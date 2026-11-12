@@ -223,6 +223,9 @@ struct HomeView: View {
             case "buy-credits": showingBuyCredits = true
             case "solo": showingSolo = true
             case "export": showingExport = true
+            case "gallery":
+                model.gallery = Screenshots.gallery
+                showingGallery = true
             default: break
             }
         }

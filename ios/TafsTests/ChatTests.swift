@@ -61,7 +61,7 @@ final class ChatTests: XCTestCase {
         let model = AppModel(signer: StubSigner())
         model.sampleReplyDelay = 0
         await model.startSample()
-        let bills = try XCTUnwrap(model.tafs.first { $0.name == "Bill pay" })
+        let bills = try XCTUnwrap(model.tafs.first { $0.name == "Overdue invoices" })
         XCTAssertTrue(model.canChat(bills.id))
 
         await model.loadChat(bills.id)
@@ -74,13 +74,14 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(thread.map(\.from), [.taf, .owner, .taf])
         XCTAssertEqual(thread[1].text, "What did you do?")
         XCTAssertFalse(model.awaitingReply(bills.id))
+        XCTAssertFalse(thread[2].text.contains("Sample reply"), "a sample taf answers without a note about being a sample")
     }
 
     func testTellingASampleTafToStopPausesIt() async throws {
         let model = AppModel(signer: StubSigner())
         model.sampleReplyDelay = 0
         await model.startSample()
-        let access = try XCTUnwrap(model.tafs.first { $0.name == "Access" })
+        let access = try XCTUnwrap(model.tafs.first { $0.name == "New leads" })
         await model.sendChat("Please stop for today", to: access.id)
         XCTAssertEqual(model.taf(access.id)?.state, .paused)
         await model.sendChat("go", to: access.id)
@@ -1174,7 +1175,7 @@ final class ChatTests: XCTestCase {
     func testASampleTafRemembersAndForgets() async throws {
         let model = AppModel(signer: StubSigner())
         await model.startSample()
-        let bills = try XCTUnwrap(model.tafs.first { $0.name == "Bill pay" })
+        let bills = try XCTUnwrap(model.tafs.first { $0.name == "Overdue invoices" })
         await model.loadMemory(bills.id)
         let notes = try XCTUnwrap(model.memories[bills.id])
         XCTAssertEqual(notes.count, 3)

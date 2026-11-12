@@ -1769,6 +1769,7 @@ final class AppModel: ObservableObject {
         await loadSample()
         save()
         if Screenshots.listSettlesOnReturn { settleListOrder() }
+        if Screenshots.enabled, Screenshots.screen == "happened" { unproven = [Screenshots.unproven] }
         if Screenshots.purchases {
             // The purchase screens at the App Store's prices: the sample's usage, which has the
             // store, is otherwise read only when Usage opens.
@@ -5106,7 +5107,6 @@ final class AppModel: ObservableObject {
         var lines: [String] = []
         lines.append(done.isEmpty ? Words.Sample.Reply.nothingDone : Words.Sample.Reply.lately(done: done.joined(separator: "\n")))
         if waiting > 0 { lines.append(Words.Sample.Reply.waiting(count: waiting)) }
-        lines.append(Words.Sample.Reply.note)
         return lines.joined(separator: "\n\n")
     }
 
@@ -5115,7 +5115,7 @@ final class AppModel: ObservableObject {
     /// Fills the app with sample tafs and a morning of work. Labelled as sample in the UI.
     func loadSample() async {
         guard tafs.isEmpty else { return }
-        for key in ["chargebacks", "deploys", "access", "billpay", "refunds"] {
+        for key in ["orders", "leads", "invoices", "chargebacks", "refunds"] {
             guard let t = TafTemplates.template(key) else { continue }
             let draft = TafDraft(name: t.name, job: t.job, tools: t.tools, rules: t.rules, templateKey: t.key)
             await start(draft, confirm: false)
@@ -7639,6 +7639,41 @@ enum Screenshots {
         test.environment = "test"
         test.live = false
         return [refunds, reads, test]
+    }
+
+    /// The Coach button in the bar, for the store's screenshots, where every signed-in owner
+    /// sees it. A sample session that isn't taking screenshots has no Coach to run, so it
+    /// isn't offered there.
+    static var showsCoach: Bool { enabled }
+
+    /// `-screen gallery`: Coach's gallery of jobs, the sample's five as tafs cloud would list
+    /// them, in the app's language: each with its Card's does, asks and never.
+    static var gallery: TafsCloud.Gallery {
+        typealias R = TafsCloud.Recipes
+        func recipe(_ t: TafTemplate, _ category: String) -> R.Recipe {
+            R.Recipe(id: t.key, title: t.name, category: category, line: t.job, say: t.job,
+                     card: R.Card(allows: t.rules.filter { !$0.never && !$0.alwaysAsk }.map(\.label),
+                                  holds: t.rules.filter(\.alwaysAsk).map(\.label),
+                                  never: t.rules.filter(\.never).map(\.label)),
+                     apps: t.tools.map { R.App(name: $0) })
+        }
+        return TafsCloud.Gallery(
+            categories: [R.Category(id: "support", title: Words.Sample.Gallery.support),
+                         R.Category(id: "payments", title: Words.Sample.Gallery.payments),
+                         R.Category(id: "finance", title: Words.Sample.Gallery.finance),
+                         R.Category(id: "sales", title: Words.Sample.Gallery.sales)],
+            recipes: [recipe(TafTemplates.refunds, "support"), recipe(TafTemplates.orders, "support"),
+                      recipe(TafTemplates.chargebacks, "payments"), recipe(TafTemplates.invoices, "finance"),
+                      recipe(TafTemplates.leads, "sales")],
+            words: .init(title: Words.Sample.Gallery.title, all: Words.Sample.Gallery.all,
+                         ownWords: Words.Sample.Gallery.ownWords, ownWordsLine: Words.Sample.Gallery.ownWordsLine))
+    }
+
+    /// `-tab needs-you -screen happened`: a refund whose outcome KIFF can't prove, for "Did this
+    /// happen?".
+    static var unproven: KIFFClient.Unproven {
+        .init(proposal: "sample-happened", title: Words.Sample.Refunds.refund4471, status: "unknown",
+              amount: 4_000, unit: "EUR", scale: 2, statusWords: Words.Record.DidThisHappen.whyLost)
     }
 
     /// Whether this run's screenshot is a purchase screen.

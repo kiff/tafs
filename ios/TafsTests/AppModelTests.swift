@@ -117,15 +117,50 @@ final class AppModelTests: XCTestCase {
         let refund = try XCTUnwrap(TafTemplates.refunds.rules.first { $0.action == "refund" })
         XCTAssertEqual(refund.perAction, .eur(150))
         XCTAssertEqual(refund.perWindow, .eur(2_000))
-        let bills = try XCTUnwrap(TafTemplates.template("billpay")?.rules.first { $0.action == "pay_bill" })
-        XCTAssertEqual(bills.perAction, .eur(5_000))
-        XCTAssertEqual(bills.perWindow, .eur(25_000))
-        XCTAssertEqual(bills.window, .week)
-        XCTAssertEqual(bills.window.label, "a week")
+        let reships = try XCTUnwrap(TafTemplates.template("orders")?.rules.first { $0.action == "reship" })
+        XCTAssertEqual(reships.perAction, .eur(60))
+        XCTAssertEqual(reships.perWindow, .eur(300))
+        XCTAssertEqual(reships.window, .day)
         let loss = try XCTUnwrap(TafTemplates.template("chargebacks")?.rules.first { $0.action == "accept_dispute" })
         XCTAssertEqual(loss.perAction, .eur(100))
         XCTAssertEqual(loss.perWindow, .eur(500))
         XCTAssertEqual(loss.window, .week)
+    }
+
+    /// The sample is the jobs tafs is sold for (the store's screenshots): refunds, card disputes,
+    /// overdue invoices, new leads and "where is my order". Nothing about deploys, access or bills.
+    func testTheSampleIsTheJobsTafsIsSoldFor() async {
+        let model = AppModel(signer: StubSigner())
+        await model.startSample()
+        XCTAssertEqual(Set(model.tafs.map(\.name)),
+                       ["Refunds", "Chargebacks", "Overdue invoices", "New leads", "Where is my order"])
+        XCTAssertEqual(model.tafs.first?.name, "Refunds", "Refunds leads the list")
+        XCTAssertNil(TafTemplates.template("billpay"))
+        XCTAssertNil(TafTemplates.template("access"))
+        XCTAssertNil(TafTemplates.template("deploys"))
+    }
+
+    /// The sample's Needs you opens on a refund over its Card's limit, with Approve once.
+    func testTheSampleWaitsOnARefundOverTheLimit() async throws {
+        let model = AppModel(signer: StubSigner())
+        await model.startSample()
+        let refunds = try XCTUnwrap(model.tafs.first { $0.name == "Refunds" })
+        let refund = try XCTUnwrap(model.held.first { $0.tafID == refunds.id })
+        XCTAssertEqual(refund.proposed.summary, "Refund order #4502")
+        XCTAssertEqual(refund.proposed.amount, .eur(480))
+    }
+
+    /// The store screenshots' gallery: the sample's five jobs, each with its Card's does, asks
+    /// and never, in the app's words.
+    func testTheScreenshotGalleryListsTheSamplesJobs() throws {
+        let gallery = Screenshots.gallery
+        XCTAssertEqual(gallery.recipes.map(\.title), ["Refunds", "Where is my order", "Chargebacks", "Overdue invoices", "New leads"])
+        XCTAssertEqual(gallery.words.title, "Pick a job")
+        let invoices = try XCTUnwrap(gallery.recipes.first { $0.id == "invoices" })
+        XCTAssertEqual(invoices.card.allows, ["Reminders"])
+        XCTAssertEqual(invoices.card.holds, ["Payment plans"])
+        XCTAssertEqual(invoices.card.never, ["Writing off a debt"])
+        XCTAssertTrue(gallery.recipes.allSatisfy { r in gallery.categories.contains { $0.id == r.category } })
     }
 
     /// The sample has no new-taf form: a new taf starts in Coach, signed in, and its foot says so.

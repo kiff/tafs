@@ -1790,13 +1790,74 @@ object Words {
         val rollbacks: String get() = Res.s(R.string.sample_deploys_rule_rollbacks)
       }
     }
+    object Gallery {
+      val all: String get() = Res.s(R.string.sample_gallery_all)
+      val finance: String get() = Res.s(R.string.sample_gallery_finance)
+      val ownWords: String get() = Res.s(R.string.sample_gallery_own_words)
+      val ownWordsLine: String get() = Res.s(R.string.sample_gallery_own_words_line)
+      val payments: String get() = Res.s(R.string.sample_gallery_payments)
+      val sales: String get() = Res.s(R.string.sample_gallery_sales)
+      val support: String get() = Res.s(R.string.sample_gallery_support)
+      val title: String get() = Res.s(R.string.sample_gallery_title)
+    }
     fun hello(name: String, now: String): String = Res.s(R.string.sample_hello, name, now)
+    object Invoices {
+      val job: String get() = Res.s(R.string.sample_invoices_job)
+      val name: String get() = Res.s(R.string.sample_invoices_name)
+      val nextStep: String get() = Res.s(R.string.sample_invoices_next_step)
+      val plan1164: String get() = Res.s(R.string.sample_invoices_plan_1164)
+      val plan1164Why: String get() = Res.s(R.string.sample_invoices_plan_1164_why)
+      val remind1187: String get() = Res.s(R.string.sample_invoices_remind_1187)
+      val remind1187Why: String get() = Res.s(R.string.sample_invoices_remind_1187_why)
+      val remind1192: String get() = Res.s(R.string.sample_invoices_remind_1192)
+      val remind1192Why: String get() = Res.s(R.string.sample_invoices_remind_1192_why)
+      object Rule {
+        val paymentPlans: String get() = Res.s(R.string.sample_invoices_rule_payment_plans)
+        val reminders: String get() = Res.s(R.string.sample_invoices_rule_reminders)
+        val writeOffs: String get() = Res.s(R.string.sample_invoices_rule_write_offs)
+      }
+      val writeOff1102: String get() = Res.s(R.string.sample_invoices_write_off_1102)
+      val writeOff1102Why: String get() = Res.s(R.string.sample_invoices_write_off_1102_why)
+    }
+    object Leads {
+      val bookMarco: String get() = Res.s(R.string.sample_leads_book_marco)
+      val bookMarcoWhy: String get() = Res.s(R.string.sample_leads_book_marco_why)
+      val discountMarco: String get() = Res.s(R.string.sample_leads_discount_marco)
+      val discountMarcoWhy: String get() = Res.s(R.string.sample_leads_discount_marco_why)
+      val job: String get() = Res.s(R.string.sample_leads_job)
+      val name: String get() = Res.s(R.string.sample_leads_name)
+      val replyLena: String get() = Res.s(R.string.sample_leads_reply_lena)
+      val replyLenaWhy: String get() = Res.s(R.string.sample_leads_reply_lena_why)
+      object Rule {
+        val calls: String get() = Res.s(R.string.sample_leads_rule_calls)
+        val discounts: String get() = Res.s(R.string.sample_leads_rule_discounts)
+        val replies: String get() = Res.s(R.string.sample_leads_rule_replies)
+      }
+    }
     val listCharges: String get() = Res.s(R.string.sample_list_charges)
     val lookUpCharge: String get() = Res.s(R.string.sample_look_up_charge)
     object Memory {
       val askFirst: String get() = Res.s(R.string.sample_memory_ask_first)
       val explain: String get() = Res.s(R.string.sample_memory_explain)
       val regulars: String get() = Res.s(R.string.sample_memory_regulars)
+    }
+    object Orders {
+      val address5133: String get() = Res.s(R.string.sample_orders_address_5133)
+      val address5133Why: String get() = Res.s(R.string.sample_orders_address_5133_why)
+      val answer5108: String get() = Res.s(R.string.sample_orders_answer_5108)
+      val answer5108Why: String get() = Res.s(R.string.sample_orders_answer_5108_why)
+      val job: String get() = Res.s(R.string.sample_orders_job)
+      val name: String get() = Res.s(R.string.sample_orders_name)
+      val nextStep: String get() = Res.s(R.string.sample_orders_next_step)
+      val reship5091: String get() = Res.s(R.string.sample_orders_reship_5091)
+      val reship5091Why: String get() = Res.s(R.string.sample_orders_reship_5091_why)
+      val reship5120: String get() = Res.s(R.string.sample_orders_reship_5120)
+      val reship5120Why: String get() = Res.s(R.string.sample_orders_reship_5120_why)
+      object Rule {
+        val addressChanges: String get() = Res.s(R.string.sample_orders_rule_address_changes)
+        val answers: String get() = Res.s(R.string.sample_orders_rule_answers)
+        val reships: String get() = Res.s(R.string.sample_orders_rule_reships)
+      }
     }
     val playNext: String get() = Res.s(R.string.sample_play_next)
     object Refunds {
@@ -1831,11 +1892,14 @@ object Words {
     }
     object Tool {
       val accounting: String get() = Res.s(R.string.sample_tool_accounting)
+      val calendar: String get() = Res.s(R.string.sample_tool_calendar)
       val code: String get() = Res.s(R.string.sample_tool_code)
+      val crm: String get() = Res.s(R.string.sample_tool_crm)
       val email: String get() = Res.s(R.string.sample_tool_email)
       val hosting: String get() = Res.s(R.string.sample_tool_hosting)
       val network: String get() = Res.s(R.string.sample_tool_network)
       val payments: String get() = Res.s(R.string.sample_tool_payments)
+      val shipping: String get() = Res.s(R.string.sample_tool_shipping)
       val signIn: String get() = Res.s(R.string.sample_tool_sign_in)
       val store: String get() = Res.s(R.string.sample_tool_store)
     }

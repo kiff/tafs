@@ -3301,8 +3301,84 @@ enum Words {
                 static var rollbacks: String { Words.line("sample.deploys.rule.rollbacks") }
             }
         }
+        enum Gallery {
+            /// All jobs
+            static var all: String { Words.line("sample.gallery.all") }
+            /// Finance
+            static var finance: String { Words.line("sample.gallery.finance") }
+            /// In your own words
+            static var ownWords: String { Words.line("sample.gallery.own_words") }
+            /// Tell Coach the job, and it drafts the taf and its Card.
+            static var ownWordsLine: String { Words.line("sample.gallery.own_words_line") }
+            /// Payments
+            static var payments: String { Words.line("sample.gallery.payments") }
+            /// Sales
+            static var sales: String { Words.line("sample.gallery.sales") }
+            /// Support
+            static var support: String { Words.line("sample.gallery.support") }
+            /// Pick a job
+            static var title: String { Words.line("sample.gallery.title") }
+        }
         /// Hi, I'm {name}. I'm on it: {now}. Ask me what I did, or tell me what to do differently. I stay inside my Card either way.
         static func hello(name: String, now: String) -> String { Words.line("sample.hello", name, now) }
+        enum Invoices {
+            /// Chase overdue invoices with a polite reminder at 7, 14 and 30 days. Offer a payment plan only with your yes. Never write off a debt.
+            static var job: String { Words.line("sample.invoices.job") }
+            /// Overdue invoices
+            static var name: String { Words.line("sample.invoices.name") }
+            /// Send a last reminder first
+            static var nextStep: String { Words.line("sample.invoices.next_step") }
+            /// Offer Northfield Gym 3 monthly payments on INV-1164
+            static var plan1164: String { Words.line("sample.invoices.plan_1164") }
+            /// 30 days overdue, asked to spread it
+            static var plan1164Why: String { Words.line("sample.invoices.plan_1164_why") }
+            /// Remind Brightline Studio about INV-1187
+            static var remind1187: String { Words.line("sample.invoices.remind_1187") }
+            /// €2,400, 14 days overdue
+            static var remind1187Why: String { Words.line("sample.invoices.remind_1187_why") }
+            /// Remind Kestrel Cafés about INV-1192
+            static var remind1192: String { Words.line("sample.invoices.remind_1192") }
+            /// €860, 7 days overdue
+            static var remind1192Why: String { Words.line("sample.invoices.remind_1192_why") }
+            enum Rule {
+                /// Payment plans
+                static var paymentPlans: String { Words.line("sample.invoices.rule.payment_plans") }
+                /// Reminders
+                static var reminders: String { Words.line("sample.invoices.rule.reminders") }
+                /// Writing off a debt
+                static var writeOffs: String { Words.line("sample.invoices.rule.write_offs") }
+            }
+            /// Write off INV-1102
+            static var writeOff1102: String { Words.line("sample.invoices.write_off_1102") }
+            /// The client closed its shop
+            static var writeOff1102Why: String { Words.line("sample.invoices.write_off_1102_why") }
+        }
+        enum Leads {
+            /// Book a call with Marco Rossi, Thursday 10:00
+            static var bookMarco: String { Words.line("sample.leads.book_marco") }
+            /// Wants prices for 3 shops
+            static var bookMarcoWhy: String { Words.line("sample.leads.book_marco_why") }
+            /// Offer Marco 20% off the first year
+            static var discountMarco: String { Words.line("sample.leads.discount_marco") }
+            /// Says another tool is cheaper
+            static var discountMarcoWhy: String { Words.line("sample.leads.discount_marco_why") }
+            /// Answer new leads from the website within 5 minutes and book a call with sales. Quote list prices only. Never promise a discount.
+            static var job: String { Words.line("sample.leads.job") }
+            /// New leads
+            static var name: String { Words.line("sample.leads.name") }
+            /// Reply to Lena Fischer at Hartwell Logistics
+            static var replyLena: String { Words.line("sample.leads.reply_lena") }
+            /// Asked for a demo for 40 people
+            static var replyLenaWhy: String { Words.line("sample.leads.reply_lena_why") }
+            enum Rule {
+                /// Booked calls
+                static var calls: String { Words.line("sample.leads.rule.calls") }
+                /// Discounts
+                static var discounts: String { Words.line("sample.leads.rule.discounts") }
+                /// Replies
+                static var replies: String { Words.line("sample.leads.rule.replies") }
+            }
+        }
         /// List charges
         static var listCharges: String { Words.line("sample.list_charges") }
         /// Look up a charge
@@ -3314,6 +3390,38 @@ enum Words {
             static var explain: String { Words.line("sample.memory.explain") }
             /// Customers who write every week get a reply the same morning.
             static var regulars: String { Words.line("sample.memory.regulars") }
+        }
+        enum Orders {
+            /// Change the address on order #5133
+            static var address5133: String { Words.line("sample.orders.address_5133") }
+            /// Already shipped yesterday
+            static var address5133Why: String { Words.line("sample.orders.address_5133_why") }
+            /// Tell Sofia where order #5108 is
+            static var answer5108: String { Words.line("sample.orders.answer_5108") }
+            /// In transit, arrives tomorrow
+            static var answer5108Why: String { Words.line("sample.orders.answer_5108_why") }
+            /// Answer "where is my order" emails with the carrier's tracking. Reship a lost parcel up to €60. Never change an address once it has shipped.
+            static var job: String { Words.line("sample.orders.job") }
+            /// Where is my order
+            static var name: String { Words.line("sample.orders.name") }
+            /// Refund it instead
+            static var nextStep: String { Words.line("sample.orders.next_step") }
+            /// Reship order #5091
+            static var reship5091: String { Words.line("sample.orders.reship_5091") }
+            /// Lost by the carrier, no scan for 9 days
+            static var reship5091Why: String { Words.line("sample.orders.reship_5091_why") }
+            /// Reship order #5120
+            static var reship5120: String { Words.line("sample.orders.reship_5120") }
+            /// Lost by the carrier, 3 items
+            static var reship5120Why: String { Words.line("sample.orders.reship_5120_why") }
+            enum Rule {
+                /// Address changes after shipping
+                static var addressChanges: String { Words.line("sample.orders.rule.address_changes") }
+                /// Answers
+                static var answers: String { Words.line("sample.orders.rule.answers") }
+                /// Reships
+                static var reships: String { Words.line("sample.orders.rule.reships") }
+            }
         }
         /// Play the next sample actions
         static var playNext: String { Words.line("sample.play_next") }
@@ -3374,8 +3482,12 @@ enum Words {
         enum Tool {
             /// Accounting
             static var accounting: String { Words.line("sample.tool.accounting") }
+            /// Calendar
+            static var calendar: String { Words.line("sample.tool.calendar") }
             /// Code
             static var code: String { Words.line("sample.tool.code") }
+            /// CRM
+            static var crm: String { Words.line("sample.tool.crm") }
             /// Email
             static var email: String { Words.line("sample.tool.email") }
             /// Hosting
@@ -3384,6 +3496,8 @@ enum Words {
             static var network: String { Words.line("sample.tool.network") }
             /// Payments
             static var payments: String { Words.line("sample.tool.payments") }
+            /// Shipping
+            static var shipping: String { Words.line("sample.tool.shipping") }
             /// Sign-in
             static var signIn: String { Words.line("sample.tool.sign_in") }
             /// Store

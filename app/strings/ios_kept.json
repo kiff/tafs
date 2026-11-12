@@ -38,8 +38,7 @@
     "Halt all \\(.applicationName)": "Siri's phrase: the key of each language's AppShortcuts.strings"
   },
   "Services/TafTemplates.swift": {
-    "pay invoice": "the sample's keywords, never shown",
-    "DROP TABLE sessions_old": "a SQL statement, the same in every language"
+    "where is my order": "the sample's keywords, never shown"
   },
   "Services/VendorSignIn.swift": {
     "no window": "developer-only",

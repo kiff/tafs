@@ -79,6 +79,9 @@ struct RootView: View {
     /// Coach only for those who may use it: it was shown to a Viewer, who got no_access, or
     /// Touch ID and then a refusal (the 805 retest).
     private var coachAvailable: Bool { model.signedIn && model.mode == .kiff && model.mayUseCoach }
+    /// The bar's Coach button: Coach's, or the store screenshots' (Screenshots.showsCoach), where
+    /// it shows without a Coach behind it.
+    private var barCoach: Bool { coachAvailable || Screenshots.showsCoach }
 
     private static let tabs: [Tab] = [.account, .tafs, .needsYou, .record]
 
@@ -105,7 +108,7 @@ struct RootView: View {
                 // foot on a phone, a rail down the left on a wide screen (the taf layout).
                 let rail = sizeClass == .regular
                 HStack(spacing: 0) {
-                    if rail { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: true) }
+                    if rail { TafsBar(tab: $tab, coachAvailable: barCoach, rail: true) }
                     // Below the tabs, not over them: a screen's own foot (a chat's field) stays
                     // above the bar.
                     VStack(spacing: 0) {
@@ -120,7 +123,7 @@ struct RootView: View {
                             }
                         }
                         // Off while the keyboard is up, as a tab bar is.
-                        if !rail && !keyboardUp { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: false) }
+                        if !rail && !keyboardUp { TafsBar(tab: $tab, coachAvailable: barCoach, rail: false) }
                     }
                 }
                 .onChange(of: tab) { _ = opened.insert($0); DriveWaits.emit("screen_shown") }
