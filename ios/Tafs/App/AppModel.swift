@@ -7389,6 +7389,137 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// How giving a key and its Card under one Face ID went (`approveKeyAndCard`).
+    enum KeyAndCard: Equatable {
+        /// The key went in and the Card is confirmed, under one signature.
+        case done
+        /// tafs cloud didn't ask for the one signature (it isn't on there, or this card has no
+        /// Card drafted): nothing was signed, and the key is given by itself, as before.
+        case notOffered
+        /// It was asked and didn't finish. The card's note says why.
+        case failed
+    }
+
+    /// A key and its taf's Card under one Face ID (docs/secure-connection.md), from the key's
+    /// sheet opened on Coach's card. The phone tells tafs cloud it can sign the step; when tafs
+    /// cloud asks for it, the phone checks the ask names this card's grant, the digest it showed,
+    /// this card's draft and the version it showed, builds both requests itself with one
+    /// `signed_at`, signs their two hashes once with the approval key, and sends the key to the
+    /// connection server, then the confirm to KIFF. It reports what came of them, and tafs cloud
+    /// checks both before Coach hears "approved". The key never goes to tafs cloud.
+    func approveKeyAndCard(_ component: SetupComponent, shown: String?, shownDraft: String?, key: String) async -> KeyAndCard {
+        guard let grantID = component.grant, let draftID = component.draft, let shown, let shownDraft, let s = setupTaf,
+              planqueReady, sessionHasKey, let tenant = kiffTenant, connecting == nil else { return .notOffered }
+        cardNotes[component.id] = nil
+        lastError = nil
+        connecting = grantID
+        defer { connecting = nil; connectStep = nil }
+        let gen = accountGeneration
+        let signer = self.signer
+        planque.tenant = tenant
+        planque.signer = { try signer.signConfirmed($0) }
+        kiff.tenant = tenant
+        defer { planque.signer = nil; kiff.setupSigner = nil }
+        let ref = cardRef(component.id)
+        let session = setupThread.components.last { $0.ref == ref }?.session
+        do {
+            let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let grant = grants.first { $0.id == grantID }
+            let words = grant.flatMap { shownWords(for: $0) }
+            let decision = try await cloud.approval(s.id, component: component.id, body: .init(
+                grant: grantID, shownDigest: shown, draft: draftID, shownDraft: shownDraft,
+                words: words.map { .init(profileSHA256: $0.profileSHA256, wordsSHA256: $0.wordsSHA256) }, session: session,
+                can: [RequestsTogether.keyAndCards]), proof: proof)
+            guard gen == accountGeneration else { return .failed }
+            switch decision.outcome {
+            case "answered":
+                cardNotes[component.id] = decision.note
+                await setupAnswered(s.id, ref: ref, decision: decision, gen: gen)
+                return .failed
+            case "read_again":
+                cardNotes[component.id] = decision.note ?? Words.Version.outOfDateCard
+                await refreshConnections()
+                if let draft = try? await kiff.draft(id: draftID), gen == accountGeneration { setupDrafts[draftID] = draft }
+                return .failed
+            case "sign":
+                break
+            default:
+                cardNotes[component.id] = Words.Coach.unknownAnswer
+                return .failed
+            }
+            // Another step (the two signatures, as before): nothing is signed here, and the key goes by itself.
+            guard let ask = decision.ask, ask.step == RequestsTogether.keyAndCards else { return .notOffered }
+            // The phone is the last check: the ask must be this card's, for what the person was shown.
+            guard let grant, grant.digestMatches, grant.digest == shown,
+                  Self.keyAndCardIsThisCards(ask, grant: grantID, shownDigest: shown, draft: draftID, shownDraft: shownDraft),
+                  grant.profile == nil || words != nil else {
+                // An ask for another grant or draft isn't this card's. One for this card at a digest or a
+                // version the phone didn't read is out of date: the card is read again, and nothing is signed.
+                let sameCard = ask.planque?.grant == grantID && ask.kiff?.draft == draftID
+                cardNotes[component.id] = sameCard ? Words.Version.outOfDateCard : Self.askNotThisCards
+                if sameCard {
+                    await refreshConnections()
+                    if let draft = try? await kiff.draft(id: draftID), gen == accountGeneration { setupDrafts[draftID] = draft }
+                }
+                return .failed
+            }
+            let signedAt = SigningTime.next()
+            let keyRequest = try planque.prepareKey(grant, key: key, words: words, signedAt: signedAt)
+            let confirm = try kiff.prepareConfirmDraft(id: draftID, version: shownDraft, signedAt: signedAt)
+            let keyHash = RequestsTogether.hash(keyRequest.message), confirmHash = RequestsTogether.hash(confirm.message)
+            let signature: String
+            do {
+                signature = try await signer.signApproval(RequestsTogether.message(tenant: tenant, signedAt: signedAt, keyHash, confirmHash), reason: ask.reason)
+            } catch {
+                cardNotes[component.id] = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+                return .failed
+            }
+            guard gen == accountGeneration else { return .failed }
+            // The key first, then the Card: a Card is never confirmed for a key that didn't go in.
+            let came: Came
+            do {
+                let given = try await planque.giveKey(keyRequest, signature: signature, with: confirmHash)
+                if given.connected {
+                    do {
+                        _ = try await kiff.confirmDraft(confirm, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: keyHash))
+                        await keepKIFFAlerts(tenant: tenant, gen: gen)
+                        came = Came(result: "confirmed")
+                    } catch {
+                        came = Came(result: "failed", why: error.localizedDescription)
+                    }
+                } else {
+                    came = Came(result: "not_connected", status: given.status)
+                }
+            } catch {
+                came = Came(result: "failed", why: Words.Connect.keyNotGiven(why: "\(error.localizedDescription)"))
+            }
+            guard gen == accountGeneration else { return .failed }
+            await refreshConnections()
+            guard gen == accountGeneration else { return .failed }
+            let reportProof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let outcome = try await cloud.approvalReport(s.id, component: component.id, ask: ask.id,
+                                                         body: .init(result: came.result, status: came.status, why: came.why, session: session),
+                                                         proof: reportProof, tenant: tenant, signedBy: { try signer.signConfirmed($0) })
+            guard gen == accountGeneration else { return .failed }
+            cardNotes[component.id] = outcome.note
+            await setupAnswered(s.id, ref: ref, decision: outcome, gen: gen)
+            return came.result == "confirmed" ? .done : .failed
+        } catch {
+            guard gen == accountGeneration else { return .failed }
+            cardNotes[component.id] = Words.Coach.answerNotReached(why: "\(error.localizedDescription)")
+            await loadSetupThread()
+            return .failed
+        }
+    }
+
+    /// Whether a `key_and_cards` ask is this card's, for what the person was shown: its grant
+    /// and the digest shown, its draft and the version shown. Anything else is refused, and
+    /// nothing is signed.
+    nonisolated static func keyAndCardIsThisCards(_ ask: TafsCloud.ApprovalDecision.Ask, grant: String, shownDigest: String, draft: String, shownDraft: String) -> Bool {
+        guard ask.step == RequestsTogether.keyAndCards, let p = ask.planque, let k = ask.kiff else { return false }
+        return p.grant == grant && p.body.digest == shownDigest && k.draft == draft && k.version == shownDraft
+    }
+
     /// Approve on Coach's drive card (docs/drive.md): the start is signed with the approval key, behind
     /// Face ID or Touch ID, as a setup call (`kiff.request.v1` over this request). tafs cloud starts the
     /// drive only for that key, and tells Coach the drive is on. Then Coach's chat closes into its
