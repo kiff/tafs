@@ -439,6 +439,11 @@ days, `promiseWords`; they're still 24, 48 and 168 hours), and sends
 tafs cloud checks the range, and a refusal says why on the panel. tafs cloud sends the late alert,
 which opens the taf. The app keeps no copy of the promise and works out nothing from it.
 
+**What a run used.** Under a run's line, in the work panel and in Its runs, the run's
+`credits.words`, as tafs cloud reads them from KIFF's usage record ("34 credits", or why it used
+none), drawn as sent (`WorkRequest.credits`). A run KIFF hasn't counted yet has no `credits`, and no
+line: the phone counts nothing.
+
 ## When something doesn't go through
 
 The owner reads the app's own words for what happened and what, if anything, they can do

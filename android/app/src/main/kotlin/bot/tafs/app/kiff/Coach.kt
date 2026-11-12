@@ -385,7 +385,16 @@ data class WorkRequest(
   /** What a waiting run waits for, in the connection's words, when it waits for an app's event: not for the owner. */
   @SerialName("waiting_for") val waitingFor: String? = null,
   val deliveries: List<WorkDelivery> = emptyList(),
-)
+  /** What the run used, as sent: read through [credits], so a value the phone can't read leaves the run as it is. */
+  @SerialName("credits") val creditsSent: kotlinx.serialization.json.JsonElement? = null,
+) {
+  /** What the run used, from KIFF's usage record, in tafs cloud's words ("34 credits"); none until KIFF has counted it. */
+  val credits: RunCredits? get() = creditsSent?.let { runCatching { KiffClient.json.decodeFromJsonElement(RunCredits.serializer(), it) }.getOrNull() }
+}
+
+/** A run's credits as tafs cloud reads them from KIFF's usage record: `words` is drawn as it is; the phone counts nothing. */
+@Serializable
+data class RunCredits(val credits: Long = 0, val counted: Boolean = false, val words: String = "")
 
 /**
  * One request from the dial's rim, step by step (`GET /v1/tafs/{id}/requests/{run}`): what the taf's work gives for it, where it
