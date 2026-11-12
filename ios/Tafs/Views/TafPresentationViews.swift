@@ -450,6 +450,8 @@ struct RetainedRuns: View {
                         // stop line's second line in the middle.
                         VStack(alignment: .leading, spacing: 4) {
                             Text(request.line).scaledFont(14)
+                            // What the run used, in tafs cloud's words, once KIFF has counted it.
+                            if let used = request.creditsLine { Text(used).scaledFont(12).foregroundColor(Theme.dim) }
                             ForEach(Array(request.deliveries.enumerated()), id: \.offset) { _, delivery in Text(delivery.line).scaledFont(12).foregroundColor(Theme.dim) }
                         }
                         .multilineTextAlignment(.leading)

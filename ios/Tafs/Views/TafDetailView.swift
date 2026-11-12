@@ -609,6 +609,10 @@ struct WorkPanel: View {
                     .foregroundColor(r.state == "needs_you" ? Theme.amberText : r.state == "failed" ? Theme.no : Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            // What the run used, in tafs cloud's words, once KIFF has counted it.
+            if let used = r.creditsLine {
+                Text(used).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
+            }
             ForEach(Array(r.deliveries.enumerated()), id: \.offset) { _, d in
                 Text(d.line).scaledFont(12, relativeTo: .caption).foregroundColor(d.sendAgain ? Theme.amberText : Theme.dim)
                     .fixedSize(horizontal: false, vertical: true)
