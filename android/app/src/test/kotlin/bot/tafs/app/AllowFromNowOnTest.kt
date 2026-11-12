@@ -112,8 +112,8 @@ class AllowFromNowOnTest {
     assertFalse(model().let { it.state.value.offersAllow(it.state.value.held.single()) })
   }
 
-  @Test fun noButtonUntilTafsCloudSaysItsLive() = runTest {
-    // Before KIFF's draft for it answers, tafs cloud doesn't list holds.allow: no button, so no tap into a 404.
+  @Test fun noButtonUntilKiffSaysItsLive() = runTest {
+    // Before KIFF's draft for it answers, KIFF's /v1/me doesn't list holds.allow: no button, so no tap into a 404.
     reads(capabilities = """"holds.answer","cards.manage"""")
     val m = model()
     assertFalse(m.state.value.offersAllow(m.state.value.held.single()))

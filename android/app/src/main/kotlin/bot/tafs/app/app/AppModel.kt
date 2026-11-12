@@ -654,7 +654,7 @@ data class AppState(
   val canManageCards: Boolean get() = allows(kiffAccount?.capabilities, "cards.manage")
 
   /**
-   * "Allow this from now on" is live: tafs cloud lists `holds.allow` once KIFF's draft for it answers. Never assumed: with no
+   * "Allow this from now on" is live: KIFF's `GET /v1/me` lists `holds.allow` once its draft for it (`allow-draft`) answers. Never assumed: with no
    * list, or none, the button isn't drawn, so no one taps into a route that isn't there yet.
    */
   val allowLive: Boolean get() = kiffAccount?.capabilities?.contains("holds.allow") == true
