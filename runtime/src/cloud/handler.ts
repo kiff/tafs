@@ -33,7 +33,7 @@ import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js"
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { accountConnections, connectionLines, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
-import { answerContent, askApp, currentDrive, DRIVE_TOOLS, DriveError, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, putResult, startDrive } from "./drive.js";
+import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords } from "./doors/hold.js";
@@ -71,6 +71,8 @@ import { RECIPES } from "../recipes.js";
  *   GET | POST | DELETE /v1/halt        the whole account's halt: read, halt, resume once KIFF runs again
  *   POST /v1/coach/drive                start the person's drive for one request, signed with the approval key (kiff/tafs#544, docs/drive.md)
  *   GET  /v1/coach/drive                their drive as it stands, and its steps
+ *   POST /v1/coach/drive/pause          the person touched the app: pause it, so Coach sends nothing (docs/drive.md)
+ *   POST /v1/coach/drive/resume         the person tapped Continue: go on, with a look first
  *   POST /v1/coach/drive/stop           end it: the owner took over, left the app, stopped it, locked or signed out
  *   POST /v1/coach/drive/{d}/results/{r} the app's answer to one of its requests
  *   GET  /v1/coach/drive/{d}/stream     its requests, as server-sent events (the streaming function)
@@ -2775,6 +2777,8 @@ async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, compone
  *   POST /v1/coach/drive {session, task, component?}  signed with the approval key (KIFF-Device-Signature): start it; with
  *                                                     component, Coach's drive card is answered "approved", and its run goes on
  *   GET  /v1/coach/drive                              the drive as it stands, and its steps (the "What I did" card)
+ *   POST /v1/coach/drive/pause {drive}                the person touched the app: Coach sends nothing until Continue
+ *   POST /v1/coach/drive/resume {drive}               the person tapped Continue: Coach's next turn starts, and it looks first
  *   POST /v1/coach/drive/stop {drive, why}            end it: the owner took over, left the app, stopped it, the phone locked
  *   POST /v1/coach/drive/{drive}/results/{request}    the phone's answer to one request: {outcome, line, image?, tree?, diagnostics?, touched?, waited?}
  *
@@ -2792,7 +2796,8 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     const d = await currentDrive(store, me.tenantID, me.subject, now);
     if (!d) return { drive: null, steps: [] };
     const { person: _p, ...shown } = d;
-    return { drive: { ...shown, ...(d.ended ? { ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } } : {}) }, steps: await driveSteps(store, me.tenantID, d.id) };
+    const paused = d.ended ? undefined : await drivePaused(store, me.tenantID, d.id);
+    return { drive: { ...shown, ...(paused ? { paused } : {}), ...(d.ended ? { ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } } : {}) }, steps: await driveSteps(store, me.tenantID, d.id) };
   }
   if (parts.length === 3 && method === "POST") {
     const body = parseBody(event);
@@ -2819,6 +2824,25 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     const told = shown ? await tellCoach(me, shown.setup, shown.card, component, "approved: the drive is on", deps) : undefined;
     return { drive: { id: drive.id, session: drive.session, task: drive.task, started: drive.started }, ...(told ? { coach: told } : {}) };
   }
+  if (parts.length === 4 && parts[3] === "pause" && method === "POST") {
+    const d = await pauseDrive(store, me.tenantID, me.subject, str(parseBody(event).drive).trim(), now).catch(fail);
+    return { paused: d.ended ? null : (await drivePaused(store, me.tenantID, d.id)) ?? null, ...(d.ended ? { ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } } : {}) };
+  }
+  if (parts.length === 4 && parts[3] === "resume" && method === "POST") {
+    const id = str(parseBody(event).drive).trim();
+    // A halt while paused ends the drive, rather than letting Coach go on (docs/drive.md).
+    const before = await currentDrive(store, me.tenantID, me.subject, now);
+    if (before && before.id === id && !before.ended && (await deps.agents.halted(me.tenantID).then((h) => h.halted, () => false))) {
+      await endDrive(store, me.tenantID, me.subject, "halted", now, id);
+      await logEvent(deps.events, me.tenantID, { kind: "drive_ended", title: "Coach stopped driving", detail: END_WORDS.halted }, now);
+    }
+    const wasPaused = before && before.id === id ? await drivePaused(store, me.tenantID, id) : undefined;
+    const d = await resumeDrive(store, me.tenantID, me.subject, id, now).catch(fail);
+    if (d.ended) return { resumed: false, ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } };
+    // Coach's turn ended while the person had the app: its next one starts in the drive's chat, and looks first.
+    const coach = wasPaused ? await coachGoesOn(event, me, d.session, deps) : undefined;
+    return { resumed: !!wasPaused, ...(coach ? { coach } : {}) };
+  }
   if (parts.length === 4 && parts[3] === "stop" && method === "POST") {
     const body = parseBody(event);
     const why = (() => { try { return endWhyOf(body.why); } catch (err) { return fail(err); } })();
@@ -2842,6 +2866,24 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     return { taken: true, outcome: t.result.outcome };
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * Continue: Coach hears it in the drive's chat. A turn of Coach's still at work there takes it as
+ * the person's next words; otherwise a new turn starts with it. Either way Coach's next step is a
+ * look, which askApp also enforces. Best effort: the drive is resumed whatever Coach does.
+ */
+async function coachGoesOn(event: HTTPEvent, me: KIFFIdentity, session: string, deps: Deps): Promise<{ run: string; session: string } | undefined> {
+  const setup = (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
+  if (!setup) return undefined;
+  const working = (await deps.agents.runs(me.tenantID, setup.id, true, 10).catch(() => []))
+    .find((r) => r.status === "RUNNING" && r.session === session && r.requester?.kind === "member" && r.requester.id === me.subject);
+  if (working) {
+    const steered = await deps.agents.steerRun(me.tenantID, setup.id, working.id, CONTINUE_SAID, member(me)).then((r) => r, () => undefined);
+    if (steered) return { run: steered.id, session };
+  }
+  const run = await sendNext(event, me, setup, session, CONTINUE_SAID, deps).catch((err) => { console.error("drive continue:", err); return undefined; });
+  return run ? { run: run.id, session: run.session } : undefined;
 }
 
 /** An approval's decision and report (kiff/tafs#413) need the ask store, planque and the phone's read proof. */
@@ -4774,7 +4816,8 @@ async function driveStreamRoute(event: HTTPEvent, drive: string, deps: Deps): Pr
   const d = await currentDrive(deps.coach, me.tenantID, me.subject, now());
   if (!d || d.id !== drive) throw new HTTPError(404, "that isn't your drive");
   if (d.ended) throw new HTTPError(409, `the drive is over: ${END_WORDS[d.ended.why]}`);
-  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: driveStream(deps.coach, me.tenantID, me.subject, d.id, now, deps.sleep, langOf(event)) };
+  const halted = () => deps.agents.halted(me.tenantID).then((h) => h.halted);
+  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: driveStream(deps.coach, me.tenantID, me.subject, d.id, now, deps.sleep, langOf(event), halted) };
 }
 
 /**
@@ -6226,6 +6269,14 @@ async function driveTool(name: DriveTool, args: Record<string, unknown>, call: C
   } catch (err) {
     if (err instanceof DriveRefusal) return refuse(`Refused by tafs: ${err.message}. Nothing was sent.`);
     throw err;
+  }
+  // A second call while the person still has the app: tafs cloud ends Coach's turn itself, so a
+  // pause costs two turns at most, whatever the model does (docs/drive.md).
+  if ("paused" in a && a.calls > 1 && on) {
+    const setup = (await deps.tafs.list(call.tenant)).find((t) => t.job === SETUP_JOB && !t.removing);
+    const working = setup ? (await deps.agents.runs(call.tenant, setup.id, true, 10).catch(() => []))
+      .filter((r) => r.status === "RUNNING" && r.session === on.session && r.requester?.kind === "member" && r.requester.id === person) : [];
+    for (const r of working) await deps.agents.cancelRun(call.tenant, setup!.id, r.id).catch((err) => console.error(`drive pause, ending ${r.id}:`, err));
   }
   // Coach's done ends the drive whatever the phone answered, or if it didn't (agentgabo on #554).
   if (name === "app_act" && args.action === "done" && on && !on.ended) {
