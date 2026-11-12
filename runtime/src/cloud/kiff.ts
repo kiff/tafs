@@ -134,7 +134,7 @@ export async function claimDraft(draftID: string, claimSecret: string, doFetch: 
 }
 
 /** Asks KIFF with the owner's session; a refused or failed answer throws. */
-async function ask<T>(token: string, method: string, path: string, body: unknown, doFetch: Fetch, base: string): Promise<T> {
+export async function ask<T>(token: string, method: string, path: string, body: unknown, doFetch: Fetch, base: string): Promise<T> {
   const res = await doFetch(`${base}${path}`, {
     method, headers: { authorization: `Bearer ${token}`, accept: "application/json", ...(body === undefined ? {} : { "content-type": "application/json" }) },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),

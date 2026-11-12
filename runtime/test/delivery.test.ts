@@ -659,6 +659,8 @@ describe("work is handed on twice at most, never in a circle, and a taf can say 
     expect(w.inputOf(handed)?.text).not.toContain("Nothing to hand over");
     expect(recordLines({ done: [{ tool: "a\nb", resource: " " }, { tool: "" }, { tool: "c", resource: "x".repeat(200) }] }))
       .toEqual(["- a b", `- c on ${"x".repeat(120)}`]);
+    // A name of control characters alone is no name once cleaned: no "- " line, and a resource of them is none.
+    expect(recordLines({ done: [{ tool: "\u0007\n" }, { tool: "d", resource: "\u0000" }] })).toEqual(["- d"]);
   });
 
   // A connection may name no resource (none is named for a dispute's close today): then the call's own id-like
