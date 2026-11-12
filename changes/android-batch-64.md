@@ -1,0 +1,1 @@
+- **Android 1.11: what a run did, counted.** Under a taf's last message, the app shows tafs cloud's line counting what the run did, from the record ("5 done · 1 waiting for you · 2 refused"), as soon as tafs cloud sends it.
