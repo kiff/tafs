@@ -80,6 +80,7 @@ enum HoldAllow {
         var domain: String
         var environment: String
         var location: String
+        /// When it starts and ends, as the instants KIFF's times name (`instant`): "" for none.
         var validFrom: String
         var validUntil: String
 
@@ -87,7 +88,7 @@ enum HoldAllow {
         init(_ current: KIFFClient.DraftCard.Terms) {
             self.init(grants: Self.grants(current.grants), totals: Self.totals(current.aggregates), onExceed: current.onExceed,
                       holders: Self.holders(current.subject, current.subjects), domain: current.domain, environment: current.environment,
-                      location: current.location, validFrom: current.validFrom, validUntil: current.validUntil)
+                      location: current.location, validFrom: Self.instant(current.validFrom), validUntil: Self.instant(current.validUntil))
         }
 
         /// A draft's Card, read over the Card in force it revises: a draft that names no
@@ -99,11 +100,11 @@ enum HoldAllow {
             }
             self.init(grants: Self.grants(card.grants), totals: Self.totals(card.aggregates), onExceed: card.onExceed,
                       holders: holders, domain: card.domain, environment: card.environment,
-                      location: card.location, validFrom: card.validFrom, validUntil: card.validUntil)
+                      location: card.location, validFrom: Self.instant(card.validFrom), validUntil: Self.instant(card.validUntil))
         }
 
         init(grants: [Grant], totals: [Total], onExceed: String?, holders: [String], domain: String?, environment: String?,
-             location: String?, validFrom: String?, validUntil: String?) {
+             location: String?, validFrom: String, validUntil: String) {
             self.grants = grants.map { g in
                 var g = g
                 g.caps = g.caps.sorted { Self.capKey($0) < Self.capKey($1) }
@@ -116,8 +117,21 @@ enum HoldAllow {
             self.domain = (domain ?? "").lowercased()
             self.environment = (environment ?? "").lowercased()
             self.location = location ?? ""
-            self.validFrom = validFrom ?? ""
-            self.validUntil = validUntil ?? ""
+            // Already read as instants by the two initializers above: never read twice.
+            self.validFrom = validFrom
+            self.validUntil = validUntil
+        }
+
+        /// A time as KIFF writes it, as the instant it names, so the same moment written with
+        /// another offset or precision is the same term. None is "". Every other text is
+        /// parsed: one that can't be read as a time is kept as written behind a mark no
+        /// instant has, so it equals only the same unreadable text, and never a time.
+        static func instant(_ time: String?) -> String {
+            guard let time, !time.isEmpty else { return "" }
+            let precise = ISO8601DateFormatter()
+            precise.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            guard let date = precise.date(from: time) ?? ISO8601DateFormatter().date(from: time) else { return "?" + time }
+            return "@" + String(Int64((date.timeIntervalSince1970 * 1000).rounded()))
         }
 
         private static func grants(_ grants: [KIFFClient.DraftCard.Grant]?) -> [Grant] {
