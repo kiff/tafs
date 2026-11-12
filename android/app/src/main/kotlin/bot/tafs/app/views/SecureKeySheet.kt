@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.KeyReceipt
 import bot.tafs.app.design.LocalBiometry
+import bot.tafs.app.drive.confirms
 import bot.tafs.app.design.OutlineButton
 import bot.tafs.app.design.PrimaryButton
 import bot.tafs.app.design.Theme
@@ -83,11 +84,27 @@ fun SecureKeyContent(
   if (receipt != null && receipt.grant == grant.id) {
     Text(SecureSheetWords.receipt(sheet, receipt.last4), style = scaled(16, FontWeight.SemiBold, Theme.ink))
     sheet.receipt?.disconnect?.takeIf { it.isNotBlank() }?.let { words ->
+      var confirming by remember(grant.id) { mutableStateOf(false) }
       Text(
         words,
         style = scaled(15, FontWeight.SemiBold, Theme.no),
-        modifier = Modifier.heightIn(min = 44.dp).clickable { actions.disconnect(grant.id) }.padding(top = 10.dp),
+        modifier = Modifier.heightIn(min = 44.dp).clickable { confirming = true }.padding(top = 10.dp),
       )
+      // Asked first, naming the one taf it ends, as from Connect apps' list; only then the connection goes.
+      if (confirming) {
+        val taf = ConnectAppsWords.tafOf(state, grant)
+        val alsoStops = ConnectAppsWords.alsoStops(state, grant)
+        bot.tafs.app.drive.DriveAlert(
+          onDismissRequest = { confirming = false },
+          containerColor = Theme.panel,
+          title = { Text(bot.tafs.app.model.ConnectionWords.disconnectTitle(grant, taf, alsoStops)) },
+          text = { Text(bot.tafs.app.model.ConnectionWords.disconnectBody(grant, taf, alsoStops)) },
+          confirmButton = {
+            androidx.compose.material3.TextButton({ confirming = false; actions.disconnect(grant.id) }, modifier = Modifier.confirms()) { Text(ConnectAppsWords.DISCONNECT, color = Theme.no) }
+          },
+          dismissButton = { androidx.compose.material3.TextButton({ confirming = false }) { Text(bot.tafs.app.model.Words.Common.cancel, color = Theme.soft) } },
+        )
+      }
     }
     Text(
       bot.tafs.app.model.Words.Common.done,

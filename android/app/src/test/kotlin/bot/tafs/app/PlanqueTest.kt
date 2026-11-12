@@ -1019,6 +1019,120 @@ class PlanqueTest {
     assertNull(m.state.value.keyForCard)
   }
 
+  // MARK: One fingerprint for the key and its Card (kiff.requests.v1, docs/secure-connection.md)
+
+  private val confirmRoute = "POST /v1/me/agent-drafts/dr_1/confirm"
+  private val keyAndCards =
+    """{"outcome":"sign","ask":{"id":"ask_1","step":"key_and_cards","scheme":"kiff.requests.v1","message":"","reason":"Connect the bank to Invoices","key":"critical",
+       "planque":{"grant":"g1","body":{"digest":"DIGEST"}},"kiff":{"draft":"dr_1","version":"v3"}}}"""
+
+  /** A signature header's fields: t, v3, with, d. */
+  private fun fields(header: String) = header.split(",").associate { it.substringBefore("=") to it.substringAfter("=") }
+
+  @Test fun oneFingerprintGivesTheKeyAndConfirmsItsCardEachRequestCheckedByItsOwnService() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${keyGrant()}]}""")
+    transport.answer(askRoute, 200, keyAndCards.replace("DIGEST", digestOf(keyRequest)))
+    transport.answer(key, 200, keyGrant("connected"))
+    transport.answer(confirmRoute, 200, draft.replace("\"draft\"", "\"confirmed\""))
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    transport.answer(grants, 200, """{"grants":[${keyGrant("connected")}]}""")
+    assertTrue(m.approveCoachWithKey(approvalComponent().copy(draft = "dr_1"), digestOf(keyRequest), "v3", "  test-key-0001\n"))
+
+    // The phone said it can sign the step; one fingerprint, for both.
+    val ask = bodyOf(transport.requestsTo(askRoute).single())
+    assertEquals("key_and_cards", ask.getValue("can").toString().trim('[', ']', '"'))
+    assertEquals(listOf("Connect the bank to Invoices"), auth.asked)
+
+    // Each request carries the one signature and the other's message hash, at the same time.
+    val keyed = transport.requestsTo(key).single()
+    val confirmed = transport.requestsTo(confirmRoute).single()
+    val toPlanque = fields(keyed.headers.getValue("Planque-Device-Signature"))
+    val toKiff = fields(confirmed.headers.getValue("KIFF-Device-Signature"))
+    assertEquals(toPlanque.getValue("t"), toKiff.getValue("t"))
+    assertEquals(toPlanque.getValue("v3"), toKiff.getValue("v3"))
+    assertEquals("dev_1", toPlanque["d"])
+    assertNull("never a v1 beside it", toPlanque["v1"] ?: toKiff["v1"])
+    assertEquals("the trimmed key, in its header alone", "test-key-0001", keyed.headers[PlanqueClient.VENDOR_KEY])
+    assertFalse(String(keyed.body!!).contains("test-key-0001"))
+
+    // Each service rebuilds its own message: the other's hash is what the phone sent beside it.
+    val at = toKiff.getValue("t")
+    val planqueBase = keyed.url.substringBefore("/v1/accounts")
+    val keyHash = KiffClient.messageHash(PlanqueClient.message(planqueBase, "t_01", "POST", "/v1/accounts/t_01/grants/g1/key", keyed.body!!, at))
+    val confirmHash = KiffClient.messageHash(KiffClient.requestMessage("t_01", "POST", "/v1/me/agent-drafts/dr_1/confirm", confirmed.body!!, at))
+    assertEquals("sha256:$confirmHash", toPlanque.getValue("with"))
+    assertEquals("sha256:$keyHash", toKiff.getValue("with"))
+    assertEquals("v3", bodyOf(confirmed).getValue("version").jsonPrimitive.content)
+
+    // The approval key signed kiff.requests.v1 over both hashes, sorted.
+    val verify = Signature.getInstance("SHA256withECDSA")
+    verify.initVerify(KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(signer.approvalPublicKeyDER)))
+    verify.update(KiffClient.requestsMessage("t_01", at, confirmHash, keyHash))
+    assertTrue(verify.verify(Base64.getDecoder().decode(toKiff.getValue("v3"))))
+    assertTrue(String(KiffClient.requestsMessage("t_01", at, "b", "a")).endsWith("\na\nb"))
+
+    // Then the report, as for any step: tafs cloud reads both services before Coach hears "approved".
+    assertEquals("confirmed", bodyOf(transport.requestsTo(reportRoute).single()).getValue("result").jsonPrimitive.content)
+    assertFalse("the key is kept nowhere in the app's state", m.state.value.toString().contains("test-key-0001"))
+  }
+
+  @Test fun answeredWithTheTwoStepsNothingIsSignedForItAndTheKeyGoesAsBefore() = runTest {
+    // tafs cloud with the step off answers the connect step: the phone signs none of it, gives the key, then asks again.
+    reads()
+    transport.answer(grants, 200, """{"grants":[${keyGrant()}]}""")
+    transport.answer(askRoute, 200, """{"outcome":"sign","ask":{"id":"ask_0","step":"connect","message":"tafs.connect.v1|t_01|g1|${digestOf(keyRequest)}","reason":"Connect the bank","planque":{"grant":"g1","body":{"digest":"${digestOf(keyRequest)}"}}}}""")
+    transport.answer(askRoute, 200, """{"outcome":"answered","answer":"already approved: the bank is connected","session":"s1","run":"r1"}""")
+    transport.answer(key, 200, keyGrant("connected"))
+    val m = model()
+    coachWithCard(m)
+    assertTrue(m.approveCoachWithKey(approvalComponent().copy(draft = "dr_1"), digestOf(keyRequest), "v3", "test-key-0001"))
+    val asks = transport.requestsTo(askRoute)
+    assertEquals(2, asks.size)
+    assertTrue("the first asked for one signature", bodyOf(asks[0]).containsKey("can"))
+    assertFalse("the two-step ask doesn't", bodyOf(asks[1]).containsKey("can"))
+    assertTrue("the key went as before", fields(transport.requestsTo(key).single().headers.getValue("Planque-Device-Signature")).containsKey("v1"))
+    assertEquals("one fingerprint, the key's own", 1, auth.asked.size)
+    assertTrue(transport.requestsTo(confirmRoute).isEmpty())
+  }
+
+  @Test fun aKeyAndCardsAskForAnotherDraftVersionOrGrantIsNeverSigned() = runTest {
+    val wrong = listOf(
+      keyAndCards.replace("DIGEST", digestOf(keyRequest)).replace("\"v3\"", "\"v4\""),
+      keyAndCards.replace("DIGEST", digestOf(keyRequest)).replace("\"dr_1\"", "\"dr_2\""),
+      keyAndCards.replace("DIGEST", digestOf(keyRequest)).replace("\"grant\":\"g1\"", "\"grant\":\"g2\""),
+      keyAndCards.replace("DIGEST", "0".repeat(64)),
+      keyAndCards.replace("DIGEST", digestOf(keyRequest)).replace("kiff.requests.v1", "tafs.setup.v1"),
+      keyAndCards.replace("DIGEST", digestOf(keyRequest)).replace("\"message\":\"\"", "\"message\":\"tafs.cards.v1|t_01|dr_1|v3\""),
+    )
+    for (answer in wrong) {
+      transport.reset()
+      auth.asked.clear()
+      reads()
+      transport.answer(grants, 200, """{"grants":[${keyGrant()}]}""")
+      transport.answer(askRoute, 200, answer)
+      val m = model()
+      coachWithCard(m)
+      assertFalse(answer, m.approveCoachWithKey(approvalComponent().copy(draft = "dr_1"), digestOf(keyRequest), "v3", "test-key-0001"))
+      assertTrue(answer, auth.asked.isEmpty())
+      assertTrue(answer, transport.requestsTo(key).isEmpty())
+      assertTrue(answer, transport.requestsTo(confirmRoute).isEmpty())
+    }
+  }
+
+  @Test fun aCardWithNoDraftNeverAsksForOneSignature() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${keyGrant()}]}""")
+    transport.answer(key, 200, keyGrant("connected"))
+    transport.answer(askRoute, 200, """{"outcome":"answered","answer":"already approved: the bank is connected","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    assertTrue(m.approveCoachWithKey(approvalComponent(), digestOf(keyRequest), null, "test-key-0001"))
+    assertFalse(bodyOf(transport.requestsTo(askRoute).single()).containsKey("can"))
+  }
+
   // MARK: The secure connection sheet (docs/secure-connection.md)
 
   private val sheetRoute = "GET /v1/connect/grants/g1/sheet"
@@ -1059,7 +1173,7 @@ class PlanqueTest {
     assertEquals("the outer whitespace a paste adds isn't the key's", "sk_live_abcd1234", bot.tafs.app.model.SecureSheetWords.cleaned("  sk_live_abcd1234\n"))
     assertEquals("Key …1234", bot.tafs.app.model.SecureSheetWords.pasted(words, "sk_live_abcd1234"))
     assertEquals("Qonto connected · key …1234", bot.tafs.app.model.SecureSheetWords.receipt(words, "1234"))
-    assertEquals("a key too short shows none of itself", "Key …", bot.tafs.app.model.SecureSheetWords.pasted(words, "abc12"))
+    assertEquals("a key under 12 characters shows none of itself", "Key …", bot.tafs.app.model.SecureSheetWords.pasted(words, "abcd-1234"))
   }
 
   @Test fun withTheSecureSheetOpenTheKeyEndsOnItsReceiptWithTheLast4Only() = runTest {
@@ -1071,10 +1185,10 @@ class PlanqueTest {
     m.loadConnectApps()
     m.openReplaceKey(m.state.value.grants.single())
     m.loadSecureSheet("g1")
-    assertTrue(m.giveKeyOnSheet("g1", digestOf(keyRequest), "test-key-1"))
+    assertTrue(m.giveKeyOnSheet("g1", digestOf(keyRequest), "test-key-0001"))
     assertEquals("the sheet stays open on its receipt", "g1", m.state.value.listApproval)
-    assertEquals(bot.tafs.app.app.KeyReceipt("g1", "ey-1"), m.state.value.keyReceipt)
-    assertFalse("the key is kept nowhere in the app's state", m.state.value.toString().contains("test-key-1"))
+    assertEquals(bot.tafs.app.app.KeyReceipt("g1", "0001"), m.state.value.keyReceipt)
+    assertFalse("the key is kept nowhere in the app's state", m.state.value.toString().contains("test-key-0001"))
     m.closeListApproval()
     assertNull("nothing keeps the last 4 after the sheet closes", m.state.value.keyReceipt)
   }

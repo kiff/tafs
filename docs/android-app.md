@@ -562,11 +562,19 @@ like this one go on their own.
   agent's (and, when KIFF names `from_hold`, made from this held call), retires no Card and adds
   none. Each Card it changes is one the offer names and reads exactly as that Card in force with the
   offered limit moved from `before` to `after` in the offer's unit: a per-call cap on the held
-  call's action (`per_action`), or a total or count in its own window, the offer's `window` when it names one (`total`, `count`). Every other
-  action, cap, total, window and `on_exceed` is the same; KIFF's lines and a grant's title are words,
-  not terms. A `resource` change, and a Card marked unchanged, read as in force. Anything else, or a
-  kind the contract doesn't name: "This change isn't what was offered", and no sign button. A draft
-  that couldn't be read shows the error alone.
+  call's action (`per_action`), or a total or count in its own window, the offer's `window` when it
+  names one (`total`, `count`). A `resource` change is the held action's scope on the offer's
+  `parameter` with exactly its `value` added. Every other term is the same, compared as KIFF's own
+  `sameTerms` does:
+  - each action, its caps, the `entity_states` and `resources` it's limited to, and its `next_steps`;
+  - each total, its window (none named is `calendar_day`), its `measure` (none named is `attempts`
+    for a count, `effects` for a sum), and its `per`;
+  - `on_exceed`, the Card's `subjects` (none named on a revision keeps the Card's), and
+    `valid_from` and `valid_until`, compared as instants.
+
+  KIFF's lines and a grant's title are words, not terms. A Card marked unchanged must read as in
+  force too. Anything else, or a kind the contract doesn't name: "This change isn't what was
+  offered", and no sign button. A draft that couldn't be read shows the error alone.
 - **Round up** asks tafs cloud for the rounded draft and keeps the person's switch. An answer that
   comes back after its sheet closed changes nothing.
 - **One signature:** the draft's confirm, behind the approval key, with the held call
@@ -685,12 +693,31 @@ grants read (`Planque-Device-Signature`), once per grant (`AppModel.loadSecureSh
 - the legal line, its `{terms}` and `{privacy}` links opening in the browser (https only);
 - the button, which gives the key as above.
 
-Once the key went, the sheet shows the receipt with the last 4 and **Disconnect**
-(`AppState.keyReceipt`), until it closes; nothing keeps the last 4 after that. Without the sheet's
-words (an older tafs cloud, an error), the sheet stays as above. The sheet sits above the keyboard
-and scrolls. An approval card that tafs cloud marks `connection: {done: true, words}` draws only
-those words and Its Card, never the connection's text again. One signature for the key and its
-Card (`tafs.setup.v1`) follows once the connection server and KIFF take it.
+Once the key went, the sheet shows the receipt with the last 4 (from a key of 12 characters or
+more, as on iOS) and **Disconnect** (`AppState.keyReceipt`), until it closes; nothing keeps the last
+4 after that. **Disconnect** asks first, naming the taf it ends, in Connect apps' own words. Without
+the sheet's words (an older tafs cloud, an error), the sheet stays as above. The sheet sits above
+the keyboard and scrolls. An approval card that tafs cloud marks `connection: {done: true, words}`
+draws only those words and Its Card, never the connection's text again.
+
+**One fingerprint for a key and its Card** (`kiff.requests.v1`, docs/secure-connection.md). From
+Coach's card with a Card's draft, on a phone with an approval key, the key sheet's button asks tafs
+cloud for the step with `can: ["key_and_cards"]` (`AppModel.approveCoachWithKey`). When tafs cloud
+answers `key_and_cards`:
+- the phone checks the ask as for each step alone: the card's grant at the digest shown, its draft
+  at the version shown, `scheme` `kiff.requests.v1`, and no message of tafs cloud's
+  (`expectedApprovalMessage`);
+- it builds both requests itself, with one `signed_at`: planque's key request
+  (`PlanqueClient.keyMessage`) and KIFF's draft confirm (`KiffClient.confirmMessage`);
+- it signs `kiff.requests.v1`, the account, the time and both messages' SHA-256 sorted, once, with
+  the approval key, behind the fingerprint (`AppModel.keyAndCards`);
+- it sends each request with that signature and the other's hash (`v3=…,with=sha256:…`): the key to
+  planque, in its header alone, then the confirm to KIFF;
+- it reports what came of them, as for any step. A key that went in with a Card that didn't is said
+  by tafs cloud, and Coach's next card asks for the Card alone.
+
+Answered with the two steps instead (tafs cloud's step off, or a card it won't join), the phone signs
+nothing for that answer and gives the key, then approves the Card, as before.
 
 A browser connection's sheet (on a taf's Setup) offers tafs cloud's `site_sign_in` action, to
 whoever manages the taf: its `title` ("Sign in to a site") and its line. A tap asks planque, signed
