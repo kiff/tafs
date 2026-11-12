@@ -1674,13 +1674,19 @@ final class TafsCloud {
             var connected = false
             /// A taf on the account was built from it.
             var running = false
-            private enum CodingKeys: String, CodingKey { case id, title, category, line, say, headline, today, card, apps, connected, running }
+            /// tafs cloud's line for a job whose proof run passed ("Proved on a test help desk."),
+            /// drawn as sent; empty for a job with none.
+            var proved = ""
+            /// What the job reported after that run, as tafs cloud sends it; empty with none.
+            var sample = ""
+            private enum CodingKeys: String, CodingKey { case id, title, category, line, say, headline, today, card, apps, connected, running, proved, sample }
             init(id: String, title: String, category: String = "", line: String = "", say: String = "",
                  headline: String = "", today: String = "", card: Card = Card(), apps: [App] = [],
-                 connected: Bool = false, running: Bool = false) {
+                 connected: Bool = false, running: Bool = false, proved: String = "", sample: String = "") {
                 self.id = id; self.title = title; self.category = category; self.line = line; self.say = say
                 self.headline = headline; self.today = today; self.card = card
                 self.apps = apps; self.connected = connected; self.running = running
+                self.proved = proved; self.sample = sample
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -1695,6 +1701,9 @@ final class TafsCloud {
                 apps = ((try? c.decodeIfPresent([LenientItem<App>].self, forKey: .apps)) ?? nil)?.compactMap(\.value) ?? []
                 connected = ((try? c.decodeIfPresent(Bool.self, forKey: .connected)) ?? nil) ?? false
                 running = ((try? c.decodeIfPresent(Bool.self, forKey: .running)) ?? nil) ?? false
+                // Anything but words (a flag, a list) is no line: the sheet draws only what reads.
+                proved = (((try? c.decodeIfPresent(String.self, forKey: .proved)) ?? nil) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                sample = (((try? c.decodeIfPresent(String.self, forKey: .sample)) ?? nil) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             }
             /// What leads the recipe on Home and on its sheet: the problem it ends; its title
             /// from a tafs cloud from before headlines.
@@ -1840,9 +1849,22 @@ final class TafsCloud {
             var all = ""
             var ownWords = ""
             var ownWordsLine = ""
-            private enum CodingKeys: String, CodingKey { case title, all, ownWords = "own_words", ownWordsLine = "own_words_line" }
-            init(title: String = "", all: String = "", ownWords: String = "", ownWordsLine: String = "") {
+            /// Browsing, with nothing created: Home's row and the gallery's title ("Explore jobs").
+            var explore = ""
+            /// The row under the strip ("See all jobs").
+            var seeAll = ""
+            /// A browsed job's only action ("Try it with Coach").
+            var tryIt = ""
+            /// The label over a job's sample ("What it reported after its test run").
+            var sample = ""
+            private enum CodingKeys: String, CodingKey {
+                case title, all, ownWords = "own_words", ownWordsLine = "own_words_line"
+                case explore, seeAll = "see_all", tryIt = "try", sample
+            }
+            init(title: String = "", all: String = "", ownWords: String = "", ownWordsLine: String = "",
+                 explore: String = "", seeAll: String = "", tryIt: String = "", sample: String = "") {
                 self.title = title; self.all = all; self.ownWords = ownWords; self.ownWordsLine = ownWordsLine
+                self.explore = explore; self.seeAll = seeAll; self.tryIt = tryIt; self.sample = sample
             }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -1850,6 +1872,10 @@ final class TafsCloud {
                 all = ((try? c.decodeIfPresent(String.self, forKey: .all)) ?? nil) ?? ""
                 ownWords = ((try? c.decodeIfPresent(String.self, forKey: .ownWords)) ?? nil) ?? ""
                 ownWordsLine = ((try? c.decodeIfPresent(String.self, forKey: .ownWordsLine)) ?? nil) ?? ""
+                explore = ((try? c.decodeIfPresent(String.self, forKey: .explore)) ?? nil) ?? ""
+                seeAll = ((try? c.decodeIfPresent(String.self, forKey: .seeAll)) ?? nil) ?? ""
+                tryIt = ((try? c.decodeIfPresent(String.self, forKey: .tryIt)) ?? nil) ?? ""
+                sample = ((try? c.decodeIfPresent(String.self, forKey: .sample)) ?? nil) ?? ""
             }
         }
         var categories: [Recipes.Category] = []
@@ -1876,11 +1902,31 @@ final class TafsCloud {
         func asRecipes(labels fallback: Recipes.Labels? = nil) -> Recipes {
             Recipes(categories: categories, recipes: recipes, labels: labels ?? fallback)
         }
-        /// The words of the row under the strip that opens every job: tafs cloud's heading for
-        /// them ("All jobs"). Nil when it sends none, or the strip already shows every job.
+        /// The words of the row under the strip that opens every job: tafs cloud's "See all
+        /// jobs" (`words.see_all`), else its heading for them ("All jobs") from a tafs cloud from
+        /// before it. Nil when it sends neither, or the strip already shows every job.
         var seeAll: String? {
-            let words = words.all.trimmingCharacters(in: .whitespacesAndNewlines)
-            return words.isEmpty || recipes.count <= stripRecipes.count ? nil : words
+            guard recipes.count > stripRecipes.count else { return nil }
+            return Self.said(words.seeAll) ?? Self.said(words.all)
+        }
+        /// The words of Home's row that opens the jobs to browse, with nothing created
+        /// (`words.explore`). Nil when tafs cloud sends none or lists no job: then no row, and
+        /// no words of the app's own.
+        var explore: String? { recipes.isEmpty ? nil : Self.said(words.explore) }
+        /// The gallery's title: browsing, tafs cloud's "Explore jobs" where it sends it; else,
+        /// and from + New, its title.
+        func title(browse: Bool) -> String { (browse ? Self.said(words.explore) : nil) ?? words.title }
+        /// The words of a job's one button, which hands it to Coach: browsing, "Try it with
+        /// Coach" (`words.try`); else, and from a tafs cloud from before it, the sheet's own
+        /// (`labels.hand`). Nil when none came: no button.
+        func handWords(browse: Bool, labels: Recipes.Labels?) -> String? {
+            (browse ? Self.said(words.tryIt) : nil) ?? Self.said(labels?.hand ?? "")
+        }
+        /// The label over a job's sample; nil when tafs cloud sends none.
+        var sampleLabel: String? { Self.said(words.sample) }
+        private static func said(_ words: String) -> String? {
+            let w = words.trimmingCharacters(in: .whitespacesAndNewlines)
+            return w.isEmpty ? nil : w
         }
         /// The strip's jobs, in tafs cloud's order: an id the gallery doesn't list is skipped.
         /// None when tafs cloud doesn't show it.

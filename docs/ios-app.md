@@ -433,8 +433,20 @@ it, in tafs cloud's words.
 - **The strip** (`RecipeStrip`): under the tafs list, `strip.title` and the jobs in `strip.ids`,
   in that order, only while `strip.shown`. tafs cloud leaves out jobs the account runs and puts
   first those whose apps are connected; the app picks nothing. On iPad it's a sidebar section.
-  Under the jobs, one row opens every job (+ New's gallery), in tafs cloud's own heading for them (`words.all`,
-  `Gallery.seeAll`): only when there are more jobs than the strip shows, on iPhone and iPad.
+  Under the jobs, one row opens every job to browse, in tafs cloud's words (`words.see_all`, or its
+  heading `words.all` from a tafs cloud from before it; `Gallery.seeAll`): only when there are
+  more jobs than the strip shows, on iPhone and iPad.
+- **Explore jobs** (`ExploreRow`, a sidebar row on iPad): a row on Home in tafs cloud's words
+  (`words.explore`), with or without tafs, and for someone who may not use Coach too. It opens the
+  gallery to browse (`GalleryMode.browse`): the same chips and jobs under `words.explore`, without
+  the own-words row, and nothing is created. A tafs cloud that sends no `words.explore` draws no
+  row: the app has no words of its own for it.
+- **A job's sheet** (`RecipeSheet`) is read only: the headline, what it costs today, its Card as
+  does / asks / never, then `proved` (tafs cloud's line where a proof run passed) and `sample`
+  (what it reported after that run, under `words.sample`), both drawn as sent and only when they
+  are words. Its one button hands the job to Coach, for someone who may use it: "Try it with
+  Coach" (`words.try`) while browsing, the sheet's `labels.hand` from + New. Nothing is set up
+  until it's tapped.
 - **App logos** (`AppMarks`): each job's apps by name, after the app's logo, and the same in
   Connect apps. A logo loads only from tafs cloud, by the path it sent: `/v1/logos/` and a key of
   32 lowercase hex, as on Android (`TafsCloud.logoURL`). An absolute URL or any other path loads

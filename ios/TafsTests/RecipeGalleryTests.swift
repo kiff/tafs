@@ -53,7 +53,10 @@ final class RecipeGalleryTests: XCTestCase {
     func testTheRowUnderTheStripOpensEveryJobInTafsCloudsWords() throws {
         let g = try read()
         XCTAssertGreaterThan(g.recipes.count, g.stripRecipes.count)
-        XCTAssertEqual(g.seeAll, "All jobs")
+        XCTAssertEqual(g.seeAll, "All jobs", "a tafs cloud from before \"See all jobs\": its heading for them")
+        var named = g
+        named.words.seeAll = "See all jobs"
+        XCTAssertEqual(named.seeAll, "See all jobs", "tafs cloud's own words for the row, once it sends them")
         var wordless = g
         wordless.words.all = "  "
         XCTAssertNil(wordless.seeAll, "no words from tafs cloud: no row, and none of the app's own")
@@ -67,11 +70,82 @@ final class RecipeGalleryTests: XCTestCase {
         // Both layouts draw the row and open the gallery from it.
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let phone = try String(contentsOf: views.appendingPathComponent("HomeView.swift"), encoding: .utf8)
-        XCTAssertTrue(phone.contains("seeAll: { showingGallery = true }"))
+        XCTAssertTrue(phone.contains("seeAll: { showingGallery = .browse }"))
         let pad = try String(contentsOf: views.appendingPathComponent("HomeSplitView.swift"), encoding: .utf8)
         XCTAssertTrue(pad.contains("if let words = gallery.seeAll {"))
         let strip = try String(contentsOf: views.appendingPathComponent("RecipeGallery.swift"), encoding: .utf8)
         XCTAssertTrue(strip.contains("if let seeAll, let words = gallery.seeAll {"))
+    }
+
+    private static let browsing = #"""
+    {"categories":[{"id":"customers","title":"Customers"}],
+     "recipes":[
+      {"id":"acknowledge-every-ticket","title":"Acknowledge every ticket","category":"customers","headline":"No ticket goes unanswered.","say":"Acknowledge every ticket.",
+       "proved":"Proved on a test help desk.","sample":"12 tickets acknowledged.\n2 wait for you."},
+      {"id":"answer-questions-about-orders","title":"Answer questions about orders","category":"customers","say":"Answer order questions.",
+       "proved":true,"sample":["a list"]}],
+     "words":{"title":"New taf","all":"All jobs","own_words":"Say it in your own words",
+              "explore":"Explore jobs","see_all":"See all jobs","try":"Try it with Coach","sample":"What it reported after its test run"},
+     "labels":{"allows":"Does on its own","holds":"Asks you first","never":"Never does","hand":"Hand it to Coach"}}
+    """#
+
+    /// Browsing the jobs, with nothing created: Home's row, the gallery's title and a job's one
+    /// button are in tafs cloud's words, and a tafs cloud from before them draws no row and
+    /// keeps the sheet's own button. The app has no words of its own for any of it.
+    func testBrowsingIsInTafsCloudsWordsAndATafsCloudFromBeforeThemDrawsNoRow() throws {
+        let g = try read(Self.browsing)
+        XCTAssertEqual(g.explore, "Explore jobs")
+        XCTAssertEqual(g.title(browse: true), "Explore jobs")
+        XCTAssertEqual(g.title(browse: false), "New taf", "+ New keeps its own title")
+        XCTAssertEqual(g.handWords(browse: true, labels: g.labels), "Try it with Coach")
+        XCTAssertEqual(g.handWords(browse: false, labels: g.labels), "Hand it to Coach", "+ New keeps the sheet's own button")
+        XCTAssertEqual(g.sampleLabel, "What it reported after its test run")
+
+        let before = try read()
+        XCTAssertNil(before.explore, "no words from tafs cloud: no row")
+        XCTAssertEqual(before.title(browse: true), "New taf", "the row under the strip still opens it, under the title it has")
+        XCTAssertEqual(before.handWords(browse: true, labels: before.labels), "Hand it to Coach")
+        XCTAssertNil(before.handWords(browse: true, labels: nil), "no words at all: no button")
+        XCTAssertNil(before.sampleLabel)
+        var blank = g
+        blank.words.explore = " \n"
+        XCTAssertNil(blank.explore)
+        var empty = g
+        empty.recipes = []
+        XCTAssertNil(empty.explore, "nothing to browse: no row")
+
+        // Both layouts draw the row whoever may or may not use Coach, with or without tafs, and
+        // open the gallery to browse; browsing has no own-words row.
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        for file in ["HomeView.swift", "HomeSplitView.swift"] {
+            let source = try String(contentsOf: views.appendingPathComponent(file), encoding: .utf8)
+            XCTAssertTrue(source.contains("if model.mode == .kiff, let words = model.gallery?.explore {"), file)
+            XCTAssertTrue(source.contains("RecipeGallerySheet(gallery: gallery, mode: mode,"), file)
+        }
+        let sheet = try String(contentsOf: views.appendingPathComponent("RecipeGallery.swift"), encoding: .utf8)
+        XCTAssertTrue(sheet.contains("if mode == .create, canHand, !gallery.words.ownWords.isEmpty { ownWords }"))
+        XCTAssertTrue(sheet.contains("handWords: gallery.handWords(browse: mode == .browse, labels: recipes.labels)"))
+    }
+
+    /// A job whose proof run passed carries tafs cloud's line and what it reported, drawn as
+    /// sent; a job with neither, or with something that isn't words, draws nothing.
+    func testAJobsProofAndSampleAreDrawnAsSentAndOnlyWhenTheyAreWords() throws {
+        let g = try read(Self.browsing)
+        XCTAssertEqual(g.recipes.count, 2, "a job whose proof isn't words still reads")
+        XCTAssertEqual(g.recipes[0].proved, "Proved on a test help desk.")
+        XCTAssertEqual(g.recipes[0].sample, "12 tickets acknowledged.\n2 wait for you.")
+        XCTAssertEqual(g.recipes[1].proved, "", "a flag is no line: the app writes none of its own")
+        XCTAssertEqual(g.recipes[1].sample, "")
+        let before = try read()
+        XCTAssertTrue(before.recipes.allSatisfy { $0.proved.isEmpty && $0.sample.isEmpty })
+        // The same fields on `/v1/recipes`, so Home's sheet and the gallery's are the same.
+        let listed = try JSONDecoder().decode(TafsCloud.Recipes.self, from: Data(Self.browsing.utf8))
+        XCTAssertEqual(listed.recipes.first?.proved, "Proved on a test help desk.")
+        let sheet = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/Views/HomeRecipes.swift"), encoding: .utf8)
+        XCTAssertTrue(sheet.contains("if !recipe.proved.isEmpty {"))
+        XCTAssertTrue(sheet.contains("if !recipe.sample.isEmpty {"))
+        XCTAssertTrue(sheet.contains("if canHand, let words = handWords ?? recipes.handWords {"))
     }
 
     /// The strip draws tafs cloud's ids in its order; one the gallery doesn't list is skipped,
