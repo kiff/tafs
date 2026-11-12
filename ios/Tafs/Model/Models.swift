@@ -392,6 +392,8 @@ struct Taf: Identifiable, Hashable, Codable {
     /// halted, needs its owner, is working, retrying, waiting or paused says that instead, so
     /// this is nil.
     var healthNow: String? = nil
+    /// tafs cloud's `work.attention`: `healthNow` says what went wrong, in place of "Working".
+    var attention = false
     /// A short word beside its name, as tafs cloud sends it: "Trial" for an open trial's
     /// entry (kiff/tafs#247); nil for a taf.
     var badge: String? = nil
@@ -400,15 +402,10 @@ struct Taf: Identifiable, Hashable, Codable {
 
     /// The Cards its page draws: each KIFF Card, else its lines as one Card.
     var shownCards: [TafCard] {
-        // The live Cards first, and among them the one that counts money (kiff/tafs#236,
-        // item 9): for a taf that pays out, what's left to spend matters most. Otherwise as KIFF lists them.
-        if let kiffCards, !kiffCards.isEmpty {
-            return kiffCards.enumerated().sorted { a, b in
-                let ka = (a.element.live ? 0 : 2) + (a.element.total != nil ? 0 : 1)
-                let kb = (b.element.live ? 0 : 2) + (b.element.total != nil ? 0 : 1)
-                return ka != kb ? ka < kb : a.offset < b.offset
-            }.map(\.element)
-        }
+        // In tafs cloud's order, never sorted again here: it puts in front the Card that has used
+        // the most of its limit, live Cards before the others (docs/api.md). An unused Card no
+        // longer goes before the one at work.
+        if let kiffCards, !kiffCards.isEmpty { return kiffCards }
         return [TafCard.merged(id: "merged", title: name, rules: card.rules, expires: card.expires, active: !card.revoked,
                                used: used, unknown: usageUnknown ?? [], counted: counted)]
     }

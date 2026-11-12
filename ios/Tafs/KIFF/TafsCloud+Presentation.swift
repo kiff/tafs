@@ -36,6 +36,18 @@ extension TafsCloud {
     }
     struct RunsPage: Decodable {
         let requests: [TafWork.Request]; let next_cursor: String?; let title: String; let more_title: String; var end_words: String? = nil
+        /// On the first page: recent firings that started no run (a Run now whose check couldn't read too).
+        var skipped: [TafWork.Skipped]? = nil
+
+        /// The page's rows, newest first: its runs and, on the first page, the firings that started
+        /// no run, each in its place by time, as Android draws them.
+        func rows(first: Bool) -> [TafWork.Row] {
+            let runs = requests.map(TafWork.Row.request)
+            guard first, let skipped, !skipped.isEmpty else { return runs }
+            return (runs + skipped.map(TafWork.Row.skipped)).enumerated()
+                .sorted { $0.element.at != $1.element.at ? $0.element.at > $1.element.at : $0.offset < $1.offset }
+                .map(\.element)
+        }
     }
     struct ConnectedAction: Decodable, Identifiable {
         var id: String { name }

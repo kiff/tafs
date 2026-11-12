@@ -88,8 +88,15 @@ connected: "Checking the sign-in…" meanwhile (`connectStep`).
 cloud's line, then its recent requests and skipped firings, newest first, in tafs cloud's words.
 A request that needs the owner is amber, a failed one red, a skipped firing dim. A door reply
 given up on offers **Send again** to whoever manages the taf (`AppModel.sendAgain`). Then its
-runs (`RunsPanel`): when it runs next, or that it works from its chat, and **Run now**; then the
-runs it kept (`RetainedRuns`), which stand for its latest run's report. What needs the owner
+runs (`RunsPanel`): when it runs next, in tafs cloud's `next_run_words` ("Next run Mon 08:00", with
+the day when it isn't today; the app's own time only from a tafs cloud that sends none), or that it
+works from its chat, and **Run now**; then the runs it kept (`RetainedRuns`), which stand for its
+latest run's report, with the firings that started no run among them by time (the first page's
+`skipped`, a Run now whose check couldn't read among them, `RunsPage.rows`), dim. The home list says the next run the same way. A taf
+whose `work.attention` is set says what went wrong last in place of its next run, and its row and
+page drop the **Working** chip (`Taf.attention`). Its Cards keep tafs cloud's order (`Taf.shownCards`):
+the one in front is the one that has used most of its limit. The Record shows an action's whole
+title with its amount ("Save a dispute response · $800"), never the verb alone. What needs the owner
 comes first, then the work, then the runs, as on Android (`TafActivityList.parts`). Under the health lines, the work shows its **oldest waiting case**
 (`oldest_waiting.words`, tafs cloud's line, amber once `late`) and, for whoever manages the taf,
 **Answer within** (`PromiseRow`): the promise as tafs cloud keeps it (`promise.hours`) or Not set,

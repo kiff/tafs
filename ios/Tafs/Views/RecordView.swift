@@ -195,11 +195,10 @@ extension RecordEntry {
         return Money(minor: NSDecimalNumber(decimal: whole).int64Value, currency: unit, scale: scale)
     }
 
-    /// "Refund €150.00": the action's verb with its amount, as the mockup has it.
+    /// "Save a dispute response · $800": the action's whole title, then its amount. Never the verb
+    /// alone ("Save $800" read as saving the money), and the same in every language.
     var titleWithAmount: String {
         guard let money = amountText else { return title }
-        let words = title.split(separator: " ")
-        if words.count > 1, ["a", "an", "the"].contains(words[1].lowercased()) { return "\(words[0]) \(money)" }
         return "\(title) · \(money)"
     }
 

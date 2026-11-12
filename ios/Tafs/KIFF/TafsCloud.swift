@@ -55,10 +55,13 @@ final class TafsCloud {
         var timeZoneWords: String? = nil
         var scheduleTimeZone: String? = nil
         var scheduleTimeZoneWords: String? = nil
+        /// The next run in the person's language, with its weekday when it isn't today ("Next run
+        /// Mon 08:00"): drawn as is, never a bare time that reads as tomorrow.
+        var nextRunWords: String? = nil
 
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, unscheduled, results
-            case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run"
+            case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", nextRunWords = "next_run_words"
             case timeZoneWords = "time_zone_words", scheduleTimeZone = "schedule_time_zone"
             case scheduleTimeZoneWords = "schedule_time_zone_words"
         }
@@ -288,9 +291,12 @@ final class TafsCloud {
         /// Where its work stands, as the list sends it (`work: {status, line}`): an idle taf that
         /// isn't healthy says its first reason here, where it would say its next run.
         var work: TafWork.Summary? = nil
+        /// tafs cloud's words for its next run, with the day when it isn't today ("Next run Mon 08:00").
+        var nextRunWords: String? = nil
 
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results, health, work
+            case nextRunWords = "next_run_words"
             case avatarRim = "avatar_rim"
             case timeZoneWords = "time_zone_words", scheduleTimeZone = "schedule_time_zone"
             case scheduleTimeZoneWords = "schedule_time_zone_words"
@@ -302,7 +308,8 @@ final class TafsCloud {
             // With unscheduled, or the taf page offers Run now and Pause a taf that works from
             // its chat can't take (kiff/tafs#206 section 2).
             id.map { CloudTaf(id: $0, name: name, job: job ?? "", kiffAgent: kiffAgent, status: status ?? "active", nextRun: nextRun, lastRun: lastRun,
-                              unscheduled: unscheduled, results: results, timeZoneWords: timeZoneWords, scheduleTimeZone: scheduleTimeZone, scheduleTimeZoneWords: scheduleTimeZoneWords) }
+                              unscheduled: unscheduled, results: results, timeZoneWords: timeZoneWords, scheduleTimeZone: scheduleTimeZone, scheduleTimeZoneWords: scheduleTimeZoneWords,
+                              nextRunWords: nextRunWords) }
         }
     }
 

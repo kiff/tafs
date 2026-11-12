@@ -80,7 +80,7 @@ struct StartsWhenView: View {
                 }
             }
             if let next = cloud?.nextRun, cloud?.paused != true {
-                Text(Words.Taf.nextRunAt(time: next.zonedShortTime) + " · " + (model.kiffAccount?.timeZone ?? "UTC"))
+                Text((cloud?.nextRunWords ?? Words.Taf.nextRunAt(time: next.zonedShortTime)) + " · " + (model.kiffAccount?.timeZone ?? "UTC"))
                     .scaledFont(13).foregroundColor(Theme.dim)
             }
             if !schedules.isEmpty {

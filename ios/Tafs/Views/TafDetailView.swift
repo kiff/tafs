@@ -168,7 +168,8 @@ struct TafDetailView: View {
                 .lineLimit(1)
                 .accessibilityIdentifier("taf-page-name")
             Spacer(minLength: 8)
-            StateChip(state: taf.state)
+            // What went wrong is said on its Activity, in place of "Working" (docs/reliability.md).
+            if !(taf.attention && taf.state == .working) { StateChip(state: taf.state) }
         }
     }
 
@@ -474,7 +475,8 @@ struct RunsPanel: View {
                     Text(Words.Taf.worksFromChat)
                         .scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Text(cloud.paused ? Words.Taf.State.paused : cloud.nextRun.map { Words.Taf.nextRunAt(time: "\($0.shortTime)") } ?? Words.Taf.onItsSchedule)
+                    // tafs cloud's words, with the day when it isn't today; the app's own only when it sends none.
+                    Text(cloud.paused ? Words.Taf.State.paused : cloud.nextRunWords ?? cloud.nextRun.map { Words.Taf.nextRunAt(time: "\($0.shortTime)") } ?? Words.Taf.onItsSchedule)
                         .scaledFont(15).foregroundColor(Theme.ink)
                     Button(inFlight ? Words.Taf.startingRun : Words.Taf.runNow) {
                         guard !runTapped else { return }
