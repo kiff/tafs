@@ -57,5 +57,11 @@
   },
   "Views/TafChatView.swift": {
     "pinned \\(pinned ?? \"none\"), turn \\(top)…\\(foot), room \\(room), viewport \\(Int(viewport)), following \\(following), touched \\(touched)": "developer-only"
+  },
+  "KIFF/TafsCloud+SecureSheet.swift": {
+    "{last4}": "a placeholder in the service's line, filled in or replaced by a link",
+    "{vendor}": "a placeholder in the service's line, filled in or replaced by a link",
+    "{terms}": "a placeholder in the service's line, filled in or replaced by a link",
+    "{privacy}": "a placeholder in the service's line, filled in or replaced by a link"
   }
 }
