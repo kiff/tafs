@@ -202,14 +202,31 @@ class MainActivity : FragmentActivity() {
         }
         // Coach drives the app (docs/drive.md): this activity's windows are the drive's, while it's on screen.
         DisposableEffect(model) {
-          val overlay = bot.tafs.app.drive.DriveOverlay(this@MainActivity, Theme.amber.toArgb()) { model.stopDrive("stopped") }
-          model.driveHost.current = bot.tafs.app.drive.AndroidDriveHost(this@MainActivity, overlay) { drivenTaf }
-          bot.tafs.app.drive.DriveInput.personsInput = { why -> model.stopDrive(why) }
-          bot.tafs.app.drive.DriveInput.coachStep = { model.drive.stepInFlight }
+          val overlay = bot.tafs.app.drive.DriveOverlay(this@MainActivity, Theme.amber.toArgb(), stop = { model.stopDrive("stopped") }, resume = { model.resumeDrive() })
+          val host = bot.tafs.app.drive.AndroidDriveHost(this@MainActivity, overlay) { drivenTaf }
+          model.driveHost.current = host
+          val input = bot.tafs.app.drive.DriveInput
+          input.personsInput = { why -> model.stopDrive(why) }
+          // The person's touch pauses the drive and is theirs (docs/drive.md, "When the person touches the app").
+          input.personsTouch = { model.drive.pause() }
+          input.personsTap = { onControl -> model.drive.personsTap(onControl) }
+          input.isControlAt = host::controlAt
+          input.isPaused = { model.drive.paused }
+          // Their back, once it has ended the drive, goes back as theirs: the topmost sheet or dialog, else the screen, else out.
+          input.personsBack = {
+            val top = input.windows.lastOrNull { it.root.isAttachedToWindow && it.root.isShown }
+            if (top == null || top === driveEntry || !top.back()) onBackPressedDispatcher.onBackPressed()
+          }
+          input.coachStep = { model.drive.stepInFlight }
           onDispose {
             model.driveHost.current = null
             overlay.show(bot.tafs.app.drive.DriveState.Off)
-            bot.tafs.app.drive.DriveInput.personsInput = {}
+            input.personsInput = {}
+            input.personsTouch = {}
+            input.personsTap = {}
+            input.isControlAt = { _, _ -> false }
+            input.isPaused = { false }
+            input.personsBack = {}
           }
         }
         // The app leaving the screen ends a drive at once: a Custom Tab, a system dialog, the share sheet, Recents and Home all

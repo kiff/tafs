@@ -1987,8 +1987,12 @@ enum Words {
         static func caption(task: String) -> String { Words.line("drive.caption", task) }
         /// Coach taps and types in this app while you watch, for this request only. It never confirms anything. Touch the app or tap Stop to take over.
         static var cardNote: String { Words.line("drive.card_note") }
+        /// Coach taps and types in this app while you watch, for this request only. It never confirms anything. Touch the app to pause it, or tap Stop to end it.
+        static var cardNotePauses: String { Words.line("drive.card_note_pauses") }
         /// Coach taps, types and scrolls in this app while you watch. It never confirms anything. Touch the app or tap Stop to take it back.
         static var cardNoteScrolls: String { Words.line("drive.card_note_scrolls") }
+        /// Coach taps, types and scrolls in this app while you watch. It never confirms anything. Touch the app to pause it, or tap Stop to end it.
+        static var cardNoteScrollsPauses: String { Words.line("drive.card_note_scrolls_pauses") }
         /// Coach asks to drive the app
         static var cardTitle: String { Words.line("drive.card_title") }
         /// Coach drove the app · {task}
@@ -2012,7 +2016,7 @@ enum Words {
             static var locked: String { Words.line("drive.ended.locked") }
             /// Coach stopped
             static var other: String { Words.line("drive.ended.other") }
-            /// You touched the app, so it's yours now
+            /// You took over, so Coach let you carry on
             static var ownerTookOver: String { Words.line("drive.ended.owner_took_over") }
             /// Another drive started
             static var replaced: String { Words.line("drive.ended.replaced") }
@@ -2045,6 +2049,8 @@ enum Words {
         static var nothingBack: String { Words.line("drive.nothing_back") }
         /// Nothing Coach can use there
         static var nothingThere: String { Words.line("drive.nothing_there") }
+        /// Paused
+        static var paused: String { Words.line("drive.paused") }
         /// Scrolled {direction}
         static func scrolled(direction: String) -> String { Words.line("drive.scrolled", direction) }
         /// That step failed

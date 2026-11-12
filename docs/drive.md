@@ -427,8 +427,9 @@ A scroll's `direction` is where the content comes from: `down` shows what's belo
 - **Before its first step:** "Coach is driving: <task>".
 - **While it's paused:** "Paused", with **Continue** and **Stop**.
 - **The card that asks to drive** says what a touch does: "… It never confirms anything. Touch the
-  app to pause it, or tap Stop to end it." (`drive.card_note`, `drive.card_note_scrolls`, in each
-  app's strings).
+  app to pause it, or tap Stop to end it." (`drive.card_note_pauses`, `drive.card_note_scrolls_pauses`
+  in the apps' shared strings; `drive.card_note` and `drive.card_note_scrolls` keep the old note until iOS
+  pauses too, then go).
 - **Once it's over:** `words`, for 3 seconds. When tafs cloud's words didn't come, the app's own words for the same end: "You took over, so Coach let you carry on", "The app left the screen, so Coach stopped", "You stopped Coach", "The phone locked, so Coach stopped", "You signed out, so Coach stopped", "The account is halted, so Coach stopped", "Coach is done", "Nothing was done for 15 minutes, so Coach stopped", "Another drive started".
 
 ### How each app sees and acts
