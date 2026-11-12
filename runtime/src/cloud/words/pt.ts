@@ -312,10 +312,14 @@ export const pt: Words = {
   handoff_dead: (name, taf) => `${name} não terminou o que ${taf} lhe passou`,
   handoff_never_started: "Nunca começou",
   handoff_note: (taf, name) => `${name} não terminou o que ${taf} lhe passou. Envie novamente a partir da página de ${taf}.`,
+  handoff_note_acted: (taf, name) => `${name} não terminou o que ${taf} lhe passou, e pode já ter agido. Verifique a página de ${name} antes de enviar algo novamente.`,
   handed_maybe: (name) => `Passado a ${name} · pode ter sido feito: verifique a página de ${name}`,
+  handed_passed: (name, to) => `Passado a ${name} · que o passou a ${to}`,
   handoff_already_acted: "já tinha agido: verifique a sua página antes de enviar novamente",
   handoff_maybe_acted: "pode já ter agido: verifique a sua página antes de enviar novamente",
   handoff_nothing_note: (taf, name, n) => `${name} não fez nada com as últimas ${n} passagens de ${taf}. Abra a página de ${taf} para ver porquê.`,
+  handoff_none: (name, why) => `Nada a passar a ${name}${why ? `: ${why}` : ""}`,
+  handoff_circle: (name) => `Não devolvido a ${name}: já teve este trabalho`,
   delivery_retrying: (name, t) => `Ainda não entregue a ${name}: nova tentativa ${t ? at(t) : "agora"}`,
   delivery_not_sent: (name, why) => `Não entregue a ${name}${why ? `: ${why}` : ""}`,
   delivery_note: (taf, name, why) => `${taf} não entregou a ${name}${why ? `: ${why}` : ""}. Envie novamente a partir da página de ${taf}, ou abra o Coach para obter ajuda.`,
@@ -326,6 +330,7 @@ export const pt: Words = {
   why_retry_failed: "a nova tentativa não terminou",
   why_retry_stopped: "a nova tentativa foi parada",
   why_handoff_failed: "a passagem falhou",
+  why_too_far: "este trabalho já foi passado duas vezes",
   delivered_line: (went, not) => {
     const parts: string[] = [];
     if (went.length) parts.push(cap(list(went.map((d) => `${d.handed ? "passado a" : "enviado para"} ${d.name}`))));

@@ -312,10 +312,14 @@ export const de: Words = {
   handoff_dead: (name, taf) => `${name} hat nicht beendet, was ${taf} übergeben hat`,
   handoff_never_started: "Nie gestartet",
   handoff_note: (taf, name) => `${name} hat nicht beendet, was ${taf} übergeben hat. Sende es auf der Seite von ${taf} erneut.`,
+  handoff_note_acted: (taf, name) => `${name} hat nicht beendet, was ${taf} übergeben hat, und hat möglicherweise schon gehandelt. Prüfe die Seite von ${name}, bevor etwas erneut gesendet wird.`,
   handed_maybe: (name) => `Übergeben an ${name} · möglicherweise erledigt: prüfe die Seite von ${name}`,
+  handed_passed: (name, to) => `Übergeben an ${name} · weitergegeben an ${to}`,
   handoff_already_acted: "es hatte bereits gehandelt: prüfe seine Seite, bevor etwas erneut gesendet wird",
   handoff_maybe_acted: "es hat möglicherweise bereits gehandelt: prüfe seine Seite, bevor etwas erneut gesendet wird",
   handoff_nothing_note: (taf, name, n) => `${name} hat mit den letzten ${n} Übergaben von ${taf} nichts getan. Öffne die Seite von ${taf}, um zu sehen, warum.`,
+  handoff_none: (name, why) => `Nichts an ${name} zu übergeben${why ? `: ${why}` : ""}`,
+  handoff_circle: (name) => `Nicht an ${name} zurückgegeben: diese Arbeit war dort schon`,
   delivery_retrying: (name, t) => `Noch nicht an ${name} zugestellt: neuer Versuch ${t ? at(t) : "jetzt"}`,
   delivery_not_sent: (name, why) => `Nicht an ${name} zugestellt${why ? `: ${why}` : ""}`,
   delivery_note: (taf, name, why) => `${taf} hat nicht an ${name} zugestellt${why ? `: ${why}` : ""}. Sende es auf der Seite von ${taf} erneut oder öffne Coach, um Hilfe zu bekommen.`,
@@ -326,6 +330,7 @@ export const de: Words = {
   why_retry_failed: "der neue Versuch wurde nicht beendet",
   why_retry_stopped: "der neue Versuch wurde gestoppt",
   why_handoff_failed: "die Übergabe ist fehlgeschlagen",
+  why_too_far: "diese Arbeit wurde schon zweimal weitergegeben",
   delivered_line: (went, not) => {
     const parts: string[] = [];
     if (went.length) parts.push(cap(list(went.map((d) => `${d.handed ? "übergeben an" : "gesendet an"} ${d.name}`))));

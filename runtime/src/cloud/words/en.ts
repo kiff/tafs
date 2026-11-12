@@ -333,10 +333,15 @@ export const en = {
   handoff_dead: (name: string, taf: string) => `${name} didn't finish what ${taf} handed it`,
   handoff_never_started: "Never started",
   handoff_note: (taf: string, name: string) => `${name} didn't finish what ${taf} handed it. Send it again from ${taf}'s page.`,
+  handoff_note_acted: (taf: string, name: string) => `${name} didn't finish what ${taf} handed it, and it may have already acted. Check ${name}'s page before anything is sent again.`,
   handed_maybe: (name: string) => `Handed to ${name} · it may have been done: check ${name}'s page`,
+  handed_passed: (name: string, to: string) => `Handed to ${name} · it handed it on to ${to}`,
   handoff_already_acted: "it had already acted: check its page before anything is sent again",
   handoff_maybe_acted: "it may have already acted: check its page before anything is sent again",
   handoff_nothing_note: (taf: string, name: string, n: number) => `${name} did nothing with the last ${n} hand-offs from ${taf}. Open ${taf}'s page to see why.`,
+  // A hand-off the taf had nothing for, in its own words, and one stopped where the work would have gone back to a taf that had it.
+  handoff_none: (name: string, why?: string) => `Nothing to hand to ${name}${why ? `: ${why}` : ""}`,
+  handoff_circle: (name: string) => `Not handed back to ${name}: it already had this work`,
   delivery_retrying: (name: string, t?: When) => `Not delivered to ${name} yet: trying again${t ? ` at ${bare(t)}` : " now"}`,
   delivery_not_sent: (name: string, why?: string) => `Not delivered to ${name}${why ? `: ${why}` : ""}`,
   delivery_note: (taf: string, name: string, why?: string) => `${taf} didn't deliver to ${name}${why ? `: ${why}` : ""}. Send it again from ${taf}'s page, or open Coach for help.`,
@@ -347,6 +352,7 @@ export const en = {
   why_retry_failed: "the retry didn't finish",
   why_retry_stopped: "the retry was stopped",
   why_handoff_failed: "the hand-over failed",
+  why_too_far: "this work was already handed on twice",
   // The line above a run's report in the thread (delivery.ts deliveredLine): where its result went, each place once.
   delivered_line: (went: Array<{ name: string; handed: boolean }>, not: Array<{ name: string; retrying: boolean }>) => {
     const w = went.map((d) => `${d.handed ? "handed to" : "sent to"} ${d.name}`);

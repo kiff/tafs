@@ -224,7 +224,9 @@ what each field takes in words (`fill`), and drafts the place with `taf_dial` as
 next version, which the owner installs (`runtime/src/cloud/setupdef.ts`). A place moves no
 money: a money tool is never a place, and tafs cloud refuses one the taf's Cards count in money,
 at the dial and when the version goes live (`places.ts`). Another taf can be the place: the result becomes its
-work, one hop, never back and never Coach. Opened from a delivery that wasn't made ("Rae
+work, never Coach, and that taf may hand its own result on once more. tafs cloud hands one piece of
+work on twice at most and never to a taf that already had it, and Coach says so when the owner asks
+for a longer chain or a loop (skill `the-dial@4`). Opened from a delivery that wasn't made ("Rae
 didn't deliver to Google Sheets · Refunds 2026"), Coach reads the taf's last request for why
 and proposes the fix as a version; it never retries the delivery itself, which is Send again
 on the taf's page (`docs/reliability.md`, "The taf's own places").
