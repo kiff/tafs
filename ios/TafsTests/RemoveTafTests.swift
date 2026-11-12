@@ -53,6 +53,35 @@ final class RemoveTafTests: XCTestCase {
         XCTAssertNil(model.cloudTaf(for: rae))
     }
 
+    /// Before Face ID, the confirmation says what goes with the taf, in tafs cloud's words; reading
+    /// them removes nothing. Without them (an older tafs cloud, no words, no answer) it says only
+    /// what it always did.
+    func testTheConfirmationSaysWhatGoesWithTheTafInTafsCloudsWords() async throws {
+        let (model, rae) = try await signedIn()
+        StubProtocol.responses["GET /v1/tafs/depl_1/removal"] = (200, #"{"taf":"depl_1","goes":["Qonto"],"stays":[{"app":"Stripe","used_by":["Chargebacks"]}],"words":"Qonto goes with it. Stripe stays: Chargebacks uses it."}"#)
+        let words = await model.removalWords(rae)
+        XCTAssertEqual(words, "Qonto goes with it. Stripe stays: Chargebacks uses it.")
+        XCTAssertEqual(AppModel.removeBody("It's removed.", goes: words), "It's removed.\n\nQonto goes with it. Stripe stays: Chargebacks uses it.")
+        XCTAssertTrue(sent("DELETE", "/v1/tafs/depl_1").isEmpty, "reading the words removes nothing")
+        XCTAssertTrue(StubProtocol.sent.allSatisfy { $0.url?.path.hasSuffix("/revoke") != true }, "and revokes nothing")
+
+        StubProtocol.responses["GET /v1/tafs/depl_1/removal"] = (200, #"{"taf":"depl_1","goes":[],"stays":[],"words":null}"#)
+        let none = await model.removalWords(rae)
+        XCTAssertNil(none, "nothing could be read: no words")
+        XCTAssertEqual(AppModel.removeBody("It's removed.", goes: none), "It's removed.")
+        StubProtocol.responses["GET /v1/tafs/depl_1/removal"] = (404, #"{"error":"not found"}"#)
+        let older = await model.removalWords(rae)
+        XCTAssertNil(older, "a tafs cloud from before the route")
+        StubProtocol.responses["GET /v1/tafs/depl_1/removal"] = (200, #"{"words":["a list"]}"#)
+        let odd = await model.removalWords(rae)
+        XCTAssertNil(odd, "anything but words is none")
+
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let file = try String(contentsOf: views.appendingPathComponent("TafDetailView.swift"), encoding: .utf8)
+        XCTAssertTrue(file.contains("removalWords = await model.removalWords(taf.id); confirmRemove = true"), "read before the confirmation opens")
+        XCTAssertTrue(file.contains("Text(AppModel.removeBody(Words.Taf.removeBody, goes: removalWords))"))
+    }
+
     func testSaysWhatIsLeftWhenItIsntFinished() async throws {
         let (model, rae) = try await signedIn()
         StubProtocol.responses["POST /v1/me/mandates/rae-k3f9-stripe_refund/revoke"] = (503, #"{"error":"down"}"#)
