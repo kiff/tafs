@@ -395,7 +395,7 @@ class PlanqueTest {
     m.reconnect(g)
     assertTrue(transport.requestsTo("POST /v1/accounts/t_01/grants/g9/approve").isEmpty())
     assertEquals(
-      "Stripe signs in through its connection provider. To sign in again, disconnect it and connect it again.",
+      "Stripe signs in through its connection provider. To sign in again, remove access and connect it again.",
       m.state.value.coachNotes["g9"],
     )
     // Signed out by the provider, it signs in again as any connection does: only a connected one is refused in place.
@@ -1183,6 +1183,20 @@ class PlanqueTest {
     assertTrue(m.state.value.secureSheetErrors["g1"] != null)
   }
 
+  @Test fun afterAPasteTheSheetSaysWhatToDoInTafsCloudsWordsAndConnectIsRightUnderTheKey() {
+    val next = KiffClient.json.decodeFromString<bot.tafs.app.kiff.SecureSheet>(
+      sheet.replace(""""cleared":"Clipboard cleared"}""", """"cleared":"Clipboard cleared","next":"Key pasted. Tap Connect."}"""),
+    )
+    assertEquals("Key pasted. Tap Connect.", next.paste.next)
+    assertNull("a tafs cloud from before it sends none, and nothing is drawn", KiffClient.json.decodeFromString<bot.tafs.app.kiff.SecureSheet>(sheet).paste.next)
+    // On the sheet, Connect comes before Details and the legal line, right under the pasted key.
+    val view = java.io.File("src/main/kotlin/bot/tafs/app/views/SecureKeySheet.kt").readText()
+    val connect = view.indexOf("{ actions.give(grant, key) }")
+    assertTrue(connect > view.indexOf("sheet.paste.next"))
+    assertTrue(connect < view.indexOf("sheet.details?.let"))
+    assertTrue(connect < view.indexOf("sheet.legal?.let"))
+  }
+
   @Test fun onlyTheLast4OfAPastedKeyShowAndTheVendorIsTafsCloudsName() {
     val words = KiffClient.json.decodeFromString<bot.tafs.app.kiff.SecureSheet>(sheet)
     assertEquals("the outer whitespace a paste adds isn't the key's", "sk_live_abcd1234", bot.tafs.app.model.SecureSheetWords.cleaned("  sk_live_abcd1234\n"))
@@ -1279,12 +1293,43 @@ class PlanqueTest {
     val m = model()
     m.refreshConnections()
     assertTrue(m.disconnect("g1"))
-    assertEquals("no taf listed: the question names the vendor alone", listOf("Disconnect mcp.stripe.com?"), auth.asked)
+    assertEquals("no taf listed: the question names the vendor alone", listOf("Remove access to mcp.stripe.com?"), auth.asked)
     assertEquals(1, transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").size)
     assertTrue("read again", transport.requestsTo(grants).size >= 2)
     auth.confirms = false
     assertFalse(m.disconnect("g1"))
     assertEquals(1, transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").size)
+  }
+
+  // MARK: Plain words for ending access (the owner, 12 Nov: "connection" and "disconnect" assume too much)
+
+  @Test fun aRequestNotAnsweredIsCancelledAndASignInNeverBackTooElseAccessIsRemoved() {
+    fun g(status: String, extra: String = "") = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(grant("g1", status, extra = ",\"vendor\":\"Stripe\"$extra"))
+    val words = bot.tafs.app.model.ConnectionWords
+    val pending = g("pending")
+    assertTrue(pending.cancellable)
+    assertEquals("Cancel the request", words.endButton(pending))
+    assertEquals("Cancel the request", words.cancelButton(pending))
+    assertEquals("Cancel the request for Stripe?", words.cancelTitle(pending))
+    val waiting = g("approved", ",\"signed_in\":false")
+    assertTrue(waiting.waitingSignIn && waiting.cancellable)
+    assertEquals("Cancel the sign-in to Stripe?", words.cancelTitle(waiting))
+    val connected = g("connected")
+    assertFalse(connected.cancellable)
+    assertEquals("Remove access", words.endButton(connected))
+  }
+
+  @Test fun removingAKeysAccessSaysTheKeyIsDeletedFromTafsNeverRevokedAtTheVendor() {
+    val words = bot.tafs.app.model.ConnectionWords
+    val key = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(keyGrant("connected"))
+    assertTrue(key.takesKey)
+    val body = words.disconnectBody(key, "Overdue invoices")
+    assertTrue(body, body.contains("The key is deleted from tafs."))
+    assertFalse(body, body.contains("revoked"))
+    assertFalse(body, body.contains("leave KIFF"))
+    // A sign-in, by contrast, is revoked at the vendor when nothing else uses it.
+    val signIn = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(grant("g1", "connected", extra = ",\"vendor\":\"Stripe\""))
+    assertTrue(words.disconnectBody(signIn, null).contains("it's revoked at Stripe"))
   }
 
   // MARK: A removed taf takes its connections with it (the owner, 5 Nov: they stayed connected and Coach offered them again)
@@ -1398,16 +1443,16 @@ class PlanqueTest {
   /** Disconnect names the one taf it ends, says other tafs' connections stay, and the fingerprint prompt asks the same. */
   @Test fun disconnectNamesTheOneTafItEndsInTheConfirmAndThePrompt() = runTest {
     val g = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(grant("g1", "connected", extra = ",\"vendor\":\"Stripe\""))
-    assertEquals("Disconnect Stripe from Invoice reminders?", bot.tafs.app.model.ConnectionWords.disconnectTitle(g, "Invoice reminders"))
-    assertEquals("Disconnect Stripe?", bot.tafs.app.model.ConnectionWords.disconnectTitle(g, null))
+    assertEquals("Remove access to Stripe for Invoice reminders?", bot.tafs.app.model.ConnectionWords.disconnectTitle(g, "Invoice reminders"))
+    assertEquals("Remove access to Stripe?", bot.tafs.app.model.ConnectionWords.disconnectTitle(g, null))
     val body = bot.tafs.app.model.ConnectionWords.disconnectBody(g, "Invoice reminders")
-    assertTrue(body, body.startsWith("Invoice reminders' Stripe tools stop working.") && body.contains("Other connections to Stripe stay connected."))
+    assertTrue(body, body.startsWith("Invoice reminders' Stripe tools stop working.") && body.contains("Other tafs that use Stripe keep their access."))
     // Another taf whose Card draws on these tools stops too, and is named (qa-kiff on tafs#546).
-    assertEquals("Disconnect Stripe from Refunds? Chargebacks stops too.", bot.tafs.app.model.ConnectionWords.disconnectTitle(g, "Refunds", listOf("Chargebacks")))
+    assertEquals("Remove access to Stripe for Refunds? Chargebacks stops too.", bot.tafs.app.model.ConnectionWords.disconnectTitle(g, "Refunds", listOf("Chargebacks")))
     val shared = bot.tafs.app.model.ConnectionWords.disconnectBody(g, "Refunds", listOf("Chargebacks"))
     assertTrue(shared, shared.contains("Chargebacks' Card also uses these tools, so it stops too."))
     assertEquals("Coach's", bot.tafs.app.model.Words.possessive("Coach"))
-    assertTrue(bot.tafs.app.model.ConnectionWords.disconnectBody(g, null).startsWith("No taf uses this Stripe connection now."))
+    assertTrue(bot.tafs.app.model.ConnectionWords.disconnectBody(g, null).startsWith("No taf uses Stripe now."))
     // The fingerprint prompt: the taf the connection was set up for, by name.
     reads()
     transport.answer(
@@ -1420,7 +1465,7 @@ class PlanqueTest {
     m.refresh()
     m.refreshConnections()
     assertTrue(m.disconnect("g1"))
-    assertEquals(listOf("Disconnect Stripe from Refunds?"), auth.asked)
+    assertEquals(listOf("Remove access to Stripe for Refunds?"), auth.asked)
   }
 
   /** The fingerprint prompt names another taf whose Card draws on the connection's tools: it stops too. */
@@ -1433,7 +1478,7 @@ class PlanqueTest {
     m.refresh()
     m.refreshConnections()
     assertTrue(m.disconnect("g1"))
-    assertEquals(listOf("Disconnect Stripe from Refunds? Chargebacks stops too."), auth.asked)
+    assertEquals(listOf("Remove access to Stripe for Refunds? Chargebacks stops too."), auth.asked)
   }
 
   @Test fun planquesOwnRefusalsSayWhatHappened() {

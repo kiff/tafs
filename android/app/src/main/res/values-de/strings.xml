@@ -10,6 +10,7 @@
     <string name="alert_answered">Ein taf hat jemandem geantwortet</string>
     <string name="alert_approve_once">Einmal genehmigen…</string>
     <string name="alert_by_email">Per E-Mail</string>
+    <string name="alert_example">Beispiel</string>
     <string name="alert_foot_cant_answer_holds">Benachrichtigungen gehen an die Personen, die zurückgehaltene Aufrufe beantworten dürfen. Deine Rolle in diesem Konto darf das nicht.</string>
     <string name="alert_foot_tells_you_device">Wenn ein taf dich braucht, meldet sich dieses %1$s, auch wenn tafs geschlossen ist. Nichts wird gesendet, bevor du genehmigst.</string>
     <string name="alert_haptics">Haptik</string>
@@ -765,7 +766,7 @@
     <string name="connect_apps_clearing">Wird entfernt…</string>
     <string name="connect_apps_connect">Verbinden</string>
     <string name="connect_apps_connected">Verbunden ✓</string>
-    <string name="connect_apps_disconnect_why">Wenn du eine trennst, werden ihre Tools nur von diesem taf entfernt und von jedem taf, dessen Card sie nutzt. Andere Verbindungen bleiben.</string>
+    <string name="connect_apps_disconnect_why">Wenn du einen Zugriff entfernst, werden seine Tools nur von diesem taf entfernt und von jedem taf, dessen Card sie nutzt. Andere tafs behalten ihre.</string>
     <string name="connect_apps_manage">Verwalten</string>
     <string name="connect_apps_more">Mehr Apps zeigen</string>
     <string name="connect_apps_none">Keine App mit diesem Namen. Coach kann eine verbinden, die nicht aufgeführt ist.</string>
@@ -776,6 +777,8 @@
     <string name="connect_apps_your_connections">Deine %1$s-Verbindungen</string>
     <string name="connect_apps_connect_taf_make_one">Apps werden für einen taf verbunden. Erstelle zuerst einen und verbinde dann hier seine Apps.</string>
     <string name="connect_apps_not_read">Die Apps konnten nicht gelesen werden. %1$s</string>
+    <string name="connect_cancel_request_button">Anfrage abbrechen</string>
+    <string name="connect_cancel_request_title">Anfrage für %1$s abbrechen?</string>
     <string name="connect_cancel_sign_in_body">Noch ist nichts verbunden. Verbinde %1$s erneut über Coach oder „Apps verbinden“, wenn du so weit bist.</string>
     <string name="connect_cancel_sign_in_button">Anmeldung abbrechen</string>
     <string name="connect_cancel_sign_in_keep_waiting">Weiter warten</string>
@@ -816,15 +819,16 @@
         <item quantity="one">%2$s stoppt ebenfalls.</item>
         <item quantity="other">%2$s stoppen ebenfalls.</item>
     </plurals>
-    <string name="connect_disconnect_no_taf_uses">Kein taf nutzt diese %1$s-Verbindung mehr. Ihre Tools verlassen KIFF.</string>
-    <string name="connect_disconnect_rest">Andere Verbindungen zu %1$s bleiben verbunden. Nutzt keine andere Verbindung diese Anmeldung, wird sie bei %1$s widerrufen. Beim erneuten Verbinden wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden.</string>
-    <string name="connect_disconnect_title">%1$s trennen?</string>
-    <string name="connect_disconnect_title_from">%1$s von %2$s trennen?</string>
+    <string name="connect_disconnect_no_taf_uses">Kein taf nutzt %1$s mehr.</string>
+    <string name="connect_disconnect_rest">Andere tafs, die %1$s nutzen, behalten ihren Zugriff. Nutzt kein anderer taf diese Anmeldung, wird sie bei %1$s widerrufen. Wenn du %1$s wieder nutzt, wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden.</string>
+    <string name="connect_disconnect_rest_key">Andere tafs, die %1$s nutzen, behalten ihren Zugriff. Der Schlüssel wird aus tafs gelöscht. Wenn du %1$s wieder nutzt, wirst du gebeten, erneut zu genehmigen und einen Schlüssel einzufügen.</string>
+    <string name="connect_disconnect_title">Zugriff auf %1$s entfernen?</string>
+    <string name="connect_disconnect_title_from">Zugriff auf %1$s für %2$s entfernen?</string>
     <string name="connect_disconnect_tools_stop">Die %2$s-Tools von %1$s funktionieren nicht mehr.</string>
-    <string name="connect_disconnect_app_question">%1$s trennen?</string>
+    <string name="connect_disconnect_app_question">Zugriff auf %1$s entfernen?</string>
     <string name="connect_disconnect_body">Seine Aktionen funktionieren für diesen taf nicht mehr.</string>
-    <string name="connect_disconnect_button">Trennen</string>
-    <string name="connect_disconnecting">Wird getrennt…</string>
+    <string name="connect_disconnect_button">Zugriff entfernen</string>
+    <string name="connect_disconnecting">Zugriff wird entfernt…</string>
     <string name="connect_from_removed">Von entfernten tafs</string>
     <string name="connect_give_key_on_sheet">Schlüssel in einer sicheren Ansicht geben</string>
     <string name="connect_give_key_with">Schlüssel mit %1$s geben</string>
@@ -854,7 +858,7 @@
     <string name="connect_no_such_connection">Es gibt keine Verbindung mit dieser ID.</string>
     <string name="connect_no_taf">Erstelle zuerst einen taf: Eine App wird verbunden, damit ein taf sie nutzt.</string>
     <string name="connect_not_connected">Nicht verbunden. %1$s</string>
-    <string name="connect_not_disconnected">Nicht getrennt. %1$s</string>
+    <string name="connect_not_disconnected">Zugriff nicht entfernt. %1$s</string>
     <string name="connect_not_set_up_here">Das Verbinden von Apps ist für dieses Konto auf diesem Telefon nicht eingerichtet.</string>
     <string name="connect_not_set_up_here_iphone">Das Verbinden von Apps ist für dieses Konto auf diesem Telefon nicht eingerichtet. Beginne in tafs auf einem iPhone.</string>
     <string name="connect_nothing_signed_in">Es wurde nichts angemeldet. Versuch es erneut.</string>
@@ -896,7 +900,7 @@
     <string name="connect_taf_not_tafs_cloud_apps">Dieser taf ist noch nicht auf tafs cloud, daher können keine Apps für ihn verbunden werden.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud hat keine Verbindung zum Genehmigen genannt</string>
     <string name="connect_the_vendors_page">die Seite des Anbieters</string>
-    <string name="connect_through_provider">%1$s meldet sich über seinen Verbindungsanbieter an. Um dich erneut anzumelden, trenne es und verbinde es neu.</string>
+    <string name="connect_through_provider">%1$s meldet sich über seinen Verbindungsanbieter an. Um dich erneut anzumelden, entferne den Zugriff und verbinde es neu.</string>
     <string name="connect_used_by_many">Behalten: Die Cards von %1$s nutzen sie</string>
     <string name="connect_used_by_one">Behalten: %2$s Card nutzt sie</string>
     <string name="connect_which_taf">Für welchen taf ist das?</string>

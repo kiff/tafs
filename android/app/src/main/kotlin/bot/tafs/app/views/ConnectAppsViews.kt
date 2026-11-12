@@ -229,9 +229,9 @@ fun ConnectAppsSheet(
                 }
                 // A sign-in that never came back is cancelled, not disconnected: nothing was connected.
                 if (onDisconnect != null) Text(
-                  if (g.waitingSignIn) bot.tafs.app.model.ConnectionWords.CANCEL_SIGN_IN else ConnectAppsWords.DISCONNECT,
+                  bot.tafs.app.model.ConnectionWords.endButton(g),
                   style = scaled(15, FontWeight.SemiBold, Theme.no),
-                  modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { if (g.waitingSignIn) confirmingCancel = g else confirmingDisconnect = g }.padding(top = 10.dp),
+                  modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { if (g.cancellable) confirmingCancel = g else confirmingDisconnect = g }.padding(top = 10.dp),
                 )
               }
             }
@@ -289,7 +289,7 @@ fun ConnectAppsSheet(
         title = { Text(bot.tafs.app.model.ConnectionWords.cancelTitle(g)) },
         text = { Text(bot.tafs.app.model.ConnectionWords.cancelBody(g)) },
         confirmButton = {
-          androidx.compose.material3.TextButton({ confirmingCancel = null; onDisconnect?.invoke(g.id) }, modifier = Modifier.confirms()) { Text(bot.tafs.app.model.ConnectionWords.CANCEL_IT, color = Theme.no) }
+          androidx.compose.material3.TextButton({ confirmingCancel = null; onDisconnect?.invoke(g.id) }, modifier = Modifier.confirms()) { Text(bot.tafs.app.model.ConnectionWords.cancelButton(g), color = Theme.no) }
         },
         dismissButton = { androidx.compose.material3.TextButton({ confirmingCancel = null }) { Text(bot.tafs.app.model.ConnectionWords.KEEP_WAITING, color = Theme.soft) } },
       )

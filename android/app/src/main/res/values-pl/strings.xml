@@ -10,6 +10,7 @@
     <string name="alert_answered">Taf komuś odpowiedział</string>
     <string name="alert_approve_once">Zatwierdź raz…</string>
     <string name="alert_by_email">Przez e-mail</string>
+    <string name="alert_example">Przykład</string>
     <string name="alert_foot_cant_answer_holds">Alerty trafiają do osób, które mogą odpowiadać na oczekujące wywołania. Twoja rola na tym koncie nie może.</string>
     <string name="alert_foot_tells_you_device">Gdy taf czeka na Ciebie, ten %1$s Cię o tym powiadomi, nawet gdy tafs jest zamknięte. Nic nie zostanie wysłane, dopóki nie zatwierdzisz.</string>
     <string name="alert_haptics">Wibracje</string>
@@ -825,7 +826,7 @@
     <string name="connect_apps_clearing">Czyszczenie…</string>
     <string name="connect_apps_connect">Połącz</string>
     <string name="connect_apps_connected">Połączono ✓</string>
-    <string name="connect_apps_disconnect_why">Rozłączenie jednego usuwa jego narzędzia tylko z tego tafa i z każdego tafa, którego Card ich używa. Inne połączenia zostają.</string>
+    <string name="connect_apps_disconnect_why">Usunięcie dostępu zabiera jego narzędzia tylko z tego tafa i z każdego tafa, którego Card ich używa. Inne tafy zachowują swoje.</string>
     <string name="connect_apps_manage">Zarządzaj</string>
     <string name="connect_apps_more">Pokaż więcej aplikacji</string>
     <string name="connect_apps_none">Brak aplikacji o tej nazwie. Coach może połączyć taką, której nie ma na liście.</string>
@@ -836,6 +837,8 @@
     <string name="connect_apps_your_connections">Twoje połączenia %1$s</string>
     <string name="connect_apps_connect_taf_make_one">Aplikacje łączy się dla tafa. Najpierw go utwórz, a potem połącz tu jego aplikacje.</string>
     <string name="connect_apps_not_read">Nie udało się odczytać aplikacji. %1$s</string>
+    <string name="connect_cancel_request_button">Anuluj prośbę</string>
+    <string name="connect_cancel_request_title">Anulować prośbę dla %1$s?</string>
     <string name="connect_cancel_sign_in_body">Nic nie jest jeszcze połączone. Połącz %1$s ponownie z Coacha lub z Połącz aplikacje, kiedy zechcesz.</string>
     <string name="connect_cancel_sign_in_button">Anuluj logowanie</string>
     <string name="connect_cancel_sign_in_keep_waiting">Czekaj dalej</string>
@@ -884,15 +887,16 @@
         <item quantity="many">%2$s też przestają działać.</item>
         <item quantity="other">%2$s też przestają działać.</item>
     </plurals>
-    <string name="connect_disconnect_no_taf_uses">Żaden taf nie używa teraz tego połączenia %1$s. Jego narzędzia znikną z KIFF.</string>
-    <string name="connect_disconnect_rest">Inne połączenia z %1$s pozostaną połączone. Jeśli żadne inne połączenie nie używa tego logowania, zostanie ono unieważnione w %1$s. Ponowne połączenie wymaga ponownego zatwierdzenia i zalogowania.</string>
-    <string name="connect_disconnect_title">Rozłączyć %1$s?</string>
-    <string name="connect_disconnect_title_from">Rozłączyć %1$s od %2$s?</string>
+    <string name="connect_disconnect_no_taf_uses">Żaden taf nie używa teraz %1$s.</string>
+    <string name="connect_disconnect_rest">Inne tafy, które używają %1$s, zachowują dostęp. Jeśli żaden inny taf nie używa tego logowania, zostanie ono cofnięte w %1$s. Ponowne użycie %1$s poprosi Cię o zatwierdzenie i ponowne zalogowanie.</string>
+    <string name="connect_disconnect_rest_key">Inne tafy, które używają %1$s, zachowują dostęp. Klucz zostanie usunięty z tafs. Ponowne użycie %1$s poprosi Cię o zatwierdzenie i ponowne wklejenie klucza.</string>
+    <string name="connect_disconnect_title">Usunąć dostęp do %1$s?</string>
+    <string name="connect_disconnect_title_from">Usunąć dostęp do %1$s dla %2$s?</string>
     <string name="connect_disconnect_tools_stop">Narzędzia %2$s tafa %1$s przestaną działać.</string>
-    <string name="connect_disconnect_app_question">Rozłączyć %1$s?</string>
+    <string name="connect_disconnect_app_question">Usunąć dostęp do %1$s?</string>
     <string name="connect_disconnect_body">Jej akcje przestaną działać dla tego tafa.</string>
-    <string name="connect_disconnect_button">Rozłącz</string>
-    <string name="connect_disconnecting">Rozłączanie…</string>
+    <string name="connect_disconnect_button">Usuń dostęp</string>
+    <string name="connect_disconnecting">Usuwanie dostępu…</string>
     <string name="connect_from_removed">Z usuniętych tafs</string>
     <string name="connect_give_key_on_sheet">Przekaż klucz na bezpiecznym ekranie</string>
     <string name="connect_give_key_with">Przekaż klucz przez %1$s</string>
@@ -928,7 +932,7 @@
     <string name="connect_no_such_connection">Nie ma połączenia o tym identyfikatorze.</string>
     <string name="connect_no_taf">Najpierw utwórz tafa: aplikację łączy się po to, by taf mógł jej używać.</string>
     <string name="connect_not_connected">Nie połączono. %1$s</string>
-    <string name="connect_not_disconnected">Nie rozłączono. %1$s</string>
+    <string name="connect_not_disconnected">Dostęp nie został usunięty. %1$s</string>
     <string name="connect_not_set_up_here">Łączenie aplikacji nie jest skonfigurowane dla tego konta z tego telefonu.</string>
     <string name="connect_not_set_up_here_iphone">Łączenie aplikacji nie jest skonfigurowane dla tego konta z tego telefonu. Zacznij od tafs na iPhonie.</string>
     <string name="connect_nothing_signed_in">Nic nie zostało zalogowane. Spróbuj ponownie.</string>
@@ -970,7 +974,7 @@
     <string name="connect_taf_not_tafs_cloud_apps">Ten taf nie jest jeszcze w tafs cloud, więc nie można dla niego łączyć aplikacji.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud nie wskazał połączenia do zatwierdzenia</string>
     <string name="connect_the_vendors_page">strona dostawcy</string>
-    <string name="connect_through_provider">%1$s loguje się przez swojego dostawcę połączeń. Aby zalogować się ponownie, rozłącz go i połącz jeszcze raz.</string>
+    <string name="connect_through_provider">%1$s loguje się przez swojego dostawcę połączeń. Aby zalogować się ponownie, usuń dostęp i połącz go jeszcze raz.</string>
     <string name="connect_used_by_many">Zachowane: używają go Card tafs %1$s</string>
     <string name="connect_used_by_one">Zachowane: używa go Card %1$s</string>
     <string name="connect_which_taf">Dla którego tafa to jest?</string>

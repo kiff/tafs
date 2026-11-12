@@ -7,6 +7,7 @@
   "alert.answered": "Een taf heeft iemand geantwoord",
   "alert.approve_once": "Eenmalig goedkeuren…",
   "alert.by_email": "Via e-mail",
+  "alert.example": "Voorbeeld",
   "alert.foot.cant_answer_holds": "Meldingen gaan naar de mensen die vastgehouden aanroepen mogen beantwoorden. Jouw rol in dit account mag dat niet.",
   "alert.foot.tells_you_device": "Als een taf op jou wacht, laat deze {device} het je weten, ook als tafs gesloten is. Er wordt niets verzonden tot je goedkeurt.",
   "alert.haptics": "Trillingen",

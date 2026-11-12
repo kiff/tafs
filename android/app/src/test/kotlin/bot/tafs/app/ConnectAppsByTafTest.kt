@@ -148,6 +148,14 @@ class ConnectAppsByTafTest {
     assertFalse(m.state.value.clearingRemoved)
   }
 
+  @Test fun removingAccessReadsConnectAppsAgainSoItNoLongerSaysConnected() = runTest {
+    val m = model()
+    val before = transport.requestsTo("GET /v1/connect/apps").size
+    transport.answer("DELETE /v1/accounts/t_01/grants/g1", 200, planqueGrant("g1", "gone-1").replace("connected", "disconnected"))
+    assertTrue(m.disconnect("g1"))
+    assertEquals("Connect apps is read again at once, not when it's next opened", before + 1, transport.requestsTo("GET /v1/connect/apps").size)
+  }
+
   @Test fun oneThatFailsIsSaidAndTheRestAreCleared() = runTest {
     val m = model()
     transport.answer("DELETE /v1/accounts/t_01/grants/g1", 200, planqueGrant("g1", "gone-1").replace("connected", "disconnected"))

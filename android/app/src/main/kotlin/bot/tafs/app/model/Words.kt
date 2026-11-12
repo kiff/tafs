@@ -16,6 +16,7 @@ object Words {
     val answered: String get() = Res.s(R.string.alert_answered)
     val approveOnce: String get() = Res.s(R.string.alert_approve_once)
     val byEmail: String get() = Res.s(R.string.alert_by_email)
+    val example: String get() = Res.s(R.string.alert_example)
     object Foot {
       val cantAnswerHolds: String get() = Res.s(R.string.alert_foot_cant_answer_holds)
       fun tellsYouDevice(device: String): String = Res.s(R.string.alert_foot_tells_you_device, device)
@@ -808,6 +809,10 @@ object Words {
     }
     val appsConnectTafMakeOne: String get() = Res.s(R.string.connect_apps_connect_taf_make_one)
     fun appsNotRead(why: String): String = Res.s(R.string.connect_apps_not_read, why)
+    object CancelRequest {
+      val button: String get() = Res.s(R.string.connect_cancel_request_button)
+      fun title(vendor: String): String = Res.s(R.string.connect_cancel_request_title, vendor)
+    }
     object CancelSignIn {
       fun body(vendor: String): String = Res.s(R.string.connect_cancel_sign_in_body, vendor)
       val button: String get() = Res.s(R.string.connect_cancel_sign_in_button)
@@ -843,6 +848,7 @@ object Words {
       fun alsoStops(count: Int, names: String): String = Res.p(R.plurals.connect_disconnect_also_stops, count, Res.number(count), names)
       fun noTafUses(vendor: String): String = Res.s(R.string.connect_disconnect_no_taf_uses, vendor)
       fun rest(vendor: String): String = Res.s(R.string.connect_disconnect_rest, vendor)
+      fun restKey(vendor: String): String = Res.s(R.string.connect_disconnect_rest_key, vendor)
       fun title(vendor: String): String = Res.s(R.string.connect_disconnect_title, vendor)
       fun titleFrom(vendor: String, taf: String): String = Res.s(R.string.connect_disconnect_title_from, vendor, taf)
       fun toolsStop(owner: String, vendor: String): String = Res.s(R.string.connect_disconnect_tools_stop, owner, vendor, Words.possessive(owner))

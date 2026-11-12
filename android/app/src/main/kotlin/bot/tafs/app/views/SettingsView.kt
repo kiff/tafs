@@ -292,8 +292,9 @@ private fun PlanRow(state: AppState, onUsage: () -> Unit) {
 @Composable
 private fun LockScreenExample(how: String, words: String) {
   Column(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp).clip(RoundedCornerShape(12.dp)).background(Theme.raised).padding(10.dp)) {
-    Text("${Words.App.name} · ${how.lowercase()}", style = scaled(11, color = Theme.dim, mono = true))
-    Text(words, style = scaled(14, color = Theme.ink))
+    // An example of what an alert looks like, never one of the account's: said so, so no one looks for that taf.
+    Text("${Words.Alert.example.uppercase()} · ${Words.App.name} · ${how.lowercase()}", style = scaled(11, color = Theme.dim, mono = true))
+    Text(words, style = scaled(14, color = Theme.soft))
   }
 }
 

@@ -133,9 +133,28 @@ fun SecureKeyContent(
   if (key.isNotEmpty()) {
     Text(SecureSheetWords.pasted(sheet, key), style = scaled(15, FontWeight.SemiBold, Theme.ink, mono = true))
     sheet.paste.cleared?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
+    // What to do now, in tafs cloud's words: Connect is right below.
+    sheet.paste.next?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.amberText)) }
   }
 
   // Its Card, when the setup has one drafted: tafs cloud's title over KIFF's own lines (the one-signature step, when it ships).
+
+  state.coachNotes[bot.tafs.app.model.ConnectWords.cardKey(grant.id)]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+
+  // Connect, right under the pasted key. The first line is checked against the grant this phone signs: a "read only" that
+  // doesn't hold leaves nothing to sign.
+  val holds = grant.digestMatches && SecureSheetWords.firstLineHolds(sheet, grant)
+  if (!holds) {
+    Text(bot.tafs.app.model.CoachWords.DIGEST_MISMATCH, style = scaled(13, color = Theme.no))
+  } else {
+    ApprovalGate {
+      PrimaryButton(
+        if (busy) state.connectStep ?: bot.tafs.app.model.Words.Approval.approving else sheet.button.ifBlank { bot.tafs.app.model.ConnectWords.giveKeyWith(LocalBiometry.current) },
+        { actions.give(grant, key) },
+        enabled = !busy && ready && key.isNotBlank(),
+      )
+    }
+  }
 
   // Details, collapsed: the technical lines and the connection server's own words, verbatim.
   sheet.details?.let { details ->
@@ -158,21 +177,7 @@ fun SecureKeyContent(
     }
   }
 
-  state.coachNotes[bot.tafs.app.model.ConnectWords.cardKey(grant.id)]?.let { Text(it, style = scaled(13, color = Theme.no)) }
-
-  // The first line is checked against the grant this phone signs: a "read only" that doesn't hold leaves nothing to sign.
-  if (!grant.digestMatches || !SecureSheetWords.firstLineHolds(sheet, grant)) {
-    Text(bot.tafs.app.model.CoachWords.DIGEST_MISMATCH, style = scaled(13, color = Theme.no))
-  } else {
-    sheet.legal?.let { LegalLine(it) }
-    ApprovalGate {
-      PrimaryButton(
-        if (busy) state.connectStep ?: bot.tafs.app.model.Words.Approval.approving else sheet.button.ifBlank { bot.tafs.app.model.ConnectWords.giveKeyWith(LocalBiometry.current) },
-        { actions.give(grant, key) },
-        enabled = !busy && ready && key.isNotBlank(),
-      )
-    }
-  }
+  if (holds) sheet.legal?.let { LegalLine(it) }
   Text(
     bot.tafs.app.model.ConnectWords.CANCEL,
     style = scaled(15, FontWeight.SemiBold, Theme.dim),

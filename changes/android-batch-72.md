@@ -1,1 +1,4 @@
 - **Android 1.17: explore jobs without creating anything.** An Explore jobs row on Tafs, and a See all jobs row under the jobs strip, open every job to browse, with or without a taf. A job's sheet shows where it was proved, its apps, and what it reported after its test run, with Try it with Coach as its only action.
+- **Plainer words for ending access.** Disconnect is now Remove access. A request not answered yet says Cancel the request. Removing a key's access says the key is deleted from tafs, and Connect apps shows the change at once.
+- **The key sheet's Connect sits right under the pasted key**, with Details below it.
+- **The lock-screen alerts in Account are marked Example.**

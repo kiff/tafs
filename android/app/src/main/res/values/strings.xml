@@ -10,6 +10,7 @@
     <string name="alert_answered">A taf answered someone</string>
     <string name="alert_approve_once">Approve once…</string>
     <string name="alert_by_email">By email</string>
+    <string name="alert_example">Example</string>
     <string name="alert_foot_cant_answer_holds">Alerts go to the people who may answer held calls. Your role on this account can\'t.</string>
     <string name="alert_foot_tells_you_device">When a taf needs you, this %1$s tells you even with tafs closed. Nothing is sent until you approve.</string>
     <string name="alert_haptics">Haptics</string>
@@ -765,7 +766,7 @@
     <string name="connect_apps_clearing">Clearing…</string>
     <string name="connect_apps_connect">Connect</string>
     <string name="connect_apps_connected">Connected ✓</string>
-    <string name="connect_apps_disconnect_why">Disconnecting one removes its tools from that taf only, and from any taf whose Card uses them. Other connections stay.</string>
+    <string name="connect_apps_disconnect_why">Removing access takes its tools from that taf only, and from any taf whose Card uses them. Other tafs keep theirs.</string>
     <string name="connect_apps_manage">Manage</string>
     <string name="connect_apps_more">Show more apps</string>
     <string name="connect_apps_none">No app by that name. Coach can connect one that isn\'t listed.</string>
@@ -776,6 +777,8 @@
     <string name="connect_apps_your_connections">Your %1$s connections</string>
     <string name="connect_apps_connect_taf_make_one">Apps connect for a taf. Make one first, then connect its apps here.</string>
     <string name="connect_apps_not_read">The apps couldn\'t be read. %1$s</string>
+    <string name="connect_cancel_request_button">Cancel the request</string>
+    <string name="connect_cancel_request_title">Cancel the request for %1$s?</string>
     <string name="connect_cancel_sign_in_body">Nothing is connected yet. Connect %1$s again from Coach or Connect apps when you\'re ready.</string>
     <string name="connect_cancel_sign_in_button">Cancel the sign-in</string>
     <string name="connect_cancel_sign_in_keep_waiting">Keep waiting</string>
@@ -816,15 +819,16 @@
         <item quantity="one">%2$s stops too.</item>
         <item quantity="other">%2$s stop too.</item>
     </plurals>
-    <string name="connect_disconnect_no_taf_uses">No taf uses this %1$s connection now. Its tools leave KIFF.</string>
-    <string name="connect_disconnect_rest">Other connections to %1$s stay connected. If no other connection uses this sign-in, it\'s revoked at %1$s. Connecting again asks you to approve and sign in again.</string>
-    <string name="connect_disconnect_title">Disconnect %1$s?</string>
-    <string name="connect_disconnect_title_from">Disconnect %1$s from %2$s?</string>
+    <string name="connect_disconnect_no_taf_uses">No taf uses %1$s now.</string>
+    <string name="connect_disconnect_rest">Other tafs that use %1$s keep their access. If no other taf uses this sign-in, it\'s revoked at %1$s. Using %1$s again asks you to approve and sign in again.</string>
+    <string name="connect_disconnect_rest_key">Other tafs that use %1$s keep their access. The key is deleted from tafs. Using %1$s again asks you to approve and paste a key again.</string>
+    <string name="connect_disconnect_title">Remove access to %1$s?</string>
+    <string name="connect_disconnect_title_from">Remove access to %1$s for %2$s?</string>
     <string name="connect_disconnect_tools_stop">%3$s %2$s tools stop working.</string>
-    <string name="connect_disconnect_app_question">Disconnect %1$s?</string>
+    <string name="connect_disconnect_app_question">Remove access to %1$s?</string>
     <string name="connect_disconnect_body">Its actions stop working for this taf.</string>
-    <string name="connect_disconnect_button">Disconnect</string>
-    <string name="connect_disconnecting">Disconnecting…</string>
+    <string name="connect_disconnect_button">Remove access</string>
+    <string name="connect_disconnecting">Removing access…</string>
     <string name="connect_from_removed">From removed tafs</string>
     <string name="connect_give_key_on_sheet">Give the key on a secure sheet</string>
     <string name="connect_give_key_with">Give the key with %1$s</string>
@@ -854,7 +858,7 @@
     <string name="connect_no_such_connection">There\'s no connection with that id.</string>
     <string name="connect_no_taf">Make a taf first: an app is connected for a taf to use.</string>
     <string name="connect_not_connected">Not connected. %1$s</string>
-    <string name="connect_not_disconnected">Not disconnected. %1$s</string>
+    <string name="connect_not_disconnected">Access not removed. %1$s</string>
     <string name="connect_not_set_up_here">Connecting apps isn\'t set up for this account from this phone.</string>
     <string name="connect_not_set_up_here_iphone">Connecting apps isn\'t set up for this account from this phone. Start from tafs on an iPhone.</string>
     <string name="connect_nothing_signed_in">Nothing was signed in. Try again.</string>
@@ -896,7 +900,7 @@
     <string name="connect_taf_not_tafs_cloud_apps">This taf isn\'t on tafs cloud yet, so apps can\'t be connected for it.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud named no connection to approve</string>
     <string name="connect_the_vendors_page">the vendor\'s page</string>
-    <string name="connect_through_provider">%1$s signs in through its connection provider. To sign in again, disconnect it and connect it again.</string>
+    <string name="connect_through_provider">%1$s signs in through its connection provider. To sign in again, remove access and connect it again.</string>
     <string name="connect_used_by_many">Kept: the Cards of %1$s use it</string>
     <string name="connect_used_by_one">Kept: %2$s Card uses it</string>
     <string name="connect_which_taf">Which taf is this for?</string>

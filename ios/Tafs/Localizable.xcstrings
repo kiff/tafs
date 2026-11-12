@@ -639,6 +639,59 @@
         }
       }
     },
+    "alert.example": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beispiel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Example"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ejemplo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exemple"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esempio"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voorbeeld"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przykład"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exemplo"
+          }
+        }
+      }
+    },
     "alert.foot.cant_answer_holds": {
       "extractionState": "manual",
       "localizations": {
@@ -38140,49 +38193,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wenn du eine trennst, werden ihre Tools nur von diesem taf entfernt und von jedem taf, dessen Card sie nutzt. Andere Verbindungen bleiben."
+            "value": "Wenn du einen Zugriff entfernst, werden seine Tools nur von diesem taf entfernt und von jedem taf, dessen Card sie nutzt. Andere tafs behalten ihre."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disconnecting one removes its tools from that taf only, and from any taf whose Card uses them. Other connections stay."
+            "value": "Removing access takes its tools from that taf only, and from any taf whose Card uses them. Other tafs keep theirs."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desconectar una quita sus herramientas solo de ese taf y de cualquier taf cuya Card las use. Las demás conexiones se mantienen."
+            "value": "Quitar un acceso retira sus herramientas solo de ese taf, y de cualquier taf cuya Card las use. Los demás tafs conservan las suyas."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "En déconnecter une retire ses outils de ce taf uniquement, et de tout taf dont la Card les utilise. Les autres connexions restent."
+            "value": "Retirer un accès retire ses outils de ce taf uniquement, et de tout taf dont la Card les utilise. Les autres tafs gardent les leurs."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scollegarne uno rimuove i suoi strumenti solo da quel taf, e da ogni taf la cui Card li usa. Gli altri collegamenti restano."
+            "value": "Rimuovere un accesso toglie i suoi strumenti solo da quel taf, e da ogni taf la cui Card li usa. Gli altri taf mantengono i loro."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ontkoppel je er een, dan verdwijnen de tools ervan alleen bij dat taf, en bij elk taf waarvan de Card ze gebruikt. Andere koppelingen blijven."
+            "value": "Toegang intrekken haalt de tools alleen weg bij die taf, en bij elke taf waarvan de Card ze gebruikt. Andere tafs houden de hunne."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rozłączenie jednego usuwa jego narzędzia tylko z tego tafa i z każdego tafa, którego Card ich używa. Inne połączenia zostają."
+            "value": "Usunięcie dostępu zabiera jego narzędzia tylko z tego tafa i z każdego tafa, którego Card ich używa. Inne tafy zachowują swoje."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desligar uma remove as suas ferramentas apenas desse taf, e de qualquer taf cujo Card as use. As outras ligações mantêm-se."
+            "value": "Remover um acesso retira as suas ferramentas apenas desse taf, e de qualquer taf cujo Card as use. Os outros tafs mantêm as suas."
           }
         }
       }
@@ -38713,6 +38766,112 @@
           "stringUnit": {
             "state": "translated",
             "value": "Não foi possível ler as apps. %1$@"
+          }
+        }
+      }
+    },
+    "connect.cancel_request.button": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anfrage abbrechen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel the request"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar la solicitud"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la demande"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annulla la richiesta"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verzoek annuleren"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anuluj prośbę"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar o pedido"
+          }
+        }
+      }
+    },
+    "connect.cancel_request.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anfrage für %1$@ abbrechen?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel the request for %1$@?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Cancelar la solicitud para %1$@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuler la demande pour %1$@ ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annullare la richiesta per %1$@?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verzoek voor %1$@ annuleren?"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anulować prośbę dla %1$@?"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar o pedido para %1$@?"
           }
         }
       }
@@ -40507,49 +40666,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kein taf nutzt diese %1$@-Verbindung mehr. Ihre Tools verlassen KIFF."
+            "value": "Kein taf nutzt %1$@ mehr."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No taf uses this %1$@ connection now. Its tools leave KIFF."
+            "value": "No taf uses %1$@ now."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ningún taf usa ahora esta conexión de %1$@. Sus herramientas salen de KIFF."
+            "value": "Ningún taf usa %1$@ ahora."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aucun taf n'utilise cette connexion %1$@ désormais. Ses outils quittent KIFF."
+            "value": "Aucun taf n'utilise %1$@ désormais."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nessun taf usa ora questo collegamento %1$@. I suoi strumenti escono da KIFF."
+            "value": "Nessun taf usa %1$@ ora."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geen enkel taf gebruikt deze %1$@-koppeling nu. De tools ervan verdwijnen uit KIFF."
+            "value": "Geen taf gebruikt %1$@ nu."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Żaden taf nie używa teraz tego połączenia %1$@. Jego narzędzia znikną z KIFF."
+            "value": "Żaden taf nie używa teraz %1$@."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nenhum taf usa agora esta ligação a %1$@. As suas ferramentas saem do KIFF."
+            "value": "Nenhum taf usa %1$@ agora."
           }
         }
       }
@@ -40560,49 +40719,102 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Andere Verbindungen zu %1$@ bleiben verbunden. Nutzt keine andere Verbindung diese Anmeldung, wird sie bei %1$@ widerrufen. Beim erneuten Verbinden wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden."
+            "value": "Andere tafs, die %1$@ nutzen, behalten ihren Zugriff. Nutzt kein anderer taf diese Anmeldung, wird sie bei %1$@ widerrufen. Wenn du %1$@ wieder nutzt, wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Other connections to %1$@ stay connected. If no other connection uses this sign-in, it's revoked at %1$@. Connecting again asks you to approve and sign in again."
+            "value": "Other tafs that use %1$@ keep their access. If no other taf uses this sign-in, it's revoked at %1$@. Using %1$@ again asks you to approve and sign in again."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Las demás conexiones a %1$@ siguen conectadas. Si ninguna otra conexión usa este inicio de sesión, se revoca en %1$@. Volver a conectar te pide aprobar e iniciar sesión otra vez."
+            "value": "Los demás tafs que usan %1$@ conservan su acceso. Si ningún otro taf usa este inicio de sesión, se revoca en %1$@. Usar %1$@ de nuevo te pide aprobar e iniciar sesión otra vez."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les autres connexions à %1$@ restent connectées. Si aucune autre connexion n'utilise cet identifiant, il est révoqué chez %1$@. Connecter à nouveau vous demande d'approuver et de vous reconnecter."
+            "value": "Les autres tafs qui utilisent %1$@ gardent leur accès. Si aucun autre taf n'utilise cet identifiant, il est révoqué chez %1$@. Utiliser %1$@ à nouveau vous demande d'approuver et de vous reconnecter."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gli altri collegamenti a %1$@ restano collegati. Se nessun altro collegamento usa questo accesso, viene revocato su %1$@. Per collegarlo di nuovo dovrai approvare e accedere di nuovo."
+            "value": "Gli altri taf che usano %1$@ mantengono il loro accesso. Se nessun altro taf usa questo login, viene revocato presso %1$@. Usare di nuovo %1$@ ti chiede di approvare e accedere di nuovo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Andere koppelingen met %1$@ blijven gekoppeld. Als geen andere koppeling deze login gebruikt, wordt die bij %1$@ ingetrokken. Opnieuw koppelen vraagt je opnieuw goed te keuren en in te loggen."
+            "value": "Andere tafs die %1$@ gebruiken, houden hun toegang. Als geen andere taf deze aanmelding gebruikt, wordt die bij %1$@ ingetrokken. Als je %1$@ weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inne połączenia z %1$@ pozostaną połączone. Jeśli żadne inne połączenie nie używa tego logowania, zostanie ono unieważnione w %1$@. Ponowne połączenie wymaga ponownego zatwierdzenia i zalogowania."
+            "value": "Inne tafy, które używają %1$@, zachowują dostęp. Jeśli żaden inny taf nie używa tego logowania, zostanie ono cofnięte w %1$@. Ponowne użycie %1$@ poprosi Cię o zatwierdzenie i ponowne zalogowanie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "As outras ligações a %1$@ continuam ligadas. Se nenhuma outra ligação usar este início de sessão, é revogado em %1$@. Ligar novamente pede-lhe para aprovar e iniciar sessão novamente."
+            "value": "Os outros tafs que usam %1$@ mantêm o seu acesso. Se nenhum outro taf usar este início de sessão, é revogado em %1$@. Usar %1$@ novamente pede-lhe que aprove e inicie sessão de novo."
+          }
+        }
+      }
+    },
+    "connect.disconnect.rest_key": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere tafs, die %1$@ nutzen, behalten ihren Zugriff. Der Schlüssel wird aus tafs gelöscht. Wenn du %1$@ wieder nutzt, wirst du gebeten, erneut zu genehmigen und einen Schlüssel einzufügen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other tafs that use %1$@ keep their access. The key is deleted from tafs. Using %1$@ again asks you to approve and paste a key again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los demás tafs que usan %1$@ conservan su acceso. La clave se elimina de tafs. Usar %1$@ de nuevo te pide aprobar y pegar una clave otra vez."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les autres tafs qui utilisent %1$@ gardent leur accès. La clé est supprimée de tafs. Utiliser %1$@ à nouveau vous demande d'approuver et de coller une clé à nouveau."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gli altri taf che usano %1$@ mantengono il loro accesso. La chiave viene eliminata da tafs. Usare di nuovo %1$@ ti chiede di approvare e incollare di nuovo una chiave."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere tafs die %1$@ gebruiken, houden hun toegang. De sleutel wordt uit tafs verwijderd. Als je %1$@ weer gebruikt, word je gevraagd opnieuw goed te keuren en een sleutel te plakken."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inne tafy, które używają %1$@, zachowują dostęp. Klucz zostanie usunięty z tafs. Ponowne użycie %1$@ poprosi Cię o zatwierdzenie i ponowne wklejenie klucza."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Os outros tafs que usam %1$@ mantêm o seu acesso. A chave é eliminada do tafs. Usar %1$@ novamente pede-lhe que aprove e cole uma chave de novo."
           }
         }
       }
@@ -40613,49 +40825,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ trennen?"
+            "value": "Zugriff auf %1$@ entfernen?"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disconnect %1$@?"
+            "value": "Remove access to %1$@?"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Desconectar %1$@?"
+            "value": "¿Quitar el acceso a %1$@?"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Déconnecter %1$@ ?"
+            "value": "Retirer l'accès à %1$@ ?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scollegare %1$@?"
+            "value": "Rimuovere l'accesso a %1$@?"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ontkoppelen?"
+            "value": "Toegang tot %1$@ intrekken?"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rozłączyć %1$@?"
+            "value": "Usunąć dostęp do %1$@?"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desligar %1$@?"
+            "value": "Remover o acesso a %1$@?"
           }
         }
       }
@@ -40666,49 +40878,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ von %2$@ trennen?"
+            "value": "Zugriff auf %1$@ für %2$@ entfernen?"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disconnect %1$@ from %2$@?"
+            "value": "Remove access to %1$@ for %2$@?"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Desconectar %1$@ de %2$@?"
+            "value": "¿Quitar el acceso a %1$@ para %2$@?"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Déconnecter %1$@ de %2$@ ?"
+            "value": "Retirer l'accès à %1$@ pour %2$@ ?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scollegare %1$@ da %2$@?"
+            "value": "Rimuovere l'accesso a %1$@ per %2$@?"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ontkoppelen van %2$@?"
+            "value": "Toegang tot %1$@ voor %2$@ intrekken?"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rozłączyć %1$@ od %2$@?"
+            "value": "Usunąć dostęp do %1$@ dla %2$@?"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desligar %1$@ de %2$@?"
+            "value": "Remover o acesso a %1$@ para %2$@?"
           }
         }
       }
@@ -40772,49 +40984,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ trennen?"
+            "value": "Zugriff auf %1$@ entfernen?"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disconnect %1$@?"
+            "value": "Remove access to %1$@?"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Desconectar %1$@?"
+            "value": "¿Quitar el acceso a %1$@?"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Déconnecter %1$@ ?"
+            "value": "Retirer l'accès à %1$@ ?"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scollegare %1$@?"
+            "value": "Rimuovere l'accesso a %1$@?"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ontkoppelen?"
+            "value": "Toegang tot %1$@ intrekken?"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rozłączyć %1$@?"
+            "value": "Usunąć dostęp do %1$@?"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desligar %1$@?"
+            "value": "Remover o acesso a %1$@?"
           }
         }
       }
@@ -40878,49 +41090,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Trennen"
+            "value": "Zugriff entfernen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disconnect"
+            "value": "Remove access"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desconectar"
+            "value": "Quitar el acceso"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Déconnecter"
+            "value": "Retirer l'accès"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scollega"
+            "value": "Rimuovi l'accesso"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ontkoppelen"
+            "value": "Toegang intrekken"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rozłącz"
+            "value": "Usuń dostęp"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desligar"
+            "value": "Remover o acesso"
           }
         }
       }
@@ -40931,49 +41143,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wird getrennt…"
+            "value": "Zugriff wird entfernt…"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Disconnecting…"
+            "value": "Removing access…"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Desconectando…"
+            "value": "Quitando el acceso…"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Déconnexion…"
+            "value": "Retrait de l'accès…"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Scollegamento…"
+            "value": "Rimozione dell'accesso…"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ontkoppelen…"
+            "value": "Toegang wordt ingetrokken…"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rozłączanie…"
+            "value": "Usuwanie dostępu…"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "A desligar…"
+            "value": "A remover o acesso…"
           }
         }
       }
@@ -42269,49 +42481,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nicht getrennt. %1$@"
+            "value": "Zugriff nicht entfernt. %1$@"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Not disconnected. %1$@"
+            "value": "Access not removed. %1$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No desconectado. %1$@"
+            "value": "Acceso no quitado. %1$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non déconnecté. %1$@"
+            "value": "Accès non retiré. %1$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non scollegato. %1$@"
+            "value": "Accesso non rimosso. %1$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Niet ontkoppeld. %1$@"
+            "value": "Toegang niet ingetrokken. %1$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie rozłączono. %1$@"
+            "value": "Dostęp nie został usunięty. %1$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não desligado. %1$@"
+            "value": "Acesso não removido. %1$@"
           }
         }
       }
@@ -44495,49 +44707,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ meldet sich über seinen Verbindungsanbieter an. Um dich erneut anzumelden, trenne es und verbinde es neu."
+            "value": "%1$@ meldet sich über seinen Verbindungsanbieter an. Um dich erneut anzumelden, entferne den Zugriff und verbinde es neu."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ signs in through its connection provider. To sign in again, disconnect it and connect it again."
+            "value": "%1$@ signs in through its connection provider. To sign in again, remove access and connect it again."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ inicia sesión a través de su proveedor de conexión. Para volver a iniciar sesión, desconéctalo y conéctalo de nuevo."
+            "value": "%1$@ inicia sesión a través de su proveedor de conexión. Para volver a iniciar sesión, quita el acceso y vuelve a conectarlo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ se connecte via son fournisseur de connexion. Pour vous reconnecter, déconnectez-le puis connectez-le à nouveau."
+            "value": "%1$@ se connecte via son fournisseur de connexion. Pour vous reconnecter, retirez l'accès puis connectez-le à nouveau."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ accede tramite il suo fornitore di collegamenti. Per accedere di nuovo, scollegalo e collegalo di nuovo."
+            "value": "%1$@ accede tramite il suo fornitore di connessione. Per accedere di nuovo, rimuovi l'accesso e collegalo di nuovo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ logt in via zijn koppelingsprovider. Om opnieuw in te loggen, ontkoppel je hem en koppel je hem opnieuw."
+            "value": "%1$@ meldt zich aan via zijn verbindingsprovider. Om je opnieuw aan te melden, trek je de toegang in en verbind je het opnieuw."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ loguje się przez swojego dostawcę połączeń. Aby zalogować się ponownie, rozłącz go i połącz jeszcze raz."
+            "value": "%1$@ loguje się przez swojego dostawcę połączeń. Aby zalogować się ponownie, usuń dostęp i połącz go jeszcze raz."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ inicia sessão através do seu fornecedor de ligação. Para iniciar sessão novamente, desligue-o e ligue-o outra vez."
+            "value": "%1$@ inicia sessão através do seu fornecedor de ligação. Para iniciar sessão de novo, remova o acesso e ligue-o novamente."
           }
         }
       }

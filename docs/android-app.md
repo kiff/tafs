@@ -645,7 +645,7 @@ older build from the track, publish a newer one, open tafs.
 ## Alerts
 
 In Account (Settings), **Alerts** shows how each kind looks on the lock screen (a hold, with
-sound; an answer, silent), then **Alerts on this phone**, **Sound** (for a hold or a halt only)
+sound; an answer, silent), each marked **Example** so no one looks for that taf, then **Alerts on this phone**, **Sound** (for a hold or a halt only)
 and the line under them. **What alerts you** is read only, at the levels `push/Alerts.kt` uses: a
 taf needs you and every taf halted, with sound, always; a taf answered someone, silent, for the
 tafs whose results include our phones (`Taf.results` has `app`; "N tafs ›" lists them); a reply
@@ -713,15 +713,17 @@ grants read (`Planque-Device-Signature`), once per grant (`AppModel.loadSecureSh
   one tool, and every one `read_only` (`SecureSheetWords.firstLineHolds`). Otherwise the mismatch
   line shows, with nothing to sign;
 - **Paste the key**, a button, never a typing field, so no keyboard opens. The pasted key is
-  trimmed, the clipboard is cleared at once, and only its last 4 show ("Key …ab12");
+  trimmed, the clipboard is cleared at once, and only its last 4 show ("Key …ab12"), then tafs
+  cloud's line for what to do next (`paste.next`, "Key pasted. Tap Connect"; none from a tafs
+  cloud from before it);
+- the button, right under the pasted key, which gives the key as above;
 - **Details**, collapsed: the technical lines, then the connection server's own words and KIFF's
   words for the profile;
-- the legal line, its `{terms}` and `{privacy}` links opening in the browser (https only);
-- the button, which gives the key as above.
+- the legal line, its `{terms}` and `{privacy}` links opening in the browser (https only).
 
 Once the key went, the sheet shows the receipt with the last 4 (from a key of 12 characters or
-more, as on iOS) and **Disconnect** (`AppState.keyReceipt`), until it closes; nothing keeps the last
-4 after that. **Disconnect** asks first, naming the taf it ends, in Connect apps' own words. Without
+more, as on iOS) and **Remove access** (`AppState.keyReceipt`), until it closes; nothing keeps the last
+4 after that. **Remove access** asks first, naming the taf it ends, in Connect apps' own words. Without
 the sheet's words (an older tafs cloud, an error), the sheet stays as above. The sheet sits above
 the keyboard and scrolls. An approval card that tafs cloud marks `connection: {done: true, words}`
 draws only those words and Its Card, never the connection's text again.
@@ -763,9 +765,17 @@ Live"), as tafs cloud sends it; with none sent, nothing shows.
 
 A connected app opens its connections by taf (`byTaf`), as on iPhone and iPad
 ([ios-app.md](ios-app.md#connect-apps)): one section per taf, those that need the owner first,
-the same rows with **Sign in again**, **Disconnect** and **Cancel**, then **From removed tafs**
+the same rows with **Sign in again**, **Remove access** and **Cancel**, then **From removed tafs**
 with **Clear these connections** on tafs cloud's `used_by` (`AppModel.clearRemovedConnections`),
 one fingerprint for them all, and **Other connections** last.
+
+**Ending access, in plain words** (`ConnectionWords.endButton`). A connected app's row says
+**Remove access**, and asks first, naming the taf it ends. For a key, the confirmation says the key
+is deleted from tafs; only a sign-in says it's revoked at the vendor. What never connected is
+cancelled instead: a request not answered yet (`Grant.pendingRequest`) says **Cancel the request**,
+and a sign-in that never came back says **Cancel**, each with its own question. Once access is
+removed, Connect apps is read again at once (`AppModel.disconnect`), so it no longer says
+Connected until it's reopened.
 
 
 **What the phone signs.** Before it shows or signs a grant, the phone recomputes its digest from

@@ -168,6 +168,12 @@ data class Grant(
    */
   val waitingSignIn: Boolean get() = status == "approved" && signedIn != true && !connectedNow
 
+  /** A request not answered yet: it's cancelled, not disconnected, since nothing was connected. */
+  val pendingRequest: Boolean get() = status == "pending"
+
+  /** Ended with Cancel rather than Remove access: a sign-in that never came back, or a request not answered yet. */
+  val cancellable: Boolean get() = waitingSignIn || pendingRequest
+
   /**
    * A managed provider's connection, connected: planque can't sign it in again in place (it can't tell which account a new
    * sign-in at the provider is), so it's disconnected and connected again instead.

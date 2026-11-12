@@ -4557,7 +4557,8 @@ class AppModel(
     } finally {
       planque.signer = null
     }
-    refreshConnections()
+    // Connect apps' list is tafs cloud's, and says Connected: read again with the grants, so it shows what's left at once.
+    if (_state.value.connectApps != null) loadConnectApps(connectAppsQuery) else refreshConnections()
     return true
   }
 

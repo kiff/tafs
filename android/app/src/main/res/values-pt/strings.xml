@@ -10,6 +10,7 @@
     <string name="alert_answered">Um taf respondeu a alguém</string>
     <string name="alert_approve_once">Aprovar uma vez…</string>
     <string name="alert_by_email">Por email</string>
+    <string name="alert_example">Exemplo</string>
     <string name="alert_foot_cant_answer_holds">Os alertas vão para as pessoas que podem responder a chamadas retidas. A sua função nesta conta não pode.</string>
     <string name="alert_foot_tells_you_device">Quando um taf precisa de si, este %1$s avisa-o mesmo com o tafs fechado. Nada é enviado até aprovar.</string>
     <string name="alert_haptics">Vibração</string>
@@ -765,7 +766,7 @@
     <string name="connect_apps_clearing">A limpar…</string>
     <string name="connect_apps_connect">Ligar</string>
     <string name="connect_apps_connected">Ligado ✓</string>
-    <string name="connect_apps_disconnect_why">Desligar uma remove as suas ferramentas apenas desse taf, e de qualquer taf cujo Card as use. As outras ligações mantêm-se.</string>
+    <string name="connect_apps_disconnect_why">Remover um acesso retira as suas ferramentas apenas desse taf, e de qualquer taf cujo Card as use. Os outros tafs mantêm as suas.</string>
     <string name="connect_apps_manage">Gerir</string>
     <string name="connect_apps_more">Mostrar mais apps</string>
     <string name="connect_apps_none">Nenhuma app com esse nome. O Coach pode ligar uma que não esteja na lista.</string>
@@ -776,6 +777,8 @@
     <string name="connect_apps_your_connections">As suas ligações a %1$s</string>
     <string name="connect_apps_connect_taf_make_one">As apps ligam-se para um taf. Crie primeiro um e depois ligue aqui as suas apps.</string>
     <string name="connect_apps_not_read">Não foi possível ler as apps. %1$s</string>
+    <string name="connect_cancel_request_button">Cancelar o pedido</string>
+    <string name="connect_cancel_request_title">Cancelar o pedido para %1$s?</string>
     <string name="connect_cancel_sign_in_body">Ainda nada está ligado. Ligue %1$s novamente a partir do Coach ou de Ligar apps quando estiver pronto.</string>
     <string name="connect_cancel_sign_in_button">Cancelar o início de sessão</string>
     <string name="connect_cancel_sign_in_keep_waiting">Continuar à espera</string>
@@ -816,15 +819,16 @@
         <item quantity="one">%2$s também para.</item>
         <item quantity="other">%2$s também param.</item>
     </plurals>
-    <string name="connect_disconnect_no_taf_uses">Nenhum taf usa agora esta ligação a %1$s. As suas ferramentas saem do KIFF.</string>
-    <string name="connect_disconnect_rest">As outras ligações a %1$s continuam ligadas. Se nenhuma outra ligação usar este início de sessão, é revogado em %1$s. Ligar novamente pede-lhe para aprovar e iniciar sessão novamente.</string>
-    <string name="connect_disconnect_title">Desligar %1$s?</string>
-    <string name="connect_disconnect_title_from">Desligar %1$s de %2$s?</string>
+    <string name="connect_disconnect_no_taf_uses">Nenhum taf usa %1$s agora.</string>
+    <string name="connect_disconnect_rest">Os outros tafs que usam %1$s mantêm o seu acesso. Se nenhum outro taf usar este início de sessão, é revogado em %1$s. Usar %1$s novamente pede-lhe que aprove e inicie sessão de novo.</string>
+    <string name="connect_disconnect_rest_key">Os outros tafs que usam %1$s mantêm o seu acesso. A chave é eliminada do tafs. Usar %1$s novamente pede-lhe que aprove e cole uma chave de novo.</string>
+    <string name="connect_disconnect_title">Remover o acesso a %1$s?</string>
+    <string name="connect_disconnect_title_from">Remover o acesso a %1$s para %2$s?</string>
     <string name="connect_disconnect_tools_stop">As ferramentas %2$s de %1$s deixam de funcionar.</string>
-    <string name="connect_disconnect_app_question">Desligar %1$s?</string>
+    <string name="connect_disconnect_app_question">Remover o acesso a %1$s?</string>
     <string name="connect_disconnect_body">As suas ações deixam de funcionar para este taf.</string>
-    <string name="connect_disconnect_button">Desligar</string>
-    <string name="connect_disconnecting">A desligar…</string>
+    <string name="connect_disconnect_button">Remover o acesso</string>
+    <string name="connect_disconnecting">A remover o acesso…</string>
     <string name="connect_from_removed">De tafs removidos</string>
     <string name="connect_give_key_on_sheet">Dar a chave num ecrã seguro</string>
     <string name="connect_give_key_with">Dar a chave com %1$s</string>
@@ -854,7 +858,7 @@
     <string name="connect_no_such_connection">Não há nenhuma ligação com esse ID.</string>
     <string name="connect_no_taf">Crie primeiro um taf: uma app é ligada para um taf a usar.</string>
     <string name="connect_not_connected">Não ligado. %1$s</string>
-    <string name="connect_not_disconnected">Não desligado. %1$s</string>
+    <string name="connect_not_disconnected">Acesso não removido. %1$s</string>
     <string name="connect_not_set_up_here">A ligação de apps não está configurada para esta conta a partir deste telefone.</string>
     <string name="connect_not_set_up_here_iphone">A ligação de apps não está configurada para esta conta a partir deste telefone. Comece a partir do tafs num iPhone.</string>
     <string name="connect_nothing_signed_in">Nenhuma sessão foi iniciada. Tente novamente.</string>
@@ -896,7 +900,7 @@
     <string name="connect_taf_not_tafs_cloud_apps">Este taf ainda não está no tafs cloud, por isso não é possível ligar apps para ele.</string>
     <string name="connect_tafs_cloud_named_no_connection">O tafs cloud não indicou nenhuma ligação para aprovar</string>
     <string name="connect_the_vendors_page">a página do fornecedor</string>
-    <string name="connect_through_provider">%1$s inicia sessão através do seu fornecedor de ligação. Para iniciar sessão novamente, desligue-o e ligue-o outra vez.</string>
+    <string name="connect_through_provider">%1$s inicia sessão através do seu fornecedor de ligação. Para iniciar sessão de novo, remova o acesso e ligue-o novamente.</string>
     <string name="connect_used_by_many">Mantida: os Cards de %1$s usam-na</string>
     <string name="connect_used_by_one">Mantida: o Card de %1$s usa-a</string>
     <string name="connect_which_taf">Para que taf é isto?</string>

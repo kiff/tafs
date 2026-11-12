@@ -10,6 +10,7 @@
     <string name="alert_answered">Een taf heeft iemand geantwoord</string>
     <string name="alert_approve_once">Eenmalig goedkeuren…</string>
     <string name="alert_by_email">Via e-mail</string>
+    <string name="alert_example">Voorbeeld</string>
     <string name="alert_foot_cant_answer_holds">Meldingen gaan naar de mensen die vastgehouden aanroepen mogen beantwoorden. Jouw rol in dit account mag dat niet.</string>
     <string name="alert_foot_tells_you_device">Als een taf op jou wacht, laat deze %1$s het je weten, ook als tafs gesloten is. Er wordt niets verzonden tot je goedkeurt.</string>
     <string name="alert_haptics">Trillingen</string>
@@ -765,7 +766,7 @@
     <string name="connect_apps_clearing">Opruimen…</string>
     <string name="connect_apps_connect">Koppelen</string>
     <string name="connect_apps_connected">Gekoppeld ✓</string>
-    <string name="connect_apps_disconnect_why">Ontkoppel je er een, dan verdwijnen de tools ervan alleen bij dat taf, en bij elk taf waarvan de Card ze gebruikt. Andere koppelingen blijven.</string>
+    <string name="connect_apps_disconnect_why">Toegang intrekken haalt de tools alleen weg bij die taf, en bij elke taf waarvan de Card ze gebruikt. Andere tafs houden de hunne.</string>
     <string name="connect_apps_manage">Beheren</string>
     <string name="connect_apps_more">Meer apps tonen</string>
     <string name="connect_apps_none">Geen app met die naam. Coach kan een app koppelen die hier niet staat.</string>
@@ -776,6 +777,8 @@
     <string name="connect_apps_your_connections">Je %1$s-koppelingen</string>
     <string name="connect_apps_connect_taf_make_one">Apps worden voor een taf gekoppeld. Maak eerst een taf en koppel hier dan de apps ervan.</string>
     <string name="connect_apps_not_read">De apps konden niet worden gelezen. %1$s</string>
+    <string name="connect_cancel_request_button">Verzoek annuleren</string>
+    <string name="connect_cancel_request_title">Verzoek voor %1$s annuleren?</string>
     <string name="connect_cancel_sign_in_body">Er is nog niets gekoppeld. Koppel %1$s opnieuw vanuit Coach of Apps koppelen wanneer je zover bent.</string>
     <string name="connect_cancel_sign_in_button">Het inloggen annuleren</string>
     <string name="connect_cancel_sign_in_keep_waiting">Blijven wachten</string>
@@ -816,15 +819,16 @@
         <item quantity="one">%2$s stopt ook.</item>
         <item quantity="other">%2$s stoppen ook.</item>
     </plurals>
-    <string name="connect_disconnect_no_taf_uses">Geen enkel taf gebruikt deze %1$s-koppeling nu. De tools ervan verdwijnen uit KIFF.</string>
-    <string name="connect_disconnect_rest">Andere koppelingen met %1$s blijven gekoppeld. Als geen andere koppeling deze login gebruikt, wordt die bij %1$s ingetrokken. Opnieuw koppelen vraagt je opnieuw goed te keuren en in te loggen.</string>
-    <string name="connect_disconnect_title">%1$s ontkoppelen?</string>
-    <string name="connect_disconnect_title_from">%1$s ontkoppelen van %2$s?</string>
+    <string name="connect_disconnect_no_taf_uses">Geen taf gebruikt %1$s nu.</string>
+    <string name="connect_disconnect_rest">Andere tafs die %1$s gebruiken, houden hun toegang. Als geen andere taf deze aanmelding gebruikt, wordt die bij %1$s ingetrokken. Als je %1$s weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden.</string>
+    <string name="connect_disconnect_rest_key">Andere tafs die %1$s gebruiken, houden hun toegang. De sleutel wordt uit tafs verwijderd. Als je %1$s weer gebruikt, word je gevraagd opnieuw goed te keuren en een sleutel te plakken.</string>
+    <string name="connect_disconnect_title">Toegang tot %1$s intrekken?</string>
+    <string name="connect_disconnect_title_from">Toegang tot %1$s voor %2$s intrekken?</string>
     <string name="connect_disconnect_tools_stop">De %2$s-tools van %1$s werken niet meer.</string>
-    <string name="connect_disconnect_app_question">%1$s ontkoppelen?</string>
+    <string name="connect_disconnect_app_question">Toegang tot %1$s intrekken?</string>
     <string name="connect_disconnect_body">De acties ervan werken niet meer voor dit taf.</string>
-    <string name="connect_disconnect_button">Ontkoppelen</string>
-    <string name="connect_disconnecting">Ontkoppelen…</string>
+    <string name="connect_disconnect_button">Toegang intrekken</string>
+    <string name="connect_disconnecting">Toegang wordt ingetrokken…</string>
     <string name="connect_from_removed">Van verwijderde tafs</string>
     <string name="connect_give_key_on_sheet">De sleutel geven op een beveiligd scherm</string>
     <string name="connect_give_key_with">De sleutel geven met %1$s</string>
@@ -854,7 +858,7 @@
     <string name="connect_no_such_connection">Er is geen koppeling met die id.</string>
     <string name="connect_no_taf">Maak eerst een taf: een app wordt gekoppeld zodat een taf hem kan gebruiken.</string>
     <string name="connect_not_connected">Niet gekoppeld. %1$s</string>
-    <string name="connect_not_disconnected">Niet ontkoppeld. %1$s</string>
+    <string name="connect_not_disconnected">Toegang niet ingetrokken. %1$s</string>
     <string name="connect_not_set_up_here">Apps koppelen is voor dit account niet ingesteld vanaf deze telefoon.</string>
     <string name="connect_not_set_up_here_iphone">Apps koppelen is voor dit account niet ingesteld vanaf deze telefoon. Begin vanuit tafs op een iPhone.</string>
     <string name="connect_nothing_signed_in">Er is niets ingelogd. Probeer het opnieuw.</string>
@@ -896,7 +900,7 @@
     <string name="connect_taf_not_tafs_cloud_apps">Dit taf staat nog niet op tafs cloud, dus er kunnen geen apps voor worden gekoppeld.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud noemde geen koppeling om goed te keuren</string>
     <string name="connect_the_vendors_page">de pagina van de leverancier</string>
-    <string name="connect_through_provider">%1$s logt in via zijn koppelingsprovider. Om opnieuw in te loggen, ontkoppel je hem en koppel je hem opnieuw.</string>
+    <string name="connect_through_provider">%1$s meldt zich aan via zijn verbindingsprovider. Om je opnieuw aan te melden, trek je de toegang in en verbind je het opnieuw.</string>
     <string name="connect_used_by_many">Behouden: de Cards van %1$s gebruiken het</string>
     <string name="connect_used_by_one">Behouden: de Card van %1$s gebruikt het</string>
     <string name="connect_which_taf">Voor welk taf is dit?</string>
