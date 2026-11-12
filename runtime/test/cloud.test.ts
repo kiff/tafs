@@ -478,6 +478,33 @@ describe("tafs cloud", () => {
     expect(r.body.requests).toHaveLength(1);
   });
 
+  it("reads each run's credits alongside the taf's runs, not after, and puts the line on its row", async () => {
+    const w = world();
+    await w.agents.api.startRun("t_acme", RAE, "go");
+    const id = w.agents.runs[0]!.id;
+    const deps = depsOf(w);
+    let creditsAsked!: () => void;
+    const asked = new Promise<void>((resolve) => { creditsAsked = resolve; });
+    // The runs read finishes only once the credits read has started: read one after the other, it waits out the timeout.
+    let overlapped = false;
+    const runs = deps.agents.runs.bind(deps.agents);
+    const agents = { ...deps.agents, runs: async (...a: Parameters<typeof runs>) => {
+      overlapped = await Promise.race([asked.then(() => true), new Promise<boolean>((r) => setTimeout(() => r(false), 200))]);
+      return runs(...a);
+    } };
+    const fetch = (async (url: string, init?: RequestInit) => {
+      if (new URL(url).pathname === "/v1/me/usage/credits/runs") {
+        creditsAsked();
+        return new Response(JSON.stringify({ items: [{ run: id, trigger: "schedule", ended: "2026-10-29T09:59:00Z", counted: true, credits: 34, refused: 0, declined: 0 }] }), { status: 200 });
+      }
+      return deps.fetch!(url, init);
+    }) as Deps["fetch"];
+    const r = await handle({ rawPath: `/v1/tafs/${RAE}/work`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, { ...deps, agents, fetch });
+    expect(r.statusCode).toBe(200);
+    expect(overlapped).toBe(true);
+    expect(JSON.parse(r.body).requests[0].credits).toEqual({ credits: 34, counted: true, words: "34 credits" });
+  });
+
   it("lists the follow-ups a taf set itself on its dial, and removes one, only of that taf", async () => {
     const w = world();
     const fu = { id: "fu-1", agent: RAE, cron: "", input: "Check it again", enabled: true, kind: "once" as const, at: "2099-01-01T09:00:00Z", follow_up: true };
