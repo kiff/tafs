@@ -1708,7 +1708,7 @@ final class SetupTests: XCTestCase {
         XCTAssertTrue(chat.contains(".fullScreenCover(isPresented: $givingKey)"), "full screen, outside the chat")
         let sheet = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
         XCTAssertTrue(sheet.contains("DriveField(Words.Connect.key, text: $key, kind: .secure, secret: true)"))
-        XCTAssertTrue(sheet.contains("Words.Connect.keyGoes") && sheet.contains("Words.Connect.keyHost("), "the sheet says where the key goes")
+        XCTAssertTrue(sheet.contains("Words.Connect.keyGoesTo(host:"), "the sheet says where the key goes, and the host it is sent to")
     }
 
     /// A paste into the key's field is told from typing, so the clipboard is cleared after it.

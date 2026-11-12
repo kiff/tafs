@@ -70,7 +70,6 @@
   "connect.disconnect_button": "Desconectar",
   "connect.disconnecting": "Desconectando…",
   "connect.from_removed": "De tafs eliminados",
-  "connect.give_key_secure_sheet": "Dar la clave en una hoja segura",
   "connect.give_key_with": "Dar la clave con {biometry}",
   "connect.kept.another_taf": "otro taf",
   "connect.kept.for_card": {
@@ -86,9 +85,6 @@
     "other": "Se conservó tu conexión de {vendor}: {names} la usan."
   },
   "connect.key": "La clave",
-  "connect.key_clipboard": "El portapapeles se vacía después de pegar.",
-  "connect.key_goes": "La clave va directamente de este teléfono a guardarse sellada. Coach nunca la ve, y ningún taf tampoco.",
-  "connect.key_host": "Solo se usa con {host}.",
   "connect.key_not_given": "No se dio la clave. {why}",
   "connect.kiff_words_connection_could_not": "No se pudieron leer las palabras de KIFF para esta conexión. No se aprobó nada.",
   "connect.last_failed": "Último fallo: {title} · {detail}",

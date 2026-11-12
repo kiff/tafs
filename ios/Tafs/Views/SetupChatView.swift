@@ -1503,7 +1503,7 @@ struct SetupApproval: View {
                         // A connection approved with its key: the key is given on its own sheet, full
                         // screen, never typed in the chat. This button only opens it.
                         let byKey = Self.takesKeyHere(grant)
-                        Button(state == .working ? Words.Approval.approving : byKey ? Words.Connect.giveKeySecureSheet : state.isFailure ? Words.Common.tryAgain : Words.Coach.Answer.approve) {
+                        Button(state == .working ? Words.Approval.approving : byKey ? Words.Connect.giveKeyOnSheet : state.isFailure ? Words.Common.tryAgain : Words.Coach.Answer.approve) {
                             if byKey {
                                 givingKey = true
                             } else {

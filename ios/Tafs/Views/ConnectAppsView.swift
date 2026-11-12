@@ -438,13 +438,10 @@ struct ConnectApprovalSheet: View {
                                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                         }
                         if start.needsKey {
-                            // Where the key goes, before it's typed: straight from this phone to be kept
-                            // sealed, used only with the vendor's host, never to Coach or a taf.
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(Words.Connect.keyGoes)
-                                Text(Words.Connect.keyHost(host: "\(Self.host(of: grant))"))
-                            }
-                            .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                            // Where the key goes, before it's typed: from this phone to the connection
+                            // server, which sends it only to the vendor's host, and never to Coach.
+                            Text(Words.Connect.keyGoesTo(host: "\(Self.host(of: grant))"))
+                                .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
                             DriveField(Words.Connect.key, text: $key, kind: .secure, secret: true)
                                 .textContentType(.password).autocorrectionDisabled().textInputAutocapitalization(.never)
                                 .padding(12).background(Theme.raised).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))

@@ -826,7 +826,6 @@
     <string name="connect_disconnect_button">Desligar</string>
     <string name="connect_disconnecting">A desligar…</string>
     <string name="connect_from_removed">De tafs removidos</string>
-    <string name="connect_give_key_secure_sheet">Dar a chave numa folha segura</string>
     <string name="connect_give_key_with">Dar a chave com %1$s</string>
     <string name="connect_kept_another_taf">outro taf</string>
     <plurals name="connect_kept_for_card">
@@ -842,9 +841,6 @@
         <item quantity="other">A sua ligação a %2$s foi mantida: %3$s usam-na.</item>
     </plurals>
     <string name="connect_key">A chave</string>
-    <string name="connect_key_clipboard">A área de transferência é limpa depois de colar.</string>
-    <string name="connect_key_goes">A chave vai diretamente deste telemóvel para onde fica selada. O Coach nunca a vê, e nenhum taf também.</string>
-    <string name="connect_key_host">Só é usada com %1$s.</string>
     <string name="connect_key_not_given">A chave não foi dada. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">Não foi possível ler as palavras do KIFF para esta ligação. Nada foi aprovado.</string>
     <string name="connect_last_failed">Última falha: %1$s · %2$s</string>

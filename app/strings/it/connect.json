@@ -70,7 +70,6 @@
   "connect.disconnect_button": "Scollega",
   "connect.disconnecting": "Scollegamento…",
   "connect.from_removed": "Dai tafs rimossi",
-  "connect.give_key_secure_sheet": "Dai la chiave su un foglio sicuro",
   "connect.give_key_with": "Dai la chiave con {biometry}",
   "connect.kept.another_taf": "un altro taf",
   "connect.kept.for_card": {
@@ -86,9 +85,6 @@
     "other": "Il tuo collegamento {vendor} è stato mantenuto: lo usano {names}."
   },
   "connect.key": "La chiave",
-  "connect.key_clipboard": "Gli appunti vengono svuotati dopo che incolli.",
-  "connect.key_goes": "La chiave va direttamente da questo telefono a dove resta sigillata. Coach non la vede mai, e nessun taf la vede.",
-  "connect.key_host": "È usata solo con {host}.",
   "connect.key_not_given": "La chiave non è stata data. {why}",
   "connect.kiff_words_connection_could_not": "Non è stato possibile leggere le parole di KIFF per questo collegamento. Non è stato approvato nulla.",
   "connect.last_failed": "Ultimo non riuscito: {title} · {detail}",

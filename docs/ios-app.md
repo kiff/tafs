@@ -280,8 +280,8 @@ the app in sample mode.
   **Coach's approval card holds no field for a key** (`SetupApproval`): a secret typed in the chat reads as handing it
   to Coach. When planque says the connection is approved with its key and it isn't connected yet, the card's one button,
   "Give the key on a secure sheet", opens this same sheet full screen, outside the chat (`ConnectApprovalSheet`,
-  `needsKey`). The sheet shows the vendor, the connection service's text for what is read or written, the host the key
-  is used with, and that the key goes straight from this phone to be kept sealed, never to Coach or a taf. Face ID
+  `needsKey`). The sheet shows the vendor, the connection service's text for what is read or written, and that the key
+  goes from this phone to the connection server, which sends it only to the vendor's host, and never to Coach. Face ID
   confirms there. A paste into the field empties the clipboard at once. Once the key is given, the card is approved as
   any other: tafs cloud reads the grant, connected, and answers Coach. The key never reaches tafs cloud or Coach.
 - **What a grant's digest covers** (`PlanqueClient.digestCovers`): the phone recomputes planque's
