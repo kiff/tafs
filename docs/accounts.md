@@ -437,8 +437,8 @@ above. The app shows the words. Builds from before this show `words` as for any 
 - **Solo**, a monthly subscription, offered where `buy.solo` is set. Its screen shows the store's
   price and every term: the period, that it renews until cancelled, how to cancel, and the Terms
   and Privacy Policy.
-- **Packs of credits**, which never expire, offered where `buy.packs` is set. Today they're sold
-  in the Android app. The App Store doesn't sell them yet, as kiff.dev says.
+- **Packs of credits**, which never expire, offered where `buy.packs` is set, which is only while
+  Solo runs. Both apps sell them, through Google Play or the App Store.
 - **The First month pack**, bought once per account, shown first among the packs where
   `buy.first_month` is set, which is only while Solo runs. It's on Google Play only: KIFF lists it
   with no App Store product, so iPhone and iPad don't show it.
