@@ -1,0 +1,16 @@
+---
+title: Confirmar cada ticket
+headline: Ningún cliente espera sin respuesta.
+today: Un mensaje se queda sin respuesta hasta que alguien llega a él, y el cliente vuelve a escribir, o se va.
+line: Confirma cada ticket nuevo del servicio de ayuda en menos de una hora y lo etiqueta por tema; lo que necesite una decisión te espera.
+card:
+  allows:
+    - Una confirmación por ticket, hasta 50 al día
+    - Etiquetas en los tickets
+  holds:
+    - Cualquier otra respuesta a un cliente
+  never:
+    - Cerrar o borrar un ticket
+    - Prometer un reembolso o un crédito
+---
+Cada hora, busca los tickets nuevos en mi servicio de ayuda. Envía a cada uno una confirmación breve y personal que diga que recibimos el mensaje y cuándo responderemos, una vez por ticket y hasta 50 al día, y etiquétalo por tema. Cualquier otra respuesta me espera. Nunca cierres ni borres un ticket, y nunca prometas un reembolso ni un crédito.
