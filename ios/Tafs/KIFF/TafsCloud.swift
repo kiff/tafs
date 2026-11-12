@@ -657,9 +657,12 @@ final class TafsCloud {
 
     /// Removes the taf for good: stops it, deletes its runs, chats and memory and its key,
     /// and frees its name. Its Cards are KIFF's: the phone revokes them first.
-    func remove(_ id: String) async throws -> Removal {
-        try await send("DELETE", "/v1/tafs/\(escaped(id))")
+    func remove(_ id: String, signature: String? = nil) async throws -> Removal {
+        try await send("DELETE", tafPath(id), headers: signature.map { ["KIFF-Device-Signature": $0] } ?? [:])
     }
+
+    /// A taf's path, as a request to it is sent and as the approval key signs it.
+    func tafPath(_ id: String) -> String { "/v1/tafs/\(escaped(id))" }
 
     /// What Run now did: the run's session, or none when the taf's check started no run, with
     /// tafs cloud's words for why (nothing new since the last run), in the person's language.

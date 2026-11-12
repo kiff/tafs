@@ -2616,13 +2616,21 @@ final class AppModel: ObservableObject {
     /// Removes a taf for good, after Face ID: KIFF revokes its Cards first, so it can't act
     /// whatever happens next; then tafs cloud stops it, deletes its runs, chats, memory and
     /// key, and frees its name. Returns what to tell the owner, nil when nothing was done.
+    ///
+    /// The approval key signs the DELETE itself (`kiff.request.v1` over `DELETE /v1/tafs/{id}`
+    /// and its empty body, sent as `KIFF-Device-Signature`), behind Face ID or Touch ID each
+    /// time, as a drive's start is: tafs cloud asks KIFF whether this phone signed it.
     func removeTaf(_ tafID: UUID) async -> String? {
         guard mode == .kiff, let taf = taf(tafID), let c = cloudTaf(for: tafID) else { return nil }
+        guard let tenant = kiffTenant else { return Words.Error.signInFirstOnDevice(device: "\(ThisDevice.kind)") }
         // The session this removal belongs to: checked after every wait, so nothing of it
         // goes out under another account's sign-in.
         let gen = accountGeneration
+        let signedAt = SigningTime.next()
+        let message = KIFFClient.requestMessage(tenant: tenant, method: "DELETE", uri: cloud.tafPath(c.id), body: Data(), signedAt: signedAt)
+        let signature: String
         do {
-            _ = try await signer.sign(Data("tafs.remove.v1|\(c.id)".utf8), reason: Words.Taf.Remove.prompt(taf: "\(taf.name)"))
+            signature = try await signer.signApproval(message, reason: Words.Taf.Remove.prompt(taf: "\(taf.name)"))
         } catch { return nil }
         guard gen == accountGeneration else { return nil }
 
@@ -2649,7 +2657,7 @@ final class AppModel: ObservableObject {
             + connections.kept.map { " " + $0 }.joined()
 
         let removal: TafsCloud.Removal
-        do { removal = try await cloud.remove(c.id) } catch {
+        do { removal = try await cloud.remove(c.id, signature: "t=\(signedAt),v1=\(signature)") } catch {
             guard gen == accountGeneration else { return nil }
             return Words.Taf.Remove.cloudDidNotAnswer(cards: "\(cards)", why: "\(error.localizedDescription)")
         }

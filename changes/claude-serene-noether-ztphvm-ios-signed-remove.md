@@ -1,0 +1,1 @@
+- **iPhone and iPad: Remove for good is signed by the phone.** The approval key signs the removal itself, behind Face ID or Touch ID each time, as Android 1.8.2 does, so tafs cloud can check with KIFF that this phone asked for it before anything is deleted (docs/tafs.md).
