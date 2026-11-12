@@ -225,6 +225,9 @@ class CoachTest {
     assertEquals("Approved · Coach's Card", CoachWords.answeredApproval("Approved", untitled, null, "Coach"))
     assertEquals("Declined · Connect mcp.stripe.com", CoachWords.answeredApproval("Declined", untitled, null, null))
     assertEquals("Approved", CoachWords.answeredApproval("Approved", card("""{"type":"approval","id":"a3"}"""), null, null))
+    // A Card that was signed is named, never the key's words (the owner, 12 Nov: "Approved · You will give an API key…").
+    assertEquals("Approved · Refunds' Card", CoachWords.answeredApproval("Approved", card(approval), "You will give an API key for Qonto", "Refunds", cardSigned = true))
+    assertEquals("not signed: as before", "Declined · Connect Stripe", CoachWords.answeredApproval("Declined", card(approval), "You will give an API key for Qonto", "Refunds"))
   }
 
   @Test fun aNoticeKeepsItsOwnTimeAndAnOwnersAnswerBetweenSplitsTheWords() = runTest {

@@ -147,6 +147,7 @@ fun SecureKeyContent(
   if (!holds) {
     Text(bot.tafs.app.model.CoachWords.DIGEST_MISMATCH, style = scaled(13, color = Theme.no))
   } else {
+    sheet.legal?.let { LegalLine(it) }
     ApprovalGate {
       PrimaryButton(
         if (busy) state.connectStep ?: bot.tafs.app.model.Words.Approval.approving else sheet.button.ifBlank { bot.tafs.app.model.ConnectWords.giveKeyWith(LocalBiometry.current) },
@@ -177,7 +178,6 @@ fun SecureKeyContent(
     }
   }
 
-  if (holds) sheet.legal?.let { LegalLine(it) }
   Text(
     bot.tafs.app.model.ConnectWords.CANCEL,
     style = scaled(15, FontWeight.SemiBold, Theme.dim),

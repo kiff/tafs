@@ -258,11 +258,14 @@ object CoachWords {
   val ANSWERING get() = Words.Coach.answering
 
   /**
-   * An answered approval, in one line: the answer, then what it was ("Approved · Connect Stripe"). What it was is Coach's
-   * title for the card, else planque's words for the connection, else KIFF's name for the draft's Card, else its service.
+   * An answered approval, in one line: the answer, then what it was ("Approved · Connect Stripe"). A Card that was signed
+   * ([cardSigned], KIFF's draft confirmed) is named first ("Approved · Refunds' Card"), since that's what the fingerprint
+   * signed. Otherwise it's Coach's title for the card, else planque's words for the connection, else KIFF's name for the
+   * draft's Card, else its service.
    */
-  fun answeredApproval(answer: String, c: SetupComponent, grantText: String?, draftLabel: String?): String {
-    val what = c.title?.takeIf { it.isNotBlank() }
+  fun answeredApproval(answer: String, c: SetupComponent, grantText: String?, draftLabel: String?, cardSigned: Boolean = false): String {
+    val what = draftLabel?.takeIf { cardSigned && it.isNotBlank() }?.let { Words.Coach.cardOf(it) }
+      ?: c.title?.takeIf { it.isNotBlank() }
       ?: grantText?.takeIf { it.isNotBlank() }
       ?: draftLabel?.takeIf { it.isNotBlank() }?.let { Words.Coach.cardOf(it) }
       ?: c.service?.let { Words.Coach.connectService(it) }

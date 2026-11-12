@@ -2,3 +2,4 @@
 - **Plainer words for ending access.** Disconnect is now Remove access. A request not answered yet says Cancel the request. Removing a key's access says the key is deleted from tafs, and Connect apps shows the change at once.
 - **The key sheet's Connect sits right under the pasted key**, with Details below it.
 - **The lock-screen alerts in Account are marked Example.**
+- **A signed approval in Coach names the Card**, with its lines under it, never the key's words.

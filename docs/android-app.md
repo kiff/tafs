@@ -716,10 +716,10 @@ grants read (`Planque-Device-Signature`), once per grant (`AppModel.loadSecureSh
   trimmed, the clipboard is cleared at once, and only its last 4 show ("Key …ab12"), then tafs
   cloud's line for what to do next (`paste.next`, "Key pasted. Tap Connect"; none from a tafs
   cloud from before it);
-- the button, right under the pasted key, which gives the key as above;
+- the legal line, its `{terms}` and `{privacy}` links opening in the browser (https only);
+- the button, right under the pasted key and the legal line, which gives the key as above;
 - **Details**, collapsed: the technical lines, then the connection server's own words and KIFF's
-  words for the profile;
-- the legal line, its `{terms}` and `{privacy}` links opening in the browser (https only).
+  words for the profile.
 
 Once the key went, the sheet shows the receipt with the last 4 (from a key of 12 characters or
 more, as on iOS) and **Remove access** (`AppState.keyReceipt`), until it closes; nothing keeps the last

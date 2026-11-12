@@ -293,7 +293,9 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
   // approved, KIFF's draft at the version signed, with nothing to answer; another tap folds it. planque's grant isn't shown
   // there: it reads as it is now, and a later approval can widen it past what this one approved.
   if (answered != null) {
-    val line = CoachWords.answeredApproval(answered, c, grant?.text, draft?.label)
+    // A signed Card is named, and its lines, KIFF's own from the draft this phone read, stay under it: what the fingerprint signed.
+    val signed = draft?.confirmed == true
+    val line = CoachWords.answeredApproval(answered, c, grant?.text, draft?.label, cardSigned = signed)
     if (draft == null) {
       Text(line, style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)
       return
@@ -301,7 +303,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
     var open by remember(c.id) { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { open = !open }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
       Text((if (open) "▾ " else "▸ ") + line, style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = if (open) Int.MAX_VALUE else 1, overflow = TextOverflow.Ellipsis)
-      if (open) DraftCardsView(draft)
+      if (open) DraftCardsView(draft) else if (signed) draft.cardLines.flatten().forEach { Text(it, style = scaled(13, color = Theme.soft)) }
     }
     return
   }

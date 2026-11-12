@@ -1189,12 +1189,12 @@ class PlanqueTest {
     )
     assertEquals("Key pasted. Tap Connect.", next.paste.next)
     assertNull("a tafs cloud from before it sends none, and nothing is drawn", KiffClient.json.decodeFromString<bot.tafs.app.kiff.SecureSheet>(sheet).paste.next)
-    // On the sheet, Connect comes before Details and the legal line, right under the pasted key.
+    // On the sheet, Connect comes right under the pasted key, with the legal line just above it, and Details after it.
     val view = java.io.File("src/main/kotlin/bot/tafs/app/views/SecureKeySheet.kt").readText()
     val connect = view.indexOf("{ actions.give(grant, key) }")
     assertTrue(connect > view.indexOf("sheet.paste.next"))
+    assertTrue(view.indexOf("sheet.legal?.let") in view.indexOf("sheet.paste.next")..connect)
     assertTrue(connect < view.indexOf("sheet.details?.let"))
-    assertTrue(connect < view.indexOf("sheet.legal?.let"))
   }
 
   @Test fun onlyTheLast4OfAPastedKeyShowAndTheVendorIsTafsCloudsName() {
