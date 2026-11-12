@@ -91,6 +91,7 @@ export const pt: Words = {
   run_failed_error: "Parou num erro. Nada foi feito depois disso.",
   run_failed_time: "Atingiu o seu limite de tempo e parou.",
   run_failed_start: "Não conseguiu começar, por isso nada foi feito.",
+  run_failed_tools: "Não começou: as ferramentas do taf não puderam ser usadas. Nada foi feito.",
   run_failed_switching: "Não começou: o taf estava a mudar de versão.",
   run_failed_access: "Parou: a pessoa que a pediu pode já não poder usar este taf.",
   run_failed_halted: "Não continuou: o taf está bloqueado.",

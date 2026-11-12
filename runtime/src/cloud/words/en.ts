@@ -97,6 +97,7 @@ export const en = {
   run_failed_error: "It stopped on an error. Nothing was done after it.",
   run_failed_time: "It reached its time limit and stopped.",
   run_failed_start: "It couldn't start, so nothing was done.",
+  run_failed_tools: "It didn't start: its tools couldn't be used. Nothing was done.",
   run_failed_switching: "It didn't start: the taf was switching versions.",
   run_failed_access: "It stopped: the person who asked may no longer use this taf.",
   run_failed_halted: "It didn't go on: the taf is halted.",

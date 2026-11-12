@@ -1,0 +1,1 @@
+- **iOS: a taf only you use says "Not shared".** The line under a taf's name no longer reads "Shared with" your own address.

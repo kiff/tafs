@@ -300,6 +300,41 @@ final class PlanqueClient {
         return try KIFFClient.decoder.decode(Grant.self, from: data)
     }
 
+    /// A key request built in full before it's signed, so its message can be signed together
+    /// with another request's (`RequestsTogether`): its body's exact bytes, the key for its
+    /// header, its `signed_at`, and the `planque.request.v1` message planque rebuilds from them.
+    struct PreparedKey: Equatable {
+        let path: String
+        let body: Data
+        let key: String
+        let signedAt: String
+        let message: Data
+    }
+
+    /// `giveKey`, built to be signed together with another request: nothing is sent yet.
+    func prepareKey(_ grant: Grant, key: String, words: ProfileWords? = nil, signedAt: String) throws -> PreparedKey {
+        guard let tenant else { throw PlanqueError.notSigning }
+        let approved = try Self.approveBody(grant, words: words)
+        let key = key.trimmingCharacters(in: .whitespacesAndNewlines)
+        let sum = SHA256.hash(data: Data(key.utf8)).map { String(format: "%02x", $0) }.joined()
+        let body = try JSONEncoder().encode(KeyBody(digest: approved.digest, keySHA256: sum, kiffProfile: approved.kiffProfile))
+        let path = "grants/\(escaped(grant.id))/key"
+        guard let url = URL(string: "v1/accounts/\(escaped(tenant))/\(path)", relativeTo: baseURL) else {
+            throw PlanqueError.server(status: 0, message: Words.Error.badPath)
+        }
+        let uri = url.path(percentEncoded: true) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")
+        return PreparedKey(path: path, body: body, key: key, signedAt: signedAt,
+                           message: Self.message(base: baseURL, tenant: tenant, method: "POST", uri: uri, body: body, signedAt: signedAt))
+    }
+
+    /// Sends a prepared key request under a signature made over it and another request
+    /// (`kiff.requests.v1`): `with` is the other request's hash.
+    func giveKey(_ prepared: PreparedKey, signature: String, with other: String) async throws -> Grant {
+        let data = try await raw("POST", prepared.path, body: prepared.body, headers: [Self.keyHeader: prepared.key],
+                                 together: (signedAt: prepared.signedAt, signature: signature, with: other))
+        return try KIFFClient.decoder.decode(Grant.self, from: data)
+    }
+
     /// Approves `grant` as shown, with KIFF's words for its profile when it has one.
     func approve(_ grant: Grant, words: ProfileWords? = nil) async throws -> Approved {
         try await send("POST", "grants/\(escaped(grant.id))/approve", body: try Self.approveBody(grant, words: words))
@@ -423,9 +458,14 @@ final class PlanqueClient {
         return try KIFFClient.decoder.decode(T.self, from: data)
     }
 
+    /// `together` is a signature already made over this request and another (`kiff.requests.v1`):
+    /// its `signed_at`, the signature, and the other request's hash. Nothing here signs then.
     private func raw(_ method: String, _ path: String, body: Data?,
-                     signer override: (@MainActor (Data) throws -> String)? = nil, headers: [String: String] = [:]) async throws -> Data {
-        guard let tenant, let signer = override ?? signer else { throw PlanqueError.notSigning }
+                     signer override: (@MainActor (Data) throws -> String)? = nil, headers: [String: String] = [:],
+                     together: (signedAt: String, signature: String, with: String)? = nil) async throws -> Data {
+        guard let tenant else { throw PlanqueError.notSigning }
+        let signer = override ?? signer
+        guard signer != nil || together != nil else { throw PlanqueError.notSigning }
         // The account itself when path is empty (erasing it), else one of its routes.
         let account = "v1/accounts/\(escaped(tenant))"
         guard let url = URL(string: path.isEmpty ? account : "\(account)/\(path)", relativeTo: baseURL) else {
@@ -443,14 +483,19 @@ final class PlanqueClient {
             request.httpBody = body
         }
         for (name, value) in headers { request.setValue(value, forHTTPHeaderField: name) }
-        let signedAt = SigningTime.next()
-        // Signed as planque reads it: the path and query as sent, percent-encoded.
-        let uri = url.path(percentEncoded: true) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")
-        let message = Self.message(base: baseURL, tenant: tenant, method: method, uri: uri, body: body ?? Data(), signedAt: signedAt)
         // planque asks KIFF whether this device signed (kiff/planque#12): never a key alone.
         if deviceID == nil, let load = deviceLoader { deviceID = await load() }
         guard let device = deviceID else { throw PlanqueError.noDevice }
-        request.setValue("t=\(signedAt),v1=\(try signer(message)),d=\(device)", forHTTPHeaderField: "Planque-Device-Signature")
+        if let together {
+            request.setValue("\(RequestsTogether.header(signedAt: together.signedAt, signature: together.signature, with: together.with)),d=\(device)",
+                             forHTTPHeaderField: "Planque-Device-Signature")
+        } else if let signer {
+            let signedAt = SigningTime.next()
+            // Signed as planque reads it: the path and query as sent, percent-encoded.
+            let uri = url.path(percentEncoded: true) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")
+            let message = Self.message(base: baseURL, tenant: tenant, method: method, uri: uri, body: body ?? Data(), signedAt: signedAt)
+            request.setValue("t=\(signedAt),v1=\(try signer(message)),d=\(device)", forHTTPHeaderField: "Planque-Device-Signature")
+        }
 
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0

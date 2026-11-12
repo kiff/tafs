@@ -310,7 +310,21 @@ the app in sample mode.
   and no text field.
   **A later approval card whose connection is already connected** carries tafs cloud's mark (`connection: {done,
   words}`, `SetupComponent.Connection`): the card draws that line and the Card, never the connection's text again.
-  Not built yet: the Card on the same sheet under one signature, which waits for the connection server and KIFF.
+  **The key and its Card under one Face ID** (`AppModel.approveKeyAndCard`, `RequestsTogether`), when the sheet is
+  opened from Coach's card and that card carries the taf's Card as a draft:
+  - The sheet draws **Its Card**: KIFF's own lines for the draft this phone read from KIFF.
+  - On Connect, the phone tells tafs cloud it can sign the step (`can: ["key_and_cards"]`). tafs cloud asks for it
+    only when it's on there; otherwise nothing is signed here and the key goes by itself, as before.
+  - The phone checks the ask is this card's (`keyAndCardIsThisCards`): its grant and the digest shown, its draft and
+    the version shown. Anything else is refused and nothing is signed.
+  - It builds both requests in full with one `signed_at` (`PlanqueClient.prepareKey`, `KIFFClient.prepareConfirmDraft`),
+    and the approval key signs once, over `kiff.requests.v1`, the account, the time and the two request messages'
+    hashes, sorted.
+  - It sends the key first, then the Card's confirm, each with `v3=` and `with=sha256:` naming the other's hash. The
+    Card is confirmed only for a key that went in.
+  - It reports what came of both, and tafs cloud checks them before Coach hears "approved". Closing the receipt then
+    doesn't approve the card again.
+  - If it doesn't finish, the card's note says why on the sheet, and the key is never given by itself after that.
 - **What a grant's digest covers** (`PlanqueClient.digestCovers`): the phone recomputes planque's
   digest before it shows or signs a grant, and refuses one that doesn't match. Without `digest_v`,
   it covers the request alone (v1). With `digest_v: 2`, it covers `{"lang", "request", "text"}`, so
@@ -321,6 +335,9 @@ the app in sample mode.
   it can't prove (`GET /v1/me/did-this-happen`), each answered No or "Yes, it did" behind
   Face ID, signed like an approval (`POST /v1/me/did-this-happen/{proposal}`). No gives the
   Card its room back; the first answer stands.
+- **Who a taf is shared with** (`ShareLine`, under the taf's name): the groups and people KIFF lists for it, never the
+  person reading it. A taf only they use reads "Not shared", and one they share names the others alone. "You" is the
+  person KIFF marks so, or the one whose email is the account read's.
 - **A message refused because of a halt** (`UnsentBubble`, in a taf's chat and in Coach's): tafs cloud's refusal says
   whether the whole account or the taf is halted (`halted`, kept on `AppModel.UnsentMessage`), never guessed from its
   words. The bubble shows tafs cloud's words and **Resume**, which opens that Halt screen: the account's, in Coach's
@@ -353,7 +370,8 @@ the app in sample mode.
     moved, in the offer's unit (and window, when it names one), or, for a `resource` change, exactly the scope's values
     in force plus the offered one. Every other term is compared (`HoldAllow.Terms`): each action's caps, scope, states
     and next steps; each total's window, measure and per-item parameter; what happens past a limit; who holds the Card;
-    where it applies; when it starts and ends. A draft that sets how long a hold waits, or revokes, is refused. Anything else shows "This change isn't what was offered", with no
+    where it applies; when it starts and ends, compared as the instants the times name, so one written with another
+    offset is the same. A text that can't be read as a time equals only the same text, never a time. A draft that sets how long a hold waits, or revokes, is refused. Anything else shows "This change isn't what was offered", with no
     sign button. A draft that couldn't be read shows the error alone.
   - **One Face ID** signs the version the phone read (`tafs.cards.v1`). With the switch on, the confirm names the
     held call and the version of it the person saw, so KIFF lets it go under the same signature. With it off, the

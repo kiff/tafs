@@ -91,6 +91,7 @@ export const de: Words = {
   run_failed_error: "Er ist bei einem Fehler stehen geblieben. Danach wurde nichts mehr getan.",
   run_failed_time: "Er hat sein Zeitlimit erreicht und gestoppt.",
   run_failed_start: "Er konnte nicht starten, also wurde nichts getan.",
+  run_failed_tools: "Er ist nicht gestartet: Die Werkzeuge des tafs konnten nicht verwendet werden. Es wurde nichts getan.",
   run_failed_switching: "Er ist nicht gestartet: Der taf wechselte gerade die Version.",
   run_failed_access: "Er hat gestoppt: Die Person, die gefragt hat, darf diesen taf vielleicht nicht mehr nutzen.",
   run_failed_halted: "Er ist nicht weitergelaufen: Der taf ist angehalten.",

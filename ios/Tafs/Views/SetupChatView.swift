@@ -1566,7 +1566,7 @@ struct SetupApproval: View {
                                 // reads the connection, now connected, and answers Coach.
                                 ConnectApprovalSheet(start: .init(grant: grant.id, needsKey: true), onGiven: {
                                     Task { await model.approve(component, shown: grant.digest, shownDraft: draft?.version) }
-                                })
+                                }, card: component)
                                 .environmentObject(model)
                             }
                         }
