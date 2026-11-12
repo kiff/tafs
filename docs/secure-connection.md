@@ -59,14 +59,16 @@ entry it came from, and answers in the request's `Accept-Language`:
              "terms": { "words": "Terms", "url": "https://kiff.dev/terms" },
              "privacy": { "words": "Privacy Policy", "url": "https://kiff.dev/privacy" } },
   "button": "Connect",
-  "receipt": { "text": "{vendor} connected · key …{last4}", "disconnect": "Disconnect" } }
+  "receipt": { "text": "Qonto connected · key …{last4}", "disconnect": "Disconnect" } }
 ```
 
 - **The first line's `kind`** is `reads_only` only when the grant lists at least one tool
   and every one says `read_only: true`. Otherwise it's `may_change`, including a grant whose
   tools carry no flag. The phone draws `text`, and may use `kind` for an icon.
-- **`{last4}` and `{vendor}`** are the only placeholders. The phone fills `{last4}` from the
-  pasted key, and the key never leaves the phone except to the connection server, as today.
+- **The placeholders** are `{last4}` (in `paste.pasted` and `receipt.text`) and `{terms}` and
+  `{privacy}` (in `legal.text`, each drawn as its link's `words`). tafs cloud fills the
+  vendor's name everywhere. The phone fills `{last4}` from the pasted key, and the key never
+  leaves the phone except to the connection server, as today.
 - **The legal links** are per language (`https://kiff.dev/de/terms`), as the apps' own legal
   links are.
 - **The logo** is the catalog entry's, as Connect apps draws it. With none, `logo` is absent
@@ -89,11 +91,16 @@ component's `draft`, as it can today), tafs cloud's approval answer gives one as
 tafs.setup.v1|{tenant}|{grant}|{digest}|{key_sha256}|{draft}|{version}
 ```
 
-- **The phone** fills `key_sha256` from the pasted key, signs once behind the fingerprint,
-  and makes two calls with the same signature:
+- **The key** is the pasted text with outer whitespace trimmed. That same trimmed key is
+  what's sent, and `key_sha256` is the lowercase hex SHA-256 of its UTF-8 bytes.
+- **The phone** fills `key_sha256`, signs once behind the fingerprint, and makes two calls
+  with the same signature, in the same fields each call takes today plus
+  `scheme: "tafs.setup.v1"` and the message's other parts, so each service rebuilds what it
+  checks:
   1. the key to the connection server, as today (`POST …/grants/{id}/key`, the key in
-     `Planque-Vendor-Key`);
-  2. then the draft's confirm to KIFF.
+     `Planque-Vendor-Key`), whose signed body also carries `scheme`, `draft` and `version`;
+  2. then the draft's confirm to KIFF, with `signature` and `version` as today, plus
+     `scheme`, `grant`, `digest` and `key_sha256`.
 - **The connection server** checks the signature over the message it rebuilds from its own
   grant, digest and the key's SHA-256. It takes `draft` and `version` as they're written,
   without reading them.
@@ -103,8 +110,10 @@ tafs.setup.v1|{tenant}|{grant}|{digest}|{key_sha256}|{draft}|{version}
   confirm takes only `tafs.cards.v1`.
 - **Each service takes one signature once,** for that draft version and that grant digest.
 - **If the confirm fails after the key went in,** the app is connected and the Card still
-  waits. The card says so, and its retry confirms with the same signature, with no second
-  fingerprint, while the draft's version holds.
+  waits. The card says so. While the sheet or the card is open, its retry confirms with the
+  same signature, which the phone keeps in memory only, with no second fingerprint, while
+  the draft's version holds. Once the app has closed, a retry takes one fresh fingerprint over
+  `tafs.cards.v1`, as a Card confirm does today.
 - **Without a draft** (an app that signs in at the vendor, whose tools are known only after
   the sign-in), the two steps stay as they are.
 
@@ -112,8 +121,9 @@ tafs.setup.v1|{tenant}|{grant}|{digest}|{key_sha256}|{draft}|{version}
 grant lists before the key is given. That's a skill change, and it takes an Eval.
 
 **Until this ships:** an approval card whose connection is already connected never repeats
-the connection's text. tafs cloud marks it on the conversation (`connection: {done: true,
-words: "Qonto is connected (read only)"}`), and the apps draw only that line and Its Card.
+the connection's text. tafs cloud marks it on Coach's approval component in the conversation
+(`connection: {done: true, words: "Qonto is connected (read only)"}`), and the apps draw only
+that line and Its Card.
 
 ## Lanes
 
@@ -129,7 +139,8 @@ words: "Qonto is connected (read only)"}`), and the apps draw only that line and
 
 - **The first line says read only only when every tool is a read**, and `may_change` for a
   grant with a write tool, or with no flags.
-- **No placeholder but `{last4}` and `{vendor}`**, and every line is in the 8 languages.
+- **No placeholder but `{last4}`, `{terms}` and `{privacy}`**, and every line is in the 8
+  languages.
 - **One fingerprint per key setup with a Card:** the phone signs one `tafs.setup.v1`
   message, and both services accept it once. A second use is refused by each.
 - **A signature over another draft, version, grant, digest or key** is refused by the
