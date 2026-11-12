@@ -161,12 +161,16 @@ final class HaltTests: XCTestCase {
         XCTAssertTrue(model.showsAccountHalt)
         XCTAssertEqual(sent("GET", "/v1/halt").count, 1)
 
-        // Resumed from there: with no taf and nothing halted, the row goes.
+        // Resumed from there: with no taf and nothing halted, the row goes. The refresh after a
+        // resume reads the account's halt again, and tafs cloud says it runs.
         StubProtocol.responses["POST /v1/resume"] = (200, #"{"state":"running"}"#)
         StubProtocol.responses["DELETE /v1/halt"] = (200, Self.running)
+        StubProtocol.responses["GET /v1/halt"] = (200, Self.running)
         let resumed = await model.resumeHalt(nil)
         XCTAssertTrue(resumed, model.lastError ?? "")
+        XCTAssertEqual(model.haltState(nil).state, .running)
         XCTAssertFalse(model.showsAccountHalt)
+        XCTAssertEqual(sent("GET", "/v1/halt").count, 2, "read again by the refresh after the resume")
     }
 
     /// Halting counts too: the account isn't running, so its row stays while it settles.
