@@ -25,6 +25,8 @@ class CloudError(
   val words: String? = null,
   /** tafs cloud's `code` for the refusal, where it names one ("held_full"). */
   val code: String? = null,
+  /** For `code: "halted"`: what is halted, `account` or `taf` (docs/approvals.md). */
+  val halted: String? = null,
 ) : Exception(message)
 
 /**
@@ -804,7 +806,7 @@ class TafsCloud(
       bot.tafs.app.drive.DriveDiagnostics.failed(method, path, response.status)
       throw CloudError(
         response.status, refusal(response.body) ?: Words.Error.cloudAnswered(status = response.status.toString()), blockingRuns(response.body), field(response.body, "words"),
-        field(response.body, "code"),
+        field(response.body, "code"), field(response.body, "halted"),
       )
     }
     return response.body
@@ -846,7 +848,7 @@ class TafsCloud(
     val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer", "Accept-Language" to KiffClient.screenLanguage())
     if (body != null) headers["Content-Type"] = "application/json"
     val response = transport.stream(HttpRequest(method, streamUrl + path, headers, body))
-    if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: Words.Error.cloudAnswered(status = response.status.toString()), blockingRuns(response.refusal), field(response.refusal, "words"), field(response.refusal, "code"))
+    if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: Words.Error.cloudAnswered(status = response.status.toString()), blockingRuns(response.refusal), field(response.refusal, "words"), field(response.refusal, "code"), field(response.refusal, "halted"))
     return StreamEvent.parse(response.lines)
   }
 

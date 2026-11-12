@@ -573,6 +573,42 @@ class ChatKiffTest {
     assertEquals("The message wasn't sent. Refunds is halted. Resume it from Halt to go on.", m.state.value.chatUnsent["refunds-1"]!!.single().why)
   }
 
+  @Test fun aMessageRefusedForTheAccountsHaltOffersResumeUntilItsResumed() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread())
+    transport.answer("POST /v1/tafs/taf_1/messages/stream", 404, """{"error":"not_found"}""")
+    transport.answer(
+      "POST /v1/tafs/taf_1/messages", 409,
+      """{"error":"refused","code":"halted","halted":"account","words":"Your account is halted: none of your tafs runs, Coach included, until it's resumed."}""",
+    )
+    transport.answer("GET /v1/halt", 200, """{"halt":{"state":"halted","runtime":true,"kiff":true,"planque":true,"account":true}}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertFalse(m.deliverChat("hello", "refunds-1"))
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertEquals("tafs cloud says what is halted", "account", unsent.halted)
+    // Where the halt stands is read at once: while it holds, the row offers Resume in Retry's place.
+    assertTrue(m.state.value.haltOf(null).halted)
+    assertTrue(m.state.value.unsentWaitsOnHalt("refunds-1", unsent))
+    // Resumed: Retry is back.
+    transport.answer("GET /v1/halt", 200, """{"halt":{"state":"running"}}""")
+    m.refreshHalt(null)
+    assertFalse(m.state.value.unsentWaitsOnHalt("refunds-1", unsent))
+  }
+
+  @Test fun aRefusalOfAnotherKindOffersRetryAsBefore() = runTest {
+    readsOf()
+    transport.answer(conversation, 200, thread())
+    transport.answer("POST /v1/tafs/taf_1/messages", 500, """{"error":"boom"}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    assertFalse(m.deliverChat("hello", "refunds-1"))
+    val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
+    assertNull(unsent.halted)
+    assertFalse(m.state.value.unsentWaitsOnHalt("refunds-1", unsent))
+    assertTrue("nothing about a halt is read", transport.requestsTo("GET /v1/halt").isEmpty())
+  }
+
   /** A message that doesn't go stays in the thread as written, marked not sent with why (kiff/tafs#476): nothing is lost. */
   @Test fun aMessageThatDoesNotGoStaysMarkedNotSentAndSaysWhy() = runTest {
     readsOf()

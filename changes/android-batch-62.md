@@ -1,0 +1,2 @@
+- **Android 1.10.2: an app that takes a key connects from Coach's card.** When Coach asks you to approve an app that connects with a key, the card now has the key field, and its button gives the key with your fingerprint. Your first taf can now use such an app.
+- **Resume where a message wasn't sent because of a halt.** When a message is refused because your account or the taf is halted, its Not sent line offers Resume (with your fingerprint) instead of Retry, and Retry comes back once it's resumed.

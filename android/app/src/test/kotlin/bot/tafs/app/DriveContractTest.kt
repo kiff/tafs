@@ -98,7 +98,8 @@ class DriveContractTest {
     val gate = File(sources, "views/ApprovalsSetupView.kt").text()
     assertTrue("ApprovalGate carries the confirm mark", Regex("""fun ApprovalGate[\s\S]{0,400}confirms\(\)""").containsMatchIn(gate))
     val listed = listOf(
-      "views/CoachViews.kt" to "{ actions.approve(c, grant.digest, draft?.version) }",
+      "views/CoachViews.kt" to "actions.giveKey(c, grant.digest, draft?.version, key) else actions.approve(c, grant.digest, draft?.version)",
+      "views/TafChatView.kt" to "resuming = true; resume()",
       "views/CoachViews.kt" to "actions.confirmKnob(taf.id)",
       "views/CoachViews.kt" to "{ actions.approveDrive(c) }",
       "views/CoachChats.kt" to "Words.Coach.Tools.give",
