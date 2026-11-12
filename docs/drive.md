@@ -255,22 +255,35 @@ drive; only a clear takeover ends it.
 
 - **Any touch, key or gesture of the person's pauses the drive at once, and is delivered.** It
   does what it would do with no drive on: a button acts, a row opens, a field takes focus.
-  - The app posts `POST /v1/coach/drive/pause {drive}`.
+  - **The app's own pause comes first.** From the person's first touch, the app refuses every
+    request of the drive with `outcome: refused`, `line: "Paused"` until Continue, whatever
+    tafs cloud says. That covers a request already on the stream, or one sent before tafs cloud
+    has the pause.
+  - The app posts `POST /v1/coach/drive/pause {drive}`. If that fails, the app keeps its own
+    pause and posts it again; only Continue (`resume`) lifts it.
   - The step under way stops before its next event. A step that dispatched nothing yet answers
     `outcome: refused`, `line: "Paused"`; one that already acted answers as it would have.
   - Coach's events are never mixed into the person's: the event being dispatched when they
     touch finishes first.
 - **While it's paused:**
   - The border dims, and the caption reads **Paused · Continue / Stop**.
-  - tafs cloud sends the app no request. Coach's look or act waits until the drive goes on or
-    ends. After 20 seconds its tool answers "The person is using the app" so Coach can wait
-    again, and Coach never tries to act around them.
+  - tafs cloud sends the app no request. Coach's look or act is answered at once with "The
+    person is using the app", and tafs cloud parks Coach's run the way a held call does: paused,
+    waiting on an event, so no invocation runs and no turns or credits are used while the person
+    has the app.
+  - `resume`, or the drive's end, is that event: the run goes on, and its first step is a look.
   - The person uses the app as usual, and every touch of theirs is delivered.
-- **Continue** posts `POST /v1/coach/drive/resume {drive}`, and the caption goes back to Coach's
-  line. Coach's first step after it is a look: tafs cloud refuses an `app_act` until Coach has
-  looked again, since the screen may have changed.
+- **Continue** puts the keyboard away first: the field keeps its text and loses focus, so nothing
+  the keyboard commits later reads as the person's typing. Then the app posts
+  `POST /v1/coach/drive/resume {drive}`, and the caption goes back to Coach's line. Coach's first
+  step after it is a look: tafs cloud refuses an `app_act` until Coach has looked again, since
+  the screen may have changed.
 - **Stop** ends the drive as `stopped`.
 - **A pause counts as nothing done:** paused for 15 minutes, the drive ends as `idle`.
+- **A halt while paused ends the drive at once** as `halted`. tafs cloud settles the parked run,
+  which stops as halted, without waiting for Coach's next call.
+- **Only the drive's own person** can pause or resume it. Anyone else's `pause` or `resume` is
+  refused with 404, as another person's drive is.
 
 **A clear takeover ends the drive,** paused or not. Coach then says it's letting the person
 carry on.
@@ -284,8 +297,9 @@ carry on.
 | taps Stop on the caption, or the Coach button | `stopped` |
 
 A tap on a control is one delivered to something that acts: a button, a row, a toggle, a link,
-a tab. A scroll, a swipe that only scrolls, and a touch on empty space don't count. The count
-starts again at Continue.
+a tab. A scroll, a swipe that only scrolls, and a touch on empty space don't count. The tap that
+paused the drive counts as the first when it landed on a control. The count starts again from
+zero at Continue.
 
 ## When a drive ends
 
@@ -303,7 +317,7 @@ tafs cloud ends a drive itself in these cases:
 
 | `why` | When |
 |---|---|
-| `halted` | The account is halted, seen at Coach's next call. |
+| `halted` | The account is halted, seen at Coach's next call, or at once while the drive is paused. |
 | `done` | Coach's `done`. |
 | `idle` | Nothing was done for 15 minutes, a pause included. |
 | `replaced` | Another drive started. |
@@ -339,7 +353,7 @@ the same either way. Coach, and the account's events, have their own words for i
   - **Volume keys stay the person's** and don't pause the drive.
 - **iOS:**
   - Coach's steps never come through the touch stream: they're the app's registered actions and `insertText`. So any `UITouch`, key press or gesture is the person's.
-  - **The overlay takes no touch** but its caption's Continue and Stop: it draws above the app's other windows and passes every other touch through. The app's windows see each touch as it goes by (`sendEvent`, before it's delivered), so the person's first touch pauses the drive and still reaches the control under it, edge swipes included.
+  - **The overlay takes no touch** but its caption's Continue and Stop: it draws above the app's other windows and passes every other touch through (its `hitTest` returns nil). The app's windows each carry a passive recognizer that sees every touch as it begins, without delaying or taking it (`cancelsTouchesInView` off, recognizing alongside every other recognizer), so the person's first touch pauses the drive and still reaches the control under it, edge swipes included. A window that opens mid-drive, such as a menu's, gets one too.
   - **A tap on a control** is counted when the registry has an element with an action under the touch's end.
   - The caption's Stop ends the drive as `stopped`. A back swipe from the edge, or a navigation back button, ends it as `owner_took_over`, and goes back.
   - The drive ends on `willResignActive` or `sceneDidEnterBackground` (`left_app`), and when protected data becomes unavailable (`locked`).
