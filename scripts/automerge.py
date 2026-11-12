@@ -150,6 +150,23 @@ def eval_running(repo, workflow):
         return True
 
 
+# What a failed or unreadable answer from GitHub raises: the request itself, or an answer
+# that isn't the JSON or the shape expected.
+UNREAD = (subprocess.CalledProcessError, ValueError, KeyError, TypeError, AttributeError)
+
+
+def read(repo, n):
+    """What `decide` needs of one pull request: itself, its files, its reviews, and the checks on
+    its latest commit."""
+    pr = gh(f"repos/{repo}/pulls/{n}")
+    changed = pages(f"repos/{repo}/pulls/{n}/files")
+    # A renamed file leaves a place too: its old name counts.
+    files = [f["filename"] for f in changed] + [f["previous_filename"] for f in changed if f.get("previous_filename")]
+    reviews = pages(f"repos/{repo}/pulls/{n}/reviews")
+    checks = pages(f"repos/{repo}/commits/{pr['head']['sha']}/check-runs")
+    return pr, files, reviews, checks
+
+
 def main(argv):
     p = argparse.ArgumentParser()
     p.add_argument("--dry-run", action="store_true")
@@ -166,13 +183,16 @@ def main(argv):
     if not hold and eval_repo and eval_workflow and eval_running(eval_repo, eval_workflow):
         hold = "the evals are running, or couldn't be read"
     numbers = [args.pr] if args.pr else [pr["number"] for pr in pages(f"repos/{repo}/pulls?state=open&base=main")]
+    unread = 0
     for n in numbers:
-        pr = gh(f"repos/{repo}/pulls/{n}")
-        changed = pages(f"repos/{repo}/pulls/{n}/files")
-        # A renamed file leaves a place too: its old name counts.
-        files = [f["filename"] for f in changed] + [f["previous_filename"] for f in changed if f.get("previous_filename")]
-        reviews = pages(f"repos/{repo}/pulls/{n}/reviews")
-        checks = pages(f"repos/{repo}/commits/{pr['head']['sha']}/check-runs")
+        # One pull request that can't be read is skipped, and the pass goes on to the others: a
+        # single failed request never keeps the rest from merging. It is read again next run.
+        try:
+            pr, files, reviews, checks = read(repo, n)
+        except UNREAD:
+            print(f"#{n}: couldn't be read, skipped")
+            unread += 1
+            continue
         ok, lane, why = decide(pr, files, reviews, checks, config, hold)
         if not ok:
             print(f"#{n}: waits for a maintainer: {why}")
@@ -184,7 +204,8 @@ def main(argv):
         gh("-X", "PUT", f"repos/{repo}/pulls/{n}/merge", "-f", "merge_method=squash", "-f", f"sha={pr['head']['sha']}",
            "-f", f"commit_title={pr['title']} (#{n})")
         print(f"#{n}: merged ({lane})")
-    return 0
+    # Nothing could be read at all: that is GitHub or the token, and the run says so by failing.
+    return 1 if numbers and unread == len(numbers) else 0
 
 
 if __name__ == "__main__":
