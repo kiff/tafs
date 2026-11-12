@@ -1,0 +1,1 @@
+- **iPhone and iPad: Account › Language.** It shows the language tafs is in, by its own name ("Français", "Polski"), and Change language opens tafs's page in Settings, where iOS lists its 8 languages, as Android 1.8.1 does (docs/ios-app.md).

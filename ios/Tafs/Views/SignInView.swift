@@ -155,6 +155,14 @@ struct SettingsView: View {
                     NavigationLink(NotificationSettingsView.title) { NotificationSettingsView() }
                 }
                 Section(Words.Settings.themeTitle) { ThemePicker() }
+                // The language tafs's lines are in, by its own name, and iOS's own setting to change
+                // it (Settings › tafs › Language). No picker of the app's own, as on Android.
+                Section(Words.Settings.languageTitle) {
+                    LabeledContent(Words.Settings.languageTitle, value: AppLanguage.name())
+                        .accessibilityIdentifier("settings.language")
+                    Button(Words.Settings.changeLanguage) { openTafsSettings() }
+                        .foregroundColor(Theme.amberText)
+                }
                 if model.mode == .kiff {
                     Section {
                         NavigationLink { TimeZonePicker() } label: { LabeledContent(Words.Settings.timeZoneTitle, value: model.kiffAccount?.timeZone ?? "UTC") }

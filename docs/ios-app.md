@@ -223,6 +223,10 @@ the app in sample mode.
 - **Account › Alerts** (`NotificationSettingsView`): two lock-screen examples, Alerts on this
   device (Turn on alerts while off), Sound, and What alerts you, read-only; "A taf answered
   someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).
+- **Account › Language:** the language tafs's lines are in, by its own name ("Français", "Polski",
+  `AppLanguage.name`), so someone in a language they don't read still finds theirs, and **Change
+  language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. No picker
+  of the app's own, as on Android (`settings.language_title`, `settings.change_language`).
 - **Dark:** each `Theme` colour has a light and a dark value (`Color(light:dark:)`), the values
   the owner reviewed, the same as Android: background 141311, panel 1F1E1B, raised 2A2824, ink
   F2EFE9, soft A8A49C, dim 96918A, line F2EFE9 at 12%, amber FF8A1F, amberText F0A45A, ok 4CC38A,
