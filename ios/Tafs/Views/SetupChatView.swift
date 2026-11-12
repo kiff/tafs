@@ -920,9 +920,11 @@ struct UnsentBubble: View {
                 }
                 .scaledFont(13, relativeTo: .footnote)
                 HStack(spacing: 14) {
+                    // Its word confirms, so a drive's touch on it is refused (docs/drive.md), though it only opens Halt.
                     Button(Words.Taf.resume) { resuming = true }
                         .foregroundColor(Theme.ink).semibold()
                         .accessibilityIdentifier("unsent.resume")
+                        .confirming()
                     Button(Self.retryWord) { Task { await retry() } }
                         .foregroundColor(Theme.soft)
                         .disabled(busy)
