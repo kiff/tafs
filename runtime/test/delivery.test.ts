@@ -671,6 +671,12 @@ describe("work is handed on twice at most, never in a circle, and a taf can say 
     expect(got.map((d: { key: string; state: string }) => [d.key, d.state])).toEqual([[`taf:${RAE}`, "none"], [`taf:${LED}`, "handed"]]);
     expect(v.agents.runs.filter((r) => r.agent === RAE)).toHaveLength(1);
     expect(v.pushed).toHaveLength(0);
+    // The dial refuses a taf as its own place. A record that names it anyway starts no run of itself, on its first run either.
+    const u = world([TO_RAE]);
+    const own = await u.ran(RAE, HAND("More of the same."), []);
+    expect(await deliveriesOfRun(u, RAE, own.id)).toEqual([{ place: "taf", key: `taf:${RAE}`, name: "Rae", state: "none", line: "Not handed back to Rae: it already had this work" }]);
+    await sweepDeliveries(u.deps);
+    expect(u.agents.runs.filter((r) => r.agent === RAE)).toHaveLength(1);
   });
 
   it("when the run before it is gone, how far the work came isn't known, so it goes no further; a read that only fails is tried again", async () => {

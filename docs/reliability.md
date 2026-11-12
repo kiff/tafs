@@ -188,7 +188,9 @@ wasn't checked is settled, once:
       already handed on twice", with Coach to open. Nothing is dropped silently.
     - **Never to a taf that already had the work,** so nothing circles. Rae hands to Invoices, and
       Invoices' results go to Rae: that stops there, as `none`, "Not handed back to Rae: it already
-      had this work". Calm, since two tafs that hand to each other are meant to stop.
+      had this work". Calm, since two tafs that hand to each other are meant to stop. The taf
+      itself counts: the dial refuses a taf as its own place, and a record that names it anyway
+      starts no run of it.
     - **When the run before it is no longer kept,** how far the work came isn't known, so it goes
       no further. A read that only fails is tried again later, and nothing is handed on a guess.
   - **How far a result goes is tafs cloud's rule, not the taf's.** The taf's instructions only ask
@@ -228,8 +230,10 @@ writes that went through) and `sent` (the writes it sent, one whose outcome isn'
   hand-off's one note to the managers may come from it.
 - **Whether the receiving run handed its result on** is read from the receiving taf's own
   deliveries for that run (`passedOn`). A manager's read or the sweep settles those first, so the
-  second hand-off starts then. A viewer's read starts nothing: the line stays "Handed to Invoices"
-  until one of those has run, for as long as a run has to start.
+  second hand-off starts then. So a manager's read of Rae's page can start Ledger's run, through
+  Invoices: once per run (the `settling` claim), and no deeper than the hop limit. A viewer's read
+  starts nothing: the line stays "Handed to Invoices" until one of those has run, for as long as a
+  run has to start.
 - **A run that was held for the owner and is back at work** reads "Handed to Invoices" again,
   not "waiting for you".
 - **The note for a dead hand-off that had acted, or may have,** doesn't say "Send it again": it

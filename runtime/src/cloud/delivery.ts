@@ -388,8 +388,9 @@ async function handOff(ctx: DeliveryContext, tenant: string, taf: Taf, r: Run, p
   // The taf's own word that there is nothing for the other taf: calm, and nothing is handed.
   const nothing = nothingToHand(text);
   if (nothing !== undefined) return { ...base, state: "none", ...(nothing ? { why: nothing } : {}) };
-  // Back to a taf that already had this work: where it stops, by design, so it is calm too.
-  if (chain?.tafs.includes(p.taf)) return { ...base, state: "none", why: DELIVERY_WORDS.circle };
+  // Back to a taf that already had this work: where it stops, by design, so it is calm too. The taf itself
+  // has it now: the dial refuses a taf as its own place (places.ts), and a record that names it anyway starts nothing.
+  if (p.taf === taf.id || chain?.tafs.includes(p.taf)) return { ...base, state: "none", why: DELIVERY_WORDS.circle };
   if (chain && chain.hops >= DELIVERY.maxHops) return { ...base, state: "not_sent", why: DELIVERY_WORDS.tooFar };
   const to = await ctx.tafs.get(tenant, p.taf);
   if (!to || to.removing || to.job === "setup") return { ...base, state: "not_sent", why: DELIVERY_WORDS.tafGone };
