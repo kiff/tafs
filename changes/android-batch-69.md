@@ -1,0 +1,1 @@
+- **Android 1.14.1:** your own taf no longer reads "Shared with" your own address; a taf shared with no one else reads "Not shared".

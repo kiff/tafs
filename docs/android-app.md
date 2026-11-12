@@ -483,6 +483,10 @@ answered:
   its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`).
 - **Card:** only what's on its Card: the Card, its limits and how they're counted, its usage,
   Halt and Revoke.
+
+Who it's shared with (`PeopleWords.sharedWith`) leaves out the person reading: the one KIFF marks
+`you` in its people list, or the one whose email is the account read's, as on iOS. Their own share is
+never named, and a taf shared with no one else reads "Not shared".
 - **Setup** (`SetupTab`): how it runs, in sections.
   - **The job**, with Improve in Coach.
   - **Starts when**, one line per start in tafs cloud's words, opening its sheet
