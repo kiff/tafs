@@ -536,30 +536,24 @@ final class KIFFClient {
         /// KIFF's plan: "solo", "team" (Company), "company" (an agreement), "internal", or none.
         var plan: String? = nil
         var billing: Billing? = nil
-        /// Whether this person manages the account's billing: someone who doesn't asks an admin.
-        var canAddTasks: Bool? = nil
         var store: Store? = nil
         /// Members' requests for a raise or a pack: every open one for someone who manages
         /// billing, this person's own otherwise.
         var requests: [PackRequest]? = nil
 
-        enum CodingKeys: String, CodingKey { case plan, billing, canAddTasks = "can_add_tasks", store, requests }
+        enum CodingKeys: String, CodingKey { case plan, billing, store, requests }
 
-        init(plan: String? = nil, billing: Billing? = nil, canAddTasks: Bool? = nil, store: Store? = nil, requests: [PackRequest]? = nil) {
-            self.plan = plan; self.billing = billing; self.canAddTasks = canAddTasks; self.store = store; self.requests = requests
+        init(plan: String? = nil, billing: Billing? = nil, store: Store? = nil, requests: [PackRequest]? = nil) {
+            self.plan = plan; self.billing = billing; self.store = store; self.requests = requests
         }
 
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             plan = (try? c.decodeIfPresent(String.self, forKey: .plan)) ?? nil
             billing = (try? c.decodeIfPresent(Billing.self, forKey: .billing)) ?? nil
-            canAddTasks = (try? c.decodeIfPresent(Bool.self, forKey: .canAddTasks)) ?? nil
             store = (try? c.decodeIfPresent(Store.self, forKey: .store)) ?? nil
             requests = ((try? c.decodeIfPresent([LenientItem<PackRequest>].self, forKey: .requests)) ?? nil)?.compactMap(\.value)
         }
-
-        /// This person manages billing: they buy and raise, and answer members' requests.
-        var managesBilling: Bool { canAddTasks == true }
     }
 
     /// A member's request to the account's admins: a raise of the spend limit (`kind: "raise"`)

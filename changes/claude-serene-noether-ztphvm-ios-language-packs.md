@@ -1,1 +1,2 @@
 - **iPhone and iPad: Account › Language.** It shows the language tafs is in, by its own name ("Français", "Polski"), and Change language opens tafs's page in Settings, where iOS lists its 8 languages, as Android 1.8.1 does (docs/ios-app.md).
+- **iPhone and iPad: an account's own admin no longer sees "Ask an admin" in Plan & usage,** and sees members' open requests again. Who manages billing is KIFF's `billing.manage`, as on Android, not a usage field KIFF now always sends as false (docs/ios-app.md).

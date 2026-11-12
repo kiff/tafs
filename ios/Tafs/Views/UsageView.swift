@@ -55,8 +55,8 @@ struct UsageView: View {
     /// For someone who doesn't manage billing, on a plan where they can ask: their request
     /// waiting, with Withdraw; else the last answer, and Ask an admin.
     @ViewBuilder private func askPanel(_ u: KIFFClient.Usage) -> some View {
-        if !u.managesBilling {
-            if let mine = Self.waiting(u) {
+        if !model.managesBilling {
+            if let mine = Self.waiting(u, managesBilling: false) {
                 Panel {
                     Eyebrow(text: Words.Usage.Requests.waiting)
                     Text(Words.Usage.adminAnswers(detail: "\(Self.askedLine(mine, in: u))")).scaledFont(15).foregroundColor(Theme.ink)
@@ -64,7 +64,7 @@ struct UsageView: View {
                     Button(Words.Usage.Requests.withdraw) { Task { await model.withdrawRequest(mine) } }.buttonStyle(OutlineButtonStyle())
                 }
             } else {
-                if let answer = Self.lastAnswer(u) {
+                if let answer = Self.lastAnswer(u, managesBilling: false) {
                     Panel { Text(answer).scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true) }
                 }
                 if Self.asks(u) != nil {
@@ -81,7 +81,7 @@ struct UsageView: View {
     /// Members' requests waiting for an answer, for someone who manages billing: a raise is
     /// answered by raising the limit, a pack by buying it for that request.
     @ViewBuilder private func requestsPanel(_ u: KIFFClient.Usage) -> some View {
-        let open = Self.openRequests(u)
+        let open = Self.openRequests(u, managesBilling: model.managesBilling)
         if !open.isEmpty {
             Panel(stroke: Theme.amber.opacity(0.5)) {
                 Eyebrow(text: Words.Usage.Requests.title, color: Theme.amber)
@@ -193,8 +193,8 @@ struct UsageView: View {
     }
 
     /// The member's own request still waiting.
-    static func waiting(_ u: KIFFClient.Usage) -> KIFFClient.PackRequest? {
-        guard !u.managesBilling else { return nil }
+    static func waiting(_ u: KIFFClient.Usage, managesBilling: Bool) -> KIFFClient.PackRequest? {
+        guard !managesBilling else { return nil }
         return u.requests?.first { $0.status == "open" }
     }
 
@@ -205,8 +205,8 @@ struct UsageView: View {
     }
 
     /// The member's latest answered request, in the lines both apps share.
-    static func lastAnswer(_ u: KIFFClient.Usage) -> String? {
-        guard !u.managesBilling, let r = u.requests?.first else { return nil }
+    static func lastAnswer(_ u: KIFFClient.Usage, managesBilling: Bool) -> String? {
+        guard !managesBilling, let r = u.requests?.first else { return nil }
         switch r.status {
         case "approved": return r.kind == "raise" ? Words.Billing.Ask.raised : Words.Billing.Ask.addedPack
         case "declined":
@@ -224,8 +224,8 @@ struct UsageView: View {
     }
 
     /// Open requests, for someone who manages billing.
-    static func openRequests(_ u: KIFFClient.Usage) -> [KIFFClient.PackRequest] {
-        guard u.managesBilling else { return [] }
+    static func openRequests(_ u: KIFFClient.Usage, managesBilling: Bool) -> [KIFFClient.PackRequest] {
+        guard managesBilling else { return [] }
         return (u.requests ?? []).filter { $0.status == "open" }
     }
 

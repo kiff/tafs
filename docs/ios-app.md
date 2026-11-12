@@ -159,6 +159,10 @@ the app in sample mode.
     `buy.first_month` is set and `ready`, then the packs that can be bought again
     (`Store.offered(firstMonth:)`). Not ready, it isn't listed: never alone or greyed. KIFF
     lists it with no App Store product today, so iPhone and iPad don't show it yet.
+  - **Who manages billing** is KIFF's `billing.manage` in the account's capabilities
+    (`AppModel.managesBilling`), as on Android: they see members' open requests, with Raise the
+    limit or Approve, and never **Ask an admin**; anyone else sees Ask an admin, or their own
+    request waiting. Not KIFF's usage `can_add_tasks`, which it has sent as false since credits.
   - **Restore purchases** stays on Solo's screen and Add credits, as the App Store asks. A
     restore that finds nothing says "Nothing to restore.", never "Purchases restored."
     (`PurchaseOutcome.nothingToRestore`).
