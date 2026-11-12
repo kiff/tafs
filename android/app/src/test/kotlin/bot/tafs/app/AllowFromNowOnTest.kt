@@ -234,6 +234,28 @@ class AllowFromNowOnTest {
     assertFalse("a Card marked unchanged that drops its end", signs(draft(extra = unchanged)))
   }
 
+  @Test fun theCardsHoldersDomainTimeZoneAndHoldTimeMustReadAsInForce() {
+    // The rest of what KIFF's sameTerms compares: a draft that differs from the Card in force only there is never signed.
+    val g = "\"grants\":"
+    val inForce = "$g[${refund(cap)}],\"subject\":\"refunds-1\",\"subjects\":[\"refunds-1\"],\"domain\":\"Payments\",\"environment\":\"live\"," +
+      "\"location\":\"Europe/Paris\",\"hold_expiry_seconds\":600"
+    fun after(extra: String = "") = "$g[${refund(raised)}]$extra"
+    assertTrue("domain and environment as written, without case; the rest kept", signs(card(after(",\"domain\":\"payments\",\"environment\":\"LIVE\""), inForce)))
+    assertFalse("another first holder, its list left out", signs(card(after(",\"subject\":\"payouts-1\",\"domain\":\"payments\",\"environment\":\"live\""), inForce)))
+    assertTrue("the same first holder, its list left out", signs(card(after(",\"subject\":\"refunds-1\",\"domain\":\"payments\",\"environment\":\"live\""), inForce)))
+    assertFalse("moved from live to test", signs(card(after(",\"domain\":\"payments\",\"environment\":\"test\""), inForce)))
+    assertFalse("another domain", signs(card(after(",\"domain\":\"shipping\",\"environment\":\"live\""), inForce)))
+    assertFalse("a domain left out: not the Card's", signs(card(after(",\"environment\":\"live\""), inForce)))
+    assertFalse("another time zone", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"location\":\"America/New_York\""), inForce)))
+    assertTrue("the same time zone, written", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"location\":\"Europe/Paris\""), inForce)))
+    assertFalse("a hold that waits longer", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"hold_expiry\":\"24h\""), inForce)))
+    assertTrue("the same hold time, written another way", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"hold_expiry\":\"10m\""), inForce)))
+    assertTrue("keep keeps it", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"hold_expiry\":\"keep\""), inForce)))
+    assertFalse("a hold time that can't be read", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"hold_expiry\":\"soon\""), inForce)))
+    assertFalse("a revoked Card", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\",\"revoked_at\":\"2026-11-12T00:00:00Z\""), inForce)))
+    assertFalse("over a revoked Card", signs(card(after(",\"domain\":\"payments\",\"environment\":\"live\""), "$inForce,\"revoked_at\":\"2026-11-12T00:00:00Z\"")))
+  }
+
   @Test fun aCardMarkedUnchangedMustReadAsInForce() {
     val sneaky = """,{"revises":"c2","unchanged":true,"current":{"grants":[{"action":"list_charges"}]},"grants":[{"action":"list_charges"},{"action":"delete_customer"}]}"""
     assertFalse(signs(draft(extra = sneaky)))

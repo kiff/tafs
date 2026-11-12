@@ -569,8 +569,11 @@ like this one go on their own.
   - each action, its caps, the `entity_states` and `resources` it's limited to, and its `next_steps`;
   - each total, its window (none named is `calendar_day`), its `measure` (none named is `attempts`
     for a count, `effects` for a sum), and its `per`;
-  - `on_exceed`, the Card's `subjects` (none named on a revision keeps the Card's), and
-    `valid_from` and `valid_until`, compared as instants.
+  - `on_exceed`, and `valid_from` and `valid_until`, compared as instants;
+  - the Card's holders (`subjects`; none named on a revision keeps the Card's, unless `subject`
+    names another first holder), its `domain` and `environment` as written (without case), its
+    `location` and `hold_expiry` (none, or `keep`, keeps the Card's; a duration it can't read never
+    matches). A Card with `revoked_at`, in the draft or in force, never matches.
 
   KIFF's lines and a grant's title are words, not terms. A Card marked unchanged must read as in
   force too. Anything else, or a kind the contract doesn't name: "This change isn't what was

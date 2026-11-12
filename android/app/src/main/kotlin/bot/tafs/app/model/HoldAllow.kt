@@ -86,28 +86,82 @@ object HoldAllow {
     val grants: List<Grant>,
     val totals: List<Total>,
     val onExceed: String?,
-    val subjects: List<String>?,
-    val validFrom: java.time.Instant?,
-    val validUntil: java.time.Instant?,
+    val card: Card,
   ) {
+    /** The Card's own terms beside its grants and totals, as KIFF's `sameTerms` compares them. */
+    data class Card(
+      val holders: List<String>?,
+      val validFrom: java.time.Instant?,
+      val validUntil: java.time.Instant?,
+      /** Domain and environment, compared as KIFF does, without case; none is "". */
+      val domain: String,
+      val environment: String,
+      val location: String?,
+      /** How long a held call waits, in seconds; KIFF's default for none. */
+      val holdSeconds: Long,
+      /** A revoked Card is never the same as any other: true never matches. */
+      val revoked: Boolean,
+    ) {
+      override fun equals(other: Any?): Boolean =
+        other is Card && !revoked && !other.revoked && holders == other.holders && validFrom == other.validFrom &&
+          validUntil == other.validUntil && domain == other.domain && environment == other.environment && location == other.location &&
+          holdSeconds == other.holdSeconds
+
+      override fun hashCode(): Int = listOf(holders, validFrom, validUntil, domain, environment, location, holdSeconds).hashCode()
+    }
+
     companion object {
-      /** A draft's Card: holders it doesn't name are the Card's in force, as KIFF issues a revision. */
-      fun of(card: DraftCard, inForce: Terms) =
-        of(card.grants, card.aggregates, card.onExceed, card.subjects ?: inForce.subjects, card.validFrom, card.validUntil)
+      /**
+       * A draft's Card as KIFF issues it over the Card in force: holders it doesn't name are the Card's (unless it names
+       * another first holder), and so are its time zone and how long a hold waits; its domain and environment are as written.
+       */
+      fun of(card: DraftCard, inForce: Terms) = read(
+        card.grants, card.aggregates, card.onExceed,
+        Card(
+          holders = card.subjects ?: card.subject?.takeIf { it.isNotBlank() && it.trim() != inForce.card.holders?.firstOrNull() }?.let { listOf(it.trim()) } ?: inForce.card.holders,
+          validFrom = instant(card.validFrom),
+          validUntil = instant(card.validUntil),
+          domain = card.domain.orEmpty().trim().lowercase(),
+          environment = card.environment.orEmpty().trim().lowercase(),
+          location = card.location?.trim()?.takeIf { it.isNotEmpty() } ?: inForce.card.location,
+          holdSeconds = card.holdExpiry?.trim()?.takeIf { it.isNotEmpty() && it != "keep" }?.let { duration(it) } ?: inForce.card.holdSeconds,
+          revoked = card.revokedAt != null,
+        ),
+      )
 
-      fun of(terms: DraftTerms) = of(terms.grants, terms.aggregates, terms.onExceed, terms.subjects, terms.validFrom, terms.validUntil)
+      fun of(terms: DraftTerms) = read(
+        terms.grants, terms.aggregates, terms.onExceed,
+        Card(
+          holders = terms.subjects ?: terms.subject?.let { listOf(it) },
+          validFrom = instant(terms.validFrom),
+          validUntil = instant(terms.validUntil),
+          domain = terms.domain.orEmpty().trim().lowercase(),
+          environment = terms.environment.orEmpty().trim().lowercase(),
+          location = terms.location?.trim()?.takeIf { it.isNotEmpty() },
+          holdSeconds = terms.holdExpirySeconds?.takeIf { it > 0 } ?: DEFAULT_HOLD_SECONDS,
+          revoked = terms.revokedAt != null,
+        ),
+      )
 
-      fun of(grants: List<Grant>, totals: List<Total>, onExceed: String?, subjects: List<String>?, from: java.time.Instant?, until: java.time.Instant?) =
+      fun of(grants: List<Grant>, totals: List<Total>, onExceed: String?, card: Card) =
         Terms(
           grants.map { it.copy(caps = it.caps.sortedWith(capOrder)) }.sortedBy { it.toString() },
           totals.sortedBy { it.toString() },
           onExceed,
-          subjects,
-          from,
-          until,
+          card,
         )
 
-      private fun of(grants: List<DraftGrant>?, aggregates: List<DraftAggregate>?, onExceed: String?, subjects: List<String>?, from: String?, until: String?) = of(
+      /** How long a hold waits when a Card doesn't say: ten minutes, KIFF's default. */
+      private const val DEFAULT_HOLD_SECONDS = 600L
+
+      /** A duration as KIFF reads one ("10m", "24h", "1h30m", "90s"); one it can't read never matches another. */
+      private fun duration(s: String): Long {
+        val parts = Regex("(\\d+)([hms])").findAll(s).toList()
+        if (parts.isEmpty() || parts.joinToString("") { it.value } != s) return -1
+        return parts.sumOf { m -> m.groupValues[1].toLong() * when (m.groupValues[2]) { "h" -> 3600L; "m" -> 60L; else -> 1L } }.takeIf { it > 0 } ?: DEFAULT_HOLD_SECONDS
+      }
+
+      private fun read(grants: List<DraftGrant>?, aggregates: List<DraftAggregate>?, onExceed: String?, card: Card) = of(
         grants.orEmpty().map { g ->
           Grant(
             g.action,
@@ -121,9 +175,7 @@ object HoldAllow {
           Total(a.quantity, a.limit, keptWindow(a.window), a.unit, a.scale, a.measure?.takeIf { it.isNotEmpty() } ?: defaultMeasure(a.quantity), a.per?.takeIf { it.isNotEmpty() })
         },
         onExceed,
-        subjects,
-        instant(from),
-        instant(until),
+        card,
       )
 
 
@@ -147,7 +199,7 @@ object HoldAllow {
   private fun applied(t: Terms, c: AllowChange, action: String): List<Terms> {
     val before = c.before
     val after = c.after
-    fun with(grants: List<Grant> = t.grants, totals: List<Total> = t.totals) = Terms.of(grants, totals, t.onExceed, t.subjects, t.validFrom, t.validUntil)
+    fun with(grants: List<Grant> = t.grants, totals: List<Total> = t.totals) = Terms.of(grants, totals, t.onExceed, t.card)
     return when (c.kind) {
       "per_action" -> {
         if (before == null || after == null) return emptyList()

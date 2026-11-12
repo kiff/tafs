@@ -149,6 +149,14 @@ data class DraftTerms(
   val subjects: List<String>? = null,
   @SerialName("valid_from") val validFrom: String? = null,
   @SerialName("valid_until") val validUntil: String? = null,
+  val subject: String? = null,
+  val domain: String? = null,
+  val environment: String? = null,
+  /** The time zone its daily totals reset in. */
+  val location: String? = null,
+  /** How long a held call waits for its answer, in seconds; 0 or none, KIFF's default. */
+  @SerialName("hold_expiry_seconds") val holdExpirySeconds: Long? = null,
+  @SerialName("revoked_at") val revokedAt: String? = null,
 ) {
   val lines: List<String> get() = DraftCard(grants, aggregates, onExceed = onExceed, kiffLines = kiffLines).lines
 }
@@ -167,10 +175,18 @@ data class DraftCard(
   @SerialName("on_exceed") val onExceed: String? = null,
   /** KIFF's own words for the Card: shown as they are when sent. The app words it only for a KIFF that doesn't send them. */
   @SerialName("lines") val kiffLines: List<String>? = null,
-  /** Every holder the Card would have; none on a revision keeps the Card's. */
+  /** Every holder the Card would have; none on a revision keeps the Card's, unless [subject] names another first holder. */
   val subjects: List<String>? = null,
   @SerialName("valid_from") val validFrom: String? = null,
   @SerialName("valid_until") val validUntil: String? = null,
+  val subject: String? = null,
+  val domain: String? = null,
+  val environment: String? = null,
+  /** The time zone its daily totals reset in; none on a revision keeps the Card's. */
+  val location: String? = null,
+  /** How long a held call waits ("10m", "24h"); none or "keep" on a revision keeps the Card's. */
+  @SerialName("hold_expiry") val holdExpiry: String? = null,
+  @SerialName("revoked_at") val revokedAt: String? = null,
 ) {
   /** Past a limit, the call asks the owner first: the lines say so, as KIFF's own words do. */
   val asksPastLimits: Boolean get() = onExceed == "owner"
