@@ -46,6 +46,13 @@ describe("a taf's health", () => {
     expect(healthOf([bad(10), ok(15), bad(18), ...nine], [], NOW)).toMatchObject({ level: "at_risk", reasons: [{ code: "failed_some", n: 2, of: 10 }] });
     expect(healthOf([bad(10), bad(15), ok(18), ...nine], [], NOW)).toMatchObject({ level: "at_risk", reasons: [{ code: "failed_some", n: 2, of: 10 }] });
     expect(healthOf([bad(10), bad(15), bad(18), ...nine], [], NOW)).toMatchObject({ level: "failing", reasons: [{ code: "all_failed", n: 3, since: ago(18) }] });
+    // A run that worked after the failures puts them behind it: the latest run comes first, so a taf that was
+    // fixed doesn't read as failing. Its next failure brings them back.
+    expect(level([ok(5), bad(10), bad(15), ...nine])).toBe("healthy");
+    expect(level([ok(5), bad(10), ok(15), bad(18), ...nine])).toBe("healthy");
+    expect(healthOf([bad(3), ok(5), bad(10), ...nine], [], NOW)).toMatchObject({ level: "at_risk", reasons: [{ code: "failed_some", n: 2, of: 10 }] });
+    // A newest run cut short by a limit didn't work: the failures before it still count.
+    expect(codes([capped(5), bad(10), bad(15), ...nine])).toEqual(["failed_some"]);
     // Four in a row say four, and the spell began at the oldest of them.
     expect(healthOf([bad(10), bad(15), bad(18), bad(19), ok(40)], [], NOW)).toMatchObject({ reasons: [{ code: "all_failed", n: 4, since: ago(19) }] });
   });
@@ -186,7 +193,8 @@ describe("a taf's health", () => {
     expect(level([], firings("run", "failed_unworked", "failed_unworked", "failed_unworked"))).toBe("healthy");
     expect(level([], firings("quiet", "failed_check", "failed_check"))).toBe("healthy");
     expect(level([], firings("run", "failed_unfinished"))).toBe("healthy");
-    expect(level([ok(5), bad(10), bad(15), bad(18)])).toBe("at_risk"); // three of four failed, but no longer in a row
+    // Three of four failed, but the newest worked: the latest run comes first, so a fixed taf reads healthy.
+    expect(level([ok(5), bad(10), bad(15), bad(18)])).toBe("healthy");
     // Past the window nothing counts: eight days ago is history.
     const old = 8 * 24 * 60;
     expect(level([bad(old), bad(old + 1), bad(old + 2)], [fired(old, "failed_unworked"), fired(old + 15, "failed_unworked")])).toBe("healthy");

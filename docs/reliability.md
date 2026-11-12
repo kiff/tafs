@@ -307,7 +307,7 @@ days count, of its last 10 runs that ended and its schedule's last 20 times.
 | Level | When |
 |---|---|
 | `failing` | two or more scheduled runs in a row couldn't start; its last two or more checks in a row found only work too big for one run, so nothing ran (that work is set aside, not done); its check couldn't read the app two or more times in a row; a scheduled run stopped part-way and its work was dropped; its last three runs failed |
-| `at_risk` | one scheduled run couldn't start, or one check couldn't read the app; its last check found only work too big for one run; its newest scheduled times waited for credits ("Waiting for credits since 09:30"); its last run didn't finish and its work goes to the next run; two or more of its last ten runs failed, or were cut short by a limit (its turns, its cost, or its reply running out of room); three or more of its last twenty scheduled times were skipped as late or busy |
+| `at_risk` | one scheduled run couldn't start, or one check couldn't read the app; its last check found only work too big for one run; its newest scheduled times waited for credits ("Waiting for credits since 09:30"); its last run didn't finish and its work goes to the next run; two or more of its last ten runs failed while its newest didn't work (a run that worked after them puts them behind it, so a fixed taf doesn't read as failing), or were cut short by a limit (its turns, its cost, or its reply running out of room); three or more of its last twenty scheduled times were skipped as late or busy |
 | `healthy` | none of these |
 
 - **A run of failures ends at the first time that worked:** a run that started, or a check

@@ -156,8 +156,11 @@ export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
   let inARow = 0;
   while (inARow < recent.length && failed(recent[inARow]!)) inARow++;
   const failures = recent.filter(failed).length;
+  // Its newest run worked (not failed, not cut short): a fix took, so the failures before it are history,
+  // shown in its runs, not in its health. A taf that fails on and off is at risk again at its next failure.
+  const newestWorked = recent.length > 0 && !failed(recent[0]!) && !CAPS.has(recent[0]!.stop ?? "");
   if (inARow >= FAILED_IN_A_ROW) reasons.push({ code: "all_failed", level: "failing", n: inARow, since: recent[inARow - 1]!.updated });
-  else if (failures >= FAILED_AT_RISK) reasons.push({ code: "failed_some", level: "at_risk", n: failures, of: recent.length });
+  else if (failures >= FAILED_AT_RISK && !newestWorked) reasons.push({ code: "failed_some", level: "at_risk", n: failures, of: recent.length });
   const capped = recent.filter((r) => r.status === "COMPLETED" && CAPS.has(r.stop ?? "")).length;
   if (capped >= CAPPED_AT_RISK) reasons.push({ code: "capped", level: "at_risk", n: capped, of: recent.length });
 
