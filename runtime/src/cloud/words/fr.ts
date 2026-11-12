@@ -645,7 +645,7 @@ export const fr: Words = {
   sheet_sealed: "Votre clé est scellée : elle n'est plus jamais affichée, et le taf ne la voit jamais",
   sheet_leave: "Vous pouvez la déconnecter à tout moment, dans Connecter des apps",
   sheet_paste: "Coller la clé",
-  sheet_paste_what: (vendor) => `Collez la clé API que vous avez créée dans ${vendor}`,
+  sheet_paste_what: (vendor) => `Copiez-la dans ${vendor}, puis collez-la ici`,
   sheet_pasted: "Clé …{last4}",
   sheet_cleared: "Presse-papiers vidé",
   sheet_details: "Détails",

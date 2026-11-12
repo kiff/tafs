@@ -645,7 +645,7 @@ export const it: Words = {
   sheet_sealed: "La tua chiave è sigillata: non viene più mostrata, e il taf non la vede mai",
   sheet_leave: "Puoi scollegarla quando vuoi, in Collega app",
   sheet_paste: "Incolla la chiave",
-  sheet_paste_what: (vendor) => `Incolla la chiave API che hai creato in ${vendor}`,
+  sheet_paste_what: (vendor) => `Copiala in ${vendor}, poi incollala qui`,
   sheet_pasted: "Chiave …{last4}",
   sheet_cleared: "Appunti svuotati",
   sheet_details: "Dettagli",

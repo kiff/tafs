@@ -645,7 +645,7 @@ export const pl: Words = {
   sheet_sealed: "Twój klucz jest zapieczętowany: nigdy nie zostanie ponownie pokazany, a taf nigdy go nie widzi",
   sheet_leave: "Możesz je rozłączyć w każdej chwili, w Połącz aplikacje",
   sheet_paste: "Wklej klucz",
-  sheet_paste_what: (vendor) => `Wklej klucz API utworzony w ${vendor}`,
+  sheet_paste_what: (vendor) => `Skopiuj go w ${vendor}, a potem wklej tutaj`,
   sheet_pasted: "Klucz …{last4}",
   sheet_cleared: "Schowek wyczyszczony",
   sheet_details: "Szczegóły",

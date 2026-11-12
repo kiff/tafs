@@ -645,7 +645,7 @@ export const es: Words = {
   sheet_sealed: "Tu clave queda sellada: nunca se vuelve a mostrar, y el taf nunca la ve",
   sheet_leave: "Puedes desconectarla cuando quieras, en Conectar apps",
   sheet_paste: "Pegar la clave",
-  sheet_paste_what: (vendor) => `Pega la clave API que creaste en ${vendor}`,
+  sheet_paste_what: (vendor) => `Cópiala en ${vendor} y pégala aquí`,
   sheet_pasted: "Clave …{last4}",
   sheet_cleared: "Portapapeles vaciado",
   sheet_details: "Detalles",

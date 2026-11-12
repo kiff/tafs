@@ -645,7 +645,7 @@ export const pt: Words = {
   sheet_sealed: "A sua chave fica selada: nunca volta a ser mostrada, e o taf nunca a vê",
   sheet_leave: "Pode desligá-la quando quiser, em Ligar apps",
   sheet_paste: "Colar a chave",
-  sheet_paste_what: (vendor) => `Cole a chave de API que criou em ${vendor}`,
+  sheet_paste_what: (vendor) => `Copie-a em ${vendor} e cole-a aqui`,
   sheet_pasted: "Chave …{last4}",
   sheet_cleared: "Área de transferência limpa",
   sheet_details: "Detalhes",

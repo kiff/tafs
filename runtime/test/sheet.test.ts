@@ -37,7 +37,7 @@ describe("the secure connection sheet (docs/secure-connection.md)", () => {
       { kind: "sealed", text: "Your key is sealed: it's never shown again, and the taf never sees it" },
       { kind: "disconnect", text: "You can disconnect it any time, in Connect apps" },
     ]);
-    expect(s.paste).toEqual({ button: "Paste the key", what: "Paste the API key you created in Qonto", pasted: "Key …{last4}", cleared: "Clipboard cleared" });
+    expect(s.paste).toEqual({ button: "Paste the key", what: "Copy it in Qonto, then paste it here", pasted: "Key …{last4}", cleared: "Clipboard cleared" });
     expect(s.details).toEqual({ title: "Details", lines: [
       { label: "Specification", value: "https://github.com/qonto/api-doc/openapi.json" },
       { label: "SHA-256", value: SHA },

@@ -645,7 +645,7 @@ export const de: Words = {
   sheet_sealed: "Dein Schlüssel wird versiegelt: Er wird nie wieder angezeigt, und der taf sieht ihn nie",
   sheet_leave: "Du kannst die Verbindung jederzeit trennen, unter Apps verbinden",
   sheet_paste: "Schlüssel einfügen",
-  sheet_paste_what: (vendor) => `Füge den API-Schlüssel ein, den du in ${vendor} erstellt hast`,
+  sheet_paste_what: (vendor) => `Kopiere ihn in ${vendor} und füge ihn hier ein`,
   sheet_pasted: "Schlüssel …{last4}",
   sheet_cleared: "Zwischenablage geleert",
   sheet_details: "Details",

@@ -703,7 +703,7 @@ export const en = {
   sheet_sealed: "Your key is sealed: it's never shown again, and the taf never sees it",
   sheet_leave: "You can disconnect it any time, in Connect apps",
   sheet_paste: "Paste the key",
-  sheet_paste_what: (vendor: string) => `Paste the API key you created in ${vendor}`,
+  sheet_paste_what: (vendor: string) => `Copy it in ${vendor}, then paste it here`,
   sheet_pasted: "Key …{last4}",
   sheet_cleared: "Clipboard cleared",
   sheet_details: "Details",

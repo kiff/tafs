@@ -645,7 +645,7 @@ export const nl: Words = {
   sheet_sealed: "Je sleutel wordt verzegeld: hij wordt nooit meer getoond, en de taf ziet hem nooit",
   sheet_leave: "Je kunt hem altijd ontkoppelen, in Apps koppelen",
   sheet_paste: "Sleutel plakken",
-  sheet_paste_what: (vendor) => `Plak de API-sleutel die je in ${vendor} hebt gemaakt`,
+  sheet_paste_what: (vendor) => `Kopieer hem in ${vendor} en plak hem hier`,
   sheet_pasted: "Sleutel …{last4}",
   sheet_cleared: "Klembord gewist",
   sheet_details: "Details",
