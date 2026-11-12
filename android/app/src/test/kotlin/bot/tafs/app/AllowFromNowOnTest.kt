@@ -37,7 +37,7 @@ class AllowFromNowOnTest {
 
   private val home = """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"idle","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}"""
 
-  private fun reads(held: String = held(), capabilities: String = """"holds.answer","cards.manage"""") {
+  private fun reads(held: String = held(), capabilities: String = """"holds.answer","cards.manage","holds.allow"""") {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":[$capabilities]}""")
     transport.answer("GET /v1/home", 200, home)
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[$held]}""")
@@ -110,6 +110,14 @@ class AllowFromNowOnTest {
   @Test fun noButtonForABreachNoCardChangeLifts() = runTest {
     reads(held = held(breaches = """[{"outcome":"per_action_exceeded"},{"outcome":"something_new"}]"""))
     assertFalse(model().let { it.state.value.offersAllow(it.state.value.held.single()) })
+  }
+
+  @Test fun noButtonUntilKiffSaysItsLive() = runTest {
+    // Before KIFF's draft for it answers, KIFF's /v1/me doesn't list holds.allow: no button, so no tap into a 404.
+    reads(capabilities = """"holds.answer","cards.manage"""")
+    val m = model()
+    assertFalse(m.state.value.offersAllow(m.state.value.held.single()))
+    assertTrue(transport.requestsTo(allow).isEmpty())
   }
 
   @Test fun noButtonWithoutCardsManage() = runTest {
