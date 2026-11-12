@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { type CoachCall, Rich } from "../src/cloud/coach.js";
-import { askApp, currentDrive, DRIVE, driveArgs, DriveError, driveRecaps, DriveRefusal, driveSteps, driveStream, endDrive, END_SAID, END_WHY, END_WORDS, putResult, resultOf, startDrive } from "../src/cloud/drive.js";
+import { askApp, CONTINUE_SAID, currentDrive, DRIVE, driveArgs, DriveError, drivePaused, driveRecaps, DriveRefusal, driveSteps, driveStream, endDrive, END_SAID, END_WHY, END_WORDS, PAUSED_SAID, pauseDrive, putResult, resultOf, resumeDrive, startDrive } from "../src/cloud/drive.js";
 import { coachTool, type Deps, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -476,5 +476,199 @@ describe("a drive's end in Coach's chat", () => {
     expect(card).toBeGreaterThanOrEqual(0);
     expect(end).toBeGreaterThan(card);
     expect(items[end]!.drive).toMatchObject({ id, why: "owner_took_over", words: "You took over, so Coach let you carry on", task: "Run Chargebacks" });
+  });
+});
+
+describe("a touch pauses the drive (docs/drive.md, When the person touches the app)", () => {
+  it("sends nothing while paused, drops what waited, and counts Coach's calls in the pause", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    await r.store.append(`${T}#drive-q#${d.id}`, { id: "rq_old", tool: "app_look", args: {}, at: NOW.toISOString() }, new Date(NOW.getTime() + 60_000));
+    await pauseDrive(r.store, T, ANA, d.id, r.now());
+    expect(await drivePaused(r.store, T, d.id)).toBe(NOW.toISOString());
+    expect(await r.store.take(`${T}#drive-q#${d.id}`)).toEqual([]);
+    const seen: unknown[] = [];
+    r.answers((req) => { seen.push(req); return { outcome: "done", line: "Looked" }; });
+    expect(await askApp(r.store, T, ANA, "app_look", {}, r.now, r.wait)).toEqual({ paused: NOW.toISOString(), calls: 1, drive: d.id });
+    expect(await askApp(r.store, T, ANA, "app_act", { action: "tap", line: "Tapping Run now", at: { x: 1, y: 2 } }, r.now, r.wait)).toEqual({ paused: NOW.toISOString(), calls: 2, drive: d.id });
+    expect(seen).toEqual([]);
+  });
+
+  it("after Continue, refuses an act until Coach has looked, then lets it act", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    await pauseDrive(r.store, T, ANA, d.id, r.now());
+    await resumeDrive(r.store, T, ANA, d.id, r.now());
+    expect(await drivePaused(r.store, T, d.id)).toBeUndefined();
+    const seen: string[] = [];
+    r.answers((req) => { seen.push(req.tool); return { outcome: "done", line: req.tool === "app_look" ? "Looked" : "Tapped Run now" }; });
+    const act = { action: "tap", line: "Tapping Run now", at: { x: 1, y: 2 } };
+    expect(await askApp(r.store, T, ANA, "app_act", act, r.now, r.wait)).toEqual({ lookFirst: true });
+    expect(seen).toEqual([]);
+    expect(await askApp(r.store, T, ANA, "app_look", {}, r.now, r.wait)).toMatchObject({ result: { line: "Looked" } });
+    expect(await askApp(r.store, T, ANA, "app_act", act, r.now, r.wait)).toMatchObject({ result: { line: "Tapped Run now" } });
+    expect(seen).toEqual(["app_look", "app_act"]);
+  });
+
+  it("a second pause or a Continue with no pause changes nothing; only the drive's person, and only that drive", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    await pauseDrive(r.store, T, ANA, d.id, r.now());
+    r.at(new Date(NOW.getTime() + 5_000));
+    await pauseDrive(r.store, T, ANA, d.id, r.now());
+    expect(await drivePaused(r.store, T, d.id)).toBe(NOW.toISOString());
+    await resumeDrive(r.store, T, ANA, d.id, r.now());
+    await resumeDrive(r.store, T, ANA, d.id, r.now());
+    expect(await r.store.get(`${T}#drive-look#${d.id}`)).toBeTruthy();
+    await expect(pauseDrive(r.store, T, "u_bo", d.id, r.now())).rejects.toMatchObject({ status: 404 });
+    await expect(resumeDrive(r.store, T, ANA, "another", r.now())).rejects.toMatchObject({ status: 404 });
+  });
+
+  it("a call already waiting when the pause lands is told the person has the app, not that the phone didn't answer", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    let polls = 0;
+    const wait = async (ms: number) => {
+      await r.wait(ms);
+      if (++polls === 2) await pauseDrive(r.store, T, ANA, d.id, r.now());
+    };
+    const started = r.now().getTime();
+    const a = await askApp(r.store, T, ANA, "app_look", {}, r.now, wait);
+    expect(a).toMatchObject({ calls: 1 });
+    expect("paused" in a).toBe(true);
+    expect(r.now().getTime() - started).toBeLessThan(DRIVE.holdMs);
+  });
+
+  it("a pause counts as nothing done: 15 minutes paused ends the drive as idle", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    await pauseDrive(r.store, T, ANA, d.id, r.now());
+    r.at(new Date(NOW.getTime() + 60_000));
+    await askApp(r.store, T, ANA, "app_look", {}, r.now, r.wait);
+    r.at(new Date(NOW.getTime() + DRIVE.idleMs + 1000));
+    expect((await currentDrive(r.store, T, ANA, r.now()))?.ended?.why).toBe("idle");
+  });
+
+  it("the stream ends a drive at once when the account is halted, paused or not", async () => {
+    const r = rig();
+    const d = await startDrive(r.store, T, ANA, "s_1", "Run Chargebacks", r.now());
+    await pauseDrive(r.store, T, ANA, d.id, r.now());
+    const out: string[] = [];
+    for await (const c of driveStream(r.store, T, ANA, d.id, r.now, r.wait, "en", async () => true)) out.push(c);
+    expect(out.at(-1)).toContain("event: ended");
+    expect(out.at(-1)).toContain('"why":"halted"');
+    expect((await currentDrive(r.store, T, ANA, r.now()))?.ended?.why).toBe("halted");
+  });
+
+  it("from the phone: pause and resume are the drive's person's, the read says paused, and Continue starts Coach's turn", async () => {
+    const w = await world();
+    const started = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
+    const id = (started.body.drive as { id: string }).id;
+    expect((await w.call("POST", "/v1/coach/drive/pause", { drive: "not-it" })).status).toBe(404);
+    const pause = await w.call("POST", "/v1/coach/drive/pause", { drive: id });
+    expect(pause.status).toBe(200);
+    expect(pause.body).toEqual({ paused: NOW.toISOString() });
+    expect((await w.call("GET", "/v1/coach/drive")).body.drive).toMatchObject({ id, paused: NOW.toISOString() });
+
+    // Coach's first call parks its run on the drive's wait; nothing goes to the phone.
+    w.working();
+    const first = await coachTool("app_look", {}, w.coachCall, w.deps) as Rich;
+    expect(first.isError).toBe(false);
+    expect(first.content[0]).toMatchObject({ text: `${PAUSED_SAID} Nothing was sent.` });
+    expect(first.structured).toEqual({ pending: true, timeout_s: 900, wait_for: { grant: "coach-drive", event: "drive.continue", key: `${T}:${id}`, words: "The person is using the app" } });
+    expect(w.stored.status).toBe("RUNNING");
+    // A second call in the same pause (the gateway didn't park the run): tafs cloud ends Coach's turn itself.
+    const second = await coachTool("app_look", {}, w.coachCall, w.deps) as Rich;
+    expect(second.content[0]).toMatchObject({ text: expect.stringContaining("tafs ended this turn") });
+    expect(w.stored.status).toBe("CANCELLED");
+
+    // Continue: Coach's next turn starts in the drive's chat, told to look first.
+    const resume = await w.call("POST", "/v1/coach/drive/resume", { drive: id });
+    expect(resume.status).toBe(200);
+    expect(resume.body).toMatchObject({ resumed: true, coach: { session: w.session } });
+    const next = w.agents.runs.at(-1)!;
+    expect(next.session).toBe(w.session);
+    const said = (await w.agents.api.session(T, w.session)).events.filter((e) => e.kind === "owner_message").at(-1)?.body as { text?: string } | undefined;
+    expect(said?.text).toContain(CONTINUE_SAID);
+    expect((await w.call("GET", "/v1/coach/drive")).body.drive).not.toHaveProperty("paused");
+    expect((await w.call("POST", "/v1/coach/drive/resume", { drive: id })).body).toEqual({ resumed: false });
+  });
+
+  it("Continue while Coach's turn is still at work goes to that turn", async () => {
+    const w = await world();
+    const started = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
+    const id = (started.body.drive as { id: string }).id;
+    await w.call("POST", "/v1/coach/drive/pause", { drive: id });
+    w.working();
+    const runs = w.agents.runs.length;
+    const resume = await w.call("POST", "/v1/coach/drive/resume", { drive: id });
+    expect(resume.body).toMatchObject({ resumed: true, coach: { run: w.stored.id } });
+    expect(w.stored.steering?.at(-1)?.text).toBe(CONTINUE_SAID);
+    expect(w.agents.runs.length).toBe(runs);
+  });
+
+  it("Continue on a halted account ends the drive as halted instead", async () => {
+    const w = await world();
+    const started = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
+    const id = (started.body.drive as { id: string }).id;
+    await w.call("POST", "/v1/coach/drive/pause", { drive: id });
+    await w.agents.api.halt(T);
+    const resume = await w.call("POST", "/v1/coach/drive/resume", { drive: id });
+    expect(resume.body).toMatchObject({ resumed: false, ended: { why: "halted" } });
+    expect(w.events.at(-1)).toMatchObject({ kind: "drive_ended", detail: END_WORDS.halted });
+  });
+});
+
+describe("a paused drive parks Coach's run (the gateway's coach-drive wait)", () => {
+  /** Coach's run as kiff/agents keeps it once the gateway parked it on the drive's wait. */
+  const park = (w: Awaited<ReturnType<typeof world>>, drive: string) => {
+    w.stored.status = "PAUSED";
+    w.stored.requirements = [...(w.stored.requirements ?? []), { call_id: "call-look", tool: "app_look", input: {}, operation: "", expires: "2026-11-06T01:00:00Z", kind: "event",
+      wait: { grant: "coach-drive", event: "drive.continue", key: `${T}:${drive}`, words: "The person is using the app" } }];
+  };
+
+  it("Continue answers the parked run's wait, and starts no new turn", async () => {
+    const w = await world();
+    const started = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
+    const id = (started.body.drive as { id: string }).id;
+    await w.call("POST", "/v1/coach/drive/pause", { drive: id });
+    park(w, id);
+    const runs = w.agents.runs.length;
+    const resume = await w.call("POST", "/v1/coach/drive/resume", { drive: id });
+    expect(resume.body).toEqual({ resumed: true, coach: { run: w.stored.id, session: w.session } });
+    const answered = w.stored.requirements!.find((q) => q.call_id === "call-look")!;
+    expect(answered.answered).toBeTruthy();
+    expect(answered.result).toEqual({ drive: "continued", words: CONTINUE_SAID });
+    expect(w.agents.runs.length).toBe(runs);
+  });
+
+  it("a stop, or another drive starting, answers the wait with the end", async () => {
+    const w = await world();
+    const a = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
+    const first = (a.body.drive as { id: string }).id;
+    await w.call("POST", "/v1/coach/drive/pause", { drive: first });
+    park(w, first);
+    await w.call("POST", "/v1/coach/drive/stop", { drive: first, why: "stopped" });
+    expect(w.stored.requirements!.find((q) => q.call_id === "call-look")!.result).toEqual({ drive: "ended", why: "stopped", words: END_WORDS.stopped });
+
+    const w2 = await world();
+    const b = await w2.call("POST", "/v1/coach/drive", { session: w2.session, task: "Run Chargebacks" }, SIGNED);
+    const old = (b.body.drive as { id: string }).id;
+    await w2.call("POST", "/v1/coach/drive/pause", { drive: old });
+    park(w2, old);
+    await w2.call("POST", "/v1/coach/drive", { session: w2.session, task: "Turn off suggestions" }, SIGNED);
+    expect(w2.stored.requirements!.find((q) => q.call_id === "call-look")!.result).toEqual({ drive: "ended", why: "replaced", words: END_WORDS.replaced });
+  });
+
+  it("only the wait for this drive is answered: another drive's, or another key, stays", async () => {
+    const w = await world();
+    const started = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
+    const id = (started.body.drive as { id: string }).id;
+    await w.call("POST", "/v1/coach/drive/pause", { drive: id });
+    park(w, "another-drive");
+    const resume = await w.call("POST", "/v1/coach/drive/resume", { drive: id });
+    expect(w.stored.requirements!.find((q) => q.call_id === "call-look")!.answered).toBeFalsy();
+    // No parked run of this drive: Continue starts Coach's next turn instead.
+    expect(resume.body).toMatchObject({ resumed: true, coach: { session: w.session } });
   });
 });

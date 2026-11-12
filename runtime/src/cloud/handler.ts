@@ -19,9 +19,9 @@ import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from ".
 import { LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withZone, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
 import { dayIn, DOES, knobOf, type KnobSetting, recipeOf, settingWords } from "./knob.js";
-import { requestDetail } from "./request.js";
+import { handedByOf, requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
-import { deliveredLine, deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
+import { type DeadHandoff, deadHandoffs, deliveredLine, deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
 import { galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
@@ -33,7 +33,7 @@ import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js"
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { accountConnections, connectionLines, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
-import { answerContent, askApp, currentDrive, DRIVE_TOOLS, DriveError, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, putResult, startDrive } from "./drive.js";
+import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { attachWhys, foldRetried, failedStep, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords } from "./doors/hold.js";
@@ -71,6 +71,8 @@ import { RECIPES } from "../recipes.js";
  *   GET | POST | DELETE /v1/halt        the whole account's halt: read, halt, resume once KIFF runs again
  *   POST /v1/coach/drive                start the person's drive for one request, signed with the approval key (kiff/tafs#544, docs/drive.md)
  *   GET  /v1/coach/drive                their drive as it stands, and its steps
+ *   POST /v1/coach/drive/pause          the person touched the app: pause it, so Coach sends nothing (docs/drive.md)
+ *   POST /v1/coach/drive/resume         the person tapped Continue: go on, with a look first
  *   POST /v1/coach/drive/stop           end it: the owner took over, left the app, stopped it, locked or signed out
  *   POST /v1/coach/drive/{d}/results/{r} the app's answer to one of its requests
  *   GET  /v1/coach/drive/{d}/stream     its requests, as server-sent events (the streaming function)
@@ -788,7 +790,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     // The taf's own places (delivery.ts): settled on this read (a manager's read acts; a viewer's starts nothing), then shown under each request.
     const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false), langOf(event));
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, fired: fired ?? [], halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event)), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now) } : {}),
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, fired: fired ?? [], halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health, deadLines(await deadOf(deps, me.tenantID, taf.id, now), taf.name, langOf(event))), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event)), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now) } : {}),
       ...waitingOf(runs, fired, taf, now, langOf(event)) };
   }
   if (parts.length === 5 && method === "GET" && action === "requests") {
@@ -806,7 +808,10 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     ]);
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, [run.id]).catch(() => new Set<string>()) : new Set<string>();
     const own = await ownDeliveries(me.tenantID, taf, [run], deps, now, me.timeZone ?? "UTC", others || await managesTaf(event, me, taf, deps).catch(() => false), langOf(event));
-    return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again, own.get(run.id) ?? [], langOf(event));
+    // A hand-off names the taf it came from, when it's still on the account.
+    const from = handedByOf(run);
+    const handedBy = from ? (await deps.tafs.get(me.tenantID, from).catch(() => undefined))?.name : undefined;
+    return requestDetail(run, read?.events ?? [], sent, me.timeZone ?? "UTC", now, titles, again, own.get(run.id) ?? [], langOf(event), handedBy);
   }
   if (parts.length === 5 && method === "DELETE" && action === "follow-ups") {
     // A follow-up the taf set itself, removed by someone who manages it (docs/api.md, "The knob"). Only a
@@ -2775,6 +2780,8 @@ async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, compone
  *   POST /v1/coach/drive {session, task, component?}  signed with the approval key (KIFF-Device-Signature): start it; with
  *                                                     component, Coach's drive card is answered "approved", and its run goes on
  *   GET  /v1/coach/drive                              the drive as it stands, and its steps (the "What I did" card)
+ *   POST /v1/coach/drive/pause {drive}                the person touched the app: Coach sends nothing until Continue
+ *   POST /v1/coach/drive/resume {drive}               the person tapped Continue: Coach's next turn starts, and it looks first
  *   POST /v1/coach/drive/stop {drive, why}            end it: the owner took over, left the app, stopped it, the phone locked
  *   POST /v1/coach/drive/{drive}/results/{request}    the phone's answer to one request: {outcome, line, image?, tree?, diagnostics?, touched?, waited?}
  *
@@ -2792,7 +2799,8 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     const d = await currentDrive(store, me.tenantID, me.subject, now);
     if (!d) return { drive: null, steps: [] };
     const { person: _p, ...shown } = d;
-    return { drive: { ...shown, ...(d.ended ? { ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } } : {}) }, steps: await driveSteps(store, me.tenantID, d.id) };
+    const paused = d.ended ? undefined : await drivePaused(store, me.tenantID, d.id);
+    return { drive: { ...shown, ...(paused ? { paused } : {}), ...(d.ended ? { ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } } : {}) }, steps: await driveSteps(store, me.tenantID, d.id) };
   }
   if (parts.length === 3 && method === "POST") {
     const body = parseBody(event);
@@ -2814,10 +2822,36 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     } else {
       await ownChat(me, setup, str(body.session).trim(), deps);
     }
+    const replaced = await currentDrive(store, me.tenantID, me.subject, now);
     const drive = await startDrive(store, me.tenantID, me.subject, body.session, body.task, now).catch(fail);
+    if (replaced && !replaced.ended) await releaseDrive(me.tenantID, replaced.id, { drive: "ended", why: "replaced", words: END_WORDS.replaced }, deps);
     await logEvent(deps.events, me.tenantID, { kind: "drive_started", title: "Coach started driving", detail: drive.task }, now);
     const told = shown ? await tellCoach(me, shown.setup, shown.card, component, "approved: the drive is on", deps) : undefined;
     return { drive: { id: drive.id, session: drive.session, task: drive.task, started: drive.started }, ...(told ? { coach: told } : {}) };
+  }
+  if (parts.length === 4 && parts[3] === "pause" && method === "POST") {
+    const d = await pauseDrive(store, me.tenantID, me.subject, str(parseBody(event).drive).trim(), now).catch(fail);
+    return { paused: d.ended ? null : (await drivePaused(store, me.tenantID, d.id)) ?? null, ...(d.ended ? { ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } } : {}) };
+  }
+  if (parts.length === 4 && parts[3] === "resume" && method === "POST") {
+    const id = str(parseBody(event).drive).trim();
+    // A halt while paused ends the drive, rather than letting Coach go on (docs/drive.md).
+    const before = await currentDrive(store, me.tenantID, me.subject, now);
+    if (before && before.id === id && !before.ended && (await deps.agents.halted(me.tenantID).then((h) => h.halted, () => false))) {
+      await endDrive(store, me.tenantID, me.subject, "halted", now, id);
+      await logEvent(deps.events, me.tenantID, { kind: "drive_ended", title: "Coach stopped driving", detail: END_WORDS.halted }, now);
+      await releaseDrive(me.tenantID, id, { drive: "ended", why: "halted", words: END_WORDS.halted }, deps);
+    }
+    const wasPaused = before && before.id === id ? await drivePaused(store, me.tenantID, id) : undefined;
+    const d = await resumeDrive(store, me.tenantID, me.subject, id, now).catch(fail);
+    if (d.ended) return { resumed: false, ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } };
+    if (!wasPaused) return { resumed: false };
+    // Coach's run parked while the person had the app: Continue is what it was waiting for, and it looks first.
+    const parked = await releaseDrive(me.tenantID, d.id, { drive: "continued", words: CONTINUE_SAID }, deps);
+    if (parked) return { resumed: true, coach: { run: parked, session: d.session } };
+    // No parked run (its turn ended instead): Coach's next turn starts in the drive's chat.
+    const coach = await coachGoesOn(event, me, d.session, deps);
+    return { resumed: true, ...(coach ? { coach } : {}) };
   }
   if (parts.length === 4 && parts[3] === "stop" && method === "POST") {
     const body = parseBody(event);
@@ -2825,6 +2859,8 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     const d = await endDrive(store, me.tenantID, me.subject, why, now, str(body.drive).trim() || undefined);
     if (d?.ended && d.ended.at === now.toISOString()) {
       await logEvent(deps.events, me.tenantID, { kind: "drive_ended", title: "Coach stopped driving", detail: END_WORDS[why] }, now);
+      // A run parked on the pause goes on, told the drive is over.
+      await releaseDrive(me.tenantID, d.id, { drive: "ended", why, words: END_WORDS[why] }, deps);
     }
     return { ended: d?.ended ? { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } : null };
   }
@@ -2842,6 +2878,48 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     return { taken: true, outcome: t.result.outcome };
   }
   throw new HTTPError(404, "not found");
+}
+
+/**
+ * Answers the wait a Coach run parked on while its drive was paused (the `coach-drive` wait, keyed
+ * by tenant and drive), so the run goes on with `payload` as its call's result. Returns the run that
+ * went on, or nothing when none was parked (the gateway didn't carry the wait, or the run already
+ * timed out or ended). Best effort: the drive's own state never depends on it.
+ */
+async function releaseDrive(tenant: string, drive: string, payload: Record<string, unknown>, deps: Deps): Promise<string | undefined> {
+  const setup = (await deps.tafs.list(tenant)).find((t) => t.job === SETUP_JOB && !t.removing);
+  if (!setup) return undefined;
+  const key = driveWaitKey(tenant, drive);
+  const paused = (await deps.agents.runs(tenant, setup.id, true, 20).catch(() => [])).filter((r) => r.status === "PAUSED");
+  for (const r of paused) {
+    const full = r.requirements ? r : await deps.agents.getRun(tenant, setup.id, r.id).catch(() => undefined);
+    const waiting = (full?.requirements ?? []).find((q) => q.kind === "event" && !q.answered && q.wait?.grant === DRIVE_WAIT_GRANT && q.wait.key === key);
+    if (!waiting) continue;
+    const went = await deps.agents.answerWait(tenant, setup.id, r.id, waiting.call_id, payload).then(() => true, (err) => {
+      console.error(`drive ${drive}: parked run ${r.id} not answered:`, err);
+      return false;
+    });
+    if (went) return r.id;
+  }
+  return undefined;
+}
+
+/**
+ * Continue: Coach hears it in the drive's chat. A turn of Coach's still at work there takes it as
+ * the person's next words; otherwise a new turn starts with it. Either way Coach's next step is a
+ * look, which askApp also enforces. Best effort: the drive is resumed whatever Coach does.
+ */
+async function coachGoesOn(event: HTTPEvent, me: KIFFIdentity, session: string, deps: Deps): Promise<{ run: string; session: string } | undefined> {
+  const setup = (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
+  if (!setup) return undefined;
+  const working = (await deps.agents.runs(me.tenantID, setup.id, true, 10).catch(() => []))
+    .find((r) => r.status === "RUNNING" && r.session === session && r.requester?.kind === "member" && r.requester.id === me.subject);
+  if (working) {
+    const steered = await deps.agents.steerRun(me.tenantID, setup.id, working.id, CONTINUE_SAID, member(me)).then((r) => r, () => undefined);
+    if (steered) return { run: steered.id, session };
+  }
+  const run = await sendNext(event, me, setup, session, CONTINUE_SAID, deps).catch((err) => { console.error("drive continue:", err); return undefined; });
+  return run ? { run: run.id, session: run.session } : undefined;
 }
 
 /** An approval's decision and report (kiff/tafs#413) need the ask store, planque and the phone's read proof. */
@@ -4774,7 +4852,8 @@ async function driveStreamRoute(event: HTTPEvent, drive: string, deps: Deps): Pr
   const d = await currentDrive(deps.coach, me.tenantID, me.subject, now());
   if (!d || d.id !== drive) throw new HTTPError(404, "that isn't your drive");
   if (d.ended) throw new HTTPError(409, `the drive is over: ${END_WORDS[d.ended.why]}`);
-  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: driveStream(deps.coach, me.tenantID, me.subject, d.id, now, deps.sleep, langOf(event)) };
+  const halted = () => deps.agents.halted(me.tenantID).then((h) => h.halted);
+  return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: driveStream(deps.coach, me.tenantID, me.subject, d.id, now, deps.sleep, langOf(event), halted) };
 }
 
 /**
@@ -5616,6 +5695,8 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // A halted taf reads halted everywhere (kiff/tafs#236, item 13): kiff/agents holds it, on
   // its own or with its account. A read that fails leaves its state as the rest says.
   const halts = await Promise.all(tafs.map((t) => deps.agents.halted(me.tenantID, t.id).then((h) => h.halted, () => false)));
+  // Each taf's hand-offs the receiving taf didn't finish (delivery.ts): they count in its Needs you. One read each.
+  const dead = await Promise.all(tafs.map((t) => deadOf(deps, me.tenantID, t.id, now)));
   // Each taf's doors, for its avatar's rim: a read that fails shows none.
   const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
   const listed = tafs.map((t, i) => {
@@ -5629,7 +5710,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
     const runs = recent[i];
     const health = runs && fired[i] ? healthOf(runs, fired[i]!, now) : undefined;
-    const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run, fired: fired[i] ?? [] }, me.timeZone ?? "UTC", now, langOf(event), health) : undefined;
+    const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run, fired: fired[i] ?? [] }, me.timeZone ?? "UTC", now, langOf(event), health, deadLines(dead[i] ?? [], t.name, langOf(event))) : undefined;
     return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, me.timeZone ?? "UTC", now) } : {}),
       // The promise is a setting: said even when the runs couldn't be read, so the apps' "Answer within" holds.
       ...(runs ? waitingOf(runs, fired[i], t, now, langOf(event)) : (t.respondWithin ? { promise: { hours: t.respondWithin } } : {})) };
@@ -6204,6 +6285,7 @@ async function driveTool(name: DriveTool, args: Record<string, unknown>, call: C
   if (on && !on.ended && (await deps.agents.halted(call.tenant).then((h) => h.halted, () => false))) {
     await endDrive(store, call.tenant, person, "halted", now(), on.id);
     await logEvent(deps.events, call.tenant, { kind: "drive_ended", title: "Coach stopped driving", detail: END_WORDS.halted }, now());
+    await releaseDrive(call.tenant, on.id, { drive: "ended", why: "halted", words: END_WORDS.halted }, deps);
   }
   // The drive is the chat's that approved it. kiff/agents names the chat on the call (SESSION_ARG),
   // inside KIFF's permit: it must be the drive's, exactly. A call that doesn't name one (a kiff/agents
@@ -6227,6 +6309,14 @@ async function driveTool(name: DriveTool, args: Record<string, unknown>, call: C
     if (err instanceof DriveRefusal) return refuse(`Refused by tafs: ${err.message}. Nothing was sent.`);
     throw err;
   }
+  // A second call while the person still has the app: tafs cloud ends Coach's turn itself, so a
+  // pause costs two turns at most, whatever the model does (docs/drive.md).
+  if ("paused" in a && a.calls > 1 && on) {
+    const setup = (await deps.tafs.list(call.tenant)).find((t) => t.job === SETUP_JOB && !t.removing);
+    const working = setup ? (await deps.agents.runs(call.tenant, setup.id, true, 10).catch(() => []))
+      .filter((r) => r.status === "RUNNING" && r.session === on.session && r.requester?.kind === "member" && r.requester.id === person) : [];
+    for (const r of working) await deps.agents.cancelRun(call.tenant, setup!.id, r.id).catch((err) => console.error(`drive pause, ending ${r.id}:`, err));
+  }
   // Coach's done ends the drive whatever the phone answered, or if it didn't (agentgabo on #554).
   if (name === "app_act" && args.action === "done" && on && !on.ended) {
     const still = await currentDrive(store, call.tenant, person, now());
@@ -6238,6 +6328,9 @@ async function driveTool(name: DriveTool, args: Record<string, unknown>, call: C
   }
   const { content, isError } = answerContent(a);
   const words = content.filter((c) => c.type === "text").map((c) => String(c.text)).join("\n");
+  // The first call in a pause parks Coach's run on the drive's wait (docs/drive.md): no error, so
+  // KIFF's gateway keeps it. It's never kept as an answer for a retry, which looks again instead.
+  if ("paused" in a && a.calls === 1) return new Rich(content, false, `${words}\n(Answered earlier: look again before your next step.)`, driveWait(call.tenant, a.drive));
   return new Rich(content, isError, `${words}\n(Answered earlier: look again before your next step.)`);
 }
 
@@ -7004,12 +7097,26 @@ function failingNotification(taf: Taf, s: Schedule, failing: NonNullable<Schedul
   };
 }
 
+/** A taf's hand-offs the receiving taf didn't finish: none when they can't be read. */
+async function deadOf(deps: Deps, tenant: string, taf: string, now: Date): Promise<DeadHandoff[]> {
+  return deps.coach ? deadHandoffs(deps.coach, tenant, taf, now).catch(() => []) : [];
+}
+
+/** Their lines, for the taf's summary (work.ts summaryOf). */
+function deadLines(dead: DeadHandoff[], taf: string, lang: Lang): string[] {
+  return dead.map((d) => wordsIn(lang).handoff_dead(d.name, taf));
+}
+
 function deliveryContext(deps: Deps, now = deps.now?.() ?? new Date()): DeliveryContext {
   if (!deps.coach) throw new HTTPError(404, "not found");
   return { store: deps.coach, tafs: deps.tafs, agents: deps.agents, push: deps.push, apns: deps.apns, now };
 }
 
-/** The taf's own deliveries for these runs, settled first (delivery.ts; `act`: a manager's read starts a hand-off or a retry, a viewer's doesn't), as the apps draw them. */
+/**
+ * The taf's own deliveries for these runs, settled first (delivery.ts; `act`: a manager's read starts a hand-off or a retry, a
+ * viewer's starts no run), as the apps draw them. Any read, a viewer's too, writes down what became of a hand-off's receiving
+ * run: it's an observation, and a dead one's single note to the managers may come from it.
+ */
 async function ownDeliveries(tenant: string, taf: Taf, runs: Run[], deps: Deps, now: Date, zone: string, act: boolean, lang: Lang = "en"): Promise<Map<string, ReturnType<typeof deliveryViews>>> {
   if (!deps.coach) return new Map();
   const ctx = deliveryContext(deps, now);
