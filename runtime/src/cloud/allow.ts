@@ -65,8 +65,11 @@ export interface Replay {
   would_allow?: { calls?: number; by_quantity?: Array<{ quantity?: string; unit?: string; total?: number }> };
 }
 
-/** Why there's no offer. */
-export type None = "never" | "unit" | "no_change" | "not_yours";
+/**
+ * Why there's no offer. `refused` is tafs cloud's own check refusing KIFF's draft (it went past the held call):
+ * the person reads the same words as `no_change`, and the log names the rule.
+ */
+export type None = "never" | "unit" | "no_change" | "not_yours" | "refused";
 
 export type OfferChange = Change & { words_before: string; words_after: string };
 
@@ -132,21 +135,27 @@ function num(x: unknown): number | undefined {
 }
 
 /**
- * Whether KIFF's changes are exactly the narrowest ones for the hold's breaches: one per breach, on its mandate,
- * of its kind, in its unit and window, with the call's figure (or, rounded, one step above it), a resource adding
- * this value only. Anything more, less or wider fails.
+ * Why KIFF's changes aren't exactly the narrowest ones for the hold's breaches, or undefined when they are: one
+ * per breach, on its mandate, of its kind, in its unit and window, with the call's figure (or, rounded, one step
+ * above it), a resource adding this value only. Anything more, less or wider is named.
  */
-export function changesMatch(breaches: Breach[], changes: Change[], round: boolean): boolean {
-  if (!breaches.length || breaches.length !== changes.length) return false;
+export function refusal(breaches: Breach[], changes: Change[], round: boolean): string | undefined {
+  if (!breaches.length) return "no breach";
+  if (breaches.length !== changes.length) return `${changes.length} changes for ${breaches.length} breaches`;
   const left = [...changes];
   for (const b of breaches) {
     const kind = kindFor(b);
-    if (!kind || !b.mandate_id) return false;
+    if (!kind || !b.mandate_id) return `a breach no change answers (${b.outcome ?? "none"})`;
     const at = left.findIndex((c) => c.mandate_id === b.mandate_id && c.kind === kind && fits(b, kind, c, round));
-    if (at < 0) return false;
+    if (at < 0) return `no ${kind} change on ${b.mandate_id} that stops at the call`;
     left.splice(at, 1);
   }
-  return left.length === 0;
+  return undefined;
+}
+
+/** Whether KIFF's changes are exactly the narrowest ones for the hold's breaches (`refusal` says why not). */
+export function changesMatch(breaches: Breach[], changes: Change[], round: boolean): boolean {
+  return refusal(breaches, changes, round) === undefined;
 }
 
 function fits(b: Breach, kind: string, c: Change, round: boolean): boolean {
@@ -227,7 +236,7 @@ export function wouldWords(r: Replay, lang: Lang): { calls: number; words: strin
 
 export function noneWords(why: None, lang: Lang): string {
   const w = wordsIn(lang);
-  return { never: w.allow_none_never, unit: w.allow_none_unit, no_change: w.allow_none_no_change, not_yours: w.allow_none_not_yours }[why];
+  return { never: w.allow_none_never, unit: w.allow_none_unit, no_change: w.allow_none_no_change, refused: w.allow_none_no_change, not_yours: w.allow_none_not_yours }[why];
 }
 
 /** What tafs cloud answers on the tap: the offer, or why there's none, with its words. */
@@ -258,13 +267,20 @@ export async function allowOffer(exception: string, round: boolean, d: AllowDeps
   if (hold.kind === "card_unit") return none("unit");
   const breaches = Array.isArray(hold.breaches) ? hold.breaches : [];
   if (!breaches.length || !breaches.every((b) => OUTCOMES.includes(b.outcome ?? "") && kindFor(b))) return none("no_change");
+  // A figure to stop at, from the hold itself: a breach with no amount gets no draft at all.
+  if (!breaches.every((b) => kindFor(b) === "resource" ? !!b.value : num(b.draw) !== undefined)) return none("no_change");
   const draft = await ask<AllowDraft>(d.token, "POST", `/v1/me/card-exceptions/${encodeURIComponent(exception)}/allow-draft`, round ? { round: true } : {}, doFetch, base);
   if (draft.none === "never" || draft.none === "unit" || draft.none === "no_change") return none(draft.none);
   if (draft.none !== undefined || !draft.draft || !draft.confirm_key || !Array.isArray(draft.changes)) return none("no_change");
-  if (!changesMatch(breaches, draft.changes, round)) return none("no_change");
+  const refuse = (rule: string): Answer => {
+    d.log?.(`allow: tafs cloud's check refused draft ${draft.draft} for hold ${exception}: ${rule}`);
+    return none("refused");
+  };
+  const why = refusal(breaches, draft.changes, round);
+  if (why) return refuse(why);
   const ours = round ? undefined : roundOffer(breaches, d.lang);
   // KIFF's rounding must agree with tafs cloud's, or the button would name a figure the draft won't carry.
-  if (draft.round?.after !== undefined && draft.round.after !== ours?.after) return none("no_change");
+  if (draft.round?.after !== undefined && draft.round.after !== ours?.after) return refuse(`round ${draft.round.after}, not ${ours?.after ?? "none"}`);
   const action = hold.title || hold.action || "";
   const changes = draft.changes.map((c) => {
     const b = breaches.find((x) => x.mandate_id === c.mandate_id && kindFor(x) === c.kind)!;

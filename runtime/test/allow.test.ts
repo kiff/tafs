@@ -175,19 +175,30 @@ describe("allowOffer", () => {
     expect(await allowOffer("exc_1", false, odd.deps)).toMatchObject({ none: "no_change" });
   });
 
-  it("doesn't offer a draft whose change its own check refuses, nor one whose rounding disagrees", async () => {
-    for (const draft of [
-      { ...DRAFT, changes: [each(40000)] },
-      { ...DRAFT, changes: [each(), count] },
-      { ...DRAFT, changes: [{ ...each(), mandate_id: "m_other" }] },
-      { ...DRAFT, round: { after: 40000 } },
-      { ...DRAFT, draft: undefined },
-      { ...DRAFT, confirm_key: undefined },
-      { ...DRAFT, changes: undefined },
-    ]) {
+  it("refuses a draft its own check refuses, or whose rounding disagrees: refused, in no_change's words, the rule logged", async () => {
+    for (const [draft, rule] of [
+      [{ ...DRAFT, changes: [each(40000)] }, "no per_action change on m_refunds"],
+      [{ ...DRAFT, changes: [each(), count] }, "2 changes for 1 breaches"],
+      [{ ...DRAFT, changes: [{ ...each(), mandate_id: "m_other" }] }, "no per_action change on m_refunds"],
+      [{ ...DRAFT, round: { after: 40000 } }, "round 40000, not 35000"],
+    ] as const) {
+      const said: string[] = [];
       const k = kiffWith({ hold: HOLD, draft });
-      expect(await allowOffer("exc_1", false, k.deps)).toMatchObject({ none: "no_change" });
+      expect(await allowOffer("exc_1", false, { ...k.deps, log: (l) => said.push(l) })).toEqual({ none: "refused", words: wordsIn("en").allow_none_no_change });
+      expect(said.join("\n")).toContain(rule);
       expect(k.asked.some((a) => a.path.endsWith("/replay"))).toBe(false);
+    }
+    // A draft KIFF didn't finish is no offer either, and no check ran on it.
+    for (const draft of [{ ...DRAFT, draft: undefined }, { ...DRAFT, confirm_key: undefined }, { ...DRAFT, changes: undefined }]) {
+      expect(await allowOffer("exc_1", false, kiffWith({ hold: HOLD, draft }).deps)).toMatchObject({ none: "no_change" });
+    }
+  });
+
+  it("asks for no draft for a hold with no figure to stop at", async () => {
+    for (const breach of [{ ...EACH, draw: undefined }, { ...TOTAL, draw: -1 }, { ...VALUE, value: undefined }]) {
+      const k = kiffWith({ hold: { ...HOLD, breaches: [breach] }, draft: DRAFT });
+      expect(await allowOffer("exc_1", false, k.deps)).toMatchObject({ none: "no_change" });
+      expect(k.asked).toHaveLength(1);
     }
   });
 
