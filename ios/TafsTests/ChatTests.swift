@@ -145,7 +145,7 @@ final class ChatTests: XCTestCase {
         StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
         {"messages":[
           {"id":"run_1.4","at":"2026-11-05T09:00:00Z","from":"taf","kind":"message","text":"Three refunds made.","session":"s1",
-           "delivered":"Sent to Slack · #ops.","counted":"  From the record: 3 done · 1 refused\n"},
+           "delivered":"Sent to Slack · #ops.","counted":"  From the record: 3 done · 1 refused\\n"},
           {"id":"run_2.4","at":"2026-11-05T10:00:00Z","from":"taf","kind":"message","text":"Nothing due today.","session":"s2","delivered":"","counted":" "},
           {"id":"run_3.4","at":"2026-11-05T11:00:00Z","from":"taf","kind":"message","text":"Done.","session":"s3"},
           {"id":"run_4.4","at":"2026-11-05T12:00:00Z","from":"taf","kind":"message","text":"Done again.","session":"s4","delivered":7,"counted":["5 done"]}]}
