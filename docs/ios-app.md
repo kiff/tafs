@@ -338,6 +338,11 @@ the app in sample mode.
 - **Who a taf is shared with** (`ShareLine`, under the taf's name): the groups and people KIFF lists for it, never the
   person reading it. A taf only they use reads "Not shared", and one they share names the others alone. "You" is the
   person KIFF marks so, or the one whose email is the account read's.
+- **A message refused because of a halt** (`UnsentBubble`, in a taf's chat and in Coach's): tafs cloud's refusal says
+  whether the whole account or the taf is halted (`halted`, kept on `AppModel.UnsentMessage`), never guessed from its
+  words. The bubble shows tafs cloud's words and **Resume**, which opens that Halt screen: the account's, in Coach's
+  chat too, or the taf's own. Resuming there is the person's act behind Face ID; the bubble resumes nothing by itself.
+  Retry then sends the message.
 - **A held call's card** (`HeldCallCard`, in Needs you) has the decision on its face: KIFF's
   amount, the action, and the Card rule it crossed, from KIFF's record. Under them, **The taf
   says**: what the call is on and the customer's reason, in the taf's own words, as KIFF keeps
