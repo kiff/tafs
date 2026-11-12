@@ -626,7 +626,7 @@ data class AppState(
 
   /** "Allow this from now on" on [call]: for someone who manages Cards, on a hold a Card change can lift, from KIFF. */
   fun offersAllow(call: HeldCall): Boolean =
-    mode == Mode.kiff && canManageCards && call.kiffId != null && holder(call.tafId)?.cloudId != null && bot.tafs.app.model.HoldAllow.allowable(call)
+    mode == Mode.kiff && canManageCards && allowLive && call.kiffId != null && holder(call.tafId)?.cloudId != null && bot.tafs.app.model.HoldAllow.allowable(call)
 
   /**
    * A message refused because the account or its taf is halted: while that halt holds, its Not sent row offers Resume, behind the
@@ -652,6 +652,12 @@ data class AppState(
 
   /** Whether this person may give a Card extra room (KIFF's cards.manage): offered only to them. */
   val canManageCards: Boolean get() = allows(kiffAccount?.capabilities, "cards.manage")
+
+  /**
+   * "Allow this from now on" is live: tafs cloud lists `holds.allow` once KIFF's draft for it answers. Never assumed: with no
+   * list, or none, the button isn't drawn, so no one taps into a route that isn't there yet.
+   */
+  val allowLive: Boolean get() = kiffAccount?.capabilities?.contains("holds.allow") == true
 
   /**
    * Whether buying is offered here: Play Billing in this build, the balance offering Solo, packs or the First month pack to this person (`buy`), and KIFF

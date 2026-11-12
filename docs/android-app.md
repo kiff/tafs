@@ -546,7 +546,9 @@ taf, and **Ask Coach** opens a conversation about the taf.
 A held call's third answer ([allow-from-now-on.md](allow-from-now-on.md)): change the Card so calls
 like this one go on their own.
 
-- **The button** shows by the app's own rule, from the held call KIFF sent, with no request
+- **The button** shows only once tafs cloud lists the `holds.allow` capability on `/v1/me`, which
+  it sends once KIFF's draft for it answers (`AppState.allowLive`; never assumed when missing). Then
+  it follows the app's own rule, from the held call KIFF sent, with no request
   (`AppState.offersAllow`, `HoldAllow.allowable`): someone who manages Cards, on a hold that isn't a
   currency mismatch (`card_unit`) or Coach's install, whose every breach is `per_action_exceeded`,
   `limit_reached` or `resource_not_on_card`.
