@@ -75,7 +75,8 @@ final class RemoveTafTests: XCTestCase {
         signer.approvalPrompted = []
         signer.currentPrompted = []
 
-        _ = try XCTUnwrap(await model.removeTaf(rae))
+        let removed = await model.removeTaf(rae)
+        XCTAssertNotNil(removed)
         XCTAssertEqual(signer.approvalPrompted.count, 1, "one Face ID, for the approval key")
         let lines = try XCTUnwrap(signer.approvalPrompted.first).components(separatedBy: "\n")
         XCTAssertEqual(Array(lines.prefix(5)), ["kiff.request.v1", "t_01", "DELETE", "/v1/tafs/depl_1",
