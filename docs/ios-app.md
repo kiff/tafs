@@ -286,10 +286,31 @@ the app in sample mode.
   **Coach's approval card holds no field for a key** (`SetupApproval`): a secret typed in the chat reads as handing it
   to Coach. When planque says the connection is approved with its key and it isn't connected yet, the card's one button,
   "Give the key on a secure sheet", opens this same sheet full screen, outside the chat (`ConnectApprovalSheet`,
-  `needsKey`). The sheet shows the vendor, the connection service's text for what is read or written, and that the key
-  goes from this phone to the connection server, which sends it only to the vendor's host, and never to Coach. Face ID
-  confirms there. A paste into the field empties the clipboard at once. Once the key is given, the card is approved as
-  any other: tafs cloud reads the grant, connected, and answers Coach. The key never reaches tafs cloud or Coach.
+  `needsKey`). Once the key is given and its receipt closed, the card is approved as any other: tafs cloud reads the
+  grant, connected, and answers Coach. The key never reaches tafs cloud or Coach.
+  **The key's sheet looks and acts protected** (`docs/secure-connection.md`). Its words are tafs cloud's, read by the
+  grant (`GET /v1/connect/grants/{grant}/sheet`, `TafsCloud.ConnectionSheet`), with this phone's signed grants
+  read (`Planque-Device-Signature`), as Connect apps is:
+  - **The title:** the vendor's logo (tafs cloud's own, or none), a lock, the host, and tafs cloud's title.
+  - **Three plain lines:** what it may do, that the key is sealed, and that it can be disconnected. The phone draws
+    the words; a line's `kind` picks its icon. **"Read only" is checked against the grant the phone read from the
+    connection server** (`SecureKey.saysTrue`): at least one tool, every one a read. A sheet that says it of any
+    other grant shows "This request doesn't match what it shows", with nothing to paste or sign.
+  - **The key is pasted, never typed.** The sheet has no text field. Apple's own paste button reads the clipboard only
+    on that tap, so iOS asks nothing more. Only the key's last 4 characters are drawn (`SecureKey.last4`; none for a
+    key shorter than 12), and the clipboard is emptied.
+  - **Details**, collapsed: tafs cloud's technical lines, and the connection server's own text, which its digest covers.
+    KIFF's words for a profile, and a digest that doesn't match, stay in sight above it.
+  - **One legal line**, with its two links as tafs cloud sends them. A link that isn't https is words alone.
+  - **Connect**, behind Face ID. The key goes to the connection server as before.
+  - **The receipt**, on the sheet: tafs cloud's line with the last 4, **Done**, and **Disconnect** (asked first, then
+    Face ID). The key is forgotten as soon as it's given, and the last 4 when the sheet closes. Disconnecting there
+    leaves Coach's card unapproved.
+  When tafs cloud's words can't be read, the sheet draws the app's own lines as before, with the same paste button
+  and no text field.
+  **A later approval card whose connection is already connected** carries tafs cloud's mark (`connection: {done,
+  words}`, `SetupComponent.Connection`): the card draws that line and the Card, never the connection's text again.
+  Not built yet: the Card on the same sheet under one signature, which waits for the connection server and KIFF.
 - **What a grant's digest covers** (`PlanqueClient.digestCovers`): the phone recomputes planque's
   digest before it shows or signs a grant, and refuses one that doesn't match. Without `digest_v`,
   it covers the request alone (v1). With `digest_v: 2`, it covers `{"lang", "request", "text"}`, so
@@ -310,6 +331,28 @@ the app in sample mode.
   - They never stand in for KIFF's amount, rule or action, and nothing is read from them.
   - The gateway's `kiff_about` and `kiff_reason` arguments aren't listed again under Details,
     where the ids stay (`TafSaysTests`).
+- **Allow this from now on** (`HoldAllow`, `AllowSheetView`; `docs/allow-from-now-on.md`): a third answer on a held
+  call's card, beside Approve once and Refuse, that changes the Card so calls like it go on their own.
+  - **The button** is the app's own rule, from the held call KIFF sent, with no request (`AppModel.offersAllow`):
+    the account's capabilities name `holds.allow` (the service says when the feature is live, and the app never
+    guesses: no list, no button), the person manages Cards, the call isn't Coach's install, and every breach is one a Card change can lift
+    (`per_action_exceeded`, `limit_reached`, `resource_not_on_card`). The held call keeps its agent and its
+    breaches' outcomes for this (`HeldCall.agent`, `breachOutcomes`).
+  - **The tap** posts `/v1/tafs/{id}/holds/{exception}/allow` (`{}`, or `{"round": true}` for "Round up to …"). The
+    app never rounds. No offer, for a reason this app knows or not, shows tafs cloud's words with nothing to sign.
+  - **The sheet** shows tafs cloud's change before and after, KIFF's own lines for each Card that changes, what it
+    would have let go when tafs cloud says, and the switch "Let this one go out too".
+  - **The phone reads KIFF's draft itself and signs only an exact match** (`HoldAllow.matches`): the draft is for
+    the held call's agent (and made from this call, when KIFF says); it retires no Card and adds none; each changed
+    Card is one the offer names and reads exactly as the Card in force with the one offered change made: a limit
+    moved, in the offer's unit (and window, when it names one), or, for a `resource` change, exactly the scope's values
+    in force plus the offered one. Every other term is compared (`HoldAllow.Terms`): each action's caps, scope, states
+    and next steps; each total's window, measure and per-item parameter; what happens past a limit; who holds the Card;
+    where it applies; when it starts and ends. A draft that sets how long a hold waits, or revokes, is refused. Anything else shows "This change isn't what was offered", with no
+    sign button. A draft that couldn't be read shows the error alone.
+  - **One Face ID** signs the version the phone read (`tafs.cards.v1`). With the switch on, the confirm names the
+    held call and the version of it the person saw, so KIFF lets it go under the same signature. With it off, the
+    Card changes and the call still waits. Rounding up keeps the person's switch.
 
 ### Connect apps
 

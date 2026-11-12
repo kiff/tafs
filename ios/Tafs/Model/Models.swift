@@ -472,6 +472,11 @@ struct HeldCall: Identifiable, Hashable, Codable {
     /// never in place of KIFF's amount, rule or action. Nil when the taf sent none.
     var tafAbout: String?
     var tafReason: String?
+    /// The KIFF agent the call is held for, and each breach's outcome as KIFF names it: what
+    /// "Allow this from now on" is decided from (docs/allow-from-now-on.md). Nil for a sample,
+    /// or one saved before them.
+    var agent: String?
+    var breachOutcomes: [String]?
 }
 
 /// The taf and version a held version_install names, as Coach sent them: the taf's id in

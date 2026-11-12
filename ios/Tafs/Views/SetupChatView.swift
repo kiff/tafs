@@ -1434,7 +1434,13 @@ struct SetupApproval: View {
                 }
             }
             if let grant {
-                if connected {
+                if let done = component.connection?.doneWords {
+                    // Already connected, as tafs cloud marks it: its one line, then Its Card. The
+                    // connection's text isn't shown again, as if it still waited.
+                    Label(done, systemImage: "checkmark.circle.fill")
+                        .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
+                        .accessibilityIdentifier("approval.connection-done")
+                } else if connected {
                     Label(Words.Coach.connectedKeysKeptSealed(vendor: "\(grant.vendor)"), systemImage: "checkmark.circle.fill")
                         .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
                 } else if listed {

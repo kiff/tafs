@@ -88,9 +88,23 @@ struct SetupComponent: Decodable, Equatable {
     /// The run pauses on this card: `owner` (the owner's answer) or `service` (a service's). None: the run
     /// goes on past it (kiff/agents' cards from before this say nothing, and the card's type decides).
     var waits: String? = nil
+    /// On an approval whose connection is already connected, tafs cloud's mark
+    /// (docs/secure-connection.md): the card draws only its words ("Qonto is connected (read
+    /// only)") and Its Card, never the connection's text again.
+    var connection: Connection? = nil
+
+    struct Connection: Codable, Hashable {
+        var done: Bool?
+        var words: String?
+        /// tafs cloud's line, when it says the connection is done and gives words for it.
+        var doneWords: String? {
+            guard done == true, let words, !words.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+            return words
+        }
+    }
 
     enum CodingKeys: String, CodingKey {
-        case type, id, title, text, tone, steps, options, questions, grant, draft, service, taf, tools, yes, no, note, version, waits
+        case type, id, title, text, tone, steps, options, questions, grant, draft, service, taf, tools, yes, no, note, version, waits, connection
         case tafID = "taf_id"
     }
 

@@ -141,6 +141,21 @@ and the same fields in the connection server's header.
 - **Without a draft** (an app that signs in at the vendor, whose tools are known only after
   the sign-in), the two steps stay as they are.
 
+**Built in tafs cloud** (`approval.ts`, `decide` and `settle`): with `TAFS_KEY_AND_CARDS=on`, a grant that takes
+a key, asked with its Card's draft by a phone that says it can sign the step (`can: ["key_and_cards"]` in the
+approval request's body; an app from before leaves it out and gets the two steps, the flag on or off), gets `{step: "key_and_cards", scheme: "kiff.requests.v1", message: "", key:
+"critical", planque: {grant, body}, kiff: {draft, version}}`, after the same checks as the cards step (the version
+shown, on-demand writes, every tool on a Card). Its report answers Coach `approved` only when the connection server
+says connected (a key grant has no `listed`) and KIFF says the Card is issued; a key that went in with a Card that didn't answers `failed: <app> is
+connected; …`, so Coach's next card asks for the Card alone. The flag stays off until both services take
+`kiff.requests.v1`, and the two steps work as before.
+
+**The phone signs only what it read itself.** The ask's `planque.body.digest` and `kiff.version` are hints for
+building the two requests: the phone puts in them the digest of the grant it read from the connection server, as
+the connect step requires, and the version of the draft it read from KIFF (the rule above). If either differs from
+the ask, it signs nothing and says the card is out of date. So a wrong digest or version from tafs cloud is never
+signed without being shown. One test in each app pins it.
+
 **Coach** drafts the Card before the key sheet opens, from the grant's tools, which a key
 grant lists before the key is given. That's a skill change, and it takes an Eval.
 
