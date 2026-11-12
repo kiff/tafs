@@ -2533,7 +2533,13 @@ function cardAnswer(b: { type?: unknown; answer?: unknown; words?: unknown; wrot
  * them. `steering`: what the owner wrote to it that it hasn't read (#64).
  * Unknown (kiff/agents not answering) reads as neither.
  */
-async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps): Promise<{ working: { session: string; run: string } | null; steering: Steering | null; capped?: Capped; stopped?: Stopped }> {
+/** Whether a PAUSED run waits only on a drive's Continue: an unanswered coach-drive wait, and nothing held for the owner. */
+function parkedOnDrive(r: Run): boolean {
+  const open = (r.requirements ?? []).filter((q) => !q.answered);
+  return open.length > 0 && open.every((q) => q.kind === "event" && q.wait?.grant === DRIVE_WAIT_GRANT);
+}
+
+async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: Deps): Promise<{ working: { session: string; run: string; parked?: true } | null; steering: Steering | null; capped?: Capped; stopped?: Stopped }> {
   const none = { working: null, steering: null };
   const latest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
   if (!latest) return none;
@@ -2561,7 +2567,10 @@ async function latestRun(me: KIFFIdentity, taf: Taf, picked: Session[], deps: De
       }
     }
     return {
-      working: r.status === "PENDING" || r.status === "RUNNING" ? { session: latest.id, run } : null,
+      // A run parked while the person has the app (docs/drive.md) is still at work: it goes on at Continue, in
+      // this chat, so the apps keep following it. One held for the owner's approval isn't: it has its own card.
+      working: r.status === "PENDING" || r.status === "RUNNING" ? { session: latest.id, run }
+        : r.status === "PAUSED" && parkedOnDrive(r) ? { session: latest.id, run, parked: true } : null,
       steering: untaken.length || held || notSent.length
         ? { run, status: r.status, untaken, ...(held ? { held } : {}), ...(notSent.length ? { not_sent: notSent } : {}) }
         : null,

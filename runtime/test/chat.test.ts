@@ -244,6 +244,25 @@ describe("conversation", () => {
     expect(r.body.messages.at(-1).text).toBe(`answer ${CHAT.maxThread + 19}`);
   });
 
+  it("keeps a run parked while the person has the app as at work, and one held for the owner as not", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 60_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Drive the app for me", ANA);
+    const run = chat as { status: string; requirements?: unknown[] };
+    run.status = "PAUSED";
+    run.requirements = [{ call_id: "c1", tool: "app_look", input: {}, kind: "event", wait: { grant: "coach-drive", event: "drive.continue", key: "t_acme:d1" } }];
+    let r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.body.working).toEqual({ session: chat.session, run: chat.id, parked: true });
+    // Held for the owner's approval as well: that has its own card, so the chat isn't "thinking".
+    run.requirements = [...run.requirements, { call_id: "c2", tool: "refund", input: {}, kind: "hold", exception: "exc_1" }];
+    r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.body.working).toBeNull();
+    // Continue answered the wait: nothing open, so it isn't parked any more.
+    run.requirements = [{ call_id: "c1", tool: "app_look", input: {}, kind: "event", answered: NOW.toISOString(), wait: { grant: "coach-drive", event: "drive.continue", key: "t_acme:d1" } }];
+    r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(r.body.working).toBeNull();
+  });
+
   it("says whether the taf is at work in its latest chat, for the app's thinking and Stop", async () => {
     const w = world();
     w.at(new Date(NOW.getTime() - 60_000));
