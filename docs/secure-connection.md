@@ -89,44 +89,55 @@ entry it came from, and answers in the request's `Accept-Language`:
 
 ## One signature: the key and its Card together
 
-**Why two today:** a key grant is given with the approval key (`tafs.connect.v1|…`, a
-fingerprint). Coach's Card for the taf is then a separate draft, confirmed with
-`tafs.cards.v1|tenant|draft|version`. KIFF names that confirm `critical`, so it takes a
-second fingerprint, on a second card.
+**Why two today:** each service checks a signature over the request it receives:
+- KIFF over `kiff.request.v1` (tenant, method, path, the body's SHA-256, `signed_at`);
+- the connection server over its own request message, the same form under its base URL,
+  which it has KIFF check.
 
-**The shape:** when Coach's card carries both the grant and the Card's draft (the approval
-component's `draft`, as it can today), tafs cloud's approval answer gives one ask, step
-`key_and_cards`, with one message for the approval key:
+Giving the key is one signed request and confirming the Card's draft is another. KIFF names
+that confirm `critical`, so each takes the approval key, and so the fingerprint, once.
+
+**The shape: one signature over both requests, `kiff.requests.v1`.** When Coach's card carries
+both the grant and the Card's draft (the approval component's `draft`, as it can today), tafs
+cloud's approval answer gives one ask, step `key_and_cards`. The phone builds both requests
+in full, with one `signed_at`:
+1. the key to the connection server, as today (`POST …/grants/{id}/key`, the key in
+   `Planque-Vendor-Key`);
+2. the draft's confirm to KIFF, as today (`POST /v1/me/agent-drafts/{draft}/confirm` with
+   `version`, and `hold` when the held call goes too).
+
+For each request it computes the request message its service checks today, exactly those
+bytes, and signs once, with the approval key behind the fingerprint:
 
 ```
-tafs.setup.v1|{tenant}|{grant}|{digest}|{key_sha256}|{draft}|{version}
+kiff.requests.v1
+{tenant}
+{signed_at}
+{sha256 hex of one request message}
+{sha256 hex of the other request message}
 ```
 
-- **The key** is the pasted text with outer whitespace trimmed. That same trimmed key is
-  what's sent, and `key_sha256` is the lowercase hex SHA-256 of its UTF-8 bytes.
-- **The phone** fills `key_sha256`, signs once behind the fingerprint, and makes two calls
-  with the same signature, in the same fields each call takes today plus
-  `scheme: "tafs.setup.v1"` and the message's other parts, so each service rebuilds what it
-  checks:
-  1. the key to the connection server, as today (`POST …/grants/{id}/key`, the key in
-     `Planque-Vendor-Key`), whose signed body also carries `scheme`, `draft` and `version`;
-  2. then the draft's confirm to KIFF, with `signature` and `version` as today, plus
-     `scheme`, `grant`, `digest` and `key_sha256`.
-- **The connection server** checks the signature over the message it rebuilds from its own
-  grant, digest and the key's SHA-256. It takes `draft` and `version` as they're written,
-  without reading them.
-- **KIFF** checks the same signature over the message it rebuilds from the tenant, the draft
-  and its version, with the device's approval key. It takes `grant`, `digest` and
-  `key_sha256` as they're written, and keeps `key_sha256` only in its single-use record,
-  never logged. The connection server, which holds the key, is the only place a hash of it
-  lives beyond that. **This is the combined confirm KIFF needs:** today's
-  confirm takes only `tafs.cards.v1`.
-- **Each service takes one signature once,** for that draft version and that grant digest.
+The two hashes are in sorted order. The phone sends the same signature on both requests,
+each in its service's signature header as today, with `v3=` for the signature and `with=`
+naming the other request's hash: `KIFF-Device-Signature: t={signed_at},v3={signature},with=sha256:{hex}`,
+and the same fields in the connection server's header.
+
+- **Each service** rebuilds its own request message from the request it received, hashes
+  it, forms the list with `with`, and checks the signature over it with the device's approval
+  key. It never reads the other request: it knows only that its own was signed together with
+  one other.
+- **Nothing the person saw goes unsigned:** each request's body hash already binds what it
+  carries. KIFF's binds the draft and its version (and the held call), and the connection
+  server's binds the grant's digest and the key's SHA-256.
+- **The time and once-only rules stay as they are:** `signed_at` within 5 minutes of each
+  service's clock, and each service takes a signature once. A `kiff.requests.v1` signature
+  is always the approval key's, never a window's tap.
+- **It's generic:** any two requests under one fingerprint (a key and its Card today, a
+  sign-in and its Card later) need nothing new in either service.
 - **If the confirm fails after the key went in,** the app is connected and the Card still
-  waits. The card says so. While the sheet or the card is open, its retry confirms with the
-  same signature, which the phone keeps in memory only, with no second fingerprint, while
-  the draft's version holds. Once the app has closed, a retry takes one fresh fingerprint over
-  `tafs.cards.v1`, as a Card confirm does today.
+  waits, and the card says so. A retry re-sends the same signed confirm only if KIFF never
+  checked it (no answer at all), within its 5 minutes. Otherwise it takes one fresh
+  fingerprint over KIFF's request alone (`kiff.request.v1`), as a Card confirm does today.
 - **Without a draft** (an app that signs in at the vendor, whose tools are known only after
   the sign-in), the two steps stay as they are.
 
@@ -143,8 +154,8 @@ that line and Its Card.
 | Lane | What it builds |
 |---|---|
 | **tafs cloud** | The sheet route and its words in the 8 languages; the `key_and_cards` ask; the connected mark on a later card |
-| **Connection server** | The key route takes a `tafs.setup.v1` signature |
-| **KIFF** | The draft confirm takes a `tafs.setup.v1` signature |
+| **Connection server** | The key route takes a `kiff.requests.v1` signature (checked through KIFF, as today) |
+| **KIFF** | Signed routes take a `kiff.requests.v1` signature; the device check the connection server calls takes it too |
 | **Apps** | The sheet; Paste the key; one fingerprint, two calls; the receipt |
 | **Coach** | The Card drafted before the key sheet (an Eval) |
 
@@ -157,10 +168,11 @@ that line and Its Card.
   that draft's.
 - **No placeholder but `{last4}`, `{terms}` and `{privacy}`**, and every line is in the 8
   languages.
-- **One fingerprint per key setup with a Card:** the phone signs one `tafs.setup.v1`
-  message, and both services accept it once. A second use is refused by each.
-- **A signature over another draft, version, grant, digest or key** is refused by the
-  service whose part doesn't match.
+- **One fingerprint per key setup with a Card:** the phone signs one `kiff.requests.v1`
+  message, and both services accept it once.
+- **qa-kiff's negatives:** the signature reused on a third request is refused; a swapped
+  `with` hash is refused by both services; a `signed_at` outside 5 minutes is refused; a
+  device-key (window) signature in `v3=` is refused.
 - **The key never leaves the phone except to the connection server**, and the last 4 aren't
   kept after the sheet closes.
 - **A card whose connection is already connected** shows only the done line and Its Card.
