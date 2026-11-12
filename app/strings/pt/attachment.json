@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "Não é possível anexar {name}.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "O tafs não pode anexar este ficheiro: não é de um tipo ou tamanho aceite. Escolha outro.",
+  "attachment.photo": "Fotografia",
+  "attachment.photo_could_not_read": "Não foi possível ler essa fotografia.",
+  "attachment.photo_numbered": "Fotografia {n}",
+  "attachment.too_large": "{name} tem {size}; o máximo é {limit}.",
+  "attachment.wrong_kind": "Não é possível anexar {name}. Pode anexar fotografias, PDF, texto, CSV, Markdown, Word e Excel."
+}

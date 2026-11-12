@@ -1,0 +1,17 @@
+{
+  "halt_all.description": "Bloqueia todos os tafs de uma vez. Nada de novo é enviado até os retomar no tafs.",
+  "halt_all.failed": "O tafs não conseguiu bloquear os seus tafs. {why} Abra o tafs para os bloquear.",
+  "halt_all.halted": {
+    "one": "{count} taf bloqueado. Nada de novo é enviado até retomar.",
+    "other": "{count} tafs bloqueados. Nada de novo é enviado até retomar."
+  },
+  "halt_all.halted_all": "Os seus tafs estão bloqueados. Nada de novo é enviado até retomar.",
+  "halt_all.halting": {
+    "one": "A bloquear {count} taf: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer.",
+    "other": "A bloquear {count} tafs: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer."
+  },
+  "halt_all.halting_all": "A bloquear os seus tafs: nenhuma execução começa. O KIFF ainda não confirmou todas as partes; o tafs mostra quando o fizer.",
+  "halt_all.running": "O tafs não conseguiu bloquear os seus tafs. Abra o tafs para os bloquear.",
+  "halt_all.signed_out": "Terminou sessão no tafs. Inicie sessão para bloquear os seus tafs.",
+  "halt_all.title": "Bloquear todos os tafs"
+}

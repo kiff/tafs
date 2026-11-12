@@ -1,0 +1,9 @@
+{
+  "export.not_exported": "Le tue chat non sono state esportate. {why}",
+  "export.not_offered": "Non è stato possibile salvare i file su questo telefono. Libera un po' di spazio, poi riprova.",
+  "export.own_chats_each_taf_coach": "Le tue chat con ogni taf, comprese quelle con Coach, i nomi dei file che hai allegato e le tue note, come file leggibile e come JSON. Solo tu puoi esportarle.",
+  "export.preparing": "Preparazione delle tue chat…",
+  "export.ready_share_again": "Pronto: {files}. Condividi di nuovo",
+  "export.row": "Esporta le mie chat",
+  "export.sign_in_first": "Accedi con KIFF per esportare le tue chat."
+}

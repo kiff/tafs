@@ -1,0 +1,17 @@
+{
+  "report.already": "Vous avez déjà signalé cette réponse.",
+  "report.cant_from_here": "Cette réponse ne peut pas être signalée d'ici.",
+  "report.menu": "Signaler cette réponse",
+  "report.not_sent": "Votre signalement n'a pas été envoyé. {why}",
+  "report.not_sent_why": "Non envoyé : {failed}",
+  "report.note_hint": "Ajouter une note (facultatif)",
+  "report.note_most_characters": "Une note compte au plus 1 000 caractères.",
+  "report.person_kiff_reads_your_report": "Une personne chez KIFF lit votre signalement, avec la réponse telle qu'elle a été écrite.",
+  "report.reason.harmful": "Dangereuse",
+  "report.reason.offensive": "Offensante",
+  "report.reason.other": "Autre",
+  "report.reason.wrong": "Erronée",
+  "report.runs_not_loaded": "Ses exécutions n'ont pas pu être chargées. {why}",
+  "report.thanks": "Merci. Une personne chez KIFF lira votre signalement.",
+  "report.what_wrong": "Quel est le problème ?"
+}

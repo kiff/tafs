@@ -1,0 +1,14 @@
+{
+  "halt.again": "Bloquer à nouveau",
+  "halt.all_now": "Tout bloquer maintenant",
+  "halt.explain.halted": "Bloqué. Rien n'atteint vos apps. Quand vous reprendrez, seul le nouveau travail s'exécutera : rien d'antérieur au blocage ne repart.",
+  "halt.explain.halted_since": "Bloqué depuis {time}. Rien n'atteint vos apps. Quand vous reprendrez, seul le nouveau travail s'exécutera : rien d'antérieur au blocage ne repart.",
+  "halt.explain.halting": "Rien de nouveau ne démarre. Bloqué s'affiche dès que KIFF et la connexion l'ont tous deux confirmé.",
+  "halt.explain.running_all": "Bloquer arrête vos tafs : aucune exécution ne démarre, et rien n'atteint vos apps jusqu'à ce que vous repreniez. Un appel déjà en route peut encore arriver ; rien n'est annulé.",
+  "halt.explain.running_one": "Bloquer l'arrête : aucune exécution ne démarre, et rien n'atteint vos apps jusqu'à ce que vous repreniez. Un appel déjà en route peut encore arriver ; rien n'est annulé.",
+  "halt.halted_nothing_reaches_your_tools": "Bloqué{since}. Rien n'atteint vos apps. Quand vous reprendrez, seul le nouveau travail s'exécutera : rien d'antérieur au blocage ne repart.",
+  "halt.halting_stops_no_run_starts": "Bloquer arrête {who} : aucune exécution ne démarre, et rien n'atteint vos apps jusqu'à ce que vous repreniez. Un appel déjà en route peut encore arriver ; rien n'est annulé.",
+  "halt.now": "Bloquer maintenant",
+  "halt.row_running": "L'arrêter jusqu'à ce que vous le repreniez",
+  "halt.your_tafs_lower": "vos tafs"
+}

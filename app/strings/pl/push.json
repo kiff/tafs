@@ -1,0 +1,8 @@
+{
+  "push.channel.holds_description": "Wywołanie jest oczekujące na Twoją odpowiedź. Nic nie zostanie wysłane, dopóki go nie zatwierdzisz.",
+  "push.channel.other": "Inne alerty",
+  "push.channel.other_description": "Prośby o zadania i odpowiedzi na nie, bez dźwięku.",
+  "push.open_needs_you": "Otwórz Czeka na Ciebie, aby odpowiedzieć.",
+  "push.open_taf": "Otwórz tafa, aby zobaczyć.",
+  "push.open_usage": "Otwórz Plan i wykorzystanie, aby zobaczyć."
+}

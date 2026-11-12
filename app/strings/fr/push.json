@@ -1,0 +1,8 @@
+{
+  "push.channel.holds_description": "Un appel est retenu en attente de votre réponse. Rien n'est envoyé tant que vous ne l'approuvez pas.",
+  "push.channel.other": "Autres alertes",
+  "push.channel.other_description": "Les demandes de tâches et leurs réponses, sans son.",
+  "push.open_needs_you": "Ouvrez Vous attend pour répondre.",
+  "push.open_taf": "Ouvrez le taf pour voir.",
+  "push.open_usage": "Ouvrez Forfait et utilisation pour voir."
+}

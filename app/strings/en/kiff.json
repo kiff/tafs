@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "Asking KIFF: {title}…",
+  "kiff.did_not_reach_kiff_try": "It didn't reach KIFF. Try again.",
+  "kiff.kiff_can_not_do_sign": "KIFF can't do this yet: sign in again from Settings to approve from this {device}.",
+  "kiff.kiff_did_not_answer_expected": "KIFF didn't answer as expected. Try again.",
+  "kiff.kiff_words_do_not_match": "KIFF's words don't match their check. Nothing can be approved."
+}

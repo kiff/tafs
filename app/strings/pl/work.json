@@ -1,0 +1,36 @@
+{
+  "work.answer_within": "Odpowiedź w ciągu",
+  "work.answer_within_days": {
+    "one": "{count} dzień",
+    "few": "{count} dni",
+    "many": "{count} dni",
+    "other": "{count} dnia"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} godzina",
+    "few": "{count} godziny",
+    "many": "{count} godzin",
+    "other": "{count} godziny"
+  },
+  "work.answer_within_line": "Dostaniesz powiadomienie, gdy sprawa czeka dłużej.",
+  "work.answer_within_none": "Nie ustawiono",
+  "work.answer_within_not_set": "Nie udało się tego ustawić. {why}",
+  "work.asking_kiff_run": "Prośba do KIFF o uruchomienie {tool}…",
+  "work.did_not_stop": "Nie zatrzymało się: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Jego uruchomienia",
+  "work.not_read": "Nie udało się odczytać jego pracy. {why}",
+  "work.not_sent_again": "Nie zostało wysłane ponownie. {why}",
+  "work.request.try_reply_now": "Spróbuj wysłać odpowiedź teraz",
+  "work.requests_need_you": {
+    "few": "{count} prośby czekają na Ciebie",
+    "many": "{count} próśb czeka na Ciebie",
+    "one": "{count} prośba czeka na Ciebie",
+    "other": "{count} prośby czeka na Ciebie"
+  },
+  "work.send_again": "Wyślij ponownie",
+  "work.sending_again": "Ponowne wysyłanie…",
+  "work.stop_run": "Zatrzymaj uruchomienie",
+  "work.stopped_part_way_before_finished": "{taf}: zatrzymało się w połowie, zanim się skończyło."
+}

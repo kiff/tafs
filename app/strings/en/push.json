@@ -1,0 +1,8 @@
+{
+  "push.channel.holds_description": "A call is held for your answer. Nothing is sent until you approve it.",
+  "push.channel.other": "Other alerts",
+  "push.channel.other_description": "Requests for tasks and their answers, with no sound.",
+  "push.open_needs_you": "Open Needs you to answer.",
+  "push.open_taf": "Open the taf to see.",
+  "push.open_usage": "Open Plan & usage to see."
+}

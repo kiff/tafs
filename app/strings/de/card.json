@@ -1,0 +1,153 @@
+{
+  "card.all_of": {
+    "one": "Die ganze Card",
+    "other": "Alle Cards"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, dann fragt er dich",
+  "card.calls_left": {
+    "one": "noch {count} Aufruf",
+    "other": "noch {count} Aufrufe"
+  },
+  "card.calls_used_of": {
+    "one": "{used} von {count} Aufruf {window}",
+    "other": "{used} von {count} Aufrufen {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} Aufruf {window}",
+    "other": "{count} Aufrufe {window}"
+  },
+  "card.card_confirmed_kiff": "Card · von KIFF bestätigt",
+  "card.card_draft_kiff": "Card · Entwurf · von KIFF",
+  "card.card_got_room_call_needed": "Seine Card hat den Spielraum bekommen, den dieser Aufruf brauchte, bis diese Summe zurückgesetzt wird",
+  "card.card_not_issued": "Die Card wurde nicht ausgestellt. ",
+  "card.card_revoked": "Card widerrufen",
+  "card.check.always_asks": "{rule}: fragt dich immer",
+  "card.check.never_allowed": "{rule}: nie erlaubt",
+  "card.check.not_on_card": "Nicht auf der Card dieses tafs",
+  "card.check.over_count": {
+    "one": "Über {count} {window}",
+    "other": "Über {count} {window}"
+  },
+  "card.check.over_each": "Über {amount} pro Aufruf",
+  "card.check.over_total": "Über {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Cards"
+  },
+  "card.ended": "Beendet",
+  "card.ended_on": "Beendet am {date}",
+  "card.ends": "Endet",
+  "card.extra_room": "+{extra} Zusatzspielraum {window}",
+  "card.extra_room_prefix": "+{formatted} Zusatzspielraum ",
+  "card.extra_room_until": "+{extra} Zusatzspielraum bis {ends}",
+  "card.figure_left": "noch {figure}",
+  "card.heading": {
+    "one": "Card",
+    "other": "Cards"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} Aufruf {window}{each}: das wäre der {nth}{item}",
+    "other": "{count} Aufrufe {window}{each}: das wäre der {nth}{item}"
+  },
+  "card.held.each_call_asks": "Jeder Aufruf fragt dich zuerst",
+  "card.held.for_each": " pro {name}",
+  "card.held.for_each_join": " pro ",
+  "card.held.for_item": " für {item}",
+  "card.held.over_count": {
+    "one": "Über seinem Limit von {count} Aufruf: das wäre der {nth}",
+    "other": "Über seinem Limit von {count} Aufrufen: das wäre der {nth}"
+  },
+  "card.held.over_one_call": "{amount} liegt über dem Limit von {cap} für einen Aufruf",
+  "card.held.over_total": "{amount} würde die Summe von {cap} überschreiten",
+  "card.hero.calls_left_of": {
+    "one": "Aufruf {window} übrig von {limit}",
+    "other": "Aufrufe {window} übrig von {limit}"
+  },
+  "card.hero.calls_use_unavailable": "Aufrufe {window} · Nutzung nicht verfügbar",
+  "card.hero.left_of": "{window} übrig von {limit}",
+  "card.hero.left_of_extra": "{window} übrig von {base} + {extra} Zusatzspielraum",
+  "card.hero.left_of_extra_until": "{window} übrig von {base} + {extra} Zusatzspielraum bis {ends}",
+  "card.hero.left_of_note": "{window} übrig von {limit}{note}",
+  "card.hero.no_currency": "keine Währung",
+  "card.hero.no_currency_suffix": " · keine Währung",
+  "card.hero.use_unavailable": "{window} · Nutzung nicht verfügbar",
+  "card.hero.use_unavailable_note": "{label} · Nutzung nicht verfügbar{note}",
+  "card.how_counted": "Wie das gezählt wird",
+  "card.issue_prompt": "{taf|possessive} Card ausstellen",
+  "card.issued_by": "Ausgestellt von",
+  "card.issued_by_account": "Das Konto",
+  "card.issued_by_named": "Ausgestellt von {who}",
+  "card.its_card": "Seine Card",
+  "card.kiff_did_not_revoke_cards": "KIFF hat {cards_left} seiner Cards nicht widerrufen: Widerrufe sie in KIFF.",
+  "card.left": "noch {amount} {window}",
+  "card.left_extra_room": "noch {current} von {own} + {extra} Zusatzspielraum{until}{note}",
+  "card.limit_can_not_raised_right": "Das Limit lässt sich gerade nicht von hier aus erhöhen.",
+  "card.limit_raised_read_balance_again": "Das Limit wurde erhöht. Lies das Guthaben erneut, bevor du es noch einmal erhöhst.",
+  "card.line.calls_in_window": {
+    "one": "{count} Aufruf {window}{then}",
+    "other": "{count} Aufrufe {window}{then}"
+  },
+  "card.line.more_asks": "; für mehr fragt er dich zuerst",
+  "card.line.then_asks": ", dann fragt er dich",
+  "card.line.total_in_window": "{amount} insgesamt {window}{then}",
+  "card.line.up_to_each": "bis zu {amount} pro Aufruf",
+  "card.more": {
+    "one": "{count} weitere",
+    "other": "{count} weitere"
+  },
+  "card.no_actions": "Noch keine Aktionen",
+  "card.no_actions_short": "noch keine Aktionen",
+  "card.no_currency": "{amount} (keine Währung)",
+  "card.no_end_date": "Kein Enddatum",
+  "card.outcome.not_a_resource": "Keine der Ressourcen der Card",
+  "card.outcome.outside": "Außerhalb der Card",
+  "card.outcome.over_one_action": "Über dem Limit der Card für eine Aktion",
+  "card.outcome.over_total": "Über der Summe der Card",
+  "card.outside_held": "Außerhalb: für dich zurückgehalten",
+  "card.outside_refused": "Außerhalb: abgelehnt",
+  "card.over_limit_calls_would": "Über seinem Limit von {limit} Aufrufen: das wäre der {nth}",
+  "card.revoke_failed": "KIFF hat die Card nicht widerrufen. {why}",
+  "card.revoked": "Widerrufen",
+  "card.rule.always_asks": "fragt dich immer",
+  "card.rule.at_most_each": "≤ {amount} pro Aufruf",
+  "card.rule.at_most_each_refused_above": "≤ {amount} pro Aufruf · darüber abgelehnt",
+  "card.rule.calls": {
+    "one": "{count} Aufruf {window}",
+    "other": "{count} Aufrufe {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} Aufruf {window}, dann fragt er dich",
+    "other": "{count} Aufrufe {window}, dann fragt er dich"
+  },
+  "card.rule.in_total": "{amount} insgesamt {window}",
+  "card.rule.never": "nie",
+  "card.rule.total_then_asks": "{amount} insgesamt {window}, dann fragt er dich",
+  "card.rule.up_to_each": "bis zu {amount} pro Aufruf; für mehr fragt er dich zuerst",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "Die Card des tafs",
+  "card.tools": {
+    "one": "{count} Tools",
+    "other": "{count} Tools"
+  },
+  "card.until": "Bis",
+  "card.until_date": "Bis {date}",
+  "card.until_ends": " bis {ends}",
+  "card.used_of": "{used} von {limit} {window}",
+  "card.window.a_day": "pro Tag",
+  "card.window.a_month": "pro Monat",
+  "card.window.a_week": "pro Woche",
+  "card.window.any_day": "innerhalb von 24 Stunden",
+  "card.window.any_hour": "innerhalb einer Stunde",
+  "card.window.any_week": "innerhalb von 7 Tagen",
+  "card.window.in_total": "insgesamt",
+  "card.window.in_total_window": "insgesamt {window}",
+  "card.window.last_day": "in den letzten 24 Stunden",
+  "card.window.last_hour": "in der letzten Stunde",
+  "card.window.last_week": "in den letzten 7 Tagen",
+  "card.window.so_far": "bisher",
+  "card.window.this_month": "diesen Monat",
+  "card.window.this_week": "diese Woche",
+  "card.window.today": "heute",
+  "card.within_card": "innerhalb der Card"
+}

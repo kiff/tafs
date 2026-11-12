@@ -1,0 +1,30 @@
+{
+  "work.answer_within": "Antwoord binnen",
+  "work.answer_within_days": {
+    "one": "{count} dag",
+    "other": "{count} dagen"
+  },
+  "work.answer_within_hours": {
+    "one": "{count} uur",
+    "other": "{count} uur"
+  },
+  "work.answer_within_line": "Je hoort het als een zaak langer wacht.",
+  "work.answer_within_none": "Niet ingesteld",
+  "work.answer_within_not_set": "Dat kon niet worden ingesteld. {why}",
+  "work.asking_kiff_run": "KIFF vragen {tool} uit te voeren…",
+  "work.did_not_stop": "Het is niet gestopt: {why}",
+  "work.duration.minutes": "{minutes} min {seconds} s",
+  "work.duration.seconds": "{seconds} s",
+  "work.its_runs": "Zijn runs",
+  "work.not_read": "Het werk kon niet worden gelezen. {why}",
+  "work.not_sent_again": "Het is niet opnieuw verzonden. {why}",
+  "work.request.try_reply_now": "Het antwoord nu proberen",
+  "work.requests_need_you": {
+    "one": "{count} verzoek wacht op jou",
+    "other": "{count} verzoeken wachten op jou"
+  },
+  "work.send_again": "Opnieuw verzenden",
+  "work.sending_again": "Opnieuw verzenden…",
+  "work.stop_run": "De run stoppen",
+  "work.stopped_part_way_before_finished": "{taf} is halverwege gestopt, voordat het klaar was."
+}

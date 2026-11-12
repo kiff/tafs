@@ -1,0 +1,17 @@
+{
+  "halt_all.description": "Zet alle tafs in één keer stil. Er wordt niets nieuws verzonden tot je ze in tafs hervat.",
+  "halt_all.failed": "tafs kon je tafs niet stilzetten. {why} Open tafs om ze stil te zetten.",
+  "halt_all.halted": {
+    "one": "{count} taf stilgezet. Er wordt niets nieuws verzonden tot je hervat.",
+    "other": "{count} tafs stilgezet. Er wordt niets nieuws verzonden tot je hervat."
+  },
+  "halt_all.halted_all": "Je tafs zijn stilgezet. Er wordt niets nieuws verzonden tot je hervat.",
+  "halt_all.halting": {
+    "one": "{count} taf wordt stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.",
+    "other": "{count} tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is."
+  },
+  "halt_all.halting_all": "Je tafs worden stilgezet: er start geen run. KIFF heeft nog niet alles bevestigd; tafs laat het zien zodra dat zo is.",
+  "halt_all.running": "tafs kon je tafs niet stilzetten. Open tafs om ze stil te zetten.",
+  "halt_all.signed_out": "Je bent uitgelogd bij tafs. Log in om je tafs stil te zetten.",
+  "halt_all.title": "Alle tafs stilzetten"
+}

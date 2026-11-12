@@ -1,0 +1,7 @@
+{
+  "kiff.asking_kiff": "Question à KIFF : {title}…",
+  "kiff.did_not_reach_kiff_try": "Cela n'a pas atteint KIFF. Réessayez.",
+  "kiff.kiff_can_not_do_sign": "KIFF ne peut pas encore le faire : reconnectez-vous depuis Réglages pour approuver depuis cet {device}.",
+  "kiff.kiff_did_not_answer_expected": "KIFF n'a pas répondu comme prévu. Réessayez.",
+  "kiff.kiff_words_do_not_match": "Les textes de KIFF ne correspondent pas à leur vérification. Rien ne peut être approuvé."
+}

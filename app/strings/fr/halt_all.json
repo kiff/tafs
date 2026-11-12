@@ -1,0 +1,17 @@
+{
+  "halt_all.description": "Bloque tous les tafs d'un coup. Rien de nouveau n'est envoyé tant que vous ne les reprenez pas dans tafs.",
+  "halt_all.failed": "tafs n'a pas pu bloquer vos tafs. {why} Ouvrez tafs pour les bloquer.",
+  "halt_all.halted": {
+    "one": "{count} taf bloqué. Rien de nouveau n'est envoyé tant que vous ne reprenez pas.",
+    "other": "{count} tafs bloqués. Rien de nouveau n'est envoyé tant que vous ne reprenez pas."
+  },
+  "halt_all.halted_all": "Vos tafs sont bloqués. Rien de nouveau n'est envoyé tant que vous ne reprenez pas.",
+  "halt_all.halting": {
+    "one": "Blocage de {count} taf : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait.",
+    "other": "Blocage de {count} tafs : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait."
+  },
+  "halt_all.halting_all": "Blocage de vos tafs : aucune exécution ne démarre. KIFF n'a pas encore tout confirmé ; tafs l'indique dès que c'est fait.",
+  "halt_all.running": "tafs n'a pas pu bloquer vos tafs. Ouvrez tafs pour les bloquer.",
+  "halt_all.signed_out": "Vous êtes déconnecté de tafs. Connectez-vous pour bloquer vos tafs.",
+  "halt_all.title": "Bloquer tous les tafs"
+}

@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} non può essere allegato.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs non può allegare questo file: non è di un tipo o di una dimensione accettati. Scegline un altro.",
+  "attachment.photo": "Foto",
+  "attachment.photo_could_not_read": "Non è stato possibile leggere quella foto.",
+  "attachment.photo_numbered": "Foto {n}",
+  "attachment.too_large": "{name} pesa {size}; il massimo è {limit}.",
+  "attachment.wrong_kind": "{name} non può essere allegato. Si possono allegare foto, PDF, testo, CSV, Markdown, file Word ed Excel."
+}

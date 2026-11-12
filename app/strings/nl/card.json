@@ -1,0 +1,153 @@
+{
+  "card.all_of": {
+    "one": "De hele Card",
+    "other": "Alle Cards"
+  },
+  "card.amount_window": "{amount} {window}",
+  "card.asks_you": "{formatted} {sum_label}, daarna vraagt het jou",
+  "card.calls_left": {
+    "one": "Nog {count} aanroep",
+    "other": "Nog {count} aanroepen"
+  },
+  "card.calls_used_of": {
+    "one": "{used} van {count} aanroep {window}",
+    "other": "{used} van {count} aanroepen {window}"
+  },
+  "card.calls_window": {
+    "one": "{count} aanroep {window}",
+    "other": "{count} aanroepen {window}"
+  },
+  "card.card_confirmed_kiff": "Card · bevestigd door KIFF",
+  "card.card_draft_kiff": "Card · concept · door KIFF",
+  "card.card_got_room_call_needed": "Zijn Card kreeg de ruimte die deze aanroep nodig had, tot dat totaal wordt gereset",
+  "card.card_not_issued": "De Card is niet uitgegeven. ",
+  "card.card_revoked": "Card ingetrokken",
+  "card.check.always_asks": "{rule}: vraagt het je altijd",
+  "card.check.never_allowed": "{rule}: nooit toegestaan",
+  "card.check.not_on_card": "Niet op de Card van dit taf",
+  "card.check.over_count": {
+    "one": "Meer dan {count} {window}",
+    "other": "Meer dan {count} {window}"
+  },
+  "card.check.over_each": "Meer dan {amount} per keer",
+  "card.check.over_total": "Meer dan {amount} {window}",
+  "card.count": {
+    "one": "{count} Card",
+    "other": "{count} Cards"
+  },
+  "card.ended": "Beëindigd",
+  "card.ended_on": "Beëindigd op {date}",
+  "card.ends": "Eindigt",
+  "card.extra_room": "+{extra} extra ruimte {window}",
+  "card.extra_room_prefix": "+{formatted} extra ruimte ",
+  "card.extra_room_until": "+{extra} extra ruimte tot {ends}",
+  "card.figure_left": "Nog {figure}",
+  "card.heading": {
+    "one": "Card",
+    "other": "Cards"
+  },
+  "card.held.count_in_window": {
+    "one": "{count} aanroep {window}{each}: dit zou de {nth}{item} zijn",
+    "other": "{count} aanroepen {window}{each}: dit zou de {nth}{item} zijn"
+  },
+  "card.held.each_call_asks": "Elke aanroep vraagt het je eerst",
+  "card.held.for_each": " voor elke {name}",
+  "card.held.for_each_join": " voor elke ",
+  "card.held.for_item": " voor {item}",
+  "card.held.over_count": {
+    "one": "Boven de limiet van {count} aanroep: dit zou de {nth} zijn",
+    "other": "Boven de limiet van {count} aanroepen: dit zou de {nth} zijn"
+  },
+  "card.held.over_one_call": "{amount} is boven de limiet van {cap} voor één aanroep",
+  "card.held.over_total": "{amount} zou boven het totaal van {cap} uitkomen",
+  "card.hero.calls_left_of": {
+    "one": "aanroep over {window} van {limit}",
+    "other": "aanroepen over {window} van {limit}"
+  },
+  "card.hero.calls_use_unavailable": "aanroepen {window} · gebruik niet beschikbaar",
+  "card.hero.left_of": "over {window} van {limit}",
+  "card.hero.left_of_extra": "over {window} van {base} + {extra} extra ruimte",
+  "card.hero.left_of_extra_until": "over {window} van {base} + {extra} extra ruimte tot {ends}",
+  "card.hero.left_of_note": "over {window} van {limit}{note}",
+  "card.hero.no_currency": "geen valuta",
+  "card.hero.no_currency_suffix": " · geen valuta",
+  "card.hero.use_unavailable": "{window} · gebruik niet beschikbaar",
+  "card.hero.use_unavailable_note": "{label} · gebruik niet beschikbaar{note}",
+  "card.how_counted": "Hoe dit wordt geteld",
+  "card.issue_prompt": "Card van {taf} uitgeven",
+  "card.issued_by": "Uitgegeven door",
+  "card.issued_by_account": "Het account",
+  "card.issued_by_named": "Uitgegeven door {who}",
+  "card.its_card": "Zijn Card",
+  "card.kiff_did_not_revoke_cards": "KIFF heeft {cards_left} van zijn Cards niet ingetrokken: trek ze in bij KIFF.",
+  "card.left": "{amount} over {window}",
+  "card.left_extra_room": "over {current} van {own} + {extra} extra ruimte{until}{note}",
+  "card.limit_can_not_raised_right": "De limiet kan nu niet vanaf hier worden verhoogd.",
+  "card.limit_raised_read_balance_again": "De limiet is verhoogd. Lees het saldo opnieuw voordat je hem nog eens verhoogt.",
+  "card.line.calls_in_window": {
+    "one": "{count} aanroep {window}{then}",
+    "other": "{count} aanroepen {window}{then}"
+  },
+  "card.line.more_asks": "; meer vraagt het je eerst",
+  "card.line.then_asks": ", daarna vraagt het jou",
+  "card.line.total_in_window": "{amount} in totaal {window}{then}",
+  "card.line.up_to_each": "tot {amount} per keer",
+  "card.more": {
+    "one": "nog {count}",
+    "other": "nog {count}"
+  },
+  "card.no_actions": "Nog geen acties",
+  "card.no_actions_short": "nog geen acties",
+  "card.no_currency": "{amount} (geen valuta)",
+  "card.no_end_date": "Geen einddatum",
+  "card.outcome.not_a_resource": "Geen van de resources van de Card",
+  "card.outcome.outside": "Buiten de Card",
+  "card.outcome.over_one_action": "Boven de limiet van de Card voor één actie",
+  "card.outcome.over_total": "Boven het totaal van de Card",
+  "card.outside_held": "Buiten: vastgehouden voor jou",
+  "card.outside_refused": "Buiten: geweigerd",
+  "card.over_limit_calls_would": "Boven de limiet van {limit} aanroepen: dit zou de {nth} zijn",
+  "card.revoke_failed": "KIFF heeft de Card niet ingetrokken. {why}",
+  "card.revoked": "Ingetrokken",
+  "card.rule.always_asks": "vraagt het je altijd",
+  "card.rule.at_most_each": "≤ {amount} per keer",
+  "card.rule.at_most_each_refused_above": "≤ {amount} per keer · daarboven geweigerd",
+  "card.rule.calls": {
+    "one": "{count} aanroep {window}",
+    "other": "{count} aanroepen {window}"
+  },
+  "card.rule.calls_then_asks": {
+    "one": "{count} aanroep {window}, daarna vraagt het jou",
+    "other": "{count} aanroepen {window}, daarna vraagt het jou"
+  },
+  "card.rule.in_total": "{amount} in totaal {window}",
+  "card.rule.never": "nooit",
+  "card.rule.total_then_asks": "{amount} in totaal {window}, daarna vraagt het jou",
+  "card.rule.up_to_each": "tot {amount} per keer; meer vraagt het je eerst",
+  "card.rule_line": "{rule} {summary}",
+  "card.the_tafs_card": "De Card van het taf",
+  "card.tools": {
+    "one": "{count} tools",
+    "other": "{count} tools"
+  },
+  "card.until": "Tot",
+  "card.until_date": "Tot {date}",
+  "card.until_ends": " tot {ends}",
+  "card.used_of": "{used} van {limit} {window}",
+  "card.window.a_day": "per dag",
+  "card.window.a_month": "per maand",
+  "card.window.a_week": "per week",
+  "card.window.any_day": "per 24 uur",
+  "card.window.any_hour": "per uur",
+  "card.window.any_week": "per 7 dagen",
+  "card.window.in_total": "in totaal",
+  "card.window.in_total_window": "in totaal {window}",
+  "card.window.last_day": "in de afgelopen 24 uur",
+  "card.window.last_hour": "in het afgelopen uur",
+  "card.window.last_week": "in de afgelopen 7 dagen",
+  "card.window.so_far": "tot nu toe",
+  "card.window.this_month": "deze maand",
+  "card.window.this_week": "deze week",
+  "card.window.today": "vandaag",
+  "card.within_card": "binnen de Card"
+}

@@ -1,0 +1,21 @@
+{
+  "halt_all.description": "Blokuje wszystkie tafs naraz. Nic nowego nie zostanie wysłane, dopóki ich nie wznowisz w tafs.",
+  "halt_all.failed": "tafs nie mógł zablokować Twoich tafs. {why} Otwórz tafs, aby je zablokować.",
+  "halt_all.halted": {
+    "one": "Zablokowano {count} taf. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.",
+    "few": "Zablokowano {count} tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.",
+    "many": "Zablokowano {count} tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.",
+    "other": "Zablokowano {count} tafs. Nic nowego nie zostanie wysłane, dopóki nie wznowisz."
+  },
+  "halt_all.halted_all": "Twoje tafs są zablokowane. Nic nowego nie zostanie wysłane, dopóki nie wznowisz.",
+  "halt_all.halting": {
+    "one": "Blokowanie {count} tafa: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.",
+    "few": "Blokowanie {count} tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.",
+    "many": "Blokowanie {count} tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.",
+    "other": "Blokowanie {count} tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi."
+  },
+  "halt_all.halting_all": "Blokowanie Twoich tafs: żadne uruchomienie się nie zaczyna. KIFF nie potwierdził jeszcze wszystkiego; tafs pokaże, kiedy to nastąpi.",
+  "halt_all.running": "tafs nie mógł zablokować Twoich tafs. Otwórz tafs, aby je zablokować.",
+  "halt_all.signed_out": "Wylogowano z tafs. Zaloguj się, aby zablokować swoje tafs.",
+  "halt_all.title": "Zablokuj wszystkie tafs"
+}

@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "Nie można załączyć: {name}.",
+  "attachment.kilobytes": "{size} KB",
+  "attachment.megabytes": "{size} MB",
+  "attachment.not_taken": "tafs nie może załączyć tego pliku: ma nieobsługiwany typ lub rozmiar. Wybierz inny.",
+  "attachment.photo": "Zdjęcie",
+  "attachment.photo_could_not_read": "Nie udało się odczytać tego zdjęcia.",
+  "attachment.photo_numbered": "Zdjęcie {n}",
+  "attachment.too_large": "{name} ma {size}; maksimum to {limit}.",
+  "attachment.wrong_kind": "Nie można załączyć: {name}. Można załączać zdjęcia, pliki PDF, tekst, CSV, Markdown, Word i Excel."
+}

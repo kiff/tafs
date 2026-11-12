@@ -1,0 +1,11 @@
+{
+  "attachment.cant_attach": "{name} ne peut pas être joint.",
+  "attachment.kilobytes": "{size} Ko",
+  "attachment.megabytes": "{size} Mo",
+  "attachment.not_taken": "tafs ne peut pas joindre ce fichier : son type ou sa taille n'est pas accepté. Choisissez-en un autre.",
+  "attachment.photo": "Photo",
+  "attachment.photo_could_not_read": "Cette photo n'a pas pu être lue.",
+  "attachment.photo_numbered": "Photo {n}",
+  "attachment.too_large": "{name} fait {size} ; le maximum est {limit}.",
+  "attachment.wrong_kind": "{name} ne peut pas être joint. Seuls les photos, PDF, fichiers texte, CSV, Markdown, Word et Excel peuvent l'être."
+}

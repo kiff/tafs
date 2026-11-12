@@ -1,0 +1,17 @@
+{
+  "halt_all.description": "Blocca tutti i tafs in una volta. Non viene inviato nulla di nuovo finché non li riprendi in tafs.",
+  "halt_all.failed": "tafs non è riuscita a bloccare i tuoi tafs. {why} Apri tafs per bloccarli.",
+  "halt_all.halted": {
+    "one": "{count} taf bloccato. Non viene inviato nulla di nuovo finché non riprendi.",
+    "other": "{count} tafs bloccati. Non viene inviato nulla di nuovo finché non riprendi."
+  },
+  "halt_all.halted_all": "I tuoi tafs sono bloccati. Non viene inviato nulla di nuovo finché non riprendi.",
+  "halt_all.halting": {
+    "one": "Blocco di {count} taf in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto.",
+    "other": "Blocco di {count} tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto."
+  },
+  "halt_all.halting_all": "Blocco dei tuoi tafs in corso: nessuna esecuzione parte. KIFF non ha ancora confermato ogni parte; tafs lo mostra quando l'ha fatto.",
+  "halt_all.running": "tafs non è riuscita a bloccare i tuoi tafs. Apri tafs per bloccarli.",
+  "halt_all.signed_out": "Sei disconnesso da tafs. Accedi per bloccare i tuoi tafs.",
+  "halt_all.title": "Blocca tutti i tafs"
+}
