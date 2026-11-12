@@ -21,6 +21,9 @@ extension TafsCloud {
             let what: String
             let pasted: String
             let cleared: String
+            /// What to do once the key is pasted ("Key pasted. Tap Connect"); none from a tafs
+            /// cloud from before it, and then nothing is drawn.
+            var next: String?
         }
         struct Details: Decodable, Equatable {
             struct Line: Decodable, Equatable {
