@@ -4903,7 +4903,7 @@ const CREDITS_CODES = ["credits_used_up", "limit_reached", "no_plan"];
  */
 async function withRefusalWords(event: HTTPEvent, err: HTTPError, deps: Deps): Promise<Record<string, unknown> | undefined> {
   const code = err.extra?.code;
-  if (code === "halted") return { ...err.extra, words: await haltedWords(event, deps) };
+  if (code === "halted") return { ...err.extra, ...(await haltedRefusal(event, deps)) };
   if (typeof code !== "string" || !CREDITS_CODES.includes(code)) return err.extra;
   try {
     const b = await readBalance(bearer(event), deps.fetch, deps.kiffBase);
@@ -4914,17 +4914,20 @@ async function withRefusalWords(event: HTTPEvent, err: HTTPError, deps: Deps): P
 }
 
 /**
- * A refusal for a halt, in the person's language: the whole account when it's halted (a Coach chat's
- * refusal included), else the taf on its own. An account halt that can't be read says the taf's.
+ * A refusal for a halt, in the person's language, and what is halted (`halted`): the whole account when it is
+ * (a Coach chat's refusal included), else the taf on its own, so the app can offer that Resume on the refusal
+ * itself. The words name no screen to resume from. An account halt that can't be read says the taf's words, with
+ * no `halted`.
  */
-async function haltedWords(event: HTTPEvent, deps: Deps): Promise<string> {
+async function haltedRefusal(event: HTTPEvent, deps: Deps): Promise<{ words: string; halted?: "account" | "taf" }> {
   const w = wordsIn(langOf(event));
   try {
     const me = await person(event, deps);
     const account = await deps.agents.halted(me.tenantID);
-    return account.halted ? w.refusal_halted_account : w.refusal_halted_taf;
+    return account.halted ? { words: w.refusal_halted_account, halted: "account" } : { words: w.refusal_halted_taf, halted: "taf" };
   } catch {
-    return w.refusal_halted_taf;
+    // Not known which is halted: no `halted`, so the app offers no Resume that might be the wrong one.
+    return { words: w.refusal_halted_taf };
   }
 }
 
@@ -4933,7 +4936,7 @@ const REFUSAL_WORDS: Record<string, string> = {
   credits_used_up: "Your tafs are waiting: this period's credits are used.",
   limit_reached: "Your tafs are waiting: the spend limit is reached. An admin of this account can raise it.",
   no_plan: "Choose a plan to start your tafs.",
-  halted: "This taf is halted: nothing of it runs until you resume it from Halt.",
+  halted: "This taf is halted: nothing of it runs until it's resumed.",
   switching: "This taf is switching versions: it runs again once the switch is done or cancelled.",
   run_changed: "This chat changed meanwhile. Read it again and send your message once more.",
 };

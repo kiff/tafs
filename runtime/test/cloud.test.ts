@@ -742,26 +742,26 @@ describe("tafs cloud", () => {
     }
   });
 
-  it("says a halted refusal in the person's language: the whole account's, Coach's included, or the taf's own", async () => {
+  it("says a halted refusal in the person's language, and what is halted: the whole account's, Coach's included, or the taf's own", async () => {
     const taf: Record<string, string> = {
-      en: "This taf is halted: nothing of it runs until you resume it from Halt.",
-      de: "Dieser taf ist angehalten: nichts davon läuft, bis du ihn über „Anhalten“ fortsetzt.",
-      fr: "Ce taf est bloqué : rien ne tourne jusqu'à ce que vous le repreniez depuis Bloquer.",
-      es: "Este taf está bloqueado: nada de él se ejecuta hasta que lo reanudes desde Bloquear.",
-      it: "Questo taf è bloccato: nulla viene eseguito finché non lo riprendi da Blocca.",
-      pt: "Este taf está bloqueado: nada dele é executado até o retomar em Bloquear.",
-      nl: "Deze taf is stilgezet: er draait niets van tot je hem hervat via Stilzetten.",
-      pl: "Ten taf jest zablokowany: nic z niego nie działa, dopóki nie wznowisz go w sekcji Zablokuj.",
+      en: "This taf is halted: nothing of it runs until it's resumed.",
+      de: "Dieser taf ist angehalten: nichts davon läuft, bis er fortgesetzt wird.",
+      fr: "Ce taf est bloqué : rien ne tourne jusqu'à ce qu'il soit repris.",
+      es: "Este taf está bloqueado: nada de él se ejecuta hasta que se reanude.",
+      it: "Questo taf è bloccato: nulla viene eseguito finché non viene ripreso.",
+      pt: "Este taf está bloqueado: nada dele é executado até ser retomado.",
+      nl: "Deze taf is stilgezet: er draait niets van tot hij wordt hervat.",
+      pl: "Ten taf jest zablokowany: nic z niego nie działa, dopóki nie zostanie wznowiony.",
     };
     const account: Record<string, string> = {
-      en: "Your account is halted: none of your tafs runs, Coach included, until you resume it from Halt.",
-      de: "Dein Konto ist angehalten: keiner deiner tafs läuft, auch Coach nicht, bis du es über „Anhalten“ fortsetzt.",
-      fr: "Votre compte est bloqué : aucun de vos tafs ne tourne, Coach compris, jusqu'à ce que vous le repreniez depuis Bloquer.",
-      es: "Tu cuenta está bloqueada: ninguno de tus tafs se ejecuta, Coach incluido, hasta que la reanudes desde Bloquear.",
-      it: "Il tuo account è bloccato: nessuno dei tuoi tafs viene eseguito, Coach compreso, finché non lo riprendi da Blocca.",
-      pt: "A sua conta está bloqueada: nenhum dos seus tafs é executado, Coach incluído, até a retomar em Bloquear.",
-      nl: "Je account is stilgezet: geen van je tafs draait, ook Coach niet, tot je het hervat via Stilzetten.",
-      pl: "Twoje konto jest zablokowane: żaden z Twoich tafs nie działa, łącznie z Coachem, dopóki nie wznowisz go w sekcji Zablokuj.",
+      en: "Your account is halted: none of your tafs runs, Coach included, until it's resumed.",
+      de: "Dein Konto ist angehalten: keiner deiner tafs läuft, auch Coach nicht, bis es fortgesetzt wird.",
+      fr: "Votre compte est bloqué : aucun de vos tafs ne tourne, Coach compris, jusqu'à ce qu'il soit repris.",
+      es: "Tu cuenta está bloqueada: ninguno de tus tafs se ejecuta, Coach incluido, hasta que se reanude.",
+      it: "Il tuo account è bloccato: nessuno dei tuoi tafs viene eseguito, Coach compreso, finché non viene ripreso.",
+      pt: "A sua conta está bloqueada: nenhum dos seus tafs é executado, Coach incluído, até ser retomada.",
+      nl: "Je account is stilgezet: geen van je tafs draait, ook Coach niet, tot het wordt hervat.",
+      pl: "Twoje konto jest zablokowane: żaden z Twoich tafs nie działa, łącznie z Coachem, dopóki nie zostanie wznowione.",
     };
     const refused = () => new AgentsError(409, "halted", undefined, "halted");
     for (const lang of Object.keys(taf)) {
@@ -771,12 +771,22 @@ describe("tafs cloud", () => {
       w.agents.fail.set("startRun", refused());
       const own = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "hi" }, headers: { "accept-language": lang } });
       expect(own.status, lang).toBe(409);
-      expect(own.body, lang).toMatchObject({ code: "halted", words: taf[lang] });
+      expect(own.body, lang).toMatchObject({ code: "halted", words: taf[lang], halted: "taf" });
       // The whole account is halted: the account's, which a Coach chat's refusal says too.
       await w.agents.api.halt("t_acme");
       w.agents.fail.set("startRun", refused());
       const all = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "hi" }, headers: { "accept-language": lang } });
-      expect(all.body, lang).toMatchObject({ code: "halted", words: account[lang] });
+      expect(all.body, lang).toMatchObject({ code: "halted", words: account[lang], halted: "account" });
+      // The words name no screen to resume from.
+      expect(all.body.words, lang).not.toMatch(/Halt|Anhalten|Bloquer|Bloquear|Blocca|Stilzetten|Zablokuj/);
+      // Whether the account is halted can't be read: the taf's words, and no `halted` to act on.
+      const halted = w.agents.api.halted;
+      w.agents.api.halted = async () => { throw new Error("down"); };
+      w.agents.fail.set("startRun", refused());
+      const unsure = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "hi" }, headers: { "accept-language": lang } });
+      w.agents.api.halted = halted;
+      expect(unsure.body, lang).toMatchObject({ code: "halted", words: taf[lang] });
+      expect(unsure.body, lang).not.toHaveProperty("halted");
     }
   });
 
