@@ -70,6 +70,7 @@
   "connect.disconnect_button": "Déconnecter",
   "connect.disconnecting": "Déconnexion…",
   "connect.from_removed": "De tafs supprimés",
+  "connect.give_key_secure_sheet": "Donner la clé sur une feuille sécurisée",
   "connect.give_key_with": "Donner la clé avec {biometry}",
   "connect.kept.another_taf": "un autre taf",
   "connect.kept.for_card": {
@@ -85,6 +86,9 @@
     "other": "Votre connexion {vendor} est conservée : {names} l'utilisent."
   },
   "connect.key": "La clé",
+  "connect.key_clipboard": "Le presse-papiers est vidé après le collage.",
+  "connect.key_goes": "La clé va directement de ce téléphone à l'endroit où elle reste scellée. Coach ne la voit jamais, et aucun taf non plus.",
+  "connect.key_host": "Elle n'est utilisée qu'avec {host}.",
   "connect.key_not_given": "La clé n'a pas été donnée. {why}",
   "connect.kiff_words_connection_could_not": "Les textes de KIFF pour cette connexion n'ont pas pu être lus. Rien n'a été approuvé.",
   "connect.last_failed": "Dernier échec : {title} · {detail}",

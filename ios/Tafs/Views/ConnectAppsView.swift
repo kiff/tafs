@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Connect apps (A1 of the approved "The knob, end to end"): what tafs cloud offers, the catalog
 /// first, searched as the owner types, in tafs cloud's order and words. Each app is connected,
@@ -412,7 +413,12 @@ struct ConnectApprovalSheet: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
     let start: TafsCloud.ConnectStart
+    /// Called once the key was given, before the sheet closes: Coach's card, which opened this
+    /// sheet for the key, is then approved as any other.
+    var onGiven: (() -> Void)? = nil
     @State private var key = ""
+    /// The key as it was before its last change: a change of more than one character is a paste.
+    @State private var keyBefore = ""
     @State private var busy = false
 
     private var grant: PlanqueClient.Grant? { model.grants.first { $0.id == start.grant } }
@@ -432,10 +438,23 @@ struct ConnectApprovalSheet: View {
                                 .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                         }
                         if start.needsKey {
-                            DriveField(Words.Connect.key, text: $key, kind: .secure)
+                            // Where the key goes, before it's typed: straight from this phone to be kept
+                            // sealed, used only with the vendor's host, never to Coach or a taf.
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(Words.Connect.keyGoes)
+                                Text(Words.Connect.keyHost(host: "\(Self.host(of: grant))"))
+                            }
+                            .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                            DriveField(Words.Connect.key, text: $key, kind: .secure, secret: true)
                                 .textContentType(.password).autocorrectionDisabled().textInputAutocapitalization(.never)
                                 .padding(12).background(Theme.raised).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                 .accessibilityIdentifier("connect.key")
+                                .onChange(of: key) { now in
+                                    // Pasted: the copy is taken off the clipboard, where other apps could read it.
+                                    if Self.pasted(from: keyBefore, to: now) { Self.clearClipboard() }
+                                    keyBefore = now
+                                }
+                            Text(Words.Connect.keyClipboard).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
                         }
                         if let error = model.lastError {
                             Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
@@ -473,6 +492,8 @@ struct ConnectApprovalSheet: View {
             if start.needsKey {
                 if await model.giveKey(grantID: grant.id, shown: grant.digest, key: key) {
                     key = ""
+                    keyBefore = ""
+                    onGiven?()
                     dismiss()
                 }
             } else if let done = await model.connect(grantID: grant.id, shown: grant.digest), done.connected || done.listed {
@@ -481,4 +502,18 @@ struct ConnectApprovalSheet: View {
             await model.loadConnectApps()
         }
     }
+
+    /// The host a key is used with: the vendor's server, without its scheme or path.
+    static func host(of grant: PlanqueClient.Grant) -> String {
+        URL(string: grant.request.server)?.host ?? grant.request.server
+    }
+
+    /// Whether a change of the key field was a paste: more than one character arrived at once.
+    /// Typing adds one at a time.
+    static func pasted(from before: String, to now: String) -> Bool {
+        now.count - before.count > 1
+    }
+
+    /// Empties the clipboard after a key was pasted. A test puts its own in.
+    @MainActor static var clearClipboard: @MainActor () -> Void = { UIPasteboard.general.items = [] }
 }

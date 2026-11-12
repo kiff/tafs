@@ -826,6 +826,7 @@
     <string name="connect_disconnect_button">Trennen</string>
     <string name="connect_disconnecting">Wird getrennt…</string>
     <string name="connect_from_removed">Von entfernten tafs</string>
+    <string name="connect_give_key_secure_sheet">Schlüssel auf einem sicheren Blatt geben</string>
     <string name="connect_give_key_with">Schlüssel mit %1$s geben</string>
     <string name="connect_kept_another_taf">einen anderen taf</string>
     <plurals name="connect_kept_for_card">
@@ -841,6 +842,9 @@
         <item quantity="other">Deine %2$s-Verbindung bleibt: %3$s nutzen sie.</item>
     </plurals>
     <string name="connect_key">Der Schlüssel</string>
+    <string name="connect_key_clipboard">Die Zwischenablage wird nach dem Einfügen geleert.</string>
+    <string name="connect_key_goes">Der Schlüssel geht direkt von diesem Telefon in die versiegelte Aufbewahrung. Coach sieht ihn nie, und kein taf sieht ihn.</string>
+    <string name="connect_key_host">Er wird nur mit %1$s verwendet.</string>
     <string name="connect_key_not_given">Der Schlüssel wurde nicht übergeben. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">KIFFs Worte zu dieser Verbindung konnten nicht gelesen werden. Es wurde nichts genehmigt.</string>
     <string name="connect_last_failed">Zuletzt fehlgeschlagen: %1$s · %2$s</string>

@@ -852,6 +852,7 @@ object Words {
     val disconnectButton: String get() = Res.s(R.string.connect_disconnect_button)
     val disconnecting: String get() = Res.s(R.string.connect_disconnecting)
     val fromRemoved: String get() = Res.s(R.string.connect_from_removed)
+    val giveKeySecureSheet: String get() = Res.s(R.string.connect_give_key_secure_sheet)
     fun giveKeyWith(biometry: String): String = Res.s(R.string.connect_give_key_with, biometry)
     object Kept {
       val anotherTaf: String get() = Res.s(R.string.connect_kept_another_taf)
@@ -860,6 +861,9 @@ object Words {
     }
     fun keptConnection(count: Int, vendor: String, names: String): String = Res.p(R.plurals.connect_kept_connection, count, Res.number(count), vendor, names)
     val key: String get() = Res.s(R.string.connect_key)
+    val keyClipboard: String get() = Res.s(R.string.connect_key_clipboard)
+    val keyGoes: String get() = Res.s(R.string.connect_key_goes)
+    fun keyHost(host: String): String = Res.s(R.string.connect_key_host, host)
     fun keyNotGiven(why: String): String = Res.s(R.string.connect_key_not_given, why)
     val kiffWordsConnectionCouldNot: String get() = Res.s(R.string.connect_kiff_words_connection_could_not)
     fun lastFailed(title: String, detail: String): String = Res.s(R.string.connect_last_failed, title, detail)

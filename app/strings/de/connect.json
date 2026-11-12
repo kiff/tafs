@@ -70,6 +70,7 @@
   "connect.disconnect_button": "Trennen",
   "connect.disconnecting": "Wird getrennt…",
   "connect.from_removed": "Von entfernten tafs",
+  "connect.give_key_secure_sheet": "Schlüssel auf einem sicheren Blatt geben",
   "connect.give_key_with": "Schlüssel mit {biometry} geben",
   "connect.kept.another_taf": "einen anderen taf",
   "connect.kept.for_card": {
@@ -85,6 +86,9 @@
     "other": "Deine {vendor}-Verbindung bleibt: {names} nutzen sie."
   },
   "connect.key": "Der Schlüssel",
+  "connect.key_clipboard": "Die Zwischenablage wird nach dem Einfügen geleert.",
+  "connect.key_goes": "Der Schlüssel geht direkt von diesem Telefon in die versiegelte Aufbewahrung. Coach sieht ihn nie, und kein taf sieht ihn.",
+  "connect.key_host": "Er wird nur mit {host} verwendet.",
   "connect.key_not_given": "Der Schlüssel wurde nicht übergeben. {why}",
   "connect.kiff_words_connection_could_not": "KIFFs Worte zu dieser Verbindung konnten nicht gelesen werden. Es wurde nichts genehmigt.",
   "connect.last_failed": "Zuletzt fehlgeschlagen: {title} · {detail}",

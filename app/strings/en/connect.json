@@ -70,6 +70,7 @@
   "connect.disconnect_button": "Disconnect",
   "connect.disconnecting": "Disconnecting…",
   "connect.from_removed": "From removed tafs",
+  "connect.give_key_secure_sheet": "Give the key on a secure sheet",
   "connect.give_key_with": "Give the key with {biometry}",
   "connect.kept.another_taf": "another taf",
   "connect.kept.for_card": {
@@ -85,6 +86,9 @@
     "other": "Kept your {vendor} connection: {names} use it."
   },
   "connect.key": "The key",
+  "connect.key_clipboard": "The clipboard is cleared after you paste.",
+  "connect.key_goes": "The key goes straight from this phone to be kept sealed. Coach never sees it, and no taf does.",
+  "connect.key_host": "It is used only with {host}.",
   "connect.key_not_given": "The key wasn't given. {why}",
   "connect.kiff_words_connection_could_not": "KIFF's words for this connection couldn't be read. Nothing was approved.",
   "connect.last_failed": "Last failed: {title} · {detail}",
