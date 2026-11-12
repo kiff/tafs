@@ -325,6 +325,51 @@ class PlanqueClient(
     return decode(raw("POST", "grants/${escaped(grant.id)}/key", body, headers = mapOf(VENDOR_KEY to trimmed)))
   }
 
+  /** The key route's body, exactly as it's sent: the digest shown, the key's SHA-256, KIFF's words for its profile. */
+  fun keyBody(grant: Grant, key: String, words: ProfileWords? = null): ByteArray {
+    val fields = buildMap {
+      put("digest", kotlinx.serialization.json.JsonPrimitive(grant.digest))
+      put("key_sha256", kotlinx.serialization.json.JsonPrimitive(sha256Hex(key.trim().toByteArray())))
+      words?.let { put("kiff_profile", it.approval()) }
+    }
+    return KiffClient.json.encodeToString(JsonObject.serializer(), JsonObject(fields)).toByteArray()
+  }
+
+  private fun keyUri(account: String, grantId: String) = "/v1/accounts/${escaped(account)}/grants/${escaped(grantId)}/key"
+
+  /** planque's own message for giving [grant] its key at [signedAt] (`planque.request.v1`), whose SHA-256 goes into `kiff.requests.v1`. */
+  fun keyMessage(grant: Grant, key: String, words: ProfileWords?, signedAt: String): ByteArray {
+    val account = tenant ?: throw PlanqueError.NotSigning
+    return message(baseUrl, account, "POST", keyUri(account, grant.id), keyBody(grant, key, words), signedAt)
+  }
+
+  /**
+   * Gives [grant] its key signed together with another request (`kiff.requests.v1`, docs/secure-connection.md): [signature] is
+   * the approval key's over both requests' hashes, [with] the other request's message hash. planque rebuilds this request's
+   * message and has KIFF check the one signature over both. The key goes in its header alone, as for [giveKey].
+   */
+  suspend fun giveKeyTogether(grant: Grant, key: String, words: ProfileWords?, signedAt: String, signature: String, with: String): Grant {
+    if (!grant.digestMatches) throw PlanqueError.DigestMismatch
+    val account = tenant ?: throw PlanqueError.NotSigning
+    val device = deviceId ?: deviceLoader?.invoke()?.also { if (tenant == account) deviceId = it } ?: throw PlanqueError.NoDevice
+    val sent = linkedMapOf(
+      "Accept" to "application/json",
+      "User-Agent" to "tafs-android",
+      "Accept-Language" to KiffClient.screenLanguage(),
+      "Content-Type" to "application/json",
+      "Planque-Device-Signature" to "t=$signedAt,v3=$signature,with=sha256:$with,d=$device",
+      VENDOR_KEY to key.trim(),
+    )
+    val response = transport.send(HttpRequest("POST", baseUrl.trimEnd('/') + keyUri(account, grant.id), sent, keyBody(grant, key, words)))
+    if (response.status !in 200..299) {
+      val fields = runCatching { KiffClient.json.parseToJsonElement(String(response.body)).jsonObject }.getOrNull()
+      val said = runCatching { fields?.get("error")?.jsonPrimitive?.content }.getOrNull()
+      val code = runCatching { fields?.get("code")?.jsonPrimitive?.content }.getOrNull()
+      throw PlanqueError.Server(response.status, said ?: Words.Error.connectionAnswered(status = response.status.toString()), code)
+    }
+    return decode(response.body)
+  }
+
   /** Confirms the vendor sign-in with the code it handed back to the app. Only the phone that approved can, within 15 minutes; then planque registers the tools in KIFF. */
   suspend fun confirm(grantId: String, code: String): Grant =
     decode(raw("POST", "grants/${escaped(grantId)}/confirm", body("confirm" to code)))

@@ -362,6 +362,9 @@ data class AllowChange(
   val unit: String? = null,
   /** A total's or a count's window, as KIFF's draft writes it: the change moves the total in that window only. */
   val window: String? = null,
+  /** A `resource` change: the grant's scope parameter, and the one value added to it. */
+  val parameter: String? = null,
+  val value: String? = null,
   @SerialName("words_before") val wordsBefore: String = "",
   @SerialName("words_after") val wordsAfter: String = "",
   val rounded: Boolean = false,

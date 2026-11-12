@@ -182,7 +182,7 @@ data class ApprovalDecision(
 @Serializable
 data class ApprovalAsk(
   val id: String,
-  /** `connect` or `cards`. */
+  /** `connect`, `cards`, or `key_and_cards` (the key and its Card under one `kiff.requests.v1` signature the phone builds). */
   val step: String,
   /** The exact bytes the device's key signs, under the fingerprint. */
   val message: String,
@@ -195,6 +195,8 @@ data class ApprovalAsk(
   val key: String? = null,
   val planque: PlanqueAsk? = null,
   val kiff: KiffAsk? = null,
+  /** For `key_and_cards`: `kiff.requests.v1`, the message the phone builds itself from the two requests (`message` is empty). */
+  val scheme: String? = null,
 )
 
 /** planque's approve, its body as tafs cloud built it: the phone sends it as it is. */

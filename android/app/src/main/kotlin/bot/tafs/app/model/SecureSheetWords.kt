@@ -7,8 +7,8 @@ import bot.tafs.app.kiff.SecureSheet
  * contract names: `{last4}` from the key it pasted, and `{vendor}` from the same answer. The key itself is never in any of them.
  */
 object SecureSheetWords {
-  /** A key's last 4 characters, the only part of it ever shown. A key shorter than 8 shows none of itself. */
-  fun last4(key: String): String = key.trim().let { if (it.length < 8) "" else it.takeLast(4) }
+  /** A key's last 4 characters, the only part of it ever shown. A key shorter than 12 shows none of itself, as on iOS. */
+  fun last4(key: String): String = key.trim().let { if (it.length < 12) "" else it.takeLast(4) }
 
   /** The pasted key, as tafs cloud says it ("Key …ab12"). */
   fun pasted(sheet: SecureSheet, key: String): String = sheet.paste.pasted.replace("{last4}", last4(key))

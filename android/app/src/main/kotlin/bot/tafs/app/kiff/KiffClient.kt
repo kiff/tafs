@@ -665,6 +665,44 @@ class KiffClient(
     return json.decodeFromString(if (bytes.isEmpty()) "{}" else String(bytes))
   }
 
+  /** One time for requests the phone signs together (`kiff.requests.v1`): the same `signed_at` in both. */
+  fun nextSignedAt(): String = signingTime.next()
+
+  /** The draft confirm's body, exactly as it's sent, so its message can be signed together with another request's. */
+  fun confirmBody(version: String): ByteArray = json.encodeToString(JsonObject.serializer(), buildJsonObject { put("version", version) }).toByteArray()
+
+  /** The path a draft's confirm goes to. */
+  fun confirmPath(id: String): String = "/v1/me/agent-drafts/${escaped(id)}/confirm"
+
+  /** KIFF's own message for the draft confirm at [signedAt] (`kiff.request.v1`), whose SHA-256 goes into `kiff.requests.v1`. */
+  fun confirmMessage(id: String, version: String, signedAt: String): ByteArray {
+    val account = tenant ?: throw KiffError.Unauthorized
+    return requestMessage(account, "POST", URI.create(baseUrl + confirmPath(id)).rawPath, confirmBody(version), signedAt)
+  }
+
+  /**
+   * The draft confirm signed together with another request (`kiff.requests.v1`, docs/secure-connection.md): [signature] is the
+   * approval key's over both requests' hashes, [with] the other request's message hash. KIFF rebuilds this request's message and
+   * checks the one signature over both.
+   */
+  suspend fun confirmDraftTogether(id: String, version: String, signedAt: String, signature: String, with: String): AgentDraft {
+    val headers = linkedMapOf(
+      "Accept" to "application/json",
+      "User-Agent" to "tafs-android",
+      "Accept-Language" to acceptLanguage(),
+      "Content-Type" to "application/json",
+      "KIFF-Device-Signature" to "t=$signedAt,v3=$signature,with=sha256:$with",
+    )
+    headers["Authorization"] = "Bearer ${token ?: throw KiffError.Unauthorized}"
+    val response = transport.send(HttpRequest("POST", baseUrl + confirmPath(id), headers, confirmBody(version)))
+    if (response.status == 401) throw KiffError.Unauthorized
+    if (response.status !in 200..299) {
+      val fields = errorFields(response.body)
+      throw KiffError.Server(response.status, fields["error"] ?: Words.Error.kiffAnswered(status = response.status.toString()), fields["reason"], fields["code"], fields["words"] ?: fields["message"])
+    }
+    return json.decodeFromString(if (response.body.isEmpty()) "{}" else String(response.body))
+  }
+
   /** Sends one request with a body of text fields. [signedBy] signs this one request, whatever [setupSigner] holds. */
   internal suspend fun send(
     method: String,
@@ -842,6 +880,18 @@ class KiffClient(
      */
     fun requestMessageWindow(tenant: String, method: String, uri: String, body: ByteArray, signedAt: String, window: String): ByteArray =
       listOf("kiff.request.v2", tenant, method, uri, sha256Hex(body), signedAt, window).joinToString("\n").toByteArray()
+
+    /**
+     * What the phone signs, once, with its approval key, to send two requests under one fingerprint (`kiff.requests.v1`,
+     * docs/secure-connection.md): the account, the one `signed_at`, and each request message's SHA-256 (lowercase hex), sorted.
+     */
+    fun requestsMessage(tenant: String, signedAt: String, one: String, other: String): ByteArray {
+      val (a, b) = if (other < one) other to one else one to other
+      return listOf("kiff.requests.v1", tenant, signedAt, a, b).joinToString("\n").toByteArray()
+    }
+
+    /** A request message's SHA-256, lowercase hex: what `kiff.requests.v1` lists and `with=sha256:` names. */
+    fun messageHash(message: ByteArray): String = sha256Hex(message)
 
     /** What the phone signs for a setup call: KIFF's signed request message, `kiff.request.v1`. */
     fun requestMessage(tenant: String, method: String, uri: String, body: ByteArray, signedAt: String): ByteArray =
