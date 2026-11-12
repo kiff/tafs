@@ -123,6 +123,9 @@ describe("a taf's definition on kiff/agents", () => {
     expect(d.instructions).toContain(CHECK_INSTRUCTIONS);
     expect(CHECK_INSTRUCTIONS).toContain('"[tafs] New since the last check"');
     expect(CHECK_INSTRUCTIONS).toContain("Never list or page through the whole collection again");
+    // Except the items kiff/agents marks seen as too large to hand over (tooLargeNote): no later run gets those.
+    expect(CHECK_INSTRUCTIONS).toContain('except items the check says were "too large to\nhand over"');
+    expect(CHECK_INSTRUCTIONS).toContain("read just them through the app");
     expect(d.instructions).toContain(CALL_INSTRUCTIONS);
     expect(d.instructions).toContain("Ask before refunding Acme.");
     expect(d.instructions).toContain(`kiff/kiff-plugins@${KIFF_SKILL.commit.slice(0, 12)}`);
