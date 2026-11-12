@@ -24,10 +24,10 @@ A drive is the owner's, one request at a time. Show a drive card, `show {type: "
 
 ## When the owner touches the app
 
-Their touch pauses the drive, and your next call says "The person is using the app":
+Their touch pauses the drive. Your next look or act answers "The person is using the app", and your run waits there until they tap Continue or the drive ends: you don't need to do anything.
 
-- **End your turn** with one short line: "I'll wait while you use the app." Don't call `app_look` or `app_act` again: nothing is sent while they have the app, and a second call ends your turn for you.
-- **When they tap Continue,** you're told: "The person tapped Continue". Look first (`app_look`), since they may have changed the screen, then go on with the request.
+- **When they tap Continue,** your call goes on with "Continue": look first (`app_look`), since they may have changed the screen, then go on with the request.
+- **If the answer comes back without a wait,** end your turn with one short line ("I'll wait while you use the app.") and don't call `app_look` or `app_act` again: a second call ends your turn for you, and you're told when they tap Continue.
 
 ## The drive ends on its own
 
