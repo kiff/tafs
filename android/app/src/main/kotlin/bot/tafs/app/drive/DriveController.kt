@@ -171,6 +171,9 @@ class DriveController(
   /** The person's taps on a control since the drive paused, the pausing one included; a third ends it. */
   private var taps = 0
 
+  /** The pause on its way to tafs cloud, posted again until it lands, Continue comes, or the drive ends. */
+  private var pausing: Job? = null
+
   /** A step of Coach's under way: a field that changes meanwhile is Coach's, any other change the person's. */
   @Volatile
   var stepInFlight: Boolean = false
@@ -200,17 +203,28 @@ class DriveController(
   }
 
   /**
-   * The person touched the app: the drive pauses at once, and their touch is theirs. tafs cloud is told, and the pause here
-   * stands even when that fails, since a request already on its way must find the app paused. False when no drive is on.
+   * The person touched the app: the drive pauses at once, and their touch is theirs. tafs cloud is told, again with a backoff
+   * until it lands, so it stops sending and Coach stops calling. The pause here stands meanwhile, since a request already on its
+   * way must find the app paused. False when no drive is on.
    */
   fun pause(): Boolean {
     val on = _state.value as? DriveState.On ?: return false
     if (on.paused) return true
     taps = 0
     set(on.copy(paused = true))
-    scope.launch(NonCancellable) { runCatching { api.pauseDrive(on.drive.id) } }
+    pausing?.cancel()
+    pausing = scope.launch {
+      var wait = PAUSE_RETRY_FIRST_MS
+      while (stillPaused(on.drive)) {
+        if (runCatching { api.pauseDrive(on.drive.id) }.isSuccess) break
+        delay(wait)
+        wait = minOf(wait * 2, PAUSE_RETRY_MAX_MS)
+      }
+    }
     return true
   }
+
+  private fun stillPaused(drive: DriveInfo): Boolean = (_state.value as? DriveState.On)?.let { it.drive.id == drive.id && it.paused } == true
 
   /** Continue: the keyboard goes away first, then Coach goes on. Its next step is a look, which tafs cloud requires. */
   fun resume() {
@@ -218,6 +232,8 @@ class DriveController(
     if (!on.paused) return
     host.putKeyboardAway()
     taps = 0
+    pausing?.cancel()
+    pausing = null
     set(on.copy(paused = false))
     scope.launch(NonCancellable) {
       // On a halted account tafs cloud ends the drive instead: it's over, in tafs cloud's words, and nothing is sent back.
@@ -254,6 +270,8 @@ class DriveController(
   private fun end(drive: DriveInfo, why: String, words: String?) {
     if ((_state.value as? DriveState.On)?.drive?.id != drive.id) return
     taps = 0
+    pausing?.cancel()
+    pausing = null
     job?.cancel()
     job = null
     stepInFlight = false
@@ -428,3 +446,7 @@ class DriveHostProxy : DriveHost {
 
 /** A clear takeover: the person's third tap on a control since the drive paused, with no Continue between. */
 const val TAKEOVER_TAPS = 3
+
+/** A pause tafs cloud didn't take is posted again after this, doubling each time up to [PAUSE_RETRY_MAX_MS]. */
+const val PAUSE_RETRY_FIRST_MS = 500L
+const val PAUSE_RETRY_MAX_MS = 8_000L

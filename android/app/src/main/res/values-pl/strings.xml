@@ -1159,7 +1159,7 @@
     <string name="drive_not_on_screen">Tego nie ma teraz na ekranie</string>
     <string name="drive_nothing_back">Nie ma do czego wrócić</string>
     <string name="drive_nothing_there">Nie ma tam nic, czego Coach mógłby użyć</string>
-    <string name="drive_paused">Wstrzymano</string>
+    <string name="drive_paused">Wstrzymane</string>
     <string name="drive_scrolled">Przewinięto: %1$s</string>
     <string name="drive_step_failed">Ten krok nie powiódł się</string>
     <string name="drive_stop">Zatrzymaj Coacha</string>

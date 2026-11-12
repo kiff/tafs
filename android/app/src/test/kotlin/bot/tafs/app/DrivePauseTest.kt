@@ -48,7 +48,8 @@ class DrivePauseTest {
     val stops = mutableListOf<String>()
     val pauses = mutableListOf<String>()
     val resumes = mutableListOf<String>()
-    var pauseFails = false
+    /** How many pause posts fail before one lands. */
+    var pauseFails = 0
 
     override suspend fun driveStream(drive: String): Flow<DriveEvent> = events.receiveAsFlow()
 
@@ -64,7 +65,7 @@ class DrivePauseTest {
 
     override suspend fun pauseDrive(drive: String) {
       pauses += drive
-      if (pauseFails) throw java.io.IOException("The network dropped")
+      if (pauses.size <= pauseFails) throw java.io.IOException("The network dropped")
     }
 
     var resumeAnswer: DriveResumed? = null
@@ -127,17 +128,33 @@ class DrivePauseTest {
   }
 
   @Test fun thePauseStandsWhenTafsCloudCantBeTold() = runTest {
-    val api = FakeApi().apply { pauseFails = true }
+    val api = FakeApi().apply { pauseFails = 2 }
     val host = FakeHost()
     val c = DriveController(api, host, driveScope()) { testScheduler.currentTime }
     c.begin(drive)
     c.pause()
-    advanceUntilIdle()
     api.events.send(request("r1", tap))
     advanceUntilIdle()
     assertTrue(c.paused)
     assertTrue(host.acts.isEmpty())
     assertEquals(DriveWords.PAUSED, api.answers.single().second.line)
+    // Posted again with a backoff until it landed: two failures, then the third took.
+    assertEquals(3, api.pauses.size)
+  }
+
+  @Test fun aPauseThatNeverLandsStopsBeingPostedAtContinue() = runTest {
+    val api = FakeApi().apply { pauseFails = Int.MAX_VALUE }
+    val c = DriveController(api, FakeHost(), driveScope()) { testScheduler.currentTime }
+    c.begin(drive)
+    c.pause()
+    testScheduler.advanceTimeBy(5_000)
+    testScheduler.runCurrent()
+    val posted = api.pauses.size
+    assertTrue("posted again meanwhile", posted > 1)
+    c.resume()
+    testScheduler.advanceTimeBy(60_000)
+    testScheduler.runCurrent()
+    assertEquals("nothing more after Continue", posted, api.pauses.size)
   }
 
   @Test fun continuePutsTheKeyboardAwayThenCoachGoesOn() = runTest {
