@@ -16,7 +16,7 @@ if you accept.
 
 1. **Coach asks first.** A card, **Coach asks to drive the app**, names your request in
    your words, with the note: "Coach taps and types in this app while you watch, for this
-   request only. It never confirms anything. Touch the app or tap Stop to take over."
+   request only. It never confirms anything. Touch the app to pause it, or tap Stop to end it."
 2. **You approve it, or not.** **Approve with your fingerprint** starts the drive, or Face
    ID or Touch ID on an iPhone or iPad. **Not now** declines. Nothing happens before you
    approve, and Coach can't approve for you: its touch on that button is refused like any
@@ -37,18 +37,22 @@ if you accept.
 
 ## Stopping it
 
+**When you touch the app, Coach pauses at once.** Your touch does what it always does, and
+Coach does nothing while you use the app. The caption reads **Paused**, with **Continue** and
+**Stop**. Continue lets Coach go on: it looks at the screen again first, since you may have
+changed it.
+
 The drive ends at once, and never picks up again, when:
 
-- you touch the app. That touch does nothing else, so taking over can't press a button
-  by accident;
-- you go back, with the back gesture or button;
+- you take over: you go back (the back gesture or button), you type in a field, or you tap a
+  third control while Coach is paused;
 - you tap **Stop** on the caption, or the Coach button;
 - you leave the app, or the phone locks;
 - you sign out, or the account is halted;
-- Coach finishes, or nothing happens for 15 minutes.
+- Coach finishes, or nothing happens for 15 minutes, a pause included.
 
-For a moment the caption says why, such as "You stopped Coach" or "You touched the app, so
-it's yours now". Then Coach's chat opens again with a **What I did** card: your request, why
+For a moment the caption says why, such as "You stopped Coach" or "You took over, so Coach
+let you carry on". Then Coach's chat opens again with a **What I did** card: your request, why
 the drive ended, and each step as tafs recorded it, not as Coach remembers it. To go on,
 ask Coach again: that's a new drive, with a new approval.
 

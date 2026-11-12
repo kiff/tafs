@@ -89,8 +89,10 @@ All of these are the person's, signed in as always:
 | `POST /v1/coach/drive {session, task, component?}` | Start, signed with the approval key (above). `session` is one of the person's chats with Coach (404 otherwise). Answers `{drive: {id, session, task, started}}`. |
 | `GET /v1/coach/drive/{drive}/stream` | The drive's requests, on the **streaming** function's address, as server-sent events (below). |
 | `POST /v1/coach/drive/{drive}/results/{request}` | The app's answer to one request (below). |
+| `POST /v1/coach/drive/pause {drive}` | The person touched the app: pause it ([below](#when-the-person-touches-the-app)). Pausing one already paused changes nothing. |
+| `POST /v1/coach/drive/resume {drive}` | The person tapped **Continue**: go on. Resuming one that isn't paused changes nothing. |
 | `POST /v1/coach/drive/stop {drive, why}` | End it. `why` is one of the ends below. |
-| `GET /v1/coach/drive` | The drive as it stands (`ended` with `why` and `words` once over), and its `steps` for the "What I did" card. `{drive: null}` when there's none. |
+| `GET /v1/coach/drive` | The drive as it stands (`paused`, the time it paused, while it's paused; `ended` with `why` and `words` once over), and its `steps` for the "What I did" card. `{drive: null}` when there's none. |
 
 ## The stream
 
@@ -246,15 +248,54 @@ The border, the caption and the dot are drawn in a window of their own, which th
 capture leaves out, or are hidden for the frame it takes. Drawn in the screen's own
 window, they would be in the screenshot on both platforms.
 
+## When the person touches the app
+
+The person's own input never waits for Coach, and Coach never acts under it. A touch pauses the
+drive; only a clear takeover ends it.
+
+- **Any touch, key or gesture of the person's pauses the drive at once, and is delivered.** It
+  does what it would do with no drive on: a button acts, a row opens, a field takes focus.
+  - The app posts `POST /v1/coach/drive/pause {drive}`.
+  - The step under way stops before its next event. A step that dispatched nothing yet answers
+    `outcome: refused`, `line: "Paused"`; one that already acted answers as it would have.
+  - Coach's events are never mixed into the person's: the event being dispatched when they
+    touch finishes first.
+- **While it's paused:**
+  - The border dims, and the caption reads **Paused · Continue / Stop**.
+  - tafs cloud sends the app no request. Coach's look or act waits until the drive goes on or
+    ends. After 20 seconds its tool answers "The person is using the app" so Coach can wait
+    again, and Coach never tries to act around them.
+  - The person uses the app as usual, and every touch of theirs is delivered.
+- **Continue** posts `POST /v1/coach/drive/resume {drive}`, and the caption goes back to Coach's
+  line. Coach's first step after it is a look: tafs cloud refuses an `app_act` until Coach has
+  looked again, since the screen may have changed.
+- **Stop** ends the drive as `stopped`.
+- **A pause counts as nothing done:** paused for 15 minutes, the drive ends as `idle`.
+
+**A clear takeover ends the drive,** paused or not. Coach then says it's letting the person
+carry on.
+
+| The person | Ends as |
+|---|---|
+| goes back: the back gesture, a back key or button | `owner_took_over` |
+| types in a field (the change is kept) | `owner_took_over` |
+| taps a control for the third time since the drive paused, with no Continue between | `owner_took_over` |
+| leaves the app: Home, Recents, a vendor's sign-in, the share sheet | `left_app` |
+| taps Stop on the caption, or the Coach button | `stopped` |
+
+A tap on a control is one delivered to something that acts: a button, a row, a toggle, a link,
+a tab. A scroll, a swipe that only scrolls, and a touch on empty space don't count. The count
+starts again at Continue.
+
 ## When a drive ends
 
 The app posts `POST /v1/coach/drive/stop {drive, why}` and stops at once when:
 
 | `why` | When |
 |---|---|
-| `owner_took_over` | The person touches the app themselves: any touch, key or gesture the drive didn't dispatch. That input isn't delivered. |
+| `owner_took_over` | A clear takeover ([above](#when-the-person-touches-the-app)): the person's back, their typing in a field, or their third tap on a control since the drive paused. That input is delivered. |
 | `left_app` | The app leaves the foreground: a vendor's sign-in, a permission dialog, the share sheet, Recents, Home. |
-| `stopped` | The Coach button, the border's Stop, or the person's back gesture. |
+| `stopped` | The Coach button, or the caption's Stop. |
 | `locked` | The screen locks. |
 | `signed_out` | The person signs out. |
 
@@ -264,7 +305,7 @@ tafs cloud ends a drive itself in these cases:
 |---|---|
 | `halted` | The account is halted, seen at Coach's next call. |
 | `done` | Coach's `done`. |
-| `idle` | Nothing was done for 15 minutes. |
+| `idle` | Nothing was done for 15 minutes, a pause included. |
 | `replaced` | Another drive started. |
 
 ### What the person is told
@@ -276,7 +317,7 @@ the same either way. Coach, and the account's events, have their own words for i
 
 | `why` | `words` |
 |---|---|
-| `owner_took_over` | You touched the app, so it's yours now |
+| `owner_took_over` | You took over, so Coach let you carry on |
 | `left_app` | The app left the screen, so Coach stopped |
 | `stopped` | You stopped Coach |
 | `locked` | The phone locked, so Coach stopped |
@@ -290,20 +331,23 @@ the same either way. Coach, and the account's events, have their own words for i
 
 - **Android:**
   - **Every window of the app is guarded,** not only the activity's. The activity's `Window.Callback` is wrapped. So is each dialog's and sheet's, since every sheet, dialog, date picker and menu opens through one wrapper (`DriveSheet`, `DriveAlert`, `DriveDialog`, `DriveDatePicker`, `DriveMenu`). A test fails the build on a raw one.
-  - **An event is Coach's only when the app is dispatching it right then,** matched by the `downTime` it created. Anything else is the person's: it isn't delivered, and it ends the drive. That includes a touch on a sheet's scrim, which the window's callback has before any view. A menu's popup has no `Window`, so a guard on its content catches touches inside it. A touch outside it reaches only the menu's dismissal, which runs inside that touch's dispatch: one that isn't Coach's ends the drive, even while one of Coach's steps is under way.
-  - **The person's back** (a key, or the back gesture, through an `OnBackInvokedCallback` at overlay priority from Android 13) ends it as `stopped`. So does their touch on the Coach button or on the caption's Stop. A dismissal Coach didn't make, if one gets past the guard, still ends it.
+  - **An event is Coach's only when the app is dispatching it right then,** matched by the `downTime` it created. Anything else is the person's: the guard pauses the drive, then hands the event on as usual. That includes a touch on a sheet's scrim, which the window's callback has before any view. A menu's popup has no `Window`, so a guard on its content catches touches inside it. A touch outside it reaches the menu's dismissal, which runs inside that touch's dispatch: one that isn't Coach's pauses the drive and dismisses the menu, even while one of Coach's steps is under way (that step stops, as above).
+  - **A tap on a control** is counted when the person's up event lands on a node with a click action, by the same hit-test Coach's touches go through.
+  - **The person's back** (a key, or the back gesture, through an `OnBackInvokedCallback` at overlay priority from Android 13) ends it as `owner_took_over`, and goes back. Their touch on the Coach button or on the caption's Stop ends it as `stopped`. A dismissal Coach didn't make, if one gets past the guard, pauses it.
   - **Coach's own `back`** is the topmost window's own dispatcher: a sheet or a dialog closes, a menu folds, a screen goes back. On the first screen it's refused ("Nothing to go back to"), since back there would leave the app.
   - **The drive ends in `ON_PAUSE`:** a Custom Tab, a system dialog, the share sheet, Recents and Home all pause the activity, and a translucent one (a permission dialog, the share sheet) never stops it. The app's own dialogs and sheets don't pause it. The screen turning off ends it as `locked`.
-  - **Volume keys stay the person's** and don't end the drive.
+  - **Volume keys stay the person's** and don't pause the drive.
 - **iOS:**
   - Coach's steps never come through the touch stream: they're the app's registered actions and `insertText`. So any `UITouch`, key press or gesture is the person's.
-  - While a drive is on, a window of the app's own sits above its other windows, so it takes every touch, edge swipes included. Its Stop, and a back swipe from the edge, end the drive as `stopped`; any other touch ends it as `owner_took_over`.
+  - **The overlay takes no touch** but its caption's Continue and Stop: it draws above the app's other windows and passes every other touch through. The app's windows see each touch as it goes by (`sendEvent`, before it's delivered), so the person's first touch pauses the drive and still reaches the control under it, edge swipes included.
+  - **A tap on a control** is counted when the registry has an element with an action under the touch's end.
+  - The caption's Stop ends the drive as `stopped`. A back swipe from the edge, or a navigation back button, ends it as `owner_took_over`, and goes back.
   - The drive ends on `willResignActive` or `sceneDidEnterBackground` (`left_app`), and when protected data becomes unavailable (`locked`).
 
 ### Typing
 
 - **The keyboard stays down while Coach drives.** Coach types through the focused field itself: on Android, its `InsertTextAtCursor` or `SetText` semantics; on iOS, `insertText`. An open keyboard could commit text after a step ended, such as an autocorrection or a finished composition, which would read as the person's.
-- **A field's change while none of Coach's steps is under way is the person's:** it isn't taken, and it ends the drive. Every text field's changes go through one check (`driveTyped` on Android). A test fails the build on a field without it. A value the app sets itself, such as a restored draft, isn't a change.
+- **A field's change while none of Coach's steps is under way is the person's:** it's kept, and it ends the drive as `owner_took_over`. Every text field's changes go through one check (`driveTyped` on Android). A test fails the build on a field without it. A value the app sets itself, such as a restored draft, isn't a change. Tapping into a field only pauses the drive; the keyboard then comes up as usual.
 
 ## What each app sends
 
@@ -354,7 +398,11 @@ A scroll's `direction` is where the content comes from: `down` shows what's belo
 
 - **While Coach acts:** Coach's `line`.
 - **Before its first step:** "Coach is driving: <task>".
-- **Once it's over:** `words`, for 3 seconds. When tafs cloud's words didn't come, the app's own words for the same end: "You touched the app, so it's yours now", "The app left the screen, so Coach stopped", "You stopped Coach", "The phone locked, so Coach stopped", "You signed out, so Coach stopped", "The account is halted, so Coach stopped", "Coach is done", "Nothing was done for 15 minutes, so Coach stopped", "Another drive started".
+- **While it's paused:** "Paused", with **Continue** and **Stop**.
+- **The card that asks to drive** says what a touch does: "… It never confirms anything. Touch the
+  app to pause it, or tap Stop to end it." (`drive.card_note`, `drive.card_note_scrolls`, in each
+  app's strings).
+- **Once it's over:** `words`, for 3 seconds. When tafs cloud's words didn't come, the app's own words for the same end: "You took over, so Coach let you carry on", "The app left the screen, so Coach stopped", "You stopped Coach", "The phone locked, so Coach stopped", "You signed out, so Coach stopped", "The account is halted, so Coach stopped", "Coach is done", "Nothing was done for 15 minutes, so Coach stopped", "Another drive started".
 
 ### How each app sees and acts
 
