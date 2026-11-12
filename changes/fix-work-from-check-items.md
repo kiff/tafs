@@ -1,0 +1,1 @@
+- **tafs: a run works from the items its check handed it.** A taf's instructions say the items under "New since the last check" are the run's work, already read: it never pages through the whole list again to find them. It reaches each taf with its next Upgrade ([tafs.md](../docs/tafs.md)).

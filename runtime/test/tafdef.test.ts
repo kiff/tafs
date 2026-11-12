@@ -9,6 +9,7 @@ import {
   KIFF_GATEWAY,
   MODEL,
   NOTES_INSTRUCTIONS,
+  CHECK_INSTRUCTIONS,
   ownerNotesIn,
   PRICE,
   RETENTION_NS,
@@ -118,6 +119,10 @@ describe("a taf's definition on kiff/agents", () => {
     const d = definition(ID, jobById("refunds"), { ownerNotes: "Ask before refunding Acme." });
     expect(d.instructions).toContain("Your job: Refunds");
     expect(d.instructions).toContain(NOTES_INSTRUCTIONS);
+    // A run works from the items its check handed it, never paging the whole list again.
+    expect(d.instructions).toContain(CHECK_INSTRUCTIONS);
+    expect(CHECK_INSTRUCTIONS).toContain('"[tafs] New since the last check"');
+    expect(CHECK_INSTRUCTIONS).toContain("Never list or page through the whole collection again");
     expect(d.instructions).toContain(CALL_INSTRUCTIONS);
     expect(d.instructions).toContain("Ask before refunding Acme.");
     expect(d.instructions).toContain(`kiff/kiff-plugins@${KIFF_SKILL.commit.slice(0, 12)}`);

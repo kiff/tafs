@@ -94,6 +94,17 @@ export const CALL_INSTRUCTIONS = `How you make a call under your Card:
   for the customer: what it is ("One free month"), never an internal id or why.
   When the call has no such field, say who it's for in your message.`;
 
+/**
+ * What every run is told about the items its check hands it (kiff/agents schedule/check.go, itemsHead): its work
+ * for the run, already read. A taf once paged the whole list itself, 100 then 14 at a time, with the new items in
+ * its input.
+ */
+export const CHECK_INSTRUCTIONS = `When a run starts with items under "[tafs] New since the last check", those items
+are this run's work: your check already read the list for you. Work from them.
+Never list or page through the whole collection again to find them; read more
+only for what one item needs (that record, by its id). What the check didn't
+hand you waits for the next run.`;
+
 /** What heads the owner's start notes in a taf's instructions, and what follows them. */
 const OWNER_NOTES_INTRO = "What the owner said about this job when they started you:\n";
 const SKILL_INTRO = "The kiff skill (";
@@ -149,7 +160,7 @@ const SKILL_TEXT = [
 
 /** What a taf's agent is: its job, how its notes work, what the owner said at the start, and KIFF's skill. */
 export function instructions(job: Job, ownerNotes?: string, actionResults: VendorPlace[] = []): string {
-  const parts = [systemPrompt(job), NOTES_INSTRUCTIONS, CALL_INSTRUCTIONS];
+  const parts = [systemPrompt(job), NOTES_INSTRUCTIONS, CALL_INSTRUCTIONS, CHECK_INSTRUCTIONS];
   const notes = ownerNotes?.trim();
   if (notes) parts.push(`${OWNER_NOTES_INTRO}${notes}`);
   const places = placesInstructions(actionResults);
