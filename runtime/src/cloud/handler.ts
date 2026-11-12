@@ -6683,6 +6683,15 @@ const WAITING_FOR_CONFIRMATION = "waiting for your confirmation";
 const HANDOVER_HELD_MS = 10 * 60_000;
 
 /**
+ * A result whose draft KIFF says isn't confirmed: the owner hasn't approved its Card yet. It isn't
+ * answered as failed (the owner would read "not set up" while they're still deciding, and Coach would
+ * hand it over again); the card waits, and the taf is made once they approve.
+ */
+class CardNotApproved extends Error {
+  constructor() { super(WAITING_FOR_CONFIRMATION); }
+}
+
+/**
  * Hands the owner over to the taf a Coach `result` waits on, with no phone
  * needed: the note only says which run to read back; what is
  * made comes from the run as kiff/agents keeps it. For each open result, once per
@@ -6710,8 +6719,9 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
     const tools = Array.isArray(card.tools) ? card.tools.filter((t): t is string => typeof t === "string") : undefined;
     const make = card.taf.improves ? improvedVersionFor(tenant, coach.id, r, card.id, { ...card.taf as ImprovedTaf, ...(tools ? { tools } : {}) }, tafs, deps) : newTafFor(tenant, coach.id, r, { ...card.taf, ...(tools ? { tools } : {}) }, tafs, deps);
     const outcome = await make.catch(async (err) => {
-      // Not told: it may still pass. The hold goes, and the sweep tries again.
-      console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);
+      // Not told: it may still pass. The hold goes, and the sweep tries again. A Card the owner hasn't
+      // approved yet is no error: the card waits the same way, and the taf is made once they approve.
+      if (!(err instanceof CardNotApproved)) console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);
       await deps.coach!.remove(held).catch(() => undefined);
       pending = true;
       return undefined;
@@ -7329,6 +7339,8 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       // Made meanwhile by an app, under this draft: done, not failed.
       const now = (await deps.tafs.list(tenant)).find((t) => t.kiffAgent && t.kiffAgent === taf.agent && !t.removing);
       if (now) return { taf_id: now.id };
+      // The owner hasn't approved the Card yet: nothing failed, and the result waits for them.
+      if (err.status === 409 && err.message === WAITING_FOR_CONFIRMATION) throw new CardNotApproved();
       return { failed: err.message };
     }
     throw err;

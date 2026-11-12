@@ -189,7 +189,9 @@ then shows its plan. Then, each step behind the owner's yes:
    ([tafs.md](tafs.md#starting-a-taf)). The conversation carries the card's answer
    (`answer.by`, `answer.outcome`: `{taf_id}`, with `check` when its first check couldn't read, or `{failed}`), and the card shows it:
    set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
-   itself; and until the answer comes, "Setting up…". The app starts nothing itself
+   itself; and until the answer comes, "Setting up…". A result whose Card the owner hasn't
+   approved yet (KIFF's `draft_not_ready`) isn't answered: it waits, and the taf is made once they
+   approve, with the next note, chat read or sweep, never answered failed. The app starts nothing itself
    (Android: `CoachWords.handOver`, `HandOverCard`; it reads the list again once for a taf
    set up that isn't listed yet). The iPhone app does the same.
    A taf's next version is still made by the app, from an improvement's result.

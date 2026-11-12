@@ -3810,13 +3810,31 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect((other.w.agents.versions.get(`t_acme|${RAE}`) ?? []).some((v) => v.note === "Checks first")).toBe(false);
   });
 
-  it("claims only a draft KIFF says is confirmed: one waiting is answered so, and nothing is made", async () => {
+  // A Card the owner hasn't approved yet isn't a failure: answering "failed" showed "not set up: waiting for
+  // your confirmation", in English, under "Set up", while the owner was still reading the Card.
+  it("claims only a draft KIFF says is confirmed: one waiting isn't answered, and is made once the owner approves", async () => {
+    const { w, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+    await note();
+    expect(answer()).toBeUndefined();
+    expect([...w.tafs.held.values()].some((t) => t.kiffAgent === "refunds-x")).toBe(false);
+    expect(w.agents.calls.filter((c) => c.startsWith("answerResult"))).toEqual([]);
+    // The owner approves (KIFF now gives the key): the sweep makes the taf and answers the card, once.
+    expect(await sweepHandOvers(deps)).toEqual([{ run: expect.any(String), pending: false }]);
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect([...w.tafs.held.values()].filter((t) => t.kiffAgent === "refunds-x")).toHaveLength(1);
+    expect(await sweepHandOvers(deps)).toEqual([]);
+  });
+
+  it("a result still waiting on its Card is tried again with the next note, never answered failed", async () => {
     const { w, note, answer } = await paused();
     w.agents.access.set("u_ana", { cards_manage: true });
     w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
     await note();
-    expect(answer()).toEqual({ answer: { failed: "waiting for your confirmation" }, answered_by: "tafs cloud" });
-    expect([...w.tafs.held.values()].some((t) => t.kiffAgent === "refunds-x")).toBe(false);
+    expect(answer()).toBeUndefined();
+    await note();
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
   });
 
   it("acts only while KIFF says the person may manage Cards now, and never on old rights", async () => {
