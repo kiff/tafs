@@ -560,7 +560,7 @@ like this one go on their own.
   agent's (and, when KIFF names `from_hold`, made from this held call), retires no Card and adds
   none. Each Card it changes is one the offer names and reads exactly as that Card in force with the
   offered limit moved from `before` to `after` in the offer's unit: a per-call cap on the held
-  call's action (`per_action`), or a total or count in its own window (`total`, `count`). Every other
+  call's action (`per_action`), or a total or count in its own window, the offer's `window` when it names one (`total`, `count`). Every other
   action, cap, total, window and `on_exceed` is the same; KIFF's lines and a grant's title are words,
   not terms. A `resource` change, and a Card marked unchanged, read as in force. Anything else, or a
   kind the contract doesn't name: "This change isn't what was offered", and no sign button. A draft
@@ -667,6 +667,28 @@ cleared after a paste: more than one character at once is a paste, and the clipb
 then. Given there (`AppModel.approveCoachWithKey`), the key goes as above, then the card is answered
 as any approval: tafs cloud finds the app connected, and Coach goes on or asks for its Cards. A key
 that didn't go answers nothing, and says why on the sheet.
+
+**The secure connection sheet** ([secure-connection.md](secure-connection.md)). When the key
+sheet opens, the phone reads tafs cloud's `GET /v1/connect/grants/{grant}/sheet` with its signed
+grants read (`Planque-Device-Signature`), once per grant (`AppModel.loadSecureSheet`,
+`TafsCloud.connectSheet`), and draws only its words (`SecureKeyContent`):
+- the title, with the vendor's logo and a lock;
+- the three plain lines. A `reads_only` line is checked against the grant this phone signs: at least
+  one tool, and every one `read_only` (`SecureSheetWords.firstLineHolds`). Otherwise the mismatch
+  line shows, with nothing to sign;
+- **Paste the key**, a button, never a typing field, so no keyboard opens. The pasted key is
+  trimmed, the clipboard is cleared at once, and only its last 4 show ("Key …ab12");
+- **Details**, collapsed: the technical lines, then the connection server's own words and KIFF's
+  words for the profile;
+- the legal line, its `{terms}` and `{privacy}` links opening in the browser (https only);
+- the button, which gives the key as above.
+
+Once the key went, the sheet shows the receipt with the last 4 and **Disconnect**
+(`AppState.keyReceipt`), until it closes; nothing keeps the last 4 after that. Without the sheet's
+words (an older tafs cloud, an error), the sheet stays as above. The sheet sits above the keyboard
+and scrolls. An approval card that tafs cloud marks `connection: {done: true, words}` draws only
+those words and Its Card, never the connection's text again. One signature for the key and its
+Card (`tafs.setup.v1`) follows once the connection server and KIFF take it.
 
 A browser connection's sheet (on a taf's Setup) offers tafs cloud's `site_sign_in` action, to
 whoever manages the taf: its `title` ("Sign in to a site") and its line. A tap asks planque, signed

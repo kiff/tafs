@@ -91,7 +91,7 @@ object HoldAllow {
       "total", "count" -> {
         if (before == null || after == null) return emptyList()
         t.aggregates.mapIndexedNotNull { ai, a ->
-          if (a.limit != before || a.unit != c.unit) return@mapIndexedNotNull null
+          if (a.limit != before || a.unit != c.unit || (c.window != null && c.window != a.window)) return@mapIndexedNotNull null
           t.copy(aggregates = t.aggregates.toMutableList().also { it[ai] = a.copy(limit = after) }).let { m ->
             Terms.of(DraftCard(grants = m.grants.map { DraftGrant(it.first, perActionMax = it.second) }, aggregates = m.aggregates, onExceed = m.onExceed))
           }

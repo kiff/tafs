@@ -1019,6 +1019,96 @@ class PlanqueTest {
     assertNull(m.state.value.keyForCard)
   }
 
+  // MARK: The secure connection sheet (docs/secure-connection.md)
+
+  private val sheetRoute = "GET /v1/connect/grants/g1/sheet"
+  private val sheet = """{"vendor":{"name":"Qonto","host":"thirdparty.qonto.com"},"title":"Secure connection to Qonto",
+    "lines":[{"kind":"reads_only","text":"Read only: it can't pay, send or change anything in Qonto"},
+             {"kind":"sealed","text":"Your key is sealed"},{"kind":"disconnect","text":"You can disconnect it any time"}],
+    "paste":{"button":"Paste the key","what":"Paste the API key you created in Qonto","pasted":"Key …{last4}","cleared":"Clipboard cleared"},
+    "details":{"title":"Details","lines":[{"label":"Header","value":"Authorization"}]},
+    "legal":{"text":"By connecting, you agree to the {terms} and the {privacy}.","terms":{"words":"Terms","url":"https://kiff.dev/terms"},
+             "privacy":{"words":"Privacy Policy","url":"https://kiff.dev/privacy"}},
+    "button":"Connect","receipt":{"text":"Qonto connected · key …{last4}","disconnect":"Disconnect"}}"""
+
+  @Test fun theSecureSheetsWordsAreTafsCloudsReadOncePerGrant() = runTest {
+    reads()
+    transport.answer(sheetRoute, 200, sheet)
+    val m = model()
+    m.loadSecureSheet("g1")
+    m.loadSecureSheet("g1")
+    assertEquals("read once", 1, transport.requestsTo(sheetRoute).size)
+    assertTrue("read as this phone", transport.requestsTo(sheetRoute).single().headers["Planque-Device-Signature"] != null)
+    val words = m.state.value.secureSheets.getValue("g1")
+    assertEquals("Secure connection to Qonto", words.title)
+    assertEquals(listOf("reads_only", "sealed", "disconnect"), words.lines.map { it.kind })
+    assertEquals("Paste the key", words.paste.button)
+  }
+
+  @Test fun aSheetThatCantBeReadSaysWhyAndTheSheetStaysAsBefore() = runTest {
+    reads()
+    transport.answer(sheetRoute, 404, """{"error":"not_found"}""")
+    val m = model()
+    m.loadSecureSheet("g1")
+    assertNull(m.state.value.secureSheets["g1"])
+    assertTrue(m.state.value.secureSheetErrors["g1"] != null)
+  }
+
+  @Test fun onlyTheLast4OfAPastedKeyShowAndTheVendorIsTafsCloudsName() {
+    val words = KiffClient.json.decodeFromString<bot.tafs.app.kiff.SecureSheet>(sheet)
+    assertEquals("the outer whitespace a paste adds isn't the key's", "sk_live_abcd1234", bot.tafs.app.model.SecureSheetWords.cleaned("  sk_live_abcd1234\n"))
+    assertEquals("Key …1234", bot.tafs.app.model.SecureSheetWords.pasted(words, "sk_live_abcd1234"))
+    assertEquals("Qonto connected · key …1234", bot.tafs.app.model.SecureSheetWords.receipt(words, "1234"))
+    assertEquals("a key too short shows none of itself", "Key …", bot.tafs.app.model.SecureSheetWords.pasted(words, "abc12"))
+  }
+
+  @Test fun withTheSecureSheetOpenTheKeyEndsOnItsReceiptWithTheLast4Only() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${keyGrant()}]}""")
+    transport.answer(key, 200, keyGrant("connected"))
+    transport.answer(sheetRoute, 200, sheet)
+    val m = model()
+    m.loadConnectApps()
+    m.openReplaceKey(m.state.value.grants.single())
+    m.loadSecureSheet("g1")
+    assertTrue(m.giveKeyOnSheet("g1", digestOf(keyRequest), "test-key-1"))
+    assertEquals("the sheet stays open on its receipt", "g1", m.state.value.listApproval)
+    assertEquals(bot.tafs.app.app.KeyReceipt("g1", "ey-1"), m.state.value.keyReceipt)
+    assertFalse("the key is kept nowhere in the app's state", m.state.value.toString().contains("test-key-1"))
+    m.closeListApproval()
+    assertNull("nothing keeps the last 4 after the sheet closes", m.state.value.keyReceipt)
+  }
+
+  @Test fun readOnlyHoldsOnlyWhenTheGrantThisPhoneSignsListsReadsAlone() {
+    val words = KiffClient.json.decodeFromString<bot.tafs.app.kiff.SecureSheet>(sheet)
+    fun grant(tools: String) = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(
+      """{"id":"g1","status":"pending","digest":"d","request":{"kind":"api_key","server":"https://thirdparty.qonto.com","agent":"a","tools":[$tools]}}""",
+    )
+    assertTrue(bot.tafs.app.model.SecureSheetWords.firstLineHolds(words, grant("""{"tool":"list","read_only":true},{"tool":"get","read_only":true}""")))
+    assertFalse("a write among them", bot.tafs.app.model.SecureSheetWords.firstLineHolds(words, grant("""{"tool":"list","read_only":true},{"tool":"pay","read_only":false}""")))
+    assertFalse("a tool with no flag", bot.tafs.app.model.SecureSheetWords.firstLineHolds(words, grant("""{"tool":"list","read_only":true},{"tool":"pay"}""")))
+    assertFalse("no tools at all", bot.tafs.app.model.SecureSheetWords.firstLineHolds(words, grant("")))
+    val mayChange = words.copy(lines = words.lines.map { if (it.kind == "reads_only") it.copy(kind = "may_change") else it })
+    assertTrue("a sheet that says it may change things claims nothing to check", bot.tafs.app.model.SecureSheetWords.firstLineHolds(mayChange, grant("")))
+  }
+
+  @Test fun theSheetHasNoTypingFieldAndClearsTheClipboardOnPaste() {
+    val view = java.io.File("src/main/kotlin/bot/tafs/app/views/SecureKeySheet.kt").readText()
+    assertFalse("never a typing field", view.contains("TextField"))
+    assertTrue("the clipboard is cleared once read", view.contains("clearPrimaryClip()"))
+    assertTrue("only the last 4 are drawn", view.contains("SecureSheetWords.pasted(sheet, key)"))
+  }
+
+  @Test fun anApprovalWhoseConnectionIsDoneShowsItsLineNotTheConnectionAgain() {
+    val c = KiffClient.json.decodeFromString<SetupComponent>(
+      """{"type":"approval","id":"a2","grant":"g1","draft":"dr_1","connection":{"done":true,"words":"Qonto is connected (read only)"}}""",
+    )
+    assertEquals("Qonto is connected (read only)", c.connection!!.words)
+    val views = java.io.File("src/main/kotlin/bot/tafs/app/views/CoachViews.kt").readText().replace("\r", "")
+    val card = views.substring(views.indexOf("private fun ApprovalCard("))
+    assertTrue("planque's text only while not done", card.contains("if (done == null) {\n          Text(grant.text"))
+  }
+
   /** The key sheet says the host the key is used with: the server's, never the vendor's name. */
   @Test fun theKeySheetNamesTheServersHostNotTheVendorsName() {
     fun grant(server: String) = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(

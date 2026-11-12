@@ -840,6 +840,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onClose = model::closeListApproval,
         needsKey = state.listApprovalNeedsKey,
         onGiveKey = { grant, key -> model.startGiveKey(grant.id, grant.digest, key) },
+        loadSecure = model::loadSecureSheet,
+        onDisconnect = model::disconnectFromReceipt,
       )
     }
     // "Allow this from now on", over whatever screen the held call was on.
