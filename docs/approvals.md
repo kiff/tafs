@@ -436,6 +436,9 @@ app's taps on that device (`Haptics.enabled`).
   planque all hold it, **Halting…** until then.
 - **Resume** is signed with Face ID in KIFF first; tafs cloud resumes kiff/agents only once
   KIFF says it runs again. What the taf was doing before the halt doesn't come back.
+- **A message or Run now refused for a halt** answers 409 with `{code: "halted", halted: "account" | "taf",
+  words}`: `halted` says what is halted, so the app offers that Resume on the refusal itself, and the words
+  name no screen to resume from (an account with no tafs shows no halt row).
 - "Halt all tafs" works from Siri and Shortcuts too (`HaltAllTafsIntent`), with the
   device unlocked. It says what happened, and when it can't finish it opens tafs on Halt
   all. Resume stays in the app.

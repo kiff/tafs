@@ -183,8 +183,8 @@ export const en = {
   suggestions_off: "Suggestions are off for this account.",
   suggestions_live: "The account has a live taf, so a new conversation with Coach opens blank. Suggestions can be turned off for good.",
   // A run or chat refused because it's halted: the taf on its own, or the whole account (Coach's included).
-  refusal_halted_taf: "This taf is halted: nothing of it runs until you resume it from Halt.",
-  refusal_halted_account: "Your account is halted: none of your tafs runs, Coach included, until you resume it from Halt.",
+  refusal_halted_taf: "This taf is halted: nothing of it runs until it's resumed.",
+  refusal_halted_account: "Your account is halted: none of your tafs runs, Coach included, until it's resumed.",
   work_paused: "Paused",
   work_from_chat: "Works from its chat",
   work_next_run: (t: When) => `Next run ${bare(t)}`,
