@@ -4183,7 +4183,7 @@ final class AppModel: ObservableObject {
                 chatErrors[tafID] = error.localizedDescription
                 return .notTried
             }
-            keepUnsent(text, tafID, why: error.localizedDescription)
+            keepUnsent(text, tafID, why: error.localizedDescription, halted: Self.haltOf(error))
             return .kept
         }
     }
@@ -4378,8 +4378,8 @@ final class AppModel: ObservableObject {
         return working != nil || s.awaiting != nil || s.live != nil
     }
 
-    private func keepUnsent(_ text: String, _ tafID: UUID, why: String, busy: Bool = false, settle: String? = nil) {
-        chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock(), busy: busy, settle: settle))
+    private func keepUnsent(_ text: String, _ tafID: UUID, why: String, busy: Bool = false, settle: String? = nil, halted: String? = nil) {
+        chatStates[tafID, default: ChatState()].unsent.append(UnsentMessage(text: text, why: why, at: clock(), busy: busy, settle: settle, halted: halted))
     }
 
     /// Why a message wasn't sent when the owner wrote too many too fast: the runtime's limit
@@ -4581,7 +4581,7 @@ final class AppModel: ObservableObject {
             } catch {
                 // Not reached: it stays in the thread as not sent, with why and Retry. The app
                 // never resends it on its own.
-                keepUnsent(text, tafID, why: error.localizedDescription)
+                keepUnsent(text, tafID, why: error.localizedDescription, halted: Self.haltOf(error))
                 return true
             }
         }
@@ -6170,7 +6170,13 @@ final class AppModel: ObservableObject {
         /// over didn't read): kept across launches only once Retry, Edit or Delete takes the
         /// row, so a restart before that shows it again.
         var settle: String? = nil
+        /// Refused because of a halt, as tafs cloud says: the whole `account`, or the `taf` on
+        /// its own. The bubble then offers Resume, which Retry can't stand in for.
+        var halted: String? = nil
     }
+
+    /// What a send's failure says of a halt: tafs cloud's `halted`, or nil for any other failure.
+    nonisolated static func haltOf(_ error: Error) -> String? { (error as? TafsCloud.CloudError)?.halted }
     @Published private(set) var setupUnsent: [UnsentMessage] = []
     /// What the owner is typing to Coach, not sent yet (kiff/tafs#245, item 3): kept here, not in the
     /// chat's view, so closing Coach mode, opening it again or switching tabs keeps it, as a
@@ -6870,7 +6876,7 @@ final class AppModel: ObservableObject {
                 fileNotices[Self.setupFiles] = error.localizedDescription
                 return .notTried
             }
-            setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock()))
+            setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock(), halted: Self.haltOf(error)))
             return .kept
         }
     }
@@ -6932,7 +6938,7 @@ final class AppModel: ObservableObject {
                 return false
             } catch {
                 // Not reached: it stays in the thread as not sent, with why and Retry; never resent on its own.
-                setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock()))
+                setupUnsent.append(UnsentMessage(text: text, why: error.localizedDescription, at: clock(), halted: Self.haltOf(error)))
                 return true
             }
         }
