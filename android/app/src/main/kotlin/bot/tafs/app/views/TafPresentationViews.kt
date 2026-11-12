@@ -244,7 +244,13 @@ internal fun SourceActivityRow(source: TafActivityEntry, taf: Taf, state: AppSta
 private fun RunRow(row: bot.tafs.app.model.Chat.WorkRow, taf: Taf, actions: TafActions) {
   val scope = rememberCoroutineScope()
   when (row) {
-    is bot.tafs.app.model.Chat.WorkRow.Request -> TextButton({ scope.launch { actions.openRequest(taf.id, row.request.id) } }) { Text(row.request.line, color = Theme.ink) }
+    is bot.tafs.app.model.Chat.WorkRow.Request -> TextButton({ scope.launch { actions.openRequest(taf.id, row.request.id) } }) {
+      // The run's line, and under it what it used, in tafs cloud's words, when KIFF has counted it.
+      androidx.compose.foundation.layout.Column {
+        Text(row.request.line, color = Theme.ink)
+        row.request.credits?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
+      }
+    }
     is bot.tafs.app.model.Chat.WorkRow.Skipped -> Text(row.firing.words, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
   }
 }
