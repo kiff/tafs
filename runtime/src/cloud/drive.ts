@@ -413,7 +413,7 @@ export const sleep: Sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 /** Coach's tool call, answered: the phone's result, or why there is none. */
 export type Answer = { result: DriveResult; drive: Drive } | { ended: Drive["ended"] & object } | { off: string } | { timedOut: true }
-  | { paused: string; calls: number } | { lookFirst: true };
+  | { paused: string; calls: number; drive: string } | { lookFirst: true };
 
 /**
  * Sends one request to the person's phone and holds for its answer, at most
@@ -431,7 +431,7 @@ export async function askApp(store: CoachStore, tenant: string, person: string, 
   const pausedAnswer = async (since: string): Promise<Answer> => {
     const calls = (num(await store.get(driveKeys.pausedCalls(tenant, d.id))) ?? 0) + 1;
     await store.put(driveKeys.pausedCalls(tenant, d.id), calls, kept(now()));
-    return { paused: since, calls };
+    return { paused: since, calls, drive: d.id };
   };
   const paused = await drivePaused(store, tenant, d.id);
   if (paused) return pausedAnswer(paused);
@@ -553,7 +553,32 @@ export async function* driveStream(store: CoachStore, tenant: string, person: st
 }
 
 /** What Coach is told at its first call while the person has the app: end the turn, and wait to be told. */
-export const PAUSED_SAID = "The person is using the app: their touch paused the drive. End your turn now with one short line, such as \"I'll wait while you use the app.\" You'll be told when they tap Continue; then look before your next step.";
+export const PAUSED_SAID = "The person is using the app: their touch paused the drive. Your run waits here until they tap Continue or the drive ends; then look before your next step.";
+
+/** The grant KIFF's gateway reserves for a paused drive's wait only Coach's drive tools may use it. */
+export const DRIVE_WAIT_GRANT = "coach-drive";
+/** The event a paused drive's wait is answered with. */
+export const DRIVE_WAIT_EVENT = "drive.continue";
+/** The longest a parked run waits: a drive's idle limit, which the gateway caps it to anyway. */
+export const DRIVE_WAIT_S = DRIVE.idleMs / 1000;
+
+/** A paused drive's wait key, as the gateway requires it: the caller's tenant, then the drive. */
+export function driveWaitKey(tenant: string, drive: string): string {
+  return `${tenant}:${drive}`;
+}
+
+/**
+ * What parks Coach's run while the person has the app: a wait for the drive's Continue or end,
+ * which KIFF's gateway keeps only for Coach's own drive tools (docs/drive.md). Where the gateway
+ * doesn't carry it, Coach reads PAUSED_SAID, and the second call's guard ends its turn.
+ */
+export function driveWait(tenant: string, drive: string): Record<string, unknown> {
+  return {
+    pending: true,
+    timeout_s: DRIVE_WAIT_S,
+    wait_for: { grant: DRIVE_WAIT_GRANT, event: DRIVE_WAIT_EVENT, key: driveWaitKey(tenant, drive), words: "The person is using the app" },
+  };
+}
 
 /** The note that starts Coach's next turn when the person taps Continue. */
 export const CONTINUE_SAID = "[drive continue] The person tapped Continue: the drive goes on. The screen may have changed while they had it, so look (app_look) before your next step.";

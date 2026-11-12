@@ -489,8 +489,8 @@ describe("a touch pauses the drive (docs/drive.md, When the person touches the a
     expect(await r.store.take(`${T}#drive-q#${d.id}`)).toEqual([]);
     const seen: unknown[] = [];
     r.answers((req) => { seen.push(req); return { outcome: "done", line: "Looked" }; });
-    expect(await askApp(r.store, T, ANA, "app_look", {}, r.now, r.wait)).toEqual({ paused: NOW.toISOString(), calls: 1 });
-    expect(await askApp(r.store, T, ANA, "app_act", { action: "tap", line: "Tapping Run now", at: { x: 1, y: 2 } }, r.now, r.wait)).toEqual({ paused: NOW.toISOString(), calls: 2 });
+    expect(await askApp(r.store, T, ANA, "app_look", {}, r.now, r.wait)).toEqual({ paused: NOW.toISOString(), calls: 1, drive: d.id });
+    expect(await askApp(r.store, T, ANA, "app_act", { action: "tap", line: "Tapping Run now", at: { x: 1, y: 2 } }, r.now, r.wait)).toEqual({ paused: NOW.toISOString(), calls: 2, drive: d.id });
     expect(seen).toEqual([]);
   });
 
@@ -570,13 +570,14 @@ describe("a touch pauses the drive (docs/drive.md, When the person touches the a
     expect(pause.body).toEqual({ paused: NOW.toISOString() });
     expect((await w.call("GET", "/v1/coach/drive")).body.drive).toMatchObject({ id, paused: NOW.toISOString() });
 
-    // Coach's first call is told to end its turn; nothing goes to the phone.
+    // Coach's first call parks its run on the drive's wait; nothing goes to the phone.
     w.working();
     const first = await coachTool("app_look", {}, w.coachCall, w.deps) as Rich;
-    expect(first.isError).toBe(true);
+    expect(first.isError).toBe(false);
     expect(first.content[0]).toMatchObject({ text: `${PAUSED_SAID} Nothing was sent.` });
+    expect(first.structured).toEqual({ pending: true, timeout_s: 900, wait_for: { grant: "coach-drive", event: "drive.continue", key: `${T}:${id}`, words: "The person is using the app" } });
     expect(w.stored.status).toBe("RUNNING");
-    // A second call in the same pause: tafs cloud ends Coach's turn itself.
+    // A second call in the same pause (the gateway didn't park the run): tafs cloud ends Coach's turn itself.
     const second = await coachTool("app_look", {}, w.coachCall, w.deps) as Rich;
     expect(second.content[0]).toMatchObject({ text: expect.stringContaining("tafs ended this turn") });
     expect(w.stored.status).toBe("CANCELLED");
@@ -615,5 +616,59 @@ describe("a touch pauses the drive (docs/drive.md, When the person touches the a
     const resume = await w.call("POST", "/v1/coach/drive/resume", { drive: id });
     expect(resume.body).toMatchObject({ resumed: false, ended: { why: "halted" } });
     expect(w.events.at(-1)).toMatchObject({ kind: "drive_ended", detail: END_WORDS.halted });
+  });
+});
+
+describe("a paused drive parks Coach's run (the gateway's coach-drive wait)", () => {
+  /** Coach's run as kiff/agents keeps it once the gateway parked it on the drive's wait. */
+  const park = (w: Awaited<ReturnType<typeof world>>, drive: string) => {
+    w.stored.status = "PAUSED";
+    w.stored.requirements = [...(w.stored.requirements ?? []), { call_id: "call-look", tool: "app_look", input: {}, operation: "", expires: "2026-11-06T01:00:00Z", kind: "event",
+      wait: { grant: "coach-drive", event: "drive.continue", key: `${T}:${drive}`, words: "The person is using the app" } }];
+  };
+
+  it("Continue answers the parked run's wait, and starts no new turn", async () => {
+    const w = await world();
+    const started = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
+    const id = (started.body.drive as { id: string }).id;
+    await w.call("POST", "/v1/coach/drive/pause", { drive: id });
+    park(w, id);
+    const runs = w.agents.runs.length;
+    const resume = await w.call("POST", "/v1/coach/drive/resume", { drive: id });
+    expect(resume.body).toEqual({ resumed: true, coach: { run: w.stored.id, session: w.session } });
+    const answered = w.stored.requirements!.find((q) => q.call_id === "call-look")!;
+    expect(answered.answered).toBeTruthy();
+    expect(answered.result).toEqual({ drive: "continued", words: CONTINUE_SAID });
+    expect(w.agents.runs.length).toBe(runs);
+  });
+
+  it("a stop, or another drive starting, answers the wait with the end", async () => {
+    const w = await world();
+    const a = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
+    const first = (a.body.drive as { id: string }).id;
+    await w.call("POST", "/v1/coach/drive/pause", { drive: first });
+    park(w, first);
+    await w.call("POST", "/v1/coach/drive/stop", { drive: first, why: "stopped" });
+    expect(w.stored.requirements!.find((q) => q.call_id === "call-look")!.result).toEqual({ drive: "ended", why: "stopped", words: END_WORDS.stopped });
+
+    const w2 = await world();
+    const b = await w2.call("POST", "/v1/coach/drive", { session: w2.session, task: "Run Chargebacks" }, SIGNED);
+    const old = (b.body.drive as { id: string }).id;
+    await w2.call("POST", "/v1/coach/drive/pause", { drive: old });
+    park(w2, old);
+    await w2.call("POST", "/v1/coach/drive", { session: w2.session, task: "Turn off suggestions" }, SIGNED);
+    expect(w2.stored.requirements!.find((q) => q.call_id === "call-look")!.result).toEqual({ drive: "ended", why: "replaced", words: END_WORDS.replaced });
+  });
+
+  it("only the wait for this drive is answered: another drive's, or another key, stays", async () => {
+    const w = await world();
+    const started = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
+    const id = (started.body.drive as { id: string }).id;
+    await w.call("POST", "/v1/coach/drive/pause", { drive: id });
+    park(w, "another-drive");
+    const resume = await w.call("POST", "/v1/coach/drive/resume", { drive: id });
+    expect(w.stored.requirements!.find((q) => q.call_id === "call-look")!.answered).toBeFalsy();
+    // No parked run of this drive: Continue starts Coach's next turn instead.
+    expect(resume.body).toMatchObject({ resumed: true, coach: { session: w.session } });
   });
 });
