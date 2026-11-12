@@ -7379,6 +7379,36 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// Approve on a Coach card whose connection is approved with its key (planque's `request.kind`
+    /// "api_key"), not connected yet. planque refuses a plain approve of such a grant, so the key
+    /// goes to planque first, signed, behind Face ID, as the Connect sheet gives it (`giveKey`);
+    /// the key never reaches tafs cloud or Coach. Then the card is approved as any other: tafs
+    /// cloud reads the grant, now connected, and answers Coach itself, or asks for the Card's
+    /// signature. A key that didn't go through leaves the card as it was, with why on it.
+    @discardableResult
+    func approveWithKey(_ component: SetupComponent, shown: String?, shownDraft: String?, key: String) async -> Bool {
+        guard let grantID = component.grant else { return false }
+        cardNotes[component.id] = nil
+        guard connecting == nil else {
+            cardNotes[component.id] = Words.Connect.anotherApproval
+            return false
+        }
+        lastError = nil
+        quietStop = nil
+        connecting = grantID
+        let given = await giveKey(grantID: grantID, shown: shown, key: key)
+        connecting = nil
+        guard given else {
+            // Why, on the card that was tapped: a tap always shows something.
+            if let why = lastError ?? quietStop { cardNotes[component.id] = why }
+            lastError = nil
+            quietStop = nil
+            return false
+        }
+        await approve(component, shown: shown, shownDraft: shownDraft)
+        return true
+    }
+
     /// Approve on Coach's drive card (docs/drive.md): the start is signed with the approval key, behind
     /// Face ID or Touch ID, as a setup call (`kiff.request.v1` over this request). tafs cloud starts the
     /// drive only for that key, and tells Coach the drive is on. Then Coach's chat closes into its

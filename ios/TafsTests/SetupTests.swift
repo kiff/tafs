@@ -1,3 +1,4 @@
+import CryptoKit
 import XCTest
 @testable import Tafs
 
@@ -1626,6 +1627,77 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(plain.destination, "the vendor's page")
         XCTAssertNil(plain.yes)
         XCTAssertNil(plain.note)
+    }
+
+    /// A connection approved with its key (planque's "api_key"), as planque lists it.
+    private func keyGrant(status: String) throws -> String {
+        let request = #"{"agent":"desk","grant":"g_2","kind":"api_key","server":"https://desk.example","tenant":"t_01","tools":[],"v":"planque.grant.v1"}"#
+        let digest = SHA256.hash(data: try JCS.canonical(Data(request.utf8))).map { String(format: "%02x", $0) }.joined()
+        return #"{"id":"g_2","status":"\#(status)","text":"desk may read tickets at desk.example","digest":"\#(digest)","request":\#(request),"vendor":"Desk","events":[]}"#
+    }
+
+    /// Coach's card for a connection approved with its key: the key goes to planque, signed, as
+    /// the Connect sheet gives it, never through a plain approve, which planque refuses. Then
+    /// tafs cloud reads the grant, connected, and answers Coach itself.
+    func testACoachCardForAKeyConnectionGivesTheKeyThenTafsCloudAnswers() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
+        await model.loadSetup()
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(try keyGrant(status: "pending"))]}"#)
+        await model.refreshConnections()
+        let grant = try XCTUnwrap(model.grants.first)
+        XCTAssertTrue(grant.takesKey)
+        XCTAssertTrue(SetupApproval.takesKeyHere(grant), "not connected yet: the card takes its key")
+        let card = try SetupTests.component(#"{"type":"approval","id":"connect-desk","grant":"g_2"}"#)
+
+        // planque refuses the key: the card says why, nothing reaches tafs cloud, and it can be tried again.
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_2/key"] = (422, #"{"error":"the key was refused by desk.example"}"#)
+        StubProtocol.sent = []
+        var went = await model.approveWithKey(card, shown: grant.digest, shownDraft: nil, key: "desk_wrong")
+        XCTAssertFalse(went)
+        XCTAssertNotNil(model.cardNotes["connect-desk"], "why, on the card that was tapped")
+        XCTAssertNil(model.lastError, "said once, on the card")
+        XCTAssertNil(model.connecting)
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/connect-desk/approval").isEmpty)
+        XCTAssertFalse(model.isAnswered(card))
+
+        // The right key: planque takes it and connects, and the list says so when read again.
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_2/key"] = (200, try keyGrant(status: "connected"))
+        StubProtocol.thenRespond["POST /v1/accounts/t_01/grants/g_2/key"] = [
+            "GET /v1/accounts/t_01/grants": (200, #"{"grants":[\#(try keyGrant(status: "connected"))]}"#),
+        ]
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/connect-desk/approval"] = (200, #"{"outcome":"answered","answer":"already approved: Desk is connected","note":"Already approved","session":"s1","run":"r1"}"#)
+        StubProtocol.sent = []
+        signer.prompts = []
+        went = await model.approveWithKey(card, shown: grant.digest, shownDraft: nil, key: " desk_live_secret_123\n")
+        XCTAssertTrue(went)
+        let given = try XCTUnwrap(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_2/key").first)
+        XCTAssertEqual(given.value(forHTTPHeaderField: PlanqueClient.keyHeader), "desk_live_secret_123", "the key, trimmed, in its header")
+        XCTAssertNotNil(given.value(forHTTPHeaderField: "Planque-Device-Signature"), "signed by this phone")
+        XCTAssertEqual(signer.prompts.count, 1, "one Face ID, for the key")
+        XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_2/approve").isEmpty, "never a plain approve")
+        // Then the card is approved as any other, with what it showed, and tafs cloud answers Coach.
+        let asked = try XCTUnwrap(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/connect-desk/approval").first)
+        XCTAssertEqual(body(asked)["shown_digest"] as? String, grant.digest)
+        XCTAssertFalse(String(data: asked.httpBody ?? Data(), encoding: .utf8)?.contains("desk_live_secret_123") ?? true, "the key never reaches tafs cloud")
+        XCTAssertEqual(model.cardNotes["connect-desk"], AppModel.alreadyApproved)
+        XCTAssertTrue(model.isAnswered(card))
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/connect-desk/answer").isEmpty, "the phone never answers the card")
+        XCTAssertFalse(SetupApproval.takesKeyHere(model.grants.first), "connected: the card is approved as any other")
+    }
+
+    /// Only a connection that takes a key, and isn't connected yet, shows the key field on Coach's card.
+    func testOnlyAKeyConnectionNotYetConnectedTakesItsKeyOnTheCard() throws {
+        let plain = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(PlanqueTests.grantJSONFor(status: "pending").utf8))
+        XCTAssertFalse(SetupApproval.takesKeyHere(plain))
+        XCTAssertFalse(SetupApproval.takesKeyHere(nil))
+        let pending = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(try keyGrant(status: "pending").utf8))
+        XCTAssertTrue(SetupApproval.takesKeyHere(pending))
+        let connected = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(try keyGrant(status: "connected").utf8))
+        XCTAssertFalse(SetupApproval.takesKeyHere(connected))
     }
 
     static func component(_ json: String) throws -> SetupComponent {

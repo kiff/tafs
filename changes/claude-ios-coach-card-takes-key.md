@@ -1,0 +1,1 @@
+- **iPhone and iPad: an app that connects with a key can be approved from Coach's card.** When Coach asks for a connection that takes an API key, its approval card now has the key field, as the Connect apps sheet does, and approving gives the key under Face ID. Before, approving from the card was refused (docs/ios-app.md).
