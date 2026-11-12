@@ -308,6 +308,8 @@ the app in sample mode.
     leaves Coach's card unapproved.
   When tafs cloud's words can't be read, the sheet draws the app's own lines as before, with the same paste button
   and no text field.
+  **A later approval card whose connection is already connected** carries tafs cloud's mark (`connection: {done,
+  words}`, `SetupComponent.Connection`): the card draws that line and the Card, never the connection's text again.
   Not built yet: the Card on the same sheet under one signature, which waits for the connection server and KIFF.
 - **What a grant's digest covers** (`PlanqueClient.digestCovers`): the phone recomputes planque's
   digest before it shows or signs a grant, and refuses one that doesn't match. Without `digest_v`,

@@ -100,6 +100,24 @@ final class SecureKeySheetTests: XCTestCase {
         XCTAssertFalse(between.contains("approve("), "nothing to sign")
     }
 
+    /// An approval card whose connection is already connected carries tafs cloud's mark: the
+    /// card draws that line, and never the connection's text again.
+    func testAnApprovalWhoseConnectionIsDoneShowsItsLine() throws {
+        func component(_ connection: String) throws -> SetupComponent {
+            try KIFFClient.decoder.decode(SetupComponent.self, from: Data(#"{"type":"approval","id":"card","grant":"g_2","draft":"dr_1"\#(connection)}"#.utf8))
+        }
+        XCTAssertEqual(try component(#","connection":{"done":true,"words":"Desk is connected (read only)"}"#).connection?.doneWords, "Desk is connected (read only)")
+        XCTAssertNil(try component(#","connection":{"done":false,"words":"Desk is connected (read only)"}"#).connection?.doneWords, "not done")
+        XCTAssertNil(try component(#","connection":{"done":true,"words":" "}"#).connection?.doneWords, "no words")
+        XCTAssertNil(try component(#","connection":{"words":"Desk is connected"}"#).connection?.doneWords, "it doesn't say done")
+        XCTAssertNil(try component("").connection, "a card from before the mark")
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let chat = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        let mark = try XCTUnwrap(chat.range(of: "if let done = component.connection?.doneWords {"))
+        let text = try XCTUnwrap(chat.range(of: "Text(grant.text)", range: mark.upperBound..<chat.endIndex))
+        XCTAssertTrue(chat[mark.upperBound..<text.lowerBound].contains("} else {"), "the connection's text is drawn only when the mark isn't there")
+    }
+
     /// The first line's kind picks an icon only. One this app doesn't know still draws its words.
     func testALinesKindPicksItsIconOnly() throws {
         XCTAssertNotEqual(SecureKey.icon("reads_only"), SecureKey.icon("may_change"), "reading and changing never look the same")
