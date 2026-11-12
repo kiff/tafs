@@ -90,7 +90,7 @@ All of these are the person's, signed in as always:
 | `GET /v1/coach/drive/{drive}/stream` | The drive's requests, on the **streaming** function's address, as server-sent events (below). |
 | `POST /v1/coach/drive/{drive}/results/{request}` | The app's answer to one request (below). |
 | `POST /v1/coach/drive/pause {drive}` | The person touched the app: pause it ([below](#when-the-person-touches-the-app)). Pausing one already paused changes nothing. |
-| `POST /v1/coach/drive/resume {drive}` | The person tapped **Continue**: go on. Resuming one that isn't paused changes nothing. |
+| `POST /v1/coach/drive/resume {drive}` | The person tapped **Continue**: go on, and Coach hears it in the drive's chat. Answers `{resumed, coach?: {run, session}}`, the turn that took it, for the app to show. Resuming one that isn't paused changes nothing. |
 | `POST /v1/coach/drive/stop {drive, why}` | End it. `why` is one of the ends below. |
 | `GET /v1/coach/drive` | The drive as it stands (`paused`, the time it paused, while it's paused; `ended` with `why` and `words` once over), and its `steps` for the "What I did" card. `{drive: null}` when there's none. |
 
@@ -259,24 +259,32 @@ drive; only a clear takeover ends it.
     request of the drive with `outcome: refused`, `line: "Paused"` until Continue, whatever
     tafs cloud says. That covers a request already on the stream, or one sent before tafs cloud
     has the pause.
-  - The app posts `POST /v1/coach/drive/pause {drive}`. If that fails on the network or with a
-    5xx, the app keeps its own pause and posts it again; only Continue (`resume`) lifts it.
-  - **A `pause` or `resume` answered 404 isn't posted again:** this person's current drive isn't
-    this one. The app ends the drive locally at once, and says why from `GET /v1/coach/drive`:
-    "Another drive started" when a different drive is current, the drive's own end when it has
-    one, else the app's own "Coach stopped". Never `owner_took_over`: that stays for the person's
-    own clear takeover, so the record never says they took over when they didn't.
+  - The app posts `POST /v1/coach/drive/pause {drive}`. If that fails with a network error or a
+    5xx, the app keeps its own pause and posts it again; only Continue (`resume`) lifts it. **A
+    `pause` or `resume` answered 404 means this person's current drive isn't this one** (it ended,
+    or another started): the app posts nothing more, ends the drive locally, and shows why from
+    `GET /v1/coach/drive` ("Another drive started" when another is current, else the app's own
+    "Coach stopped"). It's never `owner_took_over`, which stays for the person's own takeover.
   - The step under way stops before its next event. A step that dispatched nothing yet answers
     `outcome: refused`, `line: "Paused"`; one that already acted answers as it would have.
   - Coach's events are never mixed into the person's: the event being dispatched when they
     touch finishes first.
 - **While it's paused:**
   - The border dims, and the caption reads **Paused · Continue / Stop**.
-  - tafs cloud sends the app no request. Coach's look or act is answered at once with "The
-    person is using the app", and tafs cloud parks Coach's run the way a held call does: paused,
-    waiting on an event, so no invocation runs and no turns or credits are used while the person
-    has the app.
-  - `resume`, or the drive's end, is that event: the run goes on, and its first step is a look.
+  - tafs cloud sends the app no request. **Coach's run parks:** its first look or act in the pause
+    is answered "The person is using the app" with a wait (`structuredContent`: `pending`,
+    `timeout_s` 900, `wait_for: {grant: "coach-drive", event: "drive.continue", key:
+    "<tenant>:<drive>"}`). KIFF's gateway keeps that wait only for Coach's own drive tools,
+    and kiff/agents pauses the run on it, the way a held call does: no invocation runs, and no
+    turns or credits are used while the person has the app.
+  - **Continue answers the wait** (kiff/agents' `answerWait`, `{drive: "continued", words}`): the
+    run goes on, told to look before its next step. **The drive's end answers it too** (`{drive:
+    "ended", why, words}`: a stop, a halt, another drive starting), and an idle end lets it time
+    out at the same 900 seconds.
+  - **Where nothing parked** (the gateway didn't carry the wait), Coach reads the same words, and
+    a second call in the same pause ends Coach's turn from tafs cloud's side, so a pause costs two
+    turns at most, whatever the model does. Continue then starts Coach's next turn in the drive's
+    chat ("The person tapped Continue: look before your next step").
   - The person uses the app as usual, and every touch of theirs is delivered.
 - **Continue** puts the keyboard away first: the field keeps its text and loses focus, so nothing
   the keyboard commits later reads as the person's typing. Then the app posts
@@ -362,7 +370,7 @@ the same either way. Coach, and the account's events, have their own words for i
   - **A tap on a control** is counted when the registry has an element with a tap action under the touch, and the finger lifts within 12 points of where it went down (`DriveSession.isControl`). A field isn't one: a tap on it only takes the focus.
   - The caption's Stop ends the drive as `stopped`, and so does the Coach button, by its own action once the touch reaches it. A back swipe from the edge, or a navigation back button, ends it as `owner_took_over`, and goes back: the app sees it as a navigation stack that is shallower once the touch has settled (`DriveHands.wentBack`). A sheet that closes took its stack with it, so closing one only pauses.
   - **A request refused as "Paused" carries no screen:** the person is using the app, and Coach looks again after Continue.
-  - **A `pause` or `resume` that answers `ended`** ends the drive in the app with those words. One answered 404, or any other 4xx, ends it as [above](#when-the-person-touches-the-app). A network error or a 5xx is posted again at 1, 2, 4, then every 8 seconds.
+  - **A `pause` or `resume` that answers `ended`** ends the drive in the app with those words. One answered 404, or any other 4xx, ends it as [above](#when-the-person-touches-the-app), with the drive's own end when `GET /v1/coach/drive` has one. A network error or a 5xx is posted again at 1, 2, 4, then every 8 seconds.
   - The drive ends on `willResignActive` or `sceneDidEnterBackground` (`left_app`), and when protected data becomes unavailable (`locked`).
 
 ### Typing
@@ -421,8 +429,9 @@ A scroll's `direction` is where the content comes from: `down` shows what's belo
 - **Before its first step:** "Coach is driving: <task>".
 - **While it's paused:** "Paused", with **Continue** and **Stop**.
 - **The card that asks to drive** says what a touch does: "… It never confirms anything. Touch the
-  app to pause it, or tap Stop to end it." (`drive.card_note`, `drive.card_note_scrolls`, in each
-  app's strings).
+  app to pause it, or tap Stop to end it." (`drive.card_note_pauses`, `drive.card_note_scrolls_pauses`
+  in the apps' shared strings; `drive.card_note` and `drive.card_note_scrolls` keep the old note until iOS
+  pauses too, then go).
 - **Once it's over:** `words`, for 3 seconds. When tafs cloud's words didn't come, the app's own words for the same end: "You took over, so Coach let you carry on", "The app left the screen, so Coach stopped", "You stopped Coach", "The phone locked, so Coach stopped", "You signed out, so Coach stopped", "The account is halted, so Coach stopped", "Coach is done", "Nothing was done for 15 minutes, so Coach stopped", "Another drive started".
 
 ### How each app sees and acts

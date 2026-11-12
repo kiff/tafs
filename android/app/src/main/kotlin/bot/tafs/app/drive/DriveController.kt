@@ -34,6 +34,12 @@ interface DriveApi {
   /** `POST /v1/coach/drive/stop {drive, why}`. */
   suspend fun stopDrive(drive: String, why: String)
 
+  /** `POST /v1/coach/drive/pause {drive}`: the person touched the app. A tafs cloud without the route answers 404, and the app's own pause stands. */
+  suspend fun pauseDrive(drive: String) {}
+
+  /** `POST /v1/coach/drive/resume {drive}`: the person tapped Continue. Null when tafs cloud said nothing of use. */
+  suspend fun resumeDrive(drive: String): DriveResumed? = null
+
   /** `GET /v1/coach/drive`. */
   suspend fun readDrive(): DriveRead
 }
@@ -109,8 +115,14 @@ interface DriveHost {
   /** The screenshot of the app's own windows, and the tree and diagnostics when asked. */
   suspend fun look(tree: Boolean, diagnostics: Boolean): Look
 
-  /** Does one action, after checking it may (the confirm mark), and says what came of it in the app's words. */
+  /**
+   * Does one action, after checking it may (the confirm mark), and says what came of it in the app's words. A pause stops it
+   * before its next event: one that dispatched nothing is refused ("Paused"), one that already acted answers as it would have.
+   */
   suspend fun act(action: Action): Acted
+
+  /** Continue: the keyboard goes away, and the field keeps its text and loses focus, so nothing it commits later reads as typed. */
+  fun putKeyboardAway() {}
 
   /** Waits at most [timeoutMs] for one of the app's events (docs/drive.md, `wait`); true when it came. */
   suspend fun await(event: String, timeoutMs: Long): Boolean
@@ -123,17 +135,22 @@ interface DriveHost {
 sealed interface DriveState {
   data object Off : DriveState
 
-  /** Coach is driving: [caption] is the step it's on, in its words. */
-  data class On(val drive: DriveInfo, val caption: String? = null) : DriveState
+  /**
+   * Coach is driving: [caption] is the step it's on, in its words. [paused] while the person uses the app themselves: Coach does
+   * nothing until Continue.
+   */
+  data class On(val drive: DriveInfo, val caption: String? = null, val paused: Boolean = false) : DriveState
 
   /** It ended, and never comes back: [words] say why, for the caption and the chat. */
   data class Over(val drive: DriveInfo, val why: String, val words: String) : DriveState
 }
 
 /**
- * The person's drive on this phone (docs/drive.md): follows its stream, does each request in turn and answers it, and ends
- * at once on the person's input, the app leaving the screen, a lock, a sign-out, or tafs cloud's `ended`. An ended drive
- * never comes back. Nothing is done after the end, and nothing is sent but the stop.
+ * The person's drive on this phone (docs/drive.md): follows its stream, does each request in turn and answers it. The person's
+ * touch pauses it at once, here, whatever tafs cloud says: every request is refused ("Paused") until Continue. It ends at once
+ * on a clear takeover (their back, their typing, their third tap on a control since the pause), Stop, the app leaving the
+ * screen, a lock, a sign-out, or tafs cloud's `ended`. An ended drive never comes back. Nothing is done after the end, and
+ * nothing is sent but the stop.
  */
 class DriveController(
   private val api: DriveApi,
@@ -147,6 +164,15 @@ class DriveController(
 
   /** True while a drive is on. */
   val on: Boolean get() = _state.value is DriveState.On
+
+  /** True while the person has paused the drive: Coach does nothing until Continue. */
+  val paused: Boolean get() = (_state.value as? DriveState.On)?.paused == true
+
+  /** The person's taps on a control since the drive paused, the pausing one included; a third ends it. */
+  private var taps = 0
+
+  /** The pause on its way to tafs cloud, posted again until it lands, Continue comes, or the drive ends. */
+  private var pausing: Job? = null
 
   /** A step of Coach's under way: a field that changes meanwhile is Coach's, any other change the person's. */
   @Volatile
@@ -176,6 +202,56 @@ class DriveController(
     return true
   }
 
+  /**
+   * The person touched the app: the drive pauses at once, and their touch is theirs. tafs cloud is told, again with a backoff
+   * until it lands, so it stops sending and Coach stops calling. The pause here stands meanwhile, since a request already on its
+   * way must find the app paused. False when no drive is on.
+   */
+  fun pause(): Boolean {
+    val on = _state.value as? DriveState.On ?: return false
+    if (on.paused) return true
+    taps = 0
+    set(on.copy(paused = true))
+    pausing?.cancel()
+    pausing = scope.launch {
+      var wait = PAUSE_RETRY_FIRST_MS
+      while (stillPaused(on.drive)) {
+        if (runCatching { api.pauseDrive(on.drive.id) }.isSuccess) break
+        delay(wait)
+        wait = minOf(wait * 2, PAUSE_RETRY_MAX_MS)
+      }
+    }
+    return true
+  }
+
+  private fun stillPaused(drive: DriveInfo): Boolean = (_state.value as? DriveState.On)?.let { it.drive.id == drive.id && it.paused } == true
+
+  /** Continue: the keyboard goes away first, then Coach goes on. Its next step is a look, which tafs cloud requires. */
+  fun resume() {
+    val on = _state.value as? DriveState.On ?: return
+    if (!on.paused) return
+    host.putKeyboardAway()
+    taps = 0
+    pausing?.cancel()
+    pausing = null
+    set(on.copy(paused = false))
+    scope.launch(NonCancellable) {
+      // On a halted account tafs cloud ends the drive instead: it's over, in tafs cloud's words, and nothing is sent back.
+      val answer = runCatching { api.resumeDrive(on.drive.id) }.getOrNull()
+      answer?.ended?.takeIf { !answer.resumed }?.let { end(on.drive, it.why, it.words) }
+    }
+  }
+
+  /**
+   * One of the person's taps ended, [onControl] when it landed on something that acts (a button, a row, a toggle, a link, a
+   * tab). The tap that paused counts too. A third with no Continue between is a clear takeover, and ends the drive.
+   */
+  fun personsTap(onControl: Boolean) {
+    if (!paused || !onControl) return
+    taps++
+    if (taps >= TAKEOVER_TAPS) stop("owner_took_over")
+  }
+
   /** Waits for the person's stop to reach tafs cloud, if one is on its way: then the drive's end is in Coach's chat. */
   suspend fun settled() {
     stopping?.join()
@@ -193,6 +269,9 @@ class DriveController(
 
   private fun end(drive: DriveInfo, why: String, words: String?) {
     if ((_state.value as? DriveState.On)?.drive?.id != drive.id) return
+    taps = 0
+    pausing?.cancel()
+    pausing = null
     job?.cancel()
     job = null
     stepInFlight = false
@@ -246,6 +325,11 @@ class DriveController(
       answer(drive, request, DriveAnswer.refused(DriveWords.TOO_LATE))
       return
     }
+    // Paused: nothing is done while the person uses the app, whatever tafs cloud sent before it heard.
+    if (paused) {
+      answer(drive, request, DriveAnswer.refused(DriveWords.PAUSED))
+      return
+    }
     val answer = try {
       stepInFlight = true
       when (request.tool) {
@@ -275,7 +359,7 @@ class DriveController(
 
   private suspend fun act(drive: DriveInfo, args: JsonObject): DriveAnswer {
     val action = Action.of(args) ?: return DriveAnswer.refused(DriveWords.UNKNOWN)
-    if (action.line.isNotEmpty() && (_state.value as? DriveState.On)?.drive?.id == drive.id) set(DriveState.On(drive, action.line))
+    (_state.value as? DriveState.On)?.takeIf { it.drive.id == drive.id && !it.paused && action.line.isNotEmpty() }?.let { set(it.copy(caption = action.line)) }
     val acted = host.act(action)
     // Every answer carries the screen after the step.
     val after = host.look(tree = false, diagnostics = false)
@@ -301,9 +385,10 @@ object DriveWords {
   val SWIPED: String get() = Words.Drive.swiped
   val WENT_BACK: String get() = Words.Drive.wentBack
   val DONE: String get() = Words.Drive.done
+  val PAUSED: String get() = Words.Drive.paused
 
   val DRIVE_CARD: String get() = Words.Drive.cardTitle
-  val DRIVE_NOTE: String get() = Words.Drive.cardNote
+  val DRIVE_NOTE: String get() = Words.Drive.cardNotePauses
   val WHAT_I_DID: String get() = Words.Drive.whatIDid
   val NO_STEPS: String get() = Words.Drive.noSteps
 
@@ -359,3 +444,9 @@ class DriveHostProxy : DriveHost {
   }
 }
 
+/** A clear takeover: the person's third tap on a control since the drive paused, with no Continue between. */
+const val TAKEOVER_TAPS = 3
+
+/** A pause tafs cloud didn't take is posted again after this, doubling each time up to [PAUSE_RETRY_MAX_MS]. */
+const val PAUSE_RETRY_FIRST_MS = 500L
+const val PAUSE_RETRY_MAX_MS = 8_000L

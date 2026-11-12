@@ -73,8 +73,9 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * Coach drives the app on Android (docs/drive.md), on a device: the person's own input ends a drive and isn't delivered, on the
- * screen, a dialog and a sheet's scrim; their back stops it; Coach's tap reaches a sheet's button but never a confirming one; the
+ * Coach drives the app on Android (docs/drive.md), on a device: the person's own input pauses a drive and is delivered, on the
+ * screen, a dialog, a sheet's scrim and outside a menu; their third tap on a control, their typing and their back end it as
+ * `owner_took_over`; a pause stops Coach's step; Coach's tap reaches a sheet's button but never a confirming one; the
  * screenshot holds a dialog over the screen with a secret field blanked; Coach types into a focused field; and Coach can't approve
  * its own drive. The person's input goes through the system's real input path (the instrumentation injects it), Coach's through the host.
  */
@@ -85,6 +86,8 @@ class DriveEmulatorTest {
 
   private val instrumentation = InstrumentationRegistry.getInstrumentation()
   private val ends = mutableListOf<String>()
+  private var pauses = 0
+  private var taps = 0
   private var runNow = 0
   private var approved = 0
   private var sheetTaps = 0
@@ -97,7 +100,12 @@ class DriveEmulatorTest {
 
   @Before fun drive() {
     ends.clear()
+    pauses = 0
+    taps = 0
     DriveInput.personsInput = { why -> ends += why }
+    // As the controller does: the touch pauses, and the third tap on a control since then takes over.
+    DriveInput.personsTouch = { pauses++ }
+    DriveInput.personsTap = { onControl -> if (onControl && ++taps >= 3) ends += "owner_took_over" }
     DriveInput.coachStep = { false }
   }
 
@@ -107,6 +115,10 @@ class DriveEmulatorTest {
       DriveInput.unguard(rule.activity.window)
     }
     DriveInput.personsInput = {}
+    DriveInput.personsTouch = {}
+    DriveInput.personsTap = {}
+    DriveInput.isControlAt = { _, _ -> false }
+    DriveInput.isPaused = { false }
   }
 
   private fun show() {
@@ -138,7 +150,8 @@ class DriveEmulatorTest {
     rule.waitForIdle()
     instrumentation.runOnMainSync {
       DriveInput.guard(rule.activity.window)
-      host = AndroidDriveHost(rule.activity, DriveOverlay(rule.activity, 0xFFFFB300.toInt()) {}, { null })
+      host = AndroidDriveHost(rule.activity, DriveOverlay(rule.activity, 0xFFFFB300.toInt(), stop = {}), { null })
+      DriveInput.isControlAt = host::controlAt
     }
   }
 
@@ -173,34 +186,38 @@ class DriveEmulatorTest {
     return ((b[0] + b[2] / 2) * factor).toFloat() to ((b[1] + b[3] / 2) * factor).toFloat()
   }
 
-  // 1. The person's input takes over, and isn't delivered.
+  // 1. The person's input pauses the drive, and is theirs: it's delivered.
 
-  @Test fun thePersonsTapOnTheScreenEndsTheDriveAndIsntDelivered() {
+  @Test fun thePersonsTapOnTheScreenPausesTheDriveAndIsDelivered() {
     show(); driving()
     val (x, y) = screenMiddle("Run now")
     personTaps(x, y)
-    assertEquals(listOf("owner_took_over"), ends.distinct())
-    assertEquals("the person's tap never reached Run now", 0, runNow)
+    assertTrue("paused", pauses > 0)
+    assertEquals("the person's tap reached Run now", 1, runNow)
+    assertTrue("one tap ends nothing", ends.isEmpty())
   }
 
-  @Test fun thePersonsTapOnADialogEndsTheDriveAndIsntDelivered() {
+  @Test fun thePersonsTapOnADialogPausesTheDriveAndIsDelivered() {
     show(); dialogOpen = true; settle(); driving()
     val (x, y) = screenMiddle("Cancel")
     personTaps(x, y)
-    assertEquals(listOf("owner_took_over"), ends.distinct())
-    assertTrue("Cancel never ran", dialogOpen)
+    settle()
+    assertTrue(pauses > 0)
+    assertFalse("Cancel ran", dialogOpen)
+    assertTrue(ends.isEmpty())
   }
 
-  @Test fun thePersonsTapOnASheetsScrimEndsTheDriveAndIsntDelivered() {
+  @Test fun thePersonsTapOnASheetsScrimPausesTheDriveAndClosesIt() {
     show(); sheetOpen = true; settle(); driving()
     // Above the sheet, on its scrim.
     personTaps(rule.activity.window.decorView.width / 2f, 200f)
     settle()
-    assertEquals(listOf("owner_took_over"), ends.distinct())
-    assertTrue("the scrim tap was caught before the sheet could close", sheetOpen)
+    assertTrue(pauses > 0)
+    assertFalse("the scrim tap closed the sheet", sheetOpen)
+    assertTrue(ends.isEmpty())
   }
 
-  @Test fun thePersonsTapOutsideAMenuEndsTheDriveEvenDuringCoachsStep() {
+  @Test fun thePersonsTapOutsideAMenuPausesTheDriveEvenDuringCoachsStep() {
     show()
     val (_, y) = screenMiddle("Run now")
     val x = rule.activity.window.decorView.width * 0.9f
@@ -209,8 +226,43 @@ class DriveEmulatorTest {
     DriveInput.coachStep = { true }
     personTaps(x, y)
     settle()
+    assertTrue(pauses > 0)
+    assertFalse("the menu folded", menuOpen)
+    assertTrue(ends.isEmpty())
+  }
+
+  @Test fun aThirdTapOnAControlTakesOverButEmptySpaceCountsForNothing() {
+    show(); driving()
+    // Empty space, low on the screen, below everything shown.
+    val decor = rule.activity.window.decorView
+    repeat(3) { personTaps(decor.width / 2f, decor.height * 0.8f) }
+    assertTrue("a touch on empty space counts for nothing", ends.isEmpty())
+    val (x, y) = screenMiddle("Run now")
+    repeat(3) { personTaps(x, y) }
     assertEquals(listOf("owner_took_over"), ends.distinct())
-    assertEquals("the tap outside the menu never reached Run now", 0, runNow)
+    assertEquals("every tap of theirs was delivered", 3, runNow)
+  }
+
+  @Test fun thePersonsTypingIsKeptAndTakesOver() {
+    show(); driving()
+    val (x, y) = screenMiddle("Note")
+    personTaps(x, y)
+    assertTrue("tapping into a field only pauses", ends.isEmpty())
+    instrumentation.sendStringSync("hi")
+    rule.waitForIdle()
+    assertEquals(listOf("owner_took_over"), ends.distinct())
+    assertEquals("hi", text)
+  }
+
+  @Test fun aPauseStopsCoachsStepBeforeItsTouch() = runBlocking {
+    show(); driving()
+    DriveInput.isPaused = { true }
+    val button = tree().getValue("Run now").first
+    val tapped = host.act(Action.Tap(Target.Element(button), "Tapping Run now"))
+    rule.waitForIdle()
+    assertFalse(tapped.done)
+    assertEquals(DriveWords.PAUSED, tapped.line)
+    assertEquals("nothing was dispatched", 0, runNow)
   }
 
   // The person sees the drive: the border and the caption are windows on screen while it's on, and the end's words after.
@@ -269,14 +321,42 @@ class DriveEmulatorTest {
     assertEquals(DriveWords.tapped("Refunds"), tapped.line)
   }
 
-  // 2. The person's back stops it.
+  // 2. The person's back is a clear takeover.
 
-  @Test fun thePersonsBackStopsTheDrive() {
+  @Test fun thePersonsBackTakesOver() {
     show(); driving()
-    instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
-    rule.waitForIdle()
-    assertEquals(listOf("stopped"), ends.distinct())
-    assertFalse("the screen didn't go back", rule.activity.isFinishing)
+    // The test's own screen has nowhere to go back to: its back is recorded instead of leaving.
+    var wentBack = false
+    DriveInput.personsBack = { wentBack = true }
+    try {
+      instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
+      rule.waitForIdle()
+      assertEquals(listOf("owner_took_over"), ends.distinct())
+      assertTrue("the back was the person's: it went back", wentBack || rule.activity.isFinishing)
+    } finally {
+      DriveInput.personsBack = {}
+    }
+  }
+
+  @Test fun pausedTheCaptionReadsPausedWithContinueAndStop() {
+    show()
+    val drive = DriveInfo("d1", task = "Run Chargebacks")
+    try {
+      instrumentation.runOnMainSync { host.show(DriveState.On(drive, paused = true)) }
+      instrumentation.waitForIdleSync()
+      var caption: android.widget.LinearLayout? = null
+      instrumentation.runOnMainSync {
+        caption = WindowInspector.getGlobalWindowViews().filter { DriveOverlay.isOverlay(it) && it.isAttachedToWindow }
+          .filterIsInstance<android.widget.LinearLayout>().singleOrNull()
+      }
+      val bar = caption!!
+      assertEquals(DriveWords.PAUSED, (bar.getChildAt(0) as android.widget.TextView).text.toString())
+      assertEquals(android.view.View.VISIBLE, bar.getChildAt(1).visibility)
+      assertEquals(android.view.View.VISIBLE, bar.getChildAt(2).visibility)
+    } finally {
+      instrumentation.runOnMainSync { host.show(DriveState.Off) }
+      instrumentation.waitForIdleSync()
+    }
   }
 
   // 3. Coach's tap reaches a sheet's button; a confirming control is refused before anything is dispatched.

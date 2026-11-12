@@ -346,7 +346,12 @@ export type ToolAnswer = Record<string, unknown>;
  * reads it. `kept` is what a retry of the same operation gets: never the image again.
  */
 export class Rich {
-  constructor(readonly content: Array<Record<string, unknown>>, readonly isError: boolean, readonly kept: string) {}
+  /**
+   * `structured` goes out as the result's `structuredContent`, which KIFF's gateway reads for a
+   * wait (`pending`, `wait_for`, `timeout_s`): the gateway alone decides whether a run parks on it.
+   */
+  constructor(readonly content: Array<Record<string, unknown>>, readonly isError: boolean, readonly kept: string,
+    readonly structured?: Record<string, unknown>) {}
 }
 
 /** What a tool call acts with: the account, Coach, and where a task's end is announced. */
@@ -563,7 +568,7 @@ async function callOnce(name: unknown, tool: ToolDef | undefined, rawArgs: unkno
       ...(session ? { session } : {}),
     });
     if (out instanceof Rich) {
-      answer = { content: out.content, isError: out.isError };
+      answer = { content: out.content, isError: out.isError, ...(out.structured ? { structuredContent: out.structured } : {}) };
       keep = text(out.kept, out.isError);
       if (out.isError) outcome = "done_with_error";
     } else answer = text(out);

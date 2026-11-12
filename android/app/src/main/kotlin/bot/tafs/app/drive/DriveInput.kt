@@ -27,7 +27,9 @@ import androidx.compose.ui.window.DialogWindowProvider
 /**
  * Whose input it is while Coach drives (docs/drive.md, "How each platform tells the person's input from Coach's"). Coach's
  * input is only what the app dispatches itself, right then, matched by the down time it created; anything else is the
- * person's. It isn't delivered, and it ends the drive: `owner_took_over`, or `stopped` for their back.
+ * person's. It pauses the drive, and is delivered as usual (docs/drive.md, "When the person touches the app"). A clear
+ * takeover ends it as `owner_took_over`: their back, their typing in a field, or their third tap on a control since the
+ * pause. Their touch on the Coach button ends it as `stopped`.
  *
  * Every window of the app is guarded: the activity's, and each dialog's and sheet's ([DriveWindow], through the wrappers in
  * DriveWindows.kt), whose `Window.Callback` is wrapped, so a touch on a sheet's scrim is caught before it's delivered too. A
@@ -43,6 +45,26 @@ object DriveInput {
   /** Ends the drive for the person's input, with why: set by the app while a drive is on. */
   @Volatile
   var personsInput: (String) -> Unit = {}
+
+  /** Pauses the drive for the person's touch, key or gesture: set by the app while a drive is on. */
+  @Volatile
+  var personsTouch: () -> Unit = {}
+
+  /** One of the person's taps ended, true when it landed on a control: counted toward a takeover. */
+  @Volatile
+  var personsTap: (Boolean) -> Unit = {}
+
+  /** Whether a screen point is on a control that acts (a click action), by the same hit-test Coach's touches use. */
+  @Volatile
+  var isControlAt: (Int, Int) -> Boolean = { _, _ -> false }
+
+  /** Whether the person has paused the drive: Coach's gesture under way stops before its next event. */
+  @Volatile
+  var isPaused: () -> Boolean = { false }
+
+  /** The person's own back, once it has ended the drive: the topmost window goes back, or the app's first screen leaves. */
+  @Volatile
+  var personsBack: () -> Unit = {}
 
   /** Whether one of Coach's steps is being done now: what a field's change and a dismissal are checked against. */
   @Volatile
@@ -73,24 +95,38 @@ object DriveInput {
   /** Whether [event] is one the app is dispatching for Coach right now. */
   fun isCoachs(event: MotionEvent): Boolean = acting > 0 && event.downTime == coachDown
 
-  /** A touch a window got: true to deliver it; false when it's the person's during a drive, which ends it. */
+  /**
+   * A touch a window got: true to deliver it. The person's touch during a drive pauses it and is delivered, so a button acts, a
+   * row opens, a field takes focus. Their tap is counted when its up lands on a control. On the Coach button, it's their Stop,
+   * and isn't delivered.
+   */
   fun admit(event: MotionEvent): Boolean {
     if (!driving || isCoachs(event)) return true
-    // On the Coach button, the person's touch is their Stop; anywhere else, they took over.
-    val onStop = stopZones.values.any { it.contains(event.rawX.toInt(), event.rawY.toInt()) }
-    personsInput(if (onStop) "stopped" else "owner_took_over")
-    return false
+    if (stopZones.values.any { it.contains(event.rawX.toInt(), event.rawY.toInt()) }) {
+      personsInput("stopped")
+      return false
+    }
+    when (event.actionMasked) {
+      MotionEvent.ACTION_DOWN -> personsTouch()
+      MotionEvent.ACTION_UP -> personsTap(isControlAt(event.rawX.toInt(), event.rawY.toInt()))
+    }
+    return true
   }
 
   /** Where the Coach button is on screen: a touch there during a drive is the person's Stop. */
   val stopZones = mutableMapOf<Any, Box>()
 
-  /** A key a window got: the person's back stops the drive, any other key of theirs takes over. Volume keys stay theirs. */
+  /**
+   * A key a window got, always delivered: the person's back is a clear takeover and goes back; any other key of theirs pauses
+   * the drive (typing in a field ends it, through [driveTyped]). Volume and media keys stay theirs and pause nothing.
+   */
   fun admit(event: KeyEvent): Boolean {
     if (!driving || acting > 0) return true
     if (KeyEvent.isMediaSessionKey(event.keyCode) || event.keyCode in VOLUME_KEYS) return true
-    personsInput(if (event.keyCode == KeyEvent.KEYCODE_BACK) "stopped" else "owner_took_over")
-    return false
+    if (event.action == KeyEvent.ACTION_DOWN) {
+      if (event.keyCode == KeyEvent.KEYCODE_BACK) personsInput("owner_took_over") else personsTouch()
+    }
+    return true
   }
 
   private val VOLUME_KEYS = setOf(KeyEvent.KEYCODE_VOLUME_UP, KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_MUTE)
@@ -150,12 +186,15 @@ object DriveInput {
 
     /**
      * From Android 13, a back gesture isn't a key: it goes to the window's back dispatcher. Ours sits above every other there
-     * while a drive is on, so the person's back stops the drive before any screen goes back. Coach's back goes to the app's
-     * own dispatcher directly, never through this one.
+     * while a drive is on, so the person's back ends the drive (a clear takeover) before anything goes back; then it goes back
+     * as theirs ([personsBack]). Coach's back goes to the app's own dispatcher directly, never through this one.
      */
     fun backOn(window: Window) {
       if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU || backCallback != null) return
-      val cb = OnBackInvokedCallback { personsInput("stopped") }
+      val cb = OnBackInvokedCallback {
+        personsInput("owner_took_over")
+        personsBack()
+      }
       window.onBackInvokedDispatcher.registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_OVERLAY, cb)
       backCallback = cb
     }
@@ -208,48 +247,51 @@ fun DriveWindow(dismiss: (() -> Unit)? = null) {
 }
 
 /**
- * A dialog's or sheet's dismissal (a scrim tap, a swipe down, back) that Coach didn't make, during a drive, is the person's: it
- * ends the drive. The dismissal itself still happens: what the person did is theirs.
+ * A dialog's or sheet's dismissal (a scrim tap, a swipe down) that Coach didn't make, during a drive, is the person's: if one
+ * gets past the guard, it pauses the drive. The dismissal itself still happens: what the person did is theirs.
  */
 fun driveDismissal(onDismissRequest: () -> Unit): () -> Unit = {
-  if (DriveInput.driving && !DriveInput.coachIsActing && !DriveInput.coachStep()) DriveInput.personsInput("owner_took_over")
+  if (DriveInput.driving && !DriveInput.coachIsActing && !DriveInput.coachStep()) DriveInput.personsTouch()
   onDismissRequest()
 }
 
 /**
  * A menu's dismissal. Its popup has no `Window` to guard, so the person's tap outside it reaches only this, and this runs inside
  * the touch's own dispatch: Coach's outside tap is [DriveInput.coachIsActing] then. So no step window is needed here, and a tap
- * outside that isn't Coach's ends the drive even while one of Coach's steps is under way.
+ * outside that isn't Coach's pauses the drive and folds the menu, even while one of Coach's steps is under way (that step
+ * stops).
  */
 fun driveMenuDismissal(onDismissRequest: () -> Unit): () -> Unit = {
-  if (DriveInput.driving && !DriveInput.coachIsActing) DriveInput.personsInput("owner_took_over")
+  if (DriveInput.driving && !DriveInput.coachIsActing) DriveInput.personsTouch()
   onDismissRequest()
 }
 
 /**
- * The person's input inside a window with no `Window` of its own (a menu's popup): caught on its way in, before any control
- * has it, and not delivered.
+ * The person's input inside a window with no `Window` of its own (a menu's popup): seen on its way in, before any control has
+ * it. It pauses the drive and is delivered; an item tapped counts toward a takeover, as a control.
  */
 fun Modifier.driveGuard(): Modifier = pointerInput(Unit) {
   awaitPointerEventScope {
     while (true) {
       val event = awaitPointerEvent(PointerEventPass.Initial)
       if (!DriveInput.driving) continue
-      val motion = event.motionEvent
-      if (motion != null && DriveInput.isCoachs(motion)) continue
-      event.changes.forEach { it.consume() }
-      DriveInput.personsInput("owner_took_over")
+      val motion = event.motionEvent ?: continue
+      if (DriveInput.isCoachs(motion)) continue
+      when (motion.actionMasked) {
+        MotionEvent.ACTION_DOWN -> DriveInput.personsTouch()
+        MotionEvent.ACTION_UP -> DriveInput.personsTap(DriveInput.isControlAt(motion.rawX.toInt(), motion.rawY.toInt()))
+      }
     }
   }
 }
 
 /**
  * Every text field's change goes through this (docs/drive.md, "Typing"): during a drive, a change while none of Coach's steps
- * is under way is the person's. It isn't taken, and it ends the drive.
+ * is under way is the person's. It's kept, and it ends the drive: typing is a clear takeover.
  */
 fun <T> driveTyped(onValueChange: (T) -> Unit): (T) -> Unit = { value ->
-  if (!DriveInput.driving || DriveInput.coachIsActing || DriveInput.coachStep()) onValueChange(value)
-  else DriveInput.personsInput("owner_took_over")
+  onValueChange(value)
+  if (DriveInput.driving && !DriveInput.coachIsActing && !DriveInput.coachStep()) DriveInput.personsInput("owner_took_over")
 }
 
 // MARK: The marks

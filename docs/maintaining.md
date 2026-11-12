@@ -30,9 +30,46 @@ sees against what the server accepts and what the vendor actually did. For
 agent instructions, preserve the existing eval/ref/rollout gate in kiff/agents;
 a green unit test is not a completed rollout.
 
+## Merging by itself
+
+A pull request that needs no judgment merges by itself, so an app's change doesn't wait on a
+maintainer (`.github/workflows/automerge.yml`, `scripts/automerge.py`). This isn't blanket
+auto-merge: every condition below must hold, and anything else waits for a maintainer, as before.
+
+- **It's open, ready for review, against main, from a branch of this repository,** and its author
+  is a listed account (`.github/automerge.json`). A fork's pull request never merges by itself.
+- **Every file it touches is in one lane's paths:** `ios/` and `docs/ios-app.md`, or `android/` and
+  `docs/android-app.md`. Its own changelog fragment may come with it. One file anywhere else
+  (tafs cloud, the shared strings, a workflow, a contract in `docs/`, this rule itself) and it waits.
+- **A listed reviewer other than its author approved its latest commit,** and none of them has
+  changes requested. A push after the approval needs a new one. Authors and reviewers are listed
+  by GitHub login, so "other than its author" means another login.
+- **Every check on its latest commit finished and passed,** and GitHub says it can be merged. When
+  it touches an app's code, that app's own tests must be among them and have succeeded (`required`
+  in `.github/automerge.json`: iOS's `test`; Android's `test` and `ui`). They start later than the
+  quick checks, so a commit with only those green hasn't been tested yet, and waits.
+- **Nothing holds it:** the `hold-merge` label on the pull request, or the repository's
+  `AUTOMERGE_HOLD` variable set to any words (a release being cut, an eval running). With
+  `AUTOMERGE_EVAL_REPO` and `AUTOMERGE_EVAL_WORKFLOW` set, nothing merges while that workflow is
+  running or queued there. If it can't be read, that counts as running.
+
+It's off until the repository's `AUTOMERGE` variable is `on`. The workflow runs main's copy of the
+rule every ten minutes and when a check workflow finishes, never a pull request's copy, and it never
+checks out a pull request's code. The merge is a squash, made as the organization's `kiff-automerge`
+app (its client id in the `AUTOMERGE_APP_CLIENT_ID` variable, its private key in the
+`AUTOMERGE_APP_KEY` secret), with a token that lasts one run and reaches only this repository. A
+personal token in `AUTOMERGE_TOKEN` is the fallback while the app isn't set. It isn't the workflow's
+own token, because a merge made with that starts no workflow on main, so main's tests wouldn't run on
+it. Run by hand, it only says what would merge and why the rest waits.
+
+Adding a lane, an author or a reviewer is a change to `.github/automerge.json`, which never merges by
+itself. The rule's tests break each condition in turn (`scripts/test_automerge.py`).
+
 ## Before a release
 
 1. Resolve release-blocking findings or document the evidence that rules them out.
+   Set the repository's `AUTOMERGE_HOLD` variable while the release is cut: every merge into
+   `ios/` starts a run on main, and the archive shouldn't wait behind one. Clear it after.
 2. Fold the pull requests' entries in (`python3 scripts/changelog.py fold
    --release "<version>"`, [changes/README.md](../changes/README.md)), then
    review the release's entries in CHANGELOG.md; include behavior,

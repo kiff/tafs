@@ -270,6 +270,7 @@ class AndroidDriveHost(
   // MARK: Acting
 
   override suspend fun act(action: Action): Acted = withContext(Dispatchers.Main.immediate) {
+    if (DriveInput.isPaused()) return@withContext Acted.refused(DriveWords.PAUSED)
     val acted = when (action) {
       is Action.Tap -> touch(action.target, longPress = false)
       is Action.LongPress -> touch(action.target, longPress = true)
@@ -279,10 +280,36 @@ class AndroidDriveHost(
       is Action.Back -> if (DriveInput.back()) Acted(true, DriveWords.WENT_BACK) else Acted.refused(DriveWords.NOTHING_BACK)
       is Action.Done -> Acted(true, DriveWords.DONE)
     }
-    // The app settles before the screen is looked at again; the keyboard stays down (Coach types through the field).
+    // The app settles before the screen is looked at again; the keyboard stays down (Coach types through the field). Paused
+    // meanwhile, the keyboard is the person's: a field they tapped keeps it.
     delay(SETTLE_MS)
-    hideKeyboard()
+    if (!DriveInput.isPaused()) hideKeyboard()
     acted
+  }
+
+  override fun putKeyboardAway() {
+    main.post {
+      // The field keeps its text and loses focus, so nothing it commits after Coach's step reads as the person's typing.
+      windows().forEach { (root, _) -> root.findFocus()?.clearFocus() }
+      hideKeyboard()
+    }
+  }
+
+  /** Whether a screen point is on a control that acts: a button, a row, a toggle, a link, a tab. A field or empty space isn't. */
+  fun controlAt(x: Int, y: Int): Boolean {
+    val (root, _, _) = topmostAt(windows(), x, y) ?: return false
+    var found = false
+    for (owner in composeRoots(root)) {
+      fun visit(n: SemanticsNode) {
+        if (found) return
+        if (!boxOf(n).contains(x, y)) { n.children.forEach(::visit); return }
+        val c = n.config
+        if (c.contains(SemanticsActions.OnClick) || c.contains(SemanticsActions.OnLongClick)) found = true
+        n.children.forEach(::visit)
+      }
+      runCatching { visit(owner.semanticsOwner.rootSemanticsNode) }
+    }
+    return found
   }
 
   /** A point Coach named: the screen's, from the last screenshot's pixels or an element's middle; null when it's gone. */
@@ -337,6 +364,8 @@ class AndroidDriveHost(
     if (under.confirm) return Acted.refused(DriveWords.CONFIRM)
     overlay.dot(x, y)
     delay(DOT_MS)
+    // Paused while the dot showed: nothing was dispatched, so the step is refused.
+    if (DriveInput.isPaused()) return Acted.refused(DriveWords.PAUSED)
     val hold = if (longPress) ViewConfiguration.getLongPressTimeout() + 150L else 60L
     gesture(under.root, under.box, listOf(x to y), hold)
     val touched = under.words?.let { Touched(it, currentTaf()) }
@@ -350,6 +379,7 @@ class AndroidDriveHost(
     if (under.confirm) return Acted.refused(DriveWords.CONFIRM)
     overlay.dot(x, y)
     delay(DOT_MS)
+    if (DriveInput.isPaused()) return Acted.refused(DriveWords.PAUSED)
     val steps = (action.ms / FRAME_MS).toInt().coerceAtLeast(2)
     val path = (0..steps).map { i -> (x + (tx - x) * i / steps) to (y + (ty - y) * i / steps) }
     gesture(under.root, under.box, path, FRAME_MS)
@@ -358,7 +388,8 @@ class AndroidDriveHost(
 
   /**
    * One gesture, down to up, dispatched to [root] alone: the window chosen at the down gets the rest of it, as a person's finger
-   * would. Cut short (the drive ended), the window is told the gesture was cancelled.
+   * would. Cut short (the drive ended, or the person paused it), the window is told the gesture was cancelled before its next
+   * event.
    */
   private suspend fun gesture(root: View, box: Box, path: List<Pair<Int, Int>>, stepMs: Long) {
     val down = SystemClock.uptimeMillis()
@@ -377,8 +408,10 @@ class AndroidDriveHost(
       if (path.size == 1) delay(stepMs)
       for (p in path.drop(1)) {
         delay(stepMs)
+        if (DriveInput.isPaused()) return
         send(event(MotionEvent.ACTION_MOVE, p))
       }
+      if (DriveInput.isPaused()) return
       send(event(MotionEvent.ACTION_UP, path.last()))
       finished = true
     } finally {

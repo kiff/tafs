@@ -1043,7 +1043,9 @@
     <string name="drive_cant_scroll">Impossible de faire défiler %1$s ici</string>
     <string name="drive_caption">Coach pilote : %1$s</string>
     <string name="drive_card_note">Coach touche et écrit dans cette app sous vos yeux, pour cette demande uniquement. Il ne confirme jamais rien. Touchez l\'app ou touchez Arrêter pour reprendre la main.</string>
+    <string name="drive_card_note_pauses">Coach touche et écrit dans cette app sous vos yeux, pour cette demande uniquement. Il ne confirme jamais rien. Touchez l\'app pour le mettre en pause, ou touchez Arrêter pour terminer.</string>
     <string name="drive_card_note_scrolls">Coach touche, écrit et fait défiler dans cette app sous vos yeux. Il ne confirme jamais rien. Touchez l\'app ou touchez Arrêter pour reprendre la main.</string>
+    <string name="drive_card_note_scrolls_pauses">Coach touche, écrit et fait défiler dans cette app sous vos yeux. Il ne confirme jamais rien. Touchez l\'app pour le mettre en pause, ou touchez Arrêter pour terminer.</string>
     <string name="drive_card_title">Coach demande à piloter l\'app</string>
     <string name="drive_coach_drove_app">Coach a piloté l\'app · %1$s</string>
     <string name="drive_declined_line">Pas maintenant : Coach n\'a pas piloté l\'app</string>
@@ -1055,7 +1057,7 @@
     <string name="drive_ended_left_app">L\'app a quitté l\'écran, Coach s\'est donc arrêté</string>
     <string name="drive_ended_locked">Le téléphone s\'est verrouillé, Coach s\'est donc arrêté</string>
     <string name="drive_ended_other">Coach s\'est arrêté</string>
-    <string name="drive_ended_owner_took_over">Vous avez touché l\'app, elle est à vous maintenant</string>
+    <string name="drive_ended_owner_took_over">Vous avez pris la main, alors Coach vous laisse continuer</string>
     <string name="drive_ended_replaced">Un autre pilotage a commencé</string>
     <string name="drive_ended_signed_out">Vous vous êtes déconnecté, Coach s\'est donc arrêté</string>
     <string name="drive_ended_stopped">Vous avez arrêté Coach</string>
@@ -1071,6 +1073,7 @@
     <string name="drive_not_on_screen">Ce n\'est pas à l\'écran maintenant</string>
     <string name="drive_nothing_back">Rien vers quoi revenir</string>
     <string name="drive_nothing_there">Rien que Coach puisse utiliser ici</string>
+    <string name="drive_paused">En pause</string>
     <string name="drive_scrolled">A fait défiler %1$s</string>
     <string name="drive_step_failed">Cette étape a échoué</string>
     <string name="drive_stop">Arrêter Coach</string>

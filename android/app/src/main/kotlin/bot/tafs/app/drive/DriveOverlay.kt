@@ -21,23 +21,32 @@ import android.widget.TextView
 /**
  * What the person sees while Coach drives (docs/drive.md): the whole app's border glowing, a one-line caption above the tab bar
  * with Stop, and a dot where Coach is about to touch. Each is a window of its own, so the capture and Coach's touches leave them
- * out. The glow and the dot take no touch; the caption takes only its own, and its Stop ends the drive as `stopped`.
+ * out. The glow and the dot take no touch; the caption takes only its own, and its Stop ends the drive as `stopped`. Paused by
+ * the person's touch, the border dims and the caption reads "Paused" with Continue ([resume]) and Stop.
  */
-class DriveOverlay(private val activity: Activity, private val accent: Int, private val stop: () -> Unit) {
+class DriveOverlay(
+  private val activity: Activity,
+  private val accent: Int,
+  private val stop: () -> Unit,
+  private val resume: () -> Unit = {},
+) {
   private val wm = activity.getSystemService(WindowManager::class.java)
   private val main = Handler(Looper.getMainLooper())
   private var glow: Glow? = null
   private var caption: LinearLayout? = null
   private var captionText: TextView? = null
   private var stopButton: TextView? = null
+  private var continueButton: TextView? = null
 
   fun show(state: DriveState) = main.post {
     when (state) {
       is DriveState.On -> {
         if (glow == null) addGlow()
         if (caption == null) addCaption()
-        captionText?.text = state.caption ?: Words.Drive.caption(task = state.drive.task).take(60)
+        captionText?.text = if (state.paused) Words.Drive.paused else state.caption ?: Words.Drive.caption(task = state.drive.task).take(60)
+        continueButton?.visibility = if (state.paused) View.VISIBLE else View.GONE
         stopButton?.visibility = View.VISIBLE
+        glow?.dimmed = state.paused
         raise()
       }
       is DriveState.Over -> {
@@ -47,6 +56,7 @@ class DriveOverlay(private val activity: Activity, private val accent: Int, priv
         if (caption == null) addCaption()
         captionText?.text = state.words.take(80)
         stopButton?.visibility = View.GONE
+        continueButton?.visibility = View.GONE
         main.postDelayed({ if (glow == null) { caption?.let(::remove); caption = null } }, OVER_MS)
       }
       DriveState.Off -> {
@@ -105,6 +115,14 @@ class DriveOverlay(private val activity: Activity, private val accent: Int, priv
       ellipsize = android.text.TextUtils.TruncateAt.END
       layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
     }
+    val continueView = TextView(activity).apply {
+      text = Words.Common.`continue`
+      setTextColor(accent)
+      setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+      setPadding(dp(14), dp(6), dp(4), dp(6))
+      visibility = View.GONE
+      setOnClickListener { resume() }
+    }
     val stopView = TextView(activity).apply {
       text = bot.tafs.app.model.Words.Chat.stop
       setTextColor(accent)
@@ -120,13 +138,14 @@ class DriveOverlay(private val activity: Activity, private val accent: Int, priv
       setPadding(dp(16), dp(8), dp(12), dp(8))
       background = GradientDrawable().apply { cornerRadius = dp(18).toFloat(); setColor(Color.argb(0xE6, 0x1F, 0x1E, 0x1B)) }
       addView(line)
+      addView(continueView)
       addView(stopView)
     }
     val p = params(touchable = true).apply {
       width = WindowManager.LayoutParams.MATCH_PARENT
       horizontalMargin = 0.04f
     }
-    added(runCatching { wm.addView(bar, p) }, "caption").onSuccess { caption = bar; captionText = line; stopButton = stopView }
+    added(runCatching { wm.addView(bar, p) }, "caption").onSuccess { caption = bar; captionText = line; stopButton = stopView; continueButton = continueView }
   }
 
   /** A window the system refused is in the drive's diagnostics, never dropped without a word. */
@@ -146,6 +165,10 @@ class DriveOverlay(private val activity: Activity, private val accent: Int, priv
     private val border = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; color = accent }
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = accent }
     private var pulse = 1f
+
+    /** Paused: the border dims, so Coach reads as waiting. */
+    var dimmed = false
+      set(value) { field = value; invalidate() }
     private var dotAt: Pair<Float, Float>? = null
     private val animator = ValueAnimator.ofFloat(0.45f, 1f).apply {
       duration = 1_600
@@ -171,7 +194,7 @@ class DriveOverlay(private val activity: Activity, private val accent: Int, priv
     override fun onDraw(canvas: Canvas) {
       val w = 4f * resources.displayMetrics.density
       border.strokeWidth = w
-      border.alpha = (pulse * 255).toInt()
+      border.alpha = (pulse * (if (dimmed) 90 else 255)).toInt()
       canvas.drawRect(w / 2, w / 2, width - w / 2, height - w / 2, border)
       dotAt?.let { (x, y) ->
         val r = 14f * resources.displayMetrics.density

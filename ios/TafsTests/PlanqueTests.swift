@@ -103,6 +103,72 @@ final class PlanqueTests: XCTestCase {
         XCTAssertEqual(SHA256.hash(data: canonical).map { String(format: "%02x", $0) }.joined(), Self.digest)
     }
 
+    /// The signed text in the person's language (v2): with `digest_v: 2`, the digest covers
+    /// `{"lang", "request", "text"}`, so the words shown and their language are what's signed. The
+    /// expected digest here was computed apart from this app (sorted-key JSON of strings, ints and
+    /// booleans, where JCS gives the same bytes).
+    static let v2Request = #"{"v":"planque.grant.v1","grant":"g_02","tenant":"t_01","server":"https://mcp.qonto.com/mcp","agent":"books","tools":[{"tool":"list_invoices","read_only":true}],"asked_by":"setup-agent","created_at":"2026-11-11T16:00:00Z"}"#
+    static let v2Text = "books pourra lire vos factures sur mcp.qonto.com"
+    static let v2Digest = "f1ca3ab371ecf97a82d134204e4931ef39ea474b7cd6a3e233b36f97499fbb32"
+
+    static func v2Grant(digest: String = PlanqueTests.v2Digest, lang: String? = "fr", text: String = PlanqueTests.v2Text, version: String = "2") -> String {
+        #"{"id":"g_02","status":"pending","text":"\#(text)",\#(lang.map { #""lang":"\#($0)","# } ?? "")"digest_v":\#(version),"digest":"\#(digest)","request":\#(v2Request),"audience":"https://planque.kiff.dev/mcp/t_01/g_02","vendor":"Qonto","events":[]}"#
+    }
+
+    func testTheV2DigestCoversTheWordsAndTheirLanguage() throws {
+        let covered = try XCTUnwrap(PlanqueClient.digestCovers(JCS.parse(Data(Self.v2Grant().utf8))))
+        XCTAssertEqual(String(decoding: try JCS.canonical(covered), as: UTF8.self),
+                       #"{"lang":"fr","request":{"agent":"books","asked_by":"setup-agent","created_at":"2026-11-11T16:00:00Z","grant":"g_02","server":"https://mcp.qonto.com/mcp","tenant":"t_01","tools":[{"read_only":true,"tool":"list_invoices"}],"v":"planque.grant.v1"},"text":"books pourra lire vos factures sur mcp.qonto.com"}"#)
+        // Without digest_v, the request alone, as before.
+        let v1 = try XCTUnwrap(PlanqueClient.digestCovers(JCS.parse(Data(#"{"id":"g_01","request":\#(Self.request)}"#.utf8))))
+        XCTAssertEqual(v1, try JCS.parse(Data(Self.request.utf8)))
+        // A version this app doesn't know, or v2 without its language: nothing is covered, so nothing matches.
+        XCTAssertNil(PlanqueClient.digestCovers(try JCS.parse(Data(Self.v2Grant(version: "3").utf8))))
+        XCTAssertNil(PlanqueClient.digestCovers(try JCS.parse(Data(Self.v2Grant(lang: nil).utf8))))
+    }
+
+    /// A v2 grant matches only with the words and language it was signed over; a v1 grant beside it
+    /// still matches as before, so a grant issued before the switch keeps working.
+    func testAV2GrantWhoseWordsOrLanguageChangedIsRefused() async throws {
+        let (_, planque, _) = clients()
+        planque.tenant = "t_01"
+        planque.signer = { _ in "sig" }
+        planque.deviceID = "dev_phone01"
+        func listed(_ v2: String) -> String { #"{"grants":[\#(grantJSON()),\#(v2)]}"# }
+
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, listed(Self.v2Grant()))
+        let both = try await planque.grants()
+        XCTAssertEqual(both.map(\.digestMatches), [true, true], "v1 and v2 side by side")
+
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, listed(Self.v2Grant(text: "books pourra lire et payer vos factures sur mcp.qonto.com")))
+        let reworded = try await planque.grants()
+        XCTAssertEqual(reworded.map(\.digestMatches), [true, false], "one changed word")
+        do { _ = try await planque.approve(reworded[1]); XCTFail("approved words that weren't signed") } catch {
+            XCTAssertEqual(error as? PlanqueClient.PlanqueError, .digestMismatch)
+        }
+
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, listed(Self.v2Grant(lang: "en")))
+        let relabelled = try await planque.grants()
+        XCTAssertEqual(relabelled.map(\.digestMatches), [true, false], "another language code")
+
+        // The digest_v marker with a v1 digest (planque's step 1 never sends that): refused, never guessed.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, listed(Self.v2Grant(digest: "adcf390e1971e767d02d3ca528a4156047bf6de4648b720f91b75b07bd6050b6")))
+        let marked = try await planque.grants()
+        XCTAssertEqual(marked.map(\.digestMatches), [true, false])
+    }
+
+    /// planque writes the words the person approves in their language: every request says which.
+    func testPlanqueIsToldThePersonsLanguages() async throws {
+        let (_, planque, _) = clients()
+        planque.tenant = "t_01"
+        planque.signer = { _ in "sig" }
+        planque.deviceID = "dev_phone01"
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+        _ = try await planque.grants()
+        let header = try XCTUnwrap(sent("GET", "planque.test", "/v1/accounts/t_01/grants").last?.value(forHTTPHeaderField: "Accept-Language"))
+        XCTAssertEqual(header, KIFFClient.acceptLanguage(KIFFClient.screenLanguages))
+    }
+
     func testSignedInCallback() {
         XCTAssertEqual(PlanqueClient.signedIn(from: URL(string: "tafs://planque/signed-in?tenant=t_01&grant=g_01&confirm=c0de")!),
                        PlanqueClient.SignedIn(tenant: "t_01", grant: "g_01", code: "c0de"))
