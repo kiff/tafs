@@ -988,6 +988,77 @@ describe("steer with hold: tafs cloud holds what the run doesn't take (docs/chat
   });
 });
 
+describe("Allow this from now on, the route (docs/allow-from-now-on.md)", () => {
+  /** The people's KIFF, plus the held call, allow-draft and the replay. */
+  function withHold(asked: string[]) {
+    const people = kiff({ ana: ME, viewer: VIEWER, approver: APPROVER, editor: EDITOR });
+    return (async (url: string, init?: RequestInit) => {
+      const path = String(url).replace(/^https:\/\/[^/]+/, "");
+      if (path.startsWith("/v1/me/card-exceptions/") || path.includes("/replay")) {
+        asked.push(`${init?.method ?? "GET"} ${path}${init?.body ? ` ${String(init.body)}` : ""}`);
+        if (path.endsWith("/allow-draft")) {
+          const round = JSON.parse(String(init?.body)).round === true;
+          return new Response(JSON.stringify({ draft: "drf_1", version: "v1", confirm_key: "critical",
+            changes: [{ mandate_id: "m_refunds", kind: "per_action", before: 15000, after: round ? 35000 : 32000, unit: "EUR", rounded: round }], ...(round ? {} : { round: { after: 35000 } }) }), { status: 200 });
+        }
+        if (path.endsWith("/replay")) return new Response(JSON.stringify({ would_allow: { calls: 0 } }), { status: 200 });
+        if (path.endsWith("/exc_1")) return new Response(JSON.stringify({ id: "exc_1", subject: "rae", kind: "hold", status: "held", title: "Refund a payment",
+          breaches: [{ mandate_id: "m_refunds", outcome: "per_action_exceeded", quantity: "sum(amount)", unit: "EUR", limit: 15000, draw: 32000 }] }), { status: 200 });
+        return new Response("{}", { status: 404 });
+      }
+      return people(url, init);
+    }) as typeof fetch;
+  }
+
+  it("answers the offer in the person's language, the exact figure by default", async () => {
+    const w = world();
+    const asked: string[] = [];
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_1/allow`, { token: "ana", body: {}, fetch: withHold(asked), headers: { "Accept-Language": "fr" } });
+    expect(r.status).toBe(200);
+    expect(r.body.offer.draft).toBe("drf_1");
+    expect(r.body.offer.changes[0].after).toBe(32000);
+    expect(r.body.offer.changes[0].words_after.replace(/\s/g, " ")).toBe("Refund a payment : jusqu'à 320 € par appel");
+    expect(r.body.offer.round.after).toBe(35000);
+    expect(r.body.offer.would.calls).toBe(0);
+    expect(r.body.offer.send_held).toBe(true);
+    expect(asked).toEqual(["GET /v1/me/card-exceptions/exc_1", "POST /v1/me/card-exceptions/exc_1/allow-draft {}", 'POST /v1/me/agent-drafts/drf_1/replay {"days":30}']);
+  });
+
+  it("asks KIFF for the rounded figure on {round: true}, and refuses a round that isn't true or false", async () => {
+    const w = world();
+    const asked: string[] = [];
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_1/allow`, { token: "ana", body: { round: true }, fetch: withHold(asked) });
+    expect(r.body.offer.changes[0]).toMatchObject({ after: 35000, rounded: true });
+    expect(asked[1]).toBe('POST /v1/me/card-exceptions/exc_1/allow-draft {"round":true}');
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_1/allow`, { token: "ana", body: { round: "yes" }, fetch: withHold([]) })).status).toBe(400);
+  });
+
+  it("is only for whoever manages the account's Cards, and asks KIFF nothing otherwise", async () => {
+    const w = world();
+    const asked: string[] = [];
+    for (const token of ["viewer", "approver"]) {
+      expect((await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_1/allow`, { token, body: {}, fetch: withHold(asked) })).status).toBe(403);
+    }
+    expect(asked).toEqual([]);
+  });
+
+  it("says why there's no offer for another taf's call, and 404 for a call KIFF doesn't know or another account's taf", async () => {
+    const w = world();
+    // Rae's held call, asked through a taf of the same account that isn't Rae.
+    const other: Taf = { id: "taf-cccc0000000000000000", name: "Cy", job: "refunds", kiffAgent: "cy", nameClaim: "c", created: "2026-10-15T09:00:00Z" };
+    w.tafs.held.set(`t_acme#${other.id}`, other);
+    const people = withHold([]);
+    const cy = (async (url: string, init?: RequestInit) => String(url).endsWith("/v1/me/access")
+      ? new Response(JSON.stringify({ agents: { rae: { use: true, manage: true }, cy: { use: true, manage: true } } }), { status: 200 })
+      : people(url, init)) as typeof fetch;
+    const r = await call(w, "POST", `/v1/tafs/${other.id}/holds/exc_1/allow`, { token: "ana", body: {}, fetch: cy });
+    expect(r.status).toBe(200);
+    expect(r.body).toEqual({ none: "not_yours", words: "This call belongs to another taf." });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/holds/exc_9/allow`, { token: "ana", body: {}, fetch: withHold([]) })).status).toBe(404);
+    expect((await call(w, "POST", `/v1/tafs/${MAX}/holds/exc_1/allow`, { token: "ana", body: {}, fetch: withHold([]) })).status).toBe(404);
+  });
+});
+
 describe("a held call answered (kiff/tafs#206)", () => {
   it("has the run that paused on it go on, by the held call, without waiting for KIFF's alert", async () => {
     const w = world();

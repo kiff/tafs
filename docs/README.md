@@ -16,6 +16,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [chat.md](chat.md) | A taf's chat: sending, the streamed answer, the work block, held calls in the chat, steering, Stop, chats and archives |
 | [coach.md](coach.md) | Coach mode: making a taf, connecting tools, improving a taf, versions, trials, and Coach's own tools |
 | [approvals.md](approvals.md) | Held calls: how they reach the owner, how an answer is signed, what happens next, halting |
+| [allow-from-now-on.md](allow-from-now-on.md) | A held call's third answer: the narrowest Card change that would have let it go, what it would have done, one signature (the contract) |
 | [languages.md](languages.md) | The eight languages, the glossary every surface uses, and how the person's language is chosen |
 | [store-listing.md](store-listing.md) | The Play Store listing in English and the seven other languages, each reviewed against the glossary |
 | [release-notes.md](release-notes.md) | What each Android release says in Play's "What's new", in the eight languages |
