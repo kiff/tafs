@@ -90,6 +90,13 @@ export const en = {
   work_stopped_declined: (t: When) => `Stopped at ${bare(t)}: the AI declined to continue`,
   work_failed: "It failed",
   work_failed_because: (why: string) => `It failed: ${why}`,
+  // A failed run, from kiff/agents' own words for it (work.ts, failedLine): never its raw text.
+  run_failed_error: "It stopped on an error. Nothing was done after it.",
+  run_failed_time: "It reached its time limit and stopped.",
+  run_failed_start: "It couldn't start, so nothing was done.",
+  run_failed_switching: "It didn't start: the taf was switching versions.",
+  run_failed_access: "It stopped: the person who asked may no longer use this taf.",
+  run_failed_halted: "It didn't go on: the taf is halted.",
   work_needs_you: "It needs you to look at it.",
   work_retry_at: (t: When, of: string) => `It stopped while it worked. Trying again at ${bare(t)}${of}.`,
   work_retry_soon: (of: string) => `It stopped while it worked. Trying again soon${of}.`,

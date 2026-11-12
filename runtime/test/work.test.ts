@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Run } from "../src/cloud/agents.js";
-import { requestOf, runFailure, skippedOf, summaryOf, timeIn, workOf } from "../src/cloud/work.js";
+import { failedLine, requestOf, runFailure, skippedOf, summaryOf, timeIn, workOf } from "../src/cloud/work.js";
 import { requestDetail } from "../src/cloud/request.js";
 
 const NOW = new Date("2026-10-30T12:00:00Z");
@@ -158,6 +158,21 @@ describe("the thread as one ordered list", () => {
 
 describe("a failed run's code", () => {
   const words = "Our AI provider isn't serving us right now, so this stopped. That's on our side, not yours: none of your credits were used. Try again a little later.";
+  // A French screen showed "Échec : the run failed": kiff/agents' own English words for a failed run.
+  it("says kiff/agents' words for a failed run in the person's language, never its English", () => {
+    const failed = (error: string, lang: "en" | "fr" | "de" | "pl" = "en") => requestOf(run({ status: "ERROR", error }), "UTC", NOW, [], undefined, [], lang).line;
+    expect(failed("the run failed")).toBe("It stopped on an error. Nothing was done after it.");
+    expect(failed("the run failed", "fr")).toBe("Elle s'est arrêtée sur une erreur. Rien n'a été fait ensuite.");
+    expect(failed("its lease ran out: the invocation crashed or timed out", "de")).toBe("Er ist bei einem Fehler stehen geblieben. Danach wurde nichts mehr getan.");
+    expect(failed("the run reached its time limit", "fr")).toBe("Elle a atteint sa limite de temps et s'est arrêtée.");
+    expect(failed("no invocation claimed it in time", "pl")).toBe("Nie mogło się rozpocząć, więc nic nie zostało zrobione.");
+    expect(failed("the agent is halted, so the run didn't go on", "fr")).toBe("Elle n'a pas continué : le taf est bloqué.");
+    // Text tafs doesn't know: kept for an English reader, a plain "failed" in any other language.
+    expect(failed("Stripe said no.", "fr")).toBe("Échec");
+    expect(failedLine("Stripe said no.")).toBe("It failed: Stripe said no.");
+    expect(failedLine(undefined, "de")).toBe("Fehlgeschlagen");
+  });
+
   it("makes the request's line kiff/agents' words, with the code beside them; a failure with no code reads as before", () => {
     expect(requestOf(run({ status: "ERROR", error: words, code: "new_code" }), "UTC", NOW)).toMatchObject({ state: "failed", line: words, code: "new_code" });
     const plain = requestOf(run({ status: "ERROR", error: "Stripe said no." }), "UTC", NOW);
