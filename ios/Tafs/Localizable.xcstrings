@@ -51723,59 +51723,6 @@
         }
       }
     },
-    "drive.card_note": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach tippt und schreibt in dieser App, während du zusiehst, nur für diese Anfrage. Er bestätigt nie etwas. Berühre die App oder tippe auf „Stoppen“, um zu übernehmen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach taps and types in this app while you watch, for this request only. It never confirms anything. Touch the app or tap Stop to take over."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach toca y escribe en esta app mientras miras, solo para esta solicitud. Nunca confirma nada. Toca la app o toca Detener para tomar el control."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach touche et écrit dans cette app sous vos yeux, pour cette demande uniquement. Il ne confirme jamais rien. Touchez l'app ou touchez Arrêter pour reprendre la main."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach tocca e scrive in questa app mentre guardi, solo per questa richiesta. Non conferma mai nulla. Tocca l'app o tocca Ferma per riprendere il controllo."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach tikt en typt in deze app terwijl je kijkt, alleen voor dit verzoek. Het bevestigt nooit iets. Raak de app aan of tik op Stoppen om het over te nemen."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach dotyka i pisze w tej aplikacji, gdy patrzysz, tylko dla tej prośby. Nigdy niczego nie potwierdza. Dotknij aplikacji lub Zatrzymaj, aby przejąć sterowanie."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O Coach toca e escreve nesta app enquanto você observa, apenas para este pedido. Nunca confirma nada. Toque na app ou em Parar para assumir o controlo."
-          }
-        }
-      }
-    },
     "drive.card_note_pauses": {
       "extractionState": "manual",
       "localizations": {
@@ -51825,59 +51772,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "O Coach toca e escreve nesta app enquanto observa, apenas para este pedido. Nunca confirma nada. Toque na app para o pausar ou em Parar para terminar."
-          }
-        }
-      }
-    },
-    "drive.card_note_scrolls": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach tippt, schreibt und scrollt in dieser App, während du zusiehst. Er bestätigt nie etwas. Berühre die App oder tippe auf „Stoppen“, um sie zurückzunehmen."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach taps, types and scrolls in this app while you watch. It never confirms anything. Touch the app or tap Stop to take it back."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach toca, escribe y se desplaza en esta app mientras miras. Nunca confirma nada. Toca la app o toca Detener para recuperar el control."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach touche, écrit et fait défiler dans cette app sous vos yeux. Il ne confirme jamais rien. Touchez l'app ou touchez Arrêter pour reprendre la main."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach tocca, scrive e scorre in questa app mentre guardi. Non conferma mai nulla. Tocca l'app o tocca Ferma per riprenderla."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach tikt, typt en scrollt in deze app terwijl je kijkt. Het bevestigt nooit iets. Raak de app aan of tik op Stoppen om hem terug te nemen."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Coach dotyka, pisze i przewija w tej aplikacji, gdy patrzysz. Nigdy niczego nie potwierdza. Dotknij aplikacji lub Zatrzymaj, aby ją odzyskać."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O Coach toca, escreve e desliza nesta app enquanto você observa. Nunca confirma nada. Toque na app ou em Parar para retomar o controlo."
           }
         }
       }
