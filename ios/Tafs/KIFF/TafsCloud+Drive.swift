@@ -162,6 +162,19 @@ extension TafsCloud {
         return a.ended
     }
 
+    /// The person touched the app: tafs cloud sends no step until `resumeDrive`. Pausing one already
+    /// paused changes nothing.
+    func pauseDrive(_ drive: String) async throws {
+        struct Body: Encodable { let drive: String }
+        _ = try await sendData("POST", Self.drivePath + "/pause", body: Body(drive: drive))
+    }
+
+    /// The person tapped Continue: the drive goes on, and Coach's first step is a look.
+    func resumeDrive(_ drive: String) async throws {
+        struct Body: Encodable { let drive: String }
+        _ = try await sendData("POST", Self.drivePath + "/resume", body: Body(drive: drive))
+    }
+
     func postDriveResult(_ drive: String, request: String, result: DriveResult) async throws {
         _ = try await sendData("POST", Self.drivePath + "/\(escaped(drive))/results/\(escaped(request))", body: result)
     }

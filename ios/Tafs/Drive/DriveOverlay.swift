@@ -1,45 +1,80 @@
 import SwiftUI
 import UIKit
+import UIKit.UIGestureRecognizerSubclass
 
 /// The window above the app while Coach drives (docs/drive.md): it draws the border, the caption and
-/// the dot, which the screenshot leaves out, and it takes every touch, so none reaches the app. A
-/// touch ends the drive: on Stop or the Coach button, or a swipe in from the left edge (the back
-/// gesture), as `stopped`; anywhere else as `owner_took_over`. Coach's own steps never come through
+/// the dot, which the screenshot leaves out. It takes no touch but the caption's Continue and Stop, so
+/// every other touch of the person's reaches the app under it. Coach's own steps never come through
 /// touches.
 final class DriveOverlayWindow: UIWindow {
-    /// A touch that began at the left edge: a back gesture if it moves right, else the person's touch.
-    private var edge: CGPoint?
-    static let edgeWidth: CGFloat = 24
-
     override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        DriveSession.shared.isOn ? (rootViewController?.view ?? self) : nil
+        guard DriveSession.shared.isOn, DriveOverlay.shared.takes(point) else { return nil }
+        return super.hitTest(point, with: event)
+    }
+}
+
+/// Sees each touch of the person's on one of the app's windows as it begins, and takes none
+/// (docs/drive.md): it never recognizes, so the control under the touch acts as usual.
+final class DriveTouchWatch: UIGestureRecognizer, UIGestureRecognizerDelegate {
+    static func make() -> DriveTouchWatch {
+        let watch = DriveTouchWatch(target: nil, action: nil)
+        watch.cancelsTouchesInView = false
+        watch.delaysTouchesBegan = false
+        watch.delaysTouchesEnded = false
+        watch.delegate = watch
+        return watch
     }
 
-    override func sendEvent(_ event: UIEvent) {
-        guard DriveSession.shared.isOn, event.type == .touches else {
-            super.sendEvent(event)
-            return
+    /// The touch this sequence follows: the first finger down.
+    private weak var first: UITouch?
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+        guard first == nil, let touch = touches.first else { return }
+        first = touch
+        DriveSession.shared.personBegan(at: touch.location(in: nil))
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) { lifted(touches) }
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) { lifted(touches) }
+
+    private func lifted(_ touches: Set<UITouch>) {
+        if let touch = first, touches.contains(touch) {
+            first = nil
+            DriveSession.shared.personEnded(at: touch.location(in: nil))
         }
-        // Not delivered: the touch only says who has the app now.
-        for touch in event.allTouches ?? [] {
-            let p = touch.location(in: self)
-            switch touch.phase {
-            case .began:
-                if DriveOverlay.shared.stopFrame.contains(p) || DriveOverlay.coachButton()?.contains(p) == true {
-                    DriveSession.shared.stop("stopped")
-                } else if p.x <= Self.edgeWidth {
-                    edge = p
-                } else {
-                    DriveSession.shared.stop("owner_took_over")
-                }
-            case .moved:
-                if let e = edge, p.x - e.x > 40 { edge = nil; DriveSession.shared.stop("stopped") }
-            case .ended, .cancelled:
-                if edge != nil { edge = nil; DriveSession.shared.stop("owner_took_over") }
-            default:
-                break
+        // Never recognized: failing ends this sequence for the watch alone.
+        if first == nil { state = .failed }
+    }
+
+    override func reset() {
+        super.reset()
+        first = nil
+    }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
+    override func canPrevent(_ preventedGestureRecognizer: UIGestureRecognizer) -> Bool { false }
+    override func canBePrevented(by preventingGestureRecognizer: UIGestureRecognizer) -> Bool { false }
+}
+
+/// The watch on each of the app's windows while a drive is on.
+@MainActor
+enum DriveTouches {
+    static func attach() {
+        for window in DriveTargets.appWindows() where !(window.gestureRecognizers ?? []).contains(where: { $0 is DriveTouchWatch }) {
+            window.addGestureRecognizer(DriveTouchWatch.make())
+        }
+    }
+
+    static func detach() {
+        for scene in UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }) {
+            for window in scene.windows {
+                for watch in (window.gestureRecognizers ?? []) where watch is DriveTouchWatch { window.removeGestureRecognizer(watch) }
             }
         }
+    }
+
+    static func watched(_ window: UIWindow) -> Bool {
+        (window.gestureRecognizers ?? []).contains { $0 is DriveTouchWatch }
     }
 }
 
@@ -47,13 +82,15 @@ final class DriveOverlayWindow: UIWindow {
 final class DriveOverlay {
     static let shared = DriveOverlay()
     private var window: DriveOverlayWindow?
-    /// Where the caption's Stop is, in the overlay's points.
+    /// Where the caption's Stop is, and its Continue while the drive is paused, in the overlay's points.
     var stopFrame: CGRect = .null
+    var continueFrame: CGRect = .null
 
-    /// The Coach button's place on screen, while it shows.
-    static func coachButton() -> CGRect? {
-        DriveTargets.shared.entries[DriveSession.coachButtonID]?.anchor.flatMap { DriveTargets.visibleFrame($0) }
-    }
+    /// Whether a touch at a point is the overlay's own: on Continue or on Stop.
+    func takes(_ point: CGPoint) -> Bool { stopFrame.contains(point) || continueFrame.contains(point) }
+
+    /// What the overlay's window answers a touch at a point with: nothing, anywhere but on its buttons.
+    func hit(_ point: CGPoint) -> UIView? { window?.hitTest(point, with: nil) }
 
     func show() {
         guard window == nil else { return }
@@ -75,6 +112,7 @@ final class DriveOverlay {
         window?.isHidden = true
         window = nil
         stopFrame = .null
+        continueFrame = .null
     }
 
     var showing: Bool { window != nil }
@@ -83,37 +121,44 @@ final class DriveOverlay {
 /// The border, the caption and the dot.
 struct DriveOverlayView: View {
     @ObservedObject private var drive = DriveSession.shared
-    @State private var pulse = false
 
     var body: some View {
         ZStack {
             if drive.isOn {
-                RoundedRectangle(cornerRadius: 40, style: .continuous)
-                    .strokeBorder(Theme.amber.opacity(pulse ? 0.95 : 0.45), lineWidth: pulse ? 6 : 3)
-                    .ignoresSafeArea()
-                    .onAppear { withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) { pulse = true } }
+                // Paused: the border dims and holds still.
+                if drive.paused {
+                    RoundedRectangle(cornerRadius: 40, style: .continuous)
+                        .strokeBorder(Theme.amber.opacity(0.25), lineWidth: 3)
+                        .ignoresSafeArea()
+                        .allowsHitTesting(false)
+                } else {
+                    DriveBorder().allowsHitTesting(false)
+                }
             }
             if let dot = drive.dot {
                 Circle().fill(Theme.amber.opacity(0.85)).frame(width: 26, height: 26)
                     .overlay(Circle().stroke(Color.white, lineWidth: 2))
                     .position(dot)
                     .ignoresSafeArea()
+                    .allowsHitTesting(false)
             }
             if let caption = drive.caption {
                 VStack {
                     Spacer()
                     HStack(spacing: 10) {
-                        Image(systemName: "sparkle").foregroundColor(Theme.amber)
-                        Text(caption).scaledFont(14, weight: .medium).foregroundColor(Theme.ink).lineLimit(2)
+                        Image(systemName: drive.isOn && drive.paused ? "pause.fill" : "sparkle").foregroundColor(Theme.amber)
+                        Text(drive.isOn && drive.paused ? Words.Drive.paused : caption)
+                            .scaledFont(14, weight: .medium).foregroundColor(Theme.ink).lineLimit(2)
                         if drive.isOn {
-                            Text("Stop").scaledFont(14, weight: .semibold).foregroundColor(Theme.amberInk)
-                                .padding(.horizontal, 12).padding(.vertical, 6)
-                                .background(Capsule().fill(Theme.brand))
-                                .background(GeometryReader { g in
-                                    Color.clear
-                                        .onAppear { DriveOverlay.shared.stopFrame = g.frame(in: .global).insetBy(dx: -8, dy: -8) }
-                                        .onChange(of: g.frame(in: .global)) { DriveOverlay.shared.stopFrame = $0.insetBy(dx: -8, dy: -8) }
-                                })
+                            if drive.paused {
+                                Button { drive.resume() } label: { pill(Words.Common.continue, filled: true) }
+                                    .buttonStyle(.plain)
+                                    .background(place { DriveOverlay.shared.continueFrame = $0 })
+                                    .onDisappear { DriveOverlay.shared.continueFrame = .null }
+                            }
+                            Button { drive.stop("stopped") } label: { pill(Words.Chat.stop, filled: !drive.paused) }
+                                .buttonStyle(.plain)
+                                .background(place { DriveOverlay.shared.stopFrame = $0 })
                         }
                     }
                     .padding(.horizontal, 14).padding(.vertical, 10)
@@ -124,6 +169,34 @@ struct DriveOverlayView: View {
                 }
             }
         }
-        .allowsHitTesting(false)
+    }
+
+    private func pill(_ words: String, filled: Bool) -> some View {
+        Text(words).scaledFont(14, weight: .semibold).foregroundColor(filled ? Theme.amberInk : Theme.ink)
+            .padding(.horizontal, 12).padding(.vertical, 6)
+            .background(Capsule().fill(filled ? Theme.brand : Theme.ink.opacity(0.08)))
+            .contentShape(Capsule())
+    }
+
+    /// Reports a button's place to the overlay window, a little wider than it draws, so the window
+    /// takes the touches on it and no others.
+    private func place(_ report: @escaping (CGRect) -> Void) -> some View {
+        GeometryReader { g in
+            Color.clear
+                .onAppear { report(g.frame(in: .global).insetBy(dx: -8, dy: -8)) }
+                .onChange(of: g.frame(in: .global)) { report($0.insetBy(dx: -8, dy: -8)) }
+        }
+    }
+}
+
+/// The border while Coach acts: it pulses.
+private struct DriveBorder: View {
+    @State private var pulse = false
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: 40, style: .continuous)
+            .strokeBorder(Theme.amber.opacity(pulse ? 0.95 : 0.45), lineWidth: pulse ? 6 : 3)
+            .ignoresSafeArea()
+            .onAppear { withAnimation(.easeInOut(duration: 1.2).repeatForever(autoreverses: true)) { pulse = true } }
     }
 }
