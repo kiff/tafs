@@ -466,7 +466,7 @@ fun ConnectApprovalSheet(
           val busy = state.connecting == grant.id
           if (needsKey) {
             // Where the key goes, in the app's words: this phone to planque, then only the vendor's host; never Coach.
-            Text(Words.Connect.keyGoesTo(host = grant.vendor), style = scaled(13, color = Theme.soft))
+            Text(Words.Connect.keyGoesTo(host = grant.keyHost), style = scaled(13, color = Theme.soft))
             val clipboard = androidx.compose.ui.platform.LocalContext.current.getSystemService(android.content.ClipboardManager::class.java)
             OutlinedTextField(
               key,

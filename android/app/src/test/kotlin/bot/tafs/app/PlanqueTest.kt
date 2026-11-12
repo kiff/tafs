@@ -1019,6 +1019,16 @@ class PlanqueTest {
     assertNull(m.state.value.keyForCard)
   }
 
+  /** The key sheet says the host the key is used with: the server's, never the vendor's name. */
+  @Test fun theKeySheetNamesTheServersHostNotTheVendorsName() {
+    fun grant(server: String) = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(
+      """{"id":"g1","status":"pending","vendor":"Qonto","digest":"d","request":{"kind":"api_key","server":"$server","agent":"a"}}""",
+    )
+    assertEquals("thirdparty.qonto.com", grant("https://thirdparty.qonto.com/v2").keyHost)
+    assertEquals("api.example-bank.test", grant("api.example-bank.test").keyHost)
+    assertEquals("Qonto", grant("https://thirdparty.qonto.com/v2").vendor)
+  }
+
   /** The chat never takes a secret: Coach's approval card has no text field at all, so no key can be typed into it. */
   @Test fun coachsApprovalCardHasNoFieldForAKey() {
     val views = java.io.File("src/main/kotlin/bot/tafs/app/views/CoachViews.kt").readText()

@@ -625,7 +625,8 @@ key lives only in the open sheet's field, and nothing on the phone keeps it.
 secret. While the grant takes a key (planque's `api_key`) and isn't connected, the card has one
 button, **Give the key on a secure sheet**, which opens this same key sheet full screen, outside the
 chat. The sheet says where the key goes (`connect.key_goes_to`: this phone, then the connection
-server, which sends it only to the vendor's host, and never Coach), and that the clipboard is
+server, which sends it only to the vendor's host: `Grant.keyHost`, the server without its scheme or
+path, never the vendor's name; and never Coach), and that the clipboard is
 cleared after a paste: more than one character at once is a paste, and the clipboard is cleared
 then. Given there (`AppModel.approveCoachWithKey`), the key goes as above, then the card is answered
 as any approval: tafs cloud finds the app connected, and Coach goes on or asks for its Cards. A key
