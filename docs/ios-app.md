@@ -349,7 +349,7 @@ the app in sample mode.
     in force plus the offered one. Every other term is compared (`HoldAllow.Terms`): each action's caps, scope, states
     and next steps; each total's window, measure and per-item parameter; what happens past a limit; who holds the Card;
     where it applies; when it starts and ends, compared as the instants the times name, so one written with another
-    offset is the same and one that can't be read never matches. A draft that sets how long a hold waits, or revokes, is refused. Anything else shows "This change isn't what was offered", with no
+    offset is the same. A text that can't be read as a time equals only the same text, never a time. A draft that sets how long a hold waits, or revokes, is refused. Anything else shows "This change isn't what was offered", with no
     sign button. A draft that couldn't be read shows the error alone.
   - **One Face ID** signs the version the phone read (`tafs.cards.v1`). With the switch on, the confirm names the
     held call and the version of it the person saw, so KIFF lets it go under the same signature. With it off, the

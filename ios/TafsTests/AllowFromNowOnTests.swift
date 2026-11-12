@@ -232,7 +232,13 @@ final class AllowFromNowOnTests: XCTestCase {
         try differs("\(g)[\(grant(raised))],\"valid_until\":\"next year\"", "\(g)[\(grant(cap))],\"valid_until\":\"2027-01-01T00:00:00Z\"", "an end that can't be read")
         XCTAssertEqual(HoldAllow.Terms.instant(nil), "")
         XCTAssertEqual(HoldAllow.Terms.instant("2027-01-01T00:00:00Z"), HoldAllow.Terms.instant("2026-12-31T19:00:00-05:00"))
-        XCTAssertNotEqual(HoldAllow.Terms.instant("soon"), HoldAllow.Terms.instant("later"), "two times that can't be read are never the same")
+        XCTAssertNotEqual(HoldAllow.Terms.instant("soon"), HoldAllow.Terms.instant("later"), "two different texts that can't be read are never the same")
+        // A text that only looks like this code's own form of an instant is not a time, and never equals one.
+        let end = HoldAllow.Terms.instant("2027-01-01T00:00:00Z")
+        XCTAssertTrue(end.hasPrefix("@"))
+        XCTAssertNotEqual(HoldAllow.Terms.instant(end), end, "an instant's own form, given as a time, is unreadable text")
+        try differs("\(g)[\(grant(raised))],\"valid_until\":\"\(end)\"", "\(g)[\(grant(cap))],\"valid_until\":\"2027-01-01T00:00:00Z\"", "a draft whose end is that form as text")
+        XCTAssertNotEqual(HoldAllow.Terms.instant("?soon"), HoldAllow.Terms.instant("soon"))
         // Who holds it.
         try differs("\(g)[\(grant(raised))],\"subject\":\"refunds-1\",\"subjects\":[\"refunds-1\",\"payouts-1\"]", "\(g)[\(grant(cap))],\"subject\":\"refunds-1\",\"subjects\":[\"refunds-1\"]", "a holder added")
         try differs("\(g)[\(grant(raised))],\"subject\":\"payouts-1\"", "\(g)[\(grant(cap))],\"subject\":\"refunds-1\",\"subjects\":[\"refunds-1\"]", "another first holder")
