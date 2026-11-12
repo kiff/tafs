@@ -251,6 +251,7 @@ export const en = {
   from_schedule: "Its schedule",
   from_chat: "From its chat",
   from_run_now: "Run now",
+  from_handoff: (taf?: string) => (taf ? `Handed by ${taf}` : "Handed by another taf"),
   // Push alerts (push.ts, handler.ts): to each phone in its own language, kept from when it registered.
   push_held_title: "A taf needs you",
   push_held_body: (action: string) => `${action} waits for your answer. Nothing is sent until you approve.`,
@@ -314,6 +315,18 @@ export const en = {
   // the why_ words, or the app's own words as it gave them.
   delivered: (name: string, t: When) => `Delivered to ${name} at ${bare(t)}`,
   handed: (name: string, t: When) => `Handed to ${name} at ${bare(t)}`,
+  handed_waiting: (name: string) => `Handed to ${name} · waiting for you`,
+  handed_finished: (name: string, said?: string) => `Handed to ${name} · it finished${said ? `: ${said}` : ""}`,
+  handed_done: (name: string) => `Handed to ${name} · done`,
+  handed_nothing: (name: string, said?: string) => `Handed to ${name} · nothing was done${said ? `: ${said}` : ""}`,
+  // A hand-off whose receiving run failed, was stopped or never started: the sender's request needs its managers.
+  handoff_dead: (name: string, taf: string) => `${name} didn't finish what ${taf} handed it`,
+  handoff_never_started: "Never started",
+  handoff_note: (taf: string, name: string) => `${name} didn't finish what ${taf} handed it. Send it again from ${taf}'s page.`,
+  handed_maybe: (name: string) => `Handed to ${name} · it may have been done: check ${name}'s page`,
+  handoff_already_acted: "it had already acted: check its page before anything is sent again",
+  handoff_maybe_acted: "it may have already acted: check its page before anything is sent again",
+  handoff_nothing_note: (taf: string, name: string, n: number) => `${name} did nothing with the last ${n} hand-offs from ${taf}. Open ${taf}'s page to see why.`,
   delivery_retrying: (name: string, t?: When) => `Not delivered to ${name} yet: trying again${t ? ` at ${bare(t)}` : " now"}`,
   delivery_not_sent: (name: string, why?: string) => `Not delivered to ${name}${why ? `: ${why}` : ""}`,
   delivery_note: (taf: string, name: string, why?: string) => `${taf} didn't deliver to ${name}${why ? `: ${why}` : ""}. Send it again from ${taf}'s page, or open Coach for help.`,
@@ -629,7 +642,7 @@ export const en = {
   cts_app_act_does: "While a drive is on, tap, type and scroll in tafs on your phone, with a caption for each step. It can't approve anything: only you approve, on your phone.",
   cts_app_act_why: "It acts in the app as you.",
   // Why Coach stopped driving the app (drive.ts END_SAID), as the person reads it.
-  drive_end_owner_took_over: "You touched the app, so it's yours now",
+  drive_end_owner_took_over: "You took over, so Coach let you carry on",
   drive_end_left_app: "The app left the screen, so Coach stopped",
   drive_end_stopped: "You stopped Coach",
   drive_end_locked: "The phone locked, so Coach stopped",

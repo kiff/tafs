@@ -29,8 +29,15 @@ export interface RequestDetail extends RequestView {
 const DOOR: Record<string, string> = { email: "email", whatsapp: "WhatsApp", slack: "Slack", telegram: "Telegram" };
 
 /** Where a run came from, in words. */
-export function fromOf(r: Run, lang: Lang = "en"): string {
+export function fromOf(r: Run, lang: Lang = "en", handedBy?: string): string {
+  // A hand-off from another taf (delivery.ts): by that taf's name, when it's still on the account.
+  if (r.source?.startsWith("handoff:")) return wordsIn(lang).from_handoff(handedBy);
   return fromWords(r.trigger, r.source, r.requester?.kind, lang);
+}
+
+/** The taf that handed a run its work, from the run's source ("handoff:<taf>:<run>"), or none. */
+export function handedByOf(r: Run): string | undefined {
+  return /^handoff:([^:]+):/.exec(r.source ?? "")?.[1];
 }
 
 /** Where a run came from, in words, from what started it: its trigger, its source and who asked. */
@@ -49,9 +56,9 @@ function callsOf(body: unknown): Array<{ tool: string; error: boolean; notMade: 
   return waited.filter((w) => typeof w?.tool === "string").map((w) => ({ tool: w.tool as string, error: w.is_error === true, notMade: w.not_made === true, ...(typeof w.input_hash === "string" && w.input_hash ? { inputHash: w.input_hash } : {}) }));
 }
 
-export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone: string, now: Date, titles: ToolTitles = new Map(), again = new Set<string>(), own: DeliveryView[] = [], lang: Lang = "en"): RequestDetail {
+export function requestDetail(r: Run, events: SessionEvent[], sent: Sent[], zone: string, now: Date, titles: ToolTitles = new Map(), again = new Set<string>(), own: DeliveryView[] = [], lang: Lang = "en", handedBy?: string): RequestDetail {
   const view = requestOf(r, zone, now, sent, again, own, lang);
-  const from = fromOf(r, lang);
+  const from = fromOf(r, lang, handedBy);
   const w = wordsIn(lang);
   const at = (t: string) => timeIn(t, zone, now, lang);
   const steps: RequestStep[] = [{ label: w.step_received, line: `${from}, ${at(r.created)}`, state: "done" }];

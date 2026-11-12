@@ -4380,9 +4380,14 @@ class AppModel(
     }
   }
 
-  /** The person ended the drive: their touch, their back, Stop, the Coach button, the app leaving the screen, the lock. */
+  /** The person ended the drive: their back, their typing, a third tap, Stop, the Coach button, the app leaving the screen, the lock. */
   fun stopDrive(why: String) {
     drive.stop(why)
+  }
+
+  /** The person tapped Continue on a paused drive: the keyboard goes away, and Coach goes on with a look. */
+  fun resumeDrive() {
+    drive.resume()
   }
 
   /** A drive still on after the app restarted outlived it: it ends now, and never resumes (docs/drive.md). */

@@ -224,6 +224,16 @@ export interface Run {
   code?: string;
   cost_micro_usd: number;
   turns: number;
+  /**
+   * The calls that acted and went through, as kiff/agents keeps them from the calls' results, never the
+   * model's words: only a write KIFF allowed and the vendor didn't fail. Absent when there are none.
+   */
+  done?: Array<{ call_id?: string; tool?: string }>;
+  /**
+   * How many writes the run sent, a write whose outcome isn't known included. Absent on a kiff/agents
+   * that doesn't count them: then an empty `done` doesn't prove that nothing was done.
+   */
+  sent?: number;
   requirements?: Requirement[];
   cancel_requested?: boolean;
   /** What the owner wrote to the run while it went (kiff/agents#102), each marked once the run took it. */

@@ -894,6 +894,14 @@ class TafsCloud(
     send("POST", "/v1/coach/drive/stop", jsonBody("drive" to drive, "why" to why))
   }
 
+  override suspend fun pauseDrive(drive: String) {
+    send("POST", "/v1/coach/drive/pause", jsonBody("drive" to drive))
+  }
+
+  override suspend fun resumeDrive(drive: String): bot.tafs.app.drive.DriveResumed? =
+    runCatching { KiffClient.json.decodeFromString<bot.tafs.app.drive.DriveResumed>(String(send("POST", "/v1/coach/drive/resume", jsonBody("drive" to drive)))) }
+      .getOrNull()
+
   override suspend fun readDrive(): bot.tafs.app.drive.DriveRead = get("/v1/coach/drive")
 
   companion object {

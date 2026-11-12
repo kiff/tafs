@@ -1,0 +1,1 @@
+- **iPhone and iPad: ready for the approval text in the person's language.** The app tells planque the person's languages, and checks a grant marked `digest_v: 2` over its words and their language as well as its request, so the words shown are the words signed. Grants without the mark are checked as before, so this changes nothing until planque issues v2 grants (docs/ios-app.md).

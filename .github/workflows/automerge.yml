@@ -1,0 +1,79 @@
+name: Merge by itself
+
+# A pull request that needs no judgment merges by itself (docs/maintaining.md,
+# "Merging by itself"): green, approved on its latest commit by a listed
+# reviewer other than its author, and touching only one app's own paths
+# (.github/automerge.json). Everything else waits for a maintainer, as before.
+#
+# The rule is scripts/automerge.py, with its tests. This workflow only runs it:
+# every ten minutes, and when a check workflow finishes. It always runs main's
+# copy of the rule, never a pull request's, and it never checks out or runs a
+# pull request's code.
+#
+# It is off until the repository's AUTOMERGE variable is "on". AUTOMERGE_HOLD,
+# set to any words, holds every merge (a release, an eval). With
+# AUTOMERGE_EVAL_REPO and AUTOMERGE_EVAL_WORKFLOW set, nothing merges while
+# that workflow is running or queued there, or can't be read.
+#
+# The merge is made as the organization's kiff-automerge app, not with the
+# workflow's own token: a merge made with the workflow's own token starts no
+# workflow on main, so main's tests would never run on it. The app's client id
+# is the AUTOMERGE_APP_CLIENT_ID variable and its private key the
+# AUTOMERGE_APP_KEY secret; each run gets a token that lasts an hour and only
+# reaches this repository. AUTOMERGE_TOKEN, a personal token, is the fallback
+# while the app isn't set. With neither, nothing merges.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_run:
+    workflows: [iOS, Android, Strings, References]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only say what would merge, and why the rest waits
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: automerge
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    if: vars.AUTOMERGE == 'on' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - name: The rule's own tests
+        run: python3 -W error -m unittest discover -s scripts -p 'test_automerge.py'
+      - name: The app's token for this run
+        id: app
+        if: vars.AUTOMERGE_APP_CLIENT_ID != ''
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.AUTOMERGE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AUTOMERGE_APP_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+      - name: Merge what needs no judgment
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token || secrets.AUTOMERGE_TOKEN }}
+          AUTOMERGE: ${{ vars.AUTOMERGE }}
+          AUTOMERGE_HOLD: ${{ vars.AUTOMERGE_HOLD }}
+          EVAL_REPO: ${{ vars.AUTOMERGE_EVAL_REPO }}
+          EVAL_WORKFLOW: ${{ vars.AUTOMERGE_EVAL_WORKFLOW }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '--dry-run' || '' }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::notice::neither the app nor AUTOMERGE_TOKEN is set: nothing merges by itself"; exit 0
+          fi
+          python3 scripts/automerge.py $DRY_RUN

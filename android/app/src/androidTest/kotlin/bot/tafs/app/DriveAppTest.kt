@@ -12,12 +12,13 @@ import bot.tafs.app.drive.DriveState
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
 /**
  * A drive on the app itself (docs/drive.md), as MainActivity wires it: the app leaving the screen ends it as `left_app`, and the
- * person's touch on the app ends it as `owner_took_over`. The drive is begun on the activity's own model, as an approved Start
+ * person's touch on the app pauses it, ending nothing. The drive is begun on the activity's own model, as an approved Start
  * would begin it; its stream has no tafs cloud here, which leaves it on.
  */
 class DriveAppTest {
@@ -53,7 +54,7 @@ class DriveAppTest {
     assertFalse(DriveInput.driving)
   }
 
-  @Test fun thePersonsTouchOnTheAppEndsTheDrive() {
+  @Test fun thePersonsTouchOnTheAppPausesTheDrive() {
     val m = drive()
     val decor = rule.activity.window.decorView
     val x = decor.width / 2f
@@ -61,8 +62,11 @@ class DriveAppTest {
     val t = SystemClock.uptimeMillis()
     instrumentation.sendPointerSync(MotionEvent.obtain(t, t, MotionEvent.ACTION_DOWN, x, y, 0))
     instrumentation.sendPointerSync(MotionEvent.obtain(t, t + 60, MotionEvent.ACTION_UP, x, y, 0))
-    rule.waitUntil(5_000) { m.endedFor() != null }
-    assertEquals("owner_took_over", m.endedFor())
-    assertFalse(DriveInput.driving)
+    rule.waitUntil(5_000) { m.drive.paused }
+    assertEquals(null, m.endedFor())
+    assertTrue(DriveInput.driving)
+    // Continue: Coach goes on.
+    instrumentation.runOnMainSync { m.resumeDrive() }
+    assertFalse(m.drive.paused)
   }
 }
