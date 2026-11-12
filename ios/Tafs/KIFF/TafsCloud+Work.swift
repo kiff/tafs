@@ -111,19 +111,25 @@ extension TafsCloud {
         }
 
         /// Where a request's result went, and whether it can be sent again: a reply given
-        /// up on after its tries.
+        /// up on after its tries, or a place of the taf's own (an action at a connected app, or
+        /// another taf) that wasn't delivered.
         struct Delivery: Decodable, Equatable {
             var place = "door_reply"
+            /// A place of the taf's own, as tafs cloud names it; none for a door's reply.
+            var key: String?
             var state = ""
             var line = ""
             var sendAgain = false
-            enum CodingKeys: String, CodingKey { case place, state, line, sendAgain = "send_again" }
-            init(place: String = "door_reply", state: String = "", line: String = "", sendAgain: Bool = false) {
-                self.place = place; self.state = state; self.line = line; self.sendAgain = sendAgain
+            enum CodingKeys: String, CodingKey { case place, key, state, line, sendAgain = "send_again" }
+            init(place: String = "door_reply", key: String? = nil, state: String = "", line: String = "", sendAgain: Bool = false) {
+                self.place = place; self.key = key; self.state = state; self.line = line; self.sendAgain = sendAgain
             }
+            /// What Send again names in its route (docs/api.md): the door's reply, or the place's own key.
+            var sendPlace: String { place == "door_reply" ? "door_reply" : (key ?? "door_reply") }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 place = (try? c.decode(String.self, forKey: .place)) ?? "door_reply"
+                key = try? c.decode(String.self, forKey: .key)
                 state = (try? c.decode(String.self, forKey: .state)) ?? ""
                 line = (try? c.decode(String.self, forKey: .line)) ?? ""
                 sendAgain = (try? c.decode(Bool.self, forKey: .sendAgain)) ?? false

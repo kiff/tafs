@@ -87,7 +87,10 @@ connected: "Checking the sign-in…" meanwhile (`connectStep`).
 ([reliability.md](reliability.md#the-tafs-view); `WorkPanel`, `AppModel.loadWork`): tafs
 cloud's line, then its recent requests and skipped firings, newest first, in tafs cloud's words.
 A request that needs the owner is amber, a failed one red, a skipped firing dim. A door reply
-given up on offers **Send again** to whoever manages the taf (`AppModel.sendAgain`). Then its
+given up on offers **Send again** to whoever manages the taf (`AppModel.sendAgain`), and so does a
+place of the taf's own that wasn't delivered (an action at a connected app, or a hand-off the
+receiving taf didn't finish): each is sent again by its own place, the door's reply or the
+delivery's `key` (`Delivery.sendPlace`). Then its
 runs (`RunsPanel`): when it runs next, in tafs cloud's `next_run_words` ("Next run Mon 08:00", with
 the day when it isn't today; the app's own time only from a tafs cloud that sends none), or that it
 works from its chat, and **Run now**; then the runs it kept (`RetainedRuns`), which stand for its

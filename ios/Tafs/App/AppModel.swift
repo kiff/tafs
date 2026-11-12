@@ -5348,13 +5348,13 @@ final class AppModel: ObservableObject {
 
     /// Send again: a door reply given up on after its tries goes once more. It does no work
     /// and signs nothing. The work is read again after, whatever came of it.
-    func sendAgain(_ tafID: UUID, run: String) async {
+    func sendAgain(_ tafID: UUID, run: String, place: String = "door_reply") async {
         guard mode == .kiff, let c = cloudTaf(for: tafID), sendingAgain.insert(run).inserted else { return }
         workErrors[tafID] = nil
         let gen = accountGeneration
         var failed: String?
         do {
-            try await cloud.sendAgain(c.id, run: run)
+            try await cloud.sendAgain(c.id, run: run, place: place)
         } catch {
             failed = Words.Work.notSentAgain(why: "\(error.localizedDescription)")
         }
