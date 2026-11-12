@@ -55,8 +55,11 @@ auto-merge: every condition below must hold, and anything else waits for a maint
 
 It's off until the repository's `AUTOMERGE` variable is `on`. The workflow runs main's copy of the
 rule every ten minutes and when a check workflow finishes, never a pull request's copy, and it never
-checks out a pull request's code. The merge is a squash, made with the `AUTOMERGE_TOKEN` secret: a
-merge made with the workflow's own token starts no workflow on main, so main's tests wouldn't run on
+checks out a pull request's code. The merge is a squash, made as the organization's `kiff-automerge`
+app (its client id in the `AUTOMERGE_APP_CLIENT_ID` variable, its private key in the
+`AUTOMERGE_APP_KEY` secret), with a token that lasts one run and reaches only this repository. A
+personal token in `AUTOMERGE_TOKEN` is the fallback while the app isn't set. It isn't the workflow's
+own token, because a merge made with that starts no workflow on main, so main's tests wouldn't run on
 it. Run by hand, it only says what would merge and why the rest waits.
 
 Adding a lane, an author or a reviewer is a change to `.github/automerge.json`, which never merges by
