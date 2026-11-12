@@ -843,7 +843,7 @@
     </plurals>
     <string name="connect_key">A chave</string>
     <string name="connect_key_clipboard">A área de transferência é limpa depois de colar.</string>
-    <string name="connect_key_goes_to">A chave vai deste telemóvel para o servidor de ligações, que só a envia para %1$s. Nunca vai para o Coach.</string>
+    <string name="connect_key_goes_to">A chave vai deste telefone para o servidor de ligações, que só a envia para %1$s. Nunca vai para o Coach.</string>
     <string name="connect_key_not_given">A chave não foi dada. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">Não foi possível ler as palavras do KIFF para esta ligação. Nada foi aprovado.</string>
     <string name="connect_last_failed">Última falha: %1$s · %2$s</string>

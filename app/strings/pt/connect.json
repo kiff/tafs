@@ -87,7 +87,7 @@
   },
   "connect.key": "A chave",
   "connect.key_clipboard": "A área de transferência é limpa depois de colar.",
-  "connect.key_goes_to": "A chave vai deste telemóvel para o servidor de ligações, que só a envia para {host}. Nunca vai para o Coach.",
+  "connect.key_goes_to": "A chave vai deste telefone para o servidor de ligações, que só a envia para {host}. Nunca vai para o Coach.",
   "connect.key_not_given": "A chave não foi dada. {why}",
   "connect.kiff_words_connection_could_not": "Não foi possível ler as palavras do KIFF para esta ligação. Nada foi aprovado.",
   "connect.last_failed": "Última falha: {title} · {detail}",
