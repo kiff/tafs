@@ -224,6 +224,8 @@ data class AgentDraft(
   @SerialName("claim_secret") val claimSecret: String? = null,
   /** What became of the held call a confirm named (KiffClient.confirmDraft with a hold): "approved", or why not. */
   val hold: DraftHold? = null,
+  /** The held call a draft was made from (KIFF's allow-draft), when KIFF says. */
+  @SerialName("from_hold") val fromHold: String? = null,
 ) {
   val confirmed: Boolean get() = status == "confirmed"
 

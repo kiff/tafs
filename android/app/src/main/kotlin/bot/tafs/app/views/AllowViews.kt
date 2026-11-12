@@ -67,8 +67,9 @@ fun AllowSheet(open: AllowSheetState, actions: AllowActions) {
             card.lines.forEach { Text(it, style = scaled(13, color = Theme.dim)) }
           }
           offer.would?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(14, color = Theme.ink)) }
+          // A draft that couldn't be read says so in the error line alone: it isn't a draft that differs from the offer.
           if (!open.matches) {
-            Text(Words.NeedsYou.allowNotOffered, style = scaled(14, color = Theme.no))
+            if (open.draft != null || (!open.busy && open.error == null)) Text(Words.NeedsYou.allowNotOffered, style = scaled(14, color = Theme.no))
           } else {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
               Text(Words.NeedsYou.allowSendThisToo, style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))

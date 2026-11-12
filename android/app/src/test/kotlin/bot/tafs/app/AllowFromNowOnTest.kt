@@ -8,6 +8,8 @@ import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.model.HoldAllow
 import java.net.URI
 import java.time.Instant
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -68,7 +70,25 @@ class AllowFromNowOnTest {
         "lines":["Refunds up to €${max / 100} each"]}$extra]$retires}"""
 
   private fun parsedDraft(json: String) = KiffClient.json.decodeFromString<AgentDraft>(json)
-  private fun parsedOffer() = KiffClient.json.decodeFromString<bot.tafs.app.kiff.AllowAnswer>(offer).offer!!
+  private fun parsedOffer(json: String = offer) = KiffClient.json.decodeFromString<bot.tafs.app.kiff.AllowAnswer>(json).offer!!
+
+  /** Whether the phone would sign [draft] for held call ce_9 (create_refund, refunds-1), offered [o]. */
+  private fun signs(draft: String, o: AllowOffer = parsedOffer(), agent: String = "refunds-1") =
+    HoldAllow.matches(parsedDraft(draft), o, agent, "ce_9", "create_refund")
+
+  /** A draft with one Card c1, its terms [now] and in force [was], each a Card's JSON body. */
+  private fun card(now: String, was: String, from: String = "") =
+    """{"id":"dr_9","agent_id":"refunds-1","status":"draft","version":"v7"$from,"cards":[{"revises":"c1",$now,"current":{$was}}]}"""
+
+  private val cap = """{"quantity":"amount","max":15000,"unit":"EUR","scale":2}"""
+  private val raised = """{"quantity":"amount","max":32000,"unit":"EUR","scale":2}"""
+  private fun refund(vararg caps: String) = """{"action":"create_refund","per_action_max":[${caps.joinToString(",")}]}"""
+  private val day = """{"quantity":"amount","limit":50000,"window":"day","unit":"EUR","scale":2}"""
+
+  private fun totalOffer(after: Long = 60000, unit: String = "EUR") = parsedOffer(
+    """{"offer":{"changes":[{"mandate_id":"c1","kind":"total","before":50000,"after":$after,"unit":"$unit","words_before":"","words_after":""}],
+       "draft":"dr_9","confirm_key":"critical","send_held":true}}""",
+  )
 
   // MARK: The app's own rule for the button
 
@@ -100,23 +120,84 @@ class AllowFromNowOnTest {
   // MARK: The device signs what the person saw
 
   @Test fun aDraftThatCarriesExactlyTheOfferedChangeMatches() {
-    assertTrue(HoldAllow.matches(parsedDraft(draft()), parsedOffer()))
+    assertTrue(signs(draft()))
   }
 
   @Test fun aDraftWithAnotherFigureAnotherCardChangedARetiredCardOrANewCardIsNotWhatWasOffered() {
-    assertFalse("another figure", HoldAllow.matches(parsedDraft(draft(max = 50000)), parsedOffer()))
+    assertFalse("another figure", signs(draft(max = 50000)))
     val otherCard = """,{"revises":"c2","grants":[{"action":"list_charges"}],"current":{"grants":[{"action":"list_charges"},{"action":"create_refund"}]}}"""
-    assertFalse("another Card changed", HoldAllow.matches(parsedDraft(draft(extra = otherCard)), parsedOffer()))
-    assertFalse("a Card retired", HoldAllow.matches(parsedDraft(draft(retires = ""","retires":[{"id":"c3"}]""")), parsedOffer()))
+    assertFalse("another Card changed", signs(draft(extra = otherCard)))
+    assertFalse("a Card retired", signs(draft(retires = ""","retires":[{"id":"c3"}]""")))
     val newCard = """,{"grants":[{"action":"create_refund"}]}"""
-    assertFalse("a Card that revises none in force", HoldAllow.matches(parsedDraft(draft(extra = newCard)), parsedOffer()))
+    assertFalse("a Card that revises none in force", signs(draft(extra = newCard)))
     val unchanged = """,{"revises":"c2","unchanged":true,"current":{"grants":[{"action":"list_charges"}]},"grants":[{"action":"list_charges"}]}"""
-    assertTrue("a Card left as it is doesn't count", HoldAllow.matches(parsedDraft(draft(extra = unchanged)), parsedOffer()))
+    assertTrue("a Card left as it is doesn't count", signs(draft(extra = unchanged)))
   }
 
   @Test fun aChangeOfAKindTheContractDoesntNameIsNeverSigned() {
     val unknown = parsedOffer().let { it.copy(changes = it.changes.map { c -> c.copy(kind = "something_new") }) }
-    assertFalse(HoldAllow.matches(parsedDraft(draft()), unknown))
+    assertFalse(signs(draft(), unknown))
+  }
+
+  @Test fun theChangedCardReadsAsTheCardInForceWithOnlyTheOfferedFigureMoved() {
+    val g = "\"grants\":"
+    assertTrue("the offered cap, nothing else", signs(card("$g[${refund(raised)}]", "$g[${refund(cap)}]")))
+    assertFalse("a second cap moved too", signs(card("$g[${refund(raised, cap.replace("amount", "count"))}]", "$g[${refund(cap, cap.replace("amount", "count").replace("15000", "3"))}]")))
+    assertFalse("a cap added", signs(card("$g[${refund(raised, cap.replace("amount", "fee"))}]", "$g[${refund(cap)}]")))
+    assertFalse("a cap taken away", signs(card("$g[${refund()}]", "$g[${refund(cap)}]")))
+    val list = """{"action":"list_charges","per_action_max":[$cap]}"""
+    assertFalse(
+      "the cap moved on another action",
+      signs(card("$g[${refund(cap)},${list.replace("15000", "32000")}]", "$g[${refund(cap)},$list]")),
+    )
+    assertFalse("an action added", signs(card("$g[${refund(raised)},{\"action\":\"delete_customer\"}]", "$g[${refund(cap)}]")))
+    assertFalse("an action taken away", signs(card("$g[${refund(raised)}]", "$g[${refund(cap)},{\"action\":\"list_charges\"}]")))
+    assertFalse("a total added", signs(card("$g[${refund(raised)}],\"aggregates\":[$day]", "$g[${refund(cap)}]")))
+    assertFalse("a total's window changed", signs(card("$g[${refund(raised)}],\"aggregates\":[${day.replace("day\"", "week\"")}]", "$g[${refund(cap)}],\"aggregates\":[$day]")))
+    assertFalse("a total's figure changed", signs(card("$g[${refund(raised)}],\"aggregates\":[${day.replace("50000", "90000")}]", "$g[${refund(cap)}],\"aggregates\":[$day]")))
+    assertFalse("what happens past a limit changed", signs(card("$g[${refund(raised)}],\"on_exceed\":\"refuse\"", "$g[${refund(cap)}],\"on_exceed\":\"owner\"")))
+    assertTrue("KIFF's lines and a grant's title are words, not terms", signs(card("$g[${refund(raised).replace("{", "{\"title\":\"Refund\",")}],\"lines\":[\"x\"]", "$g[${refund(cap)}],\"lines\":[\"y\"]")))
+  }
+
+  @Test fun theUnitMustBeTheOffersExactly() {
+    val g = "\"grants\":"
+    assertFalse("another currency", signs(card("$g[${refund(raised.replace("EUR", "USD"))}]", "$g[${refund(cap.replace("EUR", "USD"))}]")))
+    val noUnit = parsedOffer().let { it.copy(changes = it.changes.map { c -> c.copy(unit = null) }) }
+    assertFalse("an offer with no unit for a cap in euros", signs(card("$g[${refund(raised)}]", "$g[${refund(cap)}]"), noUnit))
+  }
+
+  @Test fun aTotalOrACountChangesOnlyItsFigureInItsWindow() {
+    val g = "\"grants\":"
+    val week = day.replace("day\"", "week\"")
+    assertTrue(signs(card("$g[${refund(cap)}],\"aggregates\":[${day.replace("50000", "60000")},$week]", "$g[${refund(cap)}],\"aggregates\":[$day,$week]"), totalOffer()))
+    assertFalse("another figure", signs(card("$g[${refund(cap)}],\"aggregates\":[${day.replace("50000", "70000")}]", "$g[${refund(cap)}],\"aggregates\":[$day]"), totalOffer()))
+    assertFalse("the window moved with it", signs(card("$g[${refund(cap)}],\"aggregates\":[${day.replace("50000", "60000").replace("day\"", "week\"")}]", "$g[${refund(cap)}],\"aggregates\":[$day]"), totalOffer()))
+    assertFalse("the cap moved too", signs(card("$g[${refund(raised)}],\"aggregates\":[${day.replace("50000", "60000")}]", "$g[${refund(cap)}],\"aggregates\":[$day]"), totalOffer()))
+    assertFalse("another unit", signs(card("$g[${refund(cap)}],\"aggregates\":[${day.replace("50000", "60000")}]", "$g[${refund(cap)}],\"aggregates\":[$day]"), totalOffer(unit = "USD")))
+  }
+
+  @Test fun aResourceChangeAllowsNoReadableDifference() {
+    val g = "\"grants\":"
+    val resource = parsedOffer(
+      """{"offer":{"changes":[{"mandate_id":"c1","kind":"resource","parameter":"customer","value":"cus_42","words_before":"","words_after":""}],
+         "draft":"dr_9","confirm_key":"critical","send_held":true}}""",
+    )
+    assertTrue(signs(card("$g[${refund(cap)}]", "$g[${refund(cap)}]"), resource))
+    assertFalse("a cap moved with it", signs(card("$g[${refund(raised)}]", "$g[${refund(cap)}]"), resource))
+    assertFalse("an action added with it", signs(card("$g[${refund(cap)},{\"action\":\"list_charges\"}]", "$g[${refund(cap)}]"), resource))
+  }
+
+  @Test fun aCardMarkedUnchangedMustReadAsInForce() {
+    val sneaky = """,{"revises":"c2","unchanged":true,"current":{"grants":[{"action":"list_charges"}]},"grants":[{"action":"list_charges"},{"action":"delete_customer"}]}"""
+    assertFalse(signs(draft(extra = sneaky)))
+  }
+
+  @Test fun theDraftMustBeThisHeldCallsAgentsAndFromThisHoldWhenKiffSays() {
+    val g = "\"grants\":"
+    assertFalse("another agent's draft", signs(draft().replace("refunds-1", "payouts-1")))
+    assertFalse("a draft with no agent", signs(draft().replace("\"agent_id\":\"refunds-1\",", "")))
+    assertFalse("made from another held call", signs(card("$g[${refund(raised)}]", "$g[${refund(cap)}]", from = ""","from_hold":"ce_8"""")))
+    assertTrue("made from this one", signs(card("$g[${refund(raised)}]", "$g[${refund(cap)}]", from = ""","from_hold":"ce_9"""")))
   }
 
   // MARK: The sheet, from the tap to the signature
@@ -183,6 +264,52 @@ class AllowFromNowOnTest {
     m.loadAllow(round = true)
     assertEquals("""{"round":true}""", String(transport.requestsTo(allow).last().body!!))
     assertTrue(m.state.value.allow!!.rounded)
+  }
+
+  @Test fun roundingUpKeepsThePersonsSwitch() = runTest {
+    reads()
+    transport.answer(allow, 200, offer)
+    transport.answer("GET /v1/me/agent-drafts/dr_9", 200, draft())
+    val m = model()
+    m.openAllowNow(m.state.value.held.single())
+    m.setAllowSendHeld(false)
+    m.loadAllow(round = true)
+    assertFalse("the person turned it off; tafs cloud's send_held: true doesn't turn it back on", m.state.value.allow!!.sendHeld)
+  }
+
+  @Test fun aLateAnswerForAnotherCallLeavesTheOpenSheetAlone() = runTest {
+    val second = held().replace("\"ce_9\"", "\"ce_10\"").replace("\"ch_1\"", "\"ch_2\"")
+    reads(held = "${held()},$second")
+    transport.answer(allow, 200, offer)
+    transport.answer("POST /v1/tafs/taf_1/holds/ce_10/allow", 200, offer.replace("dr_9", "dr_10"))
+    transport.answer("GET /v1/me/agent-drafts/dr_9", 200, draft())
+    transport.answer("GET /v1/me/agent-drafts/dr_10", 200, draft().replace("dr_9", "dr_10"))
+    val m = model()
+    val (first, other) = m.state.value.held.sortedBy { it.kiffId }.let { it.first { c -> c.kiffId == "ce_9" } to it.first { c -> c.kiffId == "ce_10" } }
+    val slow = transport.holdNext(allow)
+    launch { m.openAllowNow(first) }
+    runCurrent()
+    m.closeAllow()
+    m.openAllowNow(other)
+    m.setAllowSendHeld(false)
+    val before = m.state.value.allow
+    slow.complete(Unit)
+    runCurrent()
+    assertEquals("ce_9's answer, come late, changes nothing on ce_10's sheet", before, m.state.value.allow)
+    assertEquals("dr_10", m.state.value.allow!!.draft!!.id)
+  }
+
+  @Test fun aDraftThatCouldntBeReadIsAnErrorNotAMismatch() = runTest {
+    reads()
+    transport.answer(allow, 200, offer)
+    transport.drop("GET /v1/me/agent-drafts/dr_9")
+    val m = model()
+    m.openAllowNow(m.state.value.held.single())
+    val open = m.state.value.allow!!
+    assertNull(open.draft)
+    assertFalse(open.matches)
+    assertTrue("the error says what went wrong", open.error != null)
+    assertFalse(m.confirmAllow())
   }
 
   @Suppress("unused")

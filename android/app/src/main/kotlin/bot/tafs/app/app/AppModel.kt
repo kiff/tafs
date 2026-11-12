@@ -3651,11 +3651,14 @@ class AppModel(
       val offer = answer.offer
       val draft = offer?.draft?.takeIf { it.isNotEmpty() }?.let { kiff.draft(it) }
       if (generation != accountGeneration) return false
-      val matches = offer != null && draft != null && bot.tafs.app.model.HoldAllow.matches(draft, offer)
+      val matches = offer != null && draft != null && bot.tafs.app.model.HoldAllow.matches(draft, offer, call.tafId, call.kiffId, call.proposed.action)
+      // A late answer for a call whose sheet is no longer open changes nothing. Rounding up keeps the person's switch.
       _state.update { s ->
-        s.copy(allow = s.allow?.takeIf { it.call.id == call.id }?.copy(
+        val now = s.allow
+        if (now == null || now.call.id != call.id) s
+        else s.copy(allow = now.copy(
           answer = answer, draft = draft, matches = matches, busy = false, error = null,
-          sendHeld = offer?.sendHeld ?: true, rounded = round,
+          sendHeld = if (round) now.sendHeld else offer?.sendHeld ?: true, rounded = round,
         ))
       }
       return matches
@@ -3663,7 +3666,11 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation == accountGeneration) {
-        _state.update { s -> s.copy(allow = s.allow?.copy(busy = false, error = Words.Version.cardNotRead(why = ErrorWords.of(e)))) }
+        _state.update { s ->
+          val now = s.allow
+          if (now == null || now.call.id != call.id) s
+          else s.copy(allow = now.copy(busy = false, error = Words.Version.cardNotRead(why = ErrorWords.of(e))))
+        }
       }
       return false
     }
