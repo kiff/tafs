@@ -1327,9 +1327,9 @@ struct SetupApproval: View {
     /// Whether this phone is approving it: only then does finishing tap (not a refresh
     /// that finds it approved elsewhere).
     @State private var approvingHere = false
-    /// The key typed on the card, for a connection approved with its key: sent to planque with
-    /// the approval, never kept, and cleared once it went through.
-    @State private var key = ""
+    /// The key sheet is open: a connection approved with its key takes it there, full screen,
+    /// outside the chat. The card itself never holds a field for a secret.
+    @State private var givingKey = false
 
     /// A newer approval in the thread names the same connection (kiff/tafs#138).
     private var replaced: Bool { model.setupThread.replaced(component.id) }
@@ -1378,9 +1378,9 @@ struct SetupApproval: View {
         }
     }
 
-    /// Whether this card's connection is approved by giving its key here: planque says it takes
-    /// one (`request.kind` "api_key"), and it isn't connected yet. Once connected, the card is
-    /// approved as any other.
+    /// Whether this card's connection is approved by giving its key: planque says it takes one
+    /// (`request.kind` "api_key"), and it isn't connected yet. The card then opens the key sheet
+    /// and holds no field itself. Once connected, the card is approved as any other.
     static func takesKeyHere(_ grant: PlanqueClient.Grant?) -> Bool {
         guard let grant else { return false }
         return grant.takesKey && !grant.connected
@@ -1467,14 +1467,6 @@ struct SetupApproval: View {
                         Text(Words.Connect.requestDoesNotMatchWhat)
                             .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                     }
-                    // A connection approved with its key: typed here, as on the Connect sheet. planque
-                    // takes it with the approval; a plain approve of such a grant is refused.
-                    if Self.takesKeyHere(grant), !replaced, state == .needsYou || state.isFailure {
-                        DriveField(Words.Connect.key, text: $key, kind: .secure, secret: true)
-                            .textContentType(.password).autocorrectionDisabled().textInputAutocapitalization(.never)
-                            .padding(12).background(Theme.raised).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                            .accessibilityIdentifier("coach.approval.key")
-                    }
                 }
             } else {
                 Text(Words.Connect.readingRequest).scaledFont(14).foregroundColor(Theme.dim)
@@ -1508,20 +1500,29 @@ struct SetupApproval: View {
                     Button(Words.Coach.Approval.decline) { Task { await model.answer(component, "declined") } }
                         .buttonStyle(OutlineButtonStyle())
                     ApprovalGate {
+                        // A connection approved with its key: the key is given on its own sheet, full
+                        // screen, never typed in the chat. This button only opens it.
                         let byKey = Self.takesKeyHere(grant)
-                        Button(state == .working ? Words.Approval.approving : byKey ? Words.Connect.giveKeyWith(biometry: "\(Biometry.name)") : state.isFailure ? Words.Common.tryAgain : Words.Coach.Answer.approve) {
-                            Task {
-                                guard byKey else {
-                                    await model.approve(component, shown: grant?.digest, shownDraft: draft?.version)
-                                    return
-                                }
-                                if await model.approveWithKey(component, shown: grant?.digest, shownDraft: draft?.version, key: key) { key = "" }
+                        Button(state == .working ? Words.Approval.approving : byKey ? Words.Connect.giveKeyOnSheet : state.isFailure ? Words.Common.tryAgain : Words.Coach.Answer.approve) {
+                            if byKey {
+                                givingKey = true
+                            } else {
+                                Task { await model.approve(component, shown: grant?.digest, shownDraft: draft?.version) }
                             }
                         }
                         .buttonStyle(PrimaryButtonStyle())
                         .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (connected && draft == nil)
-                                  || (!connected && grant.map { $0.profile != nil && model.shownWords(for: $0) == nil } ?? false)
-                                  || (byKey && key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty))
+                                  || (!connected && grant.map { $0.profile != nil && model.shownWords(for: $0) == nil } ?? false))
+                        .fullScreenCover(isPresented: $givingKey) {
+                            if let grant {
+                                // Once the key is given there, the card is approved as any other: tafs cloud
+                                // reads the connection, now connected, and answers Coach.
+                                ConnectApprovalSheet(start: .init(grant: grant.id, needsKey: true), onGiven: {
+                                    Task { await model.approve(component, shown: grant.digest, shownDraft: draft?.version) }
+                                })
+                                .environmentObject(model)
+                            }
+                        }
                     }
                 }
                 .disabled(busy || (answered && !state.isFailure))
