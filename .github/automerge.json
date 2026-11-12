@@ -1,0 +1,10 @@
+{
+  "lanes": {
+    "ios": ["ios/", "docs/ios-app.md"],
+    "android": ["android/", "docs/android-app.md"]
+  },
+  "fragments": "changes/",
+  "authors": ["kiff-qa", "gabosarmiento"],
+  "reviewers": ["agentgabo", "gabosarmiento", "kiff-qa"],
+  "hold_label": "hold-merge"
+}
