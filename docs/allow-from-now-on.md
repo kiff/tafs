@@ -93,6 +93,14 @@ returns the offer, or why there's none:
 
 or `{ "none": "never" | "unit" | "no_change" | "not_yours", "words": "…" }`.
 
+**A change's `kind`** is one of four, and the phone fails closed on any other:
+- `per_action`: a grant's per-call limit, `before` and `after` in the Card's unit (minor units
+  for an amount);
+- `total`: a total's limit in an amount, over its window (`window`, as KIFF names it);
+- `count`: a total's limit as a count of calls, over its window, never rounded;
+- `resource`: a value added to a scope, with `parameter` and `value` instead of `before` and
+  `after`, never rounded.
+
 - It reads the hold from KIFF with the person's session, derives the change (below) from its
   `breaches` alone, never from the taf's words, builds the draft from the agent's Cards in force
   with only that change, submits it with `from_hold`, and asks KIFF for the replay.
