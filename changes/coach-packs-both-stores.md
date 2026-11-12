@@ -1,0 +1,1 @@
+- **Coach says packs are bought on both stores (tafs cloud).** Coach's `usage-and-plans@3` says packs of credits are bought in the tafs app through Google Play or the App Store once Solo runs, and that the First month pack is on Google Play only. @2 said iPhone and iPad didn't sell them yet. It reaches Coach with the next Upgrade (docs/coach.md).

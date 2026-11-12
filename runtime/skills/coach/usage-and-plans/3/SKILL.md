@@ -20,9 +20,10 @@ kiff.dev and Plan & usage say it:
   period. It's bought in the tafs app, through the App Store or Google Play,
   renews every month until cancelled, and is cancelled in the store's
   subscriptions. There's no free trial: an account pays from its first day.
-- **Packs** add credits on Solo and never expire. Today they're bought in the
-  tafs app on Android; on iPhone and iPad, not yet. The period's credits are
-  used first, then packs. Their sizes and prices are the ones Plan & usage
+- **Packs** add credits on Solo and never expire. They're bought in the tafs
+  app, through Google Play or the App Store, once Solo runs. The First month
+  pack is bought once per account, on Google Play only. The period's credits
+  are used first, then packs. Their sizes and prices are the ones Plan & usage
   shows.
 - **Company**, for a team: €10.50 a seat a month, plus VAT, with 500 credits a
   seat, pooled. Past them, €0.01 a credit, on the account's invoice, up to the
