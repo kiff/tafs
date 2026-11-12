@@ -1,5 +1,6 @@
 import type { Fired, Run } from "./agents.js";
 import { type Lang, plural, type When, wordsIn } from "./words/index.js";
+import type { RunCredits } from "./credits.js";
 import type { DeliveryView } from "./delivery.js";
 import { type Health, healthLine } from "./health.js";
 import type { Sent } from "./doors/model.js";
@@ -42,6 +43,8 @@ export interface RequestView {
   code?: string;
   /** A step the taf handed its owner, waiting for "Done" or "Skip it" (yourstep.ts): its line is the step's. */
   your_step?: YourStepView;
+  /** What it used, from KIFF's usage record (credits.ts, runCredits), ready to draw; absent until KIFF counts it, or when the record can't be read. */
+  credits?: RunCredits;
   /** Where its result went: the door's reply as far as tafs cloud sent it, and each place of the taf's own (delivery.ts). */
   deliveries: Array<{ place: "door_reply"; state: Sent["status"]; line: string; send_again?: true } | DeliveryView>;
 }
@@ -300,8 +303,13 @@ export function summaryOf(runs: Run[], how: boolean | TafNow, zone: string, now:
 }
 
 /** The taf's page: counts per state, and the recent requests with what was sent. */
-export function workOf(runs: Run[], zone: string, now: Date, sent: Sent[], again = new Set<string>(), own = new Map<string, DeliveryView[]>(), lang: Lang = "en"): { counts: Record<RequestView["state"], number>; requests: RequestView[] } {
-  const requests = runs.map((r) => requestOf(r, zone, now, sent, again, own.get(r.id) ?? [], lang));
+export function workOf(runs: Run[], zone: string, now: Date, sent: Sent[], again = new Set<string>(), own = new Map<string, DeliveryView[]>(), lang: Lang = "en",
+  credits = new Map<string, RunCredits>()): { counts: Record<RequestView["state"], number>; requests: RequestView[] } {
+  const requests = runs.map((r) => {
+    const q = requestOf(r, zone, now, sent, again, own.get(r.id) ?? [], lang);
+    const c = credits.get(r.id);
+    return c ? { ...q, credits: c } : q;
+  });
   const counts = { done: 0, working: 0, retrying: 0, needs_you: 0, waiting: 0, stopped: 0, failed: 0 };
   for (const q of requests) counts[q.state]++;
   return { counts, requests };
