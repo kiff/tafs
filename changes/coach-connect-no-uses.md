@@ -1,0 +1,1 @@
+- **Coach connects an app from search on the first try (Coach).** `connect-an-app@9` asks for an app as `{entry, name, taf_name}` and no other field. The connection server takes no `uses`, and `@8` sent it, so the first two requests were refused and the person saw "2 failed" (docs/coach.md).
