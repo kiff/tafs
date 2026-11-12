@@ -145,6 +145,9 @@ data class Grant(
   /** The vendor, as the owner knows it: its name, else its server's host. */
   val vendor: String get() = vendorName ?: request.server
 
+  /** The host a key is used with: the vendor's server, without its scheme or path (as iOS's `host(of:)`). */
+  val keyHost: String get() = runCatching { java.net.URI(request.server).host }.getOrNull() ?: request.server
+
   /** A Slack bot connection, which a Slack door listens through: by planque's entry, else its connector's toolkit, never a vendor name. */
   val isSlackBot: Boolean get() = entry == SLACK_BOT_ENTRY || request.connector?.toolkit == "slackbot"
 

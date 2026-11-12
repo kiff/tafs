@@ -98,7 +98,7 @@ class DriveContractTest {
     val gate = File(sources, "views/ApprovalsSetupView.kt").text()
     assertTrue("ApprovalGate carries the confirm mark", Regex("""fun ApprovalGate[\s\S]{0,400}confirms\(\)""").containsMatchIn(gate))
     val listed = listOf(
-      "views/CoachViews.kt" to "actions.giveKey(c, grant.digest, draft?.version, key) else actions.approve(c, grant.digest, draft?.version)",
+      "views/CoachViews.kt" to "actions.openKeySheet(c, draft?.version) else actions.approve(c, grant.digest, draft?.version)",
       "views/TafChatView.kt" to "resuming = true; resume()",
       "views/CoachViews.kt" to "actions.confirmKnob(taf.id)",
       "views/CoachViews.kt" to "{ actions.approveDrive(c) }",
@@ -185,7 +185,7 @@ class DriveContractTest {
   @Test
   fun aVendorsKeyIsNeverCaptured() {
     val s = File(sources, "views/ConnectAppsViews.kt").text()
-    assertTrue("the key field carries the secret mark", "driveTyped({ key = it }), Modifier.fillMaxWidth().secret()" in s)
+    assertTrue("the key field carries the secret mark", Regex("""driveTyped\(\{ typed ->[\s\S]{0,400}?\}\),\s*Modifier\.fillMaxWidth\(\)\.secret\(\)""").containsMatchIn(s))
   }
 
   /** The arguments of the call whose `(` ends just before [from]. */

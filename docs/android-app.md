@@ -621,12 +621,16 @@ and iPad: a password field, and **Give the key with your fingerprint**, which si
 confirmation as an approval and sends the key to planque once (`AppModel.giveKey`,
 `PlanqueClient.giveKey`, the key in `Planque-Vendor-Key`, its SHA-256 in the signed body). The
 key lives only in the open sheet's field, and nothing on the phone keeps it.
-**Coach's approval card takes the key too** (`AppModel.approveCoachWithKey`): while the grant
-takes a key (planque's `api_key`) and isn't connected, the card shows the same password field, and
-its button gives the key the same way (`giveKey`). Then it answers the card as any approval: tafs
-cloud finds the app connected, and Coach goes on or asks for its Cards. So a first taf can connect
-an app that takes a key, before any taf exists. A key that didn't go answers nothing, and says why
-on the card.
+**Coach's approval card never takes a key** (`openCardKeySheet`): the chat isn't a place for a
+secret. While the grant takes a key (planque's `api_key`) and isn't connected, the card has one
+button, **Give the key on a secure sheet**, which opens this same key sheet full screen, outside the
+chat. The sheet says where the key goes (`connect.key_goes_to`: this phone, then the connection
+server, which sends it only to the vendor's host: `Grant.keyHost`, the server without its scheme or
+path, never the vendor's name; and never Coach), and that the clipboard is
+cleared after a paste: more than one character at once is a paste, and the clipboard is cleared
+then. Given there (`AppModel.approveCoachWithKey`), the key goes as above, then the card is answered
+as any approval: tafs cloud finds the app connected, and Coach goes on or asks for its Cards. A key
+that didn't go answers nothing, and says why on the sheet.
 
 A browser connection's sheet (on a taf's Setup) offers tafs cloud's `site_sign_in` action, to
 whoever manages the taf: its `title` ("Sign in to a site") and its line. A tap asks planque, signed
