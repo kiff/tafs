@@ -38,7 +38,9 @@ final class SecureKeySheetTests: XCTestCase {
     func testTheSheetsWordsAreReadByTheGrant() async throws {
         let cloud = cloud()
         StubProtocol.responses["GET /v1/connect/grants/g_2/sheet"] = (200, Self.answer)
-        let sheet = try await cloud.connectionSheet(grant: "g_2")
+        let sheet = try await cloud.connectionSheet(grant: "g_2", proof: "t=1,v1=sig,d=dev_phone01")
+        XCTAssertEqual(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"), "t=1,v1=sig,d=dev_phone01",
+                       "read with this phone's signed grants read")
         XCTAssertEqual(sheet.vendor.name, "Desk")
         XCTAssertEqual(sheet.vendor.host, "api.desk.example")
         XCTAssertEqual(sheet.title, "Secure connection to Desk")
@@ -65,6 +67,37 @@ final class SecureKeySheetTests: XCTestCase {
     func testAnAnswerWithoutThePasteWordsIsNotASheet() {
         let json = #"{"vendor":{"name":"Desk"},"title":"Secure connection to Desk","button":"Connect"}"#
         XCTAssertThrowsError(try KIFFClient.decoder.decode(TafsCloud.ConnectionSheet.self, from: Data(json.utf8)))
+    }
+
+    private func grant(tools: String) throws -> PlanqueClient.Grant {
+        let json = #"{"id":"g_2","status":"pending","text":"","digest":"d","vendor":"Desk","request":{"server":"https://api.desk.example","agent":"a","tools":\#(tools),"kind":"api_key"},"events":[]}"#
+        return try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(json.utf8))
+    }
+
+    /// "Read only" is believed only when the grant this phone read says so: at least one tool,
+    /// every one a read. A sheet that says it of any other grant is refused. A sheet that says
+    /// the connection may change things claims nothing to check.
+    func testReadOnlyIsCheckedAgainstTheGrantThePhoneRead() throws {
+        let readsOnly = try KIFFClient.decoder.decode(TafsCloud.ConnectionSheet.self, from: Data(Self.answer.utf8))
+        XCTAssertTrue(SecureKey.saysTrue(readsOnly, of: try grant(tools: #"[{"tool":"list","read_only":true},{"tool":"get","read_only":true}]"#)))
+        XCTAssertFalse(SecureKey.saysTrue(readsOnly, of: try grant(tools: #"[{"tool":"list","read_only":true},{"tool":"pay","read_only":false}]"#)), "one tool writes")
+        XCTAssertFalse(SecureKey.saysTrue(readsOnly, of: try grant(tools: #"[{"tool":"list","read_only":true},{"tool":"pay"}]"#)), "one tool carries no flag")
+        XCTAssertFalse(SecureKey.saysTrue(readsOnly, of: try grant(tools: "[]")), "no tool at all")
+        let mayChange = try KIFFClient.decoder.decode(TafsCloud.ConnectionSheet.self, from: Data(Self.answer.replacingOccurrences(of: "reads_only", with: "may_change").utf8))
+        XCTAssertTrue(SecureKey.saysTrue(mayChange, of: try grant(tools: #"[{"tool":"pay","read_only":false}]"#)))
+        XCTAssertTrue(SecureKey.saysTrue(mayChange, of: try grant(tools: #"[{"tool":"list","read_only":true}]"#)), "it claims less than the grant allows")
+    }
+
+    /// A sheet whose "read only" isn't the grant's draws nothing to paste or sign.
+    func testASheetThatDoesntMatchItsGrantHasNothingToSign() throws {
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let file = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
+        let refused = try XCTUnwrap(file.range(of: "if !SecureKey.saysTrue(sheet, of: grant) {"))
+        let drawn = try XCTUnwrap(file.range(of: "keySheet(grant, sheet)", range: refused.upperBound..<file.endIndex))
+        let between = String(file[refused.upperBound..<drawn.lowerBound])
+        XCTAssertTrue(between.contains("Words.Connect.requestDoesNotMatchWhat"))
+        XCTAssertFalse(between.contains("paste("), "nothing to paste")
+        XCTAssertFalse(between.contains("approve("), "nothing to sign")
     }
 
     /// The first line's kind picks an icon only. One this app doesn't know still draws its words.

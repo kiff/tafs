@@ -444,7 +444,17 @@ struct ConnectApprovalSheet: View {
                         } else if !sheetAsked {
                             ProgressView().frame(maxWidth: .infinity)
                         } else if let sheet {
-                            if given { receipt(grant, sheet) } else { keySheet(grant, sheet) }
+                            if !SecureKey.saysTrue(sheet, of: grant) {
+                                // The sheet says read only, and the request this phone read isn't: nothing to paste or sign.
+                                heading(sheet)
+                                Text(Words.Connect.requestDoesNotMatchWhat)
+                                    .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                                    .accessibilityIdentifier("connect.sheet.unchecked")
+                            } else if given {
+                                receipt(grant, sheet)
+                            } else {
+                                keySheet(grant, sheet)
+                            }
                         } else {
                             plainKeySheet(grant)
                         }
@@ -465,7 +475,7 @@ struct ConnectApprovalSheet: View {
             .task(id: start.grant) {
                 guard start.needsKey else { return }
                 // tafs cloud's words for this grant. One that doesn't serve them yet leaves the plain sheet.
-                sheet = try? await model.cloud.connectionSheet(grant: start.grant)
+                sheet = await model.connectionSheet(grant: start.grant)
                 sheetAsked = true
             }
         }

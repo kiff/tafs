@@ -2039,6 +2039,16 @@ final class AppModel: ObservableObject {
 
     /// Gives an API-key grant its key, as shown, behind Face ID. A grant with a profile needs
     /// KIFF's words for it shown, as approving does.
+    /// tafs cloud's words for a key's sheet (docs/secure-connection.md), read with this phone's
+    /// signed grants read, as Connect apps is. Nil when they can't be read: the sheet then
+    /// draws the app's own lines.
+    func connectionSheet(grant: String) async -> TafsCloud.ConnectionSheet? {
+        let signer = self.signer
+        planque.tenant = kiffTenant
+        let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+        return try? await cloud.connectionSheet(grant: grant, proof: proof)
+    }
+
     func giveKey(grantID: String, shown: String?, key: String) async -> Bool {
         guard planqueReady, sessionHasKey, let tenant = kiffTenant else {
             lastError = Words.Connect.startConnectedToolsFirst(device: "\(ThisDevice.kind)")

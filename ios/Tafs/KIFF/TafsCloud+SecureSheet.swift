@@ -72,9 +72,11 @@ extension TafsCloud {
     }
 
     /// `GET /v1/connect/grants/{grant}/sheet`: the sheet's words for a grant that takes a key.
-    func connectionSheet(grant: String) async throws -> ConnectionSheet {
+    /// `proof` is this phone's signed grants read, as Connect apps sends it: the connection
+    /// server shows the grant to tafs cloud only as this phone.
+    func connectionSheet(grant: String, proof: String? = nil) async throws -> ConnectionSheet {
         let id = grant.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? grant
-        return try await send("GET", "/v1/connect/grants/\(id)/sheet")
+        return try await send("GET", "/v1/connect/grants/\(id)/sheet", headers: proof.map { ["Planque-Device-Signature": $0] } ?? [:])
     }
 
     /// A sheet's logo: one of tafs cloud's own (`logoURL`), given as its path or as its full
@@ -90,6 +92,15 @@ extension TafsCloud {
 /// What the key's sheet works out on the phone: the key as pasted, its last 4 characters, and
 /// tafs cloud's lines with them filled in. Nothing here is kept after the sheet closes.
 enum SecureKey {
+    /// Whether the sheet's first line is true of the grant this phone read from the
+    /// connection server to sign its digest: "read only" only with at least one tool, every
+    /// one a read. The line people trust most is never tafs cloud's word alone.
+    static func saysTrue(_ sheet: TafsCloud.ConnectionSheet, of grant: PlanqueClient.Grant) -> Bool {
+        guard sheet.lines.contains(where: { $0.kind == "reads_only" }) else { return true }
+        let tools = grant.request.tools
+        return !tools.isEmpty && tools.allSatisfy { $0.readOnly == true }
+    }
+
     /// The key from a paste: the first text on the clipboard, without the blanks or line ends
     /// a copy adds around it. Nothing pasted, nothing taken.
     static func taken(from pasted: [String]) -> String? {

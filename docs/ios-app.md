@@ -289,10 +289,13 @@ the app in sample mode.
   `needsKey`). Once the key is given and its receipt closed, the card is approved as any other: tafs cloud reads the
   grant, connected, and answers Coach. The key never reaches tafs cloud or Coach.
   **The key's sheet looks and acts protected** (`docs/secure-connection.md`). Its words are tafs cloud's, read by the
-  grant (`GET /v1/connect/grants/{grant}/sheet`, `TafsCloud.ConnectionSheet`):
+  grant (`GET /v1/connect/grants/{grant}/sheet`, `TafsCloud.ConnectionSheet`), with this phone's signed grants
+  read (`Planque-Device-Signature`), as Connect apps is:
   - **The title:** the vendor's logo (tafs cloud's own, or none), a lock, the host, and tafs cloud's title.
   - **Three plain lines:** what it may do, that the key is sealed, and that it can be disconnected. The phone draws
-    the words and never works out "read only" itself; a line's `kind` only picks its icon.
+    the words; a line's `kind` picks its icon. **"Read only" is checked against the grant the phone read from the
+    connection server** (`SecureKey.saysTrue`): at least one tool, every one a read. A sheet that says it of any
+    other grant shows "This request doesn't match what it shows", with nothing to paste or sign.
   - **The key is pasted, never typed.** The sheet has no text field. Apple's own paste button reads the clipboard only
     on that tap, so iOS asks nothing more. Only the key's last 4 characters are drawn (`SecureKey.last4`; none for a
     key shorter than 12), and the clipboard is emptied.
