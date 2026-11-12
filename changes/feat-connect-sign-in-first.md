@@ -1,1 +1,0 @@
-- Coach prefers a vendor's sign-in to its key, even when search finds both, and says the key goes on a secure sheet on the phone, outside the chat, never to Coach (connect-an-app@7).

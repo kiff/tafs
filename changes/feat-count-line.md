@@ -1,2 +1,3 @@
+- Coach prefers a vendor's sign-in to its key, even when search finds both, and says the key goes on a secure sheet on the phone, outside the chat, never to Coach (connect-an-app@7).
 - A job run's report in the thread carries its count from the record (`counted`), in the owner's language, so the numbers the owner reads are never the model's. An unapproved Card is recognised by its code (`draft_not_ready`), not its words.
 - "Nothing to hand over" from a run whose record shows calls that went through isn't believed: the record's own lines are handed, and the request says so.

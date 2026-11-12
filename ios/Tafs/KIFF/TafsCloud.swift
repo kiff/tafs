@@ -799,14 +799,37 @@ final class TafsCloud {
         /// The card this owner's message answered, by id: they wrote while it waited, and
         /// their words were its answer.
         var answers: String? = nil
+        /// On a job run's report: where its result went, in tafs cloud's words ("Sent to Google
+        /// Sheets · Refunds 2026"). Drawn as written, above the taf's words. None where tafs
+        /// cloud sends none, or a blank one.
+        var delivered: String? = nil
+        /// On a run's last message: what the run did, counted from the record, in tafs cloud's
+        /// words ("From the record: 5 done · 1 refused"). Drawn as written, under the taf's
+        /// words. The phone counts nothing: none where tafs cloud sends none, or a blank one.
+        var counted: String? = nil
 
         init(at: Date, from: From, kind: Kind = .message, text: String, session: String, door: DoorMark? = nil, work: Work? = nil,
-             attachments: [AttachmentRef] = [], serverID: String? = nil, answers: String? = nil) {
+             attachments: [AttachmentRef] = [], serverID: String? = nil, answers: String? = nil, delivered: String? = nil, counted: String? = nil) {
             self.at = at; self.from = from; self.kind = kind; self.text = text; self.session = session; self.door = door; self.work = work
             self.attachments = attachments; self.serverID = serverID; self.answers = answers
+            self.delivered = Self.line(delivered); self.counted = Self.line(counted)
         }
 
-        enum CodingKeys: String, CodingKey { case at, from, kind, text, session, door, work, attachments, answers, serverID = "id" }
+        /// One of tafs cloud's lines as the app draws it: as written, without the space around it;
+        /// none for a blank one.
+        static func line(_ words: String?) -> String? {
+            guard let trimmed = words?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else { return nil }
+            return trimmed
+        }
+
+        /// tafs cloud's lines around a taf's words, as the chat draws them: where the run's result
+        /// went above, what the run did under. An owner's message and a run's kickoff have none.
+        var runLines: (above: String?, under: String?) {
+            guard from == .taf, kind != .kickoff else { return (nil, nil) }
+            return (delivered, counted)
+        }
+
+        enum CodingKeys: String, CodingKey { case at, from, kind, text, session, door, work, attachments, answers, delivered, counted, serverID = "id" }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             at = try c.decode(Date.self, forKey: .at)
@@ -820,6 +843,9 @@ final class TafsCloud {
             attachments = (try? c.decodeIfPresent([AttachmentRef].self, forKey: .attachments)) ?? []
             serverID = try? c.decodeIfPresent(String.self, forKey: .serverID)
             answers = try? c.decodeIfPresent(String.self, forKey: .answers)
+            // A line the app can't read as words leaves the message without it.
+            delivered = Self.line(try? c.decodeIfPresent(String.self, forKey: .delivered))
+            counted = Self.line(try? c.decodeIfPresent(String.self, forKey: .counted))
         }
     }
 
