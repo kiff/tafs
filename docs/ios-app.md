@@ -313,7 +313,8 @@ the app in sample mode.
 - **Allow this from now on** (`HoldAllow`, `AllowSheetView`; `docs/allow-from-now-on.md`): a third answer on a held
   call's card, beside Approve once and Refuse, that changes the Card so calls like it go on their own.
   - **The button** is the app's own rule, from the held call KIFF sent, with no request (`AppModel.offersAllow`):
-    the person manages Cards, the call isn't Coach's install, and every breach is one a Card change can lift
+    the account's capabilities name `holds.allow` (the service says when the feature is live, and the app never
+    guesses: no list, no button), the person manages Cards, the call isn't Coach's install, and every breach is one a Card change can lift
     (`per_action_exceeded`, `limit_reached`, `resource_not_on_card`). The held call keeps its agent and its
     breaches' outcomes for this (`HeldCall.agent`, `breachOutcomes`).
   - **The tap** posts `/v1/tafs/{id}/holds/{exception}/allow` (`{}`, or `{"round": true}` for "Round up to …"). The

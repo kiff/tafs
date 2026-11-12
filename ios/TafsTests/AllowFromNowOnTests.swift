@@ -60,6 +60,20 @@ final class AllowFromNowOnTests: XCTestCase {
         XCTAssertFalse(HoldAllow.allowable(held(["per_action_exceeded"], kiffID: nil)), "not KIFF's")
     }
 
+    /// The button waits for the service to say the feature is live: `holds.allow` among the
+    /// account's capabilities. Unlike the older capabilities, no list means no button.
+    func testTheButtonWaitsForTheServiceToSayItIsLive() throws {
+        XCTAssertTrue(AppModel.allowIsLive(["holds.answer", "cards.manage", "holds.allow"]))
+        XCTAssertFalse(AppModel.allowIsLive(["holds.answer", "cards.manage"]), "not live yet")
+        XCTAssertFalse(AppModel.allowIsLive([]))
+        XCTAssertFalse(AppModel.allowIsLive(nil), "an account that lists no capabilities")
+        let app = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/App/AppModel.swift")
+        let file = try String(contentsOf: app, encoding: .utf8)
+        let offers = try XCTUnwrap(file.range(of: "func offersAllow(_ call: HeldCall) -> Bool {"))
+        let body = file[offers.upperBound...].prefix(300)
+        XCTAssertTrue(body.contains("Self.allowIsLive(kiffAccount?.capabilities)"), "the button's rule asks it")
+    }
+
     /// The held call KIFF sends carries what the rule reads: its agent and each breach's outcome.
     func testAHeldCallKeepsItsAgentAndItsBreaches() throws {
         let json = #"{"id":"ce_9","subject":"refunds-1","action":"create_refund","entity_id":"ch_1","status":"held","breaches":[{"mandate_id":"c1","outcome":"per_action_exceeded","quantity":"amount","limit":15000}],"parameters":{"amount":32000},"created_at":"2026-11-12T09:00:00Z","expires_at":"2099-01-01T00:00:00Z","accounting_version":3}"#

@@ -2420,9 +2420,17 @@ final class AppModel: ObservableObject {
     }
 
     /// "Allow this from now on" on `call`: for someone who manages Cards, on a hold a Card
-    /// change can lift, from KIFF. Decided from the held call itself, with no request.
+    /// change can lift, from KIFF, once the service says the feature is live. Decided from
+    /// the held call and the account's capabilities, with no request.
     func offersAllow(_ call: HeldCall) -> Bool {
-        mode == .kiff && canManageCards && cloudTaf(for: call.tafID) != nil && HoldAllow.allowable(call)
+        mode == .kiff && Self.allowIsLive(kiffAccount?.capabilities) && canManageCards && cloudTaf(for: call.tafID) != nil && HoldAllow.allowable(call)
+    }
+
+    /// Whether "Allow this from now on" is live: the account's capabilities name `holds.allow`.
+    /// The service says when, and the app never guesses: a list without it, or no list at all,
+    /// shows no button, so nobody taps into a route that isn't there yet.
+    nonisolated static func allowIsLive(_ capabilities: [String]?) -> Bool {
+        capabilities?.contains("holds.allow") ?? false
     }
 
     /// "Allow this from now on" tapped: the sheet opens, and tafs cloud makes the offer now.
