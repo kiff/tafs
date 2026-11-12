@@ -71,6 +71,39 @@ class HaltTest {
     assertTrue("the account's halt is its own", m.state.value.haltOf(null).running)
   }
 
+  @Test fun anAccountHaltedWithNoTafLeftShowsItsHaltOnHomeToResume() = runTest {
+    transport.answer("GET /v1/me", 200, me)
+    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
+    transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
+    transport.answer("GET /v1/halt", 200, halt("halted", runtime = true, kiff = true, planque = true, account = true, at = "2026-11-08T09:00:00Z"))
+    val m = model(scope = backgroundScope)
+    m.refresh()
+    // The list carries no account halt: it's read on its own, and Home's row shows it, to resume.
+    assertTrue(transport.requestsTo("GET /v1/halt").isNotEmpty())
+    assertTrue(m.state.value.haltOf(null).halted)
+    assertTrue(m.state.value.showsAccountHalt)
+  }
+
+  @Test fun homesHaltRowShowsWithTafsOrAnAccountNotRunning() = runTest {
+    transport.answer("GET /v1/me", 200, me)
+    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
+    transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
+    transport.answer("GET /v1/halt", 200, halt("running"))
+    val empty = model(scope = backgroundScope)
+    empty.refresh()
+    assertFalse("no taf, nothing halted: nothing to halt or resume", empty.state.value.showsAccountHalt)
+  }
+
+  @Test fun anAccountWithTafsShowsItsHaltRowWithoutAnotherRead() = runTest {
+    reads()
+    val m = model(scope = backgroundScope)
+    m.refresh()
+    assertTrue(m.state.value.showsAccountHalt)
+    assertTrue("the tafs' own rows say an account halt", transport.requestsTo("GET /v1/halt").isEmpty())
+  }
+
   @Test fun haltingEveryTafIsTheAccountsHalt() = runTest {
     reads()
     transport.answer("POST /v1/halt", 200, halt("halted", runtime = true, kiff = true, planque = true, account = true, at = "2026-10-28T09:00:00Z"))

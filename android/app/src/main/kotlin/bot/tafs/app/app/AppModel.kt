@@ -609,6 +609,12 @@ data class AppState(
   /** Halting is tafs cloud's: the account's, or a taf it runs. */
   fun canHalt(tafId: String?): Boolean = mode == Mode.kiff && (tafId == null || taf(tafId)?.cloudId != null)
 
+  /**
+   * Home's row for halting every taf: with tafs to halt, or whenever the account isn't running, tafs or not, so an account
+   * halted with none left can still be resumed.
+   */
+  val showsAccountHalt: Boolean get() = canHalt(null) && (tafs.isNotEmpty() || !haltOf(null).running)
+
   /** A taf by the KIFF agent it acts as; the agent's id when the app doesn't know it. */
   fun tafName(agent: String): String = taf(agent)?.name ?: agent
 
@@ -1190,8 +1196,12 @@ class AppModel(
       // Removals tafs cloud began and didn't finish: archived tafs aren't listed, so the app finishes them.
       if (read.home.removing.isNotEmpty()) finishRemovals(read.home.removing, generation)
       nameRecordLines(generation)
-      // An account with no taf: Home lists the recipes, when tafs cloud says so (docs/android-app.md).
-      if (_state.value.tafs.isEmpty()) loadRecipes()
+      // An account with no taf: Home lists the recipes, when tafs cloud says so (docs/android-app.md). The list carries no
+      // account halt then, so it's read on its own: a halt that outlived every taf still shows on Home, to resume.
+      if (_state.value.tafs.isEmpty()) {
+        loadRecipes()
+        refreshHalt(null)
+      }
       // The jobs a taf can take, for + New and the strip under the list, read with each refresh.
       loadGallery()
     } catch (e: CancellationException) {
