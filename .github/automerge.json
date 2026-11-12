@@ -21,12 +21,14 @@
   "fragments": "changes/",
   "authors": [
     "kiff-qa",
-    "gabosarmiento"
+    "gabosarmiento",
+    "build-qa"
   ],
   "reviewers": [
     "agentgabo",
     "gabosarmiento",
-    "kiff-qa"
+    "kiff-qa",
+    "build-qa"
   ],
   "hold_label": "hold-merge"
 }
