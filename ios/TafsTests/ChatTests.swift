@@ -137,6 +137,55 @@ final class ChatTests: XCTestCase {
         XCTAssertTrue(model.awaitingReply(id), "the taf hasn't answered yet")
     }
 
+    /// tafs cloud's two lines about a run are read as written: where its result went (`delivered`)
+    /// and what it did, counted from the record (`counted`). A blank one is none, and with none
+    /// sent nothing is drawn: the phone counts nothing itself.
+    func testARunsLinesAreReadAsTafsCloudWroteThemAndNoneIsNone() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[
+          {"id":"run_1.4","at":"2026-11-05T09:00:00Z","from":"taf","kind":"message","text":"Three refunds made.","session":"s1",
+           "delivered":"Sent to Slack · #ops.","counted":"  From the record: 3 done · 1 refused\n"},
+          {"id":"run_2.4","at":"2026-11-05T10:00:00Z","from":"taf","kind":"message","text":"Nothing due today.","session":"s2","delivered":"","counted":" "},
+          {"id":"run_3.4","at":"2026-11-05T11:00:00Z","from":"taf","kind":"message","text":"Done.","session":"s3"},
+          {"id":"run_4.4","at":"2026-11-05T12:00:00Z","from":"taf","kind":"message","text":"Done again.","session":"s4","delivered":7,"counted":["5 done"]}]}
+        """)
+        await model.loadChat(id)
+        let messages = try XCTUnwrap(model.chats[id])
+        XCTAssertEqual(messages.count, 4, "a line the app can't read never drops its message")
+        XCTAssertEqual(messages[0].delivered, "Sent to Slack · #ops.")
+        XCTAssertEqual(messages[0].counted, "From the record: 3 done · 1 refused", "as written, without the space around it")
+        // Above the taf's words, where the result went; under them, what the run did.
+        XCTAssertEqual(messages[0].runLines.above, "Sent to Slack · #ops.")
+        XCTAssertEqual(messages[0].runLines.under, "From the record: 3 done · 1 refused")
+        XCTAssertNil(messages[1].delivered, "a blank line is no line")
+        XCTAssertNil(messages[1].counted)
+        XCTAssertNil(messages[2].runLines.above, "a tafs cloud that sends none: no line")
+        XCTAssertNil(messages[2].runLines.under, "and nothing counted here")
+        XCTAssertNil(messages[3].delivered, "not words: no line")
+        XCTAssertNil(messages[3].counted)
+        XCTAssertEqual(messages[3].text, "Done again.")
+    }
+
+    /// The lines are a taf's: an owner's message or a run's kickoff draws none, whatever it carries.
+    func testOnlyATafsMessageDrawsARunsLines() {
+        let at = Date(timeIntervalSince1970: 1_700_000_000)
+        let taf = TafsCloud.ChatMessage(at: at, from: .taf, text: "Done.", session: "s1", delivered: "Sent to Slack.", counted: "From the record: 1 done")
+        XCTAssertEqual(taf.runLines.above, "Sent to Slack.")
+        XCTAssertEqual(taf.runLines.under, "From the record: 1 done")
+        let owner = TafsCloud.ChatMessage(at: at, from: .owner, text: "Do it.", session: "s1", delivered: "Sent to Slack.", counted: "From the record: 1 done")
+        XCTAssertNil(owner.runLines.above)
+        XCTAssertNil(owner.runLines.under)
+        let kickoff = TafsCloud.ChatMessage(at: at, from: .taf, kind: .kickoff, text: "Work the queue", session: "s1", counted: "From the record: 1 done")
+        XCTAssertNil(kickoff.runLines.under)
+        // Only one of the two: the other draws nothing.
+        let counted = TafsCloud.ChatMessage(at: at, from: .taf, text: "Done.", session: "s1", counted: "From the record: 1 done")
+        XCTAssertNil(counted.runLines.above)
+        XCTAssertEqual(counted.runLines.under, "From the record: 1 done")
+        // The lines aren't part of what makes a message itself: its id is the same with or without them.
+        XCTAssertEqual(taf.id, TafsCloud.ChatMessage(at: at, from: .taf, text: "Done.", session: "s1").id)
+    }
+
     /// A taf hands a setting to Coach with an `ask_coach` card (kiff/tafs#476, gap 15): it's in
     /// its chat at its time, and no other card of its thread is; Ask Coach opens Coach on the
     /// taf with its words in the box, nothing sent.

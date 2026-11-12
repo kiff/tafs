@@ -109,6 +109,8 @@ struct TafChatView: View {
                                     VStack(alignment: .leading, spacing: 6) {
                                         // What it did before writing it, folded (kiff/tafs#285).
                                         if m.from == .taf, let work = m.work { WorkSummary(work: work) }
+                                        // Where the run's result went: tafs cloud's line, above the taf's words.
+                                        if let line = m.runLines.above { RunLine(text: line).accessibilityIdentifier("taf-delivered") }
                                         // The stored answer, apart from the one streaming, which the
                                         // same bubble draws under its own id (ChatPinUITests).
                                         if m.from == .taf {
@@ -117,6 +119,8 @@ struct TafChatView: View {
                                         } else {
                                             ChatBubble(message: m, taf: taf, fullWidth: false)
                                         }
+                                        // What the run did, counted from the record: tafs cloud's line, under them.
+                                        if let line = m.runLines.under { RunLine(text: line).accessibilityIdentifier("taf-counted") }
                                     }
                                 case .held(let call):
                                     HeldCallCard(call: call)
@@ -535,6 +539,20 @@ struct TafChatView: View {
                 model.putBackFiles(files, key)
             }
         }
+    }
+}
+
+/// One of tafs cloud's lines about a run, beside the taf's own words: small and secondary, drawn
+/// as written. The app adds no word of its own and counts nothing.
+struct RunLine: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .textSelection(.enabled)
     }
 }
 
