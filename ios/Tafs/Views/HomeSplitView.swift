@@ -218,6 +218,15 @@ struct HomeSplitView: View {
                         .buttonStyle(.drivablePlain)
                         .driveWords(recipe.lead)
                     }
+                    // The strip shows a few: this row opens them all, in tafs cloud's words for them.
+                    if let words = gallery.seeAll {
+                        Button { showingGallery = true } label: {
+                            Text(words).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                        }
+                        .buttonStyle(.drivablePlain)
+                        .driveWords(words)
+                        .accessibilityIdentifier("home.recipe-strip.all")
+                    }
                 } header: { Eyebrow(text: gallery.strip.title) }
                 .accessibilityIdentifier("home.recipe-strip")
             }

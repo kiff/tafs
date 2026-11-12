@@ -1,0 +1,1 @@
+- **iOS: "All jobs" under the jobs on Home.** The short list of jobs under your tafs now ends with a row that opens every job.

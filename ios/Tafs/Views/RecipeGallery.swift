@@ -83,6 +83,8 @@ struct RecipeStrip: View {
     let gallery: TafsCloud.Gallery
     var logo: (String?) -> URL? = { _ in nil }
     let open: (TafsCloud.Recipes.Recipe) -> Void
+    /// Opens every job (+ New's gallery), from the row under the strip.
+    var seeAll: (() -> Void)? = nil
 
     var body: some View {
         let jobs = gallery.stripRecipes
@@ -91,6 +93,21 @@ struct RecipeStrip: View {
                 if !gallery.strip.title.isEmpty { Eyebrow(text: gallery.strip.title) }
                 ForEach(jobs) { recipe in
                     RecipeRow(recipe: recipe, category: gallery.category(of: recipe), logo: logo) { open(recipe) }
+                }
+                // The strip shows a few: this row opens them all, in tafs cloud's words for them.
+                if let seeAll, let words = gallery.seeAll {
+                    Button(action: seeAll) {
+                        HStack {
+                            Text(words).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                            Spacer()
+                            Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim).accessibilityHidden(true)
+                        }
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.drivablePlain)
+                    .driveWords(words)
+                    .accessibilityIdentifier("home.recipe-strip.all")
                 }
             }
             .accessibilityIdentifier("home.recipe-strip")
