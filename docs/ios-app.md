@@ -277,6 +277,10 @@ the app in sample mode.
   with KIFF's words: approve first, then sign in at the vendor, as for any connection. An
   API-key vendor takes its key in the sheet: planque gets the key in `Planque-Vendor-Key`, and
   the device signs only its SHA-256 with the grant's digest. Its list and open approval are cleared when the account changes; delayed replies from the previous account or a cancelled search are discarded.
+  **Coach's approval card takes the key too** (`SetupApproval`, `AppModel.approveWithKey`): when planque says the
+  connection is approved with its key and it isn't connected yet, the card shows the key field and its button gives
+  the key the same way, since planque refuses a plain approve of such a grant. Then the card is approved as any other:
+  tafs cloud reads the grant, connected, and answers Coach. The key never reaches tafs cloud or Coach.
 - **What a grant's digest covers** (`PlanqueClient.digestCovers`): the phone recomputes planque's
   digest before it shows or signs a grant, and refuses one that doesn't match. Without `digest_v`,
   it covers the request alone (v1). With `digest_v: 2`, it covers `{"lang", "request", "text"}`, so
