@@ -171,7 +171,7 @@ struct HomeSplitView: View {
                     }
                     // Every taf at once, from its own screen, as on the phone's home.
                     // The owner looked for it here (kiff/tafs#138).
-                    if !model.cloudTafs.isEmpty, model.canManageCards {
+                    if model.showsAccountHalt {
                         NavigationLink(value: HomeSelection.haltAll) { haltAllRow.modifier(drives(Words.Taf.Halt.titleAll, .haltAll)) }
                     }
                 }

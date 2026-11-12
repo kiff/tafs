@@ -1,0 +1,1 @@
+- **iPhone and iPad: a halted account with no taf can be resumed.** Home shows "Halt all" whenever the account is halted, with or without a taf, so **Resume** is always there. Before, the row showed only while a taf ran, and a halt that outlived its tafs had nowhere to be lifted from (docs/approvals.md).
