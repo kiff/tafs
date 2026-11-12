@@ -3007,6 +3007,8 @@ function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     tenant: me.tenantID, taf: taf.id, component, token: bearer(event), proof: event.headers?.["planque-device-signature"] ?? "",
     store: deps.coach, planqueBase: deps.planqueBase, kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, now: deps.now?.() ?? new Date(),
     newID: () => `ask_${randomBytes(9).toString("hex")}`, lang: langOf(event),
+    // The key and its Card under one fingerprint, once KIFF and the connection server take kiff.requests.v1.
+    keyAndCards: process.env.TAFS_KEY_AND_CARDS === "on",
     // The prompt names the taf being set up, by its name: the card is Coach's, so not `taf`'s.
     tafName: async (agent) => (agent ? (await deps.tafs.list(me.tenantID)).find((t) => t.kiffAgent === agent)?.name : undefined),
   };

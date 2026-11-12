@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { connectedKey, approvalWords, ASK_KEPT_MS, WORDS } from "../src/cloud/approval.js";
 import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
@@ -632,5 +632,104 @@ describe("the approval window (kiff/tafs#494): which key an ask takes, and the r
     const r2 = await w2.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
     s2.grants = [grant({ status: "connected" })];
     expect((await w2.call("POST", `${ASK}/${(r2.body.ask as { id: string }).id}`, { result: "connected" }, SIG)).body).toMatchObject({ answer: "approved" });
+  });
+});
+
+describe("one signature for a key and its Card (key_and_cards, docs/secure-connection.md)", () => {
+  const API = { kind: "api_key", api: { url: "https://example.com/desk/openapi.json", digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } } };
+  const keyGrant = (over: Record<string, unknown> = {}) => grant(over, API);
+  const SIGNED = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" };
+  afterEach(() => { delete process.env.TAFS_KEY_AND_CARDS; });
+
+  async function keyWorld(on: boolean) {
+    if (on) process.env.TAFS_KEY_AND_CARDS = "on";
+    const s = services();
+    s.grants = [keyGrant()];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(keyGrant().request), draft: "drf_1", shown_draft: "v3", can: ["key_and_cards"] });
+    return { s, w, r };
+  }
+
+  it("asks a key grant with its Card's draft as one signature over both requests, behind the fingerprint", async () => {
+    const { r, w } = await keyWorld(true);
+    expect(r.body).toMatchObject({
+      outcome: "sign",
+      ask: { step: "key_and_cards", scheme: "kiff.requests.v1", message: "", key: "critical", planque: { grant: "g_1", body: { digest: keyGrant().digest } }, kiff: { draft: "drf_1", version: "v3" } },
+    });
+    expect(w.told()).toBeUndefined();
+  });
+
+  it("asks it only of a phone that says it can sign it, only for a grant that takes a key, and only with a draft", async () => {
+    process.env.TAFS_KEY_AND_CARDS = "on";
+    const s = services();
+    s.grants = [keyGrant()];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    const shown = sha256(keyGrant().request);
+    // An app from before (Android up to 67, today's iOS) doesn't say it: the two steps, flag on.
+    expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: shown, draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ ask: { step: "connect" } });
+    // No draft on the card: the key alone.
+    expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: shown, can: ["key_and_cards"] })).body).toMatchObject({ ask: { step: "connect" } });
+    // A grant that signs in at the vendor (no key): its tools come after the sign-in, so the two steps.
+    s.grants = [grant()];
+    expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request), draft: "drf_1", shown_draft: "v3", can: ["key_and_cards"] })).body)
+      .toMatchObject({ ask: { step: "connect" } });
+  });
+
+  it("never answers approved for an issued Card when the key didn't go in, and notes the connection once it did", async () => {
+    const { s, w, r } = await keyWorld(true);
+    const id = (r.body.ask as { id: string }).id;
+    s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
+    const r1 = await w.call("POST", `${ASK}/${id}`, { result: "confirmed" }, SIGNED);
+    expect(r1.body.answer).toMatch(/^failed: /);
+    expect(r1.body.answer).not.toBe("approved");
+    expect(await w.coach.get(connectedKey("t_acme", "g_1"))).toBeUndefined();
+    // Asked again with the key in: approved, and the connection noted for the done mark on Coach's next card.
+    const again = await keyWorld(true);
+    again.s.grants = [keyGrant({ status: "connected" })];
+    again.s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
+    const id2 = (again.r.body.ask as { id: string }).id;
+    expect((await again.w.call("POST", `${ASK}/${id2}`, { result: "confirmed" }, SIGNED)).body).toMatchObject({ answer: "approved" });
+    expect(await again.w.coach.get(connectedKey("t_acme", "g_1"))).toEqual({ vendor: "Stripe", read_only: false });
+  });
+
+  it("keeps the two steps while the flag is off: the services don't take kiff.requests.v1 yet", async () => {
+    const { r } = await keyWorld(false);
+    expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+  });
+
+  it("checks the draft as the cards step does: a version the card didn't show is read again", async () => {
+    process.env.TAFS_KEY_AND_CARDS = "on";
+    const s = services();
+    s.grants = [keyGrant()];
+    s.drafts.drf_1 = { status: "draft", version: "v4", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(keyGrant().request), draft: "drf_1", shown_draft: "v3", can: ["key_and_cards"] });
+    expect(r.body).toEqual({ outcome: "read_again", note: WORDS.outOfDate });
+  });
+
+  it("answers approved only when the key went in and the Card is issued, and says which half didn't", async () => {
+    const { s, w, r } = await keyWorld(true);
+    const id = (r.body.ask as { id: string }).id;
+    // The key went in, the Card didn't: connected, and the Card still waits.
+    s.grants = [keyGrant({ status: "connected" })];
+    const half = await w.call("POST", `${ASK}/${id}`, { result: "failed", why: "the confirm wasn't answered" }, SIGNED);
+    expect(half.body.answer).toMatch(/^failed: Stripe is connected; /);
+    // Coach hears it, so its next card asks for the Card alone (the connection is done).
+    expect(w.told()).toMatchObject({ answer: expect.stringMatching(/^failed: Stripe is connected; /) });
+  });
+
+  it("answers approved for both at once, and failed when the key never went in", async () => {
+    const both = await keyWorld(true);
+    both.s.grants = [keyGrant({ status: "connected" })];
+    both.s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
+    const id = (both.r.body.ask as { id: string }).id;
+    expect((await both.w.call("POST", `${ASK}/${id}`, { result: "confirmed" }, SIGNED)).body).toMatchObject({ answer: "approved" });
+    const none = await keyWorld(true);
+    const nid = (none.r.body.ask as { id: string }).id;
+    const r = await none.w.call("POST", `${ASK}/${nid}`, { result: "failed", why: "the key was refused" }, SIGNED);
+    expect(r.body.answer).toMatch(/^failed: /);
+    expect(r.body.answer).not.toMatch(/is connected/);
   });
 });
