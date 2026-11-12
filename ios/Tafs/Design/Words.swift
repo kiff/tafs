@@ -750,6 +750,58 @@ enum Words {
         /// within the Card
         static var withinCard: String { Words.line("card.within_card") }
     }
+    enum Catalog {
+        /// This phone makes a key that signs only catalog revisions, and only behind your fingerprint. Send the key and your operator id to whoever enrols operators.
+        static var enrolText: String { Words.line("catalog.enrol_text") }
+        /// Sign catalog revisions on this phone
+        static var enrolTitle: String { Words.line("catalog.enrol_title") }
+        /// {argument} is fixed to {value}
+        static func fixedTo(argument: String, value: String) -> String { Words.line("catalog.fixed_to", argument, value) }
+        /// Make the key
+        static var makeKey: String { Words.line("catalog.make_key") }
+        /// This revision isn't what the connection server signs, so nothing can be signed here. Open it again.
+        static var notWhatIsSigned: String { Words.line("catalog.not_what_is_signed") }
+        /// Only a reviewed revision is published, and only a published one retired.
+        static var nothingToSign: String { Words.line("catalog.nothing_to_sign") }
+        /// Open
+        static var `open`: String { Words.line("catalog.open") }
+        /// Open a revision
+        static var openTitle: String { Words.line("catalog.open_title") }
+        /// Your operator id
+        static var operatorId: String { Words.line("catalog.operator_id") }
+        /// Catalog operator
+        static var operatorRow: String { Words.line("catalog.operator_row") }
+        /// This phone's catalog key
+        static var publicKey: String { Words.line("catalog.public_key") }
+        /// Publish
+        static var publish: String { Words.line("catalog.publish") }
+        /// Publish {id}
+        static func publishReason(id: String) -> String { Words.line("catalog.publish_reason", id) }
+        /// {id} is published.
+        static func publishedNow(id: String) -> String { Words.line("catalog.published_now", id) }
+        /// Reads only
+        static var reads: String { Words.line("catalog.reads") }
+        /// Retire
+        static var retire: String { Words.line("catalog.retire") }
+        /// Retire {id}
+        static func retireReason(id: String) -> String { Words.line("catalog.retire_reason", id) }
+        /// {id} is retired.
+        static func retiredNow(id: String) -> String { Words.line("catalog.retired_now", id) }
+        /// Revision, as name@n
+        static var revisionId: String { Words.line("catalog.revision_id") }
+        enum State {
+            /// Draft
+            static var draft: String { Words.line("catalog.state.draft") }
+            /// Published
+            static var published: String { Words.line("catalog.state.published") }
+            /// Retired
+            static var retired: String { Words.line("catalog.state.retired") }
+            /// Reviewed
+            static var reviewed: String { Words.line("catalog.state.reviewed") }
+        }
+        /// Can change things
+        static var writes: String { Words.line("catalog.writes") }
+    }
     enum Chat {
         enum Answer {
             /// Copy this answer
