@@ -541,6 +541,30 @@ taf, and **Ask Coach** opens a conversation about the taf.
   <img src="screenshots/android/record-by-taf-dark.png" width="160" alt="The Record by taf, in dark: a chip per taf, each entry starting with its taf">
 </p>
 
+## Allow this from now on
+
+A held call's third answer ([allow-from-now-on.md](allow-from-now-on.md)): change the Card so calls
+like this one go on their own.
+
+- **The button** shows by the app's own rule, from the held call KIFF sent, with no request
+  (`AppState.offersAllow`, `HoldAllow.allowable`): someone who manages Cards, on a hold that isn't a
+  currency mismatch (`card_unit`) or Coach's install, whose every breach is `per_action_exceeded`,
+  `limit_reached` or `resource_not_on_card`.
+- **A tap** opens the sheet (`AllowSheet`) and posts tafs cloud's `…/holds/{exception}/allow`,
+  which makes the draft. A `none` shows tafs cloud's words, with nothing to sign.
+- **The sheet** shows tafs cloud's change, before and after, and KIFF's own lines for each Card that
+  changes, read from KIFF's draft by the phone. Under them: what it would have done, the held
+  call's switch (on by default; off, the Card changes and the call still waits), and **Round up to
+  {amount}** only when the offer names `round` (the app never rounds).
+- **The device signs what the person saw** (`HoldAllow.matches`): the draft differs from the Cards
+  in force only in the Cards the offer's changes name, each carrying the offered figure for its
+  kind (`per_action`, `total`, `count`, `resource`). A Card retired, a Card that revises none in
+  force, another Card changed, a grant added or taken away, or a kind the contract doesn't name:
+  "This change isn't what was offered", and no sign button.
+- **One signature:** the draft's confirm, behind the approval key, with the held call
+  (`hold: {id, accounting_version}`) when the switch is on, so KIFF lets it go under the same
+  signature. Then Needs you is read again.
+
 ## Your step
 
 A step a taf may never take itself, such as approving a bank transfer, is handed to its owner

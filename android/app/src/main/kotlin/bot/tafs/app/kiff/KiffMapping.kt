@@ -333,6 +333,8 @@ object KiffMapping {
       tafSays = tafSays(e.tafReason),
       tafAbout = tafSays(e.tafAbout, TAF_ABOUT_MAX),
       install = install(e, coach),
+      kind = e.kind,
+      breachOutcomes = e.breaches.map { it.outcome },
     )
   }
 

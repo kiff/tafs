@@ -437,6 +437,8 @@ data class AppState(
   val listApprovalNeedsKey: Boolean = false,
   /** The key sheet opened from Coach's card: that card, and its draft version, answered once the key went. */
   val keyForCard: KeyForCard? = null,
+  /** "Allow this from now on", open on a held call (docs/allow-from-now-on.md). */
+  val allow: AllowSheetState? = null,
   /** A connection from Connect apps that just came back signed in or connected: said at once, over the list. */
   val connectedNow: bot.tafs.app.kiff.Grant? = null,
   /**
@@ -616,6 +618,10 @@ data class AppState(
    * halted with none left can still be resumed.
    */
   val showsAccountHalt: Boolean get() = canHalt(null) && (tafs.isNotEmpty() || !haltOf(null).running)
+
+  /** "Allow this from now on" on [call]: for someone who manages Cards, on a hold a Card change can lift, from KIFF. */
+  fun offersAllow(call: HeldCall): Boolean =
+    mode == Mode.kiff && canManageCards && call.kiffId != null && holder(call.tafId)?.cloudId != null && bot.tafs.app.model.HoldAllow.allowable(call)
 
   /**
    * A message refused because the account or its taf is halted: while that halt holds, its Not sent row offers Resume, behind the
@@ -3599,6 +3605,113 @@ class AppModel(
   fun dismissConnectedNow() = _state.update { it.copy(connectedNow = null) }
 
   fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, keyForCard = null) }
+
+  /** "Allow this from now on" tapped on a held call: the sheet opens, and tafs cloud makes the offer now, never before. */
+  fun openAllow(call: HeldCall) {
+    scope.launch { openAllowNow(call) }
+  }
+
+  /** The sheet open on [call], and tafs cloud's offer read: true when it's what was offered and can be signed. */
+  suspend fun openAllowNow(call: HeldCall): Boolean {
+    _state.update { it.copy(allow = AllowSheetState(call, busy = true)) }
+    return loadAllow(round = false)
+  }
+
+  /** Round up to the figure the offer named: tafs cloud makes the rounded draft, shown and checked the same way. */
+  fun roundAllow() {
+    if (_state.value.allow?.busy != false) return
+    _state.update { s -> s.copy(allow = s.allow?.copy(busy = true, error = null)) }
+    scope.launch { loadAllow(round = true) }
+  }
+
+  fun setAllowSendHeld(on: Boolean) = _state.update { s -> s.copy(allow = s.allow?.copy(sendHeld = on)) }
+
+  fun closeAllow() = _state.update { it.copy(allow = null) }
+
+  fun startConfirmAllow() {
+    scope.launch { confirmAllow() }
+  }
+
+  /**
+   * tafs cloud's offer for the open sheet's held call, then KIFF's draft, read by this phone: the sheet shows KIFF's own lines
+   * under tafs cloud's words, and signs only when the draft is what was offered ([bot.tafs.app.model.HoldAllow.matches]).
+   */
+  suspend fun loadAllow(round: Boolean): Boolean {
+    val open = _state.value.allow ?: return false
+    val call = open.call
+    val cloudId = _state.value.holder(call.tafId)?.cloudId
+    val exception = call.kiffId
+    if (cloudId == null || exception == null) {
+      _state.update { s -> s.copy(allow = s.allow?.copy(busy = false, error = Words.NeedsYou.answerNotTaken)) }
+      return false
+    }
+    val generation = accountGeneration
+    try {
+      val answer = cloud.allowOffer(cloudId, exception, round)
+      val offer = answer.offer
+      val draft = offer?.draft?.takeIf { it.isNotEmpty() }?.let { kiff.draft(it) }
+      if (generation != accountGeneration) return false
+      val matches = offer != null && draft != null && bot.tafs.app.model.HoldAllow.matches(draft, offer)
+      _state.update { s ->
+        s.copy(allow = s.allow?.takeIf { it.call.id == call.id }?.copy(
+          answer = answer, draft = draft, matches = matches, busy = false, error = null,
+          sendHeld = offer?.sendHeld ?: true, rounded = round,
+        ))
+      }
+      return matches
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) {
+        _state.update { s -> s.copy(allow = s.allow?.copy(busy = false, error = Words.Version.cardNotRead(why = ErrorWords.of(e)))) }
+      }
+      return false
+    }
+  }
+
+  /**
+   * One signature: KIFF's draft as this phone read it, confirmed with the approval key, with the held call when the switch is on,
+   * so KIFF lets it go under the same signature. With it off, the Card changes and the call still waits for its own answer.
+   */
+  suspend fun confirmAllow(): Boolean {
+    val open = _state.value.allow ?: return false
+    val draft = open.draft ?: return false
+    if (!open.matches || open.busy || draft.confirmed) return false
+    val tenant = kiffTenant ?: return false
+    if (_state.value.approvalKeyLost) {
+      _state.update { s -> s.copy(allow = s.allow?.copy(error = KiffClient.APPROVAL_KEY_LOST)) }
+      return false
+    }
+    val hold = if (open.sendHeld) holdAnswered(open.call) else null
+    val generation = accountGeneration
+    _state.update { s -> s.copy(allow = s.allow?.copy(busy = true, error = null)) }
+    try {
+      confirmGrant("tafs.cards.v1|$tenant|${draft.id}|${draft.version}", Words.NeedsYou.allowTitle)
+      if (generation != accountGeneration) return false
+      val signer = signer
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      if (hold == null) kiff.confirmDraft(draft.id, draft.version) else kiff.confirmDraft(draft.id, draft.version, hold)
+    } catch (e: SignerException) {
+      if (generation == accountGeneration) {
+        _state.update { s -> s.copy(allow = s.allow?.copy(busy = false, error = notSigned(e, Words.Common.notDoneUnconfirmed))) }
+      }
+      return false
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) {
+        _state.update { s -> s.copy(allow = s.allow?.copy(busy = false, error = Words.Version.cardNotRead(why = ErrorWords.of(e)))) }
+      }
+      return false
+    } finally {
+      kiff.setupSigner = null
+    }
+    if (generation != accountGeneration) return false
+    closeAllow()
+    // The Card changed, and with the switch on the call went: Needs you and the taf read again.
+    refresh()
+    return true
+  }
 
   /**
    * Coach's card for an app connected with a key: its key screen, the Connect sheet's own, full screen and outside the chat, so
@@ -7018,3 +7131,16 @@ sealed interface ReceiptsResult {
 
 /** The key sheet opened from Coach's approval card: the card, answered once the key went, and the draft version it showed. */
 data class KeyForCard(val card: SetupComponent, val draft: String?)
+
+/** "Allow this from now on", open on [call]: tafs cloud's answer, KIFF's draft as this phone read it, and whether it's what was offered. */
+data class AllowSheetState(
+  val call: HeldCall,
+  val answer: bot.tafs.app.kiff.AllowAnswer? = null,
+  val draft: AgentDraft? = null,
+  val matches: Boolean = false,
+  val busy: Boolean = false,
+  val error: String? = null,
+  val sendHeld: Boolean = true,
+  /** The rounded figure was asked for: the offer no longer offers to round. */
+  val rounded: Boolean = false,
+)
