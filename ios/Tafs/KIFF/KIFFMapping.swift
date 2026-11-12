@@ -294,6 +294,8 @@ enum KIFFMapping {
         call.install = install(of: e, coach: coach)
         call.tafAbout = tafWords(e.tafAbout, max: 120)
         call.tafReason = tafWords(e.tafReason, max: 280)
+        call.agent = e.subject
+        call.breachOutcomes = e.breaches.map(\.outcome)
         return call
     }
 

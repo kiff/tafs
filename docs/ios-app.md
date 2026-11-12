@@ -331,6 +331,28 @@ the app in sample mode.
   - They never stand in for KIFF's amount, rule or action, and nothing is read from them.
   - The gateway's `kiff_about` and `kiff_reason` arguments aren't listed again under Details,
     where the ids stay (`TafSaysTests`).
+- **Allow this from now on** (`HoldAllow`, `AllowSheetView`; `docs/allow-from-now-on.md`): a third answer on a held
+  call's card, beside Approve once and Refuse, that changes the Card so calls like it go on their own.
+  - **The button** is the app's own rule, from the held call KIFF sent, with no request (`AppModel.offersAllow`):
+    the account's capabilities name `holds.allow` (the service says when the feature is live, and the app never
+    guesses: no list, no button), the person manages Cards, the call isn't Coach's install, and every breach is one a Card change can lift
+    (`per_action_exceeded`, `limit_reached`, `resource_not_on_card`). The held call keeps its agent and its
+    breaches' outcomes for this (`HeldCall.agent`, `breachOutcomes`).
+  - **The tap** posts `/v1/tafs/{id}/holds/{exception}/allow` (`{}`, or `{"round": true}` for "Round up to …"). The
+    app never rounds. No offer, for a reason this app knows or not, shows tafs cloud's words with nothing to sign.
+  - **The sheet** shows tafs cloud's change before and after, KIFF's own lines for each Card that changes, what it
+    would have let go when tafs cloud says, and the switch "Let this one go out too".
+  - **The phone reads KIFF's draft itself and signs only an exact match** (`HoldAllow.matches`): the draft is for
+    the held call's agent (and made from this call, when KIFF says); it retires no Card and adds none; each changed
+    Card is one the offer names and reads exactly as the Card in force with the one offered change made: a limit
+    moved, in the offer's unit (and window, when it names one), or, for a `resource` change, exactly the scope's values
+    in force plus the offered one. Every other term is compared (`HoldAllow.Terms`): each action's caps, scope, states
+    and next steps; each total's window, measure and per-item parameter; what happens past a limit; who holds the Card;
+    where it applies; when it starts and ends. A draft that sets how long a hold waits, or revokes, is refused. Anything else shows "This change isn't what was offered", with no
+    sign button. A draft that couldn't be read shows the error alone.
+  - **One Face ID** signs the version the phone read (`tafs.cards.v1`). With the switch on, the confirm names the
+    held call and the version of it the person saw, so KIFF lets it go under the same signature. With it off, the
+    Card changes and the call still waits. Rounding up keeps the person's switch.
 
 ### Connect apps
 
