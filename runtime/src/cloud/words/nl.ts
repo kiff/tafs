@@ -174,7 +174,7 @@ export const nl: Words = {
   suggestions_on: "Suggesties verschijnen in een nieuw gesprek met Coach tot het account zijn eerste taf heeft.",
   suggestions_off: "Suggesties staan uit voor dit account.",
   suggestions_live: "Het account heeft al een taf, dus een nieuw gesprek met Coach begint leeg. Suggesties kunnen voorgoed uit.",
-  refusal_halted_taf: "Deze taf is stilgezet: er draait niets van tot hij wordt hervat.",
+  refusal_halted_taf: "Dit taf is stilgezet: er draait niets van tot het wordt hervat.",
   refusal_halted_account: "Je account is stilgezet: geen van je tafs draait, ook Coach niet, tot het wordt hervat.",
   work_paused: "Gepauzeerd",
   work_from_chat: "Werkt vanuit de chat",
