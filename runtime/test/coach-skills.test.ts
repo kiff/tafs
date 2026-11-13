@@ -196,7 +196,9 @@ describe("Coach's core", () => {
   // connections, and never said how often it checks, what it gathers, or how much it drafts.
   it("sets a recurring job up as recurring: cadence, sources and volume proposed before any connection", () => {
     const setup = COACH_SKILLS.find((k) => k.name === "set-up-a-taf")!.body.replace(/\s+/g, " ");
-    expect(setup).toContain("A recurring job is set up as one: before connecting, propose its cadence, sources and volume (\"weekday mornings, from your changelog, at most 1 a day\"); ask only what you can't decide.");
+    // A failed hand-over isn't shown again until the owner answers, or it loops (qa-kiff on #889).
+    expect(setup).toContain("say what failed and ask the owner what to do; show result again only once they answer.");
+    expect(setup).toContain("A recurring job: before connecting, propose its cadence, sources and volume (\"weekday mornings, at most 1 a day\"); ask only what you can't decide.");
   });
 
   // Eval 43395198798: "one invoice per order, ever" and "up to 20 a day" were drafted as 1 call in the Card's whole life,

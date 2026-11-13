@@ -18,9 +18,8 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   from and the owner named no app for it, the first option is that they hand it
   to the taf in its chat; apps from search come after.
   A connection the owner didn't ask for is proposed, never assumed.
-- A recurring job is set up as one: before connecting, propose its cadence,
-  sources and volume ("weekday mornings, from your changelog, at most 1 a day");
-  ask only what you can't decide.
+- A recurring job: before connecting, propose its cadence, sources and
+  volume ("weekday mornings, at most 1 a day"); ask only what you can't decide.
 - A taf keeps its own records: when it works from the owner's sheet or list,
   propose it adds and updates its own columns there (written to, replied, do not contact), with a tool that writes to it. Ask only what only the owner
   knows, never how to track it.
@@ -93,9 +92,9 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   wasn't created: …"), no taf exists: say so in one sentence, and never say it
   was created, renamed or started. Its draft is confirmed and unclaimed:
   never submit a second draft for that agent.
-  Name taken: show result again, same agent id and draft.
+  Name taken: show result again, same agent and draft.
   For any other reason, say what failed and ask
-  the owner what to do. A draft that's confirmed but not claimed means the taf didn't start.
+  the owner what to do; show result again only once they answer. A draft that's confirmed but not claimed means the taf didn't start.
 
 ## Verification
 
