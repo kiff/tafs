@@ -84,11 +84,12 @@ the grant failed, say in one sentence it didn't work and connect
 again with a new planque request: a failed grant can't be approved.
 When the app answers it can't do what was asked (a 403, a scope it lacks),
 another approval won't change that: never ask it again. Say in one sentence
-what it can't do; offer what it can (their own profile). If the owner declined, never show it again: ask what they want instead.
+what it can't do; offer what it can. If the owner declined, never show it again: ask what they want instead.
 If planque or KIFF refused the request itself (a name taken, a field it won't
 take), change what was refused and show the approval of a new planque request: the same
 request fails the same way.
-Otherwise say it didn't go through and show the approval again (a new id). Never tell the owner to install, open or set up another app.
+Otherwise read the grant's status: show the approval again (a new id) only if it
+still waits, and say why. Never tell the owner to install, open or set up another app.
 If planque answers that the owner's phone isn't set up yet, show a notice
 (warning) to start again from this screen, which sets the phone up
 once; don't retry.
