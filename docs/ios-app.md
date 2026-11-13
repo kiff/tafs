@@ -370,7 +370,7 @@ the app in sample mode.
   **Tools added to a connected app and the Card over them under one Face ID** (`AppModel.approveToolsAndCard`), from
   Approve on Coach's card when it carries the taf's Card as a draft:
   - The phone tells tafs cloud it can sign the step (`can: ["tools_and_cards"]`) only for a Card the card drew
-    (`cardDrawn`): the draft read, with its Cards' lines and limits on the card, at the version shown. tafs cloud
+    (`cardDrawn`): the draft read, with at least one of its Cards' lines (limits and all) on the card, at the version shown. tafs cloud
     asks for it only when it's on there and the app is already connected; otherwise it answers as before, a step
     at a time. Approve waits until a card's Card is read, so what's signed is on screen, and it stays there until
     the fingerprint.

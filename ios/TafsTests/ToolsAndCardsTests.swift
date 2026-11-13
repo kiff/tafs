@@ -86,6 +86,8 @@ final class ToolsAndCardsTests: XCTestCase {
         XCTAssertFalse(AppModel.cardDrawn(read, shownDraft: nil), "nothing shown")
         XCTAssertFalse(AppModel.cardDrawn(nil, shownDraft: "v7"), "not read yet")
         XCTAssertFalse(AppModel.cardDrawn(try draft(#"{"id":"dr_1","agent_id":"mail","status":"pending","version":"v7"}"#), shownDraft: "v7"), "no Cards to draw")
+        XCTAssertFalse(AppModel.cardDrawn(try draft(#"{"id":"dr_1","agent_id":"mail","status":"pending","version":"v7","cards":[]}"#), shownDraft: "v7"), "an empty list: only the eyebrow is drawn")
+        XCTAssertFalse(AppModel.cardDrawn(try draft(#"{"id":"dr_1","agent_id":"mail","status":"pending","version":"v7","cards":[{"grants":[]}]}"#), shownDraft: "v7"), "a Card with no lines")
         XCTAssertFalse(AppModel.cardDrawn(try draft(#"{"id":"dr_1","agent_id":"mail","status":"pending","version":"v7","cards":[],"no_tools":true}"#), shownDraft: "v7"), "a draft with no tools")
 
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")

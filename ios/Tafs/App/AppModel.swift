@@ -8110,10 +8110,11 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Whether Coach's card drew the Card it would sign: the draft was read, it has Cards (the card
-    /// shows their lines, limits and all), and it's at the version shown.
+    /// Whether Coach's card drew the Card it would sign: the draft was read, the card shows its
+    /// lines (limits and all, the same `lines` the card draws, so none means nothing drawn), and
+    /// it's at the version shown.
     nonisolated static func cardDrawn(_ draft: KIFFClient.AgentDraft?, shownDraft: String?) -> Bool {
-        guard let draft, let shownDraft, draft.cards != nil, draft.noTools != true else { return false }
+        guard let draft, let shownDraft, !draft.lines.isEmpty, draft.noTools != true else { return false }
         return draft.version == shownDraft
     }
 
