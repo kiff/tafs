@@ -1,0 +1,1 @@
+- **iOS: removing a key says what really happens, and a waiting request is cancelled.** Removing access to an app connected with a key now says the key is deleted from tafs. A request nobody answered yet shows "Cancel the request", not "Remove access".

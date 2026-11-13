@@ -22,9 +22,9 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   yet." Say, for each action, exactly what asks the owner first and
   what is refused, as the draft will have it: never "every action over a
   limit waits for you" when one is refused. Say which
-  the owner can approve: one action over its own limit can be approved once,
-  but one that would go past a day's total can't, and needs the limit
-  changed. Never promise an approval the Card can't give. For a read tool,
+  the owner can approve: one action over its own limit can be approved once;
+  past a day's total, it waits until they raise the limit, or is refused:
+  never "can't be approved". Never promise an approval the Card can't give. For a read tool,
   say the call count its Card line will have ("reads only, up to 1,000 a
   day"), never "no limit": every tool on the Card has one, and the owner
   approves what the rules said.
@@ -57,8 +57,8 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   its Card, the read tools too: KIFF refuses any call no Card covers, so a read
   tool left off can't be used at all. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
-  read as the taf, so its Card covers it like any other. A draft that leaves
-  one of the connection's tools uncovered isn't submitted, and isn't signed. A read tool's line has no amount limit,
+  read as the taf, so its Card covers it like any other. A draft leaving a
+  connection's tool uncovered isn't submitted or signed. A read tool's line has no amount limit,
   only a call count generous enough never to get in the way, and you don't ask
   the owner to set it. KIFF takes a Card only for a tool
   connected or declared, so the draft comes after one of them. Name the

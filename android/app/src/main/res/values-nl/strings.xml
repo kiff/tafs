@@ -821,7 +821,7 @@
     </plurals>
     <string name="connect_disconnect_no_taf_uses">Geen taf gebruikt %1$s nu.</string>
     <string name="connect_disconnect_rest">Andere tafs die %1$s gebruiken, houden hun toegang. Als geen andere taf deze aanmelding gebruikt, wordt die bij %1$s ingetrokken. Als je %1$s weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden.</string>
-    <string name="connect_disconnect_rest_key">Andere tafs die %1$s gebruiken, houden hun toegang. De sleutel wordt uit tafs verwijderd. Als je %1$s weer gebruikt, word je gevraagd opnieuw goed te keuren en een sleutel te plakken.</string>
+    <string name="connect_disconnect_rest_key">Andere tafs die %1$s gebruiken, houden hun toegang. De sleutel wordt uit tafs verwijderd zodra geen enkel taf hem nog gebruikt. Als je %1$s weer gebruikt, word je gevraagd opnieuw goed te keuren en een sleutel te plakken.</string>
     <string name="connect_disconnect_title">Toegang tot %1$s intrekken?</string>
     <string name="connect_disconnect_title_from">Toegang tot %1$s voor %2$s intrekken?</string>
     <string name="connect_disconnect_tools_stop">De %2$s-tools van %1$s werken niet meer.</string>
