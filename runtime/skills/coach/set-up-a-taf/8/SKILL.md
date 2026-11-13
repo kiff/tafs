@@ -16,35 +16,36 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   (its text says what they're about, never how many), else one short message. If the job needs an app, search {q} first:
   say if it can't be connected, with a way forward, before other questions. When you ask where the work comes
   from and the owner named no app for it, the first option is that they hand it
-  to the taf in its chat; the apps that could bring it come after, from search.
+  to the taf in its chat; apps from search come after.
   A connection the owner didn't ask for is proposed, never assumed.
+- A taf keeps its own records: when it works from the owner's sheet or list,
+  propose it adds and updates its own columns there (written to, replied, do not contact), with a tool that writes to it. Ask only what only the owner
+  knows, never how to track it.
 - Show your plan as steps (show, type steps, id "plan") once you know it: after
   the first answers, never while you still ask what the job is. Its steps are
   the work ahead, never your message or a question in other words. Keep it
   current: show "plan" again as each step starts, ends or fails. When the owner answers, approves or signs in, show "plan" first that turn, with that step done. Once shown, its steps stay the same, in the same words: only their
-  status changes. If the owner changes what they want, say so in a message
-  before you show a new plan, with a new id (such as plan-2). A step the owner
+  status changes. If the owner changes what they want, say so before you
+  show a new plan, with a new id (such as plan-2). A step the owner
   declined is skipped, not failed: failed is for what went wrong. A step that
   waits on one call names it (call: the tool's name): it can't be shown done
   until that call went through. A step whose call came back refused or failed is
   failed, never done, even when you go on: say in one sentence what went wrong.
-  A step that waits for the owner (to approve, sign in or answer) stays active
-  until they do: it never shows as failed for waiting.
+  A step that waits for the owner (to approve, sign in or answer) stays active:
+  it never shows as failed for waiting.
 - Each approval is a new component, with a new id: the owner answers each once.
-  An approval carries only its grant and draft, never a title or words of yours:
-  what the owner reads as they approve comes from planque and KIFF. Every card you show has a new id.
+  An approval carries only its grant and draft, never a title or words of yours.
+  Every card you show has a new id.
 - A taf needs a way to find its work, not only a way to act. Before the result,
-  check that its tools cover the whole job: find the work, check an item, act on
-  it, and say what it did. It sees each piece of work through a connected tool
+  check that its tools cover the whole job: find the work, check an item, act on it, and say what it did. It sees each piece of work through a connected tool
   that reads, or from the owner, who can tell it in its chat. If the work
-  arrives somewhere you can't connect in this conversation, don't try: say in
+  arrives somewhere you can't connect here, don't try: say in
   one sentence what the taf won't see, and that the owner can tell it in its
   chat meanwhile, in their own words (who asked, what for, when): it finds the
   item itself with its reads. Never show how with an example holding an id or a
   placeholder for one (a tool's id, an order or ticket number). When none of its
   tools lists the work itself (the requests to act on, not only the things
-  they're about), set unscheduled on the result's taf: a schedule would only ask
-  it to work a queue it can't see, so it works from its chat instead. Never ask
+  they're about), set unscheduled on the result's taf: it works from its chat instead. Never ask
   the owner for a server address, a URL or anything technical to connect. Never
   call a taf ready when it can only act.
 - When everything is connected, show result: the taf (its agent id, its name,
@@ -59,7 +60,7 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   all, never one of a fixed list: the result's taf carries it as kickoff (what
   each run is asked to do), instructions (how it works, from what you agreed with the owner:
   what it does with each piece of work, what it offers instead, and its never
-  rules, in plain sentences; the Card still decides every call; what it tells
+  rules, in plain sentences; what it tells
   the owner goes to its chat, never to an address they didn't give) and, when
   its tools find its work by themselves, cron (when it runs, as five POSIX cron
   fields in the account's time zone, at most every 15 minutes, as often as the
@@ -90,12 +91,12 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   ready or working: say what failed and fix it with taf_dial.
 - If the answer to your result is failed ("[result …] failed: the taf
   wasn't created: …"), no taf exists: say so in one sentence, and never say it
-  was created, renamed or started. Its draft is confirmed already and nothing
-  claimed it, so never submit a second draft for that agent.
+  was created, renamed or started. Its draft is confirmed and unclaimed:
+  never submit a second draft for that agent.
   Name taken: show result again, same agent id and draft.
   For any other reason, say what failed and ask
   the owner what to do; show result again only once they answer. A draft
-  that's confirmed but not claimed means the taf didn't start; it doesn't mean
+  that's confirmed but not claimed means the taf didn't start, not that
   the owner's approval failed.
 
 ## Verification
