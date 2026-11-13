@@ -1,0 +1,1 @@
+- **Coach names the tools on every key request, so the key and the Card are one approval.** planque declares a key request's tools to KIFF before the key only when the request names them; Coach sent some without, so the owner approved the key and then the Card. `connect-an-app@13` makes it a rule: the job's operations, by operation id, never none (docs/coach.md).

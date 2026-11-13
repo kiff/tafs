@@ -44,6 +44,8 @@ export class Steps {
   private vendors = new Map<string, string>();
   private asked = new Map<string, string>(); // call id → vendor, for a request whose grant id comes in its result
   private connections = new Map<string, string>(); // call id → its vendor ("" unknown), for each connection call
+  private requests = new Set<string>(); // call ids of connection requests, to tell a connected app from a read
+  private targets = new Map<string, string>(); // call id → what it connects (the request's server or description, or the grant)
 
   constructor(private readonly titles: ToolTitles = new Map(), private readonly lang: Lang = "en") {}
 
@@ -63,10 +65,12 @@ export class Steps {
         const grant = typeof i.grant === "string" ? this.vendors.get(i.grant) ?? "" : "";
         const api = i.api && typeof i.api === "object" ? (i.api as { url?: unknown }).url : undefined;
         if (callID) this.connections.set(callID, i.action === "request" ? vendorName(i.server ?? api) : grant);
+        const target = i.action === "request" ? i.server ?? api : i.grant;
+        if (callID && typeof target === "string" && target) this.targets.set(callID, target);
         switch (i.action) {
           case "request": {
             const vendor = vendorName(i.server ?? api);
-            if (callID) this.asked.set(callID, vendor);
+            if (callID) { this.asked.set(callID, vendor); this.requests.add(callID); }
             const tools = Array.isArray(i.tools) && i.tools.length > 0;
             return tools ? w.doing_tools_for(vendor) : w.doing_connect_to(vendor);
           }
@@ -85,6 +89,7 @@ export class Steps {
       case "taf_run": return w.doing_run;
       case "taf_check": return w.doing_check;
       case "taf_estimate": return w.doing_estimate;
+      case "web_read": return w.doing_web_read;
       case "taf_task": return w.doing_task;
       case "run_stop": return w.doing_stop;
       case "taf_pause": return w.doing_pause;
@@ -104,6 +109,28 @@ export class Steps {
   connectionWhy(callID: unknown): string | undefined {
     if (typeof callID !== "string" || !this.connections.has(callID)) return undefined;
     return wordsIn(this.lang).step_connection_not_yet(this.connections.get(callID) ?? "");
+  }
+
+  /**
+   * A refused connection call's two lines for the person, in tafs cloud's words: the server's reason, scrubbed
+   * for the person (`shownWhy`), and what to do next. With what it connects (`key`: the request's server or
+   * description, or the grant), so two apps whose names aren't known stay apart. Undefined for a call that isn't
+   * a connection call.
+   */
+  connectionRefusal(callID: unknown, text: unknown): { vendor: string; key?: string; reason?: string; next: string } | undefined {
+    if (typeof callID !== "string" || !this.connections.has(callID)) return undefined;
+    const vendor = this.connections.get(callID) ?? "";
+    const key = this.targets.get(callID);
+    const w = wordsIn(this.lang);
+    const said = shownWhy(text);
+    return { vendor, ...(key ? { key } : {}), ...(said ? { reason: w.step_connection_why(said) } : {}), next: w.step_connection_next(vendor) };
+  }
+
+  /** What a connection request was for, once it went through: earlier refusals for the same are past. */
+  requestTarget(callID: unknown): { vendor: string; key?: string } | undefined {
+    if (typeof callID !== "string" || !this.requests.has(callID)) return undefined;
+    const key = this.targets.get(callID);
+    return { vendor: this.connections.get(callID) ?? "", ...(key ? { key } : {}) };
   }
 
   /** A call's result: a request's grant id, so later steps on that grant name its vendor. */
@@ -159,6 +186,22 @@ export function whyOf(text: unknown): string | undefined {
   return /[A-Za-z]{3,}/.test(line.replace(/\bit\b/g, "")) ? line : undefined;
 }
 
+/**
+ * The connection server's reason as the person reads it ("Why: …"): `whyOf`, then any host name (with its path)
+ * and any phone number left out too. The server can quote the description it read, which a third party writes,
+ * and shown in tafs's voice a bare "evil.example" or a number to call would read as tafs's own advice. Coach
+ * still reads the reason with `whyOf` alone, as data.
+ */
+export function shownWhy(text: unknown): string | undefined {
+  const line = whyOf(text);
+  if (!line) return undefined;
+  const shown = line
+    .replace(/\b(?:[a-z0-9-]+\.)+[a-z]{2,}\b(?:\/\S*)?/gi, "it")
+    .replace(/\+?\d[\d\s().-]{7,}\d/g, "it")
+    .replace(/\bit(?:\s+it)+\b/g, "it").replace(/\s{2,}/g, " ").trim();
+  return /[A-Za-z]{3,}/.test(shown.replace(/\bit\b/g, "")) ? shown : undefined;
+}
+
 /** A failed step as the apps draw it: `failed`, and `why` when the tool said something readable. */
 export function failedStep(text: unknown): { failed: true; why?: string } {
   const why = whyOf(text);
@@ -172,8 +215,25 @@ export const STEP_WHY_KEPT_MS = 30 * 24 * 3600_000;
 export const STEP_WHYS_KEPT = 50;
 
 /** The reasons a run's failed steps had, as the stream saw them, each with its call and tool, in order. */
-/** A connection step keeps the server's own reason too (`refusal`), for Coach and the log; the apps get `why` only. */
-export type StepWhys = Array<{ call: string; tool: string; why: string; refusal?: string }>;
+/**
+ * A connection step keeps the server's own reason too (`refusal`), for Coach and the log. A refused connection
+ * also keeps the person's two lines (`refused`: the reason and what to do next, in tafs cloud's words) with its
+ * vendor, until a request for that vendor goes through in the same run (`resolved`).
+ */
+export type StepWhys = Array<{ call: string; tool: string; why: string; refusal?: string;
+  refused?: { vendor: string; key?: string; reason?: string; next: string }; resolved?: true }>;
+
+/**
+ * Whether a request that went through connects what a kept refusal was for: the same server, description or
+ * grant (`key`), or, where either has none, the same vendor by a name that's known (two unknown ones never match).
+ */
+export function connectsRefused(refused: { vendor: string; key?: string }, through: { vendor: string; key?: string }): boolean {
+  if (refused.key && through.key) return refused.key === through.key || (refused.vendor !== "" && refused.vendor === through.vendor);
+  return refused.vendor !== "" && refused.vendor === through.vendor;
+}
+
+/** What a message says of a connection its work had refused and that wasn't connected since: tafs cloud's words, shown as they are. */
+export type Refused = { words: string; why?: string; next: string };
 
 /**
  * Gives failed steps their reasons, each to the first failed step of its tool in order: the
@@ -200,11 +260,24 @@ export function foldRetried<T extends { tool: string; error?: true; inputHash?: 
  */
 export const CONNECTION_TOOL = "planque";
 
-export function attachWhys<T extends { tool: string; error?: true }>(steps: T[], whys: StepWhys): Array<T & { failed?: true; why?: string }> {
+export function attachWhys<T extends { tool: string; error?: true }>(steps: T[], whys: StepWhys): Array<T & { failed?: true; why?: string; refused?: Refused }> {
   return steps.map((s) => {
     if (!s.error) return s;
     const i = whys.findIndex((w) => w.tool === s.tool);
-    const why = i >= 0 ? whys.splice(i, 1)[0]!.why : undefined;
-    return { ...s, failed: true as const, ...(why ? { why } : {}) };
+    const kept = i >= 0 ? whys.splice(i, 1)[0]! : undefined;
+    const why = kept?.why;
+    const refused = kept?.refused && !kept.resolved
+      ? { words: kept.why, ...(kept.refused.reason ? { why: kept.refused.reason } : {}), next: kept.refused.next } : undefined;
+    return { ...s, failed: true as const, ...(why ? { why } : {}), ...(refused ? { refused } : {}) };
   });
+}
+
+/**
+ * A message's refused connection (`refused` on the thread's message): the last one its work refused that wasn't
+ * connected since. It's taken before a retry folds the step away, since a later read that went through connects
+ * nothing. The steps come back without it.
+ */
+export function takeRefused<T extends { refused?: Refused }>(steps: T[]): { steps: Array<Omit<T, "refused">>; refused?: Refused } {
+  const refused = steps.map((s) => s.refused).filter((r): r is Refused => r !== undefined).at(-1);
+  return { steps: steps.map(({ refused: _r, ...s }) => s), ...(refused ? { refused } : {}) };
 }

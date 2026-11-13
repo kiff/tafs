@@ -398,6 +398,12 @@ draws it under the taf's words, small and as written (`ChatMessage.counted`); a 
 The phone counts nothing itself, and with no `counted` no line is drawn. A message with both draws
 `delivered` above the words and `counted` under them.
 
+**A connection that was refused.** A taf's message may carry tafs cloud's `refused` ([chat.md](chat.md)):
+the failed step's words ("Coach couldn't connect Shippo yet"), the server's reason ("Why: …") and what to
+do next. Android draws them under the taf's words, never folded into its steps, the first in the failure
+colour (`ChatMessage.refused`, `RefusedLines`). A blank line is left out, and with none sent nothing is
+drawn: the phone decides nothing about the connection.
+
 ## A taf's work
 
 **Its row's line** is tafs cloud's: the next run as `next_run_words` ("Next run Mon 08:00", with its day when it isn't

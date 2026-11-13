@@ -241,7 +241,13 @@ data class WireChatMessage(
   val delivered: String? = null,
   /** On a run's last message: what the run did, counted from kiff/agents' record, in tafs cloud's words, drawn under the taf's. */
   val counted: String? = null,
+  /** A connection its work asked for that the connection server refused, not connected since: tafs cloud's lines (docs/chat.md). */
+  val refused: WireRefused? = null,
 )
+
+/** A refused connection's lines, each tafs cloud's words: the step's, the server's reason ("Why: …"), and what to do next. */
+@Serializable
+data class WireRefused(val words: String = "", val why: String? = null, val next: String = "")
 
 /** The run at work in a session. */
 @Serializable

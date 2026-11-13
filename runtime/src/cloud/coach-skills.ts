@@ -67,6 +67,8 @@ const TOOL_SKILLS: Record<string, string[]> = {
   version_try: ["the-tafs"], version_install: ["the-tafs"],
   taf_results: ["the-dial"], taf_dial: ["the-dial"],
   app_look: ["drive-the-app"], app_act: ["drive-the-app"],
+  // A public page is read to connect an app by its published API description.
+  web_read: ["connect-an-app"],
 };
 
 /** The state of the account the first turn starts from, as far as the skills care. */

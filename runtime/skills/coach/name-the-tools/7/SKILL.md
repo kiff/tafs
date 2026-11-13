@@ -20,9 +20,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   to find the work (list or search), to check one item (read it), and to act
   (the write). Nothing more, nothing less. Choose each read by what the job asks of it:
   the operation whose fields answer the job's question, not the first one
-  named after the thing. For a payment to refund, the read that says how
-  much was paid and how much was already refunded, not one that says only
-  that it was paid; for a ticket to answer, the read that has its messages,
+  named after the thing. For a refund, the read that says what was paid and already refunded, not only that it was paid; for a ticket to answer, the read that has its messages,
   not only its status. Pin with fixed_arguments what must never
   change: the account, and the mode, on every tool that takes them, reads
   included, as the vendor's own descriptions ask,
@@ -55,9 +53,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   account. Never in a connection of its own:
   each new connection is one more approval and vendor sign-in for the owner. The job's own tools are then added to that same
   connection (tools on a connected grant adds them), with one approval and
-  no sign-in. Once it's connected, read every
-  operation you will connect with planque read {grant, tool (as the grant
-  lists it), arguments}, and place each argument you name (the amount, what the call
+  no sign-in. Once it's connected, read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments} (before a key: describe's arguments, by in and type), and place each argument you name (the amount, what the call
   acts on, the read's argument in unit_lookup) at the path its fields give,
   such as parameters.id. Keep that tool as one of the taf's reads, so it
   looks up the fields you left open before its first call. Reading first

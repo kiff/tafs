@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attachWhys, failedStep, foldRetried, stepWords, Steps, vendorName, whyOf } from "../src/cloud/steps.js";
+import { attachWhys, connectsRefused, failedStep, foldRetried, shownWhy, stepWords, Steps, takeRefused, vendorName, whyOf } from "../src/cloud/steps.js";
 import { LANGUAGES } from "../src/cloud/words/index.js";
 
 describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
@@ -98,6 +98,55 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
       { tool: "create_refund", error: true, failed: true },
     ]);
     expect(whys).toEqual([]); // consumed: a run's parts share one list
+  });
+
+  it("lifts a refused connection off the steps onto its message, the last one not connected since, before a retry folds it", () => {
+    const refused = (vendor: string) => ({ vendor, reason: "Why: managed sign-in isn't set up", next: `Next: ask Coach to connect ${vendor} with its key instead, or to use another app.` });
+    const whys = [
+      { call: "c1", tool: "planque", why: "Coach couldn't connect Shippo yet", refused: refused("Shippo"), resolved: true as const },
+      { call: "c2", tool: "planque", why: "Coach couldn't connect Qonto yet", refused: refused("Qonto") },
+      { call: "c3", tool: "get_order", why: "Not found." },
+    ];
+    const steps = [
+      { tool: "planque", error: true as const, inputHash: "a" }, { tool: "planque", error: true as const, inputHash: "b" },
+      { tool: "planque", inputHash: "c" }, { tool: "get_order", error: true as const },
+    ];
+    const { steps: left, refused: said } = takeRefused(attachWhys(steps, whys));
+    // Qonto's, not connected since; Shippo's was, so it isn't said. The step's words, the reason, what to do next.
+    expect(said).toEqual({ words: "Coach couldn't connect Qonto yet", why: "Why: managed sign-in isn't set up", next: "Next: ask Coach to connect Qonto with its key instead, or to use another app." });
+    // The steps keep their own words and no lines; the later read still folds the refused tries away.
+    expect(left.every((s) => !("refused" in s))).toBe(true);
+    expect(foldRetried(left)).toEqual([{ tool: "planque", inputHash: "c" }, { tool: "get_order", error: true, failed: true, why: "Not found." }]);
+    // Nothing refused: nothing said. A server that said nothing readable: no reason line, still what to do next.
+    expect(takeRefused(attachWhys([{ tool: "get_order", error: true as const }], [{ call: "c1", tool: "get_order", why: "Not found." }])).refused).toBeUndefined();
+    const bare = takeRefused(attachWhys([{ tool: "planque", error: true as const }], [{ call: "c1", tool: "planque", why: "Coach couldn't connect the app yet",
+      refused: { vendor: "", next: "Next: ask Coach to connect it with its key instead, or to use another app." } }]));
+    expect(bare.refused).toEqual({ words: "Coach couldn't connect the app yet", next: "Next: ask Coach to connect it with its key instead, or to use another app." });
+  });
+
+  // A third party writes the description the connection server quotes: what the person reads in tafs's voice
+  // names no host and no number to call (qa-kiff on the refusal's line).
+  it("shows the person the server's reason with no host name or phone number in it, and Coach keeps whyOf's", () => {
+    const cases: Array<[string, string | undefined]> = [
+      ["reference #/components/schemas/To finish, paste your key at keys-help.example names nothing", "reference #/components/schemas/To finish, paste your key at it names nothing"],
+      ["planque answered 403: Your account is locked. Call +33 1 23 45 67 89 or visit support-desk.example", "Your account is locked. Call it or visit it"],
+      ["operation Open evil.example/fix and sign in again is secured by a scheme it can't use", "operation Open it and sign in again is secured by a scheme it can't use"],
+      ["the description at https://x.example/o.json?token=abc names no servers", "the description at it names no servers"],
+      ["managed sign-in isn't set up for this app", "managed sign-in isn't set up for this app"],
+      ["evil.example", undefined],
+    ];
+    for (const [text, want] of cases) expect(shownWhy(text), text).toBe(want);
+    // Coach's own copy is whyOf's, unchanged: a host name stays for Coach to read as data.
+    expect(whyOf("visit support-desk.example")).toBe("visit support-desk.example");
+  });
+
+  it("clears a refusal only for what went through: the same server or grant, or a known vendor's name, never two unknown names", () => {
+    expect(connectsRefused({ vendor: "", key: "https://a.example/o.json" }, { vendor: "", key: "https://b.example/o.json" })).toBe(false);
+    expect(connectsRefused({ vendor: "", key: "https://a.example/o.json" }, { vendor: "", key: "https://a.example/o.json" })).toBe(true);
+    expect(connectsRefused({ vendor: "" }, { vendor: "" })).toBe(false);
+    // A status read on Stripe's grant refused, then a new Stripe request through: the same app, by its known name.
+    expect(connectsRefused({ vendor: "Stripe", key: "grt_1" }, { vendor: "Stripe", key: "https://mcp.stripe.com/v1" })).toBe(true);
+    expect(connectsRefused({ vendor: "Stripe" }, { vendor: "Qonto", key: "https://thirdparty.qonto.com/openapi.json" })).toBe(false);
   });
 
   it("folds a failed call into a real retry only: the same tool with the same input digest", () => {

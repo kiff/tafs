@@ -117,6 +117,32 @@ describe("conversation", () => {
     expect(JSON.stringify(r.body)).not.toContain("result_bytes");
   });
 
+  it("says a connection the server refused on its message, with the reason and what to do next, even when a later read folds the step", async () => {
+    const w = world();
+    w.at(new Date(NOW.getTime() - 3600_000));
+    const chat = await w.agents.api.startRun("t_acme", RAE, "Get my unused labels refunded", ANA);
+    const list = w.agents.events.get(chat.session)!;
+    const at = (s: number) => new Date(NOW.getTime() - 3600_000 + s * 1000).toISOString();
+    list.push({ session: chat.session, run: chat.id, seq: list.length + 1, time: at(9), kind: "usage", body: { cost_micro_usd: 1, timing: { ms: 900, waited: [
+      { tool: "planque", ms: 300, is_error: true, input_hash: "a" }, { tool: "planque", ms: 200, input_hash: "b" },
+    ] } } });
+    w.agents.say(chat, "Shippo's sign-in isn't set up here. I can connect it with its key.", at(12));
+    const next = "Next: ask Coach to connect Shippo with its key instead, or to use another app.";
+    await w.coach.put(stepWhyKey("t_acme", chat.id), [{ call: "c1", tool: "planque", why: "Coach couldn't connect Shippo yet", refusal: "managed sign-in isn't set up for this app",
+      refused: { vendor: "Shippo", reason: "Why: managed sign-in isn't set up for this app", next } }], new Date(NOW.getTime() + 3600_000));
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    const said = r.body.messages.find((m: { from: string }) => m.from === "taf");
+    expect(said.refused).toEqual({ words: "Coach couldn't connect Shippo yet", why: "Why: managed sign-in isn't set up for this app", next });
+    // The catalog read went through after it: the refused step folds away, the message still says it once.
+    expect(said.work.steps).toEqual([{ tool: "planque", words: expect.any(String) }]);
+    expect(JSON.stringify(said.work)).not.toContain("refused");
+    // Connected since in the same run: nothing is said.
+    await w.coach.put(stepWhyKey("t_acme", chat.id), [{ call: "c1", tool: "planque", why: "Coach couldn't connect Shippo yet",
+      refused: { vendor: "Shippo", next }, resolved: true }], new Date(NOW.getTime() + 3600_000));
+    const again = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    expect(again.body.messages.find((m: { from: string }) => m.from === "taf").refused).toBeUndefined();
+  });
+
   it("gives each step its words: KIFF's title for a tool through KIFF, an own tool's by what it does, none for a tool nothing names", async () => {
     const w = world();
     w.at(new Date(NOW.getTime() - 3600_000));
