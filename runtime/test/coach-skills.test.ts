@@ -97,13 +97,16 @@ describe("Coach's core", () => {
     // A test agent's connected key was offered as "your existing Qonto connection" (owner's phone, 12 Nov):
     // only the account's tafs' connections, or one made in this conversation, are offered.
     expect(body).toContain("Offer only one a taf uses, or one made in this conversation; another agent's grant (a test's) is never offered or reused.");
-    // Coach sent {entry, name, taf_name, uses} twice and the connection refused both (owner's phone, 12 Nov): it takes no uses.
-    expect(body).toContain("Connect the chosen app with request {entry, name, taf_name}, and no other field: the connection refuses a request with a field it doesn't take.");
-    expect(body).not.toMatch(/\buses\}|with uses\b|uses are the slugs/);
+    // A reviewed key entry refused uses (owner's phone, 12 Nov) and dropping it widened managed apps' sign-ins:
+    // every entry now takes the taf's own tools (kiff/planque#156), so uses is sent for each.
+    expect(body).toContain("Connect the chosen app with request {entry, name, taf_name, uses}: uses are the slugs of the tools search found that the taf will use, so only those are asked.");
+    expect(body).not.toContain("and no other field");
     // Four asks for one read-only report, two of them approvals, the key before the Card (owner's phone, 12 Nov):
     // a key grant's tools are declared at the request, so the Card is drafted first and the key sheet signs both.
     expect(body).toContain("For a key, the sheet is the ask, with no card before it.");
-    expect(body).toContain("once its status says declared: true, agree the rules, draft the Card and show one approval with the grant and the draft: the sheet signs both. Not declared: the key, then the Card.");
+    // planque takes tools only on a signed-in grant, and declares a key grant's from the request (agentgabo on #830).
+    expect(body).not.toContain("(planque tools) while it waits");
+    expect(body).toContain("The request carries its tools (an entry's come with it). Once its status says declared: true, agree the rules, draft the Card and show one approval with the grant and the draft: the sheet signs both. Not declared: the key, then the Card.");
     expect(body).toContain("Say a mode only as the grant gives it.");
     expect(body).toContain("Request {reuse: that grant's id, name, taf_name, tools: []}: the owner then approves the new taf's tools alone, with no new sign-in or key.");
     expect(body).toContain("Only if planque refuses the reuse, ask for the same kind: {server}, {entry} or {api}.");

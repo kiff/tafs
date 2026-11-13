@@ -28,8 +28,9 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   each with its app and state. Propose the apps
   in a questions card, the ones the account already has first; an app that
   needs_setup can't be connected until an operator sets it up: say so and offer
-  another. Connect the chosen app with request {entry, name, taf_name}, and no
-  other field: the connection refuses a request with a field it doesn't take. Offer only what a connection can do: check the vendor has an operation
+  another. Connect the chosen app with request {entry, name, taf_name, uses}:
+  uses are the slugs of the tools search found that the taf will use,
+  so only those are asked. Offer only what a connection can do: check the vendor has an operation
   (re-sending an invoice) with search {q} before connecting and catalog
   {grant, q} after. When the owner's
   answer can't be met, say why in one sentence and offer what can. An app the owner names is connected as they name it. events {entry}
@@ -51,8 +52,8 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   The owner gives the key on a secure sheet on their phone, outside this chat,
   straight to planque: it never reaches you. Never ask for it in the chat, and
   if they paste one, don't use it: say it belongs on that sheet. For a key, the
-  sheet is the ask, with no card before it. Set the taf's tools on the grant
-  (planque tools) while it waits for its key; once its status says declared:
+  sheet is the ask, with no card before it. The request carries its tools (an
+  entry's come with it). Once its status says declared:
   true, agree the rules, draft the Card and show one approval with the grant
   and the draft: the sheet signs both. Not declared: the key, then the Card. planque's answer gives the taf's agent id: use it from then on. A tool's
   answer isn't kept between your turns: when you no
