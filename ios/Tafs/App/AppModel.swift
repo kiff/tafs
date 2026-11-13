@@ -7803,12 +7803,21 @@ final class AppModel: ObservableObject {
             default:
                 cardNotes[component.id] = Words.Coach.unknownAnswer
             }
+        } catch let refused as TafsCloud.CloudError where refused.code == Self.signInNotConfirmed {
+            // tafs cloud's own line: the sign-in went through and isn't confirmed yet, so Approve
+            // again confirms it. Said as it is, never as an answer that didn't arrive.
+            guard gen == accountGeneration else { return }
+            cardNotes[component.id] = refused.words ?? refused.message
+            await loadSetupThread()
         } catch {
             guard gen == accountGeneration else { return }
             cardNotes[component.id] = Words.Coach.answerNotReached(why: "\(error.localizedDescription)")
             await loadSetupThread()
         }
     }
+
+    /// tafs cloud's code when a sign-in planque holds isn't confirmed yet: the card asks again.
+    nonisolated static let signInNotConfirmed = "sign_in_not_confirmed"
 
     /// How giving a key and its Card under one Face ID went (`approveKeyAndCard`).
     enum KeyAndCard: Equatable {

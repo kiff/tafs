@@ -1036,6 +1036,14 @@ final class SetupTests: XCTestCase {
         StubProtocol.sent = []
         let unconfirmed = await model.connect(grantID: "g_01", shown: model.grants.first?.digest)
         XCTAssertNil(unconfirmed)
+
+        // tafs cloud still finds it waiting: its own line goes on the card, as it is.
+        let line = "Your sign-in went through, but it isn't confirmed yet. Approve again to confirm it."
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/connect-sheets/approval/ask_1"] = (409, #"{"error":"\#(line)","code":"sign_in_not_confirmed"}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        await model.refreshConnections()
+        await model.approve(try SetupTests.component(#"{"type":"approval","id":"connect-sheets","grant":"g_01"}"#), shown: model.grants.first?.digest, shownDraft: nil)
+        XCTAssertEqual(model.cardNotes["connect-sheets"], line, "never as an answer that didn't arrive")
         XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").isEmpty)
         XCTAssertTrue(vendor.opened.isEmpty)
         Keychain.delete(AppModel.planqueAccount)
