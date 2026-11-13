@@ -20,6 +20,30 @@ final class SignsMarkTests: XCTestCase {
         XCTAssertFalse(odd.signs?.cardNext ?? false)
     }
 
+    /// Setup's thread is read with this phone's signed read of its connections and the steps it signs, so tafs
+    /// cloud can mark its cards; without the proof, it's read as before.
+    func testTheThreadIsReadWithTheProofAndWhatThePhoneSigns() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: URLSession(configuration: config))
+        StubProtocol.responses["GET /v1/tafs/setup_1/conversation?can=tools_and_cards,key_and_cards"] = (200, """
+        {"messages":[],"components":[{"at":"2026-11-13T23:00:00.000Z","session":"s1","run":"r1","seq":1,"key":"k1","component":{"type":"approval","id":"a1","grant":"g_1","draft":"dr_1","signs":{"card":false,"words":"Its Card: you approve it next"}}}]}
+        """)
+        let thread = try await cloud.setupThread("setup_1", proof: "t=T,v1=sig,d=dev", can: AppModel.stepsSignedHere)
+        let sent = try XCTUnwrap(StubProtocol.sent.last)
+        XCTAssertEqual(sent.value(forHTTPHeaderField: "Planque-Device-Signature"), "t=T,v1=sig,d=dev")
+        XCTAssertEqual(sent.url?.query, "can=tools_and_cards,key_and_cards")
+        XCTAssertEqual(thread.components.first?.component.signs?.cardNext, true)
+
+        StubProtocol.responses["GET /v1/tafs/setup_1/conversation"] = (200, #"{"messages":[]}"#)
+        _ = try await cloud.setupThread("setup_1", can: AppModel.stepsSignedHere)
+        let plain = try XCTUnwrap(StubProtocol.sent.last)
+        XCTAssertNil(plain.url?.query, "no proof, no steps: read as before")
+        XCTAssertNil(plain.value(forHTTPHeaderField: "Planque-Device-Signature"))
+    }
+
     /// Next: its words and dimmed lines, never the Card's own title as if signed. Next with no words: not drawn.
     func testTheCardIsDrawnByTheMark() throws {
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")

@@ -6965,8 +6965,16 @@ final class AppModel: ObservableObject {
             if setupChat == nil, !setupFresh, let newest = chats.max(by: { $0.updated < $1.updated }) { setupChat = newest.session }
             if setupFresh { return }
         }
+        // This phone's signed read of its connections, and the steps it signs: tafs cloud then marks each
+        // approval card still waiting with what its fingerprint will sign (`signs`), so the card draws the
+        // Card as being signed only when it is. Without them, the cards come as before.
+        let signer = self.signer
+        planque.tenant = kiffTenant
+        var proof: String?
+        if planqueReady && sessionHasKey { proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) }) }
+        guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         do {
-            let thread = try await cloud.setupThread(s.id, session: setupChat)
+            let thread = try await cloud.setupThread(s.id, session: setupChat, proof: proof, can: Self.stepsSignedHere)
             guard gen == accountGeneration, conversation == setupConversationGeneration, !setupFresh else { return }
             setupThread = withSent(thread)
             setupError = nil
@@ -8107,6 +8115,10 @@ final class AppModel: ObservableObject {
             return Came(result: "failed", why: error.localizedDescription)
         }
     }
+
+    /// The steps this phone signs beyond connect and cards: a key and its Card from the key's sheet, and
+    /// a connected app's added tools and its Card from Coach's card.
+    nonisolated static let stepsSignedHere = [RequestsTogether.toolsAndCards, RequestsTogether.keyAndCards]
 
     /// Whether a `tools_and_cards` ask is this card's, for what the person was shown: its grant,
     /// planque's approve exactly as this phone builds it for the digest shown (and KIFF's words for

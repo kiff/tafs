@@ -356,7 +356,9 @@ the app in sample mode.
   the same decision as the step it then asks, since the phone learns the step only after the tap. With `card: false`
   the Card is the one approved next: drawn under tafs cloud's words ("Its Card: you approve it next") with its lines
   dimmed, never under its own title as if signed now, and not drawn at all without words. With `card: true`, or no
-  mark from an older tafs cloud, the card draws the Card as before.
+  mark from an older tafs cloud, the card draws the Card as before. The mark comes on Setup's thread read with this
+  phone's signed read of its connections (`Planque-Device-Signature`) and the steps it signs
+  (`?can=tools_and_cards,key_and_cards`, `AppModel.stepsSignedHere`); without the proof, the cards come unmarked.
   **The key and its Card under one Face ID** (`AppModel.approveKeyAndCard`, `RequestsTogether`), when the sheet is
   opened from Coach's card and that card carries the taf's Card as a draft:
   - The sheet draws **Its Card**: KIFF's own lines for the draft this phone read from KIFF.
