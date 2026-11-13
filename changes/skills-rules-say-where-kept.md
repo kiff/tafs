@@ -1,0 +1,1 @@
+- Coach's rules notice says where each rule is kept when the Card doesn't hold it: on the connection, added by KIFF, or in the taf's instructions (`draft-the-card@12`).
