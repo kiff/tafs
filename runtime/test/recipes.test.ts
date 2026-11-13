@@ -241,6 +241,8 @@ Bezahle meine Rechnungen unter 100 EUR.
     const refunds = (catalog: CatalogApp[]) => withApps(recipesFor(catalog).recipes, catalog, new Map()).find((r) => r.id === "refunds-within-a-limit")!.apps.map((a) => a.name);
     const stripe = app("stripe@3", "Stripe");
     expect(refunds([app("connector:p:gorgias", "Gorgias"), app("connector:p:intercom", "Intercom"), stripe])).toEqual(["Intercom", "Stripe"]);
+    // With only an app that can't connect yet in the catalog for a connection, the job isn't shown at all.
+    expect(withApps(recipesFor([app("connector:p:gorgias", "Gorgias"), stripe]).recipes, [], new Map()).map((r) => r.id)).not.toContain("refunds-within-a-limit");
     // A connected help desk is still the one drawn, whichever it is.
     expect(refunds([app("connector:p:gorgias", "Gorgias", "connected"), app("connector:p:intercom", "Intercom"), stripe])).toEqual(["Gorgias", "Stripe"]);
   });

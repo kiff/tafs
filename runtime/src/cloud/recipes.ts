@@ -174,7 +174,9 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
   const have = new Set(apps?.flatMap(vendorOf) ?? []);
   const listed = RECIPES
     .filter((r) => connects === null || connectsToday(r, connects))
-    .filter((r) => !apps || r.connections.every((group) => group.some((v) => have.has(fold(v)))))
+    // For each connection, the catalog lists an app that would do and, under rule 13, one that connects today:
+    // the same app, so the job is never shown on an app the gallery couldn't connect.
+    .filter((r) => !apps || r.connections.every((group) => group.some((v) => have.has(fold(v)) && (connects === null || connects.has(fold(v))))))
     .map((r): Recipe => {
       const w = lang === "en" ? r : r.languages[lang];
       // One line says what the job does, in the Card's terms: no problem headline over it, and no line on what waiting
@@ -233,13 +235,13 @@ function byVendor(catalog: CatalogApp[] | undefined): Map<string, CatalogApp> {
 
 /**
  * For each of a recipe's connections, the catalog entry it would use and the name to draw: a connected one
- * first, else one that connects today (rule 13: never an app that can't connect yet ahead of one that can),
- * else the first listed.
+ * first, else one that connects today: never an app that can't connect yet (rule 13). With neither, no
+ * entry, and the name of the connection's app that connects today.
  */
 function pickApps(r: Recipe, vendors: Map<string, CatalogApp>): Array<{ app?: CatalogApp; name: string }> {
   return r.connections.map((group) => {
     const listed = group.map((v) => vendors.get(fold(v))).filter((a): a is CatalogApp => a !== undefined);
-    const app = listed.find((a) => a.state === "connected") ?? listed.find((a) => vendorOf(a).some((v) => CONNECTS_TODAY.has(v))) ?? listed[0];
+    const app = listed.find((a) => a.state === "connected") ?? listed.find((a) => vendorOf(a).some((v) => CONNECTS_TODAY.has(v)));
     return { app, name: app?.title || group.find((v) => CONNECTS_TODAY.has(fold(v))) || group[0] || "" };
   });
 }
