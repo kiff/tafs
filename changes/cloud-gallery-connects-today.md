@@ -1,0 +1,1 @@
+- The gallery shows only the jobs whose every app connects today. A job whose app can't connect yet stays out, and comes back once its app is proved and added.

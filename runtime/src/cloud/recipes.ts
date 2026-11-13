@@ -153,13 +153,27 @@ function fold(name: string): string {
 }
 
 /**
- * The recipes each of whose connections has a vendor among apps, by category, in lang; every recipe when
- * apps is undefined. `manages`: the person manages the account's tafs (`cards.manage`), so Home may lead
+ * The apps that connect today, as their recipes name them (folded): those kiff.dev's apps list says work,
+ * each proved by a check that connected it. A recipe is in the gallery only when each of its connections has
+ * one of these (rule 13): a job whose app can't connect yet stays out, and comes back once its app is added
+ * here, after a check proves it.
+ */
+export const CONNECTS_TODAY: ReadonlySet<string> = new Set(["stripe", "qonto", "shippo", "intercom", "zendesk", "pipedrive", "github", "gmail"]);
+
+/** Whether each of a recipe's connections has an app among those that connect (today's, unless said). */
+export function connectsToday(r: { connections: ReadonlyArray<ReadonlyArray<string>> }, connects: ReadonlySet<string> = CONNECTS_TODAY): boolean {
+  return r.connections.every((group) => group.some((v) => connects.has(fold(v))));
+}
+
+/**
+ * The recipes each of whose connections has a vendor among apps, and one that connects today, by category, in
+ * lang; every recipe that connects today when apps is undefined. `manages`: the person manages the account's tafs (`cards.manage`), so Home may lead
  * with the recipes.
  */
-export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefined, lang: Lang = "en", manages = true): RecipesView {
+export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefined, lang: Lang = "en", manages = true, connects: ReadonlySet<string> | null = CONNECTS_TODAY): RecipesView {
   const have = new Set(apps?.flatMap(vendorOf) ?? []);
   const listed = RECIPES
+    .filter((r) => connects === null || connectsToday(r, connects))
     .filter((r) => !apps || r.connections.every((group) => group.some((v) => have.has(fold(v)))))
     .map((r): Recipe => {
       const w = lang === "en" ? r : r.languages[lang];

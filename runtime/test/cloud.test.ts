@@ -13,6 +13,7 @@ import { DISCLOSURE_LINE, disclosureLines, jobById, OLD_DISCLOSURE_LINE } from "
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import type { AccountEvent } from "../src/cloud/events.js";
 import { RECIPES } from "../src/recipes.js";
+import { connectsToday } from "../src/cloud/recipes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -361,9 +362,9 @@ describe("tafs cloud", () => {
     expect((await get("/v1/recipes/gallery")).status).toBe(401);
     expect((await get("/v1/recipes/gallery", "key_rae")).status).toBe(403);
 
-    // No taf yet: every job, and no strip (Home leads with them all).
+    // No taf yet: every job whose apps connect today (rule 13), and no strip (Home leads with them all).
     const first = (await get("/v1/recipes/gallery", "ana")).body;
-    expect(first.recipes.map((r: { id: string }) => r.id)).toEqual(RECIPES.map((r) => r.id));
+    expect(first.recipes.map((r: { id: string }) => r.id)).toEqual(RECIPES.filter((r) => connectsToday(r)).map((r) => r.id));
     expect(first.filtered).toBe(true);
     expect(first.strip).toEqual({ shown: false, title: "More jobs to hand off", ids: [] });
     // Home leads with every job, so "Explore jobs" would open the same list again: it isn't offered (finding 2 on Android 76).
@@ -391,7 +392,7 @@ describe("tafs cloud", () => {
     // A live taf built from refunds: the gallery still lists every job; /v1/recipes keeps its meaning (empty).
     await w.tafs.put("t_acme", { id: "taf-aaaaaaaaaaaaaaaaaaaa", name: "Refunds", job: "custom", kiffAgent: "rae", nameClaim: "c", created: "2026-11-10T09:00:00Z", recipe: "refunds-within-a-limit" });
     const live = (await get("/v1/recipes/gallery", "ana")).body;
-    expect(live.recipes).toHaveLength(RECIPES.length);
+    expect(live.recipes).toHaveLength(RECIPES.filter((r) => connectsToday(r)).length);
     expect(live.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit").running).toBe(true);
     // Home no longer leads with the jobs, so "Explore jobs" is back, in every language.
     expect(live.words.explore).toBe("Explore jobs");
@@ -413,7 +414,7 @@ describe("tafs cloud", () => {
 
     // Someone who doesn't manage the tafs: every job, no strip, and nothing about which tafs exist.
     const viewer = (await get("/v1/recipes/gallery", "viewer")).body;
-    expect(viewer.recipes).toHaveLength(RECIPES.length);
+    expect(viewer.recipes).toHaveLength(RECIPES.filter((r) => connectsToday(r)).length);
     expect(viewer.strip.shown).toBe(false);
     expect(viewer.recipes.some((r: Record<string, unknown>) => "running" in r)).toBe(false);
     expect(viewer.words.explore).toBe("Explore jobs");
@@ -421,7 +422,7 @@ describe("tafs cloud", () => {
     // Suggestions off: the gallery stays, the strip goes.
     await coach.put("t_acme#suggestions", { show: false }, new Date(Date.now() + 86_400_000));
     const off = (await get("/v1/recipes/gallery", "ana")).body;
-    expect(off.recipes).toHaveLength(RECIPES.length);
+    expect(off.recipes).toHaveLength(RECIPES.filter((r) => connectsToday(r)).length);
     expect(off.strip).toMatchObject({ shown: false, ids: [] });
     expect(off.words.explore).toBe("Explore jobs");
 
