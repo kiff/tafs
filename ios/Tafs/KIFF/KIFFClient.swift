@@ -880,6 +880,8 @@ final class KIFFClient {
             var current: DraftCard.Terms?
         }
         var confirmed: Bool { status == "confirmed" }
+        /// KIFF took the owner's signature for it: confirmed, or confirmed and its key claimed since.
+        var signed: Bool { status == "confirmed" || status == "claimed" }
         /// Each Card's lines, as the owner reads them together before one Face ID confirms them
         /// all: two grants that read alike, on one Card or two, each add their action
         /// (kiff/tafs#138). Every place that shows a draft's Cards reads them from here.

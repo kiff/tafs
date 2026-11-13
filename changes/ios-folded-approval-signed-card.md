@@ -1,0 +1,1 @@
+- **iOS: an approved request leads with the Card you signed.** In Coach's chat, the folded line names the Card first and lists its rules only once the signature was taken.
