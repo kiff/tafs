@@ -12,6 +12,7 @@ import { DISCLOSURE_LINE, disclosureLines, jobById, OLD_DISCLOSURE_LINE } from "
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import type { AccountEvent } from "../src/cloud/events.js";
 import { RECIPES } from "../src/recipes.js";
+import { contract } from "./contract.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
 const VIEWER = { ...ME, capabilities: ["read"] };
@@ -305,6 +306,8 @@ describe("tafs cloud", () => {
     expect(fresh.body.recipes.length).toBeGreaterThan(0);
     expect(fresh.body.suggestions).toEqual({ show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." });
     expect(fresh.body.home).toEqual({ shown: true, words: "Pick a job for your first taf.", own_words: own });
+    { const { home, labels: shownLabels, suggestions, shown, filtered } = fresh.body;
+      contract("recipes-home", "GET /v1/recipes for someone who manages the tafs, with no live taf: Home's part of the answer (the recipes themselves are left out).", { shown, filtered, suggestions, home, labels: shownLabels }); }
     expect(fresh.body.labels).toEqual(labels);
     // Someone who doesn't manage the account's tafs can't make one: Home doesn't lead with recipes, and says what's shared shows there.
     const viewer = await call(w, "GET", "/v1/recipes", { token: "viewer" });
@@ -1724,7 +1727,8 @@ describe("Setup (kiff/agents#91)", () => {
     expect(await read()).toEqual({ setup: null, tools: null });
     process.env.TAFS_COACH_START_ONE = "on";
     try {
-      const first = (await read()).start;
+      const firstAnswer = await read();
+      const first = firstAnswer.start;
       expect(first).toMatchObject({ state: "to_give", scheme: "kiff.requests.v1", agent_id: "setup" });
       expect(first.requests.map((r: { id: string }) => r.id)).toEqual(["connect", "draft"]);
       const [connect, draft] = first.requests;
@@ -1747,6 +1751,7 @@ describe("Setup (kiff/agents#91)", () => {
       expect(draft.body.contract_digest).toBe("cd_123");
       const { contract_digest: _cd, ...unsigned } = draft.body;
       expect(w.account.previewed).toEqual([{ connections: connect.body.connections, draft: unsigned }]);
+      contract("setup-start", "GET /v1/setup before Coach exists, with TAFS_COACH_START_ONE on: the tools batch and Coach's draft with its Cards, to sign once.", firstAnswer);
       // A gateway preview that names no contract: no start, rather than a draft KIFF can't hold to its words.
       (w.account as { noContractDigest?: boolean }).noContractDigest = true;
       expect(await read()).toEqual({ setup: null, tools: null });
@@ -1760,9 +1765,11 @@ describe("Setup (kiff/agents#91)", () => {
       delete w.account.gatewayStatus;
       // Tools already there (or the batch went in and the draft was refused): the draft alone, one fresh fingerprint.
       w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
-      const retry = (await read()).start;
+      const retryAnswer = await read();
+      const retry = retryAnswer.start;
       expect(retry).toMatchObject({ state: "to_give", scheme: "kiff.request.v1" });
       expect(retry.requests.map((r: { id: string }) => r.id)).toEqual(["draft"]);
+      contract("setup-start-draft-alone", "GET /v1/setup before Coach exists, every tool already connected: Coach's draft alone, signed on its own.", retryAnswer);
       // The draft alone is previewed as ever, with nothing to declare.
       expect(retry.requests[0].cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
       expect(w.account.previewed!.at(-1)).toEqual(retry.requests[0].body);
@@ -5331,6 +5338,7 @@ describe("the first run", () => {
     expect(r.status).toBe(200);
     expect(r.body.time_zone).toBe("Europe/Paris");
     expect(k.put).toEqual(["Europe/Paris"]);
+    contract("setup-time-zone", "GET /v1/setup with X-Time-Zone for a new account still on UTC: tafs cloud set the zone in KIFF, and says so.", r.body);
     // Set once: a later read, or another phone's zone, changes nothing here; a later mismatch is the apps' question.
     expect((await k.send("GET", "/v1/setup", { "X-Time-Zone": "America/New_York" })).body).not.toHaveProperty("time_zone");
     expect(k.put).toEqual(["Europe/Paris"]);

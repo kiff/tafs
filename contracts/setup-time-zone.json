@@ -1,0 +1,8 @@
+{
+  "about": "GET /v1/setup with X-Time-Zone for a new account still on UTC: tafs cloud set the zone in KIFF, and says so. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "setup": null,
+    "tools": null,
+    "time_zone": "Europe/Paris"
+  }
+}
