@@ -40,6 +40,19 @@ class Check(unittest.TestCase):
         # The same fold on any other branch is refused.
         self.assertTrue(changelog.check(fold, "claude/x"))
 
+    def test_a_name_that_comes_back_fills_or_keeps_its_empty_fragment(self):
+        # The branch's pull request merged with an empty fragment, and the name came back before a fold.
+        mine = "claude/trusting-brown-u8tr1r"
+        own = changelog.fragment_name(mine)
+        self.assertEqual(changelog.check([("M", own), ("M", "runtime/x.ts")], mine, empty_on_base=True), [])  # filled
+        self.assertEqual(changelog.check([("M", "runtime/x.ts")], mine, empty_on_base=True), [])  # left empty
+        # Still refused: another fragment as well or instead, removing its own, and any of it without the empty file.
+        self.assertTrue(changelog.check([("A", "changes/other.md")], mine, empty_on_base=True))
+        self.assertTrue(changelog.check([("M", own), ("A", "changes/other.md")], mine, empty_on_base=True))
+        self.assertTrue(changelog.check([("D", own)], mine, empty_on_base=True))
+        self.assertTrue(changelog.check([("M", own)], mine))
+        self.assertTrue(changelog.check([("M", "runtime/x.ts")], mine))
+
     def test_dependabot_is_exempt(self):
         self.assertEqual(changelog.check([("M", "android/build.gradle.kts")], "dependabot/gradle/x"), [])
 
@@ -77,6 +90,12 @@ class Fold(unittest.TestCase):
         self.assertEqual(log, "# Changelog\n\nIntro.\n\n## Unreleased\n\n- **Second.** Added second.\n"
                               "- **First.** Added first.\n- **Old.** Already here.\n")
         self.assertEqual(sorted(os.listdir(os.path.join(self.dir, "changes"))), ["README.md"])
+
+    def test_only_an_empty_fragment_on_the_base_counts_as_the_names_own(self):
+        self.write("changes/a-b.md", ""); self.write("changes/c-d.md", "- **C.** It.\n"); self.commit("merged", 1_700_000_100)
+        self.assertTrue(changelog.own_fragment_empty("HEAD", "a/b", self.dir))
+        self.assertFalse(changelog.own_fragment_empty("HEAD", "c/d", self.dir))  # an entry, not the empty file
+        self.assertFalse(changelog.own_fragment_empty("HEAD", "e/f", self.dir))  # none
 
     def test_a_release_takes_everything_and_unreleased_starts_empty(self):
         self.write("changes/a.md", "- **New.** It.\n"); self.commit("a", 1_700_000_100)
