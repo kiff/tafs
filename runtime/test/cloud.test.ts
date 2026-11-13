@@ -121,7 +121,9 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
     }
     if (url.endsWith("/v1/me/agent-drafts/preview")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
-      const body = JSON.parse(String(init?.body)) as { cards: Array<{ id: string }> };
+      const body = JSON.parse(String(init?.body)) as { cards: Array<{ id: string }>; declare?: unknown };
+      // A KIFF that can't yet word Cards over tools a batch is about to declare.
+      if (body.declare !== undefined && (account as { declareRefused?: boolean }).declareRefused) return new Response(JSON.stringify({ error: "action taf_task is not declared" }), { status: 400 });
       (account.previewed ??= []).push(body);
       return new Response(JSON.stringify({ agent_id: "x", label: "Coach", card_title: "Coach's Card", cards: body.cards.map((c) => ({ id: c.id, lines: [`KIFF's line for ${c.id}`] })) }), { status: 200 });
     }
@@ -1724,13 +1726,26 @@ describe("Setup (kiff/agents#91)", () => {
       expect(draft.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
       expect(draft.body).not.toHaveProperty("no_tools");
       expect(first.coach_tools_step.title).toBe("Give Coach its tools");
-      // Nothing previewed: KIFF refuses a Card over an action no tool declares yet, so the phone sends the batch first.
-      expect(w.account.previewed ?? []).toEqual([]);
+      // The Cards the one fingerprint signs are shown in KIFF's own words, previewed over the tools the batch declares
+      // (qa-kiff on #852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
+      expect(draft.card_title).toBe("Coach's Card");
+      expect(draft.cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
+      expect(w.account.previewed).toEqual([{ ...draft.body, declare: connect.body.connections }]);
+      // A KIFF that can't word them yet: no start at all, so the first start goes in its steps, never unworded.
+      (w.account as { declareRefused?: boolean }).declareRefused = true;
+      expect(await read()).toEqual({ setup: null, tools: null });
+      // Nor on any error on the way: the screen still loads.
+      w.account.gatewayStatus = 503;
+      expect(await read()).toEqual({ setup: null, tools: null });
+      delete w.account.gatewayStatus;
       // Tools already there (or the batch went in and the draft was refused): the draft alone, one fresh fingerprint.
       w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
       const retry = (await read()).start;
       expect(retry).toMatchObject({ state: "to_give", scheme: "kiff.request.v1" });
       expect(retry.requests.map((r: { id: string }) => r.id)).toEqual(["draft"]);
+      // The draft alone is previewed as ever, with nothing to declare.
+      expect(retry.requests[0].cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
+      expect(w.account.previewed!.at(-1)).toEqual(retry.requests[0].body);
       // Someone who can't start Setup gets nothing to sign.
       expect((await read("viewer")).start).toBeUndefined();
       // Once Setup is claimed as before, the first start is over.
