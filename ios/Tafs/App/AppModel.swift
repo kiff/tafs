@@ -5959,6 +5959,21 @@ final class AppModel: ObservableObject {
         do {
             let approved = try await planque.approve(grant, words: words)
             guard let signInURL = approved.signInURL else {
+                // planque holds a fresh sign-in and waits for this phone to confirm it with its
+                // one-use code: confirmed here, never a second sign-in, and connected only once
+                // planque says so.
+                if approved.status == "signed_in", let code = approved.confirmCode {
+                    connectStep = Words.Coach.checkingSignIn
+                    defer { connectStep = nil }
+                    let confirmed = try await planque.confirm(grantID: grant.id, code: code)
+                    await refreshConnections()
+                    guard gen == accountGeneration else { return nil }
+                    guard confirmed.connected || confirmed.listed else {
+                        lastError = Words.Coach.notConnected(vendor: grant.vendor, status: confirmed.status.replacingOccurrences(of: "_", with: " "))
+                        return nil
+                    }
+                    return confirmed
+                }
                 // planque already holds the sign-in (contract 5): approving the tools Setup
                 // chose from the vendor's list connected them, with no second sign-in.
                 guard approved.status == "connected" else {
@@ -7788,12 +7803,21 @@ final class AppModel: ObservableObject {
             default:
                 cardNotes[component.id] = Words.Coach.unknownAnswer
             }
+        } catch let refused as TafsCloud.CloudError where refused.code == Self.signInNotConfirmed {
+            // tafs cloud's own line: the sign-in went through and isn't confirmed yet, so Approve
+            // again confirms it. Said as it is, never as an answer that didn't arrive.
+            guard gen == accountGeneration else { return }
+            cardNotes[component.id] = refused.words ?? refused.message
+            await loadSetupThread()
         } catch {
             guard gen == accountGeneration else { return }
             cardNotes[component.id] = Words.Coach.answerNotReached(why: "\(error.localizedDescription)")
             await loadSetupThread()
         }
     }
+
+    /// tafs cloud's code when a sign-in planque holds isn't confirmed yet: the card asks again.
+    nonisolated static let signInNotConfirmed = "sign_in_not_confirmed"
 
     /// How giving a key and its Card under one Face ID went (`approveKeyAndCard`).
     enum KeyAndCard: Equatable {
@@ -8023,6 +8047,13 @@ final class AppModel: ObservableObject {
             guard let p = ask.planque else { return Came(result: "failed", why: Words.Connect.tafsCloudNamedNoConnection) }
             let approved = try await planque.approve(grantID: p.grant, body: p.body)
             guard let signInURL = approved.signInURL else {
+                // A fresh sign-in planque holds for this phone to confirm, with its one-use code:
+                // confirmed here, then reported as planque answers it (unconfirmed, it's revoked).
+                if approved.status == "signed_in", let code = approved.confirmCode {
+                    let confirmed = try await planque.confirm(grantID: p.grant, code: code)
+                    return confirmed.connected || confirmed.listed ? Came(result: confirmed.status == "listed" ? "listed" : "connected")
+                        : Came(result: "not_connected", status: confirmed.status)
+                }
                 // planque already holds the sign-in: approving connected it, with no second sign-in.
                 return approved.status == "connected" || approved.status == "listed" ? Came(result: approved.status) : Came(result: "not_connected", status: approved.status)
             }

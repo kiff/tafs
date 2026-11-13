@@ -994,6 +994,61 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// planque holds a fresh sign-in and answers the approval `signed_in` with no link and a one-use
+    /// `confirm` code (the account's Google sign-in, say): this phone confirms it with that code,
+    /// then reports what planque says, `listed`, with no second sign-in. Unconfirmed, planque would
+    /// revoke it at `confirm_by`. A `signed_in` with no code is never taken as done.
+    func testASignInPlanqueHoldsIsConfirmedWithItsCodeThenGoesOn() async throws {
+        let signer = FaceIDSigner()
+        let vendor = StubVendor()
+        let model = await model(signer: signer, vendor: vendor)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/connect-sheets/approval"] = (200, #"{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g_01|\#(PlanqueTests.digest)","reason":"Connect Google Sheets","planque":{"grant":"g_01","body":{"digest":"\#(PlanqueTests.digest)"}}}}"#)
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/connect-sheets/approval/ask_1"] = (200, #"{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}"#)
+        await model.loadSetup()
+        let held = PlanqueTests.grantJSONFor(status: "signed_in", signedIn: true).replacingOccurrences(of: #""status":"signed_in","#, with: #""status":"signed_in","confirm":"c0de","confirm_by":"2026-11-13T15:10:00Z","#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, held)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, PlanqueTests.grantJSONFor(status: "listed", signedIn: true))
+        await model.refreshConnections()
+        StubProtocol.sent = []
+        await model.approve(try SetupTests.component(#"{"type":"approval","id":"connect-sheets","grant":"g_01"}"#), shown: model.grants.first?.digest, shownDraft: nil)
+        let confirm = try XCTUnwrap(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").first, "confirmed, or planque revokes it")
+        XCTAssertEqual(body(confirm)["confirm"] as? String, "c0de", "the code planque gave")
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/connect-sheets/approval/ask_1").last)["result"] as? String,
+                       "listed", "as planque answers the confirm: signed in, its tools next")
+        XCTAssertTrue(vendor.opened.isEmpty, "no second sign-in")
+        XCTAssertNil(model.lastError)
+
+        // Connect apps' own path: confirmed the same way, and approved.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        await model.refreshConnections()
+        StubProtocol.sent = []
+        let done = await model.connect(grantID: "g_01", shown: model.grants.first?.digest)
+        XCTAssertEqual(done?.status, "listed")
+        XCTAssertEqual(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").count, 1)
+        XCTAssertNil(model.lastError)
+
+        // signed_in with no code: nothing to confirm with, so it isn't done.
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, PlanqueTests.grantJSONFor(status: "signed_in", signedIn: true))
+        await model.refreshConnections()
+        StubProtocol.sent = []
+        let unconfirmed = await model.connect(grantID: "g_01", shown: model.grants.first?.digest)
+        XCTAssertNil(unconfirmed)
+
+        // tafs cloud still finds it waiting: its own line goes on the card, as it is.
+        let line = "Your sign-in went through, but it isn't confirmed yet. Approve again to confirm it."
+        StubProtocol.responses["POST /v1/tafs/taf-setup/components/connect-sheets/approval/ask_1"] = (409, #"{"error":"\#(line)","code":"sign_in_not_confirmed"}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        await model.refreshConnections()
+        await model.approve(try SetupTests.component(#"{"type":"approval","id":"connect-sheets","grant":"g_01"}"#), shown: model.grants.first?.digest, shownDraft: nil)
+        XCTAssertEqual(model.cardNotes["connect-sheets"], line, "never as an answer that didn't arrive")
+        XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").isEmpty)
+        XCTAssertTrue(vendor.opened.isEmpty)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// Connect first (contract 5 on kiff/agents#91): the first approval signs in and planque
     /// only lists the vendor's tools; the second approves the tools Setup chose, with no
     /// second sign-in. Each reports what came of it; tafs cloud answers. A held sign-in shows on the Card tab.
