@@ -637,7 +637,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "alerts" && parts.length === 2) return alerts(event, method, await person(event, deps), deps);
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
   if (parts[1] === "home" && parts[2] === "setting-up" && parts.length === 5 && parts[4] === "discard" && method === "POST") {
-    return discardHalfMade(event, await person(event, deps), decodeURIComponent(parts[3] ?? ""), deps);
+    let agent = "";
+    try { agent = decodeURIComponent(parts[3] ?? ""); } catch { throw new HTTPError(404, "no taf being set up of yours by that agent"); }
+    return discardHalfMade(event, await person(event, deps), agent, deps);
   }
   if (parts[1] === "calendar" && parts.length === 2 && method === "GET") return calendar(event, await person(event, deps), deps);
   if (parts[1] === "record" && method === "GET") return recordRoute(event, parts, await person(event, deps), deps);
@@ -6492,10 +6494,11 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     taken.push(color);
     // The chat to finish it in goes only to the person who started it (#879); anyone else sees the name alone.
     const w = wordsIn(langOf(event));
-    // Its starter can also discard it (the PM's call, 13 Nov): the phone revokes its Cards in KIFF, then asks tafs cloud.
+    // Its starter can also discard it (a Discard beside Finish setting up, 13 Nov): the phone revokes the Cards in force
+    // on its agent, listed here as Home lists a live taf's `card.ids`, then asks tafs cloud.
     return [{ name: half.name, kiff_agent: agent, color, ...(half.coach && half.session ? {
       finish: { taf: half.coach, session: half.session, words: w.home_finish_setup },
-      discard: { words: { button: w.home_discard, title: w.home_discard_title, text: w.home_discard_text, yes: w.home_discard_yes, no: w.home_discard_no } },
+      discard: { cards: (cards.get(agent) ?? []).map((c) => c.id), words: { button: w.home_discard, title: w.home_discard_title, text: w.home_discard_text, yes: w.home_discard_yes, no: w.home_discard_no } },
     } : {}) }];
   });
   // Apps from before setting_up read the same tafs from others, as they drew them there (Android 77, iPhone and iPad).
@@ -6539,10 +6542,11 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
 interface HalfMade { name: string; coach?: string; session?: string }
 
 /**
- * POST /v1/home/setting-up/{kiff_agent}/discard: a taf being set up, dropped by the person who started it (the PM's
- * call, 13 Nov: no one waits a week for its Card to lapse). The phone revokes the agent's Cards in KIFF first, as it
- * does before a removal; this ends the Coach chat that drafted it (its paused run, cancelled) and forgets the name
- * kept for it, so Home stops listing it. Signed by the phone as a removal is (KIFF-Device-Signature over POST, the
+ * POST /v1/home/setting-up/{kiff_agent}/discard: a taf being set up, dropped by the person who started it (a Discard
+ * beside Finish setting up, 13 Nov: no one waits a week for its Card to lapse). The phone revokes the agent's Cards in
+ * KIFF first (`discard.cards` on Home), as it does before a removal; this checks KIFF holds none in force any more
+ * (409 `cards_in_force` otherwise: nothing ends while a Card could still act), then ends the Coach chat that drafted
+ * it (its paused run, cancelled) and forgets the name kept for it, so Home stops listing it. Signed by the phone as a removal is (KIFF-Device-Signature over POST, the
  * path and the empty body, the approval key). Only the starter's own half-made taf, proved as Home proves it: a
  * paused run of this account's Coach whose result names that agent with the setup's own unclaimed draft. 404 otherwise.
  */
@@ -6563,6 +6567,10 @@ async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string
   }
   if (!found || !coach) throw new HTTPError(404, "no taf being set up of yours by that agent");
   await discardSigned(event, agent, deps);
+  // The Card is revoked first, by the phone: a discard that went on with one in force would leave it acting, unseen.
+  const { mandates } = await readKIFF(bearer(event), deps.fetch, deps.kiffBase);
+  const left = mandates.filter((m) => m.subject === agent && !m.revoked_at);
+  if (left.length) throw new HTTPError(409, `${left.length} Card${left.length === 1 ? "" : "s"} still in force on this agent: revoke ${left.length === 1 ? "it" : "them"} first`, { code: "cards_in_force", cards: left.map((m) => m.id) });
   await agentsCall(() => deps.agents.cancelRun(me.tenantID, coach.id, found.id, member(me)));
   await deps.coach?.remove(halfMadeKey(me.tenantID, agent)).catch(() => undefined);
   console.log(JSON.stringify({ event: "half_made_discard", tenant: me.tenantID, agent, run: found.id }));
