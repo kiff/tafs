@@ -259,6 +259,27 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// The phone enrols before anything goes to KIFF: an enrolment the connection server refuses
+    /// (another device holds it) sends neither the batch nor the draft, so KIFF is left with no
+    /// tools and no draft nobody claims.
+    func testARefusedEnrolmentSendsNothingToKIFF() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["GET /v1/setup"] = (200, Self.startJSON())
+        await model.loadSetup()
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (409, #"{"error":"this account is connected on another device"}"#)
+        StubProtocol.sent = []
+        let given = await model.giveCoachTools()
+        XCTAssertFalse(given)
+        XCTAssertTrue(sent("POST", "mcp.test", "/v1/connections/batch").isEmpty, "no batch")
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts").isEmpty, "no draft")
+        XCTAssertTrue(sent("POST", "cloud.test", "/v1/setup").isEmpty)
+        XCTAssertNil(model.setupTaf)
+        XCTAssertNotNil(model.coachToolsError, "said on the step")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// With every tool connected, tafs cloud sends the draft alone: it goes signed as any setup
     /// call, under the same one Face ID. That's also the retry once KIFF refused a draft after the
     /// batch went in: the next Start reads it, and the pair is never sent again.
