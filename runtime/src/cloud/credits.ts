@@ -402,7 +402,7 @@ export function waitingWords(b: Pick<KIFFBalance, "kind" | "why" | "can_raise" |
     case "no_plan":
       return w.cr_w_no_plan;
     case "limit_reached":
-      if (b.can_raise && b.raise_to_cents > 0) return w.cr_w_limit_raise(again);
+      if (b.can_raise && b.raise_to_cents > 0) return w.cr_w_limit_raise(day);
       if (b.can_raise) return w.cr_w_limit_ceiling(again);
       return w.cr_w_limit_admin;
     default:
@@ -449,7 +449,8 @@ export function balanceView(b: KIFFBalance, lang: Lang = "en", ranLately = true)
       const team = w.cr_company(seats(count(b.seats), lang));
       if (count(b.beyond) === 0) {
         words = w.cr_co_used_of(team, number(count(b.used), lang), c(count(b.included)));
-        detail = w.cr_co_detail_limit(eur(count(b.limit_cents)));
+        // While the tafs wait at the limit, the warning says it and how to go on: the limit's line isn't said again.
+        detail = waiting ? null : w.cr_co_detail_limit(eur(count(b.limit_cents)));
       } else {
         words = w.cr_co_used_beyond(team, eur(count(b.beyond_cents)), eur(count(b.limit_cents)));
         detail = w.cr_co_detail_beyond;

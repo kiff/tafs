@@ -1226,7 +1226,13 @@ class AppModel(
       // Which account this is, once a sign-in: it doesn't change under it. Read on its own, so its name
       // shows even when the list can't be read.
       if (_state.value.kiffAccount == null) {
-        attempt { kiff.me() }?.let { account ->
+        attempt { kiff.me() }?.let { me ->
+          var account = me
+          // A new account still on UTC: tafs cloud takes this phone's zone, with no question, when it can (docs/accounts.md).
+          // Asked only then, before the account shows, so the time-zone question never comes up for it (as on iPhone and iPad).
+          if ((account.timeZone ?: "UTC") == "UTC" && java.time.ZoneId.systemDefault().id != "UTC") {
+            runCatching { cloud.setupRead().timeZone }.getOrNull()?.let { zone -> account = account.copy(timeZone = zone) }
+          }
           if (generation == accountGeneration && _state.value.kiffAccount == null) showAccount(account)
         }
       }
@@ -1399,6 +1405,7 @@ class AppModel(
 
   /** From now on, what grants authority is signed by the approval key, each request behind its own fingerprint. */
   private fun useApprovalKey() {
+    approvalKeyRefusals = 0
     sessionHasApprovalKey = true
     _state.update { it.copy(approvalKeyLost = false) }
     val signer = signer
@@ -1433,7 +1440,23 @@ class AppModel(
     else -> otherwise
   }
 
+  /**
+   * What Start says when KIFF holds no approval key for this phone after it tried (the line both apps use): KIFF didn't accept
+   * it, try again; from the second refusal in a row, where to write too. A key KIFF holds another of keeps the lost key's words,
+   * and a phone with no approval key at all (no fingerprint) that approvals are needed.
+   */
+  private fun approvalKeyRefused(): String {
+    if (_state.value.approvalKeyLost) return KiffClient.APPROVAL_KEY_LOST
+    if (signer.approvalPublicKeyDER.isEmpty()) return bot.tafs.app.model.ApprovalWords.FIRST_TAF
+    approvalKeyRefusals += 1
+    return if (approvalKeyRefusals >= 2) Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport else Words.Approval.keyNotAccepted
+  }
+
+  /** How many Starts in a row KIFF didn't take this phone's approval key on: a key KIFF takes, or a new session, starts again. */
+  private var approvalKeyRefusals = 0
+
   private fun forgetApprovalKey() {
+    approvalKeyRefusals = 0
     sessionHasApprovalKey = false
     // A phone with no approval key (no fingerprint enrolled) grants nothing with its screen lock: what grants authority
     // stops at the signer, which says to add a fingerprint. One with a key KIFF doesn't hold yet signs as before.
@@ -3003,7 +3026,7 @@ class AppModel(
     // nothing is signed unless KIFF holds it (the one signature over both requests is the approval key's).
     if (!sessionHasApprovalKey) registerApprovalKey()
     if (!sessionHasApprovalKey) {
-      failed(if (_state.value.approvalKeyLost) KiffClient.APPROVAL_KEY_LOST else bot.tafs.app.model.ApprovalWords.FIRST_TAF)
+      failed(approvalKeyRefused())
       return false
     }
     _state.update { it.copy(startingCoach = true, coachToolsError = null, coachStartError = null) }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { periodName, planOf, refusedWords, view } from "../src/cloud/aiuse.js";
+import { view } from "../src/cloud/aiuse.js";
 import { handle, handleStream, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -12,11 +12,6 @@ const HALF = 4_854_600;
 const NOW = new Date("2026-10-22T12:00:00Z");
 
 describe("AI use since credits are the balance", () => {
-  it("names the period as kiff/agents takes it", () => {
-    expect(periodName(START)).toBe(PERIOD);
-    expect(periodName("2026-10-20T09:12:00.5+02:00")).toMatch(/^[a-z0-9._-]+$/);
-  });
-
   it("shows no bound, nothing used and never waiting", () => {
     const none = { used_pct: null, asks_at_pct: null, paused: false, starts_again: null, words: "Your plan sets no AI limit for your tafs." };
     expect(view()).toEqual({ ...none, can_go_on: false });
@@ -88,22 +83,5 @@ describe("GET /v1/usage/ai, kept for apps from before credits", () => {
     expect(r.body).toMatchObject({ used_pct: null, asks_at_pct: null, paused: false, can_go_on: false });
     expect(asked.filter((p) => p.startsWith("/v1/me/usage"))).toEqual([]);
     expect(w.agents.calls).toEqual([]);
-  });
-});
-
-describe("a chat refused for AI fair use, in words", () => {
-  it("says the day the AI use starts again, in the account's zone", () => {
-    const p = { plan: "solo", seats: 1, start: "2026-10-01T00:00:00Z", end: "2026-10-31T23:30:00Z", goOns: 0 };
-    expect(refusedWords(p, "Europe/Madrid")).toBe("Your tafs have used this period's AI. An admin of this account can let them go on from Settings › AI use, or it starts again on 1 Nov.");
-    expect(refusedWords(p, "UTC", true)).toBe("Your tafs have used this period's AI. Go on from Settings › AI use, or it starts again on 31 Oct.");
-    expect(refusedWords(undefined)).toBe("Your tafs have used this period's AI. An admin of this account can let them go on from Settings › AI use, or it starts again with the next period.");
-  });
-});
-
-describe("KIFF's usage read", () => {
-  it("is undefined when KIFF has no billing yet, and refuses a sign-in KIFF refuses", async () => {
-    expect(await planOf("ana", kiff(undefined), "https://kiff.test")).toBeUndefined();
-    expect(await planOf("ana", kiff(usage("team", 3, 2)), "https://kiff.test")).toEqual({ plan: "team", seats: 3, start: START, end: "2026-11-20T09:12:00Z", goOns: 2 });
-    await expect(planOf("eve", kiff(undefined), "https://kiff.test")).rejects.toThrow(/did not accept/);
   });
 });

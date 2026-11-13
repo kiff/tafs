@@ -294,7 +294,23 @@ final class SetupTests: XCTestCase {
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let chat = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
         XCTAssertTrue(chat.contains("if let start = model.coachStart, start.oneScreen, let words = start.words {"))
-        XCTAssertTrue(chat.contains("CoachToolsGiven(tools: start.tools)"), "what's signed, drawn on Start's screen")
+        XCTAssertTrue(chat.contains("CoachToolsGiven(tools: start.tools, start: true)"), "what's signed, drawn on Start's screen as Android draws it")
+        // The intro's second line only where it adds something: a phone that can't approve yet.
+        XCTAssertTrue(chat.contains("if model.tafs.isEmpty, model.approvalBlocked {\n                // Before the first taf"))
+        let tools = try String(contentsOf: views.appendingPathComponent("CoachToolsStep.swift"), encoding: .utf8)
+        let start = try XCTUnwrap(tools.range(of: "private var startBody: some View {"))
+        let rest = tools[start.upperBound...]
+        let cardsAt = try XCTUnwrap(rest.range(of: "cards\n"))
+        let foldAt = try XCTUnwrap(rest.range(of: "Button { folded.toggle() }"))
+        XCTAssertLessThan(cardsAt.lowerBound, foldAt.lowerBound, "the Cards first, then the tools under one fold")
+        let body = rest[..<(rest.range(of: "private func groupTools")?.lowerBound ?? rest.endIndex)]
+        XCTAssertFalse(body.contains("group.line"), "no group lines up front on Start")
+        // The alerts offer after sign-in is Android's one line.
+        let needs = try String(contentsOf: views.appendingPathComponent("NeedsYouView.swift"), encoding: .utf8)
+        let offer = try XCTUnwrap(needs.range(of: "struct AlertsOfferSheet: View {"))
+        let sheet = needs[offer.upperBound...]
+        XCTAssertTrue(sheet.contains("Text(Words.Alert.prompt)"))
+        XCTAssertFalse(sheet.prefix(1500).contains("whenTafAsksSomethingOutside"))
         Keychain.delete(AppModel.planqueAccount)
     }
 
@@ -409,6 +425,49 @@ final class SetupTests: XCTestCase {
         let onboarding = try String(contentsOf: views.appendingPathComponent("OnboardingView.swift"), encoding: .utf8)
         XCTAssertTrue(onboarding.contains(".sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }"))
         XCTAssertFalse(onboarding.contains("SignInGate"))
+    }
+
+    /// An account with Coach, whose tools and Cards are missing: `tools` carries the pair as a first
+    /// start does (kiff/tafs#881). One Face ID, one signature by the approval key over both, the
+    /// batch then the draft, and nothing claimed after it: Coach exists.
+    func testCoachsMissingToolsGoUnderOneFaceIDOnAnAccountThatHasCoach() async throws {
+        let connect = #"{"id":"connect","method":"POST","path":"/v1/connections/batch","gateway":true,"body":{"connections":[{"name":"taf_task"}]},"lines":["Hand tasks to your tafs"]}"#
+        let draft = #"{"id":"draft","method":"POST","path":"/v1/me/agent-drafts","body":{"agent_id":"setup","label":"Coach","cards":[{"title":"Coach's tasks"}]},"card_title":"Coach's Card","cards":[{"title":"Tasks","lines":["Hand a task to a taf, up to 50 a day"]}]}"#
+        let tools = #"{"state":"to_give","scheme":"kiff.requests.v1","requests":[\#(connect),\#(draft)],"connect":{"body":{"connections":[{"name":"taf_task"}]},"lines":["Hand tasks to your tafs"]}}"#
+        let toGive = #"{"setup":\#(Self.setupJSON),"tools":\#(tools)}"#
+        let read = try XCTUnwrap(TafsCloud.CoachTools.read(Data(toGive.utf8)))
+        XCTAssertEqual(read.together?.together, true)
+        XCTAssertEqual(read.card?.cardTitle, "Coach's Card", "KIFF's words for the Cards, drawn before signing")
+        XCTAssertNil(TafsCloud.CoachTools.read(Data(toGive.replacingOccurrences(of: #","card_title":"Coach's Card","cards":[{"title":"Tasks","lines":["Hand a task to a taf, up to 50 a day"]}]"#, with: "").utf8))?.together,
+                     "never Cards unread")
+
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, toGive)
+        await model.loadSetup()
+        XCTAssertNotNil(model.setupTaf)
+        StubProtocol.responses["POST /v1/connections/batch"] = (200, "{}")
+        StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_t","agent_id":"setup","status":"confirmed","version":"v2","cards":[]}"#)
+        StubProtocol.thenRespond["POST /v1/me/agent-drafts"] = ["GET /v1/setup": (200, #"{"setup":\#(Self.setupJSON),"tools":{"state":"given"}}"#)]
+        StubProtocol.sent = []
+        let given = await model.giveCoachTools()
+        XCTAssertTrue(given, model.coachToolsError ?? "")
+        XCTAssertEqual(signer.prompts, ["tafs.coach-tools.v1|t_01"], "one Face ID")
+        let order = StubProtocol.sent.compactMap { r -> String? in
+            guard let p = r.url?.path, r.httpMethod == "POST", ["/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup"].contains(p) else { return nil }
+            return p
+        }
+        XCTAssertEqual(order, ["/v1/connections/batch", "/v1/me/agent-drafts"], "the batch, then the draft, and no claim: Coach exists")
+        let batch = try XCTUnwrap(sent("POST", "mcp.test", "/v1/connections/batch").first)
+        let cards = try XCTUnwrap(sent("POST", "api.test", "/v1/me/agent-drafts").first)
+        XCTAssertEqual(String(decoding: try XCTUnwrap(cards.httpBody), as: UTF8.self), #"{"agent_id":"setup","label":"Coach","cards":[{"title":"Coach's tasks"}]}"#, "as tafs cloud wrote it")
+        let one = try XCTUnwrap(batch.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        let other = try XCTUnwrap(cards.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertTrue(one.contains(",v3=signature,with=sha256:") && other.contains(",v3=signature,with=sha256:"), "\(one) \(other)")
+        XCTAssertEqual(one.prefix(while: { $0 != "," }), other.prefix(while: { $0 != "," }), "one signed_at")
+        XCTAssertTrue(signer.quiet.contains { $0.hasPrefix("kiff.requests.v1\nt_01\n") }, "\(signer.quiet)")
+        Keychain.delete(AppModel.planqueAccount)
     }
 
     /// The phone enrols before anything goes to KIFF: an enrolment the connection server refuses

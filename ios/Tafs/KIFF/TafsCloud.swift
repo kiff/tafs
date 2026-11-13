@@ -2174,8 +2174,14 @@ final class TafsCloud {
 
         /// Read from `GET /v1/setup`'s answer; nil from a tafs cloud that sends no `start`.
         static func read(_ response: Data) -> CoachStart? {
-            guard let raw = RawJSON.value(of: "start", in: response),
-                  let fields = (try? JSONSerialization.jsonObject(with: raw)) as? [String: Any] else { return nil }
+            guard let raw = RawJSON.value(of: "start", in: response) else { return nil }
+            return parse(raw)
+        }
+
+        /// One object of requests to sign once, as `start` and, for a Coach that exists, `tools`
+        /// carry them (docs/api.md): its state, scheme, requests and step.
+        static func parse(_ raw: Data) -> CoachStart? {
+            guard let fields = (try? JSONSerialization.jsonObject(with: raw)) as? [String: Any] else { return nil }
             var s = CoachStart()
             s.state = fields["state"] as? String ?? "unknown"
             s.scheme = fields["scheme"] as? String ?? ""
@@ -2277,6 +2283,9 @@ final class TafsCloud {
                 ((try? c.decodeIfPresent(String.self, forKey: k)) ?? nil) ?? ""
             }
         }
+        /// Coach's missing tools and Cards as one pair to sign once (`tools.requests`), for a Coach
+        /// that exists; nil from a tafs cloud that sends the steps alone.
+        var together: CoachStart? = nil
         var state = "unknown"
         /// With `taken`: the name a vendor's tool holds.
         var taken: String? = nil
@@ -2313,6 +2322,14 @@ final class TafsCloud {
             }
             if let step = RawJSON.value(of: "coach_tools_step", in: raw) {
                 tools.step = try? JSONDecoder().decode(Step.self, from: step)
+            }
+            // A Coach that exists, with tools and Cards missing: the pair, signed once, as a first
+            // start's (kiff/tafs#881). Only one the phone may sign, with KIFF's words for the Cards.
+            if fields["requests"] != nil, let pair = CoachStart.parse(raw), pair.together, pair.startable {
+                tools.together = pair
+                if tools.card == nil, let draft = pair.draft {
+                    tools.card = CardDraft(body: draft.body, cardTitle: draft.cardTitle, cards: draft.cards)
+                }
             }
             return tools
         }

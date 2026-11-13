@@ -104,7 +104,7 @@ first Send starts it (`AppModel.sendChat`, `startCoach`):
   its own bytes, so it takes its own fingerprint. A sheet asks for it (`CoachToolsSheet`,
   `AppState.coachToolsAsked`). Its words are tafs cloud's (`tools.coach_tools_step`: `title`,
   `intro`, a few `groups` up front, each tool's `does` and `why` folded under `details`, closed at
-  first, then `ask`, `give` and `not_now`). The connections' `lines` and KIFF's words for the Card
+  first, then `give` and `not_now`; the button says what it does, with no question over it). The connections' `lines` and KIFF's words for the Card
   sit in the same fold. A tafs cloud from before the step shows the `lines`, the Card and the app's
   own button. **Not now** puts it off. Then one line above the conversation (`row`) opens the same
   sheet; it's never a panel there.
@@ -125,7 +125,7 @@ and iPad in [ios-app.md](ios-app.md)). Before Coach exists, `GET /v1/setup` may 
 wrote it.
 - **Start's screen shows what Coach is given** (Android 1.20, `StartScreen`): `start.words.lead`, then the Cards in KIFF's own
   words (the draft's `card_title` and `cards`), with Coach's tools folded under `coach_tools_step`'s details, then
-  `start.words.does` and the `start.words.start` button. There's no second screen, and nothing is signed unread. (1.19 opened
+  the `start.words.start` button (the lead says what Start does, once: there's no line under the button). There's no second screen, and nothing is signed unread. (1.19 opened
   Coach's tools step on the first Send instead.)
 - **Start, or the first Send, starts Coach and gives its tools, behind one fingerprint.** The phone builds each request's message with one
   `signed_at` and signs both hashes once with the approval key (`kiff.requests.v1`). Each request goes with that one signature and
@@ -485,7 +485,7 @@ Answering a held call is never a tool.
 A first Start ends on one step that asks for Coach's tools, with their own fingerprint. tafs cloud
 writes its words, in the person's language, on `GET /v1/setup`'s `tools.coach_tools_step` while the
 tools are `to_give` (`coachToolsStep` in `coach.ts`):
-`{title, intro, groups: [{name, line, tools: [{name, does, why}]}], details, ask, give, not_now, row}`.
+`{title, intro, groups: [{name, line, tools: [{name, does, why}]}], details, give, not_now, row}`.
 
 - **Four groups, always shown:** watch your tafs, run them for you, build new versions, help while you
   drive. Each group has one line. The thirteen tools sit under them, under `details`, which is folded by
@@ -501,7 +501,15 @@ tools are `to_give` (`coachToolsStep` in `coach.ts`):
 - **One confirmation** gives the tools on either phone. The words never name a biometric (fingerprint,
   Face ID): the phone knows which it asks for, and tafs cloud doesn't.
 - **Buttons:** `give` and `not_now`. After **Not now**, the Coach screen keeps one line, `row`, which
-  opens the same step. It's never a panel above the conversation.
+  opens the same step. It's never a panel above the conversation. When only Cards for tools Coach gained
+  since are missing (every tool connected), `row` says so: "Coach has new tools: approve their limits".
+- **An account that has Coach, with tools and Cards missing** (`TAFS_COACH_START_ONE=on`): `tools` also
+  carries `scheme: "kiff.requests.v1"` and `requests`, the tools batch (`connect`) and the Cards' draft
+  for Coach's own agent (`draft`), worded by KIFF's gateway over the tools the batch would connect and
+  carrying that `contract_digest`, as a first start's pair. The phone signs both hashes once, sends the
+  batch, then the draft; the draft's submit is the confirmation, as for `card`. Without the flag, or when
+  KIFF can't word the pair, it's the batch, then the Cards on the next read, as before; `connect` and
+  `card` stay for apps that don't read `requests`.
 
 When a run Coach handed a taf pauses or ends, kiff/agents tells tafs cloud
 (`POST /v1/runs/ended`). tafs cloud reads the run back from kiff/agents rather than

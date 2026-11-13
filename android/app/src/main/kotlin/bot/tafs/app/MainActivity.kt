@@ -594,6 +594,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         approveDrive = model::approveDrive,
         turnOnAlerts = { scope.launch { model.turnOnAlertsFromOffer() } },
         notNowAlerts = model::notNowAlertsOffer,
+        openPlan = { coachOpen = false; usageOpen = true },
       ),
     )
   }

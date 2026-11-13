@@ -376,3 +376,10 @@ export async function toolTitles(token: string, tenant: string, subject: string,
 export async function setTimeZoneInKIFF(token: string, zone: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<string> {
   return (await ask<{ time_zone: string }>(token, "PUT", "/v1/me/time-zone", { time_zone: zone }, doFetch, base)).time_zone;
 }
+
+/** The account's people as KIFF lists them (GET /v1/tenant/members): the subjects whose membership is active. */
+export async function activeMembers(token: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<Set<string>> {
+  const out = await ask<{ members?: Array<{ subject?: unknown; status?: unknown }> }>(token, "GET", "/v1/tenant/members", undefined, doFetch, base);
+  if (!Array.isArray(out.members)) throw new KIFFError(502, "KIFF listed no people");
+  return new Set(out.members.filter((m) => m.status === "active" && typeof m.subject === "string").map((m) => m.subject as string));
+}
