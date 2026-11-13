@@ -9,7 +9,7 @@ import { fcmSender } from "./fcm.js";
 import { KIFF_API } from "./kiff.js";
 import { PLANQUE } from "./setupdef.js";
 import { forwardAlert, type ReadyRun } from "./forward.js";
-import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepDeletions, sweepDeliveries, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepHeld, sweepLate, sweepReplies, sweepYourSteps, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
+import { type AccountData, type Accounts, type Archived, type Claims, type Deps, handle, handleStream, sweepDeletions, sweepDeliveries, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepHeld, sweepLate, sweepReplies, sweepYourSteps, sweepConsent, type HTTPEvent, type HTTPResult, type Keys, type Names, type Removals, type Slots, type Taf, type Tafs, type UpgradeOutcome, upgradeDefinitions, upgradeFailure } from "./handler.js";
 import { parseKinds } from "./alert-preferences.js";
 import { routing, silencing, type Device, type PushStore } from "./push.js";
 import type { CoachStore } from "./coach.js";
@@ -671,7 +671,8 @@ const deletionPeers = {
 };
 
 function deps(): Deps {
-  return { agents: agents(), keys, accounts, tafs, forward, names, slots, claims, push, apns, androidPush: Boolean(fcm), removals, archived, accountData, deletions, deletionPeers, coach, events, reports, planqueBase: process.env.PLANQUE_URL ?? PLANQUE, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
+  // aiConsent: always on here; nothing a person writes reaches the model before they allow it (consent.ts).
+  return { agents: agents(), aiConsent: true, keys, accounts, tafs, forward, names, slots, claims, push, apns, androidPush: Boolean(fcm), removals, archived, accountData, deletions, deletionPeers, coach, events, reports, planqueBase: process.env.PLANQUE_URL ?? PLANQUE, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
 }
 
 /**
@@ -685,23 +686,26 @@ interface UpgradeEvent {
 
 /** The deletion sweep, invoked by its schedule: every deletion not finished, and every hand-over a server error left undone, tried again. */
 interface SweepEvent {
-  sweep: "deletions";
+  /** "deletions": the 5-minute sweep, everything below. "consent": the consent sweep alone, which a deploy runs once (infra/aws.sh). */
+  sweep: "deletions" | "consent";
 }
 
 function isSweep(event: unknown): event is SweepEvent {
-  return typeof event === "object" && event !== null && !("requestContext" in event) && (event as { sweep?: unknown }).sweep === "deletions";
+  return typeof event === "object" && event !== null && !("requestContext" in event) && ["deletions", "consent"].includes((event as { sweep?: unknown }).sweep as string);
 }
 
 function isUpgrade(event: unknown): event is UpgradeEvent {
   return typeof event === "object" && event !== null && !("requestContext" in event) && "upgrade" in event;
 }
 
-export async function handler(event: HTTPEvent | UpgradeEvent | SweepEvent): Promise<HTTPResult | { upgraded: UpgradeOutcome[] } | { swept: unknown[]; handovers?: unknown[]; replies?: unknown[]; deliveries?: unknown[]; failing?: unknown[]; health?: unknown[]; held?: unknown[]; late?: unknown[]; your_steps?: unknown[] }> {
+export async function handler(event: HTTPEvent | UpgradeEvent | SweepEvent): Promise<HTTPResult | { upgraded: UpgradeOutcome[] } | { swept: unknown[]; handovers?: unknown[]; replies?: unknown[]; deliveries?: unknown[]; failing?: unknown[]; health?: unknown[]; held?: unknown[]; late?: unknown[]; your_steps?: unknown[]; consent?: unknown[] }> {
+  // Once at deploy, before any schedule fires: every taf whose runs have no consent is paused at once (consent.ts).
+  if (isSweep(event) && event.sweep === "consent") return { swept: [], consent: await sweepConsent(deps()) };
   if (isSweep(event)) {
     // The same schedule retries Coach's hand-overs a server error left undone, and door replies a provider didn't take,
     // and says once a taf whose scheduled runs keep failing to start.
     const d = deps();
-    return { swept: await sweepDeletions(d), handovers: await sweepHandOvers(d), replies: await sweepReplies(d), deliveries: await sweepDeliveries(d), failing: await sweepFailingSchedules(d), health: await sweepHealth(d), held: await sweepHeld(d), late: await sweepLate(d), your_steps: await sweepYourSteps(d) };
+    return { swept: await sweepDeletions(d), handovers: await sweepHandOvers(d), replies: await sweepReplies(d), deliveries: await sweepDeliveries(d), failing: await sweepFailingSchedules(d), health: await sweepHealth(d), held: await sweepHeld(d), late: await sweepLate(d), your_steps: await sweepYourSteps(d), consent: await sweepConsent(d) };
   }
   if (isUpgrade(event)) {
     try {

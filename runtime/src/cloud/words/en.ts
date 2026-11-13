@@ -182,7 +182,7 @@ export const en = {
   recipes_label_never: "Never does",
   recipes_label_hand: "Hand it to Coach",
   recipes_home_lead: "Pick a job for your first taf.",
-  recipes_home_empty_coach: "No tafs yet. Connect an app to set up your first taf.",
+  recipes_home_empty_coach: "No tafs yet. Tell Coach the job a taf should do.",
   recipes_home_empty_shared: "No tafs yet. Tafs shared with you show here.",
   // The gallery (GET /v1/recipes/gallery): its title, its "all jobs" heading, the way to say a job in one's own words, and the strip's title.
   gallery_title: "New taf",
@@ -620,6 +620,11 @@ export const en = {
   ct_app_act: "Tap, type and scroll in the app on your device while it drives",
   ct_replaces: "replaces the earlier connection",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
+  // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
+  start_lead: "You sign in on each app's own page. No taf ever sees your password.",
+  start_button: "Start",
+  start_does: "Start sets up approvals on this device and gives Coach its tools, with your face or fingerprint once.",
+  plan_needed: "Choose a plan to start it.",
   cts_title: "Give Coach its tools",
   cts_intro: "Coach needs a few tools to look after your tafs. They go on Coach's own Card, with their limits, and only you can sign it, on your device.",
   cts_details: "Each tool and its limits",
@@ -753,6 +758,16 @@ export const en = {
   sheet_receipt: (vendor: string) => `${vendor} connected · key …{last4}`,
   sheet_disconnect: "Disconnect",
   sheet_done: (vendor: string, readOnly: boolean) => (readOnly ? `${vendor} is connected (read only)` : `${vendor} is connected`),
+  // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
+  ai_consent_title: "Your data and the AI",
+  ai_consent_lines: ["tafs uses Anthropic's Claude AI for Coach and your tafs.", "What's sent to it: what you write to Coach and your tafs, the files you attach, what your connected apps return to a taf while it works, and what's on your screen while Coach helps you in the app.", "What's never sent: the passwords and keys your connected apps use, or your fingerprint.", "Anthropic uses it to answer and keeps it up to 30 days.", "Nothing is sent until you allow it. You can withdraw in Account."],
+  ai_consent_allow: "Allow",
+  ai_consent_not_now: "Not now",
+  ai_consent_withdraw: "Withdraw",
+  ai_consent_given: "AI use: allowed",
+  ai_consent_needed: "Allow AI use first: Coach and your tafs need it to answer.",
+  ai_consent_paused_no_one: "Paused: no one has allowed AI use for this taf's runs yet. It goes on once someone who manages tafs allows it in Account.",
+  ai_consent_paused_not_given: "Paused: AI use for this taf's runs was withdrawn. It goes on once it's allowed again, or someone who manages tafs takes it over.",
 };
 
 export type Words = typeof en;

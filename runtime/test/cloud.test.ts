@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { AgentsError } from "../src/cloud/agents.js";
 import { calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
@@ -291,19 +291,20 @@ describe("tafs cloud", () => {
       return { status: r.statusCode, body: JSON.parse(r.body) };
     };
     const labels = { allows: "Does on its own", holds: "Asks you first", never: "Never does", hand: "Hand it to Coach" };
-    const empty = "No tafs yet. Connect an app to set up your first taf.";
+    const empty = "No tafs yet. Tell Coach the job a taf should do.";
+    const own = { title: "Say it in your own words", line: "Coach builds the taf with you." };
     // The account has Rae, live: a new conversation opens blank, and the words say why; Home keeps its empty line.
     const live = await call(w, "GET", "/v1/recipes", { token: "ana" });
     expect(live.status).toBe(200);
     expect(live.body).toEqual({ categories: [], recipes: [], filtered: false, shown: false, suggestions: { show: true, reason: "live", words: "The account has a live taf, so a new conversation with Coach opens blank. Suggestions can be turned off for good." },
-      home: { shown: false, words: empty }, labels });
+      home: { shown: false, words: empty, own_words: own }, labels });
     // No live taf: the recipes, shown, and Home leads with them.
     for (const k of [...w.tafs.held.keys()]) if (k.startsWith("t_acme#")) w.tafs.held.delete(k);
     const fresh = await call(w, "GET", "/v1/recipes", { token: "ana" });
     expect(fresh.body.shown).toBe(true);
     expect(fresh.body.recipes.length).toBeGreaterThan(0);
     expect(fresh.body.suggestions).toEqual({ show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." });
-    expect(fresh.body.home).toEqual({ shown: true, words: "Pick a job for your first taf." });
+    expect(fresh.body.home).toEqual({ shown: true, words: "Pick a job for your first taf.", own_words: own });
     expect(fresh.body.labels).toEqual(labels);
     // Someone who doesn't manage the account's tafs can't make one: Home doesn't lead with recipes, and says what's shared shows there.
     const viewer = await call(w, "GET", "/v1/recipes", { token: "viewer" });
@@ -312,7 +313,7 @@ describe("tafs cloud", () => {
     const de = (await call(w, "GET", "/v1/recipes", { token: "ana", headers: { "Accept-Language": "de-DE,de;q=0.9,en;q=0.8" } })).body;
     expect(de.categories[0]).toEqual({ id: "money", title: "Geld" });
     expect(de.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit")).toMatchObject({ title: "Erstattungen bis zu einem Limit", headline: "Keine Erstattung wartet über Nacht." });
-    expect(de.home).toEqual({ shown: true, words: "Wähle eine Aufgabe für deinen ersten taf." });
+    expect(de.home).toEqual({ shown: true, words: "Wähle eine Aufgabe für deinen ersten taf.", own_words: { title: "Sag es in deinen eigenen Worten", line: "Coach baut den taf mit dir." } });
     expect(de.labels.hand).toBe("An Coach übergeben");
     expect(de.suggestions.words).toBe("Vorschläge erscheinen in einem neuen Gespräch mit Coach, bis das Konto seinen ersten taf hat.");
     expect((await call(w, "GET", "/v1/me/suggestions", { token: "ana", headers: { "Accept-Language": "pl" } })).body.suggestions.words).toBe("Sugestie pojawiają się w nowej rozmowie z Coachem, dopóki konto nie ma pierwszego tafa.");
@@ -329,9 +330,11 @@ describe("tafs cloud", () => {
     const hidden = await call(w, "GET", "/v1/recipes", { token: "ana" });
     expect(hidden.body).toMatchObject({ recipes: [], shown: false, suggestions: { show: false } });
     // Suggestions off: Home shows its empty line, as before recipes.
-    expect(hidden.body.home).toEqual({ shown: false, words: empty });
+    expect(hidden.body.home).toEqual({ shown: false, words: empty, own_words: own });
+    // Nothing is listed below it, so it never says to pick one (qa-kiff on #860).
+    expect(hidden.body.home.words).not.toMatch(/below/);
     expect((await call(w, "GET", "/v1/recipes", { token: "ana", headers: { "Accept-Language": "fr" } })).body.home)
-      .toEqual({ shown: false, words: "Aucun taf pour l'instant. Connectez une app pour configurer votre premier taf." });
+      .toEqual({ shown: false, words: "Pas encore de tafs. Dites à Coach quel travail un taf doit faire.", own_words: { title: "Dites-la avec vos mots", line: "Coach construit le taf avec vous." } });
     expect((await call(w, "PUT", "/v1/me/suggestions", { token: "ana", body: { show: true } })).body.suggestions.show).toBe(true);
     expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body.shown).toBe(true);
   });
@@ -480,7 +483,7 @@ describe("tafs cloud", () => {
       { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/")
         ? new Response(JSON.stringify({ entries: [{ entry: "connector:composio:spotify", title: "Spotify", vendor: "Spotify", how: "oauth" }] }), { status: 200 })
         : depsOf(w).fetch!(url, init)) as Deps["fetch"] });
-    expect(JSON.parse(none.body)).toMatchObject({ filtered: true, recipes: [], categories: [], home: { shown: false, words: "No tafs yet. Connect an app to set up your first taf." } });
+    expect(JSON.parse(none.body)).toMatchObject({ filtered: true, recipes: [], categories: [], home: { shown: false, words: "No tafs yet. Tell Coach the job a taf should do." } });
   });
 
   it("needs a KIFF sign-in, and a person rather than a key", async () => {
@@ -1733,6 +1736,9 @@ describe("Setup (kiff/agents#91)", () => {
       expect(draft.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
       expect(draft.body).not.toHaveProperty("no_tools");
       expect(first.coach_tools_step.title).toBe("Give Coach its tools");
+      // Start's own words, the first run's items 2 and 3: one line, the button, and what it does, never the apps' paragraphs.
+      expect(first.words).toEqual({ lead: "You sign in on each app's own page. No taf ever sees your password.", start: "Start",
+        does: "Start sets up approvals on this device and gives Coach its tools, with your face or fingerprint once." });
       // The Cards the one fingerprint signs are shown in KIFF's own words, previewed over the tools the batch declares
       // (qa-kiff on #852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
       expect(draft.card_title).toBe("Coach's Card");
@@ -3900,6 +3906,30 @@ describe("Coach's result, handed over by tafs cloud", () => {
     return { w, run: run.id, note, answer, deps };
   }
 
+  // The first run's item 7 (dev-android on #860): the hand-over card reads this answer, so a taf made with no plan says so.
+  it("says on the hand-over card that a taf made with no plan starts once there's one", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.fail.set("trigger", new AgentsError(409, "the account has no plan", undefined, "no_plan"));
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
+    const stored = w.agents.runs.find((r) => r.id === run.id)!;
+    w.agents.show(stored, RESULT);
+    Object.assign(stored, { status: "PAUSED", requirements: [{ call_id: "s1", tool: "show", input: RESULT, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" }] });
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const read = async (lang: string) => JSON.parse((await handle({ rawPath: `/v1/tafs/${COACH}/conversation`, requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana", "Accept-Language": lang } }, deps)).body) as { components: Array<{ component: { id: string }; answer?: { outcome?: unknown } }> };
+    await read("en");
+    expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ name: "Refunds" });
+    // kiff/agents takes a result's answer with its known fields only (qa-build on #860): the answer stays {taf_id}.
+    expect(stored.requirements![0]!.result).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    // The card's answer, as the apps read it, says so, in the reader's language.
+    expect((await read("en")).components.find((c) => c.component.id === "done")?.answer?.outcome).toEqual({ taf_id: NEW, plan_needed: { words: "Choose a plan to start it." } });
+    expect((await read("fr")).components.find((c) => c.component.id === "done")?.answer?.outcome).toEqual({ taf_id: NEW, plan_needed: { words: "Choisissez un forfait pour le lancer." } });
+  });
+
   it("makes the taf for the person whose run it is, once, and answers in its own name", async () => {
     const { w, run, note, answer } = await paused();
     w.agents.access.set("u_ana", { cards_manage: true });
@@ -5260,5 +5290,84 @@ describe("a step a taf handed its owner", () => {
     const { w: w2, deps: d2 } = setUp();
     w2.agents.halts.set(`t_acme|${RAE}`, { on: true, at: ago(10) });
     expect(await sweepYourSteps(d2)).toEqual([]);
+  });
+});
+
+// The first run, simpler (13 Nov): a new account's time zone from the phone, with no question; a taf made with no plan says so.
+describe("the first run", () => {
+  /** The world's fetch, with KIFF's time-zone route and balance answered as given, and what was put. */
+  // One store per test, kept across the KIFF fakes a test swaps: tafs cloud's own "set once" mark lives there.
+  let store = memoryCoach(() => new Date("2026-11-13T11:00:00Z"));
+  beforeEach(() => { store = memoryCoach(() => new Date("2026-11-13T11:00:00Z")); });
+  const withKIFF = (w: World, opts: { balanceKind?: string; zoneRefused?: boolean } = {}) => {
+    const deps = { ...depsOf(w), coach: store };
+    const put: string[] = [];
+    const fetch = (async (url: string, init?: RequestInit) => {
+      const path = new URL(url).pathname;
+      if (path === "/v1/me/time-zone" && init?.method === "PUT") {
+        if (opts.zoneRefused) return new Response(JSON.stringify({ error: "only the account's owner or an admin can change its time zone" }), { status: 403 });
+        const zone = (JSON.parse(String(init.body)) as { time_zone: string }).time_zone;
+        put.push(zone);
+        return new Response(JSON.stringify({ time_zone: zone }), { status: 200 });
+      }
+      if (opts.balanceKind && path === "/v1/me/usage/credits") {
+        const period = { start: "2026-11-01T00:00:00Z", end: "2026-12-01T00:00:00Z" };
+        return new Response(JSON.stringify({ period, current: true, credits: 0, runs: 0, balance: { kind: opts.balanceKind, state: "waiting", meter_pct: null, included: 0, used: 0, left: null, packs_left: 0, over: 0, beyond: 0, beyond_cents: 0, limit_cents: 0, seats: 0, period, can_raise: false, raise_to_cents: 0 } }), { status: 200 });
+      }
+      return deps.fetch!(url, init);
+    }) as Deps["fetch"];
+    const send = async (method: string, path: string, headers: Record<string, string> = {}, body?: unknown) => {
+      const r = await handle({ rawPath: path, requestContext: { http: { method } }, headers: { Authorization: "Bearer ana", ...headers }, body: body === undefined ? undefined : JSON.stringify(body) }, { ...deps, fetch });
+      return { status: r.statusCode, body: JSON.parse(r.body) };
+    };
+    return { put, send };
+  };
+
+  it("takes a new account's time zone from the phone, once, with no question", async () => {
+    const w = world();
+    w.tafs.held.delete(`t_acme#${RAE}`);
+    const k = withKIFF(w);
+    const r = await k.send("GET", "/v1/setup", { "X-Time-Zone": "Europe/Paris" });
+    expect(r.status).toBe(200);
+    expect(r.body.time_zone).toBe("Europe/Paris");
+    expect(k.put).toEqual(["Europe/Paris"]);
+    // Set once: a later read, or another phone's zone, changes nothing here; a later mismatch is the apps' question.
+    expect((await k.send("GET", "/v1/setup", { "X-Time-Zone": "America/New_York" })).body).not.toHaveProperty("time_zone");
+    expect(k.put).toEqual(["Europe/Paris"]);
+  });
+
+  it("leaves the zone alone for an account with a taf, a zone that isn't one, or a person KIFF won't let set it", async () => {
+    const w = world();
+    let k = withKIFF(w);
+    // Rae is on the account: not a new account.
+    expect((await k.send("GET", "/v1/setup", { "X-Time-Zone": "Europe/Paris" })).body).not.toHaveProperty("time_zone");
+    w.tafs.held.delete(`t_acme#${RAE}`);
+    for (const zone of ["Mars/Olympus", "../etc", "UTC", ""]) {
+      expect((await k.send("GET", "/v1/setup", { "X-Time-Zone": zone })).body).not.toHaveProperty("time_zone");
+    }
+    // Someone who can't manage the tafs never asks KIFF: no call on every read (qa-kiff on #860).
+    expect((await k.send("GET", "/v1/setup", { "X-Time-Zone": "Europe/Paris", Authorization: "Bearer viewer" })).body).not.toHaveProperty("time_zone");
+    expect(k.put).toEqual([]);
+    // KIFF refuses (a member, not an owner or admin): nothing marked, so an owner's phone later still sets it.
+    k = withKIFF(w, { zoneRefused: true });
+    expect((await k.send("GET", "/v1/setup", { "X-Time-Zone": "Europe/Paris" })).status).toBe(200);
+    k = withKIFF(w);
+    expect((await k.send("GET", "/v1/setup", { "X-Time-Zone": "Europe/Paris" })).body.time_zone).toBe("Europe/Paris");
+  });
+
+  it("makes a taf with no plan and says it starts once there's one, running nothing meanwhile", async () => {
+    const w = world();
+    const k = withKIFF(w, { balanceKind: "none" });
+    const r = await k.send("POST", "/v1/tafs", {}, { ...START, cron: "0 9 * * 1-5", timezone: "Europe/Madrid", budget_cents: 300 });
+    expect(r.status).toBe(200);
+    expect(r.body.taf).toMatchObject({ id: NEW, name: "Bo" });
+    expect(r.body.session).toBeNull();
+    expect(r.body.plan_needed).toEqual({ words: "Choose a plan to start it." });
+    expect(w.agents.calls.filter((c) => c.startsWith("trigger"))).toEqual([]);
+    // With a plan: no such words, and its first run starts as ever.
+    const paid = withKIFF(world(), { balanceKind: "solo" });
+    const p = await paid.send("POST", "/v1/tafs", {}, { ...START, cron: "0 9 * * 1-5", timezone: "Europe/Madrid", budget_cents: 300 });
+    expect(p.body).not.toHaveProperty("plan_needed");
+    expect(p.body.session).toMatch(/^sess/);
   });
 });

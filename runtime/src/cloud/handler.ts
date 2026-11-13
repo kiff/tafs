@@ -3,7 +3,7 @@ import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writ
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
+import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -37,9 +37,10 @@ import { accountConnections, connectionLines, endConnections, withConnections } 
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
+import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
-import { replayHeld, type Unanswered, unansweredOf, unansweredWords } from "./doors/hold.js";
+import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
@@ -107,6 +108,8 @@ import { RECIPES } from "../recipes.js";
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
  *   GET  /v1/me/suggestions             the account's "Show suggestions" setting, with its words
+ *   GET  /v1/me/ai-consent              whether this person allowed AI use, with the consent screen's words
+ *   POST /v1/me/ai-consent              {version}: they allow it; DELETE withdraws it (docs/accounts.md)
  *   PUT  /v1/me/suggestions             {show}: a manager turns suggestions off for good, or on again
  *   PUT  /v1/tafs/{id}/knob             {wakes, when, results?}: the dial changed, as the taf's next version; live, its triggers are scheduled
  *   GET  /v1/tafs/{id}/requests/{run}   one request from the rim: where it came from, what it did step by step, what comes next
@@ -195,6 +198,12 @@ export type AgentsAPI = Pick<Agents,
 
 export interface Deps {
   agents: AgentsAPI;
+  /**
+   * The AI-data consent is required (consent.ts): every route that starts a model turn for a person refuses
+   * with `ai_consent_required` until they allow it. Production sets it always (lambda.ts); a test that isn't
+   * about consent leaves it off.
+   */
+  aiConsent?: boolean;
   /** The tafs' KIFF agent keys, where kiff/agents reads them. */
   keys: Keys;
   /** Each KIFF account's alert secret, where kiff/agents checks KIFF's alerts with it. */
@@ -686,6 +695,25 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     }
     return { suggestions: await suggestionsOf(me, deps, langOf(event)) };
   }
+  if (parts.length === 3 && parts[1] === "me" && parts[2] === "ai-consent" && (method === "GET" || method === "POST" || method === "DELETE")) {
+    // The AI-data consent (docs/accounts.md): each person's own, for what they write. No fingerprint: it grants no
+    // authority, it only lets their words reach the model.
+    const me = await person(event, deps);
+    const lang = langOf(event);
+    if (method !== "GET") {
+      if (!deps.coach) throw new HTTPError(503, "the consent can't be kept here");
+      if (method === "DELETE") await withdrawAIConsent(deps.coach, me.tenantID, me.subject, deps.now?.() ?? new Date());
+      else {
+        const given = await giveAIConsent(deps.coach, me.tenantID, me.subject, parseBody(event).version, deps.now?.() ?? new Date());
+        if (given === "stale") throw new HTTPError(409, "the consent's words changed: read them again", { consent: aiConsentView(undefined, lang) });
+        // The account's first yes from someone who manages its tafs is what its tafs from before take.
+        if (me.capabilities.includes("cards.manage")) await recordFirstYes(deps.coach, me.tenantID, me.subject, deps.now?.() ?? new Date());
+      }
+      // Their tafs follow at once: paused on a withdrawal, resumed (and what waited started) on a yes.
+      if (deps.aiConsent) await settleConsent(deps, me.tenantID).catch((err) => console.error(`consent: settle: ${(err as Error).message}`));
+    }
+    return { consent: aiConsentView(await aiConsentOf(deps.coach, me.tenantID, me.subject), lang) };
+  }
   if (parts[1] === "me" && parts.length === 4 && parts[2] === "chats" && parts[3] === "export" && method === "GET") {
     return exportChats(await person(event, deps), deps);
   }
@@ -697,7 +725,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // The account's Setup (kiff/agents#91): its chat uses the taf routes, by its id.
     if (parts.length === 2 && method === "GET") {
       const setup = await setupOf(me, deps);
-      if (!setup) return { setup: null, tools: null, ...(await coachFirstStart(event, me, deps)) };
+      if (!setup) return { setup: null, tools: null, ...(await zoneFromPhone(event, me, deps)), ...(await coachFirstStart(event, me, deps)) };
       const [shown, tools] = await Promise.all([view(setup, me, deps), coachTools(event, setup, deps)]);
       return { setup: shown, tools };
     }
@@ -762,6 +790,19 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (action === "doors") return doorRoute(event, method, parts, me, taf, deps);
   if (parts.length === 4 && action === "halt") return haltRoute(event, method, me, taf, deps);
+  if (parts.length === 4 && method === "POST" && action === "ai-consent") {
+    // Someone who manages the taf takes its runs over with their own consent, which they've given (consent.ts).
+    await needTaf(event, me, taf, deps);
+    if (!deps.coach) throw new HTTPError(503, "the consent can't be kept here");
+    if (!await aiConsentOf(deps.coach, me.tenantID, me.subject)) {
+      const lang = langOf(event);
+      throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: AI_CONSENT_CODE, consent: aiConsentView(undefined, lang) });
+    }
+    await takeOver(deps.coach, me.tenantID, taf.id, me.subject, deps.now?.() ?? new Date());
+    await resumeFromConsent(deps, me.tenantID, taf.id);
+    if (deps.doors) await replayHeld(doorContext(deps), me.tenantID, taf.id).catch((err) => console.error("held not replayed:", (err as Error).message));
+    return { taf: await view(taf, me, deps, undefined, undefined, langOf(event)) };
+  }
   if (parts.length === 4 && method === "PUT" && action === "promise") {
     // The owner's promise (waiting.ts): set by someone who manages the taf, whole hours up to a week, or none.
     need(me, "cards.manage");
@@ -780,6 +821,14 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume")) {
     await needTaf(event, me, taf, deps);
+    if (deps.aiConsent && deps.coach) {
+      const paused = await consentPauseOf(deps.coach, me.tenantID, taf.id);
+      // Its schedule starts runs with no person: never on again while their consent is missing (consent.ts).
+      if (action === "resume") {
+        const c = await unattendedConsent(deps.coach, me.tenantID, taf.id);
+        if (!("subject" in c)) throw new HTTPError(409, consentPauseWords(c.why, langOf(event)), { code: AI_CONSENT_CODE });
+      } else if (paused && !paused.owner_paused) await deps.coach.put(consentPauseKey(me.tenantID, taf.id), { ...paused, owner_paused: true }, new Date((deps.now?.() ?? new Date()).getTime() + 365 * 24 * 3600_000));
+    }
     const s = await pauseAll(me.tenantID, taf, action === "resume", deps);
     await tellChange(me.tenantID, "taf", taf.id, deps);
     return { taf: await view(taf, me, deps, s, undefined, langOf(event)) };
@@ -919,6 +968,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 4 && method === "POST" && action === "run") {
     await needTaf(event, me, taf, deps);
+    await requireAIConsent(event, me, deps);
     const fired = await agentsCall(() => fireNow(me.tenantID, taf.id, deps));
     if ("session" in fired) return { session: fired.session };
     // Its check started no run (it found nothing new, the taf is halted, its check couldn't read…): said so in
@@ -982,6 +1032,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "continue") {
     if (!me.capabilities.includes("holds.answer")) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
+    // The run goes on to its next model turn: the person who lets it go on has allowed AI use (docs/accounts.md).
+    await requireAIConsent(event, me, deps);
     return goOn(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "allow") {
@@ -1122,9 +1174,12 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
  */
 async function continueReady(deps: Deps, tenant: string, ready: ReadyRun): Promise<void> {
   try {
+    // It goes on to its next model turn with no person in the moment (consent.ts): refused, the taf is paused.
+    await requireUnattended(deps, tenant, ready.agent);
     await deps.agents.continueRun(tenant, ready.agent, ready.id);
   } catch (err) {
     if (err instanceof AgentsError && err.status === 409) return;
+    if (waitsForConsent(err)) return;
     console.error(`alert: continuing run ${ready.id}: ${(err as Error).message}`);
   }
 }
@@ -1349,11 +1404,11 @@ function need(me: KIFFIdentity, capability: string): void {
 }
 
 async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
-  return makeTaf(parseBody(event), me, deps, langOf(event));
+  return makeTaf(parseBody(event), me, deps, langOf(event), bearer(event));
 }
 
 /** POST /v1/tafs's work, for the person me: from their request, or from a result tafs cloud hands over for them. */
-async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: Deps, lang?: Lang): Promise<{ taf: unknown; session: string | null; outcome?: string; words?: string; reason?: string }> {
+async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: Deps, lang?: Lang, token?: string): Promise<{ taf: unknown; session: string | null; outcome?: string; words?: string; reason?: string; plan_needed?: { words: string } }> {
   let name = str(body.name).trim();
   if (!name || name.length > MAX_NAME) throw new HTTPError(400, `give the taf a name of ${MAX_NAME} characters at most`);
   // Setup's word that the taf's tools can't find its work (kiff/tafs#138): no
@@ -1511,6 +1566,8 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
       throw err;
     });
     await deps.tafs.put(me.tenantID, taf);
+    // Its runs with no person in the moment take its maker's consent (consent.ts).
+    await recordMaker(deps.coach, me.tenantID, taf.id, me.subject, deps.now?.() ?? new Date());
     await tellChange(me.tenantID, "taf", tafID, deps);
   } catch (err) {
     // A failed write may still have landed, the record's included: all of it
@@ -1528,9 +1585,13 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   // It runs once now as well, unless it works from its chat: then it waits for the owner. Its schedule fires
   // once, through kiff/agents' trigger: a checked taf's first check hands it the open queue (`first: "all"`),
   // and an empty queue starts no run, which is no failure: the answer then has no session.
-  if (unscheduled) return { taf: await view(taf, me, deps), session: null };
+  // With no plan yet, nothing runs: the taf is made, and the answer says so in words (the first run's item 7).
+  const plan = token ? await planNeeded(token, deps, lang ?? ownerLang) : {};
+  if (unscheduled) return { taf: await view(taf, me, deps), session: null, ...plan };
+  if (plan.plan_needed) return { taf: await view(taf, me, deps), session: null, ...plan };
   let fired: Fired_;
   try { fired = await fireNow(me.tenantID, tafID, deps); } catch (err) {
+    if (waitsForCredits(err) && err.code === "no_plan") return { taf: await view(taf, me, deps), session: null, plan_needed: { words: wordsIn(lang ?? ownerLang).plan_needed } };
     throw new HTTPError(502, `${name} is started, but its first ${workCheck ? "check" : "run"} didn't start (${(err as Error).message}). Run it now from the app`);
   }
   // A first check that started no run says why (quiet, halted, a read that failed…): the taf is made all the same.
@@ -1735,6 +1796,54 @@ export const COACH_AGENT_ID = "setup";
  * fingerprint over the draft alone, never the pair again. Only for someone who may start Setup; nothing otherwise, and
  * nothing when KIFF can't word the Cards first.
  */
+/** Where tafs cloud marks that it set a new account's time zone from a phone: once, never again. */
+const zoneFromPhoneKey = (tenant: string) => `${tenant}#zone-from-phone`;
+
+/**
+ * A new account's time zone, from the phone (the first run's item 1): no question. The apps send the phone's zone as
+ * `X-Time-Zone`; while the account has no taf, KIFF's zone is still UTC, and tafs cloud has never set it, tafs cloud
+ * sets it in KIFF once with the person's session and says so (`time_zone`). A later mismatch is still the apps'
+ * question. KIFF answers UTC for a zone never set, so tafs cloud keeps its own mark. Anything failing changes nothing.
+ */
+async function zoneFromPhone(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<{ time_zone?: string }> {
+  const phone = (header(event, "x-time-zone") ?? "").trim();
+  // Only someone who manages the tafs, as for Coach's start: a member KIFF won't let set it would ask on every read.
+  if (!phone || !deps.coach || !me.capabilities.includes("cards.manage") || (me.timeZone ?? "UTC") !== "UTC" || phone === "UTC" || !validZone(phone)) return {};
+  try {
+    if (await deps.coach.get(zoneFromPhoneKey(me.tenantID))) return {};
+    if ((await deps.tafs.list(me.tenantID)).some((t) => !t.removing)) return {};
+    const zone = await setTimeZoneInKIFF(bearer(event), phone, deps.fetch, deps.kiffBase);
+    const now = deps.now?.() ?? new Date();
+    await deps.coach.put(zoneFromPhoneKey(me.tenantID), { zone, at: now.toISOString() }, new Date(now.getTime() + 10 * 365 * 24 * 3600_000));
+    return { time_zone: zone };
+  } catch (err) {
+    console.error(`zone from the phone: ${(err as Error).message}`);
+    return {};
+  }
+}
+
+/** A named IANA zone this runtime knows. */
+function validZone(zone: string): boolean {
+  if (!/^[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)+$/.test(zone)) return false;
+  try { new Intl.DateTimeFormat("en", { timeZone: zone }); return true; } catch { return false; }
+}
+
+/** Coach's start in words: one line, the button, and what it does (approvals and Coach's tools, one face or fingerprint). */
+function startWords(lang: Lang): { lead: string; start: string; does: string } {
+  const w = wordsIn(lang);
+  return { lead: w.start_lead, start: w.start_button, does: w.start_does };
+}
+
+/** `plan_needed` with its words when KIFF says the account has no plan; nothing when it has one or can't be read. */
+async function planNeeded(token: string, deps: Deps, lang: Lang): Promise<{ plan_needed?: { words: string } }> {
+  try {
+    const b = await readBalance(token, deps.fetch, deps.kiffBase);
+    return b.kind === "none" ? { plan_needed: { words: wordsIn(lang).plan_needed } } : {};
+  } catch {
+    return {};
+  }
+}
+
 async function coachFirstStart(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<{ start?: Record<string, unknown> }> {
   if (process.env.TAFS_COACH_START_ONE !== "on" || !me.capabilities.includes("cards.manage")) return {};
   const host = event.headers?.host ?? event.headers?.Host;
@@ -1764,6 +1873,9 @@ async function coachFirstStart(event: HTTPEvent, me: KIFFIdentity, deps: Deps): 
           { id: "draft", method: "POST", path: "/v1/me/agent-drafts", body: signed, ...preview },
         ],
         coach_tools_step: coachToolsStep(lang),
+        // One line before Start, the button, and what Start does: approvals on this phone and Coach's tools, under one
+        // face or fingerprint (the first run's items 2 and 3). The apps draw these, never their own paragraphs.
+        words: startWords(lang),
       },
     };
   } catch (err) {
@@ -1823,6 +1935,7 @@ async function startSetup(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promi
     await storeCoachSkills(me.tenantID, deps);
     await deps.agents.putAgent(me.tenantID, tafID, setupDef);
     await deps.tafs.put(me.tenantID, setup);
+    await recordMaker(deps.coach, me.tenantID, setup.id, me.subject, deps.now?.() ?? new Date());
   } catch (err) {
     const recordGone = await deps.tafs.remove(me.tenantID, tafID).then(() => true, () => false);
     const agentGone = await deps.agents.deleteAgent(me.tenantID, tafID).then(() => true, () => false);
@@ -2225,8 +2338,8 @@ export interface CardAnswer {
   at: string;
   /** Who answered in the owner's place, when it wasn't them: tafs cloud, for a result. */
   by?: string;
-  /** A result's outcome, what came of handing the owner over: the app draws it, nothing more. */
-  outcome?: ResultOutcome;
+  /** A result's outcome, what came of handing the owner over: the app draws it, nothing more. A taf made with no plan has `plan_needed`. */
+  outcome?: ResultOutcome & { plan_needed?: { words: string } };
 }
 
 export interface ThreadMessage {
@@ -2531,6 +2644,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   drives.sort((a, b) => a.at.localeCompare(b.at));
   const shown = components.slice(-CHAT.maxThread);
   await markConnected(me.tenantID, shown, deps, lang);
+  await markPlanNeeded(me.tenantID, shown, deps, lang);
   return { messages: messages.slice(-CHAT.maxThread), components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
 }
 
@@ -2702,6 +2816,27 @@ function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lang: Lang
  * waited (docs/secure-connection.md). The apps draw that line and the card's Card alone. A note that can't be
  * read leaves the card as it was.
  */
+/** Where tafs cloud keeps that a taf was made with no plan, for its hand-over card. */
+const planNeededKey = (tenant: string, taf: string) => `${tenant}#plan-needed#${taf}`;
+
+/** Keeps that the hand-over made this taf with no plan; nothing when it had one. */
+async function keepPlanNeeded(tenant: string, taf: string, plan: { words: string } | undefined, deps: Deps): Promise<void> {
+  if (!plan || !deps.coach) return;
+  const now = deps.now?.() ?? new Date();
+  await deps.coach.put(planNeededKey(tenant, taf), { at: now.toISOString() }, new Date(now.getTime() + 30 * 24 * 3600_000))
+    .catch((err) => console.error(`plan needed, ${taf}: ${(err as Error).message}`));
+}
+
+/** A result's card whose taf was made with no plan says so, in the reader's language: `outcome.plan_needed`. */
+async function markPlanNeeded(tenant: string, components: ThreadComponent[], deps: Deps, lang: Lang): Promise<void> {
+  if (!deps.coach) return;
+  for (const c of components) {
+    const id = c.answer?.outcome && "taf_id" in c.answer.outcome ? c.answer.outcome.taf_id : undefined;
+    if (!id || !await deps.coach.get(planNeededKey(tenant, id)).catch(() => undefined)) continue;
+    c.answer!.outcome = { ...c.answer!.outcome!, plan_needed: { words: wordsIn(lang).plan_needed } };
+  }
+}
+
 async function markConnected(tenant: string, components: ThreadComponent[], deps: Deps, lang: Lang): Promise<void> {
   if (!deps.coach) return;
   const w = wordsIn(lang);
@@ -2831,6 +2966,8 @@ interface Steering {
  * taf has only its Card's tools, and remembers what its notes say.
  */
 async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  // Before a message answers a card the old way, too.
+  await requireAIConsent(event, me, deps);
   const owner = chatText(event, files(event).length > 0);
   const answered = await oldFormAnswer(event, me, taf, owner, deps);
   if (answered) return { session: answered.session, new_session: false, run: answered.id };
@@ -2967,6 +3104,8 @@ const ANSWERABLE = ["confirm", "questions", "approval", "sign_in"];
  * answer the card doesn't take.
  */
 async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, deps: Deps): Promise<unknown> {
+  // A card's answer is the person's own words to the model, and its run goes on.
+  await requireAIConsent(event, me, deps);
   const body = parseBody(event);
   if (!("answer" in body)) throw new HTTPError(400, "send the card's answer");
   // Only tafs cloud answers in its own name (a result's hand-over), never a person's request.
@@ -3017,6 +3156,8 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     return { drive: { ...shown, ...(paused ? { paused } : {}), ...(d.ended ? { ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } } : {}) }, steps: await driveSteps(store, me.tenantID, d.id) };
   }
   if (parts.length === 3 && method === "POST") {
+    // A drive sends what's on the person's screen to Coach's model (docs/drive.md). Pause and stop are never refused.
+    await requireAIConsent(event, me, deps);
     const body = parseBody(event);
     const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
     const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
@@ -3048,6 +3189,7 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     return { paused: d.ended ? null : (await drivePaused(store, me.tenantID, d.id)) ?? null, ...(d.ended ? { ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } } : {}) };
   }
   if (parts.length === 4 && parts[3] === "resume" && method === "POST") {
+    await requireAIConsent(event, me, deps);
     const id = str(parseBody(event).drive).trim();
     // A halt while paused ends the drive, rather than letting Coach go on (docs/drive.md).
     const before = await currentDrive(store, me.tenantID, me.subject, now);
@@ -3079,6 +3221,7 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     return { ended: d?.ended ? { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } : null };
   }
   if (parts.length === 6 && parts[4] === "results" && method === "POST") {
+    await requireAIConsent(event, me, deps);
     const t = await putResult(store, me.tenantID, me.subject, parts[3] ?? "", parts[5] ?? "", parseBody(event), now).catch(fail);
     // The record's words: a step that touched something, and Coach's done (kiff/tafs#544).
     if (t.step?.touched) {
@@ -3172,6 +3315,8 @@ async function tellCoach(me: KIFFIdentity, taf: Taf, card: { session: string; ru
  * signs only what it's asked, and never builds an answer.
  */
 async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, deps: Deps): Promise<unknown> {
+  // Coach hears the outcome as the person's answer: a model turn.
+  await requireAIConsent(event, me, deps);
   const body = parseBody(event);
   const ask = askOrRefuse(() => askOf(body));
   const ctx = approvalContext(event, me, taf, component, deps);
@@ -3192,6 +3337,8 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
  * approved, or failed with why.
  */
 async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, askID: string, deps: Deps): Promise<unknown> {
+  // Coach hears the outcome as the person's answer: a model turn.
+  await requireAIConsent(event, me, deps);
   const body = parseBody(event);
   const report = askOrRefuse(() => reportOf(body));
   const ctx = approvalContext(event, me, taf, component, deps);
@@ -3452,7 +3599,107 @@ async function loadToolSkills(name: string, call: CoachCall, deps: Deps): Promis
   }
 }
 
+/**
+ * Nothing a person writes reaches the model before they allow it (docs/accounts.md, "Your data and the AI"): a
+ * route that would start a model turn for them refuses with `ai_consent_required`, the consent screen's words
+ * with it, so the app can show it there and then. With no store to read the answer from, it refuses too.
+ */
+async function requireAIConsent(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<void> {
+  if (!deps.aiConsent) return;
+  if (await aiConsentOf(deps.coach, me.tenantID, me.subject)) return;
+  const lang = langOf(event);
+  throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: "ai_consent_required", consent: aiConsentView(undefined, lang) });
+}
+
+/**
+ * A run with no person in the moment (consent.ts): it starts, or goes on, only on the consent its taf's runs take. Refused,
+ * the taf is paused with why, and the caller starts nothing: a door's message or an app's event waits as for credits.
+ */
+async function requireUnattended(deps: Deps, tenant: string, tafID: string): Promise<void> {
+  if (!deps.aiConsent) return;
+  const c = await unattendedConsent(deps.coach, tenant, tafID);
+  if ("subject" in c) return;
+  await pauseForConsent(deps, tenant, tafID, c.why).catch((err) => console.error(`consent: pause ${tafID}: ${(err as Error).message}`));
+  throw new AgentsError(403, wordsIn("en")[c.why === "no_one" ? "ai_consent_paused_no_one" : "ai_consent_paused_not_given"], undefined, AI_CONSENT_CODE);
+}
+
+/**
+ * Pauses the taf for consent: its schedules are switched off, the one start tafs cloud can't gate, and tafs cloud keeps
+ * why. Everything else with no person in the moment is gated where it starts; a person's own chat, steer and Run now go
+ * on, on their own consent, and nothing at work is cancelled (dev-android on #855). A yes switches the schedules back on,
+ * unless the owner had paused the taf. Once per pause: a second refusal changes nothing.
+ */
+async function pauseForConsent(deps: Deps, tenant: string, tafID: string, why: ConsentWhy): Promise<void> {
+  const before = deps.coach ? await consentPauseOf(deps.coach, tenant, tafID) : undefined;
+  if (!deps.coach || before?.why === why) return;
+  const now = deps.now?.() ?? new Date();
+  const taf = await deps.tafs.get(tenant, tafID).catch(() => undefined);
+  // Paused already by its owner: kept as theirs, so a yes later ends only this pause.
+  const owner = before?.owner_paused ?? taf?.paused === true;
+  await deps.coach.put(consentPauseKey(tenant, tafID), { why, at: now.toISOString(), ...(owner ? { owner_paused: true } : {}) }, new Date(now.getTime() + 365 * 24 * 3600_000));
+  if (taf && !taf.unscheduled && !owner) await switchSchedules(tenant, taf, false, deps);
+  await logEvent(deps.events, tenant, { kind: "consent_paused", taf: tafID, ...(taf ? { name: taf.name } : {}), title: consentPauseWords(why, "en") }, now);
+  await tellChange(tenant, "taf", tafID, deps);
+}
+
+/** Ends a pause for consent once the taf's runs may start again; an owner's own halt stays. */
+async function resumeFromConsent(deps: Deps, tenant: string, tafID: string): Promise<boolean> {
+  const paused = deps.coach ? await consentPauseOf(deps.coach, tenant, tafID) : undefined;
+  if (!deps.coach || !paused) return false;
+  if (!("subject" in await unattendedConsent(deps.coach, tenant, tafID))) return false;
+  const taf = await deps.tafs.get(tenant, tafID).catch(() => undefined);
+  if (taf && !taf.unscheduled && !paused.owner_paused && !taf.paused) await switchSchedules(tenant, taf, true, deps);
+  await deps.coach.remove(consentPauseKey(tenant, tafID));
+  await logEvent(deps.events, tenant, { kind: "consent_resumed", taf: tafID, ...(taf ? { name: taf.name } : {}) }, deps.now?.());
+  await tellChange(tenant, "taf", tafID, deps);
+  return true;
+}
+
+/**
+ * Brings each of the account's tafs in line with its consent: paused when its runs may not start a model turn, resumed
+ * when a pause for consent no longer holds. A schedule fires in kiff/agents, which can't ask, so this is what stops it.
+ * After a yes, what waited (doors, app events) starts.
+ */
+export async function settleConsent(deps: Deps, tenant: string): Promise<{ paused: string[]; resumed: string[] }> {
+  const out = { paused: [] as string[], resumed: [] as string[] };
+  if (!deps.aiConsent || !deps.coach) return out;
+  // Coach (Setup) is never paused: its runs come from a person's own routes, each gated on their consent (dev-android on #855).
+  for (const taf of (await deps.tafs.list(tenant)).filter((t) => !t.removing && t.job !== SETUP_JOB)) {
+    const c = await unattendedConsent(deps.coach, tenant, taf.id);
+    const paused = await consentPauseOf(deps.coach, tenant, taf.id);
+    if (!("subject" in c)) {
+      if (paused?.why === c.why) continue;
+      await pauseForConsent(deps, tenant, taf.id, c.why);
+      out.paused.push(taf.id);
+    } else if (paused && await resumeFromConsent(deps, tenant, taf.id)) out.resumed.push(taf.id);
+  }
+  if (out.resumed.length && deps.doors) await replayHeld(doorContext(deps), tenant).catch((err) => console.error("held not replayed:", (err as Error).message));
+  return out;
+}
+
+/** A taf's pause for consent, as the apps draw it. */
+async function consentPausedView(taf: Taf, me: KIFFIdentity, deps: Deps, lang: Lang): Promise<{ consent_paused?: { why: ConsentWhy; words: string } }> {
+  if (!deps.aiConsent) return {};
+  const p = await consentPauseOf(deps.coach, me.tenantID, taf.id);
+  return p ? { consent_paused: { why: p.why, words: consentPauseWords(p.why, lang) } } : {};
+}
+
+/** The consent sweep: every account's tafs in line with their consent (settleConsent). */
+export async function sweepConsent(deps: Deps): Promise<Array<{ tenant: string; paused: string[]; resumed: string[] }>> {
+  if (!deps.aiConsent || !deps.coach) return [];
+  const out: Array<{ tenant: string; paused: string[]; resumed: string[] }> = [];
+  for (const tenant of await deps.tafs.tenants()) {
+    const r = await settleConsent(deps, tenant).catch((err) => {
+      console.warn(`consent: ${tenant}: ${err instanceof Error ? err.message : "error"}`);
+      return undefined;
+    });
+    if (r && (r.paused.length || r.resumed.length)) out.push({ tenant, ...r });
+  }
+  return out;
+}
+
 async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: string, deps: Deps): Promise<unknown> {
+  await requireAIConsent(event, me, deps);
   const [at, ai] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps)]);
   const attached = files(event);
   if (attached.length) at.attachments = attached;
@@ -3507,6 +3754,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   const version = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions.find((v) => v.n === n);
   if (!version) throw new HTTPError(404, "no such version");
   if (sub === "trial") {
+    await requireAIConsent(event, me, deps);
     // What a trial works on: the owner's words, else what each scheduled run asks of it.
     const asked = str(parseBody(event).input).trim();
     const input = asked || jobMaybe(taf)?.kickoff || "";
@@ -3595,6 +3843,7 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     return { trial: await trialFor(me, taf, await agentsCall(() => deps.agents.openTrial(me.tenantID, taf.id, n, draft, member(me))), deps, langOf(event)) };
   }
   if (sub === "messages" && method === "POST") {
+    await requireAIConsent(event, me, deps);
     const text = chatText(event);
     const { run, trial } = await agentsCall(() => deps.agents.trialMessage(me.tenantID, taf.id, text, member(me)));
     return { session: run.session, run: run.id, trial };
@@ -4036,6 +4285,11 @@ async function pauseAll(tenant: string, taf: Taf, on: boolean, deps: Deps): Prom
     if (on) delete next.paused; else next.paused = true;
     if (await deps.tafs.putIf(tenant, next, cur)) break;
   }
+  return switchSchedules(tenant, taf, on, deps);
+}
+
+/** Switches every schedule that starts the taf: its own, its other timetables and its follow-ups still to come. */
+async function switchSchedules(tenant: string, taf: Taf, on: boolean, deps: Deps): Promise<Schedule> {
   const s = await agentsCall(() => deps.agents.switchSchedule(tenant, taf.id, on));
   const now = (deps.now?.() ?? new Date()).getTime();
   let missed = 0;
@@ -4064,7 +4318,9 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
   const input = own?.input ?? jobOf(taf).kickoff;
   // A paused taf stays paused when its dial is written: its schedules are written off.
   const paused = await deps.tafs.get(me.tenantID, taf.id).then((t) => t?.paused, () => taf.paused);
-  const enabled = paused !== true;
+  // So does one paused for consent (consent.ts): its schedules start runs with no person.
+  const forConsent = deps.aiConsent ? await consentPauseOf(deps.coach, me.tenantID, taf.id) : undefined;
+  const enabled = paused !== true && !forConsent;
   // Each schedule reads the taf's work first: the version's check, else the taf's. Going back to a version from
   // before, with more than one timetable, writes it as it was, unchecked, rather than hand its work twice.
   let planned: PlannedSchedule[];
@@ -4250,6 +4506,7 @@ async function cancelSwitch(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: 
  * day by someone who manages the taf), so a call KIFF doesn't list for this person is 404.
  */
 async function checkCall(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  await requireAIConsent(event, me, deps);
   const setup = await setupOf(me, deps);
   if (!setup) throw new HTTPError(409, "this account has no Setup yet");
   const body = parseBody(event);
@@ -4296,6 +4553,7 @@ async function checkCall(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promis
 }
 
 async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  await requireAIConsent(event, me, deps);
   if (taf.job === SETUP_JOB) throw new HTTPError(400, "Setup improves tafs, not itself");
   const setup = await setupOf(me, deps);
   if (!setup) throw new HTTPError(409, "this account has no Setup yet");
@@ -4323,6 +4581,7 @@ async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
  * be this taf's: kiff/agents answers another agent's as not found.
  */
 async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  await requireAIConsent(event, me, deps);
   const body = parseBody(event);
   const run = str(body.run).trim();
   if (!run) throw new HTTPError(400, "name the run to write to");
@@ -4603,6 +4862,7 @@ async function latestOf(me: KIFFIdentity, taf: Taf, session: string, deps: Deps)
 
 /** The person's next message in a chat, sent by tafs cloud with their session: Coach's unread lines go with it. */
 async function sendNext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, session: string, text: string, deps: Deps): Promise<Run> {
+  await requireAIConsent(event, me, deps);
   const lines = await takeCoachLines(me, taf, deps);
   try {
     const [at, ai] = await Promise.all([granted(event, taf.kiffAgent, { session, requester: member(me) }, deps), aiBound(event, deps)]);
@@ -5015,6 +5275,7 @@ export async function handleStream(event: HTTPEvent, given: Deps): Promise<Strea
     timing.mark("person");
     const taf = await owned(me, parts[2] ?? "", deps);
     timing.mark("taf");
+    await requireAIConsent(event, me, deps);
     const attached = files(event);
     const owner = chatText(event, attached.length > 0);
     const answered = await oldFormAnswer(event, me, taf, owner, deps);
@@ -5826,6 +6087,8 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule,
     /** The KIFF agent the taf acts as: the holder of its Cards. */
     kiff_agent: taf.kiffAgent || null,
     status: s && !s.enabled && !taf.unscheduled ? "paused" : "active",
+    /** Paused for consent to AI use with no person in the moment (consent.ts): why, and the words. Only said when so. */
+    ...(await consentPausedView(taf, me, deps, lang)),
     /** It works from its chat: no schedule runs it (kiff/tafs#138). Only said when so. */
     ...(taf.unscheduled ? { unscheduled: true } : {}),
     next_run: s?.enabled && s.next ? iso(s.next) : null,
@@ -6725,6 +6988,11 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
       if (!may.grant) throw new ToolRefusal("KIFF gave no grant for this call: try again");
       at = { grant: may.grant, live: args.chat !== "new" };
     }
+    // The taf's run answers Coach, not a person in the moment: its runs' consent (consent.ts).
+    try { await requireUnattended(deps, call.tenant, taf.id); } catch (err) {
+      if (waitsForConsent(err)) throw new ToolRefusal(`${taf.name} is paused: AI use for its runs isn't allowed. Say so to the person; someone who manages tafs allows it in Account, or takes it over.`);
+      throw err;
+    }
     const notify = call.notify();
     const run = await agentsCall(() => deps.agents.startRun(call.tenant, taf.id, text, at, undefined, notify));
     await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: await coachRun(call, deps), what: text.slice(0, 120), person: call.person?.subject }, deps);
@@ -7397,7 +7665,14 @@ function deadLines(dead: DeadHandoff[], taf: string, lang: Lang): string[] {
 
 function deliveryContext(deps: Deps, now = deps.now?.() ?? new Date()): DeliveryContext {
   if (!deps.coach) throw new HTTPError(404, "not found");
-  return { store: deps.coach, tafs: deps.tafs, agents: deps.agents, push: deps.push, apns: deps.apns, now };
+  // A hand-off or a retry starts a run with no person in the moment (consent.ts).
+  const agents: DeliveryContext["agents"] = Object.assign(Object.create(deps.agents) as DeliveryContext["agents"], {
+    startRun: async (tenant: string, ...rest: Parameters<AgentsAPI["startRun"]> extends [string, ...infer R] ? R : never) => {
+      await requireUnattended(deps, tenant, rest[0]);
+      return deps.agents.startRun(tenant, ...rest);
+    },
+  });
+  return { store: deps.coach, tafs: deps.tafs, agents, push: deps.push, apns: deps.apns, now };
 }
 
 /**
@@ -7597,8 +7872,12 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       await deps.coach.append(coachKeys.notes(tenant, me.subject), { at: at.toISOString(), text: line, taf: taf.name ?? id, taf_id: id, said: out.words ?? "" },
         new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${id} first check:`, err));
       // Said in the answer too, so Coach's closing message never calls the taf working (A4).
+      await keepPlanNeeded(tenant, id, out.plan_needed, deps);
       return { taf_id: id, check: out.reason ?? "no reason given" };
     }
+    // The hand-over card says when the taf was made with no plan (the first run's item 7). kiff/agents takes a result's
+    // answer with its known fields only, so tafs cloud keeps this itself and adds it where the card's answer is read.
+    await keepPlanNeeded(tenant, id, out.plan_needed, deps);
     return { taf_id: id };
   } catch (err) {
     if (err instanceof HTTPError && err.status >= 400 && err.status < 500) {
@@ -7735,9 +8014,15 @@ function doorContext(deps: Deps): DoorsContext {
   const agents: DoorsContext["agents"] = {
     getRun: (...a) => deps.agents.getRun(...a),
     runs: (...a) => deps.agents.runs(...a),
-    answerWait: (...a) => deps.agents.answerWait(...a),
+    // An app's event answering a run that waits on it: the run goes on to its next model turn, with no person (consent.ts).
+    answerWait: async (tenant, ...rest) => {
+      await requireUnattended(deps, tenant, rest[0]);
+      return deps.agents.answerWait(tenant, ...rest);
+    },
     startRun: async (tenant, ...rest) => {
       if (deps.deletions && await deps.deletions.get(tenant)) throw new AgentsError(410, "this account is being deleted");
+      // A door's message, an app's event, a held one released: no person in the moment (consent.ts).
+      await requireUnattended(deps, tenant, rest[0]);
       return deps.agents.startRun(tenant, ...rest);
     },
   };

@@ -172,7 +172,7 @@ export const pl: Words = {
   recipes_label_never: "Nigdy nie robi",
   recipes_label_hand: "Przekaż Coachowi",
   recipes_home_lead: "Wybierz zadanie dla swojego pierwszego tafa.",
-  recipes_home_empty_coach: "Jeszcze brak tafs. Połącz aplikację, aby skonfigurować swojego pierwszego tafa.",
+  recipes_home_empty_coach: "Nie ma jeszcze tafów. Powiedz Coachowi, jaką pracę ma wykonywać taf.",
   recipes_home_empty_shared: "Jeszcze brak tafs. Tafs udostępnione Tobie pojawią się tutaj.",
   gallery_title: "Nowy taf",
   gallery_all: "Wszystkie zadania",
@@ -566,6 +566,11 @@ export const pl: Words = {
   ct_app_act: "Dotykaj, pisz i przewijaj w aplikacji na swoim urządzeniu, gdy nią steruje",
   ct_replaces: "zastępuje wcześniejsze połączenie",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
+  // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
+  start_lead: "Logujesz się na stronie każdej aplikacji. Żaden taf nigdy nie widzi Twojego hasła.",
+  start_button: "Zacznij",
+  start_does: "Zacznij konfiguruje zatwierdzenia na tym urządzeniu i daje Coachowi jego narzędzia, z jednym użyciem twarzy lub odcisku palca.",
+  plan_needed: "Wybierz plan, aby go uruchomić.",
   cts_title: "Daj Coachowi jego narzędzia",
   cts_intro: "Coach potrzebuje kilku narzędzi, żeby zajmować się Twoimi tafami. Trafiają na własną Card Coacha, z ich limitami, i tylko Ty możesz ją podpisać, na swoim urządzeniu.",
   cts_details: "Każde narzędzie i jego limity",
@@ -693,4 +698,14 @@ export const pl: Words = {
   sheet_receipt: (vendor) => `${vendor} połączony · klucz …{last4}`,
   sheet_disconnect: "Rozłącz",
   sheet_done: (vendor, readOnly) => (readOnly ? `${vendor} jest połączony (tylko odczyt)` : `${vendor} jest połączony`),
+  // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
+  ai_consent_title: "Twoje dane i AI",
+  ai_consent_lines: ["tafs używa AI Claude firmy Anthropic, by działały Coach i Twoje tafy.", "Co jest wysyłane: to, co piszesz do Coacha i Twoich tafów, załączone pliki, to, co Twoje połączone aplikacje zwracają tafowi podczas pracy, oraz to, co jest na Twoim ekranie, gdy Coach pomaga Ci w aplikacji.", "Czego nigdy się nie wysyła: haseł i kluczy używanych przez Twoje połączone aplikacje ani odcisku palca.", "Anthropic używa tego, by odpowiedzieć, i przechowuje do 30 dni.", "Nic nie jest wysyłane, dopóki na to nie zezwolisz. Możesz to wycofać w Koncie."],
+  ai_consent_allow: "Zezwól",
+  ai_consent_not_now: "Nie teraz",
+  ai_consent_withdraw: "Wycofaj",
+  ai_consent_given: "Użycie AI: dozwolone",
+  ai_consent_needed: "Najpierw zezwól na użycie AI: Coach i Twoje tafy potrzebują go, by odpowiadać.",
+  ai_consent_paused_no_one: "Wstrzymane: nikt jeszcze nie zezwolił na użycie AI w uruchomieniach tego tafa. Ruszy, gdy ktoś, kto zarządza tafami, zezwoli na to w Koncie.",
+  ai_consent_paused_not_given: "Wstrzymane: zgodę na użycie AI w uruchomieniach tego tafa wycofano. Ruszy, gdy zgoda znów zostanie dana lub ktoś, kto zarządza tafami, go przejmie.",
 };

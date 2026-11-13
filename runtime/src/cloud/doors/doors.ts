@@ -12,7 +12,7 @@ import { newPIN, type WhatsAppClient } from "./whatsapp.js";
 import { apsFor, levelOf } from "../levels.js";
 import { eventLog, logEvent } from "../events.js";
 import { disclosureLineFor } from "../../jobs.js";
-import { anyHeld, hold, replayHeld, waitsForCredits } from "./hold.js";
+import { anyHeld, hold, replayHeld, waitsForCredits, waitsToStart } from "./hold.js";
 
 /** What doors are set up with in a deployment; a door whose part is missing isn't offered. */
 export interface DoorsConfig {
@@ -239,7 +239,7 @@ export async function arrive(a: Arrival, ctx: DoorsContext): Promise<Outcome> {
     try {
       await startDoorRun(ctx, cfg, tenant, taf, door, app, a, () => { started = true; }, own);
     } catch (err) {
-      if (started || !waitsForCredits(err)) throw err;
+      if (started || !waitsToStart(err)) throw err;
       await hold(ctx, tenant, taf, { kind: "door", door: door.id, arrival: a });
       started = true;
       return "held";
@@ -288,7 +288,7 @@ export async function startDoorRun(ctx: DoorsContext, cfg: DoorsConfig, tenant: 
       // The thread's chat is gone or busy: a new chat takes the message.
       // The owner's live chat busy: a new chat of theirs takes it, as the app's New conversation would.
       // A refusal for credits isn't the chat's: a new chat is refused the same.
-      if (!((owner || prior?.session) && err instanceof AgentsError && err.status >= 400 && err.status < 500 && err.status !== 429) || waitsForCredits(err)) throw err;
+      if (!((owner || prior?.session) && err instanceof AgentsError && err.status >= 400 && err.status < 500 && err.status !== 429) || waitsToStart(err)) throw err;
       run = await ctx.agents.startRun(tenant, taf.id, input, { requester, dedupKey: key, source: door.kind }, ai?.period ? ai : undefined, notify);
     }
   } catch (err) {
