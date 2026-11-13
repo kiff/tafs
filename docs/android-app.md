@@ -659,6 +659,19 @@ taf needs you and every taf halted, with sound, always; a taf answered someone, 
 tafs whose results include our phones (`Taf.results` has `app`; "N tafs ›" lists them); a reply
 wasn't sent, silent.
 
+## Haptics
+
+The same rule as on iPhone and iPad (`design/Haptics.kt`):
+
+- **A light tap on every button press,** from the shared buttons (`PrimaryButton`, `OutlineButton`), so every new button
+  gets it.
+- **A success tick** when a send goes through (`deliverChat`), a held call's answer goes through (`answer`), or tafs cloud
+  approves Coach's approval card.
+- **A warning tick** when one of those is refused or fails. Only the outcome of something the person did, never a background
+  read.
+- **A step tick** on a selector's stops: the theme picker and the jobs' category chips.
+- **Settings › Haptics** turns all of it off, on this phone (`tafs.display`, `haptics`). It's on until turned off.
+
 ## Dark
 
 The app follows the phone's dark setting (`TafsTheme`, `Theme.dark`): every colour in `Theme` has

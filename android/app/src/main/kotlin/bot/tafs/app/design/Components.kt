@@ -113,7 +113,8 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
       .heightIn(min = 54.dp)
       .clip(shape)
       .then(if (enabled) Modifier.brandBackground() else Modifier.background(Theme.dim.copy(alpha = 0.22f)))
-      .clickable(enabled = enabled, onClick = onClick)
+      // Every button press taps, once, here: each new button gets it (docs/android-app.md, "Haptics").
+      .clickable(enabled = enabled) { Haptics.tap(); onClick() }
       .padding(horizontal = 14.dp),
     contentAlignment = Alignment.Center,
   ) {
@@ -135,7 +136,7 @@ fun OutlineButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
       .heightIn(min = 48.dp)
       .clip(shape)
       .border(BorderStroke(1.dp, color.copy(alpha = if (enabled) 0.4f else 0.16f)), shape)
-      .clickable(enabled = enabled, onClick = onClick)
+      .clickable(enabled = enabled) { Haptics.tap(); onClick() }
       .padding(horizontal = 8.dp),
     contentAlignment = Alignment.Center,
   ) {
