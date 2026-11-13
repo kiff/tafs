@@ -68,6 +68,7 @@ export const de: Words = {
   approval_cards_not_issued: (why: string) => `KIFF hat die Cards des tafs nicht ausgestellt: ${why}`,
   approval_draft_is: (status: string) => `der Entwurf ist ${status}`,
   approval_no_draft: "KIFF hat keinen solchen Entwurf",
+  approval_card_next: "Seine Card: Du genehmigst sie als Nächstes",
   approval_cards_unread: "Die Card konnte noch nicht geprüft werden. Lies sie noch einmal, dann genehmige.",
   approval_uncovered: (tool: string) => `Diese Card deckt „${tool}“ nicht ab, obwohl der taf es bekommen hat, also würde jeder Aufruf davon abgelehnt. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_stray: (tool: string) => `Diese Card würde dem taf auch „${tool}“ erlauben, das keine seiner Verbindungen gibt. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
