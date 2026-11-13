@@ -64,7 +64,7 @@
   },
   "connect.disconnect.no_taf_uses": "Kein taf nutzt {vendor} mehr.",
   "connect.disconnect.rest": "Andere tafs, die {vendor} nutzen, behalten ihren Zugriff. Nutzt kein anderer taf diese Anmeldung, wird sie bei {vendor} widerrufen. Wenn du {vendor} wieder nutzt, wirst du gebeten, erneut zu genehmigen und dich erneut anzumelden.",
-  "connect.disconnect.rest_key": "Andere tafs, die {vendor} nutzen, behalten ihren Zugriff. Der Schlüssel wird aus tafs gelöscht. Wenn du {vendor} wieder nutzt, wirst du gebeten, erneut zu genehmigen und einen Schlüssel einzufügen.",
+  "connect.disconnect.rest_key": "Andere tafs, die {vendor} nutzen, behalten ihren Zugriff. Der Schlüssel wird aus tafs gelöscht, sobald ihn kein taf mehr nutzt. Wenn du {vendor} wieder nutzt, wirst du gebeten, erneut zu genehmigen und einen Schlüssel einzufügen.",
   "connect.disconnect.title": "Zugriff auf {vendor} entfernen?",
   "connect.disconnect.title_from": "Zugriff auf {vendor} für {taf} entfernen?",
   "connect.disconnect.tools_stop": "Die {vendor}-Tools von {owner} funktionieren nicht mehr.",

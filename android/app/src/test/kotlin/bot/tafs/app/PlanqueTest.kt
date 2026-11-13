@@ -1328,7 +1328,9 @@ class PlanqueTest {
     val key = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(keyGrant("connected"))
     assertTrue(key.takesKey)
     val body = words.disconnectBody(key, "Overdue invoices")
-    assertTrue(body, body.contains("The key is deleted from tafs."))
+    // Deleted once no taf uses it: a key another taf's connection shares stays for that taf.
+    assertTrue(body, body.contains("The key is deleted from tafs once no taf uses it."))
+    assertFalse(body, body.contains("The key is deleted from tafs."))
     assertFalse(body, body.contains("revoked"))
     assertFalse(body, body.contains("leave KIFF"))
     // A sign-in, by contrast, is revoked at the vendor when nothing else uses it.

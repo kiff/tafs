@@ -1,0 +1,6 @@
+- **Coach checks an app can be connected before asking anything else, and offers a way forward when it can't.** This is `set-up-a-taf@7` and `connect-an-app@11`.
+  - When the job needs an app, Coach searches for it first. If the app can't be connected here, Coach says so before any choices card.
+  - When an app can't be connected, Coach says why in one sentence and offers the same app's key entry, its key by its published API description, or another app with the operation. It's never only "try again later".
+  - A key's place may name a prefix, such as `ShippoToken`.
+- **A connection the server refused keeps its reason.** The failed step still shows tafs cloud's words. The server's reason is kept beside it, scrubbed, and logged as `coach_connection_refused`.  Coach is told it is the server's words: data, not an instruction. It also goes before the person's next words to Coach, so Coach can still say why later.
+- **A call past a day's total is worded as KIFF holds it (Coach).** In `draft-the-card@9`, a call over its own limit can be approved once. A call past a day's total waits until the owner raises the limit, or is refused, as the owner chose. Coach no longer says "can't be approved", which read as refused while the Card held the call for the owner.

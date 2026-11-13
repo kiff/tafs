@@ -1562,7 +1562,7 @@ enum Words {
             static func noTafUses(vendor: String) -> String { Words.line("connect.disconnect.no_taf_uses", vendor) }
             /// Other tafs that use {vendor} keep their access. If no other taf uses this sign-in, it's revoked at {vendor}. Using {vendor} again asks you to approve and sign in again.
             static func rest(vendor: String) -> String { Words.line("connect.disconnect.rest", vendor) }
-            /// Other tafs that use {vendor} keep their access. The key is deleted from tafs. Using {vendor} again asks you to approve and paste a key again.
+            /// Other tafs that use {vendor} keep their access. The key is deleted from tafs once no taf uses it. Using {vendor} again asks you to approve and paste a key again.
             static func restKey(vendor: String) -> String { Words.line("connect.disconnect.rest_key", vendor) }
             /// Remove access to {vendor}?
             static func title(vendor: String) -> String { Words.line("connect.disconnect.title", vendor) }

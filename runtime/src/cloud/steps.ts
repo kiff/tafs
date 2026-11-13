@@ -172,7 +172,8 @@ export const STEP_WHY_KEPT_MS = 30 * 24 * 3600_000;
 export const STEP_WHYS_KEPT = 50;
 
 /** The reasons a run's failed steps had, as the stream saw them, each with its call and tool, in order. */
-export type StepWhys = Array<{ call: string; tool: string; why: string }>;
+/** A connection step keeps the server's own reason too (`refusal`), for Coach and the log; the apps get `why` only. */
+export type StepWhys = Array<{ call: string; tool: string; why: string; refusal?: string }>;
 
 /**
  * Gives failed steps their reasons, each to the first failed step of its tool in order: the
