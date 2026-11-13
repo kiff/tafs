@@ -375,7 +375,7 @@ final class SetupTests: XCTestCase {
     }
 
     /// A key KIFF still doesn't hold after Start tried: the one-Face-ID start sends nothing, not
-    /// even the enrolment, and says why.
+    /// even the enrolment, and says why. The draft alone, also the approval key's, waits the same way.
     func testAnUnheldApprovalKeySignsNothing() async throws {
         let signer = KeyedSigner()
         let model = await keyedModel(signer)
@@ -383,12 +383,20 @@ final class SetupTests: XCTestCase {
         let given = await model.giveCoachTools()
         XCTAssertFalse(given)
         XCTAssertTrue(model.approvalKeyUnheld)
-        XCTAssertNotNil(model.setupError, "it says why")
+        XCTAssertEqual(model.setupError, Words.Approval.firstTaf, "it says why, in the words both phones use")
         XCTAssertNil(model.setupTaf)
         for path in ["/v1/accounts/t_01/enrolment", "/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup"] {
             XCTAssertFalse(StubProtocol.sent.contains { $0.httpMethod == "POST" && $0.url?.path == path }, path)
         }
         XCTAssertFalse(signer.quiet.contains { $0.hasPrefix("approval:") }, "the approval key signed nothing")
+
+        StubProtocol.responses["GET /v1/setup"] = (200, Self.startJSON(pair: false))
+        await model.loadSetup()
+        XCTAssertEqual(model.coachStart?.together, false)
+        StubProtocol.sent = []
+        let alone = await model.giveCoachTools()
+        XCTAssertFalse(alone)
+        XCTAssertFalse(StubProtocol.sent.contains { $0.httpMethod == "POST" && $0.url?.path == "/v1/me/agent-drafts" }, "no draft alone either")
         Keychain.delete(AppModel.planqueAccount)
         Keychain.delete(AppModel.approvalKeyedAccount)
     }

@@ -807,6 +807,10 @@ final class AppModel: ObservableObject {
     /// KIFF can't check. A signer with no approval key signs everything with its one key.
     var approvalKeyUnheld: Bool { !signer.approvalPublicKeyDER.isEmpty && !sessionHasApprovalKey }
 
+    /// What Start says then, as Android does: the lost key's words, else that setting up a taf
+    /// needs approvals.
+    var approvalKeyUnheldWords: String { approvalKeyLost ? KIFFClient.approvalKeyLost : Words.Approval.firstTaf }
+
     /// From now on, what grants authority is signed by the approval key.
     private func useApprovalKey() {
         sessionHasApprovalKey = true
@@ -6896,10 +6900,10 @@ final class AppModel: ObservableObject {
         // before it could approve gives KIFF its approval key now, under the same Face ID.
         if !sessionHasApprovalKey { await registerApprovalKey() }
         guard gen == accountGeneration else { return false }
-        // The one-Face-ID start is one signature by the approval key: with a key KIFF doesn't hold,
-        // nothing is sent, and it says why.
-        if coachStart?.together == true, approvalKeyUnheld {
-            setupError = approvalKeyLost ? KIFFClient.approvalKeyLost : Words.Kiff.kiffDidNotAnswerExpected
+        // tafs cloud's first start, the pair or the draft alone, is signed by the approval key: with a
+        // key KIFF doesn't hold, nothing is sent, and it says so in the words both phones use.
+        if coachStart?.startable == true, approvalKeyUnheld {
+            setupError = approvalKeyUnheldWords
             return false
         }
         await keepKIFFAlerts(tenant: tenant, gen: gen)
@@ -6916,10 +6920,10 @@ final class AppModel: ObservableObject {
                 if let existing = read.setup {
                     setupTaf = existing
                 } else if let start = read.start, start.startable {
-                    // A pair read only now, with a key KIFF doesn't hold: nothing is sent.
-                    if start.together, approvalKeyUnheld {
+                    // A start read only now, with a key KIFF doesn't hold: nothing is sent.
+                    if approvalKeyUnheld {
                         coachStart = start
-                        setupError = approvalKeyLost ? KIFFClient.approvalKeyLost : Words.Kiff.kiffDidNotAnswerExpected
+                        setupError = approvalKeyUnheldWords
                         return false
                     }
                     // One Face ID, the one just asked: Coach's tools and its draft with its Cards.
