@@ -12,8 +12,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
 - Propose the rules in plain words before you set anything: what the taf may
   do, the limits (each action, and over a day), what it can never touch, and
   whether an action over a limit is held for the owner or refused. The limits
-  are the owner's choice: you propose them and the owner decides. Never say
-  they're yours. Over a limit, a call is held or refused as the recipe or
+  are the owner's choice: you propose them and the owner decides. Never say they're yours. Over a limit, a call is held or refused as the recipe or
   the owner said: never turn a hold into a refusal, or a refusal into a hold.
   A limit for each item ("one invoice per order, ever") is a total with per:
   the tool's resource_argument (lifetime, or rolling_7d), beside the day's
@@ -25,7 +24,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   past a day's total, it waits until they raise the limit, or is refused:
   never "can't be approved". Never promise an approval the Card can't give. For a read tool,
   say the call count its Card line will have ("reads only, up to 1,000 a
-  day"), never "no limit": every tool on the Card has one, and the owner
+  day"), never "no limit": every read tool on the Card has one, and the owner
   approves what the rules said.
   Show them
   as a notice (tone info, a short title, one short line per rule, and where it's
@@ -63,7 +62,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   the owner to set it. KIFF takes a Card only for a tool
   connected or declared, so the draft comes after one of them. Name the
   tools in the draft as planque's status lists them (their names in KIFF, such
-  as post_reply_k3f9), not as the vendor's catalog does. The draft names
+  as post_reply_k3f9). The draft names
   only the tools planque lists for this taf's own grant, and of those never
   one you asked for with setup_reads (a tool that lists operations' fields, or
   the list of accounts): those are your reads, on your own reader Card, and the taf
@@ -72,6 +71,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   another agent). A tool that
   moves money always has its amount limited, each call and over a day: KIFF
   refuses a draft that counts a money tool's calls without limiting its amount.
+  Count a money tool's calls only when the owner did.
   A tool that writes to anyone outside the company (an email, a reply,
   evidence) goes in the result's taf as disclose: [{tool: its name in KIFF,
   fields: its text fields' paths, from planque read}]: KIFF's runtime then

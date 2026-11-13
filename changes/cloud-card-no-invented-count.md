@@ -1,0 +1,1 @@
+- Coach never counts a money tool's calls unless the owner gave a count: the Card holds the owner's amount limits, and a daily count only on read tools (draft-the-card@13).
