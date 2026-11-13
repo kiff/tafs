@@ -848,8 +848,9 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   still asked, as before.
 - **Coach's Start is one screen** (`StartScreen`): tafs cloud's line, Coach's Cards in KIFF's words, the tools folded under
   their details, what Start does, and its button. Start, or the first Send, signs it all under one fingerprint.
-- **Home leads with "Say it in your own words"** (`GET /v1/recipes`'s `home.own_words`), above the jobs. It opens Coach, empty,
-  for someone who may use it.
+- **Home leads with "Say it in your own words"** (`GET /v1/recipes`'s `home.own_words`, `OwnWordsRow`): under tafs cloud's
+  line and above the jobs, or under Home's empty line when no job is listed, so there's always a way to Coach. It opens Coach,
+  empty, for someone who may use it. As on iPhone and iPad.
 - **A taf made with no plan says so** on Coach's "taf made" card, in tafs cloud's words (the result's
   `plan_needed.words`).
 - **Alerts are offered once,** on Coach's "taf made" card, where alerts can be on and aren't: "Get an alert when a taf needs
