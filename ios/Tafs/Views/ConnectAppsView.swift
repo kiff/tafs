@@ -120,7 +120,9 @@ struct ConnectAppsView: View {
                 Text(said.how).scaledFont(14).foregroundColor(Theme.soft).frame(width: Self.howWidth, alignment: .leading)
                 Text(said.whose ?? "").scaledFont(14).foregroundColor(Theme.soft).frame(width: Self.whoseWidth, alignment: .leading)
                 HStack(spacing: 8) {
-                    if let status = said.status {
+                    if let setup = said.setup, !setup.isEmpty {
+                        Text(setup).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).lineLimit(2)
+                    } else if let status = said.status {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(status).scaledFont(14, weight: .semibold).foregroundColor(app.connected ? Theme.ok : Theme.amberText)
                             if let used = said.usedBy { Text(used).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).lineLimit(2) }
@@ -159,7 +161,7 @@ struct ConnectAppsView: View {
                 .frame(width: 24, height: 24)
                 .accessibilityHidden(true)
             }
-            Text(app.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+            Text(app.title).scaledFont(16, weight: .semibold).foregroundColor(app.needsSetup ? Theme.soft : Theme.ink)
                 .accessibilityIdentifier("connect.title." + app.entry)
         }
     }
@@ -168,7 +170,10 @@ struct ConnectAppsView: View {
     /// row's: on an iPad a button across the screen reads as a field to type in.
     @ViewBuilder
     private func trailing(_ app: TafsCloud.ConnectApps.App) -> some View {
-        if app.connected {
+        if app.needsSetup {
+            // Not set up for anyone to connect yet: tafs cloud's words say so, and there's no Connect.
+            EmptyView()
+        } else if app.connected {
             Image(systemName: "checkmark").foregroundColor(Theme.ok)
                 .accessibilityLabel(Words.Connect.Status.connected)
         } else {
@@ -215,10 +220,15 @@ struct ConnectRow: Equatable {
         let names = app.usedBy ?? usedHere
         usedBy = app.yours && !names.isEmpty ? Words.Connect.Apps.usedBy(tafs: Words.list(names)) : nil
         line = app.line
+        setup = app.needsSetup ? (app.setupWords ?? "") : nil
     }
 
-    /// The phone's second line: tafs cloud's, as sent; else how, whose, where it stands and who uses it.
-    var second: String { line ?? [how, whose, status, usedBy].compactMap { $0 }.joined(separator: " · ") }
+    /// For an app not set up for anyone to connect yet: tafs cloud's words, in place of Connect.
+    var setup: String?
+
+    /// The phone's second line: an app to set up says tafs cloud's words for it; else tafs cloud's
+    /// line, as sent; else how, whose, where it stands and who uses it.
+    var second: String { setup ?? line ?? [how, whose, status, usedBy].compactMap { $0 }.joined(separator: " · ") }
 
     /// The person's own first (connected, or to sign in again), then the rest, each in tafs cloud's order.
     static func split(_ apps: [TafsCloud.ConnectApps.App]) -> (yours: [TafsCloud.ConnectApps.App], discover: [TafsCloud.ConnectApps.App]) {

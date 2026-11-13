@@ -383,6 +383,8 @@ extension TafsCloud {
             var method: String?
             /// tafs cloud's own word that it's connected, beside `state`.
             var connectedFlag = false
+            /// For `needs_setup`: tafs cloud's line in place of Connect.
+            var setupWords: String?
             /// Whose the connection is, in tafs cloud's words, drawn as sent; nil when it sends none.
             var whose: String?
             /// The tafs that use it, by tafs cloud's names; nil when it sends none (the phone's own
@@ -393,10 +395,12 @@ extension TafsCloud {
             /// Connects with a key, by `method` where tafs cloud sends it, else `how`.
             var takesKey: Bool { (method ?? how) == "key" }
             var needsReconnect: Bool { state == "needs_reconnect" }
-            /// Connected, or to sign in again: the person's own, listed first, under Yours.
-            var yours: Bool { connected || needsReconnect }
+            /// Not set up for anyone to connect yet: no Connect, only tafs cloud's words.
+            var needsSetup: Bool { state == "needs_setup" }
+            /// Connected, signed in, or to sign in again: the person's own, listed first, under Yours.
+            var yours: Bool { connected || needsReconnect || state == "signed_in" }
 
-            enum CodingKeys: String, CodingKey { case entry, vendor, title, icon, logo, how, state, grant, line, whose, method, usedBy = "used_by", connectedFlag = "connected" }
+            enum CodingKeys: String, CodingKey { case entry, vendor, title, icon, logo, how, state, grant, line, whose, method, usedBy = "used_by", connectedFlag = "connected", setupWords = "words" }
             private struct Named: Decodable { let name: String? }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -415,6 +419,7 @@ extension TafsCloud {
                 line = words(.line)
                 whose = words(.whose)
                 method = words(.method)
+                setupWords = words(.setupWords)
                 connectedFlag = ((try? c.decodeIfPresent(Bool.self, forKey: .connectedFlag)) ?? nil) ?? false
                 // [{taf, name}], each by tafs cloud's name; anything else reads as none sent.
                 usedBy = ((try? c.decodeIfPresent([Named].self, forKey: .usedBy)) ?? nil)?

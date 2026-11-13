@@ -48,6 +48,12 @@ final class ConnectRowTests: XCTestCase {
         XCTAssertEqual(ConnectRow(gmail, usedHere: ["Leads"]).usedBy, Words.Connect.Apps.usedBy(tafs: "Leads"), "this phone's read, until tafs cloud sends it")
         let out = try app(#"{"entry":"gmail","title":"Gmail","state":"needs_reconnect"}"#)
         XCTAssertEqual(ConnectRow(out).status, Words.Connect.signInAgain)
+
+        // Not set up for anyone to connect yet: tafs cloud's words, and no Connect (as on Android).
+        let unset = try app(#"{"entry":"crm","title":"CRM","state":"needs_setup","words":"Not available to connect yet.","line":"Sign in · Not connected"}"#)
+        XCTAssertTrue(unset.needsSetup)
+        XCTAssertFalse(unset.yours)
+        XCTAssertEqual(ConnectRow(unset).second, "Not available to connect yet.", "its words, not the line")
     }
 
     /// The person's own first, connected or to sign in again, then the rest: each in tafs cloud's order.
@@ -57,6 +63,7 @@ final class ConnectRowTests: XCTestCase {
         let parts = ConnectRow.split(list)
         XCTAssertEqual(parts.yours.map(\.entry), ["b", "c"])
         XCTAssertEqual(parts.discover.map(\.entry), ["a", "d"])
+        XCTAssertTrue(try app(#"{"entry":"e","state":"signed_in"}"#).yours, "signed in is the person's own too")
 
         // A connected app opens its detail; the button stays as wide as its words; iPad is a table.
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
@@ -65,5 +72,6 @@ final class ConnectRowTests: XCTestCase {
         XCTAssertTrue(source.contains("private var table: Bool { sizeClass == .regular }"))
         XCTAssertTrue(source.contains("} header: { Text(Words.Connect.Apps.yours) }"))
         XCTAssertTrue(source.contains("} header: { Text(Words.Connect.Apps.discover) }"))
+        XCTAssertTrue(source.contains("if app.needsSetup {\n            // Not set up for anyone to connect yet"), "no Connect for an app to set up")
     }
 }
