@@ -14,7 +14,7 @@ const DAY = 86_400_000;
 const NEVER = "It never goes past your credits: when they run out, it waits.";
 const NEVER_COMPANY = "It never goes past your spend limit: there, it waits.";
 const FIRST_WEEK = "After its first week, you'll see what it really uses.";
-const UNKNOWN = "I can't tell yet what it will use.";
+const UNKNOWN = "I can't tell yet how many credits it will use.";
 
 /** n runs, one a day back from now, each with these credits. */
 const daily = (credits: number[]): Own["runs"] => credits.map((c, i) => ({ at: new Date(NOW.getTime() - (i + 1) * DAY).toISOString(), credits: c }));

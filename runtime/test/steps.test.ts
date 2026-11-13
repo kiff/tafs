@@ -110,6 +110,12 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
     // The retried install is done; the refund's failure stands, since nothing retried it.
     expect(foldRetried(steps)).toEqual([{ tool: "get_order", inputHash: "o1" }, { tool: "version_install", inputHash: "d1" }, { tool: "create_refund", error: true, inputHash: "r1" }]);
     // A later call of the same tool with other input is other work: A's failure stays (agentgabo's case).
+    // Coach's connection request, corrected after the connection server refused its shape (other input), and
+    // then through: the refused tries aren't shown. One it gave up on, with nothing through after it, stays.
+    expect(foldRetried([{ tool: "planque", error: true as const, inputHash: "a" }, { tool: "planque", error: true as const, inputHash: "b" }, { tool: "planque", inputHash: "c" }]))
+      .toEqual([{ tool: "planque", inputHash: "c" }]);
+    expect(foldRetried([{ tool: "planque", inputHash: "c" }, { tool: "planque", error: true as const, inputHash: "d" }]))
+      .toEqual([{ tool: "planque", inputHash: "c" }, { tool: "planque", error: true, inputHash: "d" }]);
     expect(foldRetried([{ tool: "send_reminder", error: true as const, inputHash: "A" }, { tool: "send_reminder", inputHash: "B" }]))
       .toEqual([{ tool: "send_reminder", error: true, inputHash: "A" }, { tool: "send_reminder", inputHash: "B" }]);
     // A retry that failed again: one failure, the last.

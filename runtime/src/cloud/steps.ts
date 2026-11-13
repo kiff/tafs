@@ -43,6 +43,7 @@ export function stepWords(tool: string, titles: ToolTitles = new Map(), lang: La
 export class Steps {
   private vendors = new Map<string, string>();
   private asked = new Map<string, string>(); // call id → vendor, for a request whose grant id comes in its result
+  private connections = new Map<string, string>(); // call id → its vendor ("" unknown), for each connection call
 
   constructor(private readonly titles: ToolTitles = new Map(), private readonly lang: Lang = "en") {}
 
@@ -60,9 +61,11 @@ export class Steps {
       case "workspace": return w.doing_workspace;
       case "planque": {
         const grant = typeof i.grant === "string" ? this.vendors.get(i.grant) ?? "" : "";
+        const api = i.api && typeof i.api === "object" ? (i.api as { url?: unknown }).url : undefined;
+        if (callID) this.connections.set(callID, i.action === "request" ? vendorName(i.server ?? api) : grant);
         switch (i.action) {
           case "request": {
-            const vendor = vendorName(i.server);
+            const vendor = vendorName(i.server ?? api);
             if (callID) this.asked.set(callID, vendor);
             const tools = Array.isArray(i.tools) && i.tools.length > 0;
             return tools ? w.doing_tools_for(vendor) : w.doing_connect_to(vendor);
@@ -92,6 +95,15 @@ export class Steps {
         return title ? w.doing_titled(title) : undefined;
       }
     }
+  }
+
+  /**
+   * Why a connection call failed, in tafs cloud's own words, never the connection server's: its refusal is
+   * about Coach's request, not the person's app. Undefined for a call that isn't a connection call.
+   */
+  connectionWhy(callID: unknown): string | undefined {
+    if (typeof callID !== "string" || !this.connections.has(callID)) return undefined;
+    return wordsIn(this.lang).step_connection_not_yet(this.connections.get(callID) ?? "");
   }
 
   /** A call's result: a request's grant id, so later steps on that grant name its vendor. */
@@ -177,8 +189,15 @@ export type StepWhys = Array<{ call: string; tool: string; why: string }>;
  * record with no digest (from before kiff/agents wrote one) folds nothing.
  */
 export function foldRetried<T extends { tool: string; error?: true; inputHash?: string }>(steps: T[]): T[] {
-  return steps.filter((s, i) => !s.error || !s.inputHash || !steps.slice(i + 1).some((later) => later.tool === s.tool && later.inputHash === s.inputHash));
+  return steps.filter((s, i) => !s.error || !steps.slice(i + 1).some((later) =>
+    later.tool === s.tool && ((s.inputHash && later.inputHash === s.inputHash) || (s.tool === CONNECTION_TOOL && !later.error))));
 }
+
+/**
+ * Coach's connection tool. A failed connection call that a later one went past is Coach correcting its own
+ * request (the connection server refused its shape, say), never the person's app failing: it isn't shown.
+ */
+export const CONNECTION_TOOL = "planque";
 
 export function attachWhys<T extends { tool: string; error?: true }>(steps: T[], whys: StepWhys): Array<T & { failed?: true; why?: string }> {
   return steps.map((s) => {
