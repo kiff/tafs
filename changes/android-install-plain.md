@@ -1,0 +1,1 @@
+- **Android 1.22.1 (82): Coach's install reads as one.** In Needs you, a version Coach installs shows no raw `n:`/`taf:` details and no rule badge (docs/android-app.md).
