@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { wordsIn } from "../src/cloud/words/index.js";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -5563,5 +5563,70 @@ describe("the first run", () => {
     const p = await paid.send("POST", "/v1/tafs", {}, { ...START, cron: "0 9 * * 1-5", timezone: "Europe/Madrid", budget_cents: 300 });
     expect(p.body).not.toHaveProperty("plan_needed");
     expect(p.body.session).toMatch(/^sess/);
+  });
+
+  // The first-run walk-through: a taf made before the plan was bought needed Run now after. Its first run is owed, and starts by
+  // itself once kiff/agents takes runs: at the next Home read (the app reads it after the purchase), or the 5-minute sweep.
+  it("starts the first run a taf was owed for want of a plan, by itself and once, as soon as there's a plan", async () => {
+    const w = world();
+    const k = withKIFF(w, { balanceKind: "none" });
+    const r = await k.send("POST", "/v1/tafs", {}, { ...START, cron: "0 9 * * 1-5", timezone: "Europe/Madrid", budget_cents: 300 });
+    expect(r.body.plan_needed).toEqual({ words: "Choose a plan to start it." });
+    const triggers = () => w.agents.calls.filter((c) => c === `trigger ${NEW}`);
+    expect(triggers()).toEqual([]);
+    // Still no plan: Home is read, kiff/agents refuses it for want of a plan, and the run stays owed.
+    w.agents.fail.set("trigger", new AgentsError(409, "the account has no plan", undefined, "no_plan"));
+    expect((await k.send("GET", "/v1/home")).status).toBe(200);
+    expect(triggers()).toHaveLength(1);
+    // The plan bought: the next Home read starts it.
+    expect((await k.send("GET", "/v1/home")).status).toBe(200);
+    expect(triggers()).toHaveLength(2);
+    expect(w.agents.runs.some((run) => run.agent === NEW)).toBe(true);
+    // Started once: neither Home nor the sweep starts it again.
+    await k.send("GET", "/v1/home");
+    expect(await sweepFirstRuns({ ...depsOf(w), coach: store })).toEqual([]);
+    expect(triggers()).toHaveLength(2);
+  });
+
+  // qa-kiff on #887: kiff/agents answers a firing with no credits as an outcome, not an error. It stays owed.
+  it("keeps a first run owed while kiff/agents holds the firing back, and settles it once a run starts or one is going", async () => {
+    const w = world();
+    const k = withKIFF(w, { balanceKind: "none" });
+    await k.send("POST", "/v1/tafs", {}, { ...START, cron: "0 9 * * 1-5", timezone: "Europe/Madrid", budget_cents: 300 });
+    const deps = { ...depsOf(w), coach: store };
+    const trigger = w.agents.api.trigger.bind(w.agents.api);
+    let fired = 0;
+    for (const outcome of ["skipped_credits", "skipped_halted", "skipped_switching"]) {
+      w.agents.api.trigger = async () => { fired++; return { outcome }; };
+      expect(await sweepFirstRuns(deps), outcome).toEqual([]);
+    }
+    // Each held back, so each sweep tried it again.
+    expect(fired).toBe(3);
+    // A run already going (the sweep and a Home read at once): settled, never fired twice.
+    w.agents.api.trigger = async () => { fired++; return { outcome: "skipped_busy" }; };
+    expect(await sweepFirstRuns(deps)).toEqual([]);
+    expect(fired).toBe(4);
+    w.agents.api.trigger = trigger;
+    w.agents.calls.length = 0;
+    expect(await sweepFirstRuns(deps)).toEqual([]);
+    expect(w.agents.calls.filter((c) => c.startsWith("trigger"))).toEqual([]);
+  });
+
+  it("drops an owed first run when its taf is removed, and keeps it through a blip", async () => {
+    const w = world();
+    const k = withKIFF(w, { balanceKind: "none" });
+    await k.send("POST", "/v1/tafs", {}, { ...START, cron: "0 9 * * 1-5", timezone: "Europe/Madrid", budget_cents: 300 });
+    const deps = { ...depsOf(w), coach: store };
+    // A server error: still owed.
+    w.agents.fail.set("trigger", new AgentsError(503, "unavailable"));
+    expect(await sweepFirstRuns(deps)).toEqual([]);
+    expect(await sweepFirstRuns(deps)).toEqual([{ tenant: "t_acme", started: [NEW] }]);
+    // A second taf, removed before any plan: never started.
+    w.agents.calls.length = 0;
+    const second = await k.send("POST", "/v1/tafs", {}, { ...START, name: "Cy", cron: "0 9 * * 1-5", timezone: "Europe/Madrid", budget_cents: 300 });
+    const id = second.body.taf.id as string;
+    w.tafs.held.delete(`t_acme#${id}`);
+    expect(await sweepFirstRuns(deps)).toEqual([]);
+    expect(w.agents.calls.filter((c) => c.startsWith("trigger"))).toEqual([]);
   });
 });

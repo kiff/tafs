@@ -1588,15 +1588,90 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   // With no plan yet, nothing runs: the taf is made, and the answer says so in words (the first run's item 7).
   const plan = token ? await planNeeded(token, deps, lang ?? ownerLang) : {};
   if (unscheduled) return { taf: await view(taf, me, deps), session: null, ...plan };
-  if (plan.plan_needed) return { taf: await view(taf, me, deps), session: null, ...plan };
+  // Its first run is owed, not dropped: it starts by itself once the account has a plan (`settleFirstRuns`).
+  if (plan.plan_needed) {
+    await oweFirstRun(me.tenantID, tafID, deps);
+    return { taf: await view(taf, me, deps), session: null, ...plan };
+  }
   let fired: Fired_;
   try { fired = await fireNow(me.tenantID, tafID, deps); } catch (err) {
-    if (waitsForCredits(err) && err.code === "no_plan") return { taf: await view(taf, me, deps), session: null, plan_needed: { words: wordsIn(lang ?? ownerLang).plan_needed } };
+    if (waitsForCredits(err) && err.code === "no_plan") {
+      await oweFirstRun(me.tenantID, tafID, deps);
+      return { taf: await view(taf, me, deps), session: null, plan_needed: { words: wordsIn(lang ?? ownerLang).plan_needed } };
+    }
     throw new HTTPError(502, `${name} is started, but its first ${workCheck ? "check" : "run"} didn't start (${(err as Error).message}). Run it now from the app`);
   }
   // A first check that started no run says why (quiet, halted, a read that failed…): the taf is made all the same.
   if (!("session" in fired)) return { taf: await view(taf, me, deps), ...noRun(fired, lang ?? ownerLang) };
   return { taf: await view(taf, me, deps), session: fired.session };
+}
+
+/** Where tafs cloud keeps the tafs whose first run waits for a plan: one list per account. */
+const firstRunsOwedKey = (tenant: string) => `${tenant}#first-runs-owed`;
+/** How long a first run is owed: an account that buys no plan in a month has its tafs' schedules to start them. */
+const FIRST_RUN_OWED_MS = 30 * 24 * 3600_000;
+
+/** The firings that settle an owed first run: anything else kiff/agents answers holds it back, and it stays owed. */
+const DONE_FIRINGS = ["quiet", "skipped_busy"];
+
+/** Notes that a taf made with no plan is owed its first run. Best effort: a store that can't be written loses only the wait. */
+async function oweFirstRun(tenant: string, taf: string, deps: Deps): Promise<void> {
+  if (!deps.coach) return;
+  const now = deps.now?.() ?? new Date();
+  try {
+    const owed = ((await deps.coach.get(firstRunsOwedKey(tenant))) as string[] | undefined) ?? [];
+    if (!owed.includes(taf)) await deps.coach.put(firstRunsOwedKey(tenant), [...owed, taf], new Date(now.getTime() + FIRST_RUN_OWED_MS));
+  } catch (err) { console.error(`first run owed ${taf}: ${(err as Error).message}`); }
+}
+
+/**
+ * The first runs an account's tafs were owed for want of a plan, started now (the first-run walk-through: a taf made before
+ * the plan was bought starts by itself after, with no Run now). tafs cloud sees no purchase, so it asks kiff/agents, which
+ * refuses with `no_plan` until there is one: that taf stays owed. Each run goes on its consent, as any run with no person in
+ * the moment. A taf removed since is dropped; one whose run started, or whose check found nothing, is done. The starts.
+ */
+export async function settleFirstRuns(tenant: string, deps: Deps): Promise<string[]> {
+  if (!deps.coach) return [];
+  const owed = ((await deps.coach.get(firstRunsOwedKey(tenant)).catch(() => undefined)) as string[] | undefined) ?? [];
+  if (!owed.length) return [];
+  const tafs = await deps.tafs.list(tenant);
+  const left: string[] = [];
+  const started: string[] = [];
+  for (const id of owed) {
+    const taf = tafs.find((t) => t.id === id && !t.removing);
+    if (!taf) continue;
+    try {
+      await requireUnattended(deps, tenant, id);
+      const fired = await fireNow(tenant, id, deps);
+      if ("session" in fired) started.push(id);
+      // Done only when a run started, its check ran and found nothing, or a run is already going. kiff/agents answers a
+      // firing it held back as an outcome, not an error: skipped for credits, while halted or switching versions. Owed.
+      else if (!DONE_FIRINGS.includes(fired.outcome)) left.push(id);
+    } catch (err) {
+      // Still no plan, no consent, or a blip: owed until the next try.
+      if (!(waitsForCredits(err) || refused(err, AI_CONSENT_CODE))) console.error(`first run ${id}: ${(err as Error).message}`);
+      left.push(id);
+    }
+  }
+  const now = deps.now?.() ?? new Date();
+  if (left.length === owed.length) return started;
+  await (left.length ? deps.coach.put(firstRunsOwedKey(tenant), left, new Date(now.getTime() + FIRST_RUN_OWED_MS)) : deps.coach.remove(firstRunsOwedKey(tenant)))
+    .catch((err) => console.error(`first runs owed ${tenant}: ${(err as Error).message}`));
+  return started;
+}
+
+/** The first runs owed for want of a plan, tried on the 5-minute sweep for every account. */
+export async function sweepFirstRuns(deps: Deps): Promise<Array<{ tenant: string; started: string[] }>> {
+  if (!deps.coach) return [];
+  const out: Array<{ tenant: string; started: string[] }> = [];
+  for (const tenant of await deps.tafs.tenants()) {
+    const started = await settleFirstRuns(tenant, deps).catch((err) => {
+      console.warn(`first runs: ${tenant}: ${err instanceof Error ? err.message : "error"}`);
+      return [] as string[];
+    });
+    if (started.length) out.push({ tenant, started });
+  }
+  return out;
 }
 
 /** What firing a schedule by hand came to: the run it started, or kiff/agents' outcome, with the read's reason when it failed. */
@@ -6249,6 +6324,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // The owner is around (kiff/tafs#210): what isn't urgent is pushed quietly, not kept for later.
   await deps.slots.keep(presenceKey(me.tenantID), presentUntil(deps.now?.() ?? new Date()))
     .catch((err) => console.error(`presence: ${(err as Error).message}`));
+  // A plan bought since a taf was made: its owed first run starts now, as Home is read after the purchase, rather than at the
+  // next sweep. One read of the store when nothing is owed.
+  await settleFirstRuns(me.tenantID, deps).catch((err) => console.error(`first runs: ${(err as Error).message}`));
   // "Did this happen?" is read with the rest, not after: a KIFF that can't give it leaves only the Needs you count out.
   const [records, removing, kiff, access, unsure] = await Promise.all([
     deps.tafs.list(me.tenantID),
