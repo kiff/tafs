@@ -62,8 +62,8 @@ On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
 - **At launch** Coach opens on its newest conversation alone, the one updated last, read with
   `GET /v1/tafs/{id}/chats`, never the latest ones together; the earlier ones are under
   Previous conversations. With none yet, the thread reads as before (`AppModel.readThread`).
-- **Previous conversations** lists them newest first. A long press archives one, and
-  Archived puts one back.
+- **Previous conversations** lists them newest first. On Android, a long press asks about that chat by its title: Archive,
+  or, under Archived, Put back. There's no menu that could open over another row.
 - **The empty chat** shows the same starts as iOS (`CoachWords.EXAMPLES`,
   `IMPROVE_EXAMPLES`).
 - **Coach's news** of the tasks it handed tafs shows under the thread, with "While you
