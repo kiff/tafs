@@ -25,9 +25,9 @@ final class TimeZoneTests: XCTestCase {
     /// it (`X-Time-Zone`), tafs cloud sets it in KIFF and answers `time_zone`, and no offer is
     /// asked. tafs cloud's answer without it, or an account with a zone already, asks as before.
     func testANewAccountTakesThePhonesZoneWithNoQuestion() async throws {
-        let before = NSTimeZone.default
-        NSTimeZone.default = try XCTUnwrap(TimeZone(identifier: "Europe/Paris"))
-        defer { NSTimeZone.default = before }
+        // The phone's zone, whatever the runner's is: only a phone on UTC has nothing to send.
+        let here = TimeZone.current.identifier
+        try XCTSkipIf(here == "UTC", "this runner is on UTC")
         func signedIn(_ setup: String) async -> AppModel {
             StubProtocol.responses = [:]
             StubProtocol.sent = []
@@ -45,15 +45,15 @@ final class TimeZoneTests: XCTestCase {
             await model.useSession("kiff_dev_x", tenant: "t1")
             return model
         }
-        let taken = await signedIn(#"{"setup":null,"tools":null,"time_zone":"Europe/Paris"}"#)
+        let taken = await signedIn(#"{"setup":null,"tools":null,"time_zone":"\#(here)"}"#)
         let read = try XCTUnwrap(StubProtocol.sent.first { $0.url?.path == "/v1/setup" })
-        XCTAssertEqual(read.value(forHTTPHeaderField: "X-Time-Zone"), "Europe/Paris")
-        XCTAssertEqual(taken.kiffAccount?.timeZone, "Europe/Paris")
+        XCTAssertEqual(read.value(forHTTPHeaderField: "X-Time-Zone"), here)
+        XCTAssertEqual(taken.kiffAccount?.timeZone, here)
         XCTAssertNil(taken.timeZoneOffer, "no question")
         XCTAssertFalse(StubProtocol.sent.contains { $0.url?.path == "/v1/me/time-zone" }, "the phone sets nothing itself")
 
         let notTaken = await signedIn(#"{"setup":null,"tools":null}"#)
-        XCTAssertEqual(notTaken.timeZoneOffer, "Europe/Paris", "not set by tafs cloud (a member, say): asked as before")
+        XCTAssertEqual(notTaken.timeZoneOffer, here, "not set by tafs cloud (a member, say): asked as before")
         let odd = await signedIn(#"{"setup":null,"tools":null,"time_zone":"Not/AZone"}"#)
         XCTAssertEqual(odd.kiffAccount?.timeZone, "UTC", "a zone the phone doesn't know isn't taken")
     }
