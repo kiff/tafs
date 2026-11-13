@@ -206,6 +206,11 @@ data class Approved(
   /** The vendor's own sign-in page, to open in a browser. None when planque already holds the sign-in. */
   @SerialName("sign_in_url") val signInUrl: String? = null,
   @SerialName("expires_at") val expiresAt: String? = null,
+  /**
+   * With `signed_in`: the sign-in is already held at the provider, and this is the one-use code the approving device confirms
+   * with (`/confirm`), as with the browser's. No second sign-in.
+   */
+  val confirm: String? = null,
 )
 
 /** planque's answer to an enrolment: the account, and the phone key's fingerprint as planque shows it in its record. */
