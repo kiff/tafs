@@ -28,7 +28,8 @@ final class KIFFClient {
             case .slowDown: return Words.Error.slowDown
             case .expired: return Words.Error.signInCodeExpired
             case .unauthorized: return Words.Error.signedOut
-            case .server(_, let message, _): return message
+            // KIFF's reason is for the code and the diagnostics; the person reads a plain line.
+            case .server(let status, _, _): return PlainError.words(status: status)
             case .approvalKeyRequired: return KIFFClient.approvalKeyLost
             case .approvalKeyExists: return Words.Error.approvalKeyExists
             }

@@ -25,7 +25,8 @@ final class PlanqueClient {
             case .noDevice: return Words.Error.noDeviceName
             case .digestMismatch: return Words.Error.requestMismatch
             case .wordsUnread: return Words.Connect.profileWordsUnread
-            case .server(_, let message): return message
+            // planque's reason is for the code and the diagnostics; the person reads a plain line.
+            case .server(let status, _): return PlainError.words(status: status)
             }
         }
     }
