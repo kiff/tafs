@@ -2441,7 +2441,7 @@ class AppModel(
       else if (tafId == COACH_CHAT) {
         // With this phone's read proof and the steps it signs, so each approval card says whether it signs the Card (`signs`).
         val proof = coachReadProof()
-        cloud.conversation(cloudId, session = _state.value.coachChat, proof = proof, can = if (proof != null && sessionHasApprovalKey) listOf("tools_and_cards", "key_and_cards") else emptyList())
+        cloud.conversation(cloudId, session = _state.value.coachChat, proof = proof, can = if (proof != null && sessionHasApprovalKey) listOf("tools_and_cards", "key_and_cards", "signs") else emptyList())
       } else cloud.conversation(cloudId)
     } catch (e: CancellationException) {
       throw e
@@ -4477,12 +4477,13 @@ class AppModel(
         session?.let { put("session", it) }
         // This build signs the key and its Card under one fingerprint: tafs cloud offers that step only when it's asked for. Without
         // a key, a connection's tools and its Card the same way (`tools_and_cards`), where the session's approval key can sign.
+        // `signs`: this build draws tafs cloud's `signs` mark, so a step that signs the Card is only offered where the card shows it.
         val can = when {
-          together != null -> "key_and_cards"
-          c.draft != null && sessionHasApprovalKey && !_state.value.approvalKeyLost -> "tools_and_cards"
-          else -> null
+          together != null -> listOf("key_and_cards", "signs")
+          c.draft != null && sessionHasApprovalKey && !_state.value.approvalKeyLost -> listOf("tools_and_cards", "signs")
+          else -> emptyList()
         }
-        can?.let { put("can", kotlinx.serialization.json.buildJsonArray { add(kotlinx.serialization.json.JsonPrimitive(it)) }) }
+        if (can.isNotEmpty()) put("can", kotlinx.serialization.json.buildJsonArray { can.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) } })
       }
       val decision = cloud.approval(cloudId, c.id, ask, proof)
       if (generation != accountGeneration) return true
@@ -4496,6 +4497,13 @@ class AppModel(
           // The phone is the last check, not a signing service: it signs only the message this card implies, rebuilt from
           // what it holds (its own account, the card's grant or draft, the ask's digest or version), and refuses any other.
           if (asked.message != expectedApprovalMessage(asked, c, tenant, shownDigest, shownDraft)) { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return true }
+          // What the card drew is what the fingerprint signs: tafs cloud's mark was its prediction when the thread was read, and the
+          // grant can change before the tap. A step that disagrees with it is never signed: the card is read again.
+          if (!stepMatchesMark(c.signs?.card, asked.step)) {
+            note(c.id, VersionWords.OUT_OF_DATE_CARD)
+            readThread(COACH_CHAT)
+            return true
+          }
           val came: Came
           if (asked.step == "key_and_cards") {
             // The key and its Card under one signature, built here from the two requests: never without the pasted key.
@@ -7618,6 +7626,13 @@ class AppModel(
     /** How often a thread is read again while a run is at work in it, and how many times at most. */
     const val CHAT_POLL_MS = 2_500L
     const val CHAT_POLL_BUDGET = 150
+
+    /**
+     * Whether an ask's step is what the card drew (`signs`): a card that showed its Card as signed takes only a step that signs
+     * it (`cards`, `key_and_cards`, `tools_and_cards`); one that showed it as next, any other step. No mark: any step, as before.
+     */
+    fun stepMatchesMark(signsCard: Boolean?, step: String): Boolean =
+      signsCard == null || signsCard == (step in setOf("cards", "key_and_cards", "tools_and_cards"))
     /** How long a live answer stands before a read saying nothing is at work clears it as ended. */
     const val STALE_LIVE_MS = 15_000L
     /** How often the thread is read while a stream is open, for a run that ended without the stream saying so. */

@@ -1,1 +1,2 @@
 - **Android: an approval shows what its fingerprint signs.** When one fingerprint also signs the taf's Card, the Card's limits stay on screen until the fingerprint, and Approve waits for them; when the Card comes next, it says so instead (docs/android-app.md).
+- **Android: a fingerprint never signs more or less than its card showed.** If the step tafs cloud asks for disagrees with what the card drew, nothing is signed and the card is read again.
