@@ -1330,7 +1330,7 @@ final class AppModel: ObservableObject {
             coachToolsError = Words.Coach.toolsUnknown
             return false
         }
-        guard tools.connect != nil || tools.card != nil else { return false }
+        guard tools.connect != nil || tools.card != nil || tools.together != nil else { return false }
         // The one confirmation: it gives Coach its Cards, and the connections go under it.
         do {
             _ = try await signer.sign(Data("tafs.coach-tools.v1|\(tenant)".utf8), reason: Words.Coach.Prompt.giveCard, grants: true)
@@ -1344,6 +1344,14 @@ final class AppModel: ObservableObject {
         kiff.setupSigner = { try signer.signConfirmed($0) }
         defer { kiff.setupSigner = nil }
         do {
+            // tafs cloud's pair (kiff/tafs#881): the batch and Coach's Cards under this one Face ID,
+            // signed once by the approval key. Coach exists, so nothing is claimed after it.
+            if let pair = tools.together, let connect = pair.connect, let draft = pair.draft, !approvalKeyUnheld {
+                _ = try await sendTogether(connect, draft, tenant: tenant, gen: gen)
+                guard gen == accountGeneration else { return false }
+                await loadCoachTools()
+                return coachTools?.given == true
+            }
             if let connect = tools.connect { try await kiff.connectBatch(connect.body) }
             guard gen == accountGeneration else { return false }
             // tafs cloud drafts the Cards over tools KIFF holds: where it sent none with the
@@ -6987,14 +6995,8 @@ final class AppModel: ObservableObject {
         guard let draftRequest = start.draft else { return nil }
         let draft: KIFFClient.AgentDraft
         if start.together, let connectRequest = start.connect {
-            let signedAt = SigningTime.next()
-            let batch = try kiff.prepare(method: connectRequest.method, path: connectRequest.path, body: connectRequest.body, gateway: true, signedAt: signedAt)
-            let cards = try kiff.prepare(method: draftRequest.method, path: draftRequest.path, body: draftRequest.body, gateway: false, signedAt: signedAt)
-            let batchHash = RequestsTogether.hash(batch.message), cardsHash = RequestsTogether.hash(cards.message)
-            let signature = try signer.signApprovalConfirmed(RequestsTogether.message(tenant: tenant, signedAt: signedAt, batchHash, cardsHash))
-            try await kiff.connectBatch(batch, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: cardsHash))
-            guard gen == accountGeneration else { return nil }
-            draft = try await kiff.submitDraft(cards, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: batchHash))
+            guard let sent = try await sendTogether(connectRequest, draftRequest, tenant: tenant, gen: gen) else { return nil }
+            draft = sent
         } else {
             draft = try await kiff.submitDraftAnswered(draftRequest.body)
         }
@@ -7004,6 +7006,21 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return nil }
         coachStart = nil
         return started
+    }
+
+    /// The tools batch and a Cards' draft, as tafs cloud built them, each in full with one
+    /// `signed_at`, signed once by the approval key over both hashes (`kiff.requests.v1`), under
+    /// the Face ID that just confirmed the step: the batch first, the draft once it answered.
+    private func sendTogether(_ connectRequest: TafsCloud.CoachStart.Request, _ draftRequest: TafsCloud.CoachStart.Request,
+                              tenant: String, gen: Int) async throws -> KIFFClient.AgentDraft? {
+        let signedAt = SigningTime.next()
+        let batch = try kiff.prepare(method: connectRequest.method, path: connectRequest.path, body: connectRequest.body, gateway: true, signedAt: signedAt)
+        let cards = try kiff.prepare(method: draftRequest.method, path: draftRequest.path, body: draftRequest.body, gateway: false, signedAt: signedAt)
+        let batchHash = RequestsTogether.hash(batch.message), cardsHash = RequestsTogether.hash(cards.message)
+        let signature = try signer.signApprovalConfirmed(RequestsTogether.message(tenant: tenant, signedAt: signedAt, batchHash, cardsHash))
+        try await kiff.connectBatch(batch, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: cardsHash))
+        guard gen == accountGeneration else { return nil }
+        return try await kiff.submitDraft(cards, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: batchHash))
     }
 
     /// tafs cloud's thread, with what the owner sent that it doesn't have yet, by the rule
