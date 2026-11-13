@@ -396,12 +396,26 @@ final class TafsCloud {
                 /// One the app can draw: a button and its yes.
                 var usable: Bool { !button.isEmpty && !yes.isEmpty }
             }
-            private struct DiscardField: Decodable { let words: Discard? }
+            private struct DiscardField: Decodable {
+                let words: Discard?
+                /// The agent's Cards to revoke first, by id: plain ids, or `{id}` each.
+                let cards: [String]?
+                private struct Ref: Decodable { let id: String? }
+                enum CodingKeys: String, CodingKey { case words, cards }
+                init(from decoder: Decoder) throws {
+                    let c = try decoder.container(keyedBy: CodingKeys.self)
+                    words = try? c.decodeIfPresent(Discard.self, forKey: .words)
+                    if let ids = try? c.decodeIfPresent([String].self, forKey: .cards) { cards = ids }
+                    else { cards = (try? c.decodeIfPresent([Ref].self, forKey: .cards))?.flatMap { $0.compactMap(\.id) } }
+                }
+            }
             var name = ""
             var kiffAgent = ""
             var color = 0
             var finish: HomeTaf.Finish?
             var discard: Discard?
+            /// The agent's Cards, as `discard` names them; nil when it names none.
+            var discardCards: [String]?
             enum CodingKeys: String, CodingKey { case name, color, finish, discard, kiffAgent = "kiff_agent" }
             init(from decoder: Decoder) throws {
                 // An item that isn't one reads as nameless and is skipped, never failing Home's read.
@@ -410,7 +424,9 @@ final class TafsCloud {
                 kiffAgent = ((try? c.decodeIfPresent(String.self, forKey: .kiffAgent)) ?? nil) ?? ""
                 color = ((try? c.decodeIfPresent(Int.self, forKey: .color)) ?? nil) ?? 0
                 finish = (try? c.decodeIfPresent(HomeTaf.Finish.self, forKey: .finish)).flatMap { $0 }.flatMap { $0.usable ? $0 : nil }
-                discard = (try? c.decodeIfPresent(DiscardField.self, forKey: .discard))?.flatMap { $0.words }.flatMap { $0.usable ? $0 : nil }
+                let field = (try? c.decodeIfPresent(DiscardField.self, forKey: .discard)) ?? nil
+                discard = field?.words.flatMap { $0.usable ? $0 : nil }
+                discardCards = field?.cards
             }
         }
 

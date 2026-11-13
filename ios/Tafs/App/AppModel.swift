@@ -1746,8 +1746,8 @@ final class AppModel: ObservableObject {
                 t.settingUp = true
                 t.finish = s.finish
                 t.discard = s.discard
-                // Its Cards, to revoke on Discard: `others` repeats it, with them, for older apps.
-                t.kiffCardIDs = home.others.first { $0.kiffAgent == s.kiffAgent && !s.kiffAgent.isEmpty }?.card.ids ?? []
+                // Its Cards, to revoke on Discard: as `discard` names them, else from `others`' repeat of it.
+                t.kiffCardIDs = s.discardCards ?? home.others.first { $0.kiffAgent == s.kiffAgent && !s.kiffAgent.isEmpty }?.card.ids ?? []
                 t.now = s.finish?.words ?? ""
                 return t
             }

@@ -128,6 +128,9 @@ final class HomeFinishSetupTests: XCTestCase {
         XCTAssertEqual(taf.discard?.yes, "Discard")
         XCTAssertEqual(taf.kiffCardIDs, ["c_inv"], "its Cards, from others' repeat")
         XCTAssertNil(model.settingUp.last?.discard, "no button, no Discard")
+        // The Cards `discard` names win over others' repeat, as plain ids or {id} each.
+        let named = await self.model(others: [repeated], settingUp: half.replacingOccurrences(of: #""no":"Keep"}}"#, with: #""no":"Keep"},"cards":[{"id":"c_named"}]}"#))
+        XCTAssertEqual(named.settingUp.first?.kiffCardIDs, ["c_named"])
 
         StubProtocol.responses["POST /v1/me/mandates/c_inv/revoke"] = (200, "{}")
         StubProtocol.responses["POST /v1/home/setting-up/invoicing-x/discard"] = (200, #"{"discarded":true,"kiff_agent":"invoicing-x"}"#)
