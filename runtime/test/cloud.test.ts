@@ -4432,6 +4432,27 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(after.others).toEqual([]);
   });
 
+  // agentgabo on #873: a result waits a few days; once it has expired, its run no longer names the agent. The name
+  // Coach gave it stays (there's no chat to finish it in any more), and its id never comes back.
+  it("keeps the name Coach gave a half-made taf once its chat's result has expired", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
+    const stored = w.agents.runs.find((r) => r.id === run.id)!;
+    Object.assign(stored, { status: "PAUSED", requirements: [{ call_id: "s1", tool: "show", input: RESULT, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" }] });
+    w.account.mandates = [{ id: "card_refunds", subject: "refunds-x", active: true, grants: [{ action: "lookup" }], aggregates: [] }];
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const home = async () => JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, deps)).body) as { others: Array<Record<string, unknown>> };
+    expect((await home()).others[0]).toMatchObject({ name: "Refunds", finish: { taf: COACH } });
+    // The result expired: the run ended without it.
+    Object.assign(stored, { status: "COMPLETED", requirements: [] });
+    const later = (await home()).others[0]!;
+    expect(later).toMatchObject({ name: "Refunds", kiff_agent: "refunds-x" });
+    expect(later).not.toHaveProperty("finish");
+  });
+
   it("shows another agent as before when no Coach chat names it, or the paused runs can't be read", async () => {
     const { w, deps } = await paused();
     w.account.mandates = [{ id: "card_ops", subject: "ops-bot", active: true, grants: [{ action: "lookup" }], aggregates: [] },
@@ -4442,9 +4463,15 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(both.others.find((o) => o.kiff_agent === "ops-bot")).toMatchObject({ name: "ops-bot" });
     expect(both.others.find((o) => o.kiff_agent === "ops-bot")).not.toHaveProperty("finish");
     w.agents.fail.set("pausedRuns", new Error("down"));
+    // The paused runs can't be read: no way to finish shows, and the name already seen is kept, never the id.
     const down = await home();
-    expect(down.others.map((o) => o.name)).toEqual(["ops-bot", "refunds-x"]);
+    expect(down.others.map((o) => o.name)).toEqual(["ops-bot", "Refunds"]);
     expect(down.others.some((o) => "finish" in o)).toBe(false);
+    // With nothing kept either (a store that's new), the agent shows as before.
+    w.agents.fail.set("pausedRuns", new Error("down"));
+    const fresh = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, { ...deps, coach: memoryCoach(() => w.now) })).body) as { others: Array<Record<string, unknown>> };
+    expect(fresh.others.map((o) => o.name)).toEqual(["ops-bot", "refunds-x"]);
   });
 
   // The Coach skills design: tafs cloud names the skills a conversation loads, by its entry point before

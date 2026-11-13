@@ -6261,7 +6261,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     taken.push(color);
     const half = halfMade.get(agent);
     return { id: null, name: half?.name ?? agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card,
-      ...(half ? { finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } } : {}) };
+      ...(half?.coach && half.session ? { finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } } : {}) };
   });
   // Which doors this deployment offers (docs/doors.md): none, and the app shows no Doors.
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
@@ -6291,8 +6291,16 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
-/** A taf Coach drafted whose setup stopped partway: the name Coach gave it, and the chat where it stopped. */
-interface HalfMade { name: string; coach: string; session: string }
+/**
+ * A taf Coach drafted whose setup stopped partway: the name Coach gave it, and the chat where it stopped while that
+ * chat's result still waits (none once it expired: the name stays, from what tafs cloud kept).
+ */
+interface HalfMade { name: string; coach?: string; session?: string }
+
+/** Where tafs cloud keeps the name Coach gave an agent whose taf wasn't made, so it outlives the chat's result. */
+const halfMadeKey = (tenant: string, agent: string) => `${tenant}#half-made#${agent}`;
+/** How long that name is kept: well past a result's own wait. */
+const HALF_MADE_KEPT_MS = 180 * 24 * 3600_000;
 
 /**
  * The tafs whose setup stopped partway, by their KIFF agent, among `agents` (the account's other agents with Cards):
@@ -6304,10 +6312,9 @@ interface HalfMade { name: string; coach: string; session: string }
 async function halfMadeTafs(tenant: string, records: Taf[], agents: Set<string>, deps: Deps): Promise<Map<string, HalfMade>> {
   const out = new Map<string, HalfMade>();
   const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
-  if (!coach) return out;
-  const paused = await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]);
+  const paused = coach ? await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]) : [];
   for (const r of paused) {
-    if (r.agent !== coach.id) continue;
+    if (!coach || r.agent !== coach.id) continue;
     for (const q of r.requirements ?? []) {
       const card = q.input as { type?: string; taf?: { agent?: unknown; name?: unknown; improves?: unknown } } | undefined;
       if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.taf || card.taf.improves) continue;
@@ -6317,6 +6324,20 @@ async function halfMadeTafs(tenant: string, records: Taf[], agents: Set<string>,
       out.set(agent, { name: name.trim(), coach: coach.id, session: r.session });
     }
   }
+  if (!deps.coach) return out;
+  const store = deps.coach;
+  const at = deps.now?.() ?? new Date();
+  // The name is kept the first time it's seen, and read back for an agent whose chat's result has expired since: its
+  // id never comes back. A store that can't be read or written changes nothing here.
+  await Promise.all([...agents].map(async (agent) => {
+    const found = out.get(agent);
+    const kept = await store.get(halfMadeKey(tenant, agent)).catch(() => undefined) as { name?: unknown } | undefined;
+    if (found && kept?.name !== found.name) {
+      await store.put(halfMadeKey(tenant, agent), { name: found.name }, new Date(at.getTime() + HALF_MADE_KEPT_MS)).catch(() => undefined);
+    } else if (!found && typeof kept?.name === "string" && kept.name) {
+      out.set(agent, { name: kept.name });
+    }
+  }));
   return out;
 }
 
