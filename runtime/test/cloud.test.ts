@@ -4203,6 +4203,57 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
   });
 
+  // 13 Nov: Coach was told its approval went through, but only the connection was signed, so no card
+  // ever asked for the Card. The result waited, unlogged, for a confirm nothing would ask for.
+  it("a result whose Card never comes is answered in plain words after 15 minutes, once, so Coach asks for the Card", async () => {
+    const { w, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const notReady = () => w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+    const start = w.now;
+    const warned: string[] = [];
+    const warn = console.warn;
+    console.warn = (...a: unknown[]) => { warned.push(a.join(" ")); };
+    try {
+      notReady();
+      await note();
+      expect(answer()).toBeUndefined();
+      // Each wait is said in the log, never silent.
+      expect(warned.some((l) => l.includes("waiting for the Card's approval (draft drf_s1)"))).toBe(true);
+      // Not early: 14 minutes on, the owner may still be approving.
+      w.now = new Date(start.getTime() + 14 * 60_000);
+      notReady();
+      await note();
+      expect(answer()).toBeUndefined();
+      // 15 minutes from its first try, the result is answered, in plain words, and no taf is made.
+      w.now = new Date(start.getTime() + 15 * 60_000);
+      notReady();
+      await note();
+      expect(answer()).toEqual({ answer: { failed: "The Card for Refunds was never approved, so Refunds isn't set up yet: approve its Card to finish" }, answered_by: "tafs cloud" });
+      expect(JSON.stringify(answer())).not.toMatch(/draft_not_ready|drf_/);
+      expect([...w.tafs.held.values()].some((t) => t.kiffAgent === "refunds-x")).toBe(false);
+      // Once: the card no longer waits, so the sweep and later notes do nothing more.
+      const answered = w.agents.calls.filter((c) => c.startsWith("answerResult")).length;
+      await note();
+      await sweepHandOvers(deps);
+      expect(w.agents.calls.filter((c) => c.startsWith("answerResult")).length).toBe(answered);
+    } finally {
+      console.warn = warn;
+    }
+  });
+
+  it("a result whose Card is approved within the 15 minutes is made, as before", async () => {
+    const { w, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const start = w.now;
+    w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+    await note();
+    w.now = new Date(start.getTime() + 20 * 60_000);
+    // Approved meanwhile: the key comes, whatever the time.
+    await note();
+    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect([...w.tafs.held.values()].filter((t) => t.kiffAgent === "refunds-x")).toHaveLength(1);
+  });
+
   it("acts only while KIFF says the person may manage Cards now, and never on old rights", async () => {
     for (const [said, why] of [[{ cards_manage: false }, "your role on this KIFF account can't manage Cards now"], [{}, "KIFF didn't say whether you may manage Cards now; try again"]] as const) {
       const { w, note, answer } = await paused();
