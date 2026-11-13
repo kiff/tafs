@@ -3907,13 +3907,27 @@ describe("Coach's result, handed over by tafs cloud", () => {
   }
 
   // The first run's item 7 (dev-android on #860): the hand-over card reads this answer, so a taf made with no plan says so.
-  it("says in the answer that a taf made with no plan starts once there's one", async () => {
-    const { w, note, answer } = await paused();
+  it("says on the hand-over card that a taf made with no plan starts once there's one", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
     w.agents.access.set("u_ana", { cards_manage: true });
     w.agents.fail.set("trigger", new AgentsError(409, "the account has no plan", undefined, "no_plan"));
-    await note();
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
+    const stored = w.agents.runs.find((r) => r.id === run.id)!;
+    w.agents.show(stored, RESULT);
+    Object.assign(stored, { status: "PAUSED", requirements: [{ call_id: "s1", tool: "show", input: RESULT, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" }] });
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const read = async (lang: string) => JSON.parse((await handle({ rawPath: `/v1/tafs/${COACH}/conversation`, requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana", "Accept-Language": lang } }, deps)).body) as { components: Array<{ component: { id: string }; answer?: { outcome?: unknown } }> };
+    await read("en");
     expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ name: "Refunds" });
-    expect(answer()).toEqual({ answer: { taf_id: NEW, plan_needed: { words: "Choose a plan to start it." } }, answered_by: "tafs cloud" });
+    // kiff/agents takes a result's answer with its known fields only (qa-build on #860): the answer stays {taf_id}.
+    expect(stored.requirements![0]!.result).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    // The card's answer, as the apps read it, says so, in the reader's language.
+    expect((await read("en")).components.find((c) => c.component.id === "done")?.answer?.outcome).toEqual({ taf_id: NEW, plan_needed: { words: "Choose a plan to start it." } });
+    expect((await read("fr")).components.find((c) => c.component.id === "done")?.answer?.outcome).toEqual({ taf_id: NEW, plan_needed: { words: "Choisissez un forfait pour le lancer." } });
   });
 
   it("makes the taf for the person whose run it is, once, and answers in its own name", async () => {

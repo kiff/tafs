@@ -2280,8 +2280,8 @@ export interface CardAnswer {
   at: string;
   /** Who answered in the owner's place, when it wasn't them: tafs cloud, for a result. */
   by?: string;
-  /** A result's outcome, what came of handing the owner over: the app draws it, nothing more. */
-  outcome?: ResultOutcome;
+  /** A result's outcome, what came of handing the owner over: the app draws it, nothing more. A taf made with no plan has `plan_needed`. */
+  outcome?: ResultOutcome & { plan_needed?: { words: string } };
 }
 
 export interface ThreadMessage {
@@ -2586,6 +2586,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   drives.sort((a, b) => a.at.localeCompare(b.at));
   const shown = components.slice(-CHAT.maxThread);
   await markConnected(me.tenantID, shown, deps, lang);
+  await markPlanNeeded(me.tenantID, shown, deps, lang);
   return { messages: messages.slice(-CHAT.maxThread), components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
 }
 
@@ -2757,6 +2758,27 @@ function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lang: Lang
  * waited (docs/secure-connection.md). The apps draw that line and the card's Card alone. A note that can't be
  * read leaves the card as it was.
  */
+/** Where tafs cloud keeps that a taf was made with no plan, for its hand-over card. */
+const planNeededKey = (tenant: string, taf: string) => `${tenant}#plan-needed#${taf}`;
+
+/** Keeps that the hand-over made this taf with no plan; nothing when it had one. */
+async function keepPlanNeeded(tenant: string, taf: string, plan: { words: string } | undefined, deps: Deps): Promise<void> {
+  if (!plan || !deps.coach) return;
+  const now = deps.now?.() ?? new Date();
+  await deps.coach.put(planNeededKey(tenant, taf), { at: now.toISOString() }, new Date(now.getTime() + 30 * 24 * 3600_000))
+    .catch((err) => console.error(`plan needed, ${taf}: ${(err as Error).message}`));
+}
+
+/** A result's card whose taf was made with no plan says so, in the reader's language: `outcome.plan_needed`. */
+async function markPlanNeeded(tenant: string, components: ThreadComponent[], deps: Deps, lang: Lang): Promise<void> {
+  if (!deps.coach) return;
+  for (const c of components) {
+    const id = c.answer?.outcome && "taf_id" in c.answer.outcome ? c.answer.outcome.taf_id : undefined;
+    if (!id || !await deps.coach.get(planNeededKey(tenant, id)).catch(() => undefined)) continue;
+    c.answer!.outcome = { ...c.answer!.outcome!, plan_needed: { words: wordsIn(lang).plan_needed } };
+  }
+}
+
 async function markConnected(tenant: string, components: ThreadComponent[], deps: Deps, lang: Lang): Promise<void> {
   if (!deps.coach) return;
   const w = wordsIn(lang);
@@ -7652,10 +7674,13 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       await deps.coach.append(coachKeys.notes(tenant, me.subject), { at: at.toISOString(), text: line, taf: taf.name ?? id, taf_id: id, said: out.words ?? "" },
         new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${id} first check:`, err));
       // Said in the answer too, so Coach's closing message never calls the taf working (A4).
-      return { taf_id: id, check: out.reason ?? "no reason given", ...(out.plan_needed ? { plan_needed: out.plan_needed } : {}) };
+      await keepPlanNeeded(tenant, id, out.plan_needed, deps);
+      return { taf_id: id, check: out.reason ?? "no reason given" };
     }
-    // The hand-over card reads this answer: a taf made with no plan says so there too (the first run's item 7).
-    return { taf_id: id, ...(out.plan_needed ? { plan_needed: out.plan_needed } : {}) };
+    // The hand-over card says when the taf was made with no plan (the first run's item 7). kiff/agents takes a result's
+    // answer with its known fields only, so tafs cloud keeps this itself and adds it where the card's answer is read.
+    await keepPlanNeeded(tenant, id, out.plan_needed, deps);
+    return { taf_id: id };
   } catch (err) {
     if (err instanceof HTTPError && err.status >= 400 && err.status < 500) {
       // Made meanwhile by an app, under this draft: done, not failed.
