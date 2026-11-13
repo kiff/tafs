@@ -312,7 +312,7 @@ describe("tafs cloud", () => {
     // In the person's language: every word, from the categories to the sheet's button.
     const de = (await call(w, "GET", "/v1/recipes", { token: "ana", headers: { "Accept-Language": "de-DE,de;q=0.9,en;q=0.8" } })).body;
     expect(de.categories[0]).toEqual({ id: "money", title: "Geld" });
-    expect(de.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit")).toMatchObject({ title: "Erstattungen bis zu einem Limit", headline: "Keine Erstattung wartet über Nacht." });
+    expect(de.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit")).toMatchObject({ title: "Erstattungen bis zu einem Limit", headline: "Beantwortet Erstattungsanfragen aus dem Support und erstattet beim Zahlungsanbieter, innerhalb der Card.", today: "" });
     expect(de.home).toEqual({ shown: true, words: "Wähle eine Aufgabe für deinen ersten taf.", own_words: { title: "Sag es in deinen eigenen Worten", line: "Coach baut den taf mit dir." } });
     expect(de.labels.hand).toBe("An Coach übergeben");
     expect(de.suggestions.words).toBe("Vorschläge erscheinen in einem neuen Gespräch mit Coach, bis das Konto seinen ersten taf hat.");
@@ -1749,9 +1749,9 @@ describe("Setup (kiff/agents#91)", () => {
       expect(draft.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
       expect(draft.body).not.toHaveProperty("no_tools");
       expect(first.coach_tools_step.title).toBe("Give Coach its tools");
-      // Start's own words, the first run's items 2 and 3: one line, the button, and what it does, never the apps' paragraphs.
-      expect(first.words).toEqual({ lead: "You sign in on each app's own page. No taf ever sees your password.", start: "Start",
-        does: "Start sets up approvals on this device and gives Coach its tools, with your face or fingerprint once." });
+      // Start's own words, the first run's items 2 and 3: one line and the button, never the apps' paragraphs. What Start does
+      // is the line's to say, once (the app-words cut, screen 3), and it never names a biometric.
+      expect(first.words).toEqual({ lead: "Start gives Coach the tools below. You approve once, on this device.", start: "Start" });
       // The Cards the one fingerprint signs are shown in KIFF's own words, previewed over the tools the batch declares
       // (qa-kiff on #852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
       expect(draft.card_title).toBe("Coach's Card");
@@ -1800,8 +1800,9 @@ describe("Setup (kiff/agents#91)", () => {
     expect(first.state).toBe("to_give");
     // The step the app shows at the end of a first Start, in the person's words: four groups, each tool folded under them.
     expect(first.coach_tools_step.title).toBe("Give Coach its tools");
-    // One confirmation gives them on either phone, and tafs cloud never names the biometric it is.
-    expect(first.coach_tools_step.ask).toBe("Give Coach these tools? You sign its Card on your device.");
+    // The button says what it does: no question above it (the app-words cut, screen 1), and a short intro.
+    expect(first.coach_tools_step).not.toHaveProperty("ask");
+    expect(first.coach_tools_step.intro).toBe("Coach needs these to look after your tafs.");
     expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 6, 2]);
     // Tools missing: the batch alone. KIFF refuses a Card naming an action no tool declares yet,
     // so the Cards come on the read after the tools are connected, and nothing is previewed now.
