@@ -1,6 +1,7 @@
 package bot.tafs.app
 
 import bot.tafs.app.model.Words
+import kotlinx.coroutines.async
 import bot.tafs.app.model.ErrorWords
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.COACH_CHAT
@@ -1462,6 +1463,21 @@ class PlanqueTest {
     m.refresh()
     assertTrue(m.discardSetup("inv-1"))
     assertNull(m.state.value.lastError)
+  }
+
+  @Test fun aSecondDiscardWhileOneIsOnItsWaySendsNothing() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, halfMade)
+    transport.answer("POST /v1/me/mandates/c9/revoke", 200)
+    transport.answer("POST /v1/home/setting-up/inv-1/discard", 200, """{"discarded":true,"kiff_agent":"inv-1"}""")
+    val m = model()
+    m.refresh()
+    val first = async { m.discardSetup("inv-1") }
+    val second = async { m.discardSetup("inv-1") }
+    assertTrue(first.await())
+    assertFalse(second.await())
+    assertEquals("the signed POST goes once", 1, transport.requestsTo("POST /v1/home/setting-up/inv-1/discard").size)
+    assertEquals(1, auth.asked.size)
   }
 
   @Test fun withoutTafsCloudsDiscardNothingIsAskedOrSent() = runTest {

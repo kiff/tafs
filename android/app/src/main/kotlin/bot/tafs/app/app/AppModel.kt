@@ -1857,6 +1857,18 @@ class AppModel(
    * it's theirs to drop is tafs cloud's to prove. True once tafs cloud dropped it.
    */
   suspend fun discardSetup(agent: String): Boolean {
+    // One at a time per taf: a second tap while one is on its way sends nothing, so the signed POST goes once.
+    if (!discarding.add(agent)) return false
+    try {
+      return discardSetupOnce(agent)
+    } finally {
+      discarding.remove(agent)
+    }
+  }
+
+  private val discarding = java.util.Collections.synchronizedSet(mutableSetOf<String>())
+
+  private suspend fun discardSetupOnce(agent: String): Boolean {
     val s = _state.value
     val taf = s.settingUp.firstOrNull { it.id == agent } ?: return false
     if (s.mode != Mode.kiff || taf.discard == null) return false
