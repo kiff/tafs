@@ -23,6 +23,8 @@ final class TafsCloud {
         /// The AI-data consent's screen, when the refusal carries it: a turn refused for want of
         /// it (`ai_consent_required`), or an older screen's yes refused for newer words.
         var consent: AIConsent? = nil
+        /// For 409 `cards_in_force`: the Cards KIFF still holds in force, by id.
+        var cards: [String] = []
         /// tafs cloud's words first, on every path that shows the error (kiff/tafs#397); the
         /// app's own line for the status only without them.
         var errorDescription: String? { words ?? message }
@@ -30,14 +32,15 @@ final class TafsCloud {
 
     /// tafs cloud's refusal: its words, and the runs in the way when it names them (kiff/tafs#206).
     static func refusal(_ status: Int, _ data: Data) -> CloudError {
-        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String?; let code: String?; let halted: String? }
+        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String?; let code: String?; let halted: String?; let cards: [String]? }
         struct Consent: Decodable { let consent: AIConsent? }
         let body = try? JSONDecoder().decode(Body.self, from: data)
         // The consent's words, read on their own, so one that doesn't read leaves the rest of the refusal:
         // with a refused turn, and with an older screen's refused yes (409), which carries the new words.
         let consent = (try? JSONDecoder().decode(Consent.self, from: data))?.consent
         let error = CloudError(status: status, message: body?.error ?? Words.Error.cloudAnswered(status: "\(status)"), blocking: body?.blocking ?? [], words: body?.words,
-                               code: body?.code, halted: body?.halted.flatMap { ["account", "taf"].contains($0) ? $0 : nil }, consent: consent)
+                               code: body?.code, halted: body?.halted.flatMap { ["account", "taf"].contains($0) ? $0 : nil }, consent: consent,
+                               cards: body?.cards ?? [])
         // Every route that would start a model turn can refuse this way: said once here, so the
         // consent screen shows wherever the person tried, with nothing wired per call.
         if body?.code == aiConsentRequired, let consent, consent.drawable {
@@ -375,11 +378,47 @@ final class TafsCloud {
         /// A taf whose setup stopped partway: the name Coach gave it, and for the person whose
         /// Coach chat it was, the chat that finishes it.
         struct SettingUp: Decodable, Equatable {
+            /// Discard, for the person whose setup it was: tafs cloud's words for the button and
+            /// its confirmation. Anyone else gets none.
+            struct Discard: Codable, Hashable {
+                var button = ""
+                var title = ""
+                var text = ""
+                var yes = ""
+                var no = ""
+                init(button: String = "", title: String = "", text: String = "", yes: String = "", no: String = "") {
+                    self.button = button; self.title = title; self.text = text; self.yes = yes; self.no = no
+                }
+                enum CodingKeys: String, CodingKey { case button, title, text, yes, no }
+                init(from decoder: Decoder) throws {
+                    guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+                    func w(_ k: CodingKeys) -> String { (((try? c.decodeIfPresent(String.self, forKey: k)) ?? nil) ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
+                    button = w(.button); title = w(.title); text = w(.text); yes = w(.yes); no = w(.no)
+                }
+                /// One the app can draw: a button and its yes.
+                var usable: Bool { !button.isEmpty && !yes.isEmpty }
+            }
+            private struct DiscardField: Decodable {
+                let words: Discard?
+                /// The agent's Cards to revoke first, by id: plain ids, or `{id}` each.
+                let cards: [String]?
+                private struct Ref: Decodable { let id: String? }
+                enum CodingKeys: String, CodingKey { case words, cards }
+                init(from decoder: Decoder) throws {
+                    let c = try decoder.container(keyedBy: CodingKeys.self)
+                    words = try? c.decodeIfPresent(Discard.self, forKey: .words)
+                    if let ids = try? c.decodeIfPresent([String].self, forKey: .cards) { cards = ids }
+                    else { cards = (try? c.decodeIfPresent([Ref].self, forKey: .cards))?.flatMap { $0.compactMap(\.id) } }
+                }
+            }
             var name = ""
             var kiffAgent = ""
             var color = 0
             var finish: HomeTaf.Finish?
-            enum CodingKeys: String, CodingKey { case name, color, finish, kiffAgent = "kiff_agent" }
+            var discard: Discard?
+            /// The agent's Cards, as `discard` names them; nil when it names none.
+            var discardCards: [String]?
+            enum CodingKeys: String, CodingKey { case name, color, finish, discard, kiffAgent = "kiff_agent" }
             init(from decoder: Decoder) throws {
                 // An item that isn't one reads as nameless and is skipped, never failing Home's read.
                 guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
@@ -387,6 +426,9 @@ final class TafsCloud {
                 kiffAgent = ((try? c.decodeIfPresent(String.self, forKey: .kiffAgent)) ?? nil) ?? ""
                 color = ((try? c.decodeIfPresent(Int.self, forKey: .color)) ?? nil) ?? 0
                 finish = (try? c.decodeIfPresent(HomeTaf.Finish.self, forKey: .finish)).flatMap { $0 }.flatMap { $0.usable ? $0 : nil }
+                let field = (try? c.decodeIfPresent(DiscardField.self, forKey: .discard)) ?? nil
+                discard = field?.words.flatMap { $0.usable ? $0 : nil }
+                discardCards = field?.cards
             }
         }
 
@@ -744,6 +786,17 @@ final class TafsCloud {
 
     /// A taf's path, as a request to it is sent and as the approval key signs it.
     func tafPath(_ id: String) -> String { "/v1/tafs/\(escaped(id))" }
+
+    /// Where a taf being set up is discarded (`POST`, signed as a removal is).
+    func discardPath(_ agent: String) -> String { "/v1/home/setting-up/\(escaped(agent))/discard" }
+
+    /// Drops a taf being set up, for the person whose setup it was: tafs cloud cancels its Coach
+    /// run and forgets the name it kept. The phone revoked its Cards first.
+    func discardSettingUp(_ agent: String, signature: String) async throws {
+        struct Answer: Decodable { let discarded: Bool? }
+        // The empty body the signature covers: nothing is sent with it.
+        let _: Answer = try await send("POST", discardPath(agent), headers: ["KIFF-Device-Signature": signature])
+    }
 
     /// What Run now did: the run's session, or none when the taf's check started no run, with
     /// tafs cloud's words for why (nothing new since the last run), in the person's language.

@@ -1,0 +1,1 @@
+- **iPhone and iPad: a taf whose setup stopped partway can be discarded.** If it was your Coach chat, Home shows Discard beside "Finish setting up". After you confirm, its Card ends and it leaves Home, behind one Face ID, as a removal is (docs/ios-app.md › A taf whose setup stopped partway).

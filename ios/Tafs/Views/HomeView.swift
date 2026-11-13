@@ -250,13 +250,17 @@ struct HomeView: View {
 
     @ViewBuilder
     private func settingUpRow(_ taf: Taf) -> some View {
-        if let finish = taf.finish, model.canFinishSetup(finish) {
-            Button { Task { await model.finishSetup(finish) } } label: { TafRow(taf: taf) }
-                .buttonStyle(.drivablePlain)
-                .driveWords(taf.name)
-                .accessibilityIdentifier("home.finish-setup")
-        } else {
-            TafRow(taf: taf)
+        VStack(alignment: .trailing, spacing: 6) {
+            if let finish = taf.finish, model.canFinishSetup(finish) {
+                Button { Task { await model.finishSetup(finish) } } label: { TafRow(taf: taf) }
+                    .buttonStyle(.drivablePlain)
+                    .driveWords(taf.name)
+                    .accessibilityIdentifier("home.finish-setup")
+            } else {
+                TafRow(taf: taf)
+            }
+            // Discard, beside Finish setting up, for the person whose setup it was.
+            DiscardSettingUpButton(taf: taf)
         }
     }
 
