@@ -190,7 +190,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" | "putSkill" | "addSessionSkills" |
-  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "tafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" | "pausedRuns" |
@@ -6315,11 +6315,15 @@ async function halfMadeTafs(tenant: string, records: Taf[], agents: Set<string>,
   for (const r of paused) {
     if (r.agent !== coach.id) continue;
     for (const q of r.requirements ?? []) {
-      const card = q.input as { type?: string; taf?: { agent?: unknown; name?: unknown; improves?: unknown } } | undefined;
+      const card = q.input as { type?: string; taf?: { agent?: unknown; name?: unknown; draft?: unknown; improves?: unknown } } | undefined;
       if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.taf || card.taf.improves) continue;
-      const { agent, name } = card.taf;
+      const { agent, name, draft } = card.taf;
       if (typeof agent !== "string" || !agents.has(agent) || out.has(agent)) continue;
-      if (typeof name !== "string" || !name.trim()) continue;
+      if (typeof name !== "string" || !name.trim() || typeof draft !== "string" || !draft) continue;
+      // What the result says isn't proof: the draft it names must be one the setup submitted here, naming this agent, and
+      // not claimed yet (the record the hand-over claims). An agent KIFF has that tafs didn't draft is never listed.
+      const held = await deps.agents.tafDraft(tenant, draft).catch(() => undefined);
+      if (!held || held.agent_id !== agent || held.claimed) continue;
       out.set(agent, { name: name.trim(), coach: coach.id, session: r.session });
     }
   }

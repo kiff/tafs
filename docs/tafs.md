@@ -109,7 +109,10 @@ the chat before the taf was made) is listed in `setting_up`, by the name Coach g
 its agent's id, and with no state, so never "Ready". Its `finish: {taf, session, words}`:
 "Finish setting up" opens Coach's chat where it stopped
 (`GET /v1/tafs/{taf}/conversation/{session}`), and reading that chat makes the taf. `others`
-repeats these for apps from before `setting_up`, which drew them there.
+repeats these for apps from before `setting_up`, which drew them there. What Coach's result says
+isn't proof: one is listed only when the draft it names is one the setup submitted (kiff/agents'
+`GET /drafts/{id}`, the record the hand-over claims), names that agent, and isn't claimed yet. A
+KIFF agent tafs didn't draft is never listed, and nothing is when kiff/agents can't be asked.
 
 A taf's Cards (`card.cards`) come live first, then active, and within each the one that has used
 the most of its limit first (its money total or its calls, whichever is further along), then

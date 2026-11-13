@@ -4477,6 +4477,40 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(down.others).toEqual([]);
   });
 
+  // qa-kiff and the PM on #886: a result card is what Coach says. Only a draft the setup submitted, naming that agent, is proof
+  // that tafs is making it; nothing KIFF has from elsewhere is ever listed.
+  it("lists a taf being set up only when the result's draft is the setup's own and names that agent", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    // ops-bot: a KIFF agent with a Card, made outside tafs, that Coach's result names with a draft id the setup never submitted.
+    // kiff-agent: named with a real setup draft, but one for another agent.
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.setupDrafts.set("drf_other", { tenant: "t_acme", agent: "refunds-x" });
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up", { requester: { kind: "member", id: "u_ana" } });
+    const card = (id: string, taf: Record<string, unknown>) => ({ call_id: id, tool: "show", operation: "", expires: "2026-11-05T12:00:00Z", kind: "card",
+      input: { type: "result", id, text: "Ready.", taf: { kickoff: "Work the queue.", cron: "*/30 * * * *", ...taf } } });
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "PAUSED", requirements: [
+      card("a", { agent: "ops-bot", name: "Ops", draft: "drf_nottafs" }),
+      card("b", { agent: "kiff-agent", name: "Kiff agent", draft: "drf_other" }),
+      card("c", { agent: "refunds-x", name: "Refunds", draft: "drf_s1" }),
+    ] });
+    w.account.mandates = ["ops-bot", "kiff-agent", "refunds-x"].map((a) => ({ id: `card_${a}`, subject: a, active: true, grants: [{ action: "lookup" }], aggregates: [] }));
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const read = async () => JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, deps)).body) as { setting_up: Array<Record<string, unknown>>; others: Array<Record<string, unknown>> };
+    const r = await read();
+    expect(r.setting_up.map((t) => t.kiff_agent)).toEqual(["refunds-x"]);
+    expect(r.others.map((o) => o.kiff_agent)).toEqual(["refunds-x"]);
+    // Its key claimed (the hand-over made the taf): no longer being set up.
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x", keyRef: "kiff/taf-x" });
+    expect((await read()).setting_up).toEqual([]);
+    // kiff/agents can't be asked: nothing is listed, never a guess.
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.api.tafDraft = async () => { throw new Error("down"); };
+    expect((await read()).setting_up).toEqual([]);
+  });
+
   // The Coach skills design: tafs cloud names the skills a conversation loads, by its entry point before
   // the first turn (way 1) and by the tool when it is used (way 2); never the model, never a tool's answer.
   it("loads a new Coach conversation's skills by how it opened, and an existing session keeps its own", async () => {
