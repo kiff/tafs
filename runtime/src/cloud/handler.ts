@@ -3689,12 +3689,18 @@ const CONSENTERS_EVERY_MS = 10 * 60_000;
 async function checkConsenters(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<void> {
   if (!deps.aiConsent || !deps.coach || !me.capabilities.includes("cards.manage")) return;
   const now = deps.now?.() ?? new Date();
+  const checked = `${me.tenantID}#consenters-checked`;
   try {
-    if (!await deps.coach.once(`${me.tenantID}#consenters-checked`, new Date(now.getTime() + CONSENTERS_EVERY_MS))) return;
+    if (await deps.coach.get(checked)) return;
     const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB).map((t) => t.id);
     const people = await consentingPeople(deps.coach, me.tenantID, tafs);
     if (!people.length) return;
     const active = await activeMembers(bearer(event), deps.fetch, deps.kiffBase);
+    // The person reading is a manager on the account, so a list without them is a wrong list (an empty or partial
+    // answer): it changes nothing, or every taf would pause (qa-kiff on the follow-up).
+    if (!active.has(me.subject)) return;
+    // Marked only after a read that worked: a failed one leaves the next manager's read to try (qa-kiff).
+    await deps.coach.put(checked, { at: now.toISOString() }, new Date(now.getTime() + CONSENTERS_EVERY_MS));
     if (await markGone(deps.coach, me.tenantID, people, active, now)) await settleConsent(deps, me.tenantID);
   } catch (err) {
     console.error(`consenters: ${(err as Error).message}`);

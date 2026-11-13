@@ -196,6 +196,14 @@ describe("the person whose consent a taf takes leaves the account", () => {
     const k = people(w, [{ subject: "u_cy", status: "removed" }]);
     await call(w, "GET", "/v1/home", "bo");
     expect(k.reads()).toBe(0);
+    // A wrong list (empty, or missing the manager reading it): nothing marked, the taf goes on.
+    const wrong = people(w, []);
+    await call(w, "GET", "/v1/home", "ana");
+    expect(wrong.reads()).toBe(1);
+    expect(await unattendedConsent(w.coach, "t_acme", RAE)).toEqual({ subject: "u_cy" });
+    // Not marked as checked either: the next read tries again.
+    await call(w, "GET", "/v1/home", "ana");
+    expect(wrong.reads()).toBe(2);
     // A list KIFF couldn't give: nothing marked, the taf goes on.
     const inner = w.deps.fetch;
     w.deps.fetch = (async (url: string, init?: RequestInit) => new URL(String(url)).pathname === "/v1/tenant/members"
