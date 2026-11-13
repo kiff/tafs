@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -65,6 +66,17 @@ class CoachInstallTest {
   // MARK: Which held call is an install
 
   private fun exception(json: String) = KiffClient.json.decodeFromString<CardException>(json)
+
+  @Test fun anInstallIsSaidAsOneWithNoArgumentsAndNoRuleBadge() {
+    val call = KiffMapping.held(exception(installHeld()), coach)
+    assertEquals("KIFF's own title", "Install a version", call.proposed.summary)
+    assertTrue("no n: or taf: under Details", call.details.isNullOrEmpty())
+    assertEquals("no badge: installing is asked every time, never outside the Card", "", call.reason)
+    // Another agent's call of the same name stays an ordinary held call.
+    val other = KiffMapping.held(exception(installHeld(subject = "refunds-1")), coach)
+    assertTrue(other.reason.isNotEmpty())
+    assertFalse(other.details.isNullOrEmpty())
+  }
 
   @Test fun onlyCoachsOwnHeldVersionInstallIsAnInstall() {
     assertEquals(VersionInstall("taf_1", 2), KiffMapping.install(exception(installHeld()), coach))
