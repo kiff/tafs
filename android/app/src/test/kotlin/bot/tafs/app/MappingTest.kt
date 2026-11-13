@@ -351,6 +351,12 @@ class MappingTest {
     // Not this person's Coach chat (no finish, or none to open): the name alone, never "Ready".
     assertNull(rows[1].finish)
     assertEquals("", rows[1].now)
+    // An item with no name is skipped, as on iPhone and iPad, and never fails the Home read with it.
+    assertEquals(emptyList<String>(), KiffMapping.settingUp(home("""{"tafs":[],"setting_up":[{"kiff_agent":"x","color":1}]}""").settingUp!!, "You").map { it.name })
+    // An item that isn't one, or has a field of the wrong kind, is skipped too; the rest of Home still reads.
+    val odd = home("""{"tafs":[],"setting_up":[7,{"name":"Bad","kiff_agent":"b","color":"red"},{"name":"Refunds","color":2}]}""")
+    assertEquals(listOf("Refunds"), KiffMapping.settingUp(odd.settingUp!!, "You").map { it.name })
+    assertEquals("setting-up:Refunds", KiffMapping.settingUp(odd.settingUp!!, "You").single().id)
     // A tafs cloud from before setting_up sends none: null, and the app draws others as before.
     assertNull(home("""{"tafs":[],"others":[],"removing":[]}""").settingUp)
   }
