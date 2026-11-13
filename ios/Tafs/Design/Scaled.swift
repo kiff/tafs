@@ -55,6 +55,9 @@ enum Haptics {
     /// A click as a dial or a selector reaches each stop.
     static func step() { if enabled { play("step") { UISelectionFeedbackGenerator().selectionChanged() } } }
 
+    /// For the tests: no press yet, so each starts from the same place.
+    static func forgetPresses() { lastTap = .distantPast }
+
     private static func play(_ kind: String, _ feel: () -> Void) {
         if let played { played(kind) } else { feel() }
     }

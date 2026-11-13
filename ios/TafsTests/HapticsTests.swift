@@ -12,6 +12,7 @@ final class HapticsTests: XCTestCase {
         super.setUp()
         played = []
         UserDefaults.standard.removeObject(forKey: Haptics.key)
+        Haptics.forgetPresses()
         Haptics.played = { [weak self] in self?.played.append($0) }
     }
 
@@ -23,7 +24,6 @@ final class HapticsTests: XCTestCase {
 
     /// A press and the action it starts tap once: a second tap this soon is the same one.
     func testAPressTapsOnce() async throws {
-        try await Task.sleep(nanoseconds: 200_000_000)
         Haptics.tap()
         Haptics.tap()
         XCTAssertEqual(played, ["tap"])
@@ -33,8 +33,7 @@ final class HapticsTests: XCTestCase {
     }
 
     /// Settings' switch turns all of it off on this device.
-    func testTheSwitchTurnsEverythingOff() async throws {
-        try await Task.sleep(nanoseconds: 200_000_000)
+    func testTheSwitchTurnsEverythingOff() throws {
         UserDefaults.standard.set(false, forKey: Haptics.key)
         Haptics.tap(); Haptics.success(); Haptics.warning(); Haptics.step()
         XCTAssertEqual(played, [])
@@ -45,9 +44,7 @@ final class HapticsTests: XCTestCase {
 
     /// Once, in the shared style every app button goes through: Primary, Outline and plain all
     /// are `DriveButton`s, so every new button taps too. A failure said to the person warns.
-    func testItsDoneOnceInTheSharedStyleAndOnFailures() async throws {
-        // Past the last test's tap, so this press is a new one.
-        try await Task.sleep(nanoseconds: 200_000_000)
+    func testItsDoneOnceInTheSharedStyleAndOnFailures() throws {
         let tafs = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
         func source(_ path: String) throws -> String { try String(contentsOf: tafs.appendingPathComponent(path), encoding: .utf8) }
         XCTAssertTrue(try source("Drive/DriveTargets.swift").contains("action: { Haptics.tap(); configuration.trigger() }"))
@@ -68,6 +65,9 @@ final class HapticsTests: XCTestCase {
     /// `warnsWithin` of the person's own press.
     func testABackgroundFailureDoesntWarn() throws {
         XCTAssertEqual(Haptics.warnsWithin, 15)
+        let model = AppModel(signer: FaceIDSigner())
+        model.lastError = "A read in the background failed."
+        XCTAssertEqual(played, [], "no press, no buzz")
         let source = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
             .appendingPathComponent("Tafs/Design/Scaled.swift"), encoding: .utf8)
         XCTAssertTrue(source.contains("guard enabled, Date().timeIntervalSince(lastTap) < warnsWithin else { return }"))
