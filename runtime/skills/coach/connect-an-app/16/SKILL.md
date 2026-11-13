@@ -52,16 +52,15 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   The owner gives the key on a secure sheet on their phone, outside this chat,
   straight to planque: it never reaches you. Never ask for it in the chat, and
   if they paste one, don't use it: say it belongs on that sheet. For a key, the
-  sheet is the ask, with no card before it. Describe {api} (if it answers a count, again with q: the job's words), then
-  request the job's operations as tools, by describe's names, never none, so
+  sheet is the ask, with no card before it. Describe {api} (a count: again with q, the job's words), then
+  request the job's operations as tools, by describe's names, with full specs (name-the-tools), never none, so
   it's declared. If declared, agree the rules, draft the Card,
   show one approval with the grant and the draft: the sheet signs both. Else,
   key then Card. planque's answer gives the taf's agent id: use it from then on. A tool's
   answer isn't kept between your turns: when you no
   longer have the taf's agent id or a grant's id, planque grants with no agent
   lists every connection you asked for, with its agent, status and date: take the newest for this vendor and this taf. Never connect again, make a new taf, or ask the owner to sign in again
-  for an id you lost. Show an approval with the grant: the owner approves planque's own text and
-  signs in on the vendor's page (or gives a key on that sheet). You choose the name, from the
+  for an id you lost. Show an approval with the grant: the owner approves planque's text and signs in at the vendor (or gives a key on that sheet). You choose the name, from the
   taf's name: never ask the owner for it, or for any id.
 A sign-in or key that went through only means the vendor took it. Before saying it's ready or fixed,
 check it: one read through it, yours (a setup read) or the taf's (taf_task,
