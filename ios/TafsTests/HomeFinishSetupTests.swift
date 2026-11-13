@@ -100,6 +100,11 @@ final class HomeFinishSetupTests: XCTestCase {
         XCTAssertEqual(model.settingUp.last?.now, "", "no state: never Ready")
         XCTAssertTrue(model.otherAgents.isEmpty, "others isn't drawn beside setting_up: no KIFF agent shows")
 
+        // An item that isn't one is skipped, and the rest of Home still reads.
+        let odd = await self.model(others: [], settingUp: #"[7,{"name":"Leads","kiff_agent":"leads-x"},{"kiff_agent":"no-name"}]"#)
+        XCTAssertEqual(odd.settingUp.map(\.name), ["Leads"])
+        XCTAssertTrue(odd.listLoaded, "Home still reads")
+
         let before = await self.model(others: [Self.other()])
         XCTAssertTrue(before.settingUp.isEmpty)
         XCTAssertEqual(before.otherAgents.map(\.name), ["Invoicing day test"], "a tafs cloud from before it: others, as before")

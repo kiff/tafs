@@ -381,7 +381,8 @@ final class TafsCloud {
             var finish: HomeTaf.Finish?
             enum CodingKeys: String, CodingKey { case name, color, finish, kiffAgent = "kiff_agent" }
             init(from decoder: Decoder) throws {
-                let c = try decoder.container(keyedBy: CodingKeys.self)
+                // An item that isn't one reads as nameless and is skipped, never failing Home's read.
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
                 name = ((try? c.decodeIfPresent(String.self, forKey: .name)) ?? nil) ?? ""
                 kiffAgent = ((try? c.decodeIfPresent(String.self, forKey: .kiffAgent)) ?? nil) ?? ""
                 color = ((try? c.decodeIfPresent(Int.self, forKey: .color)) ?? nil) ?? 0
