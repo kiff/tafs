@@ -140,12 +140,12 @@ enum ConnectionFixWords {
         g.pendingRequest ? Words.Connect.CancelRequest.title(vendor: "\(g.vendor)") : Words.Connect.CancelSignIn.title(vendor: "\(g.vendor)")
     }
     /// The confirmation's own button for it.
-    static func cancelButton(_ g: PlanqueClient.Grant) -> String {
+    static func cancelWord(_ g: PlanqueClient.Grant) -> String {
         g.pendingRequest ? Words.Connect.CancelRequest.button : Words.Connect.CancelSignIn.button
     }
     /// The row's word for ending a connection: "Cancel the request" for one nobody answered,
     /// Cancel for a sign-in that waits, else Remove access.
-    static func endButton(_ g: PlanqueClient.Grant) -> String {
+    static func endWord(_ g: PlanqueClient.Grant) -> String {
         g.pendingRequest ? Words.Connect.CancelRequest.button : g.waitingSignIn ? cancel : Words.Connect.disconnectButton
     }
     static func cancelBody(_ vendor: String) -> String { Words.Connect.CancelSignIn.body(vendor: "\(vendor)") }
@@ -322,7 +322,7 @@ struct AppConnectionsView: View {
         .confirmationDialog(cancelling.map { ConnectionFixWords.cancelTitle($0) } ?? "",
                             isPresented: Binding(get: { cancelling != nil }, set: { if !$0 { cancelling = nil } }),
                             titleVisibility: .visible, presenting: cancelling) { g in
-            Button(ConnectionFixWords.cancelButton(g), role: .destructive) { disconnect(g) }
+            Button(ConnectionFixWords.cancelWord(g), role: .destructive) { disconnect(g) }
             Button(Words.Connect.CancelSignIn.keepWaiting, role: .cancel) { cancelling = nil }
         } message: { g in
             Text(ConnectionFixWords.cancelBody(g.vendor))
@@ -354,7 +354,7 @@ struct AppConnectionsView: View {
             }
             Spacer()
             if model.canManageCards {
-                Button(busy == g.id ? Words.Connect.disconnecting : ConnectionFixWords.endButton(g), role: .destructive) {
+                Button(busy == g.id ? Words.Connect.disconnecting : ConnectionFixWords.endWord(g), role: .destructive) {
                     if g.cancellable { cancelling = g } else { confirming = g }
                 }
                 .buttonStyle(.borderless)

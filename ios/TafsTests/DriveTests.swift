@@ -441,7 +441,7 @@ final class DriveTests: XCTestCase {
         ("Views/TafSetupViews.swift", #"Button(cloud.paused ? "Resume every start""#),
         ("Views/TafDetailView.swift", #"Button(taf.state == .paused ? "Resume" : "Pause")"#),
         ("Views/TafDetailView.swift", #"Button("Remove for good")"#),
-        ("Views/TafDetailView.swift", #"Button(ConnectionFixWords.endButton(grant))"#),
+        ("Views/TafDetailView.swift", #"Button(ConnectionFixWords.endWord(grant))"#),
         ("Views/UsageView.swift", #"Button("Approve") {"#),
         ("Views/PlanViews.swift", #"Button(purchases.products[pack.appleProduct]?.displayPrice"#),
         ("Views/PlanViews.swift", #"Button(SoloView.action(product))"#),

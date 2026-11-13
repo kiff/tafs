@@ -118,8 +118,8 @@ final class ConnectionSheetTests: XCTestCase {
         XCTAssertEqual(ConnectionFixWords.waiting("Google Calendar"), "Waiting for the sign-in at Google Calendar")
         let waiting = try grant("g7", agent: "cal-1", status: "approved")
         XCTAssertEqual(ConnectionFixWords.cancelTitle(waiting), "Cancel the sign-in to Google Calendar?")
-        XCTAssertEqual(ConnectionFixWords.cancelButton(waiting), "Cancel the sign-in")
-        XCTAssertEqual(ConnectionFixWords.endButton(waiting), "Cancel")
+        XCTAssertEqual(ConnectionFixWords.cancelWord(waiting), "Cancel the sign-in")
+        XCTAssertEqual(ConnectionFixWords.endWord(waiting), "Cancel")
     }
 
     /// A request nobody answered is cancelled, in its own words: nothing was connected, so it
@@ -130,13 +130,13 @@ final class ConnectionSheetTests: XCTestCase {
         XCTAssertTrue(asked.pendingRequest)
         XCTAssertTrue(asked.cancellable)
         XCTAssertFalse(asked.waitingSignIn)
-        XCTAssertEqual(ConnectionFixWords.endButton(asked), "Cancel the request")
+        XCTAssertEqual(ConnectionFixWords.endWord(asked), "Cancel the request")
         XCTAssertEqual(ConnectionFixWords.cancelTitle(asked), "Cancel the request for Google Calendar?")
-        XCTAssertEqual(ConnectionFixWords.cancelButton(asked), "Cancel the request")
+        XCTAssertEqual(ConnectionFixWords.cancelWord(asked), "Cancel the request")
         let connected = try grant("g8", agent: "cal-1", status: "connected")
         XCTAssertFalse(connected.pendingRequest)
         XCTAssertFalse(connected.cancellable)
-        XCTAssertEqual(ConnectionFixWords.endButton(connected), "Remove access")
+        XCTAssertEqual(ConnectionFixWords.endWord(connected), "Remove access")
         XCTAssertFalse(asked.marked(connected: true).pendingRequest, "connected by this phone since")
         for status in ["approved", "failed", "disconnected", "listed"] {
             XCTAssertFalse(try grant("g11", agent: "cal-1", status: status).pendingRequest, status)

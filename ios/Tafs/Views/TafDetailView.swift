@@ -699,7 +699,7 @@ struct ConnectionsPanel: View {
                             }
                         }
                         Spacer(minLength: 0)
-                        Button(ConnectionFixWords.endButton(grant)) {
+                        Button(ConnectionFixWords.endWord(grant)) {
                             if grant.cancellable { cancelling = grant } else { confirming = grant }
                         }
                             .confirming()
@@ -734,7 +734,7 @@ struct ConnectionsPanel: View {
             .confirmationDialog(cancelling.map { ConnectionFixWords.cancelTitle($0) } ?? "",
                                 isPresented: Binding(get: { cancelling != nil }, set: { if !$0 { cancelling = nil } }),
                                 titleVisibility: .visible) {
-                Button(cancelling.map { ConnectionFixWords.cancelButton($0) } ?? Words.Connect.CancelSignIn.button, role: .destructive) {
+                Button(cancelling.map { ConnectionFixWords.cancelWord($0) } ?? Words.Connect.CancelSignIn.button, role: .destructive) {
                     if let id = cancelling?.id { Task { _ = await model.disconnect(grantID: id) } }
                 }
                 Button(Words.Connect.CancelSignIn.keepWaiting, role: .cancel) { cancelling = nil }
