@@ -275,8 +275,11 @@ data class AgentDraft(
 ) {
   val confirmed: Boolean get() = status == "confirmed"
 
-  /** Confirmed, and with a Card to name: what a signed approval's folded line names and lists. */
-  val signedCard: Boolean get() = confirmed && noTools != true
+  /** KIFF took the owner's signature for it: confirmed, or confirmed and its key claimed since. */
+  val signed: Boolean get() = status == "confirmed" || status == "claimed"
+
+  /** Signed, and with a Card to name: what a signed approval's folded line names and lists. */
+  val signedCard: Boolean get() = signed && noTools != true
 
   /** Whether KIFF approved held call [id] with this confirm, so it's answered already. */
   fun approvedHold(id: String): Boolean = hold?.id == id && hold.status == "approved"

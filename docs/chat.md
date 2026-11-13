@@ -320,7 +320,7 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   kiff/agents' words (Android: `CoachWords.answered`); the app keeps no answer of its own. Words written instead also show as the owner's message,
   with `answers` naming the card, so they never vanish from the thread.
 - On Android, an answered approval keeps one line saying what it was, "Approved · Connect
-  Stripe" (`CoachWords.answeredApproval`): the Card when one was signed (KIFF's draft confirmed,
+  Stripe" (`CoachWords.answeredApproval`): the Card when one was signed (KIFF's draft confirmed, or its key claimed since, and holding tools:
   "Approved · Refunds' Card"), else Coach's title for the card, else planque's words for the
   connection, else the draft's Card, else its service, cut to one line however long those are. A card waiting for the owner sits
   after what Coach wrote with it, so the open question is at the end. Once answered, it stays

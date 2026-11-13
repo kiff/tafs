@@ -232,6 +232,10 @@ class CoachTest {
     assertFalse(noTools.signedCard)
     assertTrue(bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.AgentDraft>("""{"id":"d2","status":"confirmed","label":"Refunds"}""").signedCard)
     assertFalse(bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.AgentDraft>("""{"id":"d3","status":"draft","label":"Refunds"}""").signedCard)
+    // Its key claimed since the confirm: still signed (as iOS reads it). Every other status isn't.
+    fun status(s: String) = bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.AgentDraft>("""{"id":"d4","status":"$s"}""").signed
+    assertTrue(status("confirmed") && status("claimed"))
+    listOf("draft", "confirming", "failed", "discarded", "rolling_back", "discarding").forEach { assertFalse(it, status(it)) }
     assertEquals("not signed: as before", "Declined · Connect Stripe", CoachWords.answeredApproval("Declined", card(approval), "You will give an API key for Qonto", "Refunds"))
   }
 
