@@ -2043,6 +2043,9 @@ final class TafsCloud {
             let gateway: Bool
             let body: Data
             var lines: [String] = []
+            /// KIFF's own words for the Cards the draft would issue, from its preview (the draft only).
+            var cardTitle: String? = nil
+            var cards: [CoachTools.CardDraft.Words] = []
         }
         var state = "unknown"
         var scheme = ""
@@ -2068,6 +2071,8 @@ final class TafsCloud {
             t.state = state
             t.taken = taken
             if let connect { t.connect = .init(body: connect.body, lines: connect.lines) }
+            // Coach's Cards in KIFF's words, drawn beside what's signed: the draft's own body.
+            if let draft { t.card = .init(body: draft.body, cardTitle: draft.cardTitle, cards: draft.cards) }
             t.step = step
             return t
         }
@@ -2086,8 +2091,17 @@ final class TafsCloud {
                     guard let f = (try? JSONSerialization.jsonObject(with: item)) as? [String: Any],
                           let id = f["id"] as? String, let method = f["method"] as? String, let path = f["path"] as? String,
                           let body = RawJSON.value(of: "body", in: item) else { return nil }
+                    // KIFF's words for the Cards, as tafs cloud reads them for the tools step's `card`.
+                    let cards: [CoachTools.CardDraft.Words] = (f["cards"] as? [Any] ?? []).compactMap { item in
+                        guard let c = item as? [String: Any] else { return nil }
+                        let title = (c["title"] as? String) ?? (c["card_title"] as? String) ?? (c["label"] as? String)
+                        let lines = (c["lines"] as? [Any])?.compactMap { $0 as? String } ?? []
+                        if title == nil && lines.isEmpty { return nil }
+                        return CoachTools.CardDraft.Words(title: title ?? "", lines: lines)
+                    }
                     return Request(id: id, method: method, path: path, gateway: f["gateway"] as? Bool ?? false, body: body,
-                                   lines: (f["lines"] as? [Any])?.compactMap { $0 as? String } ?? [])
+                                   lines: (f["lines"] as? [Any])?.compactMap { $0 as? String } ?? [],
+                                   cardTitle: f["card_title"] as? String, cards: cards)
                 }
             }
             if let step = RawJSON.value(of: "coach_tools_step", in: raw) { s.step = try? JSONDecoder().decode(CoachTools.Step.self, from: step) }

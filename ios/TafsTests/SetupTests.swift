@@ -166,7 +166,7 @@ final class SetupTests: XCTestCase {
 
     private static func startJSON(pair: Bool = true, draftPath: String = "/v1/me/agent-drafts") -> String {
         let connect = #"{"id":"connect","method":"POST","path":"/v1/connections/batch","gateway":true,"body":{"connections":[{"name":"tafs_state"}]},"lines":["See your tafs"]}"#
-        let draft = #"{"id":"draft","method":"POST","path":"\#(draftPath)","body":{"agent_id":"setup","label":"Coach","cards":[{"title":"Coach's reads"}]}}"#
+        let draft = #"{"id":"draft","method":"POST","path":"\#(draftPath)","body":{"agent_id":"setup","label":"Coach","cards":[{"title":"Coach's reads"}]},"card_title":"Coach's Cards","cards":[{"title":"Reads","lines":["See your tafs, up to 500 a day"]}]}"#
         let step = #"{"title":"Coach's tools","intro":"What Coach may do","groups":[],"details":"","ask":"Give Coach these tools?","give":"Start Coach","not_now":"Not now","row":"Coach's tools"}"#
         return #"{"setup":null,"tools":null,"start":{"state":"to_give","scheme":"\#(pair ? "kiff.requests.v1" : "kiff.request.v1")","agent_id":"setup","requests":[\#(pair ? connect + "," : "")\#(draft)],"coach_tools_step":\#(step)}}"#
     }
@@ -181,6 +181,10 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(String(decoding: try XCTUnwrap(pair.draft?.body), as: UTF8.self), #"{"agent_id":"setup","label":"Coach","cards":[{"title":"Coach's reads"}]}"#, "the body's own bytes")
         XCTAssertEqual(pair.tools.connect?.lines, ["See your tafs"])
         XCTAssertEqual(pair.tools.step?.give, "Start Coach")
+        // KIFF's words for the Cards are drawn beside the draft that's signed, never in its place.
+        XCTAssertEqual(pair.tools.card?.cardTitle, "Coach's Cards")
+        XCTAssertEqual(pair.tools.card?.cards.first?.lines, ["See your tafs, up to 500 a day"])
+        XCTAssertEqual(pair.tools.card?.body, pair.draft?.body)
         XCTAssertTrue(pair.tools.toGive)
         let alone = try XCTUnwrap(TafsCloud.CoachStart.read(Data(Self.startJSON(pair: false).utf8)))
         XCTAssertTrue(alone.startable)

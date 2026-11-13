@@ -490,7 +490,8 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   It has **Give** and **Not now**.
 - **The first start under one Face ID** (`TafsCloud.CoachStart`, `AppModel.startCoachTogether`): with no Coach yet,
   `GET /v1/setup` may carry `start`, the requests tafs cloud built for it. **Start** then opens the step with those
-  words, and its one button starts Coach and gives its tools under the one Face ID Start asks: the batch for the
+  words and KIFF's own words for Coach's Cards (the draft's `cards`, from KIFF's preview), and its one button
+  starts Coach and gives its tools under the one Face ID Start asks: the batch for the
   gateway and Coach's draft with its Cards, each built in full with one `signed_at` and signed once, together, by
   the approval key (`kiff.requests.v1`, as a key and its Card are). The batch goes first, the draft once it answered,
   then tafs cloud claims the draft's key (`POST /v1/setup`). With every tool connected, `start` carries the draft
