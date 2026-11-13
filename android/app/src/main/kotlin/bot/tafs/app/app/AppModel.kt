@@ -2940,8 +2940,9 @@ class AppModel(
   /**
    * Coach's first start under one fingerprint, from tafs cloud's [start] (docs/coach.md): the batch for KIFF's gateway and Coach's
    * draft with its Cards, each body as tafs cloud wrote it, signed once together by the approval key (`kiff.requests.v1`, one
-   * `signed_at`). The batch goes first, the draft once it answered; then this phone enrols with planque, and tafs cloud claims the
-   * draft's key. With every tool connected, [start] carries the draft alone, signed on its own. A draft refused after the batch
+   * `signed_at`). Right after the fingerprint this phone enrols with planque, before anything goes to KIFF, so a refused
+   * enrolment leaves no tools and no confirmed draft nobody claims. Then the batch, the draft once it answered, and tafs cloud
+   * claims the draft's key. With every tool connected, [start] carries the draft alone, signed on its own. A draft refused after the batch
    * went in comes back on the next read as the draft alone. True once Coach is started; why not is in `coachToolsError`.
    */
   private suspend fun startCoachTogether(start: bot.tafs.app.kiff.CoachStart): Boolean {
@@ -2982,14 +2983,23 @@ class AppModel(
         }
         val b = batch ?: return false
         val c = cards ?: return false
+        // Enrolled before anything goes to KIFF, under the same confirmation.
+        if (!enrolForCoach(failed)) return false
+        if (generation != accountGeneration) return false
         // The batch first: KIFF refuses a Card naming an action no tool declares yet.
         kiff.sendTogether(b, signature, with = c.hash)
         if (generation != accountGeneration) return false
         KiffClient.json.decodeFromString(bot.tafs.app.kiff.AgentDraft.serializer(), String(kiff.sendTogether(c, signature, with = b.hash)).ifEmpty { "{}" })
       } else {
-        // Every tool connected already: the draft alone, behind its own fingerprint.
-        approvalReason = Words.Coach.Prompt.start
-        kiff.submitDraftForClaim(draftRequest.body)
+        // Every tool connected already: the draft alone, behind its own fingerprint, taken first; then the enrolment; then the draft.
+        var alone: KiffClient.Prepared? = null
+        val signature = signer.signApproval(Words.Coach.Prompt.start) {
+          kiff.prepare(draftRequest.method, draftRequest.path, draftRequest.body, gateway = false, signedAt = kiff.nextSignedAt()).also { alone = it }.message
+        }
+        val d = alone ?: return false
+        if (!enrolForCoach(failed)) return false
+        if (generation != accountGeneration) return false
+        KiffClient.json.decodeFromString(bot.tafs.app.kiff.AgentDraft.serializer(), String(kiff.sendSigned(d, signature)).ifEmpty { "{}" })
       }
       if (generation != accountGeneration) return false
       val secret = draft.claimSecret
@@ -2997,8 +3007,6 @@ class AppModel(
         failed(Words.Coach.didntStart(why = ErrorWords.OURS))
         return false
       }
-      if (!enrolForCoach(failed)) return false
-      if (generation != accountGeneration) return false
       cloud.startSetup(draft.id, secret)
     } catch (e: SignerException) {
       if (generation == accountGeneration) notSigned(e, "").takeIf { it.isNotEmpty() }?.let(failed)

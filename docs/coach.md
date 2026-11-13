@@ -127,10 +127,12 @@ wrote it.
   words for the Cards beside the draft that's signed. The words wait in the box; nothing is signed or sent yet.
 - **Its one button starts Coach and gives its tools, behind one fingerprint.** The phone builds each request's message with one
   `signed_at` and signs both hashes once with the approval key (`kiff.requests.v1`). Each request goes with that one signature and
-  the other's hash: the batch first, the draft once it answered. Then the phone enrols with planque, under the same confirmation,
-  and tafs cloud claims the draft's key (`POST /v1/setup`). The draft's body carries the gateway's `contract_digest`, signed
-  with it.
-- **With every tool connected,** `start` carries the draft alone, signed on its own, still one fingerprint.
+  the other's hash. Right after the fingerprint, before anything goes to KIFF, the phone enrols with planque under the same
+  confirmation, so a refused enrolment leaves no tools and no confirmed draft nobody claims. Then the batch, the draft once it
+  answered, and tafs cloud claims the draft's key (`POST /v1/setup`). The draft's body carries the gateway's `contract_digest`,
+  signed with it.
+- **With every tool connected,** `start` carries the draft alone, still one fingerprint: taken first over the draft's message,
+  then the enrolment, then the draft.
 - **A draft KIFF refuses after the batch went in** is said on the step, and the next read carries the draft alone.
 - **The phone signs only these:** `POST /v1/connections/batch` on the gateway and `POST /v1/me/agent-drafts`, and only with
   KIFF's words for the Cards. Anything else, an unknown scheme, a draft without those words, or no `start` starts Coach as before.

@@ -117,10 +117,10 @@ class CoachStartTogetherTest {
     assertFalse(m.state.value.coachToolsAsked)
     assertEquals("given", m.state.value.coachTools?.state)
 
-    // The batch first, then the draft, then the claim; never an empty draft first.
+    // This phone enrolled first, before anything went to KIFF for Coach; then the batch, the draft and the claim. Never an empty draft.
     val order = transport.requests.filter { it.method == "POST" }.map { java.net.URI.create(it.url).path }
-      .filter { it in listOf("/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup") }
-    assertEquals(listOf("/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup"), order)
+      .filter { it in listOf("/v1/accounts/t_01/enrolment", "/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup") }
+    assertEquals(listOf("/v1/accounts/t_01/enrolment", "/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup"), order)
     assertTrue(transport.requestsTo("POST /v1/connections/batch").single().url.startsWith("https://mcp."))
     // Each body as tafs cloud wrote it, its contract digest with it.
     assertEquals(json(batchBody), sentBody("POST /v1/connections/batch"))
@@ -142,6 +142,21 @@ class CoachStartTogetherTest {
     assertNotNull(transport.requestsTo("POST /v1/keys").single().headers["KIFF-Device-Signature"])
   }
 
+  @Test fun anEnrolmentPlanqueRefusesSendsNothingToKiff() = runTest {
+    reads("""{"setup":null,"tools":null,"start":${start()}}""")
+    val m = model()
+    m.loadCoach()
+    transport.answer("POST /v1/keys", 200, """{"plaintext":"kk_connector"}""")
+    transport.answer("POST /v1/accounts/t_01/enrolment", 409, """{"error":"another device is enrolled for this account"}""")
+    assertFalse(m.giveCoachTools())
+    // No tools in KIFF and no confirmed draft nobody claims: the next Start begins clean.
+    assertTrue(transport.requestsTo("POST /v1/connections/batch").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/setup").isEmpty())
+    assertEquals(bot.tafs.app.model.Words.Coach.connectOtherDevice, m.state.value.coachToolsError)
+    assertEquals(listOf("Start Coach"), auth.fingerprints)
+  }
+
   @Test fun theDraftAloneGoesUnderItsOwnSingleFingerprint() = runTest {
     reads("""{"setup":null,"tools":null,"start":${start(pair = false)}}""")
     val m = model()
@@ -152,6 +167,10 @@ class CoachStartTogetherTest {
     assertTrue(transport.requestsTo("POST /v1/connections/batch").isEmpty())
     assertEquals(json(draftBody), sentBody("POST /v1/me/agent-drafts"))
     assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").single().headers.getValue("KIFF-Device-Signature").contains(",v1="))
+    // The fingerprint first, then the enrolment, then the draft.
+    val order = transport.requests.filter { it.method == "POST" }.map { java.net.URI.create(it.url).path }
+      .filter { it in listOf("/v1/accounts/t_01/enrolment", "/v1/me/agent-drafts") }
+    assertEquals(listOf("/v1/accounts/t_01/enrolment", "/v1/me/agent-drafts"), order)
     assertEquals("setup_1", m.state.value.coachCloudId)
   }
 
@@ -159,6 +178,8 @@ class CoachStartTogetherTest {
     reads("""{"setup":null,"tools":null,"start":${start()}}""", """{"setup":null,"tools":null,"start":${start(pair = false)}}""")
     val m = model()
     m.loadCoach()
+    transport.answer("POST /v1/keys", 200, """{"plaintext":"kk_connector"}""")
+    transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12"}""")
     transport.answer("POST /v1/connections/batch", 200, "{}")
     transport.answer("POST /v1/me/agent-drafts", 409, """{"error":"the tools changed since these Cards were worded; read them again","code":"contract_changed"}""")
     assertFalse(m.giveCoachTools())

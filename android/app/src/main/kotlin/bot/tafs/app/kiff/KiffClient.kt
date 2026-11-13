@@ -731,13 +731,19 @@ class KiffClient(
    * Sends [prepared] under the one approval-key [signature] over both requests' hashes, naming the other's hash ([with]): each
    * service rebuilds its own request's message and checks the one signature over both (docs/secure-connection.md).
    */
-  suspend fun sendTogether(prepared: Prepared, signature: String, with: String): ByteArray {
+  suspend fun sendTogether(prepared: Prepared, signature: String, with: String): ByteArray =
+    sendPrepared(prepared, "t=${prepared.signedAt},v3=$signature,with=sha256:$with")
+
+  /** Sends [prepared] alone, under the approval-key [signature] over its own message (`kiff.request.v1`), taken before it went. */
+  suspend fun sendSigned(prepared: Prepared, signature: String): ByteArray = sendPrepared(prepared, "t=${prepared.signedAt},v1=$signature")
+
+  private suspend fun sendPrepared(prepared: Prepared, signatureHeader: String): ByteArray {
     val headers = linkedMapOf(
       "Accept" to "application/json",
       "User-Agent" to "tafs-android",
       "Accept-Language" to acceptLanguage(),
       "Content-Type" to "application/json",
-      "KIFF-Device-Signature" to "t=${prepared.signedAt},v3=$signature,with=sha256:$with",
+      "KIFF-Device-Signature" to signatureHeader,
     )
     headers["Authorization"] = "Bearer ${token ?: throw KiffError.Unauthorized}"
     val url = (if (prepared.gateway) gatewayUrl else baseUrl) + prepared.path
@@ -749,9 +755,6 @@ class KiffClient(
     }
     return response.body
   }
-
-  /** Coach's draft with its Cards, as tafs cloud wrote it, signed alone by the approval key: its answer carries the claim secret. */
-  suspend fun submitDraftForClaim(body: JsonObject): AgentDraft = json.decodeFromString(String(sendJson("POST", "/v1/me/agent-drafts", body)))
 
   /** Sends one request with a body of text fields. [signedBy] signs this one request, whatever [setupSigner] holds. */
   internal suspend fun send(
