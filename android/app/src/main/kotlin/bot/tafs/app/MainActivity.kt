@@ -684,6 +684,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onNewTaf = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryBrowsing = false; galleryOpen = true }) else null,
               onExplore = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryBrowsing = true; galleryOpen = true }) else null,
               onOwnWords = if (state.mode == Mode.kiff) model::openCoachEmpty else null,
+              onFinishSetup = if (state.mode == Mode.kiff) ({ f -> scope.launch { model.finishSetup(f) } }) else null,
             )
           }
           val detail: @Composable (String) -> Unit = { id ->

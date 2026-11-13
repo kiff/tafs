@@ -336,6 +336,20 @@ class MappingTest {
     assertEquals("billing-x", other.id)
     assertEquals("Works under 2 KIFF Cards.", other.job)
     assertEquals("Works under 1 KIFF Card.", named("Deploys").job)
+    assertNull("no finish: shown as before", other.finish)
+  }
+
+  @Test fun anAgentWhoseSetupStoppedPartwayShowsTafsCloudsNameAndWordsAndKeepsTheChat() {
+    val sent = """{"tafs":[],"others":[{"name":"Invoicing day test","kiff_agent":"invoicing-day-test-x","color":2,"state":"idle","waiting":0,
+      "card":{"ids":["c1"],"active":true},"finish":{"taf":"setup_1","session":"s7","words":"Finish setting up"}}],"removing":[]}"""
+    val other = home(sent).others.map { KiffMapping.taf(it, "You") }.single()
+    assertEquals("Invoicing day test", other.name)
+    assertEquals("Finish setting up", other.now)
+    assertEquals("s7", other.finish?.session)
+    // A finish with no chat or no words is none: the row shows as before.
+    val empty = home(sent.replace(""""session":"s7"""", """"session":""""")).others.map { KiffMapping.taf(it, "You") }.single()
+    assertNull(empty.finish)
+    assertEquals(bot.tafs.app.model.Words.Taf.Now.actingUnderKiff, empty.now)
   }
 
   @Test fun theHomeListHoldsRemovalsAndIgnoresWhatItDoesNotUse() {

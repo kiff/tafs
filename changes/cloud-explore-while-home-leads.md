@@ -1,0 +1,1 @@
+- **tafs cloud: no "Explore jobs" above the jobs Home already lists.** The gallery leaves out `words.explore` while Home leads with every job: for someone who manages the tafs, with no live taf and suggestions on. It stays once a taf is live, with suggestions off, and for someone who can't use Coach (docs/api.md › GET /v1/recipes/gallery).
