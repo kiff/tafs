@@ -862,19 +862,13 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
 - **Alerts are offered once,** on Coach's "taf made" card, where alerts can be on and aren't: "Get an alert when a taf needs
   you", Turn on alerts (as in Settings, with Android's permission prompt) or Not now. Either answer is kept on this phone for
   the account (`AppModel.ALERTS_OFFERED_PREFIX`), so it isn't asked again. Settings keeps the switch.
-- **A taf whose setup stopped partway** (Android 1.20.1): Coach drafted it and its Card is signed, but no taf was made, so it
-  is listed under the other agents with Cards. tafs cloud sends the name Coach gave it and `finish: {taf, session, words}`
-  ([tafs.md](tafs.md#the-home-list)). The row shows `finish.words` ("Finish setting up") in amber in place of what it's doing,
-  and a tap opens Coach on that chat (`AppModel.finishSetup`). Reading the chat makes the taf at tafs cloud, and the next Home
-  read lists it as a taf. Only Coach's own chat (`finish.taf` is Coach's), for someone who may use Coach, as on iPhone and
-  iPad; otherwise, and without `finish`, an agent opens as before.
-
-## Your data and the AI
-
-The AI-data consent is tafs cloud's (docs/accounts.md, "Your data and the AI"); the app draws its words and sends the
-answer (`AIConsentSheet` in `views/AIConsentViews.kt`, `loadAIConsent`, `allowAI`, `notNowAI` and `withdrawAI` in
-`AppModel`, `TafsCloud.aiConsent`).
-
+- **A taf whose setup stopped partway** (Android 1.20.1; listed among the tafs from 1.20.2): tafs cloud lists it in
+  `setting_up` ([tafs.md](tafs.md#the-home-list)), by the name Coach gave it, with no state. Home draws it among the tafs with
+  no state pill. The person whose Coach chat it was gets `finish: {taf, session, words}`: the row shows `finish.words`
+  ("Finish setting up") in amber, and a tap opens Coach on that chat (`AppModel.finishSetup`), only for Coach's own chat and
+  someone who may use Coach, as on iPhone and iPad. Reading the chat makes the taf at tafs cloud. Anyone else sees the name
+  alone. When `setting_up` is sent, `others` only repeats it for apps from before, so it isn't drawn; a tafs cloud from before
+  `setting_up` still has its `others` drawn under "Other agents with Cards".
 - **When it shows:** after sign-in and at launch while it isn't given, and whenever tafs cloud refuses a model turn with
   `ai_consent_required`. `TafsCloud` reads that refusal once, for every route, plain or streamed, and the sheet shows the
   `consent` it carries.

@@ -129,6 +129,15 @@ object KiffMapping {
    * and use as tafs cloud read them from KIFF. Nothing is worked out here. Its id is its KIFF agent's: the
    * same on every refresh and every launch.
    */
+  /**
+   * The tafs whose setup stopped partway: each by its name, with no state. The person whose Coach chat it was gets `finish`:
+   * tafs cloud's words in place of a state, and the chat. Anyone else, or a finish with no chat or words, gets the name alone.
+   */
+  fun settingUp(list: List<HomeSettingUp>, owner: String): List<Taf> = list.map { s ->
+    val finish = s.finish?.takeIf { it.session.isNotBlank() && it.words.isNotBlank() }
+    Taf(id = s.kiffAgent, name = s.name, job = "", tools = emptyList(), colorIndex = s.color, card = Card(emptyList(), owner), now = finish?.words.orEmpty(), finish = finish)
+  }
+
   fun taf(h: HomeTaf, owner: String): Taf {
     fun amount(a: HomeAmount?): Money? = a?.let { money(it.minor, it.unit, it.scale) }
     fun rule(r: HomeRule) = CardRule(
