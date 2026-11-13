@@ -256,8 +256,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Ask it before you propose tools that move money or change data, and before any rules or draft name a mode");
     expect(flat).toContain('until they answer, nothing you write names one, and "as you chose" is only ever their answer');
     // Nothing is read from the owner's account before they approve its tools
-    // (kiff/planque#23, describe removed): Setup asks the mode, always.
-    expect(flat).not.toContain("describe");
+    // (kiff/planque#23, describe removed): Setup asks the mode, always. planque's describe {api} since
+    // connect-an-app@14 reads only a public API description, never the account: that one wording is let through.
+    expect(flat.replace(/Describe \{api\}|by describe's names/g, "")).not.toContain("describe");
     expect(flat).toContain("so don't try to read what the sign-in covers first: ask");
     expect(flat).toContain("with your other questions (confirm if it's the only one). Pin their answer on every call that takes the mode");
     // The money argument and read-only tools are part of looking, not of the mode rule.
