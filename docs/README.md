@@ -11,6 +11,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | Page | What it covers |
 |---|---|
 | [How tafs fits together](#how-tafs-fits-together) | The app, tafs cloud, kiff/agents, KIFF and planque, and who decides what |
+| [runtime.md](runtime.md) | What a taf runs on (kiff/agents), its definition and KIFF's skill, and tafs cloud |
 | [tafs.md](tafs.md) | A taf: its job, definition, schedule, runs, reports, memory, Record, pausing and removing it |
 | [taf-screen.md](taf-screen.md) | The app's screens: the bar, Record by taf, a taf's four tabs, Setup › Starts when and Results go to, Account › Alerts, dark |
 | [chat.md](chat.md) | A taf's chat: sending, the streamed answer, the work block, held calls in the chat, steering, Stop, chats and archives |
@@ -36,6 +37,21 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [screenshots.md](screenshots.md) | The apps' screenshots, iPhone, iPad and Android, light and dark, and where each set comes from |
 | [needs-from-kiff.md](needs-from-kiff.md) | What tafs needs from KIFF, and where each need stands |
 | [maintaining.md](maintaining.md) | Repository controls, merging and releasing |
+
+## Why you can trust it
+
+- **Signed approvals.** An answer to a held call is signed with the phone's key and checked
+  by KIFF, so no server can answer for the owner ([approvals](approvals.md#how-an-answer-is-signed)).
+- **Receipts the phone checks.** Each call in the Record opens KIFF's receipt, and the phone
+  checks KIFF signed it ([the Record](tafs.md#the-record)).
+- **"Did this happen?"** A money call whose outcome KIFF can't prove asks the owner, and No
+  gives the Card its room back ([Did this happen?](approvals.md#did-this-happen)).
+- **Trial versions.** Coach drafts a taf's next version, which runs beside the live one under
+  a trial Card of its own before it's made live ([trying a version](coach.md#trying-a-version)).
+- **Doors.** An email address, a WhatsApp number, a Slack channel or a Telegram bot a taf takes work from
+  ([doors](doors.md)).
+- **A memory you can read.** A taf's notes shape how it works, never what its Card allows,
+  and each one can be read and forgotten ([memory](tafs.md#memory)).
 
 ## How tafs fits together
 
