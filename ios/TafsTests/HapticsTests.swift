@@ -39,8 +39,8 @@ final class HapticsTests: XCTestCase {
         Haptics.tap(); Haptics.success(); Haptics.warning(); Haptics.step()
         XCTAssertEqual(played, [])
         UserDefaults.standard.set(true, forKey: Haptics.key)
-        Haptics.success(); Haptics.warning(); Haptics.step()
-        XCTAssertEqual(played, ["success", "warning", "step"])
+        Haptics.tap(); Haptics.success(); Haptics.warning(); Haptics.step()
+        XCTAssertEqual(played, ["tap", "success", "warning", "step"])
     }
 
     /// Once, in the shared style every app button goes through: Primary, Outline and plain all
@@ -55,9 +55,19 @@ final class HapticsTests: XCTestCase {
         XCTAssertTrue(try source("Drive/DriveTargets.swift").contains("DriveButton(inner: PlainInner())"))
 
         let model = AppModel(signer: FaceIDSigner())
+        Haptics.tap()
         model.lastError = "It didn't go through."
-        XCTAssertEqual(played, ["warning"])
+        XCTAssertEqual(played, ["tap", "warning"], "after the person's press")
         model.lastError = "It didn't go through."
-        XCTAssertEqual(played, ["warning"], "the same words again aren't a new failure")
+        XCTAssertEqual(played, ["tap", "warning"], "the same words again aren't a new failure")
+    }
+
+    /// A failure nobody acted for (a background read) never buzzes: a warning plays only within
+    /// `warnsWithin` of the person's own press.
+    func testABackgroundFailureDoesntWarn() throws {
+        XCTAssertEqual(Haptics.warnsWithin, 15)
+        let source = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/Design/Scaled.swift"), encoding: .utf8)
+        XCTAssertTrue(source.contains("guard enabled, Date().timeIntervalSince(lastTap) < warnsWithin else { return }"))
     }
 }

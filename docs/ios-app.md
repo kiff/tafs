@@ -731,7 +731,8 @@ One rule, as on Android (`Haptics`, `Design/Scaled.swift`):
   starts tap once: a second tap within 150 ms is the same one. A drive's activation doesn't tap.
 - **A success tick** when an approval goes through (a held call approved, Coach's card approved) or a send
   does (to Coach or a taf).
-- **A warning tick** when something refused or failed is said to the person (`lastError`).
+- **A warning tick** when something the person just did is refused or fails (`lastError`, within 15 s of their own press,
+  approval or send). A background read that fails never buzzes.
 - **A step tick** on dial and selector stops.
 - **Settings › Haptics** turns all of it off on this device (`HapticsTests`).
 
