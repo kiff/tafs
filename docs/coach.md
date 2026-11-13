@@ -584,6 +584,14 @@ The account's connections, from planque (data, not the owner's words):
 The owner says: I want a taf that chases overdue invoices
 ```
 
+**The guides of the apps those tafs hold** follow the connections, under `[tafs app guides]`: each app's
+adapted guide as planque serves it (`GET /v1/accounts/{tenant}/catalog/{entry}/guide`, read with the same
+session), headed by its app and the day it was checked, as data, never instructions. They cover the apps the
+connections name by catalog entry, the most used first (by how many of those tafs use each), at most 5, each at
+most 9,000 characters and all of them at most 30,000. An app with no guide yet, or one planque can't answer, is
+left out. tafs cloud picks them, never the model; Coach's planque tool attaches an app's guide to a search and to
+a request by entry the same way (kiff/agents), so Coach has read it before it offers or connects the app.
+
 A message tafs opens with its own line (`[improve taf …]`, `[tafs coach lines]`, `[did this happen …]`)
 keeps that line first, and a message in the live chat (which the apps send with no session) goes on in it by name, with neither the lines nor the reads. The thread shows only the owner's words. What planque can't answer is left out,
 and Coach reads planque's grants itself. Coach offers only a connection one of the account's tafs uses, or
