@@ -59,6 +59,12 @@ class FakeAuthenticator(var confirms: Boolean = true, var available: Boolean = t
  * made is kept.
  */
 class FakeTransport : Transport {
+  /** A stream a test keeps open its own way (one that goes quiet): given for the requests it answers, else the answer, whole. */
+  var openStream: (suspend (HttpRequest) -> bot.tafs.app.kiff.StreamedResponse?)? = null
+
+  override suspend fun stream(request: HttpRequest): bot.tafs.app.kiff.StreamedResponse =
+    openStream?.invoke(request) ?: super.stream(request)
+
   /** Kept from any thread: a model's own background work may be sending while a test reads. */
   private val log: MutableList<HttpRequest> = mutableListOf()
 
