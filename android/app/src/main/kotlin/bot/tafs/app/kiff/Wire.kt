@@ -594,8 +594,9 @@ data class CalendarEvent(
 /** A taf whose setup stopped partway, as `GET /v1/home` lists it: its name, its colour and the Coach chat that finishes it. No state. */
 @Serializable
 data class HomeSettingUp(
-  val name: String,
-  @SerialName("kiff_agent") val kiffAgent: String,
+  /** Read leniently: an item with no name is skipped (`KiffMapping.settingUp`), never the whole Home with it. */
+  val name: String = "",
+  @SerialName("kiff_agent") val kiffAgent: String = "",
   val color: Int = 0,
   val finish: HomeFinish? = null,
 )

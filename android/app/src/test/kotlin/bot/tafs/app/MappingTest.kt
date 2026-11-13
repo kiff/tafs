@@ -351,6 +351,8 @@ class MappingTest {
     // Not this person's Coach chat (no finish, or none to open): the name alone, never "Ready".
     assertNull(rows[1].finish)
     assertEquals("", rows[1].now)
+    // An item with no name is skipped, as on iPhone and iPad, and never fails the Home read with it.
+    assertEquals(emptyList<String>(), KiffMapping.settingUp(home("""{"tafs":[],"setting_up":[{"kiff_agent":"x","color":1}]}""").settingUp!!, "You").map { it.name })
     // A tafs cloud from before setting_up sends none: null, and the app draws others as before.
     assertNull(home("""{"tafs":[],"others":[],"removing":[]}""").settingUp)
   }
