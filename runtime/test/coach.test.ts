@@ -640,3 +640,58 @@ describe("Coach's tools step, at the end of a first Start", () => {
     for (const lang of LANGUAGES) expect(JSON.stringify(coachToolsStep(lang)).toLowerCase(), lang).not.toMatch(/fingerprint|face id|fingerabdruck|empreinte|huella|impronta|impressão digital|vingerafdruck|vingerafdruk|odcisk|twice|zweimal|deux fois|dos veces|due volte|duas vezes|twee keer|dwa razy/);
   });
 });
+
+// The owner removed a Qonto taf, then a new Coach chat asked whether "no client invoices" on that account was
+// normal (owner's phone, 13 Nov): its last result was still queued for Coach, and Coach's notes still named it.
+// Removing a taf forgets it for Coach too, for every person on the account.
+describe("a removed taf is forgotten by Coach", () => {
+  it("drops its queued lines for every person, by its id or an older line's name, and forgets Coach's notes naming it", async () => {
+    const w = world();
+    const CHB = "taf_chb";
+    w.tafs.held.set(`${T}#${CHB}`, { id: CHB, name: "Chargebacks", job: "chargebacks", kiffAgent: "agent_chb", nameClaim: "c3", created: "2026-10-15T09:00:00Z" } as Taf);
+    const later = new Date("2026-10-17T12:00:00Z");
+    const line = (taf: string, taf_id: string | undefined, said: string) =>
+      ({ at: "2026-10-16T12:00:00.000Z", text: `[taf ${taf} run r1 ended] It finished. answer: ${JSON.stringify(said)}`, taf, ...(taf_id ? { taf_id } : {}), said });
+    await w.coach.append(`${T}#coach-notes#u_ana`, line("Refunds", RAE, "No client invoices on this account."), later);
+    await w.coach.append(`${T}#coach-notes#u_ana`, line("Refunds", undefined, "An older line, by name only."), later);
+    await w.coach.append(`${T}#coach-notes#u_ana`, line("Chargebacks", CHB, "One dispute answered."), later);
+    await w.coach.append(`${T}#coach-notes#u_bo`, line("Refunds", RAE, "No client invoices on this account."), later);
+    w.agents.notes.set(`${T}|${SETUP}`, [
+      { agent: SETUP, name: "refunds-account", text: "Refunds' Qonto account has no client invoices.", updated: "2026-10-16T12:00:00Z" },
+      { agent: SETUP, scope: "member:u_ana", name: "ana-waiting", text: `${RAE} waits for Ana's approval.`, updated: "2026-10-16T12:00:00Z" },
+      { agent: SETUP, name: "chargebacks", text: "Chargebacks answers disputes on Fridays.", updated: "2026-10-16T12:00:00Z" },
+      // "Refunds" inside another word isn't the taf.
+      { agent: SETUP, name: "policy", text: "RefundsPolicy is 14 days.", updated: "2026-10-16T12:00:00Z" },
+      // Nor is the plain word, in a note about another taf (agentgabo on #835).
+      { agent: SETUP, name: "disputes", text: "Disputes come in by email; refunds are handled elsewhere.", updated: "2026-10-16T12:00:00Z" },
+      // A note about the removed taf and one still there goes too: removed means forgotten.
+      { agent: SETUP, name: "both", text: "Refunds' Qonto account has no client invoices; Chargebacks uses Stripe.", updated: "2026-10-16T12:00:00Z" },
+    ]);
+    // Ana manages Refunds, as KIFF says.
+    const kiff = w.deps.fetch!;
+    // Bo is another person on the account, with lines of their own.
+    w.deps.fetch = (async (url: string, init?: RequestInit) => {
+      const bo = String((init?.headers as Record<string, string> | undefined)?.authorization ?? (init?.headers as Record<string, string> | undefined)?.Authorization ?? "").endsWith(" bo");
+      if (url.endsWith("/v1/me") && bo) return new Response(JSON.stringify({ ...ME, subject: "u_bo" }));
+      if (url.endsWith("/v1/me/access")) return new Response(JSON.stringify({ agents: { agent_rae: { use: true, oversee: true, manage: true } } }));
+      return kiff(url, init);
+    }) as typeof fetch;
+    const removed = await w.send("DELETE", `/v1/tafs/${RAE}`, undefined, "ana");
+    expect(removed.body, JSON.stringify(removed)).toMatchObject({ done: true });
+    // Coach's chat shows only the taf that's still there.
+    const chat = await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana");
+    expect((chat.body.coach_lines as Array<{ taf: string }>).map((l) => l.taf)).toEqual(["Chargebacks"]);
+    // The owner's next words to Coach carry nothing of the removed taf, and still carry the other's line.
+    await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "Every Monday at 9, list my overdue client invoices." }, "ana");
+    const sent = (w.agents.events.get(w.agents.runs.find((r) => r.agent === SETUP)!.session)!.at(-1)!.body as { text: string }).text;
+    expect(sent).toContain("One dispute answered.");
+    expect(sent).not.toMatch(/Refunds|client invoices on this account|older line/);
+    // Another person's list loses it too: Bo's Coach chat shows none of it.
+    const boChat = await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "bo");
+    expect(boChat.status).toBe(200);
+    expect(boChat.body.coach_lines).toBeUndefined();
+    expect(w.tafs.held.has(`${T}#${RAE}`)).toBe(false);
+    // Coach's notes naming it, shared or a person's own, are forgotten; the others stay.
+    expect((w.agents.notes.get(`${T}|${SETUP}`) ?? []).map((n) => n.name)).toEqual(["chargebacks", "policy", "disputes"]);
+  });
+});
