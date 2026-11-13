@@ -45,7 +45,9 @@ final class HapticsTests: XCTestCase {
 
     /// Once, in the shared style every app button goes through: Primary, Outline and plain all
     /// are `DriveButton`s, so every new button taps too. A failure said to the person warns.
-    func testItsDoneOnceInTheSharedStyleAndOnFailures() throws {
+    func testItsDoneOnceInTheSharedStyleAndOnFailures() async throws {
+        // Past the last test's tap, so this press is a new one.
+        try await Task.sleep(nanoseconds: 200_000_000)
         let tafs = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
         func source(_ path: String) throws -> String { try String(contentsOf: tafs.appendingPathComponent(path), encoding: .utf8) }
         XCTAssertTrue(try source("Drive/DriveTargets.swift").contains("action: { Haptics.tap(); configuration.trigger() }"))
