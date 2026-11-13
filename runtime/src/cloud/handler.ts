@@ -8375,8 +8375,8 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
         removedTafs(event, me, deps),
       ]);
       // Each app's logo as a path on tafs cloud, and never planque's icon URL: no phone loads anything from a third party.
-      const logos = await nameLogos(deps.coach, page.apps.map((a) => a.icon), new Date());
-      const apps = page.apps.map(({ icon, ...app }) => (icon && logos.has(icon) ? { ...app, logo: logos.get(icon)! } : app));
+      const [logos, uses] = await Promise.all([nameLogos(deps.coach, page.apps.map((a) => a.icon), new Date()), connectionUses(event, me, deps)]);
+      const apps = page.apps.map(({ icon, ...app }) => ({ ...(icon && logos.has(icon) ? { ...app, logo: logos.get(icon)! } : app), ...appRow(app, me, uses, langOf(event)) }));
       return { ...page, apps, removed_tafs: removed };
     }
     if (parts.length === 4 && method === "POST") {
@@ -8393,6 +8393,66 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
     throw err;
   }
   throw new HTTPError(404, "not found");
+}
+
+/** A taf that uses a connection, as Connect apps names it: its id and its name. */
+interface AppUser { taf: string; name: string }
+
+/**
+ * Which of the tafs this person may see use each of the account's connections, by catalog entry and by vendor
+ * (folded), from planque's connections read with their own session. Undefined when it can't be read: the rows
+ * then carry no `used_by`, never an empty one that would say no taf uses an app.
+ */
+async function connectionUses(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<Map<string, AppUser[]> | undefined> {
+  if (!deps.planqueBase) return undefined;
+  try {
+    const token = bearer(event);
+    const [conns, records, access] = await Promise.all([
+      accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token), deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase),
+    ]);
+    const tafs = new Map(records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent)).map((t) => [t.kiffAgent, t]));
+    const out = new Map<string, AppUser[]>();
+    for (const c of conns) {
+      const taf = tafs.get(c.agent);
+      if (!taf) continue;
+      for (const key of [c.entry, foldVendor(c.vendor)]) {
+        if (!key) continue;
+        const list = out.get(key) ?? [];
+        if (!list.some((u) => u.taf === taf.id)) list.push({ taf: taf.id, name: taf.name });
+        out.set(key, list);
+      }
+    }
+    return out;
+  } catch (err) {
+    console.warn(`connect apps: connections unread for ${me.tenantID} (${err instanceof Error ? err.message : String(err)})`);
+    return undefined;
+  }
+}
+
+function foldVendor(name: string): string {
+  return `vendor:${name.toLowerCase().replace(/[\s._-]+/g, "")}`;
+}
+
+/**
+ * The fields both apps draw a Connect-apps row from (the owner's reference, 13 Nov): whether it's connected, how it
+ * connects, whose it is (the account's own connections: a company's are shared by its people, a personal account's
+ * are the person's), which tafs use it, and `line`, the row's second line in the person's language ("Sign in ·
+ * Connected · Used by Refunds").
+ */
+function appRow(app: { entry: string; vendor: string; title: string; how: "oauth" | "key"; state: string }, me: KIFFIdentity, uses: Map<string, AppUser[]> | undefined, lang: Lang) {
+  const w = wordsIn(lang);
+  const own = app.state === "connected" || app.state === "needs_reconnect";
+  const used = own && uses ? [...new Map([...(uses.get(app.entry) ?? []), ...(uses.get(foldVendor(app.vendor)) ?? []), ...(uses.get(foldVendor(app.title)) ?? [])].map((u) => [u.taf, u])).values()] : undefined;
+  const status = app.state === "connected" ? w.apps_connected : app.state === "needs_reconnect" ? w.apps_reconnect : app.state === "needs_setup" ? w.apps_needs_setup : w.apps_not_connected;
+  const line = [app.how === "key" ? w.apps_method_key : w.apps_method_sign_in, status, ...(used?.length ? [w.apps_used_by(used.map((u) => u.name).join(", "))] : [])].join(" · ");
+  return {
+    connected: app.state === "connected",
+    method: app.how === "key" ? "key" as const : "sign_in" as const,
+    // In the person's language, drawn as sent: the person's own, or the company account's, shared by its people.
+    ...(own && me.accountKind ? { whose: me.accountKind === "personal" ? w.apps_whose_yours : w.apps_whose_company } : {}),
+    ...(used ? { used_by: used } : {}),
+    line,
+  };
 }
 
 /**
