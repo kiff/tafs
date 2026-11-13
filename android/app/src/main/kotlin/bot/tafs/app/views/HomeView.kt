@@ -87,6 +87,8 @@ fun HomeView(
   onNewTaf: (() -> Unit)? = null,
   /** Explore jobs and See all jobs: every job, to browse, with nothing created; null where there's no gallery to open. */
   onExplore: (() -> Unit)? = null,
+  /** "Say it in your own words", first on Home: Coach, empty, to build the taf with the person. */
+  onOwnWords: (() -> Unit)? = null,
   modifier: Modifier = Modifier,
 ) {
   // Pulling to refresh plays the sample's next round; signed in, it reads KIFF again.
@@ -197,7 +199,7 @@ fun HomeView(
           val labels = recipes?.labels
           item {
             if (state.homeLeadsWithRecipes && recipes != null && labels != null) {
-              HomeRecipes(recipes, labels, onRecipe)
+              HomeRecipes(recipes, labels, onRecipe, onOwnWords.takeIf { state.mayUseCoach })
             } else {
               Panel {
                 val words = recipes?.home?.words?.takeIf { it.isNotBlank() }
