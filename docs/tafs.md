@@ -106,7 +106,7 @@ only what KIFF says the person may use or oversee.
 
 An agent whose setup stopped partway (Coach drafted it and its Card is signed, but the owner left
 the chat before the taf was made) shows by the name Coach gave it, never its agent's id, with
-`finish: {taf, session, words}`: "Finish setting up" opens Coach's chat where it stopped
+`finish: {taf, session, words}` for the person whose chat it was: "Finish setting up" opens Coach's chat where it stopped
 (`GET /v1/tafs/{taf}/conversation/{session}`), and reading that chat makes the taf. tafs cloud
 keeps that name, so once the chat's result has expired (a few days) the agent still shows by it,
 without `finish`. An agent made outside tafs, through KIFF's API, has no other name: it shows by its

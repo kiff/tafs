@@ -4423,6 +4423,11 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(before.others).toHaveLength(1);
     expect(before.others[0]).toMatchObject({ name: "Refunds", kiff_agent: "refunds-x", finish: { taf: COACH, session: stored.session, words: "Finish setting up" } });
     expect((await home("fr")).others[0]!.finish).toMatchObject({ words: "Terminer la configuration" });
+    // Another manager sees it by its name too, but Ana's chat isn't theirs to open (qa-kiff on #873): no finish.
+    const other = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer owner" } }, deps)).body) as { others: Array<Record<string, unknown>> };
+    expect(other.others[0]).toMatchObject({ name: "Refunds", kiff_agent: "refunds-x" });
+    expect(other.others[0]).not.toHaveProperty("finish");
     // Reading that chat hands it over: the taf is made, and Home lists it as a taf, not apart.
     expect((await handle({ rawPath: `/v1/tafs/${COACH}/conversation/${stored.session}`, requestContext: { http: { method: "GET" } },
       headers: { Authorization: "Bearer ana" } }, deps)).statusCode).toBe(200);
