@@ -330,12 +330,45 @@ final class PlanqueClient {
         let sum = SHA256.hash(data: Data(key.utf8)).map { String(format: "%02x", $0) }.joined()
         let body = try JSONEncoder().encode(KeyBody(digest: approved.digest, keySHA256: sum, kiffProfile: approved.kiffProfile))
         let path = "grants/\(escaped(grant.id))/key"
+        return PreparedKey(path: path, body: body, key: key, signedAt: signedAt,
+                           message: try preparedMessage(tenant: tenant, path: path, body: body, signedAt: signedAt))
+    }
+
+    /// The `planque.request.v1` message of a POST to `path`, as planque rebuilds it: the path as
+    /// sent, percent-encoded, over the exact body.
+    private func preparedMessage(tenant: String, path: String, body: Data, signedAt: String) throws -> Data {
         guard let url = URL(string: "v1/accounts/\(escaped(tenant))/\(path)", relativeTo: baseURL) else {
             throw PlanqueError.server(status: 0, message: Words.Error.badPath)
         }
         let uri = url.path(percentEncoded: true) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")
-        return PreparedKey(path: path, body: body, key: key, signedAt: signedAt,
-                           message: Self.message(base: baseURL, tenant: tenant, method: "POST", uri: uri, body: body, signedAt: signedAt))
+        return Self.message(base: baseURL, tenant: tenant, method: "POST", uri: uri, body: body, signedAt: signedAt)
+    }
+
+    /// An approve built in full before it's signed, so its message can be signed together with
+    /// another request's (`RequestsTogether`): its body's exact bytes, its `signed_at`, and the
+    /// message planque rebuilds from them.
+    struct PreparedApprove: Equatable {
+        let path: String
+        let body: Data
+        let signedAt: String
+        let message: Data
+    }
+
+    /// `approve`, built to be signed together with another request: nothing is sent yet.
+    func prepareApprove(grantID: String, body: ApproveBody, signedAt: String) throws -> PreparedApprove {
+        guard let tenant else { throw PlanqueError.notSigning }
+        let bytes = try JSONEncoder().encode(body)
+        let path = "grants/\(escaped(grantID))/approve"
+        return PreparedApprove(path: path, body: bytes, signedAt: signedAt,
+                               message: try preparedMessage(tenant: tenant, path: path, body: bytes, signedAt: signedAt))
+    }
+
+    /// Sends a prepared approve under a signature made over it and another request
+    /// (`kiff.requests.v1`): `with` is the other request's hash.
+    func approve(_ prepared: PreparedApprove, signature: String, with other: String) async throws -> Approved {
+        let data = try await raw("POST", prepared.path, body: prepared.body,
+                                 together: (signedAt: prepared.signedAt, signature: signature, with: other))
+        return try KIFFClient.decoder.decode(Approved.self, from: data)
     }
 
     /// Sends a prepared key request under a signature made over it and another request

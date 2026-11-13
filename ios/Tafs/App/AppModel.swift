@@ -7850,9 +7850,13 @@ final class AppModel: ObservableObject {
             // The read proof: planque shows the grant to tafs cloud only as this phone; it signs and grants nothing there.
             let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
             let words = grants.first { $0.id == grantID }.flatMap { shownWords(for: $0) }
+            // With the taf's Card drafted, the phone can sign the tools added to a connected app and that Card
+            // together; tafs cloud asks for it only when that's on, and otherwise answers as before.
+            let can: [String]? = component.draft != nil && shownDraft != nil ? [RequestsTogether.toolsAndCards] : nil
             let decision = try await cloud.approval(s.id, component: component.id, body: .init(
                 grant: grantID, shownDigest: shown, draft: component.draft, shownDraft: shownDraft,
-                words: words.map { .init(profileSHA256: $0.profileSHA256, wordsSHA256: $0.wordsSHA256) }, session: session), proof: proof)
+                words: words.map { .init(profileSHA256: $0.profileSHA256, wordsSHA256: $0.wordsSHA256) }, session: session,
+                can: can), proof: proof)
             guard gen == accountGeneration else { return }
             switch decision.outcome {
             case "answered":
@@ -7864,22 +7868,30 @@ final class AppModel: ObservableObject {
                 if let id = component.draft, let draft = try? await kiff.draft(id: id), gen == accountGeneration { setupDrafts[id] = draft }
             case "sign":
                 guard let ask = decision.ask else { return }
-                // The phone is the last check, not a signing service: it signs only the message this card
-                // implies, rebuilt from what it holds (its own account, the card's grant or draft, the ask's
-                // digest or version), and refuses any other.
-                guard ask.message == Self.expectedApprovalMessage(ask, component: component, tenant: tenant, shownDigest: shown, shownDraft: shownDraft) else {
-                    cardNotes[component.id] = Self.askNotThisCards
-                    return
+                let came: Came
+                if ask.step == RequestsTogether.toolsAndCards {
+                    // The tools added to a connected app and the Card over them, under one Face ID.
+                    guard let together = try await approveToolsAndCard(ask, component: component, tenant: tenant,
+                                                                       shown: shown, shownDraft: shownDraft, words: words, gen: gen) else { return }
+                    came = together
+                } else {
+                    // The phone is the last check, not a signing service: it signs only the message this card
+                    // implies, rebuilt from what it holds (its own account, the card's grant or draft, the ask's
+                    // digest or version), and refuses any other.
+                    guard ask.message == Self.expectedApprovalMessage(ask, component: component, tenant: tenant, shownDigest: shown, shownDraft: shownDraft) else {
+                        cardNotes[component.id] = Self.askNotThisCards
+                        return
+                    }
+                    do {
+                        _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true)
+                    } catch {
+                        cardNotes[component.id] = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+                        return
+                    }
+                    guard gen == accountGeneration else { return }
+                    kiff.setupSigner = { try signer.signConfirmed($0) }
+                    came = await makeAskedCall(ask, tenant: tenant, gen: gen)
                 }
-                do {
-                    _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true)
-                } catch {
-                    cardNotes[component.id] = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
-                    return
-                }
-                guard gen == accountGeneration else { return }
-                kiff.setupSigner = { try signer.signConfirmed($0) }
-                let came = await makeAskedCall(ask, tenant: tenant, gen: gen)
                 guard gen == accountGeneration else { return }
                 await refreshConnections()
                 guard gen == accountGeneration else { return }
@@ -8042,6 +8054,69 @@ final class AppModel: ObservableObject {
         return p.grant == grant && p.body.digest == shownDigest && k.draft == draft && k.version == shownDraft
     }
 
+    /// Tools added to a connected app and the taf's Card over them, under one Face ID
+    /// (`tools_and_cards`, docs/secure-connection.md). The phone checks the ask is this card's, for
+    /// what the person was shown, builds planque's approve and KIFF's confirm itself with one
+    /// `signed_at`, and signs their two hashes once with the approval key. It sends the approve
+    /// first, and the confirm only once planque says the app is connected with the tools: a Card
+    /// is never confirmed over tools that aren't in. Nil when nothing was sent: the card's note says why.
+    private func approveToolsAndCard(_ ask: TafsCloud.ApprovalDecision.Ask, component: SetupComponent, tenant: String,
+                                     shown: String?, shownDraft: String?, words: ProfileWords?, gen: Int) async throws -> Came? {
+        let grant = component.grant.flatMap { id in grants.first { $0.id == id } }
+        guard let grant, let shown, let shownDraft, let draftID = component.draft,
+              let body = try? PlanqueClient.approveBody(grant, words: words),
+              Self.toolsAndCardIsThisCards(ask, grant: grant.id, body: body, shownDigest: shown, draft: draftID, shownDraft: shownDraft) else {
+            // An ask for another grant or draft isn't this card's. One for this card at a digest or a
+            // version the phone didn't read is out of date: the card is read again, and nothing is signed.
+            let sameCard = ask.planque?.grant == component.grant && ask.kiff?.draft == component.draft
+            cardNotes[component.id] = sameCard ? Words.Version.outOfDateCard : Self.askNotThisCards
+            if sameCard {
+                await refreshConnections()
+                if let id = component.draft, let draft = try? await kiff.draft(id: id), gen == accountGeneration { setupDrafts[id] = draft }
+            }
+            return nil
+        }
+        let signedAt = SigningTime.next()
+        let approveRequest = try planque.prepareApprove(grantID: grant.id, body: body, signedAt: signedAt)
+        let confirm = try kiff.prepareConfirmDraft(id: draftID, version: shownDraft, signedAt: signedAt)
+        let approveHash = RequestsTogether.hash(approveRequest.message), confirmHash = RequestsTogether.hash(confirm.message)
+        let signature: String
+        do {
+            signature = try await signer.signApproval(RequestsTogether.message(tenant: tenant, signedAt: signedAt, approveHash, confirmHash), reason: ask.reason)
+        } catch {
+            cardNotes[component.id] = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+            return nil
+        }
+        guard gen == accountGeneration else { return nil }
+        // The tools first, then the Card.
+        let tools: Came
+        do {
+            let approved = try await planque.approve(approveRequest, signature: signature, with: confirmHash)
+            tools = try await connectedAfter(approved, grantID: grant.id, tenant: tenant, gen: gen)
+        } catch VendorSignIn.SignInError.cancelled {
+            return Came(result: "sign_in_closed")
+        } catch {
+            return Came(result: "failed", why: error.localizedDescription)
+        }
+        guard tools.result == "connected", gen == accountGeneration else { return tools }
+        do {
+            _ = try await kiff.confirmDraft(confirm, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: approveHash))
+            await keepKIFFAlerts(tenant: tenant, gen: gen)
+            return Came(result: "confirmed")
+        } catch {
+            return Came(result: "failed", why: error.localizedDescription)
+        }
+    }
+
+    /// Whether a `tools_and_cards` ask is this card's, for what the person was shown: its grant,
+    /// planque's approve exactly as this phone builds it for the digest shown (and KIFF's words for
+    /// its profile), its draft and the version shown. Anything else is refused, and nothing is signed.
+    nonisolated static func toolsAndCardIsThisCards(_ ask: TafsCloud.ApprovalDecision.Ask, grant: String, body: PlanqueClient.ApproveBody,
+                                                    shownDigest: String, draft: String, shownDraft: String) -> Bool {
+        guard ask.step == RequestsTogether.toolsAndCards, let p = ask.planque, let k = ask.kiff else { return false }
+        return p.grant == grant && p.body == body && body.digest == shownDigest && k.draft == draft && k.version == shownDraft
+    }
+
     /// Approve on Coach's drive card (docs/drive.md): the start is signed with the approval key, behind
     /// Face ID or Touch ID, as a setup call (`kiff.request.v1` over this request). tafs cloud starts the
     /// drive only for that key, and tells Coach the drive is on. Then Coach's chat closes into its
@@ -8138,29 +8213,35 @@ final class AppModel: ObservableObject {
             }
             guard let p = ask.planque else { return Came(result: "failed", why: Words.Connect.tafsCloudNamedNoConnection) }
             let approved = try await planque.approve(grantID: p.grant, body: p.body)
-            guard let signInURL = approved.signInURL else {
-                // A fresh sign-in planque holds for this phone to confirm, with its one-use code:
-                // confirmed here, then reported as planque answers it (unconfirmed, it's revoked).
-                if approved.status == "signed_in", let code = approved.confirmCode {
-                    let confirmed = try await planque.confirm(grantID: p.grant, code: code)
-                    return confirmed.connected || confirmed.listed ? Came(result: confirmed.status == "listed" ? "listed" : "connected")
-                        : Came(result: "not_connected", status: confirmed.status)
-                }
-                // planque already holds the sign-in: approving connected it, with no second sign-in.
-                return approved.status == "connected" || approved.status == "listed" ? Came(result: approved.status) : Came(result: "not_connected", status: approved.status)
-            }
-            let back = try await vendorSignIn.signIn(at: signInURL)
-            guard let signedIn = PlanqueClient.signedIn(from: back), signedIn.grant == p.grant, signedIn.tenant == tenant else { return Came(result: "no_code") }
-            guard gen == accountGeneration else { return Came(result: "failed", why: "the account changed") }
-            // Back from the vendor: connected only once planque says so, never because the page closed.
-            connectStep = Words.Coach.checkingSignIn
-            let connected = try await planque.confirm(grantID: p.grant, code: signedIn.code)
-            return connected.connected || connected.listed ? Came(result: "connected") : Came(result: "failed", why: Words.Connect.signCameBackConnection(status: "\(connected.status)"))
+            return try await connectedAfter(approved, grantID: p.grant, tenant: tenant, gen: gen)
         } catch VendorSignIn.SignInError.cancelled {
             return Came(result: "sign_in_closed")
         } catch {
             return Came(result: "failed", why: error.localizedDescription)
         }
+    }
+
+    /// planque's answer to an approve, followed to where it ends: a sign-in it holds confirmed with
+    /// its one-use code, or the vendor's sign-in made and confirmed. Connected only once planque says so.
+    private func connectedAfter(_ approved: PlanqueClient.Approved, grantID: String, tenant: String, gen: Int) async throws -> Came {
+        guard let signInURL = approved.signInURL else {
+            // A fresh sign-in planque holds for this phone to confirm, with its one-use code:
+            // confirmed here, then reported as planque answers it (unconfirmed, it's revoked).
+            if approved.status == "signed_in", let code = approved.confirmCode {
+                let confirmed = try await planque.confirm(grantID: grantID, code: code)
+                return confirmed.connected || confirmed.listed ? Came(result: confirmed.status == "listed" ? "listed" : "connected")
+                    : Came(result: "not_connected", status: confirmed.status)
+            }
+            // planque already holds the sign-in: approving connected it, with no second sign-in.
+            return approved.status == "connected" || approved.status == "listed" ? Came(result: approved.status) : Came(result: "not_connected", status: approved.status)
+        }
+        let back = try await vendorSignIn.signIn(at: signInURL)
+        guard let signedIn = PlanqueClient.signedIn(from: back), signedIn.grant == grantID, signedIn.tenant == tenant else { return Came(result: "no_code") }
+        guard gen == accountGeneration else { return Came(result: "failed", why: "the account changed") }
+        // Back from the vendor: connected only once planque says so, never because the page closed.
+        connectStep = Words.Coach.checkingSignIn
+        let connected = try await planque.confirm(grantID: grantID, code: signedIn.code)
+        return connected.connected || connected.listed ? Came(result: "connected") : Came(result: "failed", why: Words.Connect.signCameBackConnection(status: "\(connected.status)"))
     }
 
     /// Coach heard the card's answer from tafs cloud: the card shows it's answered until the thread's

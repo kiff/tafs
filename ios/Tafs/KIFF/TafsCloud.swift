@@ -1384,7 +1384,7 @@ final class TafsCloud {
         var shownDraft: String? = nil
         var words: Words? = nil
         var session: String? = nil
-        /// The steps this phone can sign beyond connect and cards (`key_and_cards`): tafs cloud
+        /// The steps this phone can sign beyond connect and cards (`key_and_cards`, `tools_and_cards`): tafs cloud
         /// never answers an app a step it didn't say it can act on.
         var can: [String]? = nil
         enum CodingKeys: String, CodingKey { case grant, shownDigest = "shown_digest", draft, shownDraft = "shown_draft", words, session, can }

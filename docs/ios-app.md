@@ -367,6 +367,20 @@ the app in sample mode.
   - It reports what came of both, and tafs cloud checks them before Coach hears "approved". Closing the receipt then
     doesn't approve the card again.
   - If it doesn't finish, the card's note says why on the sheet, and the key is never given by itself after that.
+  **Tools added to a connected app and the Card over them under one Face ID** (`AppModel.approveToolsAndCard`), from
+  Approve on Coach's card when it carries the taf's Card as a draft:
+  - The phone tells tafs cloud it can sign the step (`can: ["tools_and_cards"]`). tafs cloud asks for it only when
+    it's on there and the app is already connected; otherwise it answers as before, a step at a time.
+  - The phone checks the ask is this card's (`toolsAndCardIsThisCards`): its grant, planque's approve body exactly as
+    this phone builds it for the digest shown (with KIFF's words for its profile), its draft and the version shown.
+    Anything else is refused and nothing is signed.
+  - It builds planque's approve and KIFF's confirm in full with one `signed_at` (`PlanqueClient.prepareApprove`,
+    `KIFFClient.prepareConfirmDraft`), and the approval key signs once, as for a key.
+  - It sends the approve first, then the Card's confirm, each with `v3=` and `with=sha256:`. The Card is confirmed
+    only once planque says the app is connected with the tools; a sign-in planque holds is confirmed first, as on
+    any approval.
+  - It reports what came of both, and tafs cloud answers "approved" only when the tools are in and the Card is
+    issued. Tools in with a Card that didn't follow leave the card asking for the Card alone.
 - **What a grant's digest covers** (`PlanqueClient.digestCovers`): the phone recomputes planque's
   digest before it shows or signs a grant, and refuses one that doesn't match. Without `digest_v`,
   it covers the request alone (v1). With `digest_v: 2`, it covers `{"lang", "request", "text"}`, so
