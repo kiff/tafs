@@ -868,6 +868,62 @@ describe("a card with a grant and a draft, signed as the connection alone", () =
   });
 });
 
+// What the fingerprint signs is on the card before Approve (signs), from decide's own rule: the apps can't know the
+// step before the tap, and a card that signs the connection alone must never draw the Card as being signed.
+describe("each waiting approval card says what its fingerprint signs", () => {
+  afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; delete process.env.TAFS_KEY_AND_CARDS; });
+  const CHAT = `/v1/tafs/${COACH}/conversation`;
+  const signs = async (w: Awaited<ReturnType<typeof world>>, query?: string, headers: Record<string, string> = {}) => {
+    const r = await w.call("GET", CHAT, undefined, headers, query);
+    expect(r.status).toBe(200);
+    return ((r.body.components as Array<{ component: { id?: string; signs?: unknown } }>).find((c) => c.component.id === "a1"))?.component.signs;
+  };
+
+  it("marks the Card signed or next exactly as decide then asks, for each kind of grant", async () => {
+    process.env.TAFS_TOOLS_AND_CARDS = "on";
+    const s = services();
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    // A reused sign-in's first tools: the connection alone, the Card next.
+    s.grants = [grant({ status: "pending" })];
+    expect(await signs(w, "can=tools_and_cards")).toEqual({ card: false, words: "Its Card: you approve it next" });
+    const asked = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request), draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards"] });
+    expect(asked.body).toMatchObject({ ask: { step: "connect" } });
+    // Added tools on a connected app, with a phone that can sign both: the Card is signed now.
+    const adding = grant({ status: "pending", connected: [{ tool: "list_charges" }] });
+    s.grants = [adding];
+    expect(await signs(w, "can=tools_and_cards")).toEqual({ card: true });
+    // The same, from a phone that can't: the connection alone.
+    expect(await signs(w)).toEqual({ card: false, words: "Its Card: you approve it next" });
+    // Connected already: the card signs the Card.
+    s.grants = [grant({ status: "connected" })];
+    expect(await signs(w)).toEqual({ card: true });
+  });
+
+  it("says it in the reader's language, and a card with no draft carries no words", async () => {
+    const s = services();
+    s.grants = [grant({ status: "pending" })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const fr = await world(s, { draft: "drf_1" });
+    expect(await signs(fr, undefined, { "accept-language": "fr" })).toEqual({ card: false, words: "Sa Card : vous l'approuvez ensuite" });
+    const none = await world(s);
+    expect(await signs(none)).toEqual({ card: false });
+  });
+
+  it("leaves the card as it was without the phone's proof, when the connections can't be read, or once answered", async () => {
+    const s = services();
+    s.grants = [grant({ status: "pending" })];
+    const w = await world(s, { draft: "drf_1" });
+    expect(await signs(w, undefined, { "planque-device-signature": "" })).toBeUndefined();
+    s.grants = [];
+    expect(await signs(w)).toBeUndefined();
+    s.grants = [grant({ status: "connected" })];
+    s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
+    await w.agents.api.answerCard("t_acme", COACH, w.stored.id, "a1", "approved", ANA.requester);
+    expect(await signs(w)).toBeUndefined();
+  });
+});
+
 // qa-kiff's negative 1 on #919: a draft whose Cards also allow a tool this connection doesn't give is never signed under it,
 // whichever step signs the Card; a tool of the same taf's other connection is its own, so it may be on the same Card.
 describe("never signs a Card that allows more than the taf's connections give", () => {

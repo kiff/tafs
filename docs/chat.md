@@ -349,6 +349,16 @@ grant carries `connection: {done: true, words}`: "Qonto is connected (read only)
 the card's Card alone, never the connection's text again, so the taf's Card after its key went in doesn't read
 as if the key still waited ([secure-connection.md](secure-connection.md)).
 
+**What the fingerprint signs is on the card.** The phone learns the step only from the ask after Approve, and
+the fingerprint follows at once, so each approval card still waiting says beforehand what it signs:
+`signs: {card: true}` when its fingerprint signs the Card (the `cards`, `key_and_cards` or `tools_and_cards`
+step), and `signs: {card: false, words?}` when it signs the connection alone, with `words` ("Its Card: you
+approve it next", in the reader's language) when the card carries a draft. It comes from the same rule `decide`
+asks by (`stepFor`), read as the phone: the chat's read carries `Planque-Device-Signature` and what the phone can
+sign (`?can=tools_and_cards,key_and_cards`). Without the proof, or when the connections can't be read within
+1.5 s, the cards carry no `signs` and the apps draw them as before. With `card: false`, an app never draws the
+Card's limits as being signed now: they go under `words`.
+
 ## Coming back to a run at work
 
 When the owner leaves the chat or the app and comes back while a run works, the app

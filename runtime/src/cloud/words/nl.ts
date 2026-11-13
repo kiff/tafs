@@ -68,6 +68,7 @@ export const nl: Words = {
   approval_cards_not_issued: (why: string) => `KIFF heeft de Cards van het taf niet uitgegeven: ${why}`,
   approval_draft_is: (status: string) => `het concept is ${status}`,
   approval_no_draft: "KIFF heeft zo'n concept niet",
+  approval_card_next: "Zijn Card: die keur je hierna goed",
   approval_cards_unread: "De Card kon nog niet worden gecontroleerd. Lees hem opnieuw en keur hem dan goed.",
   approval_uncovered: (tool: string) => `Deze Card dekt "${tool}" niet, terwijl het taf het heeft gekregen, dus elke aanroep ervan zou worden geweigerd. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_stray: (tool: string) => `Deze Card zou het taf ook "${tool}" laten gebruiken, wat geen van zijn koppelingen geeft. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,

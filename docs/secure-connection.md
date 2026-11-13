@@ -177,7 +177,8 @@ That includes a reused sign-in's first tools: its card may carry the draft, but 
 which signs the connection alone. The draft isn't signed, so the report never answers `approved` while KIFF says it
 isn't issued (at the version the card showed): it answers `failed: <app> is connected; KIFF didn't issue the taf's
 Cards: …; show the approval again for its Card alone`, and Coach's next card asks the `cards` step, with the Card's
-limits on screen.
+limits on screen. Before Approve, the card already says which it is (`signs: {card, words?}`, [chat.md](chat.md)),
+so the apps never draw the Card as signed on a fingerprint that signs the connection alone.
 
 **Until this ships:** an approval card whose connection is already connected never repeats
 the connection's text. tafs cloud marks it on Coach's approval component in the conversation

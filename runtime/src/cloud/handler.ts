@@ -51,7 +51,7 @@ import { appCalls, type GrantView, runningTool, setupGrants, setupView } from ".
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval } from "./approval.js";
+import { ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 
@@ -1003,6 +1003,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const [doors, titles, posted] = await Promise.all([managing, titlesOf(event, me, taf, deps), weekOne]);
     const { messages, components, held, drives, sessions, usage } = await conversation(me, posted ? { ...taf, weekOne: posted } : taf, deps, undefined, doors, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
+    await markSigns(event, me, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
@@ -1012,6 +1013,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const [only, titles] = await Promise.all([ownChat(me, taf, parts[4] ?? "", deps), titlesOf(event, me, taf, deps)]);
     const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, only, false, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
+    await markSigns(event, me, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
   }
@@ -2991,6 +2993,36 @@ async function markConnected(tenant: string, components: ThreadComponent[], deps
     const note = (await notes.get(card.grant)) as Connected | undefined;
     if (!note || typeof note.vendor !== "string") continue;
     c.component = { ...card, connection: { done: true, words: w.sheet_done(note.vendor, note.read_only === true) } };
+  }
+}
+
+/** How long a chat's read waits for the connections it marks its approval cards from: the chat never waits on it. */
+const SIGNS_READ_MS = 1500;
+
+/**
+ * Each approval card still waiting says what its fingerprint will sign (`signs: {card, words?}`), from the same rule
+ * `decide` asks by (stepFor), so the apps draw the Card as being signed only when it is: on a card that signs the
+ * connection alone, the Card goes under `words` ("Its Card: you approve it next"). Read as the phone, with its
+ * Planque-Device-Signature and what it can sign (`?can=tools_and_cards,key_and_cards`); without the proof, or when
+ * the connections can't be read in time, the cards are left as they were.
+ */
+async function markSigns(event: HTTPEvent, me: KIFFIdentity, components: ThreadComponent[], deps: Deps): Promise<void> {
+  const proof = event.headers?.["planque-device-signature"] ?? "";
+  if (!proof || !deps.planqueBase) return;
+  const waiting = components.filter((c) => !c.answer && (c.component as { type?: unknown; grant?: unknown } | undefined)?.type === "approval" &&
+    typeof (c.component as { grant?: unknown }).grant === "string");
+  if (!waiting.length) return;
+  const grants = await within(readGrants(deps.planqueBase, me.tenantID, proof, deps.fetch ?? fetch), SIGNS_READ_MS).catch(() => undefined);
+  if (!grants) return;
+  const can = (new URLSearchParams(event.rawQueryString ?? "").get("can") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+  const flags = { keyAndCards: process.env.TAFS_KEY_AND_CARDS === "on", toolsAndCards: process.env.TAFS_TOOLS_AND_CARDS === "on" };
+  const lang = langOf(event);
+  for (const c of waiting) {
+    const card = c.component as { grant: string; draft?: unknown };
+    const grant = grants.find((g) => g.id === card.grant);
+    const draft = typeof card.draft === "string" && card.draft ? card.draft : undefined;
+    const step = grant && stepFor(grant, { draft, can }, flags);
+    if (step) c.component = { ...card, signs: signsOf(step, draft, lang) };
   }
 }
 

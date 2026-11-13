@@ -72,6 +72,8 @@ export const en = {
   approval_cards_not_issued: (why: string) => `KIFF didn't issue the taf's Cards: ${why}`,
   approval_draft_is: (status: string) => `the draft is ${status}`,
   approval_no_draft: "KIFF has no such draft",
+  /** On an approval card whose fingerprint signs the connection alone, above its Card (`signs.words`). */
+  approval_card_next: "Its Card: you approve it next",
   approval_cards_unread: "The Card couldn't be checked yet. Read it again, then approve.",
   approval_uncovered: (tool: string) => `This Card doesn't cover "${tool}", which the taf was given, so every call of it would be refused. Nothing was approved. Coach drafts it again.`,
   approval_stray: (tool: string) => `This Card would also let the taf use "${tool}", which no connection of it gives. Nothing was approved. Coach drafts it again.`,

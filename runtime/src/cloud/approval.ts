@@ -419,6 +419,31 @@ export interface DecideContext {
   tafName?: (agent?: string) => Promise<string | undefined>;
 }
 
+/** The steps a phone signs for an approval card. */
+export type SignStep = "connect" | "cards" | "key_and_cards" | "tools_and_cards";
+
+/**
+ * The step an approval card asks the phone to sign, from the grant as planque says it and what the card and the
+ * phone bring: one rule, for `decide` and for the mark the card carries before Approve (`signs`), so the apps draw
+ * the Card as signed only on a fingerprint that signs it. Undefined when nothing is signed (answered without one).
+ */
+export function stepFor(grant: ApprovalGrant, ask: { draft?: string; can?: string[] }, flags: { toolsAndCards?: boolean; keyAndCards?: boolean }): SignStep | undefined {
+  if (grant.status === "connected") return ask.draft ? "cards" : undefined;
+  if (grant.status === "listed" && !ask.draft) return undefined;
+  if (!APPROVABLE.has(grant.status)) return undefined;
+  // A connected grant's added tools with the Card's draft over them: one fingerprint (docs/secure-connection.md).
+  if (flags.toolsAndCards && ask.can?.includes("tools_and_cards") && !takesKey(grant) && grant.status === "pending" && Array.isArray(grant.connected) && grant.connected.length > 0 && ask.draft) return "tools_and_cards";
+  // A key grant whose Card is drafted already: the key and the Card under one fingerprint.
+  if (flags.keyAndCards && ask.can?.includes("key_and_cards") && takesKey(grant) && ask.draft) return "key_and_cards";
+  return "connect";
+}
+
+/** What an approval card's fingerprint will sign, for the apps to draw before Approve: the Card, or the connection alone. */
+export function signsOf(step: SignStep, draft: string | undefined, lang: Lang = "en"): { card: boolean; words?: string } {
+  const card = step !== "connect";
+  return { card, ...(!card && draft ? { words: wordsIn(lang).approval_card_next } : {}) };
+}
+
 /**
  * Decides an approval: what the card needs signed, if anything. Reads planque's
  * grant as the phone, and KIFF's draft with the person's session.
@@ -473,7 +498,8 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   }
   // A connected grant's added tools, with the Card's draft over them: the addition's approve and the Card under one
   // fingerprint (docs/secure-connection.md), as a key and its Card are, once planque takes the paired approve.
-  if (ctx.toolsAndCards && ask.can?.includes("tools_and_cards") && !takesKey(grant) && grant.status === "pending" && Array.isArray(grant.connected) && grant.connected.length > 0 && ask.draft) {
+  const step = stepFor(grant, ask, ctx);
+  if (step === "tools_and_cards" && ask.draft) {
     const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx, sameTaf);
     if ("outcome" in checked) return checked;
     const id = ctx.newID();
@@ -492,7 +518,7 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   }
   // A key grant whose Card is drafted already: the key and the Card under one fingerprint (docs/secure-connection.md),
   // once both services take kiff.requests.v1. The phone builds both requests and signs their two hashes.
-  if (ctx.keyAndCards && ask.can?.includes("key_and_cards") && takesKey(grant) && ask.draft) {
+  if (step === "key_and_cards" && ask.draft) {
     const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx, sameTaf);
     if ("outcome" in checked) return checked;
     const id = ctx.newID();
