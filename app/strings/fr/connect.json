@@ -64,7 +64,7 @@
   },
   "connect.disconnect.no_taf_uses": "Aucun taf n'utilise {vendor} désormais.",
   "connect.disconnect.rest": "Les autres tafs qui utilisent {vendor} gardent leur accès. Si aucun autre taf n'utilise cet identifiant, il est révoqué chez {vendor}. Utiliser {vendor} à nouveau vous demande d'approuver et de vous reconnecter.",
-  "connect.disconnect.rest_key": "Les autres tafs qui utilisent {vendor} gardent leur accès. La clé est supprimée de tafs. Utiliser {vendor} à nouveau vous demande d'approuver et de coller une clé à nouveau.",
+  "connect.disconnect.rest_key": "Les autres tafs qui utilisent {vendor} gardent leur accès. La clé est supprimée de tafs dès qu'aucun taf ne l'utilise. Utiliser {vendor} à nouveau vous demande d'approuver et de coller une clé à nouveau.",
   "connect.disconnect.title": "Retirer l'accès à {vendor} ?",
   "connect.disconnect.title_from": "Retirer l'accès à {vendor} pour {taf} ?",
   "connect.disconnect.tools_stop": "Les outils {vendor} de {owner} cessent de fonctionner.",

@@ -64,7 +64,7 @@
   },
   "connect.disconnect.no_taf_uses": "Ningún taf usa {vendor} ahora.",
   "connect.disconnect.rest": "Los demás tafs que usan {vendor} conservan su acceso. Si ningún otro taf usa este inicio de sesión, se revoca en {vendor}. Usar {vendor} de nuevo te pide aprobar e iniciar sesión otra vez.",
-  "connect.disconnect.rest_key": "Los demás tafs que usan {vendor} conservan su acceso. La clave se elimina de tafs. Usar {vendor} de nuevo te pide aprobar y pegar una clave otra vez.",
+  "connect.disconnect.rest_key": "Los demás tafs que usan {vendor} conservan su acceso. La clave se elimina de tafs cuando ya ningún taf la use. Usar {vendor} de nuevo te pide aprobar y pegar una clave otra vez.",
   "connect.disconnect.title": "¿Quitar el acceso a {vendor}?",
   "connect.disconnect.title_from": "¿Quitar el acceso a {vendor} para {taf}?",
   "connect.disconnect.tools_stop": "Las herramientas de {vendor} de {owner} dejan de funcionar.",

@@ -163,8 +163,8 @@ enum DisconnectWords {
         return asked + " " + Words.Connect.Disconnect.alsoStops(count: alsoStops.count, names: Words.list(alsoStops))
     }
 
-    /// What removing access ends. For a key (`key`), the key is deleted from tafs: nothing is
-    /// revoked at the vendor, which a sign-in's text says.
+    /// What removing access ends. For a key (`key`), the key is deleted from tafs once no taf uses
+    /// it: nothing is revoked at the vendor, which a sign-in's text says.
     static func message(_ vendor: String, taf: String?, alsoStops: [String] = [], key: Bool = false) -> String {
         let others: String
         switch alsoStops.count {
