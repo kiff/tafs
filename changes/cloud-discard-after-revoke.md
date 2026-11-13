@@ -1,1 +1,2 @@
 - Discarding a taf being set up goes through when the phone has just revoked its Card: tafs cloud reads KIFF again before saying a Card is still in force, and a chat that already moved on counts as ended.
+- Discarding the same taf being set up twice answers done both times (the second marked already): a phone that resends the request never sees a failure. Anyone else, or a draft that never was, still gets 404.

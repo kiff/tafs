@@ -4692,7 +4692,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The same discard sent again (a phone resending the POST on a dropped connection): done again, for them, never for another.
     const again = await req("POST", "/v1/home/setting-up/refunds-x/discard");
     expect(again.statusCode).toBe(200);
-    expect(JSON.parse(again.body)).toEqual({ discarded: true, kiff_agent: "refunds-x" });
+    expect(JSON.parse(again.body)).toEqual({ discarded: true, already: true, kiff_agent: "refunds-x" });
     expect((await req("POST", "/v1/home/setting-up/refunds-x/discard", "owner")).statusCode).toBe(404);
   });
 
