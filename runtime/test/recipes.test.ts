@@ -162,7 +162,7 @@ Bezahle meine Rechnungen unter 100 EUR.
       connections: [["gorgias", "intercom", "gmail"], ["stripe"]],
     });
     expect(fr.labels).toEqual({ allows: "Fait seul", holds: "Vous demande d'abord", never: "Ne fait jamais", hand: "Confier à Coach" });
-    expect(fr.home).toEqual({ shown: true, words: "Choisissez une tâche pour votre premier taf." });
+    expect(fr.home).toEqual({ shown: true, words: "Choisissez une tâche pour votre premier taf.", own_words: { title: "Dites-la avec vos mots", line: "Coach construit le taf avec vous." } });
     expect(fr.suggestions.words).toBe("Les suggestions s'affichent dans une nouvelle conversation avec Coach tant que le compte n'a pas son premier taf.");
     // Every language has its own words for the categories and the sheet.
     for (const lang of LANGS) {
@@ -192,9 +192,11 @@ Bezahle meine Rechnungen unter 100 EUR.
   });
 
   it("leads Home with the recipes only for a person who manages tafs, and only with one to lead with", () => {
-    expect(recipesFor(undefined).home).toEqual({ shown: true, words: "Pick a job for your first taf." });
+    expect(recipesFor(undefined).home).toEqual({ shown: true, words: "Pick a job for your first taf.", own_words: { title: "Say it in your own words", line: "Coach builds the taf with you." } });
     expect(recipesFor(undefined, "en", false).home).toEqual({ shown: false, words: "No tafs yet. Tafs shared with you show here." });
-    expect(recipesFor([], "en", true).home).toEqual({ shown: false, words: "No tafs yet. Connect an app to set up your first taf." });
+    expect(recipesFor([], "en", true).home).toEqual({ shown: false, words: "No tafs yet. Tell Coach the job a taf should do, or pick one below.", own_words: { title: "Say it in your own words", line: "Coach builds the taf with you." } });
+    // Home is the gallery now: "Say it in your own words" leads it for a person who manages tafs, never for someone a taf is only shared with.
+    expect(recipesFor(undefined, "en", false).home).not.toHaveProperty("own_words");
   });
 
   it("names a catalog entry's vendor as a recipe does", () => {
@@ -213,7 +215,7 @@ Bezahle meine Rechnungen unter 100 EUR.
     }));
     expect(all.categories).toEqual(CATEGORIES);
     expect(recipesFor([])).toEqual({ categories: [], recipes: [], filtered: true, shown: true, suggestions: { show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." },
-      home: { shown: false, words: "No tafs yet. Connect an app to set up your first taf." },
+      home: { shown: false, words: "No tafs yet. Tell Coach the job a taf should do, or pick one below.", own_words: { title: "Say it in your own words", line: "Coach builds the taf with you." } },
       labels: { allows: "Does on its own", holds: "Asks you first", never: "Never does", hand: "Hand it to Coach" } });
   });
 

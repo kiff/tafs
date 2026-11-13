@@ -368,3 +368,11 @@ export async function toolTitles(token: string, tenant: string, subject: string,
   if (keptHere.size > 1000) keptHere.delete(keptHere.keys().next().value!);
   return titles;
 }
+
+/**
+ * Sets the account's time zone in KIFF (PUT /v1/me/time-zone) with the person's own session: KIFF lets an owner or an
+ * admin do it, unsigned. tafs cloud calls it once, for a new account, with the phone's zone (handler.ts zoneFromPhone).
+ */
+export async function setTimeZoneInKIFF(token: string, zone: string, doFetch: Fetch = fetch, base = KIFF_API): Promise<string> {
+  return (await ask<{ time_zone: string }>(token, "PUT", "/v1/me/time-zone", { time_zone: zone }, doFetch, base)).time_zone;
+}

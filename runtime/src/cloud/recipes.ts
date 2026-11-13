@@ -134,7 +134,8 @@ export function suggestionWords(lang: Lang): Record<Suggestions["reason"], strin
 /** An empty list, with why (shown false), and Home's empty line. */
 export function noRecipes(suggestions: Suggestions, lang: Lang = "en", manages = true): RecipesView {
   return { categories: [], recipes: [], filtered: false, shown: false, suggestions,
-    home: { shown: false, words: emptyLine(lang, manages) }, labels: labelsIn(lang) };
+    home: { shown: false, words: emptyLine(lang, manages),
+      ...(manages ? { own_words: { title: wordsIn(lang).gallery_own_words, line: wordsIn(lang).gallery_own_words_line } } : {}) }, labels: labelsIn(lang) };
 }
 
 /**
@@ -178,7 +179,9 @@ export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefi
     filtered: apps !== undefined,
     shown: true,
     suggestions: { show: true, reason: "on", words: suggestionWords(lang).on },
-    home: { shown: home, words: home ? wordsIn(lang).recipes_home_lead : emptyLine(lang, manages) },
+    // Home is the gallery now (the first run's item 4): "Say it in your own words" leads the list, then every job.
+    home: { shown: home, words: home ? wordsIn(lang).recipes_home_lead : emptyLine(lang, manages),
+      ...(manages ? { own_words: { title: wordsIn(lang).gallery_own_words, line: wordsIn(lang).gallery_own_words_line } } : {}) },
     labels: labelsIn(lang),
   };
 }
