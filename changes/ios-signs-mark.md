@@ -1,0 +1,1 @@
+- **iPhone and iPad: an approval says when its Card comes next.** When tafs cloud marks that an approval's fingerprint doesn't cover the taf's Card, Coach's card shows the Card under tafs cloud's words ("Its Card: you approve it next") and dimmed, not as if it were being signed now (docs/ios-app.md).

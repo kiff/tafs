@@ -352,6 +352,18 @@ the app in sample mode.
   and no text field.
   **A later approval card whose connection is already connected** carries tafs cloud's mark (`connection: {done,
   words}`, `SetupComponent.Connection`): the card draws that line and the Card, never the connection's text again.
+  **What the fingerprint covers** is tafs cloud's mark too (`signs: {card, words}`, `SetupComponent.Signs`), set from
+  the same decision as the step it then asks, since the phone learns the step only after the tap. With `card: false`
+  the Card is the one approved next: drawn under tafs cloud's words ("Its Card: you approve it next") with its lines
+  dimmed, never under its own title as if signed now, and not drawn at all without words. With `card: true`, or no
+  mark from an older tafs cloud, the card draws the Card as before. The mark comes on Setup's thread read with this
+  phone's signed read of its connections (`Planque-Device-Signature`) and the steps it signs
+  (`?can=tools_and_cards,key_and_cards,signs`, `AppModel.stepsSignedHere`); without the proof, the cards come unmarked.
+  `signs` says this phone draws the mark, on the read and on Approve: only then is a held sign-in's first tools asked
+  with their Card in one fingerprint; a phone without it keeps two steps.
+  At Approve, the step tafs cloud asks must sign the Card as the mark said (`AppModel.stepMatchesMark`): a Card drawn
+  as signed with only the connection asked, or drawn as next and asked now, is out of date. Nothing is signed, and the
+  card is read again, as for `read_again`.
   **The key and its Card under one Face ID** (`AppModel.approveKeyAndCard`, `RequestsTogether`), when the sheet is
   opened from Coach's card and that card carries the taf's Card as a draft:
   - The sheet draws **Its Card**: KIFF's own lines for the draft this phone read from KIFF.

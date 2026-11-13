@@ -6965,8 +6965,16 @@ final class AppModel: ObservableObject {
             if setupChat == nil, !setupFresh, let newest = chats.max(by: { $0.updated < $1.updated }) { setupChat = newest.session }
             if setupFresh { return }
         }
+        // This phone's signed read of its connections, and the steps it signs: tafs cloud then marks each
+        // approval card still waiting with what its fingerprint will sign (`signs`), so the card draws the
+        // Card as being signed only when it is. Without them, the cards come as before.
+        let signer = self.signer
+        planque.tenant = kiffTenant
+        var proof: String?
+        if planqueReady && sessionHasKey { proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) }) }
+        guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         do {
-            let thread = try await cloud.setupThread(s.id, session: setupChat)
+            let thread = try await cloud.setupThread(s.id, session: setupChat, proof: proof, can: Self.stepsSignedHere)
             guard gen == accountGeneration, conversation == setupConversationGeneration, !setupFresh else { return }
             setupThread = withSent(thread)
             setupError = nil
@@ -7854,7 +7862,7 @@ final class AppModel: ObservableObject {
             // the tools added to a connected app and that Card together; tafs cloud asks for it only when that's on,
             // and otherwise answers as before. A Card the card didn't draw is never signed with the tools.
             let drawn = component.draft.flatMap { setupDrafts[$0] }
-            let can: [String]? = Self.cardDrawn(drawn, shownDraft: shownDraft) ? [RequestsTogether.toolsAndCards] : nil
+            let can: [String]? = Self.cardDrawn(drawn, shownDraft: shownDraft) ? [RequestsTogether.toolsAndCards, RequestsTogether.signs] : nil
             let decision = try await cloud.approval(s.id, component: component.id, body: .init(
                 grant: grantID, shownDigest: shown, draft: component.draft, shownDraft: shownDraft,
                 words: words.map { .init(profileSHA256: $0.profileSHA256, wordsSHA256: $0.wordsSHA256) }, session: session,
@@ -7870,6 +7878,15 @@ final class AppModel: ObservableObject {
                 if let id = component.draft, let draft = try? await kiff.draft(id: id), gen == accountGeneration { setupDrafts[id] = draft }
             case "sign":
                 guard let ask = decision.ask else { return }
+                // What the card said this fingerprint signs (tafs cloud's mark, read with the thread) must be what
+                // it signs now: the Card drawn as signed and only the connection asked, or the Card drawn as next
+                // and asked now, is out of date. Nothing is signed, and the card is read again.
+                guard Self.stepMatchesMark(component.signs, step: ask.step) else {
+                    cardNotes[component.id] = Words.Version.outOfDateCard
+                    await refreshConnections()
+                    await loadSetupThread()
+                    return
+                }
                 let came: Came
                 if ask.step == RequestsTogether.toolsAndCards {
                     // The tools added to a connected app and the Card over them, under one Face ID.
@@ -8117,6 +8134,18 @@ final class AppModel: ObservableObject {
         guard let draft, let shownDraft, !draft.lines.isEmpty, draft.noTools != true else { return false }
         return draft.version == shownDraft
     }
+
+    /// Whether the step tafs cloud asks signs the Card as the card's mark said: `card: true` for a step that
+    /// signs it (`cards`, `key_and_cards`, `tools_and_cards`), `card: false` for one that doesn't. No mark: any.
+    nonisolated static func stepMatchesMark(_ signs: SetupComponent.Signs?, step: String) -> Bool {
+        guard let card = signs?.card else { return true }
+        return card == ["cards", RequestsTogether.keyAndCards, RequestsTogether.toolsAndCards].contains(step)
+    }
+
+    /// What this phone says it can do beyond connect and cards: sign a key and its Card from the key's sheet,
+    /// and an app's tools and its Card from Coach's card; and draw tafs cloud's mark of what a fingerprint
+    /// signs (`signs`), so a held sign-in's first tools may go with their Card in one fingerprint.
+    nonisolated static let stepsSignedHere = [RequestsTogether.toolsAndCards, RequestsTogether.keyAndCards, RequestsTogether.signs]
 
     /// Whether a `tools_and_cards` ask is this card's, for what the person was shown: its grant,
     /// planque's approve exactly as this phone builds it for the digest shown (and KIFF's words for
