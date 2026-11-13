@@ -6279,7 +6279,9 @@ final class AppModel: ObservableObject {
         } catch let e as TafsCloud.CloudError where e.status == 409 {
             guard gen == accountGeneration else { return }
             aiConsentError = e.errorDescription
-            if let newer = e.consent ?? (try? await cloud.aiConsent()), gen == accountGeneration {
+            var newer = e.consent
+            if newer == nil { newer = try? await cloud.aiConsent() }
+            if let newer, gen == accountGeneration {
                 aiConsent = newer
                 aiConsentAsked = newer
             }
