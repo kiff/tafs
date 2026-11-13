@@ -6286,7 +6286,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const agents = [...new Set([...cards.keys(), ...waiting.keys()])].filter((a) => !ours.has(a) && listable(access, a)).sort();
   // One whose setup stopped partway (Coach drafted it, its Card is signed, and no taf was made) shows by the name
   // Coach gave it, with the way back to the chat where it stopped: never its agent's id.
-  const halfMade = agents.length ? await halfMadeTafs(me.tenantID, records, new Set(agents), deps) : new Map<string, HalfMade>();
+  const halfMade = agents.length ? await halfMadeTafs(me, records, new Set(agents), deps) : new Map<string, HalfMade>();
   const others = agents.map((agent) => {
     const card = summary(cards.get(agent) ?? []);
     const held = waiting.get(agent) ?? 0;
@@ -6294,7 +6294,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     taken.push(color);
     const half = halfMade.get(agent);
     return { id: null, name: half?.name ?? agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card,
-      ...(half ? { finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } } : {}) };
+      ...(half?.coach && half.session ? { finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } } : {}) };
   });
   // Which doors this deployment offers (docs/doors.md): none, and the app shows no Doors.
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
@@ -6324,32 +6324,57 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
-/** A taf Coach drafted whose setup stopped partway: the name Coach gave it, and the chat where it stopped. */
-interface HalfMade { name: string; coach: string; session: string }
+/**
+ * A taf Coach drafted whose setup stopped partway: the name Coach gave it, and the chat where it stopped while that
+ * chat's result still waits (none once it expired: the name stays, from what tafs cloud kept).
+ */
+interface HalfMade { name: string; coach?: string; session?: string }
+
+/** Where tafs cloud keeps the name Coach gave an agent whose taf wasn't made, so it outlives the chat's result. */
+const halfMadeKey = (tenant: string, agent: string) => `${tenant}#half-made#${agent}`;
+/** How long that name is kept: well past a result's own wait. */
+const HALF_MADE_KEPT_MS = 180 * 24 * 3600_000;
 
 /**
  * The tafs whose setup stopped partway, by their KIFF agent, among `agents` (the account's other agents with Cards):
  * a Coach run paused on a result that names a new taf for that agent, not yet answered. The agent has its Card, so
  * KIFF lists it, but tafs cloud never made the taf (the owner left before the hand-over, or confirmed the Card after
  * it). Reading that chat again hands it over (handOverShown). One read of the account's paused runs; a read that
- * fails finds none, and the agent shows as before.
+ * fails finds none, and the agent shows as before. The chat to finish it in is given only to the person who started it.
  */
-async function halfMadeTafs(tenant: string, records: Taf[], agents: Set<string>, deps: Deps): Promise<Map<string, HalfMade>> {
+async function halfMadeTafs(me: KIFFIdentity, records: Taf[], agents: Set<string>, deps: Deps): Promise<Map<string, HalfMade>> {
+  const tenant = me.tenantID;
   const out = new Map<string, HalfMade>();
   const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
-  if (!coach) return out;
-  const paused = await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]);
+  const paused = coach ? await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]) : [];
   for (const r of paused) {
-    if (r.agent !== coach.id) continue;
+    if (!coach || r.agent !== coach.id) continue;
     for (const q of r.requirements ?? []) {
       const card = q.input as { type?: string; taf?: { agent?: unknown; name?: unknown; improves?: unknown } } | undefined;
       if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.taf || card.taf.improves) continue;
       const { agent, name } = card.taf;
       if (typeof agent !== "string" || !agents.has(agent) || out.has(agent)) continue;
       if (typeof name !== "string" || !name.trim()) continue;
-      out.set(agent, { name: name.trim(), coach: coach.id, session: r.session });
+      // The chat opens only for the person who started it (ownChat): anyone else sees the name, with no way in that
+      // would answer "no such chat" (qa-kiff on #873).
+      const own = r.requester?.kind === "member" && r.requester.id === me.subject;
+      out.set(agent, { name: name.trim(), ...(own ? { coach: coach.id, session: r.session } : {}) });
     }
   }
+  if (!deps.coach) return out;
+  const store = deps.coach;
+  const at = deps.now?.() ?? new Date();
+  // The name is kept the first time it's seen, and read back for an agent whose chat's result has expired since: its
+  // id never comes back. A store that can't be read or written changes nothing here.
+  await Promise.all([...agents].map(async (agent) => {
+    const found = out.get(agent);
+    const kept = await store.get(halfMadeKey(tenant, agent)).catch(() => undefined) as { name?: unknown } | undefined;
+    if (found && kept?.name !== found.name) {
+      await store.put(halfMadeKey(tenant, agent), { name: found.name }, new Date(at.getTime() + HALF_MADE_KEPT_MS)).catch(() => undefined);
+    } else if (!found && typeof kept?.name === "string" && kept.name) {
+      out.set(agent, { name: kept.name });
+    }
+  }));
   return out;
 }
 
