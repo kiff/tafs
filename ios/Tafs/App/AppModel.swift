@@ -196,6 +196,8 @@ final class AppModel: ObservableObject {
     /// The account's other agents with Cards, the ones tafs doesn't run (made through KIFF's
     /// API): listed apart, never counted as working.
     @Published private(set) var otherAgents: [Taf] = []
+    /// The tafs whose setup stopped partway, listed among the tafs (`setting_up`).
+    @Published private(set) var settingUp: [Taf] = []
     @Published private(set) var held: [HeldCall] = []
     @Published private(set) var record: [RecordEntry] = []
     @Published private(set) var refreshing = false
@@ -1735,7 +1737,22 @@ final class AppModel: ObservableObject {
         let before = Set(tafs.map(\.id))
         tafs = home.tafs.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
         if Set(tafs.map(\.id)) != before || listOrder.isEmpty { settleListOrder() }
-        otherAgents = home.others.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
+        if let half = home.settingUp {
+            // Home lists tafs only: a half-made taf among them, and `others`, which only repeats
+            // these for older apps, isn't drawn. KIFF's own agents never show here.
+            settingUp = half.filter { !$0.name.isEmpty }.map { s in
+                var t = Taf(id: holderID(s.kiffAgent.isEmpty ? "setting-up:" + s.name : s.kiffAgent), name: s.name, job: "", tools: [],
+                            colorIndex: s.color, card: Card(rules: [], issuedBy: ownerName))
+                t.settingUp = true
+                t.finish = s.finish
+                t.now = s.finish?.words ?? ""
+                return t
+            }
+            otherAgents = []
+        } else {
+            settingUp = []
+            otherAgents = home.others.map { KIFFMapping.taf($0, id: holderID($0.kiffAgent), owner: ownerName) }
+        }
         // Each open trial is its own entry in the menu, under its taf (kiff/tafs#173).
         for t in home.tafs where t.id != nil { setTrial(t.trial, of: holderID(t.kiffAgent)) }
         let coach = coachWithTools

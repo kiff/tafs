@@ -636,6 +636,11 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "push") return push(event, method, parts, deps);
   if (parts[1] === "alerts" && parts.length === 2) return alerts(event, method, await person(event, deps), deps);
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
+  if (parts[1] === "home" && parts[2] === "setting-up" && parts.length === 5 && parts[4] === "discard" && method === "POST") {
+    let agent = "";
+    try { agent = decodeURIComponent(parts[3] ?? ""); } catch { throw new HTTPError(404, "no taf being set up of yours by that agent"); }
+    return discardHalfMade(event, await person(event, deps), agent, deps);
+  }
   if (parts[1] === "calendar" && parts.length === 2 && method === "GET") return calendar(event, await person(event, deps), deps);
   if (parts[1] === "record" && method === "GET") return recordRoute(event, parts, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
@@ -2571,6 +2576,8 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id, readerOf(me, s)).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
   const components: ThreadComponent[] = [];
+  // Words written while a card waited, by where they were recorded: unless Coach showed that card again, they answered it.
+  const wroteWhile: Array<{ run: string; seq: number; type: unknown; message: ThreadMessage }> = [];
   const held: ThreadHeld[] = [];
   /** Runs a door's message started, by run: their answers go back through it. */
   const doorRuns = new Map<string, string>();
@@ -2655,12 +2662,17 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         const b = (e.body ?? {}) as { id?: unknown; type?: unknown; answer?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown; answered_by?: unknown };
         const card = components.findLast((c) => c.run === e.run && (c.component as { id?: unknown })?.id === b.id);
         if (card) card.answer = cardAnswer(b, iso(e.time), lang);
-        // Words the owner wrote while the card waited answered it: they show as their message, as sent.
-        if (typeof b.wrote === "string" && b.wrote.trim()) {
+        // Words the owner wrote while the card waited answered it: they show as their message, as sent. kiff/agents records
+        // the whole turn Coach was given ([tafs coach lines], [tafs time zone]… then "The owner says: …"): only the owner's
+        // words are theirs, the same as an owner_message's (go-to-market job 3, 13 Nov: the envelope showed as the owner's).
+        const wrote = typeof b.wrote === "string" ? ownerWords(b.wrote.trim()) : "";
+        if (wrote) {
           // Recorded also as the run's message, at the same time: one message, marked as the answer.
-          const same = sameOwnerMessage(messages, r.session.id, iso(e.time), b.wrote.trim());
-          if (same) same.answers = str(b.id);
-          else messages.push({ id: `${e.run}.${e.seq}`, at: iso(e.time), from: "owner", kind: "message", text: b.wrote.trim(), session: r.session.id, answers: str(b.id) });
+          const same = sameOwnerMessage(messages, r.session.id, iso(e.time), wrote);
+          const message: ThreadMessage = same ?? { id: `${e.run}.${e.seq}`, at: iso(e.time), from: "owner", kind: "message", text: wrote, session: r.session.id };
+          message.answers = str(b.id);
+          if (!same) messages.push(message);
+          wroteWhile.push({ run: e.run, seq: e.seq, type: b.type, message });
         }
         continue;
       }
@@ -2681,14 +2693,17 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         if (door) doorRuns.set(e.run, door.app);
         // Words written while a card waited are already the card's answer, at the same time: one message.
         // It keeps the run's id, the one its send answered, so the app matches its send to it.
-        const same = !door && !attached.length ? sameOwnerMessage(messages, r.session.id, iso(e.time), ownerWords(text)) : undefined;
+        const said = ownerWords(text);
+        // An envelope with nothing of the owner's in it and nothing attached isn't a message of theirs.
+        if (!door && !said && !attached.length) continue;
+        const same = !door && !attached.length ? sameOwnerMessage(messages, r.session.id, iso(e.time), said) : undefined;
         if (same) {
           if (first) same.id = inputID(e.run);
           continue;
         }
         messages.push({
           id: first ? inputID(e.run) : `${e.run}.${e.seq}`,
-          at: iso(e.time), from: "owner", kind, text: door ? door.text.trim() : kind === "kickoff" ? checkStart(ownerWords(text), lang) : ownerWords(text), session: r.session.id,
+          at: iso(e.time), from: "owner", kind, text: door ? door.text.trim() : kind === "kickoff" ? checkStart(said, lang) : said, session: r.session.id,
           ...(door ? { door: { app: door.app, from: door.from, ...(door.subject ? { subject: door.subject } : {}) } } : {}),
           ...(attached.length ? { attachments: attached } : {}),
         });
@@ -2748,6 +2763,12 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   if (!only && taf.weekOne) {
     const newest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
     messages.push({ id: `week-one.${taf.id}`, at: taf.weekOne.at, from: "taf", kind: "message", text: weekOneWords(taf.name, taf.weekOne, lang), session: newest?.id ?? "", note: true });
+  }
+  // A question asked while a card waited isn't its answer (go-to-market job 3, 13 Nov: "What time is it now" was labelled
+  // as answering the rules card): Coach answers it and shows the card again, the same kind, in the same run. The message is
+  // then the owner's own, never marked as the earlier card's answer.
+  for (const w of wroteWhile) {
+    if (components.some((c) => c.run === w.run && c.seq > w.seq && (c.component as { type?: unknown } | undefined)?.type === w.type)) delete w.message.answers;
   }
   messages.sort((a, b) => a.at.localeCompare(b.at));
   components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
@@ -2976,7 +2997,7 @@ async function markConnected(tenant: string, components: ThreadComponent[], deps
 /** An `answered` event's body as the app shows it. */
 function cardAnswer(b: { type?: unknown; answer?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown; answered_by?: unknown }, at: string, lang: Lang = "en"): CardAnswer {
   if (b.unanswered === true) return { state: "no_answer", words: "", at };
-  if (typeof b.wrote === "string" && b.wrote) return { state: "wrote", words: b.wrote, at };
+  if (typeof b.wrote === "string" && b.wrote.trim()) return { state: "wrote", words: ownerWords(b.wrote.trim()), at };
   const out: CardAnswer = { state: "answered", words: approvalAnswerWords(b, lang) ?? (typeof b.words === "string" ? b.words : ""), at };
   if (typeof b.answered_by === "string" && b.answered_by) out.by = b.answered_by;
   const o = b.answer as { taf_id?: unknown; version?: unknown; failed?: unknown } | null | undefined;
@@ -6488,7 +6509,13 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const color = freeColor(taken);
     taken.push(color);
     // The chat to finish it in goes only to the person who started it (#879); anyone else sees the name alone.
-    return [{ name: half.name, kiff_agent: agent, color, ...(half.coach && half.session ? { finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } } : {}) }];
+    const w = wordsIn(langOf(event));
+    // Its starter can also discard it (a Discard beside Finish setting up, 13 Nov): the phone revokes the Cards in force
+    // on its agent, listed here as Home lists a live taf's `card.ids`, then asks tafs cloud.
+    return [{ name: half.name, kiff_agent: agent, color, ...(half.coach && half.session ? {
+      finish: { taf: half.coach, session: half.session, words: w.home_finish_setup },
+      discard: { cards: (cards.get(agent) ?? []).map((c) => c.id), words: { button: w.home_discard, title: w.home_discard_title, text: w.home_discard_text, yes: w.home_discard_yes, no: w.home_discard_no } },
+    } : {}) }];
   });
   // Apps from before setting_up read the same tafs from others, as they drew them there (Android 77, iPhone and iPad).
   const others = settingUp.map((t) => {
@@ -6529,6 +6556,59 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
  * chat's result still waits (none once it expired: the name stays, from what tafs cloud kept).
  */
 interface HalfMade { name: string; coach?: string; session?: string }
+
+/**
+ * POST /v1/home/setting-up/{kiff_agent}/discard: a taf being set up, dropped by the person who started it (a Discard
+ * beside Finish setting up, 13 Nov: no one waits a week for its Card to lapse). The phone revokes the agent's Cards in
+ * KIFF first (`discard.cards` on Home), as it does before a removal; this checks KIFF holds none in force any more
+ * (409 `cards_in_force` otherwise: nothing ends while a Card could still act), then ends the Coach chat that drafted
+ * it (its paused run, cancelled) and forgets the name kept for it, so Home stops listing it. Signed by the phone as a removal is (KIFF-Device-Signature over POST, the
+ * path and the empty body, the approval key). Only the starter's own half-made taf, proved as Home proves it: a
+ * paused run of this account's Coach whose result names that agent with the setup's own unclaimed draft. 404 otherwise.
+ */
+async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string, deps: Deps): Promise<unknown> {
+  if (!/^[A-Za-z0-9._-]{1,128}$/.test(agent)) throw new HTTPError(404, "no taf being set up of yours by that agent");
+  const records = await deps.tafs.list(me.tenantID);
+  const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
+  const paused = coach ? await agentsCall(() => deps.agents.pausedRuns(me.tenantID)) : [];
+  let found: Run | undefined;
+  for (const r of paused) {
+    if (!coach || r.agent !== coach.id || r.requester?.kind !== "member" || r.requester.id !== me.subject) continue;
+    for (const q of r.requirements ?? []) {
+      const card = q.input as { type?: string; taf?: { agent?: unknown; draft?: unknown; improves?: unknown } } | undefined;
+      if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.taf || card.taf.improves || card.taf.agent !== agent || typeof card.taf.draft !== "string") continue;
+      const held = await deps.agents.tafDraft(me.tenantID, card.taf.draft).catch(() => undefined);
+      if (held && held.agent_id === agent && !held.claimed) found = r;
+    }
+  }
+  if (!found || !coach) throw new HTTPError(404, "no taf being set up of yours by that agent");
+  await discardSigned(event, agent, deps);
+  // The Card is revoked first, by the phone: a discard that went on with one in force would leave it acting, unseen.
+  const { mandates } = await readKIFF(bearer(event), deps.fetch, deps.kiffBase);
+  const left = mandates.filter((m) => m.subject === agent && !m.revoked_at);
+  if (left.length) throw new HTTPError(409, `${left.length} Card${left.length === 1 ? "" : "s"} still in force on this agent: revoke ${left.length === 1 ? "it" : "them"} first`, { code: "cards_in_force", cards: left.map((m) => m.id) });
+  await agentsCall(() => deps.agents.cancelRun(me.tenantID, coach.id, found.id, member(me)));
+  await deps.coach?.remove(halfMadeKey(me.tenantID, agent)).catch(() => undefined);
+  console.log(JSON.stringify({ event: "half_made_discard", tenant: me.tenantID, agent, run: found.id }));
+  await tellChange(me.tenantID, "taf", agent, deps);
+  return { discarded: true, kiff_agent: agent };
+}
+
+/** A discard is signed by the phone as a removal is, under the same switch (TAFS_SIGNED_REMOVE). */
+async function discardSigned(event: HTTPEvent, agent: string, deps: Deps): Promise<void> {
+  const signature = event.headers?.["kiff-device-signature"] ?? "";
+  if (!signature) {
+    if (process.env.TAFS_SIGNED_REMOVE === "on") throw new HTTPError(403, wordsIn(langOf(event)).remove_signed, { code: "signature_required" });
+    console.log(JSON.stringify({ event: "half_made_discard", signed: false, agent }));
+    return;
+  }
+  const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
+  await checkSigned({ token: bearer(event), kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, lang: langOf(event),
+    signed: { method: "POST", uri, body: rawBody(event), signature } }, "approval").catch((err) => {
+    if (err instanceof ApprovalError && err.code === "critical_key_required") throw new HTTPError(403, wordsIn(langOf(event)).remove_signed, { code: "critical_key_required" });
+    return approvalFailure(err);
+  });
+}
 
 /** Where tafs cloud keeps the name Coach gave an agent whose taf wasn't made, so it outlives the chat's result. */
 const halfMadeKey = (tenant: string, agent: string) => `${tenant}#half-made#${agent}`;

@@ -1,0 +1,1 @@
+- **iPhone and iPad: Home lists tafs only.** A taf whose setup stopped partway shows among your tafs by its name, with no "Ready". If it was your Coach chat, it shows "Finish setting up". KIFF's own agents no longer show under "Other agents with Cards". Android does the same (docs/ios-app.md › A taf whose setup stopped partway).

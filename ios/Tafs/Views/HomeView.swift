@@ -45,6 +45,9 @@ struct HomeView: View {
                 let sections = model.tafSections
                 VStack(spacing: 10) {
                     ForEach(sections.own) { taf in tafLinks(taf) }
+                    // A taf being set up, among the tafs: by its name, with no state; its Coach chat
+                    // for the person it was (docs/tafs.md).
+                    ForEach(model.settingUp) { taf in settingUpRow(taf) }
                 }
                 if !sections.shared.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
@@ -245,6 +248,18 @@ struct HomeView: View {
         return model.gallery?.asRecipes(labels: model.recipes?.labels) ?? model.recipes ?? TafsCloud.Recipes()
     }
 
+    @ViewBuilder
+    private func settingUpRow(_ taf: Taf) -> some View {
+        if let finish = taf.finish, model.canFinishSetup(finish) {
+            Button { Task { await model.finishSetup(finish) } } label: { TafRow(taf: taf) }
+                .buttonStyle(.drivablePlain)
+                .driveWords(taf.name)
+                .accessibilityIdentifier("home.finish-setup")
+        } else {
+            TafRow(taf: taf)
+        }
+    }
+
     /// "Say it in your own words" opens Coach with nothing in its box, for someone who may use
     /// it; nil, the row isn't drawn.
     private var ownWords: (() -> Void)? {
@@ -332,6 +347,9 @@ struct TafRow: View {
                     } else if taf.finish != nil {
                         // Its setup stopped partway: it needs the owner, in tafs cloud's words.
                         Text(taf.now).scaledFont(13).foregroundColor(Theme.amberText).oneLineUnlessLarge()
+                    } else if taf.settingUp {
+                        // Being set up, by someone else's Coach chat: its name alone, no line.
+                        EmptyView()
                     } else if let line = taf.healthNow {
                         // Idle and not healthy: tafs cloud's line says why, where it would say the next run.
                         Text(line).scaledFont(13).foregroundColor(taf.health?.failing == true ? Theme.no : Theme.amberText).oneLineUnlessLarge()
@@ -346,7 +364,7 @@ struct TafRow: View {
                         .buttonStyle(.borderless)
                         .accessibilityLabel(Words.Home.haltedOpenHalt)
                         .accessibilityIdentifier("taf.halted.\(taf.name)")
-                } else if !(taf.attention && taf.state == .working) {
+                } else if !taf.settingUp, !(taf.attention && taf.state == .working) {
                     // What went wrong is said in its line, in place of "Working" (docs/reliability.md).
                     StateChip(state: taf.state)
                 }

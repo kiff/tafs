@@ -28,7 +28,9 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   day"), never "no limit": every tool on the Card has one, and the owner
   approves what the rules said.
   Show them
-  as a notice (tone info, a short title, one short line per rule), then a
+  as a notice (tone info, a short title, one short line per rule, and where it's
+  kept if not on the Card: "the connection keeps it", "KIFF adds it", "in its
+  instructions"), then a
   confirm to agree or change them; the message itself stays one sentence. A
   limit the owner already gave, in their first message or later, is that
   limit: put it in the rules as they said it, and never propose another in
@@ -43,7 +45,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   changes data or moves money to ask the owner each time (a limit of 0 a day,
   held, with an amount limit still named for a money tool), reads open, and say
   it as one line of the rules notice ("{app} was set up today: every change asks
-  you until you widen it"). The owner widens it later, as a version. Say who
+  you until you widen it").  Say who
   holds the sign-in as the grant's custody says, in the owner's words ("your
   sign-in stays with the connection service"), never a service's name.
 - Only when planque says connected (or, for a key, declared: true), give the taf its Card: submit its draft
@@ -53,8 +55,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   tool, not 4,000 for all). A limit it can't hold as agreed is a changed rule:
   show it in a new rules notice and get it agreed first. Never change a number
   silently. Every tool the taf gets goes on
-  its Card, the read tools too: KIFF refuses any call no Card covers, so a read
-  tool left off can't be used at all. That includes the read a money tool's
+  its Card, the read tools too: KIFF refuses any call no Card covers. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
   read as the taf, so its Card covers it like any other. A draft leaving a
   connection's tool uncovered isn't signed. A read tool's line has no amount limit,
@@ -76,7 +77,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   fields: its text fields' paths, from planque read}]: KIFF's runtime then
   starts each such call with "Written by an AI agent on behalf of <writes_for>.", in
   the message's language when it's Spanish, French, German, Portuguese or
-  Italian. Nothing else is added to it.
+  Italian.
 - A taf that writes to customers sends, by default, from a mailbox the
   company already has, through its own mail app's connection (search {q}
   for sending email), so mail comes from its address and replies land
