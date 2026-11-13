@@ -29,6 +29,7 @@ function world() {
   const taf: Taf = { id: RAE, name: "Rae", job: "refunds", kiffAgent: "rae", nameClaim: "c", created: "2026-11-01T09:00:00Z" };
   tafs.held.set(`t_acme#${RAE}`, taf);
   void agents.api.putAgent("t_acme", RAE, {} as never);
+  void agents.api.createSchedule("t_acme", { id: RAE, agent: RAE, cron: "0 9 * * 1-5", input: "Work the queue.", enabled: true });
   agents.calls.length = 0;
   const coach = memoryCoach(() => NOW);
   const deps = {
@@ -52,7 +53,11 @@ async function call(w: World, method: string, path: string, token: string, body?
 }
 
 const allow = (w: World, token: string) => call(w, "POST", "/v1/me/ai-consent", token, { version: "1" });
-const halted = async (w: World) => (await w.agents.api.halted("t_acme", RAE)).own;
+/** Paused: its schedule is off, the one start tafs cloud can't gate. Nothing is halted, so a person's own chat goes on. */
+const halted = async (w: World) => {
+  expect((await w.agents.api.halted("t_acme", RAE)).own).toBe(false);
+  return !(await w.agents.api.getSchedule("t_acme", RAE)).enabled;
+};
 
 describe("runs with no person in the moment take their taf's consent", () => {
   it("pauses a taf from before until someone who manages tafs allows AI use, then resumes it", async () => {
@@ -63,10 +68,10 @@ describe("runs with no person in the moment take their taf's consent", () => {
     expect((await consentPauseOf(w.coach, "t_acme", RAE))?.why).toBe("no_one");
     const shown = await call(w, "GET", "/v1/tafs", "ana");
     expect((shown.body.tafs as Array<{ id: string; consent_paused?: unknown }>).find((t) => t.id === RAE)?.consent_paused).toEqual({ why: "no_one", words: expect.stringContaining("Paused: no one has allowed AI use") });
-    // Again: nothing changes, nothing is halted twice.
+    // Again: nothing changes, nothing is switched twice.
     w.agents.calls.length = 0;
     expect(await sweepConsent(w.deps)).toEqual([]);
-    expect(w.agents.calls.filter((c) => c.startsWith("halt"))).toEqual([]);
+    expect(w.agents.calls.filter((c) => c.startsWith("switchSchedule"))).toEqual([]);
     // Someone who can't manage tafs allowing it covers their own words, not the account's tafs.
     await allow(w, "bo");
     expect(await halted(w)).toBe(true);
@@ -99,14 +104,34 @@ describe("runs with no person in the moment take their taf's consent", () => {
     expect(await tafConsentOf(w.coach, "t_acme", RAE)).toMatchObject({ subject: "u_ana", by: "took_over" });
   });
 
-  it("leaves an owner's own halt in place when a yes ends the pause", async () => {
+  it("leaves an owner's own pause in place when a yes ends the pause for consent, and refuses their resume until then", async () => {
     const w = world();
-    await w.agents.api.halt("t_acme", RAE);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/pause`, "ana")).status).toBe(200);
     expect(await settleConsent(w.deps, "t_acme")).toEqual({ paused: [RAE], resumed: [] });
-    expect((await consentPauseOf(w.coach, "t_acme", RAE))?.owner_halted).toBe(true);
+    expect((await consentPauseOf(w.coach, "t_acme", RAE))?.owner_paused).toBe(true);
+    // The owner's resume would start runs with no person: refused while no consent is on record.
+    const refused = await call(w, "POST", `/v1/tafs/${RAE}/resume`, "ana");
+    expect(refused.status).toBe(409);
+    expect(refused.body.code).toBe("ai_consent_required");
     await allow(w, "ana");
     expect(await consentPauseOf(w.coach, "t_acme", RAE)).toBeUndefined();
     expect(await halted(w)).toBe(true);
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/resume`, "ana")).status).toBe(200);
+    expect(await halted(w)).toBe(false);
+  });
+
+  it("keeps a person's own chat going on their consent while the taf is paused for consent, and never pauses Coach", async () => {
+    const w = world();
+    await sweepConsent(w.deps);
+    expect(await halted(w)).toBe(true);
+    // Bo allowed AI use: his message is his own words on his own consent.
+    await allow(w, "bo");
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, "bo", { text: "Refund order 42" })).status).toBe(200);
+    // Coach is left out of the sweep.
+    w.tafs.held.set("t_acme#taf-setup0000000000000000", { id: "taf-setup0000000000000000", name: "Setup", job: "setup", kiffAgent: "setup", nameClaim: "c", created: "2026-11-01T09:00:00Z" });
+    const r = await sweepConsent(w.deps);
+    expect(r.flatMap((x) => x.paused)).not.toContain("taf-setup0000000000000000");
+    expect(await consentPauseOf(w.coach, "t_acme", "taf-setup0000000000000000")).toBeUndefined();
   });
 
   it("is off without the requirement, as for the person routes", async () => {

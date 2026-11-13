@@ -90,7 +90,7 @@ function history(kept: Kept | undefined): Kept["earlier"] {
  * schedule's firing. Each taf's runs take one person's consent: its maker's, recorded when it's made; for a taf from
  * before, the account's first yes from someone who manages its tafs; or that of a manager who took it over. While that
  * person's consent isn't given (withdrawn, or not to the current words), its runs start no model turn: tafs cloud
- * holds what came in and pauses the taf, with the reason, until it's given again or a manager takes it over.
+ * holds what came in and switches its schedules off, with the reason, until it's given again or a manager takes it over.
  */
 
 /** The refusal's code, beside a person route's: tafs cloud's own, never kiff/agents'. */
@@ -114,8 +114,8 @@ export interface TafConsent { subject: string; at: string; by: "maker" | "took_o
 /** Why a taf's runs can't start a model turn: no one's consent is on record for it, or that person's isn't given. */
 export type ConsentWhy = "no_one" | "not_given";
 
-/** A pause for consent; owner_halted: its owner halted it too, so a yes ends the pause and leaves their halt. */
-export interface ConsentPause { why: ConsentWhy; at: string; owner_halted?: boolean }
+/** A pause for consent; owner_paused: its owner paused it too, so a yes ends this pause and leaves their schedule off. */
+export interface ConsentPause { why: ConsentWhy; at: string; owner_paused?: boolean }
 
 /** Records who made the taf: its runs take their consent. */
 export async function recordMaker(store: CoachStore | undefined, tenant: string, taf: string, subject: string, now: Date): Promise<void> {

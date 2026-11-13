@@ -1,3 +1,4 @@
+import { waitsForConsent } from "../consent.js";
 import { AgentsError } from "../agents.js";
 import { type AnsweredEvent, arrive, claimAnswered, type DoorsContext, EARLY_EVENT_KEPT_MS, type KeptEvent, type Outcome, rememberAnswered, unclaimAnswered } from "./doors.js";
 import { type Arrival, doorKeys } from "./model.js";
@@ -137,6 +138,11 @@ export async function inbound(req: Inbound, ctx: DoorsContext): Promise<InboundR
           // delivery of this event meanwhile (a slow first delivery whose claim this one took over), which is
           // the same answer; or run out, or continued, which is nothing waiting, as below.
           const answered = await ctx.agents.answerWait(e.tenant, taf.id, run.run, run.call, e.result).then(() => true, async (err) => {
+            // Its taf is paused for consent: the event is kept as when nothing waits, and waits with the taf (consent.ts).
+            if (waitsForConsent(err)) {
+              await unclaimAnswered(ctx, e.tenant, e.id, claim).catch(() => undefined);
+              return false;
+            }
             if (err instanceof AgentsError && err.status === 409) {
               if (await answeredMeanwhile(ctx, e.tenant, taf.id, run.run, run.call)) return true;
               await unclaimAnswered(ctx, e.tenant, e.id, claim).catch(() => undefined);

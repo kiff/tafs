@@ -821,6 +821,14 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 4 && method === "POST" && (action === "pause" || action === "resume")) {
     await needTaf(event, me, taf, deps);
+    if (deps.aiConsent && deps.coach) {
+      const paused = await consentPauseOf(deps.coach, me.tenantID, taf.id);
+      // Its schedule starts runs with no person: never on again while their consent is missing (consent.ts).
+      if (action === "resume") {
+        const c = await unattendedConsent(deps.coach, me.tenantID, taf.id);
+        if (!("subject" in c)) throw new HTTPError(409, consentPauseWords(c.why, langOf(event)), { code: AI_CONSENT_CODE });
+      } else if (paused && !paused.owner_paused) await deps.coach.put(consentPauseKey(me.tenantID, taf.id), { ...paused, owner_paused: true }, new Date((deps.now?.() ?? new Date()).getTime() + 365 * 24 * 3600_000));
+    }
     const s = await pauseAll(me.tenantID, taf, action === "resume", deps);
     await tellChange(me.tenantID, "taf", taf.id, deps);
     return { taf: await view(taf, me, deps, s, undefined, langOf(event)) };
@@ -1305,8 +1313,6 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
     const [kiff, runtime] = await Promise.all([inKIFF(() => haltInKIFF(token, agent, deps.fetch, deps.kiffBase)),
       agentsCall(() => deps.agents.halt(me.tenantID, taf?.id))]);
     const view = haltView(kiff, runtime);
-    // The owner's own halt outlasts a pause for consent: a later yes ends only the pause (consent.ts).
-    if (taf && deps.coach) await markOwnerHalt(deps, me.tenantID, taf.id);
     // A halt interrupts (kiff/tafs#210): every phone that answers hears it, through a Focus.
     await tellPhones(deps, me.tenantID, (lang) => haltNotification(taf, view.state === "halted", lang));
     await logEvent(deps.events, me.tenantID, { kind: "halted", ...(taf ? { taf: taf.id, name: taf.name } : {}) }, deps.now?.());
@@ -1320,12 +1326,6 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
       throw new HTTPError(502, "KIFF didn't say whether it is resumed; try again");
     }
     if (kiff.state !== "running") throw new HTTPError(409, "resume it in KIFF first: the phone signs that with Face ID");
-    // A taf paused for consent stays paused until its runs may start a model turn: a resume never steps past that.
-    if (taf && deps.aiConsent) {
-      const c = await unattendedConsent(deps.coach, me.tenantID, taf.id);
-      if (!("subject" in c)) throw new HTTPError(409, consentPauseWords(c.why, langOf(event)), { code: AI_CONSENT_CODE });
-      if (deps.coach) await deps.coach.remove(consentPauseKey(me.tenantID, taf.id));
-    }
     const runtime = await agentsCall(() => deps.agents.resume(me.tenantID, taf?.id));
     // The halt's notification is replaced, quietly, so none says halted after a resume (kiff/tafs#236, item 21).
     await tellPhones(deps, me.tenantID, (lang) => resumeNotification(taf, lang));
@@ -3494,20 +3494,22 @@ async function requireUnattended(deps: Deps, tenant: string, tafID: string): Pro
 }
 
 /**
- * Pauses the taf for consent: kiff/agents halts it, so its schedule's firings start nothing either, and tafs cloud keeps
- * why, so a yes resumes this pause and never an owner's own halt. Once per pause: a second refusal changes nothing.
+ * Pauses the taf for consent: its schedules are switched off, the one start tafs cloud can't gate, and tafs cloud keeps
+ * why. Everything else with no person in the moment is gated where it starts; a person's own chat, steer and Run now go
+ * on, on their own consent, and nothing at work is cancelled (dev-android on #855). A yes switches the schedules back on,
+ * unless the owner had paused the taf. Once per pause: a second refusal changes nothing.
  */
 async function pauseForConsent(deps: Deps, tenant: string, tafID: string, why: ConsentWhy): Promise<void> {
   const before = deps.coach ? await consentPauseOf(deps.coach, tenant, tafID) : undefined;
   if (!deps.coach || before?.why === why) return;
   const now = deps.now?.() ?? new Date();
-  // Halted already by its owner: kept as theirs, so a yes later ends only this pause.
-  const owner = before?.owner_halted ?? (await deps.agents.halted(tenant, tafID).catch(() => undefined))?.own === true;
-  await deps.agents.halt(tenant, tafID);
-  await deps.coach.put(consentPauseKey(tenant, tafID), { why, at: now.toISOString(), ...(owner ? { owner_halted: true } : {}) }, new Date(now.getTime() + 365 * 24 * 3600_000));
   const taf = await deps.tafs.get(tenant, tafID).catch(() => undefined);
+  // Paused already by its owner: kept as theirs, so a yes later ends only this pause.
+  const owner = before?.owner_paused ?? taf?.paused === true;
+  await deps.coach.put(consentPauseKey(tenant, tafID), { why, at: now.toISOString(), ...(owner ? { owner_paused: true } : {}) }, new Date(now.getTime() + 365 * 24 * 3600_000));
+  if (taf && !taf.unscheduled && !owner) await switchSchedules(tenant, taf, false, deps);
   await logEvent(deps.events, tenant, { kind: "consent_paused", taf: tafID, ...(taf ? { name: taf.name } : {}), title: consentPauseWords(why, "en") }, now);
-  await tellChange(tenant, "halted", tafID, deps);
+  await tellChange(tenant, "taf", tafID, deps);
 }
 
 /** Ends a pause for consent once the taf's runs may start again; an owner's own halt stays. */
@@ -3515,11 +3517,11 @@ async function resumeFromConsent(deps: Deps, tenant: string, tafID: string): Pro
   const paused = deps.coach ? await consentPauseOf(deps.coach, tenant, tafID) : undefined;
   if (!deps.coach || !paused) return false;
   if (!("subject" in await unattendedConsent(deps.coach, tenant, tafID))) return false;
-  if (!paused.owner_halted) await deps.agents.resume(tenant, tafID);
-  await deps.coach.remove(consentPauseKey(tenant, tafID));
   const taf = await deps.tafs.get(tenant, tafID).catch(() => undefined);
+  if (taf && !taf.unscheduled && !paused.owner_paused && !taf.paused) await switchSchedules(tenant, taf, true, deps);
+  await deps.coach.remove(consentPauseKey(tenant, tafID));
   await logEvent(deps.events, tenant, { kind: "consent_resumed", taf: tafID, ...(taf ? { name: taf.name } : {}) }, deps.now?.());
-  await tellChange(tenant, "resumed", tafID, deps);
+  await tellChange(tenant, "taf", tafID, deps);
   return true;
 }
 
@@ -3531,7 +3533,8 @@ async function resumeFromConsent(deps: Deps, tenant: string, tafID: string): Pro
 export async function settleConsent(deps: Deps, tenant: string): Promise<{ paused: string[]; resumed: string[] }> {
   const out = { paused: [] as string[], resumed: [] as string[] };
   if (!deps.aiConsent || !deps.coach) return out;
-  for (const taf of (await deps.tafs.list(tenant)).filter((t) => !t.removing)) {
+  // Coach (Setup) is never paused: its runs come from a person's own routes, each gated on their consent (dev-android on #855).
+  for (const taf of (await deps.tafs.list(tenant)).filter((t) => !t.removing && t.job !== SETUP_JOB)) {
     const c = await unattendedConsent(deps.coach, tenant, taf.id);
     const paused = await consentPauseOf(deps.coach, tenant, taf.id);
     if (!("subject" in c)) {
@@ -3542,12 +3545,6 @@ export async function settleConsent(deps: Deps, tenant: string): Promise<{ pause
   }
   if (out.resumed.length && deps.doors) await replayHeld(doorContext(deps), tenant).catch((err) => console.error("held not replayed:", (err as Error).message));
   return out;
-}
-
-/** The owner halted a taf paused for consent: the halt is theirs from now on. */
-async function markOwnerHalt(deps: Deps, tenant: string, tafID: string): Promise<void> {
-  const p = await consentPauseOf(deps.coach, tenant, tafID);
-  if (p && !p.owner_halted) await deps.coach!.put(consentPauseKey(tenant, tafID), { ...p, owner_halted: true }, new Date((deps.now?.() ?? new Date()).getTime() + 365 * 24 * 3600_000));
 }
 
 /** A taf's pause for consent, as the apps draw it. */
@@ -4158,6 +4155,11 @@ async function pauseAll(tenant: string, taf: Taf, on: boolean, deps: Deps): Prom
     if (on) delete next.paused; else next.paused = true;
     if (await deps.tafs.putIf(tenant, next, cur)) break;
   }
+  return switchSchedules(tenant, taf, on, deps);
+}
+
+/** Switches every schedule that starts the taf: its own, its other timetables and its follow-ups still to come. */
+async function switchSchedules(tenant: string, taf: Taf, on: boolean, deps: Deps): Promise<Schedule> {
   const s = await agentsCall(() => deps.agents.switchSchedule(tenant, taf.id, on));
   const now = (deps.now?.() ?? new Date()).getTime();
   let missed = 0;
@@ -4186,7 +4188,9 @@ async function applyKnob(me: KIFFIdentity, taf: Taf, n: number, deps: Deps): Pro
   const input = own?.input ?? jobOf(taf).kickoff;
   // A paused taf stays paused when its dial is written: its schedules are written off.
   const paused = await deps.tafs.get(me.tenantID, taf.id).then((t) => t?.paused, () => taf.paused);
-  const enabled = paused !== true;
+  // So does one paused for consent (consent.ts): its schedules start runs with no person.
+  const forConsent = deps.aiConsent ? await consentPauseOf(deps.coach, me.tenantID, taf.id) : undefined;
+  const enabled = paused !== true && !forConsent;
   // Each schedule reads the taf's work first: the version's check, else the taf's. Going back to a version from
   // before, with more than one timetable, writes it as it was, unchecked, rather than hand its work twice.
   let planned: PlannedSchedule[];
@@ -7876,7 +7880,11 @@ function doorContext(deps: Deps): DoorsContext {
   const agents: DoorsContext["agents"] = {
     getRun: (...a) => deps.agents.getRun(...a),
     runs: (...a) => deps.agents.runs(...a),
-    answerWait: (...a) => deps.agents.answerWait(...a),
+    // An app's event answering a run that waits on it: the run goes on to its next model turn, with no person (consent.ts).
+    answerWait: async (tenant, ...rest) => {
+      await requireUnattended(deps, tenant, rest[0]);
+      return deps.agents.answerWait(tenant, ...rest);
+    },
     startRun: async (tenant, ...rest) => {
       if (deps.deletions && await deps.deletions.get(tenant)) throw new AgentsError(410, "this account is being deleted");
       // A door's message, an app's event, a held one released: no person in the moment (consent.ts).

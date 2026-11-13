@@ -12,6 +12,7 @@ import { cut, htmlText, ownText } from "../src/cloud/doors/text.js";
 import type { WhatsAppClient } from "../src/cloud/doors/whatsapp.js";
 import { fakeAgents, memoryAccounts, memoryCoach, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import { eventLog } from "../src/cloud/events.js";
+import { consentPauseOf } from "../src/cloud/consent.js";
 
 const NOW = new Date("2026-10-24T09:00:00Z");
 const OWNER = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"], email: "Ana@Acme.example" };
@@ -1639,13 +1640,32 @@ describe("an app's event for a taf whose runs have no consent", () => {
     expect(r.status).toBe(202);
     expect(r.body).toEqual({ outcome: "held" });
     expect(w.agents.runs.filter((x) => x.agent === REFUNDS)).toHaveLength(0);
-    expect((await w.agents.api.halted("t_acme", REFUNDS)).own).toBe(true);
+    expect((await consentPauseOf(w.consent, "t_acme", REFUNDS))?.why).toBe("no_one");
     // A second event waits behind it, and still starts nothing.
     expect((await appEvent(w, { id: "ev_consent2" })).body).toEqual({ outcome: "held" });
     expect(w.agents.runs.filter((x) => x.agent === REFUNDS)).toHaveLength(0);
     // Ana manages tafs: her yes is the account's first, the taf goes on, and both events run, oldest first.
     expect((await send(w, "POST", "/v1/me/ai-consent", { token: "ana", body: { version: "1" } })).status).toBe(200);
-    expect((await w.agents.api.halted("t_acme", REFUNDS)).own).toBe(false);
+    expect(await consentPauseOf(w.consent, "t_acme", REFUNDS)).toBeUndefined();
     expect(w.agents.runs.filter((x) => x.agent === REFUNDS)).toHaveLength(2);
+  });
+
+  // qa-kiff on #855: an event that answers a run waiting on it makes that run go on, a model turn with no person.
+  it("never answers a run that waits on it: the event is kept, and the taf paused", async () => {
+    const w = world();
+    w.consent = memoryCoach(w.now);
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    const at = w.now().toISOString();
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_w", agent: REFUNDS, session: "s-run_w", trigger: "schedule", status: "PAUSED", cost_micro_usd: 0, turns: 1, created: at, updated: at,
+      requirements: [{ call_id: "call-run_w", tool: "hubspot_reply", input: { deal: "d9" }, operation: "", expires: new Date(w.now().getTime() + 15 * 60_000).toISOString(), kind: "event",
+        wait: { grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", key: "reply_9", words: "The deal's owner answers in HubSpot." } }] } as Run & { tenant: string });
+    const r = await appEvent(w, { id: "ev_reply9", key: "reply_9", payload: { deal: "d9", reply: "reply_9" } });
+    expect(r.status).toBe(202);
+    expect(r.body).toEqual({ outcome: "held" });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerWait"))).toEqual([]);
+    expect((await consentPauseOf(w.consent, "t_acme", REFUNDS))?.why).toBe("no_one");
+    // Kept for the run's pause note, as when nothing waits yet.
+    expect(await w.store.get(doorKeys.earlyEvent("t_acme", "grt_hub", "HUBSPOT_DEAL_CREATED", "reply_9"))).toBeTruthy();
   });
 });
