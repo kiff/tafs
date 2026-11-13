@@ -161,6 +161,7 @@ export const nl: Words = {
   alert_not_sent_title: "Een antwoord is niet verstuurd",
   alert_not_sent_words: "Stil, als een antwoord opnieuw moet worden geprobeerd",
   alerts_answering_tafs: (n, form) => (form === "one" ? `${n} taf` : `${n} tafs`),
+  home_finish_setup: "Instellen afronden",
   home_needs_you_none: "Niets wacht op jou.",
   home_needs_you: (n, form) => (form === "one" ? `${n} wacht op jou.` : `${n} wachten op jou.`),
   recipes_category_money: "Geld",

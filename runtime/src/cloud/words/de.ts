@@ -161,6 +161,7 @@ export const de: Words = {
   alert_not_sent_title: "Eine Antwort wurde nicht gesendet",
   alert_not_sent_words: "Lautlos, wenn eine Antwort einen weiteren Versuch braucht",
   alerts_answering_tafs: (n, form) => (form === "one" ? `${n} taf` : `${n} tafs`),
+  home_finish_setup: "Einrichtung abschließen",
   home_needs_you_none: "Nichts braucht dich.",
   home_needs_you: (n, form) => (form === "one" ? `${n} braucht dich.` : `${n} brauchen dich.`),
   recipes_category_money: "Geld",

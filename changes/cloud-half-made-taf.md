@@ -1,0 +1,1 @@
+- **tafs cloud: a taf whose setup stopped partway shows on Home by its name, with "Finish setting up".** When the owner left Coach's chat before the taf was made, its agent showed among the other agents by its id. It now shows by the name Coach gave it, and `finish` opens the chat where it stopped; reading it makes the taf (docs/tafs.md › The home list).

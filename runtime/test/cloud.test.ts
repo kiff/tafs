@@ -4415,6 +4415,51 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(again.components.find((c) => c.component.id === "done")?.answer).toMatchObject({ state: "answered", words: "Refunds is set up", by: "tafs cloud", outcome: { taf_id: NEW } });
   });
 
+  // Finding 3 of the Android 76 check: a Coach chat left before the hand-over left an agent with a signed Card and no
+  // taf, and Home listed it by its agent's id. It shows by the name Coach gave it, with the way back to its chat.
+  it("shows a taf whose setup stopped partway by its name, with the chat to finish it in, never its agent's id", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
+    const stored = w.agents.runs.find((r) => r.id === run.id)!;
+    w.agents.show(stored, RESULT);
+    Object.assign(stored, { status: "PAUSED", requirements: [{ call_id: "s1", tool: "show", input: RESULT, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" }] });
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    // Its draft confirmed: KIFF lists the agent with its Card, and tafs cloud has no taf for it.
+    w.account.mandates = [{ id: "card_refunds", subject: "refunds-x", active: true, grants: [{ action: "lookup" }], aggregates: [] }];
+    const home = async (lang = "en") => JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana", "Accept-Language": lang } }, deps)).body) as { tafs: Array<{ name: string }>; others: Array<Record<string, unknown>> };
+    const before = await home();
+    expect(before.others).toHaveLength(1);
+    expect(before.others[0]).toMatchObject({ name: "Refunds", kiff_agent: "refunds-x", finish: { taf: COACH, session: stored.session, words: "Finish setting up" } });
+    expect((await home("fr")).others[0]!.finish).toMatchObject({ words: "Terminer la configuration" });
+    // Reading that chat hands it over: the taf is made, and Home lists it as a taf, not apart.
+    expect((await handle({ rawPath: `/v1/tafs/${COACH}/conversation/${stored.session}`, requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, deps)).statusCode).toBe(200);
+    expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ name: "Refunds", kiffAgent: "refunds-x" });
+    const after = await home();
+    expect(after.tafs.map((t) => t.name)).toContain("Refunds");
+    expect(after.others).toEqual([]);
+  });
+
+  it("shows another agent as before when no Coach chat names it, or the paused runs can't be read", async () => {
+    const { w, deps } = await paused();
+    w.account.mandates = [{ id: "card_ops", subject: "ops-bot", active: true, grants: [{ action: "lookup" }], aggregates: [] },
+      { id: "card_refunds", subject: "refunds-x", active: true, grants: [{ action: "lookup" }], aggregates: [] }];
+    const home = async () => JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, deps)).body) as { others: Array<Record<string, unknown>> };
+    const both = await home();
+    expect(both.others.find((o) => o.kiff_agent === "ops-bot")).toMatchObject({ name: "ops-bot" });
+    expect(both.others.find((o) => o.kiff_agent === "ops-bot")).not.toHaveProperty("finish");
+    w.agents.fail.set("pausedRuns", new Error("down"));
+    const down = await home();
+    expect(down.others.map((o) => o.name)).toEqual(["ops-bot", "refunds-x"]);
+    expect(down.others.some((o) => "finish" in o)).toBe(false);
+  });
+
   // The Coach skills design: tafs cloud names the skills a conversation loads, by its entry point before
   // the first turn (way 1) and by the tool when it is used (way 2); never the model, never a tool's answer.
   it("loads a new Coach conversation's skills by how it opened, and an existing session keeps its own", async () => {
