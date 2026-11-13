@@ -2364,19 +2364,34 @@ describe("improving a taf (kiff/tafs#107)", () => {
     expect(first).not.toContain("card_old");
   });
 
+  it("gives Setup a Card's limit for each item and its end as KIFF holds them, so a revision keeps both", async () => {
+    const w = withSetup();
+    w.account.mandates = [{ ...raeCard, valid_until: "2026-11-19T00:00:00Z",
+      aggregates: [{ quantity: "count", limit: 10, window: "calendar_day" }, { quantity: "count", limit: 1, window: "lifetime", per: "charge" }] }];
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "Let it refund up to 200." } });
+    const first = (w.agents.events.get(r.body.session)?.[0]?.body as { text: string }).text;
+    // One refund per charge, ever: never one for the taf's whole life, and the Card still ends.
+    expect(first).toContain(`"aggregates":[{"quantity":"count","limit":10,"window":"calendar_day"},{"quantity":"count","limit":1,"window":"lifetime","per":"charge"}]`);
+    expect(first).toContain(`"valid_until":"2026-11-19T00:00:00Z"`);
+  });
+
   it("copies only a draft body's keys from a Card as KIFF lists it", () => {
     const listed = {
       id: "card_rae", subject: "rae", subjects: ["rae"], active: true, domain: "gateway", environment: "live", on_exceed: "hold",
       location: "Europe/Madrid", hold_expiry_seconds: 86400, domain_id: "dom_1",
       grants: [{ action: "create_refund_k3f9", title: "Refund a charge", entity_states: ["requested"],
         per_action_max: [{ quantity: "sum(amount)", max: 500, unit: "EUR", scale: 2 }], resources: { parameter: "charge", values: ["ch_1"], extra: 1 } }],
-      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects", unit: "EUR", scale: 2, room_grants: [{ amount: 1000 }] }],
+      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects", unit: "EUR", scale: 2, room_grants: [{ amount: 1000 }] },
+        { quantity: "count", quantity_of: "calls", limit: 1, window: "lifetime", per: "charge", measure: "effects" }],
     };
-    expect(heldCards([listed], "rae")).toEqual([{
+    expect(heldCards([{ ...listed, valid_from: "2026-11-01T00:00:00Z", valid_until: "2026-11-19T00:00:00Z" }], "rae")).toEqual([{
       id: "card_rae", subject: "rae", domain: "gateway", environment: "live", on_exceed: "hold",
+      valid_from: "2026-11-01T00:00:00Z", valid_until: "2026-11-19T00:00:00Z", location: "Europe/Madrid",
       grants: [{ action: "create_refund_k3f9", entity_states: ["requested"], resources: { parameter: "charge", values: ["ch_1"] },
         per_action_max: [{ quantity: "sum(amount)", max: 500 }] }],
-      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects" }],
+      // One per charge, ever, stays one per charge: never one for the taf's whole life.
+      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects" },
+        { quantity: "count", limit: 1, window: "lifetime", per: "charge", measure: "effects" }],
     }]);
     expect(heldCards([{ ...listed, subjects: ["rae", "bo"] }], "rae")).toEqual([]);
   });
