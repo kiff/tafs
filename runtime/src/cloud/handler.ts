@@ -1922,8 +1922,8 @@ async function remove(taf: Taf, me: { tenantID: string }, deps: Deps, token = ""
 /**
  * A removed taf, forgotten by Coach: the notes Coach keeps (shared or a person's own) that are about it go. A note
  * is about it when it names its id or KIFF agent, or its name as written (case kept, a whole word: "Emails" the
- * taf, never "emails" the word). A note that also names a taf that's still there stays: it's about that one too.
- * The removal promises its chats, runs and memory go with it, and a note like "its account has no client invoices"
+ * taf, never "emails" the word). A note that also names a taf that's still there goes too: removed means forgotten,
+ * and Coach reads the live taf again (the PM on #835). The removal promises its chats, runs and memory go with it, and a note like "its account has no client invoices"
  * brought a removed taf's read back into a new chat. Best effort: the taf is removed either way, and its queued
  * lines are dropped when read (liveCoachLines).
  */
@@ -1939,12 +1939,7 @@ async function forgetForCoach(tenant: string, taf: Taf, deps: Deps): Promise<voi
       ...(typeof t.name === "string" && t.name.trim().length >= 3 ? [word(t.name.trim(), "u")] : []),
     ];
     const gone = names(taf);
-    const live = tafs.filter((t) => t.id !== taf.id && !t.removing && t.job !== SETUP_JOB).map(names);
-    const about = (text: string, res: RegExp[]) => res.some((r) => r.test(text));
-    const forgotten = (await deps.agents.memories(tenant, coach.id)).filter((n) => {
-      const text = `${n.name}\n${n.text}`;
-      return about(text, gone) && !live.some((res) => about(text, res));
-    });
+    const forgotten = (await deps.agents.memories(tenant, coach.id)).filter((n) => gone.some((r) => r.test(`${n.name}\n${n.text}`)));
     for (const n of forgotten) await deps.agents.forget(tenant, coach.id, n.name, n.scope);
     if (forgotten.length) console.log(JSON.stringify({ event: "taf_forgotten_by_coach", taf: taf.id, notes: forgotten.length }));
   } catch (err) {

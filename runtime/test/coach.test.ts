@@ -646,8 +646,8 @@ describe("a removed taf is forgotten by Coach", () => {
       { agent: SETUP, name: "policy", text: "RefundsPolicy is 14 days.", updated: "2026-10-16T12:00:00Z" },
       // Nor is the plain word, in a note about another taf (agentgabo on #835).
       { agent: SETUP, name: "disputes", text: "Disputes come in by email; refunds are handled elsewhere.", updated: "2026-10-16T12:00:00Z" },
-      // A note about the removed taf and one still there stays: it's about that one too.
-      { agent: SETUP, name: "both", text: "Refunds hands each disputed charge to Chargebacks.", updated: "2026-10-16T12:00:00Z" },
+      // A note about the removed taf and one still there goes too: removed means forgotten (the PM on #835).
+      { agent: SETUP, name: "both", text: "Refunds' Qonto account has no client invoices; Chargebacks uses Stripe.", updated: "2026-10-16T12:00:00Z" },
     ]);
     // Ana manages Refunds, as KIFF says.
     const kiff = w.deps.fetch!;
@@ -674,6 +674,6 @@ describe("a removed taf is forgotten by Coach", () => {
     expect(boChat.body.coach_lines).toBeUndefined();
     expect(w.tafs.held.has(`${T}#${RAE}`)).toBe(false);
     // Coach's notes naming it, shared or a person's own, are forgotten; the others stay.
-    expect((w.agents.notes.get(`${T}|${SETUP}`) ?? []).map((n) => n.name)).toEqual(["chargebacks", "policy", "disputes", "both"]);
+    expect((w.agents.notes.get(`${T}|${SETUP}`) ?? []).map((n) => n.name)).toEqual(["chargebacks", "policy", "disputes"]);
   });
 });
