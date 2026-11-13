@@ -1,0 +1,1 @@
+- **Removing a key's access no longer says the key is deleted when another taf still uses it (Android and iPhone).** The confirmation said "The key is deleted from tafs.", but a key another taf's connection shares stays for that taf. It now says the key is deleted from tafs once no taf uses it, in all 8 languages (docs/android-app.md).

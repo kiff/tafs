@@ -821,7 +821,7 @@
     </plurals>
     <string name="connect_disconnect_no_taf_uses">Ningún taf usa %1$s ahora.</string>
     <string name="connect_disconnect_rest">Los demás tafs que usan %1$s conservan su acceso. Si ningún otro taf usa este inicio de sesión, se revoca en %1$s. Usar %1$s de nuevo te pide aprobar e iniciar sesión otra vez.</string>
-    <string name="connect_disconnect_rest_key">Los demás tafs que usan %1$s conservan su acceso. La clave se elimina de tafs. Usar %1$s de nuevo te pide aprobar y pegar una clave otra vez.</string>
+    <string name="connect_disconnect_rest_key">Los demás tafs que usan %1$s conservan su acceso. La clave se elimina de tafs cuando ya ningún taf la use. Usar %1$s de nuevo te pide aprobar y pegar una clave otra vez.</string>
     <string name="connect_disconnect_title">¿Quitar el acceso a %1$s?</string>
     <string name="connect_disconnect_title_from">¿Quitar el acceso a %1$s para %2$s?</string>
     <string name="connect_disconnect_tools_stop">Las herramientas de %2$s de %1$s dejan de funcionar.</string>

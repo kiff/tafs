@@ -40772,49 +40772,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Andere tafs, die %1$@ nutzen, behalten ihren Zugriff. Der Schlüssel wird aus tafs gelöscht. Wenn du %1$@ wieder nutzt, wirst du gebeten, erneut zu genehmigen und einen Schlüssel einzufügen."
+            "value": "Andere tafs, die %1$@ nutzen, behalten ihren Zugriff. Der Schlüssel wird aus tafs gelöscht, sobald ihn kein taf mehr nutzt. Wenn du %1$@ wieder nutzt, wirst du gebeten, erneut zu genehmigen und einen Schlüssel einzufügen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Other tafs that use %1$@ keep their access. The key is deleted from tafs. Using %1$@ again asks you to approve and paste a key again."
+            "value": "Other tafs that use %1$@ keep their access. The key is deleted from tafs once no taf uses it. Using %1$@ again asks you to approve and paste a key again."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los demás tafs que usan %1$@ conservan su acceso. La clave se elimina de tafs. Usar %1$@ de nuevo te pide aprobar y pegar una clave otra vez."
+            "value": "Los demás tafs que usan %1$@ conservan su acceso. La clave se elimina de tafs cuando ya ningún taf la use. Usar %1$@ de nuevo te pide aprobar y pegar una clave otra vez."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les autres tafs qui utilisent %1$@ gardent leur accès. La clé est supprimée de tafs. Utiliser %1$@ à nouveau vous demande d'approuver et de coller une clé à nouveau."
+            "value": "Les autres tafs qui utilisent %1$@ gardent leur accès. La clé est supprimée de tafs dès qu'aucun taf ne l'utilise. Utiliser %1$@ à nouveau vous demande d'approuver et de coller une clé à nouveau."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gli altri taf che usano %1$@ mantengono il loro accesso. La chiave viene eliminata da tafs. Usare di nuovo %1$@ ti chiede di approvare e incollare di nuovo una chiave."
+            "value": "Gli altri taf che usano %1$@ mantengono il loro accesso. La chiave viene eliminata da tafs quando nessun taf la usa più. Usare di nuovo %1$@ ti chiede di approvare e incollare di nuovo una chiave."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Andere tafs die %1$@ gebruiken, houden hun toegang. De sleutel wordt uit tafs verwijderd. Als je %1$@ weer gebruikt, word je gevraagd opnieuw goed te keuren en een sleutel te plakken."
+            "value": "Andere tafs die %1$@ gebruiken, houden hun toegang. De sleutel wordt uit tafs verwijderd zodra geen enkel taf hem nog gebruikt. Als je %1$@ weer gebruikt, word je gevraagd opnieuw goed te keuren en een sleutel te plakken."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Inne tafy, które używają %1$@, zachowują dostęp. Klucz zostanie usunięty z tafs. Ponowne użycie %1$@ poprosi Cię o zatwierdzenie i ponowne wklejenie klucza."
+            "value": "Inne tafy, które używają %1$@, zachowują dostęp. Klucz zostanie usunięty z tafs, gdy żaden taf nie będzie go już używał. Ponowne użycie %1$@ poprosi Cię o zatwierdzenie i ponowne wklejenie klucza."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os outros tafs que usam %1$@ mantêm o seu acesso. A chave é eliminada do tafs. Usar %1$@ novamente pede-lhe que aprove e cole uma chave de novo."
+            "value": "Os outros tafs que usam %1$@ mantêm o seu acesso. A chave é eliminada do tafs assim que nenhum taf a usar. Usar %1$@ novamente pede-lhe que aprove e cole uma chave de novo."
           }
         }
       }
