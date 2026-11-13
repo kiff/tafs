@@ -1382,6 +1382,11 @@ struct SetupComponentView: View {
             }
             switch model.setupThread.handOver(shown.ref, listed: started != nil) {
             case .setUp:
+                if let words = model.setupThread.planNeeded(shown.ref) {
+                    // Made with no plan, so nothing runs yet: tafs cloud's words say so.
+                    Text(words).scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 if let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent), model.cloudTaf(for: tafID) != nil {
                     if sizeClass == .regular {
                         // Beside the sidebar: select it there, so the list says which taf is open.

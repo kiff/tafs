@@ -361,6 +361,11 @@ struct SetupThread: Equatable {
         return .settingUp
     }
 
+    /// tafs cloud's words when the taf was made with no plan, so no run started; nil otherwise.
+    func planNeeded(_ ref: String) -> String? {
+        components.first { $0.ref == ref }?.answer?.outcome?.planNeeded
+    }
+
     /// What became of an improvement's result, from tafs cloud's answer: the version it made,
     /// why it made none (Coach hears it from tafs cloud), or not answered yet. By the card's
     /// `ref`: two results under one id each show their own version (the 755 retest).

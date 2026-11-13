@@ -1614,7 +1614,23 @@ final class TafsCloud {
             var tafID: String?
             var version: Int?
             var failed: String?
-            enum CodingKeys: String, CodingKey { case version, failed, tafID = "taf_id" }
+            /// A taf made with no plan: tafs cloud's words that say so ("Choose a plan to start
+            /// it."), in the person's language. No run started. nil when it has one.
+            var planNeeded: String?
+            enum CodingKeys: String, CodingKey { case version, failed, tafID = "taf_id", planNeeded = "plan_needed" }
+            private struct PlanNeeded: Decodable { let words: String? }
+            init(tafID: String? = nil, version: Int? = nil, failed: String? = nil, planNeeded: String? = nil) {
+                self.tafID = tafID; self.version = version; self.failed = failed; self.planNeeded = planNeeded
+            }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                tafID = try? c.decodeIfPresent(String.self, forKey: .tafID)
+                version = try? c.decodeIfPresent(Int.self, forKey: .version)
+                failed = try? c.decodeIfPresent(String.self, forKey: .failed)
+                planNeeded = (try? c.decodeIfPresent(PlanNeeded.self, forKey: .planNeeded))?.words?
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                if planNeeded?.isEmpty == true { planNeeded = nil }
+            }
         }
 
         enum CodingKeys: String, CodingKey { case state, words, by, outcome, at }
