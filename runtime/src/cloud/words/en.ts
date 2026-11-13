@@ -182,7 +182,7 @@ export const en = {
   recipes_label_never: "Never does",
   recipes_label_hand: "Hand it to Coach",
   recipes_home_lead: "Pick a job for your first taf.",
-  recipes_home_empty_coach: "No tafs yet. Connect an app to set up your first taf.",
+  recipes_home_empty_coach: "No tafs yet. Tell Coach the job a taf should do.",
   recipes_home_empty_shared: "No tafs yet. Tafs shared with you show here.",
   // The gallery (GET /v1/recipes/gallery): its title, its "all jobs" heading, the way to say a job in one's own words, and the strip's title.
   gallery_title: "New taf",
@@ -620,6 +620,11 @@ export const en = {
   ct_app_act: "Tap, type and scroll in the app on your device while it drives",
   ct_replaces: "replaces the earlier connection",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
+  // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
+  start_lead: "You sign in on each app's own page. No taf ever sees your password.",
+  start_button: "Start",
+  start_does: "Start sets up approvals on this device and gives Coach its tools, with your face or fingerprint once.",
+  plan_needed: "Choose a plan to start it.",
   cts_title: "Give Coach its tools",
   cts_intro: "Coach needs a few tools to look after your tafs. They go on Coach's own Card, with their limits, and only you can sign it, on your device.",
   cts_details: "Each tool and its limits",

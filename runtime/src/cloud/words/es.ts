@@ -172,7 +172,7 @@ export const es: Words = {
   recipes_label_never: "Nunca lo hace",
   recipes_label_hand: "Pasárselo a Coach",
   recipes_home_lead: "Elige un trabajo para tu primer taf.",
-  recipes_home_empty_coach: "Aún no hay tafs. Conecta una app para configurar tu primer taf.",
+  recipes_home_empty_coach: "Aún no hay tafs. Dile a Coach qué trabajo debe hacer un taf.",
   recipes_home_empty_shared: "Aún no hay tafs. Aquí aparecen los tafs compartidos contigo.",
   gallery_title: "Nuevo taf",
   gallery_all: "Todos los trabajos",
@@ -566,6 +566,11 @@ export const es: Words = {
   ct_app_act: "Tocar, escribir y desplazarse en la app de tu dispositivo mientras la maneja",
   ct_replaces: "sustituye a la conexión anterior",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
+  // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
+  start_lead: "Inicias sesión en la página de cada app. Ningún taf ve nunca tu contraseña.",
+  start_button: "Empezar",
+  start_does: "Empezar configura las aprobaciones en este dispositivo y da a Coach sus herramientas, con tu cara o huella una sola vez.",
+  plan_needed: "Elige un plan para ponerlo en marcha.",
   cts_title: "Dale a Coach sus herramientas",
   cts_intro: "Coach necesita algunas herramientas para ocuparse de tus tafs. Van en la propia Card de Coach, con sus límites, y solo tú puedes firmarla, en tu dispositivo.",
   cts_details: "Cada herramienta y sus límites",
