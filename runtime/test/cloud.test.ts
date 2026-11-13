@@ -365,8 +365,9 @@ describe("tafs cloud", () => {
     expect(first.recipes.map((r: { id: string }) => r.id)).toEqual(RECIPES.map((r) => r.id));
     expect(first.filtered).toBe(true);
     expect(first.strip).toEqual({ shown: false, title: "More jobs to hand off", ids: [] });
+    // Home leads with every job, so "Explore jobs" would open the same list again: it isn't offered (finding 2 on Android 76).
     expect(first.words).toEqual({ title: "New taf", all: "All jobs", own_words: "Say it in your own words", own_words_line: "Coach builds the taf with you.",
-      explore: "Explore jobs", see_all: "See all jobs", try: "Try it with Coach", sample: "What it reported after its test run" });
+      see_all: "See all jobs", try: "Try it with Coach", sample: "What it reported after its test run" });
     // Browsing: a job whose proof run passed says on what, ready to draw; a job with none has no line.
     expect(first.recipes.find((r: { id: string }) => r.id === "acknowledge-every-ticket").proved).toBe("Proved on a test help desk.");
     expect(first.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit")).not.toHaveProperty("proved");
@@ -374,7 +375,8 @@ describe("tafs cloud", () => {
     // Every word the apps draw a title or button from is there, in any language a phone asks for (an unknown one reads English).
     for (const lang of ["de", "fr-CA", "es-419", "it", "pt-BR", "nl", "pl", "ja", "*", "garbage;q=x"]) {
       const g = (await get("/v1/recipes/gallery", "ana", { "accept-language": lang })).body;
-      for (const k of ["title", "all", "explore", "see_all", "try", "sample"]) expect(g.words[k], `${lang} ${k}`).toMatch(/\S/);
+      for (const k of ["title", "all", "see_all", "try", "sample"]) expect(g.words[k], `${lang} ${k}`).toMatch(/\S/);
+      expect(g.words, lang).not.toHaveProperty("explore");
       expect(g.recipes.find((r: { id: string }) => r.id === "acknowledge-every-ticket").proved, lang).toMatch(/\S/);
     }
     expect(first.labels).toEqual({ allows: "Does on its own", holds: "Asks you first", never: "Never does", hand: "Hand it to Coach" });
@@ -390,6 +392,10 @@ describe("tafs cloud", () => {
     const live = (await get("/v1/recipes/gallery", "ana")).body;
     expect(live.recipes).toHaveLength(RECIPES.length);
     expect(live.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit").running).toBe(true);
+    // Home no longer leads with the jobs, so "Explore jobs" is back, in every language.
+    expect(live.words.explore).toBe("Explore jobs");
+    for (const lang of ["de", "fr-CA", "es-419", "it", "pt-BR", "nl", "pl", "ja"])
+      expect((await get("/v1/recipes/gallery", "ana", { "accept-language": lang })).body.words.explore, lang).toMatch(/\S/);
     expect((await get("/v1/recipes", "ana")).body).toMatchObject({ recipes: [], shown: false });
     // The strip: at most 3, never one that's running, every app connected first, then some, then none.
     expect(live.strip.shown).toBe(true);
@@ -409,17 +415,24 @@ describe("tafs cloud", () => {
     expect(viewer.recipes).toHaveLength(RECIPES.length);
     expect(viewer.strip.shown).toBe(false);
     expect(viewer.recipes.some((r: Record<string, unknown>) => "running" in r)).toBe(false);
+    expect(viewer.words.explore).toBe("Explore jobs");
 
     // Suggestions off: the gallery stays, the strip goes.
     await coach.put("t_acme#suggestions", { show: false }, new Date(Date.now() + 86_400_000));
     const off = (await get("/v1/recipes/gallery", "ana")).body;
     expect(off.recipes).toHaveLength(RECIPES.length);
     expect(off.strip).toMatchObject({ shown: false, ids: [] });
+    expect(off.words.explore).toBe("Explore jobs");
 
     // In the person's language.
     const de = (await get("/v1/recipes/gallery", "ana", { "Accept-Language": "de" })).body;
     expect(de.words.own_words).toBe("Sag es in deinen eigenen Worten");
     expect(de.strip.title).toBe("Weitere Aufgaben zum Abgeben");
+
+    // No live taf with suggestions off: Home shows its empty line, not the jobs, so "Explore jobs" is offered.
+    w.tafs.held.delete("t_acme#taf-aaaaaaaaaaaaaaaaaaaa");
+    expect((await get("/v1/recipes", "ana")).body.home.shown).toBe(false);
+    expect((await get("/v1/recipes/gallery", "ana")).body.words.explore).toBe("Explore jobs");
 
     // The logo itself: no session needed, a PNG, fetched once by tafs cloud; an unknown key is a 404.
     const logo = await get(refunds.apps[1].logo);
