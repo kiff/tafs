@@ -5467,6 +5467,30 @@ describe("the first run", () => {
     expect(triggers()).toHaveLength(2);
   });
 
+  // qa-kiff on #887: kiff/agents answers a firing with no credits as an outcome, not an error. It stays owed.
+  it("keeps a first run owed while kiff/agents holds the firing back, and settles it once a run starts or one is going", async () => {
+    const w = world();
+    const k = withKIFF(w, { balanceKind: "none" });
+    await k.send("POST", "/v1/tafs", {}, { ...START, cron: "0 9 * * 1-5", timezone: "Europe/Madrid", budget_cents: 300 });
+    const deps = { ...depsOf(w), coach: store };
+    const trigger = w.agents.api.trigger.bind(w.agents.api);
+    let fired = 0;
+    for (const outcome of ["skipped_credits", "skipped_halted", "skipped_switching"]) {
+      w.agents.api.trigger = async () => { fired++; return { outcome }; };
+      expect(await sweepFirstRuns(deps), outcome).toEqual([]);
+    }
+    // Each held back, so each sweep tried it again.
+    expect(fired).toBe(3);
+    // A run already going (the sweep and a Home read at once): settled, never fired twice.
+    w.agents.api.trigger = async () => { fired++; return { outcome: "skipped_busy" }; };
+    expect(await sweepFirstRuns(deps)).toEqual([]);
+    expect(fired).toBe(4);
+    w.agents.api.trigger = trigger;
+    w.agents.calls.length = 0;
+    expect(await sweepFirstRuns(deps)).toEqual([]);
+    expect(w.agents.calls.filter((c) => c.startsWith("trigger"))).toEqual([]);
+  });
+
   it("drops an owed first run when its taf is removed, and keeps it through a blip", async () => {
     const w = world();
     const k = withKIFF(w, { balanceKind: "none" });

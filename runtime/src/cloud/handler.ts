@@ -1611,6 +1611,9 @@ const firstRunsOwedKey = (tenant: string) => `${tenant}#first-runs-owed`;
 /** How long a first run is owed: an account that buys no plan in a month has its tafs' schedules to start them. */
 const FIRST_RUN_OWED_MS = 30 * 24 * 3600_000;
 
+/** The firings that settle an owed first run: anything else kiff/agents answers holds it back, and it stays owed. */
+const DONE_FIRINGS = ["quiet", "skipped_busy"];
+
 /** Notes that a taf made with no plan is owed its first run. Best effort: a store that can't be written loses only the wait. */
 async function oweFirstRun(tenant: string, taf: string, deps: Deps): Promise<void> {
   if (!deps.coach) return;
@@ -1641,6 +1644,9 @@ export async function settleFirstRuns(tenant: string, deps: Deps): Promise<strin
       await requireUnattended(deps, tenant, id);
       const fired = await fireNow(tenant, id, deps);
       if ("session" in fired) started.push(id);
+      // Done only when a run started, its check ran and found nothing, or a run is already going. kiff/agents answers a
+      // firing it held back as an outcome, not an error: skipped for credits, while halted or switching versions. Owed.
+      else if (!DONE_FIRINGS.includes(fired.outcome)) left.push(id);
     } catch (err) {
       // Still no plan, no consent, or a blip: owed until the next try.
       if (!(waitsForCredits(err) || refused(err, AI_CONSENT_CODE))) console.error(`first run ${id}: ${(err as Error).message}`);
