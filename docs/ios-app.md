@@ -544,6 +544,12 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   tap signs and starts, so no step opens after it and nothing signed is left unread. With words handed over, Send in
   the box below is that tap: it signs, starts Coach, then sends. Without a line or a button in `start.words`, or from
   a tafs cloud from before them, Start opens the step as above.
+- **A Coach that exists, with tools and Cards missing** (`tools.requests`, `CoachTools.together`): `tools` may carry
+  the pair a first start does, `connect` and `draft`, under `kiff.requests.v1`. Giving then signs both hashes once
+  with the approval key, under the step's one Face ID, and sends the batch, then the draft
+  (`AppModel.sendTogether`, shared with the first start). Coach exists, so nothing is claimed after it. KIFF's words
+  for the Cards are drawn first (the pair's own when `card` didn't come). Without the pair, a key KIFF doesn't hold,
+  or a draft without KIFF's words, it's the steps below.
 - **Giving** (`AppModel.giveCoachTools`): one Face ID. Under it the phone signs and sends the
   batch to KIFF's gateway (`POST /v1/connections/batch`), then the Cards' draft to KIFF
   (`POST /v1/me/agent-drafts`), each as it came. Where the Cards didn't come with the batch,

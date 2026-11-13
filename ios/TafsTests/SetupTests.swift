@@ -427,6 +427,49 @@ final class SetupTests: XCTestCase {
         XCTAssertFalse(onboarding.contains("SignInGate"))
     }
 
+    /// An account with Coach, whose tools and Cards are missing: `tools` carries the pair as a first
+    /// start does (kiff/tafs#881). One Face ID, one signature by the approval key over both, the
+    /// batch then the draft, and nothing claimed after it: Coach exists.
+    func testCoachsMissingToolsGoUnderOneFaceIDOnAnAccountThatHasCoach() async throws {
+        let connect = #"{"id":"connect","method":"POST","path":"/v1/connections/batch","gateway":true,"body":{"connections":[{"name":"taf_task"}]},"lines":["Hand tasks to your tafs"]}"#
+        let draft = #"{"id":"draft","method":"POST","path":"/v1/me/agent-drafts","body":{"agent_id":"setup","label":"Coach","cards":[{"title":"Coach's tasks"}]},"card_title":"Coach's Card","cards":[{"title":"Tasks","lines":["Hand a task to a taf, up to 50 a day"]}]}"#
+        let tools = #"{"state":"to_give","scheme":"kiff.requests.v1","requests":[\#(connect),\#(draft)],"connect":{"body":{"connections":[{"name":"taf_task"}]},"lines":["Hand tasks to your tafs"]}}"#
+        let toGive = #"{"setup":\#(Self.setupJSON),"tools":\#(tools)}"#
+        let read = try XCTUnwrap(TafsCloud.CoachTools.read(Data(toGive.utf8)))
+        XCTAssertEqual(read.together?.together, true)
+        XCTAssertEqual(read.card?.cardTitle, "Coach's Card", "KIFF's words for the Cards, drawn before signing")
+        XCTAssertNil(TafsCloud.CoachTools.read(Data(toGive.replacingOccurrences(of: #","card_title":"Coach's Card","cards":[{"title":"Tasks","lines":["Hand a task to a taf, up to 50 a day"]}]"#, with: "").utf8))?.together,
+                     "never Cards unread")
+
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, toGive)
+        await model.loadSetup()
+        XCTAssertNotNil(model.setupTaf)
+        StubProtocol.responses["POST /v1/connections/batch"] = (200, "{}")
+        StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_t","agent_id":"setup","status":"confirmed","version":"v2","cards":[]}"#)
+        StubProtocol.thenRespond["POST /v1/me/agent-drafts"] = ["GET /v1/setup": (200, #"{"setup":\#(Self.setupJSON),"tools":{"state":"given"}}"#)]
+        StubProtocol.sent = []
+        let given = await model.giveCoachTools()
+        XCTAssertTrue(given, model.coachToolsError ?? "")
+        XCTAssertEqual(signer.prompts, ["tafs.coach-tools.v1|t_01"], "one Face ID")
+        let order = StubProtocol.sent.compactMap { r -> String? in
+            guard let p = r.url?.path, r.httpMethod == "POST", ["/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup"].contains(p) else { return nil }
+            return p
+        }
+        XCTAssertEqual(order, ["/v1/connections/batch", "/v1/me/agent-drafts"], "the batch, then the draft, and no claim: Coach exists")
+        let batch = try XCTUnwrap(sent("POST", "mcp.test", "/v1/connections/batch").first)
+        let cards = try XCTUnwrap(sent("POST", "api.test", "/v1/me/agent-drafts").first)
+        XCTAssertEqual(String(decoding: try XCTUnwrap(cards.httpBody), as: UTF8.self), #"{"agent_id":"setup","label":"Coach","cards":[{"title":"Coach's tasks"}]}"#, "as tafs cloud wrote it")
+        let one = try XCTUnwrap(batch.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        let other = try XCTUnwrap(cards.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertTrue(one.contains(",v3=signature,with=sha256:") && other.contains(",v3=signature,with=sha256:"), "\(one) \(other)")
+        XCTAssertEqual(one.prefix(while: { $0 != "," }), other.prefix(while: { $0 != "," }), "one signed_at")
+        XCTAssertTrue(signer.quiet.contains { $0.hasPrefix("kiff.requests.v1\nt_01\n") }, "\(signer.quiet)")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// The phone enrols before anything goes to KIFF: an enrolment the connection server refuses
     /// (another device holds it) sends neither the batch nor the draft, so KIFF is left with no
     /// tools and no draft nobody claims.

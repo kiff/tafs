@@ -1,0 +1,1 @@
+- **iPhone and iPad: Coach's missing tools under one Face ID, on an account that already has Coach.** When tafs cloud sends the tools and Coach's Cards as one pair, giving them signs both at once and sends the tools, then the Cards. There's no second approval (docs/ios-app.md › Coach's tools).
