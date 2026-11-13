@@ -288,6 +288,15 @@ final class AppModel: ObservableObject {
     /// remembered for that zone and account, and a new zone asks again.
     @Published private(set) var timeZoneOffer: String?
 
+    /// tafs cloud set the account's zone from this phone's (`time_zone` on `GET /v1/setup`): the
+    /// account reads it, and nothing is asked.
+    private func tookTimeZone(_ zone: String?) {
+        guard let zone, var account = kiffAccount else { return }
+        account.timeZone = zone
+        kiffAccount = account
+        if timeZoneOffer == zone || TimeZone.current.identifier == zone { timeZoneOffer = nil }
+    }
+
     private func offerTimeZone(_ account: KIFFClient.Account) {
         let device = TimeZone.current.identifier
         guard (account.timeZone ?? "UTC") != device else { timeZoneOffer = nil; return }
@@ -794,8 +803,25 @@ final class AppModel: ObservableObject {
         useApprovalKey()
     }
 
+    /// This phone has an approval key that KIFF doesn't hold for the session: what that key signs,
+    /// KIFF can't check. A signer with no approval key signs everything with its one key.
+    var approvalKeyUnheld: Bool { !signer.approvalPublicKeyDER.isEmpty && !sessionHasApprovalKey }
+
+    /// What Start says then, the line both apps use: KIFF didn't accept the key, try again; from
+    /// the second refusal in a row, where to write too. A key KIFF holds another of keeps the lost
+    /// key's words.
+    private func approvalKeyRefused() -> String {
+        if approvalKeyLost { return KIFFClient.approvalKeyLost }
+        approvalKeyRefusals += 1
+        return approvalKeyRefusals >= 2 ? Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport : Words.Approval.keyNotAccepted
+    }
+    /// How many Starts in a row KIFF didn't take this device's approval key on: a key KIFF takes,
+    /// or a new session, starts again from none.
+    private(set) var approvalKeyRefusals = 0
+
     /// From now on, what grants authority is signed by the approval key.
     private func useApprovalKey() {
+        approvalKeyRefusals = 0
         sessionHasApprovalKey = true
         approvalKeyLost = false
         let signer = self.signer
@@ -803,6 +829,7 @@ final class AppModel: ObservableObject {
     }
 
     private func forgetApprovalKey() {
+        approvalKeyRefusals = 0
         cancelRelink()
         sessionHasApprovalKey = false
         approvalKeyLost = false
@@ -1602,7 +1629,14 @@ final class AppModel: ObservableObject {
             // The account read began under this generation: a sign-out or another sign-in
             // meanwhile moves it on, and the old account (and its zone) is dropped here.
             guard gen == accountGeneration else { return }
-            if kiffAccount == nil, let account {
+            if kiffAccount == nil, var account {
+                // A new account still on UTC: tafs cloud takes this phone's zone, with no question,
+                // when it can (docs/api.md). Asked only then, so it costs nothing afterwards.
+                if (account.timeZone ?? "UTC") == "UTC", TimeZone.current.identifier != "UTC",
+                   let zone = try? await cloud.setupRead().timeZone, gen == accountGeneration {
+                    account.timeZone = zone
+                }
+                guard gen == accountGeneration else { return }
                 kiffAccount = account
                 offerTimeZone(account)
             }
@@ -6622,6 +6656,21 @@ final class AppModel: ObservableObject {
         setupError = nil
     }
 
+    /// "Finish setting up" on another agent whose setup stopped partway (docs/tafs.md): Coach
+    /// opens on the chat where it stopped. Reading that chat is what makes the taf, at tafs cloud;
+    /// the next Home read lists it with the tafs. Only Coach's own chat, for someone who may use
+    /// Coach; false otherwise, and the row opens as any other agent's.
+    func canFinishSetup(_ finish: TafsCloud.HomeTaf.Finish?) -> Bool {
+        guard mode == .kiff, mayUseCoach, let finish, finish.usable, let coach = setupTaf?.id else { return false }
+        return finish.taf == coach
+    }
+
+    func finishSetup(_ finish: TafsCloud.HomeTaf.Finish) async {
+        guard canFinishSetup(finish) else { return }
+        coachOpen = true
+        await openSetupChat(finish.session)
+    }
+
     /// Reopens one of Setup's chats: it's shown alone, and messages go on in it.
     func openSetupChat(_ session: String) async {
         setupConversationGeneration += 1
@@ -6706,6 +6755,7 @@ final class AppModel: ObservableObject {
         guard mode == .kiff else { return }
         let gen = accountGeneration
         guard let read = try? await cloud.setupRead(), gen == accountGeneration else { return }
+        tookTimeZone(read.timeZone)
         setupTaf = read.setup
         // No Coach yet: tafs cloud's first start, when it sends one, is drawn as the tools step,
         // whose one button starts Coach and gives its tools under one Face ID.
@@ -6871,6 +6921,16 @@ final class AppModel: ObservableObject {
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
         defer { kiff.setupSigner = nil; planque.signer = nil }
+        // Approvals are set up here, not before sign-in (docs/approvals.md): a phone that signed in
+        // before it could approve gives KIFF its approval key now, under the same Face ID.
+        if !sessionHasApprovalKey { await registerApprovalKey() }
+        guard gen == accountGeneration else { return false }
+        // tafs cloud's first start, the pair or the draft alone, is signed by the approval key: with a
+        // key KIFF doesn't hold, nothing is sent, and it says so in the words both phones use.
+        if coachStart?.startable == true, approvalKeyUnheld {
+            setupError = approvalKeyRefused()
+            return false
+        }
         await keepKIFFAlerts(tenant: tenant, gen: gen)
         if !planqueReady {
             guard await enrolPlanque(tenant: tenant, gen: gen) else {
@@ -6885,6 +6945,12 @@ final class AppModel: ObservableObject {
                 if let existing = read.setup {
                     setupTaf = existing
                 } else if let start = read.start, start.startable {
+                    // A start read only now, with a key KIFF doesn't hold: nothing is sent.
+                    if approvalKeyUnheld {
+                        coachStart = start
+                        setupError = approvalKeyRefused()
+                        return false
+                    }
                     // One Face ID, the one just asked: Coach's tools and its draft with its Cards.
                     coachStart = start
                     setupTaf = try await startCoachTogether(start, tenant: tenant, gen: gen)
@@ -7060,13 +7126,19 @@ final class AppModel: ObservableObject {
             guard !text.isEmpty || !files.isEmpty else { return false }
             // A phone that can't approve yet starts nothing and is asked nothing: the words stay.
             guard !approvalBlocked else { return false }
-            // tafs cloud's first start: the step that shows what Coach is given opens first, and its
-            // one button starts Coach. The words stay in the composer, to send once it's started.
-            if coachStart?.startable == true {
+            if coachStart?.oneScreen == true {
+                // tafs cloud's first start, on Start's own screen: what's signed is drawn above the
+                // box, so Send signs it, under the one Face ID, then sends.
+                _ = await giveCoachTools()
+                guard setupStarted else { return false }
+            } else if coachStart?.startable == true {
+                // A tafs cloud from before Start's words: the step that shows what Coach is given
+                // opens first, and its one button starts Coach. The words stay in the composer.
                 coachToolsAsked = true
                 return false
+            } else {
+                guard await startSetup() else { return false }
             }
-            guard await startSetup() else { return false }
         }
         // A message with files goes as a message of its own (kiff/tafs#209): the composer sends it once Setup is done.
         if !files.isEmpty { return await deliverSetup(text, files: files) == .sent }

@@ -40,19 +40,31 @@ import bot.tafs.app.kiff.Recipe
 import bot.tafs.app.kiff.RecipeLabels
 import bot.tafs.app.kiff.Recipes
 
+/** "Say it in your own words" and its line, tafs cloud's (`home.own_words`): Coach, empty, builds the taf with the person. */
+@Composable
+internal fun OwnWordsRow(home: bot.tafs.app.kiff.RecipesHome?, onOwnWords: () -> Unit) {
+  val own = home?.ownWords?.takeIf { it.title.isNotBlank() } ?: return
+  Panel(modifier = Modifier.fillMaxWidth().clickable(onClick = onOwnWords)) {
+    Text(own.title, style = scaled(16, FontWeight.SemiBold, Theme.amberText))
+    if (own.line.isNotBlank()) Text(own.line, style = scaled(14, color = Theme.soft))
+  }
+}
+
 /**
- * Home with no taf, where tafs cloud lists the recipes (`home.shown`, docs/android-app.md): its line, then a chip per category
- * to narrow the list, then each recipe led by the problem it removes ([Recipe.headline]) with its line under it. A tap opens its
- * sheet. Every word is tafs cloud's, in the person's language.
+ * Home with no taf, where tafs cloud lists the recipes (`home.shown`, docs/android-app.md): its line, then "Say it in your own
+ * words", then a chip per category to narrow the list, then each recipe led by the problem it removes ([Recipe.headline]) with
+ * its line under it. A tap opens its sheet. Every word is tafs cloud's, in the person's language.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun HomeRecipes(recipes: Recipes, labels: RecipeLabels, onOpen: (Recipe) -> Unit) {
+internal fun HomeRecipes(recipes: Recipes, labels: RecipeLabels, onOpen: (Recipe) -> Unit, onOwnWords: (() -> Unit)? = null) {
   // A category picked narrows the list; picked again, every recipe shows. Nothing picked is all of them.
   var picked by rememberSaveable { mutableStateOf<String?>(null) }
   val groups = recipes.byCategory
   Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
     recipes.home?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(17, FontWeight.SemiBold, Theme.ink)) }
+    // In the person's own words, above the jobs: Coach, empty, builds the taf with them. tafs cloud's words, sent only to who may.
+    if (onOwnWords != null) OwnWordsRow(recipes.home, onOwnWords)
     if (groups.size > 1) {
       FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         groups.forEach { (category, _) ->

@@ -46,7 +46,7 @@ class GalleryScreenTest {
     ),
     recipes = listOf(refunds, invoices, leads),
     strip = GalleryStrip(shown = true, title = "More jobs to hand off", ids = listOf("follow-up-new-leads", "chase-overdue-invoices")),
-    words = GalleryWords(title = "New taf", all = "All jobs", ownWords = "Say it in your own words", ownWordsLine = "Tell Coach the job, and it builds the taf with you."),
+    words = GalleryWords(title = "New taf", all = "All jobs", explore = "Explore jobs", ownWords = "Say it in your own words", ownWordsLine = "Tell Coach the job, and it builds the taf with you."),
     labels = RecipeLabels("Does on its own", "Asks you first", "Never does", "Hand it to Coach"),
   )
   private val taf = Taf(id = "refunds-1", name = "Refunds", job = "Refund", tools = emptyList(), colorIndex = 1, card = Card(emptyList(), "You"), cloudId = "taf_1")
@@ -105,6 +105,14 @@ class GalleryScreenTest {
     rule.onNodeWithText("Explore jobs").assertExists().performClick()
     rule.waitForIdle()
     assertEquals(1, explored.size)
+  }
+
+  @Test fun withNoExploreWordsFromTafsCloudHomeHasNoExploreRow() {
+    // tafs cloud leaves them out while Home already lists every job: the app draws no row of its own words.
+    home(signedIn.copy(gallery = gallery.copy(words = gallery.words!!.copy(explore = ""))), mutableListOf(), mutableListOf())
+    rule.onAllNodesWithText("Explore jobs").assertCountEquals(0)
+    // See all jobs, under the strip, has its own words and stays.
+    rule.onNodeWithText("See all jobs").performScrollTo().assertExists()
   }
 
   @Test fun theStripEndsWithARowThatOpensEveryJob() {

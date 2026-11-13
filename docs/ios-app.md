@@ -430,9 +430,15 @@ An account with no taf sees the jobs a taf can take on Home, where tafs cloud sa
 (`GET /v1/recipes`, its `home`; [coach.md](coach.md)), as on Android
 ([android-app.md](android-app.md#home-with-no-taf)). Every word is tafs cloud's, in the person's
 language: the app has none of its own for it.
-- **The list** (`HomeRecipes`): `home.words` leads it, then a chip per category to narrow it
-  (picked again, every recipe shows), then each recipe led by its `headline`, the problem it
-  ends, with its `line` under it. While it shows, Home's own "0 tafs working" line doesn't.
+- **The list** (`HomeRecipes`): `home.words` leads it, then "Say it in your own words"
+  (`home.own_words`, its `title` and `line`) where tafs cloud sent it, then a chip per category
+  to narrow it (picked again, every recipe shows), then each recipe led by its `headline`, the
+  problem it ends, with its `line` under it. While it shows, Home's own "0 tafs working" line
+  doesn't.
+- **Say it in your own words** (`OwnWordsRow`, as + New's gallery draws it) opens Coach with
+  nothing in its box, for someone who may use Coach. tafs cloud sends it only to someone who
+  manages tafs. With no job listed it shows under Home's empty line, so there's always a way
+  to Coach; Home has no "Connect an app" row any more.
 - **Only when `home.shown`** is true and the sheet's `labels` came with it
   (`AppModel.homeListsRecipes`). Otherwise Home shows `home.words` alone, its empty line. A tafs
   cloud from before `home`, or recipes that couldn't be read, leave Home's own "No tafs yet."
@@ -454,6 +460,23 @@ language: the app has none of its own for it.
   refused (docs/drive.md).
 - **When it's read:** with each refresh that finds no taf, as well as when Coach opens
   (`HomeRecipesTests`).
+
+## A taf made with no plan
+
+When the account has no plan, tafs cloud makes the taf Coach handed over and starts no run. Its
+answer to the result carries `outcome.plan_needed.words` ("Choose a plan to start it.", in the
+person's language), and the hand-over card says them under its own words, above the button that
+opens the taf (`SetupThread.planNeeded`). No words, or none that are text, add nothing.
+
+## A taf whose setup stopped partway
+
+A Coach chat left before the hand-over leaves an agent with a signed Card and no taf. tafs cloud
+lists it among Home's other agents by the name Coach gave it, with `finish: {taf, session,
+words}` (docs/tafs.md). The row says `words` ("Finish setting up") in amber in place of what it's
+doing. A tap opens Coach on `session`, where it stopped (`AppModel.finishSetup`): reading that
+chat is what makes the taf at tafs cloud, and the next Home read lists it with the tafs. Only
+Coach's own chat (`taf` is Coach's), for someone who may use Coach (`canFinishSetup`); anything
+else, or a `finish` with no chat or words, opens as any other agent's row, on iPhone and iPad.
 
 ## Every ready-made job, at any time
 
@@ -514,6 +537,12 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   on the gateway and `POST /v1/me/agent-drafts`, and only with KIFF's words for the Cards on the draft; anything else,
   or no `start`, starts Coach as before. Send, with words handed over before Coach exists, opens the same step and keeps
   the words in the composer.
+- **Start's own screen** (`start.words`, `CoachStart.oneScreen`): where tafs cloud sends `start.words` `{lead, start,
+  does}`, Coach's intro draws `lead`, then what's signed (`CoachToolsGiven`, as the step draws it: the groups, each tool
+  folded under `details`, and Coach's Cards in KIFF's words), then one button, `start`, with `does` under it. That one
+  tap signs and starts, so no step opens after it and nothing signed is left unread. With words handed over, Send in
+  the box below is that tap: it signs, starts Coach, then sends. Without a line or a button in `start.words`, or from
+  a tafs cloud from before them, Start opens the step as above.
 - **Giving** (`AppModel.giveCoachTools`): one Face ID. Under it the phone signs and sends the
   batch to KIFF's gateway (`POST /v1/connections/batch`), then the Cards' draft to KIFF
   (`POST /v1/me/agent-drafts`), each as it came. Where the Cards didn't come with the batch,
@@ -703,7 +732,9 @@ resolved to), never the browser's:
 Light/Dark/System choice. Account contains the searchable cloud time-zone
 picker and phone alert controls. Each alert-kind choice is sent to cloud;
 Off removes this phone's registration. Time zone changes retain KIFF's signed
-setup flow.
+setup flow. The setup read sends this phone's zone (`X-Time-Zone`); when tafs
+cloud set a new account's zone from it and answers `time_zone`, the account
+takes it and no offer is asked.
 
 `TafsCloud+Presentation` decodes the same DTOs used on Android. `SourcePages`
 and `AppModel` cache pages and validators per taf and view, clearing on account

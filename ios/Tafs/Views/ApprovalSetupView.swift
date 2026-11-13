@@ -23,69 +23,6 @@ struct ReadinessReader<Content: View>: View {
     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
 }
 
-/// "Set up approvals on this device": before sign-in when the device can't approve yet, and
-/// from Coach's start before the first taf. Signing in, reviewing, refusing and halting all
-/// work without approvals, so the person may go on without.
-struct ApprovalSetupView: View {
-    let readiness: ApprovalReadiness
-    let checkAgain: () -> Void
-    /// Go on without approvals; nil where there's nothing to go on to.
-    var continueWithout: (() -> Void)?
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Image(systemName: Biometry.symbol)
-                    .font(.system(size: 40)).foregroundColor(Theme.amber)
-                    .accessibilityHidden(true)
-                Text(ApprovalReadiness.title)
-                    .scaledFont(28, weight: .bold, design: .rounded, relativeTo: .title)
-                    .foregroundColor(Theme.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(Words.Approval.tafAsksBeforeDoesAnything)
-                    .scaledFont(16).foregroundColor(Theme.soft)
-                    .fixedSize(horizontal: false, vertical: true)
-                Text(readiness.words(device: ThisDevice.kind, kind: Biometry.kind))
-                    .scaledFont(16, weight: .semibold).foregroundColor(readiness.isReady ? Theme.ok : Theme.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .accessibilityIdentifier("approvalReadiness")
-                if readiness != .unsupported {
-                    Text(ApprovalReadiness.newBiometricsNote)
-                        .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                VStack(spacing: 10) {
-                    if readiness.opensSettings {
-                        Button(Words.Voice.openSettings) { openTafsSettings() }
-                            .buttonStyle(PrimaryButtonStyle())
-                    }
-                    if !readiness.isReady && readiness != .unsupported {
-                        Button(Words.Approval.checkAgain, action: checkAgain)
-                            .buttonStyle(OutlineButtonStyle())
-                    }
-                    if let continueWithout {
-                        if readiness.isReady {
-                            Button(Words.Common.`continue`, action: continueWithout)
-                                .buttonStyle(PrimaryButtonStyle())
-                        } else {
-                            Button(Words.Approval.continueWithout, action: continueWithout)
-                                .buttonStyle(OutlineButtonStyle())
-                            Text(Words.Approval.withoutAllows)
-                                .scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                                .frame(maxWidth: .infinity)
-                        }
-                    }
-                }
-                .padding(.top, 8)
-            }
-            .padding(24)
-            .frame(maxWidth: 560, alignment: .leading)
-            .frame(maxWidth: .infinity)
-        }
-        .screenBackground()
-    }
-}
-
 /// An approval's button, or, while this device can't approve, the state's words and what to
 /// do in its place: the person learns why before the prompt, not from a failure after it.
 /// In sample mode nothing is signed for real, so the button always shows.

@@ -259,6 +259,158 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// With Start's own words (`start.words`), Start's screen draws them and what's signed, so
+    /// Send signs and starts Coach under the one Face ID, then goes on to send: no step opens.
+    /// Without a line or a button, it's the step as before.
+    func testStartsOwnWordsMakeOneScreenAndSendSignsAndSends() async throws {
+        let worded = Self.startJSON().replacingOccurrences(of: #""coach_tools_step":"#,
+            with: #""words":{"lead":"Start sets up approvals and gives Coach its tools.","start":"Start","does":"One fingerprint, on this device."},"coach_tools_step":"#)
+        let read = try XCTUnwrap(TafsCloud.CoachStart.read(Data(worded.utf8)))
+        XCTAssertEqual(read.words, TafsCloud.CoachStart.Words(lead: "Start sets up approvals and gives Coach its tools.", start: "Start", does: "One fingerprint, on this device."))
+        XCTAssertTrue(read.oneScreen)
+        XCTAssertFalse(try XCTUnwrap(TafsCloud.CoachStart.read(Data(Self.startJSON().utf8))).oneScreen, "a tafs cloud from before them")
+        let noButton = worded.replacingOccurrences(of: #""start":"Start","#, with: #""start":" ","#)
+        XCTAssertNil(try XCTUnwrap(TafsCloud.CoachStart.read(Data(noButton.utf8))).words, "no button, no screen of its own")
+        let unworded = worded.replacingOccurrences(of: #","card_title":"Coach's Cards","cards":[{"title":"Reads","lines":["See your tafs, up to 500 a day"]}]"#, with: "")
+        XCTAssertFalse(try XCTUnwrap(TafsCloud.CoachStart.read(Data(unworded.utf8))).oneScreen, "never Cards unread")
+
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["GET /v1/setup"] = (200, worded)
+        await model.loadSetup()
+        XCTAssertEqual(model.coachStart?.oneScreen, true)
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/connections/batch"] = (200, "{}")
+        StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","cards":[]}"#)
+        StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.sent = []
+        _ = await model.submitSetup("Chase my overdue invoices")
+        XCTAssertFalse(model.coachToolsAsked, "no step opens")
+        XCTAssertEqual(signer.prompts, ["tafs.setup.v1|t_01"], "one Face ID")
+        XCTAssertEqual(model.setupTaf?.id, "taf-setup")
+        XCTAssertEqual(sent("POST", "mcp.test", "/v1/connections/batch").count, 1)
+        XCTAssertEqual(sent("POST", "api.test", "/v1/me/agent-drafts").count, 1)
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let chat = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(chat.contains("if let start = model.coachStart, start.oneScreen, let words = start.words {"))
+        XCTAssertTrue(chat.contains("CoachToolsGiven(tools: start.tools)"), "what's signed, drawn on Start's screen")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A phone with an approval key, as a real one has once Face ID is set up.
+    private final class KeyedSigner: ApprovalSigning {
+        var prompts: [String] = []
+        var quiet: [String] = []
+        var publicKeyDER: Data { Data([0x30, 0x59, 0x01]) }
+        var approvalPublicKeyDER: Data { Data([0x30, 0x59, 0x02]) }
+        func sign(_ message: Data, reason: String) async throws -> String {
+            prompts.append(String(decoding: message, as: UTF8.self))
+            return "signature"
+        }
+        func signConfirmed(_ message: Data) throws -> String {
+            quiet.append(String(decoding: message, as: UTF8.self))
+            return "signature"
+        }
+        func signApprovalConfirmed(_ message: Data) throws -> String {
+            quiet.append("approval:" + String(decoding: message, as: UTF8.self))
+            return "signature"
+        }
+    }
+
+    private func keyedModel(_ signer: KeyedSigner) async -> AppModel {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        Keychain.delete(AppModel.planqueAccount)
+        Keychain.delete(AppModel.approvalKeyedAccount)
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let kiff = KIFFClient(baseURL: URL(string: "https://api.test")!, gatewayURL: URL(string: "https://mcp.test")!, token: "kiff_dev_x", session: session)
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: session)
+        let planque = PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: session)
+        let model = AppModel(signer: signer, kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: StubVendor())
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        StubProtocol.responses["GET /v1/setup"] = (200, Self.startJSON())
+        StubProtocol.responses["GET /v1/me/devices"] = (200, #"{"devices":[{"id":"dev_phone01","this_device":true}]}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[]}"#)
+        // Signed in before this phone could approve: KIFF took no approval key then.
+        StubProtocol.responses["POST /v1/me/device/approval-key"] = (503, #"{"error":"not now"}"#)
+        await model.useSession("kiff_dev_x", tenant: "t_01")
+        await model.loadSetup()
+        return model
+    }
+
+    /// Approvals are set up at Start, not before sign-in: a phone KIFF holds no approval key for
+    /// registers it under Start's one Face ID, before anything else goes to KIFF, and the pair is
+    /// then signed by that key.
+    func testStartRegistersTheApprovalKeyFirst() async throws {
+        let signer = KeyedSigner()
+        let model = await keyedModel(signer)
+        XCTAssertTrue(model.approvalKeyUnheld, "signed in before KIFF took the key")
+        let fingerprint = KIFFClient.fingerprint(signer.approvalPublicKeyDER)
+        StubProtocol.responses["POST /v1/me/device/approval-key"] = (201, #"{"fingerprint":"\#(fingerprint)"}"#)
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/connections/batch"] = (200, "{}")
+        StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","cards":[]}"#)
+        StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.sent = []
+        let given = await model.giveCoachTools()
+        XCTAssertTrue(given, model.coachToolsError ?? "")
+        XCTAssertEqual(signer.prompts, ["tafs.setup.v1|t_01"], "one Face ID")
+        XCTAssertFalse(model.approvalKeyUnheld)
+        let order = StubProtocol.sent.compactMap { r -> String? in
+            guard let p = r.url?.path, r.httpMethod == "POST", ["/v1/me/device/approval-key", "/v1/connections/batch", "/v1/me/agent-drafts"].contains(p) else { return nil }
+            return p
+        }
+        XCTAssertEqual(order, ["/v1/me/device/approval-key", "/v1/connections/batch", "/v1/me/agent-drafts"])
+        XCTAssertTrue(signer.quiet.contains { $0.hasPrefix("approval:kiff.requests.v1\nt_01\n") }, "the pair, signed by the approval key: \(signer.quiet)")
+        Keychain.delete(AppModel.planqueAccount)
+        Keychain.delete(AppModel.approvalKeyedAccount)
+    }
+
+    /// A key KIFF still doesn't hold after Start tried: the one-Face-ID start sends nothing, not
+    /// even the enrolment, and says why. The draft alone, also the approval key's, waits the same way.
+    func testAnUnheldApprovalKeySignsNothing() async throws {
+        let signer = KeyedSigner()
+        let model = await keyedModel(signer)
+        StubProtocol.sent = []
+        let given = await model.giveCoachTools()
+        XCTAssertFalse(given)
+        XCTAssertTrue(model.approvalKeyUnheld)
+        XCTAssertEqual(model.setupError, Words.Approval.keyNotAccepted, "it says why, in the line both phones use")
+        XCTAssertNil(model.setupTaf)
+        for path in ["/v1/accounts/t_01/enrolment", "/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup"] {
+            XCTAssertFalse(StubProtocol.sent.contains { $0.httpMethod == "POST" && $0.url?.path == path }, path)
+        }
+        XCTAssertFalse(signer.quiet.contains { $0.hasPrefix("approval:") }, "the approval key signed nothing")
+
+        StubProtocol.responses["GET /v1/setup"] = (200, Self.startJSON(pair: false))
+        await model.loadSetup()
+        XCTAssertEqual(model.coachStart?.together, false)
+        StubProtocol.sent = []
+        let alone = await model.giveCoachTools()
+        XCTAssertFalse(alone)
+        XCTAssertEqual(model.setupError, Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport,
+                       "from the second refusal in a row, where to write too")
+        XCTAssertFalse(StubProtocol.sent.contains { $0.httpMethod == "POST" && $0.url?.path == "/v1/me/agent-drafts" }, "no draft alone either")
+        Keychain.delete(AppModel.planqueAccount)
+        Keychain.delete(AppModel.approvalKeyedAccount)
+    }
+
+    /// Sign-in never waits on Face ID: no screen of its own stands before it.
+    func testSignInDoesntWaitOnApprovals() throws {
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let onboarding = try String(contentsOf: views.appendingPathComponent("OnboardingView.swift"), encoding: .utf8)
+        XCTAssertTrue(onboarding.contains(".sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }"))
+        XCTAssertFalse(onboarding.contains("SignInGate"))
+    }
+
     /// The phone enrols before anything goes to KIFF: an enrolment the connection server refuses
     /// (another device holds it) sends neither the batch nor the draft, so KIFF is left with no
     /// tools and no draft nobody claims.
@@ -872,6 +1024,25 @@ final class SetupTests: XCTestCase {
         XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs").isEmpty)
         XCTAssertTrue(sent("POST", "cloud.test", "/v1/tafs/taf-setup/messages").isEmpty, "Coach hears a failure from tafs cloud, not the phone")
         Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A taf made with no plan: the hand-over card's answer carries tafs cloud's words
+    /// (`outcome.plan_needed.words`), and the card says them; it's still set up. Words that
+    /// aren't words, or none, say nothing.
+    func testAHandOverMadeWithNoPlanSaysSo() throws {
+        func outcome(_ json: String) throws -> TafsCloud.CardAnswer.Outcome? {
+            try JSONDecoder().decode(TafsCloud.CardAnswer.self, from: Data(#"{"state":"answered","words":"Set up","outcome":\#(json)}"#.utf8)).outcome
+        }
+        let none = try XCTUnwrap(outcome(#"{"taf_id":"taf-new","plan_needed":{"words":"Choose a plan to start it."}}"#))
+        XCTAssertEqual(none.tafID, "taf-new")
+        XCTAssertEqual(none.planNeeded, "Choose a plan to start it.")
+        XCTAssertNil(try outcome(#"{"taf_id":"taf-new"}"#)?.planNeeded)
+        XCTAssertNil(try outcome(#"{"taf_id":"taf-new","plan_needed":{"words":" "}}"#)?.planNeeded)
+        XCTAssertEqual(try outcome(#"{"taf_id":"taf-new","plan_needed":{"words":7}}"#)?.tafID, "taf-new", "the rest still reads")
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let chat = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(chat.contains("case .setUp:\n                if let words = model.setupThread.planNeeded(shown.ref) {"),
+                      "on the card that says it's set up")
     }
 
     /// What tafs cloud answered itself is only shown: an approval already connected with no

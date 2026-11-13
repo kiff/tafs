@@ -1,0 +1,1 @@
+- **iPhone and iPad: Coach's Start is one screen and one tap.** When tafs cloud words it, Start's screen shows one line, then Coach's tools and Cards in KIFF's words, then the Start button with what it does under it. One face or fingerprint signs it all, and no second step opens. With words handed over, Send does the same, then sends (docs/ios-app.md › Coach's tools).

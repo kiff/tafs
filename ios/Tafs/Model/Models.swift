@@ -392,6 +392,9 @@ struct Taf: Identifiable, Hashable, Codable {
     /// halted, needs its owner, is working, retrying, waiting or paused says that instead, so
     /// this is nil.
     var healthNow: String? = nil
+    /// Another agent whose setup stopped partway: a tap opens Coach's chat where it stopped,
+    /// and its line says tafs cloud's words for it (docs/tafs.md).
+    var finish: TafsCloud.HomeTaf.Finish? = nil
     /// tafs cloud's `work.attention`: `healthNow` says what went wrong, in place of "Working".
     var attention = false
     /// A short word beside its name, as tafs cloud sends it: "Trial" for an open trial's

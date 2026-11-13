@@ -75,6 +75,17 @@ class TafsCloud(
   /** The account's Coach and its tools, from one read. */
   suspend fun setupAndTools(): Pair<CloudSetup?, CoachTools?> = get<SetupResponse>("/v1/setup").let { it.setup to it.tools }
 
+  /** The account's Coach, its tools and, before Coach exists, its first start under one fingerprint, from one read. */
+  suspend fun setupRead(): SetupRead {
+    // This phone's zone, so tafs cloud sets a new account's from it once, and the app asks nothing (docs/accounts.md).
+    val bytes = send("GET", "/v1/setup", extra = mapOf("X-Time-Zone" to java.time.ZoneId.systemDefault().id))
+    val r = KiffClient.json.decodeFromString(SetupResponse.serializer(), String(bytes))
+    return SetupRead(r.setup, r.tools, if (r.setup == null) CoachStart.read(r.start) else null, r.timeZone?.takeIf { it.isNotBlank() })
+  }
+
+  /** What `GET /v1/setup` answers; [timeZone] once tafs cloud set a new account's zone from this phone's. */
+  data class SetupRead(val setup: CloudSetup?, val tools: CoachTools?, val start: CoachStart?, val timeZone: String? = null)
+
   /** The recipes a new Coach conversation opens to, by category (kiff/tafs#476). */
   suspend fun recipes(): Recipes = get("/v1/recipes")
 

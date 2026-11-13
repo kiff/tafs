@@ -95,6 +95,8 @@ object Words {
     fun keyGoneBiometry(biometry: String): String = Res.s(R.string.approval_key_gone_biometry, biometry)
     val keyGoneSignIn: String get() = Res.s(R.string.approval_key_gone_sign_in)
     val keyLost: String get() = Res.s(R.string.approval_key_lost)
+    val keyNotAccepted: String get() = Res.s(R.string.approval_key_not_accepted)
+    val keyNotAcceptedSupport: String get() = Res.s(R.string.approval_key_not_accepted_support)
     fun lockedAfterTooManyTries(either: String, device: String): String = Res.s(R.string.approval_locked_after_too_many_tries, either, device)
     fun lockedUnlockDevice(either: String): String = Res.s(R.string.approval_locked_unlock_device, either)
     val newFingerprint: String get() = Res.s(R.string.approval_new_fingerprint)

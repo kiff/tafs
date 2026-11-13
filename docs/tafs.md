@@ -104,6 +104,11 @@ apart. tafs cloud builds it from its records and KIFF's Cards and held calls, re
 the owner's session, so the app combines nothing (`runtime/src/cloud/home.ts`). It lists
 only what KIFF says the person may use or oversee.
 
+An agent whose setup stopped partway (Coach drafted it and its Card is signed, but the owner left
+the chat before the taf was made) shows by the name Coach gave it, never its agent's id, with
+`finish: {taf, session, words}`: "Finish setting up" opens Coach's chat where it stopped
+(`GET /v1/tafs/{taf}/conversation/{session}`), and reading that chat makes the taf.
+
 A taf's Cards (`card.cards`) come live first, then active, and within each the one that has used
 the most of its limit first (its money total or its calls, whichever is further along), then
 KIFF's order: the Card in front is the one at work, never an unused one at 200 of 200 while

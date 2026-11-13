@@ -11,6 +11,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -98,7 +99,7 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
       else -> {
         // Not started on this phone: the conversation shows anyway, with what the person brought (a job's words) in its box,
         // and the first Send starts Coach behind one fingerprint. What Coach is, and that it asks once, stay above it.
-        if (state.coachCloudId == null) StartNote(state)
+        if (state.coachCloudId == null) StartNote(state, chats)
         else androidx.compose.animation.AnimatedVisibility(visible = !folded && !keyboard) {
           Column {
             CoachToolsRow(state) { toolsOpen = true }
@@ -159,12 +160,69 @@ private fun Note(text: String) {
 
 /** Above a conversation Coach isn't started for yet: what it is, that the first message asks for one fingerprint, and why a Start didn't go. */
 @Composable
-private fun StartNote(state: AppState) {
+private fun StartNote(state: AppState, chats: CoachChatActions) {
   val biometry = LocalBiometry.current
+  val start = state.coachStart
+  if (start != null) {
+    StartScreen(state, start, chats)
+    return
+  }
   Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     Text(CoachWords.INTRO + " " + Words.Coach.eachWaits(biometry), style = scaled(14, color = Theme.soft))
     Text(if (state.startingCoach) Words.Common.starting else Words.Coach.startingAsks(biometry), style = scaled(12, color = Theme.dim))
     (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
+  }
+}
+
+/**
+ * Start, with tafs cloud's first start (docs/coach.md): its line, then what Coach is given, the Cards in KIFF's own words and the
+ * tools folded under their details, then what Start does and its button. One tap, or the first Send, signs it all under one
+ * fingerprint: nothing is signed unread, and there's no second screen. tafs cloud's words; the app's own only before them.
+ */
+@Composable
+private fun StartScreen(state: AppState, start: bot.tafs.app.kiff.CoachStart, chats: CoachChatActions) {
+  val biometry = LocalBiometry.current
+  val scope = rememberCoroutineScope()
+  var folded by remember { mutableStateOf(true) }
+  val words = start.words
+  val tools = start.tools
+  Column(
+    Modifier.fillMaxWidth().heightIn(max = 360.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
+    verticalArrangement = Arrangement.spacedBy(6.dp),
+  ) {
+    Text(words?.lead?.ifBlank { null } ?: (CoachWords.INTRO + " " + Words.Coach.eachWaits(biometry)), style = scaled(14, color = Theme.soft))
+    // The Cards, in KIFF's own words: what the one fingerprint gives Coach.
+    tools.card?.let { card ->
+      card.cardTitle?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.padding(top = 4.dp)) }
+      card.words.forEach { (title, lines) ->
+        if (title.isNotEmpty()) Text(title, style = scaled(13, FontWeight.SemiBold, Theme.ink))
+        lines.forEach { Text(it, style = scaled(13, color = Theme.soft)) }
+      }
+    }
+    // Coach's tools, each with what it does and why, folded under the step's details.
+    val step = tools.step
+    if (step != null && step.details.isNotBlank() && step.groups.isNotEmpty()) {
+      Text(
+        step.details + if (folded) " ⌄" else " ⌃",
+        style = scaled(13, FontWeight.SemiBold, Theme.amberText),
+        modifier = Modifier.heightIn(min = 44.dp).clickable { folded = !folded }.padding(vertical = 10.dp),
+      )
+      if (!folded) step.groups.forEach { g ->
+        Text(g.name, style = scaled(13, FontWeight.SemiBold, Theme.ink))
+        g.tools.forEach { t ->
+          Text(t.name, style = scaled(13, FontWeight.SemiBold, Theme.ink))
+          if (t.does.isNotBlank()) Text(t.does, style = scaled(13, color = Theme.ink))
+          if (t.why.isNotBlank()) Text(t.why, style = scaled(13, color = Theme.soft))
+        }
+      }
+    } else tools.connect?.lines?.forEach { Text("· $it", style = scaled(13, color = Theme.ink)) }
+    Text(words?.does?.ifBlank { null } ?: Words.Coach.startingAsks(biometry), style = scaled(12, color = Theme.dim))
+    bot.tafs.app.design.PrimaryButton(
+      if (state.startingCoach) Words.Common.starting else words?.start?.ifBlank { null } ?: Words.Coach.start,
+      { scope.launch { chats.giveTools() } },
+      enabled = !state.startingCoach, modifier = Modifier.confirms(),
+    )
+    (state.coachToolsError ?: state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
 }
 
@@ -253,6 +311,9 @@ class CoachActions(
    * there, never in Coach's chat, and the card is answered once it went. With the card's draft version.
    */
   val openKeySheet: (SetupComponent, String?) -> Unit = { _, _ -> },
+  /** Alerts, offered on a new taf's card: turned on as from Settings, or put off for good on this phone. */
+  val turnOnAlerts: () -> Unit = {},
+  val notNowAlerts: () -> Unit = {},
   /** Closes the "What I did" card. */
 )
 
@@ -562,14 +623,33 @@ private fun HandOverCard(shown: ShownComponent, state: AppState, actions: CoachA
     // Coach's list of the taf's tools names them by id only: the taf's page has its Card in KIFF's words.
     when (val h = CoachWords.handOver(shown.answer, listed != null)) {
       CoachWords.HandOver.SetUp ->
-        if (listed != null) PrimaryButton(if (listed.name != taf.name) Words.Coach.Result.open(name) else c.yes ?: Words.Coach.Result.seeIt(name), { actions.openTaf(listed.id) })
-        else Text(CoachWords.settingUp(name), style = scaled(13, color = Theme.dim))
+        if (listed != null) {
+          PrimaryButton(if (listed.name != taf.name) Words.Coach.Result.open(name) else c.yes ?: Words.Coach.Result.seeIt(name), { actions.openTaf(listed.id) })
+          // Made, with no plan yet: nothing runs until there is one, in tafs cloud's words.
+          shown.answer?.outcome?.planNeeded?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.amberText)) }
+          // The first run's one offer of alerts, now that a taf can ask for something: a held call never reaches nobody.
+          if (state.offersAlerts) AlertsOffer(actions)
+        } else Text(CoachWords.settingUp(name), style = scaled(13, color = Theme.dim))
       is CoachWords.HandOver.Failed -> {
         Text(CoachWords.notSetUp(taf.name, h.why), style = scaled(13, color = Theme.no))
         Text(CoachWords.COACH_KNOWS, style = scaled(13, color = Theme.dim))
       }
       CoachWords.HandOver.SettingUp -> Text(CoachWords.settingUp(name), style = scaled(13, color = Theme.dim))
     }
+  }
+}
+
+/** Alerts, offered once on a new taf's card: what they're for, Turn on alerts, and Not now. */
+@Composable
+private fun AlertsOffer(actions: CoachActions) {
+  Column(Modifier.fillMaxWidth().padding(top = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Text(Words.Alert.prompt, style = scaled(14, color = Theme.ink))
+    OutlineButton(Words.Settings.AlertsOff.turnOn, actions.turnOnAlerts, Modifier.fillMaxWidth(), color = Theme.amberText)
+    Text(
+      Words.Common.notNow,
+      style = scaled(14, color = Theme.dim),
+      modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = actions.notNowAlerts),
+    )
   }
 }
 

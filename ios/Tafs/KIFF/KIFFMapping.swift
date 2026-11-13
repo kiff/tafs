@@ -151,6 +151,12 @@ enum KIFFMapping {
         }
         taf.used = h.card.used.compactMapValues { amount($0) }
         taf.usageUnknown = Set(h.card.usageUnknown)
+        // Its setup stopped partway: tafs cloud's words in place of what it's doing, and the chat
+        // to finish it in. One with no chat or no words is none.
+        if let finish = h.finish, finish.usable {
+            taf.finish = finish
+            taf.now = finish.words
+        }
         return taf
     }
 

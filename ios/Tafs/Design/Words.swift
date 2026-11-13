@@ -167,6 +167,10 @@ enum Words {
         static var keyGoneSignIn: String { Words.line("approval.key_gone_sign_in") }
         /// Sign in with KIFF again to approve from this phone.
         static var keyLost: String { Words.line("approval.key_lost") }
+        /// KIFF didn't accept this device's approval key. Try again.
+        static var keyNotAccepted: String { Words.line("approval.key_not_accepted") }
+        /// Still not working? Write to support@kiff.dev.
+        static var keyNotAcceptedSupport: String { Words.line("approval.key_not_accepted_support") }
         /// {either} is locked after too many tries. Lock this {device}, unlock it with its passcode, then check again.
         static func lockedAfterTooManyTries(either: String, device: String) -> String { Words.line("approval.locked_after_too_many_tries", either, device) }
         /// {either} is locked after too many tries. Unlock this device with its passcode, then try again.

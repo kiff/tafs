@@ -1,0 +1,1 @@
+- **Android: signing in no longer waits for a fingerprint.** Approvals are set up at Coach's Start, which registers the phone's approval key with KIFF first when it isn't there yet.

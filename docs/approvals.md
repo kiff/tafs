@@ -200,20 +200,24 @@ Approving needs the approval key, and the approval key needs a fingerprint or fa
 counts as strong. The app asks the phone where it stands and says so before an approval is
 needed, never only at a prompt that fails.
 
-- **The states,** each in its own words (`ApprovalReadiness`, `ApprovalWords` on Android):
-  - set up: approvals work;
-  - none enrolled: "No fingerprint is set up on this phone. Add one in its settings, then come
-    back.", with **Open settings**, which on Android opens the phone's own screen to add one
-    (`ACTION_BIOMETRIC_ENROLL`, asking for a strong biometric; its security settings where
-    that screen isn't there);
-  - temporarily unavailable (the sensor locked after tries, busy, an update pending): wait a
-    moment, or unlock the phone once, then **Check again**;
-  - unsupported (no strong biometric at all): approve from another supported device.
-- **Before sign-in,** only when it isn't set up: the screen **Set up approvals on this device**,
-  with **Continue without approvals**. Without them the person can still sign in, review,
-  refuse and halt. Once the phone says it's set up, sign-in goes on by itself.
-- **Before the first taf:** Coach's Start is an approval, so while the phone can't approve it
-  says "Setting up a taf needs approvals" with the state and what to do, in Start's place.
+- **The states,** each in one line where the approval would be (`ApprovalReadiness`,
+  `ApprovalWords.cantApprove` on Android):
+  - set up: approvals work, and nothing stands in the button's place;
+  - none enrolled: "Approving needs a fingerprint on this phone.", with **Open settings**, which
+    on Android opens the phone's own screen to add one (`ACTION_BIOMETRIC_ENROLL`, asking for a
+    strong biometric; its security settings where that screen isn't there), and **Check again**;
+  - temporarily unavailable (the sensor locked after tries, busy, an update pending): try again
+    in a moment, with **Check again**;
+  - unsupported (no strong biometric at all): approve from another supported device, with
+    neither button.
+- **No screen of its own on Android** (1.20): the states show where they're needed, at Coach's
+  Start and at each approval, never as a step before sign-in.
+- **Sign-in never waits on it** (Android 1.20). Without approvals the person can still sign in,
+  review, refuse and halt.
+- **At Coach's Start, approvals are set up:** while the phone can't approve, it says "Setting up
+  a taf needs approvals" with the state and what to do, in Start's place. Once it can, Start
+  registers the approval key with KIFF if KIFF doesn't hold it yet (a phone that signed in before
+  it could approve), and signs nothing unless KIFF holds it.
 - **At each approval** (Approve once, Extra room, Install, Issue, Resume, Coach's Approve, a
   trial's Install): while the phone can't approve, the state and what to do stand in the
   button's place (`ApprovalGate`). Refuse, Decline and Halt stay. When it can, the button
@@ -229,8 +233,8 @@ needed, never only at a prompt that fails.
 
 ### On iPhone and iPad
 
-The same screen and gates, from what `canEvaluatePolicy` says for Face ID or Touch ID
-(`ApprovalReadiness` in `Biometry.swift`, the screens in `ApprovalSetupView.swift`):
+The same gates, from what `canEvaluatePolicy` says for Face ID or Touch ID
+(`ApprovalReadiness` in `Biometry.swift`, the gates in `ApprovalSetupView.swift`):
 
 - **The states,** each from its `LAError`:
   - set up: approvals work;
@@ -246,12 +250,15 @@ The same screen and gates, from what `canEvaluatePolicy` says for Face ID or Tou
     moment"; both with **Check again**;
   - unsupported (`biometryNotAvailable` with no Face ID or Touch ID): approve on another
     iPhone, iPad or Android phone signed in to the account.
-- **Before sign-in,** only when it isn't set up: the screen, with **Check again** and
-  **Continue without approvals**, and **Open Settings** only when Face ID is turned off for
-  tafs. Once it's set up there, the same screen says so,
-  with **Continue**.
+- **Sign-in never waits on it** (as on Android 1.20): there's no screen of its own before
+  sign-in. The states show where they're needed, at Coach's Start and at each approval.
 - **Before the first taf:** Coach's start says approving is needed to finish it, and Start is
-  gated, since it asks for Face ID.
+  gated, since it asks for Face ID. Once it can, Start registers the approval key with KIFF
+  under its one Face ID when KIFF doesn't hold it yet (a phone that signed in before it could
+  approve). The one-Face-ID start, the pair or the draft alone, signs nothing while KIFF doesn't
+  hold the key, and says "KIFF didn't accept this device's approval key. Try again.", the line
+  both apps use; from the second refusal in a row, with the support address under it
+  (`AppModel.approvalKeyUnheld`, `approval.key_not_accepted`).
 - **At each approval** (Approve once, Extra room, Install from Needs you, Coach's Approve,
   Issue): while the device can't approve, the state and what to do stand in the button's place
   (`ApprovalGate`). A version's or a trial's Install, in a toolbar or a confirmation, stays

@@ -8,7 +8,13 @@ object HomeWords {
   /** + New's words. */
   fun newTaf(gallery: bot.tafs.app.kiff.RecipesGallery?): String = cloud(gallery?.words?.title, Words.Home.newTaf)
 
-  /** Explore jobs: the row on Tafs, and the gallery's title while browsing. */
+  /**
+   * Explore jobs' row on Home, only in tafs cloud's words: none sent, no row. tafs cloud leaves it out while Home already lists every
+   * job (docs/android-app.md), so the app adds no rule of its own.
+   */
+  fun exploreRow(gallery: bot.tafs.app.kiff.RecipesGallery?): String? = gallery?.words?.explore?.takeIf { it.isNotBlank() }
+
+  /** Explore jobs: the gallery's title while browsing. */
   fun explore(gallery: bot.tafs.app.kiff.RecipesGallery?): String = cloud(gallery?.words?.explore, Words.Home.exploreJobs)
 
   /** The row under the strip that opens every job. */

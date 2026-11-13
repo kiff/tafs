@@ -41,7 +41,6 @@ struct CoachToolsRow: View {
 struct CoachToolsSheet: View {
     @EnvironmentObject private var model: AppModel
     let close: () -> Void
-    @State private var folded = true
 
     var body: some View {
         NavStack {
@@ -89,9 +88,50 @@ struct CoachToolsSheet: View {
     @ViewBuilder
     private func toGive(_ tools: TafsCloud.CoachTools) -> some View {
         let step = tools.step
+        if let intro = step?.intro, !intro.isEmpty, !(step?.groups.isEmpty ?? true) { line(intro, 15, Theme.soft) }
+        CoachToolsGiven(tools: tools)
+        if let ask = step?.ask, !ask.isEmpty { line(ask, 15, Theme.ink, .semibold).padding(.top, 6) }
+        // The one confirmation: the person's, never a drive's. A phone that can't approve yet
+        // reads why in the button's place.
+        ApprovalGate {
+            Button {
+                Task { if await model.giveCoachTools() { close() } }
+            } label: {
+                Label(model.givingCoachTools ? Words.Coach.Tools.giving : Self.said(step?.give, Words.Coach.Tools.give),
+                      systemImage: Biometry.symbol)
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .disabled(model.givingCoachTools)
+            .accessibilityIdentifier("coach-tools-give")
+        }
+    }
+
+    private func line(_ words: String, _ size: CGFloat, _ color: Color, _ weight: Font.Weight = .regular) -> some View {
+        Text(words).scaledFont(size, weight: weight).foregroundColor(color)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// tafs cloud's words where it sends them; the app's own only for a tafs cloud from before them.
+    static func said(_ server: String?, _ own: String) -> String {
+        guard let server, !server.trimmingCharacters(in: .whitespaces).isEmpty else { return own }
+        return server
+    }
+
+    static func title(_ tools: TafsCloud.CoachTools?) -> String { said(tools?.step?.title, Words.Coach.Tools.title) }
+}
+
+/// What's given to Coach, as the step and Start's own screen both draw it: a few groups up front,
+/// each tool and its limits folded under them, and Coach's Cards in KIFF's words. Every word is
+/// tafs cloud's or KIFF's.
+struct CoachToolsGiven: View {
+    let tools: TafsCloud.CoachTools
+    @State private var folded = true
+
+    var body: some View {
+        let step = tools.step
         let grouped = !(step?.groups.isEmpty ?? true)
         if let step, grouped {
-            if !step.intro.isEmpty { line(step.intro, 15, Theme.soft) }
             // A few groups up front; each tool and its limits folded under them, closed at first.
             ForEach(Array(step.groups.enumerated()), id: \.offset) { _, group in
                 VStack(alignment: .leading, spacing: 2) {
@@ -142,20 +182,6 @@ struct CoachToolsSheet: View {
                 }
             }
         }
-        if let ask = step?.ask, !ask.isEmpty { line(ask, 15, Theme.ink, .semibold).padding(.top, 6) }
-        // The one confirmation: the person's, never a drive's. A phone that can't approve yet
-        // reads why in the button's place.
-        ApprovalGate {
-            Button {
-                Task { if await model.giveCoachTools() { close() } }
-            } label: {
-                Label(model.givingCoachTools ? Words.Coach.Tools.giving : Self.said(step?.give, Words.Coach.Tools.give),
-                      systemImage: Biometry.symbol)
-            }
-            .buttonStyle(PrimaryButtonStyle())
-            .disabled(model.givingCoachTools)
-            .accessibilityIdentifier("coach-tools-give")
-        }
     }
 
     private func line(_ words: String, _ size: CGFloat, _ color: Color, _ weight: Font.Weight = .regular) -> some View {
@@ -163,12 +189,4 @@ struct CoachToolsSheet: View {
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
-
-    /// tafs cloud's words where it sends them; the app's own only for a tafs cloud from before them.
-    static func said(_ server: String?, _ own: String) -> String {
-        guard let server, !server.trimmingCharacters(in: .whitespaces).isEmpty else { return own }
-        return server
-    }
-
-    static func title(_ tools: TafsCloud.CoachTools?) -> String { said(tools?.step?.title, Words.Coach.Tools.title) }
 }

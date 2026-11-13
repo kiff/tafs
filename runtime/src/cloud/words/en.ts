@@ -170,6 +170,7 @@ export const en = {
   alert_not_sent_words: "Silent, when a reply needs another try",
   alerts_answering_tafs: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 taf" : `${n} tafs`),
   // Home's Needs you line (GET /v1/home, needs_you.words): what the count says, nothing or how many.
+  home_finish_setup: "Finish setting up",
   home_needs_you_none: "Nothing needs you.",
   home_needs_you: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 needs you." : `${n} need you.`),
   // Recipes (GET /v1/recipes): the categories' titles, the sheet's labels, Home's line, and the suggestions setting's words.
@@ -632,6 +633,7 @@ export const en = {
   cts_give: "Give Coach its tools",
   cts_not_now: "Not now",
   cts_row: "Coach's tools are waiting for you · Give them",
+  cts_row_cards: "Coach has new tools: approve their limits",
   cts_g_watch: "Watch your tafs",
   cts_g_watch_line: "See your tafs and their runs, and find what went wrong.",
   cts_g_run: "Run them for you",

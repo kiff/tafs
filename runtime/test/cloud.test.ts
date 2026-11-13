@@ -368,8 +368,9 @@ describe("tafs cloud", () => {
     expect(first.recipes.map((r: { id: string }) => r.id)).toEqual(RECIPES.map((r) => r.id));
     expect(first.filtered).toBe(true);
     expect(first.strip).toEqual({ shown: false, title: "More jobs to hand off", ids: [] });
+    // Home leads with every job, so "Explore jobs" would open the same list again: it isn't offered (finding 2 on Android 76).
     expect(first.words).toEqual({ title: "New taf", all: "All jobs", own_words: "Say it in your own words", own_words_line: "Coach builds the taf with you.",
-      explore: "Explore jobs", see_all: "See all jobs", try: "Try it with Coach", sample: "What it reported after its test run" });
+      see_all: "See all jobs", try: "Try it with Coach", sample: "What it reported after its test run" });
     // Browsing: a job whose proof run passed says on what, ready to draw; a job with none has no line.
     expect(first.recipes.find((r: { id: string }) => r.id === "acknowledge-every-ticket").proved).toBe("Proved on a test help desk.");
     expect(first.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit")).not.toHaveProperty("proved");
@@ -377,7 +378,8 @@ describe("tafs cloud", () => {
     // Every word the apps draw a title or button from is there, in any language a phone asks for (an unknown one reads English).
     for (const lang of ["de", "fr-CA", "es-419", "it", "pt-BR", "nl", "pl", "ja", "*", "garbage;q=x"]) {
       const g = (await get("/v1/recipes/gallery", "ana", { "accept-language": lang })).body;
-      for (const k of ["title", "all", "explore", "see_all", "try", "sample"]) expect(g.words[k], `${lang} ${k}`).toMatch(/\S/);
+      for (const k of ["title", "all", "see_all", "try", "sample"]) expect(g.words[k], `${lang} ${k}`).toMatch(/\S/);
+      expect(g.words, lang).not.toHaveProperty("explore");
       expect(g.recipes.find((r: { id: string }) => r.id === "acknowledge-every-ticket").proved, lang).toMatch(/\S/);
     }
     expect(first.labels).toEqual({ allows: "Does on its own", holds: "Asks you first", never: "Never does", hand: "Hand it to Coach" });
@@ -393,6 +395,10 @@ describe("tafs cloud", () => {
     const live = (await get("/v1/recipes/gallery", "ana")).body;
     expect(live.recipes).toHaveLength(RECIPES.length);
     expect(live.recipes.find((r: { id: string }) => r.id === "refunds-within-a-limit").running).toBe(true);
+    // Home no longer leads with the jobs, so "Explore jobs" is back, in every language.
+    expect(live.words.explore).toBe("Explore jobs");
+    for (const lang of ["de", "fr-CA", "es-419", "it", "pt-BR", "nl", "pl", "ja"])
+      expect((await get("/v1/recipes/gallery", "ana", { "accept-language": lang })).body.words.explore, lang).toMatch(/\S/);
     expect((await get("/v1/recipes", "ana")).body).toMatchObject({ recipes: [], shown: false });
     // The strip: at most 3, never one that's running, every app connected first, then some, then none.
     expect(live.strip.shown).toBe(true);
@@ -412,17 +418,24 @@ describe("tafs cloud", () => {
     expect(viewer.recipes).toHaveLength(RECIPES.length);
     expect(viewer.strip.shown).toBe(false);
     expect(viewer.recipes.some((r: Record<string, unknown>) => "running" in r)).toBe(false);
+    expect(viewer.words.explore).toBe("Explore jobs");
 
     // Suggestions off: the gallery stays, the strip goes.
     await coach.put("t_acme#suggestions", { show: false }, new Date(Date.now() + 86_400_000));
     const off = (await get("/v1/recipes/gallery", "ana")).body;
     expect(off.recipes).toHaveLength(RECIPES.length);
     expect(off.strip).toMatchObject({ shown: false, ids: [] });
+    expect(off.words.explore).toBe("Explore jobs");
 
     // In the person's language.
     const de = (await get("/v1/recipes/gallery", "ana", { "Accept-Language": "de" })).body;
     expect(de.words.own_words).toBe("Sag es in deinen eigenen Worten");
     expect(de.strip.title).toBe("Weitere Aufgaben zum Abgeben");
+
+    // No live taf with suggestions off: Home shows its empty line, not the jobs, so "Explore jobs" is offered.
+    w.tafs.held.delete("t_acme#taf-aaaaaaaaaaaaaaaaaaaa");
+    expect((await get("/v1/recipes", "ana")).body.home.shown).toBe(false);
+    expect((await get("/v1/recipes/gallery", "ana")).body.words.explore).toBe("Explore jobs");
 
     // The logo itself: no session needed, a PNG, fetched once by tafs cloud; an unknown key is a 404.
     const logo = await get(refunds.apps[1].logo);
@@ -1783,6 +1796,51 @@ describe("Setup (kiff/agents#91)", () => {
     }
   });
 
+  // Android 76 check, finding 1: an account that has Coach and misses its tools gave them in two fingerprints, the batch
+  // then the Cards. With TAFS_COACH_START_ONE, the pair comes together, as a first start's; and a row that asks again
+  // only for new tools' Cards says why.
+  it("gives an account with Coach its missing tools and Cards under one fingerprint, and says when only new tools' limits are asked", async () => {
+    const w = world();
+    await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
+    const mcp = "https://tafs.test/v1/mcp";
+    const tools = async () => (await call(w, "GET", "/v1/setup", { token: "ana", headers: { host: "tafs.test" } })).body.tools;
+    // Off: the batch, then the Cards on the next read, as before.
+    const off = await tools();
+    expect(off.connect).toBeDefined();
+    expect(off).not.toHaveProperty("requests");
+    expect(off.coach_tools_step.row).toBe("Coach's tools are waiting for you · Give them");
+    process.env.TAFS_COACH_START_ONE = "on";
+    try {
+      const both = await tools();
+      // Older apps still read connect; a new one signs the pair once, the batch first, then the Cards' draft.
+      expect(both.connect.body.connections.map((c: { name: string }) => c.name)).toEqual(TOOLS.map((t) => t.name));
+      expect(both.scheme).toBe("kiff.requests.v1");
+      expect(both.requests.map((r: { id: string }) => r.id)).toEqual(["connect", "draft"]);
+      const [connect, draft] = both.requests;
+      expect(connect).toMatchObject({ method: "POST", path: "/v1/connections/batch", gateway: true, body: both.connect.body, lines: both.connect.lines });
+      // The draft is for Coach's own agent, with the Cards it doesn't hold, worded over the batch's contract and carrying it.
+      expect(draft).toMatchObject({ method: "POST", path: "/v1/me/agent-drafts", body: { agent_id: "setup-acme", label: "Coach", contract_digest: "cd_123" } });
+      expect(draft.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
+      expect(draft.card_title).toBeDefined();
+      // KIFF can't word the pair: the steps, as before, never an unworded draft.
+      (w.account as { batchPreviewMissing?: boolean }).batchPreviewMissing = true;
+      const unworded = await tools();
+      expect(unworded.connect).toBeDefined();
+      expect(unworded).not.toHaveProperty("requests");
+      (w.account as { batchPreviewMissing?: boolean }).batchPreviewMissing = false;
+      // Every tool there, Cards for new ones missing: the Cards alone (one fingerprint already), and the row says why.
+      w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
+      const cardsOnly = await tools();
+      expect(cardsOnly).not.toHaveProperty("requests");
+      expect(cardsOnly.card.body.agent_id).toBe("setup-acme");
+      expect(cardsOnly.coach_tools_step.row).toBe("Coach has new tools: approve their limits");
+      const fr = (await call(w, "GET", "/v1/setup", { token: "ana", headers: { host: "tafs.test", "Accept-Language": "fr" } })).body.tools;
+      expect(fr.coach_tools_step.row).toBe("Coach a de nouveaux outils : approuvez leurs limites");
+    } finally {
+      delete process.env.TAFS_COACH_START_ONE;
+    }
+  });
+
   it("says what giving Coach its tools still needs, from KIFF", async () => {
     const w = world();
     await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
@@ -2371,19 +2429,34 @@ describe("improving a taf (kiff/tafs#107)", () => {
     expect(first).not.toContain("card_old");
   });
 
+  it("gives Setup a Card's limit for each item and its end as KIFF holds them, so a revision keeps both", async () => {
+    const w = withSetup();
+    w.account.mandates = [{ ...raeCard, valid_until: "2026-11-19T00:00:00Z",
+      aggregates: [{ quantity: "count", limit: 10, window: "calendar_day" }, { quantity: "count", limit: 1, window: "lifetime", per: "charge" }] }];
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "Let it refund up to 200." } });
+    const first = (w.agents.events.get(r.body.session)?.[0]?.body as { text: string }).text;
+    // One refund per charge, ever: never one for the taf's whole life, and the Card still ends.
+    expect(first).toContain(`"aggregates":[{"quantity":"count","limit":10,"window":"calendar_day"},{"quantity":"count","limit":1,"window":"lifetime","per":"charge"}]`);
+    expect(first).toContain(`"valid_until":"2026-11-19T00:00:00Z"`);
+  });
+
   it("copies only a draft body's keys from a Card as KIFF lists it", () => {
     const listed = {
       id: "card_rae", subject: "rae", subjects: ["rae"], active: true, domain: "gateway", environment: "live", on_exceed: "hold",
       location: "Europe/Madrid", hold_expiry_seconds: 86400, domain_id: "dom_1",
       grants: [{ action: "create_refund_k3f9", title: "Refund a charge", entity_states: ["requested"],
         per_action_max: [{ quantity: "sum(amount)", max: 500, unit: "EUR", scale: 2 }], resources: { parameter: "charge", values: ["ch_1"], extra: 1 } }],
-      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects", unit: "EUR", scale: 2, room_grants: [{ amount: 1000 }] }],
+      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects", unit: "EUR", scale: 2, room_grants: [{ amount: 1000 }] },
+        { quantity: "count", quantity_of: "calls", limit: 1, window: "lifetime", per: "charge", measure: "effects" }],
     };
-    expect(heldCards([listed], "rae")).toEqual([{
+    expect(heldCards([{ ...listed, valid_from: "2026-11-01T00:00:00Z", valid_until: "2026-11-19T00:00:00Z" }], "rae")).toEqual([{
       id: "card_rae", subject: "rae", domain: "gateway", environment: "live", on_exceed: "hold",
+      valid_from: "2026-11-01T00:00:00Z", valid_until: "2026-11-19T00:00:00Z", location: "Europe/Madrid",
       grants: [{ action: "create_refund_k3f9", entity_states: ["requested"], resources: { parameter: "charge", values: ["ch_1"] },
         per_action_max: [{ quantity: "sum(amount)", max: 500 }] }],
-      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects" }],
+      // One per charge, ever, stays one per charge: never one for the taf's whole life.
+      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects" },
+        { quantity: "count", limit: 1, window: "lifetime", per: "charge", measure: "effects" }],
     }]);
     expect(heldCards([{ ...listed, subjects: ["rae", "bo"] }], "rae")).toEqual([]);
   });
@@ -4407,6 +4480,51 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const again = JSON.parse((await handle({ rawPath: `/v1/tafs/${COACH}/conversation`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
       { ...depsOf(w), coach: memoryCoach(() => w.now) })).body) as { components: Array<{ component: { id: string }; answer?: unknown }> };
     expect(again.components.find((c) => c.component.id === "done")?.answer).toMatchObject({ state: "answered", words: "Refunds is set up", by: "tafs cloud", outcome: { taf_id: NEW } });
+  });
+
+  // Finding 3 of the Android 76 check: a Coach chat left before the hand-over left an agent with a signed Card and no
+  // taf, and Home listed it by its agent's id. It shows by the name Coach gave it, with the way back to its chat.
+  it("shows a taf whose setup stopped partway by its name, with the chat to finish it in, never its agent's id", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
+    const stored = w.agents.runs.find((r) => r.id === run.id)!;
+    w.agents.show(stored, RESULT);
+    Object.assign(stored, { status: "PAUSED", requirements: [{ call_id: "s1", tool: "show", input: RESULT, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" }] });
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    // Its draft confirmed: KIFF lists the agent with its Card, and tafs cloud has no taf for it.
+    w.account.mandates = [{ id: "card_refunds", subject: "refunds-x", active: true, grants: [{ action: "lookup" }], aggregates: [] }];
+    const home = async (lang = "en") => JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana", "Accept-Language": lang } }, deps)).body) as { tafs: Array<{ name: string }>; others: Array<Record<string, unknown>> };
+    const before = await home();
+    expect(before.others).toHaveLength(1);
+    expect(before.others[0]).toMatchObject({ name: "Refunds", kiff_agent: "refunds-x", finish: { taf: COACH, session: stored.session, words: "Finish setting up" } });
+    expect((await home("fr")).others[0]!.finish).toMatchObject({ words: "Terminer la configuration" });
+    // Reading that chat hands it over: the taf is made, and Home lists it as a taf, not apart.
+    expect((await handle({ rawPath: `/v1/tafs/${COACH}/conversation/${stored.session}`, requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, deps)).statusCode).toBe(200);
+    expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ name: "Refunds", kiffAgent: "refunds-x" });
+    const after = await home();
+    expect(after.tafs.map((t) => t.name)).toContain("Refunds");
+    expect(after.others).toEqual([]);
+  });
+
+  it("shows another agent as before when no Coach chat names it, or the paused runs can't be read", async () => {
+    const { w, deps } = await paused();
+    w.account.mandates = [{ id: "card_ops", subject: "ops-bot", active: true, grants: [{ action: "lookup" }], aggregates: [] },
+      { id: "card_refunds", subject: "refunds-x", active: true, grants: [{ action: "lookup" }], aggregates: [] }];
+    const home = async () => JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, deps)).body) as { others: Array<Record<string, unknown>> };
+    const both = await home();
+    expect(both.others.find((o) => o.kiff_agent === "ops-bot")).toMatchObject({ name: "ops-bot" });
+    expect(both.others.find((o) => o.kiff_agent === "ops-bot")).not.toHaveProperty("finish");
+    w.agents.fail.set("pausedRuns", new Error("down"));
+    const down = await home();
+    expect(down.others.map((o) => o.name)).toEqual(["ops-bot", "refunds-x"]);
+    expect(down.others.some((o) => "finish" in o)).toBe(false);
   });
 
   // The Coach skills design: tafs cloud names the skills a conversation loads, by its entry point before

@@ -1,0 +1,1 @@
+- **iPhone and iPad: a taf made with no plan says so.** When Coach hands over a taf and the account has no plan, the "taf made" card adds tafs cloud's line: "Choose a plan to start it." No run starts until there is a plan (docs/ios-app.md › A taf made with no plan).

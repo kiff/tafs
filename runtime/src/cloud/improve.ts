@@ -67,7 +67,11 @@ function list(v: unknown): unknown[] {
  * body's keys are copied from KIFF's view, never what the view adds (a
  * grant's title, a limit's unit and scale, an aggregate's room), and each
  * names its holder. An aggregate's limit is the Card's base: extra room isn't
- * folded into it.
+ * folded into it. Every term a draft body names is kept: an aggregate counted
+ * for each item keeps its per, or "one per order, ever" would be drafted again
+ * as one for the taf's whole life; the Card keeps when it starts and ends, or
+ * a revision would never end. KIFF lists the hold's wait as seconds, not as
+ * a draft writes it; a draft that leaves it out keeps the Card's.
  */
 export function heldCards(mandates: unknown[], agent: string): HeldCard[] {
   const out: HeldCard[] = [];
@@ -78,7 +82,7 @@ export function heldCards(mandates: unknown[], agent: string): HeldCard[] {
     out.push({
       id: m.id,
       subject: agent,
-      ...only(m, ["domain", "environment", "on_exceed"]),
+      ...only(m, ["domain", "environment", "on_exceed", "valid_from", "valid_until", "location"]),
       grants: list(m.grants).map((g) => {
         const gv = only(g, ["action", "entity_states", "resources", "next_steps"]);
         const caps = list((g as Record<string, unknown>).per_action_max).map((c) => only(c, ["quantity", "max"]));
@@ -86,7 +90,7 @@ export function heldCards(mandates: unknown[], agent: string): HeldCard[] {
         if (gv.resources) gv.resources = only(gv.resources, ["parameter", "values"]);
         return gv;
       }),
-      aggregates: list(m.aggregates).map((a) => only(a, ["quantity", "limit", "window", "measure"])),
+      aggregates: list(m.aggregates).map((a) => only(a, ["quantity", "limit", "window", "per", "measure"])),
     });
   }
   return out;

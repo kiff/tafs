@@ -1768,9 +1768,13 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
       const body = coachCardsDraft(setup.kiffAgent, missingCards);
       card = { body, ...(await previewDraft(token, body, deps.fetch, deps.kiffBase)) };
     }
+    const connect = plan.missing.length ? coachConnect(plan.missing, mcp, plan.replace, langOf(event)) : undefined;
+    // Tools and Cards both missing: the pair under one fingerprint, as a first start has it (`kiff.requests.v1`).
+    const together = connect && !issued ? await coachToolsTogether(token, setup, connect, missingCards, deps) : undefined;
     return {
-      state: "to_give", ...(plan.missing.length ? { connect: coachConnect(plan.missing, mcp, plan.replace, langOf(event)) } : {}), ...(card ? { card } : {}),
-      coach_tools_step: coachToolsStep(langOf(event)),
+      state: "to_give", ...(connect ? { connect } : {}), ...(card ? { card } : {}), ...(together ?? {}),
+      // Only Cards missing (Coach gained tools since its Card was signed): the row says why it asks again.
+      coach_tools_step: coachToolsStep(langOf(event), { cardsOnly: !connect && !issued }),
     };
   } catch (err) {
     if (err instanceof KIFFError) {
@@ -1779,6 +1783,34 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
       return { state: "unknown" };
     }
     throw err;
+  }
+}
+
+/**
+ * Coach's missing tools and Cards on an account that has Coach, under one fingerprint (`TAFS_COACH_START_ONE=on`):
+ * the tools batch and the Cards' draft for Coach's own agent, as a first start's pair (`coachFirstStart`), so the
+ * phone signs both hashes once (`kiff.requests.v1`), sends the batch, then the draft, whose submit is the
+ * confirmation as for `card`. The Cards are worded by KIFF's gateway over the tools the batch would connect, and the
+ * draft carries that contract. Nothing when the flag is off or KIFF can't word them: the phone gives the batch, then
+ * the Cards on its next read, as before.
+ */
+async function coachToolsTogether(token: string, setup: Taf, connect: ReturnType<typeof coachConnect>, missingCards: Set<string>, deps: Deps):
+  Promise<{ scheme: string; requests: unknown[] } | undefined> {
+  if (process.env.TAFS_COACH_START_ONE !== "on") return undefined;
+  const body = coachCardsDraft(setup.kiffAgent, missingCards);
+  try {
+    const { contract_digest: digest, ...preview } = await previewBatchDraft(token, connect.body.connections, body, deps.fetch, deps.kiffGateway);
+    if (!digest) return undefined;
+    return {
+      scheme: "kiff.requests.v1",
+      requests: [
+        { id: "connect", method: "POST", path: "/v1/connections/batch", gateway: true, body: connect.body, lines: connect.lines },
+        { id: "draft", method: "POST", path: "/v1/me/agent-drafts", body: { ...body, contract_digest: digest }, ...preview },
+      ],
+    };
+  } catch (err) {
+    console.error(`coach tools together: ${err instanceof KIFFError ? `KIFF answered ${err.status}: ` : ""}${(err as Error).message}`);
+    return undefined;
   }
 }
 
@@ -6251,12 +6283,17 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // it shows as the taf's trial, never as another agent.
   const ours = new Set(records.flatMap((t) => t.kiffAgent ? [t.kiffAgent, `${t.kiffAgent}~trial`] : []));
   const agents = [...new Set([...cards.keys(), ...waiting.keys()])].filter((a) => !ours.has(a) && listable(access, a)).sort();
+  // One whose setup stopped partway (Coach drafted it, its Card is signed, and no taf was made) shows by the name
+  // Coach gave it, with the way back to the chat where it stopped: never its agent's id.
+  const halfMade = agents.length ? await halfMadeTafs(me.tenantID, records, new Set(agents), deps) : new Map<string, HalfMade>();
   const others = agents.map((agent) => {
     const card = summary(cards.get(agent) ?? []);
     const held = waiting.get(agent) ?? 0;
     const color = freeColor(taken);
     taken.push(color);
-    return { id: null, name: agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card };
+    const half = halfMade.get(agent);
+    return { id: null, name: half?.name ?? agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card,
+      ...(half ? { finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } } : {}) };
   });
   // Which doors this deployment offers (docs/doors.md): none, and the app shows no Doors.
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
@@ -6284,6 +6321,35 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   })();
   return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
+}
+
+/** A taf Coach drafted whose setup stopped partway: the name Coach gave it, and the chat where it stopped. */
+interface HalfMade { name: string; coach: string; session: string }
+
+/**
+ * The tafs whose setup stopped partway, by their KIFF agent, among `agents` (the account's other agents with Cards):
+ * a Coach run paused on a result that names a new taf for that agent, not yet answered. The agent has its Card, so
+ * KIFF lists it, but tafs cloud never made the taf (the owner left before the hand-over, or confirmed the Card after
+ * it). Reading that chat again hands it over (handOverShown). One read of the account's paused runs; a read that
+ * fails finds none, and the agent shows as before.
+ */
+async function halfMadeTafs(tenant: string, records: Taf[], agents: Set<string>, deps: Deps): Promise<Map<string, HalfMade>> {
+  const out = new Map<string, HalfMade>();
+  const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
+  if (!coach) return out;
+  const paused = await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]);
+  for (const r of paused) {
+    if (r.agent !== coach.id) continue;
+    for (const q of r.requirements ?? []) {
+      const card = q.input as { type?: string; taf?: { agent?: unknown; name?: unknown; improves?: unknown } } | undefined;
+      if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.taf || card.taf.improves) continue;
+      const { agent, name } = card.taf;
+      if (typeof agent !== "string" || !agents.has(agent) || out.has(agent)) continue;
+      if (typeof name !== "string" || !name.trim()) continue;
+      out.set(agent, { name: name.trim(), coach: coach.id, session: r.session });
+    }
+  }
+  return out;
 }
 
 /**

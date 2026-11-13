@@ -313,9 +313,29 @@ final class TafsCloud {
         var work: TafWork.Summary? = nil
         /// tafs cloud's words for its next run, with the day when it isn't today ("Next run Mon 08:00").
         var nextRunWords: String? = nil
+        /// Another agent whose setup stopped partway (docs/tafs.md): Coach drafted it and its Card
+        /// is signed, but no taf was made. Coach's taf, the chat where it stopped, and the row's words.
+        var finish: Finish? = nil
+
+        /// The way back to a taf whose setup stopped partway. Anything that isn't one reads as
+        /// empty, never failing the list.
+        struct Finish: Codable, Hashable {
+            var taf = ""
+            var session = ""
+            var words = ""
+            init(taf: String = "", session: String = "", words: String = "") { self.taf = taf; self.session = session; self.words = words }
+            init(from decoder: Decoder) throws {
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+                func text(_ k: CodingKeys) -> String { ((try? c.decodeIfPresent(String.self, forKey: k)) ?? nil)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "" }
+                taf = text(.taf); session = text(.session); words = text(.words)
+            }
+            enum CodingKeys: String, CodingKey { case taf, session, words }
+            /// One the app can open: a chat and its words.
+            var usable: Bool { !taf.isEmpty && !session.isEmpty && !words.isEmpty }
+        }
 
         enum CodingKeys: String, CodingKey {
-            case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results, health, work
+            case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results, health, work, finish
             case nextRunWords = "next_run_words"
             case avatarRim = "avatar_rim"
             case timeZoneWords = "time_zone_words", scheduleTimeZone = "schedule_time_zone"
@@ -1614,7 +1634,23 @@ final class TafsCloud {
             var tafID: String?
             var version: Int?
             var failed: String?
-            enum CodingKeys: String, CodingKey { case version, failed, tafID = "taf_id" }
+            /// A taf made with no plan: tafs cloud's words that say so ("Choose a plan to start
+            /// it."), in the person's language. No run started. nil when it has one.
+            var planNeeded: String?
+            enum CodingKeys: String, CodingKey { case version, failed, tafID = "taf_id", planNeeded = "plan_needed" }
+            private struct PlanNeeded: Decodable { let words: String? }
+            init(tafID: String? = nil, version: Int? = nil, failed: String? = nil, planNeeded: String? = nil) {
+                self.tafID = tafID; self.version = version; self.failed = failed; self.planNeeded = planNeeded
+            }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                tafID = try? c.decodeIfPresent(String.self, forKey: .tafID)
+                version = try? c.decodeIfPresent(Int.self, forKey: .version)
+                failed = try? c.decodeIfPresent(String.self, forKey: .failed)
+                planNeeded = (try? c.decodeIfPresent(PlanNeeded.self, forKey: .planNeeded))?.words?
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                if planNeeded?.isEmpty == true { planNeeded = nil }
+            }
         }
 
         enum CodingKeys: String, CodingKey { case state, words, by, outcome, at }
@@ -1774,16 +1810,34 @@ final class TafsCloud {
             var lead: String { headline.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? title : headline }
         }
         /// Home with no taf: `shown`, the recipes are listed under `words`; not shown, `words`
-        /// is Home's empty line.
+        /// is Home's empty line. `ownWords` ("Say it in your own words") leads Home's list for
+        /// someone who manages tafs; nil when tafs cloud sent none.
         struct Home: Decodable, Equatable {
+            /// "Say it in your own words" and its line, in the person's language.
+            struct OwnWords: Decodable, Equatable {
+                var title = ""
+                var line = ""
+                init(title: String = "", line: String = "") { self.title = title; self.line = line }
+                init(from decoder: Decoder) throws {
+                    let c = try decoder.container(keyedBy: CodingKeys.self)
+                    title = ((try? c.decodeIfPresent(String.self, forKey: .title)) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                    line = ((try? c.decodeIfPresent(String.self, forKey: .line)) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+                private enum CodingKeys: String, CodingKey { case title, line }
+            }
             var shown = false
             var words = ""
-            private enum CodingKeys: String, CodingKey { case shown, words }
-            init(shown: Bool = false, words: String = "") { self.shown = shown; self.words = words }
+            var ownWords: OwnWords?
+            private enum CodingKeys: String, CodingKey { case shown, words, ownWords = "own_words" }
+            init(shown: Bool = false, words: String = "", ownWords: OwnWords? = nil) {
+                self.shown = shown; self.words = words; self.ownWords = ownWords
+            }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 shown = (try? c.decodeIfPresent(Bool.self, forKey: .shown)) ?? false
                 words = (try? c.decodeIfPresent(String.self, forKey: .words)) ?? ""
+                // A row with no title isn't one.
+                ownWords = (try? c.decodeIfPresent(OwnWords.self, forKey: .ownWords)).flatMap { $0?.title.isEmpty == false ? $0 : nil }
             }
         }
         /// The recipe sheet's words, in the person's language: its three zones and its button.
@@ -1838,6 +1892,8 @@ final class TafsCloud {
         /// Whether Home with no taf lists the recipes: tafs cloud says so (`home.shown`), and
         /// the sheet's words came with them.
         var homeListsRecipes: Bool { home?.shown == true && labels != nil && !byCategory.isEmpty }
+        /// "Say it in your own words", leading Home's list; nil when tafs cloud sent none.
+        var homeOwnWords: Home.OwnWords? { home?.ownWords }
         /// tafs cloud's line for Home with no taf; nil when it sent none.
         var homeWords: String? {
             guard let w = home?.words.trimmingCharacters(in: .whitespacesAndNewlines), !w.isEmpty else { return nil }
@@ -2038,11 +2094,19 @@ final class TafsCloud {
     func setup() async throws -> CloudTaf? { try await setupRead().setup }
 
     /// The account's Coach and its tools as KIFF has them, from the one read (docs/api.md).
-    func setupRead() async throws -> (setup: CloudTaf?, tools: CoachTools?, start: CoachStart?) {
-        struct Response: Decodable { let setup: CloudTaf? }
-        let data = try await sendData("GET", "/v1/setup", body: Optional<[String: String]>.none)
+    /// Sends this phone's time zone (`X-Time-Zone`): for a new account still on UTC, tafs cloud sets
+    /// it in KIFF and answers `time_zone`, so the first run asks no question about it.
+    func setupRead() async throws -> (setup: CloudTaf?, tools: CoachTools?, start: CoachStart?, timeZone: String?) {
+        struct Response: Decodable {
+            let setup: CloudTaf?
+            let timeZone: String?
+            enum CodingKeys: String, CodingKey { case setup, timeZone = "time_zone" }
+        }
+        let data = try await sendData("GET", "/v1/setup", body: Optional<[String: String]>.none,
+                                      headers: ["X-Time-Zone": TimeZone.current.identifier])
         let r = try KIFFClient.decoder.decode(Response.self, from: data)
-        return (r.setup, CoachTools.read(data), r.setup == nil ? CoachStart.read(data) : nil)
+        let zone = r.timeZone.flatMap { TimeZone(identifier: $0) == nil ? nil : $0 }
+        return (r.setup, CoachTools.read(data), r.setup == nil ? CoachStart.read(data) : nil, zone)
     }
 
     /// Coach's first start under one fingerprint (`GET /v1/setup`'s `start`, docs/api.md): for
@@ -2063,12 +2127,21 @@ final class TafsCloud {
             var cardTitle: String? = nil
             var cards: [CoachTools.CardDraft.Words] = []
         }
+        /// Start's own words: the one line before it, its button, and what it does. With them,
+        /// Start's screen draws Coach's Cards under them and the one tap signs: no step of its own.
+        struct Words: Equatable {
+            var lead = ""
+            var start = ""
+            var does = ""
+        }
         var state = "unknown"
         var scheme = ""
         var agentID = ""
         var requests: [Request] = []
         var step: CoachTools.Step? = nil
         var taken: String? = nil
+        /// nil from a tafs cloud from before them, or without a line or a button: the step opens as before.
+        var words: Words? = nil
 
         var connect: Request? { requests.first { $0.id == "connect" } }
         var draft: Request? { requests.first { $0.id == "draft" } }
@@ -2082,6 +2155,10 @@ final class TafsCloud {
             if let connect { return together && connect.method == "POST" && connect.path == "/v1/connections/batch" && connect.gateway }
             return scheme == "kiff.request.v1"
         }
+
+        /// Start on its own screen, in tafs cloud's words, with what's signed drawn under them:
+        /// the one tap signs, and there's no step to open.
+        var oneScreen: Bool { startable && words != nil }
 
         /// What the tools step draws for it: its words, the batch's lines, and what's to give.
         var tools: CoachTools {
@@ -2123,6 +2200,11 @@ final class TafsCloud {
                 }
             }
             if let step = RawJSON.value(of: "coach_tools_step", in: raw) { s.step = try? JSONDecoder().decode(CoachTools.Step.self, from: step) }
+            if let w = fields["words"] as? [String: Any] {
+                func said(_ key: String) -> String { ((w[key] as? String) ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
+                let words = Words(lead: said("lead"), start: said("start"), does: said("does"))
+                if !words.lead.isEmpty, !words.start.isEmpty { s.words = words }
+            }
             return s
         }
     }

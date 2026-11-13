@@ -79,6 +79,17 @@ class GalleryTest {
     assertEquals("Try it with Coach", bot.tafs.app.model.HomeWords.tryIt(g))
   }
 
+  @Test fun homesExploreRowIsDrawnOnlyInTafsCloudsWords() {
+    val home = bot.tafs.app.model.HomeWords
+    assertEquals("Explore jobs", home.exploreRow(read("""{"categories":[],"recipes":[],"words":{"explore":"Explore jobs"}}""")))
+    // Left out while Home already lists every job: no row, and the browsing title keeps the app's own.
+    val none = read("""{"categories":[],"recipes":[],"words":{"title":"New taf"}}""")
+    assertEquals(null, home.exploreRow(none))
+    assertEquals(null, home.exploreRow(read("""{"categories":[],"recipes":[],"words":{"explore":"  "}}""")))
+    assertEquals(null, home.exploreRow(null))
+    assertEquals(bot.tafs.app.model.Words.Home.exploreJobs, home.explore(none))
+  }
+
   @Test fun aProofOrSampleThatIsntWordsDrawsNothingAndTheGalleryStillReads() {
     val odd = gallery.replace(""""id":"follow-up-new-leads","title":"Follow up leads","category":"customers",""",
       """"id":"follow-up-new-leads","title":"Follow up leads","category":"customers","proved":true,"sample":["a list"],""")
