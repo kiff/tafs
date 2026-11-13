@@ -1,0 +1,1 @@
+- **iPad: one sidebar for the whole app.** The mascot and "tafs" sit at the top. Needs you, Record, Calendar, Usage and Connect apps are sidebar items, above the tafs. Coach and your account sit at the foot, always visible. Each opens beside the sidebar. iPhone is unchanged (docs/ios-app.md › The taf layout and KIFF's words).
