@@ -1,0 +1,1 @@
+- **iOS: an approved request shows the Card you signed.** In Coach's chat, an approval folded to one line now names the Card and lists its rules under it. Tap it to open the whole request again.
