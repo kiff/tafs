@@ -78,8 +78,43 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
     if (left) {
       return { outcome: "answered", answer: `failed: no Card covers "${left}", which the taf's connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${left}" on a Card (a read gets a call count only, generous enough never to get in the way).`, note: W.uncovered(left) };
     }
+    // A limit for each item drafted as one lifetime count on the whole tool stops the taf after its first item
+    // (Eval 43402441612: "one invoice per order, ever" signed as 1 create_invoice in the Card's life). Never signed.
+    const capped = lifetimeCapOnWrite(grant, draft.cards);
+    if (capped) {
+      const per = capped.resource ? `per: "${capped.resource}" (its resource_argument)` : "per its resource_argument";
+      return { outcome: "answered", answer: `failed: the draft counts "${capped.tool}" ${capped.limit} in its whole life, across every item, so the taf would stop after its first. A limit for each item is a total with ${per}: count, lifetime, limit ${capped.limit}, per that argument, beside the day's total. With no resource_argument, it goes in the taf's instructions, and the rules say KIFF can't count it. Draft it again.`, note: W.lifetimeCap(capped.tool) };
+    }
   }
   return { draft: draft as NonNullable<typeof draft> & { version: string } };
+}
+
+/**
+ * A write tool of the connection that a Card counts over its whole life with no `per`: one count total on the tool
+ * for every item, which stops it after the first (count, lifetime, no per). A sum over a lifetime is a budget, and a
+ * count per item is the limit for each item: both are kept. The first such tool, with its resource argument if the
+ * request names one, so Coach knows what to count per.
+ */
+export function lifetimeCapOnWrite(grant: ApprovalGrant, cards: unknown[]): { tool: string; limit: number; resource?: string } | undefined {
+  const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+  const writes = (grant.request.tools ?? []).filter((t) => !t.read_only && !t.setup_reads);
+  for (const t of writes) {
+    const name = fold(t.name || t.tool);
+    if (!name) continue;
+    for (const raw of cards) {
+      const card = raw as { grants?: unknown; aggregates?: unknown };
+      const actions = Array.isArray(card.grants) ? card.grants.map((g) => fold((g as { action?: unknown }).action)) : [];
+      if (!actions.includes(name) || !Array.isArray(card.aggregates)) continue;
+      for (const a of card.aggregates as Array<{ quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown }>) {
+        if (fold(a.quantity) === "count" && fold(a.window) === "lifetime" && !fold(a.per)) {
+          const resource = (t as { resource_argument?: unknown }).resource_argument;
+          return { tool: t.title || t.name || t.tool || name, limit: typeof a.limit === "number" ? a.limit : 0,
+            ...(typeof resource === "string" && resource.trim() ? { resource: resource.trim() } : {}) };
+        }
+      }
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -211,6 +246,7 @@ export function approvalWords(lang: Lang = "en") {
     noDraft: w.approval_no_draft,
     cardsUnread: w.approval_cards_unread,
     uncovered: w.approval_uncovered,
+    lifetimeCap: w.approval_lifetime_cap,
     onDemandLetsRun: w.approval_on_demand,
     criticalKey: w.approval_critical_key,
     driveKey: w.approval_drive_key,
