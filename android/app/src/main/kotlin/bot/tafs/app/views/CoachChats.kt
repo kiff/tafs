@@ -3,7 +3,6 @@ package bot.tafs.app.views
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
-import bot.tafs.app.drive.DriveMenu
 import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -23,8 +22,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -43,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.testTag
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.COACH_CHAT
 import bot.tafs.app.design.Theme
@@ -74,6 +72,8 @@ internal fun PreviousConversations(state: AppState, actions: CoachChatActions, o
   var archived by remember { mutableStateOf(false) }
   // The conversation waiting for the owner's yes: archiving takes it off every device's list.
   var archiving by remember { mutableStateOf<TafsCloud.Chat?>(null) }
+  // An archived conversation to put back, asked by its title.
+  var puttingBack by remember { mutableStateOf<TafsCloud.Chat?>(null) }
   LaunchedEffect(archived) { if (archived) actions.loadArchived() else actions.load() }
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp)) {
@@ -98,7 +98,7 @@ internal fun PreviousConversations(state: AppState, actions: CoachChatActions, o
               onClose()
             }
           },
-          onAction = { if (archived) scope.launch { actions.unarchive(chat.session) } else archiving = chat },
+          onAction = { if (archived) puttingBack = chat else archiving = chat },
         )
       }
       if (!archived) {
@@ -110,7 +110,13 @@ internal fun PreviousConversations(state: AppState, actions: CoachChatActions, o
     DriveAlert(
       onDismissRequest = { archiving = null },
       title = { Text(Words.Coach.Chats.archiveTitle) },
-      text = { Text(Words.Coach.Chats.archiveBody) },
+      // The chat it acts on, by its title, so nobody has to guess which one.
+      text = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          Text(chat.title.ifBlank { Words.Coach.Chats.untitled }, style = scaled(15, FontWeight.SemiBold, Theme.ink), maxLines = 3, modifier = Modifier.testTag("archive.chat"))
+          Text(Words.Coach.Chats.archiveBody)
+        }
+      },
       confirmButton = {
         TextButton({
           archiving = null
@@ -121,23 +127,34 @@ internal fun PreviousConversations(state: AppState, actions: CoachChatActions, o
       containerColor = Theme.panel,
     )
   }
+  puttingBack?.let { chat ->
+    DriveAlert(
+      onDismissRequest = { puttingBack = null },
+      title = { Text(chat.title.ifBlank { Words.Coach.Chats.untitled }, maxLines = 3, modifier = Modifier.testTag("archive.chat")) },
+      confirmButton = {
+        TextButton({
+          puttingBack = null
+          scope.launch { actions.unarchive(chat.session) }
+        }) { Text(Words.Coach.Chats.putBack) }
+      },
+      dismissButton = { TextButton({ puttingBack = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
+      containerColor = Theme.panel,
+    )
+  }
 }
 
 /** One conversation: its title and when it last moved; a long press offers Archive, or Put back. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ChatRow(chat: TafsCloud.Chat, action: String, onOpen: () -> Unit, onAction: () -> Unit) {
-  var menu by remember { mutableStateOf(false) }
   Box {
+    // A long press asks about this chat by name (Archive, or Put back): no menu that could open over another row.
     Column(
-      Modifier.fillMaxWidth().heightIn(min = 52.dp).combinedClickable(onClick = onOpen, onLongClick = { menu = true }).padding(vertical = 8.dp),
+      Modifier.fillMaxWidth().heightIn(min = 52.dp).combinedClickable(onClick = onOpen, onLongClickLabel = action, onLongClick = onAction).padding(vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
       Text(chat.title.ifBlank { Words.Coach.Chats.untitled }, style = scaled(15, FontWeight.SemiBold, Theme.ink), maxLines = 2)
       Text(endsWords(chat.updated), style = scaled(12, color = Theme.dim))
-    }
-    DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
-      DropdownMenuItem(text = { Text(action) }, onClick = { menu = false; onAction() })
     }
   }
 }

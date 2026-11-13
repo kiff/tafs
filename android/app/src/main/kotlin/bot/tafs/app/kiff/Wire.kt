@@ -614,4 +614,16 @@ data class HomeSettingUp(
   @SerialName("kiff_agent") val kiffAgent: String = "",
   val color: Int = 0,
   val finish: HomeFinish? = null,
+  /** For the person who started it only: dropping it, in tafs cloud's words, and the Cards the phone revokes first. */
+  val discard: HomeDiscard? = null,
 )
+
+/** Discarding a taf being set up (docs/api.md): the Cards in force on its agent, and every word the button and its question say. */
+@Serializable
+data class HomeDiscard(val cards: List<String> = emptyList(), val words: HomeDiscardWords = HomeDiscardWords())
+
+@Serializable
+data class HomeDiscardWords(val button: String = "", val title: String = "", val text: String = "", val yes: String = "", val no: String = "") {
+  /** Every word there: the app has none of its own for this. */
+  val usable: Boolean get() = listOf(button, title, text, yes, no).all { it.isNotBlank() }
+}

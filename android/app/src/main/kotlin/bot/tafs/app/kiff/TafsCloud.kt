@@ -28,6 +28,8 @@ class CloudError(
   val code: String? = null,
   /** For `code: "halted"`: what is halted, `account` or `taf` (docs/approvals.md). */
   val halted: String? = null,
+  /** For `code: "cards_in_force"`: the Cards still in force that tafs cloud names (a Discard, docs/api.md). */
+  val cards: List<String> = emptyList(),
 ) : Exception(message)
 
 /**
@@ -671,6 +673,24 @@ class TafsCloud(
   suspend fun remove(id: String, signature: String?): Removal =
     KiffClient.json.decodeFromString(String(send("DELETE", "/v1/tafs/${escaped(id)}", extra = signature?.let { mapOf("KIFF-Device-Signature" to it) } ?: emptyMap())))
 
+  /** The path that drops a taf being set up (docs/api.md). */
+  fun discardPath(agent: String) = "/v1/home/setting-up/${escaped(agent)}/discard"
+
+  /** The person's confirmation of a discard, signed as a removal is: `kiff.request.v1` over `POST`, the path and the empty body. */
+  suspend fun discardSignature(agent: String, tenant: String, sign: suspend (() -> ByteArray) -> String): String {
+    var signedAt = ""
+    val signature = sign {
+      signedAt = signingTime.next()
+      KiffClient.requestMessage(tenant, "POST", discardPath(agent), ByteArray(0), signedAt)
+    }
+    return "t=$signedAt,v1=$signature"
+  }
+
+  /** Drops a taf being set up: tafs cloud ends the Coach chat that drafted it, and Home stops listing it. Its Cards are revoked first. */
+  suspend fun discardSettingUp(agent: String, signature: String) {
+    send("POST", discardPath(agent), extra = mapOf("KIFF-Device-Signature" to signature))
+  }
+
   // MARK: Doors
 
   /** A taf's doors, the apps a door can open on here, and the knocks waiting for the owner. */
@@ -866,11 +886,17 @@ class TafsCloud(
       noteRefusal(response.body)
       throw CloudError(
         response.status, refusal(response.body) ?: Words.Error.cloudAnswered(status = response.status.toString()), blockingRuns(response.body), field(response.body, "words"),
-        field(response.body, "code"), field(response.body, "halted"),
+        field(response.body, "code"), field(response.body, "halted"), namedCards(response.body),
       )
     }
     return response.body
   }
+
+  /** The Card ids a refusal names (`cards`), when it names any. */
+  private fun namedCards(body: ByteArray): List<String> = runCatching {
+    val cards = KiffClient.json.parseToJsonElement(String(body)).jsonObject["cards"] as? kotlinx.serialization.json.JsonArray ?: return emptyList()
+    cards.mapNotNull { (it as? kotlinx.serialization.json.JsonPrimitive)?.content?.takeIf(String::isNotBlank) }
+  }.getOrDefault(emptyList())
 
   /** The runs that keep a switch from beginning, when tafs cloud names them (kiff/tafs#206). */
   private fun blockingRuns(body: ByteArray): List<BlockingRun> = runCatching {

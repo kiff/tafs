@@ -484,7 +484,8 @@ class PlanqueClient(
       val said = runCatching { fields?.get("error")?.jsonPrimitive?.content }.getOrNull()
       if (response.status == 403 && held != null && runCatching { fields?.get("code")?.jsonPrimitive?.content }.getOrNull() == KiffClient.WINDOW_REQUIRED) {
         if (window == held) window = null
-        throw PlanqueError.WindowRequired(said ?: Words.Error.approvalWindowEnded)
+        // The app's own words: planque's `error` is for the log, never the person.
+        throw PlanqueError.WindowRequired(Words.Error.approvalWindowEnded)
       }
       val code = runCatching { fields?.get("code")?.jsonPrimitive?.content }.getOrNull()
       throw PlanqueError.Server(response.status, said ?: Words.Error.connectionAnswered(status = response.status.toString()), code)

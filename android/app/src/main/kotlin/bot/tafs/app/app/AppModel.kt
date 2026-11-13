@@ -1850,6 +1850,63 @@ class AppModel(
     openCoachChat(finish.session)
   }
 
+  /**
+   * Drops a taf being set up, for the person who started it (docs/api.md): the fingerprint first, then its Cards revoked in KIFF,
+   * as before a removal, then tafs cloud asked, signed, and Home read again. A Card KIFF didn't revoke is said, and tafs cloud is
+   * still asked: the agent has no taf key, so it can't act once the chat that drafted it ends. Nothing is decided here: whether
+   * it's theirs to drop is tafs cloud's to prove. True once tafs cloud dropped it.
+   */
+  suspend fun discardSetup(agent: String): Boolean {
+    val s = _state.value
+    val taf = s.settingUp.firstOrNull { it.id == agent } ?: return false
+    if (s.mode != Mode.kiff || taf.discard == null) return false
+    val tenant = kiffTenant ?: return false
+    val generation = accountGeneration
+    val signature = try {
+      cloud.discardSignature(agent, tenant) { built -> signer.signCritical(taf.discard.words.title) { built() } }
+    } catch (e: SignerException) {
+      e.message?.takeIf { it != bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED }?.let(::fail)
+      return false
+    }
+    if (generation != accountGeneration) return false
+    var cardsLeft = 0
+    // Home's list, and any Card tafs cloud named when it last refused, so a Card confirmed since Home was read can't make every
+    // retry fail the same way.
+    for (cardId in (taf.kiffCardIds + discardNamed[agent].orEmpty()).distinct()) {
+      if (generation != accountGeneration) return false
+      try {
+        kiff.revoke(cardId)
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: Exception) {
+        cardsLeft += 1
+      }
+    }
+    if (generation != accountGeneration) return false
+    try {
+      cloud.discardSettingUp(agent, signature)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation != accountGeneration) return false
+      // Cards tafs cloud found still in force: kept for the next tap, which revokes them too. The signature is taken once, so
+      // there's no second ask here: the person's next Discard asks again, with its own fingerprint.
+      if (e is CloudError && e.code == "cards_in_force" && e.cards.isNotEmpty()) discardNamed[agent] = e.cards
+      fail(listOfNotNull(if (cardsLeft > 0) Words.Taf.Remove.cardsLeft(count = cardsLeft) else null, ErrorWords.of(e)).joinToString(" "))
+      // Home read again after any refusal, so the next tap starts from what tafs cloud says now.
+      refresh()
+      return false
+    }
+    if (generation != accountGeneration) return false
+    discardNamed.remove(agent)
+    // Dropped: tafs cloud refuses while any Card is in force, so none is left, whatever a revoke said (one already revoked).
+    refresh()
+    return true
+  }
+
+  /** The Cards a refused Discard named, by agent, revoked on the next try (`discardSetup`). */
+  private val discardNamed = mutableMapOf<String, List<String>>()
+
   /** Reopens one of Coach's conversations: it's shown alone, and messages go on in it. */
   suspend fun openCoachChat(session: String) {
     leaveCoachChat()
@@ -3438,7 +3495,7 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       // planque's own words say why (a view already open, the connection not connected); anything else, in the app's.
-      if (generation == accountGeneration) note(grantId, Words.Connect.SignInView.notOpened(why = (e as? PlanqueError.Server)?.message ?: ErrorWords.of(e)))
+      if (generation == accountGeneration) note(grantId, Words.Connect.SignInView.notOpened(why = ErrorWords.of(e)))
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(openingSiteSignIn = null) }
     }
@@ -3612,7 +3669,8 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return false
-      val said = (e as? PlanqueError.Server)?.message ?: (e as? bot.tafs.app.kiff.CloudError)?.takeIf { it.status == 409 && it.words == null }?.message
+      // tafs cloud's own line for a 409 it words for the person; planque's raw reason never (a plain line by status), as on iOS.
+      val said = (e as? bot.tafs.app.kiff.CloudError)?.takeIf { it.status == 409 && it.words == null }?.message
       return knobError(tafId, Words.Setup.Knob.notApproved(why = said ?: ErrorWords.of(e)))
     } finally {
       approvingEvents.remove(tafId)
@@ -4466,7 +4524,7 @@ class AppModel(
       // A sign-in planque holds but this phone hasn't confirmed yet: tafs cloud's own line, as it is (as on iPhone and iPad).
       val confirmFirst = when (e) {
         is CloudError -> e.takeIf { it.code == "sign_in_not_confirmed" }?.let { it.words ?: it.message }
-        is KiffError.Server -> e.takeIf { it.code == "sign_in_not_confirmed" }?.message
+        is KiffError.Server -> e.takeIf { it.code == "sign_in_not_confirmed" }?.words
         else -> null
       }?.takeIf { it.isNotBlank() }
       note(c.id, confirmFirst ?: Words.Coach.answerNotReached(why = ErrorWords.of(e)))

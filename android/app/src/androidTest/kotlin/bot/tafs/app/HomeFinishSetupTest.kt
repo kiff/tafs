@@ -98,4 +98,43 @@ class HomeFinishSetupTest {
     rule.waitForIdle()
     assertEquals(listOf("finish s7"), opened)
   }
+
+  @Test fun discardAsksInTafsCloudsWordsBeforeAnythingIsUndone() {
+    val words = bot.tafs.app.kiff.HomeDiscardWords("Discard", "Discard this setup?", "Its Card is revoked and the chat that set it up ends. Nothing runs.", "Discard", "Keep it")
+    val discardable = halfMade.copy(discard = bot.tafs.app.kiff.HomeDiscard(listOf("c9"), words))
+    val asked = mutableListOf<String>()
+    rule.setShown {
+      TafsTheme {
+        HomeView(
+          AppState(mode = Mode.kiff, ready = true, listLoaded = true, kiffAccount = coachUser, coachCloudId = "setup_1", tafs = listOf(refunds), settingUp = listOf(discardable)),
+          onNeedsYou = {}, onPlayNext = {}, onOpenTaf = {}, onHaltAll = {}, onDiscardSetup = { asked += it },
+        )
+      }
+    }
+    rule.onNodeWithText("Discard").performScrollTo().assertExistsAndClick()
+    rule.waitForIdle()
+    // The question first, in tafs cloud's words: Keep it undoes nothing.
+    rule.onNodeWithText("Discard this setup?").assertExists()
+    rule.onNodeWithText("Keep it").performClick()
+    rule.waitForIdle()
+    assertEquals(emptyList<String>(), asked)
+    rule.onNodeWithText("Discard").performScrollTo().assertExistsAndClick()
+    rule.waitForIdle()
+    rule.onAllNodesWithText("Discard")[1].performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("invoicing-day-test-x"), asked)
+  }
+
+  @Test fun withoutTafsCloudsDiscardThereIsNoButton() {
+    rule.setShown {
+      TafsTheme {
+        HomeView(
+          AppState(mode = Mode.kiff, ready = true, listLoaded = true, kiffAccount = coachUser, coachCloudId = "setup_1", tafs = listOf(refunds), settingUp = listOf(halfMade)),
+          onNeedsYou = {}, onPlayNext = {}, onOpenTaf = {}, onHaltAll = {}, onDiscardSetup = {},
+        )
+      }
+    }
+    rule.onNodeWithText("Invoicing day test").performScrollTo().assertExists()
+    assertEquals(0, rule.onAllNodesWithText("Discard").fetchSemanticsNodes().size)
+  }
 }

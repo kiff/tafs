@@ -471,8 +471,13 @@ line: the phone counts nothing.
 The owner reads the app's own words for what happened and what, if anything, they can do
 (`ErrorWords`): offline, try again online; signed out, sign in; not allowed by their
 role; changed in the meantime; too many tries, wait a minute; down on our side, nothing to
-do but try later; anything else, nothing to do on their side. A server's error text never
-reaches the screen, and "try again" is said only where trying again can help. The app's own
+do but try later; anything else, nothing to do on their side. KIFF's and planque's error text
+never reaches the screen: every KIFF and planque refusal says one of these lines by its status, and its
+raw reason stays in the error for the code that acts on it (including an approval window's refusal,
+whose `detail` or `error` is the app's own line now). tafs cloud writes its `words`, else its `error`,
+for the person, so those are shown as sent; one that isn't is fixed in tafs cloud. The one planque line
+shown as planque says it is a vendor refusing planque's client (`vendor_refused_client`), since it says
+whose it is. iPhone and iPad do the same. "Try again" is said only where trying again can help. The app's own
 failures (signing, signing in, a file that didn't upload) keep their words (`OwnWords`).
 Coach still hears the server's reason for an approval that failed, as the card's answer,
 so it can say what went wrong and ask again.
@@ -897,6 +902,14 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   someone who may use Coach, as on iPhone and iPad. Reading the chat makes the taf at tafs cloud. Anyone else sees the name
   alone. When `setting_up` is sent, `others` only repeats it for apps from before, so it isn't drawn; a tafs cloud from before
   `setting_up` still has its `others` drawn under "Other agents with Cards".
+  - **Discard** (Android 1.21): for the person who started it, tafs cloud also sends `discard: {cards, words}`. Under the row,
+    `words.button` asks `words.title` and `words.text`, with `words.yes` and `words.no`; with any word missing there's no button.
+    On yes (`AppModel.discardSetup`): the fingerprint, under `words.title`, signs `POST /v1/home/setting-up/{kiff_agent}/discard`
+    and its empty body; each of `cards` is revoked in KIFF, as before a removal; then the signed POST goes to tafs cloud, and
+    Home is read again. A Card KIFF didn't revoke is said, with tafs cloud's refusal (`cards_in_force`) when it gives one, and
+    Home is read again then too. The Cards that refusal names are kept and revoked on the next tap, with its own fingerprint
+    (a signature is taken once, so there's no second ask). Once tafs cloud drops it, no Card is said left. The
+    phone decides nothing: whether it's theirs to drop is tafs cloud's to prove. iPhone and iPad do the same.
 - **When it shows:** after sign-in and at launch while it isn't given, and whenever tafs cloud refuses a model turn with
   `ai_consent_required`. `TafsCloud` reads that refusal once, for every route, plain or streamed, and the sheet shows the
   `consent` it carries.

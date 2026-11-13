@@ -58,6 +58,7 @@ import bot.tafs.app.design.Eyebrow
 import bot.tafs.app.design.Mascot
 import bot.tafs.app.design.Meter
 import bot.tafs.app.design.OutlineButton
+import bot.tafs.app.drive.confirms
 import bot.tafs.app.design.StateChip
 import bot.tafs.app.design.TafAvatar
 import bot.tafs.app.design.Theme
@@ -81,6 +82,8 @@ fun HomeView(
   onHalted: (String) -> Unit = {},
   /** "Finish setting up" on another agent whose setup stopped partway: Coach's chat where it stopped. */
   onFinishSetup: ((bot.tafs.app.kiff.HomeFinish) -> Unit)? = null,
+  /** Discard on a taf being set up, for the person who started it: asked first in tafs cloud's words; null in the sample. */
+  onDiscardSetup: ((String) -> Unit)? = null,
   /** Opens Plan & usage, from the plan's line when it needs the owner. */
   onUsage: () -> Unit = {},
   /** Opens a recipe's sheet, from Home's list with no taf, or the strip under the tafs list. */
@@ -190,6 +193,9 @@ fun HomeView(
               state.settingUp.forEach { taf ->
                 val finish = taf.finish?.takeIf { state.mayUseCoach && it.taf == state.coachCloudId }
                 TafRow(taf, showState = false) { if (finish != null && onFinishSetup != null) onFinishSetup(finish) }
+                // Discard beside it, only when tafs cloud sends it (to the person who started it), with every word its own.
+                val discard = taf.discard
+                if (discard != null && onDiscardSetup != null) DiscardSetup(taf.id, discard.words, onDiscardSetup)
               }
             }
           }
@@ -430,3 +436,20 @@ private fun UpdateLine() {
   }
 }
 
+/** Discard for a taf being set up: the button, then tafs cloud's question before anything is undone (docs/android-app.md). */
+@Composable
+fun DiscardSetup(agent: String, words: bot.tafs.app.kiff.HomeDiscardWords, onDiscard: (String) -> Unit) {
+  var asking by remember { mutableStateOf(false) }
+  OutlineButton(words.button, { asking = true }, Modifier.fillMaxWidth(), color = Theme.no)
+  if (asking) {
+    bot.tafs.app.drive.DriveAlert(
+      onDismissRequest = { asking = false },
+      title = { Text(words.title) },
+      text = { Text(words.text) },
+      confirmButton = {
+        androidx.compose.material3.TextButton(onClick = { asking = false; onDiscard(agent) }, modifier = Modifier.confirms()) { Text(words.yes, color = Theme.no) }
+      },
+      dismissButton = { androidx.compose.material3.TextButton(onClick = { asking = false }) { Text(words.no) } },
+    )
+  }
+}

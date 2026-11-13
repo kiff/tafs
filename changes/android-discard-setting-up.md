@@ -1,0 +1,3 @@
+- **Android 1.21.0 (80): Discard a taf whose setup stopped partway.** The person who started it sees Discard under it on Home. After a question and the fingerprint, its Cards are revoked and tafs cloud ends the chat that drafted it (docs/android-app.md).
+- **Android: Coach's Previous conversations ask about the chat you pressed, by its title.** A long press asks to archive it, or to put it back under Archived. The menu that could open over another row is gone (docs/coach.md).
+- **Android: KIFF's and planque's raw reasons never reach the screen.** A refused connection, a held change's approval, an ended approval window or a sign-in now says a plain line by status. tafs cloud's own words are shown as before (docs/android-app.md).

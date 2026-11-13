@@ -89,7 +89,8 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      problem = e.message ?: Words.SignIn.didntWork
+      // The app's words, or tafs cloud's: never KIFF's raw reason.
+      problem = bot.tafs.app.model.ErrorWords.of(e).ifBlank { Words.SignIn.didntWork }
     }
   }
 
