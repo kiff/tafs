@@ -443,6 +443,12 @@ The phone forwards one signed read of planque's account grants using the
 /v1/accounts/{tenant}/grants`. tafs cloud forwards that proof unchanged; it does
 not hold a device key, sign or approve anything. A missing or refused proof yields
 `connections_error`; an unreadable connection list is not presented as an empty one.
+A connection whose sign-in the vendor no longer takes (`needs_reconnect`) also gives the page a
+`connect_again`: `{grant, app, title, words, done_words}`, the taf's own **Connect again**, in the reader's
+language ("Gmail's sign-in has expired, so Rae can't use it. Connect again to sign in."). The app calls the
+connection server's approve for that `grant` (as Connect apps' Sign in again does), so the same connection is
+signed in again with its tools and the taf's Card, and shows `done_words` once it's connected. It never sends
+the person to a list of every app.
 
 `GET /v1/tafs/{id}/memory?all=true` returns all shared notes and this person's own
 notes, newest first, plus their `summary`. The older request without `all=true`
