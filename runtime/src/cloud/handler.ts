@@ -2776,8 +2776,8 @@ export function withLine(component: unknown, lang: Lang = "en", titles: ToolTitl
   // A sign-in card's buttons are the app's chrome, in the app's language (Accept-Language), whatever language
   // Coach wrote the card in; its title, text and note are Coach's message, as written.
   // Its service is the app the person signs in to ("Google Sheets"), as planque named it in the run, never a
-  // link's host and never the connection service in between ("backend.composio.dev"): the apps draw "Sign in to
-  // {service}" and "Opens {service}". With no app's name, it's left out, and the apps say "the vendor".
+  // host: a link's host can be the service in between rather than the app. The apps draw "Sign in to {service}"
+  // and "Opens {service}". With no app's name, it's left out, and the apps say "the vendor".
   if (c && c.type === "sign_in") {
     const { service: _service, ...rest } = c;
     const app = signInApp(c.service, appOf?.(c.grant));

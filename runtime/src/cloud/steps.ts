@@ -299,7 +299,8 @@ export function takeRefused<T extends { refused?: Refused }>(steps: T[]): { step
 
 /**
  * The grant and the app's name planque's answer gives (its grant view: `{id: "grt_…", vendor: "Google Sheets"}`,
- * or `{grant: {…}}`), from the answer's text. Undefined when it names no single grant with a vendor: a list, or none.
+ * or `{grant: {…}}`), from the answer's text. Undefined when it names no single grant with a vendor (a list, or
+ * none), or when its vendor is a host rather than a name.
  */
 export function appNamed(text: string): { grant: string; name: string } | undefined {
   let v: unknown;
@@ -307,32 +308,21 @@ export function appNamed(text: string): { grant: string; name: string } | undefi
   const g = (v && typeof v === "object" && "grant" in v && typeof (v as { grant: unknown }).grant === "object" ? (v as { grant: unknown }).grant : v) as { id?: unknown; vendor?: unknown } | null;
   if (!g || typeof g.id !== "string" || !/^grt_[A-Za-z0-9_-]{6,64}$/.test(g.id) || typeof g.vendor !== "string") return undefined;
   const name = g.vendor.replace(/\s+/g, " ").trim().slice(0, 60);
-  return name && !brokerNamed(name) && !/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(name) ? { grant: g.id, name } : undefined;
+  return plainName(name) ? { grant: g.id, name } : undefined;
+}
+
+/** A name a person reads ("Google Sheets", "Stripe"), never a host or a link: no "." and no "/". */
+function plainName(s: string): boolean {
+  return s !== "" && !s.includes(".") && !s.includes("/");
 }
 
 /**
- * The connection services that hold a sign-in for an app (a managed provider's): never named to the person, who
- * connects the app, not the service in between. Their hosts and their names.
- */
-const BROKERS = ["composio"];
-
-/** Whether a host or a name is a connection service's (backend.composio.dev, "Composio"). */
-export function brokerNamed(s: string): boolean {
-  const t = s.toLowerCase();
-  return BROKERS.some((b) => t === b || t.includes(`${b}.`) || t.includes(`.${b}`) || new RegExp(`\\b${b}\\b`).test(t));
-}
-
-/**
- * What a sign-in card names, for "Sign in to {app}": the app as planque named it in this run, else the app its
- * host names ("Stripe" for mcp.stripe.com). Never a host, and never a connection service: undefined then, and the
- * apps say "the vendor".
+ * What a sign-in card names, for "Sign in to {app}": the app as planque named it in this run, else Coach's
+ * `service` when it's a plain name. Never a host, whichever service a sign-in goes through: a link's host can be
+ * the service in between rather than the app. Undefined then, and the apps say "the vendor".
  */
 export function signInApp(service: unknown, app?: string): string | undefined {
-  if (app && !brokerNamed(app)) return app;
-  if (typeof service !== "string" || !service.trim() || brokerNamed(service)) return undefined;
-  const s = service.trim();
-  // A name, not a host ("Stripe"): as Coach gave it.
-  if (!s.includes(".") && !s.includes("/")) return s;
-  const named = vendorName(s.includes("://") ? s : `https://${s}/`);
-  return named && !brokerNamed(named) ? named : undefined;
+  if (app && plainName(app)) return app;
+  const s = typeof service === "string" ? service.trim() : "";
+  return plainName(s) ? s : undefined;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { withLine } from "../src/cloud/handler.js";
-import { appNamed, brokerNamed, Steps } from "../src/cloud/steps.js";
+import { appNamed, Steps } from "../src/cloud/steps.js";
 
 describe("a sign-in card's buttons", () => {
   const card = { type: "sign_in", id: "si", grant: "grt_abcdef", service: "Stripe", title: "Połącz Stripe", text: "Zaloguj się w Stripe, aby taf mógł zwracać płatności.", yes: "Zaloguj się", no: "Nie teraz", waits: "owner" };
@@ -14,23 +14,20 @@ describe("a sign-in card's buttons", () => {
     expect(withLine(card, "fr")).toMatchObject({ title: "Połącz Stripe", text: card.text, service: "Stripe", grant: "grt_abcdef" });
   });
 
-  // Go-to-market job 1 (owner's phone, 13 Nov): the card read "Sign in at backend.composio.dev", "Opens backend.composio.dev".
-  // The person connects an app, never the connection service in between: the card names the app, never a host.
-  it("name the app planque named in the run, never the connection service's host", () => {
-    const composio = { ...card, service: "backend.composio.dev", grant: "grt_sheets1" };
-    const named = withLine(composio, "en", undefined, (g) => (g === "grt_sheets1" ? "Google Sheets" : undefined));
+  // Go-to-market job 1 (owner's phone, 13 Nov): the card read "Sign in at" the host of the service a managed sign-in
+  // goes through. The person connects an app, never the service in between: the card names the app, never a host.
+  it("name the app planque named in the run, and never a host", () => {
+    const managed = { ...card, service: "signin.broker.example", grant: "grt_sheets1" };
+    const named = withLine(managed, "en", undefined, (g) => (g === "grt_sheets1" ? "Google Sheets" : undefined));
     expect(named).toMatchObject({ service: "Google Sheets" });
-    // With no app's name from the run, no service at all: the apps say "the vendor", never the host.
-    const bare = withLine(composio, "en") as Record<string, unknown>;
-    expect("service" in bare).toBe(false);
-    for (const host of ["backend.composio.dev", "app.composio.dev", "composio.dev", "connect.composio.io", "Composio"]) {
-      const out = JSON.stringify(withLine({ ...card, service: host }, "en"));
-      expect(out.toLowerCase(), host).not.toContain("composio");
+    // With no app's name from the run, any dotted service is left out: the apps say "the vendor", never the host.
+    for (const host of ["signin.broker.example", "app.broker.example", "broker.example", "https://app.broker.example/x", "mcp.stripe.com"]) {
+      const out = withLine({ ...card, service: host }, "en") as Record<string, unknown>;
+      expect("service" in out, host).toBe(false);
+      expect(JSON.stringify(out), host).not.toContain(host);
     }
-    // A vendor's own host says the vendor's name, never the host.
-    expect(withLine({ ...card, service: "mcp.stripe.com" }, "en")).toMatchObject({ service: "Stripe" });
-    // A name planque gave that is a connection service's is never used either.
-    expect(JSON.stringify(withLine(composio, "en", undefined, () => "Composio")).toLowerCase()).not.toContain("composio");
+    // A host planque gave as a name is never used either.
+    expect("service" in (withLine(managed, "en", undefined, () => "app.broker.example") as Record<string, unknown>)).toBe(false);
   });
 
   it("change no other card", () => {
@@ -51,16 +48,13 @@ describe("the app a sign-in card names", () => {
     expect(steps.appOf("grt_mail01")).toBe("Gmail");
   });
 
-  it("is never a host or a connection service's name, and nothing from a call that isn't a connection call", () => {
-    expect(appNamed(JSON.stringify({ id: "grt_sheets1", vendor: "backend.composio.dev" }))).toBeUndefined();
-    expect(appNamed(JSON.stringify({ id: "grt_sheets1", vendor: "Composio" }))).toBeUndefined();
+  it("is never a host, and nothing from a call that isn't a connection call", () => {
+    expect(appNamed(JSON.stringify({ id: "grt_sheets1", vendor: "signin.broker.example" }))).toBeUndefined();
     expect(appNamed(JSON.stringify({ grants: [{ id: "grt_sheets1", vendor: "Google Sheets" }] }))).toBeUndefined();
     expect(appNamed("not json")).toBeUndefined();
     const steps = new Steps();
     steps.call("taf_results", {}, "c3");
     steps.result("c3", JSON.stringify({ id: "grt_sheets1", vendor: "Google Sheets" }));
     expect(steps.appOf("grt_sheets1")).toBeUndefined();
-    expect(brokerNamed("api.composio.io")).toBe(true);
-    expect(brokerNamed("Google Sheets")).toBe(false);
   });
 });

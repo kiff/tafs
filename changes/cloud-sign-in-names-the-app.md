@@ -1,1 +1,1 @@
-- A sign-in card names the app the person signs in to ("Google Sheets"), as planque named it in the run, never a link's host or the connection service in between ("backend.composio.dev").
+- A sign-in card names the app the person signs in to ("Google Sheets"), as planque named it in the run, and never a host: with no name, the apps say "the vendor".
