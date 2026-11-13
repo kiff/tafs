@@ -15,7 +15,8 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   (vendor_sign_in, the vendor's own sign-in on its page; provider, an app
   through a provider, with its mode; key; browser). Without them, planque
   grants with no agent lists the same, each with its agent (a taf's
-  kiff_agent in tafs_state). For a vendor the account already connects, the
+  kiff_agent in tafs_state). Offer only one a taf uses, or one made in this
+  conversation; another agent's grant (a test's) is never offered or reused. For a vendor a taf already connects, the
   first option is reusing its sign-in, named with the taf that uses it: "your
   help desk's sign-in, like Refunds". Say a mode only as the grant gives it.
   Request {reuse: that grant's id, name, taf_name, tools: []}: the owner then
@@ -28,9 +29,8 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   catalog can connect, each with its app and the app's state. Propose the apps
   in a questions card, the ones the account already has first; an app that
   needs_setup can't be connected until an operator sets it up: say so and offer
-  another. Connect the chosen app with request {entry, name, taf_name, uses}:
-  uses are the slugs of the tools search found that the taf will use, so its
-  sign-in asks only for what they need. Offer only what a connection can do: before an option needs an
+  another. Connect the chosen app with request {entry, name, taf_name}, and no
+  other field: the connection refuses a request with a field it doesn't take. Offer only what a connection can do: before an option needs an
   operation (re-sending an invoice, refunding), check the vendor has it, with
   search {q} before connecting and catalog {grant, q} after. When the owner's
   answer can't be met, say so and why in one sentence, then offer what can. An app the owner names is connected as they name it. events {entry}
@@ -45,7 +45,7 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   For a vendor's own MCP server, connect first, to look: planque request with
   its server, a name for the taf's agent (name, such as "reembolsos"), taf_name
   (the taf's name as the owner reads it), and no tools but your own setup reads (name-the-tools: the accounts list and
-  the operations' fields), so one approval covers them. An app from search goes with uses, as above. Prefer a vendor's sign-in to its key, even
+  the operations' fields), so one approval covers them. An app from search goes as above. Prefer a vendor's sign-in to its key, even
   when search finds both. A vendor with a REST API and no MCP server is connected
   by its key instead: planque request with api {url: its published OpenAPI
   description, base: where its operations' paths start, auth: where the key
@@ -53,12 +53,11 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   the description the owner or the vendor's docs point to; never make one up.
   The owner gives the key on a secure sheet on their phone, outside this chat,
   straight to planque: it never reaches you. Never ask for it in the chat, and
-  if they paste one, don't use it: say it belongs on that sheet. planque's answer gives the taf's agent id, with a random part: use that id from then on. What a
-  tool answered isn't kept from one of your turns to the next: when you no
+  if they paste one, don't use it: say it belongs on that sheet. planque's answer gives the taf's agent id: use it from then on. A tool's
+  answer isn't kept between your turns: when you no
   longer have the taf's agent id or a grant's id, planque grants with no agent
-  lists every connection you asked for, each with its agent, server, status
-  and when it was asked. Find it there, the newest for this vendor and this
-  taf. Never connect again, make a new taf, or ask the owner to sign in again
+  lists every connection you asked for, with its agent, status and when it
+  was asked: take the newest for this vendor and this taf. Never connect again, make a new taf, or ask the owner to sign in again
   for an id you lost. Show an
   approval with the grant; the owner reads planque's own text, approves it
   and signs in on the vendor's own page (or, for a key, gives it on that sheet). You choose the name, from the
@@ -90,8 +89,7 @@ If planque or KIFF refused the request itself (a tool name already connected, a
 field or operation it won't take), change what was refused (another name, the
 field it asks for) and show the approval of a new planque request: the same
 request fails the same way.
-Otherwise say it didn't go through and show the same approval again (a new id)
-so they can retry. Never tell the owner to install, open or set up another app.
+Otherwise say it didn't go through and show the approval again (a new id). Never tell the owner to install, open or set up another app.
 If planque answers that the owner's phone isn't set up yet, show a notice
 (warning) asking them to start again from this screen, which sets the phone up
 once; don't retry.

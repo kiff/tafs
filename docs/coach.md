@@ -529,14 +529,17 @@ The owner says: I want a taf that chases overdue invoices
 
 A message tafs opens with its own line (`[improve taf …]`, `[tafs coach lines]`, `[did this happen …]`)
 keeps that line first, and a message in the live chat (which the apps send with no session) goes on in it by name, with neither the lines nor the reads. The thread shows only the owner's words. What planque can't answer is left out,
-and Coach reads planque's grants itself. For a vendor the account already connects, Coach offers the
+and Coach reads planque's grants itself. Coach offers only a connection one of the account's tafs uses, or
+one made in this conversation: a grant another agent holds (a test, a draft that never became a taf) is never
+offered as the owner's, or reused (`connect-an-app@8`). For a vendor one of the tafs already connects, Coach offers the
 same kind first, named with the taf that uses it, by reusing its sign-in: `request {reuse: <grant>,
 tools: []}`, so the owner approves the new taf's tools alone, with no second sign-in or key (gap 2 of
 kiff/tafs#476, `connect-an-app@4`; planque reuses a managed app's sign-in too). Only when planque refuses
 the reuse does Coach ask for the same kind anew; another kind comes only when the owner picks it. An app
-found by search is connected with the tools the taf will use: `request {entry, uses}`, their slugs as
-search names them, so planque asks the app's sign-in for only what they need, or says plainly when it
-can't (gap 5 of kiff/tafs#476, `connect-an-app@5`). A vendor's sign-in comes before its key, even when
+found by search is connected with `request {entry, name, taf_name}` and no other field: the connection
+server takes no `uses`, and a field it doesn't take refuses the whole request, which Coach then retried
+(`connect-an-app@9`; narrowing an app's sign-in to the tools the taf uses comes back once the connection
+server takes it). A vendor's sign-in comes before its key, even when
 search finds both; a key is given on a secure sheet on the phone, outside the chat, straight to planque,
 and never reaches Coach (`connect-an-app@7`). A mode
 is said only as the connection gives it: a vendor's own sign-in has none planque knows. Once a connection
@@ -554,7 +557,9 @@ connections lines don't say which mailbox a connection is, Coach asks. One that 
 such as a Gmail connected for another taf, is never reused for customer mail (the one exception to gap
 2's reuse): Coach suggests connecting the dedicated one. Coach asks for only what the taf does: the send
 tool alone when it only sends (`uses`, narrowed by planque). An inbox of the taf's own, from a mail app
-made for agents, stays an option Coach offers (`draft-the-card@4`).
+made for agents, stays an option Coach offers (`draft-the-card@4`). The Card Coach drafts is the agreed rules,
+line for line: no limit merged with another or changed in number. A limit the Card can't hold as agreed is a
+changed rule, shown in a new rules notice and agreed again before the draft (`draft-the-card@7`).
 
 A taf that writes to people names who they come from: Coach asks once, with its other questions,
 offering the company's name, never the mail app's default (gap 16), and its result's taf carries the

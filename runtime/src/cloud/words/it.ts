@@ -32,6 +32,8 @@ export const it: Words = {
   doing_grants: "Cerco i tuoi collegamenti…",
   doing_connection: "Lavoro sul collegamento…",
   step_connection_not_yet: (vendor: string) => vendor ? `Coach non è ancora riuscito a collegare ${vendor}` : "Coach non è ancora riuscito a collegare l'app",
+  removal_goes: (apps: string[]) => `${list(apps)} ${apps.length > 1 ? "vanno via" : "va via"} con lui.`,
+  removal_stays: (app: string, tafs: string[]) => `${app} resta: ${tafs.length > 1 ? "lo usano" : "lo usa"} ${list(tafs)}.`,
   doing_draft: "Preparo la bozza della Card…",
   doing_card: "Leggo la Card del taf…",
   doing_pending: "Controllo cosa ti aspetta…",

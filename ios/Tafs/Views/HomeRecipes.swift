@@ -146,6 +146,11 @@ struct RecipeSheet: View {
     let recipes: TafsCloud.Recipes
     /// Whether this person may use Coach: without it, the sheet has no button.
     let canHand: Bool
+    /// The button's words where the gallery says them ("Try it with Coach" while browsing);
+    /// nil for the sheet's own (`labels.hand`).
+    var handWords: String? = nil
+    /// The label over the job's sample, tafs cloud's; nil when it sends none.
+    var sampleLabel: String? = nil
     let hand: () -> Void
 
     var body: some View {
@@ -168,7 +173,25 @@ struct RecipeSheet: View {
                         }
                     }
                 }
-                if canHand, let words = recipes.handWords {
+                // Where its proof run passed: tafs cloud's line for it, then what it reported
+                // after that run, both as sent. A job with neither draws nothing here.
+                if !recipe.proved.isEmpty {
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Image(systemName: "checkmark.seal").scaledFont(14, weight: .semibold).foregroundColor(Theme.soft)
+                            .accessibilityHidden(true)
+                        Text(recipe.proved).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .accessibilityIdentifier("recipe.proved")
+                }
+                if !recipe.sample.isEmpty {
+                    Panel {
+                        if let sampleLabel { Eyebrow(text: sampleLabel) }
+                        Text(recipe.sample).scaledFont(14).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+                    }
+                    .accessibilityIdentifier("recipe.sample")
+                }
+                if canHand, let words = handWords ?? recipes.handWords {
                     Button(words, action: hand).buttonStyle(PrimaryButtonStyle())
                 }
             }

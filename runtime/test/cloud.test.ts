@@ -1556,6 +1556,77 @@ describe("removing a taf", () => {
     expect(w.agents.calls).toEqual([]);
   });
 
+  // A removed taf left its connections active, a waiting one included (owner's phone, 12 Nov): they end with it,
+  // in any status, with the person's own session; a sign-in another taf uses stays (the connection server says).
+  it("ends the taf's connections with it, after its key, and a second remove finishes one the connection server couldn't", async () => {
+    const w = world();
+    const ended: Array<{ url: string; auth: string; method: string }> = [];
+    let down = true;
+    const deps = (absent = false) => ({ ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.startsWith("https://planque.test/")) {
+        ended.push({ url, auth: String((init?.headers as Record<string, string>)?.authorization ?? ""), method: init?.method ?? "GET" });
+        if (absent) return new Response("no route", { status: 404 });
+        if (down) return new Response("down", { status: 503 });
+        return new Response(JSON.stringify({ ended: [{ vendor: "Qonto" }], kept: [{ vendor: "Stripe", used_by: ["Chargebacks"] }] }), { status: 200 });
+      }
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] });
+    const del = async (d: Deps) => {
+      const r = await handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana" } }, d);
+      return JSON.parse(r.body);
+    };
+    // The connection server is down: the removal stops there, the taf stays being removed, nothing after it runs.
+    const first = await del(deps());
+    expect(first).toMatchObject({ done: false, removed: ["schedule", "history", "memory", "key"], failed: ["connections"] });
+    expect(ended).toEqual([{ url: "https://planque.test/v1/accounts/t_acme/agents/rae/end", auth: "Bearer ana", method: "POST" }]);
+    expect(w.names.held.has("t_acme#Rae")).toBe(true);
+    expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.removing).toEqual([{ id: RAE, name: "Rae" }]);
+    // Asked again, it ends them and finishes.
+    down = false;
+    const second = await del(deps());
+    expect(second).toMatchObject({ done: true, failed: [] });
+    expect(second.removed).toContain("connections");
+    expect(ended).toHaveLength(2);
+    expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(false);
+  });
+
+  it("goes on as before with a connection server that doesn't end connections yet, and calls it for no other agent", async () => {
+    const w = world();
+    const asked: string[] = [];
+    const d = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.startsWith("https://planque.test/")) { asked.push(url); return new Response("no route", { status: 404 }); }
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] };
+    const r = await handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana" } }, d);
+    // Not ended here, so not said to be: the apps' own disconnect still runs.
+    expect(JSON.parse(r.body)).toEqual({ taf: RAE, name: "Rae", kiff_agent: "rae", done: true, removed: ["schedule", "history", "memory", "key", "name"], failed: [] });
+    expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/agents/rae/end"]);
+    // Another account's taf can't be removed from here, so its agent is never asked about.
+    expect((await handle({ rawPath: `/v1/tafs/${MAX}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana" } }, d)).statusCode).toBe(404);
+    expect(asked).toHaveLength(1);
+  });
+
+  it("says before the fingerprint what goes with the taf and what stays, ending nothing", async () => {
+    const w = world();
+    const asked: string[] = [];
+    const d = (answer: () => Response) => ({ ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.startsWith("https://planque.test/")) { asked.push(url); return answer(); }
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] });
+    const get = async (dd: Deps, lang = "en") => JSON.parse((await handle({ rawPath: `/v1/tafs/${RAE}/removal`, requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana", "accept-language": lang } }, dd)).body);
+    const both = () => new Response(JSON.stringify({ ended: [{ vendor: "Qonto" }, { vendor: "Qonto" }], kept: [{ vendor: "Stripe", used_by: ["Chargebacks"] }] }), { status: 200 });
+    expect(await get(d(both))).toEqual({ taf: RAE, goes: ["Qonto"], stays: [{ app: "Stripe", used_by: ["Chargebacks"] }], words: "Qonto goes with it. Stripe stays: Chargebacks uses it." });
+    expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/agents/rae/end?preview=1"]);
+    expect((await get(d(both), "fr")).words).toBe("Qonto part avec lui. Stripe reste : Chargebacks l'utilise.");
+    const two = () => new Response(JSON.stringify({ ended: [{ vendor: "Qonto" }, { vendor: "Gmail" }], kept: [{ vendor: "Stripe", used_by: ["Chargebacks", "Refunds"] }] }), { status: 200 });
+    expect((await get(d(two))).words).toBe("Qonto and Gmail go with it. Stripe stays: Chargebacks and Refunds use it.");
+    // Nothing to read: no words, and the apps say only that the taf goes. The taf is still there.
+    expect(await get(d(() => new Response("down", { status: 503 })))).toEqual({ taf: RAE, goes: [], stays: [], words: null });
+    expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
+    expect((await handle({ rawPath: `/v1/tafs/${RAE}/removal`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer viewer" } }, d(both))).statusCode).toBe(403);
+  });
+
   it("deletes nothing else while kiff/agents may still run it, and a second remove finishes", async () => {
     const w = world();
     w.agents.fail.set("deleteAgent", new Error("timeout"));
@@ -4240,7 +4311,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.tafs.held.delete(`t_acme#${RAE}`);
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@7,draft-the-card@6,name-the-tools@6,set-up-a-taf@6,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@9,draft-the-card@7,name-the-tools@6,set-up-a-taf@6,usage-and-plans@3`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -4248,23 +4319,23 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is it stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@7,draft-the-card@6,name-the-tools@6,set-up-a-taf@6,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@9,draft-the-card@7,name-the-tools@6,set-up-a-taf@6,usage-and-plans@3`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "is everything stopped?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@7,draft-the-card@6,halting@1,name-the-tools@6,set-up-a-taf@6,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@9,draft-the-card@7,halting@1,name-the-tools@6,set-up-a-taf@6,usage-and-plans@3`);
     await w.agents.api.resume("t_acme");
     // An account with a taf of its own: every Coach start has the holds and the halting, whatever its state.
     // "Refunds hasn't done anything" and "stop everything" never name a skill, and the model left to read
     // one didn't (kiff/agents Eval 42788659962).
     w.tafs.held.set(`t_acme#${RAE}`, rae);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Rae hasn't done anything since this morning", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@7,draft-the-card@6,halting@1,name-the-tools@6,set-up-a-taf@6,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@9,draft-the-card@7,halting@1,name-the-tools@6,set-up-a-taf@6,usage-and-plans@3`);
     // An improvement opens on the taf: its skill.
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@7,draft-the-card@6,halting@1,improve-a-taf@1,name-the-tools@6`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@9,draft-the-card@7,halting@1,improve-a-taf@1,name-the-tools@6`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
@@ -4282,7 +4353,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@7,draft-the-card@6,halting@1,name-the-tools@6,set-up-a-taf@2,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@9,draft-the-card@7,halting@1,name-the-tools@6,set-up-a-taf@2,usage-and-plans@3`);
     // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
     w.agents.access.set("u_ana", { cards_manage: true });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
@@ -4633,7 +4704,7 @@ describe("the calendar (kiff/tafs#534)", () => {
 
 // A new taf was connected to Stripe through a provider's live-only app while Chargebacks used Stripe's own
 // sign-in, in test (5 Nov). tafs cloud gives a new Coach conversation the account's connections, so the
-// same kind is there to offer first, named with the taf that uses it (connect-an-app@7).
+// same kind is there to offer first, named with the taf that uses it (connect-an-app@9).
 describe("the account's connections a Coach conversation starts with", () => {
   const COACH = "taf-c0ac4000000000000000";
   const BO = "taf-bo00000000000000000";
@@ -4687,7 +4758,7 @@ describe("the account's connections a Coach conversation starts with", () => {
     expect(text).not.toContain("Docs");
     expect(ownerWords(text)).toBe("I want a taf that chases overdue invoices");
     // The skills are chosen from how the owner opened, as before.
-    expect(w.agents.calls.at(-1)).toContain("skills=cards-and-holds@3,connect-an-app@7,");
+    expect(w.agents.calls.at(-1)).toContain("skills=cards-and-holds@3,connect-an-app@9,");
     // The same chat goes on with what the session holds: nothing is read or sent again.
     await send(deps, `/v1/tafs/${COACH}/messages`, { text: "and remind them twice", session: started.session });
     expect(asked).toHaveLength(1);

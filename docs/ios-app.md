@@ -229,7 +229,10 @@ the app in sample mode.
   then the taf's Needs you items, its work and runs, then its record by day (`ActivityFilter`: All, Done, Held,
   Refused). Card: the Card, its limits, how they're counted, usage, Halt, Revoke. Setup: The job
   (Improve in Coach), Starts when, Connected apps (`ConnectionsPanel`: **Choose actions**, through Coach, for one signed in with none chosen, then **Connect an app…**), Results go to, what it
-  remembers, Versions, Pause (sample mode) and Remove for good.
+  remembers, Versions, Pause (sample mode) and Remove for good. Remove's confirmation says what goes with the taf
+  before Face ID: tafs cloud's words from `GET /v1/tafs/{id}/removal` ("Qonto goes with it. Stripe stays: Chargebacks
+  uses it."), read when Remove is tapped and ending nothing (`AppModel.removalWords`). Without them, it says only
+  what always goes.
 - **Setup › Starts when** (`StartsWhenView`, `TafSetupViews.swift`), from `GET …/knob`
   `wakes`: its schedule with − and + through the stop's `size.choices` (`adjustKnob`), Skip it /
   Run after (`setting.busy`), app events with **Approve** (`AppEventApprovalSheet`, the signed
@@ -252,6 +255,9 @@ the app in sample mode.
   `AppLanguage.name`), so someone in a language they don't read still finds theirs, and **Change
   language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. No picker
   of the app's own, as on Android (`settings.language_title`, `settings.change_language`).
+- **Account says who is signed in once** (`AccountLines`): the account's name, then "Signed in as" only when the
+  email differs from it (a Solo account is named after its owner's email). The account's id is on the account's
+  own screen only. People & groups' first line is the count alone for such an account.
 - **Setup › Connected tools** (`ConnectedToolsRing`): one node per app (`ConnectedToolsRing.nodes`),
   the connection with actions in front; another sign-in to the same app is under Other
   connections in its sheet, with its own Disconnect. Starts when and Results go to are rows
@@ -283,6 +289,7 @@ the app in sample mode.
 - **Connect apps** (`ConnectAppsView`, from Account): `GET /v1/connect/apps`, searched as the
   owner types, in tafs cloud's order and words. Rows show only the app's catalog title;
   internal provider ids are not shown. "Not listed? Ask Coach" appears when `by_key`.
+  A row's Connect button is as wide as its words, never the row: stretched across an iPad it read as a field.
   Connecting (`POST /v1/connect/apps/{entry}`) opens the approval as a sheet over the list,
   with KIFF's words: approve first, then sign in at the vendor, as for any connection. An
   API-key vendor takes its key in the sheet: planque gets the key in `Planque-Vendor-Key`, and
@@ -292,6 +299,9 @@ the app in sample mode.
   "Give the key on a secure sheet", opens this same sheet full screen, outside the chat (`ConnectApprovalSheet`,
   `needsKey`). Once the key is given and its receipt closed, the card is approved as any other: tafs cloud reads the
   grant, connected, and answers Coach. The key never reaches tafs cloud or Coach.
+  **An approved card folds to one line that says what was signed:** where the card carried a Card, the line names the
+  Card (also when it reads "Already approved") and draws KIFF's own lines for the draft this phone read under it
+  (`OutcomeLine.detail`), never the connection's words for its key. A tap opens the whole card again.
   **The key's sheet looks and acts protected** (`docs/secure-connection.md`). Its words are tafs cloud's, read by the
   grant (`GET /v1/connect/grants/{grant}/sheet`, `TafsCloud.ConnectionSheet`), with this phone's signed grants
   read (`Planque-Device-Signature`), as Connect apps is:
@@ -433,8 +443,20 @@ it, in tafs cloud's words.
 - **The strip** (`RecipeStrip`): under the tafs list, `strip.title` and the jobs in `strip.ids`,
   in that order, only while `strip.shown`. tafs cloud leaves out jobs the account runs and puts
   first those whose apps are connected; the app picks nothing. On iPad it's a sidebar section.
-  Under the jobs, one row opens every job (+ New's gallery), in tafs cloud's own heading for them (`words.all`,
-  `Gallery.seeAll`): only when there are more jobs than the strip shows, on iPhone and iPad.
+  Under the jobs, one row opens every job to browse, in tafs cloud's words (`words.see_all`, or its
+  heading `words.all` from a tafs cloud from before it; `Gallery.seeAll`): only when there are
+  more jobs than the strip shows, on iPhone and iPad.
+- **Explore jobs** (`ExploreRow`, a sidebar row on iPad): a row on Home in tafs cloud's words
+  (`words.explore`), with or without tafs, and for someone who may not use Coach too. It opens the
+  gallery to browse (`GalleryMode.browse`): the same chips and jobs under `words.explore`, without
+  the own-words row, and nothing is created. A tafs cloud that sends no `words.explore` draws no
+  row: the app has no words of its own for it.
+- **A job's sheet** (`RecipeSheet`) is read only: the headline, what it costs today, its Card as
+  does / asks / never, then `proved` (tafs cloud's line where a proof run passed) and `sample`
+  (what it reported after that run, under `words.sample`), both drawn as sent and only when they
+  are words. Its one button hands the job to Coach, for someone who may use it: "Try it with
+  Coach" (`words.try`) while browsing, the sheet's `labels.hand` from + New. Nothing is set up
+  until it's tapped.
 - **App logos** (`AppMarks`): each job's apps by name, after the app's logo, and the same in
   Connect apps. A logo loads only from tafs cloud, by the path it sent: `/v1/logos/` and a key of
   32 lowercase hex, as on Android (`TafsCloud.logoURL`). An absolute URL or any other path loads

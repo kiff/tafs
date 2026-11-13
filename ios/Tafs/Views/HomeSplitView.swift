@@ -49,7 +49,7 @@ struct HomeSplitView: View {
     /// A recipe's sheet, opened from the detail pane with no taf, or from the strip in the sidebar.
     @State private var openRecipe: TafsCloud.Recipes.Recipe?
     /// + New's gallery of every ready-made job, and what was chosen in it: acted on once it closes.
-    @State private var showingGallery = false
+    @State private var showingGallery: GalleryMode?
     @State private var galleryChoice: GalleryChoice?
 
     var body: some View {
@@ -93,16 +93,17 @@ struct HomeSplitView: View {
         }
         .navigationSplitViewStyle(.balanced)
         .sheet(item: $openRecipe) { recipe in
-            RecipeSheet(recipe: recipe, recipes: sheetRecipes(for: recipe), canHand: model.mayUseCoach) {
+            RecipeSheet(recipe: recipe, recipes: sheetRecipes(for: recipe), canHand: model.mayUseCoach,
+                        sampleLabel: model.gallery?.sampleLabel) {
                 openRecipe = nil
                 model.handRecipeToCoach(recipe)
             }
         }
-        .sheet(isPresented: $showingGallery, onDismiss: actOnGalleryChoice) {
+        .sheet(item: $showingGallery, onDismiss: actOnGalleryChoice) { mode in
             if let gallery = model.gallery {
-                RecipeGallerySheet(gallery: gallery, labels: model.recipes?.labels, logo: { model.cloud.logoURL($0) },
-                                   canHand: model.mayUseCoach, choose: { galleryChoice = $0; showingGallery = false },
-                                   close: { showingGallery = false })
+                RecipeGallerySheet(gallery: gallery, mode: mode, labels: model.recipes?.labels, logo: { model.cloud.logoURL($0) },
+                                   canHand: model.mayUseCoach, choose: { galleryChoice = $0; showingGallery = nil },
+                                   close: { showingGallery = nil })
             }
         }
         .onAppear { model.sidebarShown = true }
@@ -204,6 +205,18 @@ struct HomeSplitView: View {
                     ForEach(sections.shared) { taf in tafLinks(taf) }
                 } header: { Eyebrow(text: Words.Home.sharedYou) }
             }
+            // The jobs, to browse with nothing created: with or without tafs, once tafs cloud
+            // sends the row's words.
+            if model.mode == .kiff, let words = model.gallery?.explore {
+                Section {
+                    Button { showingGallery = .browse } label: {
+                        Label(words, systemImage: "square.grid.2x2").scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                    }
+                    .buttonStyle(.drivablePlain)
+                    .driveWords(words)
+                    .accessibilityIdentifier("home.explore")
+                }
+            }
             // A few jobs the account doesn't run yet, where tafs cloud shows them, in its order.
             if model.mode == .kiff, !model.tafs.isEmpty, let gallery = model.gallery, !gallery.stripRecipes.isEmpty {
                 Section {
@@ -220,7 +233,7 @@ struct HomeSplitView: View {
                     }
                     // The strip shows a few: this row opens them all, in tafs cloud's words for them.
                     if let words = gallery.seeAll {
-                        Button { showingGallery = true } label: {
+                        Button { showingGallery = .browse } label: {
                             Text(words).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                         }
                         .buttonStyle(.drivablePlain)
@@ -252,7 +265,7 @@ struct HomeSplitView: View {
     private func startNewTaf() {
         // + New opens every ready-made job where tafs cloud sends the gallery; without it,
         // Coach as before.
-        if model.gallery != nil { showingGallery = true } else { model.startNewTaf() }
+        if model.gallery != nil { showingGallery = .create } else { model.startNewTaf() }
     }
 
     /// The recipes a job's sheet draws from: the detail pane's list when the job is on it, else

@@ -33,7 +33,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { accountConnections, connectionLines, withConnections } from "./connections.js";
+import { accountConnections, connectionLines, endConnections, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
@@ -728,7 +728,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     if (taf) {
       await needTaf(event, me, taf, deps);
       await removalSigned(event, me, taf, deps);
-      return remove(taf, me, deps);
+      return remove(taf, me, deps, bearer(event));
     }
     // The record goes only once every other step is done, so a removal left
     // without it lacks only its own entry: finishing is clearing that. Only a
@@ -780,6 +780,16 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const s = await pauseAll(me.tenantID, taf, action === "resume", deps);
     await tellChange(me.tenantID, "taf", taf.id, deps);
     return { taf: await view(taf, me, deps, s, undefined, langOf(event)) };
+  }
+  if (parts.length === 4 && method === "GET" && action === "removal") {
+    // What removing it takes with it, for the confirmation before the fingerprint: the apps only it uses go,
+    // one another taf uses stays. Nothing is ended here. `words` is null where it can't be read: the apps say
+    // only that the taf goes.
+    need(me, "cards.manage");
+    const preview = deps.planqueBase && taf.kiffAgent
+      ? await endConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, taf.kiffAgent, bearer(event), true).catch(() => null)
+      : null;
+    return { taf: taf.id, ...removalWords(preview, langOf(event)) };
   }
   if (parts.length === 4 && method === "GET" && action === "work") {
     // Where its work stands, for its page (docs/reliability.md): every line and time written here.
@@ -1852,7 +1862,21 @@ async function removalSigned(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
   console.log(JSON.stringify({ event: "taf_remove", signed: true, taf: taf.id }));
 }
 
-async function remove(taf: Taf, me: { tenantID: string }, deps: Deps) {
+/**
+ * The confirmation's words for what goes with a taf and what stays: "Qonto goes with it. Stripe stays:
+ * Chargebacks uses it." One app named once, whatever its connections; `words` null when nothing could be read.
+ */
+export function removalWords(r: { ended: Array<{ vendor: string }>; kept: Array<{ vendor: string; used_by: string[] }> } | null, lang: Lang = "en"):
+  { goes: string[]; stays: Array<{ app: string; used_by: string[] }>; words: string | null } {
+  if (!r) return { goes: [], stays: [], words: null };
+  const w = wordsIn(lang);
+  const stays = [...new Map(r.kept.map((k) => [k.vendor, { app: k.vendor, used_by: [...new Set(k.used_by)] }])).values()].filter((k) => k.used_by.length > 0);
+  const goes = [...new Set(r.ended.map((e) => e.vendor))].filter((v) => !stays.some((k) => k.app === v));
+  const lines = [...(goes.length ? [w.removal_goes(goes)] : []), ...stays.map((k) => w.removal_stays(k.app, k.used_by))];
+  return { goes, stays, words: lines.length ? lines.join(" ") : null };
+}
+
+async function remove(taf: Taf, me: { tenantID: string }, deps: Deps, token = "") {
   const removed: string[] = [];
   const failed: string[] = [];
   const step = async (what: string[], work: () => Promise<unknown>) => {
@@ -1868,6 +1892,18 @@ async function remove(taf: Taf, me: { tenantID: string }, deps: Deps) {
   if (!taf.removing) await deps.tafs.put(me.tenantID, { ...taf, removing: true });
   await step(["schedule", "history", "memory"], () => deps.agents.deleteAgent(me.tenantID, taf.id));
   if (failed.length === 0) await step(["key"], () => deps.keys.remove(me.tenantID, taf.id));
+  // Its connections end with it, in any status, with the person's own session: a sign-in or key another taf
+  // still uses stays (the connection server's rule). A server without the route leaves it to the apps' disconnect.
+  if (failed.length === 0 && token && deps.planqueBase && taf.kiffAgent) {
+    try {
+      const r = await endConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, taf.kiffAgent, token);
+      console.log(JSON.stringify({ event: "taf_connections_end", taf: taf.id, ended: r?.ended.length ?? null, kept: r?.kept.length ?? null }));
+      if (r) removed.push("connections");
+    } catch (err) {
+      console.error(`remove ${taf.id}: connections: ${(err as Error).message}`);
+      failed.push("connections");
+    }
+  }
   // Its doors' addresses and numbers stop being its, and their sign-ins go.
   if (failed.length === 0 && deps.doors) await step(["doors"], () => removeTafDoors(doorContext(deps), me.tenantID, taf.id));
   // Only this taf's own claim: if a newer start holds the name, it keeps it.

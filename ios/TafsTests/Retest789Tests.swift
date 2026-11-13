@@ -87,4 +87,33 @@ final class Retest789Tests: XCTestCase {
         let unnamed = try account(#"{"tenant_id":"t2","tenant_slug":"acme","tenant_display_name":""}"#)
         XCTAssertEqual(unnamed.name, "acme")
     }
+
+    /// Account says who is signed in once: an account named after its owner's email has no
+    /// second "Signed in as" line, and People & groups says only how many people. Someone
+    /// else's account, or a named one, keeps both. The account's id is on its own screen only.
+    func testAccountSaysWhoIsSignedInOnce() throws {
+        func account(_ json: String) throws -> KIFFClient.Account {
+            try KIFFClient.decoder.decode(KIFFClient.Account.self, from: Data(json.utf8))
+        }
+        let solo = try account(#"{"tenant_id":"t1","tenant_slug":"user-5d7d","tenant_display_name":"Owner@Example.com","email":"owner@example.com"}"#)
+        XCTAssertNil(AccountLines.signedInAs(solo), "the same email, whatever its case, isn't shown twice")
+        XCTAssertEqual(AccountLines.people(solo, count: 1), Words.People.count(count: 1))
+        let shared = try account(#"{"tenant_id":"t1","tenant_slug":"user-3a9f","tenant_display_name":"owner@example.com","email":"viewer@example.com"}"#)
+        XCTAssertEqual(AccountLines.signedInAs(shared), "viewer@example.com")
+        XCTAssertEqual(AccountLines.people(shared, count: 2), "owner@example.com · " + Words.People.count(count: 2))
+        let team = try account(#"{"tenant_id":"t2","tenant_slug":"acme","tenant_display_name":"Acme","email":"owner@example.com"}"#)
+        XCTAssertEqual(AccountLines.signedInAs(team), "owner@example.com")
+        let silent = try account(#"{"tenant_id":"t2","tenant_slug":"acme","tenant_display_name":"Acme"}"#)
+        XCTAssertNil(AccountLines.signedInAs(silent))
+        XCTAssertEqual(AccountLines.people(silent, count: 3), "Acme · " + Words.People.count(count: 3))
+
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let settings = try String(contentsOf: views.appendingPathComponent("SignInView.swift"), encoding: .utf8)
+        XCTAssertEqual(settings.components(separatedBy: "LabeledContent(Words.Settings.accountId").count - 1, 1, "the id, on the account's own screen only")
+        // Connect apps: a row's button is as wide as its words, never the row.
+        let connect = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
+        let row = connect[try XCTUnwrap(connect.range(of: "private func row(_ app:")).lowerBound...]
+        let button = try XCTUnwrap(row.range(of: "Words.Connect.Apps.connect).padding(.horizontal, 16)"))
+        XCTAssertTrue(row[button.upperBound...].prefix(200).contains(".fixedSize(horizontal: true, vertical: false)"))
+    }
 }

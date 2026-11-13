@@ -1,0 +1,1 @@
+- **iOS: removing a taf says which apps go with it.** Before Face ID, the confirmation names the apps only that taf used, and the ones that stay because another taf uses them.

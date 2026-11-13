@@ -32,6 +32,8 @@ export const nl: Words = {
   doing_grants: "Ik zoek je koppelingen op…",
   doing_connection: "Ik werk aan de koppeling…",
   step_connection_not_yet: (vendor: string) => vendor ? `Coach kon ${vendor} nog niet koppelen` : "Coach kon de app nog niet koppelen",
+  removal_goes: (apps: string[]) => `${list(apps)} ${apps.length > 1 ? "gaan" : "gaat"} mee.`,
+  removal_stays: (app: string, tafs: string[]) => `${app} blijft: ${list(tafs)} ${tafs.length > 1 ? "gebruiken" : "gebruikt"} het.`,
   doing_draft: "Ik stel de Card op…",
   doing_card: "Ik lees de Card van het taf…",
   doing_pending: "Ik controleer wat er op je wacht…",
