@@ -31,6 +31,8 @@ final class AppModel: ObservableObject {
     /// The steps tafs handed the person, oldest first, as tafs cloud lists them on Home (docs/api.md
     /// › Your step), less those this phone just answered.
     @Published private(set) var yourSteps: [TafsCloud.YourStep] = []
+    /// Coach's chats waiting on the owner, as Home lists them (docs/api.md › Coach waiting).
+    @Published private(set) var coachWaiting: [TafsCloud.CoachWaiting] = []
     /// Steps answered here and accepted by KIFF that Home may still list until the run hears the
     /// answer: kept out of Needs you and its count, and forgotten once Home stops listing them.
     private var answeredSteps: Set<String> = []
@@ -47,7 +49,7 @@ final class AppModel: ObservableObject {
     /// count of held calls, currency requests, steps and "Did this happen?" calls.
     var needsYouCount: Int {
         homeNeedsYou.map { max(0, $0.count - answeredStillCounted) }
-            ?? held.count + cardUnitExceptions.count + yourSteps.count + unproven.count
+            ?? held.count + cardUnitExceptions.count + yourSteps.count + unproven.count + coachWaiting.count
     }
 
     /// Home's line under the working count, in tafs cloud's words when it sent them.
@@ -645,7 +647,7 @@ final class AppModel: ObservableObject {
             recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
             recordTyping?.cancel(); recordTyping = nil
             cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil
-            yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0
+            yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaiting = []
             haltErrors = [:]
             alertsOffered = false
             remembered?.removeObject(forKey: Self.alertsOfferedKey)
@@ -1732,6 +1734,7 @@ final class AppModel: ObservableObject {
     func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
         cardUnitExceptions = home.cardUnitExceptions ?? []
         showSteps(home.yourSteps ?? [])
+        coachWaiting = (home.coachWaiting ?? []).filter(\.usable)
         homeNeedsYou = home.needsYou
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
@@ -6777,6 +6780,13 @@ final class AppModel: ObservableObject {
         guard canFinishSetup(finish) else { return }
         coachOpen = true
         await openSetupChat(finish.session)
+    }
+
+    /// A Coach chat waiting on the owner, from Needs you: Coach opens on that chat, where its card waits.
+    func openCoachWaiting(_ waiting: TafsCloud.CoachWaiting) async {
+        guard mode == .kiff, !waiting.session.isEmpty else { return }
+        coachOpen = true
+        await openSetupChat(waiting.session)
     }
 
     /// Reopens one of Setup's chats: it's shown alone, and messages go on in it.

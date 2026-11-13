@@ -13,12 +13,14 @@ struct NeedsYouView: View {
                 }
                 // A step a taf handed its owner comes first, oldest first (docs/api.md › Your step), as on Android.
                 ForEach(model.yourSteps) { step in YourStepCard(step: step).id(step.id) }
+                // Coach waits on the owner in a chat (an approval, a sign-in, an answer): tafs cloud's words, and its way in.
+                ForEach(model.coachWaiting) { waiting in CoachWaitingCard(waiting: waiting).id(waiting.id) }
                 // A knock at a taf's door waits for the owner too (kiff/tafs#236, item 17).
                 let knocked = model.tafs.filter { knocks($0) > 0 }
                 // A money call whose outcome KIFF can't prove: the owner says whether it happened.
                 ForEach(model.unproven) { call in DidThisHappenCard(call: call) }
                 ForEach(model.cardUnitExceptions) { ask in CardUnitExceptionPanel(ask: ask).id(ask.id) }
-                if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty && model.cardUnitExceptions.isEmpty && model.yourSteps.isEmpty {
+                if model.held.isEmpty && knocked.isEmpty && model.unproven.isEmpty && model.cardUnitExceptions.isEmpty && model.yourSteps.isEmpty && model.coachWaiting.isEmpty {
                     Panel {
                         Text(Words.NeedsYou.nothingWaiting).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         Text(Words.NeedsYou.emptyHint)
@@ -467,5 +469,26 @@ struct AlertsOfferSheet: View {
         }
         .padding(24)
         .background(Theme.background)
+    }
+}
+
+/// A Coach chat waiting on its person (docs/api.md › Coach waiting): tafs cloud's line, and its way in,
+/// which opens Coach on that chat.
+struct CoachWaitingCard: View {
+    @EnvironmentObject private var model: AppModel
+    let waiting: TafsCloud.CoachWaiting
+
+    var body: some View {
+        Panel(stroke: Theme.amber.opacity(0.4)) {
+            HStack(alignment: .center, spacing: 10) {
+                Image(systemName: "sparkle").foregroundColor(Theme.amberText).accessibilityHidden(true)
+                Text(waiting.words.line).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            Button(waiting.words.open) { Task { await model.openCoachWaiting(waiting) } }
+                .buttonStyle(PrimaryButtonStyle())
+                .accessibilityIdentifier("needs-you.coach-waiting." + waiting.session)
+        }
     }
 }
