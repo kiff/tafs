@@ -746,6 +746,7 @@ final class AppModel: ObservableObject {
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
+        forgetAIConsent()
         accountGeneration += 1
         tafs = []; listOrder = []; waitingWhenSettled = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
         alertsReady = nil
@@ -1109,6 +1110,7 @@ final class AppModel: ObservableObject {
         groups = []; people = []; access = [:]; peopleError = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
+        forgetAIConsent()
         accountGeneration += 1
         kiffTenant = nil
         sessionHasKey = false
@@ -1609,6 +1611,9 @@ final class AppModel: ObservableObject {
             // The gallery, with each refresh: + New opens it, and the strip under the list
             // leaves out what the account runs now.
             await loadGallery()
+            guard gen == accountGeneration else { return }
+            // The AI-data consent: its screen comes up after sign-in while it isn't given.
+            await loadAIConsent()
             guard gen == accountGeneration else { return }
             // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
             // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
@@ -6207,6 +6212,101 @@ final class AppModel: ObservableObject {
     /// (`GET /v1/recipes/gallery`). Nil before it's read, or from a tafs cloud without it, where
     /// + New opens Coach as before.
     @Published var gallery: TafsCloud.Gallery?
+
+    /// The person's AI-data consent, as tafs cloud keeps it; nil before it's read, or from a tafs
+    /// cloud without the route (docs/accounts.md, "Your data and the AI").
+    @Published private(set) var aiConsent: TafsCloud.AIConsent?
+    /// The consent screen to show now: after sign-in while it isn't given, and whenever tafs cloud
+    /// refuses a model turn for want of it. Not now closes it; a refused turn opens it again.
+    @Published var aiConsentAsked: TafsCloud.AIConsent?
+    @Published private(set) var aiConsentBusy = false
+    @Published private(set) var aiConsentError: String?
+    /// Not now was answered this session: the screen isn't put up again by a refresh, only by a
+    /// turn tafs cloud refuses.
+    private var aiConsentPutOff = false
+    private var aiConsentObserver: NSObjectProtocol?
+
+    /// Listens for tafs cloud's `ai_consent_required`, from any route, once per model.
+    func watchAIConsent() {
+        guard aiConsentObserver == nil else { return }
+        aiConsentObserver = NotificationCenter.default.addObserver(forName: .aiConsentRequired, object: nil, queue: .main) { [weak self] note in
+            guard let consent = note.object as? TafsCloud.AIConsent else { return }
+            MainActor.assumeIsolated { self?.consentRequired(consent) }
+        }
+    }
+
+    /// A turn was refused for want of the consent: its screen, now, whatever was put off before.
+    func consentRequired(_ consent: TafsCloud.AIConsent) {
+        guard mode == .kiff, consent.drawable else { return }
+        aiConsent = consent
+        aiConsentError = nil
+        aiConsentAsked = consent
+    }
+
+    /// Reads the consent, with each refresh. Not given, its screen is put up, unless Not now was
+    /// answered this session. A tafs cloud without the route leaves none, and asks nothing.
+    func loadAIConsent() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        guard let read = try? await cloud.aiConsent(), gen == accountGeneration else { return }
+        aiConsent = read
+        if !read.given, read.drawable, !aiConsentPutOff, aiConsentAsked == nil { aiConsentAsked = read }
+    }
+
+    /// Allow, for the version of the words on the screen. An older screen's yes is refused by tafs
+    /// cloud with the new words, which then show in its place.
+    func allowAI() async {
+        guard let asked = aiConsentAsked ?? aiConsent else { return }
+        let gen = accountGeneration
+        aiConsentBusy = true
+        defer { aiConsentBusy = false }
+        do {
+            let given = try await cloud.allowAI(version: asked.version)
+            guard gen == accountGeneration else { return }
+            aiConsent = given
+            aiConsentError = nil
+            aiConsentAsked = nil
+        } catch let e as TafsCloud.CloudError where e.status == 409 {
+            guard gen == accountGeneration else { return }
+            aiConsentError = e.errorDescription
+            if let newer = e.consent ?? (try? await cloud.aiConsent()), gen == accountGeneration {
+                aiConsent = newer
+                aiConsentAsked = newer
+            }
+        } catch {
+            guard gen == accountGeneration else { return }
+            aiConsentError = error.localizedDescription
+        }
+    }
+
+    /// Not now: the screen closes, and nothing is sent to the model. Trying Coach or a chat asks again.
+    func notNowAI() {
+        aiConsentPutOff = true
+        aiConsentAsked = nil
+        aiConsentError = nil
+    }
+
+    /// Withdraw, from Account: from then on, nothing this person writes reaches the model.
+    func withdrawAI() async {
+        let gen = accountGeneration
+        aiConsentBusy = true
+        defer { aiConsentBusy = false }
+        do {
+            let now = try await cloud.withdrawAI()
+            guard gen == accountGeneration else { return }
+            aiConsent = now
+            aiConsentError = nil
+            aiConsentPutOff = true
+        } catch {
+            guard gen == accountGeneration else { return }
+            aiConsentError = error.localizedDescription
+        }
+    }
+
+    /// A new account's consent is its own: nothing of the last one's stays.
+    private func forgetAIConsent() {
+        aiConsent = nil; aiConsentAsked = nil; aiConsentError = nil; aiConsentPutOff = false
+    }
     /// The account's "Show suggestions" setting as tafs cloud last said it, while it's being
     /// changed, and why a change didn't go.
     @Published var suggestions: TafsCloud.Suggestions?

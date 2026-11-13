@@ -256,6 +256,14 @@ the app in sample mode.
   device (Turn on alerts while off), Sound (off and greyed while alerts are off, its choice
   kept), and What alerts you, read-only, drawn only with something in it; "A taf answered
   someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).
+- **The AI-data consent** (`AIConsentView`, `TafsCloud+AIConsent.swift`; docs/accounts.md, "Your data and the AI"): a
+  full screen with tafs cloud's words as sent (`GET /v1/me/ai-consent`: title, lines, Allow, Not now), and no line of
+  the app's own. It comes up after sign-in while the person hasn't allowed it, and whenever tafs cloud refuses a
+  model turn for want of it (403 `ai_consent_required`, from any route: read once in `TafsCloud.refusal`). **Allow**
+  sends the version of the words on the screen (`POST {version}`); an older screen's yes is refused with the new
+  words, which then show. **Not now** closes it and sends nothing; a refresh doesn't put it up again, a refused turn
+  does. **Account** shows tafs cloud's "AI use: allowed" with **Withdraw** (`DELETE`), or the screen's title to open
+  it. A tafs cloud without the route asks nothing.
 - **Account › Language:** the language tafs's lines are in, by its own name ("Français", "Polski",
   `AppLanguage.name`), so someone in a language they don't read still finds theirs, and **Change
   language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. No picker
