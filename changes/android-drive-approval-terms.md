@@ -1,0 +1,1 @@
+- **Android: a drive no longer captures what you are approving.** While Coach helps you drive the app, its screenshots blank a connection's terms on Coach's approval card and an app event's filters, and its view of the screen names only that an approval is open, as on iPhone and iPad ([drive.md](docs/drive.md)).

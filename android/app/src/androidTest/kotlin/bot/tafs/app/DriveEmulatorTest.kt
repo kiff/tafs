@@ -48,6 +48,8 @@ import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.driveDismissal
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.secret
+import bot.tafs.app.drive.approvalTerms
+import androidx.compose.foundation.background
 import bot.tafs.app.kiff.Account
 import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.SetupComponent
@@ -96,6 +98,7 @@ class DriveEmulatorTest {
   private var menuOpen by mutableStateOf(false)
   private var text by mutableStateOf("")
   private var key by mutableStateOf("sk_test_secret")
+  private var termsShown by mutableStateOf(false)
   private lateinit var host: AndroidDriveHost
 
   @Before fun drive() {
@@ -124,6 +127,8 @@ class DriveEmulatorTest {
   private fun show() {
     rule.setShown {
       Column {
+        // Only for the approval test: the other tests' screen stays as it was (a blanked box covers any window over it).
+        if (termsShown) Text("Refund up to 50 a day", Modifier.fillMaxWidth().height(48.dp).background(Color.White).approvalTerms("Stripe"), color = Color.Black)
         Text("Home")
         Button({ runNow++ }, Modifier.fillMaxWidth().height(96.dp)) { Text("Run now") }
         Button({ approved++ }, Modifier.confirms()) { Text("Approve") }
@@ -398,6 +403,21 @@ class DriveEmulatorTest {
     // The secret field's middle is the blank fill, never its words.
     val s = shot.getPixel(secret[0] + secret[2] / 2, secret[1] + secret[3] / 2)
     assertTrue("the secret field blanked: ${Integer.toHexString(s)}", listOf(android.graphics.Color.red(s), android.graphics.Color.green(s), android.graphics.Color.blue(s)).all { it in 0x20..0x50 })
+  }
+
+  @Test fun anOpenApprovalsTermsAreBlankedAndNamedOnlyByTheirTitle() = runBlocking {
+    termsShown = true
+    show(); driving()
+    val seen = tree()
+    // In the tree: only that an approval is open, and for what. Never its terms.
+    val terms = seen.getValue("An approval is open: Stripe").second
+    assertTrue("its terms aren't in the tree", seen.keys.none { it.contains("Refund up to 50") })
+    val look = host.look(tree = false, diagnostics = false)
+    val bytes = Base64.getDecoder().decode(look.image!!.data)
+    val shot = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+    // The tree's bounds are the screenshot's, as for the secret field: the terms' middle is the blank fill, not their white ground.
+    val p = shot.getPixel(terms[0] + terms[2] / 2, terms[1] + terms[3] / 2)
+    assertTrue("the terms blanked: ${Integer.toHexString(p)}", listOf(android.graphics.Color.red(p), android.graphics.Color.green(p), android.graphics.Color.blue(p)).all { it in 0x20..0x50 })
   }
 
   // 5. Coach types into a focused field. The keyboard staying down is the app's screen's (MainActivity's; DriveContractTest reads it).
