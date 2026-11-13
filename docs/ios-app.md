@@ -520,6 +520,12 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   on the gateway and `POST /v1/me/agent-drafts`, and only with KIFF's words for the Cards on the draft; anything else,
   or no `start`, starts Coach as before. Send, with words handed over before Coach exists, opens the same step and keeps
   the words in the composer.
+- **Start's own screen** (`start.words`, `CoachStart.oneScreen`): where tafs cloud sends `start.words` `{lead, start,
+  does}`, Coach's intro draws `lead`, then what's signed (`CoachToolsGiven`, as the step draws it: the groups, each tool
+  folded under `details`, and Coach's Cards in KIFF's words), then one button, `start`, with `does` under it. That one
+  tap signs and starts, so no step opens after it and nothing signed is left unread. With words handed over, Send in
+  the box below is that tap: it signs, starts Coach, then sends. Without a line or a button in `start.words`, or from
+  a tafs cloud from before them, Start opens the step as above.
 - **Giving** (`AppModel.giveCoachTools`): one Face ID. Under it the phone signs and sends the
   batch to KIFF's gateway (`POST /v1/connections/batch`), then the Cards' draft to KIFF
   (`POST /v1/me/agent-drafts`), each as it came. Where the Cards didn't come with the batch,
