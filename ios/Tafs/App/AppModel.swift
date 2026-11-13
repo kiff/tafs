@@ -8316,6 +8316,10 @@ enum Screenshots {
     static var narrow: Bool { UserDefaults.standard.bool(forKey: "narrow") }
     /// `-landscape YES`: the iPad's window turned to landscape, for its screenshots.
     static var landscape: Bool { UserDefaults.standard.bool(forKey: "landscape") }
+    /// `-signedIn YES`: the iPad's sidebar laid out as for a signed-in account (its screens and
+    /// Coach above the account), over the sample's tafs. A screenshot of the layout only: nothing
+    /// is read from KIFF, and the screens it lists aren't opened.
+    static var signedIn: Bool { enabled && UserDefaults.standard.bool(forKey: "signedIn") }
 
     @MainActor static func turnToLandscape() {
         for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {

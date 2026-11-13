@@ -110,7 +110,7 @@ struct RootView: View {
                     // On an iPad's full width, one sidebar for the whole app (the owner's layout):
                     // the mascot and its name at the top, every screen as an item, the tafs, and
                     // Coach and the account at its foot. The tabs open beside it.
-                    HomeSplitView(tab: $tab, coachAvailable: coachAvailable)
+                    HomeSplitView(tab: $tab, coachAvailable: coachAvailable || Screenshots.signedIn)
                         .onChange(of: tab) { _ = opened.insert($0); DriveWaits.emit("screen_shown") }
                 } else {
                 HStack(spacing: 0) {

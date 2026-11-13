@@ -226,6 +226,9 @@ struct HomeSplitView: View {
         return (refunds ?? listed.first?.id).map { .taf($0) }
     }
 
+    /// The signed-in account's items: KIFF mode, or its screenshot over the sample (`-signedIn`).
+    private var signedInLayout: Bool { model.mode == .kiff || Screenshots.signedIn }
+
     private var sidebar: some View {
         // Only the owner's taps write through this binding, so each one is a choice, a tap on
         // the taf already open too: the list settling later doesn't take them away from it.
@@ -237,14 +240,14 @@ struct HomeSplitView: View {
                 Section {
                     screenItem(.needsYou, Words.NeedsYou.title, "bell", badge: model.needsYouCount)
                     screenItem(.record, Words.Record.title, "list.bullet")
-                    if model.mode == .kiff {
+                    if signedInLayout {
                         screenItem(.calendar, Words.Calendar.heading, "calendar")
                         screenItem(.usage, UsageView.title, "chart.bar")
                         screenItem(.connectApps, ConnectAppsView.title, "app.connected.to.app.below.fill")
                     }
                 }
             }
-            if model.mode == .kiff {
+            if signedInLayout {
                 Section {
                     // Today across the tafs, one line each.
                     if !model.tafs.isEmpty {
