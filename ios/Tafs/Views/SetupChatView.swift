@@ -1650,7 +1650,8 @@ struct SetupApproval: View {
                             }
                         }
                         .buttonStyle(PrimaryButtonStyle())
-                        .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (connected && draft == nil)
+                        // A card with the taf's Card waits until that Card is read and drawn above: what's signed is seen first.
+                        .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (component.draft != nil && draft == nil) || (connected && draft == nil)
                                   || (!connected && grant.map { $0.profile != nil && model.shownWords(for: $0) == nil } ?? false))
                         .fullScreenCover(isPresented: $givingKey) {
                             if let grant {

@@ -7858,9 +7858,11 @@ final class AppModel: ObservableObject {
             // The read proof: planque shows the grant to tafs cloud only as this phone; it signs and grants nothing there.
             let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
             let words = grants.first { $0.id == grantID }.flatMap { shownWords(for: $0) }
-            // With the taf's Card drafted, the phone can sign the tools added to a connected app and that Card
-            // together; tafs cloud asks for it only when that's on, and otherwise answers as before.
-            let can: [String]? = component.draft != nil && shownDraft != nil ? [RequestsTogether.toolsAndCards, RequestsTogether.signs] : nil
+            // With the taf's Card drafted and drawn on the card (its lines, at the version shown), the phone can sign
+            // the tools added to a connected app and that Card together; tafs cloud asks for it only when that's on,
+            // and otherwise answers as before. A Card the card didn't draw is never signed with the tools.
+            let drawn = component.draft.flatMap { setupDrafts[$0] }
+            let can: [String]? = Self.cardDrawn(drawn, shownDraft: shownDraft) ? [RequestsTogether.toolsAndCards, RequestsTogether.signs] : nil
             let decision = try await cloud.approval(s.id, component: component.id, body: .init(
                 grant: grantID, shownDigest: shown, draft: component.draft, shownDraft: shownDraft,
                 words: words.map { .init(profileSHA256: $0.profileSHA256, wordsSHA256: $0.wordsSHA256) }, session: session,
@@ -8123,6 +8125,14 @@ final class AppModel: ObservableObject {
         } catch {
             return Came(result: "failed", why: error.localizedDescription)
         }
+    }
+
+    /// Whether Coach's card drew the Card it would sign: the draft was read, the card shows its
+    /// lines (limits and all, the same `lines` the card draws, so none means nothing drawn), and
+    /// it's at the version shown.
+    nonisolated static func cardDrawn(_ draft: KIFFClient.AgentDraft?, shownDraft: String?) -> Bool {
+        guard let draft, let shownDraft, !draft.lines.isEmpty, draft.noTools != true else { return false }
+        return draft.version == shownDraft
     }
 
     /// Whether the step tafs cloud asks signs the Card as the card's mark said: `card: true` for a step that

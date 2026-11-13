@@ -510,8 +510,10 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     };
   }
   const id = ctx.newID();
-  // Connecting an app is routine (kiff/tafs#494): a tap inside an approval window.
-  const pending: Pending = { step: "connect", grant: grant.id, vendor, made: ctx.now.toISOString(), key: "window" };
+  // Connecting an app is routine (kiff/tafs#494): a tap inside an approval window. A card that also carries a
+  // draft keeps it here, unsigned: the connection alone is signed, and the report never answers it approved
+  // while that draft isn't issued, so Coach asks for its Card rather than hand over a taf no Card covers.
+  const pending: Pending = { step: "connect", grant: grant.id, vendor, made: ctx.now.toISOString(), key: "window", ...(ask.draft ? { draft: ask.draft, ...(ask.shown_draft ? { version: ask.shown_draft } : {}) } : {}) };
   await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
   await noteSending(grant, ctx);
   return {
@@ -663,6 +665,19 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   }
   if (grant && (grant.status === "connected" || grant.status === "listed")) {
     await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
+    // The card carried a draft that this signature didn't confirm (the combined step wasn't offered): approved
+    // only once KIFF says it's issued. Otherwise the connection is said done and the Card not, as key_and_cards
+    // says its half, and Coach shows the approval again, which asks the Card alone.
+    if (pending.draft) {
+      const draft = await draftInfo(ctx.token, pending.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now);
+      // Issued at the version the card showed, when it showed one: another version isn't the Card the owner read.
+      const other = !!draft && !!pending.version && !!draft.version && draft.version !== pending.version;
+      if (!draft || !issued(draft.status) || other) {
+        const why = !draft ? W.noDraft : other ? W.outOfDate : W.draftIs(draft.status);
+        const done = grant.status === "connected" ? "is connected" : "is signed in";
+        return { answer: `failed: ${pending.vendor} ${done}; ${W.cardsNotIssued(why)}; show the approval again for its Card alone`, note: W.cardsNotIssued(why) };
+      }
+    }
     return { answer: "approved" };
   }
   const vendor = pending.vendor;
