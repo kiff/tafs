@@ -42,6 +42,10 @@ export interface ApprovalGrant {
   request: { agent?: string; server?: string; profile?: unknown; tools?: Array<{ tool?: string; name?: string; title?: string; read_only?: boolean; setup_reads?: boolean }> } & Record<string, unknown>;
   /** The tools it had before the addition that waits now: a connected grant whose new tools wait for their approval. */
   connected?: unknown[];
+  /** planque holds a confirmed sign-in for it (a reused one, or one made earlier): approving its tools needs no sign-in. */
+  signed_in?: boolean;
+  /** Its tools are declared in KIFF while they wait for approval, so a Card can be drafted and confirmed over them. */
+  declared?: boolean;
 }
 
 /**
@@ -431,8 +435,12 @@ export function stepFor(grant: ApprovalGrant, ask: { draft?: string; can?: strin
   if (grant.status === "connected") return ask.draft ? "cards" : undefined;
   if (grant.status === "listed" && !ask.draft) return undefined;
   if (!APPROVABLE.has(grant.status)) return undefined;
-  // A connected grant's added tools with the Card's draft over them: one fingerprint (docs/secure-connection.md).
-  if (flags.toolsAndCards && ask.can?.includes("tools_and_cards") && !takesKey(grant) && grant.status === "pending" && Array.isArray(grant.connected) && grant.connected.length > 0 && ask.draft) return "tools_and_cards";
+  // Tools that wait on a sign-in planque already holds, with the Card's draft over them: one fingerprint
+  // (docs/secure-connection.md). A connected grant's added tools, or a held sign-in's first tools (one reused for
+  // another taf), declared in KIFF meanwhile: the approve connects at once, with no sign-in between the two halves.
+  const added = Array.isArray(grant.connected) && grant.connected.length > 0;
+  const heldFirst = grant.signed_in === true && grant.declared === true;
+  if (flags.toolsAndCards && ask.can?.includes("tools_and_cards") && !takesKey(grant) && grant.status === "pending" && (added || heldFirst) && ask.draft) return "tools_and_cards";
   // A key grant whose Card is drafted already: the key and the Card under one fingerprint.
   if (flags.keyAndCards && ask.can?.includes("key_and_cards") && takesKey(grant) && ask.draft) return "key_and_cards";
   return "connect";

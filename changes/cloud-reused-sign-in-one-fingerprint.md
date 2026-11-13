@@ -1,0 +1,1 @@
+- A sign-in already held, reused for another taf, takes its first tools and the Card under one fingerprint (`tools_and_cards`), as added tools do: no sign-in comes between, and both are declared before the owner signs.
