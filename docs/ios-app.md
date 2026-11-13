@@ -723,6 +723,18 @@ resolved to), never the browser's:
   `lang=<language>`, and a link that already names one keeps it (`DeviceStart.inAppLanguage`).
 - **A held call's page in KIFF**: `/needs-you/{id}?lang=<language>` (`KIFFClient.answerPage`).
 
+## Haptics
+
+One rule, as on Android (`Haptics`, `Design/Scaled.swift`):
+- **A light tap on every button press,** played once in `DriveButton`, the style under `PrimaryButtonStyle`,
+  `OutlineButtonStyle` and `.drivablePlain`. Every new button taps without wiring. A press and the action it
+  starts tap once: a second tap within 150 ms is the same one. A drive's activation doesn't tap.
+- **A success tick** when an approval goes through (a held call approved, Coach's card approved) or a send
+  does (to Coach or a taf).
+- **A warning tick** when something refused or failed is said to the person (`lastError`).
+- **A step tick** on dial and selector stops.
+- **Settings › Haptics** turns all of it off on this device (`HapticsTests`).
+
 ## Conventions
 
 - The phone decides nothing in KIFF mode: it shows what KIFF and tafs cloud say.
