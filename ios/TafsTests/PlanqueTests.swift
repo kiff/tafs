@@ -608,28 +608,46 @@ final class PlanqueTests: XCTestCase {
         return (model, refunds, signer)
     }
 
-    /// A connection another taf's Card still covers stays when the taf that asked for it is
-    /// removed, and the owner is told which taf keeps it.
-    func testRemovingATafKeepsAConnectionAnotherTafUses() async throws {
-        let (model, refunds, signer) = try await sharedModel(withChargebacks: true)
-        let removed = await model.removeTaf(refunds)
-        let words = try XCTUnwrap(removed)
-        XCTAssertTrue(sent("DELETE", "planque.test", "/v1/accounts/t_01/grants/g_01").isEmpty, "Chargebacks still runs on it")
-        XCTAssertTrue(words.contains("Kept your Stripe connection: Chargebacks uses it."), words)
-        XCTAssertEqual(signer.prompts.count, 1, "one confirmation, the removal's")
-        Keychain.delete(AppModel.planqueAccount)
+    /// Removing a taf leaves its connections to tafs cloud: the phone sends no disconnect of its
+    /// own and asks for one confirmation, the removal's, whether another taf uses the
+    /// connection or not.
+    func testRemovingATafLeavesItsConnectionsToTafsCloud() async throws {
+        for shared in [true, false] {
+            let (model, refunds, signer) = try await sharedModel(withChargebacks: shared)
+            StubProtocol.responses["DELETE /v1/tafs/depl_1"] = (200, #"{"done":true,"removed":["schedule","connections"],"failed":[]}"#)
+            let removed = await model.removeTaf(refunds)
+            let words = try XCTUnwrap(removed)
+            XCTAssertTrue(sent("DELETE", "planque.test", "/v1/accounts/t_01/grants/g_01").isEmpty, "the phone ends no connection itself")
+            XCTAssertEqual(signer.prompts.count, 1, "one confirmation, the removal's")
+            XCTAssertTrue(words.hasPrefix("Its Cards are revoked in KIFF. Its access to apps is removed."), words)
+            XCTAssertFalse(words.contains("Kept"), words)
+            Keychain.delete(AppModel.planqueAccount)
+        }
     }
 
-    /// Once the other taf is gone, the connection goes with the taf that asked for it, signed
-    /// under the removal's confirmation.
-    func testRemovingATafDisconnectsAConnectionNoOtherTafUses() async throws {
-        let (model, refunds, signer) = try await sharedModel(withChargebacks: false)
-        StubProtocol.responses["DELETE /v1/accounts/t_01/grants/g_01"] = (200, grantJSON(status: "disconnected"))
+    /// The words say only what tafs cloud did: connections it ended are said once, ones it
+    /// couldn't end are named among the steps left, and a removal that says nothing of them
+    /// claims nothing.
+    func testTheRemovalSaysOfItsConnectionsOnlyWhatTafsCloudDid() async throws {
+        func removal(_ json: String) throws -> TafsCloud.Removal {
+            try KIFFClient.decoder.decode(TafsCloud.Removal.self, from: Data(json.utf8))
+        }
+        let ended = try removal(#"{"done":true,"removed":["schedule","connections"],"failed":[]}"#)
+        XCTAssertEqual(AppModel.removalCards("Cards.", ended), "Cards. Its access to apps is removed.")
+        let silent = try removal(#"{"done":true,"removed":["schedule"],"failed":[]}"#)
+        XCTAssertEqual(AppModel.removalCards("Cards.", silent), "Cards.", "not said to be removed when tafs cloud doesn't say so")
+        let left = try removal(#"{"done":false,"removed":["schedule"],"failed":["connections"]}"#)
+        XCTAssertEqual(AppModel.removalCards("Cards.", left), "Cards.")
+        XCTAssertEqual(AppModel.removalStep("connections"), "access to apps", "named in the app's words, never by its id")
+        XCTAssertEqual(AppModel.removalStep("key"), "key")
+
+        let (model, refunds, _) = try await sharedModel(withChargebacks: false)
+        StubProtocol.responses["DELETE /v1/tafs/depl_1"] = (200, #"{"done":false,"removed":["schedule"],"failed":["connections"]}"#)
         let removed = await model.removeTaf(refunds)
         let words = try XCTUnwrap(removed)
-        XCTAssertEqual(sent("DELETE", "planque.test", "/v1/accounts/t_01/grants/g_01").count, 1)
-        XCTAssertFalse(words.contains("Kept"), words)
-        XCTAssertEqual(signer.prompts.count, 1, "no second prompt")
+        XCTAssertTrue(words.contains("its access to apps couldn't be removed"), words)
+        XCTAssertFalse(words.contains("Its access to apps is removed."), words)
+        XCTAssertTrue(sent("DELETE", "planque.test", "/v1/accounts/t_01/grants/g_01").isEmpty)
         Keychain.delete(AppModel.planqueAccount)
     }
 

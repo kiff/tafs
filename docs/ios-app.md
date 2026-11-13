@@ -238,6 +238,10 @@ the app in sample mode.
   before Face ID: tafs cloud's words from `GET /v1/tafs/{id}/removal` ("Qonto goes with it. Stripe stays: Chargebacks
   uses it."), read when Remove is tapped and ending nothing (`AppModel.removalWords`). Without them, it says only
   what always goes.
+  The removal leaves the taf's connections to tafs cloud, which ends them in every status as one of its steps: the
+  phone sends no disconnect of its own and asks for one Face ID, the removal's. The result says "Its access to
+  apps is removed." only when tafs cloud lists `connections` as removed, and names "access to apps" among the steps
+  left when it lists it as failed (`AppModel.removalCards`, `removalStep`).
 - **Setup › Starts when** (`StartsWhenView`, `TafSetupViews.swift`), from `GET …/knob`
   `wakes`: its schedule with − and + through the stop's `size.choices` (`adjustKnob`), Skip it /
   Run after (`setting.busy`), app events with **Approve** (`AppEventApprovalSheet`, the signed
