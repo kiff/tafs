@@ -384,6 +384,39 @@ class PlanqueClient(
     return decode(response.body)
   }
 
+  private fun approveUri(account: String, grantId: String) = "/v1/accounts/${escaped(account)}/grants/${escaped(grantId)}/approve"
+
+  /** planque's own message for approving [grantId] with [body] at [signedAt] (`planque.request.v1`), for `kiff.requests.v1`. */
+  fun approveMessage(grantId: String, body: ByteArray, signedAt: String): ByteArray {
+    val account = tenant ?: throw PlanqueError.NotSigning
+    return message(baseUrl, account, "POST", approveUri(account, grantId), body, signedAt)
+  }
+
+  /**
+   * Approves [grantId] with [body], exactly as tafs cloud built it, signed together with another request (`kiff.requests.v1`,
+   * `tools_and_cards`, docs/secure-connection.md): [signature] is the approval key's over both requests' hashes, [with] the
+   * other's message hash. planque rebuilds this request's message and has KIFF check the one signature over both.
+   */
+  suspend fun approveTogether(grantId: String, body: ByteArray, signedAt: String, signature: String, with: String): Approved {
+    val account = tenant ?: throw PlanqueError.NotSigning
+    val device = deviceId ?: deviceLoader?.invoke()?.also { if (tenant == account) deviceId = it } ?: throw PlanqueError.NoDevice
+    val sent = linkedMapOf(
+      "Accept" to "application/json",
+      "User-Agent" to "tafs-android",
+      "Accept-Language" to KiffClient.screenLanguage(),
+      "Content-Type" to "application/json",
+      "Planque-Device-Signature" to "t=$signedAt,v3=$signature,with=sha256:$with,d=$device",
+    )
+    val response = transport.send(HttpRequest("POST", baseUrl.trimEnd('/') + approveUri(account, grantId), sent, body))
+    if (response.status !in 200..299) {
+      val fields = runCatching { KiffClient.json.parseToJsonElement(String(response.body)).jsonObject }.getOrNull()
+      val code = runCatching { fields?.get("code")?.jsonPrimitive?.content }.getOrNull()
+      // planque's `error` is for the log: the person reads a plain line by status (ErrorWords).
+      throw PlanqueError.Server(response.status, Words.Error.connectionAnswered(status = response.status.toString()), code)
+    }
+    return decode(response.body)
+  }
+
   /** Confirms the vendor sign-in with the code it handed back to the app. Only the phone that approved can, within 15 minutes; then planque registers the tools in KIFF. */
   suspend fun confirm(grantId: String, code: String): Grant =
     decode(raw("POST", "grants/${escaped(grantId)}/confirm", body("confirm" to code)))

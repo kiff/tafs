@@ -40,6 +40,8 @@ export interface ApprovalGrant {
   /** The app's sign-in was set up on the owner's pick, not by an operator (kiff/planque#87). */
   on_demand?: boolean;
   request: { agent?: string; server?: string; profile?: unknown; tools?: Array<{ tool?: string; name?: string; title?: string; read_only?: boolean; setup_reads?: boolean }> } & Record<string, unknown>;
+  /** The tools it had before the addition that waits now: a connected grant whose new tools wait for their approval. */
+  connected?: unknown[];
 }
 
 /**
@@ -47,7 +49,7 @@ export interface ApprovalGrant {
  * it's still a draft at the version the card showed, an app set up on demand lets none of its writes run outright,
  * and every tool the connection gives the taf is on a Card. Otherwise what answers instead.
  */
-async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGrant, vendor: string, ctx: DecideContext): Promise<Decision | { draft: NonNullable<Awaited<ReturnType<typeof draftInfo>>> & { version: string } }> {
+async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGrant, vendor: string, ctx: DecideContext, others: ApprovalGrant[] = []): Promise<Decision | { draft: NonNullable<Awaited<ReturnType<typeof draftInfo>>> & { version: string } }> {
   const W = approvalWords(ctx.lang);
   const draft = await draftInfo(ctx.token, draftID, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now);
   if (!draft) return { outcome: "answered", answer: `failed: KIFF has no Card draft ${draftID} on this account`, note: `KIFF has no Card draft for this. Ask Coach for a new one.` };
@@ -73,6 +75,13 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
       inForce = await actionsInForce(ctx.token, draft.agent, ctx.fetch, ctx.kiffBase ?? KIFF_API);
     } catch {
       return { outcome: "read_again", note: W.cardsUnread };
+    }
+    // And the other way (qa-kiff's negative 1 on #919): every action the draft's Cards allow is one of this connection's
+    // tools, one of the same taf's other connections', or allowed already. A Card signed under "Connect Stripe" never
+    // also lets the taf act on something no connection of its gives it here.
+    const stray = strayAction(grant, others, draft.cards, inForce);
+    if (stray) {
+      return { outcome: "answered", answer: `failed: the Card covers "${stray}", which no connection of this taf gives it, so it isn't signed. Draft it again over the taf's connected tools only.`, note: W.stray(stray) };
     }
     const left = uncoveredTool(grant, draft.cards, inForce);
     if (left) {
@@ -151,6 +160,30 @@ export function onDemandLetsRun(grant: ApprovalGrant, cards: unknown[]): string 
  * need (Eval 42781271564). Setup's own reads (setup_reads) are on its reader Card, never the taf's, and a
  * tool listed with no KIFF name is left out.
  */
+/**
+ * The first action a draft's Cards allow that neither this grant nor another grant of the same taf gives it (its tools,
+ * or what it had connected before an addition, by their names in KIFF), and that no Card in force allows already.
+ */
+export function strayAction(grant: ApprovalGrant, others: ApprovalGrant[], cards: unknown[], inForce: Set<string>): string | undefined {
+  const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+  const given = new Set(inForce);
+  for (const g of [grant, ...others]) {
+    for (const t of [...(g.request.tools ?? []), ...((g.connected ?? []) as Array<{ name?: unknown }>)]) {
+      const name = fold((t as { name?: unknown }).name);
+      if (name) given.add(name);
+    }
+  }
+  for (const raw of cards) {
+    const card = raw as { grants?: unknown };
+    if (!Array.isArray(card.grants)) continue;
+    for (const g of card.grants) {
+      const action = fold((g as { action?: unknown }).action);
+      if (action && !given.has(action)) return (g as { action: string }).action;
+    }
+  }
+  return undefined;
+}
+
 export function uncoveredTool(grant: ApprovalGrant, cards: unknown[], inForce: Set<string>): string | undefined {
   const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
   const covered = new Set(inForce);
@@ -191,7 +224,7 @@ export interface Signing {
    * under one fingerprint. The phone builds both requests itself, with one `signed_at`, and signs `kiff.requests.v1`
    * over their two messages' hashes; `message` is then empty, and `scheme` says so.
    */
-  step: "connect" | "cards" | "key_and_cards";
+  step: "connect" | "cards" | "key_and_cards" | "tools_and_cards";
   /** For `key_and_cards`: what the phone signs, built by it from the two requests it makes. */
   scheme?: "kiff.requests.v1";
   /** The exact bytes the device's key signs, under biometrics. */
@@ -218,7 +251,7 @@ export type Decision =
 
 /** What a pending ask keeps, so the report is checked against what was asked. */
 interface Pending {
-  step: "connect" | "cards" | "key_and_cards";
+  step: "connect" | "cards" | "key_and_cards" | "tools_and_cards";
   grant: string;
   vendor: string;
   draft?: string;
@@ -246,6 +279,7 @@ export function approvalWords(lang: Lang = "en") {
     noDraft: w.approval_no_draft,
     cardsUnread: w.approval_cards_unread,
     uncovered: w.approval_uncovered,
+    stray: w.approval_stray,
     lifetimeCap: w.approval_lifetime_cap,
     onDemandLetsRun: w.approval_on_demand,
     criticalKey: w.approval_critical_key,
@@ -358,6 +392,11 @@ export interface DecideContext {
    * the Card are signed apart, as before.
    */
   keyAndCards?: boolean;
+  /**
+   * Whether a connected grant's added tools with the Card's draft over them are asked as one signature
+   * (`tools_and_cards`): on once planque takes the paired approve and declares an addition's tools to KIFF while they wait.
+   */
+  toolsAndCards?: boolean;
   tenant: string;
   taf: string;
   component: string;
@@ -385,6 +424,8 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   const grant = grants.find((g) => g.id === ask.grant);
   if (!grant) return { outcome: "answered", answer: `failed: ${W.noGrant}`, note: W.noGrant };
   const vendor = vendorOf(grant);
+  // The same taf's other connections: a Card may cover their tools too (two apps, one Card).
+  const sameTaf = grants.filter((g) => g.id !== grant.id && g.request.agent && g.request.agent === grant.request.agent && !["failed", "disconnected", "revoked"].includes(g.status));
   if (grant.status === "connected") {
     await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
     // The second approval: the vendor is connected, and the taf's Cards over its tools wait as a
@@ -393,7 +434,7 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     // report was lost. Approve again answers what holds, already approved, as the report would have.
     if (!ask.draft && ask.shown_digest && ask.shown_digest === grant.digest) return { outcome: "answered", answer: `already approved: ${vendor} is connected`, note: W.alreadyApproved };
     if (!ask.draft) return { outcome: "answered", answer: `failed: ${vendor} is already connected; nothing new to approve`, note: W.nothingToApprove(vendor) };
-    const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx);
+    const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx, sameTaf);
     if ("outcome" in checked) return checked;
     const { draft } = checked;
     const id = ctx.newID();
@@ -423,10 +464,29 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     if (!ask.words || ask.words.profile_sha256 !== sha256(grant.request.profile)) return { outcome: "read_again", note: W.wordsUnread };
     kiffProfile = { profile_sha256: ask.words.profile_sha256, words_sha256: ask.words.words_sha256 };
   }
+  // A connected grant's added tools, with the Card's draft over them: the addition's approve and the Card under one
+  // fingerprint (docs/secure-connection.md), as a key and its Card are, once planque takes the paired approve.
+  if (ctx.toolsAndCards && ask.can?.includes("tools_and_cards") && !takesKey(grant) && grant.status === "pending" && Array.isArray(grant.connected) && grant.connected.length > 0 && ask.draft) {
+    const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx, sameTaf);
+    if ("outcome" in checked) return checked;
+    const id = ctx.newID();
+    const pending: Pending = { step: "tools_and_cards", grant: grant.id, vendor, draft: ask.draft, version: checked.draft.version, made: ctx.now.toISOString(), key: "critical" };
+    await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
+    await noteSending(grant, ctx);
+    return {
+      outcome: "sign",
+      ask: {
+        id, step: "tools_and_cards", scheme: "kiff.requests.v1", message: "",
+        reason: W.reasonConnect(appNameOf(grant) || vendor, await nameOf(ctx, grant.request.agent, grant.agent_name)), key: "critical",
+        planque: { grant: grant.id, body: { digest: grant.digest, ...(kiffProfile ? { kiff_profile: kiffProfile } : {}) } },
+        kiff: { draft: ask.draft, version: checked.draft.version },
+      },
+    };
+  }
   // A key grant whose Card is drafted already: the key and the Card under one fingerprint (docs/secure-connection.md),
   // once both services take kiff.requests.v1. The phone builds both requests and signs their two hashes.
   if (ctx.keyAndCards && ask.can?.includes("key_and_cards") && takesKey(grant) && ask.draft) {
-    const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx);
+    const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx, sameTaf);
     if ("outcome" in checked) return checked;
     const id = ctx.newID();
     const pending: Pending = { step: "key_and_cards", grant: grant.id, vendor, draft: ask.draft, version: checked.draft.version, made: ctx.now.toISOString(), key: "critical" };
@@ -556,7 +616,7 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   // above spends nothing, so the phone can report again.
   if (!(await ctx.store.once(`${key}#taken`, new Date(ctx.now.getTime() + ASK_KEPT_MS)))) throw new ApprovalError(404, "no approval waits for that answer");
   await ctx.store.remove(key);
-  if (pending.step === "key_and_cards") {
+  if (pending.step === "key_and_cards" || pending.step === "tools_and_cards") {
     // One signature, two requests: approved only when the connection server says connected and KIFF says the
     // Card is issued. A key that went in with a Card that didn't says so, and the card's next tap asks the Card alone.
     const [grants, draft] = await Promise.all([

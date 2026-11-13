@@ -59,9 +59,9 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   key then Card. planque's answer gives the taf's agent id: use it from then on;
   when you no
   longer have the taf's agent id or a grant's id, planque grants with no agent
-  lists every connection you asked for, with its agent, status and date: take the newest for this vendor and this taf. Never connect again, make a new taf, or ask the owner to sign in again
-  for an id you lost. Show an approval with the grant. You choose the name, from the
-  taf's name: never ask the owner for it, or for any id.
+  lists every connection you asked for: take the newest for this vendor and this taf. Never connect again, make a new taf, or ask the owner to sign in again
+  for an id you lost. Show an approval with the grant. You choose the name: the taf's name in lower case, words joined by hyphens
+  (introduction-drafts); never ask the owner for it, or for any id.
 A sign-in or key that went through only means the vendor took it. Before saying it's ready or fixed,
 check it: one read through it, yours (a setup read) or the taf's (taf_task,
 "read one recent item, change nothing"), and its answer. A 401 or 403 there
@@ -91,8 +91,7 @@ request fails the same way.
 Otherwise read the grant's status: if it still waits, say the approval above
 still waits; never show a new one. Never tell the owner to install, open or set up another app.
 If planque answers that the owner's phone isn't set up yet, show a notice
-(warning) to start again from this screen, which sets the phone up
-once; don't retry.
+(warning) to start again from this screen; don't retry.
 
 ## Verification
 

@@ -3436,6 +3436,7 @@ function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     newID: () => `ask_${randomBytes(9).toString("hex")}`, lang: langOf(event),
     // The key and its Card under one fingerprint, once KIFF and the connection server take kiff.requests.v1.
     keyAndCards: process.env.TAFS_KEY_AND_CARDS === "on",
+    toolsAndCards: process.env.TAFS_TOOLS_AND_CARDS === "on",
     // The prompt names the taf being set up, by its name: the card is Coach's, so not `taf`'s.
     tafName: async (agent) => (agent ? (await deps.tafs.list(me.tenantID)).find((t) => t.kiffAgent === agent)?.name : undefined),
   };
@@ -6581,18 +6582,51 @@ async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string
       if (held && held.agent_id === agent && !held.claimed) found = r;
     }
   }
-  if (!found || !coach) throw new HTTPError(404, "no taf being set up of yours by that agent");
-  await discardSigned(event, agent, deps);
+  if (!found || !coach) {
+    // A discard of a draft this person already discarded (a phone's HTTP stack resends a POST on a dropped connection, and the
+    // app sees only the resend's answer) answers done again, marked already: 404 stays for a draft that never was, or isn't theirs.
+    const done = (await deps.coach?.get(discardedKey(me.tenantID, agent)).catch(() => undefined)) as { by?: string } | undefined;
+    if (done?.by === me.subject) return { discarded: true, already: true, kiff_agent: agent };
+    console.log(JSON.stringify({ event: "half_made_discard", refused: "not_found", tenant: me.tenantID, agent }));
+    throw new HTTPError(404, "no taf being set up of yours by that agent");
+  }
+  await discardSigned(event, agent, deps).catch((err) => {
+    console.log(JSON.stringify({ event: "half_made_discard", refused: err instanceof HTTPError ? err.status : "error", tenant: me.tenantID, agent }));
+    throw err;
+  });
   // The Card is revoked first, by the phone: a discard that went on with one in force would leave it acting, unseen.
-  const { mandates } = await readKIFF(bearer(event), deps.fetch, deps.kiffBase);
-  const left = mandates.filter((m) => m.subject === agent && !m.revoked_at);
-  if (left.length) throw new HTTPError(409, `${left.length} Card${left.length === 1 ? "" : "s"} still in force on this agent: revoke ${left.length === 1 ? "it" : "them"} first`, { code: "cards_in_force", cards: left.map((m) => m.id) });
-  await agentsCall(() => deps.agents.cancelRun(me.tenantID, coach.id, found.id, member(me)));
+  const inForce = async () => (await readKIFF(bearer(event), deps.fetch, deps.kiffBase)).mandates.filter((m) => m.subject === agent && !m.revoked_at);
+  let left = await inForce();
+  // KIFF's read can trail the revoke the phone made a moment before (Android 80, 13 Nov: the Card was revoked, the discard
+  // refused, and the row left Home with the chat still paused): read again before refusing.
+  const wait = deps.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)));
+  for (let i = 0; left.length && i < DISCARD_REREADS; i++) {
+    await wait(DISCARD_REREAD_MS);
+    left = await inForce();
+  }
+  if (left.length) {
+    console.log(JSON.stringify({ event: "half_made_discard", refused: "cards_in_force", tenant: me.tenantID, agent, cards: left.length }));
+    throw new HTTPError(409, `${left.length} Card${left.length === 1 ? "" : "s"} still in force on this agent: revoke ${left.length === 1 ? "it" : "them"} first`, { code: "cards_in_force", cards: left.map((m) => m.id) });
+  }
+  // A run that already moved on (ended, or no longer paused) is a chat that no longer waits: that's done too.
+  await deps.agents.cancelRun(me.tenantID, coach.id, found.id, member(me)).catch((err) => {
+    if (err instanceof AgentsError && (err.status === 404 || err.status === 409)) return;
+    return agentsCall(() => Promise.reject(err));
+  });
   await deps.coach?.remove(halfMadeKey(me.tenantID, agent)).catch(() => undefined);
+  await deps.coach?.put(discardedKey(me.tenantID, agent), { by: me.subject }, new Date((deps.now?.() ?? new Date()).getTime() + DISCARDED_KEPT_MS)).catch(() => undefined);
   console.log(JSON.stringify({ event: "half_made_discard", tenant: me.tenantID, agent, run: found.id }));
   await tellChange(me.tenantID, "taf", agent, deps);
   return { discarded: true, kiff_agent: agent };
 }
+
+/** A discard that went through, by its agent and who discarded it, so the same discard sent again answers done (discardHalfMade). */
+const discardedKey = (tenant: string, agent: string) => `${tenant}#discarded#${agent}`;
+const DISCARDED_KEPT_MS = 30 * 24 * 3600_000;
+
+/** How many times, and how far apart, a discard reads KIFF's Cards again before it says one is still in force. */
+const DISCARD_REREADS = 3;
+const DISCARD_REREAD_MS = 700;
 
 /** A discard is signed by the phone as a removal is, under the same switch (TAFS_SIGNED_REMOVE). */
 async function discardSigned(event: HTTPEvent, agent: string, deps: Deps): Promise<void> {

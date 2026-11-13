@@ -10,6 +10,8 @@ enum RequestsTogether {
     static let scheme = "kiff.requests.v1"
     /// The approval step tafs cloud asks it for: an app's key and its taf's Card.
     static let keyAndCards = "key_and_cards"
+    /// The approval step tafs cloud asks it for: tools added to a connected app and the taf's Card over them.
+    static let toolsAndCards = "tools_and_cards"
 
     /// A request message's hash, as both services write it: lowercase hex SHA-256.
     static func hash(_ message: Data) -> String {
