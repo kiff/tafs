@@ -455,6 +455,13 @@ language: the app has none of its own for it.
 - **When it's read:** with each refresh that finds no taf, as well as when Coach opens
   (`HomeRecipesTests`).
 
+## A taf made with no plan
+
+When the account has no plan, tafs cloud makes the taf Coach handed over and starts no run. Its
+answer to the result carries `outcome.plan_needed.words` ("Choose a plan to start it.", in the
+person's language), and the hand-over card says them under its own words, above the button that
+opens the taf (`SetupThread.planNeeded`). No words, or none that are text, add nothing.
+
 ## Every ready-made job, at any time
 
 The jobs stay reachable after the first taf, from `GET /v1/recipes/gallery`, read with each

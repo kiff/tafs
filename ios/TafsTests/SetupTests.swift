@@ -833,6 +833,25 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A taf made with no plan: the hand-over card's answer carries tafs cloud's words
+    /// (`outcome.plan_needed.words`), and the card says them; it's still set up. Words that
+    /// aren't words, or none, say nothing.
+    func testAHandOverMadeWithNoPlanSaysSo() throws {
+        func outcome(_ json: String) throws -> TafsCloud.CardAnswer.Outcome? {
+            try JSONDecoder().decode(TafsCloud.CardAnswer.self, from: Data(#"{"state":"answered","words":"Set up","outcome":\#(json)}"#.utf8)).outcome
+        }
+        let none = try XCTUnwrap(outcome(#"{"taf_id":"taf-new","plan_needed":{"words":"Choose a plan to start it."}}"#))
+        XCTAssertEqual(none.tafID, "taf-new")
+        XCTAssertEqual(none.planNeeded, "Choose a plan to start it.")
+        XCTAssertNil(try outcome(#"{"taf_id":"taf-new"}"#)?.planNeeded)
+        XCTAssertNil(try outcome(#"{"taf_id":"taf-new","plan_needed":{"words":" "}}"#)?.planNeeded)
+        XCTAssertEqual(try outcome(#"{"taf_id":"taf-new","plan_needed":{"words":7}}"#)?.tafID, "taf-new", "the rest still reads")
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let chat = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(chat.contains("case .setUp:\n                if let words = model.setupThread.planNeeded(shown.ref) {"),
+                      "on the card that says it's set up")
+    }
+
     /// What tafs cloud answered itself is only shown: an approval already connected with no
     /// Cards to confirm, or a Card KIFF already confirmed, signs nothing here. The phone asks
     /// no Face ID, approves nothing at planque, and never answers the card.
