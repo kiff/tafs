@@ -1745,6 +1745,9 @@ final class AppModel: ObservableObject {
                             colorIndex: s.color, card: Card(rules: [], issuedBy: ownerName))
                 t.settingUp = true
                 t.finish = s.finish
+                t.discard = s.discard
+                // Its Cards, to revoke on Discard: `others` repeats it, with them, for older apps.
+                t.kiffCardIDs = home.others.first { $0.kiffAgent == s.kiffAgent && !s.kiffAgent.isEmpty }?.card.ids ?? []
                 t.now = s.finish?.words ?? ""
                 return t
             }
@@ -2905,6 +2908,41 @@ final class AppModel: ObservableObject {
         log(tafID, .revoked, Words.Record.Removed.title(taf: "\(taf.name)"), Words.Record.Removed.detail)
         save()
         return Words.Connect.scheduleChatsRunReportsMemory(cards: "\(cards)", taf: "\(taf.name)")
+    }
+
+    /// Discards a taf being set up (Home's Discard, for the person whose setup it was): its Cards
+    /// are revoked in KIFF first, as before a removal, then tafs cloud is asked, signed as a
+    /// removal is (`kiff.request.v1` over `POST` its discard path and the empty body, with the
+    /// approval key, behind Face ID). Home is read again: the item is gone. Nil once done;
+    /// else what to tell the person.
+    func discardSettingUp(_ tafID: UUID) async -> String? {
+        guard mode == .kiff, let taf = settingUp.first(where: { $0.id == tafID }), let words = taf.discard,
+              let agent = holderIDs.first(where: { $0.value == tafID })?.key, !agent.hasPrefix("setting-up:") else { return nil }
+        guard let tenant = kiffTenant else { return Words.Error.signInFirstOnDevice(device: "\(ThisDevice.kind)") }
+        let gen = accountGeneration
+        let signedAt = SigningTime.next()
+        let message = KIFFClient.requestMessage(tenant: tenant, method: "POST", uri: cloud.discardPath(agent), body: Data(), signedAt: signedAt)
+        let signature: String
+        do {
+            signature = try await signer.signApproval(message, reason: words.title.isEmpty ? words.button : words.title)
+        } catch { return nil }
+        guard gen == accountGeneration else { return nil }
+        var cardsLeft = 0
+        for cardID in taf.kiffCardIDs {
+            guard gen == accountGeneration else { return nil }
+            do { try await kiff.revoke(cardID: cardID) } catch { cardsLeft += 1 }
+        }
+        guard gen == accountGeneration else { return nil }
+        do {
+            try await cloud.discardSettingUp(agent, signature: "t=\(signedAt),v1=\(signature)")
+        } catch {
+            guard gen == accountGeneration else { return nil }
+            return (error as? TafsCloud.CloudError).map { $0.words ?? $0.message } ?? error.localizedDescription
+        }
+        guard gen == accountGeneration else { return nil }
+        settingUp.removeAll { $0.id == tafID }
+        await refresh()
+        return cardsLeft == 0 ? nil : Words.Card.kiffDidNotRevokeCards(cardsLeft: "\(cardsLeft)")
     }
 
     /// What removing this taf takes with it, in tafs cloud's words, for the confirmation before

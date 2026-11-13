@@ -375,11 +375,34 @@ final class TafsCloud {
         /// A taf whose setup stopped partway: the name Coach gave it, and for the person whose
         /// Coach chat it was, the chat that finishes it.
         struct SettingUp: Decodable, Equatable {
+            /// Discard, for the person whose setup it was: tafs cloud's words for the button and
+            /// its confirmation. Anyone else gets none.
+            struct Discard: Codable, Hashable {
+                var button = ""
+                var title = ""
+                var text = ""
+                var yes = ""
+                var no = ""
+                init(button: String = "", title: String = "", text: String = "", yes: String = "", no: String = "") {
+                    self.button = button; self.title = title; self.text = text; self.yes = yes; self.no = no
+                }
+                private struct Wrapper: Decodable { let words: Discard? }
+                enum CodingKeys: String, CodingKey { case button, title, text, yes, no }
+                init(from decoder: Decoder) throws {
+                    guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+                    func w(_ k: CodingKeys) -> String { (((try? c.decodeIfPresent(String.self, forKey: k)) ?? nil) ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
+                    button = w(.button); title = w(.title); text = w(.text); yes = w(.yes); no = w(.no)
+                }
+                /// One the app can draw: a button and its yes.
+                var usable: Bool { !button.isEmpty && !yes.isEmpty }
+            }
+            private struct DiscardField: Decodable { let words: Discard? }
             var name = ""
             var kiffAgent = ""
             var color = 0
             var finish: HomeTaf.Finish?
-            enum CodingKeys: String, CodingKey { case name, color, finish, kiffAgent = "kiff_agent" }
+            var discard: Discard?
+            enum CodingKeys: String, CodingKey { case name, color, finish, discard, kiffAgent = "kiff_agent" }
             init(from decoder: Decoder) throws {
                 // An item that isn't one reads as nameless and is skipped, never failing Home's read.
                 guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
@@ -387,6 +410,7 @@ final class TafsCloud {
                 kiffAgent = ((try? c.decodeIfPresent(String.self, forKey: .kiffAgent)) ?? nil) ?? ""
                 color = ((try? c.decodeIfPresent(Int.self, forKey: .color)) ?? nil) ?? 0
                 finish = (try? c.decodeIfPresent(HomeTaf.Finish.self, forKey: .finish)).flatMap { $0 }.flatMap { $0.usable ? $0 : nil }
+                discard = (try? c.decodeIfPresent(DiscardField.self, forKey: .discard))?.flatMap { $0.words }.flatMap { $0.usable ? $0 : nil }
             }
         }
 
@@ -744,6 +768,17 @@ final class TafsCloud {
 
     /// A taf's path, as a request to it is sent and as the approval key signs it.
     func tafPath(_ id: String) -> String { "/v1/tafs/\(escaped(id))" }
+
+    /// Where a taf being set up is discarded (`POST`, signed as a removal is).
+    func discardPath(_ agent: String) -> String { "/v1/home/setting-up/\(escaped(agent))/discard" }
+
+    /// Drops a taf being set up, for the person whose setup it was: tafs cloud cancels its Coach
+    /// run and forgets the name it kept. The phone revoked its Cards first.
+    func discardSettingUp(_ agent: String, signature: String) async throws {
+        struct Answer: Decodable { let discarded: Bool? }
+        // The empty body the signature covers: nothing is sent with it.
+        let _: Answer = try await send("POST", discardPath(agent), headers: ["KIFF-Device-Signature": signature])
+    }
 
     /// What Run now did: the run's session, or none when the taf's check started no run, with
     /// tafs cloud's words for why (nothing new since the last run), in the person's language.
