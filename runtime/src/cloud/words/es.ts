@@ -76,7 +76,7 @@ export const es: Words = {
   apps_method_sign_in: "Iniciar sesión",
   apps_method_key: "Con una clave",
   apps_connected: "Conectada",
-  apps_reconnect: "Vuelve a iniciar sesión",
+  apps_reconnect: "Volver a iniciar sesión",
   apps_not_connected: "Sin conectar",
   apps_needs_setup: "Hay que configurarla",
   apps_used_by: (names: string) => `Usada por ${names}`,
