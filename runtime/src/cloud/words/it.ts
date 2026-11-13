@@ -79,7 +79,7 @@ export const it: Words = {
   apps_reconnect: "Accedi di nuovo",
   apps_not_connected: "Non collegata",
   apps_needs_setup: "Da configurare prima",
-  apps_used_by: (names: string) => `Usata da ${names}`,
+  apps_used_by: (names: string) => `La usa ${names}`,
   apps_whose_yours: "Tua",
   apps_whose_company: "Azienda",
   approval_confirm_first: "L'accesso è riuscito, ma non è ancora confermato. Approva di nuovo per confermarlo.",

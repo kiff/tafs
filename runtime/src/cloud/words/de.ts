@@ -73,7 +73,7 @@ export const de: Words = {
   approval_sign_in_closed: "Die Anmeldung wurde geschlossen. Es wurde nichts verbunden.",
   approval_no_code: (vendor: string) => `Die Anmeldung bei ${vendor} kam ohne ihren Bestätigungscode zurück. Es wurde nichts verbunden.`,
   approval_came_back: (status: string) => `Die Verbindung kam ohne Anmeldelink zurück (Status: ${status}). Es wurde nichts verbunden.`,
-  apps_method_sign_in: "Anmelden",
+  apps_method_sign_in: "Anmeldung",
   apps_method_key: "Mit Schlüssel",
   apps_connected: "Verbunden",
   apps_reconnect: "Erneut anmelden",

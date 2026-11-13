@@ -1443,7 +1443,10 @@ describe("Connect apps' rows", () => {
     expect(by("Qonto")).not.toHaveProperty("used_by");
     // A personal account's connections are the person's own, in their language.
     const mine = await read(w, "ana_me", "fr-FR");
-    expect(mine.body.apps.find((a) => a.title === "Stripe")).toMatchObject({ whose: "À vous", line: expect.stringMatching(/^Connexion · Connectée · Utilisée par /) });
+    expect(mine.body.apps.find((a) => a.title === "Stripe")).toMatchObject({ whose: "À vous", line: expect.stringMatching(/^Connexion · Connecté · Utilisée par /) });
+    // The same words as the apps' own keys (tafs#899), so the phone's row and the iPad's table read alike (qa-kiff on #900).
+    const pl = await read(w, "ana_co", "pl-PL");
+    expect(pl.body.apps.find((a) => a.title === "Stripe")!.line).toMatch(/^Logowanie · Połączono · Używa jej /);
   });
 
   it("leave used_by out, never empty, when the account's connections can't be read", async () => {

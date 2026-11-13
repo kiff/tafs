@@ -75,7 +75,7 @@ export const fr: Words = {
   approval_came_back: (status: string) => `La connexion est revenue sans lien pour se connecter (état : ${status}). Rien n'a été connecté.`,
   apps_method_sign_in: "Connexion",
   apps_method_key: "Avec une clé",
-  apps_connected: "Connectée",
+  apps_connected: "Connecté",
   apps_reconnect: "Se reconnecter",
   apps_not_connected: "Non connectée",
   apps_needs_setup: "À configurer d'abord",
