@@ -3,7 +3,7 @@ import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writ
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
+import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -697,7 +697,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // The account's Setup (kiff/agents#91): its chat uses the taf routes, by its id.
     if (parts.length === 2 && method === "GET") {
       const setup = await setupOf(me, deps);
-      if (!setup) return { setup: null, tools: null };
+      if (!setup) return { setup: null, tools: null, ...(await coachFirstStart(event, me, deps)) };
       const [shown, tools] = await Promise.all([view(setup, me, deps), coachTools(event, setup, deps)]);
       return { setup: shown, tools };
     }
@@ -1718,6 +1718,59 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
       return { state: "unknown" };
     }
     throw err;
+  }
+}
+
+/** Coach's KIFF agent id, as the apps have always named it for its draft. */
+export const COACH_AGENT_ID = "setup";
+
+/**
+ * Coach's first start under one fingerprint (`TAFS_COACH_START_ONE=on`, with KIFF taking `kiff.requests.v1` for
+ * the pair): for an account with no Setup yet, the two requests the phone signs once. They are
+ * Coach's tools batch, as `coachTools` gives it, and Coach's agent draft *with* its Cards, in place of an empty
+ * draft now and a Cards draft later. The phone builds neither. It signs both hashes with one `signed_at`, sends the
+ * batch first and the draft only once the batch answered (KIFF refuses a Card over an action no tool declares yet),
+ * then claims the draft's key with `POST /v1/setup` as before. With every tool already connected, the draft goes
+ * alone (`kiff.request.v1`): that is also the retry when KIFF refused the draft after the batch went in, a fresh
+ * fingerprint over the draft alone, never the pair again. Only for someone who may start Setup; nothing otherwise, and
+ * nothing when KIFF can't word the Cards first.
+ */
+async function coachFirstStart(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<{ start?: Record<string, unknown> }> {
+  if (process.env.TAFS_COACH_START_ONE !== "on" || !me.capabilities.includes("cards.manage")) return {};
+  const host = event.headers?.host ?? event.headers?.Host;
+  const mcp = `${deps.publicURL ?? (host ? `https://${host}` : "")}/v1/mcp`;
+  const lang = langOf(event);
+  const token = bearer(event);
+  try {
+    const plan = coachToolsPlan(await gatewayConnections(token, deps.fetch, deps.kiffGateway), mcp);
+    if (plan.taken) return { start: { state: "taken", taken: plan.taken } };
+    const connect = plan.missing.length ? coachConnect(plan.missing, mcp, plan.replace, lang) : undefined;
+    const body = coachCardsDraft(COACH_AGENT_ID);
+    // The person signs Coach's Cards in KIFF's own words, never tafs cloud's copy: the draft alone is previewed as
+    // ever; the pair is worded by the gateway over the tools the batch would connect, checked as the batch checks
+    // them. A KIFF that can't yet answers with an error, and the first start then goes in its steps, never unworded.
+    const worded: { card_title?: unknown; cards: unknown[]; contract_digest?: string } = connect
+      ? await previewBatchDraft(token, connect.body.connections, body, deps.fetch, deps.kiffGateway)
+      : await previewDraft(token, body, deps.fetch, deps.kiffBase);
+    const { contract_digest: digest, ...preview } = worded;
+    // What the Cards were worded over goes in the signed draft: KIFF refuses it at submit if the tools changed since.
+    if (connect && !digest) throw new KIFFError(502, "the gateway's preview named no contract");
+    const signed = digest ? { ...body, contract_digest: digest } : body;
+    return {
+      start: {
+        state: "to_give", scheme: connect ? "kiff.requests.v1" : "kiff.request.v1", agent_id: COACH_AGENT_ID,
+        requests: [
+          ...(connect ? [{ id: "connect", method: "POST", path: "/v1/connections/batch", gateway: true, body: connect.body, lines: connect.lines }] : []),
+          { id: "draft", method: "POST", path: "/v1/me/agent-drafts", body: signed, ...preview },
+        ],
+        coach_tools_step: coachToolsStep(lang),
+      },
+    };
+  } catch (err) {
+    // Any failure (KIFF refusing the preview, an error on the way): no start, so the first start goes in its steps,
+    // and the one screen that must load still does.
+    console.error(`coach start: ${err instanceof KIFFError ? `KIFF answered ${err.status}: ` : ""}${(err as Error).message}`);
+    return {};
   }
 }
 

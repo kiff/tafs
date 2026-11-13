@@ -125,6 +125,15 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
       (account.previewed ??= []).push(body);
       return new Response(JSON.stringify({ agent_id: "x", label: "Coach", card_title: "Coach's Card", cards: body.cards.map((c) => ({ id: c.id, lines: [`KIFF's line for ${c.id}`] })) }), { status: 200 });
     }
+    if (url === "https://mcp.kiff.dev/v1/connections/batch/preview") {
+      // The gateway's preview of a draft over a batch it would connect: stores nothing.
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      if ((account as { batchPreviewMissing?: boolean }).batchPreviewMissing) return new Response(JSON.stringify({ error: "not found" }), { status: 404 });
+      const body = JSON.parse(String(init?.body)) as { connections: unknown[]; draft: { cards: Array<{ id: string }> } };
+      (account.previewed ??= []).push(body);
+      const digest = (account as { noContractDigest?: boolean }).noContractDigest ? {} : { contract_digest: "cd_123" };
+      return new Response(JSON.stringify({ card_title: "Coach's Card", cards: body.draft.cards.map((c) => ({ id: c.id, lines: [`KIFF's line for ${c.id}`] })), ...digest }), { status: 200 });
+    }
     if (url === "https://mcp.kiff.dev/v1/connections") {
       if (!byToken[token]) return new Response("{}", { status: 401 });
       if (account.gatewayStatus) return new Response(JSON.stringify({ error: "down" }), { status: account.gatewayStatus });
@@ -1700,6 +1709,65 @@ describe("Setup (kiff/agents#91)", () => {
     // It's not listed with the tafs, and its chat uses the taf routes by its id.
     expect((await call(w, "GET", "/v1/tafs", { token: "ana" })).body.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
     expect((await call(w, "GET", `/v1/tafs/${NEW}/conversation`, { token: "ana" })).status).toBe(200);
+  });
+
+  // The owner's top complaint, too many approvals: Coach's first start asked for three fingerprints (its empty draft,
+  // its tools, then its Cards). With TAFS_COACH_START_ONE, the two requests come together, for one signature.
+  it("gives a first start the tools batch and Coach's draft with its Cards, to sign once, and the draft alone when the tools are there", async () => {
+    const w = world();
+    const mcp = "https://tafs.test/v1/mcp";
+    const read = async (token = "ana") => (await call(w, "GET", "/v1/setup", { token, headers: { host: "tafs.test" } })).body;
+    // Off: as before, nothing to sign from tafs cloud before Setup exists.
+    expect(await read()).toEqual({ setup: null, tools: null });
+    process.env.TAFS_COACH_START_ONE = "on";
+    try {
+      const first = (await read()).start;
+      expect(first).toMatchObject({ state: "to_give", scheme: "kiff.requests.v1", agent_id: "setup" });
+      expect(first.requests.map((r: { id: string }) => r.id)).toEqual(["connect", "draft"]);
+      const [connect, draft] = first.requests;
+      expect(connect).toMatchObject({ method: "POST", path: "/v1/connections/batch", gateway: true });
+      expect(connect.body.connections.map((c: { name: string }) => c.name)).toEqual(TOOLS.map((t) => t.name));
+      expect(connect.lines).toEqual(TOOLS.map((t) => t.line));
+      // The agent's own draft carries its Cards: no empty draft first, no Cards draft after.
+      expect(draft).toMatchObject({ method: "POST", path: "/v1/me/agent-drafts", body: { agent_id: "setup", label: "Coach" } });
+      expect(draft.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
+      expect(draft.body).not.toHaveProperty("no_tools");
+      expect(first.coach_tools_step.title).toBe("Give Coach its tools");
+      // The Cards the one fingerprint signs are shown in KIFF's own words, previewed over the tools the batch declares
+      // (qa-kiff on #852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
+      expect(draft.card_title).toBe("Coach's Card");
+      expect(draft.cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
+      // What they were worded over is signed with the draft, and KIFF refuses it at submit if the tools changed since.
+      expect(draft.body.contract_digest).toBe("cd_123");
+      const { contract_digest: _cd, ...unsigned } = draft.body;
+      expect(w.account.previewed).toEqual([{ connections: connect.body.connections, draft: unsigned }]);
+      // A gateway preview that names no contract: no start, rather than a draft KIFF can't hold to its words.
+      (w.account as { noContractDigest?: boolean }).noContractDigest = true;
+      expect(await read()).toEqual({ setup: null, tools: null });
+      delete (w.account as { noContractDigest?: boolean }).noContractDigest;
+      // A KIFF that can't word them yet: no start at all, so the first start goes in its steps, never unworded.
+      (w.account as { batchPreviewMissing?: boolean }).batchPreviewMissing = true;
+      expect(await read()).toEqual({ setup: null, tools: null });
+      // Nor on any error on the way: the screen still loads.
+      w.account.gatewayStatus = 503;
+      expect(await read()).toEqual({ setup: null, tools: null });
+      delete w.account.gatewayStatus;
+      // Tools already there (or the batch went in and the draft was refused): the draft alone, one fresh fingerprint.
+      w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
+      const retry = (await read()).start;
+      expect(retry).toMatchObject({ state: "to_give", scheme: "kiff.request.v1" });
+      expect(retry.requests.map((r: { id: string }) => r.id)).toEqual(["draft"]);
+      // The draft alone is previewed as ever, with nothing to declare.
+      expect(retry.requests[0].cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
+      expect(w.account.previewed!.at(-1)).toEqual(retry.requests[0].body);
+      // Someone who can't start Setup gets nothing to sign.
+      expect((await read("viewer")).start).toBeUndefined();
+      // Once Setup is claimed as before, the first start is over.
+      await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
+      expect((await read()).start).toBeUndefined();
+    } finally {
+      delete process.env.TAFS_COACH_START_ONE;
+    }
   });
 
   it("says what giving Coach its tools still needs, from KIFF", async () => {
