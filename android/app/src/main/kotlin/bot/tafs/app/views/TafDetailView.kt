@@ -202,6 +202,8 @@ fun TafDetailView(
     var confirmRevoke by rememberSaveable { mutableStateOf(false) }
     // The taf Remove for good was asked for, by its id when the dialog opened: the dialog removes that taf and no other.
     var removeAsked by rememberSaveable { mutableStateOf<String?>(null) }
+    // What goes with it, in tafs cloud's words: read before the question opens, so its text never changes under a tap.
+    var removalGoes by rememberSaveable { mutableStateOf<String?>(null) }
     val removeScope = rememberCoroutineScope()
     val cards = taf.shownCards
     // A wide screen in landscape (as iOS on an iPad): beside the chat or the activity, a second column with the call waiting for
@@ -262,7 +264,7 @@ fun TafDetailView(
             // How it runs; removing it for good (its Cards revoked, its schedule, chats, run reports, memory and key deleted, its
             // name freed) is its last row.
             val managesHere = state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)
-            SetupTab(taf, state, actions, onVersions = { onVersions(taf.id) }, onConnectApps = onConnectApps, onRemove = if (managesHere) ({ onRemoving(taf.id); removeAsked = taf.id }) else null, onActivity = { activitySelection = it; section = Section.Activity })
+            SetupTab(taf, state, actions, onVersions = { onVersions(taf.id) }, onConnectApps = onConnectApps, onRemove = if (managesHere) ({ onRemoving(taf.id); removeScope.launch { removalGoes = actions.removalWords(taf.id); removeAsked = taf.id } }) else null, onActivity = { activitySelection = it; section = Section.Activity })
           }
           Section.Chat -> Unit
         }
@@ -301,9 +303,7 @@ fun TafDetailView(
         LaunchedEffect(asked) { removeAsked = null }
         return@let
       }
-      // What goes with it, in tafs cloud's words, read as the question opens: said before the fingerprint, never after only.
-      var goes by remember(asked) { mutableStateOf<String?>(null) }
-      LaunchedEffect(asked) { goes = actions.removalWords(asked) }
+      val goes = removalGoes
       DriveAlert(
         onDismissRequest = { removeAsked = null },
         title = { Text(Words.Taf.removeTitle(taf.name)) },
