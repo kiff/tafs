@@ -80,9 +80,11 @@ again"; `AppModel.signedOut`, `waitingOnOwner`). A taf newly waiting goes to the
 otherwise the list holds its settled order. The taf's Card tab offers **Sign in again**
 (`AppModel.reconnect`), and Coach's sign-in card says the same for such a grant. Either way it's
 one approval, then the vendor's own page, and it's signed in only once planque answers
-connected: "Checking the sign-in…" meanwhile (`connectStep`). When planque already holds the sign-in, it answers the approval with no link: `connected`, or
-`signed_in`/`listed` with the tools still to choose (`AppModel.holdsSignIn`). That's approved and
-reported as `listed`, the tools step comes next, and it's never a failure or a second sign-in.
+connected: "Checking the sign-in…" meanwhile (`connectStep`). When planque holds a fresh sign-in already (the account's Google sign-in, say), it answers the
+approval `signed_in` with no link and a one-use `confirm` code: the phone confirms it with that code
+(`PlanqueClient.confirm`), as it does a browser's, and goes by what planque answers, `listed` (the tools
+step next) or `connected`. It's never a second sign-in, and unconfirmed planque would revoke it at
+`confirm_by`. A `signed_in` with no code isn't taken as done.
 
 **A run's two lines in the chat** (`TafChatView`, `TafsCloud.ChatMessage.runLines`, `RunLine`): a taf's
 message may carry tafs cloud's `delivered`, where the run's result went, and `counted`, what the run did,

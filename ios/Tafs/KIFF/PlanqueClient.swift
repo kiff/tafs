@@ -144,6 +144,10 @@ final class PlanqueClient {
         /// The name of the taf it was made for, as planque keeps it: what a removed taf's
         /// connection is still called.
         var agentName: String?
+        /// With `signed_in` and no sign-in link: planque holds a fresh sign-in and waits for the
+        /// approving phone to confirm it with this one-use code, as a browser's code is; unconfirmed,
+        /// planque revokes it at `confirm_by`.
+        var confirmCode: String?
         /// The Slack bot connection a Slack door listens through.
         var slackBot: Bool { entry == Self.slackBotEntry || (entry == nil && request.connector?.toolkit == "slackbot") }
         static let slackBotEntry = "connector:composio:slackbot"
@@ -155,7 +159,7 @@ final class PlanqueClient {
         /// approving. Set by `grants()`, never decoded.
         var profile: JCS.Value?
 
-        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name" }
+        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name", confirmCode = "confirm" }
 
         /// The vendor, as the owner knows it: its server's host.
         /// The vendor's name, as planque gives it: what its server calls itself, else its

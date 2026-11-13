@@ -994,10 +994,11 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
-    /// planque already holds the sign-in, and answers the approval `signed_in` with no link (the
-    /// account's Google sign-in, held from another app): approved, the tools step next. It's never a
-    /// failure and never a second sign-in, on Coach's card and on a sign-in card alike.
-    func testASignInPlanqueHoldsGoesOnToTheTools() async throws {
+    /// planque holds a fresh sign-in and answers the approval `signed_in` with no link and a one-use
+    /// `confirm` code (the account's Google sign-in, say): this phone confirms it with that code,
+    /// then reports what planque says, `listed`, with no second sign-in. Unconfirmed, planque would
+    /// revoke it at `confirm_by`. A `signed_in` with no code is never taken as done.
+    func testASignInPlanqueHoldsIsConfirmedWithItsCodeThenGoesOn() async throws {
         let signer = FaceIDSigner()
         let vendor = StubVendor()
         let model = await model(signer: signer, vendor: vendor)
@@ -1006,24 +1007,37 @@ final class SetupTests: XCTestCase {
         StubProtocol.responses["POST /v1/tafs/taf-setup/components/connect-sheets/approval"] = (200, #"{"outcome":"sign","ask":{"id":"ask_1","step":"connect","message":"tafs.connect.v1|t_01|g_01|\#(PlanqueTests.digest)","reason":"Connect Google Sheets","planque":{"grant":"g_01","body":{"digest":"\#(PlanqueTests.digest)"}}}}"#)
         StubProtocol.responses["POST /v1/tafs/taf-setup/components/connect-sheets/approval/ask_1"] = (200, #"{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}"#)
         await model.loadSetup()
+        let held = PlanqueTests.grantJSONFor(status: "signed_in", signedIn: true).replacingOccurrences(of: #""status":"signed_in","#, with: #""status":"signed_in","confirm":"c0de","confirm_by":"2026-11-13T15:10:00Z","#)
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, PlanqueTests.grantJSONFor(status: "signed_in", signedIn: true))
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, held)
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/confirm"] = (200, PlanqueTests.grantJSONFor(status: "listed", signedIn: true))
         await model.refreshConnections()
         StubProtocol.sent = []
         await model.approve(try SetupTests.component(#"{"type":"approval","id":"connect-sheets","grant":"g_01"}"#), shown: model.grants.first?.digest, shownDraft: nil)
+        let confirm = try XCTUnwrap(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").first, "confirmed, or planque revokes it")
+        XCTAssertEqual(body(confirm)["confirm"] as? String, "c0de", "the code planque gave")
         XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/tafs/taf-setup/components/connect-sheets/approval/ask_1").last)["result"] as? String,
-                       "listed", "the sign-in is held: its tools come next")
+                       "listed", "as planque answers the confirm: signed in, its tools next")
         XCTAssertTrue(vendor.opened.isEmpty, "no second sign-in")
         XCTAssertNil(model.lastError)
 
-        // Connect apps' own path: the same answer is approved, not "came back with no sign-in link".
+        // Connect apps' own path: confirmed the same way, and approved.
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
         await model.refreshConnections()
+        StubProtocol.sent = []
         let done = await model.connect(grantID: "g_01", shown: model.grants.first?.digest)
-        XCTAssertNotNil(done)
+        XCTAssertEqual(done?.status, "listed")
+        XCTAssertEqual(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").count, 1)
         XCTAssertNil(model.lastError)
+
+        // signed_in with no code: nothing to confirm with, so it isn't done.
+        StubProtocol.responses["POST /v1/accounts/t_01/grants/g_01/approve"] = (200, PlanqueTests.grantJSONFor(status: "signed_in", signedIn: true))
+        await model.refreshConnections()
+        StubProtocol.sent = []
+        let unconfirmed = await model.connect(grantID: "g_01", shown: model.grants.first?.digest)
+        XCTAssertNil(unconfirmed)
+        XCTAssertTrue(sent("POST", "planque.test", "/v1/accounts/t_01/grants/g_01/confirm").isEmpty)
         XCTAssertTrue(vendor.opened.isEmpty)
-        XCTAssertTrue(AppModel.holdsSignIn("signed_in") && AppModel.holdsSignIn("listed") && !AppModel.holdsSignIn("pending"))
         Keychain.delete(AppModel.planqueAccount)
     }
 
