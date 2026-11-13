@@ -56,6 +56,20 @@ describe("Allow this from now on: what is never offered (qa-kiff's negatives)", 
     expect(refusal([TOTAL], [total(59999)], false)).toMatch(/no total change/);
   });
 
+  it("refuses a change that would lower the limit, though it is the call's own figure", () => {
+    // The call fits under the limit (10000 used + 18000 drawn, limit 50000), so its own figure, 28000, is lower:
+    // only `after > before` refuses it.
+    const UNDER: Breach = { ...TOTAL, used: 10000 };
+    expect(refusal([UNDER], [total(28000)], false)).toMatch(/no total change/);
+  });
+
+  it("answers each breach with its own change: one change never stands for two", () => {
+    // Two breaches of one kind on one Card: each takes its change off the list, or the first would answer both and a
+    // second, wider change would pass unread.
+    expect(refusal([TOTAL, TOTAL], [total(), total(999999)], false)).toMatch(/no total change on m_refunds/);
+    expect(refusal([TOTAL, TOTAL], [total(), total()], false)).toBeUndefined();
+  });
+
   it("keeps a hold's id inside its own path: nothing it holds reaches another route", async () => {
     const k = kiffWith({ hold: HOLD, draft: DRAFT, replay: { would_allow: { calls: 0 } } });
     await allowOffer("exc_1/../../agent-drafts/drf_9", false, k.deps).catch(() => undefined);
