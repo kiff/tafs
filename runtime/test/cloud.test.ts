@@ -4690,6 +4690,54 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(later).not.toHaveProperty("finish");
   });
 
+  it("counts a card Coach waits on its person with in Needs you, and lists it to open that chat: never \"Nothing needs you.\" while Coach waits", async () => {
+    const approval = { id: "approve-card-2", type: "approval", grant: "g1", reason: "Approve the reading-only rules" };
+    type Home = { needs_you?: { count: number; words: string }; coach_waiting?: Array<Record<string, unknown>> };
+    const home = async (deps: Parameters<typeof handle>[1], token = "ana") => JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: `Bearer ${token}` } }, deps)).body) as Home;
+    const { w, run, deps } = await paused(approval);
+    w.account.unsure = 0;
+    const waits = await home(deps);
+    const stored = w.agents.runs.find((r) => r.id === run)!;
+    expect(waits.coach_waiting).toEqual([{ taf: COACH, session: stored.session, run, since: w.now.toISOString(),
+      words: { line: "Coach is waiting for your approval.", open: "Open Coach" } }]);
+    expect(waits.needs_you).toEqual({ count: 1, words: "1 needs you." });
+
+    // Questions are an answer, not an approval; in the person's language.
+    stored.requirements![0]!.input = { id: "q1", type: "questions" };
+    const fr = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana", "Accept-Language": "fr" } }, deps)).body) as Home;
+    expect(fr.coach_waiting?.[0]?.words).toEqual({ line: "Coach attend votre réponse.", open: "Ouvrir Coach" });
+
+    // Answered: nothing waits, and the count says so.
+    stored.requirements![0]!.input = approval;
+    stored.requirements![0]!.answered = w.now.toISOString();
+    const answered = await home(deps);
+    expect(answered.coach_waiting).toBeUndefined();
+    expect(answered.needs_you).toEqual({ count: 0, words: "Nothing needs you." });
+
+    // Past its time, the card no longer waits.
+    delete stored.requirements![0]!.answered;
+    stored.requirements![0]!.expires = new Date(w.now.getTime() - 60_000).toISOString();
+    expect((await home(deps)).coach_waiting).toBeUndefined();
+  });
+
+  it("never counts another person's Coach chat, nor a setup's result card, as waiting on you", async () => {
+    const theirs = await paused({ id: "approve-card-2", type: "approval", grant: "g1" }, { kind: "member", id: "u_someone_else" });
+    theirs.w.account.unsure = 0;
+    const seen = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, theirs.deps)).body) as { coach_waiting?: unknown; needs_you?: { count: number } };
+    expect(seen.coach_waiting).toBeUndefined();
+    expect(seen.needs_you?.count).toBe(0);
+    // A result card is a taf being set up (setting_up), with its own way back: not a Coach card waiting.
+    const result = await paused();
+    result.w.account.mandates = [{ id: "card_refunds", subject: "refunds-x", active: true, grants: [{ action: "lookup" }], aggregates: [] }];
+    const half = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, result.deps)).body) as { coach_waiting?: unknown; setting_up: unknown[] };
+    expect(half.setting_up).toHaveLength(1);
+    expect(half.coach_waiting).toBeUndefined();
+  });
+
   it("lists no other agent, whether or not a Coach chat names one, nor when the paused runs can't be read", async () => {
     const { w, deps } = await paused();
     w.account.mandates = [{ id: "card_ops", subject: "ops-bot", active: true, grants: [{ action: "lookup" }], aggregates: [] },
