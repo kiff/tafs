@@ -299,9 +299,11 @@ the app in sample mode.
   "Give the key on a secure sheet", opens this same sheet full screen, outside the chat (`ConnectApprovalSheet`,
   `needsKey`). Once the key is given and its receipt closed, the card is approved as any other: tafs cloud reads the
   grant, connected, and answers Coach. The key never reaches tafs cloud or Coach.
-  **An approved card folds to one line that says what was signed:** where the card carried a Card, the line names the
-  Card (also when it reads "Already approved") and draws KIFF's own lines for the draft this phone read under it
-  (`OutcomeLine.detail`), never the connection's words for its key. A tap opens the whole card again.
+  **An approved card folds to one line that says what was signed:** once KIFF took the signature for the card's draft
+  (`AgentDraft.signed`: confirmed, or its key claimed since) and the draft holds tools, the line names the Card first,
+  before Coach's title for the card and also when it reads "Already approved", and draws KIFF's own lines for the draft
+  this phone read under it (`OutcomeLine.detail`), never the connection's words for its key. A card answered while
+  its draft isn't signed keeps Coach's title and draws no lines. A tap opens the whole card again.
   **The key's sheet looks and acts protected** (`docs/secure-connection.md`). Its words are tafs cloud's, read by the
   grant (`GET /v1/connect/grants/{grant}/sheet`, `TafsCloud.ConnectionSheet`), with this phone's signed grants
   read (`Planque-Device-Signature`), as Connect apps is:

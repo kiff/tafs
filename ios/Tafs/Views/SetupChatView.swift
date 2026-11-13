@@ -1433,21 +1433,28 @@ struct SetupApproval: View {
     /// The Card an approved card signed, as KIFF's own lines for the draft this phone read: what
     /// the folded line says was approved, never the connection's words for its key. None for a
     /// card with no Card, or one whose draft isn't read.
-    private var signedCardLines: [String] {
-        guard let draft = component.draft.flatMap({ model.setupDrafts[$0] }), draft.noTools != true else { return [] }
-        return draft.lines
+    private var signedCardLines: [String] { signedCard?.lines ?? [] }
+
+    /// The draft whose Card this card's approval signed: KIFF says it took the signature
+    /// (`AgentDraft.signed`), which is stricter than the card reading as answered, and it holds
+    /// tools. None otherwise.
+    private var signedCard: KIFFClient.AgentDraft? {
+        guard let draft = component.draft.flatMap({ model.setupDrafts[$0] }), draft.signed, draft.noTools != true else { return nil }
+        return draft
     }
 
     /// An answered approval, in one line: the answer, then what it was. Coach's title for the
     /// card comes first, so several in a row each say what was approved.
     private func outcome(_ state: AppModel.CardState, _ grant: PlanqueClient.Grant?) -> String {
+        // A Card that was signed is named first, before Coach's title for the card: it's what
+        // the fingerprint signed, as on Android.
+        let signed = state == .done ? signedCard?.cardTitle : nil
         // Signed earlier, not by this tap: said as that.
         if state == .done, model.setupThread.answer(to: component.id)?.text.hasPrefix("already approved") == true {
             let title = component.title?.trimmingCharacters(in: .whitespaces)
-            // With a Card, it's the Card that was approved (kiff/tafs#94), as below.
-            let card = component.draft.flatMap { model.setupDrafts[$0] }.flatMap { $0.noTools == true ? nil : $0.cardTitle }
-            return "\(AppModel.alreadyApproved) · \(title.flatMap { $0.isEmpty ? nil : $0 } ?? card ?? (grant?.vendor ?? component.service).map(KIFFMapping.vendorWords) ?? Words.Coach.theVendor)"
+            return "\(AppModel.alreadyApproved) · \(signed ?? title.flatMap { $0.isEmpty ? nil : $0 } ?? (grant?.vendor ?? component.service).map(KIFFMapping.vendorWords) ?? Words.Coach.theVendor)"
         }
+        if let signed { return Words.Coach.Answer.approvedTitle(title: "\(signed)") }
         if let title = component.title?.trimmingCharacters(in: .whitespaces), !title.isEmpty {
             return state == .declined ? Words.Coach.Answer.declinedTitle(title: "\(title)") : Words.Coach.Answer.approvedTitle(title: "\(title)")
         }
