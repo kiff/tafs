@@ -67,8 +67,9 @@ person's language.
   without the route shows no + New.
 - **Explore jobs**, a row under the headline (`words.explore`), opens the same gallery to browse:
   every job to read, with nothing created. It shows with or without a taf, and for someone who
-  can't use Coach too. While browsing, the gallery is titled Explore jobs and offers no "own
-  words".
+  can't use Coach too, but only when tafs cloud sends `words.explore`: it leaves them out while
+  Home already lists every job, and the app draws no row of its own words (as on iPhone and
+  iPad). While browsing, the gallery is titled Explore jobs and offers no "own words".
 - **The strip** under the tafs list (`JobStrip`) draws `strip.ids` in their order, under
   `strip.title`, while `strip.shown`. An id the gallery doesn't list is left out. When the gallery
   holds more jobs than the strip shows, a last row, **See all jobs** (`words.see_all`), opens it

@@ -166,8 +166,9 @@ fun HomeView(
             }
             // A new account's Home leads with the jobs: "0 tafs working" and "Nothing needs you" say nothing yet.
             if (!state.homeLeadsWithRecipes) Headline(state)
-            // Explore jobs: every job to read, with nothing created, with or without a taf, and with no Coach needed.
-            if (onExplore != null) ExploreRow(HomeWords.explore(state.gallery), onExplore)
+            // Explore jobs: every job to read, with nothing created, with or without a taf, and with no Coach needed. Only when tafs
+            // cloud sends its words: it leaves them out while Home already lists every job.
+            if (onExplore != null) HomeWords.exploreRow(state.gallery)?.let { ExploreRow(it, onExplore) }
           }
         }
         state.held.firstOrNull()?.let { first ->
