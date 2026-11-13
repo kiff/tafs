@@ -1750,7 +1750,8 @@ const zoneFromPhoneKey = (tenant: string) => `${tenant}#zone-from-phone`;
  */
 async function zoneFromPhone(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<{ time_zone?: string }> {
   const phone = (header(event, "x-time-zone") ?? "").trim();
-  if (!phone || !deps.coach || (me.timeZone ?? "UTC") !== "UTC" || phone === "UTC" || !validZone(phone)) return {};
+  // Only someone who manages the tafs, as for Coach's start: a member KIFF won't let set it would ask on every read.
+  if (!phone || !deps.coach || !me.capabilities.includes("cards.manage") || (me.timeZone ?? "UTC") !== "UTC" || phone === "UTC" || !validZone(phone)) return {};
   try {
     if (await deps.coach.get(zoneFromPhoneKey(me.tenantID))) return {};
     if ((await deps.tafs.list(me.tenantID)).some((t) => !t.removing)) return {};
@@ -7651,9 +7652,10 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       await deps.coach.append(coachKeys.notes(tenant, me.subject), { at: at.toISOString(), text: line, taf: taf.name ?? id, taf_id: id, said: out.words ?? "" },
         new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${id} first check:`, err));
       // Said in the answer too, so Coach's closing message never calls the taf working (A4).
-      return { taf_id: id, check: out.reason ?? "no reason given" };
+      return { taf_id: id, check: out.reason ?? "no reason given", ...(out.plan_needed ? { plan_needed: out.plan_needed } : {}) };
     }
-    return { taf_id: id };
+    // The hand-over card reads this answer: a taf made with no plan says so there too (the first run's item 7).
+    return { taf_id: id, ...(out.plan_needed ? { plan_needed: out.plan_needed } : {}) };
   } catch (err) {
     if (err instanceof HTTPError && err.status >= 400 && err.status < 500) {
       // Made meanwhile by an app, under this draft: done, not failed.

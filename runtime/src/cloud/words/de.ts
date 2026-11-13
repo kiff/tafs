@@ -172,7 +172,7 @@ export const de: Words = {
   recipes_label_never: "Macht es nie",
   recipes_label_hand: "An Coach übergeben",
   recipes_home_lead: "Wähle eine Aufgabe für deinen ersten taf.",
-  recipes_home_empty_coach: "Noch keine tafs. Sag Coach, welche Aufgabe ein taf erledigen soll, oder wähle unten eine aus.",
+  recipes_home_empty_coach: "Noch keine tafs. Sag Coach, welche Aufgabe ein taf erledigen soll.",
   recipes_home_empty_shared: "Noch keine tafs. Mit dir geteilte tafs erscheinen hier.",
   gallery_title: "Neuer taf",
   gallery_all: "Alle Aufgaben",

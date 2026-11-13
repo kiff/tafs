@@ -172,7 +172,7 @@ export const es: Words = {
   recipes_label_never: "Nunca lo hace",
   recipes_label_hand: "Pasárselo a Coach",
   recipes_home_lead: "Elige un trabajo para tu primer taf.",
-  recipes_home_empty_coach: "Aún no hay tafs. Dile a Coach qué trabajo debe hacer un taf, o elige uno abajo.",
+  recipes_home_empty_coach: "Aún no hay tafs. Dile a Coach qué trabajo debe hacer un taf.",
   recipes_home_empty_shared: "Aún no hay tafs. Aquí aparecen los tafs compartidos contigo.",
   gallery_title: "Nuevo taf",
   gallery_all: "Todos los trabajos",

@@ -182,7 +182,7 @@ export const en = {
   recipes_label_never: "Never does",
   recipes_label_hand: "Hand it to Coach",
   recipes_home_lead: "Pick a job for your first taf.",
-  recipes_home_empty_coach: "No tafs yet. Tell Coach the job a taf should do, or pick one below.",
+  recipes_home_empty_coach: "No tafs yet. Tell Coach the job a taf should do.",
   recipes_home_empty_shared: "No tafs yet. Tafs shared with you show here.",
   // The gallery (GET /v1/recipes/gallery): its title, its "all jobs" heading, the way to say a job in one's own words, and the strip's title.
   gallery_title: "New taf",

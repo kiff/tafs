@@ -194,7 +194,7 @@ Bezahle meine Rechnungen unter 100 EUR.
   it("leads Home with the recipes only for a person who manages tafs, and only with one to lead with", () => {
     expect(recipesFor(undefined).home).toEqual({ shown: true, words: "Pick a job for your first taf.", own_words: { title: "Say it in your own words", line: "Coach builds the taf with you." } });
     expect(recipesFor(undefined, "en", false).home).toEqual({ shown: false, words: "No tafs yet. Tafs shared with you show here." });
-    expect(recipesFor([], "en", true).home).toEqual({ shown: false, words: "No tafs yet. Tell Coach the job a taf should do, or pick one below.", own_words: { title: "Say it in your own words", line: "Coach builds the taf with you." } });
+    expect(recipesFor([], "en", true).home).toEqual({ shown: false, words: "No tafs yet. Tell Coach the job a taf should do.", own_words: { title: "Say it in your own words", line: "Coach builds the taf with you." } });
     // Home is the gallery now: "Say it in your own words" leads it for a person who manages tafs, never for someone a taf is only shared with.
     expect(recipesFor(undefined, "en", false).home).not.toHaveProperty("own_words");
   });
@@ -215,7 +215,7 @@ Bezahle meine Rechnungen unter 100 EUR.
     }));
     expect(all.categories).toEqual(CATEGORIES);
     expect(recipesFor([])).toEqual({ categories: [], recipes: [], filtered: true, shown: true, suggestions: { show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." },
-      home: { shown: false, words: "No tafs yet. Tell Coach the job a taf should do, or pick one below.", own_words: { title: "Say it in your own words", line: "Coach builds the taf with you." } },
+      home: { shown: false, words: "No tafs yet. Tell Coach the job a taf should do.", own_words: { title: "Say it in your own words", line: "Coach builds the taf with you." } },
       labels: { allows: "Does on its own", holds: "Asks you first", never: "Never does", hand: "Hand it to Coach" } });
   });
 
