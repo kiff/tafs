@@ -30,6 +30,11 @@ final class ConnectionNameTests: XCTestCase {
         let connect = try String(contentsOf: root.appendingPathComponent("Views/ConnectAppsView.swift"), encoding: .utf8)
         XCTAssertEqual(connect.components(separatedBy: "Text(g.name ?? app.title)").count - 1, 2)
         XCTAssertFalse(connect.contains("g.account"), "no row draws the account")
+        let taf = try String(contentsOf: root.appendingPathComponent("Views/TafDetailView.swift"), encoding: .utf8)
+        XCTAssertTrue(taf.contains("Text(grant.name.map { Words.Taf.keysKeptSealed + \" · \" + $0 } ?? Words.Taf.keysKeptSealed)"), "the taf's Connected apps")
+        for (file, text) in [("ConnectAppsView", connect), ("TafDetailView", taf)] {
+            XCTAssertFalse(text.contains("grant.account.map") || text.contains("g.account.flatMap"), "\(file) draws no account")
+        }
         let doors = try String(contentsOf: root.appendingPathComponent("Views/DoorsView.swift"), encoding: .utf8)
         XCTAssertTrue(doors.contains("Text(bot.name ?? bot.vendor)"))
         let model = try String(contentsOf: root.appendingPathComponent("App/AppModel.swift"), encoding: .utf8)
