@@ -11,9 +11,9 @@
   "receipt.check.signature_mismatch": "La firma no coincide con estos pasos.",
   "receipt.check.unknown_signature": "Está firmado de una forma que esta app no conoce.",
   "receipt.check.unreadable": "No se pudo leer el recibo.",
-  "receipt.checked": "✓ Recibo de KIFF · comprobado en este teléfono",
+  "receipt.checked": "✓ Recibo de KIFF · comprobado",
   "receipt.checked_on_device": "Recibo de KIFF · comprobado en este {device}",
-  "receipt.checked_why": "KIFF lo firmó cuando decidió. La firma coincide con la dirección de KIFF y ninguno de sus pasos ha cambiado desde entonces.",
+  "receipt.checked_why": "Firmado por KIFF, sin cambios desde entonces.",
   "receipt.checking_on_device": "Comprobando el recibo de KIFF en este {device}…",
   "receipt.copy": "Copiar recibo",
   "receipt.decided_by.card": "La Card",
@@ -60,9 +60,9 @@
   "receipt.refused_by": "Rechazado por {who}",
   "receipt.share": "Compartir",
   "receipt.show_full": "Mostrar el recibo completo",
-  "receipt.signed_on_device_why": "Tu respuesta se firmó con una clave que nunca sale de este dispositivo, después de {biometry}.",
+  "receipt.signed_on_device_why": "Con {biometry}, con una clave que nunca sale de este dispositivo.",
   "receipt.signed_on_phone": "✓ Firmado en este teléfono",
-  "receipt.signed_on_phone_why": "Tu respuesta se firmó con una clave que nunca sale de este teléfono.",
+  "receipt.signed_on_phone_why": "Con una clave que nunca sale de este teléfono.",
   "receipt.signs_within": "KIFF firma los recibos en menos de un minuto tras decidir. Vuelve a comprobarlo en breve.",
   "receipt.what_happened": "Qué pasó"
 }

@@ -134,10 +134,8 @@ fun HomeView(
       }
       if (sample) {
         item {
-          Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Eyebrow(Words.Home.tagline)
-            Headline(state)
-          }
+          // The welcome's line isn't repeated here: Home says what's running (the tagline is in Settings, About).
+          Headline(state)
         }
         state.held.firstOrNull()?.let { first ->
           state.taf(first.tafId)?.let { taf -> item { NeedsYouStrip(first, taf, onNeedsYou) } }
@@ -154,7 +152,7 @@ fun HomeView(
         item {
           Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-              Box(Modifier.weight(1f)) { Eyebrow(Words.Home.tagline) }
+              Spacer(Modifier.weight(1f))
               // + New: the gallery of every job, also once a taf runs. tafs cloud's words, else the app's own.
               if (onNewTaf != null && state.mayUseCoach) {
                 Text(

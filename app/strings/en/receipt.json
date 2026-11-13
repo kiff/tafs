@@ -11,9 +11,9 @@
   "receipt.check.signature_mismatch": "The signature doesn't match these steps.",
   "receipt.check.unknown_signature": "It's signed in a way this app doesn't know.",
   "receipt.check.unreadable": "The receipt couldn't be read.",
-  "receipt.checked": "✓ KIFF's receipt · checked on this phone",
+  "receipt.checked": "✓ KIFF's receipt · checked",
   "receipt.checked_on_device": "KIFF's receipt · checked on this {device}",
-  "receipt.checked_why": "KIFF signed this when it decided. The signature matches KIFF's address and none of its steps has changed since.",
+  "receipt.checked_why": "Signed by KIFF, unchanged since.",
   "receipt.checking_on_device": "Checking KIFF's receipt on this {device}…",
   "receipt.copy": "Copy receipt",
   "receipt.decided_by.card": "The Card",
@@ -60,9 +60,9 @@
   "receipt.refused_by": "Refused by {who}",
   "receipt.share": "Share",
   "receipt.show_full": "Show the full receipt",
-  "receipt.signed_on_device_why": "Your answer was signed with a key that never leaves this device, after {biometry}.",
+  "receipt.signed_on_device_why": "With {biometry}, by a key that never leaves this device.",
   "receipt.signed_on_phone": "✓ Signed on this phone",
-  "receipt.signed_on_phone_why": "Your answer was signed with a key that never leaves this phone.",
+  "receipt.signed_on_phone_why": "By a key that never leaves this phone.",
   "receipt.signs_within": "KIFF signs receipts within a minute of deciding. Check again shortly.",
   "receipt.what_happened": "What happened"
 }

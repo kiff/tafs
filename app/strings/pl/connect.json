@@ -144,7 +144,7 @@
   "connect.sign_in_closed_nothing_connected": "Logowanie zostało zamknięte. Nic nie zostało połączone.",
   "connect.sign_in_view.not_opened": "Widok logowania się nie otworzył. {why}",
   "connect.sign_in_view.wrong_address": "Widok logowania się nie otworzył: nie był pod własnym adresem połączenia.",
-  "connect.sign_ins_kept_sealed_no": "Logowania pozostają zapieczętowane: żaden taf ich nigdy nie widzi.",
+  "connect.sign_ins_kept_sealed_no": "Żaden taf nie widzi Twoich logowań.",
   "connect.signed_in": "{app} jest zalogowana. Teraz Coach wybierze jej akcje, a Ty je zatwierdzisz.",
   "connect.signed_in_for": "{app} jest zalogowana dla {taf}. Teraz Coach wybierze jej akcje, a Ty je zatwierdzisz.",
   "connect.signed_in_row": "Zalogowano · wybierz jej akcje",

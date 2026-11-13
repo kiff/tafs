@@ -433,49 +433,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Antworte bis %3$@. Nichts wird gesendet, bevor du genehmigst."
+            "value": "%1$@ · %2$@. Antworte bis %3$@."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Answer by %3$@. Nothing is sent until you approve."
+            "value": "%1$@ · %2$@. Answer by %3$@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Responde antes de %3$@. No se envía nada hasta que apruebes."
+            "value": "%1$@ · %2$@. Responde antes de %3$@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Répondez avant %3$@. Rien n'est envoyé tant que vous n'approuvez pas."
+            "value": "%1$@ · %2$@. Répondez avant %3$@."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Rispondi entro le %3$@. Non viene inviato nulla finché non approvi."
+            "value": "%1$@ · %2$@. Rispondi entro le %3$@."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Antwoord vóór %3$@. Er wordt niets verzonden tot je goedkeurt."
+            "value": "%1$@ · %2$@. Antwoord vóór %3$@."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Odpowiedz do %3$@. Nic nie zostanie wysłane, dopóki nie zatwierdzisz."
+            "value": "%1$@ · %2$@. Odpowiedz do %3$@."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Responda até %3$@. Nada é enviado até aprovar."
+            "value": "%1$@ · %2$@. Responda até %3$@."
           }
         }
       }
@@ -751,49 +751,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wenn ein taf dich braucht, meldet sich dieses %1$@, auch wenn tafs geschlossen ist. Nichts wird gesendet, bevor du genehmigst."
+            "value": "Wenn ein taf dich braucht, meldet sich dieses %1$@, auch wenn tafs geschlossen ist."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When a taf needs you, this %1$@ tells you even with tafs closed. Nothing is sent until you approve."
+            "value": "When a taf needs you, this %1$@ tells you, even with tafs closed."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando un taf te necesita, este %1$@ te avisa aunque tafs esté cerrado. No se envía nada hasta que apruebes."
+            "value": "Cuando un taf te necesita, este %1$@ te avisa aunque tafs esté cerrado."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quand un taf vous attend, cet %1$@ vous prévient même si tafs est fermé. Rien n'est envoyé tant que vous n'approuvez pas."
+            "value": "Quand un taf vous attend, cet %1$@ vous prévient même si tafs est fermé."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando un taf ti aspetta, questo %1$@ te lo dice anche con tafs chiusa. Non viene inviato nulla finché non approvi."
+            "value": "Quando un taf ti aspetta, questo %1$@ te lo dice anche con tafs chiusa."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Als een taf op jou wacht, laat deze %1$@ het je weten, ook als tafs gesloten is. Er wordt niets verzonden tot je goedkeurt."
+            "value": "Als een taf op jou wacht, laat deze %1$@ het je weten, ook als tafs gesloten is."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gdy taf czeka na Ciebie, ten %1$@ Cię o tym powiadomi, nawet gdy tafs jest zamknięte. Nic nie zostanie wysłane, dopóki nie zatwierdzisz."
+            "value": "Gdy taf czeka na Ciebie, ten %1$@ Cię o tym powiadomi, nawet gdy tafs jest zamknięte."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando um taf precisa de si, este %1$@ avisa-o mesmo com o tafs fechado. Nada é enviado até aprovar."
+            "value": "Quando um taf precisa de si, este %1$@ avisa-o mesmo com o tafs fechado."
           }
         }
       }
@@ -26851,49 +26851,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Genehmigt · %1$@ ist verbunden, Schlüssel bleiben versiegelt"
+            "value": "Genehmigt · %1$@ ist verbunden"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Approved · %1$@ is connected, keys kept sealed"
+            "value": "Approved · %1$@ is connected"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aprobado · %1$@ está conectado, claves selladas"
+            "value": "Aprobado · %1$@ está conectado"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Approuvé · %1$@ est connecté, clés gardées scellées"
+            "value": "Approuvé · %1$@ est connecté"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Approvato · %1$@ è collegato, chiavi tenute sigillate"
+            "value": "Approvato · %1$@ è collegato"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Goedgekeurd · %1$@ is gekoppeld, sleutels blijven verzegeld"
+            "value": "Goedgekeurd · %1$@ is gekoppeld"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zatwierdzone · %1$@ połączony, klucze pozostają zapieczętowane"
+            "value": "Zatwierdzone · %1$@ połączony"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aprovado · %1$@ está ligado, chaves mantidas seladas"
+            "value": "Aprovado · %1$@ está ligado"
           }
         }
       }
@@ -28282,49 +28282,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Um deinen ersten taf fertigzustellen, musst du genehmigen: Coach bittet dich, die App, die er verbindet, und die Card des tafs auf diesem Gerät zu genehmigen."
+            "value": "Dein erster taf braucht Genehmigungen auf diesem Gerät."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Approving is needed to finish your first taf: Coach asks you to approve the app it connects and the taf's Card on this device."
+            "value": "Your first taf needs approvals on this device."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para terminar tu primer taf hay que aprobar: Coach te pide que apruebes en este dispositivo la app que conecta y la Card del taf."
+            "value": "Tu primer taf necesita aprobaciones en este dispositivo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Une approbation est nécessaire pour terminer votre premier taf : Coach vous demande d'approuver sur cet appareil l'app qu'il connecte et la Card du taf."
+            "value": "Votre premier taf nécessite des approbations sur cet appareil."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Per completare il tuo primo taf serve un'approvazione: Coach ti chiede di approvare su questo dispositivo l'app che collega e la Card del taf."
+            "value": "Il tuo primo taf richiede approvazioni su questo dispositivo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Goedkeuren is nodig om je eerste taf af te ronden: Coach vraagt je op dit apparaat de app die het koppelt en de Card van het taf goed te keuren."
+            "value": "Je eerste taf heeft goedkeuringen op dit apparaat nodig."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Do ukończenia pierwszego tafa potrzebne jest zatwierdzenie: Coach poprosi Cię na tym urządzeniu o zatwierdzenie łączonej aplikacji i Card tafa."
+            "value": "Twój pierwszy taf potrzebuje zatwierdzeń na tym urządzeniu."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "É preciso aprovar para concluir o seu primeiro taf: o Coach pede-lhe para aprovar neste dispositivo a app que liga e o Card do taf."
+            "value": "O seu primeiro taf precisa de aprovações neste dispositivo."
           }
         }
       }
@@ -28441,49 +28441,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Richte einen neuen taf ein, verbinde eine App oder ändere, wie einer arbeitet. Jede Verbindung und jede Card wartet auf deine Genehmigung."
+            "value": "Richte einen neuen taf ein, verbinde eine App oder ändere, wie einer arbeitet."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Set up a new taf, connect an app, or change how one works. Each connection and each Card waits for your approval."
+            "value": "Set up a new taf, connect an app, or change how one works."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Configura un taf nuevo, conecta una app o cambia cómo funciona uno. Cada conexión y cada Card esperan tu aprobación."
+            "value": "Configura un taf nuevo, conecta una app o cambia cómo funciona uno."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Configurez un nouveau taf, connectez une app ou changez le fonctionnement d'un taf. Chaque connexion et chaque Card attend votre approbation."
+            "value": "Configurez un nouveau taf, connectez une app ou changez le fonctionnement d'un taf."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Configura un nuovo taf, collega un'app o cambia come funziona un taf. Ogni collegamento e ogni Card aspettano la tua approvazione."
+            "value": "Configura un nuovo taf, collega un'app o cambia come funziona un taf."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stel een nieuw taf in, koppel een app of verander hoe er een werkt. Elke koppeling en elke Card wacht op je goedkeuring."
+            "value": "Stel een nieuw taf in, koppel een app of verander hoe er een werkt."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Skonfiguruj nowego tafa, połącz aplikację albo zmień sposób działania tafa. Każde połączenie i każda Card czekają na Twoje zatwierdzenie."
+            "value": "Skonfiguruj nowego tafa, połącz aplikację albo zmień sposób działania tafa."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Configure um novo taf, ligue uma app ou altere o funcionamento de um. Cada ligação e cada Card aguardam a sua aprovação."
+            "value": "Configure um novo taf, ligue uma app ou altere o funcionamento de um."
           }
         }
       }
@@ -29766,49 +29766,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ist verbunden · Schlüssel bleiben versiegelt"
+            "value": "%1$@ ist verbunden"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ is connected · keys kept sealed"
+            "value": "%1$@ is connected"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ está conectado · claves selladas"
+            "value": "%1$@ está conectado"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ est connecté · clés gardées scellées"
+            "value": "%1$@ est connecté"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ è collegato · chiavi tenute sigillate"
+            "value": "%1$@ è collegato"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ is gekoppeld · sleutels blijven verzegeld"
+            "value": "%1$@ is gekoppeld"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ połączony · klucze pozostają zapieczętowane"
+            "value": "%1$@ połączony"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ está ligado · chaves mantidas seladas"
+            "value": "%1$@ está ligado"
           }
         }
       }
@@ -31091,49 +31091,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nenne eine App, mit der ein taf arbeiten soll, etwa deinen Zahlungsanbieter. Du meldest dich auf der eigenen Seite der App an, und deine Anmeldung bleibt versiegelt: Kein taf sieht sie je."
+            "value": "Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter. Kein taf sieht deine Anmeldung."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name an app a taf should work with, like your payment provider. You sign in on the app's own page, and your sign-in is kept sealed: no taf ever sees it."
+            "value": "Name an app for your taf, like your payment provider. No taf sees your sign-in."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nombra una app con la que debería trabajar un taf, como tu proveedor de pagos. Inicias sesión en la propia página de la app, y tu inicio de sesión se guarda sellado: ningún taf lo ve nunca."
+            "value": "Nombra una app para tu taf, como tu proveedor de pagos. Ningún taf ve tu inicio de sesión."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nommez une app avec laquelle un taf doit travailler, comme votre prestataire de paiement. Vous vous connectez sur la page de l'app, et votre connexion reste scellée : aucun taf ne la voit jamais."
+            "value": "Nommez une app pour votre taf, comme votre prestataire de paiement. Aucun taf ne voit votre connexion."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Indica un'app con cui un taf dovrebbe lavorare, come il tuo fornitore di pagamenti. Accedi sulla pagina dell'app, e il tuo accesso resta sigillato: nessun taf lo vede mai."
+            "value": "Indica un'app per il tuo taf, come il tuo fornitore di pagamenti. Nessun taf vede il tuo accesso."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noem een app waarmee een taf moet werken, zoals je betaalprovider. Je logt in op de eigen pagina van de app, en je login blijft verzegeld: geen enkel taf ziet hem ooit."
+            "value": "Noem een app voor je taf, zoals je betaalprovider. Geen enkel taf ziet je login."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Podaj aplikację, z którą taf ma pracować, np. Twojego dostawcę płatności. Logujesz się na stronie samej aplikacji, a Twoje logowanie pozostaje zapieczętowane: żaden taf go nigdy nie widzi."
+            "value": "Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Żaden taf nie widzi Twojego logowania."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Indique uma app com que um taf deva trabalhar, como o seu fornecedor de pagamentos. Inicia sessão na própria página da app, e o seu início de sessão fica selado: nenhum taf o vê."
+            "value": "Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Nenhum taf vê o seu início de sessão."
           }
         }
       }
@@ -31250,49 +31250,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nenne eine App, mit der ein taf arbeiten soll, etwa deinen Zahlungsanbieter. Du meldest dich auf der eigenen Seite der App an, und deine Anmeldung bleibt versiegelt: Kein taf sieht sie je. Jede Verbindung und jede Card wartet auf %1$@."
+            "value": "Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter. Kein taf sieht deine Anmeldung. Du genehmigst mit %1$@."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name an app a taf should work with, like your payment provider. You sign in on the app's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for %1$@."
+            "value": "Name an app for your taf, like your payment provider. No taf sees your sign-in. You approve with %1$@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nombra una app con la que debería trabajar un taf, como tu proveedor de pagos. Inicias sesión en la propia página de la app, y tu inicio de sesión se guarda sellado: ningún taf lo ve nunca. Cada conexión y cada Card esperan %1$@."
+            "value": "Nombra una app para tu taf, como tu proveedor de pagos. Ningún taf ve tu inicio de sesión. Apruebas con %1$@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nommez une app avec laquelle un taf doit travailler, comme votre prestataire de paiement. Vous vous connectez sur la page de l'app, et votre connexion reste scellée : aucun taf ne la voit jamais. Chaque connexion et chaque Card attend %1$@."
+            "value": "Nommez une app pour votre taf, comme votre prestataire de paiement. Aucun taf ne voit votre connexion. Vous approuvez avec %1$@."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Indica un'app con cui un taf dovrebbe lavorare, come il tuo fornitore di pagamenti. Accedi sulla pagina dell'app, e il tuo accesso resta sigillato: nessun taf lo vede mai. Ogni collegamento e ogni Card aspettano %1$@."
+            "value": "Indica un'app per il tuo taf, come il tuo fornitore di pagamenti. Nessun taf vede il tuo accesso. Approvi con %1$@."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noem een app waarmee een taf moet werken, zoals je betaalprovider. Je logt in op de eigen pagina van de app, en je login blijft verzegeld: geen enkel taf ziet hem ooit. Elke koppeling en elke Card wacht op %1$@."
+            "value": "Noem een app voor je taf, zoals je betaalprovider. Geen enkel taf ziet je login. Je keurt goed met %1$@."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Podaj aplikację, z którą taf ma pracować, np. Twojego dostawcę płatności. Logujesz się na stronie samej aplikacji, a Twoje logowanie pozostaje zapieczętowane: żaden taf go nigdy nie widzi. Każde połączenie i każda Card czekają na %1$@."
+            "value": "Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Żaden taf nie widzi Twojego logowania. Zatwierdzasz przez %1$@."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Indique uma app com que um taf deva trabalhar, como o seu fornecedor de pagamentos. Inicia sessão na própria página da app, e o seu início de sessão fica selado: nenhum taf o vê. Cada ligação e cada Card aguardam %1$@."
+            "value": "Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Nenhum taf vê o seu início de sessão. Aprova com %1$@."
           }
         }
       }
@@ -34748,49 +34748,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die eigene Seite des Anbieters öffnet sich. Dein Passwort und deine Schlüssel werden hier nie angezeigt, und deine Anmeldung bleibt versiegelt."
+            "value": "Die eigene Seite des Anbieters öffnet sich. Kein taf sieht deine Anmeldung."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed."
+            "value": "The vendor's own page opens. No taf sees your sign-in."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Se abre la propia página del proveedor. Tu contraseña y tus claves nunca se muestran aquí, y tu inicio de sesión se guarda sellado."
+            "value": "Se abre la propia página del proveedor. Ningún taf ve tu inicio de sesión."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La page du fournisseur s'ouvre. Votre mot de passe et vos clés ne s'affichent jamais ici, et votre connexion reste scellée."
+            "value": "La page du fournisseur s'ouvre. Aucun taf ne voit votre connexion."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si apre la pagina del fornitore. La tua password e le tue chiavi non vengono mai mostrate qui, e il tuo accesso resta sigillato."
+            "value": "Si apre la pagina del fornitore. Nessun taf vede il tuo accesso."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De eigen pagina van de leverancier opent. Je wachtwoord en sleutels worden hier nooit getoond, en je login blijft verzegeld."
+            "value": "De eigen pagina van de leverancier opent. Geen enkel taf ziet je login."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Otworzy się strona samego dostawcy. Twoje hasło i klucze nigdy nie są tu pokazywane, a Twoje logowanie pozostaje zapieczętowane."
+            "value": "Otworzy się strona samego dostawcy. Żaden taf nie widzi Twojego logowania."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Abre-se a própria página do fornecedor. A sua palavra-passe e as suas chaves nunca são mostradas aqui, e o seu início de sessão fica selado."
+            "value": "Abre-se a própria página do fornecedor. Nenhum taf vê o seu início de sessão."
           }
         }
       }
@@ -44018,49 +44018,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anmeldungen bleiben versiegelt: Kein taf sieht sie je."
+            "value": "Kein taf sieht deine Anmeldungen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign-ins are kept sealed: no taf ever sees them."
+            "value": "No taf sees your sign-ins."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los inicios de sesión se guardan sellados: ningún taf los ve nunca."
+            "value": "Ningún taf ve tus inicios de sesión."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les identifiants restent scellés : aucun taf ne les voit jamais."
+            "value": "Aucun taf ne voit vos identifiants."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gli accessi restano sigillati: nessun taf li vede mai."
+            "value": "Nessun taf vede i tuoi accessi."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Logins blijven verzegeld: geen enkel taf ziet ze ooit."
+            "value": "Geen enkel taf ziet je logins."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Logowania pozostają zapieczętowane: żaden taf ich nigdy nie widzi."
+            "value": "Żaden taf nie widzi Twoich logowań."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os inícios de sessão ficam selados: nenhum taf os vê."
+            "value": "Nenhum taf vê os seus inícios de sessão."
           }
         }
       }
@@ -54803,49 +54803,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bei uns funktioniert es gerade nicht. Du musst nichts tun; versuch es später noch einmal."
+            "value": "Bei uns funktioniert es gerade nicht. Versuch es später noch einmal."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "It isn't working on our side right now. Nothing to do on your side; try again later."
+            "value": "It isn't working on our side right now. Try again later."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ahora mismo no funciona por nuestra parte. No tienes que hacer nada; vuelve a intentarlo más tarde."
+            "value": "Ahora mismo no funciona por nuestra parte. Vuelve a intentarlo más tarde."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cela ne fonctionne pas de notre côté pour le moment. Rien à faire de votre côté ; réessayez plus tard."
+            "value": "Cela ne fonctionne pas de notre côté pour le moment. Réessayez plus tard."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "In questo momento non funziona da parte nostra. Non devi fare nulla; riprova più tardi."
+            "value": "In questo momento non funziona da parte nostra. Riprova più tardi."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Het werkt nu niet aan onze kant. Je hoeft niets te doen; probeer het later opnieuw."
+            "value": "Het werkt nu niet aan onze kant. Probeer het later opnieuw."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Po naszej stronie to teraz nie działa. Po Twojej stronie nie trzeba nic robić; spróbuj ponownie później."
+            "value": "Po naszej stronie to teraz nie działa. Spróbuj ponownie później."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Neste momento não está a funcionar do nosso lado. Não precisa de fazer nada; tente novamente mais tarde."
+            "value": "Neste momento não está a funcionar do nosso lado. Tente novamente mais tarde."
           }
         }
       }
@@ -55386,49 +55386,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dieses Telefon und der Server haben sich nicht verstanden. Du musst nichts tun; wir kümmern uns darum."
+            "value": "Dieses Telefon und der Server haben sich nicht verstanden. Wir kümmern uns darum."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This phone and the server didn't understand each other. Nothing to do on your side; we're on it."
+            "value": "This phone and the server didn't understand each other. We're on it."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este teléfono y el servidor no se entendieron. No tienes que hacer nada; ya estamos en ello."
+            "value": "Este teléfono y el servidor no se entendieron. Ya estamos en ello."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ce téléphone et le serveur ne se sont pas compris. Rien à faire de votre côté ; nous nous en occupons."
+            "value": "Ce téléphone et le serveur ne se sont pas compris. Nous nous en occupons."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questo telefono e il server non si sono capiti. Non devi fare nulla; ci stiamo lavorando."
+            "value": "Questo telefono e il server non si sono capiti. Ci stiamo lavorando."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deze telefoon en de server begrepen elkaar niet. Je hoeft niets te doen; we zijn ermee bezig."
+            "value": "Deze telefoon en de server begrepen elkaar niet. We zijn ermee bezig."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ten telefon i serwer się nie zrozumiały. Po Twojej stronie nie trzeba nic robić; zajmujemy się tym."
+            "value": "Ten telefon i serwer się nie zrozumiały. Zajmujemy się tym."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este telefone e o servidor não se entenderam. Não precisa de fazer nada; estamos a tratar disso."
+            "value": "Este telefone e o servidor não se entenderam. Estamos a tratar disso."
           }
         }
       }
@@ -56340,49 +56340,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Angehalten. Nichts erreicht deine Apps. Wenn du fortsetzt, läuft nur neue Arbeit: Nichts von vor dem Anhalten wird wieder aufgenommen."
+            "value": "Angehalten. Fortsetzen startet nur neue Arbeit."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halted. Nothing reaches your apps. When you resume, only new work runs: nothing from before the halt picks up again."
+            "value": "Halted. Resuming starts only new work."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqueado. Nada llega a tus apps. Cuando lo reanudes, solo se ejecuta trabajo nuevo: nada de antes del bloqueo se retoma."
+            "value": "Bloqueado. Al reanudar, solo empieza trabajo nuevo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqué. Rien n'atteint vos apps. Quand vous reprendrez, seul le nouveau travail s'exécutera : rien d'antérieur au blocage ne repart."
+            "value": "Bloqué. La reprise ne lance que du nouveau travail."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloccato. Non arriva nulla alle tue app. Quando riprendi, viene eseguito solo il lavoro nuovo: nulla di quanto c'era prima del blocco riparte."
+            "value": "Bloccato. Riprendendo, parte solo lavoro nuovo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stilgezet. Niets bereikt je apps. Als je hervat, draait alleen nieuw werk: niets van vóór het stilzetten gaat verder."
+            "value": "Stilgezet. Hervatten start alleen nieuw werk."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zablokowane. Nic nie dociera do Twoich aplikacji. Po wznowieniu działa tylko nowa praca: nic sprzed blokady nie zostanie podjęte ponownie."
+            "value": "Zablokowane. Wznowienie uruchamia tylko nową pracę."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqueado. Nada chega às suas apps. Quando retomar, só é executado trabalho novo: nada de antes do bloqueio é retomado."
+            "value": "Bloqueado. Ao retomar, só começa trabalho novo."
           }
         }
       }
@@ -56393,49 +56393,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Angehalten seit %1$@. Nichts erreicht deine Apps. Wenn du fortsetzt, läuft nur neue Arbeit: Nichts von vor dem Anhalten wird wieder aufgenommen."
+            "value": "Angehalten seit %1$@. Fortsetzen startet nur neue Arbeit."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halted since %1$@. Nothing reaches your apps. When you resume, only new work runs: nothing from before the halt picks up again."
+            "value": "Halted since %1$@. Resuming starts only new work."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqueado desde %1$@. Nada llega a tus apps. Cuando lo reanudes, solo se ejecuta trabajo nuevo: nada de antes del bloqueo se retoma."
+            "value": "Bloqueado desde %1$@. Al reanudar, solo empieza trabajo nuevo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqué depuis %1$@. Rien n'atteint vos apps. Quand vous reprendrez, seul le nouveau travail s'exécutera : rien d'antérieur au blocage ne repart."
+            "value": "Bloqué depuis %1$@. La reprise ne lance que du nouveau travail."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloccato dalle %1$@. Non arriva nulla alle tue app. Quando riprendi, viene eseguito solo il lavoro nuovo: nulla di quanto c'era prima del blocco riparte."
+            "value": "Bloccato dalle %1$@. Riprendendo, parte solo lavoro nuovo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stilgezet sinds %1$@. Niets bereikt je apps. Als je hervat, draait alleen nieuw werk: niets van vóór het stilzetten gaat verder."
+            "value": "Stilgezet sinds %1$@. Hervatten start alleen nieuw werk."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zablokowane od %1$@. Nic nie dociera do Twoich aplikacji. Po wznowieniu działa tylko nowa praca: nic sprzed blokady nie zostanie podjęte ponownie."
+            "value": "Zablokowane od %1$@. Wznowienie uruchamia tylko nową pracę."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqueado desde %1$@. Nada chega às suas apps. Quando retomar, só é executado trabalho novo: nada de antes do bloqueio é retomado."
+            "value": "Bloqueado desde %1$@. Ao retomar, só começa trabalho novo."
           }
         }
       }
@@ -56499,49 +56499,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anhalten stoppt deine tafs: Kein Lauf startet, und nichts erreicht deine Apps, bis du fortsetzt. Ein Aufruf, der schon unterwegs ist, kann noch ankommen; nichts wird rückgängig gemacht."
+            "value": "Anhalten stoppt deine tafs, bis du fortsetzt. Ein schon gesendeter Aufruf kann noch ankommen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halting stops your tafs: no run starts, and nothing reaches your apps until you resume. A call already on its way may still arrive; nothing is undone."
+            "value": "Halting stops your tafs until you resume. A call already sent may still arrive."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloquear detiene tus tafs: no empieza ninguna ejecución y nada llega a tus apps hasta que lo reanudes. Una llamada que ya esté en camino aún puede llegar; no se deshace nada."
+            "value": "Bloquear detiene tus tafs hasta que los reanudes. Una llamada ya enviada aún puede llegar."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloquer arrête vos tafs : aucune exécution ne démarre, et rien n'atteint vos apps jusqu'à ce que vous repreniez. Un appel déjà en route peut encore arriver ; rien n'est annulé."
+            "value": "Bloquer arrête vos tafs jusqu'à ce que vous repreniez. Un appel déjà envoyé peut encore arriver."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloccare ferma i tuoi tafs: non parte nessuna esecuzione, e non arriva nulla alle tue app finché non riprendi. Una chiamata già partita può ancora arrivare; non viene annullato nulla."
+            "value": "Bloccare ferma i tuoi tafs finché non riprendi. Una chiamata già inviata può ancora arrivare."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stilzetten stopt je tafs: er start geen run, en niets bereikt je apps tot je hervat. Een aanroep die al onderweg is, kan nog aankomen; niets wordt teruggedraaid."
+            "value": "Stilzetten stopt je tafs tot je hervat. Een al verzonden aanroep kan nog aankomen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Blokada zatrzymuje Twoje tafs: żadne uruchomienie się nie zaczyna i nic nie dociera do Twoich aplikacji, dopóki ich nie wznowisz. Wywołanie, które jest już w drodze, może jeszcze dotrzeć; nic nie zostanie cofnięte."
+            "value": "Blokada zatrzymuje Twoje tafs, dopóki ich nie wznowisz. Wysłane już wywołanie może jeszcze dotrzeć."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloquear para os seus tafs: nenhuma execução começa, e nada chega às suas apps até retomar. Uma chamada já a caminho pode ainda chegar; nada é desfeito."
+            "value": "Bloquear para os seus tafs até retomar. Uma chamada já enviada pode ainda chegar."
           }
         }
       }
@@ -56552,49 +56552,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anhalten stoppt ihn: Kein Lauf startet, und nichts erreicht deine Apps, bis du fortsetzt. Ein Aufruf, der schon unterwegs ist, kann noch ankommen; nichts wird rückgängig gemacht."
+            "value": "Anhalten stoppt ihn, bis du fortsetzt. Ein schon gesendeter Aufruf kann noch ankommen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halting stops it: no run starts, and nothing reaches your apps until you resume. A call already on its way may still arrive; nothing is undone."
+            "value": "Halting stops it until you resume. A call already sent may still arrive."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloquear lo detiene: no empieza ninguna ejecución y nada llega a tus apps hasta que lo reanudes. Una llamada que ya esté en camino aún puede llegar; no se deshace nada."
+            "value": "Bloquear lo detiene hasta que lo reanudes. Una llamada ya enviada aún puede llegar."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloquer l'arrête : aucune exécution ne démarre, et rien n'atteint vos apps jusqu'à ce que vous repreniez. Un appel déjà en route peut encore arriver ; rien n'est annulé."
+            "value": "Bloquer l'arrête jusqu'à ce que vous repreniez. Un appel déjà envoyé peut encore arriver."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloccare lo ferma: non parte nessuna esecuzione, e non arriva nulla alle tue app finché non riprendi. Una chiamata già partita può ancora arrivare; non viene annullato nulla."
+            "value": "Bloccare lo ferma finché non riprendi. Una chiamata già inviata può ancora arrivare."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stilzetten stopt het: er start geen run, en niets bereikt je apps tot je hervat. Een aanroep die al onderweg is, kan nog aankomen; niets wordt teruggedraaid."
+            "value": "Stilzetten stopt het tot je hervat. Een al verzonden aanroep kan nog aankomen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Blokada go zatrzymuje: żadne uruchomienie się nie zaczyna i nic nie dociera do Twoich aplikacji, dopóki go nie wznowisz. Wywołanie, które jest już w drodze, może jeszcze dotrzeć; nic nie zostanie cofnięte."
+            "value": "Blokada go zatrzymuje, dopóki go nie wznowisz. Wysłane już wywołanie może jeszcze dotrzeć."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloquear para-o: nenhuma execução começa, e nada chega às suas apps até retomar. Uma chamada já a caminho pode ainda chegar; nada é desfeito."
+            "value": "Bloquear para-o até retomar. Uma chamada já enviada pode ainda chegar."
           }
         }
       }
@@ -56605,49 +56605,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Angehalten%1$@. Nichts erreicht deine Apps. Wenn du fortsetzt, läuft nur neue Arbeit: Nichts von vor dem Anhalten wird wieder aufgenommen."
+            "value": "Angehalten%1$@. Fortsetzen startet nur neue Arbeit."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halted%1$@. Nothing reaches your apps. When you resume, only new work runs: nothing from before the halt picks up again."
+            "value": "Halted%1$@. Resuming starts only new work."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqueado%1$@. Nada llega a tus apps. Cuando lo reanudes, solo se ejecuta trabajo nuevo: nada de antes del bloqueo se retoma."
+            "value": "Bloqueado%1$@. Al reanudar, solo empieza trabajo nuevo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqué%1$@. Rien n'atteint vos apps. Quand vous reprendrez, seul le nouveau travail s'exécutera : rien d'antérieur au blocage ne repart."
+            "value": "Bloqué%1$@. La reprise ne lance que du nouveau travail."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloccato%1$@. Non arriva nulla alle tue app. Quando riprendi, viene eseguito solo il lavoro nuovo: nulla di quanto c'era prima del blocco riparte."
+            "value": "Bloccato%1$@. Riprendendo, parte solo lavoro nuovo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stilgezet%1$@. Niets bereikt je apps. Als je hervat, draait alleen nieuw werk: niets van vóór het stilzetten gaat verder."
+            "value": "Stilgezet%1$@. Hervatten start alleen nieuw werk."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zablokowane%1$@. Nic nie dociera do Twoich aplikacji. Po wznowieniu działa tylko nowa praca: nic sprzed blokady nie zostanie podjęte ponownie."
+            "value": "Zablokowane%1$@. Wznowienie uruchamia tylko nową pracę."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqueado%1$@. Nada chega às suas apps. Quando retomar, só é executado trabalho novo: nada de antes do bloqueio é retomado."
+            "value": "Bloqueado%1$@. Ao retomar, só começa trabalho novo."
           }
         }
       }
@@ -56658,49 +56658,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anhalten stoppt %1$@: Kein Lauf startet, und nichts erreicht deine Apps, bis du fortsetzt. Ein Aufruf, der schon unterwegs ist, kann noch ankommen; nichts wird rückgängig gemacht."
+            "value": "Anhalten stoppt %1$@, bis du fortsetzt. Ein schon gesendeter Aufruf kann noch ankommen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halting stops %1$@: no run starts, and nothing reaches your apps until you resume. A call already on its way may still arrive; nothing is undone."
+            "value": "Halting stops %1$@ until you resume. A call already sent may still arrive."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloquear detiene %1$@: no empieza ninguna ejecución y nada llega a tus apps hasta que lo reanudes. Una llamada que ya esté en camino aún puede llegar; no se deshace nada."
+            "value": "Bloquear detiene %1$@ hasta que reanudes. Una llamada ya enviada aún puede llegar."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloquer arrête %1$@ : aucune exécution ne démarre, et rien n'atteint vos apps jusqu'à ce que vous repreniez. Un appel déjà en route peut encore arriver ; rien n'est annulé."
+            "value": "Bloquer arrête %1$@ jusqu'à ce que vous repreniez. Un appel déjà envoyé peut encore arriver."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloccare ferma %1$@: non parte nessuna esecuzione, e non arriva nulla alle tue app finché non riprendi. Una chiamata già partita può ancora arrivare; non viene annullato nulla."
+            "value": "Bloccare ferma %1$@ finché non riprendi. Una chiamata già inviata può ancora arrivare."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stilzetten stopt %1$@: er start geen run, en niets bereikt je apps tot je hervat. Een aanroep die al onderweg is, kan nog aankomen; niets wordt teruggedraaid."
+            "value": "Stilzetten stopt %1$@ tot je hervat. Een al verzonden aanroep kan nog aankomen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Blokada zatrzymuje: %1$@. Żadne uruchomienie się nie zaczyna i nic nie dociera do Twoich aplikacji, dopóki nie wznowisz. Wywołanie, które jest już w drodze, może jeszcze dotrzeć; nic nie zostanie cofnięte."
+            "value": "Blokada zatrzymuje: %1$@, do wznowienia. Wysłane już wywołanie może jeszcze dotrzeć."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloquear para %1$@: nenhuma execução começa, e nada chega às suas apps até retomar. Uma chamada já a caminho pode ainda chegar; nada é desfeito."
+            "value": "Bloquear para %1$@ até retomar. Uma chamada já enviada pode ainda chegar."
           }
         }
       }
@@ -57868,49 +57868,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verbinde eine App, um deinen ersten taf einzurichten. Zum Aktualisieren nach unten ziehen."
+            "value": "Verbinde eine App, um deinen ersten taf einzurichten."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connect an app to set up your first taf. Pull down to refresh."
+            "value": "Connect an app to set up your first taf."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conecta una app para configurar tu primer taf. Desliza hacia abajo para actualizar."
+            "value": "Conecta una app para configurar tu primer taf."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connectez une app pour configurer votre premier taf. Tirez vers le bas pour actualiser."
+            "value": "Connectez une app pour configurer votre premier taf."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Collega un'app per configurare il tuo primo taf. Trascina verso il basso per aggiornare."
+            "value": "Collega un'app per configurare il tuo primo taf."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Koppel een app om je eerste taf in te stellen. Trek omlaag om te vernieuwen."
+            "value": "Koppel een app om je eerste taf in te stellen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Połącz aplikację, aby skonfigurować swojego pierwszego tafa. Pociągnij w dół, aby odświeżyć."
+            "value": "Połącz aplikację, aby skonfigurować swojego pierwszego tafa."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ligue uma app para configurar o seu primeiro taf. Puxe para baixo para atualizar."
+            "value": "Ligue uma app para configurar o seu primeiro taf."
           }
         }
       }
@@ -57921,49 +57921,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mit dir geteilte tafs erscheinen hier. Zum Aktualisieren nach unten ziehen."
+            "value": "Mit dir geteilte tafs erscheinen hier."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tafs shared with you show here. Pull down to refresh."
+            "value": "Tafs shared with you show here."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aquí aparecen los tafs compartidos contigo. Desliza hacia abajo para actualizar."
+            "value": "Aquí aparecen los tafs compartidos contigo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les tafs partagés avec vous s'affichent ici. Tirez vers le bas pour actualiser."
+            "value": "Les tafs partagés avec vous s'affichent ici."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I tafs condivisi con te compaiono qui. Trascina verso il basso per aggiornare."
+            "value": "I tafs condivisi con te compaiono qui."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tafs die met je zijn gedeeld, verschijnen hier. Trek omlaag om te vernieuwen."
+            "value": "Tafs die met je zijn gedeeld, verschijnen hier."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tafs udostępnione Tobie pojawią się tutaj. Pociągnij w dół, aby odświeżyć."
+            "value": "Tafs udostępnione Tobie pojawią się tutaj."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os tafs partilhados consigo aparecem aqui. Puxe para baixo para atualizar."
+            "value": "Os tafs partilhados consigo aparecem aqui."
           }
         }
       }
@@ -58027,49 +58027,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mit KIFF angemeldet. KIFF entscheidet über jede Aktion. Zum Aktualisieren nach unten ziehen."
+            "value": "Mit KIFF angemeldet."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Signed in with KIFF. KIFF decides every action. Pull down to refresh."
+            "value": "Signed in with KIFF."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sesión iniciada con KIFF. KIFF decide cada acción. Desliza hacia abajo para actualizar."
+            "value": "Sesión iniciada con KIFF."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Connecté avec KIFF. KIFF décide de chaque action. Tirez vers le bas pour actualiser."
+            "value": "Connecté avec KIFF."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accesso effettuato con KIFF. KIFF decide ogni azione. Trascina verso il basso per aggiornare."
+            "value": "Accesso effettuato con KIFF."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ingelogd met KIFF. KIFF beslist over elke actie. Trek omlaag om te vernieuwen."
+            "value": "Ingelogd met KIFF."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zalogowano przez KIFF. KIFF decyduje o każdej akcji. Pociągnij w dół, aby odświeżyć."
+            "value": "Zalogowano przez KIFF."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sessão iniciada com o KIFF. O KIFF decide cada ação. Puxe para baixo para atualizar."
+            "value": "Sessão iniciada com o KIFF."
           }
         }
       }
@@ -59087,49 +59087,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beispieldaten. Die Card wird auf diesem Telefon geprüft. Mit KIFF angemeldet entscheidet KIFF, und ein neuer taf beginnt in Coach."
+            "value": "Beispieldaten. Mit KIFF angemeldet beginnt ein neuer taf in Coach."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf starts in Coach."
+            "value": "Sample data. Signed in with KIFF, a new taf starts in Coach."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Datos de ejemplo. La Card se comprueba en este teléfono. Sesión iniciada con KIFF, KIFF decide, y un taf nuevo empieza en Coach."
+            "value": "Datos de ejemplo. Con sesión iniciada con KIFF, un taf nuevo empieza en Coach."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Données d'exemple. La Card est vérifiée sur ce téléphone. Connecté avec KIFF, KIFF décide, et un nouveau taf commence dans Coach."
+            "value": "Données d'exemple. Connecté avec KIFF, un nouveau taf commence dans Coach."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dati di esempio. La Card viene verificata su questo telefono. Accesso effettuato con KIFF, KIFF decide, e un nuovo taf inizia in Coach."
+            "value": "Dati di esempio. Con l'accesso tramite KIFF, un nuovo taf inizia in Coach."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voorbeeldgegevens. De Card wordt op deze telefoon gecontroleerd. Ingelogd met KIFF, KIFF beslist, en een nieuw taf begint in Coach."
+            "value": "Voorbeeldgegevens. Ingelogd met KIFF begint een nieuw taf in Coach."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dane przykładowe. Card jest sprawdzana na tym telefonie. Po zalogowaniu przez KIFF decyduje KIFF, a nowy taf zaczyna się w Coachu."
+            "value": "Dane przykładowe. Po zalogowaniu przez KIFF nowy taf zaczyna się w Coachu."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dados de exemplo. O Card é verificado neste telefone. Com sessão iniciada no KIFF, o KIFF decide, e um novo taf começa no Coach."
+            "value": "Dados de exemplo. Com sessão iniciada no KIFF, um novo taf começa no Coach."
           }
         }
       }
@@ -64687,49 +64687,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Als Nächstes fragt iOS. Bestätigst du mit %1$@, werden sie für dein Konto eingerichtet."
+            "value": "Als Nächstes fragt iOS, dann %1$@."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "iOS asks next. Confirming with %1$@ sets them up for your account."
+            "value": "iOS asks next, then %1$@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "A continuación pregunta iOS. Al confirmar con %1$@ se configuran para tu cuenta."
+            "value": "A continuación pregunta iOS, luego %1$@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "iOS demande ensuite. Confirmer avec %1$@ les configure pour votre compte."
+            "value": "iOS demande ensuite, puis %1$@."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Poi te lo chiede iOS. Confermando con %1$@ li configuri per il tuo account."
+            "value": "Poi te lo chiede iOS, quindi %1$@."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "iOS vraagt het hierna. Bevestigen met %1$@ stelt ze in voor je account."
+            "value": "iOS vraagt het hierna, dan %1$@."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Następnie zapyta iOS. Potwierdzenie przez %1$@ skonfiguruje je dla Twojego konta."
+            "value": "Następnie zapyta iOS, potem %1$@."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O iOS pergunta a seguir. Confirmar com %1$@ configura-os para a sua conta."
+            "value": "O iOS pergunta a seguir, depois %1$@."
           }
         }
       }
@@ -65239,49 +65239,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einmal genehmigen reicht hier nicht: Es liegt über einer Summe, die die Card über mehrere Aufrufe erlaubt, etwa einer Tagessumme. Jemand, der die Cards des Kontos verwaltet, kann ihm Zusatzspielraum geben, oder du lehnst es ab."
+            "value": "Es liegt über einer Summe der Card, etwa einer Tagessumme. Jemand, der die Cards verwaltet, kann ihm Zusatzspielraum geben, oder du lehnst es ab."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Someone who manages the account's Cards can give it extra room, or you can refuse it."
+            "value": "It's over a Card total, such as a day's. Someone who manages the Cards can give it extra room, or you can refuse it."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aprobarla una vez no basta: supera un total que la Card permite entre llamadas, como el de un día. Alguien que gestione las Cards de la cuenta puede darle margen extra, o puedes rechazarla."
+            "value": "Supera un total de la Card, como el de un día. Alguien que gestione las Cards puede darle margen extra, o puedes rechazarla."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'approuver une fois ne suffit pas : cela dépasse un total que la Card autorise sur plusieurs appels, par exemple sur une journée. Une personne qui gère les Cards du compte peut lui donner une marge supplémentaire, ou vous pouvez le refuser."
+            "value": "Cela dépasse un total de la Card, par exemple sur une journée. Une personne qui gère les Cards peut lui donner une marge supplémentaire, ou vous pouvez le refuser."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Approvarla una volta non basta: supera un totale che la Card consente tra più chiamate, come quello di un giorno. Chi gestisce le Card dell'account può darle un margine extra, oppure puoi rifiutarla."
+            "value": "Supera un totale della Card, come quello di un giorno. Chi gestisce le Card può darle un margine extra, oppure puoi rifiutarla."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eenmalig goedkeuren laat dit niet door: het gaat boven een totaal dat de Card over meerdere aanroepen toestaat, zoals dat van een dag. Iemand die de Cards van het account beheert, kan het extra ruimte geven, of je kunt het weigeren."
+            "value": "Het gaat boven een totaal van de Card, zoals dat van een dag. Iemand die de Cards beheert, kan het extra ruimte geven, of je kunt het weigeren."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jednorazowe zatwierdzenie tego nie przepuści: przekracza sumę, na którą Card pozwala dla wielu wywołań, np. dzienną. Osoba zarządzająca Card konta może dać dodatkowy zapas albo możesz to odrzucić."
+            "value": "Przekracza sumę Card, np. dzienną. Osoba zarządzająca Card może dać dodatkowy zapas albo możesz to odrzucić."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aprovar uma vez não permite passar isto: excede um total que o Card permite entre chamadas, como o de um dia. Alguém que gere os Cards da conta pode dar-lhe margem extra, ou pode recusar."
+            "value": "Excede um total do Card, como o de um dia. Alguém que gere os Cards pode dar-lhe margem extra, ou pode recusar."
           }
         }
       }
@@ -65292,49 +65292,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einmal genehmigen reicht hier nicht: Es liegt über einer Summe, die die Card über mehrere Aufrufe erlaubt, etwa einer Tagessumme. Zusatzspielraum fügt genau das hinzu, was dieser Aufruf braucht, bis diese Summe zurückgesetzt wird. Danach ist die Card wieder wie vorher."
+            "value": "Es liegt über einer Summe der Card, etwa einer Tagessumme. Zusatzspielraum lässt nur diesen Aufruf durch."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Extra room adds just what this call needs, until that total resets. After that the Card is as it was."
+            "value": "It's over a Card total, such as a day's. Extra room lets only this call through."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aprobarla una vez no basta: supera un total que la Card permite entre llamadas, como el de un día. El margen extra añade justo lo que necesita esta llamada, hasta que ese total se reinicie. Después, la Card vuelve a ser como era."
+            "value": "Supera un total de la Card, como el de un día. El margen extra deja pasar solo esta llamada."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'approuver une fois ne suffit pas : cela dépasse un total que la Card autorise sur plusieurs appels, par exemple sur une journée. La marge supplémentaire ajoute juste ce dont cet appel a besoin, jusqu'à la remise à zéro de ce total. Ensuite, la Card redevient comme avant."
+            "value": "Cela dépasse un total de la Card, par exemple sur une journée. La marge supplémentaire ne laisse passer que cet appel."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Approvarla una volta non basta: supera un totale che la Card consente tra più chiamate, come quello di un giorno. Il margine extra aggiunge solo ciò che serve a questa chiamata, finché quel totale non si azzera. Dopo, la Card torna com'era."
+            "value": "Supera un totale della Card, come quello di un giorno. Il margine extra fa passare solo questa chiamata."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eenmalig goedkeuren laat dit niet door: het gaat boven een totaal dat de Card over meerdere aanroepen toestaat, zoals dat van een dag. Extra ruimte voegt precies toe wat deze aanroep nodig heeft, tot dat totaal wordt gereset. Daarna is de Card weer zoals hij was."
+            "value": "Het gaat boven een totaal van de Card, zoals dat van een dag. Extra ruimte laat alleen deze aanroep door."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jednorazowe zatwierdzenie tego nie przepuści: przekracza sumę, na którą Card pozwala dla wielu wywołań, np. dzienną. Dodatkowy zapas dodaje tylko tyle, ile potrzebuje to wywołanie, do czasu wyzerowania tej sumy. Potem Card wraca do poprzedniego stanu."
+            "value": "Przekracza sumę Card, np. dzienną. Dodatkowy zapas przepuszcza tylko to wywołanie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aprovar uma vez não permite passar isto: excede um total que o Card permite entre chamadas, como o de um dia. A margem extra acrescenta só o que esta chamada precisa, até esse total ser reposto. Depois disso, o Card fica como estava."
+            "value": "Excede um total do Card, como o de um dia. A margem extra deixa passar só esta chamada."
           }
         }
       }
@@ -66670,49 +66670,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wenn ein taf um etwas außerhalb seiner Card bittet, wartet er auf deine Antwort. Eine Benachrichtigung sagt es dir sofort, auf diesem %1$@ und seinem Sperrbildschirm, auch wenn tafs geschlossen ist."
+            "value": "Eine Benachrichtigung erreicht dich auf diesem %1$@, auch wenn tafs geschlossen ist."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this %1$@ and its lock screen, even with tafs closed."
+            "value": "An alert reaches you on this %1$@, even with tafs closed."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando un taf pide algo fuera de su Card, espera tu respuesta. Una alerta te avisa al momento, en este %1$@ y en su pantalla de bloqueo, aunque tafs esté cerrado."
+            "value": "Una alerta te llega en este %1$@, aunque tafs esté cerrado."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quand un taf demande quelque chose hors de sa Card, il attend votre réponse. Une alerte vous prévient aussitôt, sur cet %1$@ et son écran verrouillé, même si tafs est fermé."
+            "value": "Une alerte vous parvient sur cet %1$@, même si tafs est fermé."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando un taf chiede qualcosa fuori dalla sua Card, aspetta la tua risposta. Un avviso te lo dice subito, su questo %1$@ e sulla sua schermata di blocco, anche con tafs chiusa."
+            "value": "Un avviso ti raggiunge su questo %1$@, anche con tafs chiusa."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Als een taf om iets buiten zijn Card vraagt, wacht het op je antwoord. Een melding laat het je meteen weten, op deze %1$@ en het toegangsscherm, ook als tafs gesloten is."
+            "value": "Een melding bereikt je op deze %1$@, ook als tafs gesloten is."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gdy taf poprosi o coś poza swoją Card, czeka na Twoją odpowiedź. Alert powiadomi Cię od razu, na tym urządzeniu (%1$@) i jego ekranie blokady, nawet gdy tafs jest zamknięte."
+            "value": "Alert dotrze do Ciebie na tym urządzeniu (%1$@), nawet gdy tafs jest zamknięte."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quando um taf pede algo fora do seu Card, aguarda a sua resposta. Um alerta avisa-o de imediato, neste %1$@ e no ecrã bloqueado, mesmo com o tafs fechado."
+            "value": "Um alerta chega-lhe neste %1$@, mesmo com o tafs fechado."
           }
         }
       }
@@ -72045,49 +72045,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "✓ KIFFs Beleg · auf diesem Telefon geprüft"
+            "value": "✓ KIFFs Beleg · geprüft"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "✓ KIFF's receipt · checked on this phone"
+            "value": "✓ KIFF's receipt · checked"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "✓ Recibo de KIFF · comprobado en este teléfono"
+            "value": "✓ Recibo de KIFF · comprobado"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "✓ Reçu de KIFF · vérifié sur ce téléphone"
+            "value": "✓ Reçu de KIFF · vérifié"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "✓ Ricevuta di KIFF · verificata su questo telefono"
+            "value": "✓ Ricevuta di KIFF · verificata"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "✓ Ontvangstbewijs van KIFF · gecontroleerd op deze telefoon"
+            "value": "✓ Ontvangstbewijs van KIFF · gecontroleerd"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "✓ Potwierdzenie KIFF · sprawdzone na tym telefonie"
+            "value": "✓ Potwierdzenie KIFF · sprawdzone"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "✓ Recibo do KIFF · verificado neste telefone"
+            "value": "✓ Recibo do KIFF · verificado"
           }
         }
       }
@@ -72151,49 +72151,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF hat das signiert, als es entschieden hat. Die Signatur passt zu KIFFs Adresse, und keiner seiner Schritte hat sich seitdem geändert."
+            "value": "Von KIFF signiert, seitdem unverändert."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF signed this when it decided. The signature matches KIFF's address and none of its steps has changed since."
+            "value": "Signed by KIFF, unchanged since."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF lo firmó cuando decidió. La firma coincide con la dirección de KIFF y ninguno de sus pasos ha cambiado desde entonces."
+            "value": "Firmado por KIFF, sin cambios desde entonces."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF l'a signé au moment de décider. La signature correspond à l'adresse de KIFF et aucune de ses étapes n'a changé depuis."
+            "value": "Signé par KIFF, inchangé depuis."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF l'ha firmata quando ha deciso. La firma corrisponde all'indirizzo di KIFF e nessuno dei suoi passi è cambiato da allora."
+            "value": "Firmata da KIFF, invariata da allora."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF heeft dit ondertekend toen het besliste. De handtekening past bij het adres van KIFF en geen van de stappen is sindsdien gewijzigd."
+            "value": "Ondertekend door KIFF, sindsdien ongewijzigd."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF podpisał to w chwili decyzji. Podpis zgadza się z adresem KIFF i od tego czasu żaden krok się nie zmienił."
+            "value": "Podpisane przez KIFF, od tego czasu bez zmian."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O KIFF assinou isto quando decidiu. A assinatura corresponde ao endereço do KIFF e nenhum dos passos mudou desde então."
+            "value": "Assinado pelo KIFF, inalterado desde então."
           }
         }
       }
@@ -74642,49 +74642,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Antwort wurde nach %1$@ mit einem Schlüssel signiert, der dieses Gerät nie verlässt."
+            "value": "Mit %1$@, durch einen Schlüssel, der dieses Gerät nie verlässt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your answer was signed with a key that never leaves this device, after %1$@."
+            "value": "With %1$@, by a key that never leaves this device."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu respuesta se firmó con una clave que nunca sale de este dispositivo, después de %1$@."
+            "value": "Con %1$@, con una clave que nunca sale de este dispositivo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre réponse a été signée avec une clé qui ne quitte jamais cet appareil, après %1$@."
+            "value": "Avec %1$@, par une clé qui ne quitte jamais cet appareil."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La tua risposta è stata firmata con una chiave che non lascia mai questo dispositivo, dopo %1$@."
+            "value": "Con %1$@, con una chiave che non lascia mai questo dispositivo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je antwoord is ondertekend met een sleutel die dit apparaat nooit verlaat, na %1$@."
+            "value": "Met %1$@, door een sleutel die dit apparaat nooit verlaat."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twoja odpowiedź została podpisana kluczem, który nigdy nie opuszcza tego urządzenia, po %1$@."
+            "value": "Przez %1$@, kluczem, który nigdy nie opuszcza tego urządzenia."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "A sua resposta foi assinada com uma chave que nunca sai deste dispositivo, após %1$@."
+            "value": "Com %1$@, por uma chave que nunca sai deste dispositivo."
           }
         }
       }
@@ -74748,49 +74748,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Antwort wurde mit einem Schlüssel signiert, der dieses Telefon nie verlässt."
+            "value": "Durch einen Schlüssel, der dieses Telefon nie verlässt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your answer was signed with a key that never leaves this phone."
+            "value": "By a key that never leaves this phone."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu respuesta se firmó con una clave que nunca sale de este teléfono."
+            "value": "Con una clave que nunca sale de este teléfono."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre réponse a été signée avec une clé qui ne quitte jamais ce téléphone."
+            "value": "Par une clé qui ne quitte jamais ce téléphone."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La tua risposta è stata firmata con una chiave che non lascia mai questo telefono."
+            "value": "Con una chiave che non lascia mai questo telefono."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je antwoord is ondertekend met een sleutel die deze telefoon nooit verlaat."
+            "value": "Door een sleutel die deze telefoon nooit verlaat."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twoja odpowiedź została podpisana kluczem, który nigdy nie opuszcza tego telefonu."
+            "value": "Kluczem, który nigdy nie opuszcza tego telefonu."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "A sua resposta foi assinada com uma chave que nunca sai deste telefone."
+            "value": "Por uma chave que nunca sai deste telefone."
           }
         }
       }
@@ -88426,49 +88426,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du bestätigst mit %1$@, bevor etwas gelöscht wird. Bist du anderswo angemeldet, wirst du dort ebenfalls abgemeldet."
+            "value": "Du bestätigst mit %1$@. Andere Geräte werden auch abgemeldet."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You confirm with %1$@ before anything is deleted. Signed in elsewhere, you're signed out there too."
+            "value": "You confirm with %1$@. Other devices sign out too."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirmas con %1$@ antes de que se elimine nada. Si tienes la sesión iniciada en otro sitio, también se cerrará allí."
+            "value": "Confirmas con %1$@. También se cierra la sesión en otros dispositivos."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous confirmez avec %1$@ avant toute suppression. Si vous êtes connecté ailleurs, vous y serez aussi déconnecté."
+            "value": "Vous confirmez avec %1$@. Les autres appareils sont aussi déconnectés."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confermi con %1$@ prima che venga eliminato qualcosa. Se hai effettuato l'accesso altrove, vieni disconnesso anche lì."
+            "value": "Confermi con %1$@. Anche gli altri dispositivi vengono disconnessi."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je bevestigt met %1$@ voordat er iets wordt verwijderd. Ben je ergens anders ingelogd, dan word je daar ook uitgelogd."
+            "value": "Je bevestigt met %1$@. Andere apparaten worden ook uitgelogd."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zanim cokolwiek zostanie usunięte, potwierdzisz to przez %1$@. Logowania na innych urządzeniach też zostaną zakończone."
+            "value": "Potwierdzasz przez %1$@. Inne urządzenia też zostaną wylogowane."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confirma com %1$@ antes de qualquer eliminação. Se tiver sessão iniciada noutro lado, a sessão também é terminada lá."
+            "value": "Confirma com %1$@. A sessão também é terminada noutros dispositivos."
           }
         }
       }
@@ -88585,49 +88585,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deine Cards und Schlüssel: Sie funktionieren nicht mehr"
+            "value": "Cards und Schlüssel"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your Cards and keys: they stop working"
+            "value": "Cards and keys"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tus Cards y claves: dejan de funcionar"
+            "value": "Cards y claves"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vos Cards et vos clés : elles cessent de fonctionner"
+            "value": "Cards et clés"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le tue Card e chiavi: smettono di funzionare"
+            "value": "Card e chiavi"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je Cards en sleutels: ze werken niet meer"
+            "value": "Cards en sleutels"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twoje Card i klucze: przestaną działać"
+            "value": "Card i klucze"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os seus Cards e chaves: deixam de funcionar"
+            "value": "Cards e chaves"
           }
         }
       }
@@ -88638,49 +88638,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFFs Aufzeichnungen zu deinem Konto, gelöscht nach 30 Tagen"
+            "value": "KIFFs Aufzeichnungen, nach 30 Tagen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF's records of your account, erased after 30 days"
+            "value": "KIFF records, after 30 days"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los registros de KIFF de tu cuenta, borrados a los 30 días"
+            "value": "Registros de KIFF, a los 30 días"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les registres de KIFF sur votre compte, effacés après 30 jours"
+            "value": "Registres de KIFF, après 30 jours"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I registri di KIFF del tuo account, cancellati dopo 30 giorni"
+            "value": "Registri di KIFF, dopo 30 giorni"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De gegevens van KIFF over je account, gewist na 30 dagen"
+            "value": "Gegevens van KIFF, na 30 dagen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rejestry KIFF dotyczące Twojego konta, usuwane po 30 dniach"
+            "value": "Rejestry KIFF, po 30 dniach"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os registos do KIFF sobre a sua conta, apagados após 30 dias"
+            "value": "Registos do KIFF, após 30 dias"
           }
         }
       }
@@ -88691,49 +88691,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Anmeldungen deiner Apps, entfernt"
+            "value": "App-Anmeldungen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your apps' sign-ins, removed"
+            "value": "App sign-ins"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los inicios de sesión de tus apps, quitados"
+            "value": "Inicios de sesión de apps"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les identifiants de vos apps, retirés"
+            "value": "Identifiants des apps"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gli accessi alle tue app, rimossi"
+            "value": "Accessi alle app"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De logins van je apps, ingetrokken"
+            "value": "App-logins"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Logowania Twoich aplikacji, usunięte"
+            "value": "Logowania aplikacji"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os inícios de sessão das suas apps, removidos"
+            "value": "Inícios de sessão das apps"
           }
         }
       }
@@ -88744,49 +88744,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jeder taf, mit seinen Läufen, Chats, Notizen und Zeitplänen"
+            "value": "Tafs, Läufe, Chats und Notizen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Every taf, with its runs, chats, notes and schedules"
+            "value": "Tafs, runs, chats and notes"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cada taf, con sus ejecuciones, chats, notas y programaciones"
+            "value": "Tafs, ejecuciones, chats y notas"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chaque taf, avec ses exécutions, chats, notes et plannings"
+            "value": "Tafs, exécutions, chats et notes"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ogni taf, con le sue esecuzioni, chat, note e pianificazioni"
+            "value": "Tafs, esecuzioni, chat e note"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elk taf, met zijn runs, chats, notities en planningen"
+            "value": "Tafs, runs, chats en notities"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Każdy taf, z jego uruchomieniami, czatami, notatkami i harmonogramami"
+            "value": "Tafs, uruchomienia, czaty i notatki"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todos os tafs, com as suas execuções, chats, notas e agendamentos"
+            "value": "Tafs, execuções, chats e notas"
           }
         }
       }
@@ -89168,49 +89168,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Damit werden dein KIFF-Konto und alles, was tafs dafür speichert, gelöscht. Das lässt sich nicht rückgängig machen."
+            "value": "Das lässt sich nicht rückgängig machen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This deletes your KIFF account and everything tafs keeps for it. It can't be undone."
+            "value": "This can't be undone."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esto elimina tu cuenta de KIFF y todo lo que tafs guarda de ella. No se puede deshacer."
+            "value": "No se puede deshacer."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cela supprime votre compte KIFF et tout ce que tafs conserve pour lui. C'est irréversible."
+            "value": "C'est irréversible."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questo elimina il tuo account KIFF e tutto ciò che tafs conserva per lui. Non si può annullare."
+            "value": "Non si può annullare."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dit verwijdert je KIFF-account en alles wat tafs ervoor bewaart. Dit kan niet ongedaan worden gemaakt."
+            "value": "Dit kan niet ongedaan worden gemaakt."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "To usuwa Twoje konto KIFF i wszystko, co tafs dla niego przechowuje. Nie można tego cofnąć."
+            "value": "Nie można tego cofnąć."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Isto elimina a sua conta KIFF e tudo o que o tafs guarda para ela. Não pode ser desfeito."
+            "value": "Não pode ser desfeito."
           }
         }
       }
@@ -97012,49 +97012,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gib einem taf eine Aufgabe. Er arbeitet innerhalb einer Card, die du festlegst, und fragt dich, wenn er mehr braucht."
+            "value": "Ein taf erledigt eine Aufgabe innerhalb der Card, die du festlegst. Darüber hinaus fragt er dich."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Hand a job to a taf. It works inside a Card you set, and asks you when it needs more."
+            "value": "A taf does a job within the Card you set. Past it, it asks you."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Encarga un trabajo a un taf. Trabaja dentro de una Card que tú defines, y te pregunta cuando necesita más."
+            "value": "Un taf hace un trabajo dentro de la Card que tú defines. Más allá, te pregunta."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Confiez une mission à un taf. Il travaille dans une Card que vous définissez, et vous demande quand il lui faut plus."
+            "value": "Un taf accomplit une mission dans la Card que vous définissez. Au-delà, il vous demande."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Affida un lavoro a un taf. Lavora dentro una Card che imposti tu, e ti chiede quando gli serve di più."
+            "value": "Un taf svolge un lavoro dentro la Card che imposti tu. Oltre, ti chiede."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Geef een taak aan een taf. Het werkt binnen een Card die jij instelt, en vraagt het je als het meer nodig heeft."
+            "value": "Een taf doet een taak binnen de Card die jij instelt. Daarbuiten vraagt het jou."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Przekaż zadanie tafowi. Pracuje w ramach ustawionej przez Ciebie Card i pyta Cię, gdy potrzebuje więcej."
+            "value": "Taf wykonuje zadanie w ramach ustawionej przez Ciebie Card. Poza nią pyta Cię."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Entregue uma tarefa a um taf. Trabalha dentro de um Card que define, e pergunta-lhe quando precisa de mais."
+            "value": "Um taf faz uma tarefa dentro do Card que define. Para lá disso, pergunta-lhe."
           }
         }
       }
@@ -97277,49 +97277,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "They taf.\nYou kiff."
+            "value": "tafs"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "They taf.\nYou kiff."
+            "value": "tafs"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "They taf.\nYou kiff."
+            "value": "tafs"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ils tafent.\nVous kiffez."
+            "value": "tafs"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "They taf.\nYou kiff."
+            "value": "tafs"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "They taf.\nYou kiff."
+            "value": "tafs"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "They taf.\nYou kiff."
+            "value": "tafs"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "They taf.\nYou kiff."
+            "value": "tafs"
           }
         }
       }
@@ -99079,49 +99079,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Schlüssel bleiben versiegelt"
+            "value": "Kein taf sieht seine Schlüssel"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Keys kept sealed"
+            "value": "No taf sees its keys"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Claves selladas"
+            "value": "Ningún taf ve sus claves"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Clés gardées scellées"
+            "value": "Aucun taf ne voit ses clés"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chiavi tenute sigillate"
+            "value": "Nessun taf vede le sue chiavi"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sleutels blijven verzegeld"
+            "value": "Geen enkel taf ziet de sleutels"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Klucze pozostają zapieczętowane"
+            "value": "Żaden taf nie widzi kluczy"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chaves mantidas seladas"
+            "value": "Nenhum taf vê as suas chaves"
           }
         }
       }
@@ -103681,49 +103681,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Probiere eine Version zuerst aus: Du chattest mit ihr unter einer eigenen Card, während die Live-Version weiterarbeitet. Installierst du eine, wird sie zur Live-Version."
+            "value": "Probiere eine Version zuerst aus, unter einer eigenen Card. Die Live-Version arbeitet weiter. Installierst du eine, geht sie live."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Try a version first: you chat with it under a Card of its own, while the live version keeps working. Installing one makes it the live version."
+            "value": "Try a version first, under a Card of its own. The live version keeps working. Installing one makes it live."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prueba antes una versión: chateas con ella con una Card propia, mientras la versión activa sigue trabajando. Al instalarla, pasa a ser la versión activa."
+            "value": "Prueba antes una versión, con una Card propia. La versión activa sigue trabajando. Al instalarla, pasa a estar activa."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Essayez d'abord une version : vous discutez avec elle sous sa propre Card, pendant que la version en service continue de travailler. L'installer en fait la version en service."
+            "value": "Essayez d'abord une version, sous sa propre Card. La version en service continue de travailler. L'installer la met en service."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prova prima una versione: ci parli in chat con una Card tutta sua, mentre la versione attiva continua a lavorare. Installarla la rende la versione attiva."
+            "value": "Prova prima una versione, con una Card tutta sua. La versione attiva continua a lavorare. Installarla la rende attiva."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Probeer eerst een versie uit: je chat ermee onder een eigen Card, terwijl de live versie blijft werken. Installeer je er een, dan wordt dat de live versie."
+            "value": "Probeer eerst een versie uit, onder een eigen Card. De live versie blijft werken. Installeer je er een, dan wordt die live."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Najpierw wypróbuj wersję: rozmawiasz z nią w ramach jej własnej Card, a wersja działająca na żywo pracuje dalej. Instalacja wersji czyni ją wersją działającą na żywo."
+            "value": "Najpierw wypróbuj wersję, w ramach jej własnej Card. Wersja działająca na żywo pracuje dalej. Instalacja wersji uruchamia ją na żywo."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Experimente primeiro uma versão: conversa com ela ao abrigo de um Card próprio, enquanto a versão em produção continua a trabalhar. Instalar uma torna-a a versão em produção."
+            "value": "Experimente primeiro uma versão, ao abrigo de um Card próprio. A versão em produção continua a trabalhar. Instalar uma coloca-a em produção."
           }
         }
       }
@@ -112664,49 +112664,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Probiere eine Version zuerst aus: Du chattest mit ihr unter einer eigenen Card, während die Live-Version weiterarbeitet."
+            "value": "Probiere eine Version zuerst aus, unter einer eigenen Card. Die Live-Version arbeitet weiter."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Try a version first: you chat with it under a Card of its own, while the live version keeps working."
+            "value": "Try a version first, under a Card of its own. The live version keeps working."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prueba antes una versión: chateas con ella con una Card propia, mientras la versión activa sigue trabajando."
+            "value": "Prueba antes una versión, con una Card propia. La versión activa sigue trabajando."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Essayez d'abord une version : vous discutez avec elle sous sa propre Card, pendant que la version en service continue de travailler."
+            "value": "Essayez d'abord une version, sous sa propre Card. La version en service continue de travailler."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Prova prima una versione: ci parli in chat con una Card tutta sua, mentre la versione attiva continua a lavorare."
+            "value": "Prova prima una versione, con una Card tutta sua. La versione attiva continua a lavorare."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Probeer eerst een versie uit: je chat ermee onder een eigen Card, terwijl de live versie blijft werken."
+            "value": "Probeer eerst een versie uit, onder een eigen Card. De live versie blijft werken."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Najpierw wypróbuj wersję: rozmawiasz z nią w ramach jej własnej Card, a wersja działająca na żywo pracuje dalej."
+            "value": "Najpierw wypróbuj wersję, w ramach jej własnej Card. Wersja działająca na żywo pracuje dalej."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Experimente primeiro uma versão: conversa com ela ao abrigo de um Card próprio, enquanto a versão em produção continua a trabalhar."
+            "value": "Experimente primeiro uma versão, ao abrigo de um Card próprio. A versão em produção continua a trabalhar."
           }
         }
       }
@@ -113088,49 +113088,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du chattest mit Version %1$@ in einem eigenen Fenster. Was sie tut, ist echt: Ihre Aufrufe laufen über KIFF unter der Card unten."
+            "value": "Was Version %1$@ tut, ist echt, unter ihrer eigenen Card."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "You chat with version %1$@ in its own window. What it does is real: its calls go through KIFF under the Card below."
+            "value": "Version %1$@'s actions are real, under its own Card."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Chateas con la versión %1$@ en su propia ventana. Lo que hace es real: sus llamadas pasan por KIFF con la Card de abajo."
+            "value": "Las acciones de la versión %1$@ son reales, con su propia Card."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous discutez avec la version %1$@ dans sa propre fenêtre. Ce qu'elle fait est réel : ses appels passent par KIFF sous la Card ci-dessous."
+            "value": "Les actions de la version %1$@ sont réelles, sous sa propre Card."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Parli con la versione %1$@ nella sua finestra. Ciò che fa è reale: le sue chiamate passano da KIFF con la Card qui sotto."
+            "value": "Le azioni della versione %1$@ sono reali, con la sua Card."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je chat met versie %1$@ in een eigen venster. Wat het doet, is echt: de aanroepen gaan via KIFF onder de Card hieronder."
+            "value": "Wat versie %1$@ doet, is echt, onder een eigen Card."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Rozmawiasz z wersją %1$@ w jej własnym oknie. To, co robi, dzieje się naprawdę: jej wywołania przechodzą przez KIFF w ramach Card poniżej."
+            "value": "Działania wersji %1$@ są prawdziwe, w ramach jej własnej Card."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Conversa com a versão %1$@ na sua própria janela. O que faz é real: as suas chamadas passam pelo KIFF ao abrigo do Card abaixo."
+            "value": "As ações da versão %1$@ são reais, ao abrigo do seu próprio Card."
           }
         }
       }
@@ -113141,49 +113141,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Card des Tests zählt ab null, daher kann dein taf an einem Tag die Limits seiner Live-Card plus die dieser ausschöpfen."
+            "value": "Ihre Card zählt ab null."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The trial's Card counts from zero, so on a day your taf can spend its live Card's limits plus this one's."
+            "value": "Its Card counts from zero."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La Card de la prueba cuenta desde cero, así que en un día tu taf puede gastar los límites de su Card activa más los de esta."
+            "value": "Su Card cuenta desde cero."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La Card de l'essai compte à partir de zéro : sur une journée, votre taf peut donc dépenser les limites de sa Card en service plus celles de celle-ci."
+            "value": "Sa Card compte à partir de zéro."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La Card della prova conta da zero, quindi in un giorno il tuo taf può spendere i limiti della sua Card attiva più quelli di questa."
+            "value": "La sua Card conta da zero."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De Card van de proef telt vanaf nul, dus op een dag kan je taf de limieten van zijn live Card plus die van deze besteden."
+            "value": "Zijn Card telt vanaf nul."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Card próby liczy od zera, więc jednego dnia Twój taf może wydać limity swojej Card na żywo plus limity tej."
+            "value": "Jej Card liczy od zera."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Card da experiência conta a partir de zero, por isso num dia o seu taf pode gastar os limites do Card em produção mais os deste."
+            "value": "O seu Card conta a partir de zero."
           }
         }
       }
@@ -113194,49 +113194,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Er endet, wenn du sie installierst oder zurückkehrst, oder nach 7 ungenutzten Tagen. Sein Chat wird dann gelöscht, und unter „Versionen“ bleibt eine Zeile dazu."
+            "value": "Endet, wenn du sie installierst oder zurückkehrst, oder nach 7 ungenutzten Tagen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "It ends when you install it or go back, or after 7 days unused. Its chat is then deleted, and Versions keeps one line about it."
+            "value": "Ends when you install it, go back, or after 7 unused days."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Termina cuando la instalas o vuelves atrás, o tras 7 días sin usarla. Entonces su chat se elimina, y Versiones conserva una línea sobre ella."
+            "value": "Termina cuando la instalas, vuelves atrás, o tras 7 días sin usarla."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il prend fin quand vous l'installez ou revenez en arrière, ou après 7 jours sans utilisation. Son chat est alors supprimé, et Versions en garde une ligne."
+            "value": "Prend fin quand vous l'installez, revenez en arrière, ou après 7 jours sans utilisation."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Termina quando la installi o torni indietro, o dopo 7 giorni senza uso. La sua chat viene poi eliminata, e Versioni ne conserva una riga."
+            "value": "Termina quando la installi, torni indietro, o dopo 7 giorni senza uso."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Het eindigt als je het installeert of teruggaat, of na 7 dagen zonder gebruik. De chat wordt dan verwijderd, en Versies bewaart er één regel over."
+            "value": "Eindigt als je het installeert, teruggaat, of na 7 dagen zonder gebruik."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kończy się, gdy ją zainstalujesz lub wrócisz, albo po 7 dniach nieużywania. Jej czat zostanie wtedy usunięty, a w Wersjach zostanie o niej jeden wiersz."
+            "value": "Kończy się, gdy ją zainstalujesz, wrócisz, albo po 7 dniach nieużywania."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Termina quando a instalar ou voltar atrás, ou após 7 dias sem uso. O seu chat é então eliminado, e Versões guarda uma linha sobre ela."
+            "value": "Termina quando a instalar, voltar atrás, ou após 7 dias sem uso."
           }
         }
       }
@@ -113247,49 +113247,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Live-Version arbeitet weiter: Ihr Zeitplan, ihre Card und ihr Budget ändern sich nicht."
+            "value": "Die Live-Version läuft weiter; an einem Tag können die Limits beider Cards ausgeschöpft werden."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The live version keeps working: its schedule, Card and budget don't change."
+            "value": "The live version keeps running; on a day, both Cards' limits can be spent."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La versión activa sigue trabajando: su programación, su Card y su presupuesto no cambian."
+            "value": "La versión activa sigue funcionando; en un día se pueden gastar los límites de ambas Cards."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La version en service continue de travailler : son planning, sa Card et son budget ne changent pas."
+            "value": "La version en service continue de tourner ; sur une journée, les limites des deux Cards peuvent être dépensées."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La versione attiva continua a lavorare: la sua pianificazione, la Card e il budget non cambiano."
+            "value": "La versione attiva continua a funzionare; in un giorno si possono spendere i limiti di entrambe le Card."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De live versie blijft werken: de planning, Card en het budget veranderen niet."
+            "value": "De live versie blijft draaien; op een dag kunnen de limieten van beide Cards worden besteed."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Wersja działająca na żywo pracuje dalej: jej harmonogram, Card i budżet się nie zmieniają."
+            "value": "Wersja działająca na żywo działa dalej; jednego dnia można wydać limity obu Card."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "A versão em produção continua a trabalhar: o seu agendamento, Card e orçamento não mudam."
+            "value": "A versão em produção continua a funcionar; num dia, podem ser gastos os limites de ambos os Cards."
           }
         }
       }

@@ -46,29 +46,10 @@ fun OnboardingView(onSignIn: () -> Unit, onSample: () -> Unit, modifier: Modifie
         Text(Words.SignIn.Welcome.title, style = scaled(48, FontWeight.Bold, Theme.ink, display = true))
         Text(Words.SignIn.Welcome.lead, style = scaled(16, color = Theme.soft))
       }
-      Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Point(Words.SignIn.Welcome.insideLead, Words.SignIn.Welcome.insideRest, Theme.ok)
-        Point(Words.SignIn.Welcome.outsideLead, Words.SignIn.Welcome.outsideRest, Theme.amber)
-        Point(Words.SignIn.Welcome.revokedLead, Words.SignIn.Welcome.revokedRest, Theme.no)
-      }
     }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
       PrimaryButton(Words.SignIn.withKiff, onSignIn)
       OutlineButton(Words.Sample.tryIt, onSample, Modifier.fillMaxWidth())
     }
-  }
-}
-
-@Composable
-private fun Point(lead: String, rest: String, color: Color) {
-  Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-    Dot(color)
-    Text(
-      buildAnnotatedString {
-        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = Theme.ink)) { append(lead) }
-        withStyle(SpanStyle(color = Theme.soft)) { append(" $rest") }
-      },
-      style = scaled(15),
-    )
   }
 }

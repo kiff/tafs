@@ -60,7 +60,7 @@ person's language.
 
 **Every job, also once a taf runs** (`GET /v1/recipes/gallery`, read with each refresh;
 [coach.md](coach.md#the-gallery)). tafs cloud decides what shows; the app draws it.
-- **+ New** on Tafs, beside the tagline, in tafs cloud's `words.title` (the app's "New taf"
+- **+ New** at the top of Tafs (Home no longer repeats the tagline: it is in Settings, About), in tafs cloud's `words.title` (the app's "New taf"
   while it sends none), opens the gallery (`GallerySheet`): its title, "Say it in your own words"
   (`own_words`), which opens Coach on a new, empty conversation (`AppModel.openCoachEmpty`), then
   `words.all`, a chip per category, and every job. Only for someone who may use Coach. A tafs cloud
@@ -851,6 +851,9 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
 - **Home leads with "Say it in your own words"** (`GET /v1/recipes`'s `home.own_words`, `OwnWordsRow`): under tafs cloud's
   line and above the jobs, or under Home's empty line when no job is listed, so there's always a way to Coach. It opens Coach,
   empty, for someone who may use it. As on iPhone and iPad.
+- **Fewer words** (1.20.x): the welcome is its title and one line, with no points under it. Home doesn't repeat the
+  tagline (it's in Settings, About), and Coach's intro doesn't say that each approval waits, since the first approval card
+  does. The shared lines are cut in `app/strings` for both apps.
 - **A taf made with no plan says so** on Coach's "taf made" card, in tafs cloud's words (the result's
   `plan_needed.words`).
 - **Alerts are offered once,** on Coach's "taf made" card, where alerts can be on and aren't: "Get an alert when a taf needs

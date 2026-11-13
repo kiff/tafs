@@ -36,7 +36,7 @@
   "needs_you.extra_room_with": "Extra room with {biometry}",
   "needs_you.get_alert_when_call_waits": "Get an alert when a call waits for your answer, even with tafs closed.",
   "needs_you.install_from_card": "Install it from its card: the version goes live, then Coach hears.",
-  "needs_you.ios_asks_next_confirming_sets": "iOS asks next. Confirming with {biometry} sets them up for your account.",
+  "needs_you.ios_asks_next_confirming_sets": "iOS asks next, then {biometry}.",
   "needs_you.knocks": {
     "one": "Someone knocked at its door. Nothing was done.",
     "other": "{count} knocks at its doors. Nothing was done."
@@ -48,8 +48,8 @@
   "needs_you.nothing_sent": "Nothing is sent until you approve.",
   "needs_you.nothing_waiting": "Nothing is waiting.",
   "needs_you.opens_where_you_answer": "Opens {taf}, where you answer it",
-  "needs_you.over_total": "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Someone who manages the account's Cards can give it extra room, or you can refuse it.",
-  "needs_you.over_total_manager": "Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Extra room adds just what this call needs, until that total resets. After that the Card is as it was.",
+  "needs_you.over_total": "It's over a Card total, such as a day's. Someone who manages the Cards can give it extra room, or you can refuse it.",
+  "needs_you.over_total_manager": "It's over a Card total, such as a day's. Extra room lets only this call through.",
   "needs_you.prompt.answer": "Answer {summary}",
   "needs_you.prompt.did_not_happen": "Say it didn't happen: {title}",
   "needs_you.prompt.happened": "Say it happened: {title}",
@@ -75,7 +75,7 @@
   "needs_you.unsure.answer_not_taken": "Your answer wasn't taken. {why}",
   "needs_you.unsure.coach_not_opened": "Coach couldn't open on it. {why}",
   "needs_you.waiting_for_browser": "Waiting for your browser…",
-  "needs_you.when_taf_asks_something_outside": "When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this {device} and its lock screen, even with tafs closed.",
+  "needs_you.when_taf_asks_something_outside": "An alert reaches you on this {device}, even with tafs closed.",
   "needs_you.your_step.ended": "This step was already answered or has ended.",
   "needs_you.your_step.not_answered": "Your answer didn't go through. {why}",
   "needs_you.your_step.not_answered_unconfirmed": "Not answered: it wasn't confirmed."

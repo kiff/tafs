@@ -29,12 +29,12 @@
   "sign_in.waiting_for_browser": "In attesa del browser… Verifica che mostri {user_code}, e approva solo con questo {device} in mano.",
   "sign_in.welcome.inside_lead": "Dentro la Card",
   "sign_in.welcome.inside_rest": "agisce, e ogni azione ha una ricevuta.",
-  "sign_in.welcome.lead": "Affida un lavoro a un taf. Lavora dentro una Card che imposti tu, e ti chiede quando gli serve di più.",
+  "sign_in.welcome.lead": "Un taf svolge un lavoro dentro la Card che imposti tu. Oltre, ti chiede.",
   "sign_in.welcome.outside_lead": "Fuori",
   "sign_in.welcome.outside_rest": "ti aspetta, proprio qui.",
   "sign_in.welcome.revoked_lead": "Revocata",
   "sign_in.welcome.revoked_rest": "nessuna nuova azione va a buon fine.",
-  "sign_in.welcome.title": "They taf.\nYou kiff.",
+  "sign_in.welcome.title": "tafs",
   "sign_in.with_kiff": "Accedi con KIFF",
   "sign_in.your_code": "Il tuo codice"
 }

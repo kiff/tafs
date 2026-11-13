@@ -13,7 +13,7 @@ enum Words {
         static var allowNotifications: String { Words.line("alert.allow_notifications") }
         /// Sound, always
         static var always: String { Words.line("alert.always") }
-        /// {what} · {why}. Answer by {zone}. Nothing is sent until you approve.
+        /// {what} · {why}. Answer by {zone}.
         static func answerNothingSentUntilYou(what: String, why: String, zone: String) -> String { Words.line("alert.answer_nothing_sent_until_you", what, why, zone) }
         /// A taf answered someone
         static var answered: String { Words.line("alert.answered") }
@@ -26,7 +26,7 @@ enum Words {
         enum Foot {
             /// Alerts go to the people who may answer held calls. Your role on this account can't.
             static var cantAnswerHolds: String { Words.line("alert.foot.cant_answer_holds") }
-            /// When a taf needs you, this {device} tells you even with tafs closed. Nothing is sent until you approve.
+            /// When a taf needs you, this {device} tells you, even with tafs closed.
             static func tellsYouDevice(device: String) -> String { Words.line("alert.foot.tells_you_device", device) }
         }
         /// Haptics
@@ -1010,7 +1010,7 @@ enum Words {
             static var approve: String { Words.line("coach.answer.approve") }
             /// Approve · it didn't go through
             static var approveFailed: String { Words.line("coach.answer.approve_failed") }
-            /// Approved · {vendor} is connected, keys kept sealed
+            /// Approved · {vendor} is connected
             static func approvedConnected(vendor: String) -> String { Words.line("coach.answer.approved_connected", vendor) }
             /// Approved · Setup asked for more below
             static var approvedMoreBelow: String { Words.line("coach.answer.approved_more_below") }
@@ -1067,13 +1067,13 @@ enum Words {
         static func approvedSigned(vendor: String) -> String { Words.line("coach.approved_signed", vendor) }
         /// Approving asks for {biometry}.
         static func approvingAsks(biometry: String) -> String { Words.line("coach.approving_asks", biometry) }
-        /// Approving is needed to finish your first taf: Coach asks you to approve the app it connects and the taf's Card on this device.
+        /// Your first taf needs approvals on this device.
         static var approvingNeededFinishYourFirst: String { Words.line("coach.approving_needed_finish_your_first") }
         /// Ask Coach
         static var ask: String { Words.line("coach.ask") }
         /// Ask anything about your tafs
         static var askAnything: String { Words.line("coach.ask_anything") }
-        /// Set up a new taf, connect an app, or change how one works. Each connection and each Card waits for your approval.
+        /// Set up a new taf, connect an app, or change how one works.
         static var askAnythingLine: String { Words.line("coach.ask_anything_line") }
         /// Setup asked this phone to sign something that isn't this card's. Nothing was signed.
         static var askNotThisCards: String { Words.line("coach.ask_not_this_cards") }
@@ -1125,7 +1125,7 @@ enum Words {
         static var connectOtherDevice: String { Words.line("coach.connect_other_device") }
         /// Connect {service}
         static func connectService(service: String) -> String { Words.line("coach.connect_service", service) }
-        /// {vendor} is connected · keys kept sealed
+        /// {vendor} is connected
         static func connectedKeysKeptSealed(vendor: String) -> String { Words.line("coach.connected_keys_kept_sealed", vendor) }
         /// Connecting your apps didn't work. Tap Start to try again.
         static var connectingFailed: String { Words.line("coach.connecting_failed") }
@@ -1179,13 +1179,13 @@ enum Words {
         static func improveLine(name: String) -> String { Words.line("coach.improve_line", name) }
         /// Improve {taf}
         static func improveTaf(taf: String) -> String { Words.line("coach.improve_taf", taf) }
-        /// Name an app a taf should work with, like your payment provider. You sign in on the app's own page, and your sign-in is kept sealed: no taf ever sees it.
+        /// Name an app for your taf, like your payment provider. No taf sees your sign-in.
         static var intro: String { Words.line("coach.intro") }
         /// KIFF counts it this way
         static var kiffCountsWay: String { Words.line("coach.kiff_counts_way") }
         /// Making it live…
         static var makingLive: String { Words.line("coach.making_live") }
-        /// Name an app a taf should work with, like your payment provider. You sign in on the app's own page, and your sign-in is kept sealed: no taf ever sees it. Each connection and each Card waits for {biometry}.
+        /// Name an app for your taf, like your payment provider. No taf sees your sign-in. You approve with {biometry}.
         static func nameToolTafShouldWork(biometry: String) -> String { Words.line("coach.name_tool_taf_should_work", biometry) }
         /// Needs you · approve
         static var needsYouApprove: String { Words.line("coach.needs_you_approve") }
@@ -1329,7 +1329,7 @@ enum Words {
             /// Opens {destination}
             static func opens(destination: String) -> String { Words.line("coach.sign_in.opens", destination) }
         }
-        /// The vendor's own page opens. Your password and keys are never shown here, and your sign-in is kept sealed.
+        /// The vendor's own page opens. No taf sees your sign-in.
         static var signInNote: String { Words.line("coach.sign_in_note") }
         /// Signed in at {vendor} · reading what it offers
         static func signedReadingWhatOffers(vendor: String) -> String { Words.line("coach.signed_reading_what_offers", vendor) }
@@ -1683,7 +1683,7 @@ enum Words {
             /// The sign-in view didn't open: it wasn't on the connection's own address.
             static var wrongAddress: String { Words.line("connect.sign_in_view.wrong_address") }
         }
-        /// Sign-ins are kept sealed: no taf ever sees them.
+        /// No taf sees your sign-ins.
         static var signInsKeptSealedNo: String { Words.line("connect.sign_ins_kept_sealed_no") }
         /// {app} is signed in. Next, Coach chooses its actions and you approve them.
         static func signedIn(app: String) -> String { Words.line("connect.signed_in", app) }
@@ -2107,7 +2107,7 @@ enum Words {
         static var cloudNoCoach: String { Words.line("error.cloud_no_coach") }
         /// The connection answered {status}
         static func connectionAnswered(status: String) -> String { Words.line("error.connection_answered", status) }
-        /// It isn't working on our side right now. Nothing to do on your side; try again later.
+        /// It isn't working on our side right now. Try again later.
         static var down: String { Words.line("error.down") }
         /// The file didn't upload. Try attaching it again.
         static var fileNotUploaded: String { Words.line("error.file_not_uploaded") }
@@ -2129,7 +2129,7 @@ enum Words {
         static var offline: String { Words.line("error.offline") }
         /// Nothing to do on your side; we're on it.
         static var onOurSide: String { Words.line("error.on_our_side") }
-        /// This phone and the server didn't understand each other. Nothing to do on your side; we're on it.
+        /// This phone and the server didn't understand each other. We're on it.
         static var ours: String { Words.line("error.ours") }
         /// This request doesn't match what it asks for. Nothing was approved.
         static var requestMismatch: String { Words.line("error.request_mismatch") }
@@ -2170,20 +2170,20 @@ enum Words {
         /// Halt all now
         static var allNow: String { Words.line("halt.all_now") }
         enum Explain {
-            /// Halted. Nothing reaches your apps. When you resume, only new work runs: nothing from before the halt picks up again.
+            /// Halted. Resuming starts only new work.
             static var halted: String { Words.line("halt.explain.halted") }
-            /// Halted since {time}. Nothing reaches your apps. When you resume, only new work runs: nothing from before the halt picks up again.
+            /// Halted since {time}. Resuming starts only new work.
             static func haltedSince(time: String) -> String { Words.line("halt.explain.halted_since", time) }
             /// Nothing new starts. Halted shows once KIFF and the connection both confirm.
             static var halting: String { Words.line("halt.explain.halting") }
-            /// Halting stops your tafs: no run starts, and nothing reaches your apps until you resume. A call already on its way may still arrive; nothing is undone.
+            /// Halting stops your tafs until you resume. A call already sent may still arrive.
             static var runningAll: String { Words.line("halt.explain.running_all") }
-            /// Halting stops it: no run starts, and nothing reaches your apps until you resume. A call already on its way may still arrive; nothing is undone.
+            /// Halting stops it until you resume. A call already sent may still arrive.
             static var runningOne: String { Words.line("halt.explain.running_one") }
         }
-        /// Halted{since}. Nothing reaches your apps. When you resume, only new work runs: nothing from before the halt picks up again.
+        /// Halted{since}. Resuming starts only new work.
         static func haltedNothingReachesYourTools(since: String) -> String { Words.line("halt.halted_nothing_reaches_your_tools", since) }
-        /// Halting stops {who}: no run starts, and nothing reaches your apps until you resume. A call already on its way may still arrive; nothing is undone.
+        /// Halting stops {who} until you resume. A call already sent may still arrive.
         static func haltingStopsNoRunStarts(who: String) -> String { Words.line("halt.halting_stops_no_run_starts", who) }
         /// Halt now
         static var now: String { Words.line("halt.now") }
@@ -2228,14 +2228,14 @@ enum Words {
         /// Couldn't load your tafs
         static var couldntLoadTafs: String { Words.line("home.couldnt_load_tafs") }
         enum Empty {
-            /// Connect an app to set up your first taf. Pull down to refresh.
+            /// Connect an app to set up your first taf.
             static var coach: String { Words.line("home.empty.coach") }
-            /// Tafs shared with you show here. Pull down to refresh.
+            /// Tafs shared with you show here.
             static var shared: String { Words.line("home.empty.shared") }
         }
         /// Explore jobs
         static var exploreJobs: String { Words.line("home.explore_jobs") }
-        /// Signed in with KIFF. KIFF decides every action. Pull down to refresh.
+        /// Signed in with KIFF.
         static var footer: String { Words.line("home.footer") }
         /// Halted. Open Halt
         static var haltedOpenHalt: String { Words.line("home.halted_open_halt") }
@@ -2277,7 +2277,7 @@ enum Words {
         static func planLineDescription(words: String) -> String { Words.line("home.plan_line_description", words) }
         /// {why} · answer by {time}
         static func reasonAnswerBy(why: String, time: String) -> String { Words.line("home.reason_answer_by", why, time) }
-        /// Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf starts in Coach.
+        /// Sample data. Signed in with KIFF, a new taf starts in Coach.
         static var sampleFoot: String { Words.line("home.sample_foot") }
         /// What it reported after its test run
         static var sampleLabel: String { Words.line("home.sample_label") }
@@ -2487,7 +2487,7 @@ enum Words {
         static var getAlertWhenCallWaits: String { Words.line("needs_you.get_alert_when_call_waits") }
         /// Install it from its card: the version goes live, then Coach hears.
         static var installFromCard: String { Words.line("needs_you.install_from_card") }
-        /// iOS asks next. Confirming with {biometry} sets them up for your account.
+        /// iOS asks next, then {biometry}.
         static func iosAsksNextConfirmingSets(biometry: String) -> String { Words.line("needs_you.ios_asks_next_confirming_sets", biometry) }
         /// {count} knocks at its doors. Nothing was done.
         static func knocks(count: Int) -> String { Words.count("needs_you.knocks", count) }
@@ -2505,9 +2505,9 @@ enum Words {
         static var nothingWaiting: String { Words.line("needs_you.nothing_waiting") }
         /// Opens {taf}, where you answer it
         static func opensWhereYouAnswer(taf: String) -> String { Words.line("needs_you.opens_where_you_answer", taf) }
-        /// Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Someone who manages the account's Cards can give it extra room, or you can refuse it.
+        /// It's over a Card total, such as a day's. Someone who manages the Cards can give it extra room, or you can refuse it.
         static var overTotal: String { Words.line("needs_you.over_total") }
-        /// Approving it once can't pass this: it's over a total the Card allows across calls, such as a day's. Extra room adds just what this call needs, until that total resets. After that the Card is as it was.
+        /// It's over a Card total, such as a day's. Extra room lets only this call through.
         static var overTotalManager: String { Words.line("needs_you.over_total_manager") }
         enum Prompt {
             /// Answer {summary}
@@ -2565,7 +2565,7 @@ enum Words {
         }
         /// Waiting for your browser…
         static var waitingForBrowser: String { Words.line("needs_you.waiting_for_browser") }
-        /// When a taf asks for something outside its Card, it waits for your answer. An alert tells you at once, on this {device} and its lock screen, even with tafs closed.
+        /// An alert reaches you on this {device}, even with tafs closed.
         static func whenTafAsksSomethingOutside(device: String) -> String { Words.line("needs_you.when_taf_asks_something_outside", device) }
         enum YourStep {
             /// This step was already answered or has ended.
@@ -2783,11 +2783,11 @@ enum Words {
             /// The receipt couldn't be read.
             static var unreadable: String { Words.line("receipt.check.unreadable") }
         }
-        /// ✓ KIFF's receipt · checked on this phone
+        /// ✓ KIFF's receipt · checked
         static var checked: String { Words.line("receipt.checked") }
         /// KIFF's receipt · checked on this {device}
         static func checkedOnDevice(device: String) -> String { Words.line("receipt.checked_on_device", device) }
-        /// KIFF signed this when it decided. The signature matches KIFF's address and none of its steps has changed since.
+        /// Signed by KIFF, unchanged since.
         static var checkedWhy: String { Words.line("receipt.checked_why") }
         /// Checking KIFF's receipt on this {device}…
         static func checkingOnDevice(device: String) -> String { Words.line("receipt.checking_on_device", device) }
@@ -2891,11 +2891,11 @@ enum Words {
         static var share: String { Words.line("receipt.share") }
         /// Show the full receipt
         static var showFull: String { Words.line("receipt.show_full") }
-        /// Your answer was signed with a key that never leaves this device, after {biometry}.
+        /// With {biometry}, by a key that never leaves this device.
         static func signedOnDeviceWhy(biometry: String) -> String { Words.line("receipt.signed_on_device_why", biometry) }
         /// ✓ Signed on this phone
         static var signedOnPhone: String { Words.line("receipt.signed_on_phone") }
-        /// Your answer was signed with a key that never leaves this phone.
+        /// By a key that never leaves this phone.
         static var signedOnPhoneWhy: String { Words.line("receipt.signed_on_phone_why") }
         /// KIFF signs receipts within a minute of deciding. Check again shortly.
         static var signsWithin: String { Words.line("receipt.signs_within") }
@@ -3460,19 +3460,19 @@ enum Words {
         /// Clear the sample
         static var clearSample: String { Words.line("settings.clear_sample") }
         enum DeleteAccount {
-            /// You confirm with {biometry} before anything is deleted. Signed in elsewhere, you're signed out there too.
+            /// You confirm with {biometry}. Other devices sign out too.
             static func confirmWith(biometry: String) -> String { Words.line("settings.delete_account.confirm_with", biometry) }
             /// Your tafs are erased, but your connections aren't yet. {why}
             static func connectionsLeft(why: String) -> String { Words.line("settings.delete_account.connections_left", why) }
             /// Deleting…
             static var deleting: String { Words.line("settings.delete_account.deleting") }
-            /// Your Cards and keys: they stop working
+            /// Cards and keys
             static var goesCards: String { Words.line("settings.delete_account.goes_cards") }
-            /// KIFF's records of your account, erased after 30 days
+            /// KIFF records, after 30 days
             static var goesRecords: String { Words.line("settings.delete_account.goes_records") }
-            /// Your apps' sign-ins, removed
+            /// App sign-ins
             static var goesSignIns: String { Words.line("settings.delete_account.goes_sign_ins") }
-            /// Every taf, with its runs, chats, notes and schedules
+            /// Tafs, runs, chats and notes
             static var goesTafs: String { Words.line("settings.delete_account.goes_tafs") }
             /// Your tafs and connections are erased, but KIFF didn't delete the account. {why}
             static func kiffNotDeleted(why: String) -> String { Words.line("settings.delete_account.kiff_not_deleted", why) }
@@ -3488,7 +3488,7 @@ enum Words {
             static var row: String { Words.line("settings.delete_account.row") }
             /// Delete account
             static var title: String { Words.line("settings.delete_account.title") }
-            /// This deletes your KIFF account and everything tafs keeps for it. It can't be undone.
+            /// This can't be undone.
             static var warning: String { Words.line("settings.delete_account.warning") }
             /// What goes
             static var whatGoes: String { Words.line("settings.delete_account.what_goes") }
@@ -3808,7 +3808,7 @@ enum Words {
             static var insideLead: String { Words.line("sign_in.welcome.inside_lead") }
             /// it acts, and every action has a receipt.
             static var insideRest: String { Words.line("sign_in.welcome.inside_rest") }
-            /// Hand a job to a taf. It works inside a Card you set, and asks you when it needs more.
+            /// A taf does a job within the Card you set. Past it, it asks you.
             static var lead: String { Words.line("sign_in.welcome.lead") }
             /// Outside it
             static var outsideLead: String { Words.line("sign_in.welcome.outside_lead") }
@@ -3818,7 +3818,7 @@ enum Words {
             static var revokedLead: String { Words.line("sign_in.welcome.revoked_lead") }
             /// no new action goes through.
             static var revokedRest: String { Words.line("sign_in.welcome.revoked_rest") }
-            /// They taf.\nYou kiff.
+            /// tafs
             static var title: String { Words.line("sign_in.welcome.title") }
         }
         /// Sign in with KIFF
@@ -3895,7 +3895,7 @@ enum Words {
         static var itsWork: String { Words.line("taf.its_work") }
         /// {taf|possessive} job
         static func jobLabel(taf: String) -> String { Words.line("taf.job_label", taf, Words.possessive(taf)) }
-        /// Keys kept sealed
+        /// No taf sees its keys
         static var keysKeptSealed: String { Words.line("taf.keys_kept_sealed") }
         /// Last run
         static var lastRun: String { Words.line("taf.last_run") }
@@ -4077,7 +4077,7 @@ enum Words {
             /// Working
             static var working: String { Words.line("taf.state.working") }
         }
-        /// Try a version first: you chat with it under a Card of its own, while the live version keeps working. Installing one makes it the live version.
+        /// Try a version first, under a Card of its own. The live version keeps working. Installing one makes it live.
         static var tryVersionFirstYouChat: String { Words.line("taf.try_version_first_you_chat") }
         /// Trying v{n} · Resume
         static func tryingResume(n: String) -> String { Words.line("taf.trying_resume", n) }
@@ -4423,7 +4423,7 @@ enum Words {
             /// went back
             static var wentBack: String { Words.line("version.tried.went_back") }
         }
-        /// Try a version first: you chat with it under a Card of its own, while the live version keeps working.
+        /// Try a version first, under a Card of its own. The live version keeps working.
         static var tryFirst: String { Words.line("version.try_first") }
         /// Try it
         static var tryIt: String { Words.line("version.try_it") }
@@ -4440,13 +4440,13 @@ enum Words {
         /// While you try it
         static var whileTrying: String { Words.line("version.while_trying") }
         enum WhileYouTry {
-            /// You chat with version {n} in its own window. What it does is real: its calls go through KIFF under the Card below.
+            /// Version {n}'s actions are real, under its own Card.
             static func chat(n: String) -> String { Words.line("version.while_you_try.chat", n) }
-            /// The trial's Card counts from zero, so on a day your taf can spend its live Card's limits plus this one's.
+            /// Its Card counts from zero.
             static var countsFromZero: String { Words.line("version.while_you_try.counts_from_zero") }
-            /// It ends when you install it or go back, or after 7 days unused. Its chat is then deleted, and Versions keeps one line about it.
+            /// Ends when you install it, go back, or after 7 unused days.
             static var ends: String { Words.line("version.while_you_try.ends") }
-            /// The live version keeps working: its schedule, Card and budget don't change.
+            /// The live version keeps running; on a day, both Cards' limits can be spent.
             static var liveKeepsWorking: String { Words.line("version.while_you_try.live_keeps_working") }
         }
         /// Working…

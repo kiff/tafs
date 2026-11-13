@@ -130,7 +130,7 @@
   "connect.sign_in_closed_nothing_connected": "Se cerró el inicio de sesión. No se conectó nada.",
   "connect.sign_in_view.not_opened": "La vista de inicio de sesión no se abrió. {why}",
   "connect.sign_in_view.wrong_address": "La vista de inicio de sesión no se abrió: no estaba en la dirección propia de la conexión.",
-  "connect.sign_ins_kept_sealed_no": "Los inicios de sesión se guardan sellados: ningún taf los ve nunca.",
+  "connect.sign_ins_kept_sealed_no": "Ningún taf ve tus inicios de sesión.",
   "connect.signed_in": "{app} tiene la sesión iniciada. Ahora Coach elige sus acciones y tú las apruebas.",
   "connect.signed_in_for": "{app} tiene la sesión iniciada para {taf}. Ahora Coach elige sus acciones y tú las apruebas.",
   "connect.signed_in_row": "Sesión iniciada · elige sus acciones",

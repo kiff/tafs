@@ -11,9 +11,9 @@
   "receipt.check.signature_mismatch": "A assinatura não corresponde a estes passos.",
   "receipt.check.unknown_signature": "Está assinado de uma forma que esta app não conhece.",
   "receipt.check.unreadable": "Não foi possível ler o recibo.",
-  "receipt.checked": "✓ Recibo do KIFF · verificado neste telefone",
+  "receipt.checked": "✓ Recibo do KIFF · verificado",
   "receipt.checked_on_device": "Recibo do KIFF · verificado neste {device}",
-  "receipt.checked_why": "O KIFF assinou isto quando decidiu. A assinatura corresponde ao endereço do KIFF e nenhum dos passos mudou desde então.",
+  "receipt.checked_why": "Assinado pelo KIFF, inalterado desde então.",
   "receipt.checking_on_device": "A verificar o recibo do KIFF neste {device}…",
   "receipt.copy": "Copiar recibo",
   "receipt.decided_by.card": "O Card",
@@ -60,9 +60,9 @@
   "receipt.refused_by": "Recusado por {who}",
   "receipt.share": "Partilhar",
   "receipt.show_full": "Mostrar o recibo completo",
-  "receipt.signed_on_device_why": "A sua resposta foi assinada com uma chave que nunca sai deste dispositivo, após {biometry}.",
+  "receipt.signed_on_device_why": "Com {biometry}, por uma chave que nunca sai deste dispositivo.",
   "receipt.signed_on_phone": "✓ Assinado neste telefone",
-  "receipt.signed_on_phone_why": "A sua resposta foi assinada com uma chave que nunca sai deste telefone.",
+  "receipt.signed_on_phone_why": "Por uma chave que nunca sai deste telefone.",
   "receipt.signs_within": "O KIFF assina os recibos no prazo de um minuto após decidir. Verifique novamente daqui a pouco.",
   "receipt.what_happened": "O que aconteceu"
 }

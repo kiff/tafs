@@ -98,7 +98,7 @@
     "other": "{count} odrzuconego"
   },
   "version.tried.went_back": "wycofana",
-  "version.try_first": "Najpierw wypróbuj wersję: rozmawiasz z nią w ramach jej własnej Card, a wersja działająca na żywo pracuje dalej.",
+  "version.try_first": "Najpierw wypróbuj wersję, w ramach jej własnej Card. Wersja działająca na żywo pracuje dalej.",
   "version.try_it": "Wypróbuj",
   "version.try_number": "Wypróbuj wersję {version}",
   "version.try_number_note": "Wypróbuj wersję {version}: {note}",
@@ -106,9 +106,9 @@
   "version.trying_number": "Próba wersji {version}",
   "version.unchanged": "Bez zmian",
   "version.while_trying": "Podczas próby",
-  "version.while_you_try.chat": "Rozmawiasz z wersją {n} w jej własnym oknie. To, co robi, dzieje się naprawdę: jej wywołania przechodzą przez KIFF w ramach Card poniżej.",
-  "version.while_you_try.counts_from_zero": "Card próby liczy od zera, więc jednego dnia Twój taf może wydać limity swojej Card na żywo plus limity tej.",
-  "version.while_you_try.ends": "Kończy się, gdy ją zainstalujesz lub wrócisz, albo po 7 dniach nieużywania. Jej czat zostanie wtedy usunięty, a w Wersjach zostanie o niej jeden wiersz.",
-  "version.while_you_try.live_keeps_working": "Wersja działająca na żywo pracuje dalej: jej harmonogram, Card i budżet się nie zmieniają.",
+  "version.while_you_try.chat": "Działania wersji {n} są prawdziwe, w ramach jej własnej Card.",
+  "version.while_you_try.counts_from_zero": "Jej Card liczy od zera.",
+  "version.while_you_try.ends": "Kończy się, gdy ją zainstalujesz, wrócisz, albo po 7 dniach nieużywania.",
+  "version.while_you_try.live_keeps_working": "Wersja działająca na żywo działa dalej; jednego dnia można wydać limity obu Card.",
   "version.working": "Pracuje…"
 }

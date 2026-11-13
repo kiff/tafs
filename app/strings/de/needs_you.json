@@ -36,7 +36,7 @@
   "needs_you.extra_room_with": "Zusatzspielraum mit {biometry}",
   "needs_you.get_alert_when_call_waits": "Lass dich benachrichtigen, wenn ein Aufruf auf deine Antwort wartet, auch wenn tafs geschlossen ist.",
   "needs_you.install_from_card": "Installiere sie über ihre Karte: Die Version geht live, dann erfährt Coach davon.",
-  "needs_you.ios_asks_next_confirming_sets": "Als Nächstes fragt iOS. Bestätigst du mit {biometry}, werden sie für dein Konto eingerichtet.",
+  "needs_you.ios_asks_next_confirming_sets": "Als Nächstes fragt iOS, dann {biometry}.",
   "needs_you.knocks": {
     "one": "Jemand hat an seine Tür geklopft. Es wurde nichts unternommen.",
     "other": "{count}-mal wurde an seine Türen geklopft. Es wurde nichts unternommen."
@@ -48,8 +48,8 @@
   "needs_you.nothing_sent": "Nichts wird gesendet, bevor du genehmigst.",
   "needs_you.nothing_waiting": "Nichts wartet.",
   "needs_you.opens_where_you_answer": "Öffnet {taf}, wo du antwortest",
-  "needs_you.over_total": "Einmal genehmigen reicht hier nicht: Es liegt über einer Summe, die die Card über mehrere Aufrufe erlaubt, etwa einer Tagessumme. Jemand, der die Cards des Kontos verwaltet, kann ihm Zusatzspielraum geben, oder du lehnst es ab.",
-  "needs_you.over_total_manager": "Einmal genehmigen reicht hier nicht: Es liegt über einer Summe, die die Card über mehrere Aufrufe erlaubt, etwa einer Tagessumme. Zusatzspielraum fügt genau das hinzu, was dieser Aufruf braucht, bis diese Summe zurückgesetzt wird. Danach ist die Card wieder wie vorher.",
+  "needs_you.over_total": "Es liegt über einer Summe der Card, etwa einer Tagessumme. Jemand, der die Cards verwaltet, kann ihm Zusatzspielraum geben, oder du lehnst es ab.",
+  "needs_you.over_total_manager": "Es liegt über einer Summe der Card, etwa einer Tagessumme. Zusatzspielraum lässt nur diesen Aufruf durch.",
   "needs_you.prompt.answer": "{summary} beantworten",
   "needs_you.prompt.did_not_happen": "Angeben, dass es nicht passiert ist: {title}",
   "needs_you.prompt.happened": "Angeben, dass es passiert ist: {title}",
@@ -75,7 +75,7 @@
   "needs_you.unsure.answer_not_taken": "Deine Antwort wurde nicht angenommen. {why}",
   "needs_you.unsure.coach_not_opened": "Coach konnte sich dazu nicht öffnen. {why}",
   "needs_you.waiting_for_browser": "Wartet auf deinen Browser…",
-  "needs_you.when_taf_asks_something_outside": "Wenn ein taf um etwas außerhalb seiner Card bittet, wartet er auf deine Antwort. Eine Benachrichtigung sagt es dir sofort, auf diesem {device} und seinem Sperrbildschirm, auch wenn tafs geschlossen ist.",
+  "needs_you.when_taf_asks_something_outside": "Eine Benachrichtigung erreicht dich auf diesem {device}, auch wenn tafs geschlossen ist.",
   "needs_you.your_step.ended": "Dieser Schritt wurde schon beantwortet oder ist beendet.",
   "needs_you.your_step.not_answered": "Deine Antwort ist nicht durchgegangen. {why}",
   "needs_you.your_step.not_answered_unconfirmed": "Nicht beantwortet: Es wurde nicht bestätigt."
