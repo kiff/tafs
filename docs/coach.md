@@ -612,8 +612,8 @@ line for line: no limit merged with another or changed in number. A limit the Ca
 changed rule, shown in a new rules notice and agreed again before the draft (`draft-the-card@7`).
 
 A taf that writes to people names who they come from: Coach asks once, with its other questions,
-offering first "tafs, your AI assistant", so the taf speaks as itself, then the owner's name, then the
-company's, never the mail app's default (gap 16; `draft-the-card@11`), and its result's taf carries the
+offering first "tafs, your AI assistant", so the taf speaks as itself (`writes_for` "tafs": a recipient
+reads "on behalf of tafs", never "your" assistant), then the owner's name, then the company's, never the mail app's default (gap 16; `draft-the-card@11`), and its result's taf carries the
 answer as `writes_for`. kiff/agents then starts each outside message with "Written by an AI agent on behalf of
 <writes_for>." (gap 18; "Written by an AI agent." when no one is named, never "for the company"): first
 in each text part the message carries (an email's text and its html), said once, in the message's

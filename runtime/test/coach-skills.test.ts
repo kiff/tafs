@@ -185,9 +185,11 @@ describe("Coach's core", () => {
     const setup = COACH_SKILLS.find((k) => k.name === "set-up-a-taf")!.body.replace(/\s+/g, " ");
     expect(setup).toContain("A taf keeps its own records: when it works from the owner's sheet or list, propose it adds and updates its own columns there (written to, replied, do not contact), with a tool that writes to it. Ask only what only the owner knows, never how to track it.");
     const card = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
-    expect(card).toContain("who its messages come from: first \"tafs, your AI assistant\" (it speaks as itself), then the owner's name, then the company's (\"Kiff Agents OÜ\"); never the app's default. Put the answer in the result's taf as writes_for.");
+    // The owner reads "tafs, your AI assistant"; the recipient reads "on behalf of tafs", never "your" assistant (qa-kiff on #889).
+    expect(card).toContain("who its messages come from: first \"tafs, your AI assistant\" (it speaks as itself: writes_for \"tafs\"), then the owner's name, then the company's (\"Kiff Agents OÜ\"); never the app's default. Put the answer in the result's taf as writes_for.");
     expect(card).not.toContain("or another name?");
-    expect(disclosureLine({ writesFor: "tafs, your AI assistant" })).toBe("Written by an AI agent on behalf of tafs, your AI assistant.");
+    expect(card).toContain("Never promise an approval the Card can't give.");
+    expect(disclosureLine({ writesFor: "tafs" })).toBe("Written by an AI agent on behalf of tafs.");
   });
 
   // Eval 43395198798: "one invoice per order, ever" and "up to 20 a day" were drafted as 1 call in the Card's whole life,

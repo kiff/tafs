@@ -1,2 +1,2 @@
 - Coach proposes that a taf working from the owner's sheet or list keeps its own columns there (who it wrote to, replies, do not contact), and asks only what only the owner knows (`set-up-a-taf@8`).
-- Coach offers "tafs, your AI assistant" first for who a taf's messages come from, so a taf speaks as itself, beside the owner's name and the company's (`draft-the-card@11`).
+- Coach offers "tafs, your AI assistant" first for who a taf's messages come from, so a taf speaks as itself ("Written by an AI agent on behalf of tafs."), beside the owner's name and the company's (`draft-the-card@11`).
