@@ -134,6 +134,6 @@ final class AppModelTests: XCTestCase {
         await model.startSample()
         XCTAssertEqual(model.mode, .sample)
         XCTAssertFalse(model.canStartTafs)
-        XCTAssertEqual(Words.Home.sampleFoot, "Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf starts in Coach.")
+        XCTAssertEqual(Words.Home.sampleFoot, "Sample data. A new taf starts in Coach.")
     }
 }

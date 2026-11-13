@@ -173,7 +173,7 @@ class HeldCallCardTest {
 
   @Test fun aCallOverATotalOffersExtraRoomToNoOneWhoDoesNotManageCards() {
     show(call(approvableOnce = false), state(capabilities = listOf("holds.answer")))
-    text("Someone who manages the account's Cards can give it extra room").assertExists()
+    text("Someone who manages the Cards can give it extra room").assertExists()
     gone("Extra room with")
     text("Refuse").assertExists()
   }
