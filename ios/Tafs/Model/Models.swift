@@ -398,8 +398,11 @@ struct Taf: Identifiable, Hashable, Codable {
     /// A taf being set up (`setting_up`): listed among the tafs by its name, with no state, so
     /// never "Ready"; nothing to open but Coach's chat, for the person it was.
     var settingUp = false
+<<<<<<< HEAD
     /// Discard, for the person whose setup it was, in tafs cloud's words; nil for anyone else.
     var discard: TafsCloud.Home.SettingUp.Discard? = nil
+=======
+>>>>>>> origin/main
     /// tafs cloud's `work.attention`: `healthNow` says what went wrong, in place of "Working".
     var attention = false
     /// A short word beside its name, as tafs cloud sends it: "Trial" for an open trial's

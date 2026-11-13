@@ -1,0 +1,1 @@
+- **Android: Connect apps reads like a settings list.** Your apps come first, each with a ✓, then the rest under Discover. Each row says how the app connects and which tafs use it, with a compact Connect, as on iPhone and iPad ([android-app.md](docs/android-app.md#connect-apps)).

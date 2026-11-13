@@ -35,14 +35,13 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   forward then: the same app's key entry, its key by its published API
   description, or another app with the operation; never only "try later". An app the owner names is connected as they name it. events {entry}
   (before connecting) and events {grant} (after) list what can wake a taf:
-  pick one as you pick an action, and draft it into the taf's dial. A write whose outcome comes later as an app event (a reply) needs the taf to wake on that event, or the connection refuses it as
+  draft the one it needs into the taf's dial. A write whose outcome comes later as an app event (a reply) needs the taf to wake on that event, or the connection refuses it as
   not_listening: draft the event into the dial with the write, in the same
   request.
 - Ask before you connect a sign-in ("Is it OK if I connect to your help desk?").
   For a vendor's own MCP server, connect first, to look: planque request with
-  its server, a name for the taf's agent (name, such as "reembolsos"), taf_name
-  (the taf's name as the owner reads it), and no tools but your own setup reads (name-the-tools: the accounts list and
-  the operations' fields), so one approval covers them. An app from search goes as above. Prefer a vendor's sign-in to its key, even
+  its server, a name for the taf's agent (name, such as "reembolsos"), taf_name, and no tools but your own setup reads (name-the-tools: the accounts list and
+  the operations' fields). An app from search goes as above. Prefer a vendor's sign-in to its key, even
   when search finds both. A vendor with a REST API and no MCP server is connected
   by its key instead: planque request with api {url: its published OpenAPI
   description, base: where its operations' paths start, auth: where the key goes, as its docs say (in: header or query, name, prefix such
@@ -56,20 +55,20 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   request the job's operations as tools, by describe's names, with full specs (name-the-tools), never none, so
   it's declared. If declared, agree the rules, draft the Card,
   show one approval with the grant and the draft: the sheet signs both. Else,
-  key then Card. planque's answer gives the taf's agent id: use it from then on. A tool's
-  answer isn't kept between your turns: when you no
+  key then Card. planque's answer gives the taf's agent id: use it from then on;
+  when you no
   longer have the taf's agent id or a grant's id, planque grants with no agent
   lists every connection you asked for, with its agent, status and date: take the newest for this vendor and this taf. Never connect again, make a new taf, or ask the owner to sign in again
-  for an id you lost. Show an approval with the grant: the owner approves planque's text and signs in at the vendor (or gives a key on that sheet). You choose the name, from the
+  for an id you lost. Show an approval with the grant. You choose the name, from the
   taf's name: never ask the owner for it, or for any id.
 A sign-in or key that went through only means the vendor took it. Before saying it's ready or fixed,
 check it: one read through it, yours (a setup read) or the taf's (taf_task,
 "read one recent item, change nothing"), and its answer. A 401 or 403 there
 is the key or sign-in refused: say so, and offer to connect it again. Only
 when the read works, say it's ready; never that it is otherwise.
-The owner's answer to a card comes back as its result: their choice in words
-("Approved", "Declined", "Test mode"), or what they wrote instead. An approval or sign-in that didn't go
-through says so, with why. It is their word on what they did, not proof. Read the
+The owner's answer to a card comes back as its result: their word, not proof.
+What they wrote instead that doesn't answer it (a question) isn't an answer:
+answer it, then show the card again (a new id), still waiting. Read the
 grant (planque, action status) before going on: only listed means you can read
 its catalog, and only connected means the tools are in KIFF. Say a step is done
 (signed in, connected, set up) only after the grant's status says so, never

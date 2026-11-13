@@ -766,9 +766,14 @@
     <string name="connect_apps_also_on_many">Ook op de Cards van %1$s</string>
     <string name="connect_apps_also_on_one">Ook op de Card van %1$s</string>
     <string name="connect_apps_clearing">Opruimen…</string>
+    <string name="connect_apps_column_app">App</string>
+    <string name="connect_apps_column_how">Hoe het koppelt</string>
+    <string name="connect_apps_column_status">Status</string>
+    <string name="connect_apps_column_whose">Van wie</string>
     <string name="connect_apps_connect">Koppelen</string>
     <string name="connect_apps_connected">Gekoppeld ✓</string>
     <string name="connect_apps_disconnect_why">Toegang intrekken haalt de tools alleen weg bij die taf, en bij elke taf waarvan de Card ze gebruikt. Andere tafs houden de hunne.</string>
+    <string name="connect_apps_discover">Ontdekken</string>
     <string name="connect_apps_manage">Beheren</string>
     <string name="connect_apps_more">Meer apps tonen</string>
     <string name="connect_apps_none">Geen app met die naam. Coach kan een app koppelen die hier niet staat.</string>
@@ -776,7 +781,9 @@
     <string name="connect_apps_not_listed_why">Coach kan een app koppelen die hier niet staat, aan de hand van de eigen documentatie.</string>
     <string name="connect_apps_search">Apps zoeken</string>
     <string name="connect_apps_title">Apps koppelen</string>
+    <string name="connect_apps_used_by">Gebruikt door %1$s</string>
     <string name="connect_apps_your_connections">Je %1$s-koppelingen</string>
+    <string name="connect_apps_yours">Van jou</string>
     <string name="connect_apps_connect_taf_make_one">Apps worden voor een taf gekoppeld. Maak eerst een taf en koppel hier dan de apps ervan.</string>
     <string name="connect_apps_not_read">De apps konden niet worden gelezen. %1$s</string>
     <string name="connect_cancel_request_button">Verzoek annuleren</string>
@@ -834,6 +841,8 @@
     <string name="connect_from_removed">Van verwijderde tafs</string>
     <string name="connect_give_key_on_sheet">De sleutel geven op een beveiligd scherm</string>
     <string name="connect_give_key_with">De sleutel geven met %1$s</string>
+    <string name="connect_how_key">Met een sleutel</string>
+    <string name="connect_how_sign_in">Inloggen</string>
     <string name="connect_kept_another_taf">een ander taf</string>
     <plurals name="connect_kept_for_card">
         <item quantity="one">%1$s behouden voor %2$s, waarvan de Card hem gebruikt.</item>

@@ -478,11 +478,15 @@ Home lists tafs only. A Coach chat left before the hand-over leaves a draft with
 lists it in `setting_up`, each by the name Coach gave it, and the app draws it among the tafs with no
 state, so never "Ready" (`AppModel.settingUp`). With `setting_up` sent, `others` only repeats it for older
 apps and isn't drawn, so no KIFF agent shows; from a tafs cloud before it, `others` is drawn as before.
+<<<<<<< HEAD
 The person whose Coach chat it was gets `finish: {taf, session, words}` (docs/tafs.md), and `discard: {words}`:
 a Discard beside it (`DiscardSettingUpButton`) whose confirmation is all tafs cloud's words. Its yes revokes the
 agent's Cards in KIFF (from `others`' repeat of it), then calls `POST /v1/home/setting-up/{kiff_agent}/discard`
 signed as a removal is (the approval key over the POST and its empty body, behind Face ID), and Home is read again
 (`AppModel.discardSettingUp`). The row says `words` ("Finish setting up") in amber in place of what it's
+=======
+The person whose Coach chat it was gets `finish: {taf, session, words}` (docs/tafs.md). The row says `words` ("Finish setting up") in amber in place of what it's
+>>>>>>> origin/main
 doing. A tap opens Coach on `session`, where it stopped (`AppModel.finishSetup`): reading that
 chat is what makes the taf at tafs cloud, and the next Home read lists it with the tafs. Only
 Coach's own chat (`taf` is Coach's), for someone who may use Coach (`canFinishSetup`); anything

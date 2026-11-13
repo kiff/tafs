@@ -210,10 +210,13 @@ struct HomeSplitView: View {
                         } else {
                             tafRow(taf)
                         }
+<<<<<<< HEAD
                         // Discard, beside Finish setting up, for the person whose setup it was.
                         if taf.discard != nil {
                             DiscardSettingUpButton(taf: taf).frame(maxWidth: .infinity, alignment: .trailing)
                         }
+=======
+>>>>>>> origin/main
                     }
                     if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
                         // tafs cloud's line for a Home with no taf; the app's own only when it sent none.

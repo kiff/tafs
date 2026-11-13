@@ -53,6 +53,20 @@ import kotlinx.coroutines.launch
 /** Connect apps' own words; every app's name and state comes from tafs cloud. */
 object ConnectAppsWords {
   val TITLE get() = Words.Connect.Apps.title
+
+  /**
+   * An app's second line: tafs cloud's `line` as sent. Without it, the same words put together here: how it connects, whose it
+   * is when tafs cloud says, and which tafs use it ([usedBy]).
+   */
+  fun secondLine(app: ConnectApps.App, usedBy: List<String>): String =
+    app.line?.takeIf { it.isNotBlank() } ?: listOfNotNull(
+      if (app.byKey) Words.Connect.How.key else Words.Connect.How.signIn,
+      app.whose?.takeIf { it.isNotBlank() },
+      // Where it stands, as on iPhone and iPad: connected, or to sign in again.
+      if (app.connected) Words.Connect.Status.connected else if (app.needsReconnect) Words.Connect.signInAgain else null,
+      // Only an app that's yours is used by a taf.
+      usedBy.takeIf { app.yours && it.isNotEmpty() }?.let { Words.Connect.Apps.usedBy(tafs = bot.tafs.app.model.Res.list(it)) },
+    ).joinToString(" · ")
   val SEARCH get() = Words.Connect.Apps.search
   val CONNECTED get() = Words.Connect.Apps.connected
   val CONNECT get() = Words.Connect.Apps.connect
@@ -344,7 +358,19 @@ fun ConnectAppsSheet(
         if (onConnect != null && tafs.isEmpty()) Text(bot.tafs.app.model.ConnectWords.NO_TAF, style = scaled(14, color = Theme.soft))
         state.connectAppsError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         val apps = state.connectApps
-        apps?.apps?.forEach { app -> AppRow(app, connect, onChooseActions, onManage = if (connectionsOf(state, app).isNotEmpty()) ({ a: ConnectApps.App -> managing = a }) else null) }
+        // Yours first (connected, signed in, or to sign in again), then Discover: tafs cloud's order within each.
+        val (yours, discover) = apps?.apps.orEmpty().partition { it.yours }
+        val row: @Composable (ConnectApps.App) -> Unit = { app ->
+          AppRow(app, connect, onChooseActions, onManage = if (connectionsOf(state, app).isNotEmpty()) ({ a: ConnectApps.App -> managing = a }) else null, usedBy = usedBy(state, app))
+        }
+        if (yours.isNotEmpty()) {
+          bot.tafs.app.design.Eyebrow(Words.Connect.Apps.yours)
+          yours.forEach { row(it) }
+        }
+        if (discover.isNotEmpty()) {
+          if (yours.isNotEmpty()) bot.tafs.app.design.Eyebrow(Words.Connect.Apps.discover)
+          discover.forEach { row(it) }
+        }
         if (apps != null && apps.apps.isEmpty() && query.isNotBlank()) Text(ConnectAppsWords.NONE, style = scaled(14, color = Theme.soft))
         // The managed provider's catalog comes a page at a time.
         if (apps?.nextCursor != null) {
@@ -371,7 +397,7 @@ fun ConnectAppsSheet(
 }
 
 @Composable
-private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?, onChooseActions: (ConnectApps.App) -> Unit = {}, onManage: ((ConnectApps.App) -> Unit)? = null) {
+private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?, onChooseActions: (ConnectApps.App) -> Unit = {}, onManage: ((ConnectApps.App) -> Unit)? = null, usedBy: List<String> = emptyList()) {
   Panel {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
       // The app's logo from tafs cloud, small and as it is; without one, its initial on a tile, which is only a marker.
@@ -389,6 +415,8 @@ private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(app.title, style = scaled(15, FontWeight.SemiBold, if (app.needsSetup) Theme.soft else Theme.ink))
         app.words?.takeIf { app.needsSetup && it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+        // The second line, as on iPhone and iPad: tafs cloud's own when it sends it; else the same words put together here.
+        if (!app.needsSetup) Text(ConnectAppsWords.secondLine(app, usedBy), style = scaled(12, color = Theme.dim), maxLines = 2)
       }
       when {
         // Connected: its connections, each with Disconnect, a tap away.
@@ -540,3 +568,11 @@ fun ConnectApprovalSheet(
     }
   }
 }
+
+/**
+ * The tafs that use [app]: tafs cloud's `used_by` when it sends it, else read here from this phone's own connections, each by
+ * the taf it serves (`byTaf`), as the app's detail lists them.
+ */
+fun usedBy(state: AppState, app: ConnectApps.App): List<String> =
+  app.usedBy?.map { it.name }?.filter { it.isNotBlank() }?.distinct()
+    ?: byTaf(state, connectionsOf(state, app)).sections.map { it.taf }

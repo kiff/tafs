@@ -766,9 +766,14 @@
     <string name="connect_apps_also_on_many">Anche nelle Card di %1$s</string>
     <string name="connect_apps_also_on_one">Anche nella Card di %1$s</string>
     <string name="connect_apps_clearing">Rimozione…</string>
+    <string name="connect_apps_column_app">App</string>
+    <string name="connect_apps_column_how">Come si collega</string>
+    <string name="connect_apps_column_status">Stato</string>
+    <string name="connect_apps_column_whose">Di chi</string>
     <string name="connect_apps_connect">Collega</string>
     <string name="connect_apps_connected">Collegata ✓</string>
     <string name="connect_apps_disconnect_why">Rimuovere un accesso toglie i suoi strumenti solo da quel taf, e da ogni taf la cui Card li usa. Gli altri taf mantengono i loro.</string>
+    <string name="connect_apps_discover">Scopri</string>
     <string name="connect_apps_manage">Gestisci</string>
     <string name="connect_apps_more">Mostra altre app</string>
     <string name="connect_apps_none">Nessuna app con quel nome. Coach può collegarne una che non è in elenco.</string>
@@ -776,7 +781,9 @@
     <string name="connect_apps_not_listed_why">Coach può collegare un\'app che non è qui, partendo dalla sua documentazione.</string>
     <string name="connect_apps_search">Cerca app</string>
     <string name="connect_apps_title">Collega app</string>
+    <string name="connect_apps_used_by">La usa %1$s</string>
     <string name="connect_apps_your_connections">I tuoi collegamenti %1$s</string>
+    <string name="connect_apps_yours">Le tue</string>
     <string name="connect_apps_connect_taf_make_one">Le app si collegano per un taf. Creane prima uno, poi collega qui le sue app.</string>
     <string name="connect_apps_not_read">Non è stato possibile leggere le app. %1$s</string>
     <string name="connect_cancel_request_button">Annulla la richiesta</string>
@@ -834,6 +841,8 @@
     <string name="connect_from_removed">Dai tafs rimossi</string>
     <string name="connect_give_key_on_sheet">Dai la chiave in una schermata sicura</string>
     <string name="connect_give_key_with">Dai la chiave con %1$s</string>
+    <string name="connect_how_key">Con una chiave</string>
+    <string name="connect_how_sign_in">Accesso</string>
     <string name="connect_kept_another_taf">un altro taf</string>
     <plurals name="connect_kept_for_card">
         <item quantity="one">Mantenuto %1$s per %2$s, la cui Card lo usa.</item>

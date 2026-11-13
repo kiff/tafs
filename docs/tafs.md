@@ -59,7 +59,7 @@ tafs cloud stores one agent definition per taf in kiff/agents
   to stay under a limit; a money call that doesn't name its customer carries who it's
   for in a field the customer doesn't see, such as metadata, so the hold says it), and two sections of KIFF's `kiff` skill ("Rules that always apply" and
   "Handle a KIFF result"). The skill is vendored at one commit; moving it is in the
-  [README](../README.md#the-runtime).
+  [runtime page](runtime.md#the-runtime).
 - **Tools:** only the company's tools, through KIFF's gateway (`mcp.kiff.dev`), and its
   memory. Its KIFF agent key is in Secrets Manager; the definition only names it.
 - **Cost:** a cap per run, $2.00 unless set at start (1 to $10.00).
