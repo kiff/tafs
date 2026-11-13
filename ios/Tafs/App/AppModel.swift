@@ -198,6 +198,10 @@ final class AppModel: ObservableObject {
     @Published private(set) var otherAgents: [Taf] = []
     /// The tafs whose setup stopped partway, listed among the tafs (`setting_up`).
     @Published private(set) var settingUp: [Taf] = []
+    /// The Cards tafs cloud said were still in force when a Discard was refused (409
+    /// `cards_in_force`), by agent: the next Discard revokes them too, so it never fails the
+    /// same way twice.
+    private var discardCardsLeft: [String: [String]] = [:]
     @Published private(set) var held: [HeldCall] = []
     @Published private(set) var record: [RecordEntry] = []
     @Published private(set) var refreshing = false
@@ -2928,7 +2932,10 @@ final class AppModel: ObservableObject {
         } catch { return nil }
         guard gen == accountGeneration else { return nil }
         var cardsLeft = 0
-        for cardID in taf.kiffCardIDs {
+        // Home's Cards, and any a refused Discard named that Home didn't.
+        var cardIDs = taf.kiffCardIDs
+        for id in discardCardsLeft[agent] ?? [] where !cardIDs.contains(id) { cardIDs.append(id) }
+        for cardID in cardIDs {
             guard gen == accountGeneration else { return nil }
             do { try await kiff.revoke(cardID: cardID) } catch { cardsLeft += 1 }
         }
@@ -2936,15 +2943,19 @@ final class AppModel: ObservableObject {
         do {
             try await cloud.discardSettingUp(agent, signature: "t=\(signedAt),v1=\(signature)")
         } catch let refused as TafsCloud.CloudError where refused.code == "cards_in_force" {
-            // KIFF still holds some of its Cards in force, so nothing ended: how many are left;
-            // Discard again revokes them and asks again.
+            // KIFF still holds some of its Cards in force, so nothing ended: how many are left.
+            // The ones tafs cloud named are kept, so Discard again revokes them too, and Home is
+            // read again: it never fails the same way twice.
             guard gen == accountGeneration else { return nil }
+            if !refused.cards.isEmpty { discardCardsLeft[agent] = refused.cards }
+            await refresh()
             return Words.Card.kiffDidNotRevokeCards(cardsLeft: "\(max(refused.cards.count, cardsLeft, 1))")
         } catch {
             guard gen == accountGeneration else { return nil }
             return (error as? TafsCloud.CloudError).map { $0.words ?? $0.message } ?? error.localizedDescription
         }
         guard gen == accountGeneration else { return nil }
+        discardCardsLeft[agent] = nil
         settingUp.removeAll { $0.id == tafID }
         await refresh()
         return cardsLeft == 0 ? nil : Words.Card.kiffDidNotRevokeCards(cardsLeft: "\(cardsLeft)")

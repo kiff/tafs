@@ -156,5 +156,15 @@ final class HomeFinishSetupTests: XCTestCase {
         let left = await again.discardSettingUp(try XCTUnwrap(again.settingUp.first).id)
         XCTAssertEqual(left, Words.Card.kiffDidNotRevokeCards(cardsLeft: "1"))
         XCTAssertEqual(again.settingUp.count, 2, "nothing ended")
+
+        // A Card tafs cloud names that Home didn't: the next Discard revokes it too, never the same failure twice.
+        StubProtocol.responses["POST /v1/home/setting-up/invoicing-x/discard"] = (409, #"{"error":"cards still in force","code":"cards_in_force","cards":["c_other"]}"#)
+        _ = await again.discardSettingUp(try XCTUnwrap(again.settingUp.first).id)
+        StubProtocol.responses["POST /v1/me/mandates/c_inv/revoke"] = (200, "{}")
+        StubProtocol.responses["POST /v1/me/mandates/c_other/revoke"] = (200, "{}")
+        StubProtocol.responses["POST /v1/home/setting-up/invoicing-x/discard"] = (200, #"{"discarded":true,"kiff_agent":"invoicing-x"}"#)
+        StubProtocol.sent = []
+        _ = await again.discardSettingUp(try XCTUnwrap(again.settingUp.first).id)
+        XCTAssertFalse(StubProtocol.sent.filter { $0.url?.path == "/v1/me/mandates/c_other/revoke" }.isEmpty, "the Card tafs cloud named is revoked")
     }
 }
