@@ -80,6 +80,8 @@
     <string name="approval_key_gone_biometry">Deine %1$s hat sich geändert oder wurde nicht erkannt, daher kann dieses Gerät erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst.</string>
     <string name="approval_key_gone_sign_in">Deine Fingerabdrücke haben sich geändert oder keiner wurde erkannt, daher kann dieses Telefon erst wieder genehmigen, wenn du dich erneut anmeldest.</string>
     <string name="approval_key_lost">Melde dich erneut mit KIFF an, um auf diesem Telefon zu genehmigen.</string>
+    <string name="approval_key_not_accepted">KIFF hat den Genehmigungsschlüssel dieses Geräts nicht angenommen. Versuch es noch einmal.</string>
+    <string name="approval_key_not_accepted_support">Klappt es immer noch nicht? Schreib an support@kiff.dev.</string>
     <string name="approval_locked_after_too_many_tries">%1$s ist nach zu vielen Versuchen gesperrt. Sperre dieses %2$s, entsperre es mit seinem Code und prüfe dann erneut.</string>
     <string name="approval_locked_unlock_device">%1$s ist nach zu vielen Versuchen gesperrt. Entsperre dieses Gerät mit seinem Code und versuch es dann erneut.</string>
     <string name="approval_new_fingerprint">Fügst du später einen weiteren Fingerabdruck hinzu, kann dieses Telefon nicht mehr genehmigen, bis du es erneut genehmigst.</string>

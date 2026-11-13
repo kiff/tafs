@@ -803,8 +803,25 @@ final class AppModel: ObservableObject {
         useApprovalKey()
     }
 
+    /// This phone has an approval key that KIFF doesn't hold for the session: what that key signs,
+    /// KIFF can't check. A signer with no approval key signs everything with its one key.
+    var approvalKeyUnheld: Bool { !signer.approvalPublicKeyDER.isEmpty && !sessionHasApprovalKey }
+
+    /// What Start says then, the line both apps use: KIFF didn't accept the key, try again; from
+    /// the second refusal in a row, where to write too. A key KIFF holds another of keeps the lost
+    /// key's words.
+    private func approvalKeyRefused() -> String {
+        if approvalKeyLost { return KIFFClient.approvalKeyLost }
+        approvalKeyRefusals += 1
+        return approvalKeyRefusals >= 2 ? Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport : Words.Approval.keyNotAccepted
+    }
+    /// How many Starts in a row KIFF didn't take this device's approval key on: a key KIFF takes,
+    /// or a new session, starts again from none.
+    private(set) var approvalKeyRefusals = 0
+
     /// From now on, what grants authority is signed by the approval key.
     private func useApprovalKey() {
+        approvalKeyRefusals = 0
         sessionHasApprovalKey = true
         approvalKeyLost = false
         let signer = self.signer
@@ -812,6 +829,7 @@ final class AppModel: ObservableObject {
     }
 
     private func forgetApprovalKey() {
+        approvalKeyRefusals = 0
         cancelRelink()
         sessionHasApprovalKey = false
         approvalKeyLost = false
@@ -6888,6 +6906,16 @@ final class AppModel: ObservableObject {
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
         defer { kiff.setupSigner = nil; planque.signer = nil }
+        // Approvals are set up here, not before sign-in (docs/approvals.md): a phone that signed in
+        // before it could approve gives KIFF its approval key now, under the same Face ID.
+        if !sessionHasApprovalKey { await registerApprovalKey() }
+        guard gen == accountGeneration else { return false }
+        // tafs cloud's first start, the pair or the draft alone, is signed by the approval key: with a
+        // key KIFF doesn't hold, nothing is sent, and it says so in the words both phones use.
+        if coachStart?.startable == true, approvalKeyUnheld {
+            setupError = approvalKeyRefused()
+            return false
+        }
         await keepKIFFAlerts(tenant: tenant, gen: gen)
         if !planqueReady {
             guard await enrolPlanque(tenant: tenant, gen: gen) else {
@@ -6902,6 +6930,12 @@ final class AppModel: ObservableObject {
                 if let existing = read.setup {
                     setupTaf = existing
                 } else if let start = read.start, start.startable {
+                    // A start read only now, with a key KIFF doesn't hold: nothing is sent.
+                    if approvalKeyUnheld {
+                        coachStart = start
+                        setupError = approvalKeyRefused()
+                        return false
+                    }
                     // One Face ID, the one just asked: Coach's tools and its draft with its Cards.
                     coachStart = start
                     setupTaf = try await startCoachTogether(start, tenant: tenant, gen: gen)
