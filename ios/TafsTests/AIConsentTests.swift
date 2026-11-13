@@ -142,7 +142,9 @@ final class AIConsentTests: XCTestCase {
         XCTAssertTrue(branch.contains("answered.remove(ref)"), "not marked answered")
         XCTAssertFalse(branch.contains("cardNotes"), "no note of its own: the screen says why")
         let card = try String(contentsOf: views.appendingPathComponent("Views/QuestionsCard.swift"), encoding: .utf8)
-        XCTAssertEqual(card.components(separatedBy: "selection = ").count, 1, "nothing clears what was chosen")
+        // Its one assignment is its declaration: nothing sets it again, so nothing clears what was chosen.
+        XCTAssertEqual(card.components(separatedBy: "selection = ").count - 1, 1, "nothing clears what was chosen")
+        XCTAssertTrue(card.contains("@State private var selection = QuestionSelection()"))
     }
 
     /// A message refused for want of the consent goes back in the composer, in Coach and in a
