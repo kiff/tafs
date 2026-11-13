@@ -26,7 +26,7 @@
   "settings.delete_account.prompt": "Elimina il tuo account",
   "settings.delete_account.row": "Elimina account…",
   "settings.delete_account.title": "Elimina account",
-  "settings.delete_account.warning": "Non si può annullare.",
+  "settings.delete_account.warning": "Questo elimina il tuo account KIFF. Non si può annullare.",
   "settings.delete_account.what_goes": "Cosa viene eliminato",
   "settings.devices.android_device": "{device} Android",
   "settings.devices.last_used": "Ultimo utilizzo {ago}",

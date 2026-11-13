@@ -1184,7 +1184,7 @@
     <string name="home_overview_title">Übersicht</string>
     <string name="home_plan_line_description">%1$s Öffnet Tarif &amp; Nutzung.</string>
     <string name="home_reason_answer_by">%1$s · antworte bis %2$s</string>
-    <string name="home_sample_foot">Beispieldaten. Mit KIFF angemeldet beginnt ein neuer taf in Coach.</string>
+    <string name="home_sample_foot">Beispieldaten. Ein neuer taf beginnt in Coach.</string>
     <string name="home_sample_label">Was es nach seinem Testlauf berichtet hat</string>
     <string name="home_see_all_jobs">Alle Aufgaben ansehen</string>
     <string name="home_shared_you">Mit dir geteilt</string>
@@ -1769,7 +1769,7 @@
     <string name="settings_delete_account_prompt">Dein Konto löschen</string>
     <string name="settings_delete_account_row">Konto löschen…</string>
     <string name="settings_delete_account_title">Konto löschen</string>
-    <string name="settings_delete_account_warning">Das lässt sich nicht rückgängig machen.</string>
+    <string name="settings_delete_account_warning">Damit wird dein KIFF-Konto gelöscht. Das lässt sich nicht rückgängig machen.</string>
     <string name="settings_delete_account_what_goes">Was gelöscht wird</string>
     <string name="settings_devices_android_device">Android-%1$s</string>
     <string name="settings_devices_last_used">Zuletzt verwendet %1$s</string>

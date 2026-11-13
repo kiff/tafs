@@ -1184,7 +1184,7 @@
     <string name="home_overview_title">Overview</string>
     <string name="home_plan_line_description">%1$s Opens Plan &amp; usage.</string>
     <string name="home_reason_answer_by">%1$s · answer by %2$s</string>
-    <string name="home_sample_foot">Sample data. Signed in with KIFF, a new taf starts in Coach.</string>
+    <string name="home_sample_foot">Sample data. A new taf starts in Coach.</string>
     <string name="home_sample_label">What it reported after its test run</string>
     <string name="home_see_all_jobs">See all jobs</string>
     <string name="home_shared_you">Shared with you</string>
@@ -1769,7 +1769,7 @@
     <string name="settings_delete_account_prompt">Delete your account</string>
     <string name="settings_delete_account_row">Delete account…</string>
     <string name="settings_delete_account_title">Delete account</string>
-    <string name="settings_delete_account_warning">This can\'t be undone.</string>
+    <string name="settings_delete_account_warning">This deletes your KIFF account. It can\'t be undone.</string>
     <string name="settings_delete_account_what_goes">What goes</string>
     <string name="settings_devices_android_device">Android %1$s</string>
     <string name="settings_devices_last_used">Last used %1$s</string>

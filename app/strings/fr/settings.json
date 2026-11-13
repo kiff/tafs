@@ -26,7 +26,7 @@
   "settings.delete_account.prompt": "Supprimer votre compte",
   "settings.delete_account.row": "Supprimer le compte…",
   "settings.delete_account.title": "Supprimer le compte",
-  "settings.delete_account.warning": "C'est irréversible.",
+  "settings.delete_account.warning": "Cela supprime votre compte KIFF. C'est irréversible.",
   "settings.delete_account.what_goes": "Ce qui disparaît",
   "settings.devices.android_device": "{device} Android",
   "settings.devices.last_used": "Dernière utilisation {ago}",

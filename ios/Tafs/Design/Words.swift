@@ -2277,7 +2277,7 @@ enum Words {
         static func planLineDescription(words: String) -> String { Words.line("home.plan_line_description", words) }
         /// {why} · answer by {time}
         static func reasonAnswerBy(why: String, time: String) -> String { Words.line("home.reason_answer_by", why, time) }
-        /// Sample data. Signed in with KIFF, a new taf starts in Coach.
+        /// Sample data. A new taf starts in Coach.
         static var sampleFoot: String { Words.line("home.sample_foot") }
         /// What it reported after its test run
         static var sampleLabel: String { Words.line("home.sample_label") }
@@ -3488,7 +3488,7 @@ enum Words {
             static var row: String { Words.line("settings.delete_account.row") }
             /// Delete account
             static var title: String { Words.line("settings.delete_account.title") }
-            /// This can't be undone.
+            /// This deletes your KIFF account. It can't be undone.
             static var warning: String { Words.line("settings.delete_account.warning") }
             /// What goes
             static var whatGoes: String { Words.line("settings.delete_account.what_goes") }

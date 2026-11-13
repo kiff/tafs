@@ -29,7 +29,7 @@
   "sign_in.waiting_for_browser": "En attente de votre navigateur… Vérifiez qu'il affiche {user_code}, et n'approuvez qu'avec cet {device} en main.",
   "sign_in.welcome.inside_lead": "Dans la Card",
   "sign_in.welcome.inside_rest": "il agit, et chaque action a un reçu.",
-  "sign_in.welcome.lead": "Un taf accomplit une mission dans la Card que vous définissez. Au-delà, il vous demande.",
+  "sign_in.welcome.lead": "Un taf accomplit une mission dans la Card que vous définissez. Au-delà, il vous le demande.",
   "sign_in.welcome.outside_lead": "Hors de la Card",
   "sign_in.welcome.outside_rest": "il vous attend, ici même.",
   "sign_in.welcome.revoked_lead": "Révoquée",

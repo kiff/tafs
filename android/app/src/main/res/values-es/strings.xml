@@ -1184,7 +1184,7 @@
     <string name="home_overview_title">Resumen</string>
     <string name="home_plan_line_description">%1$s Abre Plan y uso.</string>
     <string name="home_reason_answer_by">%1$s · responde antes de %2$s</string>
-    <string name="home_sample_foot">Datos de ejemplo. Con sesión iniciada con KIFF, un taf nuevo empieza en Coach.</string>
+    <string name="home_sample_foot">Datos de ejemplo. Un taf nuevo empieza en Coach.</string>
     <string name="home_sample_label">Lo que informó tras su ejecución de prueba</string>
     <string name="home_see_all_jobs">Ver todos los trabajos</string>
     <string name="home_shared_you">Compartidos contigo</string>
@@ -1769,7 +1769,7 @@
     <string name="settings_delete_account_prompt">Eliminar tu cuenta</string>
     <string name="settings_delete_account_row">Eliminar cuenta…</string>
     <string name="settings_delete_account_title">Eliminar cuenta</string>
-    <string name="settings_delete_account_warning">No se puede deshacer.</string>
+    <string name="settings_delete_account_warning">Esto elimina tu cuenta de KIFF. No se puede deshacer.</string>
     <string name="settings_delete_account_what_goes">Qué se elimina</string>
     <string name="settings_devices_android_device">%1$s Android</string>
     <string name="settings_devices_last_used">Último uso %1$s</string>

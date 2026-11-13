@@ -59087,49 +59087,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Beispieldaten. Mit KIFF angemeldet beginnt ein neuer taf in Coach."
+            "value": "Beispieldaten. Ein neuer taf beginnt in Coach."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sample data. Signed in with KIFF, a new taf starts in Coach."
+            "value": "Sample data. A new taf starts in Coach."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Datos de ejemplo. Con sesión iniciada con KIFF, un taf nuevo empieza en Coach."
+            "value": "Datos de ejemplo. Un taf nuevo empieza en Coach."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Données d'exemple. Connecté avec KIFF, un nouveau taf commence dans Coach."
+            "value": "Données d'exemple. Un nouveau taf commence dans Coach."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dati di esempio. Con l'accesso tramite KIFF, un nuovo taf inizia in Coach."
+            "value": "Dati di esempio. Un nuovo taf inizia in Coach."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voorbeeldgegevens. Ingelogd met KIFF begint een nieuw taf in Coach."
+            "value": "Voorbeeldgegevens. Een nieuw taf begint in Coach."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dane przykładowe. Po zalogowaniu przez KIFF nowy taf zaczyna się w Coachu."
+            "value": "Dane przykładowe. Nowy taf zaczyna się w Coachu."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dados de exemplo. Com sessão iniciada no KIFF, um novo taf começa no Coach."
+            "value": "Dados de exemplo. Um novo taf começa no Coach."
           }
         }
       }
@@ -89168,49 +89168,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Das lässt sich nicht rückgängig machen."
+            "value": "Damit wird dein KIFF-Konto gelöscht. Das lässt sich nicht rückgängig machen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This can't be undone."
+            "value": "This deletes your KIFF account. It can't be undone."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se puede deshacer."
+            "value": "Esto elimina tu cuenta de KIFF. No se puede deshacer."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "C'est irréversible."
+            "value": "Cela supprime votre compte KIFF. C'est irréversible."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non si può annullare."
+            "value": "Questo elimina il tuo account KIFF. Non si può annullare."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dit kan niet ongedaan worden gemaakt."
+            "value": "Dit verwijdert je KIFF-account. Dit kan niet ongedaan worden gemaakt."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie można tego cofnąć."
+            "value": "To usuwa Twoje konto KIFF. Nie można tego cofnąć."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não pode ser desfeito."
+            "value": "Isto elimina a sua conta KIFF. Não pode ser desfeito."
           }
         }
       }
@@ -97030,13 +97030,13 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un taf accomplit une mission dans la Card que vous définissez. Au-delà, il vous demande."
+            "value": "Un taf accomplit une mission dans la Card que vous définissez. Au-delà, il vous le demande."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un taf svolge un lavoro dentro la Card che imposti tu. Oltre, ti chiede."
+            "value": "Un taf svolge un lavoro dentro la Card che imposti tu. Oltre, te lo chiede."
           }
         },
         "nl": {

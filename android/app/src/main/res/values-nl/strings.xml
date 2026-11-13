@@ -1184,7 +1184,7 @@
     <string name="home_overview_title">Overzicht</string>
     <string name="home_plan_line_description">%1$s Opent Abonnement en gebruik.</string>
     <string name="home_reason_answer_by">%1$s · antwoord vóór %2$s</string>
-    <string name="home_sample_foot">Voorbeeldgegevens. Ingelogd met KIFF begint een nieuw taf in Coach.</string>
+    <string name="home_sample_foot">Voorbeeldgegevens. Een nieuw taf begint in Coach.</string>
     <string name="home_sample_label">Wat het meldde na de testrun</string>
     <string name="home_see_all_jobs">Alle taken bekijken</string>
     <string name="home_shared_you">Met je gedeeld</string>
@@ -1769,7 +1769,7 @@
     <string name="settings_delete_account_prompt">Je account verwijderen</string>
     <string name="settings_delete_account_row">Account verwijderen…</string>
     <string name="settings_delete_account_title">Account verwijderen</string>
-    <string name="settings_delete_account_warning">Dit kan niet ongedaan worden gemaakt.</string>
+    <string name="settings_delete_account_warning">Dit verwijdert je KIFF-account. Dit kan niet ongedaan worden gemaakt.</string>
     <string name="settings_delete_account_what_goes">Wat er verdwijnt</string>
     <string name="settings_devices_android_device">Android-%1$s</string>
     <string name="settings_devices_last_used">Laatst gebruikt %1$s</string>

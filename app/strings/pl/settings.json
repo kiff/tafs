@@ -26,7 +26,7 @@
   "settings.delete_account.prompt": "Usuń swoje konto",
   "settings.delete_account.row": "Usuń konto…",
   "settings.delete_account.title": "Usuń konto",
-  "settings.delete_account.warning": "Nie można tego cofnąć.",
+  "settings.delete_account.warning": "To usuwa Twoje konto KIFF. Nie można tego cofnąć.",
   "settings.delete_account.what_goes": "Co zostanie usunięte",
   "settings.devices.android_device": "{device} z Androidem",
   "settings.devices.last_used": "Ostatnio używane {ago}",

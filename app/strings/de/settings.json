@@ -26,7 +26,7 @@
   "settings.delete_account.prompt": "Dein Konto löschen",
   "settings.delete_account.row": "Konto löschen…",
   "settings.delete_account.title": "Konto löschen",
-  "settings.delete_account.warning": "Das lässt sich nicht rückgängig machen.",
+  "settings.delete_account.warning": "Damit wird dein KIFF-Konto gelöscht. Das lässt sich nicht rückgängig machen.",
   "settings.delete_account.what_goes": "Was gelöscht wird",
   "settings.devices.android_device": "Android-{device}",
   "settings.devices.last_used": "Zuletzt verwendet {ago}",
