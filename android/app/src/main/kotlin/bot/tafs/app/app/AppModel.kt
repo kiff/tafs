@@ -2868,6 +2868,8 @@ class AppModel(
     // tafs cloud's first start: Start's screen already shows what Coach is given, the Cards in KIFF's words among it, so the
     // first Send (or Start) starts Coach and gives its tools under one fingerprint, with no second screen.
     _state.value.coachStart?.takeIf { _state.value.coachCloudId == null && it.startable }?.let { return startCoachTogether(it) }
+    // A phone that signed in before it could approve registers its approval key now, before anything is signed.
+    if (!sessionHasApprovalKey) registerApprovalKey()
     _state.update { it.copy(startingCoach = true, coachStartError = null) }
     val generation = accountGeneration
     val signer = signer
@@ -2987,6 +2989,13 @@ class AppModel(
     }
     val draftRequest = start.draft ?: return false
     if (_state.value.startingCoach) return false
+    // Approvals are set up here, at Start: a phone that signed in before it could approve registers its approval key now, and
+    // nothing is signed unless KIFF holds it (the one signature over both requests is the approval key's).
+    if (!sessionHasApprovalKey) registerApprovalKey()
+    if (!sessionHasApprovalKey) {
+      failed(if (_state.value.approvalKeyLost) KiffClient.APPROVAL_KEY_LOST else bot.tafs.app.model.ApprovalWords.FIRST_TAF)
+      return false
+    }
     _state.update { it.copy(startingCoach = true, coachToolsError = null, coachStartError = null) }
     val generation = accountGeneration
     val signer = signer
