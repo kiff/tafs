@@ -231,12 +231,16 @@ function byVendor(catalog: CatalogApp[] | undefined): Map<string, CatalogApp> {
   return out;
 }
 
-/** For each of a recipe's connections, the catalog entry it would use (a connected one first, else the first listed) and the name to draw. */
+/**
+ * For each of a recipe's connections, the catalog entry it would use and the name to draw: a connected one
+ * first, else one that connects today (rule 13: never an app that can't connect yet ahead of one that can),
+ * else the first listed.
+ */
 function pickApps(r: Recipe, vendors: Map<string, CatalogApp>): Array<{ app?: CatalogApp; name: string }> {
   return r.connections.map((group) => {
     const listed = group.map((v) => vendors.get(fold(v))).filter((a): a is CatalogApp => a !== undefined);
-    const app = listed.find((a) => a.state === "connected") ?? listed[0];
-    return { app, name: app?.title || group[0] || "" };
+    const app = listed.find((a) => a.state === "connected") ?? listed.find((a) => vendorOf(a).some((v) => CONNECTS_TODAY.has(v))) ?? listed[0];
+    return { app, name: app?.title || group.find((v) => CONNECTS_TODAY.has(fold(v))) || group[0] || "" };
   });
 }
 

@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { RECIPES } from "../src/recipes.js";
-import { CATEGORIES, categoriesIn, connectsToday, CONNECTS_TODAY, labelsIn, recipesFor, vendorOf } from "../src/cloud/recipes.js";
+import { CATEGORIES, categoriesIn, connectsToday, CONNECTS_TODAY, labelsIn, recipesFor, vendorOf, withApps } from "../src/cloud/recipes.js";
+import type { CatalogApp } from "../src/cloud/connect.js";
 import { LANGUAGES } from "../src/cloud/words/index.js";
 // The generator is plain JavaScript, so the script and the test parse the files the same way.
 import { LANGS, MODULE, parseRecipe, readRecipes, RECIPES_DIR, render } from "../scripts/recipes.mjs";
@@ -232,6 +233,16 @@ Bezahle meine Rechnungen unter 100 EUR.
     // Once an app is proved, its jobs come back with no other change.
     const withTypeform = new Set([...CONNECTS_TODAY, "typeform"]);
     expect(recipesFor(undefined, "en", true, withTypeform).recipes.map((r) => r.id)).toContain("follow-up-new-leads");
+  });
+
+  // dev-android's read of the four key jobs (13 Nov): refunds drew Gorgias, which can't connect yet, ahead of Intercom.
+  it("draws, for a connection, an app that connects today ahead of one that can't, unless one is connected", () => {
+    const app = (entry: string, vendor: string, state: CatalogApp["state"] = "available"): CatalogApp => ({ entry, vendor, title: vendor, how: "oauth", state });
+    const refunds = (catalog: CatalogApp[]) => withApps(recipesFor(catalog).recipes, catalog, new Map()).find((r) => r.id === "refunds-within-a-limit")!.apps.map((a) => a.name);
+    const stripe = app("stripe@3", "Stripe");
+    expect(refunds([app("connector:p:gorgias", "Gorgias"), app("connector:p:intercom", "Intercom"), stripe])).toEqual(["Intercom", "Stripe"]);
+    // A connected help desk is still the one drawn, whichever it is.
+    expect(refunds([app("connector:p:gorgias", "Gorgias", "connected"), app("connector:p:intercom", "Intercom"), stripe])).toEqual(["Gorgias", "Stripe"]);
   });
 
   it("filters by every connection, taking any vendor that would do for it, by category", () => {
