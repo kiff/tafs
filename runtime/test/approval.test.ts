@@ -787,6 +787,36 @@ describe("one signature for a connection's added tools and its Card (tools_and_c
   });
 });
 
+// qa-kiff's negative 1 on #919: a draft whose Cards also allow a tool this connection doesn't give is never signed under it,
+// whichever step signs the Card; a tool of the same taf's other connection is its own, so it may be on the same Card.
+describe("never signs a Card that allows more than the taf's connections give", () => {
+  const TOOLS = { tools: [{ tool: "refund", name: "refund_k3f9" }] };
+  const API = { kind: "api_key", api: { url: "https://example.com/desk/openapi.json", digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } }, ...TOOLS };
+  const cards = (extra: string[]) => [{ grants: [{ action: "refund_k3f9" }, { action: "list_charges_k3f9" }, ...extra.map((action) => ({ action }))], aggregates: [] }];
+  afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; delete process.env.TAFS_KEY_AND_CARDS; });
+
+  for (const [step, flag, made] of [
+    ["tools_and_cards", "TAFS_TOOLS_AND_CARDS", () => grant({ status: "pending", connected: [{ tool: "list_charges", name: "list_charges_k3f9" }] }, TOOLS)],
+    ["key_and_cards", "TAFS_KEY_AND_CARDS", () => grant({}, { ...API, tools: [{ tool: "refund", name: "refund_k3f9" }, { tool: "list_charges", name: "list_charges_k3f9" }] })],
+  ] as const) {
+    it(`refuses ${step} when the Card also allows a tool no connection of the taf gives, and signs it once another of its connections does`, async () => {
+      process.env[flag] = "on";
+      const s = services();
+      const g = made();
+      s.grants = [g];
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards(["send_email_everyone"]) };
+      const w = await world(s, { draft: "drf_1" });
+      const ask = { grant: "g_1", shown_digest: g.digest, draft: "drf_1", shown_draft: "v3", can: [step] };
+      const r = await w.call("POST", ASK, ask);
+      expect(r.body).toMatchObject({ outcome: "answered", answer: expect.stringMatching(/^failed: the Card covers "send_email_everyone"/) });
+      expect((r.body as { note: string }).note).toContain("send_email_everyone");
+      // The same taf's mailbox gives it: one Card over both apps is the taf's own, so it's asked.
+      s.grants = [g, grant({ id: "g_2", status: "connected", vendor: "Mail" }, { server: "mcp.mail.example", tools: [{ tool: "send", name: "send_email_everyone" }] })];
+      expect((await w.call("POST", ASK, ask)).body).toMatchObject({ outcome: "sign", ask: { step } });
+    });
+  }
+});
+
 describe("one signature for a key and its Card (key_and_cards, docs/secure-connection.md)", () => {
   const API = { kind: "api_key", api: { url: "https://example.com/desk/openapi.json", digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } } };
   const keyGrant = (over: Record<string, unknown> = {}) => grant(over, API);
