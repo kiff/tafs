@@ -785,6 +785,17 @@ answers `key_and_cards`:
 Answered with the two steps instead (tafs cloud's step off, or a card it won't join), the phone signs
 nothing for that answer and gives the key, then approves the Card, as before.
 
+**One fingerprint for a connection's tools and its Card** (`tools_and_cards`, Android 1.21.1). The
+same, for an app signed in to, not given a key: from Coach's card with a Card's draft, on a phone with
+an approval key, Approve asks tafs cloud with `can: ["tools_and_cards"]`. When tafs cloud answers that
+step (only while the connection waits for its added tools, behind `TAFS_TOOLS_AND_CARDS`), the phone
+checks the ask as for `key_and_cards`, then builds planque's approve, with the body exactly as tafs
+cloud built it (`PlanqueClient.approveMessage`), and KIFF's draft confirm with one `signed_at`, signs
+both hashes once (`AppModel.toolsAndCards`) and sends the approve, then, only once planque says
+`connected`, the confirm. Any other answer is the steps as before. The phone doesn't check the draft's
+tools against the connection: a Card can span several of the agent's connections, and KIFF refuses a
+draft over tools that aren't declared.
+
 A browser connection's sheet (on a taf's Setup) offers tafs cloud's `site_sign_in` action, to
 whoever manages the taf: its `title` ("Sign in to a site") and its line. A tap asks planque, signed
 by the device's key with no fingerprint (it grants nothing), for the live sign-in view

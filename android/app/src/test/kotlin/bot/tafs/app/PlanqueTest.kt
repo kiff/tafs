@@ -1117,6 +1117,89 @@ class PlanqueTest {
     assertFalse("the key is kept nowhere in the app's state", m.state.value.toString().contains("test-key-0001"))
   }
 
+  // MARK: One fingerprint for a connection's tools and its Card (tools_and_cards)
+
+  private val toolsAndCards =
+    """{"outcome":"sign","ask":{"id":"ask_1","step":"tools_and_cards","scheme":"kiff.requests.v1","message":"","reason":"Connect Stripe to Refunds","key":"critical",
+       "planque":{"grant":"g1","body":{"digest":"DIGEST"}},"kiff":{"draft":"dr_1","version":"v3"}}}"""
+
+  @Test fun oneFingerprintApprovesTheToolsAndConfirmsTheirCardEachRequestCheckedByItsOwnService() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, toolsAndCards.replace("DIGEST", digest))
+    transport.answer(approve, 200, """{"status":"connected"}""")
+    transport.answer(confirmRoute, 200, draft.replace("\"draft\"", "\"confirmed\""))
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    m.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3")
+
+    // The phone said it can sign the step; one fingerprint, for both.
+    assertEquals("tools_and_cards", bodyOf(transport.requestsTo(askRoute).single()).getValue("can").toString().trim('[', ']', '"'))
+    assertEquals(listOf("Connect Stripe to Refunds"), auth.asked)
+
+    // planque's approve goes with the body tafs cloud built, and each request carries the one signature and the other's hash.
+    val approved = transport.requestsTo(approve).single()
+    val confirmed = transport.requestsTo(confirmRoute).single()
+    assertEquals(digest, bodyOf(approved).getValue("digest").jsonPrimitive.content)
+    val toPlanque = fields(approved.headers.getValue("Planque-Device-Signature"))
+    val toKiff = fields(confirmed.headers.getValue("KIFF-Device-Signature"))
+    assertEquals(toPlanque.getValue("t"), toKiff.getValue("t"))
+    assertEquals(toPlanque.getValue("v3"), toKiff.getValue("v3"))
+    assertNull("never a v1 beside it", toPlanque["v1"] ?: toKiff["v1"])
+    val at = toKiff.getValue("t")
+    val planqueBase = approved.url.substringBefore("/v1/accounts")
+    val approveHash = KiffClient.messageHash(PlanqueClient.message(planqueBase, "t_01", "POST", "/v1/accounts/t_01/grants/g1/approve", approved.body!!, at))
+    val confirmHash = KiffClient.messageHash(KiffClient.requestMessage("t_01", "POST", "/v1/me/agent-drafts/dr_1/confirm", confirmed.body!!, at))
+    assertEquals("sha256:$confirmHash", toPlanque.getValue("with"))
+    assertEquals("sha256:$approveHash", toKiff.getValue("with"))
+
+    // The approval key signed kiff.requests.v1 over both hashes.
+    val verify = Signature.getInstance("SHA256withECDSA")
+    verify.initVerify(KeyFactory.getInstance("EC").generatePublic(X509EncodedKeySpec(signer.approvalPublicKeyDER)))
+    verify.update(KiffClient.requestsMessage("t_01", at, approveHash, confirmHash))
+    assertTrue(verify.verify(Base64.getDecoder().decode(toKiff.getValue("v3"))))
+
+    // Then the report, as for any step: tafs cloud reads both services before Coach hears "approved".
+    assertEquals("confirmed", bodyOf(transport.requestsTo(reportRoute).single()).getValue("result").jsonPrimitive.content)
+  }
+
+  @Test fun toolsThatDidntConnectNeverHaveTheirCardConfirmed() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, toolsAndCards.replace("DIGEST", digest))
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"failed: Stripe is not connected","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    m.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3")
+    assertTrue("no confirm for tools that aren't connected", transport.requestsTo(confirmRoute).isEmpty())
+    assertEquals("not_connected", bodyOf(transport.requestsTo(reportRoute).single()).getValue("result").jsonPrimitive.content)
+  }
+
+  @Test fun aToolsAndCardsAskForAnotherDigestIsNeverSigned() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    // The tools moved since the card was shown: the ask names a digest the person never read.
+    transport.answer(askRoute, 200, toolsAndCards.replace("DIGEST", "f".repeat(64)))
+    val m = model()
+    coachWithCard(m)
+    m.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3")
+    assertTrue("nothing signed", auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    assertTrue(transport.requestsTo(confirmRoute).isEmpty())
+  }
+
+  @Test fun aCardWithNoDraftAsksForTheOldSteps() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, """{"outcome":"answered","answer":"already approved","session":"s1","run":"r1"}""")
+    val m = model()
+    coachWithCard(m)
+    m.approveCoach(approvalComponent(), digest, null)
+    assertNull("no draft, no tools_and_cards", bodyOf(transport.requestsTo(askRoute).single())["can"])
+  }
+
   @Test fun aKeyThatDidntConnectNeverHasItsCardConfirmed() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${keyGrant()}]}""")
@@ -1145,7 +1228,7 @@ class PlanqueTest {
     val asks = transport.requestsTo(askRoute)
     assertEquals(2, asks.size)
     assertTrue("the first asked for one signature", bodyOf(asks[0]).containsKey("can"))
-    assertFalse("the two-step ask doesn't", bodyOf(asks[1]).containsKey("can"))
+    assertFalse("the two-step ask doesn't ask for the key's step again", bodyOf(asks[1])["can"].toString().contains("key_and_cards"))
     assertTrue("the key went as before", fields(transport.requestsTo(key).single().headers.getValue("Planque-Device-Signature")).containsKey("v1"))
     assertEquals("one fingerprint, the key's own", 1, auth.asked.size)
     assertTrue(transport.requestsTo(confirmRoute).isEmpty())

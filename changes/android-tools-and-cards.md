@@ -1,0 +1,1 @@
+- **Android: one fingerprint for an app's added tools and its Card.** When tafs cloud offers it, Coach's card approves a signed-in app's tools and confirms the taf's Card under one signature, as a key and its Card already are (docs/android-app.md).
