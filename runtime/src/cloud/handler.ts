@@ -1920,22 +1920,33 @@ async function remove(taf: Taf, me: { tenantID: string }, deps: Deps, token = ""
 }
 
 /**
- * A removed taf, forgotten by Coach: every note Coach keeps (shared or a person's own) that names it, by its id,
- * its KIFF agent or its name, goes. The removal promises its chats, runs and memory go with it, and a note
- * like "its account has no client invoices" brought a removed taf's read back into a new chat. A note naming
- * other tafs too goes whole: Coach reads the tafs again. Best effort: the taf is removed either way, and its
- * queued lines are dropped when read (liveCoachLines).
+ * A removed taf, forgotten by Coach: the notes Coach keeps (shared or a person's own) that are about it go. A note
+ * is about it when it names its id or KIFF agent, or its name as written (case kept, a whole word: "Emails" the
+ * taf, never "emails" the word). A note that also names a taf that's still there stays: it's about that one too.
+ * The removal promises its chats, runs and memory go with it, and a note like "its account has no client invoices"
+ * brought a removed taf's read back into a new chat. Best effort: the taf is removed either way, and its queued
+ * lines are dropped when read (liveCoachLines).
  */
 async function forgetForCoach(tenant: string, taf: Taf, deps: Deps): Promise<void> {
   if (taf.job === SETUP_JOB) return;
   try {
-    const coach = (await deps.tafs.list(tenant)).find((t) => t.job === SETUP_JOB && !t.removing);
+    const tafs = await deps.tafs.list(tenant);
+    const coach = tafs.find((t) => t.job === SETUP_JOB && !t.removing);
     if (!coach) return;
-    const words = [taf.id, taf.kiffAgent, taf.name].filter((w): w is string => typeof w === "string" && w.trim().length >= 3);
-    const names = (text: string) => words.some((w) => new RegExp(`(^|[^\\p{L}\\p{N}_-])${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^\\p{L}\\p{N}_-])`, "iu").test(text));
-    const about = (await deps.agents.memories(tenant, coach.id)).filter((n) => names(n.name) || names(n.text));
-    for (const n of about) await deps.agents.forget(tenant, coach.id, n.name, n.scope);
-    if (about.length) console.log(JSON.stringify({ event: "taf_forgotten_by_coach", taf: taf.id, notes: about.length }));
+    const word = (w: string, flags: string) => new RegExp(`(^|[^\\p{L}\\p{N}_-])${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^\\p{L}\\p{N}_-])`, flags);
+    const names = (t: Pick<Taf, "id" | "kiffAgent" | "name">) => [
+      ...[t.id, t.kiffAgent].filter((w): w is string => typeof w === "string" && w.length >= 3).map((w) => word(w, "iu")),
+      ...(typeof t.name === "string" && t.name.trim().length >= 3 ? [word(t.name.trim(), "u")] : []),
+    ];
+    const gone = names(taf);
+    const live = tafs.filter((t) => t.id !== taf.id && !t.removing && t.job !== SETUP_JOB).map(names);
+    const about = (text: string, res: RegExp[]) => res.some((r) => r.test(text));
+    const forgotten = (await deps.agents.memories(tenant, coach.id)).filter((n) => {
+      const text = `${n.name}\n${n.text}`;
+      return about(text, gone) && !live.some((res) => about(text, res));
+    });
+    for (const n of forgotten) await deps.agents.forget(tenant, coach.id, n.name, n.scope);
+    if (forgotten.length) console.log(JSON.stringify({ event: "taf_forgotten_by_coach", taf: taf.id, notes: forgotten.length }));
   } catch (err) {
     console.error(`remove ${taf.id}: Coach's notes: ${(err as Error).message}`);
   }

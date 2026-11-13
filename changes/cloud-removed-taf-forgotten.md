@@ -1,5 +1,5 @@
 - **Coach forgets a removed taf.** A new Coach chat could bring back a removed taf's last result. One source was a line still queued for the person's Coach, the other was Coach's own notes about the taf. Now:
   - each queued line names its taf by id;
   - a removed taf's lines are dropped when read, for every person on the account;
-  - Coach's notes that name the taf are forgotten when it's removed;
+  - Coach's notes about the taf are forgotten when it's removed: those naming its id, its KIFF agent, or its name as written (case kept), unless they also name a taf that's still there;
   - a run that ends after its taf was removed queues nothing.
