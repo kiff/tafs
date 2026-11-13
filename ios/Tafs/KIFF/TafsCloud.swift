@@ -47,7 +47,7 @@ final class TafsCloud {
     }
 
     /// tafs cloud's code for a model turn refused for want of the AI-data consent.
-    static let aiConsentRequired = "ai_consent_required"
+    nonisolated static let aiConsentRequired = "ai_consent_required"
 
     /// A run in the way of an install (kiff/tafs#206): one at work, or one waiting on the owner.
     struct BlockingRun: Decodable, Equatable {
