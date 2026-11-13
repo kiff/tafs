@@ -376,11 +376,21 @@ extension TafsCloud {
             /// connected, available or needs_reconnect.
             var state = "available"
             var grant: String?
+            /// What the app is, in one line, in tafs cloud's words; nil when it sends none.
+            var line: String?
+            /// Whose the connection is, in tafs cloud's words, drawn as sent; nil when it sends none.
+            var whose: String?
+            /// The tafs that use it, by tafs cloud's names; nil when it sends none (the phone's own
+            /// planque read stands in).
+            var usedBy: [String]?
             var id: String { entry }
             var connected: Bool { state == "connected" }
             var needsReconnect: Bool { state == "needs_reconnect" }
+            /// Connected, or to sign in again: the person's own, listed first, under Yours.
+            var yours: Bool { connected || needsReconnect }
 
-            enum CodingKeys: String, CodingKey { case entry, vendor, title, icon, logo, how, state, grant }
+            enum CodingKeys: String, CodingKey { case entry, vendor, title, icon, logo, how, state, grant, line, whose, usedBy = "used_by" }
+            private struct Named: Decodable { let name: String? }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 entry = try c.decode(String.self, forKey: .entry)
@@ -391,6 +401,15 @@ extension TafsCloud {
                 how = try c.decodeIfPresent(String.self, forKey: .how) ?? "oauth"
                 state = try c.decodeIfPresent(String.self, forKey: .state) ?? "available"
                 grant = try c.decodeIfPresent(String.self, forKey: .grant)
+                func words(_ k: CodingKeys) -> String? {
+                    ((try? c.decodeIfPresent(String.self, forKey: k)) ?? nil)
+                        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.flatMap { $0.isEmpty ? nil : $0 }
+                }
+                line = words(.line)
+                whose = words(.whose)
+                // [{taf, name}], each by tafs cloud's name; anything else reads as none sent.
+                usedBy = ((try? c.decodeIfPresent([Named].self, forKey: .usedBy)) ?? nil)?
+                    .compactMap { $0.name?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
             }
         }
         /// A live taf whose Card in force still uses a removed taf's connection, by tafs cloud's name.

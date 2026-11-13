@@ -17,11 +17,27 @@ struct ConnectAppsView: View {
     @State private var loadingMore = false
     /// The app waiting for its taf to be chosen.
     @State private var choosing: TafsCloud.ConnectApps.App?
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    /// On an iPad's full width, a table: App, How it connects, Whose, Status.
+    private var table: Bool { sizeClass == .regular }
 
     var body: some View {
         List {
             if let apps = model.connectApps {
-                ForEach(apps.apps) { app in row(app) }
+                // The person's own first, with a ✓, then the rest of the catalog, each in tafs cloud's order.
+                let parts = ConnectRow.split(apps.apps)
+                if !parts.yours.isEmpty {
+                    Section {
+                        if table { columns }
+                        ForEach(parts.yours) { app in row(app) }
+                    } header: { Text(Words.Connect.Apps.yours) }
+                }
+                if !parts.discover.isEmpty {
+                    Section {
+                        if table, parts.yours.isEmpty { columns }
+                        ForEach(parts.discover) { app in row(app) }
+                    } header: { Text(Words.Connect.Apps.discover) }
+                }
                 if apps.nextCursor != nil {
                     Button(loadingMore ? Words.Common.loading : Words.Connect.moreApps) {
                         loadingMore = true
@@ -68,42 +84,106 @@ struct ConnectAppsView: View {
         var id: String { start.grant }
     }
 
-    private func row(_ app: TafsCloud.ConnectApps.App) -> some View {
+    /// The table's header, on an iPad: the same widths as each row's cells.
+    private var columns: some View {
         HStack(spacing: 12) {
-            // Its logo, from tafs cloud only, small beside its name; none, the name alone.
+            Text(Words.Connect.Apps.columnApp).frame(maxWidth: .infinity, alignment: .leading)
+            Text(Words.Connect.Apps.columnHow).frame(width: Self.howWidth, alignment: .leading)
+            Text(Words.Connect.Apps.columnWhose).frame(width: Self.whoseWidth, alignment: .leading)
+            Text(Words.Connect.Apps.columnStatus).frame(width: Self.statusWidth, alignment: .leading)
+        }
+        .scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.dim)
+        .accessibilityHidden(true)
+    }
+    private static let howWidth: CGFloat = 150
+    private static let whoseWidth: CGFloat = 130
+    private static let statusWidth: CGFloat = 230
+
+    /// One app: its connected apps open their detail (what it can read and do, which tafs use
+    /// it, and Disconnect); the rest have a compact Connect.
+    @ViewBuilder
+    private func row(_ app: TafsCloud.ConnectApps.App) -> some View {
+        let said = ConnectRow(app, usedHere: model.connectionGroups(of: app).tafs.map(\.taf))
+        if app.connected, !model.connections(of: app).isEmpty {
+            NavigationLink { AppConnectionsView(app: app) } label: { cells(app, said) }
+                .accessibilityIdentifier("connect.manage." + app.entry)
+        } else {
+            cells(app, said)
+        }
+    }
+
+    @ViewBuilder
+    private func cells(_ app: TafsCloud.ConnectApps.App, _ said: ConnectRow) -> some View {
+        if table {
+            HStack(spacing: 12) {
+                name(app, said).frame(maxWidth: .infinity, alignment: .leading)
+                Text(said.how).scaledFont(14).foregroundColor(Theme.soft).frame(width: Self.howWidth, alignment: .leading)
+                Text(said.whose ?? "").scaledFont(14).foregroundColor(Theme.soft).frame(width: Self.whoseWidth, alignment: .leading)
+                HStack(spacing: 8) {
+                    if let status = said.status {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(status).scaledFont(14, weight: .semibold).foregroundColor(app.connected ? Theme.ok : Theme.amberText)
+                            if let used = said.usedBy { Text(used).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).lineLimit(2) }
+                        }
+                    }
+                    Spacer(minLength: 4)
+                    trailing(app)
+                }
+                .frame(width: Self.statusWidth, alignment: .leading)
+            }
+            .frame(minHeight: 52)
+        } else {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    name(app, said)
+                    // How it connects, whose it is, and where it stands, in one line.
+                    Text(said.second).scaledFont(13, relativeTo: .footnote).foregroundColor(app.needsReconnect ? Theme.amberText : Theme.dim)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 8)
+                trailing(app)
+            }
+            .frame(minHeight: 52)
+        }
+    }
+
+    /// The logo, from tafs cloud only, beside the name, and tafs cloud's one line on what it is.
+    private func name(_ app: TafsCloud.ConnectApps.App, _ said: ConnectRow) -> some View {
+        HStack(spacing: 10) {
             if let url = model.cloud.logoURL(app.logo) {
                 AsyncImage(url: url) { phase in
                     if case .success(let image) = phase {
                         image.resizable().interpolation(.high).scaledToFit().frame(width: 24, height: 24)
                     }
                 }
+                .frame(width: 24, height: 24)
                 .accessibilityHidden(true)
             }
-            Text(app.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
-                .accessibilityIdentifier("connect.title." + app.entry)
-            Spacer()
-            if app.connected, !model.connections(of: app).isEmpty {
-                // Its connections, each with the taf it serves and Disconnect, on a screen of their own.
-                NavigationLink { AppConnectionsView(app: app) } label: {
-                    Label(Words.Connect.Status.connected, systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(app.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                    .accessibilityIdentifier("connect.title." + app.entry)
+                if let line = said.line {
+                    Text(line).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).lineLimit(2)
                 }
-                .accessibilityLabel(Words.Connect.connectedManage)
-                .accessibilityIdentifier("connect.manage." + app.entry)
-            } else if app.connected {
-                Label(Words.Connect.Status.connected, systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)
-                    .accessibilityLabel(Words.Connect.Status.connected)
-            } else {
-                // As wide as its words, never the row's width: on an iPad a button stretched
-                // across the screen reads as a field to type in.
-                Button { connect(app) } label: {
-                    Text(app.needsReconnect ? Words.Connect.signInAgain : Words.Connect.Apps.connect).padding(.horizontal, 16)
-                }
-                    .buttonStyle(OutlineButtonStyle())
-                    .fixedSize(horizontal: true, vertical: false)
-                    .disabled(starting != nil || (taf == nil && model.connectableTafs.isEmpty))
             }
         }
-        .frame(minHeight: 44)
+    }
+
+    /// A ✓ for a connected app; else a Connect (or Sign in again) as wide as its words, never the
+    /// row's: on an iPad a button across the screen reads as a field to type in.
+    @ViewBuilder
+    private func trailing(_ app: TafsCloud.ConnectApps.App) -> some View {
+        if app.connected {
+            Image(systemName: "checkmark").foregroundColor(Theme.ok)
+                .accessibilityLabel(Words.Connect.Status.connected)
+        } else {
+            Button { connect(app) } label: {
+                Text(app.needsReconnect ? Words.Connect.signInAgain : Words.Connect.Apps.connect).padding(.horizontal, 16)
+            }
+                .buttonStyle(OutlineButtonStyle())
+                .fixedSize(horizontal: true, vertical: false)
+                .disabled(starting != nil || (taf == nil && model.connectableTafs.isEmpty))
+        }
     }
 
     /// The taf first: the one this was opened from, the only one there is, or the owner's pick.
@@ -119,6 +199,35 @@ struct ConnectAppsView: View {
             await model.startConnect(app, for: tafID)
             starting = nil
         }
+    }
+}
+
+/// What a Connect apps row says, from tafs cloud's fields (the same as Android's): how it connects,
+/// whose it is, where it stands, and which tafs use it. Every word but the app's own is tafs
+/// cloud's or a shared key.
+struct ConnectRow: Equatable {
+    let how: String
+    let whose: String?
+    let status: String?
+    let usedBy: String?
+    let line: String?
+
+    /// `usedHere`: the tafs this phone's planque read names, until tafs cloud sends `used_by`.
+    init(_ app: TafsCloud.ConnectApps.App, usedHere: [String] = []) {
+        how = app.how == "key" ? Words.Connect.How.key : Words.Connect.How.signIn
+        whose = app.whose
+        status = app.connected ? Words.Connect.Status.connected : app.needsReconnect ? Words.Connect.signInAgain : nil
+        let names = app.usedBy ?? usedHere
+        usedBy = app.yours && !names.isEmpty ? Words.Connect.Apps.usedBy(tafs: Words.list(names)) : nil
+        line = app.line
+    }
+
+    /// The phone's second line: how, whose, where it stands and who uses it.
+    var second: String { [how, whose, status, usedBy].compactMap { $0 }.joined(separator: " · ") }
+
+    /// The person's own first (connected, or to sign in again), then the rest, each in tafs cloud's order.
+    static func split(_ apps: [TafsCloud.ConnectApps.App]) -> (yours: [TafsCloud.ConnectApps.App], discover: [TafsCloud.ConnectApps.App]) {
+        (apps.filter(\.yours), apps.filter { !$0.yours })
     }
 }
 
