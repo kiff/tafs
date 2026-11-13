@@ -64,6 +64,7 @@ export const pt: Words = {
   approval_no_draft: "O KIFF não tem esse rascunho",
   approval_cards_unread: "O Card ainda não pôde ser verificado. Leia-o novamente e depois aprove.",
   approval_uncovered: (tool: string) => `Este Card não cobre «${tool}», que o taf recebeu, por isso cada chamada seria recusada. Nada foi aprovado. O Coach volta a redigi-lo.`,
+  approval_lifetime_cap: (tool: string) => `Este Card deixaria «${tool}» correr só um número fixo de vezes no total, para todos os itens e não para cada um. Nada foi aprovado. O Coach volta a redigi-lo.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} foi configurado hoje, por isso cada alteração tem de lhe perguntar primeiro; este Card deixaria «${tool}» executar sem perguntar. Nada foi aprovado. O Coach volta a redigi-lo.`,
   approval_critical_key: "Isto alarga o que o taf pode fazer, por isso precisa da sua impressão digital. Nada foi aprovado; aprove novamente com a sua impressão digital.",
   approval_drive_key: "Deixar o Coach usar a app precisa da sua impressão digital. Nada começou; aprove novamente com a sua impressão digital.",

@@ -259,6 +259,11 @@ things (`runtime/src/cloud/approval.ts`):
   `GET /v1/me/mandates`): KIFF refuses every call no Card covers (`no_mandate_issued`), reads
   included, so the taf couldn't use it. Setup's own reads (planque's `setup_reads`) are left
   out. When the Cards in force can't be read, the answer is **read_again**, never a signature.
+  A draft that counts one of the taf's write tools over its whole life with no `per` (count,
+  `lifetime`, one total on the tool for every item) is answered `failed: …` too, naming the tool
+  and its `resource_argument`: such a total stops the taf after its first item, so a limit for
+  each item ("one invoice per order, ever") is a total `per` that argument, beside the day's
+  total. A lifetime sum (a budget) and a lifetime count per item are signed.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.
