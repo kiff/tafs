@@ -1,0 +1,1 @@
+- An approved connection that planque answers as signed in with no sign-in link (the account's sign-in was held already) is approved, and Coach goes on to the tools step, instead of "Nothing was connected".

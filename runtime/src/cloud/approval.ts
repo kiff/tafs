@@ -582,7 +582,9 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   }
   const grants = await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
   const grant = grants.find((g) => g.id === pending.grant);
-  if (grant && (grant.status === "connected" || grant.status === "listed")) {
+  // signed_in: planque holds the sign-in already (the vendor's account was signed in before, so no link came
+  // back), and Coach goes on to the tools step. It's never a failure (go-to-market job 1, 13 Nov).
+  if (grant && (grant.status === "connected" || grant.status === "listed" || grant.status === "signed_in")) {
     await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
     return { answer: "approved" };
   }

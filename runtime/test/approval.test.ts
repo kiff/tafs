@@ -461,6 +461,22 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     expect((await w.report({ result: "listed" })).body).toMatchObject({ answer: "approved" });
   });
 
+  // Go-to-market job 1 (owner's phone, 13 Nov): the account's Google sign-in was held already, so planque answered
+  // signed_in with no link. The phone reported not_connected, and Coach was told "Nothing was connected".
+  it("signed in with no link is approved: planque holds the sign-in, and Coach goes on to the tools step", async () => {
+    const s = services();
+    const w = await asked(s);
+    s.grants = [grant({ status: "signed_in" })];
+    const res = await w.report({ result: "not_connected", status: "signed_in" });
+    expect(res.body).toMatchObject({ answer: "approved" });
+    expect(JSON.stringify(res.body)).not.toContain("Nothing was connected");
+    // Still not approved when planque itself says it isn't signed in.
+    const again = services();
+    const w2 = await asked(again);
+    again.grants = [grant({ status: "approved" })];
+    expect((await w2.report({ result: "not_connected", status: "approved" })).body).toMatchObject({ answer: expect.stringMatching(/^failed: /) });
+  });
+
   it("a report this phone didn't sign is refused, and Coach hears nothing", async () => {
     const s = services();
     const w = await asked(s);
@@ -481,10 +497,11 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
   it("the service is the truth: a reported success planque doesn't hold is failed, in tafs cloud's words", async () => {
     const s = services();
     const w = await asked(s);
-    s.grants = [grant({ status: "signed_in" })];
+    // Approved but never signed in: planque holds nothing yet (signed_in is held: the test above).
+    s.grants = [grant({ status: "approved" })];
     const r = await w.report({ result: "connected" });
-    expect(r.body).toMatchObject({ answer: `failed: ${WORDS.notConnected("Stripe", "signed_in")}`, note: WORDS.notConnected("Stripe", "signed_in") });
-    expect(w.told()).toMatchObject({ answer: `failed: ${WORDS.notConnected("Stripe", "signed_in")}` });
+    expect(r.body).toMatchObject({ answer: `failed: ${WORDS.notConnected("Stripe", "approved")}`, note: WORDS.notConnected("Stripe", "approved") });
+    expect(w.told()).toMatchObject({ answer: `failed: ${WORDS.notConnected("Stripe", "approved")}` });
   });
 
   it("words each note in the approving request's language, the reason Coach hears with it, and keeps the protocol's words", async () => {
