@@ -64,7 +64,7 @@
   },
   "connect.disconnect.no_taf_uses": "No taf uses {vendor} now.",
   "connect.disconnect.rest": "Other tafs that use {vendor} keep their access. If no other taf uses this sign-in, it's revoked at {vendor}. Using {vendor} again asks you to approve and sign in again.",
-  "connect.disconnect.rest_key": "Other tafs that use {vendor} keep their access. The key is deleted from tafs. Using {vendor} again asks you to approve and paste a key again.",
+  "connect.disconnect.rest_key": "Other tafs that use {vendor} keep their access. The key is deleted from tafs once no taf uses it. Using {vendor} again asks you to approve and paste a key again.",
   "connect.disconnect.title": "Remove access to {vendor}?",
   "connect.disconnect.title_from": "Remove access to {vendor} for {taf}?",
   "connect.disconnect.tools_stop": "{owner|possessive} {vendor} tools stop working.",

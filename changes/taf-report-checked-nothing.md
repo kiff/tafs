@@ -1,0 +1,1 @@
+- **A run that changed nothing says what it checked.** Every taf's report rule now says: when nothing changed, say what you checked and that you changed nothing, never that no calls were made, since each read is a call and the record shows it.
