@@ -126,12 +126,13 @@ class DriveEmulatorTest {
   private fun show() {
     rule.setShown {
       Column {
+        // At the top, clear of where the dialog opens: a blanked box covers whatever window is over it in the screenshot.
+        Text("Refund up to 50 a day", Modifier.fillMaxWidth().height(48.dp).background(Color.White).approvalTerms("Stripe"), color = Color.Black)
         Text("Home")
         Button({ runNow++ }, Modifier.fillMaxWidth().height(96.dp)) { Text("Run now") }
         Button({ approved++ }, Modifier.confirms()) { Text("Approve") }
         TextField(text, driveTyped<String> { text = it }, label = { Text("Note") })
         TextField(key, driveTyped<String> { key = it }, Modifier.secret(), label = { Text("Key") })
-        Text("Refund up to 50 a day", Modifier.fillMaxWidth().height(48.dp).background(Color.White).approvalTerms("Stripe"), color = Color.Black)
         if (sheetOpen) ModalBottomSheet(driveDismissal { sheetOpen = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
           DriveWindow()
           Column { Text("Sheet title"); Button({ sheetTaps++ }) { Text("Sheet button") } }
