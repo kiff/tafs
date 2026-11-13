@@ -558,6 +558,15 @@ is that the owner hands it to the taf in its chat; the apps search finds come af
 connected only when the owner picks it (`set-up-a-taf@2`). A connection the owner didn't ask for
 is proposed, never assumed.
 
+A recurring job is set up as recurring (`set-up-a-taf@8`): before any connection, Coach proposes its
+cadence, its sources and its volume ("weekday mornings, from your changelog and releases, at most 1 a
+day"), and asks only what it can't decide.
+
+A taf keeps its own records (`set-up-a-taf@8`). When it works from the owner's sheet or list, Coach
+proposes that it adds and updates its own columns there (who it wrote to, replies, do not contact), with a
+tool that writes to the sheet on its Card. Coach asks only what only the owner knows, never how they
+track the work: the owner talks to Coach and never types into the sheet.
+
 ## A vendor the account already connects
 
 When a new Coach conversation starts, tafs cloud reads the account's connections from planque with the
@@ -617,7 +626,8 @@ line for line: no limit merged with another or changed in number. A limit the Ca
 changed rule, shown in a new rules notice and agreed again before the draft (`draft-the-card@7`).
 
 A taf that writes to people names who they come from: Coach asks once, with its other questions,
-offering the company's name, never the mail app's default (gap 16), and its result's taf carries the
+offering first "tafs, your AI assistant", so the taf speaks as itself (`writes_for` "tafs": a recipient
+reads "on behalf of tafs", never "your" assistant), then the owner's name, then the company's, never the mail app's default (gap 16; `draft-the-card@11`), and its result's taf carries the
 answer as `writes_for`. kiff/agents then starts each outside message with "Written by an AI agent on behalf of
 <writes_for>." (gap 18; "Written by an AI agent." when no one is named, never "for the company"): first
 in each text part the message carries (an email's text and its html), said once, in the message's
