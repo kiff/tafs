@@ -288,6 +288,15 @@ final class AppModel: ObservableObject {
     /// remembered for that zone and account, and a new zone asks again.
     @Published private(set) var timeZoneOffer: String?
 
+    /// tafs cloud set the account's zone from this phone's (`time_zone` on `GET /v1/setup`): the
+    /// account reads it, and nothing is asked.
+    private func tookTimeZone(_ zone: String?) {
+        guard let zone, var account = kiffAccount else { return }
+        account.timeZone = zone
+        kiffAccount = account
+        if timeZoneOffer == zone || TimeZone.current.identifier == zone { timeZoneOffer = nil }
+    }
+
     private func offerTimeZone(_ account: KIFFClient.Account) {
         let device = TimeZone.current.identifier
         guard (account.timeZone ?? "UTC") != device else { timeZoneOffer = nil; return }
@@ -1602,7 +1611,14 @@ final class AppModel: ObservableObject {
             // The account read began under this generation: a sign-out or another sign-in
             // meanwhile moves it on, and the old account (and its zone) is dropped here.
             guard gen == accountGeneration else { return }
-            if kiffAccount == nil, let account {
+            if kiffAccount == nil, var account {
+                // A new account still on UTC: tafs cloud takes this phone's zone, with no question,
+                // when it can (docs/api.md). Asked only then, so it costs nothing afterwards.
+                if (account.timeZone ?? "UTC") == "UTC", TimeZone.current.identifier != "UTC",
+                   let zone = try? await cloud.setupRead().timeZone, gen == accountGeneration {
+                    account.timeZone = zone
+                }
+                guard gen == accountGeneration else { return }
                 kiffAccount = account
                 offerTimeZone(account)
             }
@@ -6706,6 +6722,7 @@ final class AppModel: ObservableObject {
         guard mode == .kiff else { return }
         let gen = accountGeneration
         guard let read = try? await cloud.setupRead(), gen == accountGeneration else { return }
+        tookTimeZone(read.timeZone)
         setupTaf = read.setup
         // No Coach yet: tafs cloud's first start, when it sends one, is drawn as the tools step,
         // whose one button starts Coach and gives its tools under one Face ID.

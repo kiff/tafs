@@ -2038,11 +2038,19 @@ final class TafsCloud {
     func setup() async throws -> CloudTaf? { try await setupRead().setup }
 
     /// The account's Coach and its tools as KIFF has them, from the one read (docs/api.md).
-    func setupRead() async throws -> (setup: CloudTaf?, tools: CoachTools?, start: CoachStart?) {
-        struct Response: Decodable { let setup: CloudTaf? }
-        let data = try await sendData("GET", "/v1/setup", body: Optional<[String: String]>.none)
+    /// Sends this phone's time zone (`X-Time-Zone`): for a new account still on UTC, tafs cloud sets
+    /// it in KIFF and answers `time_zone`, so the first run asks no question about it.
+    func setupRead() async throws -> (setup: CloudTaf?, tools: CoachTools?, start: CoachStart?, timeZone: String?) {
+        struct Response: Decodable {
+            let setup: CloudTaf?
+            let timeZone: String?
+            enum CodingKeys: String, CodingKey { case setup, timeZone = "time_zone" }
+        }
+        let data = try await sendData("GET", "/v1/setup", body: Optional<[String: String]>.none,
+                                      headers: ["X-Time-Zone": TimeZone.current.identifier])
         let r = try KIFFClient.decoder.decode(Response.self, from: data)
-        return (r.setup, CoachTools.read(data), r.setup == nil ? CoachStart.read(data) : nil)
+        let zone = r.timeZone.flatMap { TimeZone(identifier: $0) == nil ? nil : $0 }
+        return (r.setup, CoachTools.read(data), r.setup == nil ? CoachStart.read(data) : nil, zone)
     }
 
     /// Coach's first start under one fingerprint (`GET /v1/setup`'s `start`, docs/api.md): for

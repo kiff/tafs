@@ -1,0 +1,1 @@
+- **iPhone and iPad: a new account takes the phone's time zone without asking.** The first setup read sends the phone's zone. When tafs cloud sets a new account's zone from it, the app uses that zone and doesn't offer the "Use this zone" question. An account whose zone tafs cloud didn't set is asked as before (docs/ios-app.md › Account and paged taf presentation).

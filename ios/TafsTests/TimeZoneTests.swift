@@ -21,6 +21,43 @@ final class TimeZoneTests: XCTestCase {
         XCTAssertNil(older.timeZone, "a KIFF that doesn't say: Settings shows UTC, its default")
     }
 
+    /// A new account still on UTC takes this phone's zone with no question: the setup read sends
+    /// it (`X-Time-Zone`), tafs cloud sets it in KIFF and answers `time_zone`, and no offer is
+    /// asked. tafs cloud's answer without it, or an account with a zone already, asks as before.
+    func testANewAccountTakesThePhonesZoneWithNoQuestion() async throws {
+        let before = NSTimeZone.default
+        NSTimeZone.default = try XCTUnwrap(TimeZone(identifier: "Europe/Paris"))
+        defer { NSTimeZone.default = before }
+        func signedIn(_ setup: String) async -> AppModel {
+            StubProtocol.responses = [:]
+            StubProtocol.sent = []
+            let config = URLSessionConfiguration.ephemeral
+            config.protocolClasses = [StubProtocol.self]
+            let session = URLSession(configuration: config)
+            let model = AppModel(signer: RecordingSigner(),
+                                 kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                                 cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+            StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
+            StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+            StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+            StubProtocol.responses["GET /v1/me"] = (200, #"{"tenant_id":"t1","tenant_slug":"acme","time_zone":"UTC"}"#)
+            StubProtocol.responses["GET /v1/setup"] = (200, setup)
+            await model.useSession("kiff_dev_x", tenant: "t1")
+            return model
+        }
+        let taken = await signedIn(#"{"setup":null,"tools":null,"time_zone":"Europe/Paris"}"#)
+        let read = try XCTUnwrap(StubProtocol.sent.first { $0.url?.path == "/v1/setup" })
+        XCTAssertEqual(read.value(forHTTPHeaderField: "X-Time-Zone"), "Europe/Paris")
+        XCTAssertEqual(taken.kiffAccount?.timeZone, "Europe/Paris")
+        XCTAssertNil(taken.timeZoneOffer, "no question")
+        XCTAssertFalse(StubProtocol.sent.contains { $0.url?.path == "/v1/me/time-zone" }, "the phone sets nothing itself")
+
+        let notTaken = await signedIn(#"{"setup":null,"tools":null}"#)
+        XCTAssertEqual(notTaken.timeZoneOffer, "Europe/Paris", "not set by tafs cloud (a member, say): asked as before")
+        let odd = await signedIn(#"{"setup":null,"tools":null,"time_zone":"Not/AZone"}"#)
+        XCTAssertEqual(odd.kiffAccount?.timeZone, "UTC", "a zone the phone doesn't know isn't taken")
+    }
+
     func testSettingsSetsThisDevicesTimeZoneSigned() async throws {
         StubProtocol.responses = [:]
         StubProtocol.sent = []
