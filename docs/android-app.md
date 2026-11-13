@@ -705,7 +705,8 @@ Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#conne
   with **Connected ✓**. The rest of the catalog follows under **Discover**. Within each list, tafs cloud's order is kept.
 - **Each row has two lines:** the app's title, then tafs cloud's `line` as sent ("Sign in · Connected · Used by Refunds").
   - Without `line`, the same shared words are put together here: how it connects (`method`, else `how`: **Sign in** or
-    **With a key**), `whose` as sent, and **Used by** the tafs that use it.
+    **With a key**), `whose` as sent, where it stands (**Connected**, or **Sign in again**), and, for an app that's
+    yours, **Used by** the tafs that use it, as a list in the app's language. iPhone and iPad put it together the same way.
   - "Used by" is tafs cloud's `used_by` when sent, else this phone's own read of its connections, by taf (`usedBy`).
 - **The trailing button is compact:** **Connect**, **Sign in again**, or for one signed in, **Signed in · choose its actions**.
   A connected app opens its connections, each with Disconnect.

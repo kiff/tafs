@@ -28,9 +28,14 @@ class ConnectAppsRowTest {
     // method wins over how.
     assertTrue(key.byKey)
     assertEquals(
-      listOf(Words.Connect.How.key, "Company", Words.Connect.Apps.usedBy(tafs = "Refunds, Tickets")).joinToString(" · "),
+      listOf(Words.Connect.How.key, "Company", Words.Connect.Status.connected, Words.Connect.Apps.usedBy(tafs = bot.tafs.app.model.Res.list(listOf("Refunds", "Tickets")))).joinToString(" · "),
       ConnectAppsWords.secondLine(key, listOf("Refunds", "Tickets")),
     )
+    // To sign in again says so; an app that isn't yours is used by no taf.
+    val out = app("""{"entry":"gmail","title":"Gmail","state":"needs_reconnect"}""")
+    assertEquals(listOf(Words.Connect.How.signIn, Words.Connect.signInAgain).joinToString(" · "), ConnectAppsWords.secondLine(out, emptyList()))
+    val fresh = app("""{"entry":"slack","title":"Slack","state":"available","method":"key"}""")
+    assertEquals(Words.Connect.How.key, ConnectAppsWords.secondLine(fresh, listOf("Leads")))
     // A tafs cloud from before method and line: how alone, and nothing about whose.
     val old = app("""{"entry":"notion@1","title":"Notion","how":"oauth"}""")
     assertFalse(old.byKey)

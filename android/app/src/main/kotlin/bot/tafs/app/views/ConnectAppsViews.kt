@@ -62,7 +62,10 @@ object ConnectAppsWords {
     app.line?.takeIf { it.isNotBlank() } ?: listOfNotNull(
       if (app.byKey) Words.Connect.How.key else Words.Connect.How.signIn,
       app.whose?.takeIf { it.isNotBlank() },
-      usedBy.takeIf { it.isNotEmpty() }?.let { Words.Connect.Apps.usedBy(tafs = it.joinToString(", ")) },
+      // Where it stands, as on iPhone and iPad: connected, or to sign in again.
+      if (app.connected) Words.Connect.Status.connected else if (app.needsReconnect) Words.Connect.signInAgain else null,
+      // Only an app that's yours is used by a taf.
+      usedBy.takeIf { app.yours && it.isNotEmpty() }?.let { Words.Connect.Apps.usedBy(tafs = bot.tafs.app.model.Res.list(it)) },
     ).joinToString(" · ")
   val SEARCH get() = Words.Connect.Apps.search
   val CONNECTED get() = Words.Connect.Apps.connected
