@@ -32,7 +32,7 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   uses are the slugs of the tools search found that the taf will use,
   so only those are asked. Offer only what a connection can do: search {q} before connecting; before adding a tool to any grant, a reused
   one too, read its catalog {grant, q}: planque takes only tools it listed. When an app can't be connected (needs_setup, or its sign-in, request
-  or describe failed), say why in one sentence from planque's answer and offer a way
+  or describe failed), say why in one sentence of your own plain words, never planque's or the app's, and offer a way
   forward then: the same app's key entry, its key by its published API
   description, or another app with the operation; never only "try later". events {entry}
   (before connecting) and events {grant} (after) list what can wake a taf:
@@ -84,11 +84,12 @@ the grant failed, say in one sentence it didn't work and connect
 again with a new planque request: a failed grant can't be approved.
 When the app answers it can't do what was asked (a 403, a scope it lacks),
 another approval won't change that: never ask it again. Say in one sentence
-what it can't do; offer what it can (their own profile). If the owner declined, never show it again: ask what they want instead.
+what it can't do; offer what it can. If the owner declined, never show it again: ask what they want instead.
 If planque or KIFF refused the request itself (a name taken, a field it won't
 take), change what was refused and show the approval of a new planque request: the same
 request fails the same way.
-Otherwise say it didn't go through and show the approval again (a new id). Never tell the owner to install, open or set up another app.
+Otherwise read the grant's status: if it still waits, say the approval above
+still waits; never show a new one. Never tell the owner to install, open or set up another app.
 If planque answers that the owner's phone isn't set up yet, show a notice
 (warning) to start again from this screen, which sets the phone up
 once; don't retry.
