@@ -807,12 +807,19 @@ final class AppModel: ObservableObject {
     /// KIFF can't check. A signer with no approval key signs everything with its one key.
     var approvalKeyUnheld: Bool { !signer.approvalPublicKeyDER.isEmpty && !sessionHasApprovalKey }
 
-    /// What Start says then, as Android does: the lost key's words, else that setting up a taf
-    /// needs approvals.
-    var approvalKeyUnheldWords: String { approvalKeyLost ? KIFFClient.approvalKeyLost : Words.Approval.firstTaf }
+    /// What Start says then, the line both apps use: KIFF didn't accept the key, try again; from
+    /// the second time, where to write too. A key KIFF holds another of keeps the lost key's words.
+    private func approvalKeyRefused() -> String {
+        if approvalKeyLost { return KIFFClient.approvalKeyLost }
+        approvalKeyRefusals += 1
+        return approvalKeyRefusals >= 2 ? Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport : Words.Approval.keyNotAccepted
+    }
+    /// How many Starts KIFF didn't take this phone's approval key on, this session.
+    private(set) var approvalKeyRefusals = 0
 
     /// From now on, what grants authority is signed by the approval key.
     private func useApprovalKey() {
+        approvalKeyRefusals = 0
         sessionHasApprovalKey = true
         approvalKeyLost = false
         let signer = self.signer
@@ -820,6 +827,7 @@ final class AppModel: ObservableObject {
     }
 
     private func forgetApprovalKey() {
+        approvalKeyRefusals = 0
         cancelRelink()
         sessionHasApprovalKey = false
         approvalKeyLost = false
@@ -6903,7 +6911,7 @@ final class AppModel: ObservableObject {
         // tafs cloud's first start, the pair or the draft alone, is signed by the approval key: with a
         // key KIFF doesn't hold, nothing is sent, and it says so in the words both phones use.
         if coachStart?.startable == true, approvalKeyUnheld {
-            setupError = approvalKeyUnheldWords
+            setupError = approvalKeyRefused()
             return false
         }
         await keepKIFFAlerts(tenant: tenant, gen: gen)
@@ -6923,7 +6931,7 @@ final class AppModel: ObservableObject {
                     // A start read only now, with a key KIFF doesn't hold: nothing is sent.
                     if approvalKeyUnheld {
                         coachStart = start
-                        setupError = approvalKeyUnheldWords
+                        setupError = approvalKeyRefused()
                         return false
                     }
                     // One Face ID, the one just asked: Coach's tools and its draft with its Cards.

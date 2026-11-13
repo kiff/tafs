@@ -253,8 +253,9 @@ The same gates, from what `canEvaluatePolicy` says for Face ID or Touch ID
   gated, since it asks for Face ID. Once it can, Start registers the approval key with KIFF
   under its one Face ID when KIFF doesn't hold it yet (a phone that signed in before it could
   approve). The one-Face-ID start, the pair or the draft alone, signs nothing while KIFF doesn't
-  hold the key, and says "Setting up a taf needs approvals", as Android does
-  (`AppModel.approvalKeyUnheld`).
+  hold the key, and says "KIFF didn't accept this phone's approval key. Try again.", the line
+  both apps use; from the second time, with the support address under it
+  (`AppModel.approvalKeyUnheld`, `approval.key_not_accepted`).
 - **At each approval** (Approve once, Extra room, Install from Needs you, Coach's Approve,
   Issue): while the device can't approve, the state and what to do stand in the button's place
   (`ApprovalGate`). A version's or a trial's Install, in a toolbar or a confirmation, stays

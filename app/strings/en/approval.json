@@ -33,6 +33,8 @@
   "approval.key_gone_biometry": "Your {biometry} changed or wasn't recognized, so this device can't approve until you approve it again in your browser.",
   "approval.key_gone_sign_in": "Your fingerprints changed, or none was recognized, so this phone can't approve until you sign in again.",
   "approval.key_lost": "Sign in with KIFF again to approve from this phone.",
+  "approval.key_not_accepted": "KIFF didn't accept this phone's approval key. Try again.",
+  "approval.key_not_accepted_support": "Still not working? Write to support@kiff.dev.",
   "approval.locked_after_too_many_tries": "{either} is locked after too many tries. Lock this {device}, unlock it with its passcode, then check again.",
   "approval.locked_unlock_device": "{either} is locked after too many tries. Unlock this device with its passcode, then try again.",
   "approval.new_fingerprint": "If you add another fingerprint later, approving on this phone stops until you approve it again.",

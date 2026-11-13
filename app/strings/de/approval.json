@@ -33,6 +33,8 @@
   "approval.key_gone_biometry": "Deine {biometry} hat sich geändert oder wurde nicht erkannt, daher kann dieses Gerät erst wieder genehmigen, wenn du es erneut in deinem Browser genehmigst.",
   "approval.key_gone_sign_in": "Deine Fingerabdrücke haben sich geändert oder keiner wurde erkannt, daher kann dieses Telefon erst wieder genehmigen, wenn du dich erneut anmeldest.",
   "approval.key_lost": "Melde dich erneut mit KIFF an, um auf diesem Telefon zu genehmigen.",
+  "approval.key_not_accepted": "KIFF hat den Genehmigungsschlüssel dieses Telefons nicht angenommen. Versuch es noch einmal.",
+  "approval.key_not_accepted_support": "Klappt es immer noch nicht? Schreib an support@kiff.dev.",
   "approval.locked_after_too_many_tries": "{either} ist nach zu vielen Versuchen gesperrt. Sperre dieses {device}, entsperre es mit seinem Code und prüfe dann erneut.",
   "approval.locked_unlock_device": "{either} ist nach zu vielen Versuchen gesperrt. Entsperre dieses Gerät mit seinem Code und versuch es dann erneut.",
   "approval.new_fingerprint": "Fügst du später einen weiteren Fingerabdruck hinzu, kann dieses Telefon nicht mehr genehmigen, bis du es erneut genehmigst.",

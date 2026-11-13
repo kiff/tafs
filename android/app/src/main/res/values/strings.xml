@@ -80,6 +80,8 @@
     <string name="approval_key_gone_biometry">Your %1$s changed or wasn\'t recognized, so this device can\'t approve until you approve it again in your browser.</string>
     <string name="approval_key_gone_sign_in">Your fingerprints changed, or none was recognized, so this phone can\'t approve until you sign in again.</string>
     <string name="approval_key_lost">Sign in with KIFF again to approve from this phone.</string>
+    <string name="approval_key_not_accepted">KIFF didn\'t accept this phone\'s approval key. Try again.</string>
+    <string name="approval_key_not_accepted_support">Still not working? Write to support@kiff.dev.</string>
     <string name="approval_locked_after_too_many_tries">%1$s is locked after too many tries. Lock this %2$s, unlock it with its passcode, then check again.</string>
     <string name="approval_locked_unlock_device">%1$s is locked after too many tries. Unlock this device with its passcode, then try again.</string>
     <string name="approval_new_fingerprint">If you add another fingerprint later, approving on this phone stops until you approve it again.</string>

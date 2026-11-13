@@ -80,6 +80,8 @@
     <string name="approval_key_gone_biometry">Je %1$s is gewijzigd of niet herkend, dus dit apparaat kan niet goedkeuren tot je het opnieuw goedkeurt in je browser.</string>
     <string name="approval_key_gone_sign_in">Je vingerafdrukken zijn gewijzigd of niet herkend, dus deze telefoon kan niet goedkeuren tot je opnieuw inlogt.</string>
     <string name="approval_key_lost">Log opnieuw in met KIFF om vanaf deze telefoon goed te keuren.</string>
+    <string name="approval_key_not_accepted">KIFF heeft de goedkeuringssleutel van deze telefoon niet geaccepteerd. Probeer het opnieuw.</string>
+    <string name="approval_key_not_accepted_support">Werkt het nog steeds niet? Mail naar support@kiff.dev.</string>
     <string name="approval_locked_after_too_many_tries">%1$s is vergrendeld na te veel pogingen. Vergrendel deze %2$s, ontgrendel hem met de toegangscode en controleer het opnieuw.</string>
     <string name="approval_locked_unlock_device">%1$s is vergrendeld na te veel pogingen. Ontgrendel dit apparaat met de toegangscode en probeer het opnieuw.</string>
     <string name="approval_new_fingerprint">Voeg je later nog een vingerafdruk toe, dan stopt goedkeuren op deze telefoon tot je hem opnieuw goedkeurt.</string>

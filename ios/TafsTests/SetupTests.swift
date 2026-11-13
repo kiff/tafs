@@ -383,7 +383,7 @@ final class SetupTests: XCTestCase {
         let given = await model.giveCoachTools()
         XCTAssertFalse(given)
         XCTAssertTrue(model.approvalKeyUnheld)
-        XCTAssertEqual(model.setupError, Words.Approval.firstTaf, "it says why, in the words both phones use")
+        XCTAssertEqual(model.setupError, Words.Approval.keyNotAccepted, "it says why, in the line both phones use")
         XCTAssertNil(model.setupTaf)
         for path in ["/v1/accounts/t_01/enrolment", "/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup"] {
             XCTAssertFalse(StubProtocol.sent.contains { $0.httpMethod == "POST" && $0.url?.path == path }, path)
@@ -396,6 +396,8 @@ final class SetupTests: XCTestCase {
         StubProtocol.sent = []
         let alone = await model.giveCoachTools()
         XCTAssertFalse(alone)
+        XCTAssertEqual(model.setupError, Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport,
+                       "from the second time, where to write too")
         XCTAssertFalse(StubProtocol.sent.contains { $0.httpMethod == "POST" && $0.url?.path == "/v1/me/agent-drafts" }, "no draft alone either")
         Keychain.delete(AppModel.planqueAccount)
         Keychain.delete(AppModel.approvalKeyedAccount)

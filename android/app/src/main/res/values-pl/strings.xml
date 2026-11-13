@@ -82,6 +82,8 @@
     <string name="approval_key_gone_biometry">Twoje %1$s się zmieniło albo nie zostało rozpoznane, więc to urządzenie nie może zatwierdzać, dopóki nie zatwierdzisz go ponownie w przeglądarce.</string>
     <string name="approval_key_gone_sign_in">Twoje odciski palców się zmieniły albo żaden nie został rozpoznany, więc ten telefon nie może zatwierdzać, dopóki nie zalogujesz się ponownie.</string>
     <string name="approval_key_lost">Zaloguj się ponownie przez KIFF, aby zatwierdzać z tego telefonu.</string>
+    <string name="approval_key_not_accepted">KIFF nie przyjął klucza zatwierdzania tego telefonu. Spróbuj ponownie.</string>
+    <string name="approval_key_not_accepted_support">Nadal nie działa? Napisz na support@kiff.dev.</string>
     <string name="approval_locked_after_too_many_tries">%1$s jest zablokowane po zbyt wielu próbach. Zablokuj ten %2$s, odblokuj go kodem, a potem sprawdź ponownie.</string>
     <string name="approval_locked_unlock_device">%1$s jest zablokowane po zbyt wielu próbach. Odblokuj to urządzenie kodem, a potem spróbuj ponownie.</string>
     <string name="approval_new_fingerprint">Jeśli później dodasz kolejny odcisk palca, zatwierdzanie na tym telefonie przestanie działać, dopóki nie zatwierdzisz go ponownie.</string>

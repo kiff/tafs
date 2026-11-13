@@ -4265,6 +4265,112 @@
         }
       }
     },
+    "approval.key_not_accepted": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF hat den Genehmigungsschlüssel dieses Telefons nicht angenommen. Versuch es noch einmal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF didn't accept this phone's approval key. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF no aceptó la clave de aprobación de este teléfono. Inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF n'a pas accepté la clé d'approbation de ce téléphone. Réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF non ha accettato la chiave di approvazione di questo telefono. Riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF heeft de goedkeuringssleutel van deze telefoon niet geaccepteerd. Probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF nie przyjął klucza zatwierdzania tego telefonu. Spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O KIFF não aceitou a chave de aprovação deste telefone. Tente novamente."
+          }
+        }
+      }
+    },
+    "approval.key_not_accepted_support": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klappt es immer noch nicht? Schreib an support@kiff.dev."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Still not working? Write to support@kiff.dev."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Sigue sin funcionar? Escribe a support@kiff.dev."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toujours pas ? Écrivez à support@kiff.dev."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non funziona ancora? Scrivi a support@kiff.dev."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werkt het nog steeds niet? Mail naar support@kiff.dev."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nadal nie działa? Napisz na support@kiff.dev."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continua a não funcionar? Escreva para support@kiff.dev."
+          }
+        }
+      }
+    },
     "approval.locked_after_too_many_tries": {
       "extractionState": "manual",
       "localizations": {

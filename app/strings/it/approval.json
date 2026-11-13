@@ -33,6 +33,8 @@
   "approval.key_gone_biometry": "Il tuo {biometry} è cambiato o non è stato riconosciuto, quindi questo dispositivo non può approvare finché non lo approvi di nuovo nel browser.",
   "approval.key_gone_sign_in": "Le tue impronte sono cambiate, o nessuna è stata riconosciuta, quindi questo telefono non può approvare finché non accedi di nuovo.",
   "approval.key_lost": "Accedi di nuovo con KIFF per approvare da questo telefono.",
+  "approval.key_not_accepted": "KIFF non ha accettato la chiave di approvazione di questo telefono. Riprova.",
+  "approval.key_not_accepted_support": "Non funziona ancora? Scrivi a support@kiff.dev.",
   "approval.locked_after_too_many_tries": "{either} è bloccato dopo troppi tentativi. Blocca questo {device}, sbloccalo con il codice, poi controlla di nuovo.",
   "approval.locked_unlock_device": "{either} è bloccato dopo troppi tentativi. Sblocca questo dispositivo con il codice, poi riprova.",
   "approval.new_fingerprint": "Se in seguito aggiungi un'altra impronta, le approvazioni su questo telefono si fermano finché non lo approvi di nuovo.",
