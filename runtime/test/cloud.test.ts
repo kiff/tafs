@@ -4551,7 +4551,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
       headers: { Authorization: "Bearer ana", "Accept-Language": lang } }, deps)).body) as { tafs: Array<{ name: string }>; setting_up: Array<Record<string, unknown>>; others: Array<Record<string, unknown>> };
     const before = await home();
     // Being set up: by name, with its chat, and no state, so never "Ready".
-    expect(before.setting_up).toEqual([{ name: "Refunds", kiff_agent: "refunds-x", color: expect.any(Number), finish: { taf: COACH, session: stored.session, words: "Finish setting up" } }]);
+    expect(before.setting_up).toEqual([{ name: "Refunds", kiff_agent: "refunds-x", color: expect.any(Number), finish: { taf: COACH, session: stored.session, words: "Finish setting up" },
+      discard: { cards: expect.any(Array), words: { button: "Discard", title: "Discard this setup?", text: expect.any(String), yes: "Discard", no: "Keep it" } } }]);
     // Apps from before setting_up still find it where they drew it.
     expect(before.others).toHaveLength(1);
     expect(before.others[0]).toMatchObject({ name: "Refunds", kiff_agent: "refunds-x", finish: { taf: COACH, session: stored.session, words: "Finish setting up" } });
@@ -4649,6 +4650,63 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
     w.agents.api.tafDraft = async () => { throw new Error("down"); };
     expect((await read()).setting_up).toEqual([]);
+  });
+
+  // The owner's half-made "Invoicing day test" (13 Nov): a Discard beside "Finish setting up", so no one waits a week for its
+  // Card to lapse. The phone revokes its Cards in KIFF first; tafs cloud ends the chat and stops listing it.
+  it("lets the person who started a taf being set up discard it, and no one else", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up", { requester: { kind: "member", id: "u_ana" } });
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "PAUSED", requirements: [{ call_id: "c", tool: "show", operation: "", expires: "2026-11-05T12:00:00Z", kind: "card",
+      input: { type: "result", id: "c", text: "Ready.", taf: { agent: "refunds-x", name: "Refunds", draft: "drf_s1", kickoff: "Work the queue." } } }] });
+    w.account.mandates = [{ id: "card_refunds-x", subject: "refunds-x", active: true, grants: [{ action: "lookup" }], aggregates: [] }];
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const req = (method: string, path: string, token = "ana", lang = "en") => handle({ rawPath: path, requestContext: { http: { method } }, headers: { Authorization: `Bearer ${token}`, "accept-language": lang } }, deps);
+    const home = async (token = "ana", lang = "en") => JSON.parse((await req("GET", "/v1/home", token, lang)).body) as { setting_up: Array<Record<string, unknown>> };
+    // Its starter sees Discard beside Finish, with the confirm's words, in their language.
+    expect((await home()).setting_up[0]).toMatchObject({ kiff_agent: "refunds-x", discard: { words: { button: "Discard", title: "Discard this setup?", yes: "Discard", no: "Keep it" } } });
+    expect(((await home("ana", "fr")).setting_up[0].discard as { words: { button: string } }).words.button).toBe("Abandonner");
+    // Someone else, or an agent that isn't a taf being set up of theirs: 404, and nothing ends.
+    expect((await home("owner")).setting_up[0]).not.toHaveProperty("discard");
+    expect((await req("POST", "/v1/home/setting-up/refunds-x/discard", "owner")).statusCode).toBe(404);
+    expect((await req("POST", "/v1/home/setting-up/ops-bot/discard")).statusCode).toBe(404);
+    expect(w.agents.calls.some((c) => c.startsWith("cancelRun"))).toBe(false);
+    // Its Card is listed for the phone to revoke first, and while one is in force nothing ends.
+    expect(((await home()).setting_up[0].discard as { cards: string[] }).cards).toEqual(["card_refunds-x"]);
+    const early = await req("POST", "/v1/home/setting-up/refunds-x/discard");
+    expect(early.statusCode).toBe(409);
+    expect(JSON.parse(early.body)).toMatchObject({ code: "cards_in_force", cards: ["card_refunds-x"] });
+    expect(w.agents.calls.some((c) => c.startsWith("cancelRun"))).toBe(false);
+    // A malformed agent in the path is no agent: 404, never a crash.
+    expect((await req("POST", "/v1/home/setting-up/%E0%A4%A/discard")).statusCode).toBe(404);
+    // Its starter discards it once the phone revoked its Card: the chat that drafted it ends, and Home no longer lists it.
+    w.account.mandates = [{ ...w.account.mandates[0]!, revoked_at: "2026-11-13T17:00:00Z" }];
+    const r = await req("POST", "/v1/home/setting-up/refunds-x/discard");
+    expect(r.statusCode).toBe(200);
+    expect(JSON.parse(r.body)).toEqual({ discarded: true, kiff_agent: "refunds-x" });
+    expect(w.agents.calls).toContain(`cancelRun ${COACH} ${run.id}`);
+    expect((await home()).setting_up).toEqual([]);
+  });
+
+  // The guards that keep a live taf from ever being discarded (qa-kiff on #905): a handed-over taf's claimed draft, and an
+  // improvement's result, are no taf being set up.
+  it("never discards a taf that was handed over, nor an improvement", async () => {
+    for (const shape of ["claimed", "improves"] as const) {
+      const w = world();
+      w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+      await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+      w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x", ...(shape === "claimed" ? { keyRef: "kiff/taf-x" } : {}) });
+      const run = await w.agents.api.startRun("t_acme", COACH, "Set up", { requester: { kind: "member", id: "u_ana" } });
+      Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "PAUSED", requirements: [{ call_id: "c", tool: "show", operation: "", expires: "2026-11-05T12:00:00Z", kind: "card",
+        input: { type: "result", id: "c", text: "Ready.", taf: { agent: "refunds-x", name: "Refunds", draft: "drf_s1", ...(shape === "improves" ? { improves: RAE } : {}) } } }] });
+      w.account.mandates = [];
+      const r = await handle({ rawPath: "/v1/home/setting-up/refunds-x/discard", requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana" } }, { ...depsOf(w), coach: memoryCoach(() => w.now) });
+      expect(r.statusCode, shape).toBe(404);
+      expect(w.agents.calls.some((c) => c.startsWith("cancelRun")), shape).toBe(false);
+    }
   });
 
   // The Coach skills design: tafs cloud names the skills a conversation loads, by its entry point before

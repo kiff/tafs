@@ -636,6 +636,11 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "push") return push(event, method, parts, deps);
   if (parts[1] === "alerts" && parts.length === 2) return alerts(event, method, await person(event, deps), deps);
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
+  if (parts[1] === "home" && parts[2] === "setting-up" && parts.length === 5 && parts[4] === "discard" && method === "POST") {
+    let agent = "";
+    try { agent = decodeURIComponent(parts[3] ?? ""); } catch { throw new HTTPError(404, "no taf being set up of yours by that agent"); }
+    return discardHalfMade(event, await person(event, deps), agent, deps);
+  }
   if (parts[1] === "calendar" && parts.length === 2 && method === "GET") return calendar(event, await person(event, deps), deps);
   if (parts[1] === "record" && method === "GET") return recordRoute(event, parts, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
@@ -6504,7 +6509,13 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const color = freeColor(taken);
     taken.push(color);
     // The chat to finish it in goes only to the person who started it (#879); anyone else sees the name alone.
-    return [{ name: half.name, kiff_agent: agent, color, ...(half.coach && half.session ? { finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } } : {}) }];
+    const w = wordsIn(langOf(event));
+    // Its starter can also discard it (a Discard beside Finish setting up, 13 Nov): the phone revokes the Cards in force
+    // on its agent, listed here as Home lists a live taf's `card.ids`, then asks tafs cloud.
+    return [{ name: half.name, kiff_agent: agent, color, ...(half.coach && half.session ? {
+      finish: { taf: half.coach, session: half.session, words: w.home_finish_setup },
+      discard: { cards: (cards.get(agent) ?? []).map((c) => c.id), words: { button: w.home_discard, title: w.home_discard_title, text: w.home_discard_text, yes: w.home_discard_yes, no: w.home_discard_no } },
+    } : {}) }];
   });
   // Apps from before setting_up read the same tafs from others, as they drew them there (Android 77, iPhone and iPad).
   const others = settingUp.map((t) => {
@@ -6545,6 +6556,59 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
  * chat's result still waits (none once it expired: the name stays, from what tafs cloud kept).
  */
 interface HalfMade { name: string; coach?: string; session?: string }
+
+/**
+ * POST /v1/home/setting-up/{kiff_agent}/discard: a taf being set up, dropped by the person who started it (a Discard
+ * beside Finish setting up, 13 Nov: no one waits a week for its Card to lapse). The phone revokes the agent's Cards in
+ * KIFF first (`discard.cards` on Home), as it does before a removal; this checks KIFF holds none in force any more
+ * (409 `cards_in_force` otherwise: nothing ends while a Card could still act), then ends the Coach chat that drafted
+ * it (its paused run, cancelled) and forgets the name kept for it, so Home stops listing it. Signed by the phone as a removal is (KIFF-Device-Signature over POST, the
+ * path and the empty body, the approval key). Only the starter's own half-made taf, proved as Home proves it: a
+ * paused run of this account's Coach whose result names that agent with the setup's own unclaimed draft. 404 otherwise.
+ */
+async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string, deps: Deps): Promise<unknown> {
+  if (!/^[A-Za-z0-9._-]{1,128}$/.test(agent)) throw new HTTPError(404, "no taf being set up of yours by that agent");
+  const records = await deps.tafs.list(me.tenantID);
+  const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
+  const paused = coach ? await agentsCall(() => deps.agents.pausedRuns(me.tenantID)) : [];
+  let found: Run | undefined;
+  for (const r of paused) {
+    if (!coach || r.agent !== coach.id || r.requester?.kind !== "member" || r.requester.id !== me.subject) continue;
+    for (const q of r.requirements ?? []) {
+      const card = q.input as { type?: string; taf?: { agent?: unknown; draft?: unknown; improves?: unknown } } | undefined;
+      if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.taf || card.taf.improves || card.taf.agent !== agent || typeof card.taf.draft !== "string") continue;
+      const held = await deps.agents.tafDraft(me.tenantID, card.taf.draft).catch(() => undefined);
+      if (held && held.agent_id === agent && !held.claimed) found = r;
+    }
+  }
+  if (!found || !coach) throw new HTTPError(404, "no taf being set up of yours by that agent");
+  await discardSigned(event, agent, deps);
+  // The Card is revoked first, by the phone: a discard that went on with one in force would leave it acting, unseen.
+  const { mandates } = await readKIFF(bearer(event), deps.fetch, deps.kiffBase);
+  const left = mandates.filter((m) => m.subject === agent && !m.revoked_at);
+  if (left.length) throw new HTTPError(409, `${left.length} Card${left.length === 1 ? "" : "s"} still in force on this agent: revoke ${left.length === 1 ? "it" : "them"} first`, { code: "cards_in_force", cards: left.map((m) => m.id) });
+  await agentsCall(() => deps.agents.cancelRun(me.tenantID, coach.id, found.id, member(me)));
+  await deps.coach?.remove(halfMadeKey(me.tenantID, agent)).catch(() => undefined);
+  console.log(JSON.stringify({ event: "half_made_discard", tenant: me.tenantID, agent, run: found.id }));
+  await tellChange(me.tenantID, "taf", agent, deps);
+  return { discarded: true, kiff_agent: agent };
+}
+
+/** A discard is signed by the phone as a removal is, under the same switch (TAFS_SIGNED_REMOVE). */
+async function discardSigned(event: HTTPEvent, agent: string, deps: Deps): Promise<void> {
+  const signature = event.headers?.["kiff-device-signature"] ?? "";
+  if (!signature) {
+    if (process.env.TAFS_SIGNED_REMOVE === "on") throw new HTTPError(403, wordsIn(langOf(event)).remove_signed, { code: "signature_required" });
+    console.log(JSON.stringify({ event: "half_made_discard", signed: false, agent }));
+    return;
+  }
+  const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
+  await checkSigned({ token: bearer(event), kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, lang: langOf(event),
+    signed: { method: "POST", uri, body: rawBody(event), signature } }, "approval").catch((err) => {
+    if (err instanceof ApprovalError && err.code === "critical_key_required") throw new HTTPError(403, wordsIn(langOf(event)).remove_signed, { code: "critical_key_required" });
+    return approvalFailure(err);
+  });
+}
 
 /** Where tafs cloud keeps the name Coach gave an agent whose taf wasn't made, so it outlives the chat's result. */
 const halfMadeKey = (tenant: string, agent: string) => `${tenant}#half-made#${agent}`;
