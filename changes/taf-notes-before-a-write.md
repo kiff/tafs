@@ -1,0 +1,1 @@
+- **A taf follows its notes before it changes anything.** Before any call that changes an item, it reads its notes again for that item, its customer and the kind of request. When a note says not to, it doesn't make the call, and its report says which note stopped it.

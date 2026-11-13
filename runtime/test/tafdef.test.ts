@@ -181,6 +181,15 @@ describe("a section of the kiff skill", () => {
     expect(NOTES_INSTRUCTIONS).toContain("Never write secrets");
     // Notes are for lasting facts the owner reads, never a run's working state (a cursor saved as a note showed in "What it remembers").
     expect(NOTES_INSTRUCTIONS).toContain("Never use notes for\nyour working state: no list cursors, page tokens, ids to resume from, progress or\nscratch.");
+    // Eval 43411672907: a taf closed dispute T-2007 though the owner's note said to always fight that customer's disputes.
+    // Before any write, the notes for that item are read again, and a note that says no wins.
+    expect(NOTES_INSTRUCTIONS).toContain("Before any call that changes an item (a dispute, an order, a ticket, a payment),\nread your notes again for that item, its customer and its kind of request. When a\nnote says not to do it, the note wins: don't make the call, and say in your report\nwhich note stopped you.");
+    // A brake, never a steer (qa-kiff on #867): a note may carry what an earlier run read, so it only stops a call,
+    // it never chooses another. And no Eval case's own example is written into every taf's instructions.
+    expect(NOTES_INSTRUCTIONS).not.toContain("or to do something else");
+    expect(NOTES_INSTRUCTIONS).not.toMatch(/fight a customer/);
+    // Every job's definition carries it, the chargebacks taf's included.
+    expect(definition(ID, jobById("chargebacks")).instructions).toContain("the note wins: don't make the call");
   });
 
   it("tells the taf never to split a request to stay under a limit, and to name who a money call is for", () => {
