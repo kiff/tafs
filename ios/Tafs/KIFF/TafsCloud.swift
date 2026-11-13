@@ -313,9 +313,29 @@ final class TafsCloud {
         var work: TafWork.Summary? = nil
         /// tafs cloud's words for its next run, with the day when it isn't today ("Next run Mon 08:00").
         var nextRunWords: String? = nil
+        /// Another agent whose setup stopped partway (docs/tafs.md): Coach drafted it and its Card
+        /// is signed, but no taf was made. Coach's taf, the chat where it stopped, and the row's words.
+        var finish: Finish? = nil
+
+        /// The way back to a taf whose setup stopped partway. Anything that isn't one reads as
+        /// empty, never failing the list.
+        struct Finish: Codable, Hashable {
+            var taf = ""
+            var session = ""
+            var words = ""
+            init(taf: String = "", session: String = "", words: String = "") { self.taf = taf; self.session = session; self.words = words }
+            init(from decoder: Decoder) throws {
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+                func text(_ k: CodingKeys) -> String { ((try? c.decodeIfPresent(String.self, forKey: k)) ?? nil)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "" }
+                taf = text(.taf); session = text(.session); words = text(.words)
+            }
+            enum CodingKeys: String, CodingKey { case taf, session, words }
+            /// One the app can open: a chat and its words.
+            var usable: Bool { !taf.isEmpty && !session.isEmpty && !words.isEmpty }
+        }
 
         enum CodingKeys: String, CodingKey {
-            case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results, health, work
+            case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results, health, work, finish
             case nextRunWords = "next_run_words"
             case avatarRim = "avatar_rim"
             case timeZoneWords = "time_zone_words", scheduleTimeZone = "schedule_time_zone"

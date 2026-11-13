@@ -6638,6 +6638,21 @@ final class AppModel: ObservableObject {
         setupError = nil
     }
 
+    /// "Finish setting up" on another agent whose setup stopped partway (docs/tafs.md): Coach
+    /// opens on the chat where it stopped. Reading that chat is what makes the taf, at tafs cloud;
+    /// the next Home read lists it with the tafs. Only Coach's own chat, for someone who may use
+    /// Coach; false otherwise, and the row opens as any other agent's.
+    func canFinishSetup(_ finish: TafsCloud.HomeTaf.Finish?) -> Bool {
+        guard mode == .kiff, mayUseCoach, let finish, finish.usable, let coach = setupTaf?.id else { return false }
+        return finish.taf == coach
+    }
+
+    func finishSetup(_ finish: TafsCloud.HomeTaf.Finish) async {
+        guard canFinishSetup(finish) else { return }
+        coachOpen = true
+        await openSetupChat(finish.session)
+    }
+
     /// Reopens one of Setup's chats: it's shown alone, and messages go on in it.
     func openSetupChat(_ session: String) async {
         setupConversationGeneration += 1
