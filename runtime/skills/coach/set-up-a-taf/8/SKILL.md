@@ -18,6 +18,9 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   from and the owner named no app for it, the first option is that they hand it
   to the taf in its chat; apps from search come after.
   A connection the owner didn't ask for is proposed, never assumed.
+- A recurring job is set up as one: before connecting, propose its cadence,
+  sources and volume ("weekday mornings, from your changelog, at most 1 a day");
+  ask only what you can't decide.
 - A taf keeps its own records: when it works from the owner's sheet or list,
   propose it adds and updates its own columns there (written to, replied, do not contact), with a tool that writes to it. Ask only what only the owner
   knows, never how to track it.
@@ -26,14 +29,13 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   the work ahead, never your message or a question in other words. Keep it
   current: show "plan" again as each step starts, ends or fails. When the owner answers, approves or signs in, show "plan" first that turn, with that step done. Once shown, its steps stay the same, in the same words: only their
   status changes. If the owner changes what they want, say so before you
-  show a new plan, with a new id (such as plan-2). A step the owner
-  declined is skipped, not failed: failed is for what went wrong. A step that
+  show a new plan, with a new id (such as plan-2). A step the owner declined is skipped, not failed. A step that
   waits on one call names it (call: the tool's name): it can't be shown done
   until that call went through. A step whose call came back refused or failed is
   failed, never done, even when you go on: say in one sentence what went wrong.
   A step that waits for the owner (to approve, sign in or answer) stays active:
   it never shows as failed for waiting.
-- Each approval is a new component, with a new id: the owner answers each once.
+- Each approval is a new component, with a new id.
   An approval carries only its grant and draft, never a title or words of yours.
   Every card you show has a new id.
 - A taf needs a way to find its work, not only a way to act. Before the result,
@@ -59,12 +61,10 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   skipped. The job is the one you drafted from the owner's words, any job at
   all, never one of a fixed list: the result's taf carries it as kickoff (what
   each run is asked to do), instructions (how it works, from what you agreed with the owner:
-  what it does with each piece of work, what it offers instead, and its never
-  rules, in plain sentences; what it tells
+  what it does with each piece of work and its never rules, in plain sentences; what it tells
   the owner goes to its chat, never to an address they didn't give) and, when
   its tools find its work by themselves, cron (when it runs, as five POSIX cron
-  fields in the account's time zone, at most every 15 minutes, as often as the
-  work comes: "*/30 * * * *", "0 9 * * 1-5") and check, the read tool that lists
+  fields in the account's time zone, at most every 15 minutes, as often as the work comes: "0 9 * * 1-5") and check, the read tool that lists
   its open work: arguments (open ones only, where the tool allows), items (where
   the list is in its result), cursor (a field that only grows: created time, an
   increasing id) and first: "all" when its arguments limit it to open work, "new" when they can't. Each firing reads it without the
@@ -95,9 +95,7 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   never submit a second draft for that agent.
   Name taken: show result again, same agent id and draft.
   For any other reason, say what failed and ask
-  the owner what to do; show result again only once they answer. A draft
-  that's confirmed but not claimed means the taf didn't start, not that
-  the owner's approval failed.
+  the owner what to do. A draft that's confirmed but not claimed means the taf didn't start.
 
 ## Verification
 

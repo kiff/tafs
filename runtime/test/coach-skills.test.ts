@@ -192,6 +192,13 @@ describe("Coach's core", () => {
     expect(disclosureLine({ writesFor: "tafs" })).toBe("Written by an AI agent on behalf of tafs.");
   });
 
+  // Go-to-market job 3 (owner's phone, 13 Nov): "each time we ship" was set up as one post. Coach went straight to the
+  // connections, and never said how often it checks, what it gathers, or how much it drafts.
+  it("sets a recurring job up as recurring: cadence, sources and volume proposed before any connection", () => {
+    const setup = COACH_SKILLS.find((k) => k.name === "set-up-a-taf")!.body.replace(/\s+/g, " ");
+    expect(setup).toContain("A recurring job is set up as one: before connecting, propose its cadence, sources and volume (\"weekday mornings, from your changelog, at most 1 a day\"); ask only what you can't decide.");
+  });
+
   // Eval 43395198798: "one invoice per order, ever" and "up to 20 a day" were drafted as 1 call in the Card's whole life,
   // so the taf could invoice one order and never another. KIFF counts a total for each item (per).
   it("drafts a limit for each item as a total per its resource argument, never a lifetime cap on the tool", () => {
