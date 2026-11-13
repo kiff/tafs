@@ -37,7 +37,7 @@ import { accountConnections, connectionLines, endConnections, withConnections } 
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { aiConsentOf, aiConsentView, giveAIConsent, withdrawAIConsent } from "./consent.js";
+import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords } from "./doors/hold.js";
@@ -706,7 +706,11 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       else {
         const given = await giveAIConsent(deps.coach, me.tenantID, me.subject, parseBody(event).version, deps.now?.() ?? new Date());
         if (given === "stale") throw new HTTPError(409, "the consent's words changed: read them again", { consent: aiConsentView(undefined, lang) });
+        // The account's first yes from someone who manages its tafs is what its tafs from before take.
+        if (me.capabilities.includes("cards.manage")) await recordFirstYes(deps.coach, me.tenantID, me.subject, deps.now?.() ?? new Date());
       }
+      // Their tafs follow at once: paused on a withdrawal, resumed (and what waited started) on a yes.
+      if (deps.aiConsent) await settleConsent(deps, me.tenantID).catch((err) => console.error(`consent: settle: ${(err as Error).message}`));
     }
     return { consent: aiConsentView(await aiConsentOf(deps.coach, me.tenantID, me.subject), lang) };
   }
@@ -786,6 +790,19 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (action === "doors") return doorRoute(event, method, parts, me, taf, deps);
   if (parts.length === 4 && action === "halt") return haltRoute(event, method, me, taf, deps);
+  if (parts.length === 4 && method === "POST" && action === "ai-consent") {
+    // Someone who manages the taf takes its runs over with their own consent, which they've given (consent.ts).
+    await needTaf(event, me, taf, deps);
+    if (!deps.coach) throw new HTTPError(503, "the consent can't be kept here");
+    if (!await aiConsentOf(deps.coach, me.tenantID, me.subject)) {
+      const lang = langOf(event);
+      throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: AI_CONSENT_CODE, consent: aiConsentView(undefined, lang) });
+    }
+    await takeOver(deps.coach, me.tenantID, taf.id, me.subject, deps.now?.() ?? new Date());
+    await resumeFromConsent(deps, me.tenantID, taf.id);
+    if (deps.doors) await replayHeld(doorContext(deps), me.tenantID, taf.id).catch((err) => console.error("held not replayed:", (err as Error).message));
+    return { taf: await view(taf, me, deps, undefined, undefined, langOf(event)) };
+  }
   if (parts.length === 4 && method === "PUT" && action === "promise") {
     // The owner's promise (waiting.ts): set by someone who manages the taf, whole hours up to a week, or none.
     need(me, "cards.manage");
@@ -1149,9 +1166,12 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
  */
 async function continueReady(deps: Deps, tenant: string, ready: ReadyRun): Promise<void> {
   try {
+    // It goes on to its next model turn with no person in the moment (consent.ts): refused, the taf is paused.
+    await requireUnattended(deps, tenant, ready.agent);
     await deps.agents.continueRun(tenant, ready.agent, ready.id);
   } catch (err) {
     if (err instanceof AgentsError && err.status === 409) return;
+    if (waitsForConsent(err)) return;
     console.error(`alert: continuing run ${ready.id}: ${(err as Error).message}`);
   }
 }
@@ -1285,6 +1305,8 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
     const [kiff, runtime] = await Promise.all([inKIFF(() => haltInKIFF(token, agent, deps.fetch, deps.kiffBase)),
       agentsCall(() => deps.agents.halt(me.tenantID, taf?.id))]);
     const view = haltView(kiff, runtime);
+    // The owner's own halt outlasts a pause for consent: a later yes ends only the pause (consent.ts).
+    if (taf && deps.coach) await markOwnerHalt(deps, me.tenantID, taf.id);
     // A halt interrupts (kiff/tafs#210): every phone that answers hears it, through a Focus.
     await tellPhones(deps, me.tenantID, (lang) => haltNotification(taf, view.state === "halted", lang));
     await logEvent(deps.events, me.tenantID, { kind: "halted", ...(taf ? { taf: taf.id, name: taf.name } : {}) }, deps.now?.());
@@ -1298,6 +1320,12 @@ async function haltRoute(event: HTTPEvent, method: string, me: KIFFIdentity, taf
       throw new HTTPError(502, "KIFF didn't say whether it is resumed; try again");
     }
     if (kiff.state !== "running") throw new HTTPError(409, "resume it in KIFF first: the phone signs that with Face ID");
+    // A taf paused for consent stays paused until its runs may start a model turn: a resume never steps past that.
+    if (taf && deps.aiConsent) {
+      const c = await unattendedConsent(deps.coach, me.tenantID, taf.id);
+      if (!("subject" in c)) throw new HTTPError(409, consentPauseWords(c.why, langOf(event)), { code: AI_CONSENT_CODE });
+      if (deps.coach) await deps.coach.remove(consentPauseKey(me.tenantID, taf.id));
+    }
     const runtime = await agentsCall(() => deps.agents.resume(me.tenantID, taf?.id));
     // The halt's notification is replaced, quietly, so none says halted after a resume (kiff/tafs#236, item 21).
     await tellPhones(deps, me.tenantID, (lang) => resumeNotification(taf, lang));
@@ -1538,6 +1566,8 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
       throw err;
     });
     await deps.tafs.put(me.tenantID, taf);
+    // Its runs with no person in the moment take its maker's consent (consent.ts).
+    await recordMaker(deps.coach, me.tenantID, taf.id, me.subject, deps.now?.() ?? new Date());
     await tellChange(me.tenantID, "taf", tafID, deps);
   } catch (err) {
     // A failed write may still have landed, the record's included: all of it
@@ -1797,6 +1827,7 @@ async function startSetup(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promi
     await storeCoachSkills(me.tenantID, deps);
     await deps.agents.putAgent(me.tenantID, tafID, setupDef);
     await deps.tafs.put(me.tenantID, setup);
+    await recordMaker(deps.coach, me.tenantID, setup.id, me.subject, deps.now?.() ?? new Date());
   } catch (err) {
     const recordGone = await deps.tafs.remove(me.tenantID, tafID).then(() => true, () => false);
     const agentGone = await deps.agents.deleteAgent(me.tenantID, tafID).then(() => true, () => false);
@@ -3448,6 +3479,96 @@ async function requireAIConsent(event: HTTPEvent, me: KIFFIdentity, deps: Deps):
   if (await aiConsentOf(deps.coach, me.tenantID, me.subject)) return;
   const lang = langOf(event);
   throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: "ai_consent_required", consent: aiConsentView(undefined, lang) });
+}
+
+/**
+ * A run with no person in the moment (consent.ts): it starts, or goes on, only on the consent its taf's runs take. Refused,
+ * the taf is paused with why, and the caller starts nothing: a door's message or an app's event waits as for credits.
+ */
+async function requireUnattended(deps: Deps, tenant: string, tafID: string): Promise<void> {
+  if (!deps.aiConsent) return;
+  const c = await unattendedConsent(deps.coach, tenant, tafID);
+  if ("subject" in c) return;
+  await pauseForConsent(deps, tenant, tafID, c.why).catch((err) => console.error(`consent: pause ${tafID}: ${(err as Error).message}`));
+  throw new AgentsError(403, wordsIn("en")[c.why === "no_one" ? "ai_consent_paused_no_one" : "ai_consent_paused_not_given"], undefined, AI_CONSENT_CODE);
+}
+
+/**
+ * Pauses the taf for consent: kiff/agents halts it, so its schedule's firings start nothing either, and tafs cloud keeps
+ * why, so a yes resumes this pause and never an owner's own halt. Once per pause: a second refusal changes nothing.
+ */
+async function pauseForConsent(deps: Deps, tenant: string, tafID: string, why: ConsentWhy): Promise<void> {
+  const before = deps.coach ? await consentPauseOf(deps.coach, tenant, tafID) : undefined;
+  if (!deps.coach || before?.why === why) return;
+  const now = deps.now?.() ?? new Date();
+  // Halted already by its owner: kept as theirs, so a yes later ends only this pause.
+  const owner = before?.owner_halted ?? (await deps.agents.halted(tenant, tafID).catch(() => undefined))?.own === true;
+  await deps.agents.halt(tenant, tafID);
+  await deps.coach.put(consentPauseKey(tenant, tafID), { why, at: now.toISOString(), ...(owner ? { owner_halted: true } : {}) }, new Date(now.getTime() + 365 * 24 * 3600_000));
+  const taf = await deps.tafs.get(tenant, tafID).catch(() => undefined);
+  await logEvent(deps.events, tenant, { kind: "consent_paused", taf: tafID, ...(taf ? { name: taf.name } : {}), title: consentPauseWords(why, "en") }, now);
+  await tellChange(tenant, "halted", tafID, deps);
+}
+
+/** Ends a pause for consent once the taf's runs may start again; an owner's own halt stays. */
+async function resumeFromConsent(deps: Deps, tenant: string, tafID: string): Promise<boolean> {
+  const paused = deps.coach ? await consentPauseOf(deps.coach, tenant, tafID) : undefined;
+  if (!deps.coach || !paused) return false;
+  if (!("subject" in await unattendedConsent(deps.coach, tenant, tafID))) return false;
+  if (!paused.owner_halted) await deps.agents.resume(tenant, tafID);
+  await deps.coach.remove(consentPauseKey(tenant, tafID));
+  const taf = await deps.tafs.get(tenant, tafID).catch(() => undefined);
+  await logEvent(deps.events, tenant, { kind: "consent_resumed", taf: tafID, ...(taf ? { name: taf.name } : {}) }, deps.now?.());
+  await tellChange(tenant, "resumed", tafID, deps);
+  return true;
+}
+
+/**
+ * Brings each of the account's tafs in line with its consent: paused when its runs may not start a model turn, resumed
+ * when a pause for consent no longer holds. A schedule fires in kiff/agents, which can't ask, so this is what stops it.
+ * After a yes, what waited (doors, app events) starts.
+ */
+export async function settleConsent(deps: Deps, tenant: string): Promise<{ paused: string[]; resumed: string[] }> {
+  const out = { paused: [] as string[], resumed: [] as string[] };
+  if (!deps.aiConsent || !deps.coach) return out;
+  for (const taf of (await deps.tafs.list(tenant)).filter((t) => !t.removing)) {
+    const c = await unattendedConsent(deps.coach, tenant, taf.id);
+    const paused = await consentPauseOf(deps.coach, tenant, taf.id);
+    if (!("subject" in c)) {
+      if (paused?.why === c.why) continue;
+      await pauseForConsent(deps, tenant, taf.id, c.why);
+      out.paused.push(taf.id);
+    } else if (paused && await resumeFromConsent(deps, tenant, taf.id)) out.resumed.push(taf.id);
+  }
+  if (out.resumed.length && deps.doors) await replayHeld(doorContext(deps), tenant).catch((err) => console.error("held not replayed:", (err as Error).message));
+  return out;
+}
+
+/** The owner halted a taf paused for consent: the halt is theirs from now on. */
+async function markOwnerHalt(deps: Deps, tenant: string, tafID: string): Promise<void> {
+  const p = await consentPauseOf(deps.coach, tenant, tafID);
+  if (p && !p.owner_halted) await deps.coach!.put(consentPauseKey(tenant, tafID), { ...p, owner_halted: true }, new Date((deps.now?.() ?? new Date()).getTime() + 365 * 24 * 3600_000));
+}
+
+/** A taf's pause for consent, as the apps draw it. */
+async function consentPausedView(taf: Taf, me: KIFFIdentity, deps: Deps, lang: Lang): Promise<{ consent_paused?: { why: ConsentWhy; words: string } }> {
+  if (!deps.aiConsent) return {};
+  const p = await consentPauseOf(deps.coach, me.tenantID, taf.id);
+  return p ? { consent_paused: { why: p.why, words: consentPauseWords(p.why, lang) } } : {};
+}
+
+/** The consent sweep: every account's tafs in line with their consent (settleConsent). */
+export async function sweepConsent(deps: Deps): Promise<Array<{ tenant: string; paused: string[]; resumed: string[] }>> {
+  if (!deps.aiConsent || !deps.coach) return [];
+  const out: Array<{ tenant: string; paused: string[]; resumed: string[] }> = [];
+  for (const tenant of await deps.tafs.tenants()) {
+    const r = await settleConsent(deps, tenant).catch((err) => {
+      console.warn(`consent: ${tenant}: ${err instanceof Error ? err.message : "error"}`);
+      return undefined;
+    });
+    if (r && (r.paused.length || r.resumed.length)) out.push({ tenant, ...r });
+  }
+  return out;
 }
 
 async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: string, deps: Deps): Promise<unknown> {
@@ -5832,6 +5953,8 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule,
     /** The KIFF agent the taf acts as: the holder of its Cards. */
     kiff_agent: taf.kiffAgent || null,
     status: s && !s.enabled && !taf.unscheduled ? "paused" : "active",
+    /** Paused for consent to AI use with no person in the moment (consent.ts): why, and the words. Only said when so. */
+    ...(await consentPausedView(taf, me, deps, lang)),
     /** It works from its chat: no schedule runs it (kiff/tafs#138). Only said when so. */
     ...(taf.unscheduled ? { unscheduled: true } : {}),
     next_run: s?.enabled && s.next ? iso(s.next) : null,
@@ -6731,6 +6854,11 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
       if (!may.grant) throw new ToolRefusal("KIFF gave no grant for this call: try again");
       at = { grant: may.grant, live: args.chat !== "new" };
     }
+    // The taf's run answers Coach, not a person in the moment: its runs' consent (consent.ts).
+    try { await requireUnattended(deps, call.tenant, taf.id); } catch (err) {
+      if (waitsForConsent(err)) throw new ToolRefusal(`${taf.name} is paused: AI use for its runs isn't allowed. Say so to the person; someone who manages tafs allows it in Account, or takes it over.`);
+      throw err;
+    }
     const notify = call.notify();
     const run = await agentsCall(() => deps.agents.startRun(call.tenant, taf.id, text, at, undefined, notify));
     await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: await coachRun(call, deps), what: text.slice(0, 120), person: call.person?.subject }, deps);
@@ -7403,7 +7531,14 @@ function deadLines(dead: DeadHandoff[], taf: string, lang: Lang): string[] {
 
 function deliveryContext(deps: Deps, now = deps.now?.() ?? new Date()): DeliveryContext {
   if (!deps.coach) throw new HTTPError(404, "not found");
-  return { store: deps.coach, tafs: deps.tafs, agents: deps.agents, push: deps.push, apns: deps.apns, now };
+  // A hand-off or a retry starts a run with no person in the moment (consent.ts).
+  const agents: DeliveryContext["agents"] = Object.assign(Object.create(deps.agents) as DeliveryContext["agents"], {
+    startRun: async (tenant: string, ...rest: Parameters<AgentsAPI["startRun"]> extends [string, ...infer R] ? R : never) => {
+      await requireUnattended(deps, tenant, rest[0]);
+      return deps.agents.startRun(tenant, ...rest);
+    },
+  });
+  return { store: deps.coach, tafs: deps.tafs, agents, push: deps.push, apns: deps.apns, now };
 }
 
 /**
@@ -7744,6 +7879,8 @@ function doorContext(deps: Deps): DoorsContext {
     answerWait: (...a) => deps.agents.answerWait(...a),
     startRun: async (tenant, ...rest) => {
       if (deps.deletions && await deps.deletions.get(tenant)) throw new AgentsError(410, "this account is being deleted");
+      // A door's message, an app's event, a held one released: no person in the moment (consent.ts).
+      await requireUnattended(deps, tenant, rest[0]);
       return deps.agents.startRun(tenant, ...rest);
     },
   };

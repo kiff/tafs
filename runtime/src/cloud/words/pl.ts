@@ -700,4 +700,6 @@ export const pl: Words = {
   ai_consent_withdraw: "Wycofaj",
   ai_consent_given: "Użycie AI: dozwolone",
   ai_consent_needed: "Najpierw zezwól na użycie AI: Coach i Twoje tafy potrzebują go, by odpowiadać.",
+  ai_consent_paused_no_one: "Wstrzymane: nikt jeszcze nie zezwolił na użycie AI w uruchomieniach tego tafa. Ruszy, gdy ktoś, kto zarządza tafami, zezwoli na to w Koncie.",
+  ai_consent_paused_not_given: "Wstrzymane: zgodę na użycie AI w uruchomieniach tego tafa wycofano. Ruszy, gdy zgoda znów zostanie dana lub ktoś, kto zarządza tafami, go przejmie.",
 };

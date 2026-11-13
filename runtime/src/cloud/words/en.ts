@@ -760,6 +760,8 @@ export const en = {
   ai_consent_withdraw: "Withdraw",
   ai_consent_given: "AI use: allowed",
   ai_consent_needed: "Allow AI use first: Coach and your tafs need it to answer.",
+  ai_consent_paused_no_one: "Paused: no one has allowed AI use for this taf's runs yet. It goes on once someone who manages tafs allows it in Account.",
+  ai_consent_paused_not_given: "Paused: AI use for this taf's runs was withdrawn. It goes on once it's allowed again, or someone who manages tafs takes it over.",
 };
 
 export type Words = typeof en;
