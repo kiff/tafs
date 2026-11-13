@@ -20,7 +20,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   to find the work (list or search), to check one item (read it), and to act
   (the write). Choose each read by what the job asks of it:
   the operation whose fields answer the job's question, not the first one
-  named after the thing: for a refund, the read that says what was already refunded. Pin with fixed_arguments what must never
+  named after the thing. Pin with fixed_arguments what must never
   change: the account, and the mode, on every tool that takes them, reads
   included, as the vendor's own descriptions ask,
   and the operation that makes a tool the job's. A pin is a dotted path
@@ -60,8 +60,9 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   looks up the fields you left open before its first call. Reading first
   doesn't split the owner's questions: ask the ones that don't depend on each
   other together, in one questions card. Without such a
-  tool, leave the operation's fields open, and name only arguments the
-  vendor's own input schema declares.
+  tool, leave the operation's fields open, and name only arguments the vendor's own input schema declares.
+  An argument is never an object: name its fields one by one, each at its
+  path (values.Status).
   Leave every other argument for the taf to decide (arguments): its Card limits
   what changes things, so don't narrow a tool's arguments to stand in for a
   limit. Name the argument that moves money, with its unit and scale,
