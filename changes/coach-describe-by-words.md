@@ -1,0 +1,1 @@
+- **Coach describes a big API by the job's words, so Stripe and GitHub get the key and the Card in one approval too.** Over 200 operations, planque's `describe` answers only the count. `connect-an-app@15` has Coach describe it again with words from the job, then name the matching operations on the key request (docs/coach.md).
