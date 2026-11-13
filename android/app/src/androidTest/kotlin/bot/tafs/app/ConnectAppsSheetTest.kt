@@ -77,12 +77,12 @@ class ConnectAppsSheetTest {
     rule.onNodeWithText(ConnectAppsWords.CONNECTED).performClick()
     rule.onNodeWithText(ConnectAppsWords.DISCONNECT_WHY).assertIsDisplayed()
     rule.onNodeWithText(ConnectAppsWords.DISCONNECT).performClick()
-    rule.onNodeWithText("Disconnect Stripe from Refunds?").assertIsDisplayed()
-    rule.onNodeWithText("Other connections to Stripe stay connected", substring = true).assertIsDisplayed()
+    rule.onNodeWithText("Remove access to Stripe for Refunds?").assertIsDisplayed()
+    rule.onNodeWithText("Other tafs that use Stripe keep their access", substring = true).assertIsDisplayed()
     rule.onNodeWithText("Cancel").performClick()
     rule.waitForIdle()
     assertEquals("Cancel sends nothing", emptyList<String>(), disconnected)
-    assertEquals(0, count("Disconnect Stripe from Refunds?"))
+    assertEquals(0, count("Remove access to Stripe for Refunds?"))
     // Asked again and confirmed: that one connection, by its id.
     rule.onNodeWithText(ConnectAppsWords.DISCONNECT).performClick()
     rule.onAllNodes(hasText(ConnectAppsWords.DISCONNECT)).fetchSemanticsNodes().size.let { assertEquals("the row's and the dialog's", 2, it) }

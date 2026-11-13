@@ -102,26 +102,29 @@ class CoachScreenTest {
     show(null)
     rule.onNodeWithText("Coach").assertIsDisplayed()
     rule.onNodeWithText("Step 3 of 6 · Your rules").assertIsDisplayed()
-    // Answered: kiff/agents' word, and no buttons left on it.
-    rule.onNodeWithText("Approved · Connect Stripe (test mode)", substring = true).assertIsDisplayed()
+    // Answered: kiff/agents' word and the Card that was signed (its draft confirmed), and no buttons left on it.
+    rule.onNodeWithText("Approved · Refunds' Card", substring = true).assertIsDisplayed()
     hold()
   }
 
   @Test fun anAnsweredApprovalOpensOnATapToWhatWasApprovedAndFoldsBack() {
     show(null)
-    // Folded: one line, and what it covered isn't shown.
-    rule.onNodeWithText("Up to €20 a day").assertDoesNotExist()
-    rule.onNodeWithText("Approved · Connect Stripe (test mode)", substring = true).performClick()
-    // Open: its Card's lines in KIFF's words, at the version approved, with nothing to answer. Not planque's grant as it is now,
-    // which a later approval can widen.
-    rule.onNodeWithText("Refund a payment, up to €5 each").assertIsDisplayed()
-    rule.onNodeWithText("Read your payments and refund one.").assertDoesNotExist()
+    // Folded: the line names the Card that was signed, and KIFF's own lines for it stay under it (the owner, 12 Nov: the line
+    // said the key's words, not what was signed). Never planque's grant as it is now, which a later approval can widen.
+    rule.onNodeWithText("Approved · Refunds' Card", substring = true).assertIsDisplayed()
     rule.onNodeWithText("Up to €20 a day").assertIsDisplayed()
+    rule.onNodeWithText("Read your payments and refund one.").assertDoesNotExist()
+    rule.onNodeWithText("Approved · Refunds' Card", substring = true).performClick()
+    // Open: the Card in full, at the version approved, with nothing to answer.
+    rule.onNodeWithText("Refund a payment, up to €5 each").assertIsDisplayed()
+    rule.onNodeWithText("Up to €20 a day").assertIsDisplayed()
+    rule.onNodeWithText("Read your payments and refund one.").assertDoesNotExist()
     rule.onNodeWithText("Approve with your fingerprint").assertDoesNotExist()
     rule.onNodeWithText("Decline").assertDoesNotExist()
     hold()
-    rule.onNodeWithText("Approved · Connect Stripe (test mode)", substring = true).performClick()
-    rule.onNodeWithText("Up to €20 a day").assertDoesNotExist()
+    rule.onNodeWithText("Approved · Refunds' Card", substring = true).performClick()
+    // Folded again: the line and its Card's lines.
+    rule.onNodeWithText("Up to €20 a day").assertIsDisplayed()
   }
 
   @Test fun thePlanOpensToItsStepsAndFoldsBack() {
