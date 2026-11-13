@@ -21,6 +21,9 @@ export const en = {
   your_step_open: (vendor: string) => `Open in ${vendor}`,
   your_step_reminder: (what: string) => `Your step is still waiting: ${what}`,
   your_step_line: (what: string) => `Your step: ${what}`,
+  coach_waiting_approval: "Coach is waiting for your approval.",
+  coach_waiting_answer: "Coach is waiting for your answer.",
+  coach_waiting_open: "Open Coach",
   // What Coach is doing, one line per tool, in the person's language (steps.ts); a tool KIFF titles keeps its title.
   doing_show: "Showing you a card…",
   doing_results: "Setting where its results go…",

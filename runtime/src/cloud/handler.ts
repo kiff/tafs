@@ -15,6 +15,7 @@ import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, rea
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
+import { coachWaitingOf } from "./coachwaiting.js";
 import { type Health, HEALTH_FIRINGS, healthLine, healthOf, healthView } from "./health.js";
 import { LANGUAGES, type Lang, languageFrom, ownerLanguageIn, plural, withLanguage, withZone, wordsIn } from "./words/index.js";
 import { NOTE_UNREAD, notedSendingOutside, undisclosedSending } from "./sends-outside.js";
@@ -6539,7 +6540,14 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // tafs app. The one exception is a taf whose setup stopped partway (Coach drafted it, its Card is signed, and no
   // taf was made): it's listed as being set up, by the name Coach gave it, with the way back to the chat where it
   // stopped, never as ready and never by its agent's id.
-  const halfMade = agents.length ? await halfMadeTafs(me, records, new Set(agents), deps) : new Map<string, HalfMade>();
+  // Coach's paused chats, read once: for a taf whose setup stopped partway, and for the cards Coach waits on its person with.
+  // A read that fails shows neither: Home then lists no half-made taf and counts no Coach card.
+  const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
+  const coachPaused = coach ? await deps.agents.pausedRuns(me.tenantID).catch(() => [] as Run[]) : [];
+  const halfMade = agents.length ? await halfMadeTafs(me, records, new Set(agents), deps, coachPaused) : new Map<string, HalfMade>();
+  // A card Coach waits on its person with (an approval, a sign-in, questions): in Needs you and its count, one per chat, so
+  // Home never says "Nothing needs you." while Coach waits (docs/api.md, Coach waiting).
+  const coachWaiting = coach ? coachWaitingOf(coachPaused, coach.id, me.subject, now, langOf(event)) : [];
   const settingUp = agents.flatMap((agent) => {
     const half = halfMade.get(agent);
     if (!half) return [];
@@ -6578,14 +6586,14 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // count what they have, rather than show a number that's short.
   const needsYou = unsure === undefined ? undefined : (() => {
     const count = kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length + unsure + unitExceptions.length
-      + lights.filter((l) => l.some((d) => d.knocks > 0)).length + yourSteps.length;
+      + lights.filter((l) => l.some((d) => d.knocks > 0)).length + yourSteps.length + coachWaiting.length;
     // In the person's language, as every line of tafs cloud's (docs/api.md, The person's language).
     const lang = langOf(event);
     const w = wordsIn(lang);
     return { count, words: count === 0 ? w.home_needs_you_none : w.home_needs_you(count, plural(lang, count)) };
   })();
   return { tafs: listed, setting_up: settingUp, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
-    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
+    ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(coachWaiting.length ? { coach_waiting: coachWaiting } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
 /**
@@ -6692,13 +6700,13 @@ const HALF_MADE_KEPT_MS = 180 * 24 * 3600_000;
  * it). Reading that chat again hands it over (handOverShown). One read of the account's paused runs; a read that
  * fails finds none, and the agent shows as before. The chat to finish it in is given only to the person who started it.
  */
-async function halfMadeTafs(me: KIFFIdentity, records: Taf[], agents: Set<string>, deps: Deps): Promise<Map<string, HalfMade>> {
+async function halfMadeTafs(me: KIFFIdentity, records: Taf[], agents: Set<string>, deps: Deps, coachPaused?: Run[]): Promise<Map<string, HalfMade>> {
   const tenant = me.tenantID;
   const out = new Map<string, HalfMade>();
   const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
   // The agents a result still names this read: for them, the proof decides, and a kept name never stands in for it.
   const named = new Set<string>();
-  const paused = coach ? await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]) : [];
+  const paused = coachPaused ?? (coach ? await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]) : []);
   for (const r of paused) {
     if (!coach || r.agent !== coach.id) continue;
     for (const q of r.requirements ?? []) {
