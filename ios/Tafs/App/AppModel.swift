@@ -7860,7 +7860,7 @@ final class AppModel: ObservableObject {
             let words = grants.first { $0.id == grantID }.flatMap { shownWords(for: $0) }
             // With the taf's Card drafted, the phone can sign the tools added to a connected app and that Card
             // together; tafs cloud asks for it only when that's on, and otherwise answers as before.
-            let can: [String]? = component.draft != nil && shownDraft != nil ? [RequestsTogether.toolsAndCards] : nil
+            let can: [String]? = component.draft != nil && shownDraft != nil ? [RequestsTogether.toolsAndCards, RequestsTogether.signs] : nil
             let decision = try await cloud.approval(s.id, component: component.id, body: .init(
                 grant: grantID, shownDigest: shown, draft: component.draft, shownDraft: shownDraft,
                 words: words.map { .init(profileSHA256: $0.profileSHA256, wordsSHA256: $0.wordsSHA256) }, session: session,
@@ -8132,9 +8132,10 @@ final class AppModel: ObservableObject {
         return card == ["cards", RequestsTogether.keyAndCards, RequestsTogether.toolsAndCards].contains(step)
     }
 
-    /// The steps this phone signs beyond connect and cards: a key and its Card from the key's sheet, and
-    /// a connected app's added tools and its Card from Coach's card.
-    nonisolated static let stepsSignedHere = [RequestsTogether.toolsAndCards, RequestsTogether.keyAndCards]
+    /// What this phone says it can do beyond connect and cards: sign a key and its Card from the key's sheet,
+    /// and an app's tools and its Card from Coach's card; and draw tafs cloud's mark of what a fingerprint
+    /// signs (`signs`), so a held sign-in's first tools may go with their Card in one fingerprint.
+    nonisolated static let stepsSignedHere = [RequestsTogether.toolsAndCards, RequestsTogether.keyAndCards, RequestsTogether.signs]
 
     /// Whether a `tools_and_cards` ask is this card's, for what the person was shown: its grant,
     /// planque's approve exactly as this phone builds it for the digest shown (and KIFF's words for

@@ -28,13 +28,13 @@ final class SignsMarkTests: XCTestCase {
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [StubProtocol.self]
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: URLSession(configuration: config))
-        StubProtocol.responses["GET /v1/tafs/setup_1/conversation?can=tools_and_cards,key_and_cards"] = (200, """
+        StubProtocol.responses["GET /v1/tafs/setup_1/conversation?can=tools_and_cards,key_and_cards,signs"] = (200, """
         {"messages":[],"components":[{"at":"2026-11-13T23:00:00.000Z","session":"s1","run":"r1","seq":1,"key":"k1","component":{"type":"approval","id":"a1","grant":"g_1","draft":"dr_1","signs":{"card":false,"words":"Its Card: you approve it next"}}}]}
         """)
         let thread = try await cloud.setupThread("setup_1", proof: "t=T,v1=sig,d=dev", can: AppModel.stepsSignedHere)
         let sent = try XCTUnwrap(StubProtocol.sent.last)
         XCTAssertEqual(sent.value(forHTTPHeaderField: "Planque-Device-Signature"), "t=T,v1=sig,d=dev")
-        XCTAssertEqual(sent.url?.query, "can=tools_and_cards,key_and_cards")
+        XCTAssertEqual(sent.url?.query, "can=tools_and_cards,key_and_cards,signs")
         XCTAssertEqual(thread.components.first?.component.signs?.cardNext, true)
 
         StubProtocol.responses["GET /v1/tafs/setup_1/conversation"] = (200, #"{"messages":[]}"#)
