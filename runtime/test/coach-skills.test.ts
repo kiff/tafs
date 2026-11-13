@@ -134,6 +134,8 @@ describe("Coach's core", () => {
     // agentgabo's Gmail count on Android 80: "Gmail is connected", then "Gmail is connected (read only)", two more approvals
     // for one connection. The tools go once, complete.
     expect(tools).toContain("Ask for a taf's tools once, complete (read_only, pins, arguments): each change is one more approval.");
+    // Which item a write names when it takes several (qa-kiff on #917): the one its read takes, so the ids agree.
+    expect(tools).toContain("When it takes several, keep the one its read takes.");
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(connect).toContain("You choose the name: the taf's name in lower case, words joined by hyphens (introduction-drafts)");
   });

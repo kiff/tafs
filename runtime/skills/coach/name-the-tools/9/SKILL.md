@@ -33,9 +33,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   vendor tool runs many operations chosen by an argument (an operation id, a
   method, a path or an endpoint), connect it once for each operation the job
   needs, each under its own name with that argument pinned to that operation:
-  its Card then covers that operation alone. Never leave the operation to the taf:
-  a Card's limit on one write doesn't stop another write made through the
-  same tool. Such an operation's own fields aren't in the catalog, and their
+  its Card then covers that operation alone. Never leave the operation to the taf. Such an operation's own fields aren't in the catalog, and their
   names aren't the thing's (a read of one item can take it as id): never guess
   or rename them. When the vendor has a read-only tool that
   lists an operation's fields, given its id, ask for it
@@ -76,7 +74,8 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   no money here. It has no amount argument, and its Card limits its calls a
   day. Name what each tool that changes things acts on
   (resource_argument): the item it takes (the ticket, the event, the
-  payment), as one of its string arguments, required. For a tool that
+  payment), as one of its string arguments, required. When it takes several, keep the one
+  its read takes. For a tool that
   moves money, name the read that says its unit (unit_lookup: that read's
   name, the read's argument that takes the same id, and where the unit is in
   its answer, such as currency): KIFF refuses a call in another unit than the
