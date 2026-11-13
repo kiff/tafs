@@ -9,7 +9,7 @@
   "alert.by_email": "Por correo",
   "alert.example": "Ejemplo",
   "alert.foot.cant_answer_holds": "Las alertas van a las personas que pueden responder a las llamadas retenidas. Tu rol en esta cuenta no puede.",
-  "alert.foot.tells_you_device": "Cuando un taf te necesita, este {device} te avisa aunque tafs esté cerrado. No se envía nada hasta que apruebes.",
+  "alert.foot.tells_you_device": "Cuando un taf te necesita, este {device} te avisa aunque tafs esté cerrado.",
   "alert.haptics": "Vibración",
   "alert.kiff_did_not_take_refusal": "KIFF no aceptó el rechazo. Abre tafs para responder.",
   "alert.kiff_doesnt_send": "KIFF aún no envía alertas a tafs en esta cuenta.",

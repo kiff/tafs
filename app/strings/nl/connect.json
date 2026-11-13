@@ -130,7 +130,7 @@
   "connect.sign_in_closed_nothing_connected": "De login is gesloten. Er is niets gekoppeld.",
   "connect.sign_in_view.not_opened": "Het inlogscherm is niet geopend. {why}",
   "connect.sign_in_view.wrong_address": "Het inlogscherm is niet geopend: het stond niet op het eigen adres van de koppeling.",
-  "connect.sign_ins_kept_sealed_no": "Logins blijven verzegeld: geen enkel taf ziet ze ooit.",
+  "connect.sign_ins_kept_sealed_no": "Geen enkel taf ziet je logins.",
   "connect.signed_in": "{app} is ingelogd. Daarna kiest Coach de acties en keur jij ze goed.",
   "connect.signed_in_for": "{app} is ingelogd voor {taf}. Daarna kiest Coach de acties en keur jij ze goed.",
   "connect.signed_in_row": "Ingelogd · kies de acties",

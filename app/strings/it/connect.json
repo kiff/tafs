@@ -130,7 +130,7 @@
   "connect.sign_in_closed_nothing_connected": "L'accesso è stato chiuso. Non è stato collegato nulla.",
   "connect.sign_in_view.not_opened": "La schermata di accesso non si è aperta. {why}",
   "connect.sign_in_view.wrong_address": "La schermata di accesso non si è aperta: non era sull'indirizzo del collegamento.",
-  "connect.sign_ins_kept_sealed_no": "Gli accessi restano sigillati: nessun taf li vede mai.",
+  "connect.sign_ins_kept_sealed_no": "Nessun taf vede i tuoi accessi.",
   "connect.signed_in": "Accesso a {app} effettuato. Ora Coach sceglie le sue azioni e tu le approvi.",
   "connect.signed_in_for": "Accesso a {app} effettuato per {taf}. Ora Coach sceglie le sue azioni e tu le approvi.",
   "connect.signed_in_row": "Accesso effettuato · scegli le sue azioni",

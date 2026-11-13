@@ -11,9 +11,9 @@
   "receipt.check.signature_mismatch": "Die Signatur passt nicht zu diesen Schritten.",
   "receipt.check.unknown_signature": "Er ist auf eine Weise signiert, die diese App nicht kennt.",
   "receipt.check.unreadable": "Der Beleg konnte nicht gelesen werden.",
-  "receipt.checked": "✓ KIFFs Beleg · auf diesem Telefon geprüft",
+  "receipt.checked": "✓ KIFFs Beleg · geprüft",
   "receipt.checked_on_device": "KIFFs Beleg · auf diesem {device} geprüft",
-  "receipt.checked_why": "KIFF hat das signiert, als es entschieden hat. Die Signatur passt zu KIFFs Adresse, und keiner seiner Schritte hat sich seitdem geändert.",
+  "receipt.checked_why": "Von KIFF signiert, seitdem unverändert.",
   "receipt.checking_on_device": "KIFFs Beleg wird auf diesem {device} geprüft…",
   "receipt.copy": "Beleg kopieren",
   "receipt.decided_by.card": "Die Card",
@@ -60,9 +60,9 @@
   "receipt.refused_by": "Abgelehnt von {who}",
   "receipt.share": "Teilen",
   "receipt.show_full": "Ganzen Beleg zeigen",
-  "receipt.signed_on_device_why": "Deine Antwort wurde nach {biometry} mit einem Schlüssel signiert, der dieses Gerät nie verlässt.",
+  "receipt.signed_on_device_why": "Mit {biometry}, durch einen Schlüssel, der dieses Gerät nie verlässt.",
   "receipt.signed_on_phone": "✓ Auf diesem Telefon signiert",
-  "receipt.signed_on_phone_why": "Deine Antwort wurde mit einem Schlüssel signiert, der dieses Telefon nie verlässt.",
+  "receipt.signed_on_phone_why": "Durch einen Schlüssel, der dieses Telefon nie verlässt.",
   "receipt.signs_within": "KIFF signiert Belege innerhalb einer Minute nach der Entscheidung. Prüfe gleich noch einmal.",
   "receipt.what_happened": "Was passiert ist"
 }

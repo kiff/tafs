@@ -130,7 +130,7 @@
   "connect.sign_in_closed_nothing_connected": "La connexion a été fermée. Rien n'a été connecté.",
   "connect.sign_in_view.not_opened": "La fenêtre de connexion ne s'est pas ouverte. {why}",
   "connect.sign_in_view.wrong_address": "La fenêtre de connexion ne s'est pas ouverte : elle n'était pas sur l'adresse propre à la connexion.",
-  "connect.sign_ins_kept_sealed_no": "Les identifiants restent scellés : aucun taf ne les voit jamais.",
+  "connect.sign_ins_kept_sealed_no": "Aucun taf ne voit vos identifiants.",
   "connect.signed_in": "{app} est connecté. Ensuite, Coach choisit ses actions et vous les approuvez.",
   "connect.signed_in_for": "{app} est connecté pour {taf}. Ensuite, Coach choisit ses actions et vous les approuvez.",
   "connect.signed_in_row": "Connecté · choisissez ses actions",

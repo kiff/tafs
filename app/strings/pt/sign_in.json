@@ -29,12 +29,12 @@
   "sign_in.waiting_for_browser": "À espera do seu navegador… Verifique se mostra {user_code}, e aprove apenas com este {device} nas suas mãos.",
   "sign_in.welcome.inside_lead": "Dentro do Card",
   "sign_in.welcome.inside_rest": "age, e cada ação tem um recibo.",
-  "sign_in.welcome.lead": "Entregue uma tarefa a um taf. Trabalha dentro de um Card que define, e pergunta-lhe quando precisa de mais.",
+  "sign_in.welcome.lead": "Um taf faz uma tarefa dentro do Card que define. Para lá disso, pergunta-lhe.",
   "sign_in.welcome.outside_lead": "Fora dele",
   "sign_in.welcome.outside_rest": "aguarda por si, aqui mesmo.",
   "sign_in.welcome.revoked_lead": "Revogado",
   "sign_in.welcome.revoked_rest": "nenhuma ação nova é concluída.",
-  "sign_in.welcome.title": "They taf.\nYou kiff.",
+  "sign_in.welcome.title": "tafs",
   "sign_in.with_kiff": "Iniciar sessão com o KIFF",
   "sign_in.your_code": "O seu código"
 }

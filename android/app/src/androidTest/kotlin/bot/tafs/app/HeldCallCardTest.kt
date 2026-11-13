@@ -164,8 +164,8 @@ class HeldCallCardTest {
 
   @Test fun aCallOverATotalSaysApprovingOnceCannotPassItAndOffersExtraRoomToWhoManagesCards() {
     show(call(approvableOnce = false), state(capabilities = listOf("holds.answer", "cards.manage")))
-    text("Approving it once can't pass this").assertExists()
-    text("Extra room adds just what this call needs").assertExists()
+    text("It's over a Card total").assertExists()
+    text("Extra room lets only this call through").assertExists()
     text("Extra room with your fingerprint").assertExists()
     text("Refuse").assertExists()
     gone("Approve once")
@@ -173,7 +173,7 @@ class HeldCallCardTest {
 
   @Test fun aCallOverATotalOffersExtraRoomToNoOneWhoDoesNotManageCards() {
     show(call(approvableOnce = false), state(capabilities = listOf("holds.answer")))
-    text("Someone who manages the account's Cards can give it extra room").assertExists()
+    text("Someone who manages the Cards can give it extra room").assertExists()
     gone("Extra room with")
     text("Refuse").assertExists()
   }

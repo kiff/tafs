@@ -130,7 +130,7 @@
   "connect.sign_in_closed_nothing_connected": "The sign-in was closed. Nothing was connected.",
   "connect.sign_in_view.not_opened": "The sign-in view didn't open. {why}",
   "connect.sign_in_view.wrong_address": "The sign-in view didn't open: it wasn't on the connection's own address.",
-  "connect.sign_ins_kept_sealed_no": "Sign-ins are kept sealed: no taf ever sees them.",
+  "connect.sign_ins_kept_sealed_no": "No taf sees your sign-ins.",
   "connect.signed_in": "{app} is signed in. Next, Coach chooses its actions and you approve them.",
   "connect.signed_in_for": "{app} is signed in for {taf}. Next, Coach chooses its actions and you approve them.",
   "connect.signed_in_row": "Signed in · choose its actions",

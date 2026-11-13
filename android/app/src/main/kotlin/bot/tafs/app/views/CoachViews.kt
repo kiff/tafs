@@ -169,7 +169,8 @@ private fun StartNote(state: AppState, chats: CoachChatActions) {
     return
   }
   Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-    Text(CoachWords.INTRO + " " + Words.Coach.eachWaits(biometry), style = scaled(14, color = Theme.soft))
+    // That each connection and Card waits for approval is said where one does: the first approval card, not here too.
+    Text(CoachWords.INTRO, style = scaled(14, color = Theme.soft))
     Text(if (state.startingCoach) Words.Common.starting else Words.Coach.startingAsks(biometry), style = scaled(12, color = Theme.dim))
     (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
@@ -191,7 +192,7 @@ private fun StartScreen(state: AppState, start: bot.tafs.app.kiff.CoachStart, ch
     Modifier.fillMaxWidth().heightIn(max = 360.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
     verticalArrangement = Arrangement.spacedBy(6.dp),
   ) {
-    Text(words?.lead?.ifBlank { null } ?: (CoachWords.INTRO + " " + Words.Coach.eachWaits(biometry)), style = scaled(14, color = Theme.soft))
+    Text(words?.lead?.ifBlank { null } ?: CoachWords.INTRO, style = scaled(14, color = Theme.soft))
     // The Cards, in KIFF's own words: what the one fingerprint gives Coach.
     tools.card?.let { card ->
       card.cardTitle?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.padding(top = 4.dp)) }
@@ -233,7 +234,7 @@ private fun CoachIntro(state: AppState) {
   val biometry = LocalBiometry.current
   Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
     Text(Words.Coach.title, style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
-    Text(CoachWords.INTRO + " " + Words.Coach.eachWaits(biometry), style = scaled(16, color = Theme.soft))
+    Text(CoachWords.INTRO, style = scaled(16, color = Theme.soft))
     (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
     // Starting issues Coach's own Cards, an approval: before the first taf, say so while this phone can't approve yet.
     Text(bot.tafs.app.model.ApprovalWords.FIRST_TAF, style = scaled(15, color = Theme.ink))

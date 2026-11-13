@@ -92,7 +92,7 @@
     "other": "{count} recusadas"
   },
   "version.tried.went_back": "voltou atrás",
-  "version.try_first": "Experimente primeiro uma versão: conversa com ela ao abrigo de um Card próprio, enquanto a versão em produção continua a trabalhar.",
+  "version.try_first": "Experimente primeiro uma versão, ao abrigo de um Card próprio. A versão em produção continua a trabalhar.",
   "version.try_it": "Experimentar",
   "version.try_number": "Experimentar a versão {version}",
   "version.try_number_note": "Experimentar a versão {version}: {note}",
@@ -100,9 +100,9 @@
   "version.trying_number": "A experimentar a versão {version}",
   "version.unchanged": "Sem alterações",
   "version.while_trying": "Enquanto a experimenta",
-  "version.while_you_try.chat": "Conversa com a versão {n} na sua própria janela. O que faz é real: as suas chamadas passam pelo KIFF ao abrigo do Card abaixo.",
-  "version.while_you_try.counts_from_zero": "O Card da experiência conta a partir de zero, por isso num dia o seu taf pode gastar os limites do Card em produção mais os deste.",
-  "version.while_you_try.ends": "Termina quando a instalar ou voltar atrás, ou após 7 dias sem uso. O seu chat é então eliminado, e Versões guarda uma linha sobre ela.",
-  "version.while_you_try.live_keeps_working": "A versão em produção continua a trabalhar: o seu agendamento, Card e orçamento não mudam.",
+  "version.while_you_try.chat": "As ações da versão {n} são reais, ao abrigo do seu próprio Card.",
+  "version.while_you_try.counts_from_zero": "O seu Card conta a partir de zero.",
+  "version.while_you_try.ends": "Termina quando a instalar, voltar atrás, ou após 7 dias sem uso.",
+  "version.while_you_try.live_keeps_working": "A versão em produção continua a funcionar; num dia, podem ser gastos os limites de ambos os Cards.",
   "version.working": "A trabalhar…"
 }

@@ -36,7 +36,7 @@
   "needs_you.extra_room_with": "Marge supplémentaire avec {biometry}",
   "needs_you.get_alert_when_call_waits": "Recevez une alerte quand un appel attend votre réponse, même si tafs est fermé.",
   "needs_you.install_from_card": "Installez-la depuis sa fiche : la version est mise en service, puis Coach est prévenu.",
-  "needs_you.ios_asks_next_confirming_sets": "iOS demande ensuite. Confirmer avec {biometry} les configure pour votre compte.",
+  "needs_you.ios_asks_next_confirming_sets": "iOS demande ensuite, puis {biometry}.",
   "needs_you.knocks": {
     "one": "Quelqu'un a fait une demande d'accès à sa porte. Rien n'a été fait.",
     "other": "{count} demandes d'accès à ses portes. Rien n'a été fait."
@@ -48,8 +48,8 @@
   "needs_you.nothing_sent": "Rien n'est envoyé tant que vous n'approuvez pas.",
   "needs_you.nothing_waiting": "Rien en attente.",
   "needs_you.opens_where_you_answer": "Ouvre {taf}, où vous y répondez",
-  "needs_you.over_total": "L'approuver une fois ne suffit pas : cela dépasse un total que la Card autorise sur plusieurs appels, par exemple sur une journée. Une personne qui gère les Cards du compte peut lui donner une marge supplémentaire, ou vous pouvez le refuser.",
-  "needs_you.over_total_manager": "L'approuver une fois ne suffit pas : cela dépasse un total que la Card autorise sur plusieurs appels, par exemple sur une journée. La marge supplémentaire ajoute juste ce dont cet appel a besoin, jusqu'à la remise à zéro de ce total. Ensuite, la Card redevient comme avant.",
+  "needs_you.over_total": "Cela dépasse un total de la Card, par exemple sur une journée. Une personne qui gère les Cards peut lui donner une marge supplémentaire, ou vous pouvez le refuser.",
+  "needs_you.over_total_manager": "Cela dépasse un total de la Card, par exemple sur une journée. La marge supplémentaire ne laisse passer que cet appel.",
   "needs_you.prompt.answer": "Répondre à {summary}",
   "needs_you.prompt.did_not_happen": "Indiquer que ce n'est pas arrivé : {title}",
   "needs_you.prompt.happened": "Indiquer que c'est arrivé : {title}",
@@ -75,7 +75,7 @@
   "needs_you.unsure.answer_not_taken": "Votre réponse n'a pas été acceptée. {why}",
   "needs_you.unsure.coach_not_opened": "Coach n'a pas pu s'ouvrir dessus. {why}",
   "needs_you.waiting_for_browser": "En attente de votre navigateur…",
-  "needs_you.when_taf_asks_something_outside": "Quand un taf demande quelque chose hors de sa Card, il attend votre réponse. Une alerte vous prévient aussitôt, sur cet {device} et son écran verrouillé, même si tafs est fermé.",
+  "needs_you.when_taf_asks_something_outside": "Une alerte vous parvient sur cet {device}, même si tafs est fermé.",
   "needs_you.your_step.ended": "Cette étape a déjà reçu une réponse ou a pris fin.",
   "needs_you.your_step.not_answered": "Votre réponse n'a pas abouti. {why}",
   "needs_you.your_step.not_answered_unconfirmed": "Pas de réponse envoyée : ce n'a pas été confirmé."
