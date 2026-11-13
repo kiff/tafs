@@ -288,6 +288,17 @@ export async function gatewayConnections(token: string, doFetch: Fetch = fetch, 
 }
 
 /**
+ * KIFF's words for a draft's Cards over tools a batch is about to connect: the gateway checks each connection as
+ * the batch would (its probe included), stores nothing, and has KIFF word the draft against the account's tools
+ * plus these ones. A connection the batch would refuse is refused here, in the batch's words.
+ */
+export async function previewBatchDraft(token: string, connections: unknown[], draft: unknown, doFetch: Fetch = fetch, base = KIFF_GATEWAY_API): Promise<{ card_title?: unknown; cards: unknown[] }> {
+  const out = await ask<{ card_title?: unknown; cards?: unknown }>(token, "POST", "/v1/connections/batch/preview", { connections, draft }, doFetch, base);
+  if (!Array.isArray(out.cards)) throw new KIFFError(502, "KIFF's preview sent no Cards");
+  return { ...(out.card_title === undefined ? {} : { card_title: out.card_title }), cards: out.cards };
+}
+
+/**
  * The ids of the account's Cards in force, from one read of KIFF's list. A revoked or expired Card
  * is still listed, with `active` false, so it doesn't count.
  */

@@ -3,7 +3,7 @@ import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writ
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
+import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -1747,9 +1747,10 @@ async function coachFirstStart(event: HTTPEvent, me: KIFFIdentity, deps: Deps): 
     const connect = plan.missing.length ? coachConnect(plan.missing, mcp, plan.replace, lang) : undefined;
     const body = coachCardsDraft(COACH_AGENT_ID);
     // The person signs Coach's Cards in KIFF's own words, never tafs cloud's copy: the draft alone is previewed as
-    // ever; the pair asks KIFF to word it over the tools the batch is about to declare (`declare`). A KIFF that can't
-    // yet answers with an error, and the first start then goes as before, in steps, rather than unworded.
-    const preview = await previewDraft(token, connect ? { ...body, declare: connect.body.connections } : body, deps.fetch, deps.kiffBase);
+    // ever; the pair is worded by the gateway over the tools the batch would connect, checked as the batch checks
+    // them. A KIFF that can't yet answers with an error, and the first start then goes in its steps, never unworded.
+    const preview = connect ? await previewBatchDraft(token, connect.body.connections, body, deps.fetch, deps.kiffGateway)
+      : await previewDraft(token, body, deps.fetch, deps.kiffBase);
     return {
       start: {
         state: "to_give", scheme: connect ? "kiff.requests.v1" : "kiff.request.v1", agent_id: COACH_AGENT_ID,

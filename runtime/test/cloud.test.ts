@@ -121,11 +121,17 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
     }
     if (url.endsWith("/v1/me/agent-drafts/preview")) {
       if (!byToken[token]) return new Response("{}", { status: 401 });
-      const body = JSON.parse(String(init?.body)) as { cards: Array<{ id: string }>; declare?: unknown };
-      // A KIFF that can't yet word Cards over tools a batch is about to declare.
-      if (body.declare !== undefined && (account as { declareRefused?: boolean }).declareRefused) return new Response(JSON.stringify({ error: "action taf_task is not declared" }), { status: 400 });
+      const body = JSON.parse(String(init?.body)) as { cards: Array<{ id: string }> };
       (account.previewed ??= []).push(body);
       return new Response(JSON.stringify({ agent_id: "x", label: "Coach", card_title: "Coach's Card", cards: body.cards.map((c) => ({ id: c.id, lines: [`KIFF's line for ${c.id}`] })) }), { status: 200 });
+    }
+    if (url === "https://mcp.kiff.dev/v1/connections/batch/preview") {
+      // The gateway's preview of a draft over a batch it would connect: stores nothing.
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      if ((account as { batchPreviewMissing?: boolean }).batchPreviewMissing) return new Response(JSON.stringify({ error: "not found" }), { status: 404 });
+      const body = JSON.parse(String(init?.body)) as { connections: unknown[]; draft: { cards: Array<{ id: string }> } };
+      (account.previewed ??= []).push(body);
+      return new Response(JSON.stringify({ card_title: "Coach's Card", cards: body.draft.cards.map((c) => ({ id: c.id, lines: [`KIFF's line for ${c.id}`] })) }), { status: 200 });
     }
     if (url === "https://mcp.kiff.dev/v1/connections") {
       if (!byToken[token]) return new Response("{}", { status: 401 });
@@ -1730,9 +1736,9 @@ describe("Setup (kiff/agents#91)", () => {
       // (qa-kiff on #852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
       expect(draft.card_title).toBe("Coach's Card");
       expect(draft.cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
-      expect(w.account.previewed).toEqual([{ ...draft.body, declare: connect.body.connections }]);
+      expect(w.account.previewed).toEqual([{ connections: connect.body.connections, draft: draft.body }]);
       // A KIFF that can't word them yet: no start at all, so the first start goes in its steps, never unworded.
-      (w.account as { declareRefused?: boolean }).declareRefused = true;
+      (w.account as { batchPreviewMissing?: boolean }).batchPreviewMissing = true;
       expect(await read()).toEqual({ setup: null, tools: null });
       // Nor on any error on the way: the screen still loads.
       w.account.gatewayStatus = 503;
