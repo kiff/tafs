@@ -122,7 +122,7 @@ class CoachScreenTest {
   }
 
   /** The tools and their Card under one fingerprint (`tools_and_cards`): the grant waits on its added tools, the card carries a draft. */
-  private fun showToolsAndCards(drafts: Map<String, bot.tafs.app.kiff.AgentDraft>) = rule.setShown {
+  private fun showToolsAndCards(drafts: Map<String, bot.tafs.app.kiff.AgentDraft>, signs: String = """{"card":true}""") = rule.setShown {
     // As the planque client marks a grant whose digest it checked against its request.
     val pending = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(
       """{"id":"g1","status":"pending","text":"Read your payments and refund one.","digest":"d1","request":{"server":"https://mcp.stripe.example"}}""",
@@ -133,7 +133,7 @@ class CoachScreenTest {
     )
     val s = state(null).copy(
       grants = listOf(pending), setupDrafts = drafts.mapValues { open }, planqueReady = true,
-      coachComponents = listOf(ShownComponent(t0.plusSeconds(10), "s1", "r1", connect)),
+      coachComponents = listOf(ShownComponent(t0.plusSeconds(10), "s1", "r1", connect.copy(signsRead = KiffClient.json.parseToJsonElement(signs)))),
     )
     TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(s, actions, loadCoach = {}, onBack = {}) } }
   }
@@ -143,6 +143,16 @@ class CoachScreenTest {
     // The Card's own lines, KIFF's, on the card that signs them, while the grant still waits on its tools.
     rule.onNodeWithText(Words.Card.itsCard.uppercase()).assertExists()
     rule.onNodeWithText("Up to €20 a day").assertExists()
+    rule.onNodeWithText(Words.Approval.approveWith("your fingerprint")).assertIsEnabled()
+  }
+
+  @Test fun aCardWhoseFingerprintDoesntSignTheCardSaysItComesNextAndShowsNoLimits() {
+    // tafs cloud's mark: this fingerprint connects the app, and the Card is approved after it.
+    showToolsAndCards(mapOf("dr_1" to draft), """{"card":false,"words":"Its Card: you approve it next"}""")
+    rule.onNodeWithText("Its Card: you approve it next").assertExists()
+    // Its lines show under those words, dimmed, never under the Card's own title as if signed now (as on iPhone and iPad).
+    rule.onNodeWithText("Up to €20 a day").assertExists()
+    rule.onNodeWithText(Words.Card.itsCard.uppercase()).assertDoesNotExist()
     rule.onNodeWithText(Words.Approval.approveWith("your fingerprint")).assertIsEnabled()
   }
 

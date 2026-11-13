@@ -2347,6 +2347,16 @@ class AppModel(
     say(tafId, ChatMessage.From.taf, Chat.hello(taf))
   }
 
+  /** planque's read proof for Coach's thread, signed with the device's key and no prompt; none where planque isn't set up here. */
+  private suspend fun coachReadProof(): String? {
+    val tenant = kiffTenant ?: return null
+    if (!_state.value.sessionHasKey) return null
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    return runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
+  }
+
   /** The threads being followed, by taf: one at a time each. */
   private val followers = mutableMapOf<String, kotlinx.coroutines.Job>()
 
@@ -2428,7 +2438,11 @@ class AppModel(
     }
     val thread = try {
       if (isTrialChat(tafId)) cloud.trialConversation(cloudId)
-      else cloud.conversation(cloudId, session = if (tafId == COACH_CHAT) _state.value.coachChat else null)
+      else if (tafId == COACH_CHAT) {
+        // With this phone's read proof and the steps it signs, so each approval card says whether it signs the Card (`signs`).
+        val proof = coachReadProof()
+        cloud.conversation(cloudId, session = _state.value.coachChat, proof = proof, can = if (proof != null && sessionHasApprovalKey) listOf("tools_and_cards", "key_and_cards") else emptyList())
+      } else cloud.conversation(cloudId)
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {

@@ -60,6 +60,13 @@ data class SetupTaf(
 data class SetupConnection(val done: Boolean = false, val words: String = "")
 
 /**
+ * What an approval card's one fingerprint covers, as tafs cloud decides it (`signs`, docs/secure-connection.md): [card] when
+ * it signs the Card too; else [words] say the Card comes next ("Its Card: you approve it next"), and its limits aren't drawn.
+ */
+@Serializable
+data class SetupSigns(val card: Boolean = false, val words: String? = null)
+
+/**
  * One thing Coach shows in its chat: its plan, a notice, a question, an approval, a vendor sign-in or the hand-over. A card
  * grants nothing: an approval names planque's grant and KIFF's draft, which the owner reads and signs there.
  */
@@ -105,7 +112,12 @@ data class SetupComponent(
    * its words ("Qonto is connected (read only)") and Its Card, never the connection's text again.
    */
   val connection: SetupConnection? = null,
+  /** What this card's fingerprint covers, tafs cloud's mark, read leniently: one of another shape is no mark, never a failed card. */
+  @SerialName("signs") val signsRead: kotlinx.serialization.json.JsonElement? = null,
 ) {
+  /** Whether this card's fingerprint signs the Card ([SetupSigns]); none from a tafs cloud before the mark. */
+  val signs: SetupSigns? get() = signsRead?.let { runCatching { bot.tafs.app.kiff.KiffClient.json.decodeFromJsonElement(SetupSigns.serializer(), it) }.getOrNull() }
+
   /** The hand-over's taf, when [tafValue] is one. */
   val taf: SetupTaf?
     get() = (tafValue as? kotlinx.serialization.json.JsonObject)?.let { runCatching { KiffClient.json.decodeFromJsonElement(SetupTaf.serializer(), it) }.getOrNull() }

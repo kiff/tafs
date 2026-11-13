@@ -152,14 +152,19 @@ class TafsCloud(
     ).toByteArray()
 
   /** The taf's thread. A message the app can't read as the owner's or the taf's is left out, never the thread with it. With [session], that one chat only (kiff/tafs#73). */
-  suspend fun conversation(id: String, session: String? = null): Thread =
-    thread("/v1/tafs/${escaped(id)}/conversation" + (session?.let { "/${escaped(it)}" } ?: ""))
+  suspend fun conversation(id: String, session: String? = null, proof: String? = null, can: List<String> = emptyList()): Thread =
+    thread(
+      "/v1/tafs/${escaped(id)}/conversation" + (session?.let { "/${escaped(it)}" } ?: "") + (if (can.isEmpty()) "" else "?can=" + can.joinToString(",")),
+      // Coach's thread, read with this phone's planque read proof and the steps it can sign: tafs cloud then marks each approval
+      // card with what its fingerprint covers (`signs`, docs/secure-connection.md). Without them, no mark.
+      proof?.let { mapOf("Planque-Device-Signature" to it) } ?: emptyMap(),
+    )
 
   /** The trial's chat, read as a taf's thread is. */
   suspend fun trialConversation(id: String): Thread = thread("/v1/tafs/${escaped(id)}/trial/conversation")
 
-  private suspend fun thread(path: String): Thread {
-    val wire = get<WireThread>(path)
+  private suspend fun thread(path: String, extra: Map<String, String> = emptyMap()): Thread {
+    val wire = KiffClient.json.decodeFromString<WireThread>(String(send("GET", path, extra = extra)))
     return Thread(
       messages = wire.messages.mapNotNull { m ->
         val from = when (m.from) {

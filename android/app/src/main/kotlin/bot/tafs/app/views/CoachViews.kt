@@ -406,12 +406,25 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           Text(if (details) Words.Coach.detailsOpen else Words.Coach.detailsClosed, style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).clickable { details = !details })
           if (details) Column(Modifier.approvalTerms(grant.vendor)) { terms.forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) } }
         }
-        // The Card this approval signs, KIFF's own lines (its limits, what it never does), on screen until the fingerprint: on any
-        // card that carries a draft, connected or not, so the tools and their Card under one fingerprint (`tools_and_cards`) show
-        // what they sign. Until KIFF's draft is read, it says so, and Approve waits.
+        // What this fingerprint covers is tafs cloud's to say (`signs`): the app learns the step only after the tap.
+        // - It signs the Card: KIFF's own lines (its limits, what it never does) stay on screen until the fingerprint, connected
+        //   or not, so the tools and their Card under one fingerprint (`tools_and_cards`) show what they sign. Until KIFF's
+        //   draft is read, it says so, and Approve waits.
+        // - The Card comes next: under tafs cloud's words, its lines dimmed, never under its own title as if signed now; with no
+        //   words, not drawn (as on iPhone and iPad).
+        // - No mark (a tafs cloud from before it): as before, the Card once the grant is connected.
+        val signsCard = c.signs?.card ?: (grant.connected && draft != null)
         if (c.draft != null && draft?.confirmed != true) {
-          Eyebrow(Words.Card.itsCard)
-          if (draft != null) DraftCardsView(draft) else Text(CoachWords.READING_KIFF_WORDS, style = scaled(13, color = Theme.soft))
+          when {
+            signsCard -> {
+              Eyebrow(Words.Card.itsCard)
+              if (draft != null) DraftCardsView(draft) else Text(CoachWords.READING_KIFF_WORDS, style = scaled(13, color = Theme.soft))
+            }
+            c.signs?.words?.isNotBlank() == true -> {
+              Text(c.signs!!.words!!, style = scaled(13, FontWeight.Medium, Theme.dim))
+              draft?.cardLines?.flatten()?.forEach { Text(it, style = scaled(13, color = Theme.dim.copy(alpha = 0.7f))) }
+            }
+          }
         }
         if (!grant.digestMatches) {
           Text(CoachWords.DIGEST_MISMATCH, style = scaled(13, color = Theme.no))
@@ -434,7 +447,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
               { if (needsKey) actions.openKeySheet(c, draft?.version) else actions.approve(c, grant.digest, draft?.version) },
               Modifier.weight(1f).confirms(),
               // With a profile, nothing is approved before KIFF's words for it are read and shown; with a Card, nor before its draft.
-              enabled = !busy && (!profiled || words != null) && (c.draft == null || draft != null),
+              enabled = !busy && (!profiled || words != null) && (!signsCard || draft != null),
             )
             OutlineButton(Words.Coach.Approval.decline, { actions.answer("approval", c.id, "declined") }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
           }

@@ -763,6 +763,17 @@ class PlanqueTest {
 
   private val answerRoute = "POST /v1/tafs/setup_1/components/a1/answer"
 
+  @Test fun coachsThreadIsReadWithThisPhonesProofAndTheStepsItSignsSoCardsSayWhatTheySign() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    val m = model()
+    coachWithCard(m)
+    val read = transport.requests.last { it.method == "GET" && it.url.contains("/v1/tafs/setup_1/conversation") }
+    assertTrue(read.url, read.url.endsWith("?can=tools_and_cards,key_and_cards"))
+    assertTrue(read.headers.getValue("Planque-Device-Signature").contains(",d=dev_1"))
+    assertTrue("a read asks for no fingerprint", auth.asked.isEmpty())
+  }
+
   @Test fun readingCoachsThreadReadsWhatItsApprovalsNeed() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant()}]}""")
