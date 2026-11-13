@@ -1702,6 +1702,45 @@ describe("Setup (kiff/agents#91)", () => {
     expect((await call(w, "GET", `/v1/tafs/${NEW}/conversation`, { token: "ana" })).status).toBe(200);
   });
 
+  // The owner's top complaint, too many approvals: Coach's first start asked for three fingerprints (its empty draft,
+  // its tools, then its Cards). With TAFS_COACH_START_ONE, the two requests come together, for one signature.
+  it("gives a first start the tools batch and Coach's draft with its Cards, to sign once, and the draft alone when the tools are there", async () => {
+    const w = world();
+    const mcp = "https://tafs.test/v1/mcp";
+    const read = async (token = "ana") => (await call(w, "GET", "/v1/setup", { token, headers: { host: "tafs.test" } })).body;
+    // Off: as before, nothing to sign from tafs cloud before Setup exists.
+    expect(await read()).toEqual({ setup: null, tools: null });
+    process.env.TAFS_COACH_START_ONE = "on";
+    try {
+      const first = (await read()).start;
+      expect(first).toMatchObject({ state: "to_give", scheme: "kiff.requests.v1", agent_id: "setup" });
+      expect(first.requests.map((r: { id: string }) => r.id)).toEqual(["connect", "draft"]);
+      const [connect, draft] = first.requests;
+      expect(connect).toMatchObject({ method: "POST", path: "/v1/connections/batch", gateway: true });
+      expect(connect.body.connections.map((c: { name: string }) => c.name)).toEqual(TOOLS.map((t) => t.name));
+      expect(connect.lines).toEqual(TOOLS.map((t) => t.line));
+      // The agent's own draft carries its Cards: no empty draft first, no Cards draft after.
+      expect(draft).toMatchObject({ method: "POST", path: "/v1/me/agent-drafts", body: { agent_id: "setup", label: "Coach" } });
+      expect(draft.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
+      expect(draft.body).not.toHaveProperty("no_tools");
+      expect(first.coach_tools_step.title).toBe("Give Coach its tools");
+      // Nothing previewed: KIFF refuses a Card over an action no tool declares yet, so the phone sends the batch first.
+      expect(w.account.previewed ?? []).toEqual([]);
+      // Tools already there (or the batch went in and the draft was refused): the draft alone, one fresh fingerprint.
+      w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
+      const retry = (await read()).start;
+      expect(retry).toMatchObject({ state: "to_give", scheme: "kiff.request.v1" });
+      expect(retry.requests.map((r: { id: string }) => r.id)).toEqual(["draft"]);
+      // Someone who can't start Setup gets nothing to sign.
+      expect((await read("viewer")).start).toBeUndefined();
+      // Once Setup is claimed as before, the first start is over.
+      await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
+      expect((await read()).start).toBeUndefined();
+    } finally {
+      delete process.env.TAFS_COACH_START_ONE;
+    }
+  });
+
   it("says what giving Coach its tools still needs, from KIFF", async () => {
     const w = world();
     await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
