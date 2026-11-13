@@ -4691,6 +4691,41 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect((await home()).setting_up).toEqual([]);
   });
 
+  // Android 80, 13 Nov: the phone revoked the Card, then asked to discard, and KIFF's read still showed the Card in force for a
+  // moment: the discard refused, the row left Home (no Card in force) and the chat stayed paused. It reads KIFF again first.
+  it("discards once KIFF's read catches up with the revoke the phone just made", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up", { requester: { kind: "member", id: "u_ana" } });
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "PAUSED", requirements: [{ call_id: "c", tool: "show", operation: "", expires: "2026-11-05T12:00:00Z", kind: "card",
+      input: { type: "result", id: "c", text: "Ready.", taf: { agent: "refunds-x", name: "Refunds", draft: "drf_s1", kickoff: "Work the queue." } } }] });
+    const card = { id: "card_refunds-x", subject: "refunds-x", active: true, grants: [{ action: "lookup" }], aggregates: [] };
+    w.account.mandates = [card];
+    // The revoke lands while the discard waits to read again.
+    let waits = 0;
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now), sleep: async () => { waits++; w.account.mandates = [{ ...card, revoked_at: "2026-11-13T19:46:47Z" }]; } };
+    const r = await handle({ rawPath: "/v1/home/setting-up/refunds-x/discard", requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana" } }, deps);
+    expect(r.statusCode).toBe(200);
+    expect(JSON.parse(r.body)).toEqual({ discarded: true, kiff_agent: "refunds-x" });
+    expect(waits).toBe(1);
+    expect(w.agents.calls).toContain(`cancelRun ${COACH} ${run.id}`);
+    // A Card really still in force is still refused after the reads again: the test before (its 409 cards_in_force).
+    // A chat that moved on before the discard (kiff/agents answers 409 to the cancel): it no longer waits, so that's done too.
+    const w2 = world();
+    w2.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w2.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w2.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const run2 = await w2.agents.api.startRun("t_acme", COACH, "Set up", { requester: { kind: "member", id: "u_ana" } });
+    Object.assign(w2.agents.runs.find((x) => x.id === run2.id)!, { status: "PAUSED", requirements: [{ call_id: "c", tool: "show", operation: "", expires: "2026-11-05T12:00:00Z", kind: "card",
+      input: { type: "result", id: "c", text: "Ready.", taf: { agent: "refunds-x", name: "Refunds", draft: "drf_s1", kickoff: "Work the queue." } } }] });
+    w2.account.mandates = [{ ...card, revoked_at: "2026-11-13T19:46:47Z" }];
+    w2.agents.api.cancelRun = async () => { throw new AgentsError(409, "kiff/agents answered 409"); };
+    const moved = await handle({ rawPath: "/v1/home/setting-up/refunds-x/discard", requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana" } }, { ...depsOf(w2), coach: memoryCoach(() => w2.now) });
+    expect(moved.statusCode).toBe(200);
+  });
+
   // The guards that keep a live taf from ever being discarded (qa-kiff on #905): a handed-over taf's claimed draft, and an
   // improvement's result, are no taf being set up.
   it("never discards a taf that was handed over, nor an improvement", async () => {

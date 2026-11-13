@@ -1,0 +1,1 @@
+- Discarding a taf being set up goes through when the phone has just revoked its Card: tafs cloud reads KIFF again before saying a Card is still in force, and a chat that already moved on counts as ended.
