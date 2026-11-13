@@ -1404,6 +1404,60 @@ describe("the home list", () => {
   });
 });
 
+describe("Connect apps' rows", () => {
+  // The owner's reference (13 Nov): connected apps first with a ✓, how each connects, whose it is, which tafs use
+  // it, the same fields on both apps.
+  const read = async (w: World, token: string, lang = "en", connections: () => Response = () => new Response(JSON.stringify({ connections: [
+    { agent: "rae", vendor: "Stripe", kind: "vendor_sign_in", server: "https://mcp.stripe.com", status: "connected" },
+    { agent: "rae", vendor: "Gmail", kind: "provider", entry: "connector:p:gmail", status: "connected" },
+    { agent: "not-a-taf", vendor: "Gmail", kind: "provider", entry: "connector:p:gmail", status: "connected" },
+  ] }), { status: 200 })) => {
+    const r = await handle({ rawPath: "/v1/connect/apps", requestContext: { http: { method: "GET" } }, headers: { Authorization: `Bearer ${token}`, "accept-language": lang } },
+      { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+        if (url.startsWith("https://planque.test/v1/accounts/t_acme/catalog")) return new Response(JSON.stringify({ entries: [
+          { entry: "connector:p:typeform", vendor: "Typeform", title: "Typeform", how: "oauth", state: "available" },
+          { entry: "stripe@3", vendor: "Stripe", title: "Stripe", how: "oauth", state: "connected", grant: "g1" },
+          { entry: "connector:p:gmail", vendor: "Gmail", title: "Gmail", how: "oauth", state: "needs_reconnect", grant: "g2" },
+          { entry: "qonto@2", vendor: "Qonto", title: "Qonto", how: "key", state: "available" },
+        ] }), { status: 200 });
+        if (url === "https://planque.test/v1/accounts/t_acme/connections") return connections();
+        if (url.startsWith("https://planque.test/")) return new Response("{}", { status: 500 });
+        return depsOf(w).fetch!(url, init);
+      }) as Deps["fetch"] });
+    return { status: r.statusCode, body: JSON.parse(r.body) as { apps: Array<Record<string, unknown>> } };
+  };
+
+  it("say whether each app is connected, how it connects, whose it is and which tafs use it, connected first", async () => {
+    const w = world();
+    const { status, body } = await read(w, "ana_co");
+    expect(status).toBe(200);
+    expect(body.apps.map((a) => a.title)).toEqual(["Gmail", "Stripe", "Typeform", "Qonto"]);
+    const by = (t: string) => body.apps.find((a) => a.title === t)!;
+    expect(by("Stripe")).toMatchObject({ connected: true, method: "sign_in", whose: "Company", used_by: [{ taf: RAE, name: expect.any(String) }], line: expect.stringMatching(/^Sign in · Connected · Used by /) });
+    // Signed in once, to sign in again: the account's own, used by the taf whose agent holds it, and never an agent that's no taf.
+    expect(by("Gmail")).toMatchObject({ connected: false, method: "sign_in", whose: "Company", line: expect.stringMatching(/^Sign in · Sign in again · Used by /) });
+    expect(by("Gmail").used_by).toHaveLength(1);
+    // Not connected: no owner and no tafs, only how it would connect.
+    expect(by("Qonto")).toEqual(expect.objectContaining({ connected: false, method: "key", line: "With a key · Not connected" }));
+    expect(by("Qonto")).not.toHaveProperty("whose");
+    expect(by("Qonto")).not.toHaveProperty("used_by");
+    // A personal account's connections are the person's own, in their language.
+    const mine = await read(w, "ana_me", "fr-FR");
+    expect(mine.body.apps.find((a) => a.title === "Stripe")).toMatchObject({ whose: "À vous", line: expect.stringMatching(/^Connexion · Connecté · Utilisée par /) });
+    // The same words as the apps' own keys (tafs#899), so the phone's row and the iPad's table read alike (qa-kiff on #900).
+    const pl = await read(w, "ana_co", "pl-PL");
+    expect(pl.body.apps.find((a) => a.title === "Stripe")!.line).toMatch(/^Logowanie · Połączono · Używa jej /);
+  });
+
+  it("leave used_by out, never empty, when the account's connections can't be read", async () => {
+    const w = world();
+    const { body } = await read(w, "ana_co", "en", () => new Response("{}", { status: 500 }));
+    const stripe = body.apps.find((a) => a.title === "Stripe")!;
+    expect(stripe).not.toHaveProperty("used_by");
+    expect(stripe).toMatchObject({ connected: true, whose: "Company", line: "Sign in · Connected" });
+  });
+});
+
 describe("Connect apps' removed tafs", () => {
   // "Removed" comes from KIFF: removing a taf archives its KIFF agent. Never from a taf missing from
   // someone's list, so a live taf, one still being removed, Setup, or an agent KIFF hasn't archived is

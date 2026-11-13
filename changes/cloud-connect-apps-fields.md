@@ -1,0 +1,1 @@
+- Connect apps sends, for every app, whether it's connected, how it connects, whose it is, which tafs use it, and its row's second line in the person's language, so both apps draw the same row.

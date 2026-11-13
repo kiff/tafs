@@ -46,6 +46,8 @@ export class Steps {
   private connections = new Map<string, string>(); // call id → its vendor ("" unknown), for each connection call
   private requests = new Set<string>(); // call ids of connection requests, to tell a connected app from a read
   private targets = new Map<string, string>(); // call id → what it connects (the request's server or description, or the grant)
+  private planqueCalls = new Set<string>(); // call ids of connection calls whose answer may name a grant's app
+  private apps = new Map<string, string>(); // grant id → the app's name as planque answered it ("Google Sheets")
 
   constructor(private readonly titles: ToolTitles = new Map(), private readonly lang: Lang = "en") {}
 
@@ -62,6 +64,7 @@ export class Steps {
       case "memory": return w.doing_memory;
       case "workspace": return w.doing_workspace;
       case "planque": {
+        if (callID) this.planqueCalls.add(callID);
         const grant = typeof i.grant === "string" ? this.vendors.get(i.grant) ?? "" : "";
         const api = i.api && typeof i.api === "object" ? (i.api as { url?: unknown }).url : undefined;
         if (callID) this.connections.set(callID, i.action === "request" ? vendorName(i.server ?? api) : grant);
@@ -133,9 +136,21 @@ export class Steps {
     return { vendor: this.connections.get(callID) ?? "", ...(key ? { key } : {}) };
   }
 
+  /**
+   * The app a grant connects, as the person knows it ("Google Sheets"): planque's name for it in its answer to
+   * a connection call of this run. Undefined when no answer named it.
+   */
+  appOf(grant: unknown): string | undefined {
+    return typeof grant === "string" ? this.apps.get(grant) : undefined;
+  }
+
   /** A call's result: a request's grant id, so later steps on that grant name its vendor. */
   result(callID: unknown, text: unknown): void {
     if (typeof callID !== "string" || typeof text !== "string") return;
+    if (this.planqueCalls.delete(callID)) {
+      const app = appNamed(text);
+      if (app) this.apps.set(app.grant, app.name);
+    }
     const vendor = this.asked.get(callID);
     if (vendor === undefined) return;
     this.asked.delete(callID);
@@ -280,4 +295,34 @@ export function attachWhys<T extends { tool: string; error?: true }>(steps: T[],
 export function takeRefused<T extends { refused?: Refused }>(steps: T[]): { steps: Array<Omit<T, "refused">>; refused?: Refused } {
   const refused = steps.map((s) => s.refused).filter((r): r is Refused => r !== undefined).at(-1);
   return { steps: steps.map(({ refused: _r, ...s }) => s), ...(refused ? { refused } : {}) };
+}
+
+/**
+ * The grant and the app's name planque's answer gives (its grant view: `{id: "grt_…", vendor: "Google Sheets"}`,
+ * or `{grant: {…}}`), from the answer's text. Undefined when it names no single grant with a vendor (a list, or
+ * none), or when its vendor is a host rather than a name.
+ */
+export function appNamed(text: string): { grant: string; name: string } | undefined {
+  let v: unknown;
+  try { v = JSON.parse(text); } catch { return undefined; }
+  const g = (v && typeof v === "object" && "grant" in v && typeof (v as { grant: unknown }).grant === "object" ? (v as { grant: unknown }).grant : v) as { id?: unknown; vendor?: unknown } | null;
+  if (!g || typeof g.id !== "string" || !/^grt_[A-Za-z0-9_-]{6,64}$/.test(g.id) || typeof g.vendor !== "string") return undefined;
+  const name = g.vendor.replace(/\s+/g, " ").trim().slice(0, 60);
+  return plainName(name) ? { grant: g.id, name } : undefined;
+}
+
+/** A name a person reads ("Google Sheets", "Stripe"), never a host or a link: no "." and no "/". */
+function plainName(s: string): boolean {
+  return s !== "" && !s.includes(".") && !s.includes("/");
+}
+
+/**
+ * What a sign-in card names, for "Sign in to {app}": the app as planque named it in this run, else Coach's
+ * `service` when it's a plain name. Never a host, whichever service a sign-in goes through: a link's host can be
+ * the service in between rather than the app. Undefined then, and the apps say "the vendor".
+ */
+export function signInApp(service: unknown, app?: string): string | undefined {
+  if (app && plainName(app)) return app;
+  const s = typeof service === "string" ? service.trim() : "";
+  return plainName(s) ? s : undefined;
 }
