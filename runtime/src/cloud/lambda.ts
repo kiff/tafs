@@ -686,11 +686,12 @@ interface UpgradeEvent {
 
 /** The deletion sweep, invoked by its schedule: every deletion not finished, and every hand-over a server error left undone, tried again. */
 interface SweepEvent {
-  sweep: "deletions";
+  /** "deletions": the 5-minute sweep, everything below. "consent": the consent sweep alone, which a deploy runs once (infra/aws.sh). */
+  sweep: "deletions" | "consent";
 }
 
 function isSweep(event: unknown): event is SweepEvent {
-  return typeof event === "object" && event !== null && !("requestContext" in event) && (event as { sweep?: unknown }).sweep === "deletions";
+  return typeof event === "object" && event !== null && !("requestContext" in event) && ["deletions", "consent"].includes((event as { sweep?: unknown }).sweep as string);
 }
 
 function isUpgrade(event: unknown): event is UpgradeEvent {
@@ -698,6 +699,8 @@ function isUpgrade(event: unknown): event is UpgradeEvent {
 }
 
 export async function handler(event: HTTPEvent | UpgradeEvent | SweepEvent): Promise<HTTPResult | { upgraded: UpgradeOutcome[] } | { swept: unknown[]; handovers?: unknown[]; replies?: unknown[]; deliveries?: unknown[]; failing?: unknown[]; health?: unknown[]; held?: unknown[]; late?: unknown[]; your_steps?: unknown[]; consent?: unknown[] }> {
+  // Once at deploy, before any schedule fires: every taf whose runs have no consent is paused at once (consent.ts).
+  if (isSweep(event) && event.sweep === "consent") return { swept: [], consent: await sweepConsent(deps()) };
   if (isSweep(event)) {
     // The same schedule retries Coach's hand-overs a server error left undone, and door replies a provider didn't take,
     // and says once a taf whose scheduled runs keep failing to start.

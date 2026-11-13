@@ -102,7 +102,7 @@ to 30 days ([data.md](data.md)). The screen asks for **Allow**, or **Not now**.
     credits, and is said unanswered after 48 hours. A hand-off and a retry wait for their sweep; a run waiting
     after KIFF's alert stays paused; Coach is told the taf is paused.
   - **Back:** a yes, or a take-over, resumes the taf at once, and what waited starts. The consent sweep does the
-    same for every account, every 5 minutes, so a withdrawal or new words pause a taf whose schedule would
+    same for every account, once at each deploy (`infra/aws.sh`, `{"sweep":"consent"}`) and every 5 minutes after, so a withdrawal or new words pause a taf whose schedule would
     otherwise fire. A yes never turns on the schedule of a taf its owner paused, and the owner's resume is refused
     (409) while the consent is missing. An app's event answering a run that waits on it is gated too: refused,
     the event is kept, as when nothing waits yet.
