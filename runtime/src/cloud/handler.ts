@@ -33,7 +33,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { accountConnections, connectionLines, endConnections, withConnections } from "./connections.js";
+import { type AppGuide, accountConnections, connectionLines, endConnections, heldGuides, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
@@ -3697,14 +3697,14 @@ async function coachStart(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, e
     }
   }
   const entry = entryOf(text);
-  const [state, lines, live] = await Promise.all([coachStartState(me, event, deps), entry === "door" ? [] : startConnections(me, event, deps),
+  const [state, held, live] = await Promise.all([coachStartState(me, event, deps), entry === "door" ? { lines: [], guides: [] } : startConnections(me, event, deps),
     // The skills at the versions Coach's live definition names: kiff/agents loads no other (asNamed).
     deps.agents.getAgent(me.tenantID, taf.id).catch(() => undefined),
     // Beside the start's reads, never after them: a chat's first words wait on none of it (qa-kiff on #574).
     me.companyName ? keepCompany(me.tenantID, me.companyName, deps) : undefined, keepLanguage(me.tenantID, lang, deps)]);
   const skills = asNamed(startSkills(entry, state), live?.skills);
   if (skills.length) at.skills = skills;
-  return withConnections(text, lines, me.companyName);
+  return withConnections(text, held.lines, me.companyName, held.guides);
 }
 
 /** How long tafs cloud keeps an account's company name, read from KIFF with a person's session: a quarter. */
@@ -3773,8 +3773,8 @@ async function liveChatOf(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<strin
  * may see as home lists them, read with their own session. Best effort: what can't be read is left out, and
  * Coach reads planque's grants itself.
  */
-async function startConnections(me: KIFFIdentity, event: HTTPEvent, deps: Deps): Promise<string[]> {
-  if (!deps.planqueBase) return [];
+async function startConnections(me: KIFFIdentity, event: HTTPEvent, deps: Deps): Promise<{ lines: string[]; guides: AppGuide[] }> {
+  if (!deps.planqueBase) return { lines: [], guides: [] };
   try {
     const token = bearer(event);
     const [conns, records, access] = await Promise.all([
@@ -3782,10 +3782,12 @@ async function startConnections(me: KIFFIdentity, event: HTTPEvent, deps: Deps):
       deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase),
     ]);
     const tafs = new Map(records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent)).map((t) => [t.kiffAgent, t.name]));
-    return connectionLines(conns, tafs);
+    // The guides of the apps those tafs hold, the most used first: Coach has read them before it offers a job with one.
+    const guides = await heldGuides(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token, conns, tafs).catch(() => []);
+    return { lines: connectionLines(conns, tafs), guides };
   } catch (err) {
     console.error(`coach connections for ${me.tenantID}:`, err);
-    return [];
+    return { lines: [], guides: [] };
   }
 }
 
@@ -7672,10 +7674,16 @@ export function cardNeverApproved(name: string | undefined): string {
   return `The Card for ${taf} was never approved, so ${taf} isn't set up yet: approve its Card to finish`;
 }
 
-/** Whether this result has waited HANDOVER_CARD_WAIT_MS for its Card since its first try, which this notes. */
-async function waitedForCard(tenant: string, run: string, card: string, deps: Deps): Promise<boolean> {
+/**
+ * Whether this result has waited HANDOVER_CARD_WAIT_MS for its Card: counted from the run's pause on it (its last
+ * change, as kiff/agents keeps it), so a result already waiting is answered at its first try after this; else from
+ * its first try, which this notes.
+ */
+async function waitedForCard(tenant: string, r: Run, card: string, deps: Deps): Promise<boolean> {
   const now = deps.now?.() ?? new Date();
-  const key = `handover-card#${tenant}#${run}#${card}`;
+  const paused = Date.parse(r.updated);
+  if (Number.isFinite(paused) && now.getTime() - paused >= HANDOVER_CARD_WAIT_MS) return true;
+  const key = `handover-card#${tenant}#${r.id}#${card}`;
   const first = await deps.coach!.get(key).catch(() => undefined);
   if (typeof first !== "string") {
     await deps.coach!.put(key, now.toISOString(), new Date(now.getTime() + HANDOVER_KEPT_MS)).catch(() => undefined);
@@ -7720,6 +7728,8 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
     const held = `handover#${tenant}#${r.id}#${card.id}`;
     if (!(await deps.coach.once(held, new Date((deps.now?.() ?? new Date()).getTime() + HANDOVER_HELD_MS)))) continue;
     took = true;
+    // Every try is said, so a result that waits is never silent (13 Nov).
+    console.log(JSON.stringify({ event: "handover_try", run: r.id, card: card.id, draft: card.taf.draft ?? null }));
     // The result's tools, as KIFF names them: what a disclosure may name (kiff/tafs#476, agentgabo on #572).
     const tools = Array.isArray(card.tools) ? card.tools.filter((t): t is string => typeof t === "string") : undefined;
     const make = card.taf.improves ? improvedVersionFor(tenant, coach.id, r, card.id, { ...card.taf as ImprovedTaf, ...(tools ? { tools } : {}) }, tafs, deps) : newTafFor(tenant, coach.id, r, { ...card.taf, ...(tools ? { tools } : {}) }, tafs, deps);
@@ -7728,7 +7738,7 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
       // But not for ever, and never unsaid: past HANDOVER_CARD_WAIT_MS from the first try, nothing is asking
       // for that Card, so the result is answered in plain words and Coach asks for it.
       if (err instanceof CardNotApproved) {
-        if (await waitedForCard(tenant, r.id, card.id!, deps)) return { failed: cardNeverApproved(card.taf?.name) };
+        if (await waitedForCard(tenant, r, card.id!, deps)) return { failed: cardNeverApproved(card.taf?.name) };
         console.warn(`handover ${r.id} ${card.id}: waiting for the Card's approval (draft ${card.taf?.draft ?? "none"})`);
       } else console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);
       // Not told: it may still pass. The hold goes, and the sweep tries again.
@@ -8169,12 +8179,23 @@ const HANDOVERS_PENDING = "handovers#pending";
 /** How long a hand-over is retried before the card is left to Coach's own wait. */
 const HANDOVER_KEPT_MS = 7 * 24 * 3600_000;
 
-interface PendingHandOver { tenant: string; agent: string; run: string; tries: number; tried: string }
+interface PendingHandOver { tenant: string; agent: string; run: string; tries: number; tried: string; since?: string }
+
+/** How often the sweep tries a waiting hand-over in its first hour; after it, on the deletions' backoff. */
+const HANDOVER_RETRY_MS = 5 * 60_000;
+const HANDOVER_FIRST_HOUR_MS = 3600_000;
+
+/** How long the sweep waits before trying this hand-over again. */
+function handOverWait(p: PendingHandOver, now: Date): number {
+  const since = Date.parse(p.since ?? p.tried);
+  return Number.isFinite(since) && now.getTime() - since < HANDOVER_FIRST_HOUR_MS ? HANDOVER_RETRY_MS : backoffMs(p.tries);
+}
 
 /** handOver, and when a server error left some undone, kept for the sweep. */
 async function handOverOrKeep(tenant: string, agent: string, run: string, deps: Deps): Promise<boolean> {
   const { took, pending } = await handOver(tenant, agent, run, deps);
-  if (pending) await keepHandOver({ tenant, agent, run, tries: 0, tried: (deps.now?.() ?? new Date()).toISOString() }, deps);
+  const at = (deps.now?.() ?? new Date()).toISOString();
+  if (pending) await keepHandOver({ tenant, agent, run, tries: 0, tried: at, since: at }, deps);
   return took;
 }
 
@@ -8198,7 +8219,7 @@ export async function sweepHandOvers(deps: Deps): Promise<Array<{ run: string; p
     const key = `${p.tenant}#${p.run}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    if (now.getTime() - Date.parse(p.tried) < backoffMs(p.tries) && p.tries > 0) {
+    if (p.tries > 0 && now.getTime() - Date.parse(p.tried) < handOverWait(p, now)) {
       await keepHandOver(p, deps);
       continue;
     }
@@ -8206,7 +8227,8 @@ export async function sweepHandOvers(deps: Deps): Promise<Array<{ run: string; p
       console.error(`handover sweep ${p.run}: ${(err as Error).message}`);
       return { took: false, pending: true };
     });
-    if (pending) await keepHandOver({ ...p, tries: p.tries + 1, tried: now.toISOString() }, deps);
+    if (pending) await keepHandOver({ ...p, tries: p.tries + 1, tried: now.toISOString(), since: p.since ?? p.tried }, deps);
+    console.log(JSON.stringify({ event: "handover_sweep", run: p.run, tries: p.tries + 1, pending }));
     out.push({ run: p.run, pending });
   }
   return out;

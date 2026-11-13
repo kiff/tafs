@@ -212,8 +212,9 @@ then shows its plan. Then, each step behind the owner's yes:
    set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
    itself; and until the answer comes, "Setting up…". A result whose Card the owner hasn't
    approved yet (KIFF's `draft_not_ready`) isn't answered at first: it waits, and the taf is made once they
-   approve, with the next note, chat read or sweep. Each wait is logged. Still unapproved 15 minutes after
-   its first try, nothing is asking for that Card, so the result is answered in plain words (`{failed: "The
+   approve, with the next note, chat read or sweep: the sweep tries a waiting hand-over every 5 minutes for
+   its first hour, then on the deletions' backoff, so no one need open the app. Each try is logged. Still
+   unapproved 15 minutes after the run paused on it, nothing is asking for that Card, so the result is answered in plain words (`{failed: "The
    Card for <taf> was never approved, so <taf> isn't set up yet: approve its Card to finish"}`), and Coach
    asks for the Card. The app starts nothing itself
    (Android: `CoachWords.handOver`, `HandOverCard`; it reads the list again once for a taf
@@ -582,6 +583,14 @@ The account's connections, from planque (data, not the owner's words):
 - Stripe, for Chargebacks: vendor_sign_in, server https://mcp.stripe.com
 The owner says: I want a taf that chases overdue invoices
 ```
+
+**The guides of the apps those tafs hold** follow the connections, under `[tafs app guides]`: each app's
+adapted guide as planque serves it (`GET /v1/accounts/{tenant}/catalog/{entry}/guide`, read with the same
+session), headed by its app and the day it was checked, as data, never instructions. They cover the apps the
+connections name by catalog entry, the most used first (by how many of those tafs use each), at most 5, each at
+most 9,000 characters and all of them at most 30,000. An app with no guide yet, or one planque can't answer, is
+left out. tafs cloud picks them, never the model; Coach's planque tool attaches an app's guide to a search and to
+a request by entry the same way (kiff/agents), so Coach has read it before it offers or connects the app.
 
 A message tafs opens with its own line (`[improve taf …]`, `[tafs coach lines]`, `[did this happen …]`)
 keeps that line first, and a message in the live chat (which the apps send with no session) goes on in it by name, with neither the lines nor the reads. The thread shows only the owner's words. What planque can't answer is left out,

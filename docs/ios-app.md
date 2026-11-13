@@ -369,8 +369,11 @@ the app in sample mode.
   - If it doesn't finish, the card's note says why on the sheet, and the key is never given by itself after that.
   **Tools added to a connected app and the Card over them under one Face ID** (`AppModel.approveToolsAndCard`), from
   Approve on Coach's card when it carries the taf's Card as a draft:
-  - The phone tells tafs cloud it can sign the step (`can: ["tools_and_cards"]`). tafs cloud asks for it only when
-    it's on there and the app is already connected; otherwise it answers as before, a step at a time.
+  - The phone tells tafs cloud it can sign the step (`can: ["tools_and_cards"]`) only for a Card the card drew
+    (`cardDrawn`): the draft read, with at least one of its Cards' lines (limits and all) on the card, at the version shown. tafs cloud
+    asks for it only when it's on there and the app is already connected; otherwise it answers as before, a step
+    at a time. Approve waits until a card's Card is read, so what's signed is on screen, and it stays there until
+    the fingerprint.
   - The phone checks the ask is this card's (`toolsAndCardIsThisCards`): its grant, planque's approve body exactly as
     this phone builds it for the digest shown (with KIFF's words for its profile), its draft and the version shown.
     Anything else is refused and nothing is signed.
