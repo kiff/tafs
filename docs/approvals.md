@@ -200,15 +200,18 @@ Approving needs the approval key, and the approval key needs a fingerprint or fa
 counts as strong. The app asks the phone where it stands and says so before an approval is
 needed, never only at a prompt that fails.
 
-- **The states,** each in its own words (`ApprovalReadiness`, `ApprovalWords` on Android):
-  - set up: approvals work;
-  - none enrolled: "No fingerprint is set up on this phone. Add one in its settings, then come
-    back.", with **Open settings**, which on Android opens the phone's own screen to add one
-    (`ACTION_BIOMETRIC_ENROLL`, asking for a strong biometric; its security settings where
-    that screen isn't there);
-  - temporarily unavailable (the sensor locked after tries, busy, an update pending): wait a
-    moment, or unlock the phone once, then **Check again**;
-  - unsupported (no strong biometric at all): approve from another supported device.
+- **The states,** each in one line where the approval would be (`ApprovalReadiness`,
+  `ApprovalWords.cantApprove` on Android):
+  - set up: approvals work, and nothing stands in the button's place;
+  - none enrolled: "Approving needs a fingerprint on this phone.", with **Open settings**, which
+    on Android opens the phone's own screen to add one (`ACTION_BIOMETRIC_ENROLL`, asking for a
+    strong biometric; its security settings where that screen isn't there), and **Check again**;
+  - temporarily unavailable (the sensor locked after tries, busy, an update pending): try again
+    in a moment, with **Check again**;
+  - unsupported (no strong biometric at all): approve from another supported device, with
+    neither button.
+- **No screen of its own on Android** (1.20): the states show where they're needed, at Coach's
+  Start and at each approval, never as a step before sign-in.
 - **Sign-in never waits on it** (Android 1.20). Without approvals the person can still sign in,
   review, refuse and halt.
 - **At Coach's Start, approvals are set up:** while the phone can't approve, it says "Setting up

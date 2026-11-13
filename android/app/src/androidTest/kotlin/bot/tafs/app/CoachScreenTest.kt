@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
@@ -18,6 +19,8 @@ import bot.tafs.app.kiff.CardAnswer
 import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.SetupComponent
 import bot.tafs.app.kiff.ShownComponent
+import bot.tafs.app.model.ApprovalReadiness
+import bot.tafs.app.model.ApprovalWords
 import bot.tafs.app.model.ChatMessage
 import bot.tafs.app.model.LiveAnswer
 import bot.tafs.app.model.LiveState
@@ -25,6 +28,7 @@ import bot.tafs.app.views.CoachActions
 import bot.tafs.app.views.CoachScreen
 import bot.tafs.app.views.ConnectionActions
 import bot.tafs.app.views.DoorActions
+import bot.tafs.app.views.LocalApprovalReadiness
 import bot.tafs.app.views.TafActions
 import java.time.Instant
 import org.junit.Rule
@@ -96,6 +100,34 @@ class CoachScreenTest {
     val seconds = InstrumentationRegistry.getArguments().getString("hold")?.toLongOrNull() ?: return
     rule.waitForIdle()
     Thread.sleep(seconds * 1000)
+  }
+
+  /** Coach not started, on a phone with no fingerprint yet: Start says Coach needs approvals and what to do, never a button that would fail. */
+  private fun notStarted(readiness: ApprovalReadiness) = rule.setShown {
+    TafsTheme {
+      CompositionLocalProvider(LocalBiometry provides "your fingerprint", LocalApprovalReadiness provides readiness) {
+        CoachScreen(
+          AppState(mode = Mode.kiff, ready = true, kiffAccount = Account("t_01", "acme", capabilities = listOf("members.manage")), coachChecked = true),
+          actions, loadCoach = {}, onBack = {},
+        )
+      }
+    }
+  }
+
+  @Test fun beforeTheFirstTafAPhoneWithNoFingerprintSaysCoachNeedsApprovals() {
+    notStarted(ApprovalReadiness.NoneEnrolled)
+    rule.onNodeWithText(ApprovalWords.FIRST_TAF).assertIsDisplayed()
+    rule.onNodeWithText(ApprovalWords.cantApprove(ApprovalReadiness.NoneEnrolled)).assertIsDisplayed()
+    rule.onNodeWithText(ApprovalWords.OPEN_SETTINGS).assertIsDisplayed()
+    rule.onNodeWithText(ApprovalWords.CHECK_AGAIN).assertIsDisplayed()
+  }
+
+  @Test fun beforeTheFirstTafAPhoneThatCantApproveSaysAnotherDevice() {
+    notStarted(ApprovalReadiness.Unsupported)
+    rule.onNodeWithText(ApprovalWords.FIRST_TAF).assertIsDisplayed()
+    rule.onNodeWithText(ApprovalWords.cantApprove(ApprovalReadiness.Unsupported)).assertIsDisplayed()
+    assertEquals(0, rule.onAllNodesWithText(ApprovalWords.OPEN_SETTINGS).fetchSemanticsNodes().size)
+    assertEquals(0, rule.onAllNodesWithText(ApprovalWords.CHECK_AGAIN).fetchSemanticsNodes().size)
   }
 
   @Test fun theHeaderIsOneRowAndThePlanIsTafsCloudsLine() {

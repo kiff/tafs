@@ -1,25 +1,18 @@
 package bot.tafs.app.views
 
-import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -29,9 +22,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.Mode
-import bot.tafs.app.design.OutlineButton
-import bot.tafs.app.design.Panel
-import bot.tafs.app.design.PrimaryButton
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.model.ApprovalReadiness
@@ -66,36 +56,6 @@ fun openApprovalSettings(context: Context) {
     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
   runCatching { context.startActivity(enroll) }.onFailure {
     runCatching { context.startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-  }
-}
-
-/**
- * Set up approvals on this device (docs/approvals.md): why, where this phone stands in its own words, and what to do. Before
- * sign-in it offers [onContinue] (sign in without approvals); before the first taf it says Coach needs them.
- */
-@Composable
-fun ApprovalsSetupScreen(readiness: ApprovalReadiness, firstTaf: Boolean = false, onCheckAgain: () -> Unit, onContinue: (() -> Unit)?) {
-  val context = LocalContext.current
-  Column(
-    Modifier.fillMaxSize().background(Theme.background).statusBarsPadding().navigationBarsPadding()
-      .verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 24.dp),
-    verticalArrangement = Arrangement.spacedBy(14.dp),
-  ) {
-    Text(ApprovalWords.TITLE, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-    if (firstTaf) Text(ApprovalWords.FIRST_TAF, style = scaled(16, color = Theme.ink))
-    Text(ApprovalWords.WHY, style = scaled(15, color = Theme.soft))
-    Panel {
-      Text(ApprovalWords.state(readiness), style = scaled(16, FontWeight.SemiBold, if (readiness == ApprovalReadiness.Ready) Theme.ok else Theme.amberText))
-    }
-    Text(ApprovalWords.NEW_FINGERPRINT, style = scaled(13, color = Theme.dim))
-    if (readiness == ApprovalReadiness.NoneEnrolled) PrimaryButton(ApprovalWords.OPEN_SETTINGS, { openApprovalSettings(context) })
-    if (readiness != ApprovalReadiness.Ready && readiness != ApprovalReadiness.Unsupported) {
-      OutlineButton(ApprovalWords.CHECK_AGAIN, onCheckAgain, Modifier.fillMaxWidth())
-    }
-    onContinue?.let {
-      Text(ApprovalWords.WITHOUT_ALLOWS, style = scaled(13, color = Theme.dim))
-      OutlineButton(if (readiness == ApprovalReadiness.Ready) Words.Common.`continue` else ApprovalWords.CONTINUE_WITHOUT, it, Modifier.fillMaxWidth(), color = Theme.soft)
-    }
   }
 }
 
