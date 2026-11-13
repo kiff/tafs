@@ -103,3 +103,14 @@ phone. It was a €50 refund, over a €20 call limit, against Stripe in test mo
   target registered, the answer reached the run when the hold's 10 minutes
   were up. With the app's push registration, the run goes on when KIFF's
   signed alert arrives, not at the hold's end.
+
+## An agent harness and a taf
+
+| | A good agent harness | A taf |
+|---|---|---|
+| Where the rules live | Rules in the harness, on the machine it runs on | A Card, checked by a separate service before every call |
+| Your sign-ins | Tools reach whatever the account running them can read | Sign-ins sit in a separate vault the agent never holds |
+| What a rule can say | A rule allows or denies a tool | A Card limits how much, how often, and until when |
+| Approvals | You approve in the session that's running | You approve on your phone, signed, for that exact call, once |
+| The record | A transcript on the same machine | A signed receipt your phone checks |
+| Stopping | Stop the process | One tap halts it in every system it works through |
