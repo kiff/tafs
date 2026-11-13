@@ -1861,9 +1861,10 @@ function validZone(zone: string): boolean {
 }
 
 /** Coach's start in words: one line, the button, and what it does (approvals and Coach's tools, one face or fingerprint). */
-function startWords(lang: Lang): { lead: string; start: string; does: string } {
+function startWords(lang: Lang): { lead: string; start: string } {
   const w = wordsIn(lang);
-  return { lead: w.start_lead, start: w.start_button, does: w.start_does };
+  // What Start does is the lead's to say, once: no second line under the button (the app-words cut, screen 3).
+  return { lead: w.start_lead, start: w.start_button };
 }
 
 /** `plan_needed` with its words when KIFF says the account has no plan; nothing when it has one or can't be read. */

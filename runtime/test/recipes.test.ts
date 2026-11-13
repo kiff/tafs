@@ -158,7 +158,8 @@ Bezahle meine Rechnungen unter 100 EUR.
     const fr = recipesFor(undefined, "fr");
     expect(fr.categories.map((c) => c.title)).toEqual(["Argent", "Clients", "Opérations", "Tâches courantes"]);
     expect(fr.recipes.find((r) => r.id === "refunds-within-a-limit")).toMatchObject({
-      title: "Remboursements dans une limite", headline: "Aucun remboursement n'attend jusqu'au lendemain.",
+      // One line says what the job does: no problem headline over it, and no line on what waiting costs (the app-words cut).
+      title: "Remboursements dans une limite", headline: "Répond aux demandes de remboursement du support et rembourse chez le prestataire de paiement, dans les limites de la Card.", line: "", today: "",
       connections: [["gorgias", "intercom", "gmail"], ["stripe"]],
     });
     expect(fr.labels).toEqual({ allows: "Fait seul", holds: "Vous demande d'abord", never: "Ne fait jamais", hand: "Confier à Coach" });
@@ -170,8 +171,9 @@ Bezahle meine Rechnungen unter 100 EUR.
       expect(labelsIn(lang as never)).not.toEqual(labelsIn("en"));
     }
     // English, the order the apps show: money, customers, operations, errands.
-    expect(recipesFor(undefined).recipes.find((r) => r.id === "refunds-within-a-limit")!.today)
-      .toBe("A refund that waits can turn into a chargeback, with a fee you pay even if you win.");
+    // English: one line, what the job does; no line on what waiting costs.
+    expect(recipesFor(undefined).recipes.find((r) => r.id === "refunds-within-a-limit")).toMatchObject({ today: "", line: "",
+      headline: "Answers refund requests from the support queue and refunds in the payment provider, within the Card." });
   });
 
   it("keeps the apps' order: by category, then each recipe's place, with refunds leading Money", () => {

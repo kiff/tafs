@@ -605,7 +605,7 @@ describe("Coach's tools step, at the end of a first Start", () => {
     for (const lang of LANGUAGES) {
       const step = coachToolsStep(lang);
       expect(step.groups).toHaveLength(4);
-      for (const k of ["title", "intro", "details", "ask", "give", "not_now", "row"] as const) expect(step[k].trim()).not.toBe("");
+      for (const k of ["title", "intro", "details", "give", "not_now", "row"] as const) expect(step[k].trim()).not.toBe("");
       const n = (x: number) => new Intl.NumberFormat(lang === "en" ? "en-GB" : lang).format(x);
       COACH_TOOL_GROUPS.forEach((g, gi) => {
         const group = step.groups[gi]!;
