@@ -165,7 +165,7 @@ fun SettingsSheet(
             }
           }
           // Your data and the AI, in tafs cloud's words: whether the person allowed it, and the way to withdraw or allow it.
-          if (state.mode == Mode.kiff) state.aiConsent?.let { consent ->
+          if (state.mode == Mode.kiff) state.aiConsent?.takeIf { it.drawable }?.let { consent ->
             Section(consent.words.title) {
               if (consent.given) {
                 Text(consent.words.given, style = scaled(16, color = Theme.ink), modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp))

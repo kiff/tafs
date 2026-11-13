@@ -14,7 +14,10 @@ data class AIConsent(
   val at: String? = null,
   val version: String = "",
   val words: AIConsentWords = AIConsentWords(),
-)
+) {
+  /** tafs cloud sent the screen's words: a title, a line, Allow and Not now. Without them nothing is drawn, never a blank sheet. */
+  val drawable: Boolean get() = words.title.isNotBlank() && words.lines.any { it.isNotBlank() } && words.allow.isNotBlank() && words.notNow.isNotBlank()
+}
 
 @Serializable
 data class AIConsentWords(

@@ -852,7 +852,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       )
     }
     // Your data and the AI: after sign-in until answered, and when tafs cloud refuses a model turn for it (docs/accounts.md).
-    state.aiConsent?.takeIf { state.aiConsentAsked && !it.given }?.let { consent ->
+    state.aiConsent?.takeIf { state.aiConsentAsked && !it.given && it.drawable }?.let { consent ->
       bot.tafs.app.views.AIConsentSheet(
         consent, busy = state.aiConsentBusy, error = state.aiConsentError,
         onAllow = { scope.launch { model.allowAI() } }, onNotNow = model::notNowAI,

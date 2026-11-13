@@ -848,10 +848,13 @@ answer (`AIConsentSheet` in `views/AIConsentViews.kt`, `loadAIConsent`, `allowAI
   `ai_consent_required`. `TafsCloud` reads that refusal once, for every route, plain or streamed, and the sheet shows the
   `consent` it carries.
 - **Allow** sends the version on the screen. A 409 (the words changed) shows the newer words to read again.
-- **Not now** sends nothing and closes the sheet; the next refused turn brings it back. Reading Home, a taf and the Record
-  goes on as before.
+- **Not now** sends nothing and closes the sheet for the session: reading it again for Account doesn't bring it back, only
+  the next refused turn does. Reading Home, a taf and the Record goes on as before.
+- **A refused message goes back in the box,** with its files, and tafs cloud's words show above it. There's no Not sent row,
+  since Retry would change nothing until it's allowed.
 - **Account** shows the section under tafs cloud's title: "AI use: allowed" with Withdraw, or the lines with Allow.
-- With no answer from tafs cloud (a build before the route), nothing shows.
+- With no answer from tafs cloud (a build before the route), or words missing a title, a line, Allow or Not now, nothing
+  shows: never a blank sheet.
 
 ## Account and paged taf presentation
 

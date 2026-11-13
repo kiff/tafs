@@ -29,12 +29,12 @@ class AIConsentTest {
       """"lines":["tafs uses Anthropic's Claude AI for Coach and your tafs.","Nothing is sent until you allow it. You can withdraw in Account."],""" +
       """"allow":"Allow","not_now":"Not now","withdraw":"Withdraw","given":"AI use: allowed"}}"""
 
-  private fun reads(given: Boolean) {
+  private fun reads(given: Boolean, consentBody: String = """{"consent":${consent(given)}}""") {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":["cards.manage"]}""")
     transport.answer("GET /v1/home", 200, """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"idle","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""")
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
-    transport.answer(consentRoute, 200, """{"consent":${consent(given)}}""")
+    transport.answer(consentRoute, 200, consentBody)
   }
 
   private suspend fun TestScope.model(): AppModel {
@@ -79,6 +79,42 @@ class AIConsentTest {
     assertFalse(m.deliverChat("Refund order 42", "refunds-1"))
     assertTrue(m.state.value.aiConsentAsked)
     assertEquals("Vos données et l'IA", m.state.value.aiConsent!!.words.title)
+  }
+
+  @Test fun notNowHoldsForTheSessionAccountReadingItAgainDoesNotBringTheScreenBack() = runTest {
+    reads(given = false)
+    val m = model()
+    m.notNowAI()
+    m.loadAIConsent()
+    assertFalse(m.state.value.aiConsentAsked)
+    assertFalse(m.state.value.aiConsent!!.given)
+  }
+
+  @Test fun aRefusedMessageGoesBackInTheBoxWithNoNotSentRow() = runTest {
+    reads(given = false)
+    val m = model()
+    m.notNowAI()
+    transport.answer(
+      "POST /v1/tafs/taf_1/messages", 403,
+      """{"error":"Allow AI use first: Coach and your tafs need it to answer.","code":"ai_consent_required","consent":${consent(false)}}""",
+    )
+    var back: String? = null
+    m.sendChat("Refund order 42", "refunds-1") { back = it }
+    testScheduler.runCurrent()
+    assertEquals("Refund order 42", back)
+    assertTrue(m.state.value.chatUnsent["refunds-1"].orEmpty().isEmpty())
+    assertEquals("Allow AI use first: Coach and your tafs need it to answer.", m.state.value.chatErrors["refunds-1"])
+    assertTrue(m.state.value.aiConsentAsked)
+  }
+
+  @Test fun withNoWordsToDrawNothingShows() = runTest {
+    reads(given = false, consentBody = """{"consent":{"given":false,"version":"1","words":{"title":"","lines":[],"allow":"","not_now":"","withdraw":"","given":""}}}""")
+    val m = model()
+    assertFalse(m.state.value.aiConsentAsked)
+    assertNull(m.state.value.aiConsent)
+    transport.answer("POST /v1/tafs/taf_1/messages", 403, """{"error":"no","code":"ai_consent_required","consent":{"given":false,"version":"1","words":{}}}""")
+    assertFalse(m.deliverChat("Refund order 42", "refunds-1"))
+    assertFalse(m.state.value.aiConsentAsked)
   }
 
   @Test fun wordsChangedSinceTheyReadThemComeBackToReadAgain() = runTest {

@@ -932,7 +932,7 @@ class AppModel(
     // KIFF wants the approval key this phone doesn't hold (kiff/tafs#233).
     kiff.approvalKeyRequired = { lostApprovalKey() }
     // tafs cloud refused a model turn until the person allows AI use: its screen shows there and then, in its words.
-    cloud.aiConsentNeeded = { consent -> _state.update { it.copy(aiConsent = consent, aiConsentAsked = true, aiConsentError = null) } }
+    cloud.aiConsentNeeded = { consent -> if (consent.drawable) _state.update { it.copy(aiConsent = consent, aiConsentAsked = true, aiConsentError = null) } }
   }
 
   // MARK: Where the owner left off
@@ -967,7 +967,7 @@ class AppModel(
     _state.update { it.copy(mode = Mode.kiff, ready = true, sessionHasKey = keyed, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0") }
     if (keyGone) lostApprovalKey()
     refresh()
-    loadAIConsent()
+    loadAIConsent(ask = true)
     // A session from before the approval key registers it once (kiff/tafs#233).
     registerApprovalKey()
     // This phone's alerts, where its owner turned them on.
@@ -1139,7 +1139,7 @@ class AppModel(
     // This sign-in, so a later one that overtook it while it read gets nothing of it: no alert registration, no notice.
     val generation = accountGeneration
     refresh()
-    loadAIConsent()
+    loadAIConsent(ask = true)
     registerApprovalKey()
     if (generation != accountGeneration) return
     // Alerts were on for this account when this phone signed out of it: they come back on with no new confirmation while the
@@ -2733,14 +2733,15 @@ class AppModel(
   }
 
   /**
-   * Reads the person's AI-data consent: after sign-in and at launch, so its screen shows before anything they write is sent, and
-   * for Account. Unread (tafs cloud not reached), nothing shows: tafs cloud still refuses every model turn until it's given.
+   * Reads the person's AI-data consent. After sign-in and at launch ([ask]), its screen shows while it isn't given, before anything
+   * they write is sent; read for Account, it never brings the screen back after Not now. Unread (tafs cloud not reached), or with
+   * no words to draw, nothing shows: tafs cloud still refuses every model turn until it's given.
    */
-  suspend fun loadAIConsent() {
+  suspend fun loadAIConsent(ask: Boolean = false) {
     if (_state.value.mode != Mode.kiff) return
     val generation = accountGeneration
-    val read = attempt { cloud.aiConsent() } ?: return
-    if (generation == accountGeneration) _state.update { it.copy(aiConsent = read, aiConsentAsked = !read.given) }
+    val read = attempt { cloud.aiConsent() }?.takeIf { it.drawable } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(aiConsent = read, aiConsentAsked = if (ask) !read.given else it.aiConsentAsked && !read.given) }
   }
 
   /** The person allows AI use, for the version of the words on their screen. Words changed since come back to read again. */
@@ -4975,9 +4976,11 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       val waitsForCredits = creditsRefusal(e)
-      if (current() && (waitsForCredits != null || e is CloudError && e.code == HELD_FULL)) {
-        // As much waits as one message can be, or the tafs wait on credits: tafs cloud's words, as they are, and the owner's go
-        // back in the box to send later. No Not sent row: Retry would change nothing until then (docs/accounts.md#in-the-apps).
+      val needsConsent = e is CloudError && e.code == bot.tafs.app.kiff.AI_CONSENT_REQUIRED
+      if (current() && (waitsForCredits != null || needsConsent || e is CloudError && e.code == HELD_FULL)) {
+        // As much waits as one message can be, the tafs wait on credits, or the person hasn't allowed AI use yet (its screen shows):
+        // tafs cloud's words, as they are, and the owner's go back in the box to send later. No Not sent row: Retry would change
+        // nothing until then (docs/accounts.md#in-the-apps).
         _state.update { s ->
           val left = s.chatSent[tafId].orEmpty().filterNot { it == pending }
           s.copy(
@@ -4986,7 +4989,7 @@ class AppModel(
             chatErrors = s.chatErrors + (tafId to (waitsForCredits ?: e.message ?: "")),
           )
         }
-        if (waitsForCredits != null) putBackFiles(files, tafId)
+        if (waitsForCredits != null || needsConsent) putBackFiles(files, tafId)
         return false
       }
       if (current()) {
