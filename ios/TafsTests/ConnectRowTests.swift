@@ -12,11 +12,15 @@ final class ConnectRowTests: XCTestCase {
 
     /// tafs cloud's new fields read as sent, and a field that isn't words reads as none.
     func testTheRowReadsTafsCloudsFields() throws {
-        let sheets = try app(#"{"entry":"sheets","title":"Google Sheets","how":"oauth","state":"connected","line":"Spreadsheets in your Google account.","whose":"Yours","used_by":[{"taf":"t1","name":"Invoices"},{"taf":"t2","name":"Leads"}]}"#)
-        XCTAssertEqual(sheets.line, "Spreadsheets in your Google account.")
+        let sheets = try app(#"{"entry":"sheets","title":"Google Sheets","connected":true,"method":"sign_in","line":"Sign in · Connected · Used by Invoices, Leads","whose":"Yours","used_by":[{"taf":"t1","name":"Invoices"},{"taf":"t2","name":"Leads"}]}"#)
+        XCTAssertTrue(sheets.connected, "tafs cloud's connected")
+        XCTAssertFalse(sheets.takesKey)
+        XCTAssertEqual(sheets.line, "Sign in · Connected · Used by Invoices, Leads")
         XCTAssertEqual(sheets.whose, "Yours")
         XCTAssertEqual(sheets.usedBy, ["Invoices", "Leads"])
-        let bare = try app(#"{"entry":"stripe","title":"Stripe","how":"key","line":" ","whose":7,"used_by":"x"}"#)
+        let bare = try app(#"{"entry":"stripe","title":"Stripe","how":"oauth","method":"key","line":" ","whose":7,"used_by":"x","connected":"yes"}"#)
+        XCTAssertTrue(bare.takesKey, "method wins over how")
+        XCTAssertFalse(bare.connected)
         XCTAssertNil(bare.line)
         XCTAssertNil(bare.whose)
         XCTAssertNil(bare.usedBy)
@@ -31,7 +35,10 @@ final class ConnectRowTests: XCTestCase {
         XCTAssertEqual(said.how, Words.Connect.How.signIn)
         XCTAssertEqual(said.status, Words.Connect.Status.connected)
         XCTAssertEqual(said.usedBy, Words.Connect.Apps.usedBy(tafs: "Invoices"), "tafs cloud's names win")
-        XCTAssertEqual(said.second, [Words.Connect.How.signIn, "Yours", Words.Connect.Status.connected, Words.Connect.Apps.usedBy(tafs: "Invoices")].joined(separator: " · "))
+        XCTAssertEqual(said.second, [Words.Connect.How.signIn, "Yours", Words.Connect.Status.connected, Words.Connect.Apps.usedBy(tafs: "Invoices")].joined(separator: " · "),
+                       "composed when tafs cloud sends no line")
+        let worded = try app(#"{"entry":"sheets","title":"Google Sheets","state":"connected","line":"Anmeldung · Verbunden"}"#)
+        XCTAssertEqual(ConnectRow(worded).second, "Anmeldung · Verbunden", "tafs cloud's line, as sent")
 
         let stripe = try app(#"{"entry":"stripe","title":"Stripe","how":"key"}"#)
         let fresh = ConnectRow(stripe, usedHere: ["Refunds"])

@@ -147,7 +147,7 @@ struct ConnectAppsView: View {
         }
     }
 
-    /// The logo, from tafs cloud only, beside the name, and tafs cloud's one line on what it is.
+    /// The logo, from tafs cloud only, beside the name.
     private func name(_ app: TafsCloud.ConnectApps.App, _ said: ConnectRow) -> some View {
         HStack(spacing: 10) {
             if let url = model.cloud.logoURL(app.logo) {
@@ -159,13 +159,8 @@ struct ConnectAppsView: View {
                 .frame(width: 24, height: 24)
                 .accessibilityHidden(true)
             }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(app.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
-                    .accessibilityIdentifier("connect.title." + app.entry)
-                if let line = said.line {
-                    Text(line).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).lineLimit(2)
-                }
-            }
+            Text(app.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                .accessibilityIdentifier("connect.title." + app.entry)
         }
     }
 
@@ -214,7 +209,7 @@ struct ConnectRow: Equatable {
 
     /// `usedHere`: the tafs this phone's planque read names, until tafs cloud sends `used_by`.
     init(_ app: TafsCloud.ConnectApps.App, usedHere: [String] = []) {
-        how = app.how == "key" ? Words.Connect.How.key : Words.Connect.How.signIn
+        how = app.takesKey ? Words.Connect.How.key : Words.Connect.How.signIn
         whose = app.whose
         status = app.connected ? Words.Connect.Status.connected : app.needsReconnect ? Words.Connect.signInAgain : nil
         let names = app.usedBy ?? usedHere
@@ -222,8 +217,8 @@ struct ConnectRow: Equatable {
         line = app.line
     }
 
-    /// The phone's second line: how, whose, where it stands and who uses it.
-    var second: String { [how, whose, status, usedBy].compactMap { $0 }.joined(separator: " · ") }
+    /// The phone's second line: tafs cloud's, as sent; else how, whose, where it stands and who uses it.
+    var second: String { line ?? [how, whose, status, usedBy].compactMap { $0 }.joined(separator: " · ") }
 
     /// The person's own first (connected, or to sign in again), then the rest, each in tafs cloud's order.
     static func split(_ apps: [TafsCloud.ConnectApps.App]) -> (yours: [TafsCloud.ConnectApps.App], discover: [TafsCloud.ConnectApps.App]) {

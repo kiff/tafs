@@ -376,20 +376,27 @@ extension TafsCloud {
             /// connected, available or needs_reconnect.
             var state = "available"
             var grant: String?
-            /// What the app is, in one line, in tafs cloud's words; nil when it sends none.
+            /// The row's second line in the person's language, as tafs cloud words it ("Sign in ·
+            /// Connected · Used by Refunds"); nil when it sends none, and the app says the same itself.
             var line: String?
+            /// How it connects, as tafs cloud names it now (`sign_in` or `key`); nil from one before it.
+            var method: String?
+            /// tafs cloud's own word that it's connected, beside `state`.
+            var connectedFlag = false
             /// Whose the connection is, in tafs cloud's words, drawn as sent; nil when it sends none.
             var whose: String?
             /// The tafs that use it, by tafs cloud's names; nil when it sends none (the phone's own
             /// planque read stands in).
             var usedBy: [String]?
             var id: String { entry }
-            var connected: Bool { state == "connected" }
+            var connected: Bool { state == "connected" || connectedFlag }
+            /// Connects with a key, by `method` where tafs cloud sends it, else `how`.
+            var takesKey: Bool { (method ?? how) == "key" }
             var needsReconnect: Bool { state == "needs_reconnect" }
             /// Connected, or to sign in again: the person's own, listed first, under Yours.
             var yours: Bool { connected || needsReconnect }
 
-            enum CodingKeys: String, CodingKey { case entry, vendor, title, icon, logo, how, state, grant, line, whose, usedBy = "used_by" }
+            enum CodingKeys: String, CodingKey { case entry, vendor, title, icon, logo, how, state, grant, line, whose, method, usedBy = "used_by", connectedFlag = "connected" }
             private struct Named: Decodable { let name: String? }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -407,6 +414,8 @@ extension TafsCloud {
                 }
                 line = words(.line)
                 whose = words(.whose)
+                method = words(.method)
+                connectedFlag = ((try? c.decodeIfPresent(Bool.self, forKey: .connectedFlag)) ?? nil) ?? false
                 // [{taf, name}], each by tafs cloud's name; anything else reads as none sent.
                 usedBy = ((try? c.decodeIfPresent([Named].self, forKey: .usedBy)) ?? nil)?
                     .compactMap { $0.name?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
