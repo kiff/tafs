@@ -4243,7 +4243,7 @@ class AppModel(
           _state.update { it.copy(connectStep = CoachWords.CHECKING_SIGN_IN) }
           val connected = planque.confirm(grant.id, approved.confirm)
           refreshConnections()
-          if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor, connected.status), "planque held the sign-in, but says the connection is ${connected.status}")
+          if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor, connected.status), told = "The sign-in was held, but the connection is ${connected.status}.")
           return Connected.Done(connected)
         }
         if (url == null) {
