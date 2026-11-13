@@ -406,9 +406,12 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           Text(if (details) Words.Coach.detailsOpen else Words.Coach.detailsClosed, style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).clickable { details = !details })
           if (details) Column(Modifier.approvalTerms(grant.vendor)) { terms.forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) } }
         }
-        if (grant.connected && draft != null && !draft.confirmed) {
+        // The Card this approval signs, KIFF's own lines (its limits, what it never does), on screen until the fingerprint: on any
+        // card that carries a draft, connected or not, so the tools and their Card under one fingerprint (`tools_and_cards`) show
+        // what they sign. Until KIFF's draft is read, it says so, and Approve waits.
+        if (c.draft != null && draft?.confirmed != true) {
           Eyebrow(Words.Card.itsCard)
-          DraftCardsView(draft)
+          if (draft != null) DraftCardsView(draft) else Text(CoachWords.READING_KIFF_WORDS, style = scaled(13, color = Theme.soft))
         }
         if (!grant.digestMatches) {
           Text(CoachWords.DIGEST_MISMATCH, style = scaled(13, color = Theme.no))
@@ -430,8 +433,8 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
               },
               { if (needsKey) actions.openKeySheet(c, draft?.version) else actions.approve(c, grant.digest, draft?.version) },
               Modifier.weight(1f).confirms(),
-              // With a profile, nothing is approved before KIFF's words for it are read and shown.
-              enabled = !busy && (!profiled || words != null),
+              // With a profile, nothing is approved before KIFF's words for it are read and shown; with a Card, nor before its draft.
+              enabled = !busy && (!profiled || words != null) && (c.draft == null || draft != null),
             )
             OutlineButton(Words.Coach.Approval.decline, { actions.answer("approval", c.id, "declined") }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
           }

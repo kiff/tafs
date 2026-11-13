@@ -1,5 +1,12 @@
 package bot.tafs.app
 
+
+import bot.tafs.app.model.Words
+
+import androidx.compose.ui.test.performScrollTo
+
+import androidx.compose.ui.test.assertIsNotEnabled
+
 import org.junit.Assert.assertEquals
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.runtime.CompositionLocalProvider
@@ -112,6 +119,37 @@ class CoachScreenTest {
         )
       }
     }
+  }
+
+  /** The tools and their Card under one fingerprint (`tools_and_cards`): the grant waits on its added tools, the card carries a draft. */
+  private fun showToolsAndCards(drafts: Map<String, bot.tafs.app.kiff.AgentDraft>) = rule.setShown {
+    // As the planque client marks a grant whose digest it checked against its request.
+    val pending = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(
+      """{"id":"g1","status":"pending","text":"Read your payments and refund one.","digest":"d1","request":{"server":"https://mcp.stripe.example"}}""",
+    ).copy(digestMatches = true)
+    val open = KiffClient.json.decodeFromString<bot.tafs.app.kiff.AgentDraft>(
+      """{"id":"dr_1","agent_id":"refunds-1","status":"draft","version":"v1","label":"Refunds",
+          "cards":[{"grants":[{"action":"create_refund"}],"lines":["Refund a payment, up to €5 each","Up to €20 a day"]}]}""",
+    )
+    val s = state(null).copy(
+      grants = listOf(pending), setupDrafts = drafts.mapValues { open }, planqueReady = true,
+      coachComponents = listOf(ShownComponent(t0.plusSeconds(10), "s1", "r1", connect)),
+    )
+    TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(s, actions, loadCoach = {}, onBack = {}) } }
+  }
+
+  @Test fun theToolsAndTheirCardUnderOneFingerprintShowTheCardsLimitsBeforeApprove() {
+    showToolsAndCards(mapOf("dr_1" to draft))
+    // The Card's own lines, KIFF's, on the card that signs them, while the grant still waits on its tools.
+    rule.onNodeWithText(Words.Card.itsCard.uppercase()).assertExists()
+    rule.onNodeWithText("Up to €20 a day").assertExists()
+    rule.onNodeWithText(Words.Approval.approveWith("your fingerprint")).assertIsEnabled()
+  }
+
+  @Test fun untilTheCardIsReadApproveWaits() {
+    showToolsAndCards(emptyMap())
+    rule.onNodeWithText(Words.Card.itsCard.uppercase()).assertExists()
+    rule.onNodeWithText(Words.Approval.approveWith("your fingerprint")).assertIsNotEnabled()
   }
 
   @Test fun beforeTheFirstTafAPhoneWithNoFingerprintSaysCoachNeedsApprovals() {
