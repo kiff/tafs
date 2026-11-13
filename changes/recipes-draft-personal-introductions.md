@@ -1,0 +1,1 @@
+- **A new job in the cookbook: "Draft personal introductions".** It writes one personal first email, as a draft, to each company on your list, with the reason you noted. Nothing is sent until you approve each recipient and message.

@@ -1220,6 +1220,180 @@ export const RECIPES = [
     }
   },
   {
+    "id": "draft-personal-introductions",
+    "title": "Draft personal introductions",
+    "category": "customers",
+    "order": 4,
+    "line": "Drafts one personal first email to each company on your list, using the reason you noted for it; nothing is sent until you approve it.",
+    "headline": "Reach the right people without writing every first email.",
+    "today": "The list of people to write to stays a list, because a good first email takes time to write.",
+    "say": "Each weekday morning, read my list of companies in my spreadsheet. For each one I haven't written to yet, write a draft in my email: a short personal introduction that uses the reason I noted for that company, and nothing I didn't note. One draft per company, up to 10 a day. Never send anything yourself: every send waits for me, and I approve each recipient and each message. Skip anyone I already wrote to and anyone marked as not wanting to be contacted, and tell me who you skipped and why.",
+    "connections": [
+      [
+        "googlesheets"
+      ],
+      [
+        "gmail",
+        "outlook"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Drafts in your mailbox, one per company on your list, up to 10 a day"
+      ],
+      "holds": [
+        "Every send, for each recipient and each message"
+      ],
+      "never": [
+        "A message to someone who isn't on your list",
+        "A second message to someone you already wrote to",
+        "A message to anyone who asked not to be contacted"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Persönliche Vorstellungen entwerfen",
+        "headline": "Erreich die richtigen Leute, ohne jede erste E-Mail selbst zu schreiben.",
+        "today": "Die Liste der Leute, denen du schreiben willst, bleibt eine Liste, weil eine gute erste E-Mail Zeit kostet.",
+        "line": "Entwirft für jedes Unternehmen auf deiner Liste eine persönliche erste E-Mail mit dem Grund, den du dazu notiert hast; nichts wird gesendet, bevor du es freigibst.",
+        "say": "Lies jeden Werktagmorgen meine Liste mit Unternehmen in meiner Tabelle. Schreib für jedes, dem ich noch nicht geschrieben habe, einen Entwurf in meiner E-Mail: eine kurze persönliche Vorstellung mit dem Grund, den ich zu diesem Unternehmen notiert habe, und nichts, was ich nicht notiert habe. Ein Entwurf pro Unternehmen, bis zu 10 am Tag. Sende nie selbst etwas: Jeder Versand wartet auf mich, und ich gebe jeden Empfänger und jede Nachricht frei. Überspring alle, denen ich schon geschrieben habe, und alle, die als nicht kontaktieren markiert sind, und sag mir, wen du übersprungen hast und warum.",
+        "card": {
+          "allows": [
+            "Entwürfe in deinem Postfach, einer pro Unternehmen auf deiner Liste, bis zu 10 am Tag"
+          ],
+          "holds": [
+            "Jeder Versand, für jeden Empfänger und jede Nachricht"
+          ],
+          "never": [
+            "Eine Nachricht an jemanden, der nicht auf deiner Liste steht",
+            "Eine zweite Nachricht an jemanden, dem du schon geschrieben hast",
+            "Eine Nachricht an jemanden, der nicht kontaktiert werden möchte"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Préparer des introductions personnelles",
+        "headline": "Atteignez les bonnes personnes sans écrire chaque premier e-mail.",
+        "today": "La liste des personnes à contacter reste une liste, car un bon premier e-mail prend du temps à écrire.",
+        "line": "Prépare un premier e-mail personnel pour chaque entreprise de votre liste, avec la raison que vous avez notée pour elle ; rien n'est envoyé avant votre approbation.",
+        "say": "Chaque matin de semaine, lis ma liste d'entreprises dans mon tableur. Pour chacune à qui je n'ai pas encore écrit, rédige un brouillon dans mon e-mail : une courte introduction personnelle qui reprend la raison que j'ai notée pour cette entreprise, et rien que je n'aie noté. Un brouillon par entreprise, jusqu'à 10 par jour. N'envoie jamais rien toi-même : chaque envoi m'attend, et j'approuve chaque destinataire et chaque message. Ignore les personnes à qui j'ai déjà écrit et celles marquées comme ne voulant pas être contactées, et dis-moi qui tu as ignoré et pourquoi.",
+        "card": {
+          "allows": [
+            "Brouillons dans votre messagerie, un par entreprise de votre liste, jusqu'à 10 par jour"
+          ],
+          "holds": [
+            "Chaque envoi, pour chaque destinataire et chaque message"
+          ],
+          "never": [
+            "Un message à quelqu'un qui n'est pas sur votre liste",
+            "Un deuxième message à quelqu'un à qui vous avez déjà écrit",
+            "Un message à une personne qui a demandé à ne pas être contactée"
+          ]
+        }
+      },
+      "es": {
+        "title": "Preparar presentaciones personales",
+        "headline": "Llega a las personas adecuadas sin escribir cada primer correo.",
+        "today": "La lista de personas a las que escribir se queda en lista, porque un buen primer correo lleva tiempo.",
+        "line": "Prepara un primer correo personal para cada empresa de tu lista, con el motivo que anotaste para ella; no se envía nada hasta que lo apruebes.",
+        "say": "Cada mañana de día laborable, lee mi lista de empresas en mi hoja de cálculo. Para cada una a la que aún no he escrito, redacta un borrador en mi correo: una presentación breve y personal que use el motivo que anoté para esa empresa, y nada que yo no haya anotado. Un borrador por empresa, hasta 10 al día. Nunca envíes nada por tu cuenta: cada envío me espera, y yo apruebo cada destinatario y cada mensaje. Omite a quienes ya escribí y a quienes estén marcados como que no quieren ser contactados, y dime a quién omitiste y por qué.",
+        "card": {
+          "allows": [
+            "Borradores en tu correo, uno por empresa de tu lista, hasta 10 al día"
+          ],
+          "holds": [
+            "Cada envío, para cada destinatario y cada mensaje"
+          ],
+          "never": [
+            "Un mensaje a alguien que no está en tu lista",
+            "Un segundo mensaje a alguien a quien ya escribiste",
+            "Un mensaje a quien pidió que no se le contacte"
+          ]
+        }
+      },
+      "it": {
+        "title": "Preparare presentazioni personali",
+        "headline": "Raggiungi le persone giuste senza scrivere ogni prima email.",
+        "today": "L'elenco delle persone a cui scrivere resta un elenco, perché una buona prima email richiede tempo.",
+        "line": "Prepara una prima email personale per ogni azienda del tuo elenco, con il motivo che hai annotato per lei; niente viene inviato finché non lo approvi.",
+        "say": "Ogni mattina dei giorni feriali, leggi il mio elenco di aziende nel mio foglio di calcolo. Per ognuna a cui non ho ancora scritto, scrivi una bozza nella mia email: una breve presentazione personale che usi il motivo che ho annotato per quell'azienda, e niente che io non abbia annotato. Una bozza per azienda, fino a 10 al giorno. Non inviare mai nulla da solo: ogni invio aspetta me, e approvo io ogni destinatario e ogni messaggio. Salta chi ho già contattato e chi è segnato come da non contattare, e dimmi chi hai saltato e perché.",
+        "card": {
+          "allows": [
+            "Bozze nella tua casella di posta, una per azienda del tuo elenco, fino a 10 al giorno"
+          ],
+          "holds": [
+            "Ogni invio, per ogni destinatario e ogni messaggio"
+          ],
+          "never": [
+            "Un messaggio a qualcuno che non è nel tuo elenco",
+            "Un secondo messaggio a qualcuno a cui hai già scritto",
+            "Un messaggio a chi ha chiesto di non essere contattato"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Preparar apresentações pessoais",
+        "headline": "Chegue às pessoas certas sem escrever cada primeiro email.",
+        "today": "A lista de pessoas a quem escrever continua a ser uma lista, porque um bom primeiro email leva tempo a escrever.",
+        "line": "Prepara um primeiro email pessoal para cada empresa da sua lista, com o motivo que anotou para ela; nada é enviado antes da sua aprovação.",
+        "say": "Todas as manhãs de dias úteis, lê a minha lista de empresas na minha folha de cálculo. Para cada uma a quem ainda não escrevi, escreve um rascunho no meu email: uma apresentação curta e pessoal que use o motivo que anotei para essa empresa, e nada que eu não tenha anotado. Um rascunho por empresa, até 10 por dia. Nunca envies nada por ti: cada envio espera por mim, e eu aprovo cada destinatário e cada mensagem. Ignora as pessoas a quem já escrevi e as que estão marcadas como não querendo ser contactadas, e diz-me quem ignoraste e porquê.",
+        "card": {
+          "allows": [
+            "Rascunhos na sua caixa de correio, um por empresa da sua lista, até 10 por dia"
+          ],
+          "holds": [
+            "Cada envio, para cada destinatário e cada mensagem"
+          ],
+          "never": [
+            "Uma mensagem a alguém que não está na sua lista",
+            "Uma segunda mensagem a alguém a quem já escreveu",
+            "Uma mensagem a quem pediu para não ser contactado"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Persoonlijke introducties voorbereiden",
+        "headline": "Bereik de juiste mensen zonder elke eerste e-mail zelf te schrijven.",
+        "today": "De lijst met mensen die je wilt schrijven blijft een lijst, omdat een goede eerste e-mail tijd kost.",
+        "line": "Schrijft voor elk bedrijf op je lijst een persoonlijke eerste e-mail als concept, met de reden die je erbij hebt genoteerd; er wordt niets verstuurd voordat je het goedkeurt.",
+        "say": "Lees elke werkdagochtend mijn lijst met bedrijven in mijn spreadsheet. Schrijf voor elk bedrijf dat ik nog niet heb geschreven een concept in mijn e-mail: een korte persoonlijke introductie met de reden die ik bij dat bedrijf heb genoteerd, en niets wat ik niet heb genoteerd. Eén concept per bedrijf, tot 10 per dag. Verstuur nooit zelf iets: elke verzending wacht op mij, en ik keur elke ontvanger en elk bericht goed. Sla iedereen over die ik al heb geschreven en iedereen die is gemarkeerd als niet benaderen, en vertel me wie je hebt overgeslagen en waarom.",
+        "card": {
+          "allows": [
+            "Concepten in je mailbox, één per bedrijf op je lijst, tot 10 per dag"
+          ],
+          "holds": [
+            "Elke verzending, voor elke ontvanger en elk bericht"
+          ],
+          "never": [
+            "Een bericht aan iemand die niet op je lijst staat",
+            "Een tweede bericht aan iemand die je al hebt geschreven",
+            "Een bericht aan iemand die niet benaderd wil worden"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Przygotuj osobiste wiadomości powitalne",
+        "headline": "Docieraj do właściwych osób bez pisania każdego pierwszego e-maila.",
+        "today": "Lista osób, do których chcesz napisać, pozostaje listą, bo dobry pierwszy e-mail wymaga czasu.",
+        "line": "Przygotowuje osobisty pierwszy e-mail do każdej firmy z Twojej listy, z powodem, który przy niej zapisano; nic nie zostaje wysłane, dopóki tego nie zatwierdzisz.",
+        "say": "W każdy dzień roboczy rano przeczytaj moją listę firm w moim arkuszu kalkulacyjnym. Dla każdej, do której jeszcze nie pisałem, przygotuj wersję roboczą w moim e-mailu: krótkie, osobiste przedstawienie się z powodem, który zapisałem przy tej firmie, i niczym, czego nie zapisałem. Jedna wersja robocza na firmę, do 10 dziennie. Nigdy niczego nie wysyłaj samodzielnie: każda wysyłka czeka na mnie, a ja zatwierdzam każdego odbiorcę i każdą wiadomość. Pomiń osoby, do których już pisałem, oraz oznaczone jako niechcące kontaktu, i powiedz mi, kogo pominięto i dlaczego.",
+        "card": {
+          "allows": [
+            "Wersje robocze w Twojej skrzynce, jedna na firmę z Twojej listy, do 10 dziennie"
+          ],
+          "holds": [
+            "Każda wysyłka, dla każdego odbiorcy i każdej wiadomości"
+          ],
+          "never": [
+            "Wiadomość do kogoś, kogo nie ma na Twojej liście",
+            "Druga wiadomość do kogoś, do kogo już napisano",
+            "Wiadomość do osoby, która prosiła o brak kontaktu"
+          ]
+        }
+      }
+    }
+  },
+  {
     "id": "book-and-move-appointments",
     "title": "Book and move appointments",
     "category": "operations",
