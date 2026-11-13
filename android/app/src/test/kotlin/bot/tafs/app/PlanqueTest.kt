@@ -474,6 +474,23 @@ class PlanqueTest {
     assertTrue(transport.requestsTo(confirm).isEmpty())
   }
 
+  @Test fun signedInWithNoLinkConfirmsWithPlanquesCodeAndGoesOnNeverAFailure() = runTest {
+    // The person's sign-in at the provider is already held: planque answers signed_in with a one-use code, no link.
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(approve, 200, """{"status":"signed_in","confirm":"code_once","confirm_by":"2026-10-28T09:15:00Z"}""")
+    transport.answer(confirm, 200, grant("g1", "listed"))
+    val vendor = FakeSignIn()
+    val m = model(vendor)
+    m.refreshConnections()
+    val result = m.connect("a1", "g1", digest)
+    assertTrue(result.toString(), result is AppModel.Connected.Done)
+    // No second sign-in page, and the code planque gave is the one confirmed.
+    assertNull(vendor.opened)
+    val sent = KiffClient.json.parseToJsonElement(String(transport.requestsTo(confirm).single().body!!)).jsonObject
+    assertEquals("code_once", sent.getValue("confirm").jsonPrimitive.content)
+  }
+
   @Test fun termsThatChangedSinceTheyWereShownAreNotSignedAndAreShownAgain() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant()}]}""")
@@ -871,6 +888,26 @@ class PlanqueTest {
     assertEquals("sign_in_closed", bodyOf(transport.requestsTo(reportRoute).single()).getValue("result").jsonPrimitive.content)
     assertEquals("The sign-in was closed. Nothing was connected.", m.state.value.coachNotes["a1"])
     assertTrue(transport.requestsTo(answerRoute).isEmpty())
+  }
+
+  @Test fun aHeldSignInIsConfirmedBeforeTheReportAndASignInNotConfirmedYetShowsTafsCloudsLine() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnect())
+    transport.answer(approve, 200, """{"status":"signed_in","confirm":"code_once","confirm_by":"2026-10-28T09:15:00Z"}""")
+    transport.answer(confirm, 200, grant("g1", "listed"))
+    // tafs cloud still reads it as not confirmed: its own line, never "Your answer didn't reach Coach".
+    transport.answer(reportRoute, 409, """{"error":"Confirm the sign-in on this phone first.","code":"sign_in_not_confirmed"}""")
+    val vendor = FakeSignIn()
+    val m = model(vendor)
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.approveCoach(approvalComponent(), digest, null)
+    assertNull("no second sign-in page", vendor.opened)
+    // Confirmed with planque's code before anything was reported.
+    assertEquals("code_once", bodyOf(transport.requestsTo(confirm).single()).getValue("confirm").jsonPrimitive.content)
+    assertEquals("listed", bodyOf(transport.requestsTo(reportRoute).single()).getValue("result").jsonPrimitive.content)
+    assertEquals("Confirm the sign-in on this phone first.", m.state.value.coachNotes["a1"])
   }
 
   @Test fun planqueRefusingTheApproveIsReportedWithItsReasonNeverDecidedHere() = runTest {

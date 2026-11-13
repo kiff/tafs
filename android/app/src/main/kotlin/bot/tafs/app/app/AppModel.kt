@@ -865,7 +865,8 @@ data class AppState(
     // Coach's thread has its cards in it, and the owner's answers to them read as what they chose.
     if (tafId == COACH_CHAT) {
       // An older thread's answers, sent as text before cards were answered as data, read as what the owner chose.
-      return CoachWords.items(messages.map { if (it.from == ChatMessage.From.owner) it.copy(text = CoachWords.ownerWords(it.text, coachComponents)) else it }, coachComponents, coachDrives)
+      // A card answered again shows its last answer only: a retry replaces its own failed line.
+      return CoachWords.items(CoachWords.latestAnswers(messages).map { if (it.from == ChatMessage.From.owner) it.copy(text = CoachWords.ownerWords(it.text, coachComponents)) else it }, coachComponents, coachDrives)
     }
     val items = mutableListOf<ChatItem>()
     items += messages.map { ChatItem.Message(it) }
@@ -4240,6 +4241,16 @@ class AppModel(
       try {
         val approved = planque.approve(grant, words)
         val url = approved.signInUrl
+        if (url == null && approved.status == "signed_in" && !approved.confirm.isNullOrBlank()) {
+          // Signed in at the provider already (the person's account there is held): no second sign-in, never a failure. This
+          // phone confirms with planque's one-use code, as with the browser's, and goes on to the tools (docs/connect-apps.md).
+          if (generation != accountGeneration) return Connected.Stopped
+          _state.update { it.copy(connectStep = CoachWords.CHECKING_SIGN_IN) }
+          val connected = planque.confirm(grant.id, approved.confirm)
+          refreshConnections()
+          if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor, connected.status), told = "The sign-in was held, but the connection is ${connected.status}.")
+          return Connected.Done(connected)
+        }
         if (url == null) {
           // planque already holds the sign-in: approving the tools Setup chose from the vendor's list connected them, with no second sign-in.
           if (approved.status != "connected" && approved.status != "listed") {
@@ -4452,7 +4463,13 @@ class AppModel(
     } catch (e: Exception) {
       if (generation != accountGeneration) return true
       bot.tafs.app.design.Haptics.warning()
-      note(c.id, Words.Coach.answerNotReached(why = ErrorWords.of(e)))
+      // A sign-in planque holds but this phone hasn't confirmed yet: tafs cloud's own line, as it is (as on iPhone and iPad).
+      val confirmFirst = when (e) {
+        is CloudError -> e.takeIf { it.code == "sign_in_not_confirmed" }?.let { it.words ?: it.message }
+        is KiffError.Server -> e.takeIf { it.code == "sign_in_not_confirmed" }?.message
+        else -> null
+      }?.takeIf { it.isNotBlank() }
+      note(c.id, confirmFirst ?: Words.Coach.answerNotReached(why = ErrorWords.of(e)))
       readThread(COACH_CHAT)
       return true
     } finally {
@@ -4604,7 +4621,13 @@ class AppModel(
         val p = asked.planque ?: return Came.Of("failed", why = "tafs cloud named no connection to approve")
         val approved = planque.approveAsAsked(p.grant, p.body)
         val url = approved.signInUrl
-        if (url == null) {
+        if (url == null && approved.status == "signed_in" && !approved.confirm.isNullOrBlank()) {
+          // Signed in at the provider already: no second sign-in. planque revokes the held sign-in unless this phone confirms it
+          // with its one-use code, so it's confirmed first, then reported as planque answers it (tafs cloud approves listed).
+          _state.update { it.copy(connectStep = CoachWords.CHECKING_SIGN_IN) }
+          val connected = planque.confirm(p.grant, approved.confirm)
+          if (connected.connected || connected.listed) Came.Of(connected.status) else Came.Of("not_connected", status = connected.status)
+        } else if (url == null) {
           // planque already holds the sign-in: approving connected it, with no second sign-in.
           if (approved.status == "connected" || approved.status == "listed") Came.Of(approved.status) else Came.Of("not_connected", status = approved.status)
         } else {

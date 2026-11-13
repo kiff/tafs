@@ -6,6 +6,7 @@
     "Coach": "the draft's name at KIFF, data",
     "Connecting tools isn't set up for this account from this phone. Start from tafs on an iPhone.": "told to Coach, which reads English",
     "There's no connection with that id.": "told to Coach, which reads English",
+    "The sign-in was held, but the connection is ${connected.status}.": "told to Coach, which reads English",
     "couldn't read what to approve: ${e.message}": "told to Coach, which reads English",
     "${grant.vendor} is already connected; nothing new to approve": "told to Coach, which reads English",
     "KIFF didn't issue the taf's Cards: ${e.message}": "told to Coach, which reads English",

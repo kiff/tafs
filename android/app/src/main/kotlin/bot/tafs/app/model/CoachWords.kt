@@ -224,6 +224,21 @@ object CoachWords {
   fun notImproved(name: String, why: String) = Words.Coach.notImproved(name, why.trimEnd('.'))
 
 
+  /**
+   * A card answered again replaces its own failed answer: a failed approval then "Approved" shows the last one only, never a
+   * failure the retry put right. Only a failure is replaced (Coach can use an id again for a new card); other messages stay.
+   */
+  fun latestAnswers(messages: List<bot.tafs.app.model.ChatMessage>): List<bot.tafs.app.model.ChatMessage> {
+    val last = HashMap<Pair<String, String>, Int>()
+    messages.forEachIndexed { i, m ->
+      if (m.from == bot.tafs.app.model.ChatMessage.From.owner) CoachAnswer.parse(m.text)?.let { last[it.type to it.id] = i }
+    }
+    return messages.filterIndexed { i, m ->
+      val a = if (m.from == bot.tafs.app.model.ChatMessage.From.owner) CoachAnswer.parse(m.text) else null
+      a == null || !a.failed || last[a.type to a.id] == i
+    }
+  }
+
   /** An owner's message in their own words: an answer to a card reads as what they chose, never as the contract's form. */
   fun ownerWords(text: String, components: List<ShownComponent>): String {
     val a = CoachAnswer.parse(text) ?: return text

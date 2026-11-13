@@ -36,6 +36,11 @@ connected.
 3. **Sign in on the app's own page.** Your password goes to that app, never to tafs.
 4. **Confirm.** The app comes back to tafs, and the connection is ready for that taf.
 
+When the connection service already holds your sign-in at that app, there's no second sign-in
+page: it answers that you're signed in, with a one-use code, and your phone confirms with it
+and goes on to the app's tools. That's never a failure. In Coach's thread, a card you approve
+again after it didn't go through shows only its last answer.
+
 Only someone who manages Cards on the account can connect an app.
 
 ### Apps that use a key
