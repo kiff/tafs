@@ -130,7 +130,16 @@ data class HomeTaf(
   val work: bot.tafs.app.kiff.WorkSummary? = null,
   /** How it's doing, in tafs cloud's words (docs/reliability.md › Its health); absent when it can't be read in time. */
   val health: bot.tafs.app.kiff.TafHealth? = null,
+  /** Another agent whose setup stopped partway: Coach's chat where it stopped, and tafs cloud's words for the row (docs/tafs.md). */
+  val finish: HomeFinish? = null,
 )
+
+/**
+ * The way back to a taf whose setup stopped partway (Coach drafted it, its Card is signed, and no taf was made): Coach's taf, the
+ * chat where it stopped, and the row's words ("Finish setting up"). Reading that chat makes the taf, at tafs cloud.
+ */
+@Serializable
+data class HomeFinish(val taf: String = "", val session: String = "", val words: String = "")
 
 /** A taf whose removal began and didn't finish: archived, so no longer listed as a taf. */
 @Serializable

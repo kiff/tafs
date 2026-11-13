@@ -173,6 +173,9 @@ object KiffMapping {
     val level = h.health?.level?.takeIf { it == "at_risk" || it == "failing" }
     val line = h.work?.takeIf { it.status == "idle" }?.line?.takeIf { it.isNotBlank() }
     if (level != null && line != null) taf = taf.copy(now = line, nowHealth = level)
+    // Its setup stopped partway: tafs cloud's words in place of what it's doing, and the chat to finish it in.
+    val finish = h.finish?.takeIf { it.session.isNotBlank() && it.words.isNotBlank() }
+    if (finish != null) taf = taf.copy(now = finish.words, finish = finish)
     return taf.copy(
       cloudId = h.id,
       paused = h.status == "paused",

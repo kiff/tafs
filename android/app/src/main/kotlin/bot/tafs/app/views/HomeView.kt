@@ -79,6 +79,8 @@ fun HomeView(
   onHaltAll: () -> Unit,
   /** A halted taf's chip: Halt, where it's resumed ("Halted · resume it from Halt"). */
   onHalted: (String) -> Unit = {},
+  /** "Finish setting up" on another agent whose setup stopped partway: Coach's chat where it stopped. */
+  onFinishSetup: ((bot.tafs.app.kiff.HomeFinish) -> Unit)? = null,
   /** Opens Plan & usage, from the plan's line when it needs the owner. */
   onUsage: () -> Unit = {},
   /** Opens a recipe's sheet, from Home's list with no taf, or the strip under the tafs list. */
@@ -166,8 +168,9 @@ fun HomeView(
             }
             // A new account's Home leads with the jobs: "0 tafs working" and "Nothing needs you" say nothing yet.
             if (!state.homeLeadsWithRecipes) Headline(state)
-            // Explore jobs: every job to read, with nothing created, with or without a taf, and with no Coach needed.
-            if (onExplore != null) ExploreRow(HomeWords.explore(state.gallery), onExplore)
+            // Explore jobs: every job to read, with nothing created, with or without a taf, and with no Coach needed. Only when tafs
+            // cloud sends its words: it leaves them out while Home already lists every job.
+            if (onExplore != null) HomeWords.exploreRow(state.gallery)?.let { ExploreRow(it, onExplore) }
           }
         }
         state.held.firstOrNull()?.let { first ->
@@ -189,7 +192,11 @@ fun HomeView(
           item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
               Eyebrow(Words.Home.otherAgents)
-              state.otherAgents.forEach { taf -> TafRow(taf, onHalted = { onHalted(taf.id) }) { onOpenTaf(taf.id) } }
+              state.otherAgents.forEach { taf ->
+                // Only Coach's own chat, for someone who may use Coach (as on iPhone and iPad): anything else opens as before.
+                val finish = taf.finish?.takeIf { state.mayUseCoach && it.taf == state.coachCloudId }
+                TafRow(taf, onHalted = { onHalted(taf.id) }) { if (finish != null && onFinishSetup != null) onFinishSetup(finish) else onOpenTaf(taf.id) }
+              }
             }
           }
         }
@@ -369,7 +376,8 @@ fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, 
         // A connection its vendor signed out says so, in planque's words, in place of what it's doing: it waits on the owner.
         // At risk or failing, tafs cloud's first reason, amber or red.
         val tone = when {
-          signedOut != null -> Theme.amberText
+          // Its setup stopped partway: it needs the owner.
+          signedOut != null || taf.finish != null -> Theme.amberText
           taf.nowHealth == "failing" -> Theme.no
           taf.nowHealth == "at_risk" -> Theme.amberText
           else -> Theme.dim

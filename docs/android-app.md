@@ -67,8 +67,9 @@ person's language.
   without the route shows no + New.
 - **Explore jobs**, a row under the headline (`words.explore`), opens the same gallery to browse:
   every job to read, with nothing created. It shows with or without a taf, and for someone who
-  can't use Coach too. While browsing, the gallery is titled Explore jobs and offers no "own
-  words".
+  can't use Coach too, but only when tafs cloud sends `words.explore`: it leaves them out while
+  Home already lists every job, and the app draws no row of its own words (as on iPhone and
+  iPad). While browsing, the gallery is titled Explore jobs and offers no "own words".
 - **The strip** under the tafs list (`JobStrip`) draws `strip.ids` in their order, under
   `strip.title`, while `strip.shown`. An id the gallery doesn't list is left out. When the gallery
   holds more jobs than the strip shows, a last row, **See all jobs** (`words.see_all`), opens it
@@ -856,6 +857,12 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
 - **Alerts are offered once,** on Coach's "taf made" card, where alerts can be on and aren't: "Get an alert when a taf needs
   you", Turn on alerts (as in Settings, with Android's permission prompt) or Not now. Either answer is kept on this phone for
   the account (`AppModel.ALERTS_OFFERED_PREFIX`), so it isn't asked again. Settings keeps the switch.
+- **A taf whose setup stopped partway** (Android 1.20.1): Coach drafted it and its Card is signed, but no taf was made, so it
+  is listed under the other agents with Cards. tafs cloud sends the name Coach gave it and `finish: {taf, session, words}`
+  ([tafs.md](tafs.md#the-home-list)). The row shows `finish.words` ("Finish setting up") in amber in place of what it's doing,
+  and a tap opens Coach on that chat (`AppModel.finishSetup`). Reading the chat makes the taf at tafs cloud, and the next Home
+  read lists it as a taf. Only Coach's own chat (`finish.taf` is Coach's), for someone who may use Coach, as on iPhone and
+  iPad; otherwise, and without `finish`, an agent opens as before.
 
 ## Your data and the AI
 
