@@ -2,3 +2,5 @@
   - **The disclosure:** it now reads "Written by an AI agent on behalf of <name>.", in all six languages. A name stored before, at the old length cap, keeps the shorter "for" so its line still fits. New names are capped at 251 bytes.
   - **A held call:** it says until when only if KIFF gives the hold's expiry, never a guess such as "until tomorrow".
   - **Amounts:** they're in the currency the record or the call gives, never converted into another currency or called its equivalent.
+  - **Actions:** a taf says it did something (sent, added, asked Coach, raised a limit) only when one of its calls in that run did it.
+- **Coach drafts a limit for each item as a total per item.** "One invoice per order, ever" becomes a lifetime total counted for each order, next to the day's total, never one call in the whole life of the tool (draft-the-card@10).

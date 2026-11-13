@@ -78,6 +78,8 @@ describe("a taf's definition on kiff/agents", () => {
     // Every kind of call the count can show is in the rule's list, the ones whose effect isn't known too.
     expect(SHARED_INSTRUCTIONS).toContain("(how many were\ndone or sent, are waiting, were refused, failed, or were sent with no word on\nwhether they took effect)");
     expect(SHARED_INSTRUCTIONS).not.toContain("count of the calls your record shows");
+    // Eval 43395198798: a report said "I've added a card for Coach to raise those limits", and the record had no such call.
+    expect(SHARED_INSTRUCTIONS).toContain("Say you did something (sent, added, asked Coach, raised a limit)\nonly when a call of yours in this run did it: never an action you meant to\ntake, or one you only describe.");
   });
 
   it("names its KIFF key by reference, never the key", () => {

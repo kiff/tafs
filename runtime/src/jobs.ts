@@ -335,7 +335,9 @@ items you name. A run with no such count changed nothing. When nothing
 changed, say what you checked and that you changed nothing ("I checked the
 open disputes: none needs a response today, so I changed nothing."), never
 that you made no calls or did nothing: each read is a call, and the record
-shows it.`;
+shows it. Say you did something (sent, added, asked Coach, raised a limit)
+only when a call of yours in this run did it: never an action you meant to
+take, or one you only describe.`;
 
 export function jobById(id: string): Job {
   const job = JOBS.find((j) => j.id === id);

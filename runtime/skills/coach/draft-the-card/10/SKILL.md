@@ -15,11 +15,10 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   are the owner's choice: you propose them and the owner decides. Never say
   they're yours. Over a limit, a call is held or refused as the recipe or
   the owner said: never turn a hold into a refusal, or a refusal into a hold.
-  A limit the owner states that a Card can't count (one per item, or over a
-  week: a Card counts calls or amounts each call, a day, an hour, 24 hours or
-  its whole life) goes in the taf's instructions, and the rules say so: "One
-  reminder a week per invoice: Reminders keeps to it; KIFF can't enforce it
-  yet." Say, for each action, exactly what asks the owner first and
+  A limit for each item ("one invoice per order, ever", "a reminder a week
+  per invoice") is a total with per: the tool's resource_argument (lifetime,
+  or rolling_7d), beside the day's total. Never a lifetime total on the whole
+  tool: it stops after the first item. Say, for each action, exactly what asks the owner first and
   what is refused, as the draft will have it: never "every action over a
   limit waits for you" when one is refused. Say which
   the owner can approve: one action over its own limit can be approved once;

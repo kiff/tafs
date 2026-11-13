@@ -177,6 +177,15 @@ describe("Coach's core", () => {
     expect(body).not.toContain("an app the account connects comes first");
   });
 
+  // Eval 43395198798: "one invoice per order, ever" and "up to 20 a day" were drafted as 1 call in the Card's whole life,
+  // so the taf could invoice one order and never another. KIFF counts a total for each item (per).
+  it("drafts a limit for each item as a total per its resource argument, never a lifetime cap on the tool", () => {
+    const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
+    expect(body).toContain('A limit for each item ("one invoice per order, ever", "a reminder a week per invoice") is a total with per: the tool\'s resource_argument (lifetime, or rolling_7d), beside the day\'s total.');
+    expect(body).toContain("Never a lifetime total on the whole tool: it stops after the first item.");
+    expect(body).not.toContain("KIFF can't enforce it yet");
+  });
+
   // Eval 42781271564: Setup named a read for the currency check and left it off the Card.
   it("covers every tool the taf gets, the currency check's read included", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
