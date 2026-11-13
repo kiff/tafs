@@ -474,9 +474,11 @@ opens the taf (`SetupThread.planNeeded`). No words, or none that are text, add n
 
 ## A taf whose setup stopped partway
 
-A Coach chat left before the hand-over leaves an agent with a signed Card and no taf. tafs cloud
-lists it among Home's other agents by the name Coach gave it, with `finish: {taf, session,
-words}` (docs/tafs.md). The row says `words` ("Finish setting up") in amber in place of what it's
+Home lists tafs only. A Coach chat left before the hand-over leaves a draft with no taf: tafs cloud
+lists it in `setting_up`, each by the name Coach gave it, and the app draws it among the tafs with no
+state, so never "Ready" (`AppModel.settingUp`). With `setting_up` sent, `others` only repeats it for older
+apps and isn't drawn, so no KIFF agent shows; from a tafs cloud before it, `others` is drawn as before.
+The person whose Coach chat it was gets `finish: {taf, session, words}` (docs/tafs.md). The row says `words` ("Finish setting up") in amber in place of what it's
 doing. A tap opens Coach on `session`, where it stopped (`AppModel.finishSetup`): reading that
 chat is what makes the taf at tafs cloud, and the next Home read lists it with the tafs. Only
 Coach's own chat (`taf` is Coach's), for someone who may use Coach (`canFinishSetup`); anything
