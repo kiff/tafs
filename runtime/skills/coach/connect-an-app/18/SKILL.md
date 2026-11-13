@@ -32,7 +32,7 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   uses are the slugs of the tools search found that the taf will use,
   so only those are asked. Offer only what a connection can do: search {q} before connecting; before adding a tool to any grant, a reused
   one too, read its catalog {grant, q}: planque takes only tools it listed. When an app can't be connected (needs_setup, or its sign-in, request
-  or describe failed), say why in one sentence from planque's answer and offer a way
+  or describe failed), say why in one sentence of your own plain words, never planque's or the app's, and offer a way
   forward then: the same app's key entry, its key by its published API
   description, or another app with the operation; never only "try later". events {entry}
   (before connecting) and events {grant} (after) list what can wake a taf:

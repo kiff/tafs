@@ -148,7 +148,7 @@ describe("Coach's core", () => {
     const setup = COACH_SKILLS.find((k) => k.name === "set-up-a-taf")!.body.replace(/\s+/g, " ");
     expect(setup).toContain("If the job needs an app, search {q} first: say if it can't be connected, with a way forward, before other questions.");
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
-    expect(connect).toContain("When an app can't be connected (needs_setup, or its sign-in, request or describe failed), say why in one sentence from planque's answer and offer a way forward then: the same app's key entry, its key by its published API description, or another app with the operation; never only \"try later\".");
+    expect(connect).toContain("When an app can't be connected (needs_setup, or its sign-in, request or describe failed), say why in one sentence of your own plain words, never planque's or the app's, and offer a way forward then: the same app's key entry, its key by its published API description, or another app with the operation; never only \"try later\".");
     // A key some vendors want after a word ("ShippoToken <key>"): the request names it.
     expect(connect).toContain("(in: header or query, name, prefix such as \"Token \")");
   });
