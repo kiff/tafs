@@ -1073,6 +1073,8 @@ final class KIFFClient {
         let body: Data
         let signedAt: String
         let message: Data
+        /// For KIFF's gateway, not its API.
+        var gateway = false
     }
 
     /// The confirm of a draft, at exactly `version`, built to be signed together with another request.
@@ -1084,6 +1086,32 @@ final class KIFFClient {
         let uri = url.path + (url.query.map { "?" + $0 } ?? "")
         return Prepared(method: "POST", path: path, body: body, signedAt: signedAt,
                         message: Self.requestMessage(tenant: tenant, method: "POST", uri: uri, body: body, signedAt: signedAt))
+    }
+
+    /// A request tafs cloud built, to KIFF's API or its gateway, ready to be signed together with
+    /// another (Coach's first start): `body` is sent as these bytes, which its message covers.
+    func prepare(method: String, path: String, body: Data, gateway: Bool, signedAt: String) throws -> Prepared {
+        guard let tenant else { throw KIFFError.unauthorized }
+        guard let url = URL(string: path, relativeTo: gateway ? gatewayURL : baseURL) else { throw KIFFError.server(status: 0, message: Words.Error.badPath) }
+        let uri = url.path + (url.query.map { "?" + $0 } ?? "")
+        return Prepared(method: method, path: path, body: body, signedAt: signedAt,
+                        message: Self.requestMessage(tenant: tenant, method: method, uri: uri, body: body, signedAt: signedAt), gateway: gateway)
+    }
+
+    /// Sends Coach's tools batch, prepared and signed together with its draft.
+    func connectBatch(_ prepared: Prepared, signatureHeader: String) async throws {
+        let _: Empty = try await send(prepared.method, prepared.path, body: RawJSON(data: prepared.body), base: gatewayURL, presigned: signatureHeader)
+    }
+
+    /// Sends Coach's draft, prepared and signed together with its batch: KIFF answers the draft,
+    /// confirmed, with the claim secret tafs cloud takes Coach's key with.
+    func submitDraft(_ prepared: Prepared, signatureHeader: String) async throws -> AgentDraft {
+        try await send(prepared.method, prepared.path, body: RawJSON(data: prepared.body), presigned: signatureHeader)
+    }
+
+    /// Submits a draft exactly as tafs cloud sent it, signed as any setup call, and answers it.
+    func submitDraftAnswered(_ body: Data) async throws -> AgentDraft {
+        try await send("POST", "/v1/me/agent-drafts", body: RawJSON(data: body))
     }
 
     /// Sends a prepared confirm with the signature header made for it: the bytes that were signed, unchanged.

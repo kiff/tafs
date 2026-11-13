@@ -488,6 +488,16 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   (`coachToolsAsked`), with tafs cloud's title, intro, groups and ask. The install's Face ID
   gives none of them. Each tool and KIFF's words for the Cards are folded under `details`.
   It has **Give** and **Not now**.
+- **The first start under one Face ID** (`TafsCloud.CoachStart`, `AppModel.startCoachTogether`): with no Coach yet,
+  `GET /v1/setup` may carry `start`, the requests tafs cloud built for it. **Start** then opens the step with those
+  words and KIFF's own words for Coach's Cards (the draft's `cards`, from KIFF's preview), and its one button
+  starts Coach and gives its tools under the one Face ID Start asks: the batch for the
+  gateway and Coach's draft with its Cards, each built in full with one `signed_at` and signed once, together, by
+  the approval key (`kiff.requests.v1`, as a key and its Card are). The batch goes first, the draft once it answered,
+  then tafs cloud claims the draft's key (`POST /v1/setup`). With every tool connected, `start` carries the draft
+  alone and it goes signed as one request. A draft KIFF refuses after the batch went in is started again from the
+  next read, which carries the draft alone, under a new Face ID. The phone signs only `POST /v1/connections/batch`
+  on the gateway and `POST /v1/me/agent-drafts`; anything else, or no `start`, starts Coach as before.
 - **Giving** (`AppModel.giveCoachTools`): one Face ID. Under it the phone signs and sends the
   batch to KIFF's gateway (`POST /v1/connections/batch`), then the Cards' draft to KIFF
   (`POST /v1/me/agent-drafts`), each as it came. Where the Cards didn't come with the batch,

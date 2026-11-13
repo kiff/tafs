@@ -122,6 +122,25 @@ enum RawJSON {
         }
     }
 
+    /// A JSON array's elements, each its own bytes as written; nil when `data` isn't an array.
+    static func elements(of data: Data) -> [Data]? {
+        let bytes = [UInt8](data)
+        var i = skipSpace(bytes, 0)
+        guard i < bytes.count, bytes[i] == UInt8(ascii: "[") else { return nil }
+        i = skipSpace(bytes, i + 1)
+        var out: [Data] = []
+        if i < bytes.count, bytes[i] == UInt8(ascii: "]") { return out }
+        while true {
+            guard let end = endOfValue(bytes, i) else { return nil }
+            out.append(Data(bytes[i..<end]))
+            i = skipSpace(bytes, end)
+            guard i < bytes.count else { return nil }
+            if bytes[i] == UInt8(ascii: "]") { return out }
+            guard bytes[i] == UInt8(ascii: ",") else { return nil }
+            i = skipSpace(bytes, i + 1)
+        }
+    }
+
     private static func skipSpace(_ b: [UInt8], _ from: Int) -> Int {
         var i = from
         while i < b.count, [0x20, 0x09, 0x0A, 0x0D].contains(b[i]) { i += 1 }

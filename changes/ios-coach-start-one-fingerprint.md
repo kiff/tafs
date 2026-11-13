@@ -1,0 +1,1 @@
+- **iOS: starting Coach for the first time takes one Face ID.** Start shows what Coach is given, and one Face ID starts it and gives it its tools, where it used to ask twice.
