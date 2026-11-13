@@ -1,0 +1,1 @@
+- **tafs cloud: a taf made before the plan was bought starts its first run by itself after.** Its first run is owed, not dropped: it starts once the account has a plan, at the next Home read or the 5-minute sweep, on its consent like any run with no person in the moment, and only once (docs/api.md › POST /v1/tafs).
