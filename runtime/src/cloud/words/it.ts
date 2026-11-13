@@ -708,4 +708,5 @@ export const it: Words = {
   ai_consent_needed: "Consenti prima l'uso dell'IA: Coach e i tuoi taf ne hanno bisogno per rispondere.",
   ai_consent_paused_no_one: "In pausa: nessuno ha ancora consentito l'uso dell'IA per le esecuzioni di questo taf. Riprende appena chi gestisce i taf lo consente in Account.",
   ai_consent_paused_not_given: "In pausa: l'uso dell'IA per le esecuzioni di questo taf è stato revocato. Riprende appena è di nuovo consentito o chi gestisce i taf lo prende in carico.",
+  ai_consent_paused_left: "In pausa: la persona il cui consenso all'IA usavano le sue esecuzioni non è più nell'account. Riprende appena chi gestisce i taf lo prende in carico.",
 };

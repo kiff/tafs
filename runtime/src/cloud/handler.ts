@@ -3,7 +3,7 @@ import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writ
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF } from "./kiff.js";
+import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -37,7 +37,7 @@ import { accountConnections, connectionLines, endConnections, withConnections } 
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent } from "./consent.js";
+import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
@@ -3677,6 +3677,36 @@ export async function settleConsent(deps: Deps, tenant: string): Promise<{ pause
   return out;
 }
 
+/** How often a manager's read checks the consenting people against KIFF's list, per account. */
+const CONSENTERS_EVERY_MS = 10 * 60_000;
+
+/**
+ * Whether the people whose consent the account's tafs take are still on it (consent.ts): read with a manager's own
+ * session, since KIFF says nothing when someone leaves and the sweep has no session. At most every 10 minutes per
+ * account. One no longer active is marked gone and their tafs are paused, `left`, until a manager takes them over;
+ * one back is cleared. Anything failing changes nothing.
+ */
+async function checkConsenters(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<void> {
+  if (!deps.aiConsent || !deps.coach || !me.capabilities.includes("cards.manage")) return;
+  const now = deps.now?.() ?? new Date();
+  const checked = `${me.tenantID}#consenters-checked`;
+  try {
+    if (await deps.coach.get(checked)) return;
+    const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB).map((t) => t.id);
+    const people = await consentingPeople(deps.coach, me.tenantID, tafs);
+    if (!people.length) return;
+    const active = await activeMembers(bearer(event), deps.fetch, deps.kiffBase);
+    // The person reading is a manager on the account, so a list without them is a wrong list (an empty or partial
+    // answer): it changes nothing, or every taf would pause.
+    if (!active.has(me.subject)) return;
+    // Marked only after a read that worked: a failed one leaves the next manager's read to try.
+    await deps.coach.put(checked, { at: now.toISOString() }, new Date(now.getTime() + CONSENTERS_EVERY_MS));
+    if (await markGone(deps.coach, me.tenantID, people, active, now)) await settleConsent(deps, me.tenantID);
+  } catch (err) {
+    console.error(`consenters: ${(err as Error).message}`);
+  }
+}
+
 /** A taf's pause for consent, as the apps draw it. */
 async function consentPausedView(taf: Taf, me: KIFFIdentity, deps: Deps, lang: Lang): Promise<{ consent_paused?: { why: ConsentWhy; words: string } }> {
   if (!deps.aiConsent) return {};
@@ -6181,6 +6211,8 @@ async function calendar(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
 }
 
 async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
+  // Whose consent the tafs take, checked against KIFF's people now and then: someone who left consents for no one.
+  await checkConsenters(event, me, deps);
   // The owner is around (kiff/tafs#210): what isn't urgent is pushed quietly, not kept for later.
   await deps.slots.keep(presenceKey(me.tenantID), presentUntil(deps.now?.() ?? new Date()))
     .catch((err) => console.error(`presence: ${(err as Error).message}`));
