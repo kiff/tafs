@@ -1917,9 +1917,38 @@ async function remove(taf: Taf, me: { tenantID: string }, deps: Deps, token = ""
     await deps.archived.remove(me.tenantID, taf.id).catch((err) => console.error(`remove ${taf.id}: archive: ${(err as Error).message}`));
     await deps.tafs.remove(me.tenantID, taf.id);
     await deps.removals.done(me.tenantID, taf.id);
+    await forgetForCoach(me.tenantID, taf, deps);
   }
   await tellChange(me.tenantID, "taf", taf.id, deps);
   return { taf: taf.id, name: taf.name, kiff_agent: taf.kiffAgent || null, done: failed.length === 0, removed, failed };
+}
+
+/**
+ * A removed taf, forgotten by Coach: the notes Coach keeps (shared or a person's own) that are about it go. A note
+ * is about it when it names its id or KIFF agent, or its name as written (case kept, a whole word: "Emails" the
+ * taf, never "emails" the word). A note that also names a taf that's still there goes too: removed means forgotten,
+ * and Coach reads the live taf again (the PM on #835). The removal promises its chats, runs and memory go with it, and a note like "its account has no client invoices"
+ * brought a removed taf's read back into a new chat. Best effort: the taf is removed either way, and its queued
+ * lines are dropped when read (liveCoachLines).
+ */
+async function forgetForCoach(tenant: string, taf: Taf, deps: Deps): Promise<void> {
+  if (taf.job === SETUP_JOB) return;
+  try {
+    const tafs = await deps.tafs.list(tenant);
+    const coach = tafs.find((t) => t.job === SETUP_JOB && !t.removing);
+    if (!coach) return;
+    const word = (w: string, flags: string) => new RegExp(`(^|[^\\p{L}\\p{N}_-])${w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^\\p{L}\\p{N}_-])`, flags);
+    const names = (t: Pick<Taf, "id" | "kiffAgent" | "name">) => [
+      ...[t.id, t.kiffAgent].filter((w): w is string => typeof w === "string" && w.length >= 3).map((w) => word(w, "iu")),
+      ...(typeof t.name === "string" && t.name.trim().length >= 3 ? [word(t.name.trim(), "u")] : []),
+    ];
+    const gone = names(taf);
+    const forgotten = (await deps.agents.memories(tenant, coach.id)).filter((n) => gone.some((r) => r.test(`${n.name}\n${n.text}`)));
+    for (const n of forgotten) await deps.agents.forget(tenant, coach.id, n.name, n.scope);
+    if (forgotten.length) console.log(JSON.stringify({ event: "taf_forgotten_by_coach", taf: taf.id, notes: forgotten.length }));
+  } catch (err) {
+    console.error(`remove ${taf.id}: Coach's notes: ${(err as Error).message}`);
+  }
 }
 
 /**
@@ -4021,7 +4050,7 @@ async function tellCoachLive(me: KIFFIdentity, taf: Taf, n: number, deps: Deps):
     whose = `, which you didn't make${note ? ` (its note: ${JSON.stringify(note)})` : ""}`;
   }
   const line = `[taf ${taf.name} version ${n} live] The owner installed version ${n}${whose}; it runs now.${does ? ` It does: ${JSON.stringify(does)}` : ""}`;
-  await deps.coach.append(coachKeys.notes(me.tenantID, me.subject), { at: at.toISOString(), text: line, taf: taf.name, said: `Version ${n} is live.` },
+  await deps.coach.append(coachKeys.notes(me.tenantID, me.subject), { at: at.toISOString(), text: line, taf: taf.name, taf_id: taf.id, said: `Version ${n} is live.` },
     new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${taf.id} v${n}:`, err));
 }
 
@@ -6793,10 +6822,11 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (setup && task.coachRun) {
     told = await deps.agents.steerRun(tenant, setup.id, task.coachRun, line).then(() => true, () => false);
   }
-  if (!told && task.person) {
+  // A taf removed meanwhile is forgotten, its last result too: nothing of it reaches Coach.
+  if (!told && task.person && taf && !taf.removing) {
     // The person reads the taf and how it went; their Coach reads the whole line. A task
     // with no person behind it is told to no one's Coach.
-    await deps.coach.append(coachKeys.notes(tenant, task.person), { at: at.toISOString(), text: line, taf: name, said, ...(level === "later" ? { away: true } : {}) },
+    await deps.coach.append(coachKeys.notes(tenant, task.person), { at: at.toISOString(), text: line, taf: name, taf_id: taf.id, said, ...(level === "later" ? { away: true } : {}) },
       new Date(at.getTime() + TASK_KEPT_MS));
   }
   if (level === "quiet") await tellPhones(deps, tenant, (lang) => endedNotification(name, r, lang));
@@ -7470,7 +7500,7 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
     if (out.outcome === "failed_check" && deps.coach) {
       const at = deps.now?.() ?? new Date();
       const line = `[taf ${taf.name ?? id} first check] The taf is set up, but its first check couldn't read: ${out.reason ?? "no reason given"}; fix the check with taf_dial.`;
-      await deps.coach.append(coachKeys.notes(tenant, me.subject), { at: at.toISOString(), text: line, taf: taf.name ?? id, said: out.words ?? "" },
+      await deps.coach.append(coachKeys.notes(tenant, me.subject), { at: at.toISOString(), text: line, taf: taf.name ?? id, taf_id: id, said: out.words ?? "" },
         new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${id} first check:`, err));
       // Said in the answer too, so Coach's closing message never calls the taf working (A4).
       return { taf_id: id, check: out.reason ?? "no reason given" };
@@ -7561,8 +7591,9 @@ async function takeCoachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{
   if (taf.job !== SETUP_JOB || !deps.coach) return { text: (owner) => owner, putBack: async () => {} };
   const store = deps.coach;
   const key = coachKeys.notes(me.tenantID, me.subject);
-  const taken = await store.take(key);
-  const said = (taken as Array<{ text?: unknown }>).map((l) => l?.text).filter((t): t is string => typeof t === "string");
+  // A removed taf's lines are dropped here for good, whoever they were queued for.
+  const taken = await liveCoachLines(me.tenantID, await store.take(key) as CoachLine[], deps);
+  const said = taken.map((l) => l?.text).filter((t): t is string => typeof t === "string");
   return {
     text: (owner) => said.length ? `${COACH_LINES}\n${said.join("\n")}\nThe owner says: ${owner}` : owner,
     putBack: async () => {
@@ -7574,10 +7605,27 @@ async function takeCoachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{
   };
 }
 
+/** A line queued for a person's Coach: the taf it's about by id (`taf_id`), and by name (`taf`, all an older line has). */
+type CoachLine = { at?: string; text?: string; taf?: string; taf_id?: string; said?: string; away?: boolean };
+
+/**
+ * The queued lines about tafs that are still there. Removing a taf forgets it for Coach too: its lines go, for every
+ * person on the account, since the lists are per person and read here. A line names its taf by id; an older one only
+ * by name, kept while a taf of that name is there. A line about no taf is kept.
+ */
+async function liveCoachLines(tenant: string, lines: CoachLine[], deps: Deps): Promise<CoachLine[]> {
+  if (!lines.some((l) => typeof l?.taf_id === "string" || typeof l?.taf === "string")) return lines;
+  const tafs = (await deps.tafs.list(tenant)).filter((t) => !t.removing);
+  const ids = new Set(tafs.map((t) => t.id));
+  const names = new Set(tafs.map((t) => t.name));
+  return lines.filter((l) => typeof l?.taf_id === "string" ? ids.has(l.taf_id)
+    : typeof l?.taf === "string" ? names.has(l.taf) || ids.has(l.taf) : true);
+}
+
 /** The lines about Coach's tasks it hasn't read, for the app to show in Coach's chat. */
 async function coachLines(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ coach_lines?: Array<{ at: string; taf: string; said: string; away?: true }> }> {
   if (taf.job !== SETUP_JOB || !deps.coach) return {};
-  const kept = (await deps.coach.get(coachKeys.notes(me.tenantID, me.subject))) as Array<{ at?: string; taf?: string; said?: string; away?: boolean }> | undefined;
+  const kept = await liveCoachLines(me.tenantID, ((await deps.coach.get(coachKeys.notes(me.tenantID, me.subject))) ?? []) as CoachLine[], deps);
   // Away: kept while the owner was away, so the app gathers it into "While you were away" (kiff/tafs#210).
   const lines = (kept ?? []).filter((l): l is { at: string; taf: string; said: string; away?: boolean } =>
     typeof l.at === "string" && typeof l.taf === "string" && typeof l.said === "string")
