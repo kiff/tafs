@@ -90,6 +90,7 @@ class CoachStartTogetherTest {
     assertFalse(alone.together)
     assertFalse("a request to another route is never signed", CoachStart.read(json(start(draftPath = "/v1/me/agents")))!!.startable)
     assertFalse("a scheme it doesn't know", CoachStart.read(json(start().replace("kiff.requests.v1", "kiff.requests.v9")))!!.startable)
+    assertFalse("never Cards without KIFF's words", CoachStart.read(json(start().replace(""""cards":[{"title":"Reads","lines":["See your tafs, up to 500 a day"]}]""", """"cards":[]""")))!!.startable)
     assertNull("one the app can't read is none", CoachStart.read(KiffClient.json.parseToJsonElement("[1]")))
   }
 

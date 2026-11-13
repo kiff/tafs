@@ -284,6 +284,8 @@ data class CoachStart(
     get() {
       val d = draft ?: return false
       if (state != "to_give" || d.method != "POST" || d.path != DRAFT_PATH || d.gateway) return false
+      // Never Cards the person hasn't read in KIFF's own words.
+      if (CoachCardDraft(d.body, d.cardTitle, d.cards).words.isEmpty()) return false
       val c = connect ?: return scheme == ALONE
       return together && c.method == "POST" && c.path == BATCH_PATH && c.gateway
     }

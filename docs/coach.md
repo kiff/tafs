@@ -132,8 +132,8 @@ wrote it.
   with it.
 - **With every tool connected,** `start` carries the draft alone, signed on its own, still one fingerprint.
 - **A draft KIFF refuses after the batch went in** is said on the step, and the next read carries the draft alone.
-- **The phone signs only these:** `POST /v1/connections/batch` on the gateway and `POST /v1/me/agent-drafts`. Anything else, an
-  unknown scheme, or no `start` starts Coach as before.
+- **The phone signs only these:** `POST /v1/connections/batch` on the gateway and `POST /v1/me/agent-drafts`, and only with
+  KIFF's words for the Cards. Anything else, an unknown scheme, a draft without those words, or no `start` starts Coach as before.
 
 iOS follows.
 
