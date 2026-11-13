@@ -135,7 +135,19 @@ enum ConnectionFixWords {
     }
     static let cancel = Words.Common.cancel
     static func waiting(_ vendor: String) -> String { Words.Connect.Status.waitingSignIn(vendor: "\(vendor)") }
-    static func cancelTitle(_ vendor: String) -> String { Words.Connect.CancelSignIn.title(vendor: "\(vendor)") }
+    /// What's cancelled, asked first: the request nobody answered, or the sign-in that never came back.
+    static func cancelTitle(_ g: PlanqueClient.Grant) -> String {
+        g.pendingRequest ? Words.Connect.CancelRequest.title(vendor: "\(g.vendor)") : Words.Connect.CancelSignIn.title(vendor: "\(g.vendor)")
+    }
+    /// The confirmation's own button for it.
+    static func cancelButton(_ g: PlanqueClient.Grant) -> String {
+        g.pendingRequest ? Words.Connect.CancelRequest.button : Words.Connect.CancelSignIn.button
+    }
+    /// The row's word for ending a connection: "Cancel the request" for one nobody answered,
+    /// Cancel for a sign-in that waits, else Remove access.
+    static func endButton(_ g: PlanqueClient.Grant) -> String {
+        g.pendingRequest ? Words.Connect.CancelRequest.button : g.waitingSignIn ? cancel : Words.Connect.disconnectButton
+    }
     static func cancelBody(_ vendor: String) -> String { Words.Connect.CancelSignIn.body(vendor: "\(vendor)") }
 }
 
@@ -151,7 +163,9 @@ enum DisconnectWords {
         return asked + " " + Words.Connect.Disconnect.alsoStops(count: alsoStops.count, names: Words.list(alsoStops))
     }
 
-    static func message(_ vendor: String, taf: String?, alsoStops: [String] = []) -> String {
+    /// What removing access ends. For a key (`key`), the key is deleted from tafs: nothing is
+    /// revoked at the vendor, which a sign-in's text says.
+    static func message(_ vendor: String, taf: String?, alsoStops: [String] = [], key: Bool = false) -> String {
         let others: String
         switch alsoStops.count {
         case 0: others = ""
@@ -160,8 +174,8 @@ enum DisconnectWords {
         }
         return (taf.map { Words.Connect.Disconnect.toolsStop(owner: $0, vendor: vendor) } ?? Words.Connect.Disconnect.noTafUses(vendor: "\(vendor)"))
             + others
-            + Words.Connect.otherConnectionsStayConnectedNo(vendor: "\(vendor)", vendor2: "\(vendor)")
-            + Words.Connect.connectingAgainAsksYouApprove
+            + (key ? " " + Words.Connect.Disconnect.restKey(vendor: "\(vendor)")
+               : Words.Connect.otherConnectionsStayConnectedNo(vendor: "\(vendor)", vendor2: "\(vendor)") + Words.Connect.connectingAgainAsksYouApprove)
     }
 }
 
@@ -294,7 +308,7 @@ struct AppConnectionsView: View {
             Button(Words.Connect.disconnectButton, role: .destructive) { disconnect(g) }
             Button(Words.Common.cancel, role: .cancel) { confirming = nil }
         } message: { g in
-            Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g), alsoStops: model.alsoStops(g)))
+            Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g), alsoStops: model.alsoStops(g), key: g.takesKey))
         }
         // Clearing removed tafs' connections asks first, then one Face ID for all of them.
         .confirmationDialog(ConnectionGroupWords.clearTitle(clearing?.count ?? 0),
@@ -305,10 +319,10 @@ struct AppConnectionsView: View {
         } message: { _ in
             Text(ConnectionGroupWords.clearBody)
         }
-        .confirmationDialog(cancelling.map { ConnectionFixWords.cancelTitle($0.vendor) } ?? "",
+        .confirmationDialog(cancelling.map { ConnectionFixWords.cancelTitle($0) } ?? "",
                             isPresented: Binding(get: { cancelling != nil }, set: { if !$0 { cancelling = nil } }),
                             titleVisibility: .visible, presenting: cancelling) { g in
-            Button(Words.Connect.CancelSignIn.button, role: .destructive) { disconnect(g) }
+            Button(ConnectionFixWords.cancelButton(g), role: .destructive) { disconnect(g) }
             Button(Words.Connect.CancelSignIn.keepWaiting, role: .cancel) { cancelling = nil }
         } message: { g in
             Text(ConnectionFixWords.cancelBody(g.vendor))
@@ -324,7 +338,7 @@ struct AppConnectionsView: View {
                     // A provider's connection isn't signed in again in place: said before any Face ID.
                     Text(ConnectionFixWords.throughProvider(g.vendor)).scaledFont(13).foregroundColor(Theme.soft)
                         .fixedSize(horizontal: false, vertical: true)
-                } else if model.canManageCards, !g.waitingSignIn {
+                } else if model.canManageCards, !g.cancellable {
                     Button(g.takesKey ? ConnectionFixWords.replaceKey : ConnectionFixWords.signInAgain) {
                         if g.takesKey { replacing = g } else { Task { await model.reconnect(g) } }
                     }
@@ -340,8 +354,8 @@ struct AppConnectionsView: View {
             }
             Spacer()
             if model.canManageCards {
-                Button(busy == g.id ? Words.Connect.disconnecting : g.waitingSignIn ? ConnectionFixWords.cancel : Words.Connect.disconnectButton, role: .destructive) {
-                    if g.waitingSignIn { cancelling = g } else { confirming = g }
+                Button(busy == g.id ? Words.Connect.disconnecting : ConnectionFixWords.endButton(g), role: .destructive) {
+                    if g.cancellable { cancelling = g } else { confirming = g }
                 }
                 .buttonStyle(.borderless)
                 .confirming()
@@ -663,7 +677,7 @@ struct ConnectApprovalSheet: View {
                     Button(Words.Connect.disconnectButton, role: .destructive) { disconnect(grant) }
                     Button(Words.Common.cancel, role: .cancel) { }
                 } message: {
-                    Text(DisconnectWords.message(grant.vendor, taf: model.tafOf(grant), alsoStops: model.alsoStops(grant)))
+                    Text(DisconnectWords.message(grant.vendor, taf: model.tafOf(grant), alsoStops: model.alsoStops(grant), key: grant.takesKey))
                 }
         }
     }

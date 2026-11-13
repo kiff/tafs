@@ -699,8 +699,8 @@ struct ConnectionsPanel: View {
                             }
                         }
                         Spacer(minLength: 0)
-                        Button(grant.waitingSignIn ? ConnectionFixWords.cancel : Words.Connect.disconnectButton) {
-                            if grant.waitingSignIn { cancelling = grant } else { confirming = grant }
+                        Button(ConnectionFixWords.endButton(grant)) {
+                            if grant.cancellable { cancelling = grant } else { confirming = grant }
                         }
                             .confirming()
                             .scaledFont(14, weight: .semibold)
@@ -729,12 +729,12 @@ struct ConnectionsPanel: View {
                     if let id = confirming?.id { Task { _ = await model.disconnect(grantID: id) } }
                 }
             } message: {
-                if let g = confirming { Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g), alsoStops: model.alsoStops(g))) }
+                if let g = confirming { Text(DisconnectWords.message(g.vendor, taf: model.tafOf(g), alsoStops: model.alsoStops(g), key: g.takesKey)) }
             }
-            .confirmationDialog(cancelling.map { ConnectionFixWords.cancelTitle($0.vendor) } ?? "",
+            .confirmationDialog(cancelling.map { ConnectionFixWords.cancelTitle($0) } ?? "",
                                 isPresented: Binding(get: { cancelling != nil }, set: { if !$0 { cancelling = nil } }),
                                 titleVisibility: .visible) {
-                Button(Words.Connect.CancelSignIn.button, role: .destructive) {
+                Button(cancelling.map { ConnectionFixWords.cancelButton($0) } ?? Words.Connect.CancelSignIn.button, role: .destructive) {
                     if let id = cancelling?.id { Task { _ = await model.disconnect(grantID: id) } }
                 }
                 Button(Words.Connect.CancelSignIn.keepWaiting, role: .cancel) { cancelling = nil }
