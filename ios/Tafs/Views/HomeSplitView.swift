@@ -200,6 +200,17 @@ struct HomeSplitView: View {
             if !sections.own.isEmpty || sections.shared.isEmpty {
                 Section {
                     ForEach(sections.own) { taf in tafLinks(taf) }
+                    // A taf being set up, among the tafs: by its name, with no state (docs/tafs.md).
+                    ForEach(model.settingUp) { taf in
+                        if let finish = taf.finish, model.canFinishSetup(finish) {
+                            Button { Task { await model.finishSetup(finish) } } label: { tafRow(taf) }
+                                .buttonStyle(.drivablePlain)
+                                .driveWords(taf.name)
+                                .accessibilityIdentifier("home.finish-setup")
+                        } else {
+                            tafRow(taf)
+                        }
+                    }
                     if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty {
                         // tafs cloud's line for a Home with no taf; the app's own only when it sent none.
                         Text(model.recipes?.homeWords ?? (model.mayUseCoach ? Words.Home.connectToolSetUpYour : Words.Home.tafsSharedYouShow))
@@ -334,6 +345,9 @@ struct HomeSplitView: View {
                 } else if taf.finish != nil {
                     // Its setup stopped partway: it needs the owner, in tafs cloud's words.
                     Text(taf.now).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.amberText).oneLineUnlessLarge()
+                } else if taf.settingUp {
+                    // Being set up, by someone else's Coach chat: its name alone, no line.
+                    EmptyView()
                 } else if let line = taf.healthNow {
                     // Idle and not healthy: tafs cloud's line says why, where it would say the next run.
                     Text(line).scaledFont(13, relativeTo: .footnote).foregroundColor(taf.health?.failing == true ? Theme.no : Theme.amberText).oneLineUnlessLarge()

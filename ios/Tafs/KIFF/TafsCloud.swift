@@ -367,8 +367,30 @@ final class TafsCloud {
         /// Everything that waits for the person, counted by tafs cloud with its words; absent
         /// when KIFF's "Did this happen?" can't be read, and the app counts what it has.
         var needsYou: NeedsYou? = nil
+        /// The tafs whose setup stopped partway, listed among the tafs (docs/tafs.md); nil from a
+        /// tafs cloud from before it, whose `others` are drawn as before. With it, `others` only
+        /// repeats them for older apps, and isn't drawn.
+        var settingUp: [SettingUp]? = nil
+
+        /// A taf whose setup stopped partway: the name Coach gave it, and for the person whose
+        /// Coach chat it was, the chat that finishes it.
+        struct SettingUp: Decodable, Equatable {
+            var name = ""
+            var kiffAgent = ""
+            var color = 0
+            var finish: HomeTaf.Finish?
+            enum CodingKeys: String, CodingKey { case name, color, finish, kiffAgent = "kiff_agent" }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                name = ((try? c.decodeIfPresent(String.self, forKey: .name)) ?? nil) ?? ""
+                kiffAgent = ((try? c.decodeIfPresent(String.self, forKey: .kiffAgent)) ?? nil) ?? ""
+                color = ((try? c.decodeIfPresent(Int.self, forKey: .color)) ?? nil) ?? 0
+                finish = (try? c.decodeIfPresent(HomeTaf.Finish.self, forKey: .finish)).flatMap { $0 }.flatMap { $0.usable ? $0 : nil }
+            }
+        }
 
         enum CodingKeys: String, CodingKey {
+            case settingUp = "setting_up"
             case tafs, others, removing, doorsOffered = "doors_offered"
             case cardUnitExceptions = "card_unit_exceptions"
             case yourSteps = "your_steps"

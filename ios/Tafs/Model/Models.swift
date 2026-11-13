@@ -395,6 +395,9 @@ struct Taf: Identifiable, Hashable, Codable {
     /// Another agent whose setup stopped partway: a tap opens Coach's chat where it stopped,
     /// and its line says tafs cloud's words for it (docs/tafs.md).
     var finish: TafsCloud.HomeTaf.Finish? = nil
+    /// A taf being set up (`setting_up`): listed among the tafs by its name, with no state, so
+    /// never "Ready"; nothing to open but Coach's chat, for the person it was.
+    var settingUp = false
     /// tafs cloud's `work.attention`: `healthNow` says what went wrong, in place of "Working".
     var attention = false
     /// A short word beside its name, as tafs cloud sends it: "Trial" for an open trial's
