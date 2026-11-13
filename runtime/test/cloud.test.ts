@@ -4689,6 +4689,11 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(JSON.parse(r.body)).toEqual({ discarded: true, kiff_agent: "refunds-x" });
     expect(w.agents.calls).toContain(`cancelRun ${COACH} ${run.id}`);
     expect((await home()).setting_up).toEqual([]);
+    // The same discard sent again (a phone resending the POST on a dropped connection): done again, for them, never for another.
+    const again = await req("POST", "/v1/home/setting-up/refunds-x/discard");
+    expect(again.statusCode).toBe(200);
+    expect(JSON.parse(again.body)).toEqual({ discarded: true, kiff_agent: "refunds-x" });
+    expect((await req("POST", "/v1/home/setting-up/refunds-x/discard", "owner")).statusCode).toBe(404);
   });
 
   // Android 80, 13 Nov: the phone revoked the Card, then asked to discard, and KIFF's read still showed the Card in force for a

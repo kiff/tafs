@@ -1,0 +1,1 @@
+- A discard the phone sends again after it went through (a connection dropped and the request resent) answers done, for the person who discarded it, for ten minutes.

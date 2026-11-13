@@ -6582,6 +6582,10 @@ async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string
     }
   }
   if (!found || !coach) {
+    // The same discard sent again once it went through (a phone's HTTP stack resends a POST on a dropped connection, and the
+    // app sees only the resend's answer): it answers done again, for the person who discarded it, for a short while.
+    const done = (await deps.coach?.get(discardedKey(me.tenantID, agent)).catch(() => undefined)) as { by?: string } | undefined;
+    if (done?.by === me.subject) return { discarded: true, kiff_agent: agent };
     console.log(JSON.stringify({ event: "half_made_discard", refused: "not_found", tenant: me.tenantID, agent }));
     throw new HTTPError(404, "no taf being set up of yours by that agent");
   }
@@ -6609,10 +6613,15 @@ async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string
     return agentsCall(() => Promise.reject(err));
   });
   await deps.coach?.remove(halfMadeKey(me.tenantID, agent)).catch(() => undefined);
+  await deps.coach?.put(discardedKey(me.tenantID, agent), { by: me.subject }, new Date((deps.now?.() ?? new Date()).getTime() + DISCARDED_KEPT_MS)).catch(() => undefined);
   console.log(JSON.stringify({ event: "half_made_discard", tenant: me.tenantID, agent, run: found.id }));
   await tellChange(me.tenantID, "taf", agent, deps);
   return { discarded: true, kiff_agent: agent };
 }
+
+/** A discard that went through, kept a while so the same discard sent again answers done (discardHalfMade). */
+const discardedKey = (tenant: string, agent: string) => `${tenant}#discarded#${agent}`;
+const DISCARDED_KEPT_MS = 10 * 60_000;
 
 /** How many times, and how far apart, a discard reads KIFF's Cards again before it says one is still in force. */
 const DISCARD_REREADS = 3;
