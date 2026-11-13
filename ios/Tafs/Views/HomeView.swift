@@ -70,9 +70,17 @@ struct HomeView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Eyebrow(text: Words.Home.otherAgents)
                         ForEach(model.otherAgents) { taf in
-                            NavigationLink(value: taf.id) { TafRow(taf: taf, onHalted: { openHalt(taf.id) }) }
-                                .buttonStyle(.drivablePlain)
-                                .driveWords(taf.name)
+                            if let finish = taf.finish, model.canFinishSetup(finish) {
+                                // Its setup stopped partway: Coach's chat where it stopped (docs/tafs.md).
+                                Button { Task { await model.finishSetup(finish) } } label: { TafRow(taf: taf) }
+                                    .buttonStyle(.drivablePlain)
+                                    .driveWords(taf.name)
+                                    .accessibilityIdentifier("home.finish-setup")
+                            } else {
+                                NavigationLink(value: taf.id) { TafRow(taf: taf, onHalted: { openHalt(taf.id) }) }
+                                    .buttonStyle(.drivablePlain)
+                                    .driveWords(taf.name)
+                            }
                         }
                     }
                 }
@@ -321,6 +329,9 @@ struct TafRow: View {
                     // what it's doing: it waits on the owner.
                     if let out = model.signedOut(taf.id) {
                         Text(out.signedOutWords).scaledFont(13).foregroundColor(Theme.amberText).oneLineUnlessLarge()
+                    } else if taf.finish != nil {
+                        // Its setup stopped partway: it needs the owner, in tafs cloud's words.
+                        Text(taf.now).scaledFont(13).foregroundColor(Theme.amberText).oneLineUnlessLarge()
                     } else if let line = taf.healthNow {
                         // Idle and not healthy: tafs cloud's line says why, where it would say the next run.
                         Text(line).scaledFont(13).foregroundColor(taf.health?.failing == true ? Theme.no : Theme.amberText).oneLineUnlessLarge()
