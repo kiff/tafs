@@ -153,6 +153,43 @@ final class HomeRecipesTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Home is the gallery for a new account (kiff/tafs#860): "Say it in your own words" leads
+    /// its list, in tafs cloud's words, for someone who may use Coach, and opens Coach with
+    /// nothing in its box. It leads Home's empty line too, and the "Connect an app" row is gone.
+    func testSayItInYourOwnWordsLeadsHomeAndConnectAnAppIsGone() throws {
+        let words = #""own_words":{"title":"Sag es mit deinen Worten","line":"Coach baut den taf mit dir."}"#
+        let led = try JSONDecoder().decode(TafsCloud.Recipes.self, from: Data(Self.shown.replacingOccurrences(
+            of: #""home":{"shown":true,"#, with: #""home":{"shown":true,\#(words),"#).utf8))
+        XCTAssertEqual(led.homeOwnWords, TafsCloud.Recipes.Home.OwnWords(title: "Sag es mit deinen Worten", line: "Coach baut den taf mit dir."))
+        XCTAssertTrue(led.homeListsRecipes)
+        let empty = try JSONDecoder().decode(TafsCloud.Recipes.self, from: Data(Self.notShown.replacingOccurrences(
+            of: #""home":{"shown":false,"#, with: #""home":{"shown":false,\#(words),"#).utf8))
+        XCTAssertEqual(empty.homeOwnWords?.title, "Sag es mit deinen Worten", "with no job listed too")
+        // Not sent (someone who doesn't manage tafs, or a tafs cloud from before it), or with no
+        // title: no row.
+        let none = try JSONDecoder().decode(TafsCloud.Recipes.self, from: Data(Self.shown.utf8))
+        XCTAssertNil(none.homeOwnWords)
+        let untitled = try JSONDecoder().decode(TafsCloud.Recipes.self, from: Data(Self.shown.replacingOccurrences(
+            of: #""home":{"shown":true,"#, with: #""home":{"shown":true,"own_words":{"title":" ","line":"x"},"#).utf8))
+        XCTAssertNil(untitled.homeOwnWords)
+        XCTAssertTrue(untitled.homeListsRecipes, "the jobs still list")
+
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        func source(_ file: String) throws -> String { try String(contentsOf: views.appendingPathComponent(file), encoding: .utf8) }
+        let list = try source("HomeRecipes.swift")
+        let row = try XCTUnwrap(list.range(of: "OwnWordsRow(title: own.title, line: own.line, action: ownWords)"))
+        let jobs = try XCTUnwrap(list.range(of: "let all = recipes.byCategory"))
+        XCTAssertLessThan(row.lowerBound, jobs.lowerBound, "first, above the jobs")
+        let home = try source("HomeView.swift")
+        XCTAssertTrue(home.contains("model.mayUseCoach ? { model.startNewTaf() } : nil"))
+        XCTAssertTrue(home.contains("HomeRecipes(recipes: recipes, logo: { model.cloud.logoURL($0) }, ownWords: ownWords)"))
+        XCTAssertTrue(home.contains("if let ownWords, let own = model.recipes?.homeOwnWords {"), "Home's empty line leads to Coach too")
+        XCTAssertTrue(try source("HomeSplitView.swift").contains("ownWords: model.mayUseCoach ? { model.startNewTaf() } : nil"))
+        for file in ["HomeView.swift", "HomeSplitView.swift"] {
+            XCTAssertFalse(try source(file).contains("Words.Home.connectTool)"), "\(file): the Connect an app row is gone")
+        }
+    }
+
     /// The sheet's zones are the recipe's Card, in order, titled by tafs cloud's labels: a
     /// zone its Card leaves empty isn't drawn.
     func testAnEmptyZoneIsLeftOutOfTheSheet() throws {

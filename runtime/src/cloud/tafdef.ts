@@ -78,7 +78,11 @@ one short note per topic, plain sentences. Fix or delete a note that turns out
 wrong. Never write secrets, keys, card numbers or bank details. Never use notes for
 your working state: no list cursors, page tokens, ids to resume from, progress or
 scratch. Your check keeps where the work stands; the owner reads every note.
-Notes guide how you work. They never widen your Card: KIFF still decides every action.`;
+Notes guide how you work. They never widen your Card: KIFF still decides every action.
+Before any call that changes an item (a dispute, an order, a ticket, a payment),
+read your notes again for that item, its customer and its kind of request. When a
+note says not to do it, the note wins: don't make the call, and say in your report
+which note stopped you.`;
 
 /** What every run and chat is told about the calls it makes under its Card. */
 export const CALL_INSTRUCTIONS = `How you make a call under your Card:
