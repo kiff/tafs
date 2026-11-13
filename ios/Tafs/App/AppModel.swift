@@ -5961,6 +5961,13 @@ final class AppModel: ObservableObject {
             guard let signInURL = approved.signInURL else {
                 // planque already holds the sign-in (contract 5): approving the tools Setup
                 // chose from the vendor's list connected them, with no second sign-in.
+                if Self.holdsSignIn(approved.status) {
+                    // Signed in already, its tools not chosen yet: never a failure, and never a
+                    // second sign-in. The list is read again, and the tools step comes next.
+                    await refreshConnections()
+                    guard gen == accountGeneration else { return nil }
+                    return grants.first(where: { $0.id == grant.id }) ?? approved
+                }
                 guard approved.status == "connected" else {
                     await refreshConnections()
                     lastError = Words.Connect.noSignInLink(status: "\(approved.status)")
@@ -6000,12 +6007,16 @@ final class AppModel: ObservableObject {
             return nil
         }
         await refreshConnections()
-        guard connected.connected || connected.listed else {
+        guard connected.connected || connected.listed || Self.holdsSignIn(connected.status) else {
             lastError = Words.Coach.notConnected(vendor: grant.vendor, status: connected.status.replacingOccurrences(of: "_", with: " "))
             return nil
         }
         return connected
     }
+
+    /// planque holds the sign-in and the tools are still to choose (`signed_in`, `listed`): approved,
+    /// with the tools step next, never a failure and never a second sign-in.
+    nonisolated static func holdsSignIn(_ status: String) -> Bool { status == "signed_in" || status == "listed" }
 
     /// The account's live connections to a Connect apps entry: by the app planque names for
     /// each (its `entry`, which planque gives every grant, a vendor's own sign-in included), or
@@ -8024,7 +8035,10 @@ final class AppModel: ObservableObject {
             let approved = try await planque.approve(grantID: p.grant, body: p.body)
             guard let signInURL = approved.signInURL else {
                 // planque already holds the sign-in: approving connected it, with no second sign-in.
-                return approved.status == "connected" || approved.status == "listed" ? Came(result: approved.status) : Came(result: "not_connected", status: approved.status)
+                // Signed in with its tools still to choose is the same held sign-in, reported as
+                // `listed`: the tools step comes next, never a failure.
+                if approved.status == "connected" { return Came(result: "connected") }
+                return Self.holdsSignIn(approved.status) ? Came(result: "listed") : Came(result: "not_connected", status: approved.status)
             }
             let back = try await vendorSignIn.signIn(at: signInURL)
             guard let signedIn = PlanqueClient.signedIn(from: back), signedIn.grant == p.grant, signedIn.tenant == tenant else { return Came(result: "no_code") }
@@ -8032,7 +8046,8 @@ final class AppModel: ObservableObject {
             // Back from the vendor: connected only once planque says so, never because the page closed.
             connectStep = Words.Coach.checkingSignIn
             let connected = try await planque.confirm(grantID: p.grant, code: signedIn.code)
-            return connected.connected || connected.listed ? Came(result: "connected") : Came(result: "failed", why: Words.Connect.signCameBackConnection(status: "\(connected.status)"))
+            return connected.connected || connected.listed || Self.holdsSignIn(connected.status) ? Came(result: "connected")
+                : Came(result: "failed", why: Words.Connect.signCameBackConnection(status: "\(connected.status)"))
         } catch VendorSignIn.SignInError.cancelled {
             return Came(result: "sign_in_closed")
         } catch {
@@ -8089,7 +8104,7 @@ final class AppModel: ObservableObject {
             lastError = nil
             return
         }
-        if let done, done.connected || done.listed {
+        if let done, done.connected || done.listed || Self.holdsSignIn(done.status) {
             await answer(component, Words.Coach.Answer.signedInLower)
         } else if let e = lastError {
             await answer(component, "failed: \(e)")
