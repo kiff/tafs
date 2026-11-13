@@ -41,7 +41,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are twelve, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@12", "did-this-happen@1", "draft-the-card@9", "drive-the-app@3", "halting@1", "improve-a-taf@1", "name-the-tools@6", "set-up-a-taf@7", "the-dial@4", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@13", "did-this-happen@1", "draft-the-card@9", "drive-the-app@3", "halting@1", "improve-a-taf@1", "name-the-tools@6", "set-up-a-taf@7", "the-dial@4", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -103,7 +103,16 @@ describe("Coach's core", () => {
   it("finds a vendor's published API description with web_read, and loads connect-an-app when it reads a page", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(body).toContain("Find the description with web_read on the vendor's docs, or use the owner's; never make one up.");
-    expect(toolSkills("web_read")).toEqual(["connect-an-app@12"]);
+    expect(toolSkills("web_read")).toEqual(["connect-an-app@13"]);
+  });
+
+  // planque declares a key request's tools to KIFF before the key only when the request names them, and only
+  // then can one approval cover the key and the Card: the Eval's key-and-Card gate was skipped while Coach sent none.
+  it("names the job's tools on every key request, so planque declares them and the key and the Card are one approval", () => {
+    const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
+    expect(body).toContain("A key request names the job's operations as tools, by operation id, never none: only then is it declared.");
+    expect(body).toContain("If not, the key, then the Card.");
+    expect(body).not.toContain("The request carries its tools (an entry's come with it).");
   });
 
   it("checks an app can be connected before asking anything else, and offers a way forward when it can't", () => {
@@ -132,7 +141,7 @@ describe("Coach's core", () => {
     expect(body).toContain("For a key, the sheet is the ask, with no card before it.");
     // planque takes tools only on a signed-in grant, and declares a key grant's from the request (agentgabo on #830).
     expect(body).not.toContain("(planque tools) while it waits");
-    expect(body).toContain("The request carries its tools (an entry's come with it). Once its status says declared: true, agree the rules, draft the Card and show one approval with the grant and the draft: the sheet signs both. Not declared: the key, then the Card.");
+    expect(body).toContain("A key request names the job's operations as tools, by operation id, never none: only then is it declared. If declared, agree the rules, draft the Card, show one approval with the grant and the draft: the sheet signs both. If not, the key, then the Card.");
     expect(body).toContain("Say a mode only as the grant gives it.");
     expect(body).toContain("Request {reuse: that grant's id, name, taf_name, tools: []}: the owner then approves the new taf's tools alone, with no new sign-in or key.");
     expect(body).toContain("Only if planque refuses the reuse, ask for the same kind: {server}, {entry} or {api}.");
@@ -231,15 +240,15 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   }
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@12", "draft-the-card@9", "halting@1", "name-the-tools@6", "set-up-a-taf@7", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@12", "draft-the-card@9", "improve-a-taf@1", "name-the-tools@6"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@13", "draft-the-card@9", "halting@1", "name-the-tools@6", "set-up-a-taf@7", "usage-and-plans@3"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@13", "draft-the-card@9", "improve-a-taf@1", "name-the-tools@6"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@12", "draft-the-card@9", "halting@1", "name-the-tools@6", "set-up-a-taf@7", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@12", "draft-the-card@9", "halting@1", "improve-a-taf@1", "name-the-tools@6"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@13", "draft-the-card@9", "halting@1", "name-the-tools@6", "set-up-a-taf@7", "usage-and-plans@3"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@13", "draft-the-card@9", "halting@1", "improve-a-taf@1", "name-the-tools@6"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });

@@ -54,10 +54,11 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   The owner gives the key on a secure sheet on their phone, outside this chat,
   straight to planque: it never reaches you. Never ask for it in the chat, and
   if they paste one, don't use it: say it belongs on that sheet. For a key, the
-  sheet is the ask, with no card before it. The request carries its tools (an
-  entry's come with it). Once its status says declared:
-  true, agree the rules, draft the Card and show one approval with the grant
-  and the draft: the sheet signs both. Not declared: the key, then the Card. planque's answer gives the taf's agent id: use it from then on. A tool's
+  sheet is the ask, with no card before it. A key request names the job's
+  operations as tools, by operation id, never none: only then is it
+  declared. If declared, agree the rules, draft the Card,
+  show one approval with the grant and the draft: the sheet signs both. If not,
+  the key, then the Card. planque's answer gives the taf's agent id: use it from then on. A tool's
   answer isn't kept between your turns: when you no
   longer have the taf's agent id or a grant's id, planque grants with no agent
   lists every connection you asked for, with its agent, status and when it
