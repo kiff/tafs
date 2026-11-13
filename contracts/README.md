@@ -10,3 +10,6 @@ read it: in CI, in seconds, never first on a phone or in an Eval.
 
 Write a file again only through its writer: `UPDATE_CONTRACTS=1 npx vitest run test/contract_apps.test.ts` in `runtime/`. Never
 by hand: a hand edit is a contract no code keeps.
+
+A change here runs the iOS and Android workflows (`contracts/**` is in both their paths), so a file written again is read by
+both apps' tests on the same pull request.

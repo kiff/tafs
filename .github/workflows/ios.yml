@@ -27,12 +27,12 @@ on:
     tags: ["v*"]
     # What the app is built from (the strings are generated into ios/). GitHub
     # doesn't apply paths to a tag push, so a tag always runs.
-    paths: ["ios/**", "app/strings/**", ".github/workflows/ios.yml"]
+    paths: ["ios/**", "app/strings/**", "contracts/**", ".github/workflows/ios.yml"]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     # Only a change to the Apple app, its strings or this workflow: a change to
     # tafs cloud or to Android doesn't wait for a macOS runner.
-    paths: ["ios/**", "app/strings/**", ".github/workflows/ios.yml"]
+    paths: ["ios/**", "app/strings/**", "contracts/**", ".github/workflows/ios.yml"]
   workflow_dispatch:
     inputs:
       upload:
@@ -133,7 +133,7 @@ jobs:
       # upload goes straight to the archive. Each part on its own rule, the
       # rule main and pull requests use to decide when to run it:
       # - the unit tests (tested): no change since to what the app is built
-      #   from (the push paths);
+      #   from or tested against (the push paths, contracts/ among them);
       # - the iPhone's UI tests (ui): no change since to what draws the screens
       #   or to the UI tests;
       # - the iPad's (ipad_tested): no change since to the iPad's layout.
@@ -146,7 +146,7 @@ jobs:
           HEAD: ${{ github.sha }}
           RUN: ${{ github.run_id }}
         run: |
-          app='^(ios/|app/strings/|\.github/workflows/ios\.yml$)'
+          app='^(ios/|app/strings/|contracts/|\.github/workflows/ios\.yml$)'
           uitests='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|ios/TafsUITests/|\.github/workflows/ios\.yml$)'
           ipad='^(ios/Tafs/Views/(HomeSplitView|HomeView|TafsBar)\.swift$|ios/Tafs/App/TafsApp\.swift$|ios/TafsUITests/ListTapUITests\.swift$|\.github/workflows/ios\.yml$)'
           tested=false; ui_tested=false; ipad_tested=false
