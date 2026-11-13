@@ -568,7 +568,7 @@ export const nl: Words = {
   ct_replaces: "vervangt de eerdere koppeling",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
   // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
-  start_lead: "Starten geeft Coach de tools hieronder. Je keurt één keer goed, op dit apparaat.",
+  start_lead: "Starten geeft Coach de tools hieronder. Je keurt ze goed op dit apparaat.",
   start_button: "Starten",
   plan_needed: "Kies een abonnement om het te starten.",
   cts_title: "Geef Coach zijn tools",

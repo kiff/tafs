@@ -568,7 +568,7 @@ export const pt: Words = {
   ct_replaces: "substitui a ligação anterior",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
   // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
-  start_lead: "Começar dá ao Coach as ferramentas abaixo. Aprova uma vez, neste dispositivo.",
+  start_lead: "Começar dá ao Coach as ferramentas abaixo. Aprova-as neste dispositivo.",
   start_button: "Começar",
   plan_needed: "Escolha um plano para o pôr a funcionar.",
   cts_title: "Dê ao Coach as suas ferramentas",

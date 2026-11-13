@@ -568,7 +568,7 @@ export const fr: Words = {
   ct_replaces: "remplace la connexion précédente",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
   // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
-  start_lead: "Commencer donne à Coach les outils ci-dessous. Vous approuvez une fois, sur cet appareil.",
+  start_lead: "Commencer donne à Coach les outils ci-dessous. Vous les approuvez sur cet appareil.",
   start_button: "Commencer",
   plan_needed: "Choisissez un forfait pour le lancer.",
   cts_title: "Donner ses outils à Coach",

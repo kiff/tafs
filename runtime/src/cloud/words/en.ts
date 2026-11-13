@@ -622,7 +622,7 @@ export const en = {
   ct_replaces: "replaces the earlier connection",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
   // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
-  start_lead: "Start gives Coach the tools below. You approve once, on this device.",
+  start_lead: "Start gives Coach the tools below. You approve them on this device.",
   start_button: "Start",
   plan_needed: "Choose a plan to start it.",
   cts_title: "Give Coach its tools",

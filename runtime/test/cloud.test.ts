@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
+import { wordsIn } from "../src/cloud/words/index.js";
 import { AgentsError } from "../src/cloud/agents.js";
 import { calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
@@ -1750,8 +1751,12 @@ describe("Setup (kiff/agents#91)", () => {
       expect(draft.body).not.toHaveProperty("no_tools");
       expect(first.coach_tools_step.title).toBe("Give Coach its tools");
       // Start's own words, the first run's items 2 and 3: one line and the button, never the apps' paragraphs. What Start does
-      // is the line's to say, once (the app-words cut, screen 3), and it never names a biometric.
-      expect(first.words).toEqual({ lead: "Start gives Coach the tools below. You approve once, on this device.", start: "Start" });
+      // is the line's to say (the app-words cut, screen 3). It never names a biometric, and never says "once": a first run
+      // asks for the face or fingerprint more than once (the first-run walk-through).
+      expect(first.words).toEqual({ lead: "Start gives Coach the tools below. You approve them on this device.", start: "Start" });
+      for (const lang of ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const) {
+        expect(wordsIn(lang).start_lead, lang).not.toMatch(/\b(once|einmal|une fois|una vez|una volta|uma vez|één keer|raz)\b/i);
+      }
       // The Cards the one fingerprint signs are shown in KIFF's own words, previewed over the tools the batch declares
       // (qa-kiff on #852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
       expect(draft.card_title).toBe("Coach's Card");
