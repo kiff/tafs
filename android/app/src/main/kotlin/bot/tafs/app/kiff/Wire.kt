@@ -162,7 +162,25 @@ data class Home(
   @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException>? = null,
   /** Steps a taf handed its owner, oldest first (docs/api.md › Your step): Needs you draws them. */
   @SerialName("your_steps") val yourSteps: List<YourStep>? = null,
+  /** Coach's chats waiting on this person for an answer or approval, oldest first (docs/api.md › Coach waiting): Needs you draws them. */
+  @SerialName("coach_waiting") val coachWaiting: List<CoachWaiting>? = null,
 )
+
+/**
+ * A Coach chat paused on a card its person answers, as tafs cloud lists it: the chat to open and tafs cloud's words for the row
+ * ("Coach is waiting for your approval.", "Open Coach"). The app decides nothing about it: tafs cloud says it waits.
+ */
+@Serializable
+data class CoachWaiting(
+  val taf: String = "",
+  val session: String = "",
+  val run: String = "",
+  val since: String? = null,
+  val words: CoachWaitingWords = CoachWaitingWords(),
+)
+
+@Serializable
+data class CoachWaitingWords(val line: String = "", val open: String = "")
 
 /**
  * A step a taf may never take itself, handed to its owner, as tafs cloud shows it: KIFF's hand-off id, what to do and why, in

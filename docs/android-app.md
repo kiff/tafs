@@ -623,6 +623,16 @@ like this one go on their own.
   (`hold: {id, accounting_version}`) when the switch is on, so KIFF lets it go under the same
   signature. Then Needs you is read again.
 
+## Coach waiting
+
+A Coach chat paused on a card its person answers (an approval, a sign-in, questions) is in **Needs
+you** ([api.md](api.md#coach-waiting)): Home's `coach_waiting`, after the steps, each a panel
+(`CoachWaitingPanel`, `views/YourStepViews.kt`) with tafs cloud's line ("Coach is waiting for your
+approval.") and its **Open Coach** button, which opens Coach on that chat (`AppModel.openWaitingCoach`),
+where the card is answered. tafs cloud counts each in `needs_you`, so Home never says "Nothing needs
+you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
+iPhone and iPad follow.
+
 ## Your step
 
 A step a taf may never take itself, such as approving a bank transfer, is handed to its owner

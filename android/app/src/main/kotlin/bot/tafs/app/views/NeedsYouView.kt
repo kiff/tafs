@@ -169,6 +169,7 @@ fun NeedsYouView(
   modifier: Modifier = Modifier,
   onAnswerUnsure: (suspend (bot.tafs.app.kiff.UnsureCall, Boolean) -> Unit)? = null,
   onCheckUnsure: (suspend (bot.tafs.app.kiff.UnsureCall) -> Unit)? = null,
+  onOpenCoach: ((bot.tafs.app.kiff.CoachWaiting) -> Unit)? = null,
 ) {
   val unsureScope = rememberCoroutineScope()
   // Pulling reads KIFF again, as on iOS: a hold made while this screen was open shows without leaving it.
@@ -192,9 +193,11 @@ fun NeedsYouView(
     item { ScreenTitle(Words.NeedsYou.title) }
     // Steps a taf handed its owner, oldest first, as tafs cloud lists them: before the held calls, as each is the owner's to do.
     items(state.yourSteps, key = { "ys|" + it.handoff }) { step -> YourStepPanel(step, state) }
+    // Coach's chats waiting on this person, in tafs cloud's words: the button opens that chat, where the card is answered.
+    items(state.coachWaiting, key = { "cw|" + it.session }) { waiting -> CoachWaitingPanel(waiting, onOpenCoach) }
     // Cards asked to take another currency: tafs cloud's rows, apart from the held calls, with no Approve once.
     items(state.cardUnitExceptions, key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
-    if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty()) {
+    if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty() && state.coachWaiting.isEmpty()) {
       item {
         Panel {
           Text(Words.NeedsYou.nothingWaiting, style = scaled(15, FontWeight.SemiBold, Theme.ink))

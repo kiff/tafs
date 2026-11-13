@@ -54,3 +54,15 @@ fun YourStepPanel(step: YourStep, state: AppState) {
     }
   }
 }
+
+/**
+ * A Coach chat waiting on this person (docs/api.md › Coach waiting), in tafs cloud's words: what Coach waits for, and the way into
+ * that chat. With no way in (sample mode), the line alone.
+ */
+@Composable
+fun CoachWaitingPanel(waiting: bot.tafs.app.kiff.CoachWaiting, onOpen: ((bot.tafs.app.kiff.CoachWaiting) -> Unit)?) {
+  Panel(stroke = Theme.amber.copy(alpha = 0.5f)) {
+    Text(waiting.words.line, style = scaled(16, FontWeight.SemiBold, Theme.ink))
+    if (onOpen != null && waiting.words.open.isNotBlank()) PrimaryButton(waiting.words.open, { onOpen(waiting) }, Modifier.fillMaxWidth())
+  }
+}
