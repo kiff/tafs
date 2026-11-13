@@ -272,7 +272,8 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
       call.proposed.amount?.let { Text(it.formatted, style = scaled(44, FontWeight.Bold, Theme.ink, display = true)) }
       Text(call.proposed.summary, style = scaled(16, FontWeight.SemiBold, Theme.ink))
       if (call.proposed.context.isNotEmpty()) Text(call.proposed.context, style = scaled(14, color = Theme.soft))
-      Text(
+      // KIFF's reason, as a badge; none where there's none to say (Coach's install).
+      if (call.reason.isNotBlank()) Text(
         call.reason,
         style = scaled(12, FontWeight.Medium, Theme.amberText),
         modifier = Modifier.clip(CircleShape).background(Theme.amber.copy(alpha = 0.14f)).padding(horizontal = 8.dp, vertical = 5.dp),
