@@ -104,7 +104,7 @@ first Send starts it (`AppModel.sendChat`, `startCoach`):
   its own bytes, so it takes its own fingerprint. A sheet asks for it (`CoachToolsSheet`,
   `AppState.coachToolsAsked`). Its words are tafs cloud's (`tools.coach_tools_step`: `title`,
   `intro`, a few `groups` up front, each tool's `does` and `why` folded under `details`, closed at
-  first, then `ask`, `give` and `not_now`). The connections' `lines` and KIFF's words for the Card
+  first, then `give` and `not_now`; the button says what it does, with no question over it). The connections' `lines` and KIFF's words for the Card
   sit in the same fold. A tafs cloud from before the step shows the `lines`, the Card and the app's
   own button. **Not now** puts it off. Then one line above the conversation (`row`) opens the same
   sheet; it's never a panel there.
@@ -125,7 +125,7 @@ and iPad in [ios-app.md](ios-app.md)). Before Coach exists, `GET /v1/setup` may 
 wrote it.
 - **Start's screen shows what Coach is given** (Android 1.20, `StartScreen`): `start.words.lead`, then the Cards in KIFF's own
   words (the draft's `card_title` and `cards`), with Coach's tools folded under `coach_tools_step`'s details, then
-  `start.words.does` and the `start.words.start` button. There's no second screen, and nothing is signed unread. (1.19 opened
+  the `start.words.start` button (the lead says what Start does, once: there's no line under the button). There's no second screen, and nothing is signed unread. (1.19 opened
   Coach's tools step on the first Send instead.)
 - **Start, or the first Send, starts Coach and gives its tools, behind one fingerprint.** The phone builds each request's message with one
   `signed_at` and signs both hashes once with the approval key (`kiff.requests.v1`). Each request goes with that one signature and
@@ -317,6 +317,16 @@ taken once: a second signed report of the same ask finds nothing waiting. On
 Android: `AppModel.approveCoach`; on iOS, `AppModel.approve`. A sign-in card's **Sign in
 again**, and Connect apps' sheet, still approve on the phone as before.
 
+
+**A message during an approval waits.** Once tafs cloud asks the phone to sign, the person is approving
+(a fingerprint, perhaps a vendor's sign-in), and the card's run waits for the report. A message they send
+meanwhile, to that chat, doesn't start a new run, which would leave the card waiting for nothing. It's
+steered into the run the card waits in (`held: "approval"` in the answer, or in the stream's `session`
+event), and Coach reads it once the approval is settled. What that run never reads is sent as the next
+message once it's over, as for any held message. The wait lasts as long as the ask (20 minutes). A report
+that comes in after the card stopped waiting anyway (a run that went on) still counts: the phone gets the
+outcome, never a conflict, and Coach reads "[approval …] The owner's approval was settled after their
+message: …" with the next message (go-to-market job 3, 13 Nov).
 ## Connections
 
 A taf's connections are on its Card tab (`ConnectionsPanel`): whose keys, which tools,
@@ -485,7 +495,7 @@ Answering a held call is never a tool.
 A first Start ends on one step that asks for Coach's tools, with their own fingerprint. tafs cloud
 writes its words, in the person's language, on `GET /v1/setup`'s `tools.coach_tools_step` while the
 tools are `to_give` (`coachToolsStep` in `coach.ts`):
-`{title, intro, groups: [{name, line, tools: [{name, does, why}]}], details, ask, give, not_now, row}`.
+`{title, intro, groups: [{name, line, tools: [{name, does, why}]}], details, give, not_now, row}`.
 
 - **Four groups, always shown:** watch your tafs, run them for you, build new versions, help while you
   drive. Each group has one line. The thirteen tools sit under them, under `details`, which is folded by
@@ -548,6 +558,15 @@ is that the owner hands it to the taf in its chat; the apps search finds come af
 connected only when the owner picks it (`set-up-a-taf@2`). A connection the owner didn't ask for
 is proposed, never assumed.
 
+A recurring job is set up as recurring (`set-up-a-taf@8`): before any connection, Coach proposes its
+cadence, its sources and its volume ("weekday mornings, from your changelog and releases, at most 1 a
+day"), and asks only what it can't decide.
+
+A taf keeps its own records (`set-up-a-taf@8`). When it works from the owner's sheet or list, Coach
+proposes that it adds and updates its own columns there (who it wrote to, replies, do not contact), with a
+tool that writes to the sheet on its Card. Coach asks only what only the owner knows, never how they
+track the work: the owner talks to Coach and never types into the sheet.
+
 ## A vendor the account already connects
 
 When a new Coach conversation starts, tafs cloud reads the account's connections from planque with the
@@ -607,7 +626,8 @@ line for line: no limit merged with another or changed in number. A limit the Ca
 changed rule, shown in a new rules notice and agreed again before the draft (`draft-the-card@7`).
 
 A taf that writes to people names who they come from: Coach asks once, with its other questions,
-offering the company's name, never the mail app's default (gap 16), and its result's taf carries the
+offering first "tafs, your AI assistant", so the taf speaks as itself (`writes_for` "tafs": a recipient
+reads "on behalf of tafs", never "your" assistant), then the owner's name, then the company's, never the mail app's default (gap 16; `draft-the-card@11`), and its result's taf carries the
 answer as `writes_for`. kiff/agents then starts each outside message with "Written by an AI agent on behalf of
 <writes_for>." (gap 18; "Written by an AI agent." when no one is named, never "for the company"): first
 in each text part the message carries (an email's text and its html), said once, in the message's
@@ -699,6 +719,12 @@ are suggestions, not finished products: there is no recipe-specific code, and wh
 build one, the gap is fixed generically (a connection, how Coach picks tools, a Card rule), so a
 person can prompt Coach freely. Three of the five starter jobs tafs began with are recipes now. Bill pay and Access aren't, because
 the apps they connect can't do their Card's work today.
+
+The gallery shows only the jobs whose apps connect today (rule 13): each of a recipe's connections needs an
+app in `CONNECTS_TODAY` (`runtime/src/cloud/recipes.ts`), the apps kiff.dev's apps list says work, each
+proved by a check that connected it. A job whose app can't connect yet ("Chase overdue invoices",
+"Follow up new leads within the hour") stays out, and comes back with no other change once its app is
+added there.
 
 They show only while the account has no live taf, and while its "Show suggestions" setting is
 on (the owner's decision): tafs cloud decides, and `GET /v1/recipes` sends the list or an empty

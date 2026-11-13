@@ -126,7 +126,7 @@ class VersionsTest {
     transport.answer(versions, 500, """{"error":"later"}""")
     val m = model()
     m.loadVersions("refunds-1")
-    assertEquals("Its versions couldn't be loaded. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.versionErrors["refunds-1"])
+    assertEquals("Its versions couldn't be loaded. It isn't working on our side right now. Try again later.", m.state.value.versionErrors["refunds-1"])
     assertNull(m.state.value.versions["refunds-1"])
   }
 
@@ -212,7 +212,7 @@ class VersionsTest {
     transport.answer(switch2, 500, """{"error":"down"}""")
     val m = model()
     assertFalse(m.useVersion(Version(2, "n", null, t0, false), "refunds-1"))
-    assertEquals("Version 2 can't go live now. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.versionErrors["refunds-1"])
+    assertEquals("Version 2 can't go live now. It isn't working on our side right now. Try again later.", m.state.value.versionErrors["refunds-1"])
     assertTrue(auth.asked.isEmpty())
   }
 
@@ -312,7 +312,7 @@ class VersionsTest {
     val m = model()
     assertFalse(m.useVersion(Version(2, "n", "setup", t0, false, "dr_1"), "refunds-1", shownDraft = "v3"))
     assertEquals(
-      "Installing version 2 didn't finish: KIFF didn't confirm its Card. It isn't working on our side right now. Nothing to do on your side; try again later. Your taf doesn't run until you finish or cancel it.",
+      "Installing version 2 didn't finish: KIFF didn't confirm its Card. It isn't working on our side right now. Try again later. Your taf doesn't run until you finish or cancel it.",
       m.state.value.versionErrors["refunds-1"],
     )
     assertNull(m.state.value.staleVersionCards["refunds-1"])

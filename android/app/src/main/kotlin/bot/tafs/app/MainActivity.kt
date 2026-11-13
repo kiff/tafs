@@ -139,6 +139,9 @@ class MainActivity : FragmentActivity() {
     // The words in this screen's language, which follows the app's own when the person picked one: a language changed while
     // the app was away recreates the screen, and with it this (docs/languages.md).
     bot.tafs.app.model.Res.install(bot.tafs.app.design.AndroidWords.of(this))
+    // The app's taps, behind Haptics in Settings: on this window (docs/android-app.md, "Haptics").
+    bot.tafs.app.design.Haptics.load(this)
+    bot.tafs.app.design.Haptics.performer = bot.tafs.app.design.Haptics.on(window.decorView)
     // The bars follow the app's own Light/Dark/System choice from the first frame, not only the phone's setting; TafsTheme
     // keeps them in step when the choice changes.
     // Edge to edge without the window's deprecated bar colours (docs/android-app.md): the theme makes the bars transparent
@@ -594,6 +597,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         approveDrive = model::approveDrive,
         turnOnAlerts = { scope.launch { model.turnOnAlertsFromOffer() } },
         notNowAlerts = model::notNowAlertsOffer,
+        openPlan = { coachOpen = false; usageOpen = true },
       ),
     )
   }

@@ -178,7 +178,7 @@ class ChatKiffTest {
     m.loadChat("refunds-1")
     transport.answer(conversation, 500, """{"error":"boom"}""")
     m.loadChat("refunds-1")
-    assertEquals("The thread couldn't be loaded. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.chatErrors["refunds-1"])
+    assertEquals("The thread couldn't be loaded. It isn't working on our side right now. Try again later.", m.state.value.chatErrors["refunds-1"])
     assertEquals(listOf("Hi"), m.messages().map { it.text })
   }
 
@@ -621,7 +621,7 @@ class ChatKiffTest {
     val unsent = m.state.value.chatUnsent["refunds-1"]!!.single()
     assertEquals("hello", unsent.message.text)
     assertEquals(bot.tafs.app.model.Unsent.SESSION, unsent.message.session)
-    assertEquals("The message wasn't sent. It isn't working on our side right now. Nothing to do on your side; try again later.", unsent.why)
+    assertEquals("The message wasn't sent. It isn't working on our side right now. Try again later.", unsent.why)
     assertNull("said under the message, not above the box", m.state.value.chatErrors["refunds-1"])
     // The thread shows it where it was written, and a reload keeps it.
     assertTrue(m.state.value.chatItems("refunds-1").any { it is bot.tafs.app.model.ChatItem.Message && it.message == unsent.message })

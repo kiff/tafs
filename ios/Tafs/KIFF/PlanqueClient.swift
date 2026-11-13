@@ -255,7 +255,11 @@ final class PlanqueClient {
         /// planque already holds the sign-in: approving the tools connected them (contract 5).
         let signInURL: URL?
         let expiresAt: String?
-        enum CodingKeys: String, CodingKey { case status, signInURL = "sign_in_url", expiresAt = "expires_at" }
+        /// With `signed_in` and no sign-in link: planque holds a fresh sign-in and waits for this
+        /// phone to confirm it with this one-use code, as a browser's code is; unconfirmed, planque
+        /// revokes it at `confirm_by`.
+        var confirmCode: String? = nil
+        enum CodingKeys: String, CodingKey { case status, signInURL = "sign_in_url", expiresAt = "expires_at", confirmCode = "confirm" }
     }
 
     /// The approve body: the grant's digest, and for a grant with a profile, the digests of

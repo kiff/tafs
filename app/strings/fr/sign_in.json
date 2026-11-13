@@ -29,12 +29,12 @@
   "sign_in.waiting_for_browser": "En attente de votre navigateur… Vérifiez qu'il affiche {user_code}, et n'approuvez qu'avec cet {device} en main.",
   "sign_in.welcome.inside_lead": "Dans la Card",
   "sign_in.welcome.inside_rest": "il agit, et chaque action a un reçu.",
-  "sign_in.welcome.lead": "Confiez une mission à un taf. Il travaille dans une Card que vous définissez, et vous demande quand il lui faut plus.",
+  "sign_in.welcome.lead": "Un taf accomplit une mission dans la Card que vous définissez. Au-delà, il vous le demande.",
   "sign_in.welcome.outside_lead": "Hors de la Card",
   "sign_in.welcome.outside_rest": "il vous attend, ici même.",
   "sign_in.welcome.revoked_lead": "Révoquée",
   "sign_in.welcome.revoked_rest": "aucune nouvelle action ne passe.",
-  "sign_in.welcome.title": "Ils tafent.\nVous kiffez.",
+  "sign_in.welcome.title": "tafs",
   "sign_in.with_kiff": "Se connecter avec KIFF",
   "sign_in.your_code": "Votre code"
 }

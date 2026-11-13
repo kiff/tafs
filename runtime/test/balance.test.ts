@@ -76,7 +76,7 @@ describe("the balance, in words", () => {
     expect(beyond.home_line).toBe("80% of the spend limit is used");
     // Waiting: the raise for whoever may make it; past the ceiling, KIFF; an admin, for anyone else.
     expect(balanceView(co({ state: "waiting", why: "limit_reached", beyond: 800, beyond_cents: 8000, meter_pct: 100 })).balance.warning)
-      .toBe("Your tafs are waiting: the spend limit is reached. Raise it to let them go on, or they go on when the period starts again on 1 Dec.");
+      .toBe("Spend limit reached. Raise it, or your tafs go on from 1 Dec.");
     const ceiling = balanceView(co({ state: "waiting", why: "limit_reached", raise_to_cents: 0 }));
     expect(ceiling.balance.raise).toBeNull();
     expect(ceiling.balance.warning).toContain("can't go higher from the app. Contact KIFF to raise it further");

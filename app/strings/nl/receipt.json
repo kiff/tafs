@@ -11,9 +11,9 @@
   "receipt.check.signature_mismatch": "De handtekening komt niet overeen met deze stappen.",
   "receipt.check.unknown_signature": "Het is ondertekend op een manier die deze app niet kent.",
   "receipt.check.unreadable": "Het ontvangstbewijs kon niet worden gelezen.",
-  "receipt.checked": "✓ Ontvangstbewijs van KIFF · gecontroleerd op deze telefoon",
+  "receipt.checked": "✓ Ontvangstbewijs van KIFF · gecontroleerd",
   "receipt.checked_on_device": "Ontvangstbewijs van KIFF · gecontroleerd op deze {device}",
-  "receipt.checked_why": "KIFF heeft dit ondertekend toen het besliste. De handtekening past bij het adres van KIFF en geen van de stappen is sindsdien gewijzigd.",
+  "receipt.checked_why": "Ondertekend door KIFF, sindsdien ongewijzigd.",
   "receipt.checking_on_device": "Ontvangstbewijs van KIFF controleren op deze {device}…",
   "receipt.copy": "Ontvangstbewijs kopiëren",
   "receipt.decided_by.card": "De Card",
@@ -60,9 +60,9 @@
   "receipt.refused_by": "Geweigerd door {who}",
   "receipt.share": "Delen",
   "receipt.show_full": "Het volledige ontvangstbewijs tonen",
-  "receipt.signed_on_device_why": "Je antwoord is ondertekend met een sleutel die dit apparaat nooit verlaat, na {biometry}.",
+  "receipt.signed_on_device_why": "Met {biometry}, door een sleutel die dit apparaat nooit verlaat.",
   "receipt.signed_on_phone": "✓ Ondertekend op deze telefoon",
-  "receipt.signed_on_phone_why": "Je antwoord is ondertekend met een sleutel die deze telefoon nooit verlaat.",
+  "receipt.signed_on_phone_why": "Door een sleutel die deze telefoon nooit verlaat.",
   "receipt.signs_within": "KIFF ondertekent ontvangstbewijzen binnen een minuut na de beslissing. Controleer het zo opnieuw.",
   "receipt.what_happened": "Wat er gebeurde"
 }

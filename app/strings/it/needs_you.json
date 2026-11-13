@@ -36,7 +36,7 @@
   "needs_you.extra_room_with": "Margine extra con {biometry}",
   "needs_you.get_alert_when_call_waits": "Ricevi un avviso quando una chiamata aspetta la tua risposta, anche con tafs chiusa.",
   "needs_you.install_from_card": "Installala dalla sua scheda: la versione diventa attiva, poi Coach viene informato.",
-  "needs_you.ios_asks_next_confirming_sets": "Poi te lo chiede iOS. Confermando con {biometry} li configuri per il tuo account.",
+  "needs_you.ios_asks_next_confirming_sets": "Poi te lo chiede iOS, quindi {biometry}.",
   "needs_you.knocks": {
     "one": "Qualcuno ha bussato alla sua porta. Non è stato fatto nulla.",
     "other": "{count} bussate alle sue porte. Non è stato fatto nulla."
@@ -48,8 +48,8 @@
   "needs_you.nothing_sent": "Non viene inviato nulla finché non approvi.",
   "needs_you.nothing_waiting": "Non c'è nulla in attesa.",
   "needs_you.opens_where_you_answer": "Apre {taf}, dove rispondi",
-  "needs_you.over_total": "Approvarla una volta non basta: supera un totale che la Card consente tra più chiamate, come quello di un giorno. Chi gestisce le Card dell'account può darle un margine extra, oppure puoi rifiutarla.",
-  "needs_you.over_total_manager": "Approvarla una volta non basta: supera un totale che la Card consente tra più chiamate, come quello di un giorno. Il margine extra aggiunge solo ciò che serve a questa chiamata, finché quel totale non si azzera. Dopo, la Card torna com'era.",
+  "needs_you.over_total": "Supera un totale della Card, come quello di un giorno. Chi gestisce le Card può darle un margine extra, oppure puoi rifiutarla.",
+  "needs_you.over_total_manager": "Supera un totale della Card, come quello di un giorno. Il margine extra fa passare solo questa chiamata.",
   "needs_you.prompt.answer": "Rispondi a {summary}",
   "needs_you.prompt.did_not_happen": "Di' che non è successo: {title}",
   "needs_you.prompt.happened": "Di' che è successo: {title}",
@@ -75,7 +75,7 @@
   "needs_you.unsure.answer_not_taken": "La tua risposta non è stata accettata. {why}",
   "needs_you.unsure.coach_not_opened": "Coach non è riuscito ad aprirsi su questo. {why}",
   "needs_you.waiting_for_browser": "In attesa del browser…",
-  "needs_you.when_taf_asks_something_outside": "Quando un taf chiede qualcosa fuori dalla sua Card, aspetta la tua risposta. Un avviso te lo dice subito, su questo {device} e sulla sua schermata di blocco, anche con tafs chiusa.",
+  "needs_you.when_taf_asks_something_outside": "Un avviso ti raggiunge su questo {device}, anche con tafs chiusa.",
   "needs_you.your_step.ended": "Questo passo ha già una risposta o è terminato.",
   "needs_you.your_step.not_answered": "La tua risposta non è andata a buon fine. {why}",
   "needs_you.your_step.not_answered_unconfirmed": "Nessuna risposta: non è stato confermato."

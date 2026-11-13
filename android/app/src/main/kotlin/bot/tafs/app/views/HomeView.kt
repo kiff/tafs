@@ -136,10 +136,8 @@ fun HomeView(
       }
       if (sample) {
         item {
-          Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Eyebrow(Words.Home.tagline)
-            Headline(state)
-          }
+          // The welcome's line isn't repeated here: Home says what's running (the tagline is in Settings, About).
+          Headline(state)
         }
         state.held.firstOrNull()?.let { first ->
           state.taf(first.tafId)?.let { taf -> item { NeedsYouStrip(first, taf, onNeedsYou) } }
@@ -156,7 +154,7 @@ fun HomeView(
         item {
           Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-              Box(Modifier.weight(1f)) { Eyebrow(Words.Home.tagline) }
+              Spacer(Modifier.weight(1f))
               // + New: the gallery of every job, also once a taf runs. tafs cloud's words, else the app's own.
               if (onNewTaf != null && state.mayUseCoach) {
                 Text(
@@ -181,6 +179,18 @@ fun HomeView(
             val byId = state.listedTafs.associateBy { it.id }
             order.forEach { id ->
               byId[id]?.let { taf -> TafRow(taf, state.signedOut(taf.id)?.let(bot.tafs.app.model.ConnectionWords::signedOut), onHalted = { onHalted(taf.id) }) { onOpenTaf(taf.id) } }
+            }
+          }
+        }
+        if (state.settingUp.isNotEmpty()) {
+          // Tafs whose setup stopped partway, among the tafs: by name, tafs cloud's "Finish setting up", and no state, since it
+          // doesn't run yet. A tap opens Coach where it stopped, for someone who may use Coach.
+          item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+              state.settingUp.forEach { taf ->
+                val finish = taf.finish?.takeIf { state.mayUseCoach && it.taf == state.coachCloudId }
+                TafRow(taf, showState = false) { if (finish != null && onFinishSetup != null) onFinishSetup(finish) }
+              }
             }
           }
         }
@@ -348,7 +358,7 @@ private fun NeedsYouStrip(call: HeldCall, taf: Taf, onClick: () -> Unit) {
 
 @Composable
 /** [onHalted]: a halted taf's chip opens Halt, where it's resumed; the rest of the row opens the taf. */
-fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, onClick: () -> Unit) {
+fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, showState: Boolean = true, onClick: () -> Unit) {
   val shape = RoundedCornerShape(18.dp)
   Column(
     Modifier
@@ -382,9 +392,9 @@ fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, 
           taf.nowHealth == "at_risk" -> Theme.amberText
           else -> Theme.dim
         }
-        Text(signedOut ?: taf.now, style = scaled(13, color = tone), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        (signedOut ?: taf.now).takeIf { it.isNotEmpty() }?.let { Text(it, style = scaled(13, color = tone), maxLines = 1, overflow = TextOverflow.Ellipsis) }
       }
-      StateChip(taf.state, onClick = onHalted?.takeIf { taf.state == TafState.halted })
+      if (showState) StateChip(taf.state, onClick = onHalted?.takeIf { taf.state == TafState.halted })
     }
     val rule = taf.card.rules.firstOrNull { it.perWindow != null }
     val limit = rule?.perWindow

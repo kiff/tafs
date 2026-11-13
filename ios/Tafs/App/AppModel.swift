@@ -205,7 +205,11 @@ final class AppModel: ObservableObject {
         // The app's recent errors, in its own words, for a drive's diagnostics (docs/drive.md).
         didSet {
             lastErrorFrom = nil
-            if let lastError, lastError != oldValue { DriveDiagnostics.shared.error(lastError) }
+            if let lastError, lastError != oldValue {
+                DriveDiagnostics.shared.error(lastError)
+                // Something refused or failed, said to the person: a warning tick (Haptics).
+                Haptics.warning()
+            }
         }
     }
     /// What the last error came from, when a screen shows only its own: set with `fail`,
@@ -1330,7 +1334,7 @@ final class AppModel: ObservableObject {
             coachToolsError = Words.Coach.toolsUnknown
             return false
         }
-        guard tools.connect != nil || tools.card != nil else { return false }
+        guard tools.connect != nil || tools.card != nil || tools.together != nil else { return false }
         // The one confirmation: it gives Coach its Cards, and the connections go under it.
         do {
             _ = try await signer.sign(Data("tafs.coach-tools.v1|\(tenant)".utf8), reason: Words.Coach.Prompt.giveCard, grants: true)
@@ -1344,6 +1348,14 @@ final class AppModel: ObservableObject {
         kiff.setupSigner = { try signer.signConfirmed($0) }
         defer { kiff.setupSigner = nil }
         do {
+            // tafs cloud's pair (kiff/tafs#881): the batch and Coach's Cards under this one Face ID,
+            // signed once by the approval key. Coach exists, so nothing is claimed after it.
+            if let pair = tools.together, let connect = pair.connect, let draft = pair.draft, !approvalKeyUnheld {
+                _ = try await sendTogether(connect, draft, tenant: tenant, gen: gen)
+                guard gen == accountGeneration else { return false }
+                await loadCoachTools()
+                return coachTools?.given == true
+            }
             if let connect = tools.connect { try await kiff.connectBatch(connect.body) }
             guard gen == accountGeneration else { return false }
             // tafs cloud drafts the Cards over tools KIFF holds: where it sent none with the
@@ -4137,7 +4149,14 @@ final class AppModel: ObservableObject {
 
     /// `files` go with the message (kiff/tafs#209): a message may be files alone. One with
     /// files that doesn't go is left with the composer, files and all, rather than kept unsent.
+    /// A send that went through ticks (Haptics), whichever way it went.
     private func deliverChat(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
+        let delivery = await deliverChatOnce(text, to: tafID, files: files)
+        if delivery == .sent { Haptics.success() }
+        return delivery
+    }
+
+    private func deliverChatOnce(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !files.isEmpty else { return .notTried }
         guard text.count <= Self.chatLimit else {
@@ -5448,6 +5467,8 @@ final class AppModel: ObservableObject {
         let id = (call.proposalID ?? call.kiffID).map(KIFFMapping.recordID) ?? UUID()
         var entry = RecordEntry(id: id, tafID: call.tafID, kind: kind, title: title, detail: detail, at: call.heldAt, signature: signature)
         if kind == .approved { entry.ownerApproved = true }
+        // An approval that went through ticks (Haptics); a refusal is the person's own choice.
+        if kind == .approved { Haptics.success() }
         entry.byYou = true
         record.removeAll { $0.id == id }
         record.insert(entry, at: 0)
@@ -5951,6 +5972,21 @@ final class AppModel: ObservableObject {
         do {
             let approved = try await planque.approve(grant, words: words)
             guard let signInURL = approved.signInURL else {
+                // planque holds a fresh sign-in and waits for this phone to confirm it with its
+                // one-use code: confirmed here, never a second sign-in, and connected only once
+                // planque says so.
+                if approved.status == "signed_in", let code = approved.confirmCode {
+                    connectStep = Words.Coach.checkingSignIn
+                    defer { connectStep = nil }
+                    let confirmed = try await planque.confirm(grantID: grant.id, code: code)
+                    await refreshConnections()
+                    guard gen == accountGeneration else { return nil }
+                    guard confirmed.connected || confirmed.listed else {
+                        lastError = Words.Coach.notConnected(vendor: grant.vendor, status: confirmed.status.replacingOccurrences(of: "_", with: " "))
+                        return nil
+                    }
+                    return confirmed
+                }
                 // planque already holds the sign-in (contract 5): approving the tools Setup
                 // chose from the vendor's list connected them, with no second sign-in.
                 guard approved.status == "connected" else {
@@ -6987,14 +7023,8 @@ final class AppModel: ObservableObject {
         guard let draftRequest = start.draft else { return nil }
         let draft: KIFFClient.AgentDraft
         if start.together, let connectRequest = start.connect {
-            let signedAt = SigningTime.next()
-            let batch = try kiff.prepare(method: connectRequest.method, path: connectRequest.path, body: connectRequest.body, gateway: true, signedAt: signedAt)
-            let cards = try kiff.prepare(method: draftRequest.method, path: draftRequest.path, body: draftRequest.body, gateway: false, signedAt: signedAt)
-            let batchHash = RequestsTogether.hash(batch.message), cardsHash = RequestsTogether.hash(cards.message)
-            let signature = try signer.signApprovalConfirmed(RequestsTogether.message(tenant: tenant, signedAt: signedAt, batchHash, cardsHash))
-            try await kiff.connectBatch(batch, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: cardsHash))
-            guard gen == accountGeneration else { return nil }
-            draft = try await kiff.submitDraft(cards, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: batchHash))
+            guard let sent = try await sendTogether(connectRequest, draftRequest, tenant: tenant, gen: gen) else { return nil }
+            draft = sent
         } else {
             draft = try await kiff.submitDraftAnswered(draftRequest.body)
         }
@@ -7004,6 +7034,21 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return nil }
         coachStart = nil
         return started
+    }
+
+    /// The tools batch and a Cards' draft, as tafs cloud built them, each in full with one
+    /// `signed_at`, signed once by the approval key over both hashes (`kiff.requests.v1`), under
+    /// the Face ID that just confirmed the step: the batch first, the draft once it answered.
+    private func sendTogether(_ connectRequest: TafsCloud.CoachStart.Request, _ draftRequest: TafsCloud.CoachStart.Request,
+                              tenant: String, gen: Int) async throws -> KIFFClient.AgentDraft? {
+        let signedAt = SigningTime.next()
+        let batch = try kiff.prepare(method: connectRequest.method, path: connectRequest.path, body: connectRequest.body, gateway: true, signedAt: signedAt)
+        let cards = try kiff.prepare(method: draftRequest.method, path: draftRequest.path, body: draftRequest.body, gateway: false, signedAt: signedAt)
+        let batchHash = RequestsTogether.hash(batch.message), cardsHash = RequestsTogether.hash(cards.message)
+        let signature = try signer.signApprovalConfirmed(RequestsTogether.message(tenant: tenant, signedAt: signedAt, batchHash, cardsHash))
+        try await kiff.connectBatch(batch, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: cardsHash))
+        guard gen == accountGeneration else { return nil }
+        return try await kiff.submitDraft(cards, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: batchHash))
     }
 
     /// tafs cloud's thread, with what the owner sent that it doesn't have yet, by the rule
@@ -7024,7 +7069,14 @@ final class AppModel: ObservableObject {
     /// was tried and failed), or didn't try (nothing to send, too long, or busy).
     enum Delivery { case sent, kept, notTried }
 
+    /// A send to Coach that went through ticks (Haptics), whichever way it went.
     private func deliverSetup(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
+        let delivery = await deliverSetupOnce(text, files: files)
+        if delivery == .sent { Haptics.success() }
+        return delivery
+    }
+
+    private func deliverSetupOnce(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !files.isEmpty, text.count <= Self.chatLimit, let s = setupTaf, !setupSending else { return .notTried }
         // An improvement's first message carries no files: tafs cloud adds the taf's context to it.
@@ -7771,12 +7823,21 @@ final class AppModel: ObservableObject {
             default:
                 cardNotes[component.id] = Words.Coach.unknownAnswer
             }
+        } catch let refused as TafsCloud.CloudError where refused.code == Self.signInNotConfirmed {
+            // tafs cloud's own line: the sign-in went through and isn't confirmed yet, so Approve
+            // again confirms it. Said as it is, never as an answer that didn't arrive.
+            guard gen == accountGeneration else { return }
+            cardNotes[component.id] = refused.words ?? refused.message
+            await loadSetupThread()
         } catch {
             guard gen == accountGeneration else { return }
             cardNotes[component.id] = Words.Coach.answerNotReached(why: "\(error.localizedDescription)")
             await loadSetupThread()
         }
     }
+
+    /// tafs cloud's code when a sign-in planque holds isn't confirmed yet: the card asks again.
+    nonisolated static let signInNotConfirmed = "sign_in_not_confirmed"
 
     /// How giving a key and its Card under one Face ID went (`approveKeyAndCard`).
     enum KeyAndCard: Equatable {
@@ -8006,6 +8067,13 @@ final class AppModel: ObservableObject {
             guard let p = ask.planque else { return Came(result: "failed", why: Words.Connect.tafsCloudNamedNoConnection) }
             let approved = try await planque.approve(grantID: p.grant, body: p.body)
             guard let signInURL = approved.signInURL else {
+                // A fresh sign-in planque holds for this phone to confirm, with its one-use code:
+                // confirmed here, then reported as planque answers it (unconfirmed, it's revoked).
+                if approved.status == "signed_in", let code = approved.confirmCode {
+                    let confirmed = try await planque.confirm(grantID: p.grant, code: code)
+                    return confirmed.connected || confirmed.listed ? Came(result: confirmed.status == "listed" ? "listed" : "connected")
+                        : Came(result: "not_connected", status: confirmed.status)
+                }
                 // planque already holds the sign-in: approving connected it, with no second sign-in.
                 return approved.status == "connected" || approved.status == "listed" ? Came(result: approved.status) : Came(result: "not_connected", status: approved.status)
             }

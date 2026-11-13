@@ -4,6 +4,7 @@ import bot.tafs.app.model.Words
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveMenu
 import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.approvalTerms
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -168,7 +169,8 @@ private fun StartNote(state: AppState, chats: CoachChatActions) {
     return
   }
   Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-    Text(CoachWords.INTRO + " " + Words.Coach.eachWaits(biometry), style = scaled(14, color = Theme.soft))
+    // That each connection and Card waits for approval is said where one does: the first approval card, not here too.
+    Text(CoachWords.INTRO, style = scaled(14, color = Theme.soft))
     Text(if (state.startingCoach) Words.Common.starting else Words.Coach.startingAsks(biometry), style = scaled(12, color = Theme.dim))
     (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
@@ -190,7 +192,7 @@ private fun StartScreen(state: AppState, start: bot.tafs.app.kiff.CoachStart, ch
     Modifier.fillMaxWidth().heightIn(max = 360.dp).verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
     verticalArrangement = Arrangement.spacedBy(6.dp),
   ) {
-    Text(words?.lead?.ifBlank { null } ?: (CoachWords.INTRO + " " + Words.Coach.eachWaits(biometry)), style = scaled(14, color = Theme.soft))
+    Text(words?.lead?.ifBlank { null } ?: CoachWords.INTRO, style = scaled(14, color = Theme.soft))
     // The Cards, in KIFF's own words: what the one fingerprint gives Coach.
     tools.card?.let { card ->
       card.cardTitle?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink), modifier = Modifier.padding(top = 4.dp)) }
@@ -232,7 +234,7 @@ private fun CoachIntro(state: AppState) {
   val biometry = LocalBiometry.current
   Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
     Text(Words.Coach.title, style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
-    Text(CoachWords.INTRO + " " + Words.Coach.eachWaits(biometry), style = scaled(16, color = Theme.soft))
+    Text(CoachWords.INTRO, style = scaled(16, color = Theme.soft))
     (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
     // Starting issues Coach's own Cards, an approval: before the first taf, say so while this phone can't approve yet.
     Text(bot.tafs.app.model.ApprovalWords.FIRST_TAF, style = scaled(15, color = Theme.ink))
@@ -314,6 +316,8 @@ class CoachActions(
   /** Alerts, offered on a new taf's card: turned on as from Settings, or put off for good on this phone. */
   val turnOnAlerts: () -> Unit = {},
   val notNowAlerts: () -> Unit = {},
+  /** A taf made with no plan: Plan & usage, where a plan is chosen. */
+  val openPlan: () -> Unit = {},
   /** Closes the "What I did" card. */
 )
 
@@ -380,9 +384,10 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
         // Already connected, as tafs cloud marks it: its one line, then Its Card; the connection's text isn't asked again.
         val done = c.connection?.takeIf { it.done && it.words.isNotBlank() }
         if (done != null) Text(done.words, style = scaled(14, FontWeight.Medium, Theme.ink))
-        // planque's own words for what it will do, never Coach's.
+        // planque's own words for what it will do, never Coach's. An open approval's terms are the person's to read: blanked for
+        // a drive, named only by its vendor (docs/drive.md).
         if (done == null) {
-          Text(grant.text, style = scaled(14, color = Theme.ink))
+          Text(grant.text, style = scaled(14, color = Theme.ink), modifier = Modifier.approvalTerms(grant.vendor))
           Text(grant.vendor, style = scaled(13, color = Theme.dim, mono = true))
         }
         // KIFF's words for the connection's profile, verbatim and in order (KIFF's profile contract, `kiff.words.v1`): what the owner's approval signs.
@@ -399,7 +404,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
         }
         grant.terms?.takeIf { it.isNotEmpty() && done == null }?.let { terms ->
           Text(if (details) Words.Coach.detailsOpen else Words.Coach.detailsClosed, style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).clickable { details = !details })
-          if (details) terms.forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) }
+          if (details) Column(Modifier.approvalTerms(grant.vendor)) { terms.forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) } }
         }
         if (grant.connected && draft != null && !draft.confirmed) {
           Eyebrow(Words.Card.itsCard)
@@ -626,7 +631,11 @@ private fun HandOverCard(shown: ShownComponent, state: AppState, actions: CoachA
         if (listed != null) {
           PrimaryButton(if (listed.name != taf.name) Words.Coach.Result.open(name) else c.yes ?: Words.Coach.Result.seeIt(name), { actions.openTaf(listed.id) })
           // Made, with no plan yet: nothing runs until there is one, in tafs cloud's words.
-          shown.answer?.outcome?.planNeeded?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.amberText)) }
+          shown.answer?.outcome?.planNeeded?.words?.takeIf { it.isNotBlank() }?.let {
+            Text(it, style = scaled(14, FontWeight.SemiBold, Theme.amberText))
+            // Where to do it, one tap away: Plan & usage, where a plan is chosen.
+            OutlineButton(Words.Usage.choosePlan, actions.openPlan, Modifier.fillMaxWidth())
+          }
           // The first run's one offer of alerts, now that a taf can ask for something: a held call never reaches nobody.
           if (state.offersAlerts) AlertsOffer(actions)
         } else Text(CoachWords.settingUp(name), style = scaled(13, color = Theme.dim))

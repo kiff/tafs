@@ -75,6 +75,7 @@ export const en = {
   approval_sign_in_closed: "The sign-in was closed. Nothing was connected.",
   approval_no_code: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,
   approval_came_back: (status: string) => `The connection came back ${status} with no sign-in link. Nothing was connected.`,
+  approval_confirm_first: "Your sign-in went through, but it isn't confirmed yet. Approve again to confirm it.",
   approval_not_connected: (vendor: string, status: string) => `The sign-in at ${vendor} didn't connect: the connection is ${status}. Nothing was connected. Try signing in again.`,
   approval_failed: (why: string) => `Not connected: ${why}`,
   approval_failed_default: "it didn't go through",
@@ -268,7 +269,7 @@ export const en = {
   cr_w_no_plan: "Choose a plan to start your tafs.",
   // What Coach's help includes, under the Solo offer in the store (buy.coach).
   cr_buy_coach: "Coach is included: enough to set up about 4 new jobs a month. Past that, Coach's help uses your credits.",
-  cr_w_limit_raise: (again: string) => `Your tafs are waiting: the spend limit is reached. Raise it to let them go on, or ${again}.`,
+  cr_w_limit_raise: (day: string) => `Spend limit reached. Raise it, or your tafs go on from ${day}.`,
   cr_w_limit_ceiling: (again: string) => `Your tafs are waiting: the spend limit is reached, and it can't go higher from the app. Contact KIFF to raise it further, or ${again}.`,
   cr_w_limit_admin: "Your tafs are waiting: the spend limit is reached. An admin of this account can raise it.",
   cr_w_used_pack: (again: string) => `Your tafs are waiting: this period's credits and your packs are used. A pack lets them go on, or ${again}.`,
@@ -622,14 +623,12 @@ export const en = {
   ct_replaces: "replaces the earlier connection",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
   // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
-  start_lead: "You sign in on each app's own page. No taf ever sees your password.",
+  start_lead: "Start gives Coach the tools below. You approve them on this device.",
   start_button: "Start",
-  start_does: "Start sets up approvals on this device and gives Coach its tools, with your face or fingerprint once.",
   plan_needed: "Choose a plan to start it.",
   cts_title: "Give Coach its tools",
-  cts_intro: "Coach needs a few tools to look after your tafs. They go on Coach's own Card, with their limits, and only you can sign it, on your device.",
+  cts_intro: "Coach needs these to look after your tafs.",
   cts_details: "Each tool and its limits",
-  cts_ask: "Give Coach these tools? You sign its Card on your device.",
   cts_give: "Give Coach its tools",
   cts_not_now: "Not now",
   cts_row: "Coach's tools are waiting for you · Give them",
@@ -770,6 +769,7 @@ export const en = {
   ai_consent_needed: "Allow AI use first: Coach and your tafs need it to answer.",
   ai_consent_paused_no_one: "Paused: no one has allowed AI use for this taf's runs yet. It goes on once someone who manages tafs allows it in Account.",
   ai_consent_paused_not_given: "Paused: AI use for this taf's runs was withdrawn. It goes on once it's allowed again, or someone who manages tafs takes it over.",
+  ai_consent_paused_left: "Paused: the person whose AI consent its runs used is no longer on the account. It goes on once someone who manages tafs takes it over.",
 };
 
 export type Words = typeof en;

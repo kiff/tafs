@@ -178,11 +178,19 @@ fun SettingsSheet(
               state.aiConsentError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
             }
           }
+          // The app's taps, on this phone: on until turned off here (docs/android-app.md, "Haptics").
+          Section(Words.Alert.haptics) {
+            var haptics by remember { mutableStateOf(bot.tafs.app.design.Haptics.enabled) }
+            AccountSwitch(Words.Alert.haptics, Words.Settings.lightTapsWhenYouSend, haptics, true) { on ->
+              bot.tafs.app.design.Haptics.set(context, on)
+              haptics = on
+            }
+          }
           Section(Words.Settings.themeTitle) {
             Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
               ThemePreference.entries.forEach { choice ->
                 Row(Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(if (Theme.preference == choice) Theme.ink else Theme.raised)
-                  .clickable { Theme.choose(context, choice) }.padding(horizontal = 8.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
+                  .clickable { if (Theme.preference != choice) bot.tafs.app.design.Haptics.step(); Theme.choose(context, choice) }.padding(horizontal = 8.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
                   val color = if (Theme.preference == choice) Theme.background else Theme.ink
                   if (choice != ThemePreference.System) Icon(painterResource(if (choice == ThemePreference.Light) R.drawable.ic_sun else R.drawable.ic_moon), null, tint = color, modifier = Modifier.size(16.dp))
                   Text(choice.title, style = scaled(14, FontWeight.Medium, color))

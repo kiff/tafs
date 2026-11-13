@@ -339,6 +339,22 @@ class MappingTest {
     assertNull("no finish: shown as before", other.finish)
   }
 
+  @Test fun settingUpReadsEachByNameWithItsWordsAndNoState() {
+    val sent = """{"tafs":[],"setting_up":[{"name":"Invoicing day test","kiff_agent":"invoicing-x","color":2,"finish":{"taf":"setup_1","session":"s7","words":"Finish setting up"}},
+      {"name":"No chat","kiff_agent":"no-chat","color":1,"finish":{"taf":"setup_1","session":"","words":"Finish setting up"}}],
+      "others":[{"name":"Invoicing day test","kiff_agent":"invoicing-x","color":2,"state":"idle","waiting":0,"card":{"ids":["c1"],"active":true}}],"removing":[]}"""
+    val h = home(sent)
+    val rows = KiffMapping.settingUp(h.settingUp!!, "You")
+    assertEquals(listOf("Invoicing day test", "No chat"), rows.map { it.name })
+    assertEquals("Finish setting up", rows[0].now)
+    assertEquals("s7", rows[0].finish?.session)
+    // Not this person's Coach chat (no finish, or none to open): the name alone, never "Ready".
+    assertNull(rows[1].finish)
+    assertEquals("", rows[1].now)
+    // A tafs cloud from before setting_up sends none: null, and the app draws others as before.
+    assertNull(home("""{"tafs":[],"others":[],"removing":[]}""").settingUp)
+  }
+
   @Test fun anAgentWhoseSetupStoppedPartwayShowsTafsCloudsNameAndWordsAndKeepsTheChat() {
     val sent = """{"tafs":[],"others":[{"name":"Invoicing day test","kiff_agent":"invoicing-day-test-x","color":2,"state":"idle","waiting":0,
       "card":{"ids":["c1"],"active":true},"finish":{"taf":"setup_1","session":"s7","words":"Finish setting up"}}],"removing":[]}"""

@@ -29,12 +29,12 @@
   "sign_in.waiting_for_browser": "Wacht op je browser… Controleer of die {user_code} toont, en keur alleen goed met deze {device} in je handen.",
   "sign_in.welcome.inside_lead": "Binnen de Card",
   "sign_in.welcome.inside_rest": "handelt het, en elke actie heeft een ontvangstbewijs.",
-  "sign_in.welcome.lead": "Geef een taak aan een taf. Het werkt binnen een Card die jij instelt, en vraagt het je als het meer nodig heeft.",
+  "sign_in.welcome.lead": "Een taf doet een taak binnen de Card die jij instelt. Daarbuiten vraagt het jou.",
   "sign_in.welcome.outside_lead": "Daarbuiten",
   "sign_in.welcome.outside_rest": "wacht het op jou, hier.",
   "sign_in.welcome.revoked_lead": "Ingetrokken",
   "sign_in.welcome.revoked_rest": "gaat er geen nieuwe actie meer door.",
-  "sign_in.welcome.title": "They taf.\nYou kiff.",
+  "sign_in.welcome.title": "tafs",
   "sign_in.with_kiff": "Inloggen met KIFF",
   "sign_in.your_code": "Je code"
 }

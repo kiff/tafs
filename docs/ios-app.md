@@ -80,7 +80,11 @@ again"; `AppModel.signedOut`, `waitingOnOwner`). A taf newly waiting goes to the
 otherwise the list holds its settled order. The taf's Card tab offers **Sign in again**
 (`AppModel.reconnect`), and Coach's sign-in card says the same for such a grant. Either way it's
 one approval, then the vendor's own page, and it's signed in only once planque answers
-connected: "Checking the sign-in…" meanwhile (`connectStep`).
+connected: "Checking the sign-in…" meanwhile (`connectStep`). When planque holds a fresh sign-in already (the account's Google sign-in, say), it answers the
+approval `signed_in` with no link and a one-use `confirm` code: the phone confirms it with that code
+(`PlanqueClient.confirm`), as it does a browser's, and goes by what planque answers, `listed` (the tools
+step next) or `connected`. It's never a second sign-in, and unconfirmed planque would revoke it at
+`confirm_by`. A `signed_in` with no code isn't taken as done.
 
 **A run's two lines in the chat** (`TafChatView`, `TafsCloud.ChatMessage.runLines`, `RunLine`): a taf's
 message may carry tafs cloud's `delivered`, where the run's result went, and `counted`, what the run did,
@@ -538,11 +542,18 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   or no `start`, starts Coach as before. Send, with words handed over before Coach exists, opens the same step and keeps
   the words in the composer.
 - **Start's own screen** (`start.words`, `CoachStart.oneScreen`): where tafs cloud sends `start.words` `{lead, start,
-  does}`, Coach's intro draws `lead`, then what's signed (`CoachToolsGiven`, as the step draws it: the groups, each tool
-  folded under `details`, and Coach's Cards in KIFF's words), then one button, `start`, with `does` under it. That one
+  does}`, Coach's intro draws `lead`, then what's signed as Android draws it (`CoachToolsGiven(start: true)`): Coach's
+  Cards in KIFF's words, then every group and tool folded under `details`, with no group lines up front. Then one
+  button, `start`, with `does` under it. That one
   tap signs and starts, so no step opens after it and nothing signed is left unread. With words handed over, Send in
   the box below is that tap: it signs, starts Coach, then sends. Without a line or a button in `start.words`, or from
   a tafs cloud from before them, Start opens the step as above.
+- **A Coach that exists, with tools and Cards missing** (`tools.requests`, `CoachTools.together`): `tools` may carry
+  the pair a first start does, `connect` and `draft`, under `kiff.requests.v1`. Giving then signs both hashes once
+  with the approval key, under the step's one Face ID, and sends the batch, then the draft
+  (`AppModel.sendTogether`, shared with the first start). Coach exists, so nothing is claimed after it. KIFF's words
+  for the Cards are drawn first (the pair's own when `card` didn't come). Without the pair, a key KIFF doesn't hold,
+  or a draft without KIFF's words, it's the steps below.
 - **Giving** (`AppModel.giveCoachTools`): one Face ID. Under it the phone signs and sends the
   batch to KIFF's gateway (`POST /v1/connections/batch`), then the Cards' draft to KIFF
   (`POST /v1/me/agent-drafts`), each as it came. Where the Cards didn't come with the batch,
@@ -715,6 +726,19 @@ resolved to), never the browser's:
 - **KIFF's approval page**, for a sign-in and for approving again after Face ID changed: the link KIFF answers gets
   `lang=<language>`, and a link that already names one keeps it (`DeviceStart.inAppLanguage`).
 - **A held call's page in KIFF**: `/needs-you/{id}?lang=<language>` (`KIFFClient.answerPage`).
+
+## Haptics
+
+One rule, as on Android (`Haptics`, `Design/Scaled.swift`):
+- **A light tap on every button press,** played once in `DriveButton`, the style under `PrimaryButtonStyle`,
+  `OutlineButtonStyle` and `.drivablePlain`. Every new button taps without wiring. A press and the action it
+  starts tap once: a second tap within 150 ms is the same one. A drive's activation doesn't tap.
+- **A success tick** when an approval goes through (a held call approved, Coach's card approved) or a send
+  does (to Coach or a taf).
+- **A warning tick** when something the person just did is refused or fails (`lastError`, within 15 s of their own press,
+  approval or send). A background read that fails never buzzes.
+- **A step tick** on dial and selector stops.
+- **Settings › Haptics** turns all of it off on this device (`HapticsTests`).
 
 ## Conventions
 

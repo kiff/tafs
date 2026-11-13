@@ -188,6 +188,16 @@ class DriveContractTest {
     assertTrue("the key field carries the secret mark", Regex("""driveTyped\(\{ typed ->[\s\S]{0,400}?\}\),\s*Modifier\.fillMaxWidth\(\)\.secret\(\)""").containsMatchIn(s))
   }
 
+  @Test
+  fun anOpenApprovalsTermsAreNeverCaptured() {
+    // The same places iOS marks with driveTerms: a connection's text and its exact terms, and an app event's filters.
+    val coach = File(sources, "views/CoachViews.kt").text()
+    assertTrue("a connection's text carries the approval mark", "Text(grant.text, style = scaled(14, color = Theme.ink), modifier = Modifier.approvalTerms(grant.vendor))" in coach)
+    assertTrue("its exact terms carry it", "if (details) Column(Modifier.approvalTerms(grant.vendor)) { terms.forEach" in coach)
+    val event = File(sources, "views/EventApproval.kt").text()
+    assertTrue("an app event's filters carry it", Regex("""Column\(Modifier\.approvalTerms\(event\.label\)\) \{\s*filters\.forEach""").containsMatchIn(event))
+  }
+
   /** The arguments of the call whose `(` ends just before [from]. */
   private fun call(s: String, from: Int): String {
     var depth = 1

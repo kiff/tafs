@@ -11,9 +11,9 @@
   "receipt.check.signature_mismatch": "Podpis nie zgadza się z tymi krokami.",
   "receipt.check.unknown_signature": "Jest podpisane w sposób, którego ta aplikacja nie zna.",
   "receipt.check.unreadable": "Nie udało się odczytać potwierdzenia.",
-  "receipt.checked": "✓ Potwierdzenie KIFF · sprawdzone na tym telefonie",
+  "receipt.checked": "✓ Potwierdzenie KIFF · sprawdzone",
   "receipt.checked_on_device": "Potwierdzenie KIFF · sprawdzone na tym urządzeniu ({device})",
-  "receipt.checked_why": "KIFF podpisał to w chwili decyzji. Podpis zgadza się z adresem KIFF i od tego czasu żaden krok się nie zmienił.",
+  "receipt.checked_why": "Podpisane przez KIFF, od tego czasu bez zmian.",
   "receipt.checking_on_device": "Sprawdzanie potwierdzenia KIFF na tym urządzeniu ({device})…",
   "receipt.copy": "Kopiuj potwierdzenie",
   "receipt.decided_by.card": "Card",
@@ -60,9 +60,9 @@
   "receipt.refused_by": "Odrzucone przez: {who}",
   "receipt.share": "Udostępnij",
   "receipt.show_full": "Pokaż pełne potwierdzenie",
-  "receipt.signed_on_device_why": "Twoja odpowiedź została podpisana kluczem, który nigdy nie opuszcza tego urządzenia, po {biometry}.",
+  "receipt.signed_on_device_why": "Przez {biometry}, kluczem, który nigdy nie opuszcza tego urządzenia.",
   "receipt.signed_on_phone": "✓ Podpisano na tym telefonie",
-  "receipt.signed_on_phone_why": "Twoja odpowiedź została podpisana kluczem, który nigdy nie opuszcza tego telefonu.",
+  "receipt.signed_on_phone_why": "Kluczem, który nigdy nie opuszcza tego telefonu.",
   "receipt.signs_within": "KIFF podpisuje potwierdzenia w ciągu minuty od decyzji. Sprawdź ponownie za chwilę.",
   "receipt.what_happened": "Co się stało"
 }

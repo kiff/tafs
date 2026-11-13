@@ -92,7 +92,7 @@
     "other": "{count} refused"
   },
   "version.tried.went_back": "went back",
-  "version.try_first": "Try a version first: you chat with it under a Card of its own, while the live version keeps working.",
+  "version.try_first": "Try a version first, under a Card of its own. The live version keeps working.",
   "version.try_it": "Try it",
   "version.try_number": "Try version {version}",
   "version.try_number_note": "Try version {version}: {note}",
@@ -100,9 +100,9 @@
   "version.trying_number": "Trying version {version}",
   "version.unchanged": "Unchanged",
   "version.while_trying": "While you try it",
-  "version.while_you_try.chat": "You chat with version {n} in its own window. What it does is real: its calls go through KIFF under the Card below.",
-  "version.while_you_try.counts_from_zero": "The trial's Card counts from zero, so on a day your taf can spend its live Card's limits plus this one's.",
-  "version.while_you_try.ends": "It ends when you install it or go back, or after 7 days unused. Its chat is then deleted, and Versions keeps one line about it.",
-  "version.while_you_try.live_keeps_working": "The live version keeps working: its schedule, Card and budget don't change.",
+  "version.while_you_try.chat": "Version {n}'s actions are real, under its own Card.",
+  "version.while_you_try.counts_from_zero": "Its Card counts from zero.",
+  "version.while_you_try.ends": "Ends when you install it, go back, or after 7 unused days.",
+  "version.while_you_try.live_keeps_working": "The live version keeps running; on a day, both Cards' limits can be spent.",
   "version.working": "Working…"
 }

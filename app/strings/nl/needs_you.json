@@ -36,7 +36,7 @@
   "needs_you.extra_room_with": "Extra ruimte met {biometry}",
   "needs_you.get_alert_when_call_waits": "Krijg een melding als een aanroep op je antwoord wacht, ook als tafs gesloten is.",
   "needs_you.install_from_card": "Installeer het vanaf de kaart: de versie gaat live, daarna hoort Coach het.",
-  "needs_you.ios_asks_next_confirming_sets": "iOS vraagt het hierna. Bevestigen met {biometry} stelt ze in voor je account.",
+  "needs_you.ios_asks_next_confirming_sets": "iOS vraagt het hierna, dan {biometry}.",
   "needs_you.knocks": {
     "one": "Iemand klopte aan bij zijn deur. Er is niets gedaan.",
     "other": "{count} keer aangeklopt bij zijn deuren. Er is niets gedaan."
@@ -48,8 +48,8 @@
   "needs_you.nothing_sent": "Er wordt niets verzonden tot je goedkeurt.",
   "needs_you.nothing_waiting": "Er wacht niets.",
   "needs_you.opens_where_you_answer": "Opent {taf}, waar je het beantwoordt",
-  "needs_you.over_total": "Eenmalig goedkeuren laat dit niet door: het gaat boven een totaal dat de Card over meerdere aanroepen toestaat, zoals dat van een dag. Iemand die de Cards van het account beheert, kan het extra ruimte geven, of je kunt het weigeren.",
-  "needs_you.over_total_manager": "Eenmalig goedkeuren laat dit niet door: het gaat boven een totaal dat de Card over meerdere aanroepen toestaat, zoals dat van een dag. Extra ruimte voegt precies toe wat deze aanroep nodig heeft, tot dat totaal wordt gereset. Daarna is de Card weer zoals hij was.",
+  "needs_you.over_total": "Het gaat boven een totaal van de Card, zoals dat van een dag. Iemand die de Cards beheert, kan het extra ruimte geven, of je kunt het weigeren.",
+  "needs_you.over_total_manager": "Het gaat boven een totaal van de Card, zoals dat van een dag. Extra ruimte laat alleen deze aanroep door.",
   "needs_you.prompt.answer": "{summary} beantwoorden",
   "needs_you.prompt.did_not_happen": "Zeggen dat het niet is gebeurd: {title}",
   "needs_you.prompt.happened": "Zeggen dat het is gebeurd: {title}",
@@ -75,7 +75,7 @@
   "needs_you.unsure.answer_not_taken": "Je antwoord is niet aangenomen. {why}",
   "needs_you.unsure.coach_not_opened": "Coach kon er niet op openen. {why}",
   "needs_you.waiting_for_browser": "Wachten op je browser…",
-  "needs_you.when_taf_asks_something_outside": "Als een taf om iets buiten zijn Card vraagt, wacht het op je antwoord. Een melding laat het je meteen weten, op deze {device} en het toegangsscherm, ook als tafs gesloten is.",
+  "needs_you.when_taf_asks_something_outside": "Een melding bereikt je op deze {device}, ook als tafs gesloten is.",
   "needs_you.your_step.ended": "Deze stap is al beantwoord of is afgelopen.",
   "needs_you.your_step.not_answered": "Je antwoord is niet doorgekomen. {why}",
   "needs_you.your_step.not_answered_unconfirmed": "Niet beantwoord: het is niet bevestigd."

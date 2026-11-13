@@ -92,7 +92,7 @@
     "other": "{count} geweigerd"
   },
   "version.tried.went_back": "teruggegaan",
-  "version.try_first": "Probeer eerst een versie uit: je chat ermee onder een eigen Card, terwijl de live versie blijft werken.",
+  "version.try_first": "Probeer eerst een versie uit, onder een eigen Card. De live versie blijft werken.",
   "version.try_it": "Uitproberen",
   "version.try_number": "Versie {version} uitproberen",
   "version.try_number_note": "Versie {version} uitproberen: {note}",
@@ -100,9 +100,9 @@
   "version.trying_number": "Versie {version} wordt uitgeprobeerd",
   "version.unchanged": "Ongewijzigd",
   "version.while_trying": "Terwijl je het uitprobeert",
-  "version.while_you_try.chat": "Je chat met versie {n} in een eigen venster. Wat het doet, is echt: de aanroepen gaan via KIFF onder de Card hieronder.",
-  "version.while_you_try.counts_from_zero": "De Card van de proef telt vanaf nul, dus op een dag kan je taf de limieten van zijn live Card plus die van deze besteden.",
-  "version.while_you_try.ends": "Het eindigt als je het installeert of teruggaat, of na 7 dagen zonder gebruik. De chat wordt dan verwijderd, en Versies bewaart er één regel over.",
-  "version.while_you_try.live_keeps_working": "De live versie blijft werken: de planning, Card en het budget veranderen niet.",
+  "version.while_you_try.chat": "Wat versie {n} doet, is echt, onder een eigen Card.",
+  "version.while_you_try.counts_from_zero": "Zijn Card telt vanaf nul.",
+  "version.while_you_try.ends": "Eindigt als je het installeert, teruggaat, of na 7 dagen zonder gebruik.",
+  "version.while_you_try.live_keeps_working": "De live versie blijft draaien; op een dag kunnen de limieten van beide Cards worden besteed.",
   "version.working": "Bezig…"
 }

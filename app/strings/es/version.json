@@ -92,7 +92,7 @@
     "other": "{count} rechazadas"
   },
   "version.tried.went_back": "se volvió atrás",
-  "version.try_first": "Prueba antes una versión: chateas con ella con una Card propia, mientras la versión activa sigue trabajando.",
+  "version.try_first": "Prueba antes una versión, con una Card propia. La versión activa sigue trabajando.",
   "version.try_it": "Probar",
   "version.try_number": "Probar la versión {version}",
   "version.try_number_note": "Probar la versión {version}: {note}",
@@ -100,9 +100,9 @@
   "version.trying_number": "Probando la versión {version}",
   "version.unchanged": "Sin cambios",
   "version.while_trying": "Mientras la pruebas",
-  "version.while_you_try.chat": "Chateas con la versión {n} en su propia ventana. Lo que hace es real: sus llamadas pasan por KIFF con la Card de abajo.",
-  "version.while_you_try.counts_from_zero": "La Card de la prueba cuenta desde cero, así que en un día tu taf puede gastar los límites de su Card activa más los de esta.",
-  "version.while_you_try.ends": "Termina cuando la instalas o vuelves atrás, o tras 7 días sin usarla. Entonces su chat se elimina, y Versiones conserva una línea sobre ella.",
-  "version.while_you_try.live_keeps_working": "La versión activa sigue trabajando: su programación, su Card y su presupuesto no cambian.",
+  "version.while_you_try.chat": "Las acciones de la versión {n} son reales, con su propia Card.",
+  "version.while_you_try.counts_from_zero": "Su Card cuenta desde cero.",
+  "version.while_you_try.ends": "Termina cuando la instalas, vuelves atrás, o tras 7 días sin usarla.",
+  "version.while_you_try.live_keeps_working": "La versión activa sigue funcionando; en un día se pueden gastar los límites de ambas Cards.",
   "version.working": "Trabajando…"
 }

@@ -840,6 +840,11 @@ export class Agents {
     return this.call("POST", tenant, ["drafts", draftID, "claim"], { key_ref: keyRef });
   }
 
+  /** The agent a draft submitted by the account's setup names, and whether its key is claimed, claiming nothing (404: none). */
+  tafDraft(tenant: string, draftID: string): Promise<{ agent_id: string; claimed: boolean }> {
+    return this.call("GET", tenant, ["drafts", draftID]);
+  }
+
   // Sessions and memory.
 
   /** The agent's sessions, newest first: with `owner`, theirs and the taf's jobs'; without, as the service. */

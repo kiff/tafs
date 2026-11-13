@@ -1,0 +1,1 @@
+- **iPhone and iPad: haptics on every button.** Every button press gives a light tap. An approval or a send that goes through gives a success tick, and something refused or failed gives a warning tick. Settings › Haptics turns all of it off (docs/ios-app.md › Haptics).

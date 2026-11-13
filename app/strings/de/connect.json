@@ -130,7 +130,7 @@
   "connect.sign_in_closed_nothing_connected": "Die Anmeldung wurde geschlossen. Es wurde nichts verbunden.",
   "connect.sign_in_view.not_opened": "Die Anmeldeansicht hat sich nicht geöffnet. {why}",
   "connect.sign_in_view.wrong_address": "Die Anmeldeansicht hat sich nicht geöffnet: Sie lag nicht auf der eigenen Adresse der Verbindung.",
-  "connect.sign_ins_kept_sealed_no": "Anmeldungen bleiben versiegelt: Kein taf sieht sie je.",
+  "connect.sign_ins_kept_sealed_no": "Kein taf sieht deine Anmeldungen.",
   "connect.signed_in": "{app} ist angemeldet. Als Nächstes wählt Coach seine Aktionen, und du genehmigst sie.",
   "connect.signed_in_for": "{app} ist für {taf} angemeldet. Als Nächstes wählt Coach seine Aktionen, und du genehmigst sie.",
   "connect.signed_in_row": "Angemeldet · Aktionen wählen",

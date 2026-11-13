@@ -1,0 +1,1 @@
+- **iPhone and iPad: a sign-in already held is confirmed, not shown as a failure.** When an app's sign-in is already held (a Google account signed in for another app, say), the phone confirms it with planque and goes on to choosing its tools. It no longer says "it didn't go through", and it never asks you to sign in a second time (docs/ios-app.md).

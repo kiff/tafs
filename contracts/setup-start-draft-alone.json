@@ -344,9 +344,8 @@
       ],
       "coach_tools_step": {
         "title": "Give Coach its tools",
-        "intro": "Coach needs a few tools to look after your tafs. They go on Coach's own Card, with their limits, and only you can sign it, on your device.",
+        "intro": "Coach needs these to look after your tafs.",
         "details": "Each tool and its limits",
-        "ask": "Give Coach these tools? You sign its Card on your device.",
         "give": "Give Coach its tools",
         "not_now": "Not now",
         "row": "Coach's tools are waiting for you · Give them",
@@ -448,9 +447,8 @@
         ]
       },
       "words": {
-        "lead": "You sign in on each app's own page. No taf ever sees your password.",
-        "start": "Start",
-        "does": "Start sets up approvals on this device and gives Coach its tools, with your face or fingerprint once."
+        "lead": "Start gives Coach the tools below. You approve them on this device.",
+        "start": "Start"
       }
     }
   }

@@ -112,7 +112,7 @@ export const consentPauseKey = (tenant: string, taf: string) => `${tenant}#ai-co
 export interface TafConsent { subject: string; at: string; by: "maker" | "took_over" | "first_yes" }
 
 /** Why a taf's runs can't start a model turn: no one's consent is on record for it, or that person's isn't given. */
-export type ConsentWhy = "no_one" | "not_given";
+export type ConsentWhy = "no_one" | "not_given" | "left";
 
 /** A pause for consent; owner_paused: its owner paused it too, so a yes ends this pause and leaves their schedule off. */
 export interface ConsentPause { why: ConsentWhy; at: string; owner_paused?: boolean }
@@ -149,17 +149,55 @@ export async function tafConsentOf(store: CoachStore | undefined, tenant: string
 export async function unattendedConsent(store: CoachStore | undefined, tenant: string, taf: string): Promise<{ subject: string } | { why: ConsentWhy }> {
   const whose = await tafConsentOf(store, tenant, taf);
   if (!whose) return { why: "no_one" };
+  // Someone no longer on the account (removed, suspended or gone) consents for no one: their tafs wait for a manager.
+  if (store && await store.get(consentGoneKey(tenant, whose.subject)).catch(() => undefined)) return { why: "left" };
   return (await aiConsentOf(store, tenant, whose.subject)) ? { subject: whose.subject } : { why: "not_given" };
+}
+
+/** Where tafs cloud marks someone whose consent no longer counts: KIFF lists them as no longer active on the account. */
+export const consentGoneKey = (tenant: string, subject: string) => `${tenant}#ai-consent-gone#${subject}`;
+
+/**
+ * The people whose consent the account's tafs take (each taf's, and the account's first yes), so a read of KIFF's
+ * people can tell whether each is still on the account.
+ */
+export async function consentingPeople(store: CoachStore, tenant: string, tafs: string[]): Promise<string[]> {
+  const out = new Set<string>();
+  for (const id of tafs) {
+    const whose = await tafConsentOf(store, tenant, id);
+    if (whose) out.add(whose.subject);
+  }
+  return [...out];
+}
+
+/**
+ * Marks each consenting person KIFF no longer lists as active as gone, and clears the mark of one back on the account.
+ * Whether anything changed, so the caller settles the tafs.
+ */
+export async function markGone(store: CoachStore, tenant: string, people: string[], active: Set<string>, now: Date): Promise<boolean> {
+  let changed = false;
+  for (const subject of people) {
+    const gone = !!await store.get(consentGoneKey(tenant, subject)).catch(() => undefined);
+    if (!active.has(subject) && !gone) {
+      await store.put(consentGoneKey(tenant, subject), { at: now.toISOString() }, new Date(now.getTime() + CONSENT_KEPT_MS));
+      changed = true;
+    } else if (active.has(subject) && gone) {
+      await store.remove(consentGoneKey(tenant, subject));
+      changed = true;
+    }
+  }
+  return changed;
 }
 
 /** The taf's pause for consent, if tafs cloud made one. */
 export async function consentPauseOf(store: CoachStore | undefined, tenant: string, taf: string): Promise<ConsentPause | undefined> {
   if (!store) return undefined;
   const p = await store.get(consentPauseKey(tenant, taf)).catch(() => undefined) as ConsentPause | undefined;
-  return p && (p.why === "no_one" || p.why === "not_given") ? p : undefined;
+  return p && (p.why === "no_one" || p.why === "not_given" || p.why === "left") ? p : undefined;
 }
 
 /** The words for a taf paused for consent, in the person's language. */
 export function consentPauseWords(why: ConsentWhy, lang: Lang): string {
-  return why === "no_one" ? wordsIn(lang).ai_consent_paused_no_one : wordsIn(lang).ai_consent_paused_not_given;
+  const w = wordsIn(lang);
+  return why === "no_one" ? w.ai_consent_paused_no_one : why === "left" ? w.ai_consent_paused_left : w.ai_consent_paused_not_given;
 }

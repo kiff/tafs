@@ -9,7 +9,7 @@
   "alert.by_email": "Via e-mail",
   "alert.example": "Voorbeeld",
   "alert.foot.cant_answer_holds": "Meldingen gaan naar de mensen die vastgehouden aanroepen mogen beantwoorden. Jouw rol in dit account mag dat niet.",
-  "alert.foot.tells_you_device": "Als een taf op jou wacht, laat deze {device} het je weten, ook als tafs gesloten is. Er wordt niets verzonden tot je goedkeurt.",
+  "alert.foot.tells_you_device": "Als een taf op jou wacht, laat deze {device} het je weten, ook als tafs gesloten is.",
   "alert.haptics": "Trillingen",
   "alert.kiff_did_not_take_refusal": "KIFF heeft de weigering niet aangenomen. Open tafs om te antwoorden.",
   "alert.kiff_doesnt_send": "KIFF stuurt in dit account nog geen meldingen naar tafs.",

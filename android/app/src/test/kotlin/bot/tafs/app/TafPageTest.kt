@@ -438,7 +438,7 @@ class TafPageTest {
     val note: MemoryNote = m.state.value.memories["refunds-1"]!!.single()
     assertFalse(m.forgetAtCloud(note, "refunds-1"))
     assertEquals(listOf("n1"), m.state.value.memories["refunds-1"]!!.map { it.id })
-    assertEquals("It wasn't forgotten. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.memoryErrors["refunds-1"])
+    assertEquals("It wasn't forgotten. It isn't working on our side right now. Try again later.", m.state.value.memoryErrors["refunds-1"])
   }
 
   @Test fun notesThatCantBeReadSaySo() = runTest {
@@ -447,7 +447,7 @@ class TafPageTest {
     val m = model()
     m.readMemory("refunds-1")
     assertNull(m.state.value.memories["refunds-1"])
-    assertEquals("Its notes couldn't be loaded. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.memoryErrors["refunds-1"])
+    assertEquals("Its notes couldn't be loaded. It isn't working on our side right now. Try again later.", m.state.value.memoryErrors["refunds-1"])
   }
 
   // MARK: The account's time zone (#464 item 2)

@@ -9,7 +9,7 @@
   "alert.by_email": "By email",
   "alert.example": "Example",
   "alert.foot.cant_answer_holds": "Alerts go to the people who may answer held calls. Your role on this account can't.",
-  "alert.foot.tells_you_device": "When a taf needs you, this {device} tells you even with tafs closed. Nothing is sent until you approve.",
+  "alert.foot.tells_you_device": "When a taf needs you, this {device} tells you, even with tafs closed.",
   "alert.haptics": "Haptics",
   "alert.kiff_did_not_take_refusal": "KIFF didn't take the refusal. Open tafs to answer it.",
   "alert.kiff_doesnt_send": "KIFF doesn't send alerts to tafs yet on this account.",

@@ -2,6 +2,7 @@ package bot.tafs.app.views
 
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
+import bot.tafs.app.drive.approvalTerms
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -95,9 +96,12 @@ internal fun EventApprovalSheet(event: bot.tafs.app.kiff.KnobWire.Item, busy: Bo
       if (filters.isNotEmpty()) {
         bot.tafs.app.design.Eyebrow(KnobWords.EVENT_FILTERS)
         // Each filter as tafs cloud gives it: its name and value, the same ones planque subscribes.
-        filters.forEach { (name, value) ->
-          val shown = (value as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content ?: value.toString()
-          Text("$name · $shown", style = scaled(14, color = Theme.soft, mono = true))
+        // An open approval's terms: blanked for a drive, named only by the event (docs/drive.md).
+        Column(Modifier.approvalTerms(event.label)) {
+          filters.forEach { (name, value) ->
+            val shown = (value as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content ?: value.toString()
+            Text("$name · $shown", style = scaled(14, color = Theme.soft, mono = true))
+          }
         }
       }
       error?.let { Text(it, style = scaled(13, color = Theme.no)) }

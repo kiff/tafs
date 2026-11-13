@@ -129,7 +129,7 @@ class TrialsTest {
     val m = trying()
     transport.answer(trialGet, 500, """{"error":"later"}""")
     m.loadTrial("refunds-1")
-    assertEquals("The trial couldn't be read. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.trialErrors["refunds-1"])
+    assertEquals("The trial couldn't be read. It isn't working on our side right now. Try again later.", m.state.value.trialErrors["refunds-1"])
     assertNotNull(m.state.value.openTrials["refunds-1"])
   }
 
@@ -369,7 +369,7 @@ class TrialsTest {
     val m = trying()
     transport.answer(kiffEnd, 500, """{"error":"kiff is down"}""")
     assertFalse(m.goBackFromTrial("refunds-1"))
-    assertEquals("The trial didn't end. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.trialErrors["refunds-1"])
+    assertEquals("The trial didn't end. It isn't working on our side right now. Try again later.", m.state.value.trialErrors["refunds-1"])
     assertTrue(sent(cloudEnd).isEmpty())
     assertNotNull(m.state.value.openTrials["refunds-1"])
   }
@@ -408,7 +408,7 @@ class TrialsTest {
   @Test fun whatTryingMeansIsSaidBeforeTheConfirmation() {
     val lines = VersionWords.whileYouTry(2)
     assertEquals(4, lines.size)
-    assertTrue(lines[0].startsWith("You chat with version 2 in its own window."))
-    assertTrue(lines[3].contains("after 7 days unused"))
+    assertTrue(lines[0].startsWith("Version 2's actions are real"))
+    assertTrue(lines[3].contains("after 7 unused days"))
   }
 }

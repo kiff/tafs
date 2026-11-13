@@ -139,7 +139,7 @@ class CoachTest {
     val m = model()
     m.loadCoach()
     assertTrue(m.state.value.coachChecked)
-    assertEquals("Coach couldn't be reached. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.chatErrors[COACH_CHAT])
+    assertEquals("Coach couldn't be reached. It isn't working on our side right now. Try again later.", m.state.value.chatErrors[COACH_CHAT])
   }
 
   // MARK: Its thread

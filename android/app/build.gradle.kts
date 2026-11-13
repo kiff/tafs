@@ -12,8 +12,8 @@ android {
     applicationId = "dev.kiff.tafs"
     minSdk = 30
     targetSdk = 37
-    versionCode = 77
-    versionName = "1.20.1"
+    versionCode = 79
+    versionName = "1.20.3"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
@@ -129,3 +129,7 @@ dependencies {
   implementation(libs.androidx.navigation3.runtime)
   implementation(libs.androidx.lifecycle.viewmodel.navigation3)
 }
+
+// Unit tests run in UTC, as CI does, so a developer's own time zone never changes what they read; a test that needs a phone in
+// another zone sets it itself.
+tasks.withType<Test>().configureEach { systemProperty("user.timezone", "UTC") }
