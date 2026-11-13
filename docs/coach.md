@@ -710,6 +710,12 @@ build one, the gap is fixed generically (a connection, how Coach picks tools, a 
 person can prompt Coach freely. Three of the five starter jobs tafs began with are recipes now. Bill pay and Access aren't, because
 the apps they connect can't do their Card's work today.
 
+The gallery shows only the jobs whose apps connect today (rule 13): each of a recipe's connections needs an
+app in `CONNECTS_TODAY` (`runtime/src/cloud/recipes.ts`), the apps kiff.dev's apps list says work, each
+proved by a check that connected it. A job whose app can't connect yet ("Chase overdue invoices",
+"Follow up new leads within the hour") stays out, and comes back with no other change once its app is
+added there.
+
 They show only while the account has no live taf, and while its "Show suggestions" setting is
 on (the owner's decision): tafs cloud decides, and `GET /v1/recipes` sends the list or an empty
 one with `shown: false` and the words why. A manager turns them off for good with

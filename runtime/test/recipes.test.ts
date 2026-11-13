@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { RECIPES } from "../src/recipes.js";
-import { CATEGORIES, categoriesIn, labelsIn, recipesFor, vendorOf } from "../src/cloud/recipes.js";
+import { CATEGORIES, categoriesIn, connectsToday, CONNECTS_TODAY, labelsIn, recipesFor, vendorOf, withApps } from "../src/cloud/recipes.js";
+import type { CatalogApp } from "../src/cloud/connect.js";
 import { LANGUAGES } from "../src/cloud/words/index.js";
 // The generator is plain JavaScript, so the script and the test parse the files the same way.
 import { LANGS, MODULE, parseRecipe, readRecipes, RECIPES_DIR, render } from "../scripts/recipes.mjs";
@@ -155,7 +156,7 @@ Bezahle meine Rechnungen unter 100 EUR.
   });
 
   it("serves the recipes, categories and sheet in the person's language", () => {
-    const fr = recipesFor(undefined, "fr");
+    const fr = recipesFor(undefined, "fr", true, null);
     expect(fr.categories.map((c) => c.title)).toEqual(["Argent", "Clients", "Opérations", "Tâches courantes"]);
     expect(fr.recipes.find((r) => r.id === "refunds-within-a-limit")).toMatchObject({
       // One line says what the job does: no problem headline over it, and no line on what waiting costs (the app-words cut).
@@ -209,7 +210,7 @@ Bezahle meine Rechnungen unter 100 EUR.
   });
 
   it("lists every recipe when the catalog wasn't read, and none when it lists nothing", () => {
-    const all = recipesFor(undefined);
+    const all = recipesFor(undefined, "en", true, null);
     expect(all.filtered).toBe(false);
     expect(all.recipes.map((r) => r.id)).toEqual(RECIPES.map((r) => r.id).sort((a, b) => {
       const order = (id: string) => CATEGORIES.findIndex((c) => c.id === RECIPES.find((r) => r.id === id)!.category);
@@ -221,8 +222,33 @@ Bezahle meine Rechnungen unter 100 EUR.
       labels: { allows: "Does on its own", holds: "Asks you first", never: "Never does", hand: "Hand it to Coach" } });
   });
 
+  // Rule 13 (go-to-market scoreboard, 13 Nov): the gallery shows only jobs whose apps connect today. A job whose app
+  // can't connect yet stays out, and comes back once its app is added to CONNECTS_TODAY after a check proves it.
+  it("lists only the jobs whose every connection has an app that connects today", () => {
+    const ids = recipesFor(undefined).recipes.map((r) => r.id);
+    expect(ids).not.toContain("chase-overdue-invoices");
+    expect(ids).not.toContain("follow-up-new-leads");
+    for (const id of ids) expect(connectsToday(RECIPES.find((r) => r.id === id)!), id).toBe(true);
+    expect(ids).toEqual(expect.arrayContaining(["ship-when-green", "refunds-within-a-limit", "save-a-customer-who-cancels", "acknowledge-every-ticket"]));
+    // Once an app is proved, its jobs come back with no other change.
+    const withTypeform = new Set([...CONNECTS_TODAY, "typeform"]);
+    expect(recipesFor(undefined, "en", true, withTypeform).recipes.map((r) => r.id)).toContain("follow-up-new-leads");
+  });
+
+  // dev-android's read of the four key jobs (13 Nov): refunds drew Gorgias, which can't connect yet, ahead of Intercom.
+  it("draws, for a connection, an app that connects today ahead of one that can't, unless one is connected", () => {
+    const app = (entry: string, vendor: string, state: CatalogApp["state"] = "available"): CatalogApp => ({ entry, vendor, title: vendor, how: "oauth", state });
+    const refunds = (catalog: CatalogApp[]) => withApps(recipesFor(catalog).recipes, catalog, new Map()).find((r) => r.id === "refunds-within-a-limit")!.apps.map((a) => a.name);
+    const stripe = app("stripe@3", "Stripe");
+    expect(refunds([app("connector:p:gorgias", "Gorgias"), app("connector:p:intercom", "Intercom"), stripe])).toEqual(["Intercom", "Stripe"]);
+    // With only an app that can't connect yet in the catalog for a connection, the job isn't shown at all.
+    expect(withApps(recipesFor([app("connector:p:gorgias", "Gorgias"), stripe]).recipes, [], new Map()).map((r) => r.id)).not.toContain("refunds-within-a-limit");
+    // A connected help desk is still the one drawn, whichever it is.
+    expect(refunds([app("connector:p:gorgias", "Gorgias", "connected"), app("connector:p:intercom", "Intercom"), stripe])).toEqual(["Gorgias", "Stripe"]);
+  });
+
   it("filters by every connection, taking any vendor that would do for it, by category", () => {
-    const ids = (apps: Array<{ entry: string; vendor: string }>) => recipesFor(apps).recipes.map((r) => r.id);
+    const ids = (apps: Array<{ entry: string; vendor: string }>) => recipesFor(apps, "en", true, null).recipes.map((r) => r.id);
     const stripeAndGmail = [{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gmail", vendor: "Gmail" }];
     expect(ids(stripeAndGmail)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels"]);
     // Gorgias instead of Gmail does as well for Refunds; Chargebacks needs Stripe and a shop or help desk; a help desk alone does for tickets.

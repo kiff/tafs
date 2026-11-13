@@ -153,14 +153,30 @@ function fold(name: string): string {
 }
 
 /**
- * The recipes each of whose connections has a vendor among apps, by category, in lang; every recipe when
- * apps is undefined. `manages`: the person manages the account's tafs (`cards.manage`), so Home may lead
+ * The apps that connect today, as their recipes name them (folded): those kiff.dev's apps list says work,
+ * each proved by a check that connected it. A recipe is in the gallery only when each of its connections has
+ * one of these (rule 13): a job whose app can't connect yet stays out, and comes back once its app is added
+ * here, after a check proves it.
+ */
+export const CONNECTS_TODAY: ReadonlySet<string> = new Set(["stripe", "qonto", "shippo", "intercom", "zendesk", "pipedrive", "github", "gmail"]);
+
+/** Whether each of a recipe's connections has an app among those that connect (today's, unless said). */
+export function connectsToday(r: { connections: ReadonlyArray<ReadonlyArray<string>> }, connects: ReadonlySet<string> = CONNECTS_TODAY): boolean {
+  return r.connections.every((group) => group.some((v) => connects.has(fold(v))));
+}
+
+/**
+ * The recipes each of whose connections has a vendor among apps, and one that connects today, by category, in
+ * lang; every recipe that connects today when apps is undefined. `manages`: the person manages the account's tafs (`cards.manage`), so Home may lead
  * with the recipes.
  */
-export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefined, lang: Lang = "en", manages = true): RecipesView {
+export function recipesFor(apps: Pick<CatalogApp, "entry" | "vendor">[] | undefined, lang: Lang = "en", manages = true, connects: ReadonlySet<string> | null = CONNECTS_TODAY): RecipesView {
   const have = new Set(apps?.flatMap(vendorOf) ?? []);
   const listed = RECIPES
-    .filter((r) => !apps || r.connections.every((group) => group.some((v) => have.has(fold(v)))))
+    .filter((r) => connects === null || connectsToday(r, connects))
+    // For each connection, the catalog lists an app that would do and, under rule 13, one that connects today:
+    // the same app, so the job is never shown on an app the gallery couldn't connect.
+    .filter((r) => !apps || r.connections.every((group) => group.some((v) => have.has(fold(v)) && (connects === null || connects.has(fold(v))))))
     .map((r): Recipe => {
       const w = lang === "en" ? r : r.languages[lang];
       // One line says what the job does, in the Card's terms: no problem headline over it, and no line on what waiting
@@ -217,12 +233,16 @@ function byVendor(catalog: CatalogApp[] | undefined): Map<string, CatalogApp> {
   return out;
 }
 
-/** For each of a recipe's connections, the catalog entry it would use (a connected one first, else the first listed) and the name to draw. */
+/**
+ * For each of a recipe's connections, the catalog entry it would use and the name to draw: a connected one
+ * first, else one that connects today: never an app that can't connect yet (rule 13). With neither, no
+ * entry, and the name of the connection's app that connects today.
+ */
 function pickApps(r: Recipe, vendors: Map<string, CatalogApp>): Array<{ app?: CatalogApp; name: string }> {
   return r.connections.map((group) => {
     const listed = group.map((v) => vendors.get(fold(v))).filter((a): a is CatalogApp => a !== undefined);
-    const app = listed.find((a) => a.state === "connected") ?? listed[0];
-    return { app, name: app?.title || group[0] || "" };
+    const app = listed.find((a) => a.state === "connected") ?? listed.find((a) => vendorOf(a).some((v) => CONNECTS_TODAY.has(v)));
+    return { app, name: app?.title || group.find((v) => CONNECTS_TODAY.has(fold(v))) || group[0] || "" };
   });
 }
 
