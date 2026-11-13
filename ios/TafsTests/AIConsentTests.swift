@@ -125,6 +125,24 @@ final class AIConsentTests: XCTestCase {
         return model
     }
 
+    /// A card's answer refused for want of the consent stays to send again: the card isn't marked
+    /// answered, gets no "didn't reach" note of its own (the screen says why), and a questions
+    /// card keeps what was chosen, since nothing clears it.
+    func testARefusedCardAnswerStaysToSendAgain() throws {
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        let model = try String(contentsOf: views.appendingPathComponent("App/AppModel.swift"), encoding: .utf8)
+        let from = try XCTUnwrap(model.range(of: "func answer(_ component: SetupComponent, _ text: String) async {"))
+        let to = try XCTUnwrap(model.range(of: "nonisolated static func answerValue("))
+        let answer = model[from.lowerBound..<to.lowerBound]
+        let consent = try XCTUnwrap(answer.range(of: "where e.code == TafsCloud.aiConsentRequired {"))
+        let next = try XCTUnwrap(answer[consent.upperBound...].range(of: "} catch {"))
+        let branch = answer[consent.upperBound..<next.lowerBound]
+        XCTAssertTrue(branch.contains("answered.remove(ref)"), "not marked answered")
+        XCTAssertFalse(branch.contains("cardNotes"), "no note of its own: the screen says why")
+        let card = try String(contentsOf: views.appendingPathComponent("Views/QuestionsCard.swift"), encoding: .utf8)
+        XCTAssertEqual(card.components(separatedBy: "selection = ").count, 1, "nothing clears what was chosen")
+    }
+
     /// Every word on the screen and in Account's row is tafs cloud's.
     func testTheScreenHasNoWordsOfTheAppsOwn() throws {
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")

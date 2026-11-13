@@ -7509,6 +7509,11 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return }
             answered.remove(ref)
             await loadSetupThread()
+        } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+            // Refused for want of the AI-data consent: its screen says why, and the card stays as
+            // it was, its answers as chosen, to send again once it's allowed.
+            guard gen == accountGeneration else { return }
+            answered.remove(ref)
         } catch {
             guard gen == accountGeneration else { return }
             answered.remove(ref)
