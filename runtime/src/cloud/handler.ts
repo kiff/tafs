@@ -1749,14 +1749,19 @@ async function coachFirstStart(event: HTTPEvent, me: KIFFIdentity, deps: Deps): 
     // The person signs Coach's Cards in KIFF's own words, never tafs cloud's copy: the draft alone is previewed as
     // ever; the pair is worded by the gateway over the tools the batch would connect, checked as the batch checks
     // them. A KIFF that can't yet answers with an error, and the first start then goes in its steps, never unworded.
-    const preview = connect ? await previewBatchDraft(token, connect.body.connections, body, deps.fetch, deps.kiffGateway)
+    const worded: { card_title?: unknown; cards: unknown[]; contract_digest?: string } = connect
+      ? await previewBatchDraft(token, connect.body.connections, body, deps.fetch, deps.kiffGateway)
       : await previewDraft(token, body, deps.fetch, deps.kiffBase);
+    const { contract_digest: digest, ...preview } = worded;
+    // What the Cards were worded over goes in the signed draft: KIFF refuses it at submit if the tools changed since.
+    if (connect && !digest) throw new KIFFError(502, "the gateway's preview named no contract");
+    const signed = digest ? { ...body, contract_digest: digest } : body;
     return {
       start: {
         state: "to_give", scheme: connect ? "kiff.requests.v1" : "kiff.request.v1", agent_id: COACH_AGENT_ID,
         requests: [
           ...(connect ? [{ id: "connect", method: "POST", path: "/v1/connections/batch", gateway: true, body: connect.body, lines: connect.lines }] : []),
-          { id: "draft", method: "POST", path: "/v1/me/agent-drafts", body, ...preview },
+          { id: "draft", method: "POST", path: "/v1/me/agent-drafts", body: signed, ...preview },
         ],
         coach_tools_step: coachToolsStep(lang),
       },

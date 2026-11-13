@@ -131,7 +131,8 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
       if ((account as { batchPreviewMissing?: boolean }).batchPreviewMissing) return new Response(JSON.stringify({ error: "not found" }), { status: 404 });
       const body = JSON.parse(String(init?.body)) as { connections: unknown[]; draft: { cards: Array<{ id: string }> } };
       (account.previewed ??= []).push(body);
-      return new Response(JSON.stringify({ card_title: "Coach's Card", cards: body.draft.cards.map((c) => ({ id: c.id, lines: [`KIFF's line for ${c.id}`] })) }), { status: 200 });
+      const digest = (account as { noContractDigest?: boolean }).noContractDigest ? {} : { contract_digest: "cd_123" };
+      return new Response(JSON.stringify({ card_title: "Coach's Card", cards: body.draft.cards.map((c) => ({ id: c.id, lines: [`KIFF's line for ${c.id}`] })), ...digest }), { status: 200 });
     }
     if (url === "https://mcp.kiff.dev/v1/connections") {
       if (!byToken[token]) return new Response("{}", { status: 401 });
@@ -1736,7 +1737,14 @@ describe("Setup (kiff/agents#91)", () => {
       // (qa-kiff on #852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
       expect(draft.card_title).toBe("Coach's Card");
       expect(draft.cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
-      expect(w.account.previewed).toEqual([{ connections: connect.body.connections, draft: draft.body }]);
+      // What they were worded over is signed with the draft, and KIFF refuses it at submit if the tools changed since.
+      expect(draft.body.contract_digest).toBe("cd_123");
+      const { contract_digest: _cd, ...unsigned } = draft.body;
+      expect(w.account.previewed).toEqual([{ connections: connect.body.connections, draft: unsigned }]);
+      // A gateway preview that names no contract: no start, rather than a draft KIFF can't hold to its words.
+      (w.account as { noContractDigest?: boolean }).noContractDigest = true;
+      expect(await read()).toEqual({ setup: null, tools: null });
+      delete (w.account as { noContractDigest?: boolean }).noContractDigest;
       // A KIFF that can't word them yet: no start at all, so the first start goes in its steps, never unworded.
       (w.account as { batchPreviewMissing?: boolean }).batchPreviewMissing = true;
       expect(await read()).toEqual({ setup: null, tools: null });

@@ -292,10 +292,11 @@ export async function gatewayConnections(token: string, doFetch: Fetch = fetch, 
  * the batch would (its probe included), stores nothing, and has KIFF word the draft against the account's tools
  * plus these ones. A connection the batch would refuse is refused here, in the batch's words.
  */
-export async function previewBatchDraft(token: string, connections: unknown[], draft: unknown, doFetch: Fetch = fetch, base = KIFF_GATEWAY_API): Promise<{ card_title?: unknown; cards: unknown[] }> {
-  const out = await ask<{ card_title?: unknown; cards?: unknown }>(token, "POST", "/v1/connections/batch/preview", { connections, draft }, doFetch, base);
+export async function previewBatchDraft(token: string, connections: unknown[], draft: unknown, doFetch: Fetch = fetch, base = KIFF_GATEWAY_API): Promise<{ card_title?: unknown; cards: unknown[]; contract_digest?: string }> {
+  const out = await ask<{ card_title?: unknown; cards?: unknown; contract_digest?: unknown }>(token, "POST", "/v1/connections/batch/preview", { connections, draft }, doFetch, base);
   if (!Array.isArray(out.cards)) throw new KIFFError(502, "KIFF's preview sent no Cards");
-  return { ...(out.card_title === undefined ? {} : { card_title: out.card_title }), cards: out.cards };
+  return { ...(out.card_title === undefined ? {} : { card_title: out.card_title }), cards: out.cards,
+    ...(typeof out.contract_digest === "string" ? { contract_digest: out.contract_digest } : {}) };
 }
 
 /**
