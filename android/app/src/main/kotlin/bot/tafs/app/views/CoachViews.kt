@@ -314,6 +314,8 @@ class CoachActions(
   /** Alerts, offered on a new taf's card: turned on as from Settings, or put off for good on this phone. */
   val turnOnAlerts: () -> Unit = {},
   val notNowAlerts: () -> Unit = {},
+  /** A taf made with no plan: Plan & usage, where a plan is chosen. */
+  val openPlan: () -> Unit = {},
   /** Closes the "What I did" card. */
 )
 
@@ -626,7 +628,11 @@ private fun HandOverCard(shown: ShownComponent, state: AppState, actions: CoachA
         if (listed != null) {
           PrimaryButton(if (listed.name != taf.name) Words.Coach.Result.open(name) else c.yes ?: Words.Coach.Result.seeIt(name), { actions.openTaf(listed.id) })
           // Made, with no plan yet: nothing runs until there is one, in tafs cloud's words.
-          shown.answer?.outcome?.planNeeded?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.amberText)) }
+          shown.answer?.outcome?.planNeeded?.words?.takeIf { it.isNotBlank() }?.let {
+            Text(it, style = scaled(14, FontWeight.SemiBold, Theme.amberText))
+            // Where to do it, one tap away: Plan & usage, where a plan is chosen.
+            OutlineButton(Words.Usage.choosePlan, actions.openPlan, Modifier.fillMaxWidth())
+          }
           // The first run's one offer of alerts, now that a taf can ask for something: a held call never reaches nobody.
           if (state.offersAlerts) AlertsOffer(actions)
         } else Text(CoachWords.settingUp(name), style = scaled(13, color = Theme.dim))

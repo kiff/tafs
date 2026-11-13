@@ -54,6 +54,38 @@ class FirstRunTest {
     assertTrue(m.state.value.timeZoneOffer == null || m.state.value.timeZoneOffer != "Europe/Paris")
   }
 
+  @Test fun aNewAccountOnUtcTakesTafsCloudsZoneBeforeItShowsSoNothingIsAsked() = runTest {
+    // A phone in Paris, an account KIFF still has on UTC: tafs cloud sets the zone from the phone's, and the app shows it as set.
+    val was = java.util.TimeZone.getDefault()
+    java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Europe/Paris"))
+    try {
+      reads("UTC")
+      transport.answer("GET /v1/setup", 200, """{"setup":null,"time_zone":"Europe/Paris"}""")
+      val m = model()
+      m.refresh()
+      assertEquals("Europe/Paris", transport.requestsTo("GET /v1/setup").first().headers["X-Time-Zone"])
+      assertEquals("Europe/Paris", m.state.value.kiffAccount?.timeZone)
+      assertNull("no time-zone question", m.state.value.timeZoneOffer)
+    } finally {
+      java.util.TimeZone.setDefault(was)
+    }
+  }
+
+  @Test fun anAccountWithItsOwnZoneIsntAskedAboutAgainByTheSetupRead() = runTest {
+    // An account that already has a zone: no setup read for it, and a different phone zone is still offered once, as before.
+    val was = java.util.TimeZone.getDefault()
+    java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Europe/Paris"))
+    try {
+      reads("America/New_York")
+      val m = model()
+      m.refresh()
+      assertTrue(transport.requestsTo("GET /v1/setup").isEmpty())
+      assertEquals("Europe/Paris", m.state.value.timeZoneOffer)
+    } finally {
+      java.util.TimeZone.setDefault(was)
+    }
+  }
+
   @Test fun homeLeadsWithTheOwnWordsTafsCloudSends() {
     val r = KiffClient.json.decodeFromString(
       Recipes.serializer(),

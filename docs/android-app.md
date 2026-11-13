@@ -845,8 +845,13 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
 [api.md](api.md)):
 
 - **No time-zone question for a new account.** `GET /v1/setup` carries this phone's zone as `X-Time-Zone`. When tafs cloud
-  set a new account's zone from it, it answers `time_zone`; times show in it, and nothing is asked. A later mismatch is
-  still asked, as before.
+  set a new account's zone from it, it answers `time_zone`; times show in it, and nothing is asked. For an account KIFF still
+  has on UTC, on a phone that isn't, that read happens before the account first shows (Android 1.20.2, as on iPhone and
+  iPad), so the question never comes up for it. A later mismatch is still asked, as before.
+- **A taf made with no plan** says so on Coach's card, with **Choose a plan**, which opens Plan & usage.
+- **When KIFF doesn't take this phone's approval key at Start,** Start says "KIFF didn't accept this device's approval key.
+  Try again." (`approval.key_not_accepted`), and from the second time in a row the support line under it
+  (`approval.key_not_accepted_support`). A phone with no fingerprint keeps "Setting up a taf needs approvals".
 - **Coach's Start is one screen** (`StartScreen`): tafs cloud's line, Coach's Cards in KIFF's words, the tools folded under
   their details, what Start does, and its button. Start, or the first Send, signs it all under one fingerprint.
 - **Home leads with "Say it in your own words"** (`GET /v1/recipes`'s `home.own_words`, `OwnWordsRow`): under tafs cloud's
