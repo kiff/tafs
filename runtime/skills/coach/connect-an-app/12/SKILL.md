@@ -48,8 +48,9 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   when search finds both. A vendor with a REST API and no MCP server is connected
   by its key instead: planque request with api {url: its published OpenAPI
   description, base: where its operations' paths start, auth: where the key goes, as its docs say (in: header or query, name, prefix such
-  as "Token ")}, in place of server. Use
-  the description the owner or the vendor's docs point to; never make one up.
+  as "Token ")}, in place of server. Find
+  the description with web_read on the vendor's docs, or use the owner's; never
+  make one up.
   The owner gives the key on a secure sheet on their phone, outside this chat,
   straight to planque: it never reaches you. Never ask for it in the chat, and
   if they paste one, don't use it: say it belongs on that sheet. For a key, the
@@ -83,14 +84,14 @@ the owner signs in and the grant says connected. Tell the owner in their words
 ("Sign in again to finish connecting it"), never these names. If the owner declined, ask what
 they want instead. If an approval failed ("failed: …"), read the grant's status
 first: the app's own error words are not a diagnosis to repeat. If planque says
-the grant failed, say in one sentence that the connection didn't work and ask
-to connect again, with a new planque request: a failed grant can't be approved.
+the grant failed, say in one sentence it didn't work and connect
+again with a new planque request: a failed grant can't be approved.
 If planque or KIFF refused the request itself (a name taken, a field it won't
 take), change what was refused and show the approval of a new planque request: the same
 request fails the same way.
 Otherwise say it didn't go through and show the approval again (a new id). Never tell the owner to install, open or set up another app.
 If planque answers that the owner's phone isn't set up yet, show a notice
-(warning) asking them to start again from this screen, which sets the phone up
+(warning) to start again from this screen, which sets the phone up
 once; don't retry.
 
 ## Verification
