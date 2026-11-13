@@ -741,7 +741,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
@@ -1103,7 +1103,7 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
@@ -1263,6 +1263,18 @@ final class AppModel: ObservableObject {
     /// each time, so every phone of the account agrees. A name a vendor's tool holds stops it
     /// before anything is asked or sent, and says which. True once nothing's left to give.
     func giveCoachTools() async -> Bool {
+        // Before Coach exists, its tools are given by starting it: one Face ID for both.
+        if setupTaf == nil, coachStart?.startable == true {
+            guard !givingCoachTools else { return false }
+            givingCoachTools = true
+            defer { givingCoachTools = false }
+            coachToolsError = nil
+            setupError = nil
+            let started = await startSetup()
+            // Said on the step the person tapped from, where they're looking.
+            if !started { coachToolsError = setupError ?? lastError }
+            return started && coachTools?.toGive != true
+        }
         guard mode == .kiff, sessionHasKey, let tenant = kiffTenant, setupTaf != nil else { return false }
         guard !givingCoachTools, !approvalBlocked else { return false }
         givingCoachTools = true
@@ -6235,6 +6247,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var coachTools: TafsCloud.CoachTools?
     /// The tools step is asked: at the end of a first Start, until given or put off.
     @Published var coachToolsAsked = false
+    /// tafs cloud's first start for Coach (`GET /v1/setup`'s `start`), while the account has no
+    /// Coach; nil from a tafs cloud that sends none, which starts Coach as before.
+    @Published private(set) var coachStart: TafsCloud.CoachStart?
     @Published private(set) var coachToolsError: String?
     @Published private(set) var givingCoachTools = false
     /// Setup's past chats, to reopen, newest first.
@@ -6607,7 +6622,10 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         guard let read = try? await cloud.setupRead(), gen == accountGeneration else { return }
         setupTaf = read.setup
-        showCoachTools(read.setup == nil ? nil : read.tools)
+        // No Coach yet: tafs cloud's first start, when it sends one, is drawn as the tools step,
+        // whose one button starts Coach and gives its tools under one Face ID.
+        coachStart = read.setup == nil ? read.start : nil
+        showCoachTools(read.setup == nil ? coachStart.flatMap { $0.startable ? $0.tools : nil } : read.tools)
         if read.setup != nil { await loadSetupThread() }
         await loadRecipes()
     }
@@ -6777,8 +6795,14 @@ final class AppModel: ObservableObject {
         }
         if setupTaf == nil {
             do {
-                if let existing = try await cloud.setup() {
+                let read = try await cloud.setupRead()
+                guard gen == accountGeneration else { return false }
+                if let existing = read.setup {
                     setupTaf = existing
+                } else if let start = read.start, start.startable {
+                    // One Face ID, the one just asked: Coach's tools and its draft with its Cards.
+                    coachStart = start
+                    setupTaf = try await startCoachTogether(start, tenant: tenant, gen: gen)
                 } else {
                     let draft = try await kiff.submitNoToolsDraft(agentID: Self.setupAgent, label: "Setup")
                     guard gen == accountGeneration, let secret = draft.claimSecret else {
@@ -6800,6 +6824,35 @@ final class AppModel: ObservableObject {
         await loadCoachTools()
         if gen == accountGeneration, coachTools?.toGive == true { coachToolsAsked = true }
         return true
+    }
+
+    /// Coach's first start as tafs cloud built it, under the Face ID that confirmed Start: the
+    /// tools batch and Coach's draft, each built in full with one `signed_at`, signed once by the
+    /// approval key over both hashes (`kiff.requests.v1`); the batch goes first, the draft once the
+    /// batch answered, then tafs cloud claims the draft's key. With every tool connected, the draft
+    /// goes alone. A draft KIFF refuses after the batch went in is started again from the next read,
+    /// which carries the draft alone, under a new Face ID: never the pair again.
+    private func startCoachTogether(_ start: TafsCloud.CoachStart, tenant: String, gen: Int) async throws -> TafsCloud.CloudTaf? {
+        guard let draftRequest = start.draft else { return nil }
+        let draft: KIFFClient.AgentDraft
+        if start.together, let connectRequest = start.connect {
+            let signedAt = SigningTime.next()
+            let batch = try kiff.prepare(method: connectRequest.method, path: connectRequest.path, body: connectRequest.body, gateway: true, signedAt: signedAt)
+            let cards = try kiff.prepare(method: draftRequest.method, path: draftRequest.path, body: draftRequest.body, gateway: false, signedAt: signedAt)
+            let batchHash = RequestsTogether.hash(batch.message), cardsHash = RequestsTogether.hash(cards.message)
+            let signature = try signer.signApprovalConfirmed(RequestsTogether.message(tenant: tenant, signedAt: signedAt, batchHash, cardsHash))
+            try await kiff.connectBatch(batch, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: cardsHash))
+            guard gen == accountGeneration else { return nil }
+            draft = try await kiff.submitDraft(cards, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: batchHash))
+        } else {
+            draft = try await kiff.submitDraftAnswered(draftRequest.body)
+        }
+        guard gen == accountGeneration else { return nil }
+        guard let secret = draft.claimSecret else { throw KIFFClient.KIFFError.server(status: 0, message: Words.Kiff.kiffDidNotAnswerExpected) }
+        let started = try await cloud.startSetup(draftID: draft.id, claimSecret: secret)
+        guard gen == accountGeneration else { return nil }
+        coachStart = nil
+        return started
     }
 
     /// tafs cloud's thread, with what the owner sent that it doesn't have yet, by the rule

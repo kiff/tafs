@@ -2022,11 +2022,77 @@ final class TafsCloud {
     func setup() async throws -> CloudTaf? { try await setupRead().setup }
 
     /// The account's Coach and its tools as KIFF has them, from the one read (docs/api.md).
-    func setupRead() async throws -> (setup: CloudTaf?, tools: CoachTools?) {
+    func setupRead() async throws -> (setup: CloudTaf?, tools: CoachTools?, start: CoachStart?) {
         struct Response: Decodable { let setup: CloudTaf? }
         let data = try await sendData("GET", "/v1/setup", body: Optional<[String: String]>.none)
         let r = try KIFFClient.decoder.decode(Response.self, from: data)
-        return (r.setup, CoachTools.read(data))
+        return (r.setup, CoachTools.read(data), r.setup == nil ? CoachStart.read(data) : nil)
+    }
+
+    /// Coach's first start under one fingerprint (`GET /v1/setup`'s `start`, docs/api.md): for
+    /// an account with no Coach yet, the requests the phone signs once, as tafs cloud built them.
+    /// The tools batch for the gateway (`connect`) and Coach's agent draft with its Cards (`draft`)
+    /// under one `kiff.requests.v1`; or, with every tool already connected, the draft alone
+    /// (`kiff.request.v1`). The phone builds neither, and sends each body as these bytes.
+    struct CoachStart: Equatable {
+        struct Request: Equatable {
+            let id: String
+            let method: String
+            let path: String
+            /// For KIFF's gateway, not its API.
+            let gateway: Bool
+            let body: Data
+            var lines: [String] = []
+        }
+        var state = "unknown"
+        var scheme = ""
+        var agentID = ""
+        var requests: [Request] = []
+        var step: CoachTools.Step? = nil
+        var taken: String? = nil
+
+        var connect: Request? { requests.first { $0.id == "connect" } }
+        var draft: Request? { requests.first { $0.id == "draft" } }
+        /// The pair, signed once: both requests and the scheme that names two.
+        var together: Bool { scheme == RequestsTogether.scheme && connect != nil && draft != nil }
+        /// Something the phone can sign and send now: the pair, or the draft alone.
+        var startable: Bool {
+            guard state == "to_give", let draft, draft.method == "POST", draft.path == "/v1/me/agent-drafts", !draft.gateway else { return false }
+            if let connect { return together && connect.method == "POST" && connect.path == "/v1/connections/batch" && connect.gateway }
+            return scheme == "kiff.request.v1"
+        }
+
+        /// What the tools step draws for it: its words, the batch's lines, and what's to give.
+        var tools: CoachTools {
+            var t = CoachTools()
+            t.state = state
+            t.taken = taken
+            if let connect { t.connect = .init(body: connect.body, lines: connect.lines) }
+            t.step = step
+            return t
+        }
+
+        /// Read from `GET /v1/setup`'s answer; nil from a tafs cloud that sends no `start`.
+        static func read(_ response: Data) -> CoachStart? {
+            guard let raw = RawJSON.value(of: "start", in: response),
+                  let fields = (try? JSONSerialization.jsonObject(with: raw)) as? [String: Any] else { return nil }
+            var s = CoachStart()
+            s.state = fields["state"] as? String ?? "unknown"
+            s.scheme = fields["scheme"] as? String ?? ""
+            s.agentID = fields["agent_id"] as? String ?? ""
+            s.taken = fields["taken"] as? String
+            if let list = RawJSON.value(of: "requests", in: raw), let items = RawJSON.elements(of: list) {
+                s.requests = items.compactMap { item in
+                    guard let f = (try? JSONSerialization.jsonObject(with: item)) as? [String: Any],
+                          let id = f["id"] as? String, let method = f["method"] as? String, let path = f["path"] as? String,
+                          let body = RawJSON.value(of: "body", in: item) else { return nil }
+                    return Request(id: id, method: method, path: path, gateway: f["gateway"] as? Bool ?? false, body: body,
+                                   lines: (f["lines"] as? [Any])?.compactMap { $0 as? String } ?? [])
+                }
+            }
+            if let step = RawJSON.value(of: "coach_tools_step", in: raw) { s.step = try? JSONDecoder().decode(CoachTools.Step.self, from: step) }
+            return s
+        }
     }
 
     /// Coach's tools as tafs cloud reads them from KIFF (`GET /v1/setup`'s `tools`,

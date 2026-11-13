@@ -164,6 +164,119 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    private static func startJSON(pair: Bool = true, draftPath: String = "/v1/me/agent-drafts") -> String {
+        let connect = #"{"id":"connect","method":"POST","path":"/v1/connections/batch","gateway":true,"body":{"connections":[{"name":"tafs_state"}]},"lines":["See your tafs"]}"#
+        let draft = #"{"id":"draft","method":"POST","path":"\#(draftPath)","body":{"agent_id":"setup","label":"Coach","cards":[{"title":"Coach's reads"}]}}"#
+        let step = #"{"title":"Coach's tools","intro":"What Coach may do","groups":[],"details":"","ask":"Give Coach these tools?","give":"Start Coach","not_now":"Not now","row":"Coach's tools"}"#
+        return #"{"setup":null,"tools":null,"start":{"state":"to_give","scheme":"\#(pair ? "kiff.requests.v1" : "kiff.request.v1")","agent_id":"setup","requests":[\#(pair ? connect + "," : "")\#(draft)],"coach_tools_step":\#(step)}}"#
+    }
+
+    /// tafs cloud's first start reads as sent: the two requests with their bodies' own bytes, the
+    /// step's words, and whether the phone may sign it. Anything but the routes it names is no start.
+    func testCoachsFirstStartReadsAsTafsCloudSendsIt() throws {
+        let pair = try XCTUnwrap(TafsCloud.CoachStart.read(Data(Self.startJSON().utf8)))
+        XCTAssertTrue(pair.startable)
+        XCTAssertTrue(pair.together)
+        XCTAssertEqual(pair.connect?.gateway, true)
+        XCTAssertEqual(String(decoding: try XCTUnwrap(pair.draft?.body), as: UTF8.self), #"{"agent_id":"setup","label":"Coach","cards":[{"title":"Coach's reads"}]}"#, "the body's own bytes")
+        XCTAssertEqual(pair.tools.connect?.lines, ["See your tafs"])
+        XCTAssertEqual(pair.tools.step?.give, "Start Coach")
+        XCTAssertTrue(pair.tools.toGive)
+        let alone = try XCTUnwrap(TafsCloud.CoachStart.read(Data(Self.startJSON(pair: false).utf8)))
+        XCTAssertTrue(alone.startable)
+        XCTAssertFalse(alone.together)
+        XCTAssertFalse(try XCTUnwrap(TafsCloud.CoachStart.read(Data(Self.startJSON(draftPath: "/v1/me/agents").utf8))).startable,
+                       "a request to another route is never signed")
+        XCTAssertNil(TafsCloud.CoachStart.read(Data(#"{"setup":null,"tools":null}"#.utf8)), "a tafs cloud from before it")
+    }
+
+    /// Start opens what Coach is given, and its one button starts Coach and gives its tools under
+    /// one Face ID: the batch and Coach's draft are signed once, together, by the approval key, the
+    /// batch goes first and the draft after it, each as tafs cloud wrote it, then tafs cloud claims
+    /// the draft's key. No second step asks for the tools.
+    func testCoachsFirstStartGivesItsToolsUnderOneFaceID() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["GET /v1/setup"] = (200, Self.startJSON())
+        await model.loadSetup()
+        XCTAssertEqual(model.coachStart?.startable, true)
+        XCTAssertEqual(model.coachTools?.toGive, true, "drawn as the tools step")
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/connections/batch"] = (200, "{}")
+        StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","cards":[]}"#)
+        StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.sent = []
+
+        let given = await model.giveCoachTools()
+        XCTAssertTrue(given, model.coachToolsError ?? "")
+        XCTAssertEqual(signer.prompts, ["tafs.setup.v1|t_01"], "one Face ID")
+        XCTAssertEqual(model.setupTaf?.id, "taf-setup")
+        XCTAssertNil(model.coachStart)
+
+        let batch = try XCTUnwrap(sent("POST", "mcp.test", "/v1/connections/batch").first)
+        let draft = try XCTUnwrap(sent("POST", "api.test", "/v1/me/agent-drafts").first)
+        XCTAssertEqual(String(decoding: try XCTUnwrap(batch.httpBody), as: UTF8.self), #"{"connections":[{"name":"tafs_state"}]}"#)
+        XCTAssertEqual(String(decoding: try XCTUnwrap(draft.httpBody), as: UTF8.self), #"{"agent_id":"setup","label":"Coach","cards":[{"title":"Coach's reads"}]}"#)
+        let order = StubProtocol.sent.compactMap { r -> String? in
+            guard let p = r.url?.path, r.httpMethod == "POST", ["/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup"].contains(p) else { return nil }
+            return p
+        }
+        XCTAssertEqual(order, ["/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup"], "the batch, then the draft, then the claim")
+        let one = try XCTUnwrap(batch.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        let other = try XCTUnwrap(draft.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertTrue(one.contains(",v3=signature,with=sha256:") && other.contains(",v3=signature,with=sha256:"), "\(one) \(other)")
+        XCTAssertEqual(one.prefix(while: { $0 != "," }), other.prefix(while: { $0 != "," }), "one signed_at")
+        XCTAssertNotEqual(one, other, "each names the other's hash")
+        let together = try XCTUnwrap(signer.quiet.first { $0.hasPrefix("kiff.requests.v1\nt_01\n") }, "\(signer.quiet)")
+        XCTAssertEqual(together.split(separator: "\n").count, 5, "the scheme, the account, the time, two hashes")
+        XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/setup").first) as? [String: String], ["draft_id": "drf_s", "claim_secret": "kiff_claim_x"])
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts").count == 1, "no empty draft first")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// With every tool connected, tafs cloud sends the draft alone: it goes signed as any setup
+    /// call, under the same one Face ID. That's also the retry once KIFF refused a draft after the
+    /// batch went in: the next Start reads it, and the pair is never sent again.
+    func testCoachsDraftAloneGoesUnderTheSameFaceID() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["GET /v1/setup"] = (200, Self.startJSON(pair: false))
+        await model.loadSetup()
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","cards":[]}"#)
+        StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.sent = []
+        let given = await model.giveCoachTools()
+        XCTAssertTrue(given, model.coachToolsError ?? "")
+        XCTAssertEqual(signer.prompts.count, 1)
+        XCTAssertTrue(sent("POST", "mcp.test", "/v1/connections/batch").isEmpty, "no batch")
+        let draft = try XCTUnwrap(sent("POST", "api.test", "/v1/me/agent-drafts").first)
+        XCTAssertTrue(try XCTUnwrap(draft.value(forHTTPHeaderField: "KIFF-Device-Signature")).contains(",v1="), "signed as one request")
+        XCTAssertEqual(model.setupTaf?.id, "taf-setup")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A start the phone can't sign (a request to another route) starts Coach as before.
+    func testAStartThePhoneCantSignStartsCoachAsBefore() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["GET /v1/setup"] = (200, Self.startJSON(draftPath: "/v1/me/agents"))
+        await model.loadSetup()
+        XCTAssertNil(model.coachTools, "nothing drawn as the step")
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","no_tools":true,"cards":[]}"#)
+        StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.sent = []
+        let started = await model.startSetup()
+        XCTAssertTrue(started)
+        XCTAssertEqual(body(sent("POST", "api.test", "/v1/me/agent-drafts").first)["no_tools"] as? Bool, true)
+        XCTAssertTrue(StubProtocol.sent.allSatisfy { $0.url?.path != "/v1/me/agents" })
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// Coach mode's Start also points KIFF's alerts at tafs cloud, with the same one Face ID
     /// (kiff/tafs#206): a paused run hears the owner's answer with no phone's alerts on.
     /// Kept already, nothing is registered again.
