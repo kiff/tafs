@@ -228,10 +228,12 @@ final class ConnectAppsTests: XCTestCase {
         XCTAssertTrue(DisconnectWords.message("Stripe", taf: nil).hasPrefix("No taf uses Stripe now."))
         // Another taf whose Card draws on these tools stops too, and is named (qa-kiff on tafs#546).
         XCTAssertEqual(DisconnectWords.title("Stripe", taf: "Refunds", alsoStops: ["Chargebacks"]), "Remove access to Stripe for Refunds? Chargebacks stops too.")
-        // A key is deleted from tafs: nothing is revoked at the vendor, and coming back takes a key, not a sign-in.
+        // A key is deleted from tafs once no taf uses it (a key another taf's connection shares stays for that taf):
+        // nothing is revoked at the vendor, and coming back takes a key, not a sign-in.
         let key = DisconnectWords.message("Qonto", taf: "Invoices", key: true)
         XCTAssertTrue(key.hasPrefix("Invoices' Qonto tools stop working."), key)
-        XCTAssertTrue(key.contains("The key is deleted from tafs."), key)
+        XCTAssertTrue(key.contains("The key is deleted from tafs once no taf uses it."), key)
+        XCTAssertFalse(key.contains("The key is deleted from tafs."), key)
         XCTAssertFalse(key.contains("revoked at"), key)
         XCTAssertFalse(key.contains("sign in again"), key)
         XCTAssertTrue(message.contains("revoked at Stripe"), "a sign-in still says where it's revoked: \(message)")
