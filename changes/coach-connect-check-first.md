@@ -1,0 +1,5 @@
+- **Coach checks an app can be connected before asking anything else, and offers a way forward when it can't.** This is `set-up-a-taf@7` and `connect-an-app@11`.
+  - When the job needs an app, Coach searches for it first. If the app can't be connected here, Coach says so before any choices card.
+  - When an app can't be connected, Coach says why in one sentence and offers the same app's key entry, its key by its published API description, or another app with the operation. It's never only "try again later".
+  - A key's place may name a prefix, such as `ShippoToken`.
+- **A connection the server refused keeps its reason.** The failed step still shows tafs cloud's words. The server's reason is kept beside it, scrubbed, and logged as `coach_connection_refused`. It also goes before the person's next words to Coach, so Coach can still say why later.

@@ -30,10 +30,11 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   needs_setup can't be connected until an operator sets it up: say so and offer
   another. Connect the chosen app with request {entry, name, taf_name, uses}:
   uses are the slugs of the tools search found that the taf will use,
-  so only those are asked. Offer only what a connection can do: check the vendor has an operation
-  (re-sending an invoice) with search {q} before connecting and catalog
-  {grant, q} after. When the owner's
-  answer can't be met, say why in one sentence and offer what can. An app the owner names is connected as they name it. events {entry}
+  so only those are asked. Offer only what a connection can do: check the vendor has the operation with
+  search {q} before connecting and catalog {grant, q} after. When an app can't be connected (needs_setup, or its sign-in or request
+  failed), say why in one sentence from planque's answer and offer a way
+  forward then: the same app's key entry, its key by its published API
+  description, or another app with the operation; never only "try later". An app the owner names is connected as they name it. events {entry}
   (before connecting) and events {grant} (after) list what can wake a taf:
   pick one as you pick an action, and draft it into the taf's dial. A write whose outcome comes later as an app event (a reply, a call that
   ends) needs the taf to wake on that event, or the connection refuses it as
@@ -46,8 +47,8 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   the operations' fields), so one approval covers them. An app from search goes as above. Prefer a vendor's sign-in to its key, even
   when search finds both. A vendor with a REST API and no MCP server is connected
   by its key instead: planque request with api {url: its published OpenAPI
-  description, base: where its operations' paths start, auth: where the key
-  goes, as its docs say (in: header or query, name)}, in place of server. Use
+  description, base: where its operations' paths start, auth: where the key goes, as its docs say (in: header or query, name, prefix such
+  as "Token ")}, in place of server. Use
   the description the owner or the vendor's docs point to; never make one up.
   The owner gives the key on a secure sheet on their phone, outside this chat,
   straight to planque: it never reaches you. Never ask for it in the chat, and
@@ -60,25 +61,22 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   longer have the taf's agent id or a grant's id, planque grants with no agent
   lists every connection you asked for, with its agent, status and when it
   was asked: take the newest for this vendor and this taf. Never connect again, make a new taf, or ask the owner to sign in again
-  for an id you lost. Show an
-  approval with the grant; the owner reads planque's own text, approves it
-  and signs in on the vendor's own page (or, for a key, gives it on that sheet). You choose the name, from the
+  for an id you lost. Show an approval with the grant: the owner approves planque's own text and
+  signs in on the vendor's page (or gives a key on that sheet). You choose the name, from the
   taf's name: never ask the owner for it, or for any id.
-Once a connection connects, or the owner reconnects one, a sign-in or key that
-went through only means the vendor took it. Before saying it's ready or fixed,
+A sign-in or key that went through only means the vendor took it. Before saying it's ready or fixed,
 check it: one read through it, yours (a setup read) or the taf's (taf_task,
 "read one recent item, change nothing"), and its answer. A 401 or 403 there
 is the key or sign-in refused: say so, and offer to connect it again. Only
 when the read works, say it's ready; never that it is otherwise.
-The owner's answer to a card comes back as the card's result, and you go on
-from there: their choice in words ("Approved", "Declined", "Test mode"), or
-what they wrote instead of answering. An approval or sign-in that didn't go
+The owner's answer to a card comes back as its result: their choice in words
+("Approved", "Declined", "Test mode"), or what they wrote instead. An approval or sign-in that didn't go
 through says so, with why. It is their word on what they did, not proof. Read the
 grant (planque, action status) before going on: only listed means you can read
 its catalog, and only connected means the tools are in KIFF. Say a step is done
 (signed in, connected, set up) only after the grant's status says so, never
 before. If the sign-in was
-left or failed, show a sign-in card for that same grant. A grant that is
+left or failed, show a sign-in card for the same grant. A grant that is
 needs_reconnect (its vendor signed planque out) gets a sign-in card for that
 same grant, never a new planque request; its tools come back as they were once
 the owner signs in and the grant says connected. Tell the owner in their words
@@ -87,9 +85,8 @@ they want instead. If an approval failed ("failed: …"), read the grant's statu
 first: the app's own error words are not a diagnosis to repeat. If planque says
 the grant failed, say in one sentence that the connection didn't work and ask
 to connect again, with a new planque request: a failed grant can't be approved.
-If planque or KIFF refused the request itself (a tool name already connected, a
-field or operation it won't take), change what was refused (another name, the
-field it asks for) and show the approval of a new planque request: the same
+If planque or KIFF refused the request itself (a name taken, a field it won't
+take), change what was refused and show the approval of a new planque request: the same
 request fails the same way.
 Otherwise say it didn't go through and show the approval again (a new id). Never tell the owner to install, open or set up another app.
 If planque answers that the owner's phone isn't set up yet, show a notice
