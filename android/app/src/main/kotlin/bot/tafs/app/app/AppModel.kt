@@ -1850,6 +1850,51 @@ class AppModel(
     openCoachChat(finish.session)
   }
 
+  /**
+   * Drops a taf being set up, for the person who started it (docs/api.md): the fingerprint first, then its Cards revoked in KIFF,
+   * as before a removal, then tafs cloud asked, signed, and Home read again. A Card KIFF didn't revoke is said, and tafs cloud is
+   * still asked: the agent has no taf key, so it can't act once the chat that drafted it ends. Nothing is decided here: whether
+   * it's theirs to drop is tafs cloud's to prove. True once tafs cloud dropped it.
+   */
+  suspend fun discardSetup(agent: String): Boolean {
+    val s = _state.value
+    val taf = s.settingUp.firstOrNull { it.id == agent } ?: return false
+    if (s.mode != Mode.kiff || taf.discard == null) return false
+    val tenant = kiffTenant ?: return false
+    val generation = accountGeneration
+    val signature = try {
+      cloud.discardSignature(agent, tenant) { built -> signer.signCritical(taf.discard.words.title) { built() } }
+    } catch (e: SignerException) {
+      e.message?.takeIf { it != bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED }?.let(::fail)
+      return false
+    }
+    if (generation != accountGeneration) return false
+    var cardsLeft = 0
+    for (cardId in taf.kiffCardIds) {
+      if (generation != accountGeneration) return false
+      try {
+        kiff.revoke(cardId)
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: Exception) {
+        cardsLeft += 1
+      }
+    }
+    if (generation != accountGeneration) return false
+    try {
+      cloud.discardSettingUp(agent, signature)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) fail(listOfNotNull(if (cardsLeft > 0) Words.Taf.Remove.cardsLeft(count = cardsLeft) else null, ErrorWords.of(e)).joinToString(" "))
+      return false
+    }
+    if (generation != accountGeneration) return false
+    if (cardsLeft > 0) fail(Words.Taf.Remove.cardsLeft(count = cardsLeft))
+    refresh()
+    return true
+  }
+
   /** Reopens one of Coach's conversations: it's shown alone, and messages go on in it. */
   suspend fun openCoachChat(session: String) {
     leaveCoachChat()

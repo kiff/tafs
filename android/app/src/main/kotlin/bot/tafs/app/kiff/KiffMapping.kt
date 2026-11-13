@@ -135,7 +135,9 @@ object KiffMapping {
    */
   fun settingUp(list: List<HomeSettingUp>, owner: String): List<Taf> = list.filter { it.name.isNotBlank() }.map { s ->
     val finish = s.finish?.takeIf { it.session.isNotBlank() && it.words.isNotBlank() }
-    Taf(id = s.kiffAgent.ifBlank { "setting-up:" + s.name }, name = s.name, job = "", tools = emptyList(), colorIndex = s.color, card = Card(emptyList(), owner), now = finish?.words.orEmpty(), finish = finish)
+    Taf(id = s.kiffAgent.ifBlank { "setting-up:" + s.name }, name = s.name, job = "", tools = emptyList(), colorIndex = s.color, card = Card(emptyList(), owner), now = finish?.words.orEmpty(), finish = finish,
+      // Discard only with every word, and only for an agent tafs cloud named.
+      discard = s.discard?.takeIf { it.words.usable && s.kiffAgent.isNotBlank() }, kiffCardIds = s.discard?.cards.orEmpty())
   }
 
   fun taf(h: HomeTaf, owner: String): Taf {

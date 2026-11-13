@@ -1394,6 +1394,54 @@ class PlanqueTest {
     assertNull(m.removalWords("refunds-1"))
   }
 
+  private val halfMade = """{"tafs":[],"others":[],"removing":[],"setting_up":[{"name":"Invoicing day test","kiff_agent":"inv-1","color":2,""" +
+    """"discard":{"cards":["c9"],"words":{"button":"Discard","title":"Discard this setup?","text":"Its Card is revoked and the chat that set it up ends. Nothing runs.","yes":"Discard","no":"Keep it"}}}]}"""
+
+  @Test fun discardingATafBeingSetUpRevokesItsCardsThenAsksTafsCloudSignedAndReadsHomeAgain() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, halfMade)
+    transport.answer("POST /v1/me/mandates/c9/revoke", 200)
+    transport.answer("POST /v1/home/setting-up/inv-1/discard", 200, """{"discarded":true,"kiff_agent":"inv-1"}""")
+    val m = model()
+    m.refresh()
+    assertEquals("Discard", m.state.value.settingUp.single().discard?.words?.button)
+    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[],"setting_up":[]}""")
+    assertTrue(m.discardSetup("inv-1"))
+    // The fingerprint first, under tafs cloud's question; then the Card at KIFF; then tafs cloud, signed as a removal is.
+    assertEquals(listOf("Discard this setup?"), auth.asked)
+    val revoke = transport.requests.indexOfFirst { it.url.endsWith("/v1/me/mandates/c9/revoke") }
+    val discard = transport.requests.indexOfFirst { it.url.endsWith("/v1/home/setting-up/inv-1/discard") }
+    assertTrue("the Card is revoked before tafs cloud is asked", revoke in 0 until discard)
+    assertTrue(transport.requests[discard].headers.getValue("KIFF-Device-Signature").contains(",v1="))
+    assertTrue("Home is read again, and lists it no more", m.state.value.settingUp.isEmpty())
+  }
+
+  @Test fun aCardKiffDidntRevokeIsSaidWithTafsCloudsRefusal() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, halfMade)
+    transport.answer("POST /v1/me/mandates/c9/revoke", 500, """{"error":"internal"}""")
+    // tafs cloud checks KIFF itself and refuses while a Card is in force: it decides, and the phone says both.
+    transport.answer("POST /v1/home/setting-up/inv-1/discard", 409, """{"error":"1 Card still in force on this agent: revoke it first","code":"cards_in_force","cards":["c9"]}""")
+    val m = model()
+    m.refresh()
+    assertFalse(m.discardSetup("inv-1"))
+    assertEquals(1, transport.requestsTo("POST /v1/home/setting-up/inv-1/discard").size)
+    val said = m.state.value.lastError!!
+    assertTrue(said, said.startsWith(Words.Taf.Remove.cardsLeft(count = 1)))
+    assertEquals("still listed until tafs cloud drops it", 1, m.state.value.settingUp.size)
+  }
+
+  @Test fun withoutTafsCloudsDiscardNothingIsAskedOrSent() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[],"setting_up":[{"name":"Invoicing day test","kiff_agent":"inv-1","color":2}]}""")
+    val m = model()
+    m.refresh()
+    assertNull(m.state.value.settingUp.single().discard)
+    assertFalse(m.discardSetup("inv-1"))
+    assertTrue(auth.asked.isEmpty())
+    assertTrue(transport.requests.none { it.method == "POST" && (it.url.contains("/discard") || it.url.contains("/revoke")) })
+  }
+
   @Test fun removingATafLeavesItsConnectionsToTafsCloudUnderTheSameConfirmation() = runTest {
     reads()
     transport.answer("GET /v1/home", 200, """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"working","status":"active","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""")

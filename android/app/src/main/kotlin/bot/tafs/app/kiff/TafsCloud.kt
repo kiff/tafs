@@ -671,6 +671,24 @@ class TafsCloud(
   suspend fun remove(id: String, signature: String?): Removal =
     KiffClient.json.decodeFromString(String(send("DELETE", "/v1/tafs/${escaped(id)}", extra = signature?.let { mapOf("KIFF-Device-Signature" to it) } ?: emptyMap())))
 
+  /** The path that drops a taf being set up (docs/api.md). */
+  fun discardPath(agent: String) = "/v1/home/setting-up/${escaped(agent)}/discard"
+
+  /** The person's confirmation of a discard, signed as a removal is: `kiff.request.v1` over `POST`, the path and the empty body. */
+  suspend fun discardSignature(agent: String, tenant: String, sign: suspend (() -> ByteArray) -> String): String {
+    var signedAt = ""
+    val signature = sign {
+      signedAt = signingTime.next()
+      KiffClient.requestMessage(tenant, "POST", discardPath(agent), ByteArray(0), signedAt)
+    }
+    return "t=$signedAt,v1=$signature"
+  }
+
+  /** Drops a taf being set up: tafs cloud ends the Coach chat that drafted it, and Home stops listing it. Its Cards are revoked first. */
+  suspend fun discardSettingUp(agent: String, signature: String) {
+    send("POST", discardPath(agent), extra = mapOf("KIFF-Device-Signature" to signature))
+  }
+
   // MARK: Doors
 
   /** A taf's doors, the apps a door can open on here, and the knocks waiting for the owner. */

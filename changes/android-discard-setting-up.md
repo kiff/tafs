@@ -1,0 +1,1 @@
+- **Android: Discard a taf whose setup stopped partway.** The person who started it sees Discard under it on Home. After a question and the fingerprint, its Cards are revoked and tafs cloud ends the chat that drafted it (docs/android-app.md).

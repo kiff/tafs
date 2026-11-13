@@ -897,6 +897,12 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   someone who may use Coach, as on iPhone and iPad. Reading the chat makes the taf at tafs cloud. Anyone else sees the name
   alone. When `setting_up` is sent, `others` only repeats it for apps from before, so it isn't drawn; a tafs cloud from before
   `setting_up` still has its `others` drawn under "Other agents with Cards".
+  - **Discard** (Android 1.21): for the person who started it, tafs cloud also sends `discard: {cards, words}`. Under the row,
+    `words.button` asks `words.title` and `words.text`, with `words.yes` and `words.no`; with any word missing there's no button.
+    On yes (`AppModel.discardSetup`): the fingerprint, under `words.title`, signs `POST /v1/home/setting-up/{kiff_agent}/discard`
+    and its empty body; each of `cards` is revoked in KIFF, as before a removal; then the signed POST goes to tafs cloud, and
+    Home is read again. A Card KIFF didn't revoke is said, with tafs cloud's refusal (`cards_in_force`) when it gives one. The
+    phone decides nothing: whether it's theirs to drop is tafs cloud's to prove. iPhone and iPad do the same.
 - **When it shows:** after sign-in and at launch while it isn't given, and whenever tafs cloud refuses a model turn with
   `ai_consent_required`. `TafsCloud` reads that refusal once, for every route, plain or streamed, and the sheet shows the
   `consent` it carries.
