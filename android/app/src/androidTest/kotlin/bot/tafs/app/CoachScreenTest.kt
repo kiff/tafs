@@ -130,6 +130,28 @@ class CoachScreenTest {
     assertEquals(0, rule.onAllNodesWithText(ApprovalWords.CHECK_AGAIN).fetchSemanticsNodes().size)
   }
 
+  @Test fun aTafMadeWithNoPlanSaysSoWithChooseAPlan() {
+    val plans = mutableListOf<Unit>()
+    val made = component("""{"type":"result","id":"r9","text":"Refunds is ready.","taf":{"agent":"refunds-1","name":"Refunds"}}""")
+    val answer = KiffClient.json.decodeFromString<CardAnswer>("""{"state":"answered","outcome":{"taf_id":"taf_1","plan_needed":{"words":"Choose a plan to start it."}}}""")
+    val listed = bot.tafs.app.model.Taf(id = "refunds-1", name = "Refunds", job = "", tools = emptyList(), colorIndex = 1, card = bot.tafs.app.model.Card(emptyList(), "You"), cloudId = "taf_1")
+    val withResult = state(null).copy(tafs = listOf(listed), coachComponents = listOf(ShownComponent(t0, "s1", "r9", made, answer)), chats = emptyMap())
+    val withPlan = TafActions(
+      answer = { _, _ -> }, togglePause = {}, revoke = {}, loadMemory = {}, forget = { _, _ -> }, loadChat = {},
+      sendChat = { _, _, _, _ -> }, issuer = "KIFF",
+      doors = DoorActions({}, { _, _ -> null }, { _, _, _ -> }, { _, _ -> }, { _, _, _, _ -> }, { _, _, _ -> }, { _, _, _, _ -> }, {}),
+      coach = CoachActions(answer = { _, _, _ -> }, approve = { _, _, _ -> }, cancelSignIn = {}, openPlan = { plans += Unit }),
+      connections = ConnectionActions({}, { false }),
+    )
+    rule.setShown {
+      TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(withResult, withPlan, loadCoach = {}, onBack = {}) } }
+    }
+    rule.onNodeWithText("Choose a plan to start it.").assertIsDisplayed()
+    rule.onNodeWithText(bot.tafs.app.model.Words.Usage.choosePlan).performClick()
+    rule.waitForIdle()
+    assertEquals(1, plans.size)
+  }
+
   @Test fun theHeaderIsOneRowAndThePlanIsTafsCloudsLine() {
     show(null)
     rule.onNodeWithText("Coach").assertIsDisplayed()
