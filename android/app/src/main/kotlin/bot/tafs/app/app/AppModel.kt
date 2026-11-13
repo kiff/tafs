@@ -249,6 +249,8 @@ data class AppState(
   val dismissedCardUnits: Set<String> = emptySet(),
   /** Steps a taf handed its owner, as tafs cloud lists them on Home (docs/api.md › Your step); Needs you draws them. */
   val yourSteps: List<bot.tafs.app.kiff.YourStep> = emptyList(),
+  /** Coach's chats waiting on this person, as tafs cloud lists them on Home (docs/api.md › Coach waiting); Needs you draws them. */
+  val coachWaiting: List<bot.tafs.app.kiff.CoachWaiting> = emptyList(),
   /** The hand-offs whose answer is on its way to KIFF. */
   val answeringSteps: Set<String> = emptySet(),
   /** The hand-offs KIFF took an answer for: kept out of a Home read already on its way. */
@@ -630,7 +632,7 @@ data class AppState(
    * What Needs you holds, as Home's headline and the bar's badge count it: tafs cloud's count, else (when it couldn't count all
    * of it) the app's own of what it has, held calls, currency requests and "Did this happen?".
    */
-  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size)
+  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size + coachWaiting.size)
 
   /** Home's line for it: tafs cloud's words, else the app's for its own count. */
   val needsYouWords: String get() = needsYou?.words ?: needsYouCount.let { if (it == 0) Words.NeedsYou.nothing else Words.NeedsYou.count(count = it) }
@@ -1355,6 +1357,7 @@ class AppModel(
         held = held,
         cardUnitExceptions = read.home.cardUnitExceptions.orEmpty().filterNot { it.id in s.dismissedCardUnits },
         yourSteps = read.home.yourSteps.orEmpty().filterNot { it.handoff in s.answeredSteps },
+        coachWaiting = read.home.coachWaiting.orEmpty().filter { it.session.isNotBlank() && it.words.line.isNotBlank() },
         needsYou = read.home.needsYou,
         // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given on this device.
         record = read.activity?.let { withDecisions(KiffMapping.record(it, holders)) } ?: s.record,
@@ -1848,6 +1851,13 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || !_state.value.mayUseCoach || finish.session.isBlank()) return
     _state.update { it.copy(coachRequested = true) }
     openCoachChat(finish.session)
+  }
+
+  /** A Coach chat waiting on its person, from Needs you (docs/api.md › Coach waiting): Coach opens on that chat. */
+  suspend fun openWaitingCoach(waiting: bot.tafs.app.kiff.CoachWaiting) {
+    if (_state.value.mode != Mode.kiff || !_state.value.mayUseCoach || waiting.session.isBlank()) return
+    _state.update { it.copy(coachRequested = true) }
+    openCoachChat(waiting.session)
   }
 
   /**

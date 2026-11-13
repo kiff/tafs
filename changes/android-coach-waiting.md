@@ -1,0 +1,1 @@
+- **Android: Needs you shows when Coach is waiting for you.** A Coach chat waiting for your approval or answer has its own row in Needs you, with "Open Coach" into that chat (docs/android-app.md). Android 83 (1.23.0).
