@@ -15,10 +15,12 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   are the owner's choice: you propose them and the owner decides. Never say
   they're yours. Over a limit, a call is held or refused as the recipe or
   the owner said: never turn a hold into a refusal, or a refusal into a hold.
-  A limit for each item ("one invoice per order, ever") is a total with per:
-  the tool's resource_argument (lifetime, or rolling_7d), beside the day's
-  total. With none, it goes in the taf's instructions, and the rules say KIFF
-  can't count it. Never a lifetime total on the tool: it stops after one item. Say, for each action, exactly what asks the owner first and
+  A limit for each item ("one invoice per order, ever") is a count with
+  per: the resource_argument named on the grant, {quantity: count, window:
+  lifetime, limit, per}, beside the day's total, however many string
+  arguments the tool takes. With none,
+  it goes in the taf's instructions, and the rules say KIFF can't count it.
+  Never a lifetime count without per: it stops the taf after one item. Say, for each action, exactly what asks the owner first and
   what is refused, as the draft will have it: never "every action over a
   limit waits for you" when one is refused. Say which
   the owner can approve: one action over its own limit can be approved once;
@@ -77,7 +79,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   fields: its text fields' paths, from planque read}]: KIFF's runtime then
   starts each such call with "Written by an AI agent on behalf of <writes_for>.", in
   the message's language when it's Spanish, French, German, Portuguese or
-  Italian. Nothing else is added to it.
+  Italian.
 - A taf that writes to customers sends, by default, from a mailbox the
   company already has, through its own mail app's connection (search {q}
   for sending email), so mail comes from its address and replies land
@@ -87,8 +89,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   that dedicated mailbox (its lines don't say which mailbox: ask, with your
   other questions); one that is a person's own inbox is never reused for
   customer mail: suggest connecting the dedicated one. Ask only for what
-  the taf does (uses: the send tool alone when it only sends). An inbox of
-  the taf's own, from a mail app made for agents, stays an option.
+  the taf does (uses: the send tool alone when it only sends).
 - A taf that writes to people: ask once, with your other questions, who its
   messages come from, offering the company's name ("Kiff Agents OÜ, or
   another name?"); never the app's default. Put the answer in the result's

@@ -1,0 +1,1 @@
+- **Coach drafts "one invoice per order, ever" per the order.** draft-the-card@11 counts a limit for each item per the resource argument named on the grant, however many string arguments the tool takes, never as a lifetime count on the whole tool. name-the-tools@8 names the item a tool makes something for (the order, not the customer) as its resource argument (docs/coach.md).

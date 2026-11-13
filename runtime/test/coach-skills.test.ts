@@ -41,7 +41,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are twelve, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@16", "did-this-happen@1", "draft-the-card@10", "drive-the-app@3", "halting@1", "improve-a-taf@1", "name-the-tools@7", "set-up-a-taf@7", "the-dial@4", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@16", "did-this-happen@1", "draft-the-card@11", "drive-the-app@3", "halting@1", "improve-a-taf@1", "name-the-tools@8", "set-up-a-taf@7", "the-dial@4", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -181,10 +181,14 @@ describe("Coach's core", () => {
   // so the taf could invoice one order and never another. KIFF counts a total for each item (per).
   it("drafts a limit for each item as a total per its resource argument, never a lifetime cap on the tool", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
-    expect(body).toContain('A limit for each item ("one invoice per order, ever") is a total with per: the tool\'s resource_argument (lifetime, or rolling_7d), beside the day\'s total.');
+    // Eval 43431718298: "one invoice per order, ever" signed as one count over create_invoice's life, with order among several
+    // string arguments. The per is the resource argument named on the grant, whatever else the tool takes.
+    expect(body).toContain('A limit for each item ("one invoice per order, ever") is a count with per: the resource_argument named on the grant, {quantity: count, window: lifetime, limit, per}, beside the day\'s total, however many string arguments the tool takes.');
     // A tool with no resource argument: KIFF would refuse a per naming an argument it doesn't declare (qa-kiff on #851).
     expect(body).toContain("With none, it goes in the taf's instructions, and the rules say KIFF can't count it.");
-    expect(body).toContain("Never a lifetime total on the tool: it stops after one item.");
+    expect(body).toContain("Never a lifetime count without per: it stops the taf after one item.");
+    const tools = COACH_SKILLS.find((k) => k.name === "name-the-tools")!.body.replace(/\s+/g, " ");
+    expect(tools).toContain("One that makes something for an item (an invoice for an order) takes the order, never the customer.");
     expect(body).not.toContain("KIFF can't enforce it yet");
   });
 
@@ -259,15 +263,15 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   }
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@16", "draft-the-card@10", "halting@1", "name-the-tools@7", "set-up-a-taf@7", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@16", "draft-the-card@10", "improve-a-taf@1", "name-the-tools@7"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@16", "draft-the-card@11", "halting@1", "name-the-tools@8", "set-up-a-taf@7", "usage-and-plans@3"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@16", "draft-the-card@11", "improve-a-taf@1", "name-the-tools@8"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@16", "draft-the-card@10", "halting@1", "name-the-tools@7", "set-up-a-taf@7", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@16", "draft-the-card@10", "halting@1", "improve-a-taf@1", "name-the-tools@7"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@16", "draft-the-card@11", "halting@1", "name-the-tools@8", "set-up-a-taf@7", "usage-and-plans@3"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@16", "draft-the-card@11", "halting@1", "improve-a-taf@1", "name-the-tools@8"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });

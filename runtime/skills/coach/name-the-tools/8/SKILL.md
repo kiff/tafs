@@ -18,9 +18,8 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   catalog {grant, cursor} reads on. Never say a list was too long to read.
   Choose, from the vendor's own catalog, the tools the whole job needs:
   to find the work (list or search), to check one item (read it), and to act
-  (the write). Nothing more, nothing less. Choose each read by what the job asks of it:
-  the operation whose fields answer the job's question, not the first one
-  named after the thing. For a refund, the read that says what was paid and already refunded, not only that it was paid; for a ticket to answer, the read that has its messages,
+  (the write). Choose each read by what the job asks of it:
+  the operation whose fields answer the job's question. For a refund, the read that says what was paid and already refunded, not only that it was paid; for a ticket to answer, the read that has its messages,
   not only its status. Pin with fixed_arguments what must never
   change: the account, and the mode, on every tool that takes them, reads
   included, as the vendor's own descriptions ask,
@@ -74,9 +73,11 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   no money here. It has no amount argument, and its Card limits its calls a
   day. Name what each tool that changes things acts on
   (resource_argument): the item it takes (the ticket, the event, the
-  payment), as one of its string arguments, required. When it can take
-  several, keep the one the taf's read of it takes and leave the others out,
-  so the owner's record and KIFF's checks name one thing. For a tool that
+  payment), as one of its string arguments, required. One that makes
+  something for an item (an invoice for an order) takes the order, never
+  the customer. When it can take
+  several, keep the one the taf's read of it takes and leave the others out.
+  For a tool that
   moves money, name the read that says its unit (unit_lookup: that read's
   name, the read's argument that takes the same id, and where the unit is in
   its answer, such as currency): KIFF refuses a call in another unit than the
