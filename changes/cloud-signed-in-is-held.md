@@ -1,1 +1,1 @@
-- An approved connection that planque answers as signed in with no sign-in link (the account's sign-in was held already) is approved, and Coach goes on to the tools step, instead of "Nothing was connected".
+- A connection that planque answers as signed in but not yet confirmed is no longer failed with "Nothing was connected". tafs cloud reads it again, and approves it only once planque lists it after the phone's confirm. Until then, the phone is told to confirm first (409, `sign_in_not_confirmed`), and Coach hears nothing yet.

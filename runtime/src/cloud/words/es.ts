@@ -73,6 +73,7 @@ export const es: Words = {
   approval_sign_in_closed: "El inicio de sesión se cerró. No se conectó nada.",
   approval_no_code: (vendor: string) => `El inicio de sesión en ${vendor} volvió sin su código de confirmación. No se conectó nada.`,
   approval_came_back: (status: string) => `La conexión volvió sin enlace para iniciar sesión (estado: ${status}). No se conectó nada.`,
+  approval_confirm_first: "Tu inicio de sesión se completó, pero aún no está confirmado. Aprueba de nuevo para confirmarlo.",
   approval_not_connected: (vendor: string, status: string) => `El inicio de sesión en ${vendor} no conectó (estado de la conexión: ${status}). No se conectó nada. Vuelve a iniciar sesión.`,
   approval_failed: (why: string) => `No conectado: ${why}`,
   approval_failed_default: "no se completó",

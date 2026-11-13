@@ -73,6 +73,7 @@ export const it: Words = {
   approval_sign_in_closed: "L'accesso è stato chiuso. Non è stato collegato nulla.",
   approval_no_code: (vendor: string) => `L'accesso a ${vendor} è tornato senza il suo codice di conferma. Non è stato collegato nulla.`,
   approval_came_back: (status: string) => `Il collegamento è tornato senza link di accesso (stato: ${status}). Non è stato collegato nulla.`,
+  approval_confirm_first: "L'accesso è riuscito, ma non è ancora confermato. Approva di nuovo per confermarlo.",
   approval_not_connected: (vendor: string, status: string) => `L'accesso a ${vendor} non ha collegato nulla (stato del collegamento: ${status}). Accedi di nuovo.`,
   approval_failed: (why: string) => `Non collegato: ${why}`,
   approval_failed_default: "non è andata a buon fine",

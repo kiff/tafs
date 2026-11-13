@@ -73,6 +73,7 @@ export const de: Words = {
   approval_sign_in_closed: "Die Anmeldung wurde geschlossen. Es wurde nichts verbunden.",
   approval_no_code: (vendor: string) => `Die Anmeldung bei ${vendor} kam ohne ihren Bestätigungscode zurück. Es wurde nichts verbunden.`,
   approval_came_back: (status: string) => `Die Verbindung kam ohne Anmeldelink zurück (Status: ${status}). Es wurde nichts verbunden.`,
+  approval_confirm_first: "Deine Anmeldung hat geklappt, ist aber noch nicht bestätigt. Tippe erneut auf Genehmigen, um sie zu bestätigen.",
   approval_not_connected: (vendor: string, status: string) => `Die Anmeldung bei ${vendor} hat keine Verbindung hergestellt (Status: ${status}). Es wurde nichts verbunden. Melde dich erneut an.`,
   approval_failed: (why: string) => `Nicht verbunden: ${why}`,
   approval_failed_default: "es hat nicht geklappt",

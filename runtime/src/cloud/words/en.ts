@@ -75,6 +75,7 @@ export const en = {
   approval_sign_in_closed: "The sign-in was closed. Nothing was connected.",
   approval_no_code: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,
   approval_came_back: (status: string) => `The connection came back ${status} with no sign-in link. Nothing was connected.`,
+  approval_confirm_first: "Your sign-in went through, but it isn't confirmed yet. Approve again to confirm it.",
   approval_not_connected: (vendor: string, status: string) => `The sign-in at ${vendor} didn't connect: the connection is ${status}. Nothing was connected. Try signing in again.`,
   approval_failed: (why: string) => `Not connected: ${why}`,
   approval_failed_default: "it didn't go through",

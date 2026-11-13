@@ -73,6 +73,7 @@ export const fr: Words = {
   approval_sign_in_closed: "La connexion a été fermée. Rien n'a été connecté.",
   approval_no_code: (vendor: string) => `La connexion à ${vendor} est revenue sans son code de confirmation. Rien n'a été connecté.`,
   approval_came_back: (status: string) => `La connexion est revenue sans lien pour se connecter (état : ${status}). Rien n'a été connecté.`,
+  approval_confirm_first: "Votre connexion a abouti, mais elle n'est pas encore confirmée. Approuvez à nouveau pour la confirmer.",
   approval_not_connected: (vendor: string, status: string) => `La connexion à ${vendor} n'a pas abouti (état : ${status}). Rien n'a été connecté. Reconnectez-vous.`,
   approval_failed: (why: string) => `Non connecté : ${why}`,
   approval_failed_default: "cela n'a pas abouti",
