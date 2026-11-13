@@ -1,5 +1,7 @@
 package bot.tafs.app
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -29,6 +31,7 @@ class HomeFinishSetupTest {
     id = "invoicing-day-test-x", name = "Invoicing day test", job = "", tools = emptyList(), colorIndex = 2, card = Card(emptyList(), "You"),
     now = "Finish setting up", finish = finish,
   )
+  private val coachUser = bot.tafs.app.kiff.Account("t_01", "acme", capabilities = listOf("members.manage"))
   private val other = Taf(id = "ops-bot", name = "ops-bot", job = "", tools = emptyList(), colorIndex = 3, card = Card(emptyList(), "You"))
 
   @Test fun aTafWhoseSetupStoppedOpensCoachWhereItStoppedAndAnotherAgentOpensAsBefore() {
@@ -36,7 +39,10 @@ class HomeFinishSetupTest {
     rule.setShown {
       TafsTheme {
         HomeView(
-          AppState(mode = Mode.kiff, ready = true, listLoaded = true, tafs = listOf(refunds), otherAgents = listOf(halfMade, other)),
+          AppState(
+            mode = Mode.kiff, ready = true, listLoaded = true, kiffAccount = coachUser, coachCloudId = "setup_1",
+            tafs = listOf(refunds), otherAgents = listOf(halfMade, other),
+          ),
           onNeedsYou = {}, onPlayNext = {}, onOpenTaf = { opened += "open $it" }, onHaltAll = {},
           onFinishSetup = { opened += "finish ${it.session}" },
         )
@@ -51,5 +57,25 @@ class HomeFinishSetupTest {
   private fun androidx.compose.ui.test.SemanticsNodeInteraction.assertExistsAndClick() {
     assertExists()
     performClick()
+  }
+
+  @Test fun someoneWhoCantUseCoachOrAnotherTafsChatOpensTheAgentAsBefore() {
+    val opened = mutableListOf<String>()
+    var state by androidx.compose.runtime.mutableStateOf(
+      AppState(mode = Mode.kiff, ready = true, listLoaded = true, kiffAccount = bot.tafs.app.kiff.Account("t_01", "acme", capabilities = emptyList()),
+        coachCloudId = "setup_1", tafs = listOf(refunds), otherAgents = listOf(halfMade)),
+    )
+    rule.setShown {
+      TafsTheme {
+        HomeView(state, onNeedsYou = {}, onPlayNext = {}, onOpenTaf = { opened += "open $it" }, onHaltAll = {}, onFinishSetup = { opened += "finish ${it.session}" })
+      }
+    }
+    rule.onNodeWithText("Finish setting up").performScrollTo().assertExistsAndClick()
+    // A finish naming another taf than Coach's own, for someone who may use Coach: as before too.
+    state = state.copy(kiffAccount = coachUser, coachCloudId = "setup_2")
+    rule.waitForIdle()
+    rule.onNodeWithText("Finish setting up").performScrollTo().assertExistsAndClick()
+    rule.waitForIdle()
+    assertEquals(listOf("open invoicing-day-test-x", "open invoicing-day-test-x"), opened)
   }
 }

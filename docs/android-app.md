@@ -861,7 +861,8 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   is listed under the other agents with Cards. tafs cloud sends the name Coach gave it and `finish: {taf, session, words}`
   ([tafs.md](tafs.md#the-home-list)). The row shows `finish.words` ("Finish setting up") in amber in place of what it's doing,
   and a tap opens Coach on that chat (`AppModel.finishSetup`). Reading the chat makes the taf at tafs cloud, and the next Home
-  read lists it as a taf. Without `finish`, an agent shows and opens as before.
+  read lists it as a taf. Only Coach's own chat (`finish.taf` is Coach's), for someone who may use Coach, as on iPhone and
+  iPad; otherwise, and without `finish`, an agent opens as before.
 
 ## Your data and the AI
 

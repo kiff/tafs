@@ -193,7 +193,8 @@ fun HomeView(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
               Eyebrow(Words.Home.otherAgents)
               state.otherAgents.forEach { taf ->
-                val finish = taf.finish
+                // Only Coach's own chat, for someone who may use Coach (as on iPhone and iPad): anything else opens as before.
+                val finish = taf.finish?.takeIf { state.mayUseCoach && it.taf == state.coachCloudId }
                 TafRow(taf, onHalted = { onHalted(taf.id) }) { if (finish != null && onFinishSetup != null) onFinishSetup(finish) else onOpenTaf(taf.id) }
               }
             }
