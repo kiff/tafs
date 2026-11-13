@@ -126,9 +126,72 @@ struct CoachToolsSheet: View {
 /// tafs cloud's or KIFF's.
 struct CoachToolsGiven: View {
     let tools: TafsCloud.CoachTools
+    /// Start's own screen draws it as Android does: Coach's Cards in KIFF's words first, then
+    /// every group and tool folded under the step's details, with no group lines up front.
+    var start = false
     @State private var folded = true
 
     var body: some View {
+        if start { startBody } else { stepBody }
+    }
+
+    /// On Start's screen: the Cards, then the tools under one fold (docs/ios-app.md).
+    @ViewBuilder
+    private var startBody: some View {
+        cards
+        let step = tools.step
+        if let step, !step.groups.isEmpty, !step.details.isEmpty {
+            Button { folded.toggle() } label: {
+                HStack(spacing: 6) {
+                    Text(step.details).scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
+                    Image(systemName: folded ? "chevron.down" : "chevron.up").scaledFont(12).foregroundColor(Theme.amberText)
+                        .accessibilityHidden(true)
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.drivablePlain)
+            .accessibilityIdentifier("coach-start-details")
+            if !folded { groupTools(step) }
+        } else if let step, !step.groups.isEmpty {
+            groupTools(step)
+        } else if let lines = tools.connect?.lines {
+            ForEach(Array(lines.enumerated()), id: \.offset) { _, said in line(said, 14, Theme.ink) }
+        }
+    }
+
+    /// Each group's tools, with what each does and why.
+    @ViewBuilder
+    private func groupTools(_ step: TafsCloud.CoachTools.Step) -> some View {
+        ForEach(Array(step.groups.enumerated()), id: \.offset) { _, group in
+            if !group.tools.isEmpty { line(group.name, 13, Theme.ink, .semibold).padding(.top, 4) }
+            ForEach(Array(group.tools.enumerated()), id: \.offset) { _, tool in
+                VStack(alignment: .leading, spacing: 2) {
+                    line(tool.name, 14, Theme.ink, .semibold)
+                    if !tool.does.isEmpty { line(tool.does, 13, Theme.ink) }
+                    if !tool.why.isEmpty { line(tool.why, 13, Theme.soft) }
+                }
+            }
+        }
+    }
+
+    /// Coach's Cards in KIFF's own words.
+    @ViewBuilder
+    private var cards: some View {
+        if let card = tools.card {
+            if let title = card.cardTitle, !title.isEmpty { line(title, 14, Theme.ink, .semibold).padding(.top, 4) }
+            ForEach(Array(card.cards.enumerated()), id: \.offset) { _, words in
+                VStack(alignment: .leading, spacing: 2) {
+                    if !words.title.isEmpty { line(words.title, 13, Theme.ink, .semibold) }
+                    ForEach(Array(words.lines.enumerated()), id: \.offset) { _, said in line(said, 13, Theme.soft) }
+                }
+            }
+        }
+    }
+
+    /// In the step, as before: a few groups up front, each tool and the Cards under the fold.
+    @ViewBuilder
+    private var stepBody: some View {
         let step = tools.step
         let grouped = !(step?.groups.isEmpty ?? true)
         if let step, grouped {

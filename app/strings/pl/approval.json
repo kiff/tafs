@@ -33,6 +33,8 @@
   "approval.key_gone_biometry": "Twoje {biometry} się zmieniło albo nie zostało rozpoznane, więc to urządzenie nie może zatwierdzać, dopóki nie zatwierdzisz go ponownie w przeglądarce.",
   "approval.key_gone_sign_in": "Twoje odciski palców się zmieniły albo żaden nie został rozpoznany, więc ten telefon nie może zatwierdzać, dopóki nie zalogujesz się ponownie.",
   "approval.key_lost": "Zaloguj się ponownie przez KIFF, aby zatwierdzać z tego telefonu.",
+  "approval.key_not_accepted": "KIFF nie przyjął klucza zatwierdzania tego urządzenia. Spróbuj ponownie.",
+  "approval.key_not_accepted_support": "Nadal nie działa? Napisz na support@kiff.dev.",
   "approval.locked_after_too_many_tries": "{either} jest zablokowane po zbyt wielu próbach. Zablokuj ten {device}, odblokuj go kodem, a potem sprawdź ponownie.",
   "approval.locked_unlock_device": "{either} jest zablokowane po zbyt wielu próbach. Odblokuj to urządzenie kodem, a potem spróbuj ponownie.",
   "approval.new_fingerprint": "Jeśli później dodasz kolejny odcisk palca, zatwierdzanie na tym telefonie przestanie działać, dopóki nie zatwierdzisz go ponownie.",

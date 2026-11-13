@@ -213,6 +213,8 @@ data class AppState(
   val listUnread: Boolean = false,
   /** Agents made through KIFF's API, not run by tafs: their Cards, apart from the tafs. */
   val otherAgents: List<Taf> = emptyList(),
+  /** The tafs whose setup stopped partway, drawn among the tafs with tafs cloud's "Finish setting up" (docs/tafs.md). */
+  val settingUp: List<Taf> = emptyList(),
   /** This session holds this phone's signing key: KIFF knows it, so it checks this phone's signature on an answer. */
   val sessionHasKey: Boolean = false,
   /**
@@ -863,7 +865,8 @@ data class AppState(
     // Coach's thread has its cards in it, and the owner's answers to them read as what they chose.
     if (tafId == COACH_CHAT) {
       // An older thread's answers, sent as text before cards were answered as data, read as what the owner chose.
-      return CoachWords.items(messages.map { if (it.from == ChatMessage.From.owner) it.copy(text = CoachWords.ownerWords(it.text, coachComponents)) else it }, coachComponents, coachDrives)
+      // A card answered again shows its last answer only: a retry replaces its own failed line.
+      return CoachWords.items(CoachWords.latestAnswers(messages).map { if (it.from == ChatMessage.From.owner) it.copy(text = CoachWords.ownerWords(it.text, coachComponents)) else it }, coachComponents, coachDrives)
     }
     val items = mutableListOf<ChatItem>()
     items += messages.map { ChatItem.Message(it) }
@@ -1226,7 +1229,13 @@ class AppModel(
       // Which account this is, once a sign-in: it doesn't change under it. Read on its own, so its name
       // shows even when the list can't be read.
       if (_state.value.kiffAccount == null) {
-        attempt { kiff.me() }?.let { account ->
+        attempt { kiff.me() }?.let { me ->
+          var account = me
+          // A new account still on UTC: tafs cloud takes this phone's zone, with no question, when it can (docs/accounts.md).
+          // Asked only then, before the account shows, so the time-zone question never comes up for it (as on iPhone and iPad).
+          if ((account.timeZone ?: "UTC") == "UTC" && java.time.ZoneId.systemDefault().id != "UTC") {
+            runCatching { cloud.setupRead().timeZone }.getOrNull()?.let { zone -> account = account.copy(timeZone = zone) }
+          }
           if (generation == accountGeneration && _state.value.kiffAccount == null) showAccount(account)
         }
       }
@@ -1330,7 +1339,9 @@ class AppModel(
   /** Shows tafs cloud's list as it is, and KIFF's held calls and activity. */
   private fun show(read: Fetched) {
     val tafs = read.home.tafs.map { KiffMapping.taf(it, ownerName) }
-    val others = read.home.others.map { KiffMapping.taf(it, ownerName) }
+    // A tafs cloud that lists `setting_up` lists tafs only: `others` then only repeats it for apps from before, so it isn't drawn.
+    val settingUp = read.home.settingUp?.let { KiffMapping.settingUp(it, ownerName) }
+    val others = if (settingUp != null) emptyList() else read.home.others.map { KiffMapping.taf(it, ownerName) }
     val holders = (tafs + others).map { it.id }.toSet()
     // A held install is Coach's only from Coach's own agent, which KIFF holds only under Coach's install Card.
     val coach = _state.value.coachAgent?.takeIf { it.isNotEmpty() }
@@ -1340,6 +1351,7 @@ class AppModel(
       s.copy(
         tafs = tafs,
         otherAgents = others,
+        settingUp = settingUp.orEmpty(),
         held = held,
         cardUnitExceptions = read.home.cardUnitExceptions.orEmpty().filterNot { it.id in s.dismissedCardUnits },
         yourSteps = read.home.yourSteps.orEmpty().filterNot { it.handoff in s.answeredSteps },
@@ -1399,6 +1411,7 @@ class AppModel(
 
   /** From now on, what grants authority is signed by the approval key, each request behind its own fingerprint. */
   private fun useApprovalKey() {
+    approvalKeyRefusals = 0
     sessionHasApprovalKey = true
     _state.update { it.copy(approvalKeyLost = false) }
     val signer = signer
@@ -1433,7 +1446,23 @@ class AppModel(
     else -> otherwise
   }
 
+  /**
+   * What Start says when KIFF holds no approval key for this phone after it tried (the line both apps use): KIFF didn't accept
+   * it, try again; from the second refusal in a row, where to write too. A key KIFF holds another of keeps the lost key's words,
+   * and a phone with no approval key at all (no fingerprint) that approvals are needed.
+   */
+  private fun approvalKeyRefused(): String {
+    if (_state.value.approvalKeyLost) return KiffClient.APPROVAL_KEY_LOST
+    if (signer.approvalPublicKeyDER.isEmpty()) return bot.tafs.app.model.ApprovalWords.FIRST_TAF
+    approvalKeyRefusals += 1
+    return if (approvalKeyRefusals >= 2) Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport else Words.Approval.keyNotAccepted
+  }
+
+  /** How many Starts in a row KIFF didn't take this phone's approval key on: a key KIFF takes, or a new session, starts again. */
+  private var approvalKeyRefusals = 0
+
   private fun forgetApprovalKey() {
+    approvalKeyRefusals = 0
     sessionHasApprovalKey = false
     // A phone with no approval key (no fingerprint enrolled) grants nothing with its screen lock: what grants authority
     // stops at the signer, which says to add a fingerprint. One with a key KIFF doesn't hold yet signs as before.
@@ -3003,7 +3032,7 @@ class AppModel(
     // nothing is signed unless KIFF holds it (the one signature over both requests is the approval key's).
     if (!sessionHasApprovalKey) registerApprovalKey()
     if (!sessionHasApprovalKey) {
-      failed(if (_state.value.approvalKeyLost) KiffClient.APPROVAL_KEY_LOST else bot.tafs.app.model.ApprovalWords.FIRST_TAF)
+      failed(approvalKeyRefused())
       return false
     }
     _state.update { it.copy(startingCoach = true, coachToolsError = null, coachStartError = null) }
@@ -4212,6 +4241,16 @@ class AppModel(
       try {
         val approved = planque.approve(grant, words)
         val url = approved.signInUrl
+        if (url == null && approved.status == "signed_in" && !approved.confirm.isNullOrBlank()) {
+          // Signed in at the provider already (the person's account there is held): no second sign-in, never a failure. This
+          // phone confirms with planque's one-use code, as with the browser's, and goes on to the tools (docs/connect-apps.md).
+          if (generation != accountGeneration) return Connected.Stopped
+          _state.update { it.copy(connectStep = CoachWords.CHECKING_SIGN_IN) }
+          val connected = planque.confirm(grant.id, approved.confirm)
+          refreshConnections()
+          if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor, connected.status), told = "The sign-in was held, but the connection is ${connected.status}.")
+          return Connected.Done(connected)
+        }
         if (url == null) {
           // planque already holds the sign-in: approving the tools Setup chose from the vendor's list connected them, with no second sign-in.
           if (approved.status != "connected" && approved.status != "listed") {
@@ -4421,7 +4460,13 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return true
-      note(c.id, Words.Coach.answerNotReached(why = ErrorWords.of(e)))
+      // A sign-in planque holds but this phone hasn't confirmed yet: tafs cloud's own line, as it is (as on iPhone and iPad).
+      val confirmFirst = when (e) {
+        is CloudError -> e.takeIf { it.code == "sign_in_not_confirmed" }?.let { it.words ?: it.message }
+        is KiffError.Server -> e.takeIf { it.code == "sign_in_not_confirmed" }?.message
+        else -> null
+      }?.takeIf { it.isNotBlank() }
+      note(c.id, confirmFirst ?: Words.Coach.answerNotReached(why = ErrorWords.of(e)))
       readThread(COACH_CHAT)
       return true
     } finally {
@@ -4573,7 +4618,13 @@ class AppModel(
         val p = asked.planque ?: return Came.Of("failed", why = "tafs cloud named no connection to approve")
         val approved = planque.approveAsAsked(p.grant, p.body)
         val url = approved.signInUrl
-        if (url == null) {
+        if (url == null && approved.status == "signed_in" && !approved.confirm.isNullOrBlank()) {
+          // Signed in at the provider already: no second sign-in. planque revokes the held sign-in unless this phone confirms it
+          // with its one-use code, so it's confirmed first, then reported as planque answers it (tafs cloud approves listed).
+          _state.update { it.copy(connectStep = CoachWords.CHECKING_SIGN_IN) }
+          val connected = planque.confirm(p.grant, approved.confirm)
+          if (connected.connected || connected.listed) Came.Of(connected.status) else Came.Of("not_connected", status = connected.status)
+        } else if (url == null) {
           // planque already holds the sign-in: approving connected it, with no second sign-in.
           if (approved.status == "connected" || approved.status == "listed") Came.Of(approved.status) else Came.Of("not_connected", status = approved.status)
         } else {

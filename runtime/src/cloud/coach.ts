@@ -247,7 +247,6 @@ export interface CoachToolsStep {
   groups: Array<{ name: string; line: string; tools: Array<{ name: string; does: string; why: string }> }>;
   /** The label of the fold the tools sit under, closed by default. */
   details: string;
-  ask: string;
   give: string;
   not_now: string;
   /** The one row the Coach screen keeps while any tool is still to give: true with some given or none. */
@@ -260,7 +259,7 @@ export interface CoachToolsStep {
  * the other tools on the same Card, and "waits for you" only where the Card holds past its limit or
  * holds every call. It never names a biometric: the phone knows which it asks for, not tafs cloud.
  */
-export function coachToolsStep(lang: Lang = "en"): CoachToolsStep {
+export function coachToolsStep(lang: Lang = "en", opts: { cardsOnly?: boolean } = {}): CoachToolsStep {
   const w = wordsIn(lang);
   const all = w as unknown as Record<string, string | undefined>;
   const word = (key: string) => all[key] ?? "";
@@ -274,7 +273,7 @@ export function coachToolsStep(lang: Lang = "en"): CoachToolsStep {
     return other ? w.cts_up_to_shared(n(card.limit), word(`cts_${other}`)) : w.cts_up_to(n(card.limit));
   };
   return {
-    title: w.cts_title, intro: w.cts_intro, details: w.cts_details, ask: w.cts_ask, give: w.cts_give, not_now: w.cts_not_now, row: w.cts_row,
+    title: w.cts_title, intro: w.cts_intro, details: w.cts_details, give: w.cts_give, not_now: w.cts_not_now, row: opts.cardsOnly ? w.cts_row_cards : w.cts_row,
     groups: COACH_TOOL_GROUPS.map((g) => ({
       name: word(`cts_g_${g.id}`),
       line: word(`cts_g_${g.id}_line`),

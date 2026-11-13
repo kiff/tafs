@@ -177,7 +177,16 @@ class CoachStartTogetherTest {
     assertTrue("no fingerprint asked", auth.fingerprints.isEmpty())
     assertTrue(transport.requestsTo("POST /v1/connections/batch").isEmpty())
     assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
-    assertEquals(bot.tafs.app.model.ApprovalWords.FIRST_TAF, m.state.value.coachToolsError)
+    // The phone can approve: it's KIFF that didn't take the key, in the line both apps say.
+    assertEquals(bot.tafs.app.model.Words.Approval.keyNotAccepted, m.state.value.coachToolsError)
+    // The second refusal in a row says where to write too, under it.
+    transport.answer("POST /v1/me/device/approval-key", 404, """{"error":"not_found"}""")
+    assertFalse(m.startCoach())
+    assertEquals(
+      bot.tafs.app.model.Words.Approval.keyNotAccepted + "\n" + bot.tafs.app.model.Words.Approval.keyNotAcceptedSupport,
+      m.state.value.coachToolsError,
+    )
+    assertTrue("still nothing signed", auth.fingerprints.isEmpty())
   }
 
   @Test fun theDraftAloneGoesUnderItsOwnSingleFingerprint() = runTest {

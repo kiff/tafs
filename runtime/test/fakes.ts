@@ -516,6 +516,13 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (o) return { outcome: o.outcome };
       return newRun(tenant, s.agent, openSession(tenant, s.agent, "run").id, "schedule", s.input, id);
     },
+    async tafDraft(tenant, draftID) {
+      calls.push(`tafDraft ${draftID}`);
+      failing("tafDraft");
+      const d = setupDrafts.get(draftID);
+      if (!d || d.tenant !== tenant) throw gone();
+      return { agent_id: d.agent, claimed: !!d.keyRef };
+    },
     async claimTafDraft(tenant, draftID, keyRef) {
       calls.push(`claimTafDraft ${draftID} ${keyRef}`);
       failing("claimTafDraft");

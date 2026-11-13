@@ -1,0 +1,1 @@
+- **iPhone and iPad: a taf whose setup stopped partway can be finished from Home.** A Coach chat left before the hand-over used to leave an agent listed by its id. Home now shows it by its name with "Finish setting up", and a tap opens Coach where it stopped, which makes the taf (docs/ios-app.md › A taf whose setup stopped partway).

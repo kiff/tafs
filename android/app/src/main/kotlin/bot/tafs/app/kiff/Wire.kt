@@ -149,7 +149,10 @@ data class PendingRemoval(val id: String, val name: String)
 @Serializable
 data class Home(
   val tafs: List<HomeTaf> = emptyList(),
+  /** Agents from before `setting_up`; a tafs cloud that sends `setting_up` repeats it here, and the app draws `setting_up` then. */
   val others: List<HomeTaf> = emptyList(),
+  /** The tafs whose setup stopped partway, by the name Coach gave each, with the chat that finishes it (docs/tafs.md); null from a tafs cloud from before it. */
+  @SerialName("setting_up") val settingUp: List<HomeSettingUp>? = null,
   val removing: List<PendingRemoval> = emptyList(),
   /** The doors tafs cloud offers here (docs/doors.md); absent when none, and the app shows no Doors. */
   @SerialName("doors_offered") val doorsOffered: List<String>? = null,
@@ -586,3 +589,13 @@ data class CalendarEvent(
   val id: String get() = "$taf|$kind|$at"
   val count: Int get() = rawCount.coerceAtLeast(1)
 }
+
+
+/** A taf whose setup stopped partway, as `GET /v1/home` lists it: its name, its colour and the Coach chat that finishes it. No state. */
+@Serializable
+data class HomeSettingUp(
+  val name: String,
+  @SerialName("kiff_agent") val kiffAgent: String,
+  val color: Int = 0,
+  val finish: HomeFinish? = null,
+)

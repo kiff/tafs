@@ -2,6 +2,7 @@ package bot.tafs.app
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -77,5 +78,24 @@ class HomeFinishSetupTest {
     rule.onNodeWithText("Finish setting up").performScrollTo().assertExistsAndClick()
     rule.waitForIdle()
     assertEquals(listOf("open invoicing-day-test-x", "open invoicing-day-test-x"), opened)
+  }
+
+  @Test fun settingUpShowsAmongTheTafsWithNoStateAndOpensCoachWhereItStopped() {
+    val opened = mutableListOf<String>()
+    rule.setShown {
+      TafsTheme {
+        HomeView(
+          AppState(mode = Mode.kiff, ready = true, listLoaded = true, kiffAccount = coachUser, coachCloudId = "setup_1", tafs = listOf(refunds), settingUp = listOf(halfMade)),
+          onNeedsYou = {}, onPlayNext = {}, onOpenTaf = { opened += "open $it" }, onHaltAll = {},
+          onFinishSetup = { opened += "finish ${it.session}" },
+        )
+      }
+    }
+    rule.onNodeWithText("Invoicing day test").performScrollTo().assertExists()
+    // No state: it doesn't run yet, so never "Ready".
+    assertEquals(1, rule.onAllNodesWithText(bot.tafs.app.model.TafState.idle.label).fetchSemanticsNodes().size)
+    rule.onNodeWithText("Finish setting up").performScrollTo().assertExistsAndClick()
+    rule.waitForIdle()
+    assertEquals(listOf("finish s7"), opened)
   }
 }

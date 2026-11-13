@@ -1,0 +1,1 @@
+- **Android: Home lists tafs only.** A taf whose setup stopped partway shows among your tafs by its name, with **Finish setting up** for the person whose Coach chat it was, and no "Ready". KIFF's own agents no longer show under "Other agents with Cards" ([android-app.md](docs/android-app.md#the-first-run)).

@@ -254,6 +254,7 @@ export function approvalWords(lang: Lang = "en") {
     signInClosed: w.approval_sign_in_closed,
     noCode: w.approval_no_code,
     cameBack: (status: string) => w.approval_came_back(w.approval_status(status)),
+    confirmFirst: w.approval_confirm_first,
     notConnected: (vendor: string, status: string) => w.approval_not_connected(vendor, w.approval_status(status)),
     failed: (why?: string) => w.approval_failed(why ?? w.approval_failed_default),
     reasonConnect: (vendor: string, taf?: string) => (taf ? w.approval_reason_connect(vendor, taf) : w.approval_reason_connect_unnamed(vendor)),
@@ -580,8 +581,19 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
     const why = report.result === "failed" && report.why ? report.why : draft ? W.draftIs(draft.status) : W.noDraft;
     return { answer: `failed: ${W.cardsNotIssued(why)}`, note: W.cardsNotIssued(why) };
   }
-  const grants = await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
-  const grant = grants.find((g) => g.id === pending.grant);
+  let grant = (await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch)).find((g) => g.id === pending.grant);
+  // signed_in: planque holds the sign-in's token, unused, until the approving phone confirms it with planque's
+  // one-use code; unconfirmed, planque revokes it. So it's "not yet", never approved and never failed: read once
+  // more (the phone may have just confirmed), and if it's still waiting, the ask waits again for the phone's
+  // report after its confirm, and Coach hears nothing yet (go-to-market job 1, 13 Nov).
+  if (grant?.status === "signed_in") {
+    grant = (await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch)).find((g) => g.id === pending.grant);
+    if (grant?.status === "signed_in") {
+      await ctx.store.put(key, pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
+      await ctx.store.remove(`${key}#taken`);
+      throw new ApprovalError(409, W.confirmFirst, "sign_in_not_confirmed");
+    }
+  }
   if (grant && (grant.status === "connected" || grant.status === "listed")) {
     await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
     return { answer: "approved" };

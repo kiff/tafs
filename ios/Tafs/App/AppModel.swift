@@ -803,8 +803,25 @@ final class AppModel: ObservableObject {
         useApprovalKey()
     }
 
+    /// This phone has an approval key that KIFF doesn't hold for the session: what that key signs,
+    /// KIFF can't check. A signer with no approval key signs everything with its one key.
+    var approvalKeyUnheld: Bool { !signer.approvalPublicKeyDER.isEmpty && !sessionHasApprovalKey }
+
+    /// What Start says then, the line both apps use: KIFF didn't accept the key, try again; from
+    /// the second refusal in a row, where to write too. A key KIFF holds another of keeps the lost
+    /// key's words.
+    private func approvalKeyRefused() -> String {
+        if approvalKeyLost { return KIFFClient.approvalKeyLost }
+        approvalKeyRefusals += 1
+        return approvalKeyRefusals >= 2 ? Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport : Words.Approval.keyNotAccepted
+    }
+    /// How many Starts in a row KIFF didn't take this device's approval key on: a key KIFF takes,
+    /// or a new session, starts again from none.
+    private(set) var approvalKeyRefusals = 0
+
     /// From now on, what grants authority is signed by the approval key.
     private func useApprovalKey() {
+        approvalKeyRefusals = 0
         sessionHasApprovalKey = true
         approvalKeyLost = false
         let signer = self.signer
@@ -812,6 +829,7 @@ final class AppModel: ObservableObject {
     }
 
     private func forgetApprovalKey() {
+        approvalKeyRefusals = 0
         cancelRelink()
         sessionHasApprovalKey = false
         approvalKeyLost = false
@@ -1312,7 +1330,7 @@ final class AppModel: ObservableObject {
             coachToolsError = Words.Coach.toolsUnknown
             return false
         }
-        guard tools.connect != nil || tools.card != nil else { return false }
+        guard tools.connect != nil || tools.card != nil || tools.together != nil else { return false }
         // The one confirmation: it gives Coach its Cards, and the connections go under it.
         do {
             _ = try await signer.sign(Data("tafs.coach-tools.v1|\(tenant)".utf8), reason: Words.Coach.Prompt.giveCard, grants: true)
@@ -1326,6 +1344,14 @@ final class AppModel: ObservableObject {
         kiff.setupSigner = { try signer.signConfirmed($0) }
         defer { kiff.setupSigner = nil }
         do {
+            // tafs cloud's pair (kiff/tafs#881): the batch and Coach's Cards under this one Face ID,
+            // signed once by the approval key. Coach exists, so nothing is claimed after it.
+            if let pair = tools.together, let connect = pair.connect, let draft = pair.draft, !approvalKeyUnheld {
+                _ = try await sendTogether(connect, draft, tenant: tenant, gen: gen)
+                guard gen == accountGeneration else { return false }
+                await loadCoachTools()
+                return coachTools?.given == true
+            }
             if let connect = tools.connect { try await kiff.connectBatch(connect.body) }
             guard gen == accountGeneration else { return false }
             // tafs cloud drafts the Cards over tools KIFF holds: where it sent none with the
@@ -6638,6 +6664,21 @@ final class AppModel: ObservableObject {
         setupError = nil
     }
 
+    /// "Finish setting up" on another agent whose setup stopped partway (docs/tafs.md): Coach
+    /// opens on the chat where it stopped. Reading that chat is what makes the taf, at tafs cloud;
+    /// the next Home read lists it with the tafs. Only Coach's own chat, for someone who may use
+    /// Coach; false otherwise, and the row opens as any other agent's.
+    func canFinishSetup(_ finish: TafsCloud.HomeTaf.Finish?) -> Bool {
+        guard mode == .kiff, mayUseCoach, let finish, finish.usable, let coach = setupTaf?.id else { return false }
+        return finish.taf == coach
+    }
+
+    func finishSetup(_ finish: TafsCloud.HomeTaf.Finish) async {
+        guard canFinishSetup(finish) else { return }
+        coachOpen = true
+        await openSetupChat(finish.session)
+    }
+
     /// Reopens one of Setup's chats: it's shown alone, and messages go on in it.
     func openSetupChat(_ session: String) async {
         setupConversationGeneration += 1
@@ -6888,6 +6929,16 @@ final class AppModel: ObservableObject {
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
         defer { kiff.setupSigner = nil; planque.signer = nil }
+        // Approvals are set up here, not before sign-in (docs/approvals.md): a phone that signed in
+        // before it could approve gives KIFF its approval key now, under the same Face ID.
+        if !sessionHasApprovalKey { await registerApprovalKey() }
+        guard gen == accountGeneration else { return false }
+        // tafs cloud's first start, the pair or the draft alone, is signed by the approval key: with a
+        // key KIFF doesn't hold, nothing is sent, and it says so in the words both phones use.
+        if coachStart?.startable == true, approvalKeyUnheld {
+            setupError = approvalKeyRefused()
+            return false
+        }
         await keepKIFFAlerts(tenant: tenant, gen: gen)
         if !planqueReady {
             guard await enrolPlanque(tenant: tenant, gen: gen) else {
@@ -6902,6 +6953,12 @@ final class AppModel: ObservableObject {
                 if let existing = read.setup {
                     setupTaf = existing
                 } else if let start = read.start, start.startable {
+                    // A start read only now, with a key KIFF doesn't hold: nothing is sent.
+                    if approvalKeyUnheld {
+                        coachStart = start
+                        setupError = approvalKeyRefused()
+                        return false
+                    }
                     // One Face ID, the one just asked: Coach's tools and its draft with its Cards.
                     coachStart = start
                     setupTaf = try await startCoachTogether(start, tenant: tenant, gen: gen)
@@ -6938,14 +6995,8 @@ final class AppModel: ObservableObject {
         guard let draftRequest = start.draft else { return nil }
         let draft: KIFFClient.AgentDraft
         if start.together, let connectRequest = start.connect {
-            let signedAt = SigningTime.next()
-            let batch = try kiff.prepare(method: connectRequest.method, path: connectRequest.path, body: connectRequest.body, gateway: true, signedAt: signedAt)
-            let cards = try kiff.prepare(method: draftRequest.method, path: draftRequest.path, body: draftRequest.body, gateway: false, signedAt: signedAt)
-            let batchHash = RequestsTogether.hash(batch.message), cardsHash = RequestsTogether.hash(cards.message)
-            let signature = try signer.signApprovalConfirmed(RequestsTogether.message(tenant: tenant, signedAt: signedAt, batchHash, cardsHash))
-            try await kiff.connectBatch(batch, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: cardsHash))
-            guard gen == accountGeneration else { return nil }
-            draft = try await kiff.submitDraft(cards, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: batchHash))
+            guard let sent = try await sendTogether(connectRequest, draftRequest, tenant: tenant, gen: gen) else { return nil }
+            draft = sent
         } else {
             draft = try await kiff.submitDraftAnswered(draftRequest.body)
         }
@@ -6955,6 +7006,21 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return nil }
         coachStart = nil
         return started
+    }
+
+    /// The tools batch and a Cards' draft, as tafs cloud built them, each in full with one
+    /// `signed_at`, signed once by the approval key over both hashes (`kiff.requests.v1`), under
+    /// the Face ID that just confirmed the step: the batch first, the draft once it answered.
+    private func sendTogether(_ connectRequest: TafsCloud.CoachStart.Request, _ draftRequest: TafsCloud.CoachStart.Request,
+                              tenant: String, gen: Int) async throws -> KIFFClient.AgentDraft? {
+        let signedAt = SigningTime.next()
+        let batch = try kiff.prepare(method: connectRequest.method, path: connectRequest.path, body: connectRequest.body, gateway: true, signedAt: signedAt)
+        let cards = try kiff.prepare(method: draftRequest.method, path: draftRequest.path, body: draftRequest.body, gateway: false, signedAt: signedAt)
+        let batchHash = RequestsTogether.hash(batch.message), cardsHash = RequestsTogether.hash(cards.message)
+        let signature = try signer.signApprovalConfirmed(RequestsTogether.message(tenant: tenant, signedAt: signedAt, batchHash, cardsHash))
+        try await kiff.connectBatch(batch, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: cardsHash))
+        guard gen == accountGeneration else { return nil }
+        return try await kiff.submitDraft(cards, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: batchHash))
     }
 
     /// tafs cloud's thread, with what the owner sent that it doesn't have yet, by the rule

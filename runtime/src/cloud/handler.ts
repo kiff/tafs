@@ -3,7 +3,7 @@ import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writ
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF } from "./kiff.js";
+import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -37,7 +37,7 @@ import { accountConnections, connectionLines, endConnections, withConnections } 
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent } from "./consent.js";
+import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
@@ -190,7 +190,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" | "putSkill" | "addSessionSkills" |
-  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "tafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" | "pausedRuns" |
@@ -1588,15 +1588,90 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   // With no plan yet, nothing runs: the taf is made, and the answer says so in words (the first run's item 7).
   const plan = token ? await planNeeded(token, deps, lang ?? ownerLang) : {};
   if (unscheduled) return { taf: await view(taf, me, deps), session: null, ...plan };
-  if (plan.plan_needed) return { taf: await view(taf, me, deps), session: null, ...plan };
+  // Its first run is owed, not dropped: it starts by itself once the account has a plan (`settleFirstRuns`).
+  if (plan.plan_needed) {
+    await oweFirstRun(me.tenantID, tafID, deps);
+    return { taf: await view(taf, me, deps), session: null, ...plan };
+  }
   let fired: Fired_;
   try { fired = await fireNow(me.tenantID, tafID, deps); } catch (err) {
-    if (waitsForCredits(err) && err.code === "no_plan") return { taf: await view(taf, me, deps), session: null, plan_needed: { words: wordsIn(lang ?? ownerLang).plan_needed } };
+    if (waitsForCredits(err) && err.code === "no_plan") {
+      await oweFirstRun(me.tenantID, tafID, deps);
+      return { taf: await view(taf, me, deps), session: null, plan_needed: { words: wordsIn(lang ?? ownerLang).plan_needed } };
+    }
     throw new HTTPError(502, `${name} is started, but its first ${workCheck ? "check" : "run"} didn't start (${(err as Error).message}). Run it now from the app`);
   }
   // A first check that started no run says why (quiet, halted, a read that failed…): the taf is made all the same.
   if (!("session" in fired)) return { taf: await view(taf, me, deps), ...noRun(fired, lang ?? ownerLang) };
   return { taf: await view(taf, me, deps), session: fired.session };
+}
+
+/** Where tafs cloud keeps the tafs whose first run waits for a plan: one list per account. */
+const firstRunsOwedKey = (tenant: string) => `${tenant}#first-runs-owed`;
+/** How long a first run is owed: an account that buys no plan in a month has its tafs' schedules to start them. */
+const FIRST_RUN_OWED_MS = 30 * 24 * 3600_000;
+
+/** The firings that settle an owed first run: anything else kiff/agents answers holds it back, and it stays owed. */
+const DONE_FIRINGS = ["quiet", "skipped_busy"];
+
+/** Notes that a taf made with no plan is owed its first run. Best effort: a store that can't be written loses only the wait. */
+async function oweFirstRun(tenant: string, taf: string, deps: Deps): Promise<void> {
+  if (!deps.coach) return;
+  const now = deps.now?.() ?? new Date();
+  try {
+    const owed = ((await deps.coach.get(firstRunsOwedKey(tenant))) as string[] | undefined) ?? [];
+    if (!owed.includes(taf)) await deps.coach.put(firstRunsOwedKey(tenant), [...owed, taf], new Date(now.getTime() + FIRST_RUN_OWED_MS));
+  } catch (err) { console.error(`first run owed ${taf}: ${(err as Error).message}`); }
+}
+
+/**
+ * The first runs an account's tafs were owed for want of a plan, started now (the first-run walk-through: a taf made before
+ * the plan was bought starts by itself after, with no Run now). tafs cloud sees no purchase, so it asks kiff/agents, which
+ * refuses with `no_plan` until there is one: that taf stays owed. Each run goes on its consent, as any run with no person in
+ * the moment. A taf removed since is dropped; one whose run started, or whose check found nothing, is done. The starts.
+ */
+export async function settleFirstRuns(tenant: string, deps: Deps): Promise<string[]> {
+  if (!deps.coach) return [];
+  const owed = ((await deps.coach.get(firstRunsOwedKey(tenant)).catch(() => undefined)) as string[] | undefined) ?? [];
+  if (!owed.length) return [];
+  const tafs = await deps.tafs.list(tenant);
+  const left: string[] = [];
+  const started: string[] = [];
+  for (const id of owed) {
+    const taf = tafs.find((t) => t.id === id && !t.removing);
+    if (!taf) continue;
+    try {
+      await requireUnattended(deps, tenant, id);
+      const fired = await fireNow(tenant, id, deps);
+      if ("session" in fired) started.push(id);
+      // Done only when a run started, its check ran and found nothing, or a run is already going. kiff/agents answers a
+      // firing it held back as an outcome, not an error: skipped for credits, while halted or switching versions. Owed.
+      else if (!DONE_FIRINGS.includes(fired.outcome)) left.push(id);
+    } catch (err) {
+      // Still no plan, no consent, or a blip: owed until the next try.
+      if (!(waitsForCredits(err) || refused(err, AI_CONSENT_CODE))) console.error(`first run ${id}: ${(err as Error).message}`);
+      left.push(id);
+    }
+  }
+  const now = deps.now?.() ?? new Date();
+  if (left.length === owed.length) return started;
+  await (left.length ? deps.coach.put(firstRunsOwedKey(tenant), left, new Date(now.getTime() + FIRST_RUN_OWED_MS)) : deps.coach.remove(firstRunsOwedKey(tenant)))
+    .catch((err) => console.error(`first runs owed ${tenant}: ${(err as Error).message}`));
+  return started;
+}
+
+/** The first runs owed for want of a plan, tried on the 5-minute sweep for every account. */
+export async function sweepFirstRuns(deps: Deps): Promise<Array<{ tenant: string; started: string[] }>> {
+  if (!deps.coach) return [];
+  const out: Array<{ tenant: string; started: string[] }> = [];
+  for (const tenant of await deps.tafs.tenants()) {
+    const started = await settleFirstRuns(tenant, deps).catch((err) => {
+      console.warn(`first runs: ${tenant}: ${err instanceof Error ? err.message : "error"}`);
+      return [] as string[];
+    });
+    if (started.length) out.push({ tenant, started });
+  }
+  return out;
 }
 
 /** What firing a schedule by hand came to: the run it started, or kiff/agents' outcome, with the read's reason when it failed. */
@@ -1768,9 +1843,13 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
       const body = coachCardsDraft(setup.kiffAgent, missingCards);
       card = { body, ...(await previewDraft(token, body, deps.fetch, deps.kiffBase)) };
     }
+    const connect = plan.missing.length ? coachConnect(plan.missing, mcp, plan.replace, langOf(event)) : undefined;
+    // Tools and Cards both missing: the pair under one fingerprint, as a first start has it (`kiff.requests.v1`).
+    const together = connect && !issued ? await coachToolsTogether(token, setup, connect, missingCards, deps) : undefined;
     return {
-      state: "to_give", ...(plan.missing.length ? { connect: coachConnect(plan.missing, mcp, plan.replace, langOf(event)) } : {}), ...(card ? { card } : {}),
-      coach_tools_step: coachToolsStep(langOf(event)),
+      state: "to_give", ...(connect ? { connect } : {}), ...(card ? { card } : {}), ...(together ?? {}),
+      // Only Cards missing (Coach gained tools since its Card was signed): the row says why it asks again.
+      coach_tools_step: coachToolsStep(langOf(event), { cardsOnly: !connect && !issued }),
     };
   } catch (err) {
     if (err instanceof KIFFError) {
@@ -1779,6 +1858,34 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
       return { state: "unknown" };
     }
     throw err;
+  }
+}
+
+/**
+ * Coach's missing tools and Cards on an account that has Coach, under one fingerprint (`TAFS_COACH_START_ONE=on`):
+ * the tools batch and the Cards' draft for Coach's own agent, as a first start's pair (`coachFirstStart`), so the
+ * phone signs both hashes once (`kiff.requests.v1`), sends the batch, then the draft, whose submit is the
+ * confirmation as for `card`. The Cards are worded by KIFF's gateway over the tools the batch would connect, and the
+ * draft carries that contract. Nothing when the flag is off or KIFF can't word them: the phone gives the batch, then
+ * the Cards on its next read, as before.
+ */
+async function coachToolsTogether(token: string, setup: Taf, connect: ReturnType<typeof coachConnect>, missingCards: Set<string>, deps: Deps):
+  Promise<{ scheme: string; requests: unknown[] } | undefined> {
+  if (process.env.TAFS_COACH_START_ONE !== "on") return undefined;
+  const body = coachCardsDraft(setup.kiffAgent, missingCards);
+  try {
+    const { contract_digest: digest, ...preview } = await previewBatchDraft(token, connect.body.connections, body, deps.fetch, deps.kiffGateway);
+    if (!digest) return undefined;
+    return {
+      scheme: "kiff.requests.v1",
+      requests: [
+        { id: "connect", method: "POST", path: "/v1/connections/batch", gateway: true, body: connect.body, lines: connect.lines },
+        { id: "draft", method: "POST", path: "/v1/me/agent-drafts", body: { ...body, contract_digest: digest }, ...preview },
+      ],
+    };
+  } catch (err) {
+    console.error(`coach tools together: ${err instanceof KIFFError ? `KIFF answered ${err.status}: ` : ""}${(err as Error).message}`);
+    return undefined;
   }
 }
 
@@ -1829,9 +1936,10 @@ function validZone(zone: string): boolean {
 }
 
 /** Coach's start in words: one line, the button, and what it does (approvals and Coach's tools, one face or fingerprint). */
-function startWords(lang: Lang): { lead: string; start: string; does: string } {
+function startWords(lang: Lang): { lead: string; start: string } {
   const w = wordsIn(lang);
-  return { lead: w.start_lead, start: w.start_button, does: w.start_does };
+  // What Start does is the lead's to say, once: no second line under the button (the app-words cut, screen 3).
+  return { lead: w.start_lead, start: w.start_button };
 }
 
 /** `plan_needed` with its words when KIFF says the account has no plan; nothing when it has one or can't be read. */
@@ -2973,6 +3081,9 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   if (answered) return { session: answered.session, new_session: false, run: answered.id };
   const lines = await takeCoachLines(me, taf, deps);
   try {
+    const waiting = await approvalWaiting(event, me, taf, deps);
+    const held = waiting ? await holdForApproval(me, taf, waiting, lines.text(owner), deps) : undefined;
+    if (held) return { session: held.session, new_session: false, run: held.id, held: "approval" };
     return await startMessage(event, me, taf, lines.text(owner), deps);
   } catch (err) {
     // The message didn't start: Coach reads its lines with the next one.
@@ -3327,7 +3438,51 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
     const told = await tellCoach(me, taf, card, component, decision.answer, deps);
     return { outcome: "answered", answer: decision.answer, note: decision.note, ...told };
   }
+  // The person is now approving on the phone (a fingerprint, a sign-in): a message they send meanwhile waits in
+  // this run, read once the approval is settled, and never voids the card (go-to-market job 3, 13 Nov).
+  if (decision.outcome === "sign") {
+    await deps.coach!.put(approvalWaitKey(me.tenantID, taf.id, me.subject), { session: card.session, run: card.run, component } satisfies ApprovalWaiting,
+      new Date(nowOf(deps).getTime() + APPROVAL_WAIT_MS)).catch((err) => console.error("approval wait not kept:", err));
+  }
   return decision;
+}
+
+/** How long a message waits for an approval in progress: as long as its ask is kept (approval.ts). */
+const APPROVAL_WAIT_MS = 20 * 60_000;
+const approvalWaitKey = (tenant: string, taf: string, person: string) => `${tenant}#${taf}#${person}#approval-waiting`;
+/** The approval a person is in the middle of: the chat and the run its card waits in. */
+interface ApprovalWaiting { session: string; run: string; component: string }
+
+/** The approval this person is in the middle of in the chat a message goes to, if any. A new chat waits for none. */
+async function approvalWaiting(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<ApprovalWaiting | undefined> {
+  if (!deps.coach || files(event).length) return undefined;
+  const body = parseBody(event);
+  if (body.new_chat === true) return undefined;
+  const w = (await deps.coach.get(approvalWaitKey(me.tenantID, taf.id, me.subject)).catch(() => undefined)) as ApprovalWaiting | undefined;
+  if (!w || typeof w.run !== "string" || typeof w.session !== "string") return undefined;
+  const session = str(body.session).trim();
+  return !session || session === w.session ? w : undefined;
+}
+
+/**
+ * A message typed while the person approves: steered into the run the approval card waits in, so Coach reads it
+ * once the approval is settled, and the card isn't voided by a new run. What the run never reads, tafs cloud
+ * sends as the next message once the run is over, as for any held message. Undefined when the run went on or
+ * ended (the approval is over): the message then starts as usual.
+ */
+async function holdForApproval(me: KIFFIdentity, taf: Taf, w: ApprovalWaiting, text: string, deps: Deps): Promise<Run | undefined> {
+  try {
+    const out = await deps.agents.steerRun(me.tenantID, taf.id, w.run, text, member(me));
+    await deps.coach!.put(steerKeys.run(me.tenantID, out.id), { person: me.subject, session: out.session } satisfies SteeredRun, steerKept(deps));
+    await deps.coach!.append(chatKeys(me, taf, out.session).steered, { run: out.id } satisfies SteeredChat, steerKept(deps));
+    return out;
+  } catch (err) {
+    if (err instanceof AgentsError && err.status === 409) {
+      await deps.coach!.remove(approvalWaitKey(me.tenantID, taf.id, me.subject)).catch(() => undefined);
+      return undefined;
+    }
+    throw agentsFailure(err);
+  }
 }
 
 /**
@@ -3347,7 +3502,20 @@ async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf,
   const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
   const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
   const outcome = await settleApproval(askID, report, { ...ctx, signed }).catch(approvalFailure);
-  const told = await tellCoach(me, taf, card, component, outcome.answer, deps);
+  await deps.coach!.remove(approvalWaitKey(me.tenantID, taf.id, me.subject)).catch(() => undefined);
+  let told: Awaited<ReturnType<typeof tellCoach>> | { session: string };
+  try {
+    told = await tellCoach(me, taf, card, component, outcome.answer, deps);
+  } catch (err) {
+    // The card stopped waiting while the person approved (a message started a new run before this came in): the
+    // approval still happened, so Coach reads its outcome with the next message, and the card shows it, never
+    // "changed in the meantime" beside a connection that's made.
+    if (!(err instanceof HTTPError && err.status === 409)) throw err;
+    const at = nowOf(deps);
+    await deps.coach!.append(coachKeys.notes(me.tenantID, me.subject), { at: at.toISOString(), text: `[approval ${component}] The owner's approval was settled after their message: ${outcome.answer}`, taf: taf.name, taf_id: taf.id } satisfies CoachLine,
+      new Date(at.getTime() + TASK_KEPT_MS));
+    told = { session: card.session };
+  }
   return { outcome: "answered", answer: outcome.answer, ...(outcome.note ? { note: outcome.note } : {}), ...told };
 }
 
@@ -3675,6 +3843,36 @@ export async function settleConsent(deps: Deps, tenant: string): Promise<{ pause
   }
   if (out.resumed.length && deps.doors) await replayHeld(doorContext(deps), tenant).catch((err) => console.error("held not replayed:", (err as Error).message));
   return out;
+}
+
+/** How often a manager's read checks the consenting people against KIFF's list, per account. */
+const CONSENTERS_EVERY_MS = 10 * 60_000;
+
+/**
+ * Whether the people whose consent the account's tafs take are still on it (consent.ts): read with a manager's own
+ * session, since KIFF says nothing when someone leaves and the sweep has no session. At most every 10 minutes per
+ * account. One no longer active is marked gone and their tafs are paused, `left`, until a manager takes them over;
+ * one back is cleared. Anything failing changes nothing.
+ */
+async function checkConsenters(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<void> {
+  if (!deps.aiConsent || !deps.coach || !me.capabilities.includes("cards.manage")) return;
+  const now = deps.now?.() ?? new Date();
+  const checked = `${me.tenantID}#consenters-checked`;
+  try {
+    if (await deps.coach.get(checked)) return;
+    const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => !t.removing && t.job !== SETUP_JOB).map((t) => t.id);
+    const people = await consentingPeople(deps.coach, me.tenantID, tafs);
+    if (!people.length) return;
+    const active = await activeMembers(bearer(event), deps.fetch, deps.kiffBase);
+    // The person reading is a manager on the account, so a list without them is a wrong list (an empty or partial
+    // answer): it changes nothing, or every taf would pause.
+    if (!active.has(me.subject)) return;
+    // Marked only after a read that worked: a failed one leaves the next manager's read to try.
+    await deps.coach.put(checked, { at: now.toISOString() }, new Date(now.getTime() + CONSENTERS_EVERY_MS));
+    if (await markGone(deps.coach, me.tenantID, people, active, now)) await settleConsent(deps, me.tenantID);
+  } catch (err) {
+    console.error(`consenters: ${(err as Error).message}`);
+  }
 }
 
 /** A taf's pause for consent, as the apps draw it. */
@@ -5283,6 +5481,15 @@ export async function handleStream(event: HTTPEvent, given: Deps): Promise<Strea
     timing.mark("answer");
     const lines = await takeCoachLines(me, taf, deps);
     timing.mark("lines");
+    // A message sent while the person approves waits in the approval's run: no new run voids the card.
+    const waiting = await approvalWaiting(event, me, taf, deps);
+    const held = waiting ? await holdForApproval(me, taf, waiting, lines.text(owner), deps).catch(async (err) => { await lines.putBack(); throw err; }) : undefined;
+    if (held) {
+      return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: (async function* () {
+        yield sse("session", { session: held.session, new_session: false, run: held.id, held: "approval" });
+        yield sse("taken", {});
+      })() };
+    }
     let run: AsyncGenerator<RunStreamEvent> | undefined;
     let first: IteratorResult<RunStreamEvent> | undefined;
     let at: RunAt;
@@ -6181,9 +6388,14 @@ async function calendar(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
 }
 
 async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
+  // Whose consent the tafs take, checked against KIFF's people now and then: someone who left consents for no one.
+  await checkConsenters(event, me, deps);
   // The owner is around (kiff/tafs#210): what isn't urgent is pushed quietly, not kept for later.
   await deps.slots.keep(presenceKey(me.tenantID), presentUntil(deps.now?.() ?? new Date()))
     .catch((err) => console.error(`presence: ${(err as Error).message}`));
+  // A plan bought since a taf was made: its owed first run starts now, as Home is read after the purchase, rather than at the
+  // next sweep. One read of the store when nothing is owed.
+  await settleFirstRuns(me.tenantID, deps).catch((err) => console.error(`first runs: ${(err as Error).message}`));
   // "Did this happen?" is read with the rest, not after: a KIFF that can't give it leaves only the Needs you count out.
   const [records, removing, kiff, access, unsure] = await Promise.all([
     deps.tafs.list(me.tenantID),
@@ -6251,12 +6463,24 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // it shows as the taf's trial, never as another agent.
   const ours = new Set(records.flatMap((t) => t.kiffAgent ? [t.kiffAgent, `${t.kiffAgent}~trial`] : []));
   const agents = [...new Set([...cards.keys(), ...waiting.keys()])].filter((a) => !ours.has(a) && listable(access, a)).sort();
-  const others = agents.map((agent) => {
-    const card = summary(cards.get(agent) ?? []);
-    const held = waiting.get(agent) ?? 0;
+  // Home lists tafs only. An agent made through KIFF's API isn't one: it's KIFF's, and KIFF shows it, never the
+  // tafs app. The one exception is a taf whose setup stopped partway (Coach drafted it, its Card is signed, and no
+  // taf was made): it's listed as being set up, by the name Coach gave it, with the way back to the chat where it
+  // stopped, never as ready and never by its agent's id.
+  const halfMade = agents.length ? await halfMadeTafs(me, records, new Set(agents), deps) : new Map<string, HalfMade>();
+  const settingUp = agents.flatMap((agent) => {
+    const half = halfMade.get(agent);
+    if (!half) return [];
     const color = freeColor(taken);
     taken.push(color);
-    return { id: null, name: agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card };
+    // The chat to finish it in goes only to the person who started it (#879); anyone else sees the name alone.
+    return [{ name: half.name, kiff_agent: agent, color, ...(half.coach && half.session ? { finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } } : {}) }];
+  });
+  // Apps from before setting_up read the same tafs from others, as they drew them there (Android 77, iPhone and iPad).
+  const others = settingUp.map((t) => {
+    const card = summary(cards.get(t.kiff_agent) ?? []);
+    const held = waiting.get(t.kiff_agent) ?? 0;
+    return { id: null, name: t.name, job: null, kiff_agent: t.kiff_agent, status: null, next_run: null, last_run: null, color: t.color, state: stateOf(card, held, null), waiting: held, card, ...(t.finish ? { finish: t.finish } : {}) };
   });
   // Which doors this deployment offers (docs/doors.md): none, and the app shows no Doors.
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
@@ -6282,8 +6506,69 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const w = wordsIn(lang);
     return { count, words: count === 0 ? w.home_needs_you_none : w.home_needs_you(count, plural(lang, count)) };
   })();
-  return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
+  return { tafs: listed, setting_up: settingUp, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
+}
+
+/**
+ * A taf Coach drafted whose setup stopped partway: the name Coach gave it, and the chat where it stopped while that
+ * chat's result still waits (none once it expired: the name stays, from what tafs cloud kept).
+ */
+interface HalfMade { name: string; coach?: string; session?: string }
+
+/** Where tafs cloud keeps the name Coach gave an agent whose taf wasn't made, so it outlives the chat's result. */
+const halfMadeKey = (tenant: string, agent: string) => `${tenant}#half-made#${agent}`;
+/** How long that name is kept: well past a result's own wait. */
+const HALF_MADE_KEPT_MS = 180 * 24 * 3600_000;
+
+/**
+ * The tafs whose setup stopped partway, by their KIFF agent, among `agents` (the account's other agents with Cards):
+ * a Coach run paused on a result that names a new taf for that agent, not yet answered. The agent has its Card, so
+ * KIFF lists it, but tafs cloud never made the taf (the owner left before the hand-over, or confirmed the Card after
+ * it). Reading that chat again hands it over (handOverShown). One read of the account's paused runs; a read that
+ * fails finds none, and the agent shows as before. The chat to finish it in is given only to the person who started it.
+ */
+async function halfMadeTafs(me: KIFFIdentity, records: Taf[], agents: Set<string>, deps: Deps): Promise<Map<string, HalfMade>> {
+  const tenant = me.tenantID;
+  const out = new Map<string, HalfMade>();
+  const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
+  // The agents a result still names this read: for them, the proof decides, and a kept name never stands in for it.
+  const named = new Set<string>();
+  const paused = coach ? await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]) : [];
+  for (const r of paused) {
+    if (!coach || r.agent !== coach.id) continue;
+    for (const q of r.requirements ?? []) {
+      const card = q.input as { type?: string; taf?: { agent?: unknown; name?: unknown; draft?: unknown; improves?: unknown } } | undefined;
+      if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.taf || card.taf.improves) continue;
+      const { agent, name, draft } = card.taf;
+      if (typeof agent !== "string" || !agents.has(agent) || out.has(agent)) continue;
+      if (typeof name !== "string" || !name.trim() || typeof draft !== "string" || !draft) continue;
+      named.add(agent);
+      // What the result says isn't proof: the draft it names must be one the setup submitted here, naming this agent, and
+      // not claimed yet (the record the hand-over claims). An agent KIFF has that tafs didn't draft is never listed.
+      const held = await deps.agents.tafDraft(tenant, draft).catch(() => undefined);
+      if (!held || held.agent_id !== agent || held.claimed) continue;
+      // The chat opens only for the person who started it (ownChat): anyone else sees the name, with no way in that
+      // would answer "no such chat" (qa-kiff on #873).
+      const own = r.requester?.kind === "member" && r.requester.id === me.subject;
+      out.set(agent, { name: name.trim(), ...(own ? { coach: coach.id, session: r.session } : {}) });
+    }
+  }
+  if (!deps.coach) return out;
+  const store = deps.coach;
+  const at = deps.now?.() ?? new Date();
+  // The name is kept the first time it's seen, and read back for an agent whose chat's result has expired since: its
+  // id never comes back. A store that can't be read or written changes nothing here.
+  await Promise.all([...agents].map(async (agent) => {
+    const found = out.get(agent);
+    const kept = await store.get(halfMadeKey(tenant, agent)).catch(() => undefined) as { name?: unknown } | undefined;
+    if (found && kept?.name !== found.name) {
+      await store.put(halfMadeKey(tenant, agent), { name: found.name }, new Date(at.getTime() + HALF_MADE_KEPT_MS)).catch(() => undefined);
+    } else if (!found && !named.has(agent) && typeof kept?.name === "string" && kept.name) {
+      out.set(agent, { name: kept.name });
+    }
+  }));
+  return out;
 }
 
 /**

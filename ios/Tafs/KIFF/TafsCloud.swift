@@ -313,9 +313,29 @@ final class TafsCloud {
         var work: TafWork.Summary? = nil
         /// tafs cloud's words for its next run, with the day when it isn't today ("Next run Mon 08:00").
         var nextRunWords: String? = nil
+        /// Another agent whose setup stopped partway (docs/tafs.md): Coach drafted it and its Card
+        /// is signed, but no taf was made. Coach's taf, the chat where it stopped, and the row's words.
+        var finish: Finish? = nil
+
+        /// The way back to a taf whose setup stopped partway. Anything that isn't one reads as
+        /// empty, never failing the list.
+        struct Finish: Codable, Hashable {
+            var taf = ""
+            var session = ""
+            var words = ""
+            init(taf: String = "", session: String = "", words: String = "") { self.taf = taf; self.session = session; self.words = words }
+            init(from decoder: Decoder) throws {
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+                func text(_ k: CodingKeys) -> String { ((try? c.decodeIfPresent(String.self, forKey: k)) ?? nil)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? "" }
+                taf = text(.taf); session = text(.session); words = text(.words)
+            }
+            enum CodingKeys: String, CodingKey { case taf, session, words }
+            /// One the app can open: a chat and its words.
+            var usable: Bool { !taf.isEmpty && !session.isEmpty && !words.isEmpty }
+        }
 
         enum CodingKeys: String, CodingKey {
-            case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results, health, work
+            case id, name, job, status, color, state, waiting, card, unscheduled, trial, doors, results, health, work, finish
             case nextRunWords = "next_run_words"
             case avatarRim = "avatar_rim"
             case timeZoneWords = "time_zone_words", scheduleTimeZone = "schedule_time_zone"
@@ -2154,8 +2174,14 @@ final class TafsCloud {
 
         /// Read from `GET /v1/setup`'s answer; nil from a tafs cloud that sends no `start`.
         static func read(_ response: Data) -> CoachStart? {
-            guard let raw = RawJSON.value(of: "start", in: response),
-                  let fields = (try? JSONSerialization.jsonObject(with: raw)) as? [String: Any] else { return nil }
+            guard let raw = RawJSON.value(of: "start", in: response) else { return nil }
+            return parse(raw)
+        }
+
+        /// One object of requests to sign once, as `start` and, for a Coach that exists, `tools`
+        /// carry them (docs/api.md): its state, scheme, requests and step.
+        static func parse(_ raw: Data) -> CoachStart? {
+            guard let fields = (try? JSONSerialization.jsonObject(with: raw)) as? [String: Any] else { return nil }
             var s = CoachStart()
             s.state = fields["state"] as? String ?? "unknown"
             s.scheme = fields["scheme"] as? String ?? ""
@@ -2257,6 +2283,9 @@ final class TafsCloud {
                 ((try? c.decodeIfPresent(String.self, forKey: k)) ?? nil) ?? ""
             }
         }
+        /// Coach's missing tools and Cards as one pair to sign once (`tools.requests`), for a Coach
+        /// that exists; nil from a tafs cloud that sends the steps alone.
+        var together: CoachStart? = nil
         var state = "unknown"
         /// With `taken`: the name a vendor's tool holds.
         var taken: String? = nil
@@ -2293,6 +2322,14 @@ final class TafsCloud {
             }
             if let step = RawJSON.value(of: "coach_tools_step", in: raw) {
                 tools.step = try? JSONDecoder().decode(Step.self, from: step)
+            }
+            // A Coach that exists, with tools and Cards missing: the pair, signed once, as a first
+            // start's (kiff/tafs#881). Only one the phone may sign, with KIFF's words for the Cards.
+            if fields["requests"] != nil, let pair = CoachStart.parse(raw), pair.together, pair.startable {
+                tools.together = pair
+                if tools.card == nil, let draft = pair.draft {
+                    tools.card = CardDraft(body: draft.body, cardTitle: draft.cardTitle, cards: draft.cards)
+                }
             }
             return tools
         }

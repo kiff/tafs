@@ -468,6 +468,16 @@ answer to the result carries `outcome.plan_needed.words` ("Choose a plan to star
 person's language), and the hand-over card says them under its own words, above the button that
 opens the taf (`SetupThread.planNeeded`). No words, or none that are text, add nothing.
 
+## A taf whose setup stopped partway
+
+A Coach chat left before the hand-over leaves an agent with a signed Card and no taf. tafs cloud
+lists it among Home's other agents by the name Coach gave it, with `finish: {taf, session,
+words}` (docs/tafs.md). The row says `words` ("Finish setting up") in amber in place of what it's
+doing. A tap opens Coach on `session`, where it stopped (`AppModel.finishSetup`): reading that
+chat is what makes the taf at tafs cloud, and the next Home read lists it with the tafs. Only
+Coach's own chat (`taf` is Coach's), for someone who may use Coach (`canFinishSetup`); anything
+else, or a `finish` with no chat or words, opens as any other agent's row, on iPhone and iPad.
+
 ## Every ready-made job, at any time
 
 The jobs stay reachable after the first taf, from `GET /v1/recipes/gallery`, read with each
@@ -528,11 +538,18 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   or no `start`, starts Coach as before. Send, with words handed over before Coach exists, opens the same step and keeps
   the words in the composer.
 - **Start's own screen** (`start.words`, `CoachStart.oneScreen`): where tafs cloud sends `start.words` `{lead, start,
-  does}`, Coach's intro draws `lead`, then what's signed (`CoachToolsGiven`, as the step draws it: the groups, each tool
-  folded under `details`, and Coach's Cards in KIFF's words), then one button, `start`, with `does` under it. That one
+  does}`, Coach's intro draws `lead`, then what's signed as Android draws it (`CoachToolsGiven(start: true)`): Coach's
+  Cards in KIFF's words, then every group and tool folded under `details`, with no group lines up front. Then one
+  button, `start`, with `does` under it. That one
   tap signs and starts, so no step opens after it and nothing signed is left unread. With words handed over, Send in
   the box below is that tap: it signs, starts Coach, then sends. Without a line or a button in `start.words`, or from
   a tafs cloud from before them, Start opens the step as above.
+- **A Coach that exists, with tools and Cards missing** (`tools.requests`, `CoachTools.together`): `tools` may carry
+  the pair a first start does, `connect` and `draft`, under `kiff.requests.v1`. Giving then signs both hashes once
+  with the approval key, under the step's one Face ID, and sends the batch, then the draft
+  (`AppModel.sendTogether`, shared with the first start). Coach exists, so nothing is claimed after it. KIFF's words
+  for the Cards are drawn first (the pair's own when `card` didn't come). Without the pair, a key KIFF doesn't hold,
+  or a draft without KIFF's words, it's the steps below.
 - **Giving** (`AppModel.giveCoachTools`): one Face ID. Under it the phone signs and sends the
   batch to KIFF's gateway (`POST /v1/connections/batch`), then the Cards' draft to KIFF
   (`POST /v1/me/agent-drafts`), each as it came. Where the Cards didn't come with the batch,

@@ -80,6 +80,8 @@
     <string name="approval_key_gone_biometry">Tu %1$s cambió o no se reconoció, así que este dispositivo no puede aprobar hasta que lo vuelvas a aprobar en tu navegador.</string>
     <string name="approval_key_gone_sign_in">Tus huellas cambiaron o no se reconoció ninguna, así que este teléfono no puede aprobar hasta que vuelvas a iniciar sesión.</string>
     <string name="approval_key_lost">Vuelve a iniciar sesión con KIFF para aprobar desde este teléfono.</string>
+    <string name="approval_key_not_accepted">KIFF no aceptó la clave de aprobación de este dispositivo. Inténtalo de nuevo.</string>
+    <string name="approval_key_not_accepted_support">¿Sigue sin funcionar? Escribe a support@kiff.dev.</string>
     <string name="approval_locked_after_too_many_tries">%1$s está bloqueado tras demasiados intentos. Bloquea este %2$s, desbloquéalo con su código y vuelve a comprobarlo.</string>
     <string name="approval_locked_unlock_device">%1$s está bloqueado tras demasiados intentos. Desbloquea este dispositivo con su código y vuelve a intentarlo.</string>
     <string name="approval_new_fingerprint">Si más adelante añades otra huella, aprobar en este teléfono deja de funcionar hasta que lo vuelvas a aprobar.</string>

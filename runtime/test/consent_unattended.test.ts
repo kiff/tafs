@@ -148,6 +148,71 @@ describe("runs with no person in the moment take their taf's consent", () => {
   });
 });
 
+// A person whose consent a taf takes leaves the account: KIFF says nothing when someone
+// leaves, so a manager's read checks KIFF's people now and then; someone no longer active consents for no one.
+describe("the person whose consent a taf takes leaves the account", () => {
+  /** KIFF's people as given, and how many times they were read. */
+  const people = (w: World, members: Array<{ subject: string; status: string }>) => {
+    const inner = w.deps.fetch;
+    let reads = 0;
+    w.deps.fetch = (async (url: string, init?: RequestInit) => {
+      if (new URL(String(url)).pathname === "/v1/tenant/members") {
+        reads++;
+        return new Response(JSON.stringify({ members }), { status: 200 });
+      }
+      return inner(url, init);
+    }) as typeof fetch;
+    return { reads: () => reads };
+  };
+
+  it("pauses their tafs, left, until a manager takes them over, and reads KIFF's people at most every 10 minutes", async () => {
+    const w = world();
+    await recordMaker(w.coach, "t_acme", RAE, "u_cy", NOW);
+    await allow(w, "ana");
+    await allow(w, "cy");
+    expect(await halted(w)).toBe(false);
+    // Cy was removed from the account: a manager opening Home finds it, and Rae waits.
+    const k = people(w, [{ subject: "u_ana", status: "active" }, { subject: "u_cy", status: "removed" }]);
+    await call(w, "GET", "/v1/home", "ana");
+    expect(k.reads()).toBe(1);
+    expect(await unattendedConsent(w.coach, "t_acme", RAE)).toEqual({ why: "left" });
+    expect((await consentPauseOf(w.coach, "t_acme", RAE))?.why).toBe("left");
+    expect(await halted(w)).toBe(true);
+    const shown = await call(w, "GET", "/v1/tafs", "ana");
+    expect((shown.body.tafs as Array<{ id: string; consent_paused?: { words: string } }>).find((t) => t.id === RAE)?.consent_paused?.words)
+      .toContain("is no longer on the account");
+    // Read again soon after: KIFF's people aren't asked again.
+    await call(w, "GET", "/v1/home", "ana");
+    expect(k.reads()).toBe(1);
+    // Ana takes it over with her own consent: it goes on.
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/ai-consent`, "ana")).status).toBe(200);
+    expect(await halted(w)).toBe(false);
+  });
+
+  it("never reads KIFF's people for someone who can't manage the tafs, and changes nothing when the read fails", async () => {
+    const w = world();
+    await recordMaker(w.coach, "t_acme", RAE, "u_cy", NOW);
+    await allow(w, "cy");
+    const k = people(w, [{ subject: "u_cy", status: "removed" }]);
+    await call(w, "GET", "/v1/home", "bo");
+    expect(k.reads()).toBe(0);
+    // A wrong list (empty, or missing the manager reading it): nothing marked, the taf goes on.
+    const wrong = people(w, []);
+    await call(w, "GET", "/v1/home", "ana");
+    expect(wrong.reads()).toBe(1);
+    expect(await unattendedConsent(w.coach, "t_acme", RAE)).toEqual({ subject: "u_cy" });
+    // Not marked as checked either: the next read tries again.
+    await call(w, "GET", "/v1/home", "ana");
+    expect(wrong.reads()).toBe(2);
+    // A list KIFF couldn't give: nothing marked, the taf goes on.
+    const inner = w.deps.fetch;
+    w.deps.fetch = (async (url: string, init?: RequestInit) => new URL(String(url)).pathname === "/v1/tenant/members"
+      ? new Response("{}", { status: 503 }) : inner(url, init)) as typeof fetch;
+    await call(w, "GET", "/v1/home", "ana");
+    expect(await unattendedConsent(w.coach, "t_acme", RAE)).toEqual({ subject: "u_cy" });
+  });
+});
+
 // Each trigger goes through requireUnattended (a door's message, an app's event and a held one released via the doors'
 // startRun; a hand-off and a retry via the deliveries'; continueReady; Coach's task). Their own end-to-end cases are next.
 describe.todo("the trigger matrix, end to end (an app's event held: doors.test.ts): a door's message held, a hand-off and a retry waiting, a run after KIFF's alert left paused, Coach's task refused");
