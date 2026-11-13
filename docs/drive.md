@@ -239,7 +239,9 @@ These are blanked in it:
 
 - a field marked secret: a vendor's key, a password, a recovery code;
 - an open approval's terms. Coach can't act on them, and the tree names only the
-  approval's title ("An approval is open: Stripe for Refunds").
+  approval's title ("An approval is open: Stripe for Refunds"). On both apps that's a
+  connection's text and its exact terms on Coach's approval card, and an app event's
+  filters before it's approved (`Modifier.approvalTerms` on Android, `driveTerms` on iOS).
 
 Each platform's contract test fails on a secret field or a confirming control without
 its mark.

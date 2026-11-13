@@ -4,6 +4,7 @@ import bot.tafs.app.model.Words
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveMenu
 import bot.tafs.app.drive.confirms
+import bot.tafs.app.drive.approvalTerms
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -380,9 +381,10 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
         // Already connected, as tafs cloud marks it: its one line, then Its Card; the connection's text isn't asked again.
         val done = c.connection?.takeIf { it.done && it.words.isNotBlank() }
         if (done != null) Text(done.words, style = scaled(14, FontWeight.Medium, Theme.ink))
-        // planque's own words for what it will do, never Coach's.
+        // planque's own words for what it will do, never Coach's. An open approval's terms are the person's to read: blanked for
+        // a drive, named only by its vendor (docs/drive.md).
         if (done == null) {
-          Text(grant.text, style = scaled(14, color = Theme.ink))
+          Text(grant.text, style = scaled(14, color = Theme.ink), modifier = Modifier.approvalTerms(grant.vendor))
           Text(grant.vendor, style = scaled(13, color = Theme.dim, mono = true))
         }
         // KIFF's words for the connection's profile, verbatim and in order (KIFF's profile contract, `kiff.words.v1`): what the owner's approval signs.
@@ -399,7 +401,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
         }
         grant.terms?.takeIf { it.isNotEmpty() && done == null }?.let { terms ->
           Text(if (details) Words.Coach.detailsOpen else Words.Coach.detailsClosed, style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).clickable { details = !details })
-          if (details) terms.forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) }
+          if (details) Column(Modifier.approvalTerms(grant.vendor)) { terms.forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) } }
         }
         if (grant.connected && draft != null && !draft.confirmed) {
           Eyebrow(Words.Card.itsCard)
