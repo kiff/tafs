@@ -1870,7 +1870,9 @@ class AppModel(
     }
     if (generation != accountGeneration) return false
     var cardsLeft = 0
-    for (cardId in taf.kiffCardIds) {
+    // Home's list, and any Card tafs cloud named when it last refused, so a Card confirmed since Home was read can't make every
+    // retry fail the same way.
+    for (cardId in (taf.kiffCardIds + discardNamed[agent].orEmpty()).distinct()) {
       if (generation != accountGeneration) return false
       try {
         kiff.revoke(cardId)
@@ -1886,14 +1888,24 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) fail(listOfNotNull(if (cardsLeft > 0) Words.Taf.Remove.cardsLeft(count = cardsLeft) else null, ErrorWords.of(e)).joinToString(" "))
+      if (generation != accountGeneration) return false
+      // Cards tafs cloud found still in force: kept for the next tap, which revokes them too. The signature is taken once, so
+      // there's no second ask here: the person's next Discard asks again, with its own fingerprint.
+      if (e is CloudError && e.code == "cards_in_force" && e.cards.isNotEmpty()) discardNamed[agent] = e.cards
+      fail(listOfNotNull(if (cardsLeft > 0) Words.Taf.Remove.cardsLeft(count = cardsLeft) else null, ErrorWords.of(e)).joinToString(" "))
+      // Home read again after any refusal, so the next tap starts from what tafs cloud says now.
+      refresh()
       return false
     }
     if (generation != accountGeneration) return false
-    if (cardsLeft > 0) fail(Words.Taf.Remove.cardsLeft(count = cardsLeft))
+    discardNamed.remove(agent)
+    // Dropped: tafs cloud refuses while any Card is in force, so none is left, whatever a revoke said (one already revoked).
     refresh()
     return true
   }
+
+  /** The Cards a refused Discard named, by agent, revoked on the next try (`discardSetup`). */
+  private val discardNamed = mutableMapOf<String, List<String>>()
 
   /** Reopens one of Coach's conversations: it's shown alone, and messages go on in it. */
   suspend fun openCoachChat(session: String) {

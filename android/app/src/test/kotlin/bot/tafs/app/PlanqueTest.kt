@@ -1431,6 +1431,38 @@ class PlanqueTest {
     assertEquals("still listed until tafs cloud drops it", 1, m.state.value.settingUp.size)
   }
 
+  @Test fun aCardOnlyTafsCloudsRefusalNamesIsRevokedOnTheNextTry() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, halfMade)
+    transport.answer("POST /v1/me/mandates/c9/revoke", 200)
+    // A Card confirmed after Home was read: only the refusal names it.
+    transport.answer("POST /v1/home/setting-up/inv-1/discard", 409, """{"error":"1 Card still in force on this agent: revoke it first","code":"cards_in_force","cards":["c10"]}""")
+    val m = model()
+    m.refresh()
+    val homeReads = transport.requestsTo("GET /v1/home").size
+    assertFalse(m.discardSetup("inv-1"))
+    assertTrue("Home is read again after the refusal", transport.requestsTo("GET /v1/home").size > homeReads)
+    assertTrue("no second ask on the same signature", transport.requestsTo("POST /v1/home/setting-up/inv-1/discard").size == 1)
+    // The next tap revokes the Card the refusal named, then asks again with its own fingerprint.
+    transport.answer("POST /v1/me/mandates/c10/revoke", 200)
+    transport.answer("POST /v1/home/setting-up/inv-1/discard", 200, """{"discarded":true,"kiff_agent":"inv-1"}""")
+    assertTrue(m.discardSetup("inv-1"))
+    assertEquals(1, transport.requestsTo("POST /v1/me/mandates/c10/revoke").size)
+    assertEquals(2, auth.asked.size)
+  }
+
+  @Test fun onceTafsCloudDropsItNoCardIsSaidLeftEvenIfARevokeFailed() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, halfMade)
+    // Already revoked on an earlier try: KIFF refuses the revoke, and tafs cloud, which checks, drops it.
+    transport.answer("POST /v1/me/mandates/c9/revoke", 409, """{"error":"already revoked"}""")
+    transport.answer("POST /v1/home/setting-up/inv-1/discard", 200, """{"discarded":true,"kiff_agent":"inv-1"}""")
+    val m = model()
+    m.refresh()
+    assertTrue(m.discardSetup("inv-1"))
+    assertNull(m.state.value.lastError)
+  }
+
   @Test fun withoutTafsCloudsDiscardNothingIsAskedOrSent() = runTest {
     reads()
     transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[],"setting_up":[{"name":"Invoicing day test","kiff_agent":"inv-1","color":2}]}""")

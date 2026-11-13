@@ -28,6 +28,8 @@ class CloudError(
   val code: String? = null,
   /** For `code: "halted"`: what is halted, `account` or `taf` (docs/approvals.md). */
   val halted: String? = null,
+  /** For `code: "cards_in_force"`: the Cards still in force that tafs cloud names (a Discard, docs/api.md). */
+  val cards: List<String> = emptyList(),
 ) : Exception(message)
 
 /**
@@ -884,11 +886,17 @@ class TafsCloud(
       noteRefusal(response.body)
       throw CloudError(
         response.status, refusal(response.body) ?: Words.Error.cloudAnswered(status = response.status.toString()), blockingRuns(response.body), field(response.body, "words"),
-        field(response.body, "code"), field(response.body, "halted"),
+        field(response.body, "code"), field(response.body, "halted"), namedCards(response.body),
       )
     }
     return response.body
   }
+
+  /** The Card ids a refusal names (`cards`), when it names any. */
+  private fun namedCards(body: ByteArray): List<String> = runCatching {
+    val cards = KiffClient.json.parseToJsonElement(String(body)).jsonObject["cards"] as? kotlinx.serialization.json.JsonArray ?: return emptyList()
+    cards.mapNotNull { (it as? kotlinx.serialization.json.JsonPrimitive)?.content?.takeIf(String::isNotBlank) }
+  }.getOrDefault(emptyList())
 
   /** The runs that keep a switch from beginning, when tafs cloud names them (kiff/tafs#206). */
   private fun blockingRuns(body: ByteArray): List<BlockingRun> = runCatching {
