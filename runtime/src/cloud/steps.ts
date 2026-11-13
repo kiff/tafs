@@ -46,6 +46,8 @@ export class Steps {
   private connections = new Map<string, string>(); // call id → its vendor ("" unknown), for each connection call
   private requests = new Set<string>(); // call ids of connection requests, to tell a connected app from a read
   private targets = new Map<string, string>(); // call id → what it connects (the request's server or description, or the grant)
+  private planqueCalls = new Set<string>(); // call ids of connection calls whose answer may name a grant's app
+  private apps = new Map<string, string>(); // grant id → the app's name as planque answered it ("Google Sheets")
 
   constructor(private readonly titles: ToolTitles = new Map(), private readonly lang: Lang = "en") {}
 
@@ -62,6 +64,7 @@ export class Steps {
       case "memory": return w.doing_memory;
       case "workspace": return w.doing_workspace;
       case "planque": {
+        if (callID) this.planqueCalls.add(callID);
         const grant = typeof i.grant === "string" ? this.vendors.get(i.grant) ?? "" : "";
         const api = i.api && typeof i.api === "object" ? (i.api as { url?: unknown }).url : undefined;
         if (callID) this.connections.set(callID, i.action === "request" ? vendorName(i.server ?? api) : grant);
@@ -133,9 +136,21 @@ export class Steps {
     return { vendor: this.connections.get(callID) ?? "", ...(key ? { key } : {}) };
   }
 
+  /**
+   * The app a grant connects, as the person knows it ("Google Sheets"): planque's name for it in its answer to
+   * a connection call of this run. Undefined when no answer named it.
+   */
+  appOf(grant: unknown): string | undefined {
+    return typeof grant === "string" ? this.apps.get(grant) : undefined;
+  }
+
   /** A call's result: a request's grant id, so later steps on that grant name its vendor. */
   result(callID: unknown, text: unknown): void {
     if (typeof callID !== "string" || typeof text !== "string") return;
+    if (this.planqueCalls.delete(callID)) {
+      const app = appNamed(text);
+      if (app) this.apps.set(app.grant, app.name);
+    }
     const vendor = this.asked.get(callID);
     if (vendor === undefined) return;
     this.asked.delete(callID);
@@ -280,4 +295,44 @@ export function attachWhys<T extends { tool: string; error?: true }>(steps: T[],
 export function takeRefused<T extends { refused?: Refused }>(steps: T[]): { steps: Array<Omit<T, "refused">>; refused?: Refused } {
   const refused = steps.map((s) => s.refused).filter((r): r is Refused => r !== undefined).at(-1);
   return { steps: steps.map(({ refused: _r, ...s }) => s), ...(refused ? { refused } : {}) };
+}
+
+/**
+ * The grant and the app's name planque's answer gives (its grant view: `{id: "grt_…", vendor: "Google Sheets"}`,
+ * or `{grant: {…}}`), from the answer's text. Undefined when it names no single grant with a vendor: a list, or none.
+ */
+export function appNamed(text: string): { grant: string; name: string } | undefined {
+  let v: unknown;
+  try { v = JSON.parse(text); } catch { return undefined; }
+  const g = (v && typeof v === "object" && "grant" in v && typeof (v as { grant: unknown }).grant === "object" ? (v as { grant: unknown }).grant : v) as { id?: unknown; vendor?: unknown } | null;
+  if (!g || typeof g.id !== "string" || !/^grt_[A-Za-z0-9_-]{6,64}$/.test(g.id) || typeof g.vendor !== "string") return undefined;
+  const name = g.vendor.replace(/\s+/g, " ").trim().slice(0, 60);
+  return name && !brokerNamed(name) && !/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(name) ? { grant: g.id, name } : undefined;
+}
+
+/**
+ * The connection services that hold a sign-in for an app (a managed provider's): never named to the person, who
+ * connects the app, not the service in between. Their hosts and their names.
+ */
+const BROKERS = ["composio"];
+
+/** Whether a host or a name is a connection service's (backend.composio.dev, "Composio"). */
+export function brokerNamed(s: string): boolean {
+  const t = s.toLowerCase();
+  return BROKERS.some((b) => t === b || t.includes(`${b}.`) || t.includes(`.${b}`) || new RegExp(`\\b${b}\\b`).test(t));
+}
+
+/**
+ * What a sign-in card names, for "Sign in to {app}": the app as planque named it in this run, else the app its
+ * host names ("Stripe" for mcp.stripe.com). Never a host, and never a connection service: undefined then, and the
+ * apps say "the vendor".
+ */
+export function signInApp(service: unknown, app?: string): string | undefined {
+  if (app && !brokerNamed(app)) return app;
+  if (typeof service !== "string" || !service.trim() || brokerNamed(service)) return undefined;
+  const s = service.trim();
+  // A name, not a host ("Stripe"): as Coach gave it.
+  if (!s.includes(".") && !s.includes("/")) return s;
+  const named = vendorName(s.includes("://") ? s : `https://${s}/`);
+  return named && !brokerNamed(named) ? named : undefined;
 }

@@ -39,7 +39,7 @@ import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
-import { attachWhys, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
+import { attachWhys, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
@@ -2531,7 +2531,13 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       if (!w) runs.set(id, (w = { parts: [{ start: at, before: 0, seen: at, tools: [] }], turns: 0 }));
       return w;
     };
+    // The run's connection calls, so a sign-in card names the app planque named in their answers.
+    const steps = new Steps(titles, lang);
     for (const e of r.events) {
+      if (e.kind === "tool_call") {
+        const b = (e.body ?? {}) as { tool?: unknown; input?: unknown; call_id?: unknown };
+        if (typeof b.tool === "string") steps.call(b.tool, b.input, typeof b.call_id === "string" ? b.call_id : undefined);
+      }
       if (e.kind === "usage") {
         const at = Date.parse(iso(e.time));
         const w = runOf(e.run, at);
@@ -2557,7 +2563,8 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
       }
       if (e.kind === "tool_result") {
         // A call KIFF held, where it was held: the app reads the call itself from KIFF.
-        const b = (e.body ?? {}) as { tool?: unknown; state?: unknown; hold?: { exception?: unknown }; invocation?: unknown };
+        const b = (e.body ?? {}) as { tool?: unknown; state?: unknown; hold?: { exception?: unknown }; invocation?: unknown; call_id?: unknown; text?: unknown };
+        steps.result(b.call_id, b.text);
         // A step handed to the owner pauses the run the same way, but isn't a call KIFF holds: Needs you lists it.
         if (b.state === "held" && b.tool !== YOUR_STEP_TOOL && typeof b.hold?.exception === "string" && b.hold.exception) {
           held.push({ at: iso(e.time), session: r.session.id, run: e.run, exception: b.hold.exception, ...(typeof b.invocation === "string" ? { invocation: b.invocation } : {}) });
@@ -2565,7 +2572,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         continue;
       }
       if (e.kind === "component") {
-        components.push({ at: iso(e.time), session: r.session.id, run: e.run, seq: e.seq, component: withLine(e.body, lang, titles) });
+        components.push({ at: iso(e.time), session: r.session.id, run: e.run, seq: e.seq, component: withLine(e.body, lang, titles, (g) => steps.appOf(g)) });
         continue;
       }
       if (e.kind === "answered") {
@@ -2760,15 +2767,22 @@ const UNMARKED_OWNER = new Set(["confirm", "questions", "approval", "sign_in", "
  * at work or the first still to do, or "Done · 6 of 6". So an app shows the plan in one line, with no
  * counting of its own. A sign-in card gets its buttons in the app's language. Any other component is as it came.
  */
-export function withLine(component: unknown, lang: Lang = "en", titles: ToolTitles = new Map()): unknown {
-  const c = component as { type?: unknown; steps?: unknown; waits?: unknown } | null | undefined;
+export function withLine(component: unknown, lang: Lang = "en", titles: ToolTitles = new Map(), appOf?: (grant: unknown) => string | undefined): unknown {
+  const c = component as { type?: unknown; steps?: unknown; waits?: unknown; service?: unknown; grant?: unknown } | null | undefined;
   // A card from before kiff/agents marked who it waits on gets the mark here, so an app reads `waits` on every card.
-  if (c && typeof c === "object" && !("waits" in c) && waitsOf(c)) return withLine({ ...c, waits: waitsOf(c) }, lang, titles);
+  if (c && typeof c === "object" && !("waits" in c) && waitsOf(c)) return withLine({ ...c, waits: waitsOf(c) }, lang, titles, appOf);
   const loop = loopCardWords(component, lang, titles);
   if (loop) return loop;
   // A sign-in card's buttons are the app's chrome, in the app's language (Accept-Language), whatever language
   // Coach wrote the card in; its title, text and note are Coach's message, as written.
-  if (c && c.type === "sign_in") return { ...c, yes: wordsIn(lang).signin_yes, no: wordsIn(lang).signin_no };
+  // Its service is the app the person signs in to ("Google Sheets"), as planque named it in the run, never a
+  // link's host and never the connection service in between ("backend.composio.dev"): the apps draw "Sign in to
+  // {service}" and "Opens {service}". With no app's name, it's left out, and the apps say "the vendor".
+  if (c && c.type === "sign_in") {
+    const { service: _service, ...rest } = c;
+    const app = signInApp(c.service, appOf?.(c.grant));
+    return { ...rest, ...(app ? { service: app } : {}), yes: wordsIn(lang).signin_yes, no: wordsIn(lang).signin_no };
+  }
   if (!c || c.type !== "steps" || !Array.isArray(c.steps) || !c.steps.length) return component;
   const steps = c.steps as Array<{ label?: unknown; status?: unknown }>;
   const n = steps.length;
@@ -5809,7 +5823,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (d.kind === "text" && typeof d.text === "string") return sse("text", { text: d.text });
         if (d.kind === "thinking" && typeof d.text === "string") return sse("thinking", { text: d.text });
         if (d.kind === "tool_call" && typeof d.tool === "string") return call(d.tool, d.input, d.call_id);
-        if (d.kind === "component" && d.component !== undefined) return sse("component", { component: withLine(d.component, lang) });
+        if (d.kind === "component" && d.component !== undefined) return sse("component", { component: withLine(d.component, lang, undefined, (g) => steps.appOf(g)) });
         if (d.kind === "owner_message") return sse("taken", {}); // the app has the text: it wrote it
         if (d.kind === "tool_result") return ended(d.call_id, (d.result ?? {}) as Record<string, unknown>, d.not_made === true);
         return undefined;
@@ -5821,7 +5835,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
         if (d.kind === "tool_call" && typeof b.tool === "string") return call(b.tool, b.input, b.call_id);
         if (d.kind === "tool_result") return ended(b.call_id, b, b.not_made === true);
         if (d.kind === "agent_message" || d.kind === "report") return sse("said", {});
-        if (d.kind === "component") return sse("component", { component: withLine(d.body, lang) });
+        if (d.kind === "component") return sse("component", { component: withLine(d.body, lang, undefined, (g) => steps.appOf(g)) });
         if (d.kind === "usage") {
           // The first turn after a pause starts a part: what came before it is in the
           // conversation, with its own work, and isn't shown as this part's (the 859 test).
