@@ -267,8 +267,11 @@ export interface GalleryWords {
   all: string;
   own_words: string;
   own_words_line: string;
-  /** Browse mode (looking without creating anything): the Tafs tab's entry that opens the gallery to browse. */
-  explore: string;
+  /**
+   * Browse mode (looking without creating anything): the Tafs tab's entry that opens the gallery to browse. Absent
+   * while Home leads with every job, where the row would open the same list again: the apps draw no row then.
+   */
+  explore?: string;
   /** The row under the strip that opens the same gallery to browse ("See all jobs"): the only word for that row. */
   see_all: string;
   /** A job sheet's only action while browsing: Coach opened with the job's words. Nothing is set up until it's tapped. */
@@ -319,13 +322,16 @@ export function galleryFor(catalog: CatalogApp[] | undefined, lang: Lang, state:
   const ids = left.map((r, i) => ({ r, i })).sort((a, b) => rank(a.r) - rank(b.r) || a.i - b.i).slice(0, STRIP_MAX).map(({ r }) => r.id);
   const w = wordsIn(lang);
   const shown = state.manages && state.live && state.suggestions && ids.length > 0;
+  // Home leads with every job (as `/v1/recipes` has it): someone who manages the tafs, no live taf, suggestions on,
+  // and a job to show. "Explore jobs" would open that same list again, so it isn't offered then.
+  const homeLeads = state.manages && !state.live && state.suggestions && recipes.length > 0;
   return {
     categories: base.categories,
     recipes,
     filtered: base.filtered,
     strip: { shown, title: w.gallery_strip_title, ids: shown ? ids : [] },
     words: { title: w.gallery_title, all: w.gallery_all, own_words: w.gallery_own_words, own_words_line: w.gallery_own_words_line,
-      explore: w.gallery_explore, see_all: w.gallery_see_all, try: w.gallery_try, sample: w.gallery_sample },
+      ...(homeLeads ? {} : { explore: w.gallery_explore }), see_all: w.gallery_see_all, try: w.gallery_try, sample: w.gallery_sample },
     labels: base.labels,
   };
 }
