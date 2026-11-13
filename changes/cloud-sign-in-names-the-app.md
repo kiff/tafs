@@ -1,0 +1,1 @@
+- A sign-in card names the app the person signs in to ("Google Sheets"), as planque named it in the run, and never a host: with no name, the apps say "the vendor".

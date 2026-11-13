@@ -766,9 +766,14 @@
     <string name="connect_apps_also_on_many">Auch auf den Cards von %1$s</string>
     <string name="connect_apps_also_on_one">Auch auf %2$s Card</string>
     <string name="connect_apps_clearing">Wird entfernt…</string>
+    <string name="connect_apps_column_app">App</string>
+    <string name="connect_apps_column_how">Verbindungsart</string>
+    <string name="connect_apps_column_status">Zustand</string>
+    <string name="connect_apps_column_whose">Von wem</string>
     <string name="connect_apps_connect">Verbinden</string>
     <string name="connect_apps_connected">Verbunden ✓</string>
     <string name="connect_apps_disconnect_why">Wenn du einen Zugriff entfernst, werden seine Tools nur von diesem taf entfernt und von jedem taf, dessen Card sie nutzt. Andere tafs behalten ihre.</string>
+    <string name="connect_apps_discover">Entdecken</string>
     <string name="connect_apps_manage">Verwalten</string>
     <string name="connect_apps_more">Mehr Apps zeigen</string>
     <string name="connect_apps_none">Keine App mit diesem Namen. Coach kann eine verbinden, die nicht aufgeführt ist.</string>
@@ -776,7 +781,9 @@
     <string name="connect_apps_not_listed_why">Coach kann eine App verbinden, die nicht hier steht, anhand ihrer eigenen Doku.</string>
     <string name="connect_apps_search">Apps suchen</string>
     <string name="connect_apps_title">Apps verbinden</string>
+    <string name="connect_apps_used_by">Genutzt von %1$s</string>
     <string name="connect_apps_your_connections">Deine %1$s-Verbindungen</string>
+    <string name="connect_apps_yours">Deine</string>
     <string name="connect_apps_connect_taf_make_one">Apps werden für einen taf verbunden. Erstelle zuerst einen und verbinde dann hier seine Apps.</string>
     <string name="connect_apps_not_read">Die Apps konnten nicht gelesen werden. %1$s</string>
     <string name="connect_cancel_request_button">Anfrage abbrechen</string>
@@ -834,6 +841,8 @@
     <string name="connect_from_removed">Von entfernten tafs</string>
     <string name="connect_give_key_on_sheet">Schlüssel in einer sicheren Ansicht geben</string>
     <string name="connect_give_key_with">Schlüssel mit %1$s geben</string>
+    <string name="connect_how_key">Mit Schlüssel</string>
+    <string name="connect_how_sign_in">Anmeldung</string>
     <string name="connect_kept_another_taf">einen anderen taf</string>
     <plurals name="connect_kept_for_card">
         <item quantity="one">%1$s für %2$s behalten, dessen Card sie nutzt.</item>

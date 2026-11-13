@@ -797,9 +797,14 @@ object Words {
       fun alsoOnMany(tafs: String): String = Res.s(R.string.connect_apps_also_on_many, tafs)
       fun alsoOnOne(owner: String): String = Res.s(R.string.connect_apps_also_on_one, owner, Words.possessive(owner))
       val clearing: String get() = Res.s(R.string.connect_apps_clearing)
+      val columnApp: String get() = Res.s(R.string.connect_apps_column_app)
+      val columnHow: String get() = Res.s(R.string.connect_apps_column_how)
+      val columnStatus: String get() = Res.s(R.string.connect_apps_column_status)
+      val columnWhose: String get() = Res.s(R.string.connect_apps_column_whose)
       val connect: String get() = Res.s(R.string.connect_apps_connect)
       val connected: String get() = Res.s(R.string.connect_apps_connected)
       val disconnectWhy: String get() = Res.s(R.string.connect_apps_disconnect_why)
+      val discover: String get() = Res.s(R.string.connect_apps_discover)
       val manage: String get() = Res.s(R.string.connect_apps_manage)
       val more: String get() = Res.s(R.string.connect_apps_more)
       val none: String get() = Res.s(R.string.connect_apps_none)
@@ -807,7 +812,9 @@ object Words {
       val notListedWhy: String get() = Res.s(R.string.connect_apps_not_listed_why)
       val search: String get() = Res.s(R.string.connect_apps_search)
       val title: String get() = Res.s(R.string.connect_apps_title)
+      fun usedBy(tafs: String): String = Res.s(R.string.connect_apps_used_by, tafs)
       fun yourConnections(app: String): String = Res.s(R.string.connect_apps_your_connections, app)
+      val yours: String get() = Res.s(R.string.connect_apps_yours)
     }
     val appsConnectTafMakeOne: String get() = Res.s(R.string.connect_apps_connect_taf_make_one)
     fun appsNotRead(why: String): String = Res.s(R.string.connect_apps_not_read, why)
@@ -862,6 +869,10 @@ object Words {
     val fromRemoved: String get() = Res.s(R.string.connect_from_removed)
     val giveKeyOnSheet: String get() = Res.s(R.string.connect_give_key_on_sheet)
     fun giveKeyWith(biometry: String): String = Res.s(R.string.connect_give_key_with, biometry)
+    object How {
+      val key: String get() = Res.s(R.string.connect_how_key)
+      val signIn: String get() = Res.s(R.string.connect_how_sign_in)
+    }
     object Kept {
       val anotherTaf: String get() = Res.s(R.string.connect_kept_another_taf)
       fun forCard(count: Int, who: String): String = Res.p(R.plurals.connect_kept_for_card, count, Res.number(count), who)

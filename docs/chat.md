@@ -113,6 +113,13 @@ A sign-in card's buttons are the app's chrome: tafs cloud writes `yes` and `no` 
 language ("Se connecter", "Pas maintenant"), whatever language Coach wrote the card in. Its
 `title`, `text` and `note` are Coach's message, as written.
 
+Its `service` is the app the person signs in to, for the apps' "Sign in to {service}" and "Opens
+{service}": the app's name as planque gave it in its answer to a connection call earlier in the run
+("Google Sheets"), else Coach's `service` when it's a plain name ("Stripe"). It's never a host: a link's
+host can be the service a managed sign-in goes through rather than the app, and the person connects the
+app, not the service in between. With no name for the app, `service` is left out, and the apps say "the
+vendor".
+
 ### The work block
 
 While the taf works, a block sits under the owner's message (`LiveWork`): the live line on
