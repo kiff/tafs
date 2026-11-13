@@ -4271,49 +4271,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF hat den Genehmigungsschlüssel dieses Telefons nicht angenommen. Versuch es noch einmal."
+            "value": "KIFF hat den Genehmigungsschlüssel dieses Geräts nicht angenommen. Versuch es noch einmal."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF didn't accept this phone's approval key. Try again."
+            "value": "KIFF didn't accept this device's approval key. Try again."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF no aceptó la clave de aprobación de este teléfono. Inténtalo de nuevo."
+            "value": "KIFF no aceptó la clave de aprobación de este dispositivo. Inténtalo de nuevo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF n'a pas accepté la clé d'approbation de ce téléphone. Réessayez."
+            "value": "KIFF n'a pas accepté la clé d'approbation de cet appareil. Réessayez."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF non ha accettato la chiave di approvazione di questo telefono. Riprova."
+            "value": "KIFF non ha accettato la chiave di approvazione di questo dispositivo. Riprova."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF heeft de goedkeuringssleutel van deze telefoon niet geaccepteerd. Probeer het opnieuw."
+            "value": "KIFF heeft de goedkeuringssleutel van dit apparaat niet geaccepteerd. Probeer het opnieuw."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "KIFF nie przyjął klucza zatwierdzania tego telefonu. Spróbuj ponownie."
+            "value": "KIFF nie przyjął klucza zatwierdzania tego urządzenia. Spróbuj ponownie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O KIFF não aceitou a chave de aprovação deste telefone. Tente novamente."
+            "value": "O KIFF não aceitou a chave de aprovação deste dispositivo. Tente novamente."
           }
         }
       }

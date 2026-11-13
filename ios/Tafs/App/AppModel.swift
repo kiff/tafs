@@ -808,13 +808,15 @@ final class AppModel: ObservableObject {
     var approvalKeyUnheld: Bool { !signer.approvalPublicKeyDER.isEmpty && !sessionHasApprovalKey }
 
     /// What Start says then, the line both apps use: KIFF didn't accept the key, try again; from
-    /// the second time, where to write too. A key KIFF holds another of keeps the lost key's words.
+    /// the second refusal in a row, where to write too. A key KIFF holds another of keeps the lost
+    /// key's words.
     private func approvalKeyRefused() -> String {
         if approvalKeyLost { return KIFFClient.approvalKeyLost }
         approvalKeyRefusals += 1
         return approvalKeyRefusals >= 2 ? Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport : Words.Approval.keyNotAccepted
     }
-    /// How many Starts KIFF didn't take this phone's approval key on, this session.
+    /// How many Starts in a row KIFF didn't take this device's approval key on: a key KIFF takes,
+    /// or a new session, starts again from none.
     private(set) var approvalKeyRefusals = 0
 
     /// From now on, what grants authority is signed by the approval key.

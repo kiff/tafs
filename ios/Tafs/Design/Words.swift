@@ -167,7 +167,7 @@ enum Words {
         static var keyGoneSignIn: String { Words.line("approval.key_gone_sign_in") }
         /// Sign in with KIFF again to approve from this phone.
         static var keyLost: String { Words.line("approval.key_lost") }
-        /// KIFF didn't accept this phone's approval key. Try again.
+        /// KIFF didn't accept this device's approval key. Try again.
         static var keyNotAccepted: String { Words.line("approval.key_not_accepted") }
         /// Still not working? Write to support@kiff.dev.
         static var keyNotAcceptedSupport: String { Words.line("approval.key_not_accepted_support") }

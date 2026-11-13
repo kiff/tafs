@@ -80,7 +80,7 @@
     <string name="approval_key_gone_biometry">O seu %1$s mudou ou não foi reconhecido, por isso este dispositivo não pode aprovar até o aprovar novamente no seu navegador.</string>
     <string name="approval_key_gone_sign_in">As suas impressões digitais mudaram, ou nenhuma foi reconhecida, por isso este telefone não pode aprovar até iniciar sessão novamente.</string>
     <string name="approval_key_lost">Inicie sessão novamente com o KIFF para aprovar a partir deste telefone.</string>
-    <string name="approval_key_not_accepted">O KIFF não aceitou a chave de aprovação deste telefone. Tente novamente.</string>
+    <string name="approval_key_not_accepted">O KIFF não aceitou a chave de aprovação deste dispositivo. Tente novamente.</string>
     <string name="approval_key_not_accepted_support">Continua a não funcionar? Escreva para support@kiff.dev.</string>
     <string name="approval_locked_after_too_many_tries">%1$s está bloqueado após demasiadas tentativas. Bloqueie este %2$s, desbloqueie-o com o código e verifique novamente.</string>
     <string name="approval_locked_unlock_device">%1$s está bloqueado após demasiadas tentativas. Desbloqueie este dispositivo com o código e tente novamente.</string>

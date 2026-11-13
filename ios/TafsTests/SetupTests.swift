@@ -397,7 +397,7 @@ final class SetupTests: XCTestCase {
         let alone = await model.giveCoachTools()
         XCTAssertFalse(alone)
         XCTAssertEqual(model.setupError, Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport,
-                       "from the second time, where to write too")
+                       "from the second refusal in a row, where to write too")
         XCTAssertFalse(StubProtocol.sent.contains { $0.httpMethod == "POST" && $0.url?.path == "/v1/me/agent-drafts" }, "no draft alone either")
         Keychain.delete(AppModel.planqueAccount)
         Keychain.delete(AppModel.approvalKeyedAccount)
