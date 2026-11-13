@@ -4561,8 +4561,16 @@ class AppModel(
     val grant = _state.value.grants.firstOrNull { it.id == grantId } ?: return Came.Of("failed", why = "the connection isn't on this phone")
     // What the person read: the grant as shown.
     if (!grant.digestMatches || grant.digest != shownDigest) { note(noteKey, VersionWords.OUT_OF_DATE_CARD); return null }
-    // The body goes as tafs cloud built it, encoded once, so the hash signed is the hash of what's sent.
-    val body = KiffClient.json.encodeToString(kotlinx.serialization.json.JsonElement.serializer(), p.body).toByteArray()
+    // The body is built here from what the person read: the digest shown, and KIFF's words for its profile when it has one. An
+    // ask whose body says anything else (a profile never read, any other field) is refused, and nothing is signed.
+    val words = grant.request.profile?.let { _state.value.profileWordsFor(grant) ?: run { note(noteKey, Words.Connect.profileWordsUnread); return null } }
+    val built = kotlinx.serialization.json.JsonObject(buildMap {
+      put("digest", kotlinx.serialization.json.JsonPrimitive(grant.digest))
+      words?.let { put("kiff_profile", it.approval()) }
+    })
+    if (p.body != built) { note(noteKey, CoachWords.ASK_NOT_THIS_CARDS); return null }
+    // Encoded once, so the hash signed is the hash of what's sent.
+    val body = KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), built).toByteArray()
     planque.tenant = tenant
     planque.deviceLoader = { kiff.thisDeviceId() }
     kiff.tenant = tenant
@@ -4586,7 +4594,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      return Came.Of("failed", why = e.message ?: "the connection wasn't approved")
+      return Came.Of("failed", why = e.message ?: "it didn't go through")
     }
     // The tools first, then the Card: a Card is never confirmed for tools that aren't connected.
     if (approved.status != "connected") return Came.Of("not_connected", status = approved.status)

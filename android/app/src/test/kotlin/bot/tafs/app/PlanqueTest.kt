@@ -1190,6 +1190,21 @@ class PlanqueTest {
     assertTrue(transport.requestsTo(confirmRoute).isEmpty())
   }
 
+  @Test fun aToolsAndCardsBodyWithAnythingThePersonDidntReadIsNeverSigned() = runTest {
+    // The phone builds the approve body from what was shown: an extra field, or a profile never read, isn't signed.
+    for (body in listOf(""""digest":"$digest","scope":"all"""", """"digest":"$digest","kiff_profile":{"profile_sha256":"${"ab".repeat(32)}","words_sha256":"${"cd".repeat(32)}"}""")) {
+      reads()
+      transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+      transport.answer(askRoute, 200, toolsAndCards.replace(""""digest":"DIGEST"""", body))
+      val m = model()
+      coachWithCard(m)
+      m.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3")
+      assertTrue(body, auth.asked.isEmpty())
+      assertTrue(transport.requestsTo(approve).isEmpty())
+      assertTrue(transport.requestsTo(confirmRoute).isEmpty())
+    }
+  }
+
   @Test fun aCardWithNoDraftAsksForTheOldSteps() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant()}]}""")
