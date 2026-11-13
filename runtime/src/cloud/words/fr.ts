@@ -693,4 +693,14 @@ export const fr: Words = {
   sheet_receipt: (vendor) => `${vendor} connecté · clé …{last4}`,
   sheet_disconnect: "Déconnecter",
   sheet_done: (vendor, readOnly) => (readOnly ? `${vendor} est connecté (lecture seule)` : `${vendor} est connecté`),
+  // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
+  ai_consent_title: "Vos données et l'IA",
+  ai_consent_lines: ["tafs utilise l'IA Claude d'Anthropic pour faire fonctionner Coach et vos tafs.", "Ce qui lui est envoyé : ce que vous écrivez à Coach et à vos tafs, les fichiers que vous joignez, ce que vos apps connectées renvoient à un taf pendant qu'il travaille, et ce qui est à l'écran quand Coach vous aide dans l'app.", "Ce qui n'est jamais envoyé : les mots de passe et clés qu'utilisent vos apps connectées, ni votre empreinte.", "Anthropic s'en sert pour répondre et le garde jusqu'à 30 jours.", "Rien n'est envoyé tant que vous ne l'autorisez pas. Vous pouvez retirer votre accord dans Compte."],
+  ai_consent_allow: "Autoriser",
+  ai_consent_not_now: "Pas maintenant",
+  ai_consent_withdraw: "Retirer",
+  ai_consent_given: "Usage de l'IA : autorisé",
+  ai_consent_needed: "Autorisez d'abord l'usage de l'IA : Coach et vos tafs en ont besoin pour répondre.",
+  ai_consent_paused_no_one: "En pause : personne n'a encore autorisé l'usage de l'IA pour les exécutions de ce taf. Il reprend dès qu'une personne qui gère les tafs l'autorise dans Compte.",
+  ai_consent_paused_not_given: "En pause : l'usage de l'IA pour les exécutions de ce taf a été retiré. Il reprend dès qu'il est de nouveau autorisé ou qu'une personne qui gère les tafs le reprend.",
 };

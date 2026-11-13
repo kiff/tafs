@@ -693,4 +693,14 @@ export const pl: Words = {
   sheet_receipt: (vendor) => `${vendor} połączony · klucz …{last4}`,
   sheet_disconnect: "Rozłącz",
   sheet_done: (vendor, readOnly) => (readOnly ? `${vendor} jest połączony (tylko odczyt)` : `${vendor} jest połączony`),
+  // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
+  ai_consent_title: "Twoje dane i AI",
+  ai_consent_lines: ["tafs używa AI Claude firmy Anthropic, by działały Coach i Twoje tafy.", "Co jest wysyłane: to, co piszesz do Coacha i Twoich tafów, załączone pliki, to, co Twoje połączone aplikacje zwracają tafowi podczas pracy, oraz to, co jest na Twoim ekranie, gdy Coach pomaga Ci w aplikacji.", "Czego nigdy się nie wysyła: haseł i kluczy używanych przez Twoje połączone aplikacje ani odcisku palca.", "Anthropic używa tego, by odpowiedzieć, i przechowuje do 30 dni.", "Nic nie jest wysyłane, dopóki na to nie zezwolisz. Możesz to wycofać w Koncie."],
+  ai_consent_allow: "Zezwól",
+  ai_consent_not_now: "Nie teraz",
+  ai_consent_withdraw: "Wycofaj",
+  ai_consent_given: "Użycie AI: dozwolone",
+  ai_consent_needed: "Najpierw zezwól na użycie AI: Coach i Twoje tafy potrzebują go, by odpowiadać.",
+  ai_consent_paused_no_one: "Wstrzymane: nikt jeszcze nie zezwolił na użycie AI w uruchomieniach tego tafa. Ruszy, gdy ktoś, kto zarządza tafami, zezwoli na to w Koncie.",
+  ai_consent_paused_not_given: "Wstrzymane: zgodę na użycie AI w uruchomieniach tego tafa wycofano. Ruszy, gdy zgoda znów zostanie dana lub ktoś, kto zarządza tafami, go przejmie.",
 };
