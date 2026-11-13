@@ -541,7 +541,7 @@ found by search is connected with `request {entry, name, taf_name, uses}`: `uses
 found that the taf will use, so the owner approves only those, for a managed app's sign-in and for a reviewed
 key entry alike (`connect-an-app@10`, with the connection server taking a reviewed entry's `tools` as a
 subset of its own; `@9` had dropped `uses` because a reviewed entry refused it, which widened managed
-apps' sign-ins). **Reading a public page** (`web_read`, `connect-an-app@12`). To connect an app by its key, Coach finds the vendor's published API description itself, on its docs, rather than asking the owner for anything technical. It reads one public page as anyone could. The rules:
+apps' sign-ins). **Reading a public page** (`web_read`, `connect-an-app@13`). To connect an app by its key, Coach finds the vendor's published API description itself, on its docs, rather than asking the owner for anything technical. It reads one public page as anyone could. The rules:
 
 - https only, on the usual port;
 - no sign-in and no cookie;
@@ -553,7 +553,7 @@ An OpenAPI description, in JSON or YAML, answers its servers and how its key is 
 
 **Checked first, with a way forward** (`set-up-a-taf@7`, `connect-an-app@11`). When the job needs an app, Coach searches for it before asking the owner anything else. If it can't be connected here, Coach says so first, before any choices card. When an app can't be connected (it needs setting up, or its sign-in or request failed), Coach says why in one sentence from the connection server's answer, and offers a way forward in the same turn. That's the same app's key entry, its key by its published API description (the key's place may name a `prefix`, as `ShippoToken <key>`), or another app with the operation. It's never only "try again later". The failed step still shows tafs cloud's own words, but the server's reason is kept beside it, scrubbed. It's logged (`coach_connection_refused`) and goes before the person's next words to Coach, so Coach can still say it once the turn it failed in is over. A vendor's sign-in comes before its key, even when
 search finds both; a key is given on a secure sheet on the phone, outside the chat, straight to planque,
-and never reaches Coach (`connect-an-app@7`). A mode
+and never reaches Coach (`connect-an-app@7`). A key request always names the job's operations as its tools, by operation id, never none (`connect-an-app@13`): planque declares a key request's tools to KIFF before the key only when it names them, and only a declared request lets the owner sign the key and the taf's Card in one approval; without them, the key comes first and the Card after. A mode
 is said only as the connection gives it: a vendor's own sign-in has none planque knows. Once a connection
 connects, Coach checks it with one read through it before saying it's ready: a 401 or 403 there is the
 key or sign-in refused, caught at connect rather than at the taf's first run (gap 10).
