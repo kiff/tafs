@@ -172,7 +172,7 @@ export const it: Words = {
   recipes_label_never: "Non fa mai",
   recipes_label_hand: "Affidalo a Coach",
   recipes_home_lead: "Scegli un lavoro per il tuo primo taf.",
-  recipes_home_empty_coach: "Ancora nessun taf. Collega un'app per configurare il tuo primo taf.",
+  recipes_home_empty_coach: "Ancora nessun taf. Di' a Coach quale lavoro deve fare un taf.",
   recipes_home_empty_shared: "Ancora nessun taf. I tafs condivisi con te compaiono qui.",
   gallery_title: "Nuovo taf",
   gallery_all: "Tutti i lavori",
@@ -566,6 +566,11 @@ export const it: Words = {
   ct_app_act: "Toccare, scrivere e scorrere nell'app sul tuo dispositivo mentre la guida",
   ct_replaces: "sostituisce il collegamento precedente",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
+  // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
+  start_lead: "Accedi sulla pagina di ogni app. Nessun taf vede mai la tua password.",
+  start_button: "Inizia",
+  start_does: "Inizia configura le approvazioni su questo dispositivo e dà a Coach i suoi strumenti, con il volto o l'impronta una sola volta.",
+  plan_needed: "Scegli un piano per avviarlo.",
   cts_title: "Dai a Coach i suoi strumenti",
   cts_intro: "Coach ha bisogno di qualche strumento per occuparsi dei tuoi tafs. Vanno sulla Card di Coach, con i loro limiti, e solo tu puoi firmarla, sul tuo dispositivo.",
   cts_details: "Ogni strumento e i suoi limiti",
@@ -693,4 +698,14 @@ export const it: Words = {
   sheet_receipt: (vendor) => `${vendor} collegato · chiave …{last4}`,
   sheet_disconnect: "Scollega",
   sheet_done: (vendor, readOnly) => (readOnly ? `${vendor} è collegato (sola lettura)` : `${vendor} è collegato`),
+  // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
+  ai_consent_title: "I tuoi dati e l'IA",
+  ai_consent_lines: ["tafs usa l'IA Claude di Anthropic per far funzionare Coach e i tuoi taf.", "Cosa le viene inviato: ciò che scrivi a Coach e ai tuoi taf, i file che alleghi, ciò che le tue app collegate restituiscono a un taf mentre lavora e ciò che è sul tuo schermo mentre Coach ti aiuta nell'app.", "Cosa non viene mai inviato: le password e le chiavi usate dalle tue app collegate, né la tua impronta.", "Anthropic lo usa per rispondere e lo conserva fino a 30 giorni.", "Non viene inviato nulla finché non lo consenti. Puoi revocarlo in Account."],
+  ai_consent_allow: "Consenti",
+  ai_consent_not_now: "Non ora",
+  ai_consent_withdraw: "Revoca",
+  ai_consent_given: "Uso dell'IA: consentito",
+  ai_consent_needed: "Consenti prima l'uso dell'IA: Coach e i tuoi taf ne hanno bisogno per rispondere.",
+  ai_consent_paused_no_one: "In pausa: nessuno ha ancora consentito l'uso dell'IA per le esecuzioni di questo taf. Riprende appena chi gestisce i taf lo consente in Account.",
+  ai_consent_paused_not_given: "In pausa: l'uso dell'IA per le esecuzioni di questo taf è stato revocato. Riprende appena è di nuovo consentito o chi gestisce i taf lo prende in carico.",
 };

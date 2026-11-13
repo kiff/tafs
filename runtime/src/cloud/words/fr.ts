@@ -172,7 +172,7 @@ export const fr: Words = {
   recipes_label_never: "Ne fait jamais",
   recipes_label_hand: "Confier à Coach",
   recipes_home_lead: "Choisissez une tâche pour votre premier taf.",
-  recipes_home_empty_coach: "Aucun taf pour l'instant. Connectez une app pour configurer votre premier taf.",
+  recipes_home_empty_coach: "Pas encore de tafs. Dites à Coach quel travail un taf doit faire.",
   recipes_home_empty_shared: "Aucun taf pour l'instant. Les tafs partagés avec vous s'affichent ici.",
   gallery_title: "Nouveau taf",
   gallery_all: "Toutes les tâches",
@@ -566,6 +566,11 @@ export const fr: Words = {
   ct_app_act: "Toucher, écrire et faire défiler dans l'app sur votre appareil pendant qu'il la pilote",
   ct_replaces: "remplace la connexion précédente",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
+  // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
+  start_lead: "Vous vous connectez sur la page de chaque app. Aucun taf ne voit jamais votre mot de passe.",
+  start_button: "Commencer",
+  start_does: "Commencer configure les approbations sur cet appareil et donne à Coach ses outils, avec votre visage ou votre empreinte une seule fois.",
+  plan_needed: "Choisissez un forfait pour le lancer.",
   cts_title: "Donner ses outils à Coach",
   cts_intro: "Coach a besoin de quelques outils pour s'occuper de vos tafs. Ils vont sur la propre Card de Coach, avec leurs limites, et vous seul pouvez la signer, sur votre appareil.",
   cts_details: "Chaque outil et ses limites",
@@ -693,4 +698,14 @@ export const fr: Words = {
   sheet_receipt: (vendor) => `${vendor} connecté · clé …{last4}`,
   sheet_disconnect: "Déconnecter",
   sheet_done: (vendor, readOnly) => (readOnly ? `${vendor} est connecté (lecture seule)` : `${vendor} est connecté`),
+  // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
+  ai_consent_title: "Vos données et l'IA",
+  ai_consent_lines: ["tafs utilise l'IA Claude d'Anthropic pour faire fonctionner Coach et vos tafs.", "Ce qui lui est envoyé : ce que vous écrivez à Coach et à vos tafs, les fichiers que vous joignez, ce que vos apps connectées renvoient à un taf pendant qu'il travaille, et ce qui est à l'écran quand Coach vous aide dans l'app.", "Ce qui n'est jamais envoyé : les mots de passe et clés qu'utilisent vos apps connectées, ni votre empreinte.", "Anthropic s'en sert pour répondre et le garde jusqu'à 30 jours.", "Rien n'est envoyé tant que vous ne l'autorisez pas. Vous pouvez retirer votre accord dans Compte."],
+  ai_consent_allow: "Autoriser",
+  ai_consent_not_now: "Pas maintenant",
+  ai_consent_withdraw: "Retirer",
+  ai_consent_given: "Usage de l'IA : autorisé",
+  ai_consent_needed: "Autorisez d'abord l'usage de l'IA : Coach et vos tafs en ont besoin pour répondre.",
+  ai_consent_paused_no_one: "En pause : personne n'a encore autorisé l'usage de l'IA pour les exécutions de ce taf. Il reprend dès qu'une personne qui gère les tafs l'autorise dans Compte.",
+  ai_consent_paused_not_given: "En pause : l'usage de l'IA pour les exécutions de ce taf a été retiré. Il reprend dès qu'il est de nouveau autorisé ou qu'une personne qui gère les tafs le reprend.",
 };

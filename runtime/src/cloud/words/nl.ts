@@ -172,7 +172,7 @@ export const nl: Words = {
   recipes_label_never: "Doet het nooit",
   recipes_label_hand: "Geef het aan Coach",
   recipes_home_lead: "Kies een taak voor je eerste taf.",
-  recipes_home_empty_coach: "Nog geen tafs. Koppel een app om je eerste taf in te stellen.",
+  recipes_home_empty_coach: "Nog geen tafs. Vertel Coach welk werk een taf moet doen.",
   recipes_home_empty_shared: "Nog geen tafs. Tafs die met je zijn gedeeld, verschijnen hier.",
   gallery_title: "Nieuwe taf",
   gallery_all: "Alle taken",
@@ -566,6 +566,11 @@ export const nl: Words = {
   ct_app_act: "Tikken, typen en scrollen in de app op je apparaat terwijl het die bedient",
   ct_replaces: "vervangt de eerdere koppeling",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
+  // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
+  start_lead: "Je logt in op de pagina van elke app zelf. Geen taf ziet ooit je wachtwoord.",
+  start_button: "Starten",
+  start_does: "Starten stelt goedkeuringen in op dit apparaat en geeft Coach zijn tools, met één keer je gezicht of vingerafdruk.",
+  plan_needed: "Kies een abonnement om het te starten.",
   cts_title: "Geef Coach zijn tools",
   cts_intro: "Coach heeft een paar tools nodig om voor je tafs te zorgen. Ze komen op Coach' eigen Card, met hun limieten, en alleen jij kunt die ondertekenen, op je apparaat.",
   cts_details: "Elke tool en zijn limieten",
@@ -693,4 +698,14 @@ export const nl: Words = {
   sheet_receipt: (vendor) => `${vendor} gekoppeld · sleutel …{last4}`,
   sheet_disconnect: "Ontkoppelen",
   sheet_done: (vendor, readOnly) => (readOnly ? `${vendor} is gekoppeld (alleen lezen)` : `${vendor} is gekoppeld`),
+  // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
+  ai_consent_title: "Je gegevens en de AI",
+  ai_consent_lines: ["tafs gebruikt de AI Claude van Anthropic om Coach en je tafs te laten werken.", "Wat ernaartoe gaat: wat je aan Coach en je tafs schrijft, de bestanden die je bijvoegt, wat je gekoppelde apps een taf teruggeven terwijl hij werkt, en wat er op je scherm staat terwijl Coach je in de app helpt.", "Wat nooit wordt verzonden: de wachtwoorden en sleutels die je gekoppelde apps gebruiken, of je vingerafdruk.", "Anthropic gebruikt het om te antwoorden en bewaart het tot 30 dagen.", "Er wordt niets verzonden voordat je het toestaat. Je kunt het intrekken bij Account."],
+  ai_consent_allow: "Toestaan",
+  ai_consent_not_now: "Niet nu",
+  ai_consent_withdraw: "Intrekken",
+  ai_consent_given: "AI-gebruik: toegestaan",
+  ai_consent_needed: "Sta eerst AI-gebruik toe: Coach en je tafs hebben het nodig om te antwoorden.",
+  ai_consent_paused_no_one: "Gepauzeerd: niemand heeft AI-gebruik voor de runs van deze taf al toegestaan. Hij gaat verder zodra iemand die tafs beheert het toestaat in Account.",
+  ai_consent_paused_not_given: "Gepauzeerd: AI-gebruik voor de runs van deze taf is ingetrokken. Hij gaat verder zodra het weer is toegestaan of iemand die tafs beheert hem overneemt.",
 };
