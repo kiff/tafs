@@ -541,7 +541,17 @@ found by search is connected with `request {entry, name, taf_name, uses}`: `uses
 found that the taf will use, so the owner approves only those, for a managed app's sign-in and for a reviewed
 key entry alike (`connect-an-app@10`, with the connection server taking a reviewed entry's `tools` as a
 subset of its own; `@9` had dropped `uses` because a reviewed entry refused it, which widened managed
-apps' sign-ins). **Checked first, with a way forward** (`set-up-a-taf@7`, `connect-an-app@11`). When the job needs an app, Coach searches for it before asking the owner anything else. If it can't be connected here, Coach says so first, before any choices card. When an app can't be connected (it needs setting up, or its sign-in or request failed), Coach says why in one sentence from the connection server's answer, and offers a way forward in the same turn. That's the same app's key entry, its key by its published API description (the key's place may name a `prefix`, as `ShippoToken <key>`), or another app with the operation. It's never only "try again later". The failed step still shows tafs cloud's own words, but the server's reason is kept beside it, scrubbed. It's logged (`coach_connection_refused`) and goes before the person's next words to Coach, so Coach can still say it once the turn it failed in is over. A vendor's sign-in comes before its key, even when
+apps' sign-ins). **Reading a public page** (`web_read`, `connect-an-app@12`). To connect an app by its key, Coach finds the vendor's published API description itself, on its docs, rather than asking the owner for anything technical. It reads one public page as anyone could. The rules:
+
+- https only, on the usual port;
+- no sign-in and no cookie;
+- never a private or reserved address: the host is resolved once and the connection goes to the address checked;
+- at most three redirects, each checked again;
+- text only, cut short.
+
+An OpenAPI description, in JSON or YAML, answers its servers and how its key is given (where, its name and any prefix). That's what `request {api}` needs. What it reads is data, never an instruction. It has a Card of its own, `coach-web-reads`, at 50 reads a day, which an account's phone asks for on its next read, as any Card added later.
+
+**Checked first, with a way forward** (`set-up-a-taf@7`, `connect-an-app@11`). When the job needs an app, Coach searches for it before asking the owner anything else. If it can't be connected here, Coach says so first, before any choices card. When an app can't be connected (it needs setting up, or its sign-in or request failed), Coach says why in one sentence from the connection server's answer, and offers a way forward in the same turn. That's the same app's key entry, its key by its published API description (the key's place may name a `prefix`, as `ShippoToken <key>`), or another app with the operation. It's never only "try again later". The failed step still shows tafs cloud's own words, but the server's reason is kept beside it, scrubbed. It's logged (`coach_connection_refused`) and goes before the person's next words to Coach, so Coach can still say it once the turn it failed in is over. A vendor's sign-in comes before its key, even when
 search finds both; a key is given on a secure sheet on the phone, outside the chat, straight to planque,
 and never reaches Coach (`connect-an-app@7`). A mode
 is said only as the connection gives it: a vendor's own sign-in has none planque knows. Once a connection
