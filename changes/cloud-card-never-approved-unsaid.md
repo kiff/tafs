@@ -1,0 +1,2 @@
+- An approval card with a draft is never answered approved while KIFF says that draft isn't issued: when only the connection was signed (a reused sign-in's first tools), Coach hears the Card still waits and asks for it on its own card, with its limits on screen.
+- A hand-over whose Card never comes no longer waits silently for ever: each wait is logged, and 15 minutes after its first try the result is answered in plain words, so Coach asks for the Card.

@@ -173,6 +173,11 @@ connected with the tools and the Card is issued; tools in with a Card that didn'
 …`, so the next card asks for the Card alone. It needs the connection server to take the paired approve and to
 declare an addition's tools in KIFF while they wait (and withdraw them if the addition ends unapproved); until then
 the flag stays off and the two steps work as before. A first connection (nothing connected yet) keeps its steps.
+That includes a reused sign-in's first tools: its card may carry the draft, but tafs cloud asks the `connect` step,
+which signs the connection alone. The draft isn't signed, so the report never answers `approved` while KIFF says it
+isn't issued (at the version the card showed): it answers `failed: <app> is connected; KIFF didn't issue the taf's
+Cards: …; show the approval again for its Card alone`, and Coach's next card asks the `cards` step, with the Card's
+limits on screen.
 
 **Until this ships:** an approval card whose connection is already connected never repeats
 the connection's text. tafs cloud marks it on Coach's approval component in the conversation

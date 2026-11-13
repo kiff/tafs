@@ -7628,6 +7628,30 @@ async function handOverShown(tenant: string, taf: Taf, components: ThreadCompone
 /** What tafs cloud answers a result whose draft the owner hasn't confirmed yet. */
 const WAITING_FOR_CONFIRMATION = "waiting for your confirmation";
 
+/**
+ * How long a result waits for its draft's Card to be approved before it's answered: a Card the owner is
+ * approving takes a minute or two; one no card asks for (an approval answered without it) never comes.
+ */
+const HANDOVER_CARD_WAIT_MS = 15 * 60_000;
+
+/** The result's answer when its Card never came: the owner reads it on the card, and Coach asks for the Card. */
+export function cardNeverApproved(name: string | undefined): string {
+  const taf = name?.trim() || "the taf";
+  return `The Card for ${taf} was never approved, so ${taf} isn't set up yet: approve its Card to finish`;
+}
+
+/** Whether this result has waited HANDOVER_CARD_WAIT_MS for its Card since its first try, which this notes. */
+async function waitedForCard(tenant: string, run: string, card: string, deps: Deps): Promise<boolean> {
+  const now = deps.now?.() ?? new Date();
+  const key = `handover-card#${tenant}#${run}#${card}`;
+  const first = await deps.coach!.get(key).catch(() => undefined);
+  if (typeof first !== "string") {
+    await deps.coach!.put(key, now.toISOString(), new Date(now.getTime() + HANDOVER_KEPT_MS)).catch(() => undefined);
+    return false;
+  }
+  return now.getTime() - Date.parse(first) >= HANDOVER_CARD_WAIT_MS;
+}
+
 /** How long a result's hand-over holds its card, so a repeat note or a second phone can't make two. */
 const HANDOVER_HELD_MS = 10 * 60_000;
 
@@ -7667,10 +7691,15 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
     // The result's tools, as KIFF names them: what a disclosure may name (kiff/tafs#476, agentgabo on #572).
     const tools = Array.isArray(card.tools) ? card.tools.filter((t): t is string => typeof t === "string") : undefined;
     const make = card.taf.improves ? improvedVersionFor(tenant, coach.id, r, card.id, { ...card.taf as ImprovedTaf, ...(tools ? { tools } : {}) }, tafs, deps) : newTafFor(tenant, coach.id, r, { ...card.taf, ...(tools ? { tools } : {}) }, tafs, deps);
-    const outcome = await make.catch(async (err) => {
-      // Not told: it may still pass. The hold goes, and the sweep tries again. A Card the owner hasn't
-      // approved yet is no error: the card waits the same way, and the taf is made once they approve.
-      if (!(err instanceof CardNotApproved)) console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);
+    const outcome = await make.catch(async (err): Promise<ResultOutcome | undefined> => {
+      // A Card the owner hasn't approved yet is no error: the card waits, and the taf is made once they approve.
+      // But not for ever, and never unsaid: past HANDOVER_CARD_WAIT_MS from the first try, nothing is asking
+      // for that Card, so the result is answered in plain words and Coach asks for it.
+      if (err instanceof CardNotApproved) {
+        if (await waitedForCard(tenant, r.id, card.id!, deps)) return { failed: cardNeverApproved(card.taf?.name) };
+        console.warn(`handover ${r.id} ${card.id}: waiting for the Card's approval (draft ${card.taf?.draft ?? "none"})`);
+      } else console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);
+      // Not told: it may still pass. The hold goes, and the sweep tries again.
       await deps.coach!.remove(held).catch(() => undefined);
       pending = true;
       return undefined;
