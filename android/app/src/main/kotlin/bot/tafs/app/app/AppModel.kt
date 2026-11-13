@@ -2359,11 +2359,22 @@ class AppModel(
   fun followChat(tafId: String, handOver: String? = null) {
     if (followers[tafId]?.isActive == true) return
     followers[tafId] = scope.launch {
+      val me = coroutineContext[kotlinx.coroutines.Job]
       var polls = 0
-      while (polls < CHAT_POLL_BUDGET && (busy(tafId) || (handOver != null && handingOver(handOver)))) {
-        delay(CHAT_POLL_MS)
+      // Every few seconds at first, then every quarter minute: a long run (a setup's hand-over, a slow turn) is followed to its end,
+      // so its last words show and "…" goes, never left as it was when the reads ran out.
+      while (polls < CHAT_POLL_BUDGET + CHAT_SLOW_POLL_BUDGET && (busy(tafId) || (handOver != null && handingOver(handOver)))) {
+        delay(if (polls < CHAT_POLL_BUDGET) CHAT_POLL_MS else CHAT_SLOW_POLL_MS)
         polls += 1
         readThread(tafId)
+        // A run at work that this phone hasn't followed yet (one that went on with no stream open, as Coach's does once tafs cloud
+        // answers its result): its stream, from the start, as when the chat opens. The stream takes over from these reads.
+        val run = _state.value.chatWorking[tafId]?.run
+        val cloudId = _state.value.taf(tafId)?.cloudId
+        if (run != null && cloudId != null && run !in resumedRuns && !isTrialChat(tafId)) {
+          resumeChat(tafId, cloudId, run, again = true)
+          if (followers[tafId] !== me) return@launch
+        }
       }
       // The run stopped: done, or waiting on a call KIFF held. KIFF is read again, so a hold's card shows in the chat and in
       // Needs you, and the Card's amounts are today's. (Until the chat follows its run's stream, as iOS's does.)
@@ -2429,6 +2440,7 @@ class AppModel(
     // What a stopped run never read (docs/chat.md): each becomes its own Not sent row once, in tafs cloud's words. It's remembered when
     // Retry or Edit takes it, never before, so a restart brings it back until then, and a second Retry finds nothing, as on iOS.
     val notSent = thread.steering?.let { st -> st.notSent.map { it to notSentKey(st.run, it) } }.orEmpty().filter { (_, key) -> key !in settledNotSent() }
+    var endedQuiet = false
     _state.update { read ->
       val s = alongside?.invoke(read) ?: read
       // What the owner sent stays on screen until the thread has it (kiff/tafs#138, 48).
@@ -2442,13 +2454,19 @@ class AppModel(
       // (kiff/tafs#476); tafs cloud's `working` still says if a run is at work.
       val handedOver = tafId == COACH_CHAT && thread.working == null && waiting.isEmpty() && tafId !in s.chatSending &&
         CoachWords.handedOver(thread.messages, thread.components, s.chatLive[tafId]?.session)
+      // tafs cloud says nothing is at work here, and the live answer has been up a while: its run ended and its stream went quiet
+      // without saying so. Its "…" and Stop go, and the thread shows what the run wrote (the stream is closed just below).
+      val live = s.chatLive[tafId]
+      val quiet = live != null && thread.working == null && waiting.isEmpty() && tafId !in s.chatSending &&
+        java.time.Duration.between(live.started, now) > java.time.Duration.ofMillis(STALE_LIVE_MS)
+      if (quiet) endedQuiet = true
       s.copy(
-        chatLive = if (handedOver) s.chatLive - tafId else s.chatLive,
+        chatLive = if (handedOver || quiet) s.chatLive - tafId else s.chatLive,
         chats = s.chats + (tafId to messages),
         chatSent = if (waiting.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to waiting),
         chatErrors = s.chatErrors - tafId,
         chatWorking = thread.working?.let { s.chatWorking + (tafId to ChatRun(it, thread.workingRun)) } ?: (s.chatWorking - tafId),
-        chatAwaiting = if (settled || handedOver) s.chatAwaiting - tafId else s.chatAwaiting,
+        chatAwaiting = if (settled || handedOver || quiet) s.chatAwaiting - tafId else s.chatAwaiting,
         chatSteering = thread.steering?.takeIf { it.held != null }?.let { s.chatSteering + (tafId to it) } ?: (s.chatSteering - tafId),
         chatUnsent = s.chatUnsent[tafId].orEmpty().let { kept ->
           // One already on screen isn't added again.
@@ -2466,6 +2484,9 @@ class AppModel(
         coachLines = if (tafId == COACH_CHAT) thread.coachLines else s.coachLines,
       )
     }
+    // The stream that went quiet is closed: it no longer holds the chat, so a later run is followed again.
+    // Never from inside that stream's own reads: its end is about to come, with how the run ended.
+    if (endedQuiet && followers[tafId] !== kotlin.coroutines.coroutineContext[kotlinx.coroutines.Job]) followers.remove(tafId)?.cancel()
     if (tafId == COACH_CHAT) {
       readApprovals()
       followHandOvers()
@@ -5533,6 +5554,14 @@ class AppModel(
     fun current() = generation == accountGeneration && (tafId != COACH_CHAT || coach == coachGeneration)
     followers[tafId]?.cancel()
     followers[tafId] = scope.launch {
+      // While the stream is open, the thread is read now and then: a run that ended without the stream saying so (it can stay
+      // quiet for many minutes) shows as ended, never as "…" (readThread closes the stream then).
+      val check = launch {
+        while (true) {
+          delay(STREAM_CHECK_MS)
+          if (current()) readThread(tafId)
+        }
+      }
       var ended: StreamEvent.End? = null
       fun live(change: (LiveAnswer) -> LiveAnswer) = _state.update { s ->
         s.chatLive[tafId]?.let { s.copy(chatLive = s.chatLive + (tafId to change(it))) } ?: s
@@ -5580,6 +5609,8 @@ class AppModel(
         throw e
       } catch (_: Exception) {
         // The stream dropped: the thread has the rest.
+      } finally {
+        check.cancel()
       }
       if (!current()) return@launch
       val end = ended
@@ -7573,6 +7604,13 @@ class AppModel(
     /** How often a thread is read again while a run is at work in it, and how many times at most. */
     const val CHAT_POLL_MS = 2_500L
     const val CHAT_POLL_BUDGET = 150
+    /** How long a live answer stands before a read saying nothing is at work clears it as ended. */
+    const val STALE_LIVE_MS = 15_000L
+    /** How often the thread is read while a stream is open, for a run that ended without the stream saying so. */
+    const val STREAM_CHECK_MS = 30_000L
+    /** After the fast reads, one every [CHAT_SLOW_POLL_MS] while the run still works: about 25 minutes more. */
+    const val CHAT_SLOW_POLL_MS = 15_000L
+    const val CHAT_SLOW_POLL_BUDGET = 100
 
     /** The stops of the run's own: it ends with no words for it. */
     val CAP_STOPS = setOf("cost_cap", "turn_cap", "max_token", "refused")
