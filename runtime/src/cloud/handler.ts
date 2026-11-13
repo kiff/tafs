@@ -190,7 +190,7 @@ export interface HTTPResult {
 /** What tafs cloud calls on kiff/agents. */
 export type AgentsAPI = Pick<Agents,
   "putAgent" | "deleteAgent" | "startRun" | "sessions" | "session" | "archive" | "memories" | "forget" | "putSkill" | "addSessionSkills" |
-  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
+  "createSchedule" | "getSchedule" | "updateSchedule" | "switchSchedule" | "listSchedules" | "deleteSchedule" | "trigger" | "scheduleRuns" | "scheduleFirings" | "cancelRun" | "continueRun" | "continueHeld" | "answerCard" | "answerResult" | "answerWait" | "requesterAccess" | "claimTafDraft" | "tafDraft" | "getRun" | "streamRun" | "resumeRun" | "steerRun" | "getAgent" |
   "versions" | "switchVersion" | "startTrial" | "trial" | "beginSwitch" | "replaceSwitchDraft" | "cancelSwitch" | "createVersion" | "getVersion" |
   "createAttachment" | "readAttachment" |
   "halt" | "resume" | "halted" | "eraseTenant" | "aiSpent" | "runs" | "pausedRuns" |
@@ -6316,17 +6316,24 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // it shows as the taf's trial, never as another agent.
   const ours = new Set(records.flatMap((t) => t.kiffAgent ? [t.kiffAgent, `${t.kiffAgent}~trial`] : []));
   const agents = [...new Set([...cards.keys(), ...waiting.keys()])].filter((a) => !ours.has(a) && listable(access, a)).sort();
-  // One whose setup stopped partway (Coach drafted it, its Card is signed, and no taf was made) shows by the name
-  // Coach gave it, with the way back to the chat where it stopped: never its agent's id.
+  // Home lists tafs only. An agent made through KIFF's API isn't one: it's KIFF's, and KIFF shows it, never the
+  // tafs app. The one exception is a taf whose setup stopped partway (Coach drafted it, its Card is signed, and no
+  // taf was made): it's listed as being set up, by the name Coach gave it, with the way back to the chat where it
+  // stopped, never as ready and never by its agent's id.
   const halfMade = agents.length ? await halfMadeTafs(me, records, new Set(agents), deps) : new Map<string, HalfMade>();
-  const others = agents.map((agent) => {
-    const card = summary(cards.get(agent) ?? []);
-    const held = waiting.get(agent) ?? 0;
+  const settingUp = agents.flatMap((agent) => {
+    const half = halfMade.get(agent);
+    if (!half) return [];
     const color = freeColor(taken);
     taken.push(color);
-    const half = halfMade.get(agent);
-    return { id: null, name: half?.name ?? agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card,
-      ...(half?.coach && half.session ? { finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } } : {}) };
+    // The chat to finish it in goes only to the person who started it (#879); anyone else sees the name alone.
+    return [{ name: half.name, kiff_agent: agent, color, ...(half.coach && half.session ? { finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } } : {}) }];
+  });
+  // Apps from before setting_up read the same tafs from others, as they drew them there (Android 77, iPhone and iPad).
+  const others = settingUp.map((t) => {
+    const card = summary(cards.get(t.kiff_agent) ?? []);
+    const held = waiting.get(t.kiff_agent) ?? 0;
+    return { id: null, name: t.name, job: null, kiff_agent: t.kiff_agent, status: null, next_run: null, last_run: null, color: t.color, state: stateOf(card, held, null), waiting: held, card, ...(t.finish ? { finish: t.finish } : {}) };
   });
   // Which doors this deployment offers (docs/doors.md): none, and the app shows no Doors.
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
@@ -6352,7 +6359,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const w = wordsIn(lang);
     return { count, words: count === 0 ? w.home_needs_you_none : w.home_needs_you(count, plural(lang, count)) };
   })();
-  return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
+  return { tafs: listed, setting_up: settingUp, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
@@ -6378,15 +6385,22 @@ async function halfMadeTafs(me: KIFFIdentity, records: Taf[], agents: Set<string
   const tenant = me.tenantID;
   const out = new Map<string, HalfMade>();
   const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
+  // The agents a result still names this read: for them, the proof decides, and a kept name never stands in for it.
+  const named = new Set<string>();
   const paused = coach ? await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]) : [];
   for (const r of paused) {
     if (!coach || r.agent !== coach.id) continue;
     for (const q of r.requirements ?? []) {
-      const card = q.input as { type?: string; taf?: { agent?: unknown; name?: unknown; improves?: unknown } } | undefined;
+      const card = q.input as { type?: string; taf?: { agent?: unknown; name?: unknown; draft?: unknown; improves?: unknown } } | undefined;
       if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.taf || card.taf.improves) continue;
-      const { agent, name } = card.taf;
+      const { agent, name, draft } = card.taf;
       if (typeof agent !== "string" || !agents.has(agent) || out.has(agent)) continue;
-      if (typeof name !== "string" || !name.trim()) continue;
+      if (typeof name !== "string" || !name.trim() || typeof draft !== "string" || !draft) continue;
+      named.add(agent);
+      // What the result says isn't proof: the draft it names must be one the setup submitted here, naming this agent, and
+      // not claimed yet (the record the hand-over claims). An agent KIFF has that tafs didn't draft is never listed.
+      const held = await deps.agents.tafDraft(tenant, draft).catch(() => undefined);
+      if (!held || held.agent_id !== agent || held.claimed) continue;
       // The chat opens only for the person who started it (ownChat): anyone else sees the name, with no way in that
       // would answer "no such chat" (qa-kiff on #873).
       const own = r.requester?.kind === "member" && r.requester.id === me.subject;
@@ -6403,7 +6417,7 @@ async function halfMadeTafs(me: KIFFIdentity, records: Taf[], agents: Set<string
     const kept = await store.get(halfMadeKey(tenant, agent)).catch(() => undefined) as { name?: unknown } | undefined;
     if (found && kept?.name !== found.name) {
       await store.put(halfMadeKey(tenant, agent), { name: found.name }, new Date(at.getTime() + HALF_MADE_KEPT_MS)).catch(() => undefined);
-    } else if (!found && typeof kept?.name === "string" && kept.name) {
+    } else if (!found && !named.has(agent) && typeof kept?.name === "string" && kept.name) {
       out.set(agent, { name: kept.name });
     }
   }));

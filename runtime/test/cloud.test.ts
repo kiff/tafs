@@ -1231,7 +1231,8 @@ describe("the home list", () => {
     expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0].state).toBe("halted");
   });
 
-  it("lists the account's other agents with Cards apart: idle, and never Setup's or a taf being removed", async () => {
+  // KIFF's own agents and their Cards were mixed into the tafs app's Home. Home lists tafs only.
+  it("never lists an agent made through KIFF's API, or Setup's, or a taf being removed: Home is tafs only", async () => {
     const w = world();
     await w.tafs.put("t_acme", { id: NEW, name: "Setup", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-14T09:00:00Z" });
     await w.tafs.put("t_acme", { id: NEW2, name: "Old", job: "refunds", kiffAgent: "old", nameClaim: "c2", created: "2026-10-13T09:00:00Z", removing: true });
@@ -1240,14 +1241,9 @@ describe("the home list", () => {
       { ...demoCard, id: "card_trial", subject: "rae~trial" }];
     const r = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
     expect(r.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae"]);
-    expect(r.others).toEqual([{
-      id: null, name: "support-demo", job: null, kiff_agent: "support-demo", status: null, next_run: null, last_run: null,
-      color: 1, state: "idle", waiting: 0,
-      card: { ids: ["card_demo"], active: true, expires: null, tools: ["lookup"], rules: [{ action: "lookup", label: "lookup", outside: "hold", per_action: null, per_window: null, count_per_window: null, window: "calendar_day", window_words: { each: "a day", now: "today" } }], used: {}, usage_unknown: [],
-        cards: [{ id: "card_demo", title: "lookup", environment: "", live: true, active: true, expires: null,
-          rules: [{ action: "lookup", label: "lookup", outside: "hold", per_action: null, per_window: null, count_per_window: null, window: "calendar_day", window_words: { each: "a day", now: "today" } }],
-          total: null, calls: null }] },
-    }]);
+    // support-demo has an active Card at KIFF, and tafs didn't make it: it's KIFF's, not the app's.
+    expect(r.setting_up).toEqual([]);
+    expect(r.others).toEqual([]);
   });
 
   it("keeps each taf's colour, and gives a new one the first nobody has", async () => {
@@ -1269,7 +1265,7 @@ describe("the home list", () => {
     w.account.access = { rae: { ...no, use: true }, bo: no, vi: { ...no, oversee: true }, "support-demo": { ...no, use: true }, "ops-bot": no };
     const home = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
     expect(home.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae", "Vi"]);
-    expect(home.others.map((a: { name: string }) => a.name)).toEqual(["support-demo"]);
+    expect(home.others).toEqual([]);
     const list = (await call(w, "GET", "/v1/tafs", { token: "ana" })).body;
     expect(list.tafs.map((t: { name: string }) => t.name)).toEqual(["Rae", "Vi"]);
     // An agent KIFF doesn't name isn't listed either.
@@ -4497,8 +4493,11 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // Its draft confirmed: KIFF lists the agent with its Card, and tafs cloud has no taf for it.
     w.account.mandates = [{ id: "card_refunds", subject: "refunds-x", active: true, grants: [{ action: "lookup" }], aggregates: [] }];
     const home = async (lang = "en") => JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
-      headers: { Authorization: "Bearer ana", "Accept-Language": lang } }, deps)).body) as { tafs: Array<{ name: string }>; others: Array<Record<string, unknown>> };
+      headers: { Authorization: "Bearer ana", "Accept-Language": lang } }, deps)).body) as { tafs: Array<{ name: string }>; setting_up: Array<Record<string, unknown>>; others: Array<Record<string, unknown>> };
     const before = await home();
+    // Being set up: by name, with its chat, and no state, so never "Ready".
+    expect(before.setting_up).toEqual([{ name: "Refunds", kiff_agent: "refunds-x", color: expect.any(Number), finish: { taf: COACH, session: stored.session, words: "Finish setting up" } }]);
+    // Apps from before setting_up still find it where they drew it.
     expect(before.others).toHaveLength(1);
     expect(before.others[0]).toMatchObject({ name: "Refunds", kiff_agent: "refunds-x", finish: { taf: COACH, session: stored.session, words: "Finish setting up" } });
     expect((await home("fr")).others[0]!.finish).toMatchObject({ words: "Terminer la configuration" });
@@ -4514,6 +4513,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const after = await home();
     expect(after.tafs.map((t) => t.name)).toContain("Refunds");
     expect(after.others).toEqual([]);
+    expect(after.setting_up).toEqual([]);
   });
 
   // agentgabo on #873: a result waits a few days; once it has expired, its run no longer names the agent. The name
@@ -4525,6 +4525,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
     const stored = w.agents.runs.find((r) => r.id === run.id)!;
     Object.assign(stored, { status: "PAUSED", requirements: [{ call_id: "s1", tool: "show", input: RESULT, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" }] });
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
     w.account.mandates = [{ id: "card_refunds", subject: "refunds-x", active: true, grants: [{ action: "lookup" }], aggregates: [] }];
     const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
     const home = async () => JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
@@ -4537,25 +4538,62 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(later).not.toHaveProperty("finish");
   });
 
-  it("shows another agent as before when no Coach chat names it, or the paused runs can't be read", async () => {
+  it("lists no other agent, whether or not a Coach chat names one, nor when the paused runs can't be read", async () => {
     const { w, deps } = await paused();
     w.account.mandates = [{ id: "card_ops", subject: "ops-bot", active: true, grants: [{ action: "lookup" }], aggregates: [] },
       { id: "card_refunds", subject: "refunds-x", active: true, grants: [{ action: "lookup" }], aggregates: [] }];
     const home = async () => JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
-      headers: { Authorization: "Bearer ana" } }, deps)).body) as { others: Array<Record<string, unknown>> };
+      headers: { Authorization: "Bearer ana" } }, deps)).body) as { setting_up: Array<Record<string, unknown>>; others: Array<Record<string, unknown>> };
     const both = await home();
-    expect(both.others.find((o) => o.kiff_agent === "ops-bot")).toMatchObject({ name: "ops-bot" });
-    expect(both.others.find((o) => o.kiff_agent === "ops-bot")).not.toHaveProperty("finish");
+    // refunds-x is the taf Coach is setting up; ops-bot was made through KIFF's API, and isn't listed.
+    expect(both.setting_up.map((t) => t.kiff_agent)).toEqual(["refunds-x"]);
+    expect(both.others.map((o) => o.kiff_agent)).toEqual(["refunds-x"]);
+    // Which agent is a taf being set up can't be told: none is listed, never one by its agent's id.
     w.agents.fail.set("pausedRuns", new Error("down"));
-    // The paused runs can't be read: no way to finish shows, and the name already seen is kept, never the id.
     const down = await home();
-    expect(down.others.map((o) => o.name)).toEqual(["ops-bot", "Refunds"]);
-    expect(down.others.some((o) => "finish" in o)).toBe(false);
-    // With nothing kept either (a store that's new), the agent shows as before.
+    // The paused runs can't be read: no way to finish shows, and the name already seen (with its proof) is kept, never the id.
+    expect(down.setting_up).toEqual([{ name: "Refunds", kiff_agent: "refunds-x", color: expect.any(Number) }]);
+    expect(down.others.map((o) => o.name)).toEqual(["Refunds"]);
+    // With nothing kept either (a store that's new), nothing is listed: never an agent by its id.
     w.agents.fail.set("pausedRuns", new Error("down"));
     const fresh = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
-      headers: { Authorization: "Bearer ana" } }, { ...deps, coach: memoryCoach(() => w.now) })).body) as { others: Array<Record<string, unknown>> };
-    expect(fresh.others.map((o) => o.name)).toEqual(["ops-bot", "refunds-x"]);
+      headers: { Authorization: "Bearer ana" } }, { ...deps, coach: memoryCoach(() => w.now) })).body) as { setting_up: unknown[]; others: unknown[] };
+    expect(fresh.setting_up).toEqual([]);
+    expect(fresh.others).toEqual([]);
+  });
+
+  // A result card is only what Coach says. Only a draft the setup submitted, naming that agent, is proof that tafs is making
+  // it; nothing KIFF has from elsewhere is ever listed.
+  it("lists a taf being set up only when the result's draft is the setup's own and names that agent", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    // ops-bot: a KIFF agent with a Card, made outside tafs, that Coach's result names with a draft id the setup never submitted.
+    // kiff-agent: named with a real setup draft, but one for another agent.
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.setupDrafts.set("drf_other", { tenant: "t_acme", agent: "refunds-x" });
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up", { requester: { kind: "member", id: "u_ana" } });
+    const card = (id: string, taf: Record<string, unknown>) => ({ call_id: id, tool: "show", operation: "", expires: "2026-11-05T12:00:00Z", kind: "card",
+      input: { type: "result", id, text: "Ready.", taf: { kickoff: "Work the queue.", cron: "*/30 * * * *", ...taf } } });
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "PAUSED", requirements: [
+      card("a", { agent: "ops-bot", name: "Ops", draft: "drf_nottafs" }),
+      card("b", { agent: "kiff-agent", name: "Kiff agent", draft: "drf_other" }),
+      card("c", { agent: "refunds-x", name: "Refunds", draft: "drf_s1" }),
+    ] });
+    w.account.mandates = ["ops-bot", "kiff-agent", "refunds-x"].map((a) => ({ id: `card_${a}`, subject: a, active: true, grants: [{ action: "lookup" }], aggregates: [] }));
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const read = async () => JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, deps)).body) as { setting_up: Array<Record<string, unknown>>; others: Array<Record<string, unknown>> };
+    const r = await read();
+    expect(r.setting_up.map((t) => t.kiff_agent)).toEqual(["refunds-x"]);
+    expect(r.others.map((o) => o.kiff_agent)).toEqual(["refunds-x"]);
+    // Its key claimed (the hand-over made the taf): no longer being set up.
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x", keyRef: "kiff/taf-x" });
+    expect((await read()).setting_up).toEqual([]);
+    // kiff/agents can't be asked: nothing is listed, never a guess.
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.api.tafDraft = async () => { throw new Error("down"); };
+    expect((await read()).setting_up).toEqual([]);
   });
 
   // The Coach skills design: tafs cloud names the skills a conversation loads, by its entry point before

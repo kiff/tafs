@@ -98,19 +98,23 @@ taken becomes "Name 2", "Name 3"….
 
 ## The home list
 
-`GET /v1/home` is the app's list: each taf with its state, colour and Card summary, then
-the account's other agents with Cards (made through KIFF's API, not run by tafs), listed
-apart. tafs cloud builds it from its records and KIFF's Cards and held calls, read with
-the owner's session, so the app combines nothing (`runtime/src/cloud/home.ts`). It lists
-only what KIFF says the person may use or oversee.
+`GET /v1/home` is the app's list: tafs only, each with its state, colour and Card summary.
+tafs cloud builds it from its records and KIFF's Cards and held calls, read with the owner's
+session, so the app combines nothing (`runtime/src/cloud/home.ts`). It lists only what KIFF
+says the person may use or oversee. An agent made through KIFF's API isn't a taf: it's
+KIFF's, and KIFF shows it, never the tafs app.
 
-An agent whose setup stopped partway (Coach drafted it and its Card is signed, but the owner left
-the chat before the taf was made) shows by the name Coach gave it, never its agent's id, with
-`finish: {taf, session, words}` for the person whose chat it was: "Finish setting up" opens Coach's chat where it stopped
-(`GET /v1/tafs/{taf}/conversation/{session}`), and reading that chat makes the taf. tafs cloud
-keeps that name, so once the chat's result has expired (a few days) the agent still shows by it,
-without `finish`. An agent made outside tafs, through KIFF's API, has no other name: it shows by its
-KIFF id.
+A taf whose setup stopped partway (Coach drafted it and its Card is signed, but the owner left
+the chat before the taf was made) is listed in `setting_up`, by the name Coach gave it, never
+its agent's id, and with no state, so never "Ready". For the person whose chat it was, its
+`finish: {taf, session, words}`: "Finish setting up" opens Coach's chat where it stopped
+(`GET /v1/tafs/{taf}/conversation/{session}`), and reading that chat makes the taf. Anyone else
+sees the name alone. tafs cloud keeps that name, so once the chat's result has expired (a few
+days) it still shows by it, without `finish`. `others` repeats these for apps from before
+`setting_up`, which drew them there. What Coach's result says isn't proof: one is listed only
+when the draft it names is one the setup submitted (kiff/agents' `GET /drafts/{id}`, the record
+the hand-over claims), names that agent, and isn't claimed yet. A KIFF agent tafs didn't draft
+is never listed, and nothing is when kiff/agents can't be asked.
 
 A taf's Cards (`card.cards`) come live first, then active, and within each the one that has used
 the most of its limit first (its money total or its calls, whichever is further along), then
