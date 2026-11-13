@@ -4440,8 +4440,14 @@ class AppModel(
         shownDraft?.let { put("shown_draft", it) }
         words?.let { put("words", it.approval()) }
         session?.let { put("session", it) }
-        // This build signs the key and its Card under one fingerprint: tafs cloud offers that step only when it's asked for.
-        if (together != null) put("can", kotlinx.serialization.json.buildJsonArray { add(kotlinx.serialization.json.JsonPrimitive("key_and_cards")) })
+        // This build signs the key and its Card under one fingerprint: tafs cloud offers that step only when it's asked for. Without
+        // a key, a connection's tools and its Card the same way (`tools_and_cards`), where the session's approval key can sign.
+        val can = when {
+          together != null -> "key_and_cards"
+          c.draft != null && sessionHasApprovalKey && !_state.value.approvalKeyLost -> "tools_and_cards"
+          else -> null
+        }
+        can?.let { put("can", kotlinx.serialization.json.buildJsonArray { add(kotlinx.serialization.json.JsonPrimitive(it)) }) }
       }
       val decision = cloud.approval(cloudId, c.id, ask, proof)
       if (generation != accountGeneration) return true
@@ -4460,6 +4466,9 @@ class AppModel(
             // The key and its Card under one signature, built here from the two requests: never without the pasted key.
             val key = together ?: run { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return true }
             came = keyAndCards(asked, c.id, grantId, shownDigest, key, tenant) ?: return true
+          } else if (asked.step == "tools_and_cards") {
+            // The connection's tools and its Card under one signature, built here from the two requests.
+            came = toolsAndCards(asked, c.id, grantId, shownDigest, tenant) ?: return true
           } else {
             // tafs cloud's hint that the call takes an approval window (kiff/tafs#494): one fingerprint opens it, unless this
             // phone holds one, and the call goes as a tap. The service decides; a KIFF without windows leaves the step as it was.
@@ -4536,6 +4545,67 @@ class AppModel(
       kiff.setupSigner = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
       if (generation == accountGeneration) readWindowWords()
+    }
+  }
+
+  /**
+   * A connection's tools and its Card under one signature (`tools_and_cards`, `kiff.requests.v1`, docs/secure-connection.md):
+   * planque's approve, with the body exactly as tafs cloud built it, and KIFF's draft confirm, each built here with one
+   * `signed_at`, both hashes signed once with the approval key behind the fingerprint. The Card is confirmed only once planque
+   * says the connection is connected; tafs cloud checks both services before Coach hears "approved". Null when nothing was
+   * signed (said on the card).
+   */
+  private suspend fun toolsAndCards(asked: bot.tafs.app.kiff.ApprovalAsk, noteKey: String, grantId: String, shownDigest: String?, tenant: String): Came? {
+    val p = asked.planque ?: return Came.Of("failed", why = "tafs cloud named no connection to approve")
+    val k = asked.kiff ?: return Came.Of("failed", why = "tafs cloud named no draft to confirm")
+    val grant = _state.value.grants.firstOrNull { it.id == grantId } ?: return Came.Of("failed", why = "the connection isn't on this phone")
+    // What the person read: the grant as shown.
+    if (!grant.digestMatches || grant.digest != shownDigest) { note(noteKey, VersionWords.OUT_OF_DATE_CARD); return null }
+    // The body is built here from what the person read: the digest shown, and KIFF's words for its profile when it has one. An
+    // ask whose body says anything else (a profile never read, any other field) is refused, and nothing is signed.
+    val words = grant.request.profile?.let { _state.value.profileWordsFor(grant) ?: run { note(noteKey, Words.Connect.profileWordsUnread); return null } }
+    val built = kotlinx.serialization.json.JsonObject(buildMap {
+      put("digest", kotlinx.serialization.json.JsonPrimitive(grant.digest))
+      words?.let { put("kiff_profile", it.approval()) }
+    })
+    if (p.body != built) { note(noteKey, CoachWords.ASK_NOT_THIS_CARDS); return null }
+    // Encoded once, so the hash signed is the hash of what's sent.
+    val body = KiffClient.json.encodeToString(kotlinx.serialization.json.JsonObject.serializer(), built).toByteArray()
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    kiff.tenant = tenant
+    var signedAt = ""
+    var approveHash = ""
+    var confirmHash = ""
+    approvalReason = asked.reason
+    val signature = try {
+      signer.signApproval(asked.reason) {
+        signedAt = kiff.nextSignedAt()
+        approveHash = KiffClient.messageHash(planque.approveMessage(grantId, body, signedAt))
+        confirmHash = KiffClient.messageHash(kiff.confirmMessage(k.draft, k.version, signedAt))
+        KiffClient.requestsMessage(tenant, signedAt, approveHash, confirmHash)
+      }
+    } catch (e: SignerException) {
+      note(noteKey, notSigned(e, Words.Common.notDoneUnconfirmed))
+      return null
+    }
+    val approved = try {
+      planque.approveTogether(grantId, body, signedAt, signature, with = confirmHash)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      return Came.Of("failed", why = e.message ?: "it didn't go through")
+    }
+    // The tools first, then the Card: a Card is never confirmed for tools that aren't connected.
+    if (approved.status != "connected") return Came.Of("not_connected", status = approved.status)
+    return try {
+      kiff.confirmDraftTogether(k.draft, k.version, signedAt, signature, with = approveHash)
+      Came.Of("confirmed")
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      // The tools went in and the Card didn't: tafs cloud says so, and Coach's next card asks for the Card alone.
+      Came.Of("failed", why = e.message ?: "the Card wasn't confirmed")
     }
   }
 
@@ -7484,7 +7554,7 @@ class AppModel(
         }
         // The key and its Card under one signature the phone builds itself (`kiff.requests.v1`): no message from tafs cloud,
         // and the card's grant at the digest shown, and its draft at the version shown, as for each step alone.
-        "key_and_cards" -> {
+        "key_and_cards", "tools_and_cards" -> {
           val p = asked.planque ?: return null
           val k = asked.kiff ?: return null
           val digest = runCatching { p.body.jsonObject["digest"]?.jsonPrimitive?.content }.getOrNull() ?: return null

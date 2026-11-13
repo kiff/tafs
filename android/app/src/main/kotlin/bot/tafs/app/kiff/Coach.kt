@@ -182,7 +182,10 @@ data class ApprovalDecision(
 @Serializable
 data class ApprovalAsk(
   val id: String,
-  /** `connect`, `cards`, or `key_and_cards` (the key and its Card under one `kiff.requests.v1` signature the phone builds). */
+  /**
+   * `connect`, `cards`, `key_and_cards` (the key and its Card under one `kiff.requests.v1` signature the phone builds), or
+   * `tools_and_cards` (a connection's approve and its Card the same way).
+   */
   val step: String,
   /** The exact bytes the device's key signs, under the fingerprint. */
   val message: String,
