@@ -161,6 +161,7 @@ export const pl: Words = {
   alert_not_sent_title: "Odpowiedź nie została wysłana",
   alert_not_sent_words: "Bez dźwięku, gdy odpowiedź wymaga kolejnej próby",
   alerts_answering_tafs: (n, form) => (form === "one" ? `${n} taf` : form === "few" ? `${n} tafy` : `${n} tafów`),
+  home_finish_setup: "Dokończ konfigurację",
   home_needs_you_none: "Nic nie czeka na Ciebie.",
   home_needs_you: (n, form) => (form === "one" ? `${n} czeka na Ciebie.` : form === "few" ? `${n} czekają na Ciebie.` : `${n} czeka na Ciebie.`),
   recipes_category_money: "Pieniądze",

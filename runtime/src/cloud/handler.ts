@@ -6251,12 +6251,17 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // it shows as the taf's trial, never as another agent.
   const ours = new Set(records.flatMap((t) => t.kiffAgent ? [t.kiffAgent, `${t.kiffAgent}~trial`] : []));
   const agents = [...new Set([...cards.keys(), ...waiting.keys()])].filter((a) => !ours.has(a) && listable(access, a)).sort();
+  // One whose setup stopped partway (Coach drafted it, its Card is signed, and no taf was made) shows by the name
+  // Coach gave it, with the way back to the chat where it stopped: never its agent's id.
+  const halfMade = agents.length ? await halfMadeTafs(me.tenantID, records, new Set(agents), deps) : new Map<string, HalfMade>();
   const others = agents.map((agent) => {
     const card = summary(cards.get(agent) ?? []);
     const held = waiting.get(agent) ?? 0;
     const color = freeColor(taken);
     taken.push(color);
-    return { id: null, name: agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card };
+    const half = halfMade.get(agent);
+    return { id: null, name: half?.name ?? agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card,
+      ...(half ? { finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } } : {}) };
   });
   // Which doors this deployment offers (docs/doors.md): none, and the app shows no Doors.
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
@@ -6284,6 +6289,35 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   })();
   return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
+}
+
+/** A taf Coach drafted whose setup stopped partway: the name Coach gave it, and the chat where it stopped. */
+interface HalfMade { name: string; coach: string; session: string }
+
+/**
+ * The tafs whose setup stopped partway, by their KIFF agent, among `agents` (the account's other agents with Cards):
+ * a Coach run paused on a result that names a new taf for that agent, not yet answered. The agent has its Card, so
+ * KIFF lists it, but tafs cloud never made the taf (the owner left before the hand-over, or confirmed the Card after
+ * it). Reading that chat again hands it over (handOverShown). One read of the account's paused runs; a read that
+ * fails finds none, and the agent shows as before.
+ */
+async function halfMadeTafs(tenant: string, records: Taf[], agents: Set<string>, deps: Deps): Promise<Map<string, HalfMade>> {
+  const out = new Map<string, HalfMade>();
+  const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
+  if (!coach) return out;
+  const paused = await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]);
+  for (const r of paused) {
+    if (r.agent !== coach.id) continue;
+    for (const q of r.requirements ?? []) {
+      const card = q.input as { type?: string; taf?: { agent?: unknown; name?: unknown; improves?: unknown } } | undefined;
+      if (q.kind !== "card" || q.answered || card?.type !== "result" || !card.taf || card.taf.improves) continue;
+      const { agent, name } = card.taf;
+      if (typeof agent !== "string" || !agents.has(agent) || out.has(agent)) continue;
+      if (typeof name !== "string" || !name.trim()) continue;
+      out.set(agent, { name: name.trim(), coach: coach.id, session: r.session });
+    }
+  }
+  return out;
 }
 
 /**
