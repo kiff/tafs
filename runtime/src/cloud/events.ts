@@ -14,7 +14,7 @@ import type { DoorStore } from "./doors/model.js";
  */
 export interface AccountEvent {
   at: string;
-  kind: "halted" | "resumed" | "knocked" | "knock_done" | "knock_ignored" | "paired" | "door_removed" | "drive_started" | "drive_step" | "drive_ended";
+  kind: "halted" | "resumed" | "knocked" | "knock_done" | "knock_ignored" | "paired" | "door_removed" | "drive_started" | "drive_step" | "drive_ended" | "consent_paused" | "consent_resumed";
   /** The taf's id in tafs cloud; absent for all of the account's tafs. */
   taf?: string;
   /** The taf's name when it happened. */

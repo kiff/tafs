@@ -1,3 +1,4 @@
+import { waitsForConsent } from "../consent.js";
 import { randomBytes } from "node:crypto";
 import { AgentsError } from "../agents.js";
 import { deviceLang, type Notification, sendNotification } from "../push.js";
@@ -45,6 +46,14 @@ export const CREDITS_CODES = ["credits_used_up", "limit_reached", "no_plan"] as 
 /** Whether err is kiff/agents refusing a run because the account's tafs wait for credits. */
 export function waitsForCredits(err: unknown): err is AgentsError {
   return err instanceof AgentsError && err.status === 409 && (CREDITS_CODES as readonly string[]).includes(err.code ?? "");
+}
+
+/**
+ * Whether what came in waits rather than runs: for the account's credits, or for its taf's consent to AI use with no person
+ * in the moment (consent.ts). Either way it's kept, and starts once that's back, or is said unanswered after 48 hours.
+ */
+export function waitsToStart(err: unknown): boolean {
+  return waitsForCredits(err) || waitsForConsent(err);
 }
 
 /** A door's message that waits: the arrival as its door took it, and the door it came through. */
@@ -177,6 +186,11 @@ export async function replayHeld(ctx: DoorsContext, tenant: string, only?: strin
     } catch (err) {
       if (waitsForCredits(err)) {
         out.waiting = true;
+        continue;
+      }
+      // Its taf is paused for consent: its items wait, never counted as tries; other tafs' go on.
+      if (waitsForConsent(err)) {
+        stuck.add(w.taf.id);
         continue;
       }
       console.error("held item not started:", err instanceof Error ? err.message : "error");

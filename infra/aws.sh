@@ -346,6 +346,11 @@ aws lambda add-permission --function-name "$FN" --statement-id deletions-sweep -
 aws events put-targets --rule tafs-cloud-deletions \
   --targets "[{\"Id\":\"tafs-cloud\",\"Arn\":\"$FN_ARN\",\"Input\":\"{\\\"sweep\\\":\\\"deletions\\\"}\"}]" >/dev/null
 
+# The consent sweep, once, now: a taf whose runs have no one's consent to AI use has its schedules switched off
+# before any fires, rather than at the 5-minute sweep (runtime/src/cloud/consent.ts). Cheap to repeat.
+aws lambda invoke --function-name "$FN" --cli-binary-format raw-in-base64-out --payload '{"sweep":"consent"}' /dev/null >/dev/null
+echo "swept consent"
+
 echo "deploy role $(aws iam get-role --role-name "$DEPLOY_ROLE" --query Role.Arn --output text)"
 echo "url $URL"
 echo "stream url $STREAM_URL"

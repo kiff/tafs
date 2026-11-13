@@ -700,4 +700,6 @@ export const nl: Words = {
   ai_consent_withdraw: "Intrekken",
   ai_consent_given: "AI-gebruik: toegestaan",
   ai_consent_needed: "Sta eerst AI-gebruik toe: Coach en je tafs hebben het nodig om te antwoorden.",
+  ai_consent_paused_no_one: "Gepauzeerd: niemand heeft AI-gebruik voor de runs van deze taf al toegestaan. Hij gaat verder zodra iemand die tafs beheert het toestaat in Account.",
+  ai_consent_paused_not_given: "Gepauzeerd: AI-gebruik voor de runs van deze taf is ingetrokken. Hij gaat verder zodra het weer is toegestaan of iemand die tafs beheert hem overneemt.",
 };

@@ -89,8 +89,23 @@ to 30 days ([data.md](data.md)). The screen asks for **Allow**, or **Not now**.
 - **Kept, never deleted.** A withdrawal marks the record (`withdrawn_at`) and keeps it. A new yes keeps each
   earlier one with when it was withdrawn (the newest 50), so tafs cloud can show who allowed what, for which
   version, and from when to when.
-- **Runs with no person in the moment** (a schedule, a door's message, an app's event, a handoff, a retry) take
-  the taf owner's consent. That gate isn't built yet.
+- **Runs with no person in the moment** (a schedule's firing, a door's message, an app's event, a held one
+  released, a hand-off, a retry, a task Coach hands a taf, a run going on after KIFF's alert) take one person's
+  consent per taf (`runtime/src/cloud/consent.ts`; whose is the rule below, in one function, `tafConsentOf`):
+  - **Whose:** the taf's maker, recorded when it's made. A taf from before takes the account's first yes from
+    someone who manages its tafs (`cards.manage`). Someone who manages it can take it over with their own
+    consent (`POST /v1/tafs/{id}/ai-consent`).
+  - **Without it** (no one's on record, or that person's isn't given: withdrawn, or to older words), the run
+    starts nothing, and tafs cloud pauses the taf: its schedules are switched off, the one start it can't gate,
+    and the taf says why (`consent_paused {why, words}`). Nothing is halted or cancelled: a person's own chat,
+    steer and Run now go on, on their own consent. Coach is never paused: its runs come from a person's routes. A door's message or an app's event waits, as for
+    credits, and is said unanswered after 48 hours. A hand-off and a retry wait for their sweep; a run waiting
+    after KIFF's alert stays paused; Coach is told the taf is paused.
+  - **Back:** a yes, or a take-over, resumes the taf at once, and what waited starts. The consent sweep does the
+    same for every account, once at each deploy (`infra/aws.sh`, `{"sweep":"consent"}`) and every 5 minutes after, so a withdrawal or new words pause a taf whose schedule would
+    otherwise fire. A yes never turns on the schedule of a taf its owner paused, and the owner's resume is refused
+    (409) while the consent is missing. An app's event answering a run that waits on it is gated too: refused,
+    the event is kept, as when nothing waits yet.
 - **The words are tafs cloud's** (`ai_consent_*` in `runtime/src/cloud/words/`); the apps draw them as sent.
 
 Routes: `GET`, `POST {version}` and `DELETE /v1/me/ai-consent` ([api.md](api.md#the-account)).
