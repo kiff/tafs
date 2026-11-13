@@ -72,12 +72,12 @@
   },
   "taf.remove.cards_revoked": "Jego Card są unieważnione w KIFF.",
   "taf.remove.cloud_did_not_answer": "{cards} tafs cloud nie odpowiedział ({why}). Jeśli usuwanie się zaczęło, tafs dokończy je przy następnym odświeżeniu; jeśli nie, dotknij ponownie Usuń.",
-  "taf.remove.connections_disconnected": "Jego połączenia są rozłączone.",
+  "taf.remove.connections_disconnected": "Jego dostęp do aplikacji został usunięty.",
   "taf.remove.connections_left": {
-    "one": "Nie udało się rozłączyć {count} z jego połączeń: rozłącz je w Połącz aplikacje.",
-    "few": "Nie udało się rozłączyć {count} z jego połączeń: rozłącz je w Połącz aplikacje.",
-    "many": "Nie udało się rozłączyć {count} z jego połączeń: rozłącz je w Połącz aplikacje.",
-    "other": "Nie udało się rozłączyć {count} z jego połączeń: rozłącz je w Połącz aplikacje."
+    "one": "Nie udało się usunąć dostępu do {count} z jego aplikacji: usuń go w Połącz aplikacje.",
+    "few": "Nie udało się usunąć dostępu do {count} z jego aplikacji: usuń go w Połącz aplikacje.",
+    "many": "Nie udało się usunąć dostępu do {count} z jego aplikacji: usuń go w Połącz aplikacje.",
+    "other": "Nie udało się usunąć dostępu do {count} z jego aplikacji: usuń go w Połącz aplikacje."
   },
   "taf.remove.done": "Jego harmonogram, czaty, raporty z uruchomień, pamięć i klucz zostały usunięte, a nazwa {taf} jest wolna. Potwierdzenia KIFF zostają.",
   "taf.remove.finishes_on_refresh": "Jeśli usuwanie się zaczęło, tafs dokończy je przy następnym odświeżeniu.",

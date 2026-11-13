@@ -809,8 +809,8 @@
     <string name="connect_connecting_again_asks_you_approve">" Volver a conectar te pide aprobar e iniciar sesión otra vez."</string>
     <string name="connect_connection_is">Esta conexión está %1$s.</string>
     <string name="connect_connection_is_because">Esta conexión está %1$s: %2$s</string>
-    <string name="connect_connections_could_not_disconnected_disconnect">" No se pudieron desconectar %1$s de sus conexiones: desconéctalas en Conectar apps."</string>
-    <string name="connect_connections_disconnected">" Sus conexiones están desconectadas."</string>
+    <string name="connect_connections_could_not_disconnected_disconnect">" No se pudo quitar el acceso a %1$s de sus apps: quítalo en Conectar apps."</string>
+    <string name="connect_connections_disconnected">" Se quitó su acceso a las apps."</string>
     <string name="connect_could_not_cleared_try_again">No se pudieron borrar %1$s. Vuelve a intentarlo.</string>
     <string name="connect_could_not_connected">No se pudo conectar %1$s: %2$s</string>
     <string name="connect_disconnect_also_card">La Card de %1$s también usa estas herramientas, así que también se detiene.</string>
@@ -866,7 +866,7 @@
     <string name="connect_open_browser_again">Volver a abrir el navegador</string>
     <string name="connect_opening_sign_in">Abriendo el inicio de sesión…</string>
     <string name="connect_other_connections">Otras conexiones</string>
-    <string name="connect_other_connections_stay_connected_no">" Las demás conexiones a %1$s siguen conectadas. Si ninguna otra conexión usa este inicio de sesión, se revoca en %2$s."</string>
+    <string name="connect_other_connections_stay_connected_no">" Los demás tafs que usan %1$s conservan su acceso. Si ningún otro taf usa este inicio de sesión, se revoca en %2$s."</string>
     <string name="connect_profile_words_not_read">No se pudieron leer las palabras de KIFF para esta conexión. %1$s</string>
     <string name="connect_profile_words_unread">Las palabras de KIFF para esta conexión aún no se han leído. No se aprobó nada.</string>
     <string name="connect_prompt_connect">Conectar %1$s a %2$s</string>
@@ -1760,7 +1760,7 @@
     <string name="settings_delete_account_deleting">Eliminando…</string>
     <string name="settings_delete_account_goes_cards">Tus Cards y claves: dejan de funcionar</string>
     <string name="settings_delete_account_goes_records">Los registros de KIFF de tu cuenta, borrados a los 30 días</string>
-    <string name="settings_delete_account_goes_sign_ins">Los inicios de sesión de tus apps, desconectados</string>
+    <string name="settings_delete_account_goes_sign_ins">Los inicios de sesión de tus apps, quitados</string>
     <string name="settings_delete_account_goes_tafs">Cada taf, con sus ejecuciones, chats, notas y programaciones</string>
     <string name="settings_delete_account_kiff_not_deleted">Tus tafs y conexiones se borraron, pero KIFF no eliminó la cuenta. %1$s</string>
     <string name="settings_delete_account_not_erased">tafs no pudo borrar tus tafs. Tu cuenta de KIFF no se ha eliminado. %1$s</string>
@@ -1996,10 +1996,10 @@
     </plurals>
     <string name="taf_remove_cards_revoked">Sus Cards están revocadas en KIFF.</string>
     <string name="taf_remove_cloud_did_not_answer">%1$s tafs cloud no respondió (%2$s). Si empezó, tafs lo termina la próxima vez que se actualice; si no, vuelve a tocar Eliminar.</string>
-    <string name="taf_remove_connections_disconnected">Sus conexiones están desconectadas.</string>
+    <string name="taf_remove_connections_disconnected">Se quitó su acceso a las apps.</string>
     <plurals name="taf_remove_connections_left">
-        <item quantity="one">No se pudo desconectar %1$s de sus conexiones: desconéctala en Conectar apps.</item>
-        <item quantity="other">No se pudieron desconectar %1$s de sus conexiones: desconéctalas en Conectar apps.</item>
+        <item quantity="one">No se pudo quitar el acceso a %1$s de sus apps: quítalo en Conectar apps.</item>
+        <item quantity="other">No se pudo quitar el acceso a %1$s de sus apps: quítalo en Conectar apps.</item>
     </plurals>
     <string name="taf_remove_done">Se eliminaron su programación, sus chats, sus informes de ejecución, su memoria y su clave, y el nombre %1$s queda libre. Los recibos de KIFF se conservan.</string>
     <string name="taf_remove_finishes_on_refresh">Si la eliminación empezó, tafs la termina la próxima vez que se actualice.</string>

@@ -294,7 +294,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
   // there: it reads as it is now, and a later approval can widen it past what this one approved.
   if (answered != null) {
     // A signed Card is named, and its lines, KIFF's own from the draft this phone read, stay under it: what the fingerprint signed.
-    val signed = draft?.confirmed == true
+    val signed = draft?.signedCard == true
     val line = CoachWords.answeredApproval(answered, c, grant?.text, draft?.label, cardSigned = signed)
     if (draft == null) {
       Text(line, style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = 1, overflow = TextOverflow.Ellipsis)

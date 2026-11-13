@@ -809,8 +809,8 @@
     <string name="connect_connecting_again_asks_you_approve">" Connecting again asks you to approve and sign in again."</string>
     <string name="connect_connection_is">This connection is %1$s.</string>
     <string name="connect_connection_is_because">This connection is %1$s: %2$s</string>
-    <string name="connect_connections_could_not_disconnected_disconnect">" %1$s of its connections couldn\'t be disconnected: disconnect them in Connect apps."</string>
-    <string name="connect_connections_disconnected">" Its connections are disconnected."</string>
+    <string name="connect_connections_could_not_disconnected_disconnect">" Access to %1$s of its apps couldn\'t be removed: remove it in Connect apps."</string>
+    <string name="connect_connections_disconnected">" Its access to apps is removed."</string>
     <string name="connect_could_not_cleared_try_again">%1$s couldn\'t be cleared. Try again.</string>
     <string name="connect_could_not_connected">%1$s couldn\'t be connected: %2$s</string>
     <string name="connect_disconnect_also_card">%2$s Card also uses these tools, so it stops too.</string>
@@ -866,7 +866,7 @@
     <string name="connect_open_browser_again">Open the browser again</string>
     <string name="connect_opening_sign_in">Opening the sign-in…</string>
     <string name="connect_other_connections">Other connections</string>
-    <string name="connect_other_connections_stay_connected_no">" Other connections to %1$s stay connected. If no other connection uses this sign-in, it\'s revoked at %2$s."</string>
+    <string name="connect_other_connections_stay_connected_no">" Other tafs that use %1$s keep their access. If no other taf uses this sign-in, it\'s revoked at %2$s."</string>
     <string name="connect_profile_words_not_read">KIFF\'s words for this connection couldn\'t be read. %1$s</string>
     <string name="connect_profile_words_unread">KIFF\'s words for this connection aren\'t read yet. Nothing was approved.</string>
     <string name="connect_prompt_connect">Connect %1$s to %2$s</string>
@@ -1760,7 +1760,7 @@
     <string name="settings_delete_account_deleting">Deleting…</string>
     <string name="settings_delete_account_goes_cards">Your Cards and keys: they stop working</string>
     <string name="settings_delete_account_goes_records">KIFF\'s records of your account, erased after 30 days</string>
-    <string name="settings_delete_account_goes_sign_ins">Your apps\' sign-ins, disconnected</string>
+    <string name="settings_delete_account_goes_sign_ins">Your apps\' sign-ins, removed</string>
     <string name="settings_delete_account_goes_tafs">Every taf, with its runs, chats, notes and schedules</string>
     <string name="settings_delete_account_kiff_not_deleted">Your tafs and connections are erased, but KIFF didn\'t delete the account. %1$s</string>
     <string name="settings_delete_account_not_erased">tafs couldn\'t erase your tafs. Your KIFF account isn\'t deleted. %1$s</string>
@@ -1996,10 +1996,10 @@
     </plurals>
     <string name="taf_remove_cards_revoked">Its Cards are revoked in KIFF.</string>
     <string name="taf_remove_cloud_did_not_answer">%1$s tafs cloud didn\'t answer (%2$s). If it began, tafs finishes it the next time it refreshes; if not, tap Remove again.</string>
-    <string name="taf_remove_connections_disconnected">Its connections are disconnected.</string>
+    <string name="taf_remove_connections_disconnected">Its access to apps is removed.</string>
     <plurals name="taf_remove_connections_left">
-        <item quantity="one">%1$s of its connections couldn\'t be disconnected: disconnect them in Connect apps.</item>
-        <item quantity="other">%1$s of its connections couldn\'t be disconnected: disconnect them in Connect apps.</item>
+        <item quantity="one">Access to %1$s of its apps couldn\'t be removed: remove it in Connect apps.</item>
+        <item quantity="other">Access to %1$s of its apps couldn\'t be removed: remove it in Connect apps.</item>
     </plurals>
     <string name="taf_remove_done">Its schedule, chats, run reports, memory and key are deleted, and the name %1$s is free. KIFF\'s receipts stay.</string>
     <string name="taf_remove_finishes_on_refresh">If the removal began, tafs finishes it the next time it refreshes.</string>

@@ -70,10 +70,10 @@
   },
   "taf.remove.cards_revoked": "Ses Cards sont révoquées dans KIFF.",
   "taf.remove.cloud_did_not_answer": "{cards} tafs cloud n'a pas répondu ({why}). Si la suppression a commencé, tafs la termine à la prochaine actualisation ; sinon, touchez à nouveau Supprimer.",
-  "taf.remove.connections_disconnected": "Ses connexions sont déconnectées.",
+  "taf.remove.connections_disconnected": "Son accès aux apps est retiré.",
   "taf.remove.connections_left": {
-    "one": "{count} de ses connexions n'a pas pu être déconnectée : déconnectez-la dans Connecter des apps.",
-    "other": "{count} de ses connexions n'ont pas pu être déconnectées : déconnectez-les dans Connecter des apps."
+    "one": "L'accès à {count} de ses apps n'a pas pu être retiré : retirez-le dans Connecter des apps.",
+    "other": "L'accès à {count} de ses apps n'a pas pu être retiré : retirez-le dans Connecter des apps."
   },
   "taf.remove.done": "Son planning, ses chats, ses rapports d'exécution, sa mémoire et sa clé sont supprimés, et le nom {taf} redevient libre. Les reçus de KIFF restent.",
   "taf.remove.finishes_on_refresh": "Si la suppression a commencé, tafs la termine à la prochaine actualisation.",

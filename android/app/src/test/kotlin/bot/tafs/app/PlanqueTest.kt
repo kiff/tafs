@@ -1377,7 +1377,7 @@ class PlanqueTest {
     assertTrue("another taf's stays", transport.requestsTo("DELETE /v1/accounts/t_01/grants/g3").isEmpty())
     val order = transport.requests.map { "${it.method} ${java.net.URI.create(it.url).path}" }
     assertTrue(order.indexOf("DELETE /v1/accounts/t_01/grants/g1") < order.indexOf("DELETE /v1/tafs/taf_1"))
-    assertTrue(words!!.startsWith("Its Cards are revoked in KIFF. Its connections are disconnected."))
+    assertTrue(words!!.startsWith("Its Cards are revoked in KIFF. Its access to apps is removed."))
   }
 
   @Test fun aConnectionThatWontDisconnectIsNamedAndTheRemovalGoesOn() = runTest {
@@ -1394,7 +1394,7 @@ class PlanqueTest {
     m.refresh()
     m.refreshConnections()
     val words = m.removeTaf("refunds-1")!!
-    assertTrue(words, words.contains("1 of its connections couldn't be disconnected: disconnect them in Connect apps."))
+    assertTrue(words, words.contains("Access to 1 of its apps couldn't be removed: remove it in Connect apps."))
     assertEquals(1, transport.requestsTo("DELETE /v1/tafs/taf_1").size)
   }
 
@@ -1417,7 +1417,7 @@ class PlanqueTest {
     val words = m.removeTaf("refunds-1")!!
     assertTrue("Chargebacks still runs on it", transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").isEmpty())
     assertTrue(words, words.contains("Kept your Stripe connection: Chargebacks uses it."))
-    assertFalse(words, words.contains("Its connections are disconnected."))
+    assertFalse(words, words.contains("Its access to apps is removed."))
   }
 
   @Test fun aSharedConnectionIsDisconnectedOnceItsOtherTafIsGone() = runTest {

@@ -270,8 +270,13 @@ data class AgentDraft(
   val hold: DraftHold? = null,
   /** The held call a draft was made from (KIFF's allow-draft), when KIFF says. */
   @SerialName("from_hold") val fromHold: String? = null,
+  /** An agent drafted with no tools (Coach's own start): confirming it issues no Card to name. */
+  @SerialName("no_tools") val noTools: Boolean? = null,
 ) {
   val confirmed: Boolean get() = status == "confirmed"
+
+  /** Confirmed, and with a Card to name: what a signed approval's folded line names and lists. */
+  val signedCard: Boolean get() = confirmed && noTools != true
 
   /** Whether KIFF approved held call [id] with this confirm, so it's answered already. */
   fun approvedHold(id: String): Boolean = hold?.id == id && hold.status == "approved"

@@ -809,8 +809,8 @@
     <string name="connect_connecting_again_asks_you_approve">" Per collegarlo di nuovo dovrai approvare e accedere di nuovo."</string>
     <string name="connect_connection_is">Questo collegamento è %1$s.</string>
     <string name="connect_connection_is_because">Questo collegamento è %1$s: %2$s</string>
-    <string name="connect_connections_could_not_disconnected_disconnect">" %1$s dei suoi collegamenti non sono stati scollegati: scollegali in Collega app."</string>
-    <string name="connect_connections_disconnected">" I suoi collegamenti sono scollegati."</string>
+    <string name="connect_connections_could_not_disconnected_disconnect">" Non è stato possibile rimuovere l\'accesso a %1$s delle sue app: rimuovilo in Collega app."</string>
+    <string name="connect_connections_disconnected">" Il suo accesso alle app è rimosso."</string>
     <string name="connect_could_not_cleared_try_again">%1$s non sono stati eliminati. Riprova.</string>
     <string name="connect_could_not_connected">Impossibile collegare %1$s: %2$s</string>
     <string name="connect_disconnect_also_card">Anche la Card di %1$s usa questi strumenti, quindi si ferma anche lei.</string>
@@ -866,7 +866,7 @@
     <string name="connect_open_browser_again">Apri di nuovo il browser</string>
     <string name="connect_opening_sign_in">Apertura dell\'accesso…</string>
     <string name="connect_other_connections">Altri collegamenti</string>
-    <string name="connect_other_connections_stay_connected_no">" Gli altri collegamenti a %1$s restano collegati. Se nessun altro collegamento usa questo accesso, viene revocato su %2$s."</string>
+    <string name="connect_other_connections_stay_connected_no">" Gli altri taf che usano %1$s mantengono il loro accesso. Se nessun altro taf usa questo login, viene revocato su %2$s."</string>
     <string name="connect_profile_words_not_read">Non è stato possibile leggere le parole di KIFF per questo collegamento. %1$s</string>
     <string name="connect_profile_words_unread">Le parole di KIFF per questo collegamento non sono ancora state lette. Non è stato approvato nulla.</string>
     <string name="connect_prompt_connect">Collega %1$s a %2$s</string>
@@ -1760,7 +1760,7 @@
     <string name="settings_delete_account_deleting">Eliminazione…</string>
     <string name="settings_delete_account_goes_cards">Le tue Card e chiavi: smettono di funzionare</string>
     <string name="settings_delete_account_goes_records">I registri di KIFF del tuo account, cancellati dopo 30 giorni</string>
-    <string name="settings_delete_account_goes_sign_ins">Gli accessi alle tue app, scollegati</string>
+    <string name="settings_delete_account_goes_sign_ins">Gli accessi alle tue app, rimossi</string>
     <string name="settings_delete_account_goes_tafs">Ogni taf, con le sue esecuzioni, chat, note e pianificazioni</string>
     <string name="settings_delete_account_kiff_not_deleted">I tuoi tafs e collegamenti sono cancellati, ma KIFF non ha eliminato l\'account. %1$s</string>
     <string name="settings_delete_account_not_erased">tafs non è riuscita a cancellare i tuoi tafs. Il tuo account KIFF non è stato eliminato. %1$s</string>
@@ -1996,10 +1996,10 @@
     </plurals>
     <string name="taf_remove_cards_revoked">Le sue Card sono revocate in KIFF.</string>
     <string name="taf_remove_cloud_did_not_answer">%1$s tafs cloud non ha risposto (%2$s). Se la rimozione è iniziata, tafs la completa al prossimo aggiornamento; altrimenti tocca di nuovo Rimuovi.</string>
-    <string name="taf_remove_connections_disconnected">I suoi collegamenti sono scollegati.</string>
+    <string name="taf_remove_connections_disconnected">Il suo accesso alle app è rimosso.</string>
     <plurals name="taf_remove_connections_left">
-        <item quantity="one">%1$s dei suoi collegamenti non è stato scollegato: scollegalo in Collega app.</item>
-        <item quantity="other">%1$s dei suoi collegamenti non sono stati scollegati: scollegali in Collega app.</item>
+        <item quantity="one">Non è stato possibile rimuovere l\'accesso a %1$s delle sue app: rimuovilo in Collega app.</item>
+        <item quantity="other">Non è stato possibile rimuovere l\'accesso a %1$s delle sue app: rimuovilo in Collega app.</item>
     </plurals>
     <string name="taf_remove_done">La sua pianificazione, le chat, i resoconti delle esecuzioni, la memoria e la chiave vengono eliminati, e il nome %1$s torna libero. Le ricevute di KIFF restano.</string>
     <string name="taf_remove_finishes_on_refresh">Se la rimozione è iniziata, tafs la completa al prossimo aggiornamento.</string>

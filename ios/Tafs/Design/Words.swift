@@ -1543,9 +1543,9 @@ enum Words {
         static func connectionIs(status: String) -> String { Words.line("connect.connection_is", status) }
         /// This connection is {status}: {reason}
         static func connectionIsBecause(status: String, reason: String) -> String { Words.line("connect.connection_is_because", status, reason) }
-        ///  {left} of its connections couldn't be disconnected: disconnect them in Connect apps.
+        ///  Access to {left} of its apps couldn't be removed: remove it in Connect apps.
         static func connectionsCouldNotDisconnectedDisconnect(left: String) -> String { Words.line("connect.connections_could_not_disconnected_disconnect", left) }
-        ///  Its connections are disconnected.
+        ///  Its access to apps is removed.
         static var connectionsDisconnected: String { Words.line("connect.connections_disconnected") }
         /// {left} couldn't be cleared. Try again.
         static func couldNotClearedTryAgain(left: String) -> String { Words.line("connect.could_not_cleared_try_again", left) }
@@ -1637,7 +1637,7 @@ enum Words {
         static var openingSignIn: String { Words.line("connect.opening_sign_in") }
         /// Other connections
         static var otherConnections: String { Words.line("connect.other_connections") }
-        ///  Other connections to {vendor} stay connected. If no other connection uses this sign-in, it's revoked at {vendor_2}.
+        ///  Other tafs that use {vendor} keep their access. If no other taf uses this sign-in, it's revoked at {vendor_2}.
         static func otherConnectionsStayConnectedNo(vendor: String, vendor2: String) -> String { Words.line("connect.other_connections_stay_connected_no", vendor, vendor2) }
         /// KIFF's words for this connection couldn't be read. {why}
         static func profileWordsNotRead(why: String) -> String { Words.line("connect.profile_words_not_read", why) }
@@ -3470,7 +3470,7 @@ enum Words {
             static var goesCards: String { Words.line("settings.delete_account.goes_cards") }
             /// KIFF's records of your account, erased after 30 days
             static var goesRecords: String { Words.line("settings.delete_account.goes_records") }
-            /// Your apps' sign-ins, disconnected
+            /// Your apps' sign-ins, removed
             static var goesSignIns: String { Words.line("settings.delete_account.goes_sign_ins") }
             /// Every taf, with its runs, chats, notes and schedules
             static var goesTafs: String { Words.line("settings.delete_account.goes_tafs") }
@@ -3974,9 +3974,9 @@ enum Words {
             static var cardsRevoked: String { Words.line("taf.remove.cards_revoked") }
             /// {cards} tafs cloud didn't answer ({why}). If it began, tafs finishes it the next time it refreshes; if not, tap Remove again.
             static func cloudDidNotAnswer(cards: String, why: String) -> String { Words.line("taf.remove.cloud_did_not_answer", cards, why) }
-            /// Its connections are disconnected.
+            /// Its access to apps is removed.
             static var connectionsDisconnected: String { Words.line("taf.remove.connections_disconnected") }
-            /// {count} of its connections couldn't be disconnected: disconnect them in Connect apps.
+            /// Access to {count} of its apps couldn't be removed: remove it in Connect apps.
             static func connectionsLeft(count: Int) -> String { Words.count("taf.remove.connections_left", count) }
             /// Its schedule, chats, run reports, memory and key are deleted, and the name {taf} is free. KIFF's receipts stay.
             static func done(taf: String) -> String { Words.line("taf.remove.done", taf) }

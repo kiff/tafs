@@ -17,7 +17,7 @@
   "settings.delete_account.deleting": "A eliminar…",
   "settings.delete_account.goes_cards": "Os seus Cards e chaves: deixam de funcionar",
   "settings.delete_account.goes_records": "Os registos do KIFF sobre a sua conta, apagados após 30 dias",
-  "settings.delete_account.goes_sign_ins": "Os inícios de sessão das suas apps, desligados",
+  "settings.delete_account.goes_sign_ins": "Os inícios de sessão das suas apps, removidos",
   "settings.delete_account.goes_tafs": "Todos os tafs, com as suas execuções, chats, notas e agendamentos",
   "settings.delete_account.kiff_not_deleted": "Os seus tafs e ligações foram apagados, mas o KIFF não eliminou a conta. {why}",
   "settings.delete_account.not_erased": "O tafs não conseguiu apagar os seus tafs. A sua conta KIFF não foi eliminada. {why}",

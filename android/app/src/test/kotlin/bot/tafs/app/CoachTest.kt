@@ -227,6 +227,11 @@ class CoachTest {
     assertEquals("Approved", CoachWords.answeredApproval("Approved", card("""{"type":"approval","id":"a3"}"""), null, null))
     // A Card that was signed is named, never the key's words (the owner, 12 Nov: "Approved · You will give an API key…").
     assertEquals("Approved · Refunds' Card", CoachWords.answeredApproval("Approved", card(approval), "You will give an API key for Qonto", "Refunds", cardSigned = true))
+    // A draft confirmed with no tools (Coach's own start) has no Card to name.
+    val noTools = bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.AgentDraft>("""{"id":"d1","status":"confirmed","no_tools":true,"label":"Coach"}""")
+    assertFalse(noTools.signedCard)
+    assertTrue(bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.AgentDraft>("""{"id":"d2","status":"confirmed","label":"Refunds"}""").signedCard)
+    assertFalse(bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.AgentDraft>("""{"id":"d3","status":"draft","label":"Refunds"}""").signedCard)
     assertEquals("not signed: as before", "Declined · Connect Stripe", CoachWords.answeredApproval("Declined", card(approval), "You will give an API key for Qonto", "Refunds"))
   }
 

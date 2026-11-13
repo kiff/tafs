@@ -40220,49 +40220,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": " %1$@ seiner Verbindungen konnten nicht getrennt werden: Trenne sie unter „Apps verbinden“."
+            "value": " Der Zugriff auf %1$@ seiner Apps konnte nicht entfernt werden: Entferne ihn unter „Apps verbinden“."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": " %1$@ of its connections couldn't be disconnected: disconnect them in Connect apps."
+            "value": " Access to %1$@ of its apps couldn't be removed: remove it in Connect apps."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": " No se pudieron desconectar %1$@ de sus conexiones: desconéctalas en Conectar apps."
+            "value": " No se pudo quitar el acceso a %1$@ de sus apps: quítalo en Conectar apps."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": " %1$@ de ses connexions n'ont pas pu être déconnectées : déconnectez-les dans Connecter des apps."
+            "value": " L'accès à %1$@ de ses apps n'a pas pu être retiré : retirez-le dans Connecter des apps."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": " %1$@ dei suoi collegamenti non sono stati scollegati: scollegali in Collega app."
+            "value": " Non è stato possibile rimuovere l'accesso a %1$@ delle sue app: rimuovilo in Collega app."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": " %1$@ van de koppelingen konden niet worden ontkoppeld: ontkoppel ze in Apps koppelen."
+            "value": " Toegang tot %1$@ van de apps kon niet worden ingetrokken: trek die in bij Apps koppelen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": " Nie udało się rozłączyć części jego połączeń (%1$@): rozłącz je w Połącz aplikacje."
+            "value": " Nie udało się usunąć dostępu do części jego aplikacji (%1$@): usuń go w Połącz aplikacje."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": " Não foi possível desligar %1$@ das suas ligações: desligue-as em Ligar apps."
+            "value": " Não foi possível remover o acesso a %1$@ das suas apps: remova-o em Ligar apps."
           }
         }
       }
@@ -40273,49 +40273,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": " Seine Verbindungen sind getrennt."
+            "value": " Sein Zugriff auf Apps ist entfernt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": " Its connections are disconnected."
+            "value": " Its access to apps is removed."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": " Sus conexiones están desconectadas."
+            "value": " Se quitó su acceso a las apps."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": " Ses connexions sont déconnectées."
+            "value": " Son accès aux apps est retiré."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": " I suoi collegamenti sono scollegati."
+            "value": " Il suo accesso alle app è rimosso."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": " De koppelingen zijn ontkoppeld."
+            "value": " De toegang tot apps is ingetrokken."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": " Jego połączenia są rozłączone."
+            "value": " Jego dostęp do aplikacji został usunięty."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": " As suas ligações estão desligadas."
+            "value": " O seu acesso às apps foi removido."
           }
         }
       }
@@ -42905,49 +42905,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": " Andere Verbindungen zu %1$@ bleiben verbunden. Nutzt keine andere Verbindung diese Anmeldung, wird sie bei %2$@ widerrufen."
+            "value": " Andere tafs, die %1$@ nutzen, behalten ihren Zugriff. Nutzt kein anderer taf diese Anmeldung, wird sie bei %2$@ widerrufen."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": " Other connections to %1$@ stay connected. If no other connection uses this sign-in, it's revoked at %2$@."
+            "value": " Other tafs that use %1$@ keep their access. If no other taf uses this sign-in, it's revoked at %2$@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": " Las demás conexiones a %1$@ siguen conectadas. Si ninguna otra conexión usa este inicio de sesión, se revoca en %2$@."
+            "value": " Los demás tafs que usan %1$@ conservan su acceso. Si ningún otro taf usa este inicio de sesión, se revoca en %2$@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": " Les autres connexions à %1$@ restent connectées. Si aucune autre connexion n'utilise cet identifiant, il est révoqué chez %2$@."
+            "value": " Les autres tafs qui utilisent %1$@ gardent leur accès. Si aucun autre taf n'utilise cet identifiant, il est révoqué chez %2$@."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": " Gli altri collegamenti a %1$@ restano collegati. Se nessun altro collegamento usa questo accesso, viene revocato su %2$@."
+            "value": " Gli altri taf che usano %1$@ mantengono il loro accesso. Se nessun altro taf usa questo login, viene revocato su %2$@."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": " Andere koppelingen met %1$@ blijven gekoppeld. Als geen andere koppeling deze login gebruikt, wordt die bij %2$@ ingetrokken."
+            "value": " Andere tafs die %1$@ gebruiken, houden hun toegang. Als geen andere taf deze login gebruikt, wordt die bij %2$@ ingetrokken."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": " Inne połączenia z %1$@ pozostaną połączone. Jeśli żadne inne połączenie nie używa tego logowania, zostanie ono unieważnione w %2$@."
+            "value": " Inne tafy, które używają %1$@, zachowują dostęp. Jeśli żaden inny taf nie używa tego logowania, zostanie ono unieważnione w %2$@."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": " As outras ligações a %1$@ continuam ligadas. Se nenhuma outra ligação usar este início de sessão, é revogado em %2$@."
+            "value": " Os outros tafs que usam %1$@ mantêm o seu acesso. Se nenhum outro taf usar este início de sessão, é revogado em %2$@."
           }
         }
       }
@@ -88691,49 +88691,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Anmeldungen deiner Apps, getrennt"
+            "value": "Die Anmeldungen deiner Apps, entfernt"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your apps' sign-ins, disconnected"
+            "value": "Your apps' sign-ins, removed"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los inicios de sesión de tus apps, desconectados"
+            "value": "Los inicios de sesión de tus apps, quitados"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les identifiants de vos apps, déconnectés"
+            "value": "Les identifiants de vos apps, retirés"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gli accessi alle tue app, scollegati"
+            "value": "Gli accessi alle tue app, rimossi"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De logins van je apps, ontkoppeld"
+            "value": "De logins van je apps, ingetrokken"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Logowania Twoich aplikacji, rozłączone"
+            "value": "Logowania Twoich aplikacji, usunięte"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os inícios de sessão das suas apps, desligados"
+            "value": "Os inícios de sessão das suas apps, removidos"
           }
         }
       }
@@ -101115,49 +101115,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Seine Verbindungen sind getrennt."
+            "value": "Sein Zugriff auf Apps ist entfernt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Its connections are disconnected."
+            "value": "Its access to apps is removed."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sus conexiones están desconectadas."
+            "value": "Se quitó su acceso a las apps."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ses connexions sont déconnectées."
+            "value": "Son accès aux apps est retiré."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I suoi collegamenti sono scollegati."
+            "value": "Il suo accesso alle app è rimosso."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De koppelingen zijn ontkoppeld."
+            "value": "De toegang tot apps is ingetrokken."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jego połączenia są rozłączone."
+            "value": "Jego dostęp do aplikacji został usunięty."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "As suas ligações estão desligadas."
+            "value": "O seu acesso às apps foi removido."
           }
         }
       }
@@ -101168,7 +101168,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie udało się rozłączyć %1$@ z jego połączeń: rozłącz je w Połącz aplikacje."
+            "value": "Nie udało się usunąć dostępu do %1$@ z jego aplikacji: usuń go w Połącz aplikacje."
           }
         }
       }
@@ -101179,7 +101179,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie udało się rozłączyć %1$@ z jego połączeń: rozłącz je w Połącz aplikacje."
+            "value": "Nie udało się usunąć dostępu do %1$@ z jego aplikacji: usuń go w Połącz aplikacje."
           }
         }
       }
@@ -101190,49 +101190,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ seiner Verbindungen konnte nicht getrennt werden: Trenne sie unter „Apps verbinden“."
+            "value": "Der Zugriff auf %1$@ seiner Apps konnte nicht entfernt werden: Entferne ihn unter „Apps verbinden“."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of its connections couldn't be disconnected: disconnect them in Connect apps."
+            "value": "Access to %1$@ of its apps couldn't be removed: remove it in Connect apps."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se pudo desconectar %1$@ de sus conexiones: desconéctala en Conectar apps."
+            "value": "No se pudo quitar el acceso a %1$@ de sus apps: quítalo en Conectar apps."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ de ses connexions n'a pas pu être déconnectée : déconnectez-la dans Connecter des apps."
+            "value": "L'accès à %1$@ de ses apps n'a pas pu être retiré : retirez-le dans Connecter des apps."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ dei suoi collegamenti non è stato scollegato: scollegalo in Collega app."
+            "value": "Non è stato possibile rimuovere l'accesso a %1$@ delle sue app: rimuovilo in Collega app."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ van de koppelingen kon niet worden ontkoppeld: ontkoppel die in Apps koppelen."
+            "value": "Toegang tot %1$@ van de apps kon niet worden ingetrokken: trek die in bij Apps koppelen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie udało się rozłączyć %1$@ z jego połączeń: rozłącz je w Połącz aplikacje."
+            "value": "Nie udało się usunąć dostępu do %1$@ z jego aplikacji: usuń go w Połącz aplikacje."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível desligar %1$@ das suas ligações: desligue-a em Ligar apps."
+            "value": "Não foi possível remover o acesso a %1$@ das suas apps: remova-o em Ligar apps."
           }
         }
       }
@@ -101243,49 +101243,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ seiner Verbindungen konnten nicht getrennt werden: Trenne sie unter „Apps verbinden“."
+            "value": "Der Zugriff auf %1$@ seiner Apps konnte nicht entfernt werden: Entferne ihn unter „Apps verbinden“."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ of its connections couldn't be disconnected: disconnect them in Connect apps."
+            "value": "Access to %1$@ of its apps couldn't be removed: remove it in Connect apps."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se pudieron desconectar %1$@ de sus conexiones: desconéctalas en Conectar apps."
+            "value": "No se pudo quitar el acceso a %1$@ de sus apps: quítalo en Conectar apps."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ de ses connexions n'ont pas pu être déconnectées : déconnectez-les dans Connecter des apps."
+            "value": "L'accès à %1$@ de ses apps n'a pas pu être retiré : retirez-le dans Connecter des apps."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ dei suoi collegamenti non sono stati scollegati: scollegali in Collega app."
+            "value": "Non è stato possibile rimuovere l'accesso a %1$@ delle sue app: rimuovilo in Collega app."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ van de koppelingen konden niet worden ontkoppeld: ontkoppel ze in Apps koppelen."
+            "value": "Toegang tot %1$@ van de apps kon niet worden ingetrokken: trek die in bij Apps koppelen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie udało się rozłączyć %1$@ z jego połączeń: rozłącz je w Połącz aplikacje."
+            "value": "Nie udało się usunąć dostępu do %1$@ z jego aplikacji: usuń go w Połącz aplikacje."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não foi possível desligar %1$@ das suas ligações: desligue-as em Ligar apps."
+            "value": "Não foi possível remover o acesso a %1$@ das suas apps: remova-o em Ligar apps."
           }
         }
       }

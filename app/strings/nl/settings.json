@@ -17,7 +17,7 @@
   "settings.delete_account.deleting": "Verwijderen…",
   "settings.delete_account.goes_cards": "Je Cards en sleutels: ze werken niet meer",
   "settings.delete_account.goes_records": "De gegevens van KIFF over je account, gewist na 30 dagen",
-  "settings.delete_account.goes_sign_ins": "De logins van je apps, ontkoppeld",
+  "settings.delete_account.goes_sign_ins": "De logins van je apps, ingetrokken",
   "settings.delete_account.goes_tafs": "Elk taf, met zijn runs, chats, notities en planningen",
   "settings.delete_account.kiff_not_deleted": "Je tafs en koppelingen zijn gewist, maar KIFF heeft het account niet verwijderd. {why}",
   "settings.delete_account.not_erased": "tafs kon je tafs niet wissen. Je KIFF-account is niet verwijderd. {why}",

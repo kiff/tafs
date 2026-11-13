@@ -70,10 +70,10 @@
   },
   "taf.remove.cards_revoked": "Zijn Cards zijn ingetrokken in KIFF.",
   "taf.remove.cloud_did_not_answer": "{cards} tafs cloud antwoordde niet ({why}). Als het verwijderen is begonnen, rondt tafs het af bij de volgende vernieuwing; zo niet, tik dan nogmaals op Verwijderen.",
-  "taf.remove.connections_disconnected": "De koppelingen zijn ontkoppeld.",
+  "taf.remove.connections_disconnected": "De toegang tot apps is ingetrokken.",
   "taf.remove.connections_left": {
-    "one": "{count} van de koppelingen kon niet worden ontkoppeld: ontkoppel die in Apps koppelen.",
-    "other": "{count} van de koppelingen konden niet worden ontkoppeld: ontkoppel ze in Apps koppelen."
+    "one": "Toegang tot {count} van de apps kon niet worden ingetrokken: trek die in bij Apps koppelen.",
+    "other": "Toegang tot {count} van de apps kon niet worden ingetrokken: trek die in bij Apps koppelen."
   },
   "taf.remove.done": "De planning, chats, runrapporten, het geheugen en de sleutel zijn verwijderd, en de naam {taf} is vrij. De ontvangstbewijzen van KIFF blijven.",
   "taf.remove.finishes_on_refresh": "Als het verwijderen is begonnen, rondt tafs het af bij de volgende vernieuwing.",

@@ -17,7 +17,7 @@
   "settings.delete_account.deleting": "Deleting…",
   "settings.delete_account.goes_cards": "Your Cards and keys: they stop working",
   "settings.delete_account.goes_records": "KIFF's records of your account, erased after 30 days",
-  "settings.delete_account.goes_sign_ins": "Your apps' sign-ins, disconnected",
+  "settings.delete_account.goes_sign_ins": "Your apps' sign-ins, removed",
   "settings.delete_account.goes_tafs": "Every taf, with its runs, chats, notes and schedules",
   "settings.delete_account.kiff_not_deleted": "Your tafs and connections are erased, but KIFF didn't delete the account. {why}",
   "settings.delete_account.not_erased": "tafs couldn't erase your tafs. Your KIFF account isn't deleted. {why}",

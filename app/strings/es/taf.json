@@ -70,10 +70,10 @@
   },
   "taf.remove.cards_revoked": "Sus Cards están revocadas en KIFF.",
   "taf.remove.cloud_did_not_answer": "{cards} tafs cloud no respondió ({why}). Si empezó, tafs lo termina la próxima vez que se actualice; si no, vuelve a tocar Eliminar.",
-  "taf.remove.connections_disconnected": "Sus conexiones están desconectadas.",
+  "taf.remove.connections_disconnected": "Se quitó su acceso a las apps.",
   "taf.remove.connections_left": {
-    "one": "No se pudo desconectar {count} de sus conexiones: desconéctala en Conectar apps.",
-    "other": "No se pudieron desconectar {count} de sus conexiones: desconéctalas en Conectar apps."
+    "one": "No se pudo quitar el acceso a {count} de sus apps: quítalo en Conectar apps.",
+    "other": "No se pudo quitar el acceso a {count} de sus apps: quítalo en Conectar apps."
   },
   "taf.remove.done": "Se eliminaron su programación, sus chats, sus informes de ejecución, su memoria y su clave, y el nombre {taf} queda libre. Los recibos de KIFF se conservan.",
   "taf.remove.finishes_on_refresh": "Si la eliminación empezó, tafs la termina la próxima vez que se actualice.",

@@ -70,10 +70,10 @@
   },
   "taf.remove.cards_revoked": "Seine Cards sind in KIFF widerrufen.",
   "taf.remove.cloud_did_not_answer": "{cards} tafs cloud hat nicht geantwortet ({why}). Falls das Entfernen begonnen hat, schließt tafs es bei der nächsten Aktualisierung ab; falls nicht, tippe erneut auf „Entfernen“.",
-  "taf.remove.connections_disconnected": "Seine Verbindungen sind getrennt.",
+  "taf.remove.connections_disconnected": "Sein Zugriff auf Apps ist entfernt.",
   "taf.remove.connections_left": {
-    "one": "{count} seiner Verbindungen konnte nicht getrennt werden: Trenne sie unter „Apps verbinden“.",
-    "other": "{count} seiner Verbindungen konnten nicht getrennt werden: Trenne sie unter „Apps verbinden“."
+    "one": "Der Zugriff auf {count} seiner Apps konnte nicht entfernt werden: Entferne ihn unter „Apps verbinden“.",
+    "other": "Der Zugriff auf {count} seiner Apps konnte nicht entfernt werden: Entferne ihn unter „Apps verbinden“."
   },
   "taf.remove.done": "Sein Zeitplan, seine Chats, Laufberichte, sein Gedächtnis und sein Schlüssel sind gelöscht, und der Name {taf} ist frei. KIFFs Belege bleiben.",
   "taf.remove.finishes_on_refresh": "Falls das Entfernen begonnen hat, schließt tafs es bei der nächsten Aktualisierung ab.",

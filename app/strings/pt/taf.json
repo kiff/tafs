@@ -70,10 +70,10 @@
   },
   "taf.remove.cards_revoked": "Os seus Cards foram revogados no KIFF.",
   "taf.remove.cloud_did_not_answer": "{cards} O tafs cloud não respondeu ({why}). Se a remoção começou, o tafs conclui-a na próxima atualização; se não, toque novamente em Remover.",
-  "taf.remove.connections_disconnected": "As suas ligações estão desligadas.",
+  "taf.remove.connections_disconnected": "O seu acesso às apps foi removido.",
   "taf.remove.connections_left": {
-    "one": "Não foi possível desligar {count} das suas ligações: desligue-a em Ligar apps.",
-    "other": "Não foi possível desligar {count} das suas ligações: desligue-as em Ligar apps."
+    "one": "Não foi possível remover o acesso a {count} das suas apps: remova-o em Ligar apps.",
+    "other": "Não foi possível remover o acesso a {count} das suas apps: remova-o em Ligar apps."
   },
   "taf.remove.done": "O seu agendamento, chats, relatórios de execução, memória e chave foram eliminados, e o nome {taf} está livre. Os recibos do KIFF mantêm-se.",
   "taf.remove.finishes_on_refresh": "Se a remoção começou, o tafs conclui-a na próxima atualização.",

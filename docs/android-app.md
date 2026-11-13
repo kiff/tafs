@@ -72,7 +72,8 @@ person's language.
 - **The strip** under the tafs list (`JobStrip`) draws `strip.ids` in their order, under
   `strip.title`, while `strip.shown`. An id the gallery doesn't list is left out. When the gallery
   holds more jobs than the strip shows, a last row, **See all jobs** (`words.see_all`), opens it
-  to browse, as Explore jobs does.
+  to browse, as Explore jobs does. The strip offers jobs to hand to Coach, so it shows only to
+  someone who may use Coach; someone who can't has Explore jobs, which opens the same gallery.
 - **A job** (`JobRow`, also on Home with no taf) leads with its headline, then its line, then its
   apps, each with its logo. Its category's colour is its edge, and its chip's; the colour is tafs
   cloud's token for the theme on screen (`CategoryColor`), and without one the app's own colours

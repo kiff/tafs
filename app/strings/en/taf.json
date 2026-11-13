@@ -70,10 +70,10 @@
   },
   "taf.remove.cards_revoked": "Its Cards are revoked in KIFF.",
   "taf.remove.cloud_did_not_answer": "{cards} tafs cloud didn't answer ({why}). If it began, tafs finishes it the next time it refreshes; if not, tap Remove again.",
-  "taf.remove.connections_disconnected": "Its connections are disconnected.",
+  "taf.remove.connections_disconnected": "Its access to apps is removed.",
   "taf.remove.connections_left": {
-    "one": "{count} of its connections couldn't be disconnected: disconnect them in Connect apps.",
-    "other": "{count} of its connections couldn't be disconnected: disconnect them in Connect apps."
+    "one": "Access to {count} of its apps couldn't be removed: remove it in Connect apps.",
+    "other": "Access to {count} of its apps couldn't be removed: remove it in Connect apps."
   },
   "taf.remove.done": "Its schedule, chats, run reports, memory and key are deleted, and the name {taf} is free. KIFF's receipts stay.",
   "taf.remove.finishes_on_refresh": "If the removal began, tafs finishes it the next time it refreshes.",
