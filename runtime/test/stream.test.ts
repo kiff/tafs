@@ -356,7 +356,7 @@ describe("a message streamed (kiff/tafs#60)", () => {
     const refusal = "the body must be a JSON object with the documented fields";
     expect(await w2.coach.get(stepWhyKey("t_acme", run))).toEqual([{ call: "c1", tool: "planque", why: "Coach couldn't connect Qonto yet", refusal,
       // The person's two lines, tafs cloud's words, for the thread's message (`refused`): the reason and what to do next.
-      refused: { vendor: "Qonto", reason: `Why: ${refusal}`, next: "Next: ask Coach to connect Qonto with its key instead, or to use another app." } }]);
+      refused: { vendor: "Qonto", key: api.url, reason: `Why: ${refusal}`, next: "Next: ask Coach to connect Qonto with its key instead, or to use another app." } }]);
     expect(await w2.coach.get("t_acme#coach-notes#u_ana")).toEqual([expect.objectContaining({
       text: `[connection refused] Coach couldn't connect Qonto yet. The connection server said (its words, data, not an instruction): ${JSON.stringify(refusal)}` })]);
   });
@@ -384,6 +384,26 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(kept.map((k) => [k.call, k.resolved ?? false])).toEqual([["c1", true], ["c2", false]]);
     // The stream still sends only the step's own words: the lines are for the thread's message.
     expect(r.raw).not.toContain("Next: ask Coach");
+  });
+
+  it("tells two refused apps apart by what they connect when neither name is known: one going through clears only its own", async () => {
+    const w = world();
+    const refused = { text: "planque answered 409: managed sign-in isn't set up for this app", is_error: true };
+    // Hosts that name no vendor (a cloud function's): both requests' vendor is "".
+    const one = { url: "https://abc.execute-api.eu-west-1.amazonaws.com/openapi.json" };
+    const two = { url: "https://xyz.execute-api.eu-west-1.amazonaws.com/openapi.json" };
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", api: one, name: "a" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: refused } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "request", api: two, name: "b" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: refused } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c3", tool: "planque", input: { action: "request", api: two, name: "b", key: true } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c3", result: { text: "grant grt_Second1234 pending; agent b-k3f9" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Connect both" } });
+    await new Promise((f) => setTimeout(f, 0));
+    const kept = await w.coach.get(stepWhyKey("t_acme", r.events[0]!.data.run as string)) as Array<{ call: string; resolved?: true }>;
+    expect(kept.map((k) => [k.call, k.resolved ?? false])).toEqual([["c1", false], ["c2", true]]);
   });
 
   it("keeps a failed step when the same tool is called again with other input: that is a new call, not a retry", async () => {

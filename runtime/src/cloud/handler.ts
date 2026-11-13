@@ -37,7 +37,7 @@ import { accountConnections, connectionLines, endConnections, withConnections } 
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
-import { attachWhys, CONNECTION_TOOL, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
+import { attachWhys, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords } from "./doors/hold.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
@@ -5282,7 +5282,7 @@ class Pace {
 
 /** Keeps a failed step's reason for its run's thread (kiff/tafs#476, gap 9): by run and call, with the call's tool. */
 type WhyKeeper = ((run: string, call: string, tool: string, why: string, refusal?: string, refused?: StepWhys[number]["refused"]) => void)
-  & { connected?: (run: string, vendor: string) => void };
+  & { connected?: (run: string, through: { vendor: string; key?: string }) => void };
 
 /**
  * The keeper for a person's streams: a run's failed steps' reasons go in the coach store
@@ -5312,13 +5312,13 @@ function whyKeeper(me: KIFFIdentity, deps: Deps): WhyKeeper | undefined {
     }));
   };
   // A request for a vendor went through: the refusals for it earlier in the run are past, and no message says them.
-  keeper.connected = (run, vendor) => {
+  keeper.connected = (run, through) => {
     const key = stepWhyKey(me.tenantID, run);
     then(() => store.get(key).then(async (kept) => {
       const whys = Array.isArray(kept) ? kept as StepWhys : [];
-      if (!whys.some((w) => w.refused && !w.resolved && w.refused.vendor === vendor)) return undefined;
+      if (!whys.some((w) => w.refused && !w.resolved && connectsRefused(w.refused, through))) return undefined;
       const at = deps.now?.() ?? new Date();
-      await store.put(key, whys.map((w) => w.refused && w.refused.vendor === vendor ? { ...w, resolved: true as const } : w), new Date(at.getTime() + STEP_WHY_KEPT_MS));
+      await store.put(key, whys.map((w) => w.refused && connectsRefused(w.refused, through) ? { ...w, resolved: true as const } : w), new Date(at.getTime() + STEP_WHY_KEPT_MS));
     }));
   };
   return keeper;
@@ -5363,7 +5363,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
   // answer: only KIFF's keys for it, never what the tool answered, but why it failed, in words.
   const ended = (callID: unknown, r: { text?: unknown; is_error?: unknown; state?: unknown; hold?: { exception?: unknown }; invocation?: unknown; tool?: unknown }, notMade = false): string => {
     // A connection request that went through: what was refused for its vendor earlier in the run is past.
-    const connected = r.is_error !== true && r.state !== "held" && !notMade ? steps.requestVendor(callID) : undefined;
+    const connected = r.is_error !== true && r.state !== "held" && !notMade ? steps.requestTarget(callID) : undefined;
     if (connected !== undefined && runID) keep?.connected?.(runID, connected);
     steps.result(callID, r.text);
     if (typeof callID === "string" && typeof r.tool === "string" && !toolOf.has(callID)) toolOf.set(callID, r.tool);

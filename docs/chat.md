@@ -393,10 +393,10 @@ on its `report`.
 connection Coach asked for in that run was refused by the connection server, and no request for the
 same app went through later in the run, the message says so in three lines, all tafs cloud's words in
 the person's language: `words`, the failed step's own ("Coach couldn't connect Shippo yet"); `why`, the
-server's reason, scrubbed as any step's reason is (`whyOf`), as a line ("Why: managed sign-in isn't set up
+server's reason, scrubbed as any step's reason is (`whyOf`) and with any host name or phone number left out too (`shownWhy`: the server can quote a description a third party wrote), as a line ("Why: managed sign-in isn't set up
 for this app"), left out when nothing readable is left; and `next`, what to do ("Next: ask Coach to connect
 Shippo with its key instead, or to use another app."). It's taken before a retry folds the step away, so
-a later read that went through (the catalog, say) doesn't hide it; a later request for the same app
+a later read that went through (the catalog, say) doesn't hide it; a later request for the same server, description or grant (or the same app by a known name)
 that went through does (`resolved`, `takeRefused` and `Steps.connectionRefusal` in
 `runtime/src/cloud/steps.ts`). Both apps draw the lines under the taf's words, never folded, the first in
 the failure colour, and add none of their own (`RefusedLines`). The live stream's `step` keeps only `why`.

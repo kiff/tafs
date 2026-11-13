@@ -544,8 +544,6 @@ struct TafChatView: View {
     }
 }
 
-/// One of tafs cloud's lines about a run, beside the taf's own words: small and secondary, drawn
-/// as written. The app adds no word of its own and counts nothing.
 /// A refused connection's lines, each as tafs cloud wrote it: the step's in the failure
 /// colour, then why and what to do next (docs/chat.md).
 struct RefusedLines: View {
@@ -564,6 +562,8 @@ struct RefusedLines: View {
     }
 }
 
+/// One of tafs cloud's lines about a run, beside the taf's own words: small and secondary, drawn
+/// as written. The app adds no word of its own and counts nothing.
 struct RunLine: View {
     let text: String
 
