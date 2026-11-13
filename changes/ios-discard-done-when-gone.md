@@ -1,0 +1,1 @@
+- **iPhone and iPad: a Discard that worked says so.** If tafs cloud refuses the last step, but the taf is already gone from Home because ending its Cards ended it, the app now treats it as done instead of saying it didn't go through.

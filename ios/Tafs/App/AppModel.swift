@@ -2952,6 +2952,14 @@ final class AppModel: ObservableObject {
             return Words.Card.kiffDidNotRevokeCards(cardsLeft: "\(max(refused.cards.count, cardsLeft, 1))")
         } catch {
             guard gen == accountGeneration else { return nil }
+            // Refused, but Home may no longer list it: revoking its Cards can be what ends it, and
+            // tafs cloud then refuses an agent with none left. Home decides: gone is done.
+            await refresh()
+            guard gen == accountGeneration else { return nil }
+            if !settingUp.contains(where: { $0.id == tafID }) {
+                discardCardsLeft[agent] = nil
+                return nil
+            }
             return (error as? TafsCloud.CloudError).map { $0.words ?? $0.message } ?? error.localizedDescription
         }
         guard gen == accountGeneration else { return nil }

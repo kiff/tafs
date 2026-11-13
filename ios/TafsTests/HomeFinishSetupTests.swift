@@ -166,5 +166,15 @@ final class HomeFinishSetupTests: XCTestCase {
         StubProtocol.sent = []
         _ = await again.discardSettingUp(try XCTUnwrap(again.settingUp.first).id)
         XCTAssertFalse(StubProtocol.sent.filter { $0.url?.path == "/v1/me/mandates/c_other/revoke" }.isEmpty, "the Card tafs cloud named is revoked")
+
+        // Refused once its Cards are revoked (the agent has none left), but Home no longer lists
+        // it: that's done, never "Not done".
+        let gone = await self.model(others: [repeated], settingUp: half)
+        StubProtocol.responses["POST /v1/me/mandates/c_inv/revoke"] = (200, "{}")
+        StubProtocol.responses["POST /v1/home/setting-up/invoicing-x/discard"] = (409, #"{"error":"it changed in the meantime"}"#)
+        StubProtocol.thenRespond["POST /v1/home/setting-up/invoicing-x/discard"] = ["GET /v1/home": (200, String(HomeJSON.list([]).dropLast()) + #","setting_up":[]}"#)]
+        let note = await gone.discardSettingUp(try XCTUnwrap(gone.settingUp.first).id)
+        XCTAssertNil(note, "gone from Home is done")
+        XCTAssertTrue(gone.settingUp.isEmpty)
     }
 }
