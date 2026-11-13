@@ -1,0 +1,1 @@
+- **Android: haptics are back.** A light tap on every button, a success tick when a send or an approval goes through, a warning when one fails, and a tick on selector stops, with **Haptics** in Settings to turn them off on this phone ([android-app.md](docs/android-app.md#haptics)).

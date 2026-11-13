@@ -4439,6 +4439,8 @@ class AppModel(
           val reportProof = runCatching { planque.grantsReadProof(sign) }.getOrNull()
           val outcome = cloud.approvalReport(cloudId, c.id, asked.id, report, reportProof, tenant, sign)
           if (generation != accountGeneration) return true
+          // tafs cloud's decision: approved ticks success, anything it answered as failed a warning.
+          if (outcome.answer?.startsWith("failed") == true) bot.tafs.app.design.Haptics.warning() else bot.tafs.app.design.Haptics.success()
           note(c.id, outcome.note)
           coachAnswered(cloudId, key, outcome.session, outcome.run)
         }
@@ -4449,6 +4451,7 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return true
+      bot.tafs.app.design.Haptics.warning()
       note(c.id, Words.Coach.answerNotReached(why = ErrorWords.of(e)))
       readThread(COACH_CHAT)
       return true
@@ -5072,7 +5075,11 @@ class AppModel(
    * Sends the owner's message to the taf and waits for its answer. The sample answers from its
    * own record; signed in, the thread is tafs cloud's. A message may be words, files, or both.
    */
-  suspend fun deliverChat(text: String, tafId: String, withFiles: Boolean = false): Boolean {
+  suspend fun deliverChat(text: String, tafId: String, withFiles: Boolean = false): Boolean =
+    // A send that goes through ticks success; one refused or failed, a warning (docs/android-app.md, "Haptics").
+    deliverChatNow(text, tafId, withFiles).also { sent -> if (sent) bot.tafs.app.design.Haptics.success() else if (text.isNotBlank() || withFiles) bot.tafs.app.design.Haptics.warning() }
+
+  private suspend fun deliverChatNow(text: String, tafId: String, withFiles: Boolean): Boolean {
     val words = text.trim()
     val files = withFiles && _state.value.mode == Mode.kiff && _state.value.files(tafId).any { it.ref != null }
     if (words.isEmpty() && !files) return false
@@ -5684,6 +5691,19 @@ class AppModel(
     installed: Boolean = false,
     approvedWithCard: Boolean = false,
     presigned: SignedAnswer? = null,
+  ): Boolean =
+    // A held call's answer that goes through ticks success; one that doesn't, a warning.
+    answerNow(call, answer, confirmed, installed, approvedWithCard, presigned).also { done ->
+      if (done) bot.tafs.app.design.Haptics.success() else bot.tafs.app.design.Haptics.warning()
+    }
+
+  private suspend fun answerNow(
+    call: HeldCall,
+    answer: Answer,
+    confirmed: Boolean,
+    installed: Boolean,
+    approvedWithCard: Boolean,
+    presigned: SignedAnswer?,
   ): Boolean {
     val before = _state.value
     if (before.held.none { it.id == call.id }) return false
