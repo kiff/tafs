@@ -1,1 +1,2 @@
 - **Android 1.22.0 (81): one fingerprint for an app's added tools and its Card.** When tafs cloud offers it, Coach's card approves a signed-in app's tools and confirms the taf's Card under one signature, as a key and its Card already are (docs/android-app.md).
+- **Android: Coach's last words always reach the chat.** A long run is followed to its end, and a stream that went quiet after its run ended no longer leaves "…" and Stop on screen (docs/chat.md).
