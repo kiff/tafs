@@ -1794,6 +1794,51 @@ describe("Setup (kiff/agents#91)", () => {
     }
   });
 
+  // Android 76 check, finding 1: an account that has Coach and misses its tools gave them in two fingerprints, the batch
+  // then the Cards. With TAFS_COACH_START_ONE, the pair comes together, as a first start's; and a row that asks again
+  // only for new tools' Cards says why.
+  it("gives an account with Coach its missing tools and Cards under one fingerprint, and says when only new tools' limits are asked", async () => {
+    const w = world();
+    await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
+    const mcp = "https://tafs.test/v1/mcp";
+    const tools = async () => (await call(w, "GET", "/v1/setup", { token: "ana", headers: { host: "tafs.test" } })).body.tools;
+    // Off: the batch, then the Cards on the next read, as before.
+    const off = await tools();
+    expect(off.connect).toBeDefined();
+    expect(off).not.toHaveProperty("requests");
+    expect(off.coach_tools_step.row).toBe("Coach's tools are waiting for you · Give them");
+    process.env.TAFS_COACH_START_ONE = "on";
+    try {
+      const both = await tools();
+      // Older apps still read connect; a new one signs the pair once, the batch first, then the Cards' draft.
+      expect(both.connect.body.connections.map((c: { name: string }) => c.name)).toEqual(TOOLS.map((t) => t.name));
+      expect(both.scheme).toBe("kiff.requests.v1");
+      expect(both.requests.map((r: { id: string }) => r.id)).toEqual(["connect", "draft"]);
+      const [connect, draft] = both.requests;
+      expect(connect).toMatchObject({ method: "POST", path: "/v1/connections/batch", gateway: true, body: both.connect.body, lines: both.connect.lines });
+      // The draft is for Coach's own agent, with the Cards it doesn't hold, worded over the batch's contract and carrying it.
+      expect(draft).toMatchObject({ method: "POST", path: "/v1/me/agent-drafts", body: { agent_id: "setup-acme", label: "Coach", contract_digest: "cd_123" } });
+      expect(draft.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
+      expect(draft.card_title).toBeDefined();
+      // KIFF can't word the pair: the steps, as before, never an unworded draft.
+      (w.account as { batchPreviewMissing?: boolean }).batchPreviewMissing = true;
+      const unworded = await tools();
+      expect(unworded.connect).toBeDefined();
+      expect(unworded).not.toHaveProperty("requests");
+      (w.account as { batchPreviewMissing?: boolean }).batchPreviewMissing = false;
+      // Every tool there, Cards for new ones missing: the Cards alone (one fingerprint already), and the row says why.
+      w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
+      const cardsOnly = await tools();
+      expect(cardsOnly).not.toHaveProperty("requests");
+      expect(cardsOnly.card.body.agent_id).toBe("setup-acme");
+      expect(cardsOnly.coach_tools_step.row).toBe("Coach has new tools: approve their limits");
+      const fr = (await call(w, "GET", "/v1/setup", { token: "ana", headers: { host: "tafs.test", "Accept-Language": "fr" } })).body.tools;
+      expect(fr.coach_tools_step.row).toBe("Coach a de nouveaux outils : approuvez leurs limites");
+    } finally {
+      delete process.env.TAFS_COACH_START_ONE;
+    }
+  });
+
   it("says what giving Coach its tools still needs, from KIFF", async () => {
     const w = world();
     await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
@@ -2383,19 +2428,34 @@ describe("improving a taf (kiff/tafs#107)", () => {
     expect(first).not.toContain("card_old");
   });
 
+  it("gives Setup a Card's limit for each item and its end as KIFF holds them, so a revision keeps both", async () => {
+    const w = withSetup();
+    w.account.mandates = [{ ...raeCard, valid_until: "2026-11-19T00:00:00Z",
+      aggregates: [{ quantity: "count", limit: 10, window: "calendar_day" }, { quantity: "count", limit: 1, window: "lifetime", per: "charge" }] }];
+    const r = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "Let it refund up to 200." } });
+    const first = (w.agents.events.get(r.body.session)?.[0]?.body as { text: string }).text;
+    // One refund per charge, ever: never one for the taf's whole life, and the Card still ends.
+    expect(first).toContain(`"aggregates":[{"quantity":"count","limit":10,"window":"calendar_day"},{"quantity":"count","limit":1,"window":"lifetime","per":"charge"}]`);
+    expect(first).toContain(`"valid_until":"2026-11-19T00:00:00Z"`);
+  });
+
   it("copies only a draft body's keys from a Card as KIFF lists it", () => {
     const listed = {
       id: "card_rae", subject: "rae", subjects: ["rae"], active: true, domain: "gateway", environment: "live", on_exceed: "hold",
       location: "Europe/Madrid", hold_expiry_seconds: 86400, domain_id: "dom_1",
       grants: [{ action: "create_refund_k3f9", title: "Refund a charge", entity_states: ["requested"],
         per_action_max: [{ quantity: "sum(amount)", max: 500, unit: "EUR", scale: 2 }], resources: { parameter: "charge", values: ["ch_1"], extra: 1 } }],
-      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects", unit: "EUR", scale: 2, room_grants: [{ amount: 1000 }] }],
+      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects", unit: "EUR", scale: 2, room_grants: [{ amount: 1000 }] },
+        { quantity: "count", quantity_of: "calls", limit: 1, window: "lifetime", per: "charge", measure: "effects" }],
     };
-    expect(heldCards([listed], "rae")).toEqual([{
+    expect(heldCards([{ ...listed, valid_from: "2026-11-01T00:00:00Z", valid_until: "2026-11-19T00:00:00Z" }], "rae")).toEqual([{
       id: "card_rae", subject: "rae", domain: "gateway", environment: "live", on_exceed: "hold",
+      valid_from: "2026-11-01T00:00:00Z", valid_until: "2026-11-19T00:00:00Z", location: "Europe/Madrid",
       grants: [{ action: "create_refund_k3f9", entity_states: ["requested"], resources: { parameter: "charge", values: ["ch_1"] },
         per_action_max: [{ quantity: "sum(amount)", max: 500 }] }],
-      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects" }],
+      // One per charge, ever, stays one per charge: never one for the taf's whole life.
+      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", measure: "effects" },
+        { quantity: "count", limit: 1, window: "lifetime", per: "charge", measure: "effects" }],
     }]);
     expect(heldCards([{ ...listed, subjects: ["rae", "bo"] }], "rae")).toEqual([]);
   });

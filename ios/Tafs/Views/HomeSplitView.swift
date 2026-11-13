@@ -255,7 +255,15 @@ struct HomeSplitView: View {
                 // Agents made through KIFF's API, not run by tafs: their Cards, apart.
                 Section {
                     ForEach(model.otherAgents) { taf in
-                        NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
+                        if let finish = taf.finish, model.canFinishSetup(finish) {
+                            // Its setup stopped partway: Coach's chat where it stopped (docs/tafs.md).
+                            Button { Task { await model.finishSetup(finish) } } label: { tafRow(taf) }
+                                .buttonStyle(.drivablePlain)
+                                .driveWords(taf.name)
+                                .accessibilityIdentifier("home.finish-setup")
+                        } else {
+                            NavigationLink(value: HomeSelection.taf(taf.id)) { tafRow(taf) }
+                        }
                     }
                 } header: { Eyebrow(text: Words.Home.otherAgents) }
             }
@@ -323,6 +331,9 @@ struct HomeSplitView: View {
                 }
                 if let out = model.signedOut(taf.id) {
                     Text(out.signedOutWords).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.amberText).oneLineUnlessLarge()
+                } else if taf.finish != nil {
+                    // Its setup stopped partway: it needs the owner, in tafs cloud's words.
+                    Text(taf.now).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.amberText).oneLineUnlessLarge()
                 } else if let line = taf.healthNow {
                     // Idle and not healthy: tafs cloud's line says why, where it would say the next run.
                     Text(line).scaledFont(13, relativeTo: .footnote).foregroundColor(taf.health?.failing == true ? Theme.no : Theme.amberText).oneLineUnlessLarge()

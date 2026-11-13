@@ -468,6 +468,16 @@ answer to the result carries `outcome.plan_needed.words` ("Choose a plan to star
 person's language), and the hand-over card says them under its own words, above the button that
 opens the taf (`SetupThread.planNeeded`). No words, or none that are text, add nothing.
 
+## A taf whose setup stopped partway
+
+A Coach chat left before the hand-over leaves an agent with a signed Card and no taf. tafs cloud
+lists it among Home's other agents by the name Coach gave it, with `finish: {taf, session,
+words}` (docs/tafs.md). The row says `words` ("Finish setting up") in amber in place of what it's
+doing. A tap opens Coach on `session`, where it stopped (`AppModel.finishSetup`): reading that
+chat is what makes the taf at tafs cloud, and the next Home read lists it with the tafs. Only
+Coach's own chat (`taf` is Coach's), for someone who may use Coach (`canFinishSetup`); anything
+else, or a `finish` with no chat or words, opens as any other agent's row, on iPhone and iPad.
+
 ## Every ready-made job, at any time
 
 The jobs stay reachable after the first taf, from `GET /v1/recipes/gallery`, read with each
