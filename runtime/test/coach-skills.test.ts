@@ -99,7 +99,7 @@ describe("Coach's core", () => {
     expect(body).not.toContain("but one that would go past a day's total can't");
   });
 
-  // Coach finds a vendor's published API description itself, with web_read, never one it makes up (the PM, 13 Nov).
+  // Coach finds a vendor's published API description itself, with web_read, never one it makes up.
   it("finds a vendor's published API description with web_read, and loads connect-an-app when it reads a page", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(body).toContain("Find the description with web_read on the vendor's docs, or use the owner's; never make one up.");
