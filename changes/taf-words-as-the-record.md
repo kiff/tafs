@@ -1,0 +1,4 @@
+- **A taf's messages say "on behalf of", and its words stay with the record.**
+  - **The disclosure:** it now reads "Written by an AI agent on behalf of <name>.", in all six languages. A name stored before, at the old length cap, keeps the shorter "for" so its line still fits. New names are capped at 251 bytes.
+  - **A held call:** it says until when only if KIFF gives the hold's expiry, never a guess such as "until tomorrow".
+  - **Amounts:** they're in the currency the record or the call gives, never converted into another currency or called its equivalent.

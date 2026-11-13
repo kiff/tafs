@@ -575,7 +575,7 @@ changed rule, shown in a new rules notice and agreed again before the draft (`dr
 
 A taf that writes to people names who they come from: Coach asks once, with its other questions,
 offering the company's name, never the mail app's default (gap 16), and its result's taf carries the
-answer as `writes_for`. kiff/agents then starts each outside message with "Written by an AI agent for
+answer as `writes_for`. kiff/agents then starts each outside message with "Written by an AI agent on behalf of
 <writes_for>." (gap 18; "Written by an AI agent." when no one is named, never "for the company"): first
 in each text part the message carries (an email's text and its html), said once, in the message's
 language when it's Spanish, French, German, Portuguese or Italian (the definition's `disclose.lines`),

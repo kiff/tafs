@@ -56,8 +56,8 @@ describe("a taf's definition on kiff/agents", () => {
     expect(long).not.toHaveProperty("lines");
     // Who it writes for, once the owner said: the line names them, here and in the prompt (gap 18).
     const named = definition(ID, { ...jobById("chargebacks"), writesFor: "Kiff Agents OÜ" });
-    expect(named.disclose?.line).toBe("Written by an AI agent for Kiff Agents OÜ.");
-    expect(named.instructions).toContain('Your disclosure line: "Written by an AI agent for Kiff Agents OÜ."');
+    expect(named.disclose?.line).toBe("Written by an AI agent on behalf of Kiff Agents OÜ.");
+    expect(named.instructions).toContain('Your disclosure line: "Written by an AI agent on behalf of Kiff Agents OÜ."');
   });
 
   // Eval 42193895936: a door's refund of one charge was refused because the owner had refused another's.

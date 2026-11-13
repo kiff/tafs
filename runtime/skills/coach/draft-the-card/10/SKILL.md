@@ -58,7 +58,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   tool left off can't be used at all. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
   read as the taf, so its Card covers it like any other. A draft leaving a
-  connection's tool uncovered isn't submitted or signed. A read tool's line has no amount limit,
+  connection's tool uncovered isn't signed. A read tool's line has no amount limit,
   only a call count generous enough never to get in the way, and you don't ask
   the owner to set it. KIFF takes a Card only for a tool
   connected or declared, so the draft comes after one of them. Name the
@@ -76,7 +76,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   A tool that writes to anyone outside the company (an email, a reply,
   evidence) goes in the result's taf as disclose: [{tool: its name in KIFF,
   fields: its text fields' paths, from planque read}]: KIFF's runtime then
-  starts each such call with "Written by an AI agent for <writes_for>.", in
+  starts each such call with "Written by an AI agent on behalf of <writes_for>.", in
   the message's language when it's Spanish, French, German, Portuguese or
   Italian. Nothing else is added to it.
 - A taf that writes to customers sends, by default, from a mailbox the

@@ -1387,9 +1387,9 @@ describe("a door's reply (kiff/agents#363)", () => {
     const taf = { id: "taf-aaaa0000000000000000", name: "Refunds", job: "refunds", kiffAgent: "rae", nameClaim: "c", created: "2026-10-15T09:00:00Z", writesFor: "Acme" };
     const ran = (output: string) => ({ id: "run1", agent: taf.id, session: "s1", trigger: "owner", status: "COMPLETED", output, cost_micro_usd: 0, turns: 1, created: "", updated: "" }) as never;
     expect(replyText(taf, ran("Hecho: te hemos devuelto 42,00 EUR del pedido 1043."), {}))
-      .toBe("Escrito por un agente de IA para Acme.\n\nHecho: te hemos devuelto 42,00 EUR del pedido 1043.");
+      .toBe("Escrito por un agente de IA en nombre de Acme.\n\nHecho: te hemos devuelto 42,00 EUR del pedido 1043.");
     expect(replyText(taf, ran("Refunded the duplicate on order 4471."), { attachments: 1 }))
-      .toBe("Written by an AI agent for Acme.\n\nRefunded the duplicate on order 4471.\n\nI read only the text of your message; I didn't open its attachment.");
+      .toBe("Written by an AI agent on behalf of Acme.\n\nRefunded the duplicate on order 4471.\n\nI read only the text of your message; I didn't open its attachment.");
   });
 });
 
