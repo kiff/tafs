@@ -6251,17 +6251,23 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // it shows as the taf's trial, never as another agent.
   const ours = new Set(records.flatMap((t) => t.kiffAgent ? [t.kiffAgent, `${t.kiffAgent}~trial`] : []));
   const agents = [...new Set([...cards.keys(), ...waiting.keys()])].filter((a) => !ours.has(a) && listable(access, a)).sort();
-  // One whose setup stopped partway (Coach drafted it, its Card is signed, and no taf was made) shows by the name
-  // Coach gave it, with the way back to the chat where it stopped: never its agent's id.
+  // Home lists tafs only. An agent made through KIFF's API isn't one: it's KIFF's, and KIFF shows it, never the
+  // tafs app. The one exception is a taf whose setup stopped partway (Coach drafted it, its Card is signed, and no
+  // taf was made): it's listed as being set up, by the name Coach gave it, with the way back to the chat where it
+  // stopped, never as ready and never by its agent's id.
   const halfMade = agents.length ? await halfMadeTafs(me.tenantID, records, new Set(agents), deps) : new Map<string, HalfMade>();
-  const others = agents.map((agent) => {
-    const card = summary(cards.get(agent) ?? []);
-    const held = waiting.get(agent) ?? 0;
+  const settingUp = agents.flatMap((agent) => {
+    const half = halfMade.get(agent);
+    if (!half) return [];
     const color = freeColor(taken);
     taken.push(color);
-    const half = halfMade.get(agent);
-    return { id: null, name: half?.name ?? agent, job: null, kiff_agent: agent, status: null, next_run: null, last_run: null, color, state: stateOf(card, held, null), waiting: held, card,
-      ...(half ? { finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } } : {}) };
+    return [{ name: half.name, kiff_agent: agent, color, finish: { taf: half.coach, session: half.session, words: wordsIn(langOf(event)).home_finish_setup } }];
+  });
+  // Apps from before setting_up read the same tafs from others, as they drew them there (Android 77, iPhone and iPad).
+  const others = settingUp.map((t) => {
+    const card = summary(cards.get(t.kiff_agent) ?? []);
+    const held = waiting.get(t.kiff_agent) ?? 0;
+    return { id: null, name: t.name, job: null, kiff_agent: t.kiff_agent, status: null, next_run: null, last_run: null, color: t.color, state: stateOf(card, held, null), waiting: held, card, finish: t.finish };
   });
   // Which doors this deployment offers (docs/doors.md): none, and the app shows no Doors.
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
@@ -6287,7 +6293,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const w = wordsIn(lang);
     return { count, words: count === 0 ? w.home_needs_you_none : w.home_needs_you(count, plural(lang, count)) };
   })();
-  return { tafs: listed, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
+  return { tafs: listed, setting_up: settingUp, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
