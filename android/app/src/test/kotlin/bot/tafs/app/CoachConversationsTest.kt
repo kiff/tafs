@@ -62,6 +62,18 @@ class CoachConversationsTest {
     assertTrue(transport.requestsTo("GET /v1/tafs/setup_1/conversation/s9").isNotEmpty())
   }
 
+  @Test fun finishSettingUpOpensCoachOnTheChatWhereItStopped() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/conversation/s7", 200, """{"messages":[{"at":"2026-10-27T09:00:00Z","from":"owner","text":"Invoicing day test","session":"s7"}]}""")
+    val m = model()
+    m.finishSetup(bot.tafs.app.kiff.HomeFinish(taf = "setup_1", session = "s7", words = "Finish setting up"))
+    // Coach opens on that chat; reading it is what makes the taf, at tafs cloud. The app makes nothing itself.
+    assertTrue(m.state.value.coachRequested)
+    assertEquals("s7", m.state.value.coachChat)
+    assertEquals(1, transport.requestsTo("GET /v1/tafs/setup_1/conversation/s7").size)
+    assertEquals(listOf("Invoicing day test"), m.state.value.chats[COACH_CHAT].orEmpty().map { it.text })
+  }
+
   @Test fun aReopenedConversationIsReadAloneAndMessagesGoOnInIt() = runTest {
     reads()
     transport.answer("GET /v1/tafs/setup_1/conversation/s4", 200, """{"messages":[{"at":"2026-10-27T09:00:00Z","from":"owner","text":"Hi","session":"s4"}]}""")

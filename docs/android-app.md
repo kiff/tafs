@@ -857,6 +857,11 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
 - **Alerts are offered once,** on Coach's "taf made" card, where alerts can be on and aren't: "Get an alert when a taf needs
   you", Turn on alerts (as in Settings, with Android's permission prompt) or Not now. Either answer is kept on this phone for
   the account (`AppModel.ALERTS_OFFERED_PREFIX`), so it isn't asked again. Settings keeps the switch.
+- **A taf whose setup stopped partway** (Android 1.20.1): Coach drafted it and its Card is signed, but no taf was made, so it
+  is listed under the other agents with Cards. tafs cloud sends the name Coach gave it and `finish: {taf, session, words}`
+  ([tafs.md](tafs.md#the-home-list)). The row shows `finish.words` ("Finish setting up") in amber in place of what it's doing,
+  and a tap opens Coach on that chat (`AppModel.finishSetup`). Reading the chat makes the taf at tafs cloud, and the next Home
+  read lists it as a taf. Without `finish`, an agent shows and opens as before.
 
 ## Your data and the AI
 

@@ -413,6 +413,8 @@ data class Taf(
   val kiffCardIds: List<String> = emptyList(),
   /** tafs cloud's id for it, which its chat and runs are under; null for an agent tafs doesn't run, and in the sample. */
   val cloudId: String? = null,
+  /** Another agent whose setup stopped partway: a tap opens Coach's chat where it stopped (docs/tafs.md). */
+  val finish: bot.tafs.app.kiff.HomeFinish? = null,
   /** Its schedule is paused on tafs cloud: no run starts. Its Cards aren't touched. */
   val paused: Boolean = false,
   /** When its schedule runs it next, as tafs cloud says. */

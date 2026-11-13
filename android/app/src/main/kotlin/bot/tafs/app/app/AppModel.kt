@@ -1811,6 +1811,16 @@ class AppModel(
   /** The tab screen opened Coach. */
   fun coachOpened() = _state.update { it.copy(coachRequested = false) }
 
+  /**
+   * "Finish setting up" on another agent whose setup stopped partway (docs/tafs.md): Coach opens on the chat where it stopped.
+   * Reading that chat is what makes the taf, at tafs cloud; the next Home read lists it as a taf.
+   */
+  suspend fun finishSetup(finish: bot.tafs.app.kiff.HomeFinish) {
+    if (_state.value.mode != Mode.kiff || !_state.value.mayUseCoach || finish.session.isBlank()) return
+    _state.update { it.copy(coachRequested = true) }
+    openCoachChat(finish.session)
+  }
+
   /** Reopens one of Coach's conversations: it's shown alone, and messages go on in it. */
   suspend fun openCoachChat(session: String) {
     leaveCoachChat()

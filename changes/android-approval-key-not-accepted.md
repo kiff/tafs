@@ -1,1 +1,1 @@
-- **Android 1.20.1 (77):** Home shows **Explore jobs** only when tafs cloud sends its words, as iPhone and iPad do, so it no longer repeats the jobs Home already lists ([android-app.md](docs/android-app.md)).
+- **Android 1.20.1 (77):** Home shows **Explore jobs** only when tafs cloud sends its words, as iPhone and iPad do, so it no longer repeats the jobs Home already lists. A taf whose setup stopped partway shows by its name with **Finish setting up**, which opens Coach where it stopped ([android-app.md](docs/android-app.md)).
