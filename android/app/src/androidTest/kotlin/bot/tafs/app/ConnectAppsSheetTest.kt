@@ -11,6 +11,8 @@ import bot.tafs.app.kiff.ConnectApps
 import bot.tafs.app.views.ConnectAppsSheet
 import bot.tafs.app.views.ConnectAppsWords
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import bot.tafs.app.model.Words
 import org.junit.Rule
 import org.junit.Test
 
@@ -109,6 +111,18 @@ class ConnectAppsSheetTest {
     rule.onNodeWithText(ConnectAppsWords.SIGN_IN_AGAIN).performClick()
     rule.waitForIdle()
     assertEquals("one taf: it's for that one", listOf("notion@1>refunds-1", "google>refunds-1"), started)
+  }
+
+  @Test fun theAccountsOwnAppsComeFirstUnderYoursThenDiscover() {
+    show(connect = true)
+    val yours = rule.onNodeWithText(Words.Connect.Apps.yours).fetchSemanticsNode().boundsInRoot.top
+    val discover = rule.onNodeWithText(Words.Connect.Apps.discover).fetchSemanticsNode().boundsInRoot.top
+    val stripe = rule.onNodeWithText("Stripe").fetchSemanticsNode().boundsInRoot.top
+    val notion = rule.onNodeWithText("Notion").fetchSemanticsNode().boundsInRoot.top
+    // Stripe is connected: under Yours. Notion isn't: under Discover.
+    assertTrue(yours < stripe && stripe < discover && discover < notion)
+    // Each row says how it connects.
+    assertTrue(count(Words.Connect.How.signIn) >= 2)
   }
 
   @Test fun aRowIsTheAppsTitleAloneNotTheProvidersIdForIt() {
