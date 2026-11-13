@@ -49,9 +49,10 @@ On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
   (`startApproval`, `startSignInAgain`, `startReconnect`), so the vendor's sign-in page opening
   never cuts the flow short: planque's confirm, the answer to Coach, reading the thread and
   following the run all go on.
-- **An answered approval** folds to one line saying what was approved. On Android, when it had a
-  Card, a tap opens it again to that Card's lines, KIFF's draft at the version signed, with nothing
-  to answer; another tap folds it. planque's grant isn't shown there: it reads as it is now, and a
+- **An answered approval** folds to one line saying what was approved. When a Card was signed, the
+  line names that Card, and its lines, KIFF's own from the draft the phone read, stay under it
+  (iOS and Android), never the key's words. On Android, a tap opens it again to that Card in full,
+  KIFF's draft at the version signed, with nothing to answer; another tap folds it. planque's grant isn't shown there: it reads as it is now, and a
   later tools approval can widen it past what this one approved. iOS follows.
 - **Coach's tools in one tap:** when tafs cloud sends the connect batch before Coach's Card (the
   Card is drafted over tools KIFF holds), the app reads the tools again after the batch and gives

@@ -399,7 +399,18 @@ data class SecureVendor(val name: String = "", val logo: String? = null, val hos
 data class SecureLine(val kind: String = "", val text: String = "")
 
 @Serializable
-data class SecurePaste(val button: String = "", val what: String? = null, val pasted: String = "", val cleared: String? = null)
+data class SecurePaste(
+  val button: String = "",
+  val what: String? = null,
+  val pasted: String = "",
+  val cleared: String? = null,
+  /** What to do once the key is pasted ("Key pasted. Tap Connect"); none from a tafs cloud from before it. */
+  val next: String? = null,
+)
+
+/** What removing a taf takes with it (`GET /v1/tafs/{id}/removal`): its apps that go, those that stay, and tafs cloud's words. */
+@Serializable
+data class RemovalPreview(val words: String? = null)
 
 @Serializable
 data class SecureDetails(val title: String = "", val lines: List<SecureDetail> = emptyList())

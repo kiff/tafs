@@ -82,7 +82,7 @@ final class ConnectionSheetTests: XCTestCase {
         XCTAssertFalse(try g("g9", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"refunds-1","connector":{"provider":"composio","toolkit":"stripe"},"tools":[]}"#, status: "needs_reconnect").signsInThroughProvider)
         XCTAssertFalse(try g("g1", #"{"server":"https://mcp.stripe.com","agent":"refunds-1","tools":[]}"#).signsInThroughProvider)
         XCTAssertEqual(ConnectionFixWords.throughProvider("Stripe"),
-                       "Stripe signs in through its connection provider. To sign in again, disconnect it and connect it again.")
+                       "Stripe signs in through its connection provider. To sign in again, remove access and connect it again.")
     }
 
     func testAKeyConnectionIsFixedWithANewKeyAndASignInOneBySigningInAgain() throws {

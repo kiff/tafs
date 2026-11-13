@@ -1,0 +1,8 @@
+- **Android 1.17: explore jobs without creating anything.** An Explore jobs row on Tafs, and a See all jobs row under the jobs strip, open every job to browse, with or without a taf. A job's sheet shows where it was proved, its apps, and what it reported after its test run, with Try it with Coach as its only action.
+- **Plainer words for ending access.** Disconnect is now Remove access. A request not answered yet says Cancel the request. Removing a key's access says the key is deleted from tafs, and Connect apps shows the change at once.
+- **The key sheet's Connect sits right under the pasted key**, with Details below it.
+- **The lock-screen alerts in Account are marked Example.**
+- **A signed approval in Coach names the Card**, with its lines under it, never the key's words.
+- **Removing a taf says which apps go with it** before the fingerprint, in tafs cloud's words.
+- **This phone's name in KIFF's device list keeps each language's word order** ("tafs sur appareil Android", not "tafs sur Android appareil").
+- **A personal account shows its email once in Account, and no raw account id**; People & groups starts with the count alone.

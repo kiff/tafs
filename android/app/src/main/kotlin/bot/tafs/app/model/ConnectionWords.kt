@@ -51,7 +51,17 @@ object ConnectionWords {
     return tafName(g, taf)?.let { Words.Connect.Prompt.giveKey(vendor = app, agent = it) } ?: Words.Connect.Prompt.giveKeyApp(vendor = app)
   }
 
-  fun cancelTitle(g: Grant): String = Words.Connect.CancelSignIn.title(g.vendor)
+  fun cancelTitle(g: Grant): String = if (g.pendingRequest) Words.Connect.CancelRequest.title(g.vendor) else Words.Connect.CancelSignIn.title(g.vendor)
+
+  /** The row's word, and the confirmation's, for what's cancelled: the request, or the sign-in. */
+  fun cancelButton(g: Grant): String = if (g.pendingRequest) Words.Connect.CancelRequest.button else Words.Connect.CancelSignIn.button
+
+  /** The row's word for ending a grant: Cancel for what never connected, else Remove access. */
+  fun endButton(g: Grant): String = when {
+    g.pendingRequest -> Words.Connect.CancelRequest.button
+    g.waitingSignIn -> CANCEL_SIGN_IN
+    else -> Words.Connect.disconnectButton
+  }
   fun cancelBody(g: Grant): String = Words.Connect.CancelSignIn.body(g.vendor)
 
   /** A sign-in that never came back, cancelled: its confirmation's buttons. */
@@ -139,5 +149,5 @@ object ConnectionWords {
         1 -> " " + Words.Connect.Disconnect.alsoCard(alsoStops[0])
         else -> " " + Words.Connect.Disconnect.alsoCards(PeopleWords.all(alsoStops))
       } +
-      " " + Words.Connect.Disconnect.rest(g.vendor)
+      " " + (if (g.takesKey) Words.Connect.Disconnect.restKey(g.vendor) else Words.Connect.Disconnect.rest(g.vendor))
 }

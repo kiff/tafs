@@ -2079,6 +2079,23 @@ class AppModel(
    * then tafs cloud stops it, deletes its runs, chats, memory and key, and frees its name. What to tell the owner; null
    * when nothing was done.
    */
+  /**
+   * tafs cloud's words for what removing [tafId] takes with it ("Qonto goes with it. Stripe stays: Chargebacks uses it."), for
+   * the confirmation before the fingerprint. Null when it sends none, or a tafs cloud from before the route: then the
+   * confirmation says only that the taf goes.
+   */
+  suspend fun removalWords(tafId: String): String? {
+    val cloudId = _state.value.taf(tafId)?.cloudId ?: return null
+    if (_state.value.mode != Mode.kiff) return null
+    return try {
+      cloud.removal(cloudId).words?.takeIf { it.isNotBlank() }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (_: Exception) {
+      null
+    }
+  }
+
   suspend fun removeTaf(tafId: String): String? {
     val s = _state.value
     val taf = s.taf(tafId)
@@ -4557,7 +4574,8 @@ class AppModel(
     } finally {
       planque.signer = null
     }
-    refreshConnections()
+    // Connect apps' list is tafs cloud's, and says Connected: read again with the grants, so it shows what's left at once.
+    if (_state.value.connectApps != null) loadConnectApps(connectAppsQuery) else refreshConnections()
     return true
   }
 

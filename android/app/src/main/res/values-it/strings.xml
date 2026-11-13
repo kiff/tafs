@@ -10,6 +10,7 @@
     <string name="alert_answered">Un taf ha risposto a qualcuno</string>
     <string name="alert_approve_once">Approva una volta…</string>
     <string name="alert_by_email">Via email</string>
+    <string name="alert_example">Esempio</string>
     <string name="alert_foot_cant_answer_holds">Gli avvisi vanno alle persone che possono rispondere alle chiamate trattenute. Il tuo ruolo in questo account non può.</string>
     <string name="alert_foot_tells_you_device">Quando un taf ti aspetta, questo %1$s te lo dice anche con tafs chiusa. Non viene inviato nulla finché non approvi.</string>
     <string name="alert_haptics">Feedback aptico</string>
@@ -765,7 +766,7 @@
     <string name="connect_apps_clearing">Rimozione…</string>
     <string name="connect_apps_connect">Collega</string>
     <string name="connect_apps_connected">Collegata ✓</string>
-    <string name="connect_apps_disconnect_why">Scollegarne uno rimuove i suoi strumenti solo da quel taf, e da ogni taf la cui Card li usa. Gli altri collegamenti restano.</string>
+    <string name="connect_apps_disconnect_why">Rimuovere un accesso toglie i suoi strumenti solo da quel taf, e da ogni taf la cui Card li usa. Gli altri taf mantengono i loro.</string>
     <string name="connect_apps_manage">Gestisci</string>
     <string name="connect_apps_more">Mostra altre app</string>
     <string name="connect_apps_none">Nessuna app con quel nome. Coach può collegarne una che non è in elenco.</string>
@@ -776,6 +777,8 @@
     <string name="connect_apps_your_connections">I tuoi collegamenti %1$s</string>
     <string name="connect_apps_connect_taf_make_one">Le app si collegano per un taf. Creane prima uno, poi collega qui le sue app.</string>
     <string name="connect_apps_not_read">Non è stato possibile leggere le app. %1$s</string>
+    <string name="connect_cancel_request_button">Annulla la richiesta</string>
+    <string name="connect_cancel_request_title">Annullare la richiesta per %1$s?</string>
     <string name="connect_cancel_sign_in_body">Non è ancora collegato nulla. Collega di nuovo %1$s da Coach o da Collega app quando sei pronto.</string>
     <string name="connect_cancel_sign_in_button">Annulla l\'accesso</string>
     <string name="connect_cancel_sign_in_keep_waiting">Continua ad aspettare</string>
@@ -806,8 +809,8 @@
     <string name="connect_connecting_again_asks_you_approve">" Per collegarlo di nuovo dovrai approvare e accedere di nuovo."</string>
     <string name="connect_connection_is">Questo collegamento è %1$s.</string>
     <string name="connect_connection_is_because">Questo collegamento è %1$s: %2$s</string>
-    <string name="connect_connections_could_not_disconnected_disconnect">" %1$s dei suoi collegamenti non sono stati scollegati: scollegali in Collega app."</string>
-    <string name="connect_connections_disconnected">" I suoi collegamenti sono scollegati."</string>
+    <string name="connect_connections_could_not_disconnected_disconnect">" Non è stato possibile rimuovere l\'accesso a %1$s delle sue app: rimuovilo in Collega app."</string>
+    <string name="connect_connections_disconnected">" Il suo accesso alle app è rimosso."</string>
     <string name="connect_could_not_cleared_try_again">%1$s non sono stati eliminati. Riprova.</string>
     <string name="connect_could_not_connected">Impossibile collegare %1$s: %2$s</string>
     <string name="connect_disconnect_also_card">Anche la Card di %1$s usa questi strumenti, quindi si ferma anche lei.</string>
@@ -816,15 +819,16 @@
         <item quantity="one">Si ferma anche %2$s.</item>
         <item quantity="other">Si fermano anche %2$s.</item>
     </plurals>
-    <string name="connect_disconnect_no_taf_uses">Nessun taf usa ora questo collegamento %1$s. I suoi strumenti escono da KIFF.</string>
-    <string name="connect_disconnect_rest">Gli altri collegamenti a %1$s restano collegati. Se nessun altro collegamento usa questo accesso, viene revocato su %1$s. Per collegarlo di nuovo dovrai approvare e accedere di nuovo.</string>
-    <string name="connect_disconnect_title">Scollegare %1$s?</string>
-    <string name="connect_disconnect_title_from">Scollegare %1$s da %2$s?</string>
+    <string name="connect_disconnect_no_taf_uses">Nessun taf usa %1$s ora.</string>
+    <string name="connect_disconnect_rest">Gli altri taf che usano %1$s mantengono il loro accesso. Se nessun altro taf usa questo login, viene revocato presso %1$s. Usare di nuovo %1$s ti chiede di approvare e accedere di nuovo.</string>
+    <string name="connect_disconnect_rest_key">Gli altri taf che usano %1$s mantengono il loro accesso. La chiave viene eliminata da tafs. Usare di nuovo %1$s ti chiede di approvare e incollare di nuovo una chiave.</string>
+    <string name="connect_disconnect_title">Rimuovere l\'accesso a %1$s?</string>
+    <string name="connect_disconnect_title_from">Rimuovere l\'accesso a %1$s per %2$s?</string>
     <string name="connect_disconnect_tools_stop">Gli strumenti %2$s di %1$s smettono di funzionare.</string>
-    <string name="connect_disconnect_app_question">Scollegare %1$s?</string>
+    <string name="connect_disconnect_app_question">Rimuovere l\'accesso a %1$s?</string>
     <string name="connect_disconnect_body">Le sue azioni smettono di funzionare per questo taf.</string>
-    <string name="connect_disconnect_button">Scollega</string>
-    <string name="connect_disconnecting">Scollegamento…</string>
+    <string name="connect_disconnect_button">Rimuovi l\'accesso</string>
+    <string name="connect_disconnecting">Rimozione dell\'accesso…</string>
     <string name="connect_from_removed">Dai tafs rimossi</string>
     <string name="connect_give_key_on_sheet">Dai la chiave in una schermata sicura</string>
     <string name="connect_give_key_with">Dai la chiave con %1$s</string>
@@ -854,7 +858,7 @@
     <string name="connect_no_such_connection">Non esiste un collegamento con quell\'id.</string>
     <string name="connect_no_taf">Crea prima un taf: un\'app viene collegata perché un taf la usi.</string>
     <string name="connect_not_connected">Non collegato. %1$s</string>
-    <string name="connect_not_disconnected">Non scollegato. %1$s</string>
+    <string name="connect_not_disconnected">Accesso non rimosso. %1$s</string>
     <string name="connect_not_set_up_here">Il collegamento delle app non è configurato per questo account da questo telefono.</string>
     <string name="connect_not_set_up_here_iphone">Il collegamento delle app non è configurato per questo account da questo telefono. Inizia da tafs su un iPhone.</string>
     <string name="connect_nothing_signed_in">Nessun accesso effettuato. Riprova.</string>
@@ -862,7 +866,7 @@
     <string name="connect_open_browser_again">Apri di nuovo il browser</string>
     <string name="connect_opening_sign_in">Apertura dell\'accesso…</string>
     <string name="connect_other_connections">Altri collegamenti</string>
-    <string name="connect_other_connections_stay_connected_no">" Gli altri collegamenti a %1$s restano collegati. Se nessun altro collegamento usa questo accesso, viene revocato su %2$s."</string>
+    <string name="connect_other_connections_stay_connected_no">" Gli altri taf che usano %1$s mantengono il loro accesso. Se nessun altro taf usa questo login, viene revocato su %2$s."</string>
     <string name="connect_profile_words_not_read">Non è stato possibile leggere le parole di KIFF per questo collegamento. %1$s</string>
     <string name="connect_profile_words_unread">Le parole di KIFF per questo collegamento non sono ancora state lette. Non è stato approvato nulla.</string>
     <string name="connect_prompt_connect">Collega %1$s a %2$s</string>
@@ -896,7 +900,7 @@
     <string name="connect_taf_not_tafs_cloud_apps">Questo taf non è ancora su tafs cloud, quindi non si possono collegare app per lui.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud non ha indicato nessun collegamento da approvare</string>
     <string name="connect_the_vendors_page">la pagina del fornitore</string>
-    <string name="connect_through_provider">%1$s accede tramite il suo fornitore di collegamenti. Per accedere di nuovo, scollegalo e collegalo di nuovo.</string>
+    <string name="connect_through_provider">%1$s accede tramite il suo fornitore di connessione. Per accedere di nuovo, rimuovi l\'accesso e collegalo di nuovo.</string>
     <string name="connect_used_by_many">Mantenuto: lo usano le Card di %1$s</string>
     <string name="connect_used_by_one">Mantenuto: lo usa la Card di %1$s</string>
     <string name="connect_which_taf">Per quale taf è?</string>
@@ -1159,6 +1163,7 @@
     <string name="home_couldnt_load_tafs">Impossibile caricare i tuoi tafs</string>
     <string name="home_empty_coach">Collega un\'app per configurare il tuo primo taf. Trascina verso il basso per aggiornare.</string>
     <string name="home_empty_shared">I tafs condivisi con te compaiono qui. Trascina verso il basso per aggiornare.</string>
+    <string name="home_explore_jobs">Esplora i lavori</string>
     <string name="home_footer">Accesso effettuato con KIFF. KIFF decide ogni azione. Trascina verso il basso per aggiornare.</string>
     <string name="home_halted_open_halt">Bloccato. Apri Blocca</string>
     <string name="home_loading">Caricamento dei tuoi tafs…</string>
@@ -1180,6 +1185,8 @@
     <string name="home_plan_line_description">%1$s Apre Piano e utilizzo.</string>
     <string name="home_reason_answer_by">%1$s · rispondi entro le %2$s</string>
     <string name="home_sample_foot">Dati di esempio. La Card viene verificata su questo telefono. Accesso effettuato con KIFF, KIFF decide, e un nuovo taf inizia in Coach.</string>
+    <string name="home_sample_label">Cosa ha riferito dopo la sua prova</string>
+    <string name="home_see_all_jobs">Vedi tutti i lavori</string>
     <string name="home_shared_you">Condivisi con te</string>
     <string name="home_sign_approve_each_step">Accedi e approvi ogni passo</string>
     <string name="home_start_new_taf">Inizia un nuovo taf</string>
@@ -1188,6 +1195,7 @@
     <string name="home_tafs_shared_you_show">I tafs condivisi con te compaiono qui.</string>
     <string name="home_tagline">They taf. You kiff.</string>
     <string name="home_title">Tafs</string>
+    <string name="home_try_with_coach">Provalo con Coach</string>
     <plurals name="home_working">
         <item quantity="one">%1$s taf al lavoro.</item>
         <item quantity="other">%1$s tafs al lavoro.</item>
@@ -1752,7 +1760,7 @@
     <string name="settings_delete_account_deleting">Eliminazione…</string>
     <string name="settings_delete_account_goes_cards">Le tue Card e chiavi: smettono di funzionare</string>
     <string name="settings_delete_account_goes_records">I registri di KIFF del tuo account, cancellati dopo 30 giorni</string>
-    <string name="settings_delete_account_goes_sign_ins">Gli accessi alle tue app, scollegati</string>
+    <string name="settings_delete_account_goes_sign_ins">Gli accessi alle tue app, rimossi</string>
     <string name="settings_delete_account_goes_tafs">Ogni taf, con le sue esecuzioni, chat, note e pianificazioni</string>
     <string name="settings_delete_account_kiff_not_deleted">I tuoi tafs e collegamenti sono cancellati, ma KIFF non ha eliminato l\'account. %1$s</string>
     <string name="settings_delete_account_not_erased">tafs non è riuscita a cancellare i tuoi tafs. Il tuo account KIFF non è stato eliminato. %1$s</string>
@@ -1763,6 +1771,7 @@
     <string name="settings_delete_account_title">Elimina account</string>
     <string name="settings_delete_account_warning">Questo elimina il tuo account KIFF e tutto ciò che tafs conserva per lui. Non si può annullare.</string>
     <string name="settings_delete_account_what_goes">Cosa viene eliminato</string>
+    <string name="settings_devices_android_device">%1$s Android</string>
     <string name="settings_devices_last_used">Ultimo utilizzo %1$s</string>
     <string name="settings_devices_not_loaded">Impossibile caricare i tuoi dispositivi. %1$s</string>
     <string name="settings_devices_not_used">Non ancora usato</string>
@@ -1987,10 +1996,10 @@
     </plurals>
     <string name="taf_remove_cards_revoked">Le sue Card sono revocate in KIFF.</string>
     <string name="taf_remove_cloud_did_not_answer">%1$s tafs cloud non ha risposto (%2$s). Se la rimozione è iniziata, tafs la completa al prossimo aggiornamento; altrimenti tocca di nuovo Rimuovi.</string>
-    <string name="taf_remove_connections_disconnected">I suoi collegamenti sono scollegati.</string>
+    <string name="taf_remove_connections_disconnected">Il suo accesso alle app è rimosso.</string>
     <plurals name="taf_remove_connections_left">
-        <item quantity="one">%1$s dei suoi collegamenti non è stato scollegato: scollegalo in Collega app.</item>
-        <item quantity="other">%1$s dei suoi collegamenti non sono stati scollegati: scollegali in Collega app.</item>
+        <item quantity="one">Non è stato possibile rimuovere l\'accesso a %1$s delle sue app: rimuovilo in Collega app.</item>
+        <item quantity="other">Non è stato possibile rimuovere l\'accesso a %1$s delle sue app: rimuovilo in Collega app.</item>
     </plurals>
     <string name="taf_remove_done">La sua pianificazione, le chat, i resoconti delle esecuzioni, la memoria e la chiave vengono eliminati, e il nome %1$s torna libero. Le ricevute di KIFF restano.</string>
     <string name="taf_remove_finishes_on_refresh">Se la rimozione è iniziata, tafs la completa al prossimo aggiornamento.</string>

@@ -66,6 +66,9 @@ data class RecipesGallery(
     get() = if (strip?.shown != true) emptyList() else strip.ids.mapNotNull { id -> recipes.firstOrNull { it.id == id } }
 
   fun category(id: String): RecipeCategory? = categories.firstOrNull { it.id == id }
+
+  /** The gallery lists a job the strip doesn't show: then a row under the strip opens them all. */
+  val holdsMoreThanStrip: Boolean get() = stripRecipes.isNotEmpty() && recipes.size > stripRecipes.size
 }
 
 @Serializable
@@ -79,6 +82,14 @@ data class GalleryWords(
   val all: String = "",
   @kotlinx.serialization.SerialName("own_words") val ownWords: String = "",
   @kotlinx.serialization.SerialName("own_words_line") val ownWordsLine: String = "",
+  /** Browsing every job, with nothing created: the row on Tafs, and the sheet's title then. */
+  val explore: String = "",
+  /** The row under the strip that opens every job. */
+  @kotlinx.serialization.SerialName("see_all") val seeAll: String = "",
+  /** A job's one action while browsing. */
+  @kotlinx.serialization.SerialName("try") val tryIt: String = "",
+  /** The label over a job's sample report. */
+  val sample: String = "",
 )
 
 /** The account's "Show suggestions" setting, kept in tafs cloud: whether it's on, and tafs cloud's words for it. */
@@ -108,7 +119,19 @@ data class Recipe(
   val connected: Boolean = false,
   /** A taf on the account was built from it. */
   val running: Boolean = false,
-)
+  /** As sent: read leniently, so a value that isn't words draws nothing and never fails the whole gallery. */
+  @kotlinx.serialization.SerialName("proved") val provedSent: kotlinx.serialization.json.JsonElement? = null,
+  @kotlinx.serialization.SerialName("sample") val sampleSent: kotlinx.serialization.json.JsonElement? = null,
+) {
+  /** tafs cloud's line for where the job was proved ("Proved on a test help desk."); empty when it wasn't, or isn't words. */
+  val proved: String get() = words(provedSent)
+
+  /** What the job reported after that proof run, as tafs cloud sends it; empty when there's none, or it isn't words. */
+  val sample: String get() = words(sampleSent)
+
+  private fun words(sent: kotlinx.serialization.json.JsonElement?): String =
+    (sent as? kotlinx.serialization.json.JsonPrimitive)?.takeIf { it.isString }?.content?.trim().orEmpty()
+}
 
 /** The Card a recipe's taf would have, as its file says it: what it does on its own, asks first, and never does. */
 @Serializable

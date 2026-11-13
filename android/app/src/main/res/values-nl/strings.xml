@@ -10,6 +10,7 @@
     <string name="alert_answered">Een taf heeft iemand geantwoord</string>
     <string name="alert_approve_once">Eenmalig goedkeuren…</string>
     <string name="alert_by_email">Via e-mail</string>
+    <string name="alert_example">Voorbeeld</string>
     <string name="alert_foot_cant_answer_holds">Meldingen gaan naar de mensen die vastgehouden aanroepen mogen beantwoorden. Jouw rol in dit account mag dat niet.</string>
     <string name="alert_foot_tells_you_device">Als een taf op jou wacht, laat deze %1$s het je weten, ook als tafs gesloten is. Er wordt niets verzonden tot je goedkeurt.</string>
     <string name="alert_haptics">Trillingen</string>
@@ -765,7 +766,7 @@
     <string name="connect_apps_clearing">Opruimen…</string>
     <string name="connect_apps_connect">Koppelen</string>
     <string name="connect_apps_connected">Gekoppeld ✓</string>
-    <string name="connect_apps_disconnect_why">Ontkoppel je er een, dan verdwijnen de tools ervan alleen bij dat taf, en bij elk taf waarvan de Card ze gebruikt. Andere koppelingen blijven.</string>
+    <string name="connect_apps_disconnect_why">Toegang intrekken haalt de tools alleen weg bij die taf, en bij elke taf waarvan de Card ze gebruikt. Andere tafs houden de hunne.</string>
     <string name="connect_apps_manage">Beheren</string>
     <string name="connect_apps_more">Meer apps tonen</string>
     <string name="connect_apps_none">Geen app met die naam. Coach kan een app koppelen die hier niet staat.</string>
@@ -776,6 +777,8 @@
     <string name="connect_apps_your_connections">Je %1$s-koppelingen</string>
     <string name="connect_apps_connect_taf_make_one">Apps worden voor een taf gekoppeld. Maak eerst een taf en koppel hier dan de apps ervan.</string>
     <string name="connect_apps_not_read">De apps konden niet worden gelezen. %1$s</string>
+    <string name="connect_cancel_request_button">Verzoek annuleren</string>
+    <string name="connect_cancel_request_title">Verzoek voor %1$s annuleren?</string>
     <string name="connect_cancel_sign_in_body">Er is nog niets gekoppeld. Koppel %1$s opnieuw vanuit Coach of Apps koppelen wanneer je zover bent.</string>
     <string name="connect_cancel_sign_in_button">Het inloggen annuleren</string>
     <string name="connect_cancel_sign_in_keep_waiting">Blijven wachten</string>
@@ -806,8 +809,8 @@
     <string name="connect_connecting_again_asks_you_approve">" Opnieuw koppelen vraagt je opnieuw goed te keuren en in te loggen."</string>
     <string name="connect_connection_is">Deze koppeling is %1$s.</string>
     <string name="connect_connection_is_because">Deze koppeling is %1$s: %2$s</string>
-    <string name="connect_connections_could_not_disconnected_disconnect">" %1$s van de koppelingen konden niet worden ontkoppeld: ontkoppel ze in Apps koppelen."</string>
-    <string name="connect_connections_disconnected">" De koppelingen zijn ontkoppeld."</string>
+    <string name="connect_connections_could_not_disconnected_disconnect">" Toegang tot %1$s van de apps kon niet worden ingetrokken: trek die in bij Apps koppelen."</string>
+    <string name="connect_connections_disconnected">" De toegang tot apps is ingetrokken."</string>
     <string name="connect_could_not_cleared_try_again">%1$s konden niet worden opgeruimd. Probeer het opnieuw.</string>
     <string name="connect_could_not_connected">%1$s kon niet worden gekoppeld: %2$s</string>
     <string name="connect_disconnect_also_card">De Card van %1$s gebruikt deze tools ook, dus die stopt ook.</string>
@@ -816,15 +819,16 @@
         <item quantity="one">%2$s stopt ook.</item>
         <item quantity="other">%2$s stoppen ook.</item>
     </plurals>
-    <string name="connect_disconnect_no_taf_uses">Geen enkel taf gebruikt deze %1$s-koppeling nu. De tools ervan verdwijnen uit KIFF.</string>
-    <string name="connect_disconnect_rest">Andere koppelingen met %1$s blijven gekoppeld. Als geen andere koppeling deze login gebruikt, wordt die bij %1$s ingetrokken. Opnieuw koppelen vraagt je opnieuw goed te keuren en in te loggen.</string>
-    <string name="connect_disconnect_title">%1$s ontkoppelen?</string>
-    <string name="connect_disconnect_title_from">%1$s ontkoppelen van %2$s?</string>
+    <string name="connect_disconnect_no_taf_uses">Geen taf gebruikt %1$s nu.</string>
+    <string name="connect_disconnect_rest">Andere tafs die %1$s gebruiken, houden hun toegang. Als geen andere taf deze aanmelding gebruikt, wordt die bij %1$s ingetrokken. Als je %1$s weer gebruikt, word je gevraagd opnieuw goed te keuren en je aan te melden.</string>
+    <string name="connect_disconnect_rest_key">Andere tafs die %1$s gebruiken, houden hun toegang. De sleutel wordt uit tafs verwijderd. Als je %1$s weer gebruikt, word je gevraagd opnieuw goed te keuren en een sleutel te plakken.</string>
+    <string name="connect_disconnect_title">Toegang tot %1$s intrekken?</string>
+    <string name="connect_disconnect_title_from">Toegang tot %1$s voor %2$s intrekken?</string>
     <string name="connect_disconnect_tools_stop">De %2$s-tools van %1$s werken niet meer.</string>
-    <string name="connect_disconnect_app_question">%1$s ontkoppelen?</string>
+    <string name="connect_disconnect_app_question">Toegang tot %1$s intrekken?</string>
     <string name="connect_disconnect_body">De acties ervan werken niet meer voor dit taf.</string>
-    <string name="connect_disconnect_button">Ontkoppelen</string>
-    <string name="connect_disconnecting">Ontkoppelen…</string>
+    <string name="connect_disconnect_button">Toegang intrekken</string>
+    <string name="connect_disconnecting">Toegang wordt ingetrokken…</string>
     <string name="connect_from_removed">Van verwijderde tafs</string>
     <string name="connect_give_key_on_sheet">De sleutel geven op een beveiligd scherm</string>
     <string name="connect_give_key_with">De sleutel geven met %1$s</string>
@@ -854,7 +858,7 @@
     <string name="connect_no_such_connection">Er is geen koppeling met die id.</string>
     <string name="connect_no_taf">Maak eerst een taf: een app wordt gekoppeld zodat een taf hem kan gebruiken.</string>
     <string name="connect_not_connected">Niet gekoppeld. %1$s</string>
-    <string name="connect_not_disconnected">Niet ontkoppeld. %1$s</string>
+    <string name="connect_not_disconnected">Toegang niet ingetrokken. %1$s</string>
     <string name="connect_not_set_up_here">Apps koppelen is voor dit account niet ingesteld vanaf deze telefoon.</string>
     <string name="connect_not_set_up_here_iphone">Apps koppelen is voor dit account niet ingesteld vanaf deze telefoon. Begin vanuit tafs op een iPhone.</string>
     <string name="connect_nothing_signed_in">Er is niets ingelogd. Probeer het opnieuw.</string>
@@ -862,7 +866,7 @@
     <string name="connect_open_browser_again">De browser opnieuw openen</string>
     <string name="connect_opening_sign_in">De login openen…</string>
     <string name="connect_other_connections">Andere koppelingen</string>
-    <string name="connect_other_connections_stay_connected_no">" Andere koppelingen met %1$s blijven gekoppeld. Als geen andere koppeling deze login gebruikt, wordt die bij %2$s ingetrokken."</string>
+    <string name="connect_other_connections_stay_connected_no">" Andere tafs die %1$s gebruiken, houden hun toegang. Als geen andere taf deze login gebruikt, wordt die bij %2$s ingetrokken."</string>
     <string name="connect_profile_words_not_read">De woorden van KIFF voor deze koppeling konden niet worden gelezen. %1$s</string>
     <string name="connect_profile_words_unread">De woorden van KIFF voor deze koppeling zijn nog niet gelezen. Er is niets goedgekeurd.</string>
     <string name="connect_prompt_connect">%1$s koppelen aan %2$s</string>
@@ -896,7 +900,7 @@
     <string name="connect_taf_not_tafs_cloud_apps">Dit taf staat nog niet op tafs cloud, dus er kunnen geen apps voor worden gekoppeld.</string>
     <string name="connect_tafs_cloud_named_no_connection">tafs cloud noemde geen koppeling om goed te keuren</string>
     <string name="connect_the_vendors_page">de pagina van de leverancier</string>
-    <string name="connect_through_provider">%1$s logt in via zijn koppelingsprovider. Om opnieuw in te loggen, ontkoppel je hem en koppel je hem opnieuw.</string>
+    <string name="connect_through_provider">%1$s meldt zich aan via zijn verbindingsprovider. Om je opnieuw aan te melden, trek je de toegang in en verbind je het opnieuw.</string>
     <string name="connect_used_by_many">Behouden: de Cards van %1$s gebruiken het</string>
     <string name="connect_used_by_one">Behouden: de Card van %1$s gebruikt het</string>
     <string name="connect_which_taf">Voor welk taf is dit?</string>
@@ -1159,6 +1163,7 @@
     <string name="home_couldnt_load_tafs">Kon je tafs niet laden</string>
     <string name="home_empty_coach">Koppel een app om je eerste taf in te stellen. Trek omlaag om te vernieuwen.</string>
     <string name="home_empty_shared">Tafs die met je zijn gedeeld, verschijnen hier. Trek omlaag om te vernieuwen.</string>
+    <string name="home_explore_jobs">Taken verkennen</string>
     <string name="home_footer">Ingelogd met KIFF. KIFF beslist over elke actie. Trek omlaag om te vernieuwen.</string>
     <string name="home_halted_open_halt">Stilgezet. Open Stilzetten</string>
     <string name="home_loading">Je tafs laden…</string>
@@ -1180,6 +1185,8 @@
     <string name="home_plan_line_description">%1$s Opent Abonnement en gebruik.</string>
     <string name="home_reason_answer_by">%1$s · antwoord vóór %2$s</string>
     <string name="home_sample_foot">Voorbeeldgegevens. De Card wordt op deze telefoon gecontroleerd. Ingelogd met KIFF, KIFF beslist, en een nieuw taf begint in Coach.</string>
+    <string name="home_sample_label">Wat het meldde na de testrun</string>
+    <string name="home_see_all_jobs">Alle taken bekijken</string>
     <string name="home_shared_you">Met je gedeeld</string>
     <string name="home_sign_approve_each_step">Je logt in en keurt elke stap goed</string>
     <string name="home_start_new_taf">Een nieuw taf starten</string>
@@ -1188,6 +1195,7 @@
     <string name="home_tafs_shared_you_show">Tafs die met je zijn gedeeld, verschijnen hier.</string>
     <string name="home_tagline">They taf. You kiff.</string>
     <string name="home_title">Tafs</string>
+    <string name="home_try_with_coach">Probeer het met Coach</string>
     <plurals name="home_working">
         <item quantity="one">%1$s taf bezig.</item>
         <item quantity="other">%1$s tafs bezig.</item>
@@ -1752,7 +1760,7 @@
     <string name="settings_delete_account_deleting">Verwijderen…</string>
     <string name="settings_delete_account_goes_cards">Je Cards en sleutels: ze werken niet meer</string>
     <string name="settings_delete_account_goes_records">De gegevens van KIFF over je account, gewist na 30 dagen</string>
-    <string name="settings_delete_account_goes_sign_ins">De logins van je apps, ontkoppeld</string>
+    <string name="settings_delete_account_goes_sign_ins">De logins van je apps, ingetrokken</string>
     <string name="settings_delete_account_goes_tafs">Elk taf, met zijn runs, chats, notities en planningen</string>
     <string name="settings_delete_account_kiff_not_deleted">Je tafs en koppelingen zijn gewist, maar KIFF heeft het account niet verwijderd. %1$s</string>
     <string name="settings_delete_account_not_erased">tafs kon je tafs niet wissen. Je KIFF-account is niet verwijderd. %1$s</string>
@@ -1763,6 +1771,7 @@
     <string name="settings_delete_account_title">Account verwijderen</string>
     <string name="settings_delete_account_warning">Dit verwijdert je KIFF-account en alles wat tafs ervoor bewaart. Dit kan niet ongedaan worden gemaakt.</string>
     <string name="settings_delete_account_what_goes">Wat er verdwijnt</string>
+    <string name="settings_devices_android_device">Android-%1$s</string>
     <string name="settings_devices_last_used">Laatst gebruikt %1$s</string>
     <string name="settings_devices_not_loaded">Kon je apparaten niet laden. %1$s</string>
     <string name="settings_devices_not_used">Nog niet gebruikt</string>
@@ -1987,10 +1996,10 @@
     </plurals>
     <string name="taf_remove_cards_revoked">Zijn Cards zijn ingetrokken in KIFF.</string>
     <string name="taf_remove_cloud_did_not_answer">%1$s tafs cloud antwoordde niet (%2$s). Als het verwijderen is begonnen, rondt tafs het af bij de volgende vernieuwing; zo niet, tik dan nogmaals op Verwijderen.</string>
-    <string name="taf_remove_connections_disconnected">De koppelingen zijn ontkoppeld.</string>
+    <string name="taf_remove_connections_disconnected">De toegang tot apps is ingetrokken.</string>
     <plurals name="taf_remove_connections_left">
-        <item quantity="one">%1$s van de koppelingen kon niet worden ontkoppeld: ontkoppel die in Apps koppelen.</item>
-        <item quantity="other">%1$s van de koppelingen konden niet worden ontkoppeld: ontkoppel ze in Apps koppelen.</item>
+        <item quantity="one">Toegang tot %1$s van de apps kon niet worden ingetrokken: trek die in bij Apps koppelen.</item>
+        <item quantity="other">Toegang tot %1$s van de apps kon niet worden ingetrokken: trek die in bij Apps koppelen.</item>
     </plurals>
     <string name="taf_remove_done">De planning, chats, runrapporten, het geheugen en de sleutel zijn verwijderd, en de naam %1$s is vrij. De ontvangstbewijzen van KIFF blijven.</string>
     <string name="taf_remove_finishes_on_refresh">Als het verwijderen is begonnen, rondt tafs het af bij de volgende vernieuwing.</string>

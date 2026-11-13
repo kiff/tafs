@@ -8,6 +8,7 @@
   "home.couldnt_load_tafs": "Couldn't load your tafs",
   "home.empty.coach": "Connect an app to set up your first taf. Pull down to refresh.",
   "home.empty.shared": "Tafs shared with you show here. Pull down to refresh.",
+  "home.explore_jobs": "Explore jobs",
   "home.footer": "Signed in with KIFF. KIFF decides every action. Pull down to refresh.",
   "home.halted_open_halt": "Halted. Open Halt",
   "home.loading": "Loading your tafs…",
@@ -29,6 +30,8 @@
   "home.plan_line_description": "{words} Opens Plan & usage.",
   "home.reason_answer_by": "{why} · answer by {time}",
   "home.sample_foot": "Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf starts in Coach.",
+  "home.sample_label": "What it reported after its test run",
+  "home.see_all_jobs": "See all jobs",
   "home.shared_you": "Shared with you",
   "home.sign_approve_each_step": "You sign in and approve each step",
   "home.start_new_taf": "Start a new taf",
@@ -37,6 +40,7 @@
   "home.tafs_shared_you_show": "Tafs shared with you show here.",
   "home.tagline": "They taf. You kiff.",
   "home.title": "Tafs",
+  "home.try_with_coach": "Try it with Coach",
   "home.working": {
     "one": "{count} taf working.",
     "other": "{count} tafs working."

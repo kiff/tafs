@@ -85,6 +85,8 @@ fun HomeView(
   onRecipe: (bot.tafs.app.kiff.Recipe) -> Unit = {},
   /** + New: every job a taf can take (docs/android-app.md); null where there's no gallery to open. */
   onNewTaf: (() -> Unit)? = null,
+  /** Explore jobs and See all jobs: every job, to browse, with nothing created; null where there's no gallery to open. */
+  onExplore: (() -> Unit)? = null,
   modifier: Modifier = Modifier,
 ) {
   // Pulling to refresh plays the sample's next round; signed in, it reads KIFF again.
@@ -151,11 +153,10 @@ fun HomeView(
           Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
               Box(Modifier.weight(1f)) { Eyebrow(Words.Home.tagline) }
-              // + New, in tafs cloud's words: the gallery of every job, also once a taf runs.
-              val newTaf = state.gallery?.words?.title?.takeIf { it.isNotBlank() }
-              if (onNewTaf != null && newTaf != null && state.mayUseCoach) {
+              // + New: the gallery of every job, also once a taf runs. tafs cloud's words, else the app's own.
+              if (onNewTaf != null && state.mayUseCoach) {
                 Text(
-                  "+ $newTaf",
+                  "+ " + HomeWords.newTaf(state.gallery),
                   style = scaled(15, FontWeight.SemiBold, Theme.amberText),
                   modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onNewTaf).padding(horizontal = 4.dp, vertical = 10.dp),
                 )
@@ -163,6 +164,8 @@ fun HomeView(
             }
             // A new account's Home leads with the jobs: "0 tafs working" and "Nothing needs you" say nothing yet.
             if (!state.homeLeadsWithRecipes) Headline(state)
+            // Explore jobs: every job to read, with nothing created, with or without a taf, and with no Coach needed.
+            if (onExplore != null) ExploreRow(HomeWords.explore(state.gallery), onExplore)
           }
         }
         state.held.firstOrNull()?.let { first ->
@@ -178,7 +181,7 @@ fun HomeView(
         }
         // A few jobs the account doesn't run yet, under its tafs, as tafs cloud picks them (docs/android-app.md).
         val gallery = state.gallery
-        if (gallery != null && state.tafs.isNotEmpty() && state.mayUseCoach && gallery.stripRecipes.isNotEmpty()) item { JobStrip(gallery, onRecipe) }
+        if (gallery != null && state.tafs.isNotEmpty() && state.mayUseCoach && gallery.stripRecipes.isNotEmpty()) item { JobStrip(gallery, onRecipe, onExplore) }
         if (state.otherAgents.isNotEmpty()) {
           // Agents made through KIFF's API, not run by tafs: their Cards, apart.
           item {
@@ -216,6 +219,18 @@ fun HomeView(
         item { Text(Words.Home.footer, style = scaled(12, color = Theme.dim)) }
       }
     }
+  }
+}
+
+/** A row that opens every job to browse: Explore jobs on Tafs, See all jobs under the strip. */
+@Composable
+internal fun ExploreRow(words: String, onClick: () -> Unit) {
+  Row(
+    Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onClick).padding(vertical = 8.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Text(words, style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
+    Text("›", style = scaled(17, FontWeight.SemiBold, Theme.dim))
   }
 }
 

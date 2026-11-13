@@ -58,6 +58,62 @@ class GalleryTest {
     assertEquals(emptyList<String>(), read("""{"categories":[],"recipes":[]}""").stripRecipes.map { it.id })
   }
 
+  @Test fun browsingReadsTafsCloudsWordsAndEachJobsProofAndSample() {
+    val sent = gallery
+      .replace(""""own_words_line":"Tell Coach the job, and it builds the taf with you."}""",
+        """"own_words_line":"Tell Coach the job, and it builds the taf with you.","explore":"Explore jobs","see_all":"See all jobs","try":"Try it with Coach","sample":"What it reported after its test run"}""")
+      .replace(""""id":"follow-up-new-leads","title":"Follow up leads","category":"customers",""",
+        """"id":"follow-up-new-leads","title":"Follow up leads","category":"customers","proved":"Proved on a test help desk.","sample":"3 tickets answered.",""")
+    val g = read(sent)
+    assertEquals("Explore jobs", g.words?.explore)
+    assertEquals("See all jobs", g.words?.seeAll)
+    assertEquals("Try it with Coach", g.words?.tryIt)
+    assertEquals("What it reported after its test run", g.words?.sample)
+    val leads = g.recipes.first { it.id == "follow-up-new-leads" }
+    assertEquals("Proved on a test help desk.", leads.proved)
+    assertEquals("3 tickets answered.", leads.sample)
+    // A job with no proof run has neither line, and nothing is drawn for it.
+    assertEquals("", g.recipes.first().proved)
+    assertEquals("", g.recipes.first().sample)
+    assertEquals("Explore jobs", bot.tafs.app.model.HomeWords.explore(g))
+    assertEquals("Try it with Coach", bot.tafs.app.model.HomeWords.tryIt(g))
+  }
+
+  @Test fun aProofOrSampleThatIsntWordsDrawsNothingAndTheGalleryStillReads() {
+    val odd = gallery.replace(""""id":"follow-up-new-leads","title":"Follow up leads","category":"customers",""",
+      """"id":"follow-up-new-leads","title":"Follow up leads","category":"customers","proved":true,"sample":["a list"],""")
+    val g = read(odd)
+    assertEquals("every job still reads", 3, g.recipes.size)
+    val leads = g.recipes.first { it.id == "follow-up-new-leads" }
+    assertEquals("", leads.proved)
+    assertEquals("", leads.sample)
+    assertEquals("Proved.", read(gallery.replace(""""category":"customers",""", """"category":"customers","proved":"  Proved.  ",""")).recipes.last().proved)
+  }
+
+  @Test fun whileTafsCloudSendsNoWordsTheAppsOwnStandInAndNewIsAlwaysNamed() {
+    val g = read("""{"categories":[],"recipes":[]}""")
+    val home = bot.tafs.app.model.HomeWords
+    val words = bot.tafs.app.model.Words.Home
+    // + New is never left without words: tafs cloud's title, else the app's "New taf".
+    assertEquals(words.newTaf, home.newTaf(g))
+    assertEquals(words.newTaf, home.newTaf(null))
+    assertEquals(words.newTaf, home.newTaf(read("""{"categories":[],"recipes":[],"words":{"title":"  "}}""")))
+    assertEquals("New taf", home.newTaf(read(gallery)))
+    assertEquals(words.exploreJobs, home.explore(g))
+    assertEquals(words.seeAllJobs, home.seeAll(g))
+    assertEquals(words.tryWithCoach, home.tryIt(g))
+    assertEquals(words.sampleLabel, home.sampleLabel(g))
+  }
+
+  @Test fun theRowUnderTheStripShowsOnlyWhenTheGalleryHoldsMore() {
+    val g = read(gallery)
+    assertTrue("three jobs, the strip shows two", g.holdsMoreThanStrip)
+    val whole = g.copy(strip = g.strip!!.copy(ids = g.recipes.map { it.id }))
+    assertFalse("the strip already shows every job", whole.holdsMoreThanStrip)
+    val hidden = g.copy(strip = g.strip!!.copy(shown = false))
+    assertFalse("no strip, so no row under it", hidden.holdsMoreThanStrip)
+  }
+
   @Test fun anOlderTafsCloudsRecipesStillRead() {
     val g = read("""{"categories":[{"id":"money","title":"Money"}],"recipes":[{"id":"r","title":"R","category":"money"}]}""")
     assertNull(g.categories.single().color)

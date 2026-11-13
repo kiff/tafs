@@ -8,6 +8,7 @@
   "home.couldnt_load_tafs": "Impossible de charger vos tafs",
   "home.empty.coach": "Connectez une app pour configurer votre premier taf. Tirez vers le bas pour actualiser.",
   "home.empty.shared": "Les tafs partagés avec vous s'affichent ici. Tirez vers le bas pour actualiser.",
+  "home.explore_jobs": "Explorer les tâches",
   "home.footer": "Connecté avec KIFF. KIFF décide de chaque action. Tirez vers le bas pour actualiser.",
   "home.halted_open_halt": "Bloqué. Ouvrir Bloquer",
   "home.loading": "Chargement de vos tafs…",
@@ -29,6 +30,8 @@
   "home.plan_line_description": "{words} Ouvre Forfait et utilisation.",
   "home.reason_answer_by": "{why} · répondez avant {time}",
   "home.sample_foot": "Données d'exemple. La Card est vérifiée sur ce téléphone. Connecté avec KIFF, KIFF décide, et un nouveau taf commence dans Coach.",
+  "home.sample_label": "Ce qu'il a rapporté après son essai",
+  "home.see_all_jobs": "Voir toutes les tâches",
   "home.shared_you": "Partagés avec vous",
   "home.sign_approve_each_step": "Vous vous connectez et approuvez chaque étape",
   "home.start_new_taf": "Lancer un nouveau taf",
@@ -37,6 +40,7 @@
   "home.tafs_shared_you_show": "Les tafs partagés avec vous s'affichent ici.",
   "home.tagline": "They taf. You kiff.",
   "home.title": "Tafs",
+  "home.try_with_coach": "L'essayer avec Coach",
   "home.working": {
     "one": "{count} taf en cours.",
     "other": "{count} tafs en cours."

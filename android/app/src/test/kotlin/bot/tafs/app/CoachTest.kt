@@ -225,6 +225,18 @@ class CoachTest {
     assertEquals("Approved · Coach's Card", CoachWords.answeredApproval("Approved", untitled, null, "Coach"))
     assertEquals("Declined · Connect mcp.stripe.com", CoachWords.answeredApproval("Declined", untitled, null, null))
     assertEquals("Approved", CoachWords.answeredApproval("Approved", card("""{"type":"approval","id":"a3"}"""), null, null))
+    // A Card that was signed is named, never the key's words (the owner, 12 Nov: "Approved · You will give an API key…").
+    assertEquals("Approved · Refunds' Card", CoachWords.answeredApproval("Approved", card(approval), "You will give an API key for Qonto", "Refunds", cardSigned = true))
+    // A draft confirmed with no tools (Coach's own start) has no Card to name.
+    val noTools = bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.AgentDraft>("""{"id":"d1","status":"confirmed","no_tools":true,"label":"Coach"}""")
+    assertFalse(noTools.signedCard)
+    assertTrue(bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.AgentDraft>("""{"id":"d2","status":"confirmed","label":"Refunds"}""").signedCard)
+    assertFalse(bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.AgentDraft>("""{"id":"d3","status":"draft","label":"Refunds"}""").signedCard)
+    // Its key claimed since the confirm: still signed (as iOS reads it). Every other status isn't.
+    fun status(s: String) = bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.AgentDraft>("""{"id":"d4","status":"$s"}""").signed
+    assertTrue(status("confirmed") && status("claimed"))
+    listOf("draft", "confirming", "failed", "discarded", "rolling_back", "discarding").forEach { assertFalse(it, status(it)) }
+    assertEquals("not signed: as before", "Declined · Connect Stripe", CoachWords.answeredApproval("Declined", card(approval), "You will give an API key for Qonto", "Refunds"))
   }
 
   @Test fun aNoticeKeepsItsOwnTimeAndAnOwnersAnswerBetweenSplitsTheWords() = runTest {

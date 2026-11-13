@@ -84,5 +84,5 @@ class TafsApplication : Application() {
 
   /** What KIFF's device list calls this phone, so the owner can tell it from their other devices. */
   val deviceName: String
-    get() = bot.tafs.app.model.Words.Settings.Devices.thisDeviceName(device = "Android " + bot.tafs.app.model.ThisDevice.word)
+    get() = bot.tafs.app.model.Words.Settings.Devices.thisDeviceName(device = bot.tafs.app.model.Words.Settings.Devices.androidDevice(device = bot.tafs.app.model.ThisDevice.word))
 }

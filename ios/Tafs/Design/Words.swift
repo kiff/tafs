@@ -21,6 +21,8 @@ enum Words {
         static var approveOnce: String { Words.line("alert.approve_once") }
         /// By email
         static var byEmail: String { Words.line("alert.by_email") }
+        /// Example
+        static var example: String { Words.line("alert.example") }
         enum Foot {
             /// Alerts go to the people who may answer held calls. Your role on this account can't.
             static var cantAnswerHolds: String { Words.line("alert.foot.cant_answer_holds") }
@@ -1466,7 +1468,7 @@ enum Words {
             static var connect: String { Words.line("connect.apps.connect") }
             /// Connected ✓
             static var connected: String { Words.line("connect.apps.connected") }
-            /// Disconnecting one removes its tools from that taf only, and from any taf whose Card uses them. Other connections stay.
+            /// Removing access takes its tools from that taf only, and from any taf whose Card uses them. Other tafs keep theirs.
             static var disconnectWhy: String { Words.line("connect.apps.disconnect_why") }
             /// Manage
             static var manage: String { Words.line("connect.apps.manage") }
@@ -1489,6 +1491,12 @@ enum Words {
         static var appsConnectTafMakeOne: String { Words.line("connect.apps_connect_taf_make_one") }
         /// The apps couldn't be read. {why}
         static func appsNotRead(why: String) -> String { Words.line("connect.apps_not_read", why) }
+        enum CancelRequest {
+            /// Cancel the request
+            static var button: String { Words.line("connect.cancel_request.button") }
+            /// Cancel the request for {vendor}?
+            static func title(vendor: String) -> String { Words.line("connect.cancel_request.title", vendor) }
+        }
         enum CancelSignIn {
             /// Nothing is connected yet. Connect {vendor} again from Coach or Connect apps when you're ready.
             static func body(vendor: String) -> String { Words.line("connect.cancel_sign_in.body", vendor) }
@@ -1535,9 +1543,9 @@ enum Words {
         static func connectionIs(status: String) -> String { Words.line("connect.connection_is", status) }
         /// This connection is {status}: {reason}
         static func connectionIsBecause(status: String, reason: String) -> String { Words.line("connect.connection_is_because", status, reason) }
-        ///  {left} of its connections couldn't be disconnected: disconnect them in Connect apps.
+        ///  Access to {left} of its apps couldn't be removed: remove it in Connect apps.
         static func connectionsCouldNotDisconnectedDisconnect(left: String) -> String { Words.line("connect.connections_could_not_disconnected_disconnect", left) }
-        ///  Its connections are disconnected.
+        ///  Its access to apps is removed.
         static var connectionsDisconnected: String { Words.line("connect.connections_disconnected") }
         /// {left} couldn't be cleared. Try again.
         static func couldNotClearedTryAgain(left: String) -> String { Words.line("connect.could_not_cleared_try_again", left) }
@@ -1550,24 +1558,26 @@ enum Words {
             static func alsoCards(names: String) -> String { Words.line("connect.disconnect.also_cards", names) }
             /// {names} stop too.
             static func alsoStops(count: Int, names: String) -> String { Words.count("connect.disconnect.also_stops", count, names) }
-            /// No taf uses this {vendor} connection now. Its tools leave KIFF.
+            /// No taf uses {vendor} now.
             static func noTafUses(vendor: String) -> String { Words.line("connect.disconnect.no_taf_uses", vendor) }
-            /// Other connections to {vendor} stay connected. If no other connection uses this sign-in, it's revoked at {vendor}. Connecting again asks you to approve and sign in again.
+            /// Other tafs that use {vendor} keep their access. If no other taf uses this sign-in, it's revoked at {vendor}. Using {vendor} again asks you to approve and sign in again.
             static func rest(vendor: String) -> String { Words.line("connect.disconnect.rest", vendor) }
-            /// Disconnect {vendor}?
+            /// Other tafs that use {vendor} keep their access. The key is deleted from tafs. Using {vendor} again asks you to approve and paste a key again.
+            static func restKey(vendor: String) -> String { Words.line("connect.disconnect.rest_key", vendor) }
+            /// Remove access to {vendor}?
             static func title(vendor: String) -> String { Words.line("connect.disconnect.title", vendor) }
-            /// Disconnect {vendor} from {taf}?
+            /// Remove access to {vendor} for {taf}?
             static func titleFrom(vendor: String, taf: String) -> String { Words.line("connect.disconnect.title_from", vendor, taf) }
             /// {owner|possessive} {vendor} tools stop working.
             static func toolsStop(owner: String, vendor: String) -> String { Words.line("connect.disconnect.tools_stop", owner, vendor, Words.possessive(owner)) }
         }
-        /// Disconnect {app}?
+        /// Remove access to {app}?
         static func disconnectAppQuestion(app: String) -> String { Words.line("connect.disconnect_app_question", app) }
         /// Its actions stop working for this taf.
         static var disconnectBody: String { Words.line("connect.disconnect_body") }
-        /// Disconnect
+        /// Remove access
         static var disconnectButton: String { Words.line("connect.disconnect_button") }
-        /// Disconnecting…
+        /// Removing access…
         static var disconnecting: String { Words.line("connect.disconnecting") }
         /// From removed tafs
         static var fromRemoved: String { Words.line("connect.from_removed") }
@@ -1611,7 +1621,7 @@ enum Words {
         static var noTaf: String { Words.line("connect.no_taf") }
         /// Not connected. {why}
         static func notConnected(why: String) -> String { Words.line("connect.not_connected", why) }
-        /// Not disconnected. {why}
+        /// Access not removed. {why}
         static func notDisconnected(why: String) -> String { Words.line("connect.not_disconnected", why) }
         /// Connecting apps isn't set up for this account from this phone.
         static var notSetUpHere: String { Words.line("connect.not_set_up_here") }
@@ -1627,7 +1637,7 @@ enum Words {
         static var openingSignIn: String { Words.line("connect.opening_sign_in") }
         /// Other connections
         static var otherConnections: String { Words.line("connect.other_connections") }
-        ///  Other connections to {vendor} stay connected. If no other connection uses this sign-in, it's revoked at {vendor_2}.
+        ///  Other tafs that use {vendor} keep their access. If no other taf uses this sign-in, it's revoked at {vendor_2}.
         static func otherConnectionsStayConnectedNo(vendor: String, vendor2: String) -> String { Words.line("connect.other_connections_stay_connected_no", vendor, vendor2) }
         /// KIFF's words for this connection couldn't be read. {why}
         static func profileWordsNotRead(why: String) -> String { Words.line("connect.profile_words_not_read", why) }
@@ -1701,7 +1711,7 @@ enum Words {
         static var tafsCloudNamedNoConnection: String { Words.line("connect.tafs_cloud_named_no_connection") }
         /// the vendor's page
         static var theVendorsPage: String { Words.line("connect.the_vendors_page") }
-        /// {vendor} signs in through its connection provider. To sign in again, disconnect it and connect it again.
+        /// {vendor} signs in through its connection provider. To sign in again, remove access and connect it again.
         static func throughProvider(vendor: String) -> String { Words.line("connect.through_provider", vendor) }
         enum UsedBy {
             /// Kept: the Cards of {names} use it
@@ -2223,6 +2233,8 @@ enum Words {
             /// Tafs shared with you show here. Pull down to refresh.
             static var shared: String { Words.line("home.empty.shared") }
         }
+        /// Explore jobs
+        static var exploreJobs: String { Words.line("home.explore_jobs") }
         /// Signed in with KIFF. KIFF decides every action. Pull down to refresh.
         static var footer: String { Words.line("home.footer") }
         /// Halted. Open Halt
@@ -2267,6 +2279,10 @@ enum Words {
         static func reasonAnswerBy(why: String, time: String) -> String { Words.line("home.reason_answer_by", why, time) }
         /// Sample data. The Card is checked on this phone. Signed in with KIFF, KIFF decides, and a new taf starts in Coach.
         static var sampleFoot: String { Words.line("home.sample_foot") }
+        /// What it reported after its test run
+        static var sampleLabel: String { Words.line("home.sample_label") }
+        /// See all jobs
+        static var seeAllJobs: String { Words.line("home.see_all_jobs") }
         /// Shared with you
         static var sharedYou: String { Words.line("home.shared_you") }
         /// You sign in and approve each step
@@ -2283,6 +2299,8 @@ enum Words {
         static var tagline: String { Words.line("home.tagline") }
         /// Tafs
         static var title: String { Words.line("home.title") }
+        /// Try it with Coach
+        static var tryWithCoach: String { Words.line("home.try_with_coach") }
         /// {count} tafs working.
         static func working(count: Int) -> String { Words.count("home.working", count) }
         /// Your tafs
@@ -3452,7 +3470,7 @@ enum Words {
             static var goesCards: String { Words.line("settings.delete_account.goes_cards") }
             /// KIFF's records of your account, erased after 30 days
             static var goesRecords: String { Words.line("settings.delete_account.goes_records") }
-            /// Your apps' sign-ins, disconnected
+            /// Your apps' sign-ins, removed
             static var goesSignIns: String { Words.line("settings.delete_account.goes_sign_ins") }
             /// Every taf, with its runs, chats, notes and schedules
             static var goesTafs: String { Words.line("settings.delete_account.goes_tafs") }
@@ -3476,6 +3494,8 @@ enum Words {
             static var whatGoes: String { Words.line("settings.delete_account.what_goes") }
         }
         enum Devices {
+            /// Android {device}
+            static func androidDevice(device: String) -> String { Words.line("settings.devices.android_device", device) }
             /// Last used {ago}
             static func lastUsed(ago: String) -> String { Words.line("settings.devices.last_used", ago) }
             /// Couldn't load your devices. {why}
@@ -3954,9 +3974,9 @@ enum Words {
             static var cardsRevoked: String { Words.line("taf.remove.cards_revoked") }
             /// {cards} tafs cloud didn't answer ({why}). If it began, tafs finishes it the next time it refreshes; if not, tap Remove again.
             static func cloudDidNotAnswer(cards: String, why: String) -> String { Words.line("taf.remove.cloud_did_not_answer", cards, why) }
-            /// Its connections are disconnected.
+            /// Its access to apps is removed.
             static var connectionsDisconnected: String { Words.line("taf.remove.connections_disconnected") }
-            /// {count} of its connections couldn't be disconnected: disconnect them in Connect apps.
+            /// Access to {count} of its apps couldn't be removed: remove it in Connect apps.
             static func connectionsLeft(count: Int) -> String { Words.count("taf.remove.connections_left", count) }
             /// Its schedule, chats, run reports, memory and key are deleted, and the name {taf} is free. KIFF's receipts stay.
             static func done(taf: String) -> String { Words.line("taf.remove.done", taf) }

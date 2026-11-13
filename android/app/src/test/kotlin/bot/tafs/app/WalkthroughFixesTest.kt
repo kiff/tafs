@@ -23,4 +23,20 @@ class WalkthroughFixesTest {
     assertNotEquals(accountShown(signedIn), accountShown(signedIn.copy(kiffAccount = Account("t_02", "other"))))
     assertEquals(accountShown(signedIn), accountShown(signedIn.copy(kiffAccount = Account("t_01", "acme", timeZone = "Europe/Paris"))))
   }
+
+  @Test fun aPersonalAccountShowsItsEmailOnceAndNoRawId() {
+    // Named after its owner's email (the owner's iPad, 13 Nov: shown twice, then "user-5d7d…").
+    val personal = Account("t_01", "user-5d7d", displayName = "anna@example.test", email = "Anna@Example.test")
+    org.junit.Assert.assertTrue(personal.personal)
+    org.junit.Assert.assertNull("the account's name already says it", personal.signedInAs)
+    // A named account: who's signed in is news, and its id is its own.
+    val named = Account("t_02", "acme", displayName = "Acme", email = "anna@example.test")
+    org.junit.Assert.assertFalse(named.personal)
+    assertEquals("anna@example.test", named.signedInAs)
+    org.junit.Assert.assertFalse("no email: not personal", Account("t_03", "acme").personal)
+    val settings = java.io.File("src/main/kotlin/bot/tafs/app/views/SettingsView.kt").readText()
+    org.junit.Assert.assertTrue(settings.contains("if (!account.personal) Value(Words.Settings.accountId, account.slug)"))
+    val people = java.io.File("src/main/kotlin/bot/tafs/app/views/PeopleViews.kt").readText()
+    org.junit.Assert.assertTrue(people.contains("if (account.personal) \"\" else"))
+  }
 }

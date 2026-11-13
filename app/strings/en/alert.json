@@ -7,6 +7,7 @@
   "alert.answered": "A taf answered someone",
   "alert.approve_once": "Approve once…",
   "alert.by_email": "By email",
+  "alert.example": "Example",
   "alert.foot.cant_answer_holds": "Alerts go to the people who may answer held calls. Your role on this account can't.",
   "alert.foot.tells_you_device": "When a taf needs you, this {device} tells you even with tafs closed. Nothing is sent until you approve.",
   "alert.haptics": "Haptics",

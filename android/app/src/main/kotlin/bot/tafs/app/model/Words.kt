@@ -16,6 +16,7 @@ object Words {
     val answered: String get() = Res.s(R.string.alert_answered)
     val approveOnce: String get() = Res.s(R.string.alert_approve_once)
     val byEmail: String get() = Res.s(R.string.alert_by_email)
+    val example: String get() = Res.s(R.string.alert_example)
     object Foot {
       val cantAnswerHolds: String get() = Res.s(R.string.alert_foot_cant_answer_holds)
       fun tellsYouDevice(device: String): String = Res.s(R.string.alert_foot_tells_you_device, device)
@@ -808,6 +809,10 @@ object Words {
     }
     val appsConnectTafMakeOne: String get() = Res.s(R.string.connect_apps_connect_taf_make_one)
     fun appsNotRead(why: String): String = Res.s(R.string.connect_apps_not_read, why)
+    object CancelRequest {
+      val button: String get() = Res.s(R.string.connect_cancel_request_button)
+      fun title(vendor: String): String = Res.s(R.string.connect_cancel_request_title, vendor)
+    }
     object CancelSignIn {
       fun body(vendor: String): String = Res.s(R.string.connect_cancel_sign_in_body, vendor)
       val button: String get() = Res.s(R.string.connect_cancel_sign_in_button)
@@ -843,6 +848,7 @@ object Words {
       fun alsoStops(count: Int, names: String): String = Res.p(R.plurals.connect_disconnect_also_stops, count, Res.number(count), names)
       fun noTafUses(vendor: String): String = Res.s(R.string.connect_disconnect_no_taf_uses, vendor)
       fun rest(vendor: String): String = Res.s(R.string.connect_disconnect_rest, vendor)
+      fun restKey(vendor: String): String = Res.s(R.string.connect_disconnect_rest_key, vendor)
       fun title(vendor: String): String = Res.s(R.string.connect_disconnect_title, vendor)
       fun titleFrom(vendor: String, taf: String): String = Res.s(R.string.connect_disconnect_title_from, vendor, taf)
       fun toolsStop(owner: String, vendor: String): String = Res.s(R.string.connect_disconnect_tools_stop, owner, vendor, Words.possessive(owner))
@@ -1204,6 +1210,7 @@ object Words {
       val coach: String get() = Res.s(R.string.home_empty_coach)
       val shared: String get() = Res.s(R.string.home_empty_shared)
     }
+    val exploreJobs: String get() = Res.s(R.string.home_explore_jobs)
     val footer: String get() = Res.s(R.string.home_footer)
     val haltedOpenHalt: String get() = Res.s(R.string.home_halted_open_halt)
     val loading: String get() = Res.s(R.string.home_loading)
@@ -1227,6 +1234,8 @@ object Words {
     fun planLineDescription(words: String): String = Res.s(R.string.home_plan_line_description, words)
     fun reasonAnswerBy(why: String, time: String): String = Res.s(R.string.home_reason_answer_by, why, time)
     val sampleFoot: String get() = Res.s(R.string.home_sample_foot)
+    val sampleLabel: String get() = Res.s(R.string.home_sample_label)
+    val seeAllJobs: String get() = Res.s(R.string.home_see_all_jobs)
     val sharedYou: String get() = Res.s(R.string.home_shared_you)
     val signApproveEachStep: String get() = Res.s(R.string.home_sign_approve_each_step)
     val startNewTaf: String get() = Res.s(R.string.home_start_new_taf)
@@ -1235,6 +1244,7 @@ object Words {
     val tafsSharedYouShow: String get() = Res.s(R.string.home_tafs_shared_you_show)
     val tagline: String get() = Res.s(R.string.home_tagline)
     val title: String get() = Res.s(R.string.home_title)
+    val tryWithCoach: String get() = Res.s(R.string.home_try_with_coach)
     fun working(count: Int): String = Res.p(R.plurals.home_working, count, Res.number(count))
     val yourTafs: String get() = Res.s(R.string.home_your_tafs)
   }
@@ -1886,6 +1896,7 @@ object Words {
       val whatGoes: String get() = Res.s(R.string.settings_delete_account_what_goes)
     }
     object Devices {
+      fun androidDevice(device: String): String = Res.s(R.string.settings_devices_android_device, device)
       fun lastUsed(ago: String): String = Res.s(R.string.settings_devices_last_used, ago)
       fun notLoaded(why: String): String = Res.s(R.string.settings_devices_not_loaded, why)
       val notUsed: String get() = Res.s(R.string.settings_devices_not_used)

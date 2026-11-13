@@ -8,6 +8,7 @@
   "home.couldnt_load_tafs": "Deine tafs konnten nicht geladen werden",
   "home.empty.coach": "Verbinde eine App, um deinen ersten taf einzurichten. Zum Aktualisieren nach unten ziehen.",
   "home.empty.shared": "Mit dir geteilte tafs erscheinen hier. Zum Aktualisieren nach unten ziehen.",
+  "home.explore_jobs": "Aufgaben entdecken",
   "home.footer": "Mit KIFF angemeldet. KIFF entscheidet über jede Aktion. Zum Aktualisieren nach unten ziehen.",
   "home.halted_open_halt": "Angehalten. „Anhalten“ öffnen",
   "home.loading": "Deine tafs werden geladen…",
@@ -29,6 +30,8 @@
   "home.plan_line_description": "{words} Öffnet Tarif & Nutzung.",
   "home.reason_answer_by": "{why} · antworte bis {time}",
   "home.sample_foot": "Beispieldaten. Die Card wird auf diesem Telefon geprüft. Mit KIFF angemeldet entscheidet KIFF, und ein neuer taf beginnt in Coach.",
+  "home.sample_label": "Was es nach seinem Testlauf berichtet hat",
+  "home.see_all_jobs": "Alle Aufgaben ansehen",
   "home.shared_you": "Mit dir geteilt",
   "home.sign_approve_each_step": "Du meldest dich an und genehmigst jeden Schritt",
   "home.start_new_taf": "Einen neuen taf starten",
@@ -37,6 +40,7 @@
   "home.tafs_shared_you_show": "Mit dir geteilte tafs erscheinen hier.",
   "home.tagline": "They taf. You kiff.",
   "home.title": "Tafs",
+  "home.try_with_coach": "Mit Coach ausprobieren",
   "home.working": {
     "one": "{count} taf arbeitet.",
     "other": "{count} tafs arbeiten."

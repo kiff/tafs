@@ -70,10 +70,10 @@
   },
   "taf.remove.cards_revoked": "Le sue Card sono revocate in KIFF.",
   "taf.remove.cloud_did_not_answer": "{cards} tafs cloud non ha risposto ({why}). Se la rimozione è iniziata, tafs la completa al prossimo aggiornamento; altrimenti tocca di nuovo Rimuovi.",
-  "taf.remove.connections_disconnected": "I suoi collegamenti sono scollegati.",
+  "taf.remove.connections_disconnected": "Il suo accesso alle app è rimosso.",
   "taf.remove.connections_left": {
-    "one": "{count} dei suoi collegamenti non è stato scollegato: scollegalo in Collega app.",
-    "other": "{count} dei suoi collegamenti non sono stati scollegati: scollegali in Collega app."
+    "one": "Non è stato possibile rimuovere l'accesso a {count} delle sue app: rimuovilo in Collega app.",
+    "other": "Non è stato possibile rimuovere l'accesso a {count} delle sue app: rimuovilo in Collega app."
   },
   "taf.remove.done": "La sua pianificazione, le chat, i resoconti delle esecuzioni, la memoria e la chiave vengono eliminati, e il nome {taf} torna libero. Le ricevute di KIFF restano.",
   "taf.remove.finishes_on_refresh": "Se la rimozione è iniziata, tafs la completa al prossimo aggiornamento.",

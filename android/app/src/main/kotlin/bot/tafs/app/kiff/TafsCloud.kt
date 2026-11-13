@@ -638,6 +638,9 @@ class TafsCloud(
   /** A taf's doors, the apps a door can open on here, and the knocks waiting for the owner. */
   suspend fun doors(id: String): DoorsRead = get("/v1/tafs/${escaped(id)}/doors")
 
+  /** What removing a taf takes with it, in tafs cloud's words, for the confirmation before the fingerprint. Nothing is ended. */
+  suspend fun removal(id: String): RemovalPreview = get("/v1/tafs/${escaped(id)}/removal")
+
   /** Turns a door on. Email needs nothing more; WhatsApp, its signup's code and ids. */
   suspend fun addDoor(id: String, app: String, extra: Map<String, String> = emptyMap()): Door =
     door(post<DoorResponse>("/v1/tafs/${escaped(id)}/doors", extra + ("app" to app)))

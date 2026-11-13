@@ -7,6 +7,7 @@
   "alert.answered": "Un taf a répondu à quelqu'un",
   "alert.approve_once": "Approuver une fois…",
   "alert.by_email": "Par e-mail",
+  "alert.example": "Exemple",
   "alert.foot.cant_answer_holds": "Les alertes vont aux personnes qui peuvent répondre aux appels retenus. Votre rôle sur ce compte ne le peut pas.",
   "alert.foot.tells_you_device": "Quand un taf vous attend, cet {device} vous prévient même si tafs est fermé. Rien n'est envoyé tant que vous n'approuvez pas.",
   "alert.haptics": "Vibrations",
