@@ -88,8 +88,8 @@ what it can't do; offer what it can. If the owner declined, never show it again:
 If planque or KIFF refused the request itself (a name taken, a field it won't
 take), change what was refused and show the approval of a new planque request: the same
 request fails the same way.
-Otherwise read the grant's status: show the approval again (a new id) only if it
-still waits, and say why. Never tell the owner to install, open or set up another app.
+Otherwise read the grant's status: if it still waits, say the approval above
+still waits; never show a new one. Never tell the owner to install, open or set up another app.
 If planque answers that the owner's phone isn't set up yet, show a notice
 (warning) to start again from this screen, which sets the phone up
 once; don't retry.

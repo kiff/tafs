@@ -112,8 +112,8 @@ describe("Coach's core", () => {
     expect(connect).toContain("When the app answers it can't do what was asked (a 403, a scope it lacks), another approval won't change that: never ask it again.");
     // A declined approval is the plainest thing never to ask again (qa-kiff on #907).
     expect(connect).toContain("If the owner declined, never show it again: ask what they want instead.");
-    // No retry after a failed approval unless the grant still waits (the bar's no-loop gate, qa-kiff's pick).
-    expect(connect).toContain("Otherwise read the grant's status: show the approval again (a new id) only if it still waits, and say why.");
+    // No second approval for one app: a grant that still waits is pointed to, never shown again (the owner's bar, 13 Nov).
+    expect(connect).toContain("Otherwise read the grant's status: if it still waits, say the approval above still waits; never show a new one.");
     const tools = COACH_SKILLS.find((k) => k.name === "name-the-tools")!.body.replace(/\s+/g, " ");
     expect(tools).toContain("A pin is a dotted path (four parts at most) and its JSON value; a key with dots in its own name is pinned through its parent, the whole object as the value.");
   });

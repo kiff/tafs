@@ -1,2 +1,2 @@
 - Coach says why a connection failed in one sentence of its own plain words, never planque's or the app's (connect-an-app@19).
-- After an approval that failed with no reason given, Coach reads the grant's status and shows it again only if it still waits, saying why: nothing is asked twice for no reason (connect-an-app@19).
+- After an approval that failed with no reason given, Coach reads the grant's status: if it still waits, it points to the approval already shown, and never shows a new one (connect-an-app@19).
