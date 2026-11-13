@@ -1896,6 +1896,7 @@ object Words {
       val whatGoes: String get() = Res.s(R.string.settings_delete_account_what_goes)
     }
     object Devices {
+      fun androidDevice(device: String): String = Res.s(R.string.settings_devices_android_device, device)
       fun lastUsed(ago: String): String = Res.s(R.string.settings_devices_last_used, ago)
       fun notLoaded(why: String): String = Res.s(R.string.settings_devices_not_loaded, why)
       val notUsed: String get() = Res.s(R.string.settings_devices_not_used)

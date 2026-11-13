@@ -3494,6 +3494,8 @@ enum Words {
             static var whatGoes: String { Words.line("settings.delete_account.what_goes") }
         }
         enum Devices {
+            /// Android {device}
+            static func androidDevice(device: String) -> String { Words.line("settings.devices.android_device", device) }
             /// Last used {ago}
             static func lastUsed(ago: String) -> String { Words.line("settings.devices.last_used", ago) }
             /// Couldn't load your devices. {why}

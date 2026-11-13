@@ -28,6 +28,7 @@
   "settings.delete_account.title": "Eliminar conta",
   "settings.delete_account.warning": "Isto elimina a sua conta KIFF e tudo o que o tafs guarda para ela. Não pode ser desfeito.",
   "settings.delete_account.what_goes": "O que é eliminado",
+  "settings.devices.android_device": "{device} Android",
   "settings.devices.last_used": "Usado pela última vez {ago}",
   "settings.devices.not_loaded": "Não foi possível carregar os seus dispositivos. {why}",
   "settings.devices.not_used": "Ainda não usado",

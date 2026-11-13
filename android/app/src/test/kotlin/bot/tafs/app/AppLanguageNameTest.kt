@@ -19,6 +19,13 @@ class AppLanguageNameTest {
     assertEquals("English", AppLanguage.name())
   }
 
+  @Test fun thisPhonesNameKeepsEachLanguagesWordOrder() {
+    // What KIFF's device list calls this phone: "tafs on Android phone", never "tafs sur Android appareil" (the owner's iPad, 13 Nov).
+    assertEquals("tafs on Android phone", bot.tafs.app.model.Words.Settings.Devices.thisDeviceName(device = bot.tafs.app.model.Words.Settings.Devices.androidDevice(device = "phone")))
+    val fr = File("src/main/res/values-fr/strings.xml").readText()
+    assertTrue(fr.contains("""<string name="settings_devices_android_device">%1${'$'}s Android</string>"""))
+  }
+
   @Test fun theManifestDeclaresTheGeneratedLocalesSoAndroidOffersTheEight() {
     val manifest = File("src/main/AndroidManifest.xml").readText()
     assertTrue(manifest.contains("android:localeConfig=\"@xml/locales_config\""))

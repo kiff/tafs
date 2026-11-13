@@ -28,6 +28,7 @@
   "settings.delete_account.title": "Account verwijderen",
   "settings.delete_account.warning": "Dit verwijdert je KIFF-account en alles wat tafs ervoor bewaart. Dit kan niet ongedaan worden gemaakt.",
   "settings.delete_account.what_goes": "Wat er verdwijnt",
+  "settings.devices.android_device": "Android-{device}",
   "settings.devices.last_used": "Laatst gebruikt {ago}",
   "settings.devices.not_loaded": "Kon je apparaten niet laden. {why}",
   "settings.devices.not_used": "Nog niet gebruikt",

@@ -1771,6 +1771,7 @@
     <string name="settings_delete_account_title">Konto löschen</string>
     <string name="settings_delete_account_warning">Damit werden dein KIFF-Konto und alles, was tafs dafür speichert, gelöscht. Das lässt sich nicht rückgängig machen.</string>
     <string name="settings_delete_account_what_goes">Was gelöscht wird</string>
+    <string name="settings_devices_android_device">Android-%1$s</string>
     <string name="settings_devices_last_used">Zuletzt verwendet %1$s</string>
     <string name="settings_devices_not_loaded">Deine Geräte konnten nicht geladen werden. %1$s</string>
     <string name="settings_devices_not_used">Noch nicht verwendet</string>

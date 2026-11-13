@@ -1771,6 +1771,7 @@
     <string name="settings_delete_account_title">Delete account</string>
     <string name="settings_delete_account_warning">This deletes your KIFF account and everything tafs keeps for it. It can\'t be undone.</string>
     <string name="settings_delete_account_what_goes">What goes</string>
+    <string name="settings_devices_android_device">Android %1$s</string>
     <string name="settings_devices_last_used">Last used %1$s</string>
     <string name="settings_devices_not_loaded">Couldn\'t load your devices. %1$s</string>
     <string name="settings_devices_not_used">Not used yet</string>

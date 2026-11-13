@@ -1883,6 +1883,7 @@
     <string name="settings_delete_account_title">Usuń konto</string>
     <string name="settings_delete_account_warning">To usuwa Twoje konto KIFF i wszystko, co tafs dla niego przechowuje. Nie można tego cofnąć.</string>
     <string name="settings_delete_account_what_goes">Co zostanie usunięte</string>
+    <string name="settings_devices_android_device">%1$s z Androidem</string>
     <string name="settings_devices_last_used">Ostatnio używane %1$s</string>
     <string name="settings_devices_not_loaded">Nie udało się wczytać Twoich urządzeń. %1$s</string>
     <string name="settings_devices_not_used">Jeszcze nieużywane</string>

@@ -1771,6 +1771,7 @@
     <string name="settings_delete_account_title">Account verwijderen</string>
     <string name="settings_delete_account_warning">Dit verwijdert je KIFF-account en alles wat tafs ervoor bewaart. Dit kan niet ongedaan worden gemaakt.</string>
     <string name="settings_delete_account_what_goes">Wat er verdwijnt</string>
+    <string name="settings_devices_android_device">Android-%1$s</string>
     <string name="settings_devices_last_used">Laatst gebruikt %1$s</string>
     <string name="settings_devices_not_loaded">Kon je apparaten niet laden. %1$s</string>
     <string name="settings_devices_not_used">Nog niet gebruikt</string>
