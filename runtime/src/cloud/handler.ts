@@ -1893,12 +1893,16 @@ async function remove(taf: Taf, me: { tenantID: string }, deps: Deps, token = ""
   await step(["schedule", "history", "memory"], () => deps.agents.deleteAgent(me.tenantID, taf.id));
   if (failed.length === 0) await step(["key"], () => deps.keys.remove(me.tenantID, taf.id));
   // Its connections end with it, in any status, with the person's own session: a sign-in or key another taf
-  // still uses stays (the connection server's rule). A server without the route leaves it to the apps' disconnect.
+  // still uses stays (the connection server's rule). The apps no longer end them themselves, so a server
+  // without the route is failed, never left out: the removal stops there, as for a server that's down, and
+  // both apps name what's left. With no connection server configured, or a taf with no KIFF agent, it has
+  // no connections to end. Erasing the account (no session) leaves them to the apps' planque erase.
   if (failed.length === 0 && token && deps.planqueBase && taf.kiffAgent) {
     try {
       const r = await endConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, taf.kiffAgent, token);
       console.log(JSON.stringify({ event: "taf_connections_end", taf: taf.id, ended: r?.ended.length ?? null, kept: r?.kept.length ?? null }));
-      if (r) removed.push("connections");
+      if (!r) throw new Error("the connection server has no route to end them");
+      removed.push("connections");
     } catch (err) {
       console.error(`remove ${taf.id}: connections: ${(err as Error).message}`);
       failed.push("connections");
