@@ -230,8 +230,8 @@ needed, never only at a prompt that fails.
 
 ### On iPhone and iPad
 
-The same screen and gates, from what `canEvaluatePolicy` says for Face ID or Touch ID
-(`ApprovalReadiness` in `Biometry.swift`, the screens in `ApprovalSetupView.swift`):
+The same gates, from what `canEvaluatePolicy` says for Face ID or Touch ID
+(`ApprovalReadiness` in `Biometry.swift`, the gates in `ApprovalSetupView.swift`):
 
 - **The states,** each from its `LAError`:
   - set up: approvals work;
@@ -247,12 +247,13 @@ The same screen and gates, from what `canEvaluatePolicy` says for Face ID or Tou
     moment"; both with **Check again**;
   - unsupported (`biometryNotAvailable` with no Face ID or Touch ID): approve on another
     iPhone, iPad or Android phone signed in to the account.
-- **Before sign-in,** only when it isn't set up: the screen, with **Check again** and
-  **Continue without approvals**, and **Open Settings** only when Face ID is turned off for
-  tafs. Once it's set up there, the same screen says so,
-  with **Continue**.
+- **Sign-in never waits on it** (as on Android 1.20): there's no screen of its own before
+  sign-in. The states show where they're needed, at Coach's Start and at each approval.
 - **Before the first taf:** Coach's start says approving is needed to finish it, and Start is
-  gated, since it asks for Face ID.
+  gated, since it asks for Face ID. Once it can, Start registers the approval key with KIFF
+  under its one Face ID when KIFF doesn't hold it yet (a phone that signed in before it could
+  approve). The one-Face-ID start signs nothing while KIFF doesn't hold the key, and says why
+  (`AppModel.approvalKeyUnheld`).
 - **At each approval** (Approve once, Extra room, Install from Needs you, Coach's Approve,
   Issue): while the device can't approve, the state and what to do stand in the button's place
   (`ApprovalGate`). A version's or a trial's Install, in a toolbar or a confirmation, stays

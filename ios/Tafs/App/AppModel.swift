@@ -803,6 +803,10 @@ final class AppModel: ObservableObject {
         useApprovalKey()
     }
 
+    /// This phone has an approval key that KIFF doesn't hold for the session: what that key signs,
+    /// KIFF can't check. A signer with no approval key signs everything with its one key.
+    var approvalKeyUnheld: Bool { !signer.approvalPublicKeyDER.isEmpty && !sessionHasApprovalKey }
+
     /// From now on, what grants authority is signed by the approval key.
     private func useApprovalKey() {
         sessionHasApprovalKey = true
@@ -6888,6 +6892,16 @@ final class AppModel: ObservableObject {
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
         defer { kiff.setupSigner = nil; planque.signer = nil }
+        // Approvals are set up here, not before sign-in (docs/approvals.md): a phone that signed in
+        // before it could approve gives KIFF its approval key now, under the same Face ID.
+        if !sessionHasApprovalKey { await registerApprovalKey() }
+        guard gen == accountGeneration else { return false }
+        // The one-Face-ID start is one signature by the approval key: with a key KIFF doesn't hold,
+        // nothing is sent, and it says why.
+        if coachStart?.together == true, approvalKeyUnheld {
+            setupError = approvalKeyLost ? KIFFClient.approvalKeyLost : Words.Kiff.kiffDidNotAnswerExpected
+            return false
+        }
         await keepKIFFAlerts(tenant: tenant, gen: gen)
         if !planqueReady {
             guard await enrolPlanque(tenant: tenant, gen: gen) else {
@@ -6902,6 +6916,12 @@ final class AppModel: ObservableObject {
                 if let existing = read.setup {
                     setupTaf = existing
                 } else if let start = read.start, start.startable {
+                    // A pair read only now, with a key KIFF doesn't hold: nothing is sent.
+                    if start.together, approvalKeyUnheld {
+                        coachStart = start
+                        setupError = approvalKeyLost ? KIFFClient.approvalKeyLost : Words.Kiff.kiffDidNotAnswerExpected
+                        return false
+                    }
                     // One Face ID, the one just asked: Coach's tools and its draft with its Cards.
                     coachStart = start
                     setupTaf = try await startCoachTogether(start, tenant: tenant, gen: gen)
