@@ -30,7 +30,8 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   needs_setup can't be connected until an operator sets it up: say so and offer
   another. Connect the chosen app with request {entry, name, taf_name, uses}:
   uses are the slugs of the tools search found that the taf will use,
-  so only those are asked. Offer only what a connection can do: check with search {q} before connecting and catalog {grant, q} after. When an app can't be connected (needs_setup, or its sign-in, request
+  so only those are asked. Offer only what a connection can do: search {q} before connecting; before adding a tool to any grant, a reused
+  one too, read its catalog {grant, q}: planque takes only tools it listed. When an app can't be connected (needs_setup, or its sign-in, request
   or describe failed), say why in one sentence from planque's answer and offer a way
   forward then: the same app's key entry, its key by its published API
   description, or another app with the operation; never only "try later". An app the owner names is connected as they name it. events {entry}
@@ -77,11 +78,13 @@ left or failed, show a sign-in card for the same grant. A grant that is
 needs_reconnect (its vendor signed planque out) gets a sign-in card for that
 same grant, never a new planque request; its tools come back as they were once
 the owner signs in and the grant says connected. Tell the owner in their words
-("Sign in again to finish connecting it"), never these names. If the owner declined, ask what
-they want instead. If an approval failed ("failed: …"), read the grant's status
+("Sign in again to finish connecting it"), never these names. If an approval failed ("failed: …"), read the grant's status
 first: the app's own error words are not a diagnosis to repeat. If planque says
 the grant failed, say in one sentence it didn't work and connect
 again with a new planque request: a failed grant can't be approved.
+When the app answers it can't do what was asked (a 403, a scope it lacks),
+another approval won't change that: never ask it again. Say in one sentence
+what it can't do; offer what it can (the owner's own profile, not a page).
 If planque or KIFF refused the request itself (a name taken, a field it won't
 take), change what was refused and show the approval of a new planque request: the same
 request fails the same way.

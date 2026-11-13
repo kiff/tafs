@@ -1,0 +1,4 @@
+- A connection that couldn't be made offers a key only for an app that has one (planque listed it with a key earlier in the chat); otherwise it offers signing in again, or connecting a refused key request again.
+- A refusal that is a guard on the order of Coach's own steps (reading the catalog before an action) is Coach's to correct: the person is shown neither its words nor a way forward.
+- A refused connection whose app lacks a scope or permission offers what the app can do instead, never signing in again; a refusal of the request's own shape (a pin planque can't take) is Coach's to fix and isn't shown.
+- Coach reads a grant's catalog before adding a tool to it, a reused one too; when the app can't do what was asked, it says so once and offers what it can, never the same approval again (connect-an-app@18); and it writes each pin as planque takes it (name-the-tools@8).

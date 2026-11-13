@@ -48,6 +48,8 @@ export class Steps {
   private targets = new Map<string, string>(); // call id → what it connects (the request's server or description, or the grant)
   private planqueCalls = new Set<string>(); // call ids of connection calls whose answer may name a grant's app
   private apps = new Map<string, string>(); // grant id → the app's name as planque answered it ("Google Sheets")
+  private keyApps = new Set<string>(); // apps planque's answers this run listed with a key path (how: key), folded
+  private keyRequests = new Set<string>(); // call ids of connection requests by a key (api)
 
   constructor(private readonly titles: ToolTitles = new Map(), private readonly lang: Lang = "en") {}
 
@@ -65,6 +67,7 @@ export class Steps {
       case "workspace": return w.doing_workspace;
       case "planque": {
         if (callID) this.planqueCalls.add(callID);
+        if (callID && i.action === "request" && i.api) this.keyRequests.add(callID);
         const grant = typeof i.grant === "string" ? this.vendors.get(i.grant) ?? "" : "";
         const api = i.api && typeof i.api === "object" ? (i.api as { url?: unknown }).url : undefined;
         if (callID) this.connections.set(callID, i.action === "request" ? vendorName(i.server ?? api) : grant);
@@ -122,11 +125,22 @@ export class Steps {
    */
   connectionRefusal(callID: unknown, text: unknown): { vendor: string; key?: string; reason?: string; next: string } | undefined {
     if (typeof callID !== "string" || !this.connections.has(callID)) return undefined;
+    // A guard on the order of Coach's own steps ("read the app's tool catalog before selecting this action") is about how
+    // Coach asked, never the person's app: Coach reads it and goes on, and the person is shown neither its words nor a
+    // way forward that isn't theirs to take (go-to-market job 3, 13 Nov).
+    if (coachGuard(text)) return undefined;
     const vendor = this.connections.get(callID) ?? "";
     const key = this.targets.get(callID);
     const w = wordsIn(this.lang);
     const said = shownWhy(text);
-    return { vendor, ...(key ? { key } : {}), ...(said ? { reason: w.step_connection_why(said) } : {}), next: w.step_connection_next(vendor) };
+    // The way forward is one the app has (go-to-market job 3: a sign-in refused for LinkedIn offered "its key instead", and
+    // LinkedIn has no key): a key's when planque listed the app with one this run, the same again for a key request that was
+    // refused, else signing in again.
+    const next = lacksAccess(text) ? w.step_connection_next_cant(vendor)
+      : this.keyRequests.has(callID) ? w.step_connection_next_again(vendor)
+      : vendor && this.keyApps.has(foldApp(vendor)) ? w.step_connection_next(vendor)
+      : w.step_connection_next_sign_in(vendor);
+    return { vendor, ...(key ? { key } : {}), ...(said ? { reason: w.step_connection_why(said) } : {}), next };
   }
 
   /** What a connection request was for, once it went through: earlier refusals for the same are past. */
@@ -150,6 +164,7 @@ export class Steps {
     if (this.planqueCalls.delete(callID)) {
       const app = appNamed(text);
       if (app) this.apps.set(app.grant, app.name);
+      for (const v of keyAppsIn(text)) this.keyApps.add(v);
     }
     const vendor = this.asked.get(callID);
     if (vendor === undefined) return;
@@ -325,4 +340,49 @@ export function signInApp(service: unknown, app?: string): string | undefined {
   if (app && plainName(app)) return app;
   const s = typeof service === "string" ? service.trim() : "";
   return plainName(s) ? s : undefined;
+}
+
+function foldApp(name: string): string {
+  return name.toLowerCase().replace(/^_+/, "").replace(/[\s._-]+/g, "");
+}
+
+/** The apps a planque answer lists with a key path (`how: "key"`), by vendor, title or entry slug, folded. */
+export function keyAppsIn(text: string): string[] {
+  let v: unknown;
+  try { v = JSON.parse(text); } catch { return []; }
+  const out = new Set<string>();
+  const walk = (x: unknown, depth: number): void => {
+    if (depth > 6 || !x || typeof x !== "object") return;
+    if (Array.isArray(x)) { for (const e of x.slice(0, 500)) walk(e, depth + 1); return; }
+    const o = x as Record<string, unknown>;
+    if (o.how === "key") {
+      for (const name of [o.vendor, o.title, typeof o.entry === "string" ? o.entry.replace(/^connector:[^:]+:/, "").replace(/@\d+$/, "") : undefined]) {
+        if (typeof name === "string" && name.trim()) out.add(foldApp(name));
+      }
+    }
+    for (const val of Object.values(o)) walk(val, depth + 1);
+  };
+  walk(v, 0);
+  return [...out];
+}
+
+/**
+ * Whether a connection server's refusal is a guard on the order of Coach's own steps (read the catalog, or the
+ * tools, before asking for an action): Coach's to correct, never the person's to read.
+ */
+export function coachGuard(text: unknown): boolean {
+  const line = whyOf(text) ?? "";
+  return /\b(read|check|list)\b[^.]*\b(catalog|tools?)\b[^.]*\bbefore\b/i.test(line) || /\bbefore (selecting|choosing|adding|asking for) (this|an|the) (action|tool)\b/i.test(line)
+    // The request's own shape, as planque checks it ("fixed argument … must be a dotted path with a JSON value"): Coach wrote it.
+    || /\bargument\b[^.]*\b(?:is not a valid|must be|needs)\b|\bdotted path\b/i.test(line);
+}
+
+/**
+ * Whether a refusal says the app can't do it with this connection: a 403, or a scope or permission it lacks. Signing in
+ * again gives the same access (go-to-market job 3: LinkedIn's page posting, "Ensure you have the scope"), so the way
+ * forward is what the app can do instead.
+ */
+export function lacksAccess(text: unknown): boolean {
+  const line = whyOf(text) ?? "";
+  return /\bscopes?\b|\bpermission\b|\bforbidden\b|\bnot (?:allowed|authori[sz]ed)\b/i.test(line);
 }
