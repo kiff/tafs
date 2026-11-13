@@ -702,7 +702,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const lang = langOf(event);
     if (method !== "GET") {
       if (!deps.coach) throw new HTTPError(503, "the consent can't be kept here");
-      if (method === "DELETE") await withdrawAIConsent(deps.coach, me.tenantID, me.subject);
+      if (method === "DELETE") await withdrawAIConsent(deps.coach, me.tenantID, me.subject, deps.now?.() ?? new Date());
       else {
         const given = await giveAIConsent(deps.coach, me.tenantID, me.subject, parseBody(event).version, deps.now?.() ?? new Date());
         if (given === "stale") throw new HTTPError(409, "the consent's words changed: read them again", { consent: aiConsentView(undefined, lang) });
@@ -1007,6 +1007,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "continue") {
     if (!me.capabilities.includes("holds.answer")) throw new HTTPError(403, "your role on this KIFF account can't answer held calls");
+    // The run goes on to its next model turn: the person who lets it go on has allowed AI use (docs/accounts.md).
+    await requireAIConsent(event, me, deps);
     return goOn(me, taf, parts[4] ?? "", deps);
   }
   if (parts.length === 6 && method === "POST" && action === "holds" && parts[5] === "allow") {
@@ -2803,6 +2805,8 @@ interface Steering {
  * taf has only its Card's tools, and remembers what its notes say.
  */
 async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  // Before a message answers a card the old way, too.
+  await requireAIConsent(event, me, deps);
   const owner = chatText(event, files(event).length > 0);
   const answered = await oldFormAnswer(event, me, taf, owner, deps);
   if (answered) return { session: answered.session, new_session: false, run: answered.id };
@@ -2939,6 +2943,8 @@ const ANSWERABLE = ["confirm", "questions", "approval", "sign_in"];
  * answer the card doesn't take.
  */
 async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, deps: Deps): Promise<unknown> {
+  // A card's answer is the person's own words to the model, and its run goes on.
+  await requireAIConsent(event, me, deps);
   const body = parseBody(event);
   if (!("answer" in body)) throw new HTTPError(400, "send the card's answer");
   // Only tafs cloud answers in its own name (a result's hand-over), never a person's request.
@@ -2989,6 +2995,8 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     return { drive: { ...shown, ...(paused ? { paused } : {}), ...(d.ended ? { ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } } : {}) }, steps: await driveSteps(store, me.tenantID, d.id) };
   }
   if (parts.length === 3 && method === "POST") {
+    // A drive sends what's on the person's screen to Coach's model (docs/drive.md). Pause and stop are never refused.
+    await requireAIConsent(event, me, deps);
     const body = parseBody(event);
     const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
     const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
@@ -3020,6 +3028,7 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     return { paused: d.ended ? null : (await drivePaused(store, me.tenantID, d.id)) ?? null, ...(d.ended ? { ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } } : {}) };
   }
   if (parts.length === 4 && parts[3] === "resume" && method === "POST") {
+    await requireAIConsent(event, me, deps);
     const id = str(parseBody(event).drive).trim();
     // A halt while paused ends the drive, rather than letting Coach go on (docs/drive.md).
     const before = await currentDrive(store, me.tenantID, me.subject, now);
@@ -3051,6 +3060,7 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     return { ended: d?.ended ? { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } : null };
   }
   if (parts.length === 6 && parts[4] === "results" && method === "POST") {
+    await requireAIConsent(event, me, deps);
     const t = await putResult(store, me.tenantID, me.subject, parts[3] ?? "", parts[5] ?? "", parseBody(event), now).catch(fail);
     // The record's words: a step that touched something, and Coach's done (kiff/tafs#544).
     if (t.step?.touched) {
@@ -3144,6 +3154,8 @@ async function tellCoach(me: KIFFIdentity, taf: Taf, card: { session: string; ru
  * signs only what it's asked, and never builds an answer.
  */
 async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, deps: Deps): Promise<unknown> {
+  // Coach hears the outcome as the person's answer: a model turn.
+  await requireAIConsent(event, me, deps);
   const body = parseBody(event);
   const ask = askOrRefuse(() => askOf(body));
   const ctx = approvalContext(event, me, taf, component, deps);
@@ -3164,6 +3176,8 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
  * approved, or failed with why.
  */
 async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component: string, askID: string, deps: Deps): Promise<unknown> {
+  // Coach hears the outcome as the person's answer: a model turn.
+  await requireAIConsent(event, me, deps);
   const body = parseBody(event);
   const report = askOrRefuse(() => reportOf(body));
   const ctx = approvalContext(event, me, taf, component, deps);

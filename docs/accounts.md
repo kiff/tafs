@@ -67,22 +67,30 @@ end at once. This device signs out with **Sign out of KIFF**.
 
 tafs uses Anthropic's Claude to run Coach and the tafs. Before anything a person writes reaches the model,
 they allow it on one screen, in their language, that names Anthropic, says what's sent (what they write to
-Coach and their tafs, the files they attach, what their connected apps return to a taf while it works), what
+Coach and their tafs, the files they attach, what their connected apps return to a taf while it works, and
+what's on their screen while Coach helps them in the app), what
 never is (the passwords and keys their connected apps use, their fingerprint), and that Anthropic keeps it up
 to 30 days ([data.md](data.md)). The screen asks for **Allow**, or **Not now**.
 
 - **Each person's own.** tafs cloud keeps the answer per person on the account (`runtime/src/cloud/consent.ts`),
   with when it was given and the version of the words. A teammate's yes doesn't cover anyone else's words.
 - **Not signed.** It grants no authority, so it asks for no fingerprint.
-- **Nothing before it.** Until it's given, every route that starts a model turn for the person (a chat message,
-  streamed or not, a steer, Run now, a trial and its messages, Improve, "Not sure, help me check") refuses with
-  403 `ai_consent_required`, the screen's words with it, so the app shows the screen there and then. Nothing is
-  sent to kiff/agents.
+- **Nothing before it.** Until it's given, every route by which a person starts a model turn or lets one go on
+  refuses with 403 `ai_consent_required`, the screen's words with it, so the app shows the screen there and then.
+  Nothing is sent to kiff/agents. That's a chat message, streamed or not, an answer to a card, a steer, Run now,
+  a trial and its messages, Improve, "Not sure, help me check", an approval card's ask and report, a held call's
+  continue, and a Coach drive's start, results and resume. A drive's pause and stop are never refused.
+  `runtime/test/consent_triggers.test.ts` checks each against a fake that records every turn.
 - **Asked again when it changes.** `AI_CONSENT_VERSION` goes up when what's sent, or to whom, changes in
   substance; a yes to an older version no longer counts, and a yes from an old screen is refused (409). A
   translation fix keeps the version.
 - **Withdraw** in Account: from then on, nothing they write reaches the model until they allow it again. A run
   already going finishes its current turn.
+- **Kept, never deleted.** A withdrawal marks the record (`withdrawn_at`) and keeps it. A new yes keeps each
+  earlier one with when it was withdrawn (the newest 50), so tafs cloud can show who allowed what, for which
+  version, and from when to when.
+- **Runs with no person in the moment** (a schedule, a door's message, an app's event, a handoff, a retry) take
+  the taf owner's consent. That gate isn't built yet.
 - **The words are tafs cloud's** (`ai_consent_*` in `runtime/src/cloud/words/`); the apps draw them as sent.
 
 Routes: `GET`, `POST {version}` and `DELETE /v1/me/ai-consent` ([api.md](api.md#the-account)).

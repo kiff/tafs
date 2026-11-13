@@ -694,7 +694,7 @@ export const pt: Words = {
   sheet_done: (vendor, readOnly) => (readOnly ? `${vendor} está ligado (só leitura)` : `${vendor} está ligado`),
   // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
   ai_consent_title: "Os seus dados e a IA",
-  ai_consent_lines: ["O tafs usa a IA Claude da Anthropic para fazer funcionar o Coach e os seus tafs.", "O que lhe é enviado: o que escreve ao Coach e aos seus tafs, os ficheiros que anexa e o que as suas apps ligadas devolvem a um taf enquanto trabalha.", "O que nunca é enviado: as palavras-passe e chaves que as suas apps ligadas usam, nem a sua impressão digital.", "A Anthropic usa-o para responder e guarda-o até 30 dias.", "Nada é enviado até que o permita. Pode retirar a autorização em Conta."],
+  ai_consent_lines: ["O tafs usa a IA Claude da Anthropic para fazer funcionar o Coach e os seus tafs.", "O que lhe é enviado: o que escreve ao Coach e aos seus tafs, os ficheiros que anexa, o que as suas apps ligadas devolvem a um taf enquanto trabalha e o que está no seu ecrã enquanto o Coach o ajuda na app.", "O que nunca é enviado: as palavras-passe e chaves que as suas apps ligadas usam, nem a sua impressão digital.", "A Anthropic usa-o para responder e guarda-o até 30 dias.", "Nada é enviado até que o permita. Pode retirar a autorização em Conta."],
   ai_consent_allow: "Permitir",
   ai_consent_not_now: "Agora não",
   ai_consent_withdraw: "Retirar",

@@ -86,6 +86,25 @@ describe("the AI-data consent", () => {
     expect(started(w)).toHaveLength(1);
   });
 
+  it("keeps the record when withdrawn, and each earlier window when allowed again: who allowed what, and from when to when", async () => {
+    const w = world();
+    let now = NOW;
+    const at = (d: Date) => { now = d; };
+    const calls = async (method: string) => handle(event(method, "/v1/me/ai-consent", { token: "ana", body: method === "POST" ? { version: AI_CONSENT_VERSION } : undefined }), { ...deps(w), now: () => now });
+    await calls("POST");
+    at(new Date("2026-11-14T09:00:00Z"));
+    await calls("DELETE");
+    expect(await w.coach.get(aiConsentKey("t_acme", "u_ana"))).toMatchObject({ at: NOW.toISOString(), version: AI_CONSENT_VERSION, withdrawn_at: "2026-11-14T09:00:00.000Z" });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "Refund order 42" } })).status).toBe(403);
+    at(new Date("2026-11-15T09:00:00Z"));
+    await calls("POST");
+    expect(await w.coach.get(aiConsentKey("t_acme", "u_ana"))).toEqual({
+      at: "2026-11-15T09:00:00.000Z", version: AI_CONSENT_VERSION,
+      earlier: [{ at: NOW.toISOString(), version: AI_CONSENT_VERSION, withdrawn_at: "2026-11-14T09:00:00.000Z" }],
+    });
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "Refund order 42" } })).status).toBe(200);
+  });
+
   it("is each person's own: Ana's yes doesn't let Bo's words through", async () => {
     const w = world();
     await call(w, "POST", "/v1/me/ai-consent", { token: "ana", body: { version: AI_CONSENT_VERSION } });

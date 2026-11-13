@@ -754,7 +754,7 @@ export const en = {
   sheet_done: (vendor: string, readOnly: boolean) => (readOnly ? `${vendor} is connected (read only)` : `${vendor} is connected`),
   // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
   ai_consent_title: "Your data and the AI",
-  ai_consent_lines: ["tafs uses Anthropic's Claude AI for Coach and your tafs.", "What's sent to it: what you write to Coach and your tafs, the files you attach, and what your connected apps return to a taf while it works.", "What's never sent: the passwords and keys your connected apps use, or your fingerprint.", "Anthropic uses it to answer and keeps it up to 30 days.", "Nothing is sent until you allow it. You can withdraw in Account."],
+  ai_consent_lines: ["tafs uses Anthropic's Claude AI for Coach and your tafs.", "What's sent to it: what you write to Coach and your tafs, the files you attach, what your connected apps return to a taf while it works, and what's on your screen while Coach helps you in the app.", "What's never sent: the passwords and keys your connected apps use, or your fingerprint.", "Anthropic uses it to answer and keeps it up to 30 days.", "Nothing is sent until you allow it. You can withdraw in Account."],
   ai_consent_allow: "Allow",
   ai_consent_not_now: "Not now",
   ai_consent_withdraw: "Withdraw",
