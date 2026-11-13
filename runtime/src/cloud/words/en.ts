@@ -633,6 +633,7 @@ export const en = {
   cts_give: "Give Coach its tools",
   cts_not_now: "Not now",
   cts_row: "Coach's tools are waiting for you · Give them",
+  cts_row_cards: "Coach has new tools: approve their limits",
   cts_g_watch: "Watch your tafs",
   cts_g_watch_line: "See your tafs and their runs, and find what went wrong.",
   cts_g_run: "Run them for you",

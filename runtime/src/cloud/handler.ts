@@ -1768,9 +1768,13 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
       const body = coachCardsDraft(setup.kiffAgent, missingCards);
       card = { body, ...(await previewDraft(token, body, deps.fetch, deps.kiffBase)) };
     }
+    const connect = plan.missing.length ? coachConnect(plan.missing, mcp, plan.replace, langOf(event)) : undefined;
+    // Tools and Cards both missing: the pair under one fingerprint, as a first start has it (`kiff.requests.v1`).
+    const together = connect && !issued ? await coachToolsTogether(token, setup, connect, missingCards, deps) : undefined;
     return {
-      state: "to_give", ...(plan.missing.length ? { connect: coachConnect(plan.missing, mcp, plan.replace, langOf(event)) } : {}), ...(card ? { card } : {}),
-      coach_tools_step: coachToolsStep(langOf(event)),
+      state: "to_give", ...(connect ? { connect } : {}), ...(card ? { card } : {}), ...(together ?? {}),
+      // Only Cards missing (Coach gained tools since its Card was signed): the row says why it asks again.
+      coach_tools_step: coachToolsStep(langOf(event), { cardsOnly: !connect && !issued }),
     };
   } catch (err) {
     if (err instanceof KIFFError) {
@@ -1779,6 +1783,34 @@ async function coachTools(event: HTTPEvent, setup: Taf, deps: Deps): Promise<Rec
       return { state: "unknown" };
     }
     throw err;
+  }
+}
+
+/**
+ * Coach's missing tools and Cards on an account that has Coach, under one fingerprint (`TAFS_COACH_START_ONE=on`):
+ * the tools batch and the Cards' draft for Coach's own agent, as a first start's pair (`coachFirstStart`), so the
+ * phone signs both hashes once (`kiff.requests.v1`), sends the batch, then the draft, whose submit is the
+ * confirmation as for `card`. The Cards are worded by KIFF's gateway over the tools the batch would connect, and the
+ * draft carries that contract. Nothing when the flag is off or KIFF can't word them: the phone gives the batch, then
+ * the Cards on its next read, as before.
+ */
+async function coachToolsTogether(token: string, setup: Taf, connect: ReturnType<typeof coachConnect>, missingCards: Set<string>, deps: Deps):
+  Promise<{ scheme: string; requests: unknown[] } | undefined> {
+  if (process.env.TAFS_COACH_START_ONE !== "on") return undefined;
+  const body = coachCardsDraft(setup.kiffAgent, missingCards);
+  try {
+    const { contract_digest: digest, ...preview } = await previewBatchDraft(token, connect.body.connections, body, deps.fetch, deps.kiffGateway);
+    if (!digest) return undefined;
+    return {
+      scheme: "kiff.requests.v1",
+      requests: [
+        { id: "connect", method: "POST", path: "/v1/connections/batch", gateway: true, body: connect.body, lines: connect.lines },
+        { id: "draft", method: "POST", path: "/v1/me/agent-drafts", body: { ...body, contract_digest: digest }, ...preview },
+      ],
+    };
+  } catch (err) {
+    console.error(`coach tools together: ${err instanceof KIFFError ? `KIFF answered ${err.status}: ` : ""}${(err as Error).message}`);
+    return undefined;
   }
 }
 
