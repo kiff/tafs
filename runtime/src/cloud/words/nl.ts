@@ -73,6 +73,7 @@ export const nl: Words = {
   approval_sign_in_closed: "Het inloggen is gesloten. Er is niets gekoppeld.",
   approval_no_code: (vendor: string) => `Het inloggen bij ${vendor} kwam terug zonder bevestigingscode. Er is niets gekoppeld.`,
   approval_came_back: (status: string) => `De koppeling kwam terug zonder inloglink (status: ${status}). Er is niets gekoppeld.`,
+  approval_confirm_first: "Je aanmelding is gelukt, maar nog niet bevestigd. Tik opnieuw op Goedkeuren om haar te bevestigen.",
   approval_not_connected: (vendor: string, status: string) => `Het inloggen bij ${vendor} is niet gelukt (status van de koppeling: ${status}). Er is niets gekoppeld. Log opnieuw in.`,
   approval_failed: (why: string) => `Niet gekoppeld: ${why}`,
   approval_failed_default: "het is niet gelukt",

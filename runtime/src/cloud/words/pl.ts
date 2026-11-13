@@ -73,6 +73,7 @@ export const pl: Words = {
   approval_sign_in_closed: "Logowanie zostało zamknięte. Nic nie zostało połączone.",
   approval_no_code: (vendor: string) => `Logowanie w ${vendor} wróciło bez kodu potwierdzenia. Nic nie zostało połączone.`,
   approval_came_back: (status: string) => `Połączenie wróciło bez linku do logowania (stan: ${status}). Nic nie zostało połączone.`,
+  approval_confirm_first: "Logowanie się udało, ale nie jest jeszcze potwierdzone. Zatwierdź ponownie, aby je potwierdzić.",
   approval_not_connected: (vendor: string, status: string) => `Logowanie w ${vendor} nie połączyło konta (stan połączenia: ${status}). Nic nie zostało połączone. Zaloguj się ponownie.`,
   approval_failed: (why: string) => `Nie połączono: ${why}`,
   approval_failed_default: "nie powiodło się",

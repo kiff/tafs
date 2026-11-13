@@ -461,6 +461,36 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     expect((await w.report({ result: "listed" })).body).toMatchObject({ answer: "approved" });
   });
 
+  // Go-to-market job 1 (owner's phone, 13 Nov): the account's Google sign-in was held, so planque answered signed_in
+  // with no link, and Coach was told "Nothing was connected". signed_in is planque's token held, unused, until the
+  // approving phone confirms it with planque's one-use code; unconfirmed, planque revokes it. So it's "not yet":
+  // never approved (it could still go), never failed, and the ask waits for the report after the phone's confirm.
+  it("signed in but not confirmed is not yet: neither approved nor failed, and approved once planque lists it after the confirm", async () => {
+    const s = services();
+    const w = await asked(s);
+    s.grants = [grant({ status: "signed_in" })];
+    const before = s.proofs.length;
+    const early = await w.report({ result: "not_connected", status: "signed_in" });
+    expect(early.status).toBe(409);
+    expect(early.body).toMatchObject({ code: "sign_in_not_confirmed", error: WORDS.confirmFirst });
+    expect(JSON.stringify(early.body)).not.toContain("Nothing was connected");
+    expect(w.told()).toBeUndefined();
+    // planque was read twice: once more in case the phone had just confirmed.
+    expect(s.proofs.length - before).toBe(2);
+    // The phone confirms with planque's code, planque lists the tools, and the next report is approved.
+    s.grants = [grant({ status: "listed" })];
+    expect((await w.report({ result: "listed" })).body).toMatchObject({ answer: "approved" });
+    expect(w.told()).toMatchObject({ answer: "approved" });
+  });
+
+  it("a sign-in confirmed between the report and tafs cloud's read is approved on the second read", async () => {
+    const s = services();
+    const w = await asked(s);
+    let reads = 0;
+    Object.defineProperty(s, "grants", { get: () => [grant({ status: reads++ === 0 ? "signed_in" : "connected" })], configurable: true });
+    expect((await w.report({ result: "connected" })).body).toMatchObject({ answer: "approved" });
+  });
+
   it("a report this phone didn't sign is refused, and Coach hears nothing", async () => {
     const s = services();
     const w = await asked(s);
@@ -481,10 +511,11 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
   it("the service is the truth: a reported success planque doesn't hold is failed, in tafs cloud's words", async () => {
     const s = services();
     const w = await asked(s);
-    s.grants = [grant({ status: "signed_in" })];
+    // Approved but never signed in: planque holds nothing (signed_in waits for the phone's confirm: the test above).
+    s.grants = [grant({ status: "approved" })];
     const r = await w.report({ result: "connected" });
-    expect(r.body).toMatchObject({ answer: `failed: ${WORDS.notConnected("Stripe", "signed_in")}`, note: WORDS.notConnected("Stripe", "signed_in") });
-    expect(w.told()).toMatchObject({ answer: `failed: ${WORDS.notConnected("Stripe", "signed_in")}` });
+    expect(r.body).toMatchObject({ answer: `failed: ${WORDS.notConnected("Stripe", "approved")}`, note: WORDS.notConnected("Stripe", "approved") });
+    expect(w.told()).toMatchObject({ answer: `failed: ${WORDS.notConnected("Stripe", "approved")}` });
   });
 
   it("words each note in the approving request's language, the reason Coach hears with it, and keeps the protocol's words", async () => {

@@ -73,6 +73,7 @@ export const pt: Words = {
   approval_sign_in_closed: "O início de sessão foi fechado. Nada foi ligado.",
   approval_no_code: (vendor: string) => `O início de sessão em ${vendor} voltou sem o seu código de confirmação. Nada foi ligado.`,
   approval_came_back: (status: string) => `A ligação voltou sem link para iniciar sessão (estado: ${status}). Nada foi ligado.`,
+  approval_confirm_first: "O seu início de sessão foi concluído, mas ainda não está confirmado. Aprove novamente para o confirmar.",
   approval_not_connected: (vendor: string, status: string) => `O início de sessão em ${vendor} não ligou (estado da ligação: ${status}). Nada foi ligado. Inicie sessão novamente.`,
   approval_failed: (why: string) => `Não ligado: ${why}`,
   approval_failed_default: "não foi concluído",
