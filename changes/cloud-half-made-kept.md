@@ -1,0 +1,1 @@
+- **tafs cloud: a half-made taf keeps its name, and only its starter gets Finish setting up.** Home keeps the name Coach gave for 180 days, so it still shows once the chat's result expires, and offers "Finish setting up" only to the person whose Coach chat it was (docs/tafs.md › The home list).
