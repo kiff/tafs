@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attachWhys, connectsRefused, failedStep, foldRetried, shownWhy, stepWords, Steps, takeRefused, vendorName, whyOf } from "../src/cloud/steps.js";
+import { attachWhys, coachGuard, connectsRefused, failedStep, foldRetried, keyAppsIn, lacksAccess, refusalKind, shownWhy, stepWords, Steps, takeRefused, vendorName, whyOf } from "../src/cloud/steps.js";
 import { LANGUAGES } from "../src/cloud/words/index.js";
 
 describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
@@ -196,5 +196,44 @@ describe("Coach's steps in the person's language", () => {
         if (lang !== "en") expect(line, `${lang} ${tool}`).not.toBe(new Steps(new Map(), "en").call(tool, {}));
       }
     }
+  });
+});
+
+describe("a refused connection's way forward (go-to-market job 3, 13 Nov)", () => {
+  it("offers a key only for an app planque listed with one, and keeps Coach's own step guards from the person", () => {
+    const s = new Steps();
+    // LinkedIn by a managed sign-in, no key anywhere: sign in again, never "its key instead".
+    s.call("planque", { action: "request", server: "https://api.linkedin.com/mcp" }, "c1");
+    expect(s.connectionRefusal("c1", "the sign-in was left")?.next).toBe("Next: ask Coach to sign in to Linkedin again, or to use another app.");
+    // A scope or permission the connection lacks: signing in again gives the same, so what the app can do instead.
+    expect(s.connectionRefusal("c1", "LinkedIn refused it (it answered 403): You don't have permission to access organization ACLs. Ensure you have the scope.")?.next).toBe("Next: ask Coach what Linkedin can do instead, or to use another app.");
+    // An app planque listed with a key path in this chat: its key is offered.
+    s.call("planque", { action: "search", q: "invoices" }, "c2");
+    s.result("c2", JSON.stringify({ apps: [{ entry: "qonto@2", vendor: "Qonto", title: "Qonto", how: "key" }] }));
+    s.call("planque", { action: "request", server: "https://mcp.qonto.com" }, "c3");
+    expect(s.connectionRefusal("c3", "managed sign-in isn't set up")?.next).toBe("Next: ask Coach to connect Qonto with its key instead, or to use another app.");
+    // A refused key request: connect it again.
+    s.call("planque", { action: "request", api: { url: "https://api.example.org/openapi.json" } }, "c4");
+    expect(s.connectionRefusal("c4", "the body must be a JSON object")?.next).toMatch(/^Next: ask Coach to connect .* again, or to use another app\.$/);
+    // A guard on the order of Coach's own steps: nothing for the person, no words and no way forward.
+    s.call("planque", { action: "tools", grant: "grt_abc123" }, "c5");
+    expect(s.connectionRefusal("c5", "read the app's tool catalog before selecting this action")).toBeUndefined();
+    expect(coachGuard("read the app's tool catalog before selecting this action")).toBe(true);
+    expect(coachGuard("403: missing the organization scope")).toBe(false);
+    // The request's own shape, as planque checks it: Coach wrote it, and Coach fixes it (job 3's pinned post tool).
+    expect(coachGuard("fixed argument visibility.com.linkedin.ugc.MemberNetworkVisibility must be a dotted path with a JSON value")).toBe(true);
+    expect(coachGuard("argument post_text is not a valid name")).toBe(true);
+    expect(s.connectionRefusal("c1", "fixed argument visibility.com.linkedin.ugc.MemberNetworkVisibility must be a dotted path with a JSON value")).toBeUndefined();
+    expect(lacksAccess("Google Sheets refused the write: the sheet was renamed.")).toBe(false);
+    // The person's reason line is tafs cloud's, by kind, never the server's words (the go-to-market bar, 13 Nov).
+    const scope = s.connectionRefusal("c1", "planque answered 403: LinkedIn refused it (it answered 403): You don't have permission to access organization ACLs. Ensure you have the scope.");
+    expect(scope).toMatchObject({ reason: "Linkedin doesn't allow this with the access it gave." });
+    expect(s.connectionRefusal("c1", "planque answered 502: the provider is unavailable")).toMatchObject({ reason: "Linkedin didn't answer in time.", next: "Next: ask Coach to try Linkedin again in a few minutes, or to use another app." });
+    expect(s.connectionRefusal("c1", "planque answered 409: the sign-in expired")).toMatchObject({ reason: "The sign-in to Linkedin didn't finish.", next: "Next: ask Coach to sign in to Linkedin again, or to use another app." });
+    const other = s.connectionRefusal("c1", "planque answered 400: unknown field toolkit_slug in request (grant grt_Abc123xyz)");
+    expect(other?.reason).toBeUndefined();
+    for (const r of [scope, other]) expect(JSON.stringify(r)).not.toMatch(/ACL|toolkit|planque|grt_|answered/);
+    expect(refusalKind("timed out after 30s")).toBe("later");
+    expect(keyAppsIn(JSON.stringify({ entries: [{ entry: "connector:p:linkedin", vendor: "LinkedIn", how: "oauth" }] }))).toEqual([]);
   });
 });
