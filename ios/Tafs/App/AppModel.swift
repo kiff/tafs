@@ -2828,6 +2828,24 @@ final class AppModel: ObservableObject {
         return Words.Connect.scheduleChatsRunReportsMemory(cards: "\(cards)", taf: "\(taf.name)")
     }
 
+    /// What removing this taf takes with it, in tafs cloud's words, for the confirmation before
+    /// Face ID: which apps go with it, and which stay for another taf. Reading it ends nothing.
+    /// None when tafs cloud has no such words (an older one, an answer that didn't come, the
+    /// account changed meanwhile): the confirmation then says only that the taf goes.
+    func removalWords(_ tafID: UUID) async -> String? {
+        guard mode == .kiff, let c = cloudTaf(for: tafID) else { return nil }
+        let gen = accountGeneration
+        guard let preview = try? await cloud.removalPreview(c.id), gen == accountGeneration else { return nil }
+        return preview.words
+    }
+
+    /// The Remove confirmation's message: what always goes, then tafs cloud's words for the
+    /// apps that go with it or stay, when it sent some.
+    nonisolated static func removeBody(_ body: String, goes words: String?) -> String {
+        guard let words, !words.isEmpty else { return body }
+        return body + "\n\n" + words
+    }
+
     /// Finishes removals tafs cloud lists as begun. They were confirmed with Face ID when
     /// they began; finishing only deletes what's left of a taf already stopped.
     private func finishRemovals(_ removing: [TafsCloud.PendingRemoval], gen: Int) async {

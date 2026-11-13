@@ -665,6 +665,24 @@ final class TafsCloud {
         try await send("DELETE", tafPath(id), headers: signature.map { ["KIFF-Device-Signature": $0] } ?? [:])
     }
 
+    /// What removing a taf takes with it, for the confirmation before Face ID
+    /// (`GET /v1/tafs/{id}/removal`, which ends nothing): tafs cloud's words, ready to draw
+    /// ("Qonto goes with it. Stripe stays: Chargebacks uses it."), or none when it could read nothing.
+    struct RemovalPreview: Decodable, Equatable {
+        var words: String?
+        private enum CodingKeys: String, CodingKey { case words }
+        init(words: String? = nil) { self.words = words }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            let said = ((try? c.decodeIfPresent(String.self, forKey: .words)) ?? nil)?.trimmingCharacters(in: .whitespacesAndNewlines)
+            words = said?.isEmpty == false ? said : nil
+        }
+    }
+
+    func removalPreview(_ id: String) async throws -> RemovalPreview {
+        try await send("GET", tafPath(id) + "/removal")
+    }
+
     /// A taf's path, as a request to it is sent and as the approval key signs it.
     func tafPath(_ id: String) -> String { "/v1/tafs/\(escaped(id))" }
 

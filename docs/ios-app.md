@@ -229,7 +229,10 @@ the app in sample mode.
   then the taf's Needs you items, its work and runs, then its record by day (`ActivityFilter`: All, Done, Held,
   Refused). Card: the Card, its limits, how they're counted, usage, Halt, Revoke. Setup: The job
   (Improve in Coach), Starts when, Connected apps (`ConnectionsPanel`: **Choose actions**, through Coach, for one signed in with none chosen, then **Connect an app…**), Results go to, what it
-  remembers, Versions, Pause (sample mode) and Remove for good.
+  remembers, Versions, Pause (sample mode) and Remove for good. Remove's confirmation says what goes with the taf
+  before Face ID: tafs cloud's words from `GET /v1/tafs/{id}/removal` ("Qonto goes with it. Stripe stays: Chargebacks
+  uses it."), read when Remove is tapped and ending nothing (`AppModel.removalWords`). Without them, it says only
+  what always goes.
 - **Setup › Starts when** (`StartsWhenView`, `TafSetupViews.swift`), from `GET …/knob`
   `wakes`: its schedule with − and + through the stop's `size.choices` (`adjustKnob`), Skip it /
   Run after (`setting.busy`), app events with **Approve** (`AppEventApprovalSheet`, the signed

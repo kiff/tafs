@@ -24,6 +24,8 @@ struct TafDetailView: View {
     @State private var openResults = Screenshots.enabled && Screenshots.screen == "results"
     @State private var confirmRevoke = false
     @State private var confirmRemove = false
+    /// tafs cloud's words for what goes with the taf, read when Remove is tapped.
+    @State private var removalWords: String?
     /// What removing it did, shown once it's done.
     @State private var removal: String?
     /// The Card in front of the stack (kiff/tafs#211); nil for the first, the live one.
@@ -141,7 +143,8 @@ struct TafDetailView: View {
             .confirmationDialog(Words.Taf.removeTitle(taf: "\(taf.name)"), isPresented: $confirmRemove, titleVisibility: .visible) {
                 Button(Words.Taf.Remove.button, role: .destructive) { Task { removal = await model.removeTaf(tafID) } }
             } message: {
-                Text(Words.Taf.removeBody)
+                // What goes with it, before Face ID: the apps only it used, in tafs cloud's words.
+                Text(AppModel.removeBody(Words.Taf.removeBody, goes: removalWords))
             }
             .alert(Words.Taf.removeNamed(taf: "\(taf.name)"), isPresented: Binding(get: { removal != nil }, set: { if !$0 { removal = nil } })) {
                 Button(Words.Common.ok, role: .cancel) {}
@@ -311,7 +314,8 @@ struct TafDetailView: View {
                 .confirming()
         }
         if model.mode == .kiff, cloud != nil, manages {
-            Button(Words.Setup.removeForGood) { confirmRemove = true }
+            // The confirmation opens once tafs cloud has said what goes with the taf, or hasn't.
+            Button(Words.Setup.removeForGood) { Task { removalWords = await model.removalWords(taf.id); confirmRemove = true } }
                 .buttonStyle(OutlineButtonStyle(color: Theme.no))
                 .confirming()
         }
