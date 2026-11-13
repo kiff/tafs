@@ -110,6 +110,8 @@ describe("Coach's core", () => {
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(connect).toContain("before adding a tool to any grant, a reused one too, read its catalog {grant, q}: planque takes only tools it listed.");
     expect(connect).toContain("When the app answers it can't do what was asked (a 403, a scope it lacks), another approval won't change that: never ask it again.");
+    // A declined approval is the plainest thing never to ask again (qa-kiff on #907).
+    expect(connect).toContain("If the owner declined, never show it again: ask what they want instead.");
     const tools = COACH_SKILLS.find((k) => k.name === "name-the-tools")!.body.replace(/\s+/g, " ");
     expect(tools).toContain("A pin is a dotted path (four parts at most) and its JSON value; a key with dots in its own name is pinned through its parent, the whole object as the value.");
   });

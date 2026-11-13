@@ -132,15 +132,22 @@ export class Steps {
     const vendor = this.connections.get(callID) ?? "";
     const key = this.targets.get(callID);
     const w = wordsIn(this.lang);
-    const said = shownWhy(text);
+    // The person's two lines are tafs cloud's, by the refusal's kind, never the server's words (go-to-market bar, 13 Nov:
+    // no raw error from planque, KIFF or a vendor reaches the person). Those stay for Coach and the log (keepWhy).
+    const kind = refusalKind(text);
+    const reason = kind === "cant" ? w.step_connection_why_cant(vendor)
+      : kind === "later" ? w.step_connection_why_later(vendor)
+      : kind === "sign_in" ? w.step_connection_why_sign_in(vendor)
+      : undefined;
     // The way forward is one the app has (go-to-market job 3: a sign-in refused for LinkedIn offered "its key instead", and
-    // LinkedIn has no key): a key's when planque listed the app with one this run, the same again for a key request that was
-    // refused, else signing in again.
-    const next = lacksAccess(text) ? w.step_connection_next_cant(vendor)
+    // LinkedIn has no key): what it can do instead when it lacks the access; again later when it didn't answer; a key's when
+    // planque listed the app with one this run; the same again for a key request that was refused; else signing in again.
+    const next = kind === "cant" ? w.step_connection_next_cant(vendor)
+      : kind === "later" ? w.step_connection_next_later(vendor)
       : this.keyRequests.has(callID) ? w.step_connection_next_again(vendor)
       : vendor && this.keyApps.has(foldApp(vendor)) ? w.step_connection_next(vendor)
       : w.step_connection_next_sign_in(vendor);
-    return { vendor, ...(key ? { key } : {}), ...(said ? { reason: w.step_connection_why(said) } : {}), next };
+    return { vendor, ...(key ? { key } : {}), ...(reason ? { reason } : {}), next };
   }
 
   /** What a connection request was for, once it went through: earlier refusals for the same are past. */
@@ -382,6 +389,20 @@ export function coachGuard(text: unknown): boolean {
  * again gives the same access (go-to-market job 3: LinkedIn's page posting, "Ensure you have the scope"), so the way
  * forward is what the app can do instead.
  */
+export type RefusalKind = "cant" | "later" | "sign_in" | "other";
+
+/**
+ * What kind of refusal a connection call's answer is, for the person's words: the app lacks the access (`cant`), it
+ * didn't answer or is down (`later`), the sign-in didn't finish (`sign_in`), or anything else (`other`, no reason line).
+ */
+export function refusalKind(text: unknown): RefusalKind {
+  if (lacksAccess(text)) return "cant";
+  const raw = typeof text === "string" ? text.split("\n").find((l) => l.trim()) ?? "" : "";
+  if (/\b(?:5\d\d|timed? ?out|unavailable|try again later|rate.?limit|too many requests)\b/i.test(raw)) return "later";
+  if (/\b(?:sign(?:ed)?[- ]?in|log(?:ged)?[- ]?in|sign-in|expired|revoked|declined|cancell?ed)\b/i.test(raw)) return "sign_in";
+  return "other";
+}
+
 export function lacksAccess(text: unknown): boolean {
   const line = whyOf(text) ?? "";
   return /\bscopes?\b|\bpermission\b|\bforbidden\b|\bnot (?:allowed|authori[sz]ed)\b/i.test(line);

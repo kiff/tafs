@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attachWhys, coachGuard, connectsRefused, failedStep, foldRetried, keyAppsIn, lacksAccess, shownWhy, stepWords, Steps, takeRefused, vendorName, whyOf } from "../src/cloud/steps.js";
+import { attachWhys, coachGuard, connectsRefused, failedStep, foldRetried, keyAppsIn, lacksAccess, refusalKind, shownWhy, stepWords, Steps, takeRefused, vendorName, whyOf } from "../src/cloud/steps.js";
 import { LANGUAGES } from "../src/cloud/words/index.js";
 
 describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
@@ -225,6 +225,15 @@ describe("a refused connection's way forward (go-to-market job 3, 13 Nov)", () =
     expect(coachGuard("argument post_text is not a valid name")).toBe(true);
     expect(s.connectionRefusal("c1", "fixed argument visibility.com.linkedin.ugc.MemberNetworkVisibility must be a dotted path with a JSON value")).toBeUndefined();
     expect(lacksAccess("Google Sheets refused the write: the sheet was renamed.")).toBe(false);
+    // The person's reason line is tafs cloud's, by kind, never the server's words (the go-to-market bar, 13 Nov).
+    const scope = s.connectionRefusal("c1", "planque answered 403: LinkedIn refused it (it answered 403): You don't have permission to access organization ACLs. Ensure you have the scope.");
+    expect(scope).toMatchObject({ reason: "Linkedin doesn't allow this with the access it gave." });
+    expect(s.connectionRefusal("c1", "planque answered 502: the provider is unavailable")).toMatchObject({ reason: "Linkedin didn't answer in time.", next: "Next: ask Coach to try Linkedin again in a few minutes, or to use another app." });
+    expect(s.connectionRefusal("c1", "planque answered 409: the sign-in expired")).toMatchObject({ reason: "The sign-in to Linkedin didn't finish.", next: "Next: ask Coach to sign in to Linkedin again, or to use another app." });
+    const other = s.connectionRefusal("c1", "planque answered 400: unknown field toolkit_slug in request (grant grt_Abc123xyz)");
+    expect(other?.reason).toBeUndefined();
+    for (const r of [scope, other]) expect(JSON.stringify(r)).not.toMatch(/ACL|toolkit|planque|grt_|answered/);
+    expect(refusalKind("timed out after 30s")).toBe("later");
     expect(keyAppsIn(JSON.stringify({ entries: [{ entry: "connector:p:linkedin", vendor: "LinkedIn", how: "oauth" }] }))).toEqual([]);
   });
 });

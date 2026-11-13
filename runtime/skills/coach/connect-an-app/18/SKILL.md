@@ -34,7 +34,7 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   one too, read its catalog {grant, q}: planque takes only tools it listed. When an app can't be connected (needs_setup, or its sign-in, request
   or describe failed), say why in one sentence from planque's answer and offer a way
   forward then: the same app's key entry, its key by its published API
-  description, or another app with the operation; never only "try later". An app the owner names is connected as they name it. events {entry}
+  description, or another app with the operation; never only "try later". events {entry}
   (before connecting) and events {grant} (after) list what can wake a taf:
   draft the one it needs into the taf's dial. A write whose outcome comes later as an app event (a reply) needs the taf to wake on that event, or the connection refuses it as
   not_listening: draft the event into the dial with the write, in the same
@@ -42,7 +42,7 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
 - Ask before you connect a sign-in ("Is it OK if I connect to your help desk?").
   For a vendor's own MCP server, connect first, to look: planque request with
   its server, a name for the taf's agent (name, such as "reembolsos"), taf_name, and no tools but your own setup reads (name-the-tools: the accounts list and
-  the operations' fields). An app from search goes as above. Prefer a vendor's sign-in to its key, even
+  the operations' fields). Prefer a vendor's sign-in to its key, even
   when search finds both. A vendor with a REST API and no MCP server is connected
   by its key instead: planque request with api {url: its published OpenAPI
   description, base: where its operations' paths start, auth: where the key goes, as its docs say (in: header or query, name, prefix such
@@ -84,7 +84,7 @@ the grant failed, say in one sentence it didn't work and connect
 again with a new planque request: a failed grant can't be approved.
 When the app answers it can't do what was asked (a 403, a scope it lacks),
 another approval won't change that: never ask it again. Say in one sentence
-what it can't do; offer what it can (the owner's own profile, not a page).
+what it can't do; offer what it can (their own profile). If the owner declined, never show it again: ask what they want instead.
 If planque or KIFF refused the request itself (a name taken, a field it won't
 take), change what was refused and show the approval of a new planque request: the same
 request fails the same way.
