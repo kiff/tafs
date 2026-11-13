@@ -172,7 +172,7 @@ export const nl: Words = {
   recipes_label_never: "Doet het nooit",
   recipes_label_hand: "Geef het aan Coach",
   recipes_home_lead: "Kies een taak voor je eerste taf.",
-  recipes_home_empty_coach: "Nog geen tafs. Koppel een app om je eerste taf in te stellen.",
+  recipes_home_empty_coach: "Nog geen tafs. Vertel Coach welk werk een taf moet doen.",
   recipes_home_empty_shared: "Nog geen tafs. Tafs die met je zijn gedeeld, verschijnen hier.",
   gallery_title: "Nieuwe taf",
   gallery_all: "Alle taken",
@@ -566,6 +566,11 @@ export const nl: Words = {
   ct_app_act: "Tikken, typen en scrollen in de app op je apparaat terwijl het die bedient",
   ct_replaces: "vervangt de eerdere koppeling",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
+  // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
+  start_lead: "Je logt in op de pagina van elke app zelf. Geen taf ziet ooit je wachtwoord.",
+  start_button: "Starten",
+  start_does: "Starten stelt goedkeuringen in op dit apparaat en geeft Coach zijn tools, met één keer je gezicht of vingerafdruk.",
+  plan_needed: "Kies een abonnement om het te starten.",
   cts_title: "Geef Coach zijn tools",
   cts_intro: "Coach heeft een paar tools nodig om voor je tafs te zorgen. Ze komen op Coach' eigen Card, met hun limieten, en alleen jij kunt die ondertekenen, op je apparaat.",
   cts_details: "Elke tool en zijn limieten",

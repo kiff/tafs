@@ -3,7 +3,7 @@ import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writ
 import { type AIView, view as aiView } from "./aiuse.js";
 import { type BalanceView, balanceView, type CreditRun, CreditsError, runCreditsOf, type CreditsView, creditsView, readBalance, readBalanceAndRuns, readCoachCredits, readCreditRuns, readCredits, type TafCreditsView, tafCreditsView, UNREADABLE, waitingWords } from "./credits.js";
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
-import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs } from "./kiff.js";
+import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
 import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
@@ -40,7 +40,7 @@ import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
-import { replayHeld, type Unanswered, unansweredOf, unansweredWords } from "./doors/hold.js";
+import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
@@ -725,7 +725,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // The account's Setup (kiff/agents#91): its chat uses the taf routes, by its id.
     if (parts.length === 2 && method === "GET") {
       const setup = await setupOf(me, deps);
-      if (!setup) return { setup: null, tools: null, ...(await coachFirstStart(event, me, deps)) };
+      if (!setup) return { setup: null, tools: null, ...(await zoneFromPhone(event, me, deps)), ...(await coachFirstStart(event, me, deps)) };
       const [shown, tools] = await Promise.all([view(setup, me, deps), coachTools(event, setup, deps)]);
       return { setup: shown, tools };
     }
@@ -1404,11 +1404,11 @@ function need(me: KIFFIdentity, capability: string): void {
 }
 
 async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
-  return makeTaf(parseBody(event), me, deps, langOf(event));
+  return makeTaf(parseBody(event), me, deps, langOf(event), bearer(event));
 }
 
 /** POST /v1/tafs's work, for the person me: from their request, or from a result tafs cloud hands over for them. */
-async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: Deps, lang?: Lang): Promise<{ taf: unknown; session: string | null; outcome?: string; words?: string; reason?: string }> {
+async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: Deps, lang?: Lang, token?: string): Promise<{ taf: unknown; session: string | null; outcome?: string; words?: string; reason?: string; plan_needed?: { words: string } }> {
   let name = str(body.name).trim();
   if (!name || name.length > MAX_NAME) throw new HTTPError(400, `give the taf a name of ${MAX_NAME} characters at most`);
   // Setup's word that the taf's tools can't find its work (kiff/tafs#138): no
@@ -1585,9 +1585,13 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   // It runs once now as well, unless it works from its chat: then it waits for the owner. Its schedule fires
   // once, through kiff/agents' trigger: a checked taf's first check hands it the open queue (`first: "all"`),
   // and an empty queue starts no run, which is no failure: the answer then has no session.
-  if (unscheduled) return { taf: await view(taf, me, deps), session: null };
+  // With no plan yet, nothing runs: the taf is made, and the answer says so in words (the first run's item 7).
+  const plan = token ? await planNeeded(token, deps, lang ?? ownerLang) : {};
+  if (unscheduled) return { taf: await view(taf, me, deps), session: null, ...plan };
+  if (plan.plan_needed) return { taf: await view(taf, me, deps), session: null, ...plan };
   let fired: Fired_;
   try { fired = await fireNow(me.tenantID, tafID, deps); } catch (err) {
+    if (waitsForCredits(err) && err.code === "no_plan") return { taf: await view(taf, me, deps), session: null, plan_needed: { words: wordsIn(lang ?? ownerLang).plan_needed } };
     throw new HTTPError(502, `${name} is started, but its first ${workCheck ? "check" : "run"} didn't start (${(err as Error).message}). Run it now from the app`);
   }
   // A first check that started no run says why (quiet, halted, a read that failed…): the taf is made all the same.
@@ -1792,6 +1796,54 @@ export const COACH_AGENT_ID = "setup";
  * fingerprint over the draft alone, never the pair again. Only for someone who may start Setup; nothing otherwise, and
  * nothing when KIFF can't word the Cards first.
  */
+/** Where tafs cloud marks that it set a new account's time zone from a phone: once, never again. */
+const zoneFromPhoneKey = (tenant: string) => `${tenant}#zone-from-phone`;
+
+/**
+ * A new account's time zone, from the phone (the first run's item 1): no question. The apps send the phone's zone as
+ * `X-Time-Zone`; while the account has no taf, KIFF's zone is still UTC, and tafs cloud has never set it, tafs cloud
+ * sets it in KIFF once with the person's session and says so (`time_zone`). A later mismatch is still the apps'
+ * question. KIFF answers UTC for a zone never set, so tafs cloud keeps its own mark. Anything failing changes nothing.
+ */
+async function zoneFromPhone(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<{ time_zone?: string }> {
+  const phone = (header(event, "x-time-zone") ?? "").trim();
+  // Only someone who manages the tafs, as for Coach's start: a member KIFF won't let set it would ask on every read.
+  if (!phone || !deps.coach || !me.capabilities.includes("cards.manage") || (me.timeZone ?? "UTC") !== "UTC" || phone === "UTC" || !validZone(phone)) return {};
+  try {
+    if (await deps.coach.get(zoneFromPhoneKey(me.tenantID))) return {};
+    if ((await deps.tafs.list(me.tenantID)).some((t) => !t.removing)) return {};
+    const zone = await setTimeZoneInKIFF(bearer(event), phone, deps.fetch, deps.kiffBase);
+    const now = deps.now?.() ?? new Date();
+    await deps.coach.put(zoneFromPhoneKey(me.tenantID), { zone, at: now.toISOString() }, new Date(now.getTime() + 10 * 365 * 24 * 3600_000));
+    return { time_zone: zone };
+  } catch (err) {
+    console.error(`zone from the phone: ${(err as Error).message}`);
+    return {};
+  }
+}
+
+/** A named IANA zone this runtime knows. */
+function validZone(zone: string): boolean {
+  if (!/^[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)+$/.test(zone)) return false;
+  try { new Intl.DateTimeFormat("en", { timeZone: zone }); return true; } catch { return false; }
+}
+
+/** Coach's start in words: one line, the button, and what it does (approvals and Coach's tools, one face or fingerprint). */
+function startWords(lang: Lang): { lead: string; start: string; does: string } {
+  const w = wordsIn(lang);
+  return { lead: w.start_lead, start: w.start_button, does: w.start_does };
+}
+
+/** `plan_needed` with its words when KIFF says the account has no plan; nothing when it has one or can't be read. */
+async function planNeeded(token: string, deps: Deps, lang: Lang): Promise<{ plan_needed?: { words: string } }> {
+  try {
+    const b = await readBalance(token, deps.fetch, deps.kiffBase);
+    return b.kind === "none" ? { plan_needed: { words: wordsIn(lang).plan_needed } } : {};
+  } catch {
+    return {};
+  }
+}
+
 async function coachFirstStart(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<{ start?: Record<string, unknown> }> {
   if (process.env.TAFS_COACH_START_ONE !== "on" || !me.capabilities.includes("cards.manage")) return {};
   const host = event.headers?.host ?? event.headers?.Host;
@@ -1821,6 +1873,9 @@ async function coachFirstStart(event: HTTPEvent, me: KIFFIdentity, deps: Deps): 
           { id: "draft", method: "POST", path: "/v1/me/agent-drafts", body: signed, ...preview },
         ],
         coach_tools_step: coachToolsStep(lang),
+        // One line before Start, the button, and what Start does: approvals on this phone and Coach's tools, under one
+        // face or fingerprint (the first run's items 2 and 3). The apps draw these, never their own paragraphs.
+        words: startWords(lang),
       },
     };
   } catch (err) {
@@ -2283,8 +2338,8 @@ export interface CardAnswer {
   at: string;
   /** Who answered in the owner's place, when it wasn't them: tafs cloud, for a result. */
   by?: string;
-  /** A result's outcome, what came of handing the owner over: the app draws it, nothing more. */
-  outcome?: ResultOutcome;
+  /** A result's outcome, what came of handing the owner over: the app draws it, nothing more. A taf made with no plan has `plan_needed`. */
+  outcome?: ResultOutcome & { plan_needed?: { words: string } };
 }
 
 export interface ThreadMessage {
@@ -2589,6 +2644,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   drives.sort((a, b) => a.at.localeCompare(b.at));
   const shown = components.slice(-CHAT.maxThread);
   await markConnected(me.tenantID, shown, deps, lang);
+  await markPlanNeeded(me.tenantID, shown, deps, lang);
   return { messages: messages.slice(-CHAT.maxThread), components: shown, held: held.slice(-CHAT.maxThread), drives: drives.slice(-CHAT.maxThread), sessions: picked, ...(usage ? { usage } : {}) };
 }
 
@@ -2760,6 +2816,27 @@ function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lang: Lang
  * waited (docs/secure-connection.md). The apps draw that line and the card's Card alone. A note that can't be
  * read leaves the card as it was.
  */
+/** Where tafs cloud keeps that a taf was made with no plan, for its hand-over card. */
+const planNeededKey = (tenant: string, taf: string) => `${tenant}#plan-needed#${taf}`;
+
+/** Keeps that the hand-over made this taf with no plan; nothing when it had one. */
+async function keepPlanNeeded(tenant: string, taf: string, plan: { words: string } | undefined, deps: Deps): Promise<void> {
+  if (!plan || !deps.coach) return;
+  const now = deps.now?.() ?? new Date();
+  await deps.coach.put(planNeededKey(tenant, taf), { at: now.toISOString() }, new Date(now.getTime() + 30 * 24 * 3600_000))
+    .catch((err) => console.error(`plan needed, ${taf}: ${(err as Error).message}`));
+}
+
+/** A result's card whose taf was made with no plan says so, in the reader's language: `outcome.plan_needed`. */
+async function markPlanNeeded(tenant: string, components: ThreadComponent[], deps: Deps, lang: Lang): Promise<void> {
+  if (!deps.coach) return;
+  for (const c of components) {
+    const id = c.answer?.outcome && "taf_id" in c.answer.outcome ? c.answer.outcome.taf_id : undefined;
+    if (!id || !await deps.coach.get(planNeededKey(tenant, id)).catch(() => undefined)) continue;
+    c.answer!.outcome = { ...c.answer!.outcome!, plan_needed: { words: wordsIn(lang).plan_needed } };
+  }
+}
+
 async function markConnected(tenant: string, components: ThreadComponent[], deps: Deps, lang: Lang): Promise<void> {
   if (!deps.coach) return;
   const w = wordsIn(lang);
@@ -7795,8 +7872,12 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
       await deps.coach.append(coachKeys.notes(tenant, me.subject), { at: at.toISOString(), text: line, taf: taf.name ?? id, taf_id: id, said: out.words ?? "" },
         new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${id} first check:`, err));
       // Said in the answer too, so Coach's closing message never calls the taf working (A4).
+      await keepPlanNeeded(tenant, id, out.plan_needed, deps);
       return { taf_id: id, check: out.reason ?? "no reason given" };
     }
+    // The hand-over card says when the taf was made with no plan (the first run's item 7). kiff/agents takes a result's
+    // answer with its known fields only, so tafs cloud keeps this itself and adds it where the card's answer is read.
+    await keepPlanNeeded(tenant, id, out.plan_needed, deps);
     return { taf_id: id };
   } catch (err) {
     if (err instanceof HTTPError && err.status >= 400 && err.status < 500) {
