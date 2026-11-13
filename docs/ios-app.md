@@ -472,6 +472,19 @@ answer to the result carries `outcome.plan_needed.words` ("Choose a plan to star
 person's language), and the hand-over card says them under its own words, above the button that
 opens the taf (`SetupThread.planNeeded`). No words, or none that are text, add nothing.
 
+## Connect apps
+
+The same rows as Android, from the same tafs cloud fields (`GET /v1/connect/apps`: `title`, `logo`, `state` or
+`connected`, `method` (else `how`), and `line`, `whose` and `used_by` when sent; `ConnectRow`):
+- **Yours first, then Discover:** connected apps (or ones to sign in again) under Yours, the rest under Discover,
+  each in tafs cloud's order, with search.
+- **On a phone, two lines:** the name, then tafs cloud's `line` as sent ("Sign in · Connected · Used by Refunds"). From a
+  tafs cloud without it, the app says the same: how it connects ("Sign in" or "With a key"), whose it is (`whose`, as
+  sent), where it stands, and which tafs use it ("Used by …", from `used_by`, or this phone's planque read). A ✓ for a connected app; else a compact Connect, as wide as its words.
+- **On an iPad's full width, a table:** App, How it connects, Whose, Status.
+- **A connected app opens its detail** (`AppConnectionsView`): what each connection can read and do, which taf it
+  serves, and Disconnect.
+
 ## A taf whose setup stopped partway
 
 Home lists tafs only. A Coach chat left before the hand-over leaves a draft with no taf: tafs cloud
