@@ -161,6 +161,19 @@ server declares in KIFF at the request (`declared: true` on the grant) and which
 the key is in (`connect-an-app@10`, `draft-the-card@8`). Not declared, Coach asks for the key first,
 then the Card, as before.
 
+**A connection's added tools and its Card together (`tools_and_cards`).** The same shape, for an app already
+signed in: Coach adds the taf's tools to a connected grant (the addition waits as `pending`, with what it had in
+`connected`), drafts the Card over them, and shows one approval with the grant and the draft. With
+`TAFS_TOOLS_AND_CARDS=on` and `can: ["tools_and_cards"]`, tafs cloud answers `{step: "tools_and_cards", scheme:
+"kiff.requests.v1", message: "", key: "critical", planque: {grant, body: {digest, kiff_profile?}}, kiff: {draft,
+version}}`. The phone builds the two requests it already knows, with one `signed_at`: the connection server's approve
+(`POST …/grants/{grant}/approve`, as the connect step sends it) and KIFF's confirm (as the cards step does), signs
+their two hashes once, and sends `with=` on each, as for a key. The report answers `approved` only when the grant is
+connected with the tools and the Card is issued; tools in with a Card that didn't answers `failed: <app> is connected;
+…`, so the next card asks for the Card alone. It needs the connection server to take the paired approve and to
+declare an addition's tools in KIFF while they wait (and withdraw them if the addition ends unapproved); until then
+the flag stays off and the two steps work as before. A first connection (nothing connected yet) keeps its steps.
+
 **Until this ships:** an approval card whose connection is already connected never repeats
 the connection's text. tafs cloud marks it on Coach's approval component in the conversation
 (`connection: {done: true, words: "Qonto is connected (read only)"}`), and the apps draw only

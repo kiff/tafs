@@ -1,0 +1,2 @@
+- tafs cloud can ask an app already connected for its added tools and the Card over them under one fingerprint (`tools_and_cards`, behind `TAFS_TOOLS_AND_CARDS`, off until the connection server takes it).
+- A Card is never signed if it would also let the taf use a tool none of its connections gives (for the connect-then-Card, key-and-Card and tools-and-Card approvals alike).

@@ -70,6 +70,7 @@ export const es: Words = {
   approval_no_draft: "KIFF no tiene ese borrador",
   approval_cards_unread: "La Card aún no se pudo comprobar. Vuelve a leerla y luego apruébala.",
   approval_uncovered: (tool: string) => `Esta Card no cubre «${tool}», que el taf recibió, así que cada llamada se rechazaría. No se aprobó nada. Coach la redacta de nuevo.`,
+  approval_stray: (tool: string) => `Esta Card también dejaría al taf usar «${tool}», que ninguna conexión suya le da. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_lifetime_cap: (tool: string) => `Esta Card dejaría que «${tool}» se ejecute solo un número fijo de veces en total, para todos los elementos y no para cada uno. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} se configuró hoy, así que cada cambio debe preguntarte primero; esta Card dejaría que «${tool}» se ejecute sin preguntar. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_critical_key: "Esto amplía lo que el taf puede hacer, así que necesita tu huella digital. No se aprobó nada; vuelve a aprobarlo con tu huella digital.",
