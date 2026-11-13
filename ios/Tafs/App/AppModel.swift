@@ -2958,7 +2958,8 @@ final class AppModel: ObservableObject {
         discardCardsLeft[agent] = nil
         settingUp.removeAll { $0.id == tafID }
         await refresh()
-        return cardsLeft == 0 ? nil : Words.Card.kiffDidNotRevokeCards(cardsLeft: "\(cardsLeft)")
+        // tafs cloud took it only once KIFF held none of its Cards in force: none is left to say.
+        return nil
     }
 
     /// What removing this taf takes with it, in tafs cloud's words, for the confirmation before
