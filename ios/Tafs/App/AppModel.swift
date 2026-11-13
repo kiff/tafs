@@ -2935,6 +2935,11 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return nil }
         do {
             try await cloud.discardSettingUp(agent, signature: "t=\(signedAt),v1=\(signature)")
+        } catch let refused as TafsCloud.CloudError where refused.code == "cards_in_force" {
+            // KIFF still holds some of its Cards in force, so nothing ended: how many are left;
+            // Discard again revokes them and asks again.
+            guard gen == accountGeneration else { return nil }
+            return Words.Card.kiffDidNotRevokeCards(cardsLeft: "\(max(refused.cards.count, cardsLeft, 1))")
         } catch {
             guard gen == accountGeneration else { return nil }
             return (error as? TafsCloud.CloudError).map { $0.words ?? $0.message } ?? error.localizedDescription

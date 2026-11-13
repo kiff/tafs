@@ -148,5 +148,13 @@ final class HomeFinishSetupTests: XCTestCase {
         XCTAssertTrue(discard.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasPrefix("t=") ?? false, "signed as a removal is")
         XCTAssertTrue((discard.httpBody ?? Data()).isEmpty, "the empty body it signs")
         XCTAssertFalse(model.settingUp.contains { $0.id == taf.id }, "the row goes")
+
+        // KIFF still holds a Card in force: tafs cloud ends nothing, and says how many are left.
+        let again = await self.model(others: [repeated], settingUp: half)
+        StubProtocol.responses["POST /v1/me/mandates/c_inv/revoke"] = (502, #"{"error":"KIFF is busy"}"#)
+        StubProtocol.responses["POST /v1/home/setting-up/invoicing-x/discard"] = (409, #"{"error":"cards still in force","code":"cards_in_force","cards":["c_inv"]}"#)
+        let left = await again.discardSettingUp(try XCTUnwrap(again.settingUp.first).id)
+        XCTAssertEqual(left, Words.Card.kiffDidNotRevokeCards(cardsLeft: "1"))
+        XCTAssertEqual(again.settingUp.count, 2, "nothing ended")
     }
 }

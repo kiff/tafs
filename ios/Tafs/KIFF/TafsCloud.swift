@@ -23,6 +23,8 @@ final class TafsCloud {
         /// The AI-data consent's screen, when the refusal carries it: a turn refused for want of
         /// it (`ai_consent_required`), or an older screen's yes refused for newer words.
         var consent: AIConsent? = nil
+        /// For 409 `cards_in_force`: the Cards KIFF still holds in force, by id.
+        var cards: [String] = []
         /// tafs cloud's words first, on every path that shows the error (kiff/tafs#397); the
         /// app's own line for the status only without them.
         var errorDescription: String? { words ?? message }
@@ -30,14 +32,15 @@ final class TafsCloud {
 
     /// tafs cloud's refusal: its words, and the runs in the way when it names them (kiff/tafs#206).
     static func refusal(_ status: Int, _ data: Data) -> CloudError {
-        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String?; let code: String?; let halted: String? }
+        struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String?; let code: String?; let halted: String?; let cards: [String]? }
         struct Consent: Decodable { let consent: AIConsent? }
         let body = try? JSONDecoder().decode(Body.self, from: data)
         // The consent's words, read on their own, so one that doesn't read leaves the rest of the refusal:
         // with a refused turn, and with an older screen's refused yes (409), which carries the new words.
         let consent = (try? JSONDecoder().decode(Consent.self, from: data))?.consent
         let error = CloudError(status: status, message: body?.error ?? Words.Error.cloudAnswered(status: "\(status)"), blocking: body?.blocking ?? [], words: body?.words,
-                               code: body?.code, halted: body?.halted.flatMap { ["account", "taf"].contains($0) ? $0 : nil }, consent: consent)
+                               code: body?.code, halted: body?.halted.flatMap { ["account", "taf"].contains($0) ? $0 : nil }, consent: consent,
+                               cards: body?.cards ?? [])
         // Every route that would start a model turn can refuse this way: said once here, so the
         // consent screen shows wherever the person tried, with nothing wired per call.
         if body?.code == aiConsentRequired, let consent, consent.drawable {
