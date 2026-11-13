@@ -646,7 +646,7 @@ describe("a removed taf is forgotten by Coach", () => {
       { agent: SETUP, name: "policy", text: "RefundsPolicy is 14 days.", updated: "2026-10-16T12:00:00Z" },
       // Nor is the plain word, in a note about another taf (agentgabo on #835).
       { agent: SETUP, name: "disputes", text: "Disputes come in by email; refunds are handled elsewhere.", updated: "2026-10-16T12:00:00Z" },
-      // A note about the removed taf and one still there goes too: removed means forgotten (the PM on #835).
+      // A note about the removed taf and one still there goes too: removed means forgotten.
       { agent: SETUP, name: "both", text: "Refunds' Qonto account has no client invoices; Chargebacks uses Stripe.", updated: "2026-10-16T12:00:00Z" },
     ]);
     // Ana manages Refunds, as KIFF says.

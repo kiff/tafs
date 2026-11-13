@@ -1927,7 +1927,7 @@ async function remove(taf: Taf, me: { tenantID: string }, deps: Deps, token = ""
  * A removed taf, forgotten by Coach: the notes Coach keeps (shared or a person's own) that are about it go. A note
  * is about it when it names its id or KIFF agent, or its name as written (case kept, a whole word: "Emails" the
  * taf, never "emails" the word). A note that also names a taf that's still there goes too: removed means forgotten,
- * and Coach reads the live taf again (the PM on #835). The removal promises its chats, runs and memory go with it, and a note like "its account has no client invoices"
+ * and Coach reads the live taf again. The removal promises its chats, runs and memory go with it, and a note like "its account has no client invoices"
  * brought a removed taf's read back into a new chat. Best effort: the taf is removed either way, and its queued
  * lines are dropped when read (liveCoachLines).
  */
