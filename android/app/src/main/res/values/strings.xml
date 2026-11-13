@@ -766,9 +766,14 @@
     <string name="connect_apps_also_on_many">Also on the Cards of %1$s</string>
     <string name="connect_apps_also_on_one">Also on %2$s Card</string>
     <string name="connect_apps_clearing">Clearing…</string>
+    <string name="connect_apps_column_app">App</string>
+    <string name="connect_apps_column_how">How it connects</string>
+    <string name="connect_apps_column_status">Status</string>
+    <string name="connect_apps_column_whose">Whose</string>
     <string name="connect_apps_connect">Connect</string>
     <string name="connect_apps_connected">Connected ✓</string>
     <string name="connect_apps_disconnect_why">Removing access takes its tools from that taf only, and from any taf whose Card uses them. Other tafs keep theirs.</string>
+    <string name="connect_apps_discover">Discover</string>
     <string name="connect_apps_manage">Manage</string>
     <string name="connect_apps_more">Show more apps</string>
     <string name="connect_apps_none">No app by that name. Coach can connect one that isn\'t listed.</string>
@@ -776,7 +781,9 @@
     <string name="connect_apps_not_listed_why">Coach can connect an app that isn\'t here, from its own docs.</string>
     <string name="connect_apps_search">Search apps</string>
     <string name="connect_apps_title">Connect apps</string>
+    <string name="connect_apps_used_by">Used by %1$s</string>
     <string name="connect_apps_your_connections">Your %1$s connections</string>
+    <string name="connect_apps_yours">Yours</string>
     <string name="connect_apps_connect_taf_make_one">Apps connect for a taf. Make one first, then connect its apps here.</string>
     <string name="connect_apps_not_read">The apps couldn\'t be read. %1$s</string>
     <string name="connect_cancel_request_button">Cancel the request</string>
@@ -834,6 +841,8 @@
     <string name="connect_from_removed">From removed tafs</string>
     <string name="connect_give_key_on_sheet">Give the key on a secure sheet</string>
     <string name="connect_give_key_with">Give the key with %1$s</string>
+    <string name="connect_how_key">With a key</string>
+    <string name="connect_how_sign_in">Sign in</string>
     <string name="connect_kept_another_taf">another taf</string>
     <plurals name="connect_kept_for_card">
         <item quantity="one">Kept %1$s for %2$s, whose Card uses it.</item>
