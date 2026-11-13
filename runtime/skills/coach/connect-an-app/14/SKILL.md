@@ -31,8 +31,8 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   another. Connect the chosen app with request {entry, name, taf_name, uses}:
   uses are the slugs of the tools search found that the taf will use,
   so only those are asked. Offer only what a connection can do: check the vendor has the operation with
-  search {q} before connecting and catalog {grant, q} after. When an app can't be connected (needs_setup, or its sign-in or request
-  failed), say why in one sentence from planque's answer and offer a way
+  search {q} before connecting and catalog {grant, q} after. When an app can't be connected (needs_setup, or its sign-in, request
+  or describe failed), say why in one sentence from planque's answer and offer a way
   forward then: the same app's key entry, its key by its published API
   description, or another app with the operation; never only "try later". An app the owner names is connected as they name it. events {entry}
   (before connecting) and events {grant} (after) list what can wake a taf:
@@ -57,8 +57,8 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   sheet is the ask, with no card before it. Describe {api}, then
   request the job's operations as tools, by describe's names, never none, so
   it's declared. If declared, agree the rules, draft the Card,
-  show one approval with the grant and the draft: the sheet signs both. Else
-  the key, then the Card. planque's answer gives the taf's agent id: use it from then on. A tool's
+  show one approval with the grant and the draft: the sheet signs both. Else,
+  key then Card. planque's answer gives the taf's agent id: use it from then on. A tool's
   answer isn't kept between your turns: when you no
   longer have the taf's agent id or a grant's id, planque grants with no agent
   lists every connection you asked for, with its agent, status and when it

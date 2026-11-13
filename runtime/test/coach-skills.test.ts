@@ -112,7 +112,7 @@ describe("Coach's core", () => {
   it("names the job's tools on every key request, so planque declares them and the key and the Card are one approval", () => {
     const body = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(body).toContain("Describe {api}, then request the job's operations as tools, by describe's names, never none, so it's declared.");
-    expect(body).toContain("Else the key, then the Card.");
+    expect(body).toContain("Else, key then Card.");
     expect(body).not.toContain("The request carries its tools (an entry's come with it).");
   });
 
@@ -120,7 +120,7 @@ describe("Coach's core", () => {
     const setup = COACH_SKILLS.find((k) => k.name === "set-up-a-taf")!.body.replace(/\s+/g, " ");
     expect(setup).toContain("If the job needs an app, search {q} first: say if it can't be connected, with a way forward, before other questions.");
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
-    expect(connect).toContain("When an app can't be connected (needs_setup, or its sign-in or request failed), say why in one sentence from planque's answer and offer a way forward then: the same app's key entry, its key by its published API description, or another app with the operation; never only \"try later\".");
+    expect(connect).toContain("When an app can't be connected (needs_setup, or its sign-in, request or describe failed), say why in one sentence from planque's answer and offer a way forward then: the same app's key entry, its key by its published API description, or another app with the operation; never only \"try later\".");
     // A key some vendors want after a word ("ShippoToken <key>"): the request names it.
     expect(connect).toContain("(in: header or query, name, prefix such as \"Token \")");
   });
@@ -142,7 +142,7 @@ describe("Coach's core", () => {
     expect(body).toContain("For a key, the sheet is the ask, with no card before it.");
     // planque takes tools only on a signed-in grant, and declares a key grant's from the request (agentgabo on #830).
     expect(body).not.toContain("(planque tools) while it waits");
-    expect(body).toContain("Describe {api}, then request the job's operations as tools, by describe's names, never none, so it's declared. If declared, agree the rules, draft the Card, show one approval with the grant and the draft: the sheet signs both. Else the key, then the Card.");
+    expect(body).toContain("Describe {api}, then request the job's operations as tools, by describe's names, never none, so it's declared. If declared, agree the rules, draft the Card, show one approval with the grant and the draft: the sheet signs both. Else, key then Card.");
     expect(body).toContain("Say a mode only as the grant gives it.");
     expect(body).toContain("Request {reuse: that grant's id, name, taf_name, tools: []}: the owner then approves the new taf's tools alone, with no new sign-in or key.");
     expect(body).toContain("Only if planque refuses the reuse, ask for the same kind: {server}, {entry} or {api}.");
