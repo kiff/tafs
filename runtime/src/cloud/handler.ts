@@ -37,6 +37,7 @@ import { accountConnections, connectionLines, endConnections, withConnections } 
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
+import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, CONNECTION_TOOL, foldRetried, failedStep, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords } from "./doors/hold.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
@@ -263,6 +264,8 @@ export interface Deps {
    * and the run notices use this. Unset: the request's host.
    */
   publicURL?: string;
+  /** Fetches one public page for Coach's web_read (tests pass one that reaches no network). */
+  pageFetch?: PageFetch;
   now?: () => Date;
   /** Waits, between a switch's tries while what blocks it stops (tests pass one that doesn't). */
   sleep?: (ms: number) => Promise<void>;
@@ -6568,6 +6571,16 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   }
   // A new taf's estimate has no taf yet: it's read from the draft.
   if (name === "taf_estimate") return estimateTool(args, call, deps);
+  // A public page, read as anyone could (webread.ts): about no taf.
+  if (name === "web_read") {
+    try {
+      return { ...(await readPage(args.url, deps.pageFetch)) };
+    } catch (err) {
+      if (err instanceof PageRefusal) throw new ToolRefusal(err.message);
+      console.error(`web_read: ${(err as Error).message}`);
+      throw new ToolRefusal("the page couldn't be read");
+    }
+  }
   const taf = await coachTaf(call.tenant, args.taf, deps);
   const n = Number(args.n);
   // In a person's chat, what KIFF says they may do with this taf; tafs cloud only applies it.

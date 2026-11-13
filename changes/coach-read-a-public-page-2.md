@@ -1,0 +1,3 @@
+- **Coach reads a public page (`web_read`).** To connect an app by its key, Coach finds the vendor's published API description on its docs, in JSON or YAML, with `connect-an-app@12`.
+  - **What it reads:** one public page, https only, with no sign-in or cookie, never a private address, at most three redirects, text only and cut short. The whole read stops at 10 seconds, redirects included. An address carries at most a 300-character path and a 100-character query, so a page can't have Coach send out what it knows. A hostile page can't make the read slow. An OpenAPI description answers its servers and how its key is given, prefix included.
+  - **Its Card:** a Card of its own, `coach-web-reads`, at 50 reads a day. An account's phone asks for it on its next read.
