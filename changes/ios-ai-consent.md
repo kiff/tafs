@@ -1,0 +1,1 @@
+- **iOS: allow AI use before anything you write reaches the model.** One screen names the AI provider, what's sent and what never is, with Allow and Not now. Account shows it, with Withdraw.

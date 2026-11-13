@@ -19,6 +19,8 @@ struct TafsApp: App {
                 .environmentObject(model)
                 .tint(Theme.amber)
                 .task {
+                    // tafs cloud's "allow AI use first", from whatever route the person tried.
+                    model.watchAIConsent()
                     if Screenshots.enabled {
                         if Screenshots.landscape { Screenshots.turnToLandscape() }
                         await model.startSample()
@@ -202,6 +204,11 @@ struct RootView: View {
         }
         .onChange(of: model.requestedTab) { requested in showRequestedTab(requested) }
         .onAppear { showRequestedTab(model.requestedTab) }
+        // The AI-data consent, full screen, before anything the person writes reaches the model:
+        // after sign-in while it isn't given, and whenever tafs cloud refuses a turn for want of it.
+        .fullScreenCover(item: Binding(get: { model.aiConsentAsked }, set: { if $0 == nil { model.aiConsentAsked = nil } })) { consent in
+            AIConsentView(consent: consent).environmentObject(model)
+        }
         // The device's time zone, asked once (kiff/tafs#206 6.11).
         .alert(Words.Settings.TimeZoneOffer.title(zone: model.timeZoneOffer ?? ""), isPresented: Binding(
             get: { model.timeZoneOffer != nil && model.lastError == nil },
