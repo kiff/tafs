@@ -763,6 +763,17 @@ class PlanqueTest {
 
   private val answerRoute = "POST /v1/tafs/setup_1/components/a1/answer"
 
+  @Test fun coachsThreadIsReadWithThisPhonesProofAndTheStepsItSignsSoCardsSayWhatTheySign() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    val m = model()
+    coachWithCard(m)
+    val read = transport.requests.last { it.method == "GET" && it.url.contains("/v1/tafs/setup_1/conversation") }
+    assertTrue(read.url, read.url.endsWith("?can=tools_and_cards,key_and_cards,signs"))
+    assertTrue(read.headers.getValue("Planque-Device-Signature").contains(",d=dev_1"))
+    assertTrue("a read asks for no fingerprint", auth.asked.isEmpty())
+  }
+
   @Test fun readingCoachsThreadReadsWhatItsApprovalsNeed() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant()}]}""")
@@ -1081,7 +1092,7 @@ class PlanqueTest {
 
     // The phone said it can sign the step; one fingerprint, for both.
     val ask = bodyOf(transport.requestsTo(askRoute).single())
-    assertEquals("key_and_cards", ask.getValue("can").toString().trim('[', ']', '"'))
+    assertEquals("a card with no mark never says it draws it", """["key_and_cards"]""", ask.getValue("can").toString())
     assertEquals(listOf("Connect the bank to Invoices"), auth.asked)
 
     // Each request carries the one signature and the other's message hash, at the same time.
@@ -1132,10 +1143,10 @@ class PlanqueTest {
     transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
     val m = model()
     coachWithCard(m)
-    m.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3")
+    m.approveCoach(approvalComponent().copy(draft = "dr_1", signsRead = KiffClient.json.parseToJsonElement("""{"card":true}""")), digest, "v3")
 
-    // The phone said it can sign the step; one fingerprint, for both.
-    assertEquals("tools_and_cards", bodyOf(transport.requestsTo(askRoute).single()).getValue("can").toString().trim('[', ']', '"'))
+    // The phone said it can sign the step, and that the card drew what it signs; one fingerprint, for both.
+    assertEquals("""["tools_and_cards","signs"]""", bodyOf(transport.requestsTo(askRoute).single()).getValue("can").toString())
     assertEquals(listOf("Connect Stripe to Refunds"), auth.asked)
 
     // planque's approve goes with the body tafs cloud built, and each request carries the one signature and the other's hash.
@@ -1203,6 +1214,53 @@ class PlanqueTest {
       assertTrue(transport.requestsTo(approve).isEmpty())
       assertTrue(transport.requestsTo(confirmRoute).isEmpty())
     }
+  }
+
+  @Test fun aCardWithNoMarkNeverSaysItDrawsWhatItSigns() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, """{"outcome":"refused","error":"not now"}""")
+    val m = model()
+    coachWithCard(m)
+    m.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3")
+    assertEquals("""["tools_and_cards"]""", bodyOf(transport.requestsTo(askRoute).single()).getValue("can").toString())
+    assertTrue(auth.asked.isEmpty())
+  }
+
+  @Test fun aStepIsSignedOnlyWhenItMatchesWhatTheCardDrew() {
+    assertTrue("no mark: any step", AppModel.stepMatchesMark(null, "tools_and_cards"))
+    assertTrue(AppModel.stepMatchesMark(true, "tools_and_cards"))
+    assertTrue(AppModel.stepMatchesMark(true, "cards"))
+    assertFalse("drawn as signed, asked to connect alone", AppModel.stepMatchesMark(true, "connect"))
+    assertTrue(AppModel.stepMatchesMark(false, "connect"))
+    assertFalse("drawn as next, asked to sign it now", AppModel.stepMatchesMark(false, "tools_and_cards"))
+    assertFalse(AppModel.stepMatchesMark(false, "cards"))
+  }
+
+  @Test fun aCardDrawnAsNextIsNeverSignedWhenTheAskWouldSignItNow() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, toolsAndCards.replace("DIGEST", digest))
+    val m = model()
+    coachWithCard(m)
+    val next = approvalComponent().copy(draft = "dr_1", signsRead = KiffClient.json.parseToJsonElement("""{"card":false,"words":"Its Card: you approve it next"}"""))
+    m.approveCoach(next, digest, "v3")
+    assertTrue("nothing signed", auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
+    assertTrue(transport.requestsTo(confirmRoute).isEmpty())
+    assertEquals(bot.tafs.app.model.VersionWords.OUT_OF_DATE_CARD, m.state.value.coachNotes["a1"])
+  }
+
+  @Test fun aCardDrawnAsSigningItsCardIsNeverSignedForTheConnectionAlone() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnect())
+    val m = model()
+    coachWithCard(m)
+    val signing = approvalComponent().copy(draft = "dr_1", signsRead = KiffClient.json.parseToJsonElement("""{"card":true}"""))
+    m.approveCoach(signing, digest, "v3")
+    assertTrue("nothing signed", auth.asked.isEmpty())
+    assertTrue(transport.requestsTo(approve).isEmpty())
   }
 
   @Test fun aCardWithNoDraftAsksForTheOldSteps() = runTest {

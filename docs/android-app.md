@@ -769,6 +769,22 @@ the sheet's words (an older tafs cloud, an error), the sheet stays as above. The
 the keyboard and scrolls. An approval card that tafs cloud marks `connection: {done: true, words}`
 draws only those words and Its Card, never the connection's text again.
 
+**What a card's fingerprint signs** (`signs`, docs/secure-connection.md): Coach's thread is read with this
+phone's planque read proof (the device's key, no prompt) and `?can=tools_and_cards,key_and_cards,signs`, so tafs
+cloud marks each waiting approval card with `signs: {card, words?}` (read leniently: any other shape is no mark).
+- `card: true`: Its Card, KIFF's own lines, stays on screen until the fingerprint, connected or not, and
+  Approve waits until KIFF's draft is read.
+- `card: false`: the Card's lines, dimmed, under tafs cloud's `words` ("Its Card: you approve it next"), never
+  under its own title as if signed now; with no `words`, not drawn.
+- No mark (a tafs cloud from before it): as before, Its Card once the grant is connected.
+The approve flow asks with `signs` in `can` too, only from a card that carries the mark: a card read without
+it (no read proof, or tafs cloud's read timed out) never says it draws what it signs. Once the ask is back, and before any signature, a step
+that disagrees with the mark is never signed (`AppModel.stepMatchesMark`): `card: true` takes only
+`cards`, `key_and_cards` or `tools_and_cards`, and `card: false` only another step. On a mismatch the card says
+"What you're asked to approve changed since it was shown. Read it again, then approve." and the thread
+is read again. No mark: any step.
+iPhone and iPad draw it the same way.
+
 **One fingerprint for a key and its Card** (`kiff.requests.v1`, docs/secure-connection.md). From
 Coach's card with a Card's draft, on a phone with an approval key, the key sheet's button asks tafs
 cloud for the step with `can: ["key_and_cards"]` (`AppModel.approveCoachWithKey`). When tafs cloud
