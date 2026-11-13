@@ -623,7 +623,7 @@ such as a Gmail connected for another taf, is never reused for customer mail (th
 tool alone when it only sends (`uses`, narrowed by planque). An inbox of the taf's own, from a mail app
 made for agents, stays an option Coach offers (`draft-the-card@4`). The Card Coach drafts is the agreed rules,
 line for line: no limit merged with another or changed in number. A limit the Card can't hold as agreed is a
-changed rule, shown in a new rules notice and agreed again before the draft (`draft-the-card@7`).
+changed rule, shown in a new rules notice and agreed again before the draft (`draft-the-card@7`). Each line of the rules notice says where its rule is kept when the Card doesn't hold it: "the connection keeps it" (an argument the connection fixes, such as one workspace), "KIFF adds it" (the disclosure line), or "in its instructions" (what KIFF can't count) (`draft-the-card@12`).
 
 A taf that writes to people names who they come from: Coach asks once, with its other questions,
 offering first "tafs, your AI assistant", so the taf speaks as itself (`writes_for` "tafs": a recipient
