@@ -25,7 +25,6 @@ class ApprovalWordsTest {
 
   @Test fun noTwoStatesShareWords() {
     val states = ApprovalReadiness.entries
-    assertEquals(states.size, states.map(ApprovalWords::state).toSet().size)
     val cant = states.filter { it != ApprovalReadiness.Ready }
     assertEquals(cant.size, cant.map(ApprovalWords::cantApprove).toSet().size)
     cant.forEach { assertNotEquals("", ApprovalWords.cantApprove(it)) }
@@ -39,10 +38,9 @@ class ApprovalWordsTest {
   }
 
   @Test fun theWordsSayWhatToDo() {
-    assertTrue(ApprovalWords.state(ApprovalReadiness.NoneEnrolled).contains("settings"))
-    assertTrue(ApprovalWords.state(ApprovalReadiness.TemporarilyUnavailable).contains("check again"))
-    assertTrue(ApprovalWords.state(ApprovalReadiness.Unsupported).contains("another"))
-    assertTrue(ApprovalWords.NEW_FINGERPRINT.contains("another fingerprint"))
-    assertEquals("Set up approvals on this device", ApprovalWords.TITLE)
+    assertTrue(ApprovalWords.cantApprove(ApprovalReadiness.NoneEnrolled).contains("fingerprint"))
+    assertTrue(ApprovalWords.cantApprove(ApprovalReadiness.TemporarilyUnavailable).contains("Try again"))
+    assertTrue(ApprovalWords.cantApprove(ApprovalReadiness.Unsupported).contains("another"))
+    assertEquals("", ApprovalWords.cantApprove(ApprovalReadiness.Ready))
   }
 }
