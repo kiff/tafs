@@ -2161,6 +2161,7 @@ object Words {
       fun notFinished(steps: String): String = Res.s(R.string.taf_remove_not_finished, steps)
       fun notFinishedAfter(cards: String, failed: String): String = Res.s(R.string.taf_remove_not_finished_after, cards, failed)
       fun prompt(taf: String): String = Res.s(R.string.taf_remove_prompt, taf)
+      val stepConnections: String get() = Res.s(R.string.taf_remove_step_connections)
       val stepHistory: String get() = Res.s(R.string.taf_remove_step_history)
       val stepKey: String get() = Res.s(R.string.taf_remove_step_key)
       val stepMemory: String get() = Res.s(R.string.taf_remove_step_memory)

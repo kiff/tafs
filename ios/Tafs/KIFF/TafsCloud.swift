@@ -20,6 +20,9 @@ final class TafsCloud {
         /// on its own, as tafs cloud says. Nil for any other refusal, and for a value this app
         /// doesn't know.
         var halted: String? = nil
+        /// The AI-data consent's screen, when the refusal carries it: a turn refused for want of
+        /// it (`ai_consent_required`), or an older screen's yes refused for newer words.
+        var consent: AIConsent? = nil
         /// tafs cloud's words first, on every path that shows the error (kiff/tafs#397); the
         /// app's own line for the status only without them.
         var errorDescription: String? { words ?? message }
@@ -28,10 +31,23 @@ final class TafsCloud {
     /// tafs cloud's refusal: its words, and the runs in the way when it names them (kiff/tafs#206).
     static func refusal(_ status: Int, _ data: Data) -> CloudError {
         struct Body: Decodable { let error: String?; let blocking: [BlockingRun]?; let words: String?; let code: String?; let halted: String? }
+        struct Consent: Decodable { let consent: AIConsent? }
         let body = try? JSONDecoder().decode(Body.self, from: data)
-        return CloudError(status: status, message: body?.error ?? Words.Error.cloudAnswered(status: "\(status)"), blocking: body?.blocking ?? [], words: body?.words,
-                          code: body?.code, halted: body?.halted.flatMap { ["account", "taf"].contains($0) ? $0 : nil })
+        // The consent's words, read on their own, so one that doesn't read leaves the rest of the refusal:
+        // with a refused turn, and with an older screen's refused yes (409), which carries the new words.
+        let consent = (try? JSONDecoder().decode(Consent.self, from: data))?.consent
+        let error = CloudError(status: status, message: body?.error ?? Words.Error.cloudAnswered(status: "\(status)"), blocking: body?.blocking ?? [], words: body?.words,
+                               code: body?.code, halted: body?.halted.flatMap { ["account", "taf"].contains($0) ? $0 : nil }, consent: consent)
+        // Every route that would start a model turn can refuse this way: said once here, so the
+        // consent screen shows wherever the person tried, with nothing wired per call.
+        if body?.code == aiConsentRequired, let consent, consent.drawable {
+            NotificationCenter.default.post(name: .aiConsentRequired, object: consent)
+        }
+        return error
     }
+
+    /// tafs cloud's code for a model turn refused for want of the AI-data consent.
+    nonisolated static let aiConsentRequired = "ai_consent_required"
 
     /// A run in the way of an install (kiff/tafs#206): one at work, or one waiting on the owner.
     struct BlockingRun: Decodable, Equatable {
@@ -2022,11 +2038,91 @@ final class TafsCloud {
     func setup() async throws -> CloudTaf? { try await setupRead().setup }
 
     /// The account's Coach and its tools as KIFF has them, from the one read (docs/api.md).
-    func setupRead() async throws -> (setup: CloudTaf?, tools: CoachTools?) {
+    func setupRead() async throws -> (setup: CloudTaf?, tools: CoachTools?, start: CoachStart?) {
         struct Response: Decodable { let setup: CloudTaf? }
         let data = try await sendData("GET", "/v1/setup", body: Optional<[String: String]>.none)
         let r = try KIFFClient.decoder.decode(Response.self, from: data)
-        return (r.setup, CoachTools.read(data))
+        return (r.setup, CoachTools.read(data), r.setup == nil ? CoachStart.read(data) : nil)
+    }
+
+    /// Coach's first start under one fingerprint (`GET /v1/setup`'s `start`, docs/api.md): for
+    /// an account with no Coach yet, the requests the phone signs once, as tafs cloud built them.
+    /// The tools batch for the gateway (`connect`) and Coach's agent draft with its Cards (`draft`)
+    /// under one `kiff.requests.v1`; or, with every tool already connected, the draft alone
+    /// (`kiff.request.v1`). The phone builds neither, and sends each body as these bytes.
+    struct CoachStart: Equatable {
+        struct Request: Equatable {
+            let id: String
+            let method: String
+            let path: String
+            /// For KIFF's gateway, not its API.
+            let gateway: Bool
+            let body: Data
+            var lines: [String] = []
+            /// KIFF's own words for the Cards the draft would issue, from its preview (the draft only).
+            var cardTitle: String? = nil
+            var cards: [CoachTools.CardDraft.Words] = []
+        }
+        var state = "unknown"
+        var scheme = ""
+        var agentID = ""
+        var requests: [Request] = []
+        var step: CoachTools.Step? = nil
+        var taken: String? = nil
+
+        var connect: Request? { requests.first { $0.id == "connect" } }
+        var draft: Request? { requests.first { $0.id == "draft" } }
+        /// The pair, signed once: both requests and the scheme that names two.
+        var together: Bool { scheme == RequestsTogether.scheme && connect != nil && draft != nil }
+        /// Something the phone can sign and send now: the pair, or the draft alone.
+        var startable: Bool {
+            guard state == "to_give", let draft, draft.method == "POST", draft.path == "/v1/me/agent-drafts", !draft.gateway else { return false }
+            if let connect { return together && connect.method == "POST" && connect.path == "/v1/connections/batch" && connect.gateway }
+            return scheme == "kiff.request.v1"
+        }
+
+        /// What the tools step draws for it: its words, the batch's lines, and what's to give.
+        var tools: CoachTools {
+            var t = CoachTools()
+            t.state = state
+            t.taken = taken
+            if let connect { t.connect = .init(body: connect.body, lines: connect.lines) }
+            // Coach's Cards in KIFF's words, drawn beside what's signed: the draft's own body.
+            if let draft { t.card = .init(body: draft.body, cardTitle: draft.cardTitle, cards: draft.cards) }
+            t.step = step
+            return t
+        }
+
+        /// Read from `GET /v1/setup`'s answer; nil from a tafs cloud that sends no `start`.
+        static func read(_ response: Data) -> CoachStart? {
+            guard let raw = RawJSON.value(of: "start", in: response),
+                  let fields = (try? JSONSerialization.jsonObject(with: raw)) as? [String: Any] else { return nil }
+            var s = CoachStart()
+            s.state = fields["state"] as? String ?? "unknown"
+            s.scheme = fields["scheme"] as? String ?? ""
+            s.agentID = fields["agent_id"] as? String ?? ""
+            s.taken = fields["taken"] as? String
+            if let list = RawJSON.value(of: "requests", in: raw), let items = RawJSON.elements(of: list) {
+                s.requests = items.compactMap { item in
+                    guard let f = (try? JSONSerialization.jsonObject(with: item)) as? [String: Any],
+                          let id = f["id"] as? String, let method = f["method"] as? String, let path = f["path"] as? String,
+                          let body = RawJSON.value(of: "body", in: item) else { return nil }
+                    // KIFF's words for the Cards, as tafs cloud reads them for the tools step's `card`.
+                    let cards: [CoachTools.CardDraft.Words] = (f["cards"] as? [Any] ?? []).compactMap { item in
+                        guard let c = item as? [String: Any] else { return nil }
+                        let title = (c["title"] as? String) ?? (c["card_title"] as? String) ?? (c["label"] as? String)
+                        let lines = (c["lines"] as? [Any])?.compactMap { $0 as? String } ?? []
+                        if title == nil && lines.isEmpty { return nil }
+                        return CoachTools.CardDraft.Words(title: title ?? "", lines: lines)
+                    }
+                    return Request(id: id, method: method, path: path, gateway: f["gateway"] as? Bool ?? false, body: body,
+                                   lines: (f["lines"] as? [Any])?.compactMap { $0 as? String } ?? [],
+                                   cardTitle: f["card_title"] as? String, cards: cards)
+                }
+            }
+            if let step = RawJSON.value(of: "coach_tools_step", in: raw) { s.step = try? JSONDecoder().decode(CoachTools.Step.self, from: step) }
+            return s
+        }
     }
 
     /// Coach's tools as tafs cloud reads them from KIFF (`GET /v1/setup`'s `tools`,

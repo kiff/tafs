@@ -7,11 +7,11 @@ describe("the disclosure line, in the message's language (kiff/agents#363)", () 
   it("names who the messages come from in each language, and tells a text's language as kiff/agents does", () => {
     const acme = { writesFor: "Acme" };
     expect(disclosureLines(acme)).toEqual({
-      es: "Escrito por un agente de IA para Acme.",
-      fr: "Rédigé par un agent d'IA pour Acme.",
-      de: "Von einem KI-Agenten für Acme geschrieben.",
-      pt: "Escrito por um agente de IA para Acme.",
-      it: "Scritto da un agente di IA per Acme.",
+      es: "Escrito por un agente de IA en nombre de Acme.",
+      fr: "Rédigé par un agent d'IA au nom de Acme.",
+      de: "Von einem KI-Agenten im Auftrag von Acme geschrieben.",
+      pt: "Escrito por um agente de IA em nome de Acme.",
+      it: "Scritto da un agente di IA per conto di Acme.",
     });
     expect(disclosureLines({}).es).toBe("Escrito por un agente de IA.");
     for (const [lang, text] of [
@@ -26,35 +26,39 @@ describe("the disclosure line, in the message's language (kiff/agents#363)", () 
     }
     // Too little to tell, as much of two languages, or one it has no line in: the default line.
     for (const text of ["OK", "Gracias.", "Hola, gracias. Olá, obrigado.", "Teie tagasimakse on tehtud."]) {
-      expect(disclosureLineFor(acme, text), text).toBe("Written by an AI agent for Acme.");
+      expect(disclosureLineFor(acme, text), text).toBe("Written by an AI agent on behalf of Acme.");
     }
-    expect(disclosureLineFor(acme, "Hecho: te hemos devuelto el importe del pedido 1043.")).toBe("Escrito por un agente de IA para Acme.");
+    expect(disclosureLineFor(acme, "Hecho: te hemos devuelto el importe del pedido 1043.")).toBe("Escrito por un agente de IA en nombre de Acme.");
     // An html part's tags aren't its words, even English ones in an attribute.
     expect(languageOf('<span title="the order is for you and your thanks">Hola, gracias.</span>')).toBe("es");
   });
 
   it("leaves out a language whose line wouldn't fit in what kiff/agents takes, and caps a new name so every line fits", () => {
     expect(DISCLOSURE_MAX_BYTES).toBe(300);
-    expect(WRITES_FOR_MAX_BYTES).toBe(261); // German's line carries the most: 39 bytes besides the name
+    expect(WRITES_FOR_MAX_BYTES).toBe(251); // German's line carries the most: 49 bytes besides the name ("im Auftrag von")
     const bytes = (s: string) => Buffer.byteLength(s);
-    // A new name at the cap (66 characters, 261 bytes): its line fits in every language, German's to the byte.
-    const atCap = "😀".repeat(65) + "a";
-    expect(bytes(atCap)).toBe(261);
+    // A new name at the cap (63 characters, 251 bytes): its line fits in every language, German's to the byte.
+    const atCap = "😀".repeat(62) + "aaa";
+    expect(bytes(atCap)).toBe(251);
     expect(writesForOf(atCap)).toBe(atCap);
     expect(() => writesForOf(atCap + "a")).toThrow("writes_for");
     const all = disclosureLines({ writesFor: atCap });
     expect(Object.keys(all).sort()).toEqual(["de", "es", "fr", "it", "pt"]);
     expect(bytes(all.de!)).toBe(300);
     for (const l of [disclosureLine({ writesFor: atCap }), ...Object.values(all)]) expect(bytes(l)).toBeLessThanOrEqual(300);
-    // A name stored before the cap, or a company's name from KIFF, up to 272 bytes: English fits to the byte and
-    // heads its messages in every language, none other fitting.
+    // A name stored before the cap, or a company's name from KIFF, up to 272 bytes: English fits to the byte, in
+    // the shorter "for" it had before "on behalf of", and heads its messages in every language, none other fitting.
     const stored = "😀".repeat(68);
     expect(bytes(disclosureLine({ writesFor: stored }))).toBe(300);
+    expect(disclosureLine({ writesFor: stored })).toBe(`Written by an AI agent for ${stored}.`);
+    expect(disclosureLine({ writesFor: "Acme" })).toBe("Written by an AI agent on behalf of Acme.");
+    expect(writesForIn("Written by an AI agent on behalf of Acme.")).toBe("Acme");
+    expect(writesForIn("Written by an AI agent for Acme.")).toBe("Acme");
     expect(disclosureLines({ writesFor: stored })).toEqual({});
     expect(disclosureLineFor({ writesFor: stored }, "Hecho: te hemos devuelto el importe del pedido 1043.")).toBe(disclosureLine({ writesFor: stored }));
     expect(systemPrompt({ ...jobById("refunds"), writesFor: stored })).not.toContain("In other languages");
-    // In between (266 bytes): the languages whose line fits stay, German doesn't.
-    const between = "😀".repeat(66) + "aa";
+    // In between (258 bytes): the languages whose line fits stay, German doesn't.
+    const between = "😀".repeat(64) + "aa";
     const some = disclosureLines({ writesFor: between });
     expect(Object.keys(some).sort()).toEqual(["es", "fr", "it", "pt"]);
     expect(bytes(some.es!)).toBe(300);
@@ -64,8 +68,8 @@ describe("the disclosure line, in the message's language (kiff/agents#363)", () 
   it("asks the taf to start with its line, in the language it writes in, and gives it each one", () => {
     const prompt = systemPrompt({ ...jobById("chargebacks"), writesFor: "Acme" });
     expect(prompt).toContain("it starts with your disclosure line, word for word, in the language");
-    expect(prompt).toContain('Your disclosure line: "Written by an AI agent for Acme."');
-    expect(prompt).toContain('es "Escrito por un agente de IA para Acme."');
+    expect(prompt).toContain('Your disclosure line: "Written by an AI agent on behalf of Acme."');
+    expect(prompt).toContain('es "Escrito por un agente de IA en nombre de Acme."');
     expect(prompt).not.toContain("ends with your disclosure line");
   });
 });
@@ -83,7 +87,7 @@ describe("jobs", () => {
     const prompt = systemPrompt(own);
     expect(prompt).toContain("Your job: Invoices.\n\nYour disclosure line: \"Written by an AI agent.\"\nIn other languages: es \"Escrito por un agente de IA.\", fr \"Rédigé par un agent d'IA.\", de \"Von einem KI-Agenten geschrieben.\", pt \"Escrito por um agente de IA.\", it \"Scritto da un agente di IA.\"\n\nWhat this job does: Reminds customers of overdue invoices.\n\nNever change an invoice.");
     // Who it writes for, once the owner said (gaps 16 and 18): never "for the company".
-    expect(systemPrompt({ ...own, writesFor: "Kiff Agents OÜ" })).toContain('Your disclosure line: "Written by an AI agent for Kiff Agents OÜ."');
+    expect(systemPrompt({ ...own, writesFor: "Kiff Agents OÜ" })).toContain('Your disclosure line: "Written by an AI agent on behalf of Kiff Agents OÜ."');
     expect(prompt).toContain("kiff_pending");
     // With nothing drafted but the name, it still says what it is.
     expect(ownJob({ name: "Leads", summary: " ", kickoff: "x" }).instructions).toBe("You do this job for the company: Leads.");
@@ -174,7 +178,7 @@ describe("jobs", () => {
       expect(flat).toContain("the owner also sees any text you write between tool calls: write none, or speak to them as \"you\"");
       // Concise, not a word count (the owner, kiff/agents#78).
       expect(flat).not.toMatch(/\d+ words/);
-      expect(flat).toContain("amounts in the owner's currency with its symbol (€150), never in cents");
+      expect(flat).toContain("amounts in the currency the record or the call gives, with its symbol (€150, $12), never converted into another currency, never \"the equivalent\", and never in cents");
       expect(flat).toContain("no ids (payments, refunds, operations, cards) unless the owner asks for one");
       expect(flat).toContain("nothing about your notes, earlier runs, or what you checked and didn't change");
       // A held call in one sentence: the wait, the one limit, the deadline (the Eval's judges,
@@ -188,7 +192,8 @@ describe("jobs", () => {
       // Until when, in the chat in words, as the chat's own rule says ("no clock times or time
       // zones, a deadline included"); a time only in a scheduled run's report. The two rules
       // disagreed, and a taf wrote "until 06:59 UTC today (2026-11-06)" (Eval 42176052141).
-      expect(flat).toContain("and until when, from KIFF's hold_expires_at, never a time you work out (kiff/tafs#206): in the chat in words (\"today\", \"in ten minutes\"), since the app shows the time in the owner's zone; in a scheduled run's report, the time in the owner's time zone.");
+      // "Held until tomorrow, when the hold expires" for a call KIFF gave no expiry (Eval, 13 Nov): only from hold_expires_at.
+      expect(flat).toContain("and until when only if KIFF's answer gives hold_expires_at, never a time you work out or a guess such as \"until tomorrow\" (kiff/tafs#206): in the chat in words (\"today\", \"in ten minutes\"), since the app shows the time in the owner's zone; in a scheduled run's report, the time in the owner's time zone.");
       expect(flat).not.toContain("the time KIFF's hold_expires_at gives, in the owner's time zone");
       // A chat answer ends with no report: the judges read a scheduled run's "nothing else was
       // done or left undone" as filler.

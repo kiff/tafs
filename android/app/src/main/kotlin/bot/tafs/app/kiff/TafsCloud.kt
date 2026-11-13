@@ -99,6 +99,31 @@ class TafsCloud(
     String(sendJson("PUT", "/v1/me/suggestions", kotlinx.serialization.json.JsonObject(mapOf("show" to kotlinx.serialization.json.JsonPrimitive(show))))),
   ).suggestions
 
+  /** The person's AI-data consent, with the screen's words in their language (docs/accounts.md, "Your data and the AI"). */
+  suspend fun aiConsent(): AIConsent = get<AIConsentAnswer>("/v1/me/ai-consent").consent
+
+  /** The person allows AI use for the [version] of the words they read: 409 when those words changed since, with the new ones. */
+  suspend fun giveAIConsent(version: String): AIConsent = KiffClient.json.decodeFromString<AIConsentAnswer>(
+    String(sendJson("POST", "/v1/me/ai-consent", kotlinx.serialization.json.JsonObject(mapOf("version" to kotlinx.serialization.json.JsonPrimitive(version))))),
+  ).consent
+
+  /** The person withdraws it: from then on, nothing they write reaches the model until they allow it again. */
+  suspend fun withdrawAIConsent(): AIConsent = KiffClient.json.decodeFromString<AIConsentAnswer>(String(send("DELETE", "/v1/me/ai-consent"))).consent
+
+  /**
+   * Told when tafs cloud refuses a model turn until the person allows AI use (`ai_consent_required`), with the consent screen it
+   * sent, so the app shows it there and then. The refusal still throws, as any other.
+   */
+  var aiConsentNeeded: ((AIConsent) -> Unit)? = null
+
+  private fun noteRefusal(body: ByteArray) {
+    if (field(body, "code") != AI_CONSENT_REQUIRED) return
+    val consent = runCatching {
+      KiffClient.json.decodeFromJsonElement(AIConsent.serializer(), KiffClient.json.parseToJsonElement(String(body)).jsonObject["consent"]!!)
+    }.getOrNull() ?: return
+    aiConsentNeeded?.invoke(consent)
+  }
+
   /** Where Coach's tools are, on tafs cloud: KIFF's gateway reaches them there, each call carrying KIFF's permit. */
   val mcpUrl: String get() = "$baseUrl/v1/mcp"
 
@@ -827,6 +852,7 @@ class TafsCloud(
     if (response.status !in 200..299) {
       // Kept for Coach's diagnostics by the route's template and status only (docs/drive.md).
       bot.tafs.app.drive.DriveDiagnostics.failed(method, path, response.status)
+      noteRefusal(response.body)
       throw CloudError(
         response.status, refusal(response.body) ?: Words.Error.cloudAnswered(status = response.status.toString()), blockingRuns(response.body), field(response.body, "words"),
         field(response.body, "code"), field(response.body, "halted"),
@@ -871,6 +897,7 @@ class TafsCloud(
     val headers = linkedMapOf("Accept" to "text/event-stream", "Authorization" to "Bearer $bearer", "Accept-Language" to KiffClient.screenLanguage())
     if (body != null) headers["Content-Type"] = "application/json"
     val response = transport.stream(HttpRequest(method, streamUrl + path, headers, body))
+    if (response.status != 200) noteRefusal(response.refusal)
     if (response.status != 200) throw CloudError(response.status, refusal(response.refusal) ?: Words.Error.cloudAnswered(status = response.status.toString()), blockingRuns(response.refusal), field(response.refusal, "words"), field(response.refusal, "code"), field(response.refusal, "halted"))
     return StreamEvent.parse(response.lines)
   }

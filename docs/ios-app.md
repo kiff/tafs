@@ -238,6 +238,10 @@ the app in sample mode.
   before Face ID: tafs cloud's words from `GET /v1/tafs/{id}/removal` ("Qonto goes with it. Stripe stays: Chargebacks
   uses it."), read when Remove is tapped and ending nothing (`AppModel.removalWords`). Without them, it says only
   what always goes.
+  The removal leaves the taf's connections to tafs cloud, which ends them in every status as one of its steps: the
+  phone sends no disconnect of its own and asks for one Face ID, the removal's. The result says "Its access to
+  apps is removed." only when tafs cloud lists `connections` as removed, and names "access to apps" among the steps
+  left when it lists it as failed (`AppModel.removalCards`, `removalStep`).
 - **Setup › Starts when** (`StartsWhenView`, `TafSetupViews.swift`), from `GET …/knob`
   `wakes`: its schedule with − and + through the stop's `size.choices` (`adjustKnob`), Skip it /
   Run after (`setting.busy`), app events with **Approve** (`AppEventApprovalSheet`, the signed
@@ -256,6 +260,16 @@ the app in sample mode.
   device (Turn on alerts while off), Sound (off and greyed while alerts are off, its choice
   kept), and What alerts you, read-only, drawn only with something in it; "A taf answered
   someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).
+- **The AI-data consent** (`AIConsentView`, `TafsCloud+AIConsent.swift`; docs/accounts.md, "Your data and the AI"): a
+  full screen with tafs cloud's words as sent (`GET /v1/me/ai-consent`: title, lines, Allow, Not now), and no line of
+  the app's own. It comes up after sign-in while the person hasn't allowed it, and whenever tafs cloud refuses a
+  model turn for want of it (403 `ai_consent_required`, from any route: read once in `TafsCloud.refusal`). **Allow**
+  sends the version of the words on the screen (`POST {version}`); an older screen's yes is refused with the new
+  words, which then show. **Not now** closes it and sends nothing; a refresh doesn't put it up again, a refused turn
+  does. **Account** shows tafs cloud's "AI use: allowed" with **Withdraw** (`DELETE`), or the screen's title to open
+  it. A tafs cloud without the route asks nothing.
+  A screen missing its title, a line, Allow or Not now isn't drawn, as on Android. A message or a card's answer refused
+  for want of it goes back where it was (the composer, with its files; the card, as chosen), with no Not sent row.
 - **Account › Language:** the language tafs's lines are in, by its own name ("Français", "Polski",
   `AppLanguage.name`), so someone in a language they don't read still finds theirs, and **Change
   language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. No picker
@@ -488,6 +502,16 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   (`coachToolsAsked`), with tafs cloud's title, intro, groups and ask. The install's Face ID
   gives none of them. Each tool and KIFF's words for the Cards are folded under `details`.
   It has **Give** and **Not now**.
+- **The first start under one Face ID** (`TafsCloud.CoachStart`, `AppModel.startCoachTogether`): with no Coach yet,
+  `GET /v1/setup` may carry `start`, the requests tafs cloud built for it. **Start** then opens the step with those
+  words and KIFF's own words for Coach's Cards (the draft's `cards`, from KIFF's preview), and its one button
+  starts Coach and gives its tools under the one Face ID Start asks: the batch for the
+  gateway and Coach's draft with its Cards, each built in full with one `signed_at` and signed once, together, by
+  the approval key (`kiff.requests.v1`, as a key and its Card are). The batch goes first, the draft once it answered,
+  then tafs cloud claims the draft's key (`POST /v1/setup`). With every tool connected, `start` carries the draft
+  alone and it goes signed as one request. A draft KIFF refuses after the batch went in is started again from the
+  next read, which carries the draft alone, under a new Face ID. The phone signs only `POST /v1/connections/batch`
+  on the gateway and `POST /v1/me/agent-drafts`; anything else, or no `start`, starts Coach as before.
 - **Giving** (`AppModel.giveCoachTools`): one Face ID. Under it the phone signs and sends the
   batch to KIFF's gateway (`POST /v1/connections/batch`), then the Cards' draft to KIFF
   (`POST /v1/me/agent-drafts`), each as it came. Where the Cards didn't come with the batch,

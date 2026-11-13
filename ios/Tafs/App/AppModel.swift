@@ -741,11 +741,12 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
         planque.deviceID = nil
+        forgetAIConsent()
         accountGeneration += 1
         tafs = []; listOrder = []; waitingWhenSettled = []; orderHasRecord = false; otherAgents = []; held = []; record = []; decided = [:]; devices = []; unreachable = nil; retries = 0; retryingRefresh = false; retrying?.cancel()
         alertsReady = nil
@@ -1103,12 +1104,13 @@ final class AppModel: ObservableObject {
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
         setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
-        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
+        setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
         groups = []; people = []; access = [:]; peopleError = nil
         remembered?.removeObject(forKey: Self.settledKey) // nothing of the chats stays on the phone (docs/data.md)
         planque.deviceID = nil
+        forgetAIConsent()
         accountGeneration += 1
         kiffTenant = nil
         sessionHasKey = false
@@ -1263,6 +1265,18 @@ final class AppModel: ObservableObject {
     /// each time, so every phone of the account agrees. A name a vendor's tool holds stops it
     /// before anything is asked or sent, and says which. True once nothing's left to give.
     func giveCoachTools() async -> Bool {
+        // Before Coach exists, its tools are given by starting it: one Face ID for both.
+        if setupTaf == nil, coachStart?.startable == true {
+            guard !givingCoachTools else { return false }
+            givingCoachTools = true
+            defer { givingCoachTools = false }
+            coachToolsError = nil
+            setupError = nil
+            let started = await startSetup()
+            // Said on the step the person tapped from, where they're looking.
+            if !started { coachToolsError = setupError ?? lastError }
+            return started && coachTools?.toGive != true
+        }
         guard mode == .kiff, sessionHasKey, let tenant = kiffTenant, setupTaf != nil else { return false }
         guard !givingCoachTools, !approvalBlocked else { return false }
         givingCoachTools = true
@@ -1609,6 +1623,9 @@ final class AppModel: ObservableObject {
             // The gallery, with each refresh: + New opens it, and the strip under the list
             // leaves out what the account runs now.
             await loadGallery()
+            guard gen == accountGeneration else { return }
+            // The AI-data consent: its screen comes up after sign-in while it isn't given.
+            await loadAIConsent()
             guard gen == accountGeneration else { return }
             // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given
             // on this device. A KIFF that doesn't let the phone read it leaves the record as it is.
@@ -2793,19 +2810,13 @@ final class AppModel: ObservableObject {
             }
         }
         guard gen == accountGeneration else { return nil }
-        // Its connections go with it: each grant its agent asked for is disconnected in
-        // planque (its tools out of KIFF, its sign-in revoked at the vendor), signed under the
-        // confirmation just given. Left connected, they stayed live and Coach offered them to
-        // the next taf as "already connected".
-        // A connection another taf still uses stays: KIFF's tools are the account's, so a later
-        // taf can draw on this one's.
-        guard let connections = await disconnectGrants(of: c.kiffAgent ?? "", gen: gen) else { return nil }
-        let cards = (cardsLeft == 0
+        // Its connections go with it, ended by tafs cloud as part of the removal: every status,
+        // a waiting or failed one too, and one another taf still uses stays. The phone no longer
+        // disconnects them itself, which signed one more request each and missed those.
+        let revoked = cardsLeft == 0
             ? Words.Taf.Remove.cardsRevoked
-            : Words.Card.kiffDidNotRevokeCards(cardsLeft: "\(cardsLeft)"))
-            + (connections.left > 0 ? Words.Connect.connectionsCouldNotDisconnectedDisconnect(left: "\(connections.left)")
-               : connections.done > 0 ? Words.Connect.connectionsDisconnected : "")
-            + connections.kept.map { " " + $0 }.joined()
+            : Words.Card.kiffDidNotRevokeCards(cardsLeft: "\(cardsLeft)")
+        var cards = revoked
 
         let removal: TafsCloud.Removal
         do { removal = try await cloud.remove(c.id, signature: "t=\(signedAt),v1=\(signature)") } catch {
@@ -2818,6 +2829,11 @@ final class AppModel: ObservableObject {
             tafs[i].state = .revoked
             tafs[i].now = Words.Taf.Now.removed
         }
+        // What tafs cloud did with its connections: ended (said once), or not (named among the
+        // steps left). The list of connections is read again either way, with no signature.
+        cards = Self.removalCards(revoked, removal)
+        await refreshConnections()
+        guard gen == accountGeneration else { return nil }
         guard removal.done else {
             let failed = removal.failed.map(Self.removalStep).joined(separator: ", ")
             return Words.Taf.Remove.notFinishedAfter(cards: "\(cards)", failed: "\(failed)")
@@ -2857,8 +2873,15 @@ final class AppModel: ObservableObject {
         if gen == accountGeneration { unfinishedRemovals = still }
     }
 
-    private static func removalStep(_ step: String) -> String {
+    /// The removal's first words: what became of its Cards, then "Its access to apps is
+    /// removed." only when tafs cloud says it ended its connections.
+    nonisolated static func removalCards(_ revoked: String, _ removal: TafsCloud.Removal) -> String {
+        revoked + (removal.removed.contains("connections") ? Words.Connect.connectionsDisconnected : "")
+    }
+
+    nonisolated static func removalStep(_ step: String) -> String {
         switch step {
+        case "connections": return Words.Taf.Remove.stepConnections
         case "schedule": return Words.Taf.Remove.stepSchedule
         case "history": return Words.Taf.Remove.stepHistory
         case "memory": return Words.Taf.Remove.stepMemory
@@ -4185,6 +4208,13 @@ final class AppModel: ObservableObject {
             }
             keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
             return .kept
+        } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+            // Refused for want of the AI-data consent: its screen says why, and the message goes
+            // back in the composer with its files, with no Not sent row, to send once it's allowed.
+            guard current() else { return .notTried }
+            chats[tafID]?.removeAll { $0.id == pending.id }
+            chatSent[tafID]?.removeAll { $0.id == pending.id }
+            return .notTried
         } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
             // The tafs wait for credits: tafs cloud's words, and the message stays in the
             // composer, with no Retry, since sending again changes nothing until they go on.
@@ -4592,6 +4622,9 @@ final class AppModel: ObservableObject {
                 return false
             } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
                 chatErrors[tafID] = Self.waitsForCredits(e)
+                return false
+            } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+                // The consent's screen says why; the words stay in the composer.
                 return false
             } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
                 keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
@@ -6085,39 +6118,6 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Disconnects every live grant `agent` asked for that no other taf uses, signed by the
-    /// device key under a confirmation the caller already took (removing the taf): how many
-    /// were, how many couldn't be, and each one kept for another taf in words; nil when the
-    /// account changed meanwhile. Without planque here, there's nothing to disconnect from
-    /// this device; without its key, each is counted as left, so the owner is told.
-    private func disconnectGrants(of agent: String, gen: Int) async -> (done: Int, left: Int, kept: [String])? {
-        guard !agent.isEmpty, planqueReady, let tenant = kiffTenant else { return (0, 0, []) }
-        await refreshConnections()
-        guard gen == accountGeneration else { return nil }
-        // Only the ones holding a sign-in: a pending grant never signed in has nothing to end.
-        let asked = grants.filter { $0.request.agent == agent && ($0.connected || $0.holdsSignIn || $0.needsReconnect) }
-        var mine: [PlanqueClient.Grant] = []
-        var kept: [String] = []
-        for g in asked {
-            let names = tafsUsing(g, except: agent).map(\.name)
-            if names.isEmpty { mine.append(g); continue }
-            kept.append(Words.Connect.keptConnection(count: names.count, vendor: g.vendor, names: Words.list(names)))
-        }
-        guard !mine.isEmpty else { return (0, 0, kept) }
-        guard sessionHasKey else { return (0, mine.count, kept) }
-        let signer = self.signer
-        planque.tenant = tenant
-        planque.signer = { try signer.signConfirmed($0) }
-        defer { planque.signer = nil }
-        var left = 0
-        for g in mine {
-            guard gen == accountGeneration else { return nil }
-            do { _ = try await planque.disconnect(grantID: g.id) } catch { left += 1 }
-        }
-        await refreshConnections()
-        return (mine.count - left, left, kept)
-    }
-
     /// Disconnects a vendor: planque removes its tools from KIFF and revokes the sign-in at
     /// the vendor. Asks for Face ID.
     func disconnect(grantID: String) async -> Bool {
@@ -6207,6 +6207,103 @@ final class AppModel: ObservableObject {
     /// (`GET /v1/recipes/gallery`). Nil before it's read, or from a tafs cloud without it, where
     /// + New opens Coach as before.
     @Published var gallery: TafsCloud.Gallery?
+
+    /// The person's AI-data consent, as tafs cloud keeps it; nil before it's read, or from a tafs
+    /// cloud without the route (docs/accounts.md, "Your data and the AI").
+    @Published private(set) var aiConsent: TafsCloud.AIConsent?
+    /// The consent screen to show now: after sign-in while it isn't given, and whenever tafs cloud
+    /// refuses a model turn for want of it. Not now closes it; a refused turn opens it again.
+    @Published var aiConsentAsked: TafsCloud.AIConsent?
+    @Published private(set) var aiConsentBusy = false
+    @Published private(set) var aiConsentError: String?
+    /// Not now was answered this session: the screen isn't put up again by a refresh, only by a
+    /// turn tafs cloud refuses.
+    private var aiConsentPutOff = false
+    private var aiConsentObserver: NSObjectProtocol?
+
+    /// Listens for tafs cloud's `ai_consent_required`, from any route, once per model.
+    func watchAIConsent() {
+        guard aiConsentObserver == nil else { return }
+        aiConsentObserver = NotificationCenter.default.addObserver(forName: .aiConsentRequired, object: nil, queue: .main) { [weak self] note in
+            guard let consent = note.object as? TafsCloud.AIConsent else { return }
+            MainActor.assumeIsolated { self?.consentRequired(consent) }
+        }
+    }
+
+    /// A turn was refused for want of the consent: its screen, now, whatever was put off before.
+    func consentRequired(_ consent: TafsCloud.AIConsent) {
+        guard mode == .kiff, consent.drawable else { return }
+        aiConsent = consent
+        aiConsentError = nil
+        aiConsentAsked = consent
+    }
+
+    /// Reads the consent, with each refresh. Not given, its screen is put up, unless Not now was
+    /// answered this session. A tafs cloud without the route leaves none, and asks nothing.
+    func loadAIConsent() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        guard let read = try? await cloud.aiConsent(), gen == accountGeneration else { return }
+        aiConsent = read
+        if !read.given, read.drawable, !aiConsentPutOff, aiConsentAsked == nil { aiConsentAsked = read }
+    }
+
+    /// Allow, for the version of the words on the screen. An older screen's yes is refused by tafs
+    /// cloud with the new words, which then show in its place.
+    func allowAI() async {
+        guard let asked = aiConsentAsked ?? aiConsent else { return }
+        let gen = accountGeneration
+        aiConsentBusy = true
+        defer { aiConsentBusy = false }
+        do {
+            let given = try await cloud.allowAI(version: asked.version)
+            guard gen == accountGeneration else { return }
+            aiConsent = given
+            aiConsentError = nil
+            aiConsentAsked = nil
+        } catch let e as TafsCloud.CloudError where e.status == 409 {
+            guard gen == accountGeneration else { return }
+            aiConsentError = e.errorDescription
+            var newer = e.consent
+            if newer == nil { newer = try? await cloud.aiConsent() }
+            if let newer, gen == accountGeneration {
+                aiConsent = newer
+                aiConsentAsked = newer
+            }
+        } catch {
+            guard gen == accountGeneration else { return }
+            aiConsentError = error.localizedDescription
+        }
+    }
+
+    /// Not now: the screen closes, and nothing is sent to the model. Trying Coach or a chat asks again.
+    func notNowAI() {
+        aiConsentPutOff = true
+        aiConsentAsked = nil
+        aiConsentError = nil
+    }
+
+    /// Withdraw, from Account: from then on, nothing this person writes reaches the model.
+    func withdrawAI() async {
+        let gen = accountGeneration
+        aiConsentBusy = true
+        defer { aiConsentBusy = false }
+        do {
+            let now = try await cloud.withdrawAI()
+            guard gen == accountGeneration else { return }
+            aiConsent = now
+            aiConsentError = nil
+            aiConsentPutOff = true
+        } catch {
+            guard gen == accountGeneration else { return }
+            aiConsentError = error.localizedDescription
+        }
+    }
+
+    /// A new account's consent is its own: nothing of the last one's stays.
+    private func forgetAIConsent() {
+        aiConsent = nil; aiConsentAsked = nil; aiConsentError = nil; aiConsentPutOff = false
+    }
     /// The account's "Show suggestions" setting as tafs cloud last said it, while it's being
     /// changed, and why a change didn't go.
     @Published var suggestions: TafsCloud.Suggestions?
@@ -6235,6 +6332,9 @@ final class AppModel: ObservableObject {
     @Published private(set) var coachTools: TafsCloud.CoachTools?
     /// The tools step is asked: at the end of a first Start, until given or put off.
     @Published var coachToolsAsked = false
+    /// tafs cloud's first start for Coach (`GET /v1/setup`'s `start`), while the account has no
+    /// Coach; nil from a tafs cloud that sends none, which starts Coach as before.
+    @Published private(set) var coachStart: TafsCloud.CoachStart?
     @Published private(set) var coachToolsError: String?
     @Published private(set) var givingCoachTools = false
     /// Setup's past chats, to reopen, newest first.
@@ -6607,7 +6707,10 @@ final class AppModel: ObservableObject {
         let gen = accountGeneration
         guard let read = try? await cloud.setupRead(), gen == accountGeneration else { return }
         setupTaf = read.setup
-        showCoachTools(read.setup == nil ? nil : read.tools)
+        // No Coach yet: tafs cloud's first start, when it sends one, is drawn as the tools step,
+        // whose one button starts Coach and gives its tools under one Face ID.
+        coachStart = read.setup == nil ? read.start : nil
+        showCoachTools(read.setup == nil ? coachStart.flatMap { $0.startable ? $0.tools : nil } : read.tools)
         if read.setup != nil { await loadSetupThread() }
         await loadRecipes()
     }
@@ -6777,8 +6880,14 @@ final class AppModel: ObservableObject {
         }
         if setupTaf == nil {
             do {
-                if let existing = try await cloud.setup() {
+                let read = try await cloud.setupRead()
+                guard gen == accountGeneration else { return false }
+                if let existing = read.setup {
                     setupTaf = existing
+                } else if let start = read.start, start.startable {
+                    // One Face ID, the one just asked: Coach's tools and its draft with its Cards.
+                    coachStart = start
+                    setupTaf = try await startCoachTogether(start, tenant: tenant, gen: gen)
                 } else {
                     let draft = try await kiff.submitNoToolsDraft(agentID: Self.setupAgent, label: "Setup")
                     guard gen == accountGeneration, let secret = draft.claimSecret else {
@@ -6800,6 +6909,35 @@ final class AppModel: ObservableObject {
         await loadCoachTools()
         if gen == accountGeneration, coachTools?.toGive == true { coachToolsAsked = true }
         return true
+    }
+
+    /// Coach's first start as tafs cloud built it, under the Face ID that confirmed Start: the
+    /// tools batch and Coach's draft, each built in full with one `signed_at`, signed once by the
+    /// approval key over both hashes (`kiff.requests.v1`); the batch goes first, the draft once the
+    /// batch answered, then tafs cloud claims the draft's key. With every tool connected, the draft
+    /// goes alone. A draft KIFF refuses after the batch went in is started again from the next read,
+    /// which carries the draft alone, under a new Face ID: never the pair again.
+    private func startCoachTogether(_ start: TafsCloud.CoachStart, tenant: String, gen: Int) async throws -> TafsCloud.CloudTaf? {
+        guard let draftRequest = start.draft else { return nil }
+        let draft: KIFFClient.AgentDraft
+        if start.together, let connectRequest = start.connect {
+            let signedAt = SigningTime.next()
+            let batch = try kiff.prepare(method: connectRequest.method, path: connectRequest.path, body: connectRequest.body, gateway: true, signedAt: signedAt)
+            let cards = try kiff.prepare(method: draftRequest.method, path: draftRequest.path, body: draftRequest.body, gateway: false, signedAt: signedAt)
+            let batchHash = RequestsTogether.hash(batch.message), cardsHash = RequestsTogether.hash(cards.message)
+            let signature = try signer.signApprovalConfirmed(RequestsTogether.message(tenant: tenant, signedAt: signedAt, batchHash, cardsHash))
+            try await kiff.connectBatch(batch, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: cardsHash))
+            guard gen == accountGeneration else { return nil }
+            draft = try await kiff.submitDraft(cards, signatureHeader: RequestsTogether.header(signedAt: signedAt, signature: signature, with: batchHash))
+        } else {
+            draft = try await kiff.submitDraftAnswered(draftRequest.body)
+        }
+        guard gen == accountGeneration else { return nil }
+        guard let secret = draft.claimSecret else { throw KIFFClient.KIFFError.server(status: 0, message: Words.Kiff.kiffDidNotAnswerExpected) }
+        let started = try await cloud.startSetup(draftID: draft.id, claimSecret: secret)
+        guard gen == accountGeneration else { return nil }
+        coachStart = nil
+        return started
     }
 
     /// tafs cloud's thread, with what the owner sent that it doesn't have yet, by the rule
@@ -6878,6 +7016,13 @@ final class AppModel: ObservableObject {
             setupAwaiting = clock()
             await loadSetupThread()
             return .sent
+        } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+            // Refused for want of the AI-data consent: its screen says why, and the message goes
+            // back in the composer, with no Not sent row, to send once it's allowed.
+            guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
+            setupSent.removeAll { $0.id == mine.id }
+            setupThread.messages.removeAll { $0.id == mine.id }
+            return .notTried
         } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
             // Coach past its fair use waits as the tafs do: its words, the message kept to send later.
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
@@ -6953,6 +7098,9 @@ final class AppModel: ObservableObject {
                 return false
             } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
                 setupError = Self.waitsForCredits(e)
+                return false
+            } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+                // The consent's screen says why; the words stay in the composer.
                 return false
             } catch {
                 // Not reached: it stays in the thread as not sent, with why and Retry; never resent on its own.
@@ -7409,6 +7557,11 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return }
             answered.remove(ref)
             await loadSetupThread()
+        } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+            // Refused for want of the AI-data consent: its screen says why, and the card stays as
+            // it was, its answers as chosen, to send again once it's allowed.
+            guard gen == accountGeneration else { return }
+            answered.remove(ref)
         } catch {
             guard gen == accountGeneration else { return }
             answered.remove(ref)

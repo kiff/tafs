@@ -259,6 +259,11 @@ things (`runtime/src/cloud/approval.ts`):
   `GET /v1/me/mandates`): KIFF refuses every call no Card covers (`no_mandate_issued`), reads
   included, so the taf couldn't use it. Setup's own reads (planque's `setup_reads`) are left
   out. When the Cards in force can't be read, the answer is **read_again**, never a signature.
+  A draft that counts one of the taf's write tools over its whole life with no `per` (count,
+  `lifetime`, one total on the tool for every item) is answered `failed: …` too, naming the tool
+  and its `resource_argument`: such a total stops the taf after its first item, so a limit for
+  each item ("one invoice per order, ever") is a total `per` that argument, beside the day's
+  total. A lifetime sum (a budget) and a lifetime count per item are signed.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.
@@ -575,7 +580,7 @@ changed rule, shown in a new rules notice and agreed again before the draft (`dr
 
 A taf that writes to people names who they come from: Coach asks once, with its other questions,
 offering the company's name, never the mail app's default (gap 16), and its result's taf carries the
-answer as `writes_for`. kiff/agents then starts each outside message with "Written by an AI agent for
+answer as `writes_for`. kiff/agents then starts each outside message with "Written by an AI agent on behalf of
 <writes_for>." (gap 18; "Written by an AI agent." when no one is named, never "for the company"): first
 in each text part the message carries (an email's text and its html), said once, in the message's
 language when it's Spanish, French, German, Portuguese or Italian (the definition's `disclose.lines`),

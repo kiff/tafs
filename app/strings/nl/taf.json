@@ -80,6 +80,7 @@
   "taf.remove.not_finished": "Niet afgerond: {steps} kon niet worden verwijderd. tafs probeert het bij elke vernieuwing opnieuw.",
   "taf.remove.not_finished_after": "{cards} Niet afgerond: {failed} kon niet worden verwijderd. tafs probeert het bij elke vernieuwing opnieuw.",
   "taf.remove.prompt": "{taf} definitief verwijderen",
+  "taf.remove.step_connections": "toegang tot apps",
   "taf.remove.step_history": "runs en chats",
   "taf.remove.step_key": "sleutel",
   "taf.remove.step_memory": "geheugen",

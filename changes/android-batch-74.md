@@ -1,0 +1,1 @@
+- **Android 1.18 (74): Your data and the AI.** Before anything you write reaches the AI, a screen names Anthropic, says what's sent and what never is, and asks you to allow it. It shows after sign-in, and again if you write to a taf or Coach before allowing it. Not now sends nothing. Account shows whether it's allowed, with Withdraw.

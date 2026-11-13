@@ -780,7 +780,8 @@ one fingerprint for them all, and **Other connections** last.
 **Remove access**, and asks first, naming the taf it ends. For a key, the confirmation says the key
 is deleted from tafs once no taf uses it, since a key another taf's connection shares stays for that
 taf; only a sign-in says it's revoked at the vendor. What never connected is
-cancelled instead: a request not answered yet (`Grant.pendingRequest`) says **Cancel the request**,
+cancelled instead: a request not answered yet (`Grant.pendingRequest`: pending, holding no sign-in, and not connected by
+this phone since) says **Cancel the request**,
 and a sign-in that never came back says **Cancel**, each with its own question. Once access is
 removed, Connect apps is read again at once (`AppModel.disconnect`), so it no longer says
 Connected until it's reopened.
@@ -836,6 +837,24 @@ keyguard, then waits until it is awake and unlocked, since a just-booted emulato
 and an activity launched then never gets a window ("No compose hierarchies found"). It
 also closes a system dialog left over from boot, and each test sets its screen with `setShown`,
 which waits until there's a Compose hierarchy to read before reading it.
+
+## Your data and the AI
+
+The AI-data consent is tafs cloud's (docs/accounts.md, "Your data and the AI"); the app draws its words and sends the
+answer (`AIConsentSheet` in `views/AIConsentViews.kt`, `loadAIConsent`, `allowAI`, `notNowAI` and `withdrawAI` in
+`AppModel`, `TafsCloud.aiConsent`).
+
+- **When it shows:** after sign-in and at launch while it isn't given, and whenever tafs cloud refuses a model turn with
+  `ai_consent_required`. `TafsCloud` reads that refusal once, for every route, plain or streamed, and the sheet shows the
+  `consent` it carries.
+- **Allow** sends the version on the screen. A 409 (the words changed) shows the newer words to read again.
+- **Not now** sends nothing and closes the sheet for the session: reading it again for Account doesn't bring it back, only
+  the next refused turn does. Reading Home, a taf and the Record goes on as before.
+- **A refused message goes back in the box,** with its files. There's no Not sent row, since Retry would change nothing
+  until it's allowed, and no error line: the screen says why. A refused card answer stays on the card, with no line either.
+- **Account** shows the section under tafs cloud's title: "AI use: allowed" with Withdraw, or the lines with Allow.
+- With no answer from tafs cloud (a build before the route), or words missing a title, a line, Allow or Not now, nothing
+  shows: never a blank sheet.
 
 ## Account and paged taf presentation
 

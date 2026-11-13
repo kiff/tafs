@@ -164,6 +164,10 @@ struct SettingsView: View {
                     Button(Words.Settings.changeLanguage) { openTafsSettings() }
                         .foregroundColor(Theme.amberText)
                 }
+                // The AI-data consent: given, with Withdraw; not given, its screen. tafs cloud's words.
+                if model.mode == .kiff, model.aiConsent?.drawable == true {
+                    Section { AIConsentRow() }
+                }
                 if model.mode == .kiff {
                     Section {
                         NavigationLink { TimeZonePicker() } label: { LabeledContent(Words.Settings.timeZoneTitle, value: model.kiffAccount?.timeZone ?? "UTC") }

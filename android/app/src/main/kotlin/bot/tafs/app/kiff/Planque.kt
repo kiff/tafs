@@ -168,8 +168,11 @@ data class Grant(
    */
   val waitingSignIn: Boolean get() = status == "approved" && signedIn != true && !connectedNow
 
-  /** A request not answered yet: it's cancelled, not disconnected, since nothing was connected. */
-  val pendingRequest: Boolean get() = status == "pending"
+  /**
+   * A request not answered yet: it's cancelled, not disconnected, since nothing was connected. Not one that holds a sign-in
+   * already, nor one this phone connected since (as iOS reads it).
+   */
+  val pendingRequest: Boolean get() = status == "pending" && !holdsSignIn && !connectedNow
 
   /** Ended with Cancel rather than Remove access: a sign-in that never came back, or a request not answered yet. */
   val cancellable: Boolean get() = waitingSignIn || pendingRequest

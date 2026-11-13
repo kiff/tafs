@@ -161,7 +161,11 @@ struct SetupChatView: View {
             // on a phone that can't approve yet the gate stays, for its words.
             if !model.setupHanded || model.approvalBlocked {
                 ApprovalGate {
-                    Button(model.startingSetup ? Words.Common.starting : Words.Coach.start) { Task { _ = await model.startSetup() } }
+                    // With tafs cloud's first start, Start opens what Coach is given, and its one
+                    // button starts Coach and gives it, under one Face ID; else Start as before.
+                    Button(model.startingSetup ? Words.Common.starting : Words.Coach.start) {
+                        if model.coachStart?.startable == true { model.coachToolsAsked = true } else { Task { _ = await model.startSetup() } }
+                    }
                         .buttonStyle(PrimaryButtonStyle())
                         .disabled(model.startingSetup || model.mode != .kiff)
                 }

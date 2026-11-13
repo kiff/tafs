@@ -3988,6 +3988,8 @@ enum Words {
             static func notFinishedAfter(cards: String, failed: String) -> String { Words.line("taf.remove.not_finished_after", cards, failed) }
             /// Remove {taf} for good
             static func prompt(taf: String) -> String { Words.line("taf.remove.prompt", taf) }
+            /// access to apps
+            static var stepConnections: String { Words.line("taf.remove.step_connections") }
             /// runs and chats
             static var stepHistory: String { Words.line("taf.remove.step_history") }
             /// key

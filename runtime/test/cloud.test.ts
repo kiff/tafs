@@ -125,6 +125,15 @@ function kiff(byToken: Record<string, object>, drafts: Drafts, claimed: string[]
       (account.previewed ??= []).push(body);
       return new Response(JSON.stringify({ agent_id: "x", label: "Coach", card_title: "Coach's Card", cards: body.cards.map((c) => ({ id: c.id, lines: [`KIFF's line for ${c.id}`] })) }), { status: 200 });
     }
+    if (url === "https://mcp.kiff.dev/v1/connections/batch/preview") {
+      // The gateway's preview of a draft over a batch it would connect: stores nothing.
+      if (!byToken[token]) return new Response("{}", { status: 401 });
+      if ((account as { batchPreviewMissing?: boolean }).batchPreviewMissing) return new Response(JSON.stringify({ error: "not found" }), { status: 404 });
+      const body = JSON.parse(String(init?.body)) as { connections: unknown[]; draft: { cards: Array<{ id: string }> } };
+      (account.previewed ??= []).push(body);
+      const digest = (account as { noContractDigest?: boolean }).noContractDigest ? {} : { contract_digest: "cd_123" };
+      return new Response(JSON.stringify({ card_title: "Coach's Card", cards: body.draft.cards.map((c) => ({ id: c.id, lines: [`KIFF's line for ${c.id}`] })), ...digest }), { status: 200 });
+    }
     if (url === "https://mcp.kiff.dev/v1/connections") {
       if (!byToken[token]) return new Response("{}", { status: 401 });
       if (account.gatewayStatus) return new Response(JSON.stringify({ error: "down" }), { status: account.gatewayStatus });
@@ -1702,6 +1711,65 @@ describe("Setup (kiff/agents#91)", () => {
     expect((await call(w, "GET", `/v1/tafs/${NEW}/conversation`, { token: "ana" })).status).toBe(200);
   });
 
+  // The owner's top complaint, too many approvals: Coach's first start asked for three fingerprints (its empty draft,
+  // its tools, then its Cards). With TAFS_COACH_START_ONE, the two requests come together, for one signature.
+  it("gives a first start the tools batch and Coach's draft with its Cards, to sign once, and the draft alone when the tools are there", async () => {
+    const w = world();
+    const mcp = "https://tafs.test/v1/mcp";
+    const read = async (token = "ana") => (await call(w, "GET", "/v1/setup", { token, headers: { host: "tafs.test" } })).body;
+    // Off: as before, nothing to sign from tafs cloud before Setup exists.
+    expect(await read()).toEqual({ setup: null, tools: null });
+    process.env.TAFS_COACH_START_ONE = "on";
+    try {
+      const first = (await read()).start;
+      expect(first).toMatchObject({ state: "to_give", scheme: "kiff.requests.v1", agent_id: "setup" });
+      expect(first.requests.map((r: { id: string }) => r.id)).toEqual(["connect", "draft"]);
+      const [connect, draft] = first.requests;
+      expect(connect).toMatchObject({ method: "POST", path: "/v1/connections/batch", gateway: true });
+      expect(connect.body.connections.map((c: { name: string }) => c.name)).toEqual(TOOLS.map((t) => t.name));
+      expect(connect.lines).toEqual(TOOLS.map((t) => t.line));
+      // The agent's own draft carries its Cards: no empty draft first, no Cards draft after.
+      expect(draft).toMatchObject({ method: "POST", path: "/v1/me/agent-drafts", body: { agent_id: "setup", label: "Coach" } });
+      expect(draft.body.cards.map((c: { id: string }) => c.id)).toEqual(COACH_CARDS.map((c) => c.id));
+      expect(draft.body).not.toHaveProperty("no_tools");
+      expect(first.coach_tools_step.title).toBe("Give Coach its tools");
+      // The Cards the one fingerprint signs are shown in KIFF's own words, previewed over the tools the batch declares
+      // (qa-kiff on #852): the phone still sends the batch first, since KIFF refuses a Card over an undeclared action.
+      expect(draft.card_title).toBe("Coach's Card");
+      expect(draft.cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
+      // What they were worded over is signed with the draft, and KIFF refuses it at submit if the tools changed since.
+      expect(draft.body.contract_digest).toBe("cd_123");
+      const { contract_digest: _cd, ...unsigned } = draft.body;
+      expect(w.account.previewed).toEqual([{ connections: connect.body.connections, draft: unsigned }]);
+      // A gateway preview that names no contract: no start, rather than a draft KIFF can't hold to its words.
+      (w.account as { noContractDigest?: boolean }).noContractDigest = true;
+      expect(await read()).toEqual({ setup: null, tools: null });
+      delete (w.account as { noContractDigest?: boolean }).noContractDigest;
+      // A KIFF that can't word them yet: no start at all, so the first start goes in its steps, never unworded.
+      (w.account as { batchPreviewMissing?: boolean }).batchPreviewMissing = true;
+      expect(await read()).toEqual({ setup: null, tools: null });
+      // Nor on any error on the way: the screen still loads.
+      w.account.gatewayStatus = 503;
+      expect(await read()).toEqual({ setup: null, tools: null });
+      delete w.account.gatewayStatus;
+      // Tools already there (or the batch went in and the draft was refused): the draft alone, one fresh fingerprint.
+      w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
+      const retry = (await read()).start;
+      expect(retry).toMatchObject({ state: "to_give", scheme: "kiff.request.v1" });
+      expect(retry.requests.map((r: { id: string }) => r.id)).toEqual(["draft"]);
+      // The draft alone is previewed as ever, with nothing to declare.
+      expect(retry.requests[0].cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
+      expect(w.account.previewed!.at(-1)).toEqual(retry.requests[0].body);
+      // Someone who can't start Setup gets nothing to sign.
+      expect((await read("viewer")).start).toBeUndefined();
+      // Once Setup is claimed as before, the first start is over.
+      await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
+      expect((await read()).start).toBeUndefined();
+    } finally {
+      delete process.env.TAFS_COACH_START_ONE;
+    }
+  });
+
   it("says what giving Coach its tools still needs, from KIFF", async () => {
     const w = world();
     await call(w, "POST", "/v1/setup", { token: "ana", body: SETUP });
@@ -2428,7 +2496,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(w.tafs.held.get(`t_acme#${RAE}`)!.writesFor).toBeUndefined();
     // The same version, once it names someone, gives the taf that name.
     w.agents.versionDefs.set(`t_acme|${RAE}|2`, { ...w.agents.versionDefs.get(`t_acme|${RAE}|2`)!,
-      disclose: { line: "Written by an AI agent for Kiff Agents OÜ.", in: [{ tool: "send_message_k3f9", fields: ["text"] }] } });
+      disclose: { line: "Written by an AI agent on behalf of Kiff Agents OÜ.", in: [{ tool: "send_message_k3f9", fields: ["text"] }] } });
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/2/live`, { token: "ana" })).body).toEqual({ live: 2 });
     expect(w.tafs.held.get(`t_acme#${RAE}`)!.writesFor).toBe("Kiff Agents OÜ");
   });
@@ -4011,8 +4079,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await note();
     expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
     const def = w.agents.agents.get(`t_acme|${NEW}`)!;
-    expect(def.disclose).toEqual({ line: "Written by an AI agent for Kiff Agents OÜ.", lines: disclosureLines({ writesFor: "Kiff Agents OÜ" }), in: [{ tool: "send_message_k3f9", fields: ["text"] }, { tool: "file_evidence_k3f9", fields: ["note"] }] });
-    expect(def.disclose!.lines!.es).toBe("Escrito por un agente de IA para Kiff Agents OÜ.");
+    expect(def.disclose).toEqual({ line: "Written by an AI agent on behalf of Kiff Agents OÜ.", lines: disclosureLines({ writesFor: "Kiff Agents OÜ" }), in: [{ tool: "send_message_k3f9", fields: ["text"] }, { tool: "file_evidence_k3f9", fields: ["note"] }] });
+    expect(def.disclose!.lines!.es).toBe("Escrito por un agente de IA en nombre de Kiff Agents OÜ.");
     expect(def).not.toHaveProperty("credit");
     expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ writesFor: "Kiff Agents OÜ" });
     // A name on two lines is refused, in words for Coach.
@@ -4050,7 +4118,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(made).toMatchObject({ answer: { version: expect.any(Number) } });
     // The version carries the new line; the live taf doesn't until the owner installs it (qa-kiff on #574).
     const latest = [...w.agents.versionDefs.values()].at(-1) as { disclose?: { line: string } } | undefined;
-    expect(latest?.disclose?.line).toBe("Written by an AI agent for Kiff Agents OÜ.");
+    expect(latest?.disclose?.line).toBe("Written by an AI agent on behalf of Kiff Agents OÜ.");
     expect(w.tafs.held.get(`t_acme#${RAE}`)!.writesFor).toBeUndefined();
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${made.answer.version}/live`, { token: "ana" })).body).toEqual({ live: made.answer.version });
     const kept = w.tafs.held.get(`t_acme#${RAE}`)!;
@@ -4060,14 +4128,14 @@ describe("Coach's result, handed over by tafs cloud", () => {
 
   // qa-kiff on #574: the name fits kiff/agents' 300-byte line in any script, on one line, unpadded.
   it("refuses a writes_for that doesn't fit the disclosure line", async () => {
-    for (const bad of ["株".repeat(88), " Kiff", "Kiff ", "Kiff\nAgents", "x".repeat(101)]) {
+    for (const bad of ["株".repeat(84), " Kiff", "Kiff ", "Kiff\nAgents", "x".repeat(101)]) {
       const { w, note, answer } = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: bad } });
       w.agents.access.set("u_ana", { cards_manage: true });
       await note();
       expect(JSON.stringify(answer()), bad).toContain("writes_for is who the taf's messages come from");
     }
-    // 87 of a 3-byte script fits: 261 bytes, so the line fits in every language, German's at 300 (qa-kiff on #587).
-    const fits = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: "株".repeat(87) } });
+    // 83 of a 3-byte script fits: 249 bytes, so the line fits in every language, German's within 300 (qa-kiff on #587).
+    const fits = await paused({ ...RESULT, tools: [WORK_TOOL, "send_message_k3f9"], taf: { ...RESULT.taf, disclose: [{ tool: "send_message_k3f9", fields: ["text"] }], writes_for: "株".repeat(83) } });
     fits.w.agents.access.set("u_ana", { cards_manage: true });
     await fits.note();
     expect(fits.answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
@@ -4315,7 +4383,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.tafs.held.delete(`t_acme#${RAE}`);
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@16,draft-the-card@9,name-the-tools@7,set-up-a-taf@7,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@16,draft-the-card@10,name-the-tools@7,set-up-a-taf@7,usage-and-plans@3`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -4323,23 +4391,23 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is it stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@16,draft-the-card@9,name-the-tools@7,set-up-a-taf@7,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@16,draft-the-card@10,name-the-tools@7,set-up-a-taf@7,usage-and-plans@3`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "is everything stopped?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@16,draft-the-card@9,halting@1,name-the-tools@7,set-up-a-taf@7,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@16,draft-the-card@10,halting@1,name-the-tools@7,set-up-a-taf@7,usage-and-plans@3`);
     await w.agents.api.resume("t_acme");
     // An account with a taf of its own: every Coach start has the holds and the halting, whatever its state.
     // "Refunds hasn't done anything" and "stop everything" never name a skill, and the model left to read
     // one didn't (kiff/agents Eval 42788659962).
     w.tafs.held.set(`t_acme#${RAE}`, rae);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Rae hasn't done anything since this morning", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@16,draft-the-card@9,halting@1,name-the-tools@7,set-up-a-taf@7,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@16,draft-the-card@10,halting@1,name-the-tools@7,set-up-a-taf@7,usage-and-plans@3`);
     // An improvement opens on the taf: its skill.
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@16,draft-the-card@9,halting@1,improve-a-taf@1,name-the-tools@7`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@16,draft-the-card@10,halting@1,improve-a-taf@1,name-the-tools@7`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
@@ -4357,7 +4425,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@16,draft-the-card@9,halting@1,name-the-tools@7,set-up-a-taf@2,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@16,draft-the-card@10,halting@1,name-the-tools@7,set-up-a-taf@2,usage-and-plans@3`);
     // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
     w.agents.access.set("u_ana", { cards_manage: true });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
@@ -4381,7 +4449,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(made.status).toBe(200);
     const rec = (await w.tafs.list("t_acme")).find((t) => t.name === "Disputes")!;
     expect(rec.writesFor).toBe("Kiff Agents OÜ");
-    expect(w.agents.agents.get(`t_acme|${rec.id}`)!.disclose?.line).toBe("Written by an AI agent for Kiff Agents OÜ.");
+    expect(w.agents.agents.get(`t_acme|${rec.id}`)!.disclose?.line).toBe("Written by an AI agent on behalf of Kiff Agents OÜ.");
     // A personal account's display name is never a sender: the line names no one.
     const mine = await call(w, "POST", "/v1/tafs", { token: "ana_me", body: { ...START, job: "chargebacks", name: "Mine" } });
     expect(mine.status).toBe(200);
@@ -4413,7 +4481,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const out = await upgradeDefinitions(deps, { dryRun: false });
     expect(out.find((o) => o.taf === before.id)?.outcome).toBe("written");
     expect(w.tafs.held.get(`t_acme#${before.id}`)!.writesFor).toBe("Kiff Agents OÜ");
-    expect(w.agents.agents.get(`t_acme|${before.id}`)!.disclose?.line).toBe("Written by an AI agent for Kiff Agents OÜ.");
+    expect(w.agents.agents.get(`t_acme|${before.id}`)!.disclose?.line).toBe("Written by an AI agent on behalf of Kiff Agents OÜ.");
   });
 
   // kiff/tafs#476, gap 10: a taf couldn't say why a call failed ("my tool results from earlier runs aren't
