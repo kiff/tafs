@@ -50,22 +50,26 @@ export const DISCLOSURE_LINE = "Written by an AI agent.";
  */
 export function disclosureLine(job: Pick<Job, "writesFor">): string {
   const who = job.writesFor?.replace(/\s+/g, " ").trim();
-  return who ? lineFor(who) : DISCLOSURE_LINE;
+  if (!who) return DISCLOSURE_LINE;
+  // A name stored before "on behalf of", at the old cap, keeps the shorter "for" so the line still fits.
+  for (const line of [lineFor(who), `Written by an AI agent for ${who}.`]) if (Buffer.byteLength(line) <= DISCLOSURE_MAX_BYTES) return line;
+  return DISCLOSURE_LINE;
 }
 
 /** The disclosure line naming who the messages come from. */
-const lineFor = (who: string) => `Written by an AI agent for ${who}.`;
+/** "On behalf of": the taf acts for them, and the reader can tell who answers for the message (Eval, 13 Nov). */
+const lineFor = (who: string) => `Written by an AI agent on behalf of ${who}.`;
 
 /** The most bytes a disclosure line may have: kiff/agents refuses a definition with a longer one (agent.MaxDisclosureLine). */
 export const DISCLOSURE_MAX_BYTES = 300;
 
 /** The line in other languages, by ISO 639-1 code, naming who the messages come from. */
 const LINES_FOR: Readonly<Record<string, (who: string) => string>> = {
-  es: (who) => `Escrito por un agente de IA para ${who}.`,
-  fr: (who) => `Rédigé par un agent d'IA pour ${who}.`,
-  de: (who) => `Von einem KI-Agenten für ${who} geschrieben.`,
-  pt: (who) => `Escrito por um agente de IA para ${who}.`,
-  it: (who) => `Scritto da un agente di IA per ${who}.`,
+  es: (who) => `Escrito por un agente de IA en nombre de ${who}.`,
+  fr: (who) => `Rédigé par un agent d'IA au nom de ${who}.`,
+  de: (who) => `Von einem KI-Agenten im Auftrag von ${who} geschrieben.`,
+  pt: (who) => `Escrito por um agente de IA em nome de ${who}.`,
+  it: (who) => `Scritto da un agente di IA per conto di ${who}.`,
 };
 
 /** The line in other languages, naming no one. */
@@ -220,8 +224,9 @@ five ways, and these win:
   owner answers in tafs, where they read what you write, so don't send them a
   link or say where to answer. Say it in one sentence: the call waits for
   their approval, the one limit that holds it (the most for one call, the
-  day's total, or how many calls a day), and until when, from KIFF's
-  hold_expires_at, never a time you work out (kiff/tafs#206): in the chat in
+  day's total, or how many calls a day), and until when only if KIFF's answer
+  gives hold_expires_at, never a time you work out or a guess such as
+  "until tomorrow" (kiff/tafs#206): in the chat in
   words ("today", "in ten minutes"), since the app shows the time in the
   owner's zone; in a scheduled run's report, the time in the owner's time
   zone. Nothing else: not what's left on the item, not
@@ -311,7 +316,8 @@ In the chat, answer like a good assistant, in the owner's language:
   in other words, and no word on the check you made before asking;
 - the owner also sees any text you write between tool calls: write none, or
   speak to them as "you", never notes to yourself about "the owner";
-- amounts in the owner's currency with its symbol (€150), never in cents;
+- amounts in the currency the record or the call gives, with its symbol (€150,
+  $12), never converted into another currency, never "the equivalent", and never in cents;
 - no ids (payments, refunds, operations, cards) unless the owner asks for one;
 - no clock times or time zones, a deadline included: "today", "in ten
   minutes" (the app shows the time in the owner's zone);
@@ -329,7 +335,9 @@ items you name. A run with no such count changed nothing. When nothing
 changed, say what you checked and that you changed nothing ("I checked the
 open disputes: none needs a response today, so I changed nothing."), never
 that you made no calls or did nothing: each read is a call, and the record
-shows it.`;
+shows it. Say you did something (sent, added, asked Coach, raised a limit)
+only when a call of yours in this run did it: never an action you meant to
+take, or one you only describe.`;
 
 export function jobById(id: string): Job {
   const job = JOBS.find((j) => j.id === id);
@@ -410,7 +418,8 @@ export const OLD_DISCLOSURE_LINE = "Written by an AI agent for the company.";
 /** Who a disclosure line names, as disclosureLine wrote it; undefined for a line that names no one, the old one too. */
 export function writesForIn(line: string | undefined): string | undefined {
   if (line === OLD_DISCLOSURE_LINE) return undefined;
-  const m = /^Written by an AI agent for (.+)\.$/.exec(line ?? "");
+  // "on behalf of" since 13 Nov; "for" in a version built before.
+  const m = /^Written by an AI agent (?:on behalf of|for) (.+)\.$/.exec(line ?? "");
   return m?.[1];
 }
 

@@ -15,11 +15,10 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   are the owner's choice: you propose them and the owner decides. Never say
   they're yours. Over a limit, a call is held or refused as the recipe or
   the owner said: never turn a hold into a refusal, or a refusal into a hold.
-  A limit the owner states that a Card can't count (one per item, or over a
-  week: a Card counts calls or amounts each call, a day, an hour, 24 hours or
-  its whole life) goes in the taf's instructions, and the rules say so: "One
-  reminder a week per invoice: Reminders keeps to it; KIFF can't enforce it
-  yet." Say, for each action, exactly what asks the owner first and
+  A limit for each item ("one invoice per order, ever") is a total with per:
+  the tool's resource_argument (lifetime, or rolling_7d), beside the day's
+  total. With none, it goes in the taf's instructions, and the rules say KIFF
+  can't count it. Never a lifetime total on the tool: it stops after one item. Say, for each action, exactly what asks the owner first and
   what is refused, as the draft will have it: never "every action over a
   limit waits for you" when one is refused. Say which
   the owner can approve: one action over its own limit can be approved once;
@@ -58,7 +57,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   tool left off can't be used at all. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
   read as the taf, so its Card covers it like any other. A draft leaving a
-  connection's tool uncovered isn't submitted or signed. A read tool's line has no amount limit,
+  connection's tool uncovered isn't signed. A read tool's line has no amount limit,
   only a call count generous enough never to get in the way, and you don't ask
   the owner to set it. KIFF takes a Card only for a tool
   connected or declared, so the draft comes after one of them. Name the
@@ -76,7 +75,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   A tool that writes to anyone outside the company (an email, a reply,
   evidence) goes in the result's taf as disclose: [{tool: its name in KIFF,
   fields: its text fields' paths, from planque read}]: KIFF's runtime then
-  starts each such call with "Written by an AI agent for <writes_for>.", in
+  starts each such call with "Written by an AI agent on behalf of <writes_for>.", in
   the message's language when it's Spanish, French, German, Portuguese or
   Italian. Nothing else is added to it.
 - A taf that writes to customers sends, by default, from a mailbox the
