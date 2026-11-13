@@ -44,6 +44,33 @@ final class SignsMarkTests: XCTestCase {
         XCTAssertNil(plain.value(forHTTPHeaderField: "Planque-Device-Signature"))
     }
 
+    /// The step asked at Approve must sign the Card as the card showed it, both ways; with no mark, any step.
+    func testTheStepMustMatchWhatTheCardShowed() throws {
+        let signed = SetupComponent.Signs(card: true), next = SetupComponent.Signs(card: false, words: "Its Card: you approve it next")
+        for step in ["cards", "key_and_cards", "tools_and_cards"] {
+            XCTAssertTrue(AppModel.stepMatchesMark(signed, step: step), step)
+            XCTAssertFalse(AppModel.stepMatchesMark(next, step: step), "shown as next, signed now: \(step)")
+        }
+        XCTAssertFalse(AppModel.stepMatchesMark(signed, step: "connect"), "shown as signed, only the connection asked")
+        XCTAssertTrue(AppModel.stepMatchesMark(next, step: "connect"))
+        for step in ["connect", "cards", "tools_and_cards"] {
+            XCTAssertTrue(AppModel.stepMatchesMark(nil, step: step), "no mark: as today")
+            XCTAssertTrue(AppModel.stepMatchesMark(SetupComponent.Signs(card: nil), step: step), "a mark that says nothing: as today")
+        }
+
+        // In `approve`, before anything is signed, whichever step.
+        let app = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/App/AppModel.swift")
+        let file = try String(contentsOf: app, encoding: .utf8)
+        let start = try XCTUnwrap(file.range(of: "func approve(_ component: SetupComponent, shown: String?, shownDraft: String?) async {"))
+        let end = try XCTUnwrap(file.range(of: "nonisolated static let signInNotConfirmed", range: start.upperBound..<file.endIndex))
+        let flow = String(file[start.upperBound..<end.lowerBound])
+        let guardAt = try XCTUnwrap(flow.range(of: "guard Self.stepMatchesMark(component.signs, step: ask.step) else {")).lowerBound
+        for signing in ["approveToolsAndCard(ask", "signer.sign(Data(ask.message.utf8)"] {
+            XCTAssertTrue(guardAt < (try XCTUnwrap(flow.range(of: signing), signing)).lowerBound, signing)
+        }
+        XCTAssertTrue(flow.contains("cardNotes[component.id] = Words.Version.outOfDateCard\n                    await refreshConnections()\n                    await loadSetupThread()"))
+    }
+
     /// Next: its words and dimmed lines, never the Card's own title as if signed. Next with no words: not drawn.
     func testTheCardIsDrawnByTheMark() throws {
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")

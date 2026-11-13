@@ -7876,6 +7876,15 @@ final class AppModel: ObservableObject {
                 if let id = component.draft, let draft = try? await kiff.draft(id: id), gen == accountGeneration { setupDrafts[id] = draft }
             case "sign":
                 guard let ask = decision.ask else { return }
+                // What the card said this fingerprint signs (tafs cloud's mark, read with the thread) must be what
+                // it signs now: the Card drawn as signed and only the connection asked, or the Card drawn as next
+                // and asked now, is out of date. Nothing is signed, and the card is read again.
+                guard Self.stepMatchesMark(component.signs, step: ask.step) else {
+                    cardNotes[component.id] = Words.Version.outOfDateCard
+                    await refreshConnections()
+                    await loadSetupThread()
+                    return
+                }
                 let came: Came
                 if ask.step == RequestsTogether.toolsAndCards {
                     // The tools added to a connected app and the Card over them, under one Face ID.
@@ -8114,6 +8123,13 @@ final class AppModel: ObservableObject {
         } catch {
             return Came(result: "failed", why: error.localizedDescription)
         }
+    }
+
+    /// Whether the step tafs cloud asks signs the Card as the card's mark said: `card: true` for a step that
+    /// signs it (`cards`, `key_and_cards`, `tools_and_cards`), `card: false` for one that doesn't. No mark: any.
+    nonisolated static func stepMatchesMark(_ signs: SetupComponent.Signs?, step: String) -> Bool {
+        guard let card = signs?.card else { return true }
+        return card == ["cards", RequestsTogether.keyAndCards, RequestsTogether.toolsAndCards].contains(step)
     }
 
     /// The steps this phone signs beyond connect and cards: a key and its Card from the key's sheet, and

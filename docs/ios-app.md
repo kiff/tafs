@@ -359,6 +359,9 @@ the app in sample mode.
   mark from an older tafs cloud, the card draws the Card as before. The mark comes on Setup's thread read with this
   phone's signed read of its connections (`Planque-Device-Signature`) and the steps it signs
   (`?can=tools_and_cards,key_and_cards`, `AppModel.stepsSignedHere`); without the proof, the cards come unmarked.
+  At Approve, the step tafs cloud asks must sign the Card as the mark said (`AppModel.stepMatchesMark`): a Card drawn
+  as signed with only the connection asked, or drawn as next and asked now, is out of date. Nothing is signed, and the
+  card is read again, as for `read_again`.
   **The key and its Card under one Face ID** (`AppModel.approveKeyAndCard`, `RequestsTogether`), when the sheet is
   opened from Coach's card and that card carries the taf's Card as a draft:
   - The sheet draws **Its Card**: KIFF's own lines for the draft this phone read from KIFF.
