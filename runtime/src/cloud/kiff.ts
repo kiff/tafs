@@ -21,6 +21,8 @@ export interface KIFFIdentity {
    * account's, whose name can be an email.
    */
   companyName?: string;
+  /** The account's kind, as KIFF gives it: a company's, shared by its people, or one person's own. */
+  accountKind?: "company" | "personal";
 }
 
 export class KIFFError extends Error {
@@ -61,6 +63,7 @@ export async function whoIs(token: string, doFetch: Fetch = fetch, base = KIFF_A
     ...(typeof me.email === "string" && me.email ? { email: me.email } : {}),
     ...(typeof me.time_zone === "string" && me.time_zone ? { timeZone: me.time_zone } : {}),
     ...(companyNameOf(me.account_kind, me.tenant_display_name) ? { companyName: companyNameOf(me.account_kind, me.tenant_display_name) } : {}),
+    ...(me.account_kind === "company" || me.account_kind === "personal" ? { accountKind: me.account_kind } : {}),
   };
 }
 
