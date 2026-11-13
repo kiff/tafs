@@ -829,6 +829,7 @@
     <string name="connect_apps_connect">Połącz</string>
     <string name="connect_apps_connected">Połączono ✓</string>
     <string name="connect_apps_disconnect_why">Usunięcie dostępu zabiera jego narzędzia tylko z tego tafa i z każdego tafa, którego Card ich używa. Inne tafy zachowują swoje.</string>
+    <string name="connect_apps_discover">Odkrywaj</string>
     <string name="connect_apps_manage">Zarządzaj</string>
     <string name="connect_apps_more">Pokaż więcej aplikacji</string>
     <string name="connect_apps_none">Brak aplikacji o tej nazwie. Coach może połączyć taką, której nie ma na liście.</string>
@@ -836,7 +837,9 @@
     <string name="connect_apps_not_listed_why">Coach może połączyć aplikację, której tu nie ma, na podstawie jej dokumentacji.</string>
     <string name="connect_apps_search">Szukaj aplikacji</string>
     <string name="connect_apps_title">Połącz aplikacje</string>
+    <string name="connect_apps_used_by">Używa jej %1$s</string>
     <string name="connect_apps_your_connections">Twoje połączenia %1$s</string>
+    <string name="connect_apps_yours">Twoje</string>
     <string name="connect_apps_connect_taf_make_one">Aplikacje łączy się dla tafa. Najpierw go utwórz, a potem połącz tu jego aplikacje.</string>
     <string name="connect_apps_not_read">Nie udało się odczytać aplikacji. %1$s</string>
     <string name="connect_cancel_request_button">Anuluj prośbę</string>
@@ -902,6 +905,8 @@
     <string name="connect_from_removed">Z usuniętych tafs</string>
     <string name="connect_give_key_on_sheet">Przekaż klucz na bezpiecznym ekranie</string>
     <string name="connect_give_key_with">Przekaż klucz przez %1$s</string>
+    <string name="connect_how_key">Kluczem</string>
+    <string name="connect_how_sign_in">Logowanie</string>
     <string name="connect_kept_another_taf">inny taf</string>
     <plurals name="connect_kept_for_card">
         <item quantity="one">Zachowano %1$s dla: %2$s, bo używa go jego Card.</item>

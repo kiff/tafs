@@ -769,6 +769,7 @@
     <string name="connect_apps_connect">Ligar</string>
     <string name="connect_apps_connected">Ligado ✓</string>
     <string name="connect_apps_disconnect_why">Remover um acesso retira as suas ferramentas apenas desse taf, e de qualquer taf cujo Card as use. Os outros tafs mantêm as suas.</string>
+    <string name="connect_apps_discover">Descobrir</string>
     <string name="connect_apps_manage">Gerir</string>
     <string name="connect_apps_more">Mostrar mais apps</string>
     <string name="connect_apps_none">Nenhuma app com esse nome. O Coach pode ligar uma que não esteja na lista.</string>
@@ -776,7 +777,9 @@
     <string name="connect_apps_not_listed_why">O Coach pode ligar uma app que não esteja aqui, a partir da documentação dela.</string>
     <string name="connect_apps_search">Pesquisar apps</string>
     <string name="connect_apps_title">Ligar apps</string>
+    <string name="connect_apps_used_by">Usada por %1$s</string>
     <string name="connect_apps_your_connections">As suas ligações a %1$s</string>
+    <string name="connect_apps_yours">As suas</string>
     <string name="connect_apps_connect_taf_make_one">As apps ligam-se para um taf. Crie primeiro um e depois ligue aqui as suas apps.</string>
     <string name="connect_apps_not_read">Não foi possível ler as apps. %1$s</string>
     <string name="connect_cancel_request_button">Cancelar o pedido</string>
@@ -834,6 +837,8 @@
     <string name="connect_from_removed">De tafs removidos</string>
     <string name="connect_give_key_on_sheet">Dar a chave num ecrã seguro</string>
     <string name="connect_give_key_with">Dar a chave com %1$s</string>
+    <string name="connect_how_key">Com uma chave</string>
+    <string name="connect_how_sign_in">Início de sessão</string>
     <string name="connect_kept_another_taf">outro taf</string>
     <plurals name="connect_kept_for_card">
         <item quantity="one">%1$s mantida para %2$s, cujo Card a usa.</item>

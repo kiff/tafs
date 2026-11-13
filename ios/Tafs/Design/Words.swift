@@ -1474,6 +1474,8 @@ enum Words {
             static var connected: String { Words.line("connect.apps.connected") }
             /// Removing access takes its tools from that taf only, and from any taf whose Card uses them. Other tafs keep theirs.
             static var disconnectWhy: String { Words.line("connect.apps.disconnect_why") }
+            /// Discover
+            static var discover: String { Words.line("connect.apps.discover") }
             /// Manage
             static var manage: String { Words.line("connect.apps.manage") }
             /// Show more apps
@@ -1488,8 +1490,12 @@ enum Words {
             static var search: String { Words.line("connect.apps.search") }
             /// Connect apps
             static var title: String { Words.line("connect.apps.title") }
+            /// Used by {tafs}
+            static func usedBy(tafs: String) -> String { Words.line("connect.apps.used_by", tafs) }
             /// Your {app} connections
             static func yourConnections(app: String) -> String { Words.line("connect.apps.your_connections", app) }
+            /// Yours
+            static var yours: String { Words.line("connect.apps.yours") }
         }
         /// Apps connect for a taf. Make one first, then connect its apps here.
         static var appsConnectTafMakeOne: String { Words.line("connect.apps_connect_taf_make_one") }
@@ -1589,6 +1595,12 @@ enum Words {
         static var giveKeyOnSheet: String { Words.line("connect.give_key_on_sheet") }
         /// Give the key with {biometry}
         static func giveKeyWith(biometry: String) -> String { Words.line("connect.give_key_with", biometry) }
+        enum How {
+            /// With a key
+            static var key: String { Words.line("connect.how.key") }
+            /// Sign in
+            static var signIn: String { Words.line("connect.how.sign_in") }
+        }
         enum Kept {
             /// another taf
             static var anotherTaf: String { Words.line("connect.kept.another_taf") }
