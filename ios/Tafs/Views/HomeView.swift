@@ -77,27 +77,6 @@ struct HomeView: View {
                     }
                 }
 
-                if model.mode == .kiff {
-                    // Connecting tools is Coach mode's (kiff/tafs#138).
-                    Button { model.openCoach() } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "plus").scaledFont(16, weight: .bold).foregroundColor(.white)
-                                .frame(width: 36, height: 36).background(Theme.brand).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(Words.Home.connectTool).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
-                                Text(Words.Home.signApproveEachStep).scaledFont(13).foregroundColor(Theme.dim)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
-                        }
-                        .padding(14)
-                        .background(Theme.panel)
-                        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).stroke(Theme.line))
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                    }
-                    .buttonStyle(.drivablePlain)
-                }
-
                 if model.showsAccountHalt {
                     // Every taf at once, from its own screen: also with no taf, while the account is halted.
                     HaltRow(tafID: nil, framed: true)
@@ -115,7 +94,7 @@ struct HomeView: View {
                     // tafs cloud says what Home shows with no taf: the recipes under its line, or
                     // its empty line (docs/ios-app.md).
                     if let recipes = model.recipes, recipes.homeListsRecipes {
-                        HomeRecipes(recipes: recipes, logo: { model.cloud.logoURL($0) }) { openRecipe = $0 }
+                        HomeRecipes(recipes: recipes, logo: { model.cloud.logoURL($0) }, ownWords: ownWords) { openRecipe = $0 }
                     } else {
                         Panel {
                             if let words = model.recipes?.homeWords {
@@ -128,6 +107,10 @@ struct HomeView: View {
                                 Text(model.mayUseCoach ? Words.Home.Empty.coach : Words.Home.Empty.shared)
                                     .scaledFont(14).foregroundColor(Theme.soft)
                             }
+                        }
+                        // No job listed: "Say it in your own words" still leads to Coach.
+                        if let ownWords, let own = model.recipes?.homeOwnWords {
+                            OwnWordsRow(title: own.title, line: own.line, action: ownWords)
                         }
                     }
                 }
@@ -252,6 +235,12 @@ struct HomeView: View {
     private func sheetRecipes(for recipe: TafsCloud.Recipes.Recipe) -> TafsCloud.Recipes {
         if let recipes = model.recipes, recipes.recipes.contains(where: { $0.id == recipe.id }) { return recipes }
         return model.gallery?.asRecipes(labels: model.recipes?.labels) ?? model.recipes ?? TafsCloud.Recipes()
+    }
+
+    /// "Say it in your own words" opens Coach with nothing in its box, for someone who may use
+    /// it; nil, the row isn't drawn.
+    private var ownWords: (() -> Void)? {
+        model.mayUseCoach ? { model.startNewTaf() } : nil
     }
 
     /// What was chosen in the gallery, once it has closed: Coach opens over Home.
