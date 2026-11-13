@@ -123,9 +123,11 @@ first Send starts it (`AppModel.sendChat`, `startCoach`):
 and iPad in [ios-app.md](ios-app.md)). Before Coach exists, `GET /v1/setup` may carry `start`
 ([api.md](api.md#the-account)): the tools batch for KIFF's gateway and Coach's draft with its Cards, each body as tafs cloud
 wrote it.
-- **The first Send opens Coach's tools step,** drawn from `start`: tafs cloud's step words, the connections' lines, and KIFF's
-  words for the Cards beside the draft that's signed. The words wait in the box; nothing is signed or sent yet.
-- **Its one button starts Coach and gives its tools, behind one fingerprint.** The phone builds each request's message with one
+- **Start's screen shows what Coach is given** (Android 1.20, `StartScreen`): `start.words.lead`, then the Cards in KIFF's own
+  words (the draft's `card_title` and `cards`), with Coach's tools folded under `coach_tools_step`'s details, then
+  `start.words.does` and the `start.words.start` button. There's no second screen, and nothing is signed unread. (1.19 opened
+  Coach's tools step on the first Send instead.)
+- **Start, or the first Send, starts Coach and gives its tools, behind one fingerprint.** The phone builds each request's message with one
   `signed_at` and signs both hashes once with the approval key (`kiff.requests.v1`). Each request goes with that one signature and
   the other's hash. Right after the fingerprint, before anything goes to KIFF, the phone enrols with planque under the same
   confirmation, so a refused enrolment leaves no tools and no confirmed draft nobody claims. Then the batch, the draft once it

@@ -139,7 +139,15 @@ data class RecipeCard(val allows: List<String> = emptyList(), val holds: List<St
 
 /** Home with no taf: [shown], the recipes are listed under [words]; not shown, [words] is Home's empty line. */
 @Serializable
-data class RecipesHome(val shown: Boolean = false, val words: String = "")
+data class RecipesHome(
+  val shown: Boolean = false,
+  val words: String = "",
+  /** "Say it in your own words" and its line, first on Home for someone who manages tafs: Coach, empty, builds the taf with them. */
+  @kotlinx.serialization.SerialName("own_words") val ownWords: OwnWords? = null,
+) {
+  @Serializable
+  data class OwnWords(val title: String = "", val line: String = "")
+}
 
 /** The recipe sheet's words, in the person's language. */
 @Serializable

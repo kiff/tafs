@@ -94,21 +94,16 @@ class CoachStartTogetherTest {
     assertNull("one the app can't read is none", CoachStart.read(KiffClient.json.parseToJsonElement("[1]")))
   }
 
-  @Test fun theFirstSendOpensTheStepAndTheStepsButtonStartsCoachUnderOneFingerprint() = runTest {
+  @Test fun theFirstSendStartsCoachUnderOneFingerprintFromStartsScreen() = runTest {
     reads("""{"setup":null,"tools":null,"start":${start()}}""")
     val m = model()
     m.loadCoach()
     assertEquals(true, m.state.value.coachStart?.startable)
     assertEquals(true, m.state.value.coachTools?.toGive)
-    // The first Send opens what Coach is given; nothing is signed or sent from there.
-    assertFalse(m.startCoach())
-    assertTrue(m.state.value.coachToolsAsked)
-    assertNull(m.state.value.coachStartError)
-    assertTrue(auth.asked.isEmpty())
-    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
-
     startAnswers()
-    assertTrue(m.giveCoachTools())
+    // Start's screen already shows the Cards in KIFF's words: the first Send starts Coach, with no second screen.
+    assertTrue(m.startCoach())
+    assertFalse(m.state.value.coachToolsAsked)
     // One fingerprint for the batch and the draft with its Cards; the enrolment and the claim go under it.
     assertEquals(listOf("Start Coach"), auth.fingerprints)
     assertEquals(listOf("Start Coach"), auth.asked)

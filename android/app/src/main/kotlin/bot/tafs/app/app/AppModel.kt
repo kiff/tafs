@@ -501,6 +501,11 @@ data class AppState(
   val alertsReady: Boolean = false,
   /** Alerts were on for this account when this phone signed out, and didn't come back on with the sign-in: it says so once. */
   val alertsOffSinceSignOut: Boolean = false,
+  /**
+   * Alerts were offered on this phone for this account already (answered, or turned on): the offer on a new taf's card shows once.
+   * True until the session says otherwise, so it never shows for a session not read yet.
+   */
+  val alertsOffered: Boolean = true,
   val canAnswerHolds: Boolean? = null,
   val turningOnAlerts: Boolean = false,
   /** Sound for alerts on this phone: off, tafs cloud sends this phone's alerts quietly. */
@@ -715,6 +720,12 @@ data class AppState(
    * Whether this person may use Coach: KIFF's answer for the account's Setup agent, else by default an account admin
    * (the one who manages members).
    */
+  /**
+   * Alerts are offered on a new taf's card (docs/android-app.md): the first run's one offer, so a held call never reaches nobody.
+   * Only where alerts can be on and aren't, once per account on this phone.
+   */
+  val offersAlerts: Boolean get() = mode == Mode.kiff && alertsAvailable && !alertsReady && !alertsOffered
+
   val mayUseCoach: Boolean
     get() = (mode == Mode.kiff && (access[COACH_AGENT]?.use ?: (kiffAccount?.capabilities?.contains("members.manage") ?: false))) ||
       (mode == Mode.sample && screenshots)
@@ -969,7 +980,7 @@ class AppModel(
     val key = signer.approvalPublicKeyDER
     if (keyed && key.isNotEmpty() && KiffClient.sameKey(secrets.load(APPROVAL_KEYED), key)) useApprovalKey()
     // Drawn at once, saying it is loading, not after the network: the owner never waits on a blank screen.
-    _state.update { it.copy(mode = Mode.kiff, ready = true, sessionHasKey = keyed, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0") }
+    _state.update { it.copy(mode = Mode.kiff, ready = true, sessionHasKey = keyed, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0", alertsOffered = alertsOfferedOn(tenant)) }
     if (keyGone) lostApprovalKey()
     refresh()
     loadAIConsent(ask = true)
@@ -1140,7 +1151,7 @@ class AppModel(
     followers.values.forEach { it.cancel() }
     followers.clear()
     // Nothing of an earlier session or of the sample shows in this one.
-    _state.value = AppState(mode = Mode.kiff, ready = true, sessionHasKey = tenant != null, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0")
+    _state.value = AppState(mode = Mode.kiff, ready = true, sessionHasKey = tenant != null, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0", alertsOffered = alertsOfferedOn(tenant))
     // This sign-in, so a later one that overtook it while it read gets nothing of it: no alert registration, no notice.
     val generation = accountGeneration
     refresh()
@@ -1162,6 +1173,22 @@ class AppModel(
 
   /** The "alerts are off" note was read, or acted on. */
   fun dismissAlertsOff() = _state.update { it.copy(alertsOffSinceSignOut = false) }
+
+  /** Whether alerts were offered on this phone for [tenant]'s account already; an account not known yet has had no offer. */
+  private fun alertsOfferedOn(tenant: String?): Boolean = tenant != null && secrets.load(ALERTS_OFFERED_PREFIX + tenant) != null
+
+  /** The offer on a new taf's card was answered: it doesn't show again for this account on this phone. Settings keeps the switch. */
+  fun notNowAlertsOffer() {
+    kiffTenant?.let { secrets.save("1", ALERTS_OFFERED_PREFIX + it) }
+    _state.update { it.copy(alertsOffered = true) }
+  }
+
+  /** Turn on alerts, from the offer on a new taf's card: as from Settings, and the offer is answered either way. */
+  suspend fun turnOnAlertsFromOffer(): Boolean {
+    val on = turnOnAlerts()
+    notNowAlertsOffer()
+    return on
+  }
 
   /** What the four reads of a refresh found. */
   private class Fetched(val home: Home, val exceptions: List<CardException>, val activity: List<ActivityCall>?, val access: Map<String, Access>?)
@@ -2683,6 +2710,11 @@ class AppModel(
       // No Coach yet: tafs cloud's first start, when it sends one the phone may sign, is drawn as Coach's tools step, whose one
       // button starts Coach and gives it its tools under one fingerprint.
       val start = setup.start?.takeIf { coach == null && it.startable }
+      // tafs cloud set a new account's zone from this phone's: times show in it, and the question isn't asked.
+      setup.timeZone?.let { zone ->
+        AccountTime.use(zone)
+        _state.update { s -> s.copy(kiffAccount = s.kiffAccount?.copy(timeZone = zone), timeZoneOffer = s.timeZoneOffer?.takeIf { it != zone }) }
+      }
       _state.update {
         it.copy(
           coachCloudId = coach?.id, coachAgent = coach?.kiffAgent, coachChecked = true, coachStart = start,
@@ -2833,12 +2865,9 @@ class AppModel(
     }
     if (_state.value.planqueReady && _state.value.coachCloudId != null) return true
     if (_state.value.startingCoach) return false
-    // tafs cloud's first start: the step that shows what Coach is given opens, and its one button starts Coach and gives its
-    // tools under one fingerprint (giveCoachTools). Nothing is sent from here.
-    if (_state.value.coachCloudId == null && _state.value.coachStart?.startable == true) {
-      _state.update { it.copy(coachToolsAsked = true, coachStartError = null, coachToolsError = null) }
-      return false
-    }
+    // tafs cloud's first start: Start's screen already shows what Coach is given, the Cards in KIFF's words among it, so the
+    // first Send (or Start) starts Coach and gives its tools under one fingerprint, with no second screen.
+    _state.value.coachStart?.takeIf { _state.value.coachCloudId == null && it.startable }?.let { return startCoachTogether(it) }
     _state.update { it.copy(startingCoach = true, coachStartError = null) }
     val generation = accountGeneration
     val signer = signer
@@ -7380,6 +7409,8 @@ class AppModel(
     // What alerts keep on this phone: a target's secret not yet handed to tafs cloud, whether alerts were turned on, and the sound.
     const val HANDOFF = "kiff.alert-handoff"
     const val ALERTS_ON = "kiff.alerts-on"
+    /** Alerts were offered on a new taf's card for an account (the key ends with the account's id): shown once. */
+    const val ALERTS_OFFERED_PREFIX = "kiff.alerts-offered#"
     /** How long Resume waits for its confirmation before cancelling it. */
     const val RESUME_CONFIRM_MS = 10_000L
     /** The account whose alerts were on when this phone last signed out of it, so signing in to it again brings them back. */

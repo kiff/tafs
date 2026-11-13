@@ -208,7 +208,16 @@ data class PlanqueAsk(val grant: String, val body: JsonElement)
 data class KiffAsk(val draft: String, val version: String)
 
 @Serializable
-data class ResultOutcome(@SerialName("taf_id") val tafId: String? = null, val version: Int? = null, val failed: String? = null)
+data class ResultOutcome(
+  @SerialName("taf_id") val tafId: String? = null,
+  val version: Int? = null,
+  val failed: String? = null,
+  /** The taf is made, and no run started: the account has no plan yet. tafs cloud's words, for the "taf made" card. */
+  @SerialName("plan_needed") val planNeeded: PlanNeeded? = null,
+)
+
+@Serializable
+data class PlanNeeded(val words: String = "")
 
 /** A component as the thread holds it: where it first appeared, its latest version (showing an id again replaces it in place), and its answer. */
 data class ShownComponent(
@@ -242,6 +251,8 @@ internal data class SetupResponse(
   val tools: CoachTools? = null,
   /** Coach's first start under one fingerprint, read leniently: one the app can't read is none, never the setup with it. */
   val start: JsonElement? = null,
+  /** The account's time zone, set from this phone's by tafs cloud for a new account (docs/accounts.md): no question asked. */
+  @SerialName("time_zone") val timeZone: String? = null,
 )
 
 /**
@@ -257,7 +268,12 @@ data class CoachStart(
   val requests: List<Request> = emptyList(),
   @SerialName("coach_tools_step") val step: CoachToolsStep? = null,
   val taken: String? = null,
+  /** Start's words, tafs cloud's in the person's language: the line before it, its button, and what it does. */
+  val words: StartWords? = null,
 ) {
+  @Serializable
+  data class StartWords(val lead: String = "", val start: String = "", val does: String = "")
+
   @Serializable
   data class Request(
     val id: String = "",

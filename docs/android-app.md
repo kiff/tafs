@@ -838,6 +838,25 @@ and an activity launched then never gets a window ("No compose hierarchies found
 also closes a system dialog left over from boot, and each test sets its screen with `setShown`,
 which waits until there's a Compose hierarchy to read before reading it.
 
+## The first run
+
+A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](coach.md#starting-coach-once-per-account),
+[api.md](api.md)):
+
+- **No time-zone question for a new account.** `GET /v1/setup` carries this phone's zone as `X-Time-Zone`. When tafs cloud
+  set a new account's zone from it, it answers `time_zone`; times show in it, and nothing is asked. A later mismatch is
+  still asked, as before.
+- **Coach's Start is one screen** (`StartScreen`): tafs cloud's line, Coach's Cards in KIFF's words, the tools folded under
+  their details, what Start does, and its button. Start, or the first Send, signs it all under one fingerprint.
+- **Home leads with "Say it in your own words"** (`GET /v1/recipes`'s `home.own_words`, `OwnWordsRow`): under tafs cloud's
+  line and above the jobs, or under Home's empty line when no job is listed, so there's always a way to Coach. It opens Coach,
+  empty, for someone who may use it. As on iPhone and iPad.
+- **A taf made with no plan says so** on Coach's "taf made" card, in tafs cloud's words (the result's
+  `plan_needed.words`).
+- **Alerts are offered once,** on Coach's "taf made" card, where alerts can be on and aren't: "Get an alert when a taf needs
+  you", Turn on alerts (as in Settings, with Android's permission prompt) or Not now. Either answer is kept on this phone for
+  the account (`AppModel.ALERTS_OFFERED_PREFIX`), so it isn't asked again. Settings keeps the switch.
+
 ## Your data and the AI
 
 The AI-data consent is tafs cloud's (docs/accounts.md, "Your data and the AI"); the app draws its words and sends the

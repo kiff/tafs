@@ -600,6 +600,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         loadKnob = model::loadKnob,
         confirmKnob = model::confirmKnobChange,
         approveDrive = model::approveDrive,
+        turnOnAlerts = { scope.launch { model.turnOnAlertsFromOffer() } },
+        notNowAlerts = model::notNowAlertsOffer,
       ),
     )
   }
@@ -689,6 +691,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onRecipe = { recipeOpen = it.id },
               onNewTaf = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryBrowsing = false; galleryOpen = true }) else null,
               onExplore = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryBrowsing = true; galleryOpen = true }) else null,
+              onOwnWords = if (state.mode == Mode.kiff) model::openCoachEmpty else null,
             )
           }
           val detail: @Composable (String) -> Unit = { id ->

@@ -27,7 +27,8 @@
     "Coach can't drive: ${ErrorWords.of(e)}": "the drive's diagnostics, never shown",
     "another account or conversation": "a cancellation's reason, never shown",
     "hold off": "the sample's keywords, never shown",
-    "carry on": "the sample's keywords, never shown"
+    "carry on": "the sample's keywords, never shown",
+    "kiff.alerts-offered#": "a storage key on this phone, never shown"
   },
   "design/AvatarDoorRim.kt": {
     "Door rim": "an animation's label, for tools",
