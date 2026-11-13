@@ -98,6 +98,7 @@ class DriveEmulatorTest {
   private var menuOpen by mutableStateOf(false)
   private var text by mutableStateOf("")
   private var key by mutableStateOf("sk_test_secret")
+  private var termsShown by mutableStateOf(false)
   private lateinit var host: AndroidDriveHost
 
   @Before fun drive() {
@@ -126,8 +127,8 @@ class DriveEmulatorTest {
   private fun show() {
     rule.setShown {
       Column {
-        // At the top, clear of where the dialog opens: a blanked box covers whatever window is over it in the screenshot.
-        Text("Refund up to 50 a day", Modifier.fillMaxWidth().height(48.dp).background(Color.White).approvalTerms("Stripe"), color = Color.Black)
+        // Only for the approval test: the other tests' screen stays as it was (a blanked box covers any window over it).
+        if (termsShown) Text("Refund up to 50 a day", Modifier.fillMaxWidth().height(48.dp).background(Color.White).approvalTerms("Stripe"), color = Color.Black)
         Text("Home")
         Button({ runNow++ }, Modifier.fillMaxWidth().height(96.dp)) { Text("Run now") }
         Button({ approved++ }, Modifier.confirms()) { Text("Approve") }
@@ -405,6 +406,7 @@ class DriveEmulatorTest {
   }
 
   @Test fun anOpenApprovalsTermsAreBlankedAndNamedOnlyByTheirTitle() = runBlocking {
+    termsShown = true
     show(); driving()
     val seen = tree()
     // In the tree: only that an approval is open, and for what. Never its terms.
