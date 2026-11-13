@@ -96,3 +96,31 @@ export function withConnections(text: string, lines: string[], company?: string)
 
 /** The lines tafs opens a Coach message with and reads again (entryOf, ownerWords), so they stay first. */
 const OPENINGS = ["[improve taf ", "[tafs coach lines]", "[did this happen "];
+
+/** What ending a removed taf's connections ended, and what stayed because another taf still uses it. */
+export interface EndedConnections {
+  ended: Array<{ vendor: string }>;
+  kept: Array<{ vendor: string; used_by: string[] }>;
+}
+
+/**
+ * Ends every connection of a taf's KIFF agent, in any status (connected, waiting, failed): the connection
+ * server's route that only takes away (`POST /v1/accounts/{tenant}/agents/{agent}/end`), with the person's own
+ * session. A sign-in or key another taf still uses stays, and the answer says so. With `preview`, nothing is
+ * ended: the same answer, for the confirmation's words. `null` from a connection server without the route
+ * (404), so a removal goes on as before, with the apps' own disconnect.
+ */
+export async function endConnections(fetchFn: Fetch, base: string, tenant: string, agent: string, bearer: string, preview = false): Promise<EndedConnections | null> {
+  const res = await fetchFn(`${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/agents/${encodeURIComponent(agent)}/end${preview ? "?preview=1" : ""}`, {
+    method: "POST", headers: { authorization: `Bearer ${bearer}`, accept: "application/json", "content-type": "application/json" }, body: "{}",
+  });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`the connection server answered ${res.status}`);
+  const got = await res.json().catch(() => ({})) as { ended?: unknown; kept?: unknown };
+  const list = (v: unknown) => (Array.isArray(v) ? v : []).filter((x): x is Record<string, unknown> => !!x && typeof x === "object");
+  return {
+    ended: list(got.ended).map((e) => ({ vendor: line(e.vendor, 60) || "an app" })),
+    kept: list(got.kept).map((k) => ({ vendor: line(k.vendor, 60) || "an app",
+      used_by: (Array.isArray(k.used_by) ? k.used_by : []).filter((u): u is string => typeof u === "string").map((u) => line(u, 60)).filter(Boolean) })),
+  };
+}

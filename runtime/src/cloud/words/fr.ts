@@ -31,6 +31,8 @@ export const fr: Words = {
   doing_read_account: (vendor: string) => vendor ? `Je lis votre compte ${vendor}…` : "Je lis votre compte…",
   doing_grants: "Je recherche vos connexions…",
   doing_connection: "Je travaille sur la connexion…",
+  removal_goes: (apps: string[]) => `${list(apps)} ${apps.length > 1 ? "partent" : "part"} avec lui.`,
+  removal_stays: (app: string, tafs: string[]) => `${app} reste : ${list(tafs)} ${tafs.length > 1 ? "l'utilisent" : "l'utilise"}.`,
   doing_draft: "Je rédige la Card…",
   doing_card: "Je lis la Card du taf…",
   doing_pending: "Je vérifie ce qui vous attend…",

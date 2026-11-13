@@ -31,6 +31,8 @@ export const pt: Words = {
   doing_read_account: (vendor: string) => vendor ? `A ler a sua conta ${vendor}…` : "A ler a sua conta…",
   doing_grants: "A procurar as suas ligações…",
   doing_connection: "A trabalhar na ligação…",
+  removal_goes: (apps: string[]) => `${list(apps)} ${apps.length > 1 ? "saem" : "sai"} com ele.`,
+  removal_stays: (app: string, tafs: string[]) => `${app} fica: ${tafs.length > 1 ? "usam-no" : "usa-o"} ${list(tafs)}.`,
   doing_draft: "A redigir o Card…",
   doing_card: "A ler o Card do taf…",
   doing_pending: "A verificar o que está à sua espera…",

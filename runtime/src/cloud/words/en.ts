@@ -31,6 +31,8 @@ export const en = {
   doing_read_account: (vendor: string) => `Reading from ${vendor ? `your ${vendor}` : "your"} account…`,
   doing_grants: "Looking up your connections…",
   doing_connection: "Working on the connection…",
+  removal_goes: (apps: string[]) => `${new Intl.ListFormat("en", { type: "conjunction" }).format(apps)} ${apps.length > 1 ? "go" : "goes"} with it.`,
+  removal_stays: (app: string, tafs: string[]) => `${app} stays: ${new Intl.ListFormat("en", { type: "conjunction" }).format(tafs)} ${tafs.length > 1 ? "use" : "uses"} it.`,
   doing_draft: "Drafting the Card…",
   doing_card: "Reading the taf's Card…",
   doing_pending: "Checking what waits for you…",
