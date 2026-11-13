@@ -111,7 +111,8 @@ fun PeopleGroupsSheet(state: AppState, actions: PeopleActions, onClose: () -> Un
       ) {
         state.peopleError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         state.kiffAccount?.let { account ->
-          Text("${account.name} · " + Words.People.count(count = state.people.size), style = scaled(14, color = Theme.soft), modifier = Modifier.padding(horizontal = 4.dp))
+          // A personal account's name is the owner's email, already on screen: the count alone.
+          Text((if (account.personal) "" else "${account.name} · ") + Words.People.count(count = state.people.size), style = scaled(14, color = Theme.soft), modifier = Modifier.padding(horizontal = 4.dp))
         }
         state.groups.forEach { group ->
           GroupPanel(

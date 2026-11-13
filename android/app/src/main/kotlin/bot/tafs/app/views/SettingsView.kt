@@ -115,9 +115,10 @@ fun SettingsSheet(
           Section(Words.Settings.yourAccount) {
             Value(Words.Settings.mode, when (state.mode) { Mode.kiff -> Words.Settings.modeKiff; Mode.sample -> Words.Settings.modeSample; Mode.signedOut -> Words.Settings.modeSignedOut })
             if (state.mode == Mode.kiff) state.kiffAccount?.let { account ->
+              // The email once: a personal account is named after it. Its raw id isn't shown; a named account's id is.
               Value(Words.Settings.kiffAccount, account.name)
-              Value(Words.Settings.accountId, account.slug)
-              account.email?.takeIf(String::isNotEmpty)?.let { Value(Words.Settings.signedInAs, it) }
+              if (!account.personal) Value(Words.Settings.accountId, account.slug)
+              account.signedInAs?.let { Value(Words.Settings.signedInAs, it) }
             }
             if (state.mode == Mode.sample) Action(Words.SignIn.withKiff, Theme.ink, onSignIn)
             if (state.approvalKeyLost) {

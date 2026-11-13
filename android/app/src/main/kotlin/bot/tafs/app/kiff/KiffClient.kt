@@ -89,6 +89,12 @@ data class Account(
 ) {
   /** The account as the owner knows it: its name, else its slug. */
   val name: String get() = displayName?.takeIf { it.isNotEmpty() } ?: slug
+
+  /** A personal account, named after its owner's email: its name already says who's signed in, and its id is a raw one. */
+  val personal: Boolean get() = !email.isNullOrBlank() && email.trim().equals(name.trim(), ignoreCase = true)
+
+  /** "Signed in as", only when it says something the account's name doesn't. */
+  val signedInAs: String? get() = email?.takeIf { it.isNotBlank() && !personal }
 }
 
 /**

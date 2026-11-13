@@ -831,6 +831,11 @@ which waits until there's a Compose hierarchy to read before reading it.
 
 ## Account and paged taf presentation
 
+Account names the KIFF account, its id and who's signed in. A personal account is named after its
+owner's email (`Account.personal`), so it shows the email once, as the account's name, with no
+"Signed in as" and no raw id; a named account shows all three. People & groups starts with the
+count alone for a personal account, else "Acme · 3 people".
+
 `ThemePreference` and `TafsTheme` apply the saved Light/Dark/System choice.
 `SettingsSheet` exposes source-defined phone alerts and time zones. Alert
 choices are saved for this device and account and sent on registration; Off

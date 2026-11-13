@@ -5,3 +5,4 @@
 - **A signed approval in Coach names the Card**, with its lines under it, never the key's words.
 - **Removing a taf says which apps go with it** before the fingerprint, in tafs cloud's words.
 - **This phone's name in KIFF's device list keeps each language's word order** ("tafs sur appareil Android", not "tafs sur Android appareil").
+- **A personal account shows its email once in Account, and no raw account id**; People & groups starts with the count alone.
