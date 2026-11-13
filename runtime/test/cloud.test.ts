@@ -1715,7 +1715,7 @@ describe("Setup (kiff/agents#91)", () => {
     expect(first.coach_tools_step.title).toBe("Give Coach its tools");
     // One confirmation gives them on either phone, and tafs cloud never names the biometric it is.
     expect(first.coach_tools_step.ask).toBe("Give Coach these tools? You sign its Card on your device.");
-    expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 5, 2]);
+    expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 6, 2]);
     // Tools missing: the batch alone. KIFF refuses a Card naming an action no tool declares yet,
     // so the Cards come on the read after the tools are connected, and nothing is previewed now.
     expect(first.card).toBeUndefined();

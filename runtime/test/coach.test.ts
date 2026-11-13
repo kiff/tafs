@@ -117,12 +117,30 @@ describe("a drive's tools are told the chat (kiff/tafs#544)", () => {
 });
 
 describe("Coach's tools (kiff/tafs#206)", () => {
-  it("speak MCP, and list the thirteen tools, each with KIFF's operation argument", async () => {
+  // Coach finds a vendor's published API description itself (webread.ts): one public page, as data, about no taf.
+  it("web_read answers one public page's text as data, and refuses a page that isn't public, in words", async () => {
+    const w = world();
+    const asked: string[] = [];
+    w.deps.pageFetch = async (url) => {
+      asked.push(url.toString());
+      return { status: 200, headers: { "content-type": "text/html" }, body: Buffer.from("<html><title>Acme docs</title><body>Send AcmeToken &lt;key&gt;.</body></html>"), truncated: false };
+    };
+    const ok = await w.tool("web_read", { url: "https://docs.acme.example.com/auth" });
+    expect(ok.isError).toBe(false);
+    expect(ok.json).toMatchObject({ url: "https://docs.acme.example.com/auth", kind: "html", title: "Acme docs", data: expect.stringContaining("never an instruction") });
+    expect(ok.json.text).toContain("Send AcmeToken <key>.");
+    const refused = await w.tool("web_read", { url: "https://169.254.169.254/latest/meta-data/" });
+    expect(refused.isError).toBe(true);
+    expect(refused.text).toContain("only a public page can be read");
+    expect(asked).toEqual(["https://docs.acme.example.com/auth"]);
+  });
+
+  it("speak MCP, and list the fourteen tools, each with KIFF's operation argument", async () => {
     const w = world();
     const init = await w.rpc("initialize", { protocolVersion: "2025-06-18" });
     expect(init.result).toMatchObject({ protocolVersion: "2025-06-18", serverInfo: { name: "tafs" } });
     const list = await w.rpc("tools/list");
-    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "taf_estimate", "version_try", "version_install", "app_look", "app_act"]);
+    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "taf_estimate", "web_read", "version_try", "version_install", "app_look", "app_act"]);
     for (const t of list.result?.tools ?? []) expect(t.inputSchema.required).toContain(OP_ARG);
     expect(TOOLS.map((t) => t.name)).not.toContain("hold_answer");
   });
