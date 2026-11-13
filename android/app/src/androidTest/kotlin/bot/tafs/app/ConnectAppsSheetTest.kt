@@ -115,8 +115,8 @@ class ConnectAppsSheetTest {
 
   @Test fun theAccountsOwnAppsComeFirstUnderYoursThenDiscover() {
     show(connect = true)
-    val yours = rule.onNodeWithText(Words.Connect.Apps.yours).fetchSemanticsNode().boundsInRoot.top
-    val discover = rule.onNodeWithText(Words.Connect.Apps.discover).fetchSemanticsNode().boundsInRoot.top
+    val yours = rule.onNodeWithText(Words.Connect.Apps.yours.uppercase()).fetchSemanticsNode().boundsInRoot.top
+    val discover = rule.onNodeWithText(Words.Connect.Apps.discover.uppercase()).fetchSemanticsNode().boundsInRoot.top
     val stripe = rule.onNodeWithText("Stripe").fetchSemanticsNode().boundsInRoot.top
     val notion = rule.onNodeWithText("Notion").fetchSemanticsNode().boundsInRoot.top
     // Stripe is connected: under Yours. Notion isn't: under Discover.
