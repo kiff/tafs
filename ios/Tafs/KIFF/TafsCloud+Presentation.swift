@@ -70,6 +70,29 @@ extension TafsCloud {
         struct Versions: Decodable { let title: String; let summary: String; let live: Int?; let earlier: Int }
         let connections: [ConnectedApp]; let workflow: Workflow; let memory: Memory; let versions: Versions; let connections_error: String?
         var card_unit_exceptions: [CardUnitException]? = nil
+        /// The taf's own Connect again, when a connection's sign-in expired (docs/api.md).
+        var connect_again: ConnectAgain? = nil
+    }
+    /// A taf's own Connect again (docs/api.md): the connection (`grant`) whose sign-in the vendor no longer
+    /// takes, and tafs cloud's words for it. The app signs that same connection in again, so the taf keeps
+    /// its tools and its Card, and says `done_words` once it's connected. Read leniently: one without its
+    /// connection or words reads as none, never the page with it.
+    struct ConnectAgain: Decodable, Equatable {
+        var grant = ""
+        var app = ""
+        var title = ""
+        var words = ""
+        var doneWords = ""
+        var usable: Bool { !grant.isEmpty && !title.isEmpty && !words.isEmpty }
+        init(grant: String = "", app: String = "", title: String = "", words: String = "", doneWords: String = "") {
+            self.grant = grant; self.app = app; self.title = title; self.words = words; self.doneWords = doneWords
+        }
+        enum CodingKeys: String, CodingKey { case grant, app, title, words, doneWords = "done_words" }
+        init(from decoder: Decoder) throws {
+            guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+            func text(_ key: CodingKeys) -> String { (((try? c.decodeIfPresent(String.self, forKey: key)) ?? nil) ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
+            grant = text(.grant); app = text(.app); title = text(.title); words = text(.words); doneWords = text(.doneWords)
+        }
     }
     private func query(_ value: String) -> String {
         value.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? value

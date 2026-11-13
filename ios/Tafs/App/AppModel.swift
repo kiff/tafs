@@ -641,7 +641,7 @@ final class AppModel: ObservableObject {
     private(set) var accountGeneration = 0 {
         didSet {
             phoneAlerts = nil; phoneAlertsBusy = false; phoneAlertsError = nil
-            tafSetups = [:]; tafSetupErrors = [:]; activityPages = [:]; runPages = [:]; timeZones = []
+            tafSetups = [:]; tafSetupErrors = [:]; connectedAgain = [:]; activityPages = [:]; runPages = [:]; timeZones = []
             recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
             recordTyping?.cancel(); recordTyping = nil
             cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil
@@ -5828,6 +5828,19 @@ final class AppModel: ObservableObject {
             lastError = nil
         }
     }
+
+    /// A taf's own Connect again (tafs cloud's `connect_again`): signs that same connection in again, then
+    /// reads the taf's page. Once planque says it's connected, the taf shows tafs cloud's `done_words`.
+    func connectAgain(_ tafID: UUID, _ again: TafsCloud.ConnectAgain) async {
+        connectedAgain[tafID] = nil
+        await reconnectApp(again.grant)
+        let connected = grants.first { $0.id == again.grant }?.connected == true
+        await loadTafSetup(tafID)
+        if connected, !again.doneWords.isEmpty { connectedAgain[tafID] = again.doneWords }
+    }
+
+    /// tafs cloud's words for a taf whose connection was just connected again, by taf.
+    @Published private(set) var connectedAgain: [UUID: String] = [:]
 
     /// Why a sign-in again from a taf's page didn't connect, by grant id.
     @Published private(set) var reconnectErrors: [String: String] = [:]
