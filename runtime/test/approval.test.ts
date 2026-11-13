@@ -491,6 +491,41 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     expect((await w.report({ result: "connected" })).body).toMatchObject({ answer: "approved" });
   });
 
+  // Go-to-market job 3 (owner's phone, 13 Nov): a message typed while the owner approved GitHub (a fingerprint and a
+  // sign-in) started a new run, the card stopped waiting, and it read "connected" beside Approve and "Your answer
+  // didn't reach Setup". A message during an approval waits until it's settled; it never voids the card.
+  it("a message sent between the fingerprint and the report waits in the approval's run, and the approval goes through", async () => {
+    const s = services();
+    const w = await asked(s);
+    w.agents.calls.length = 0;
+    const sent = await w.call("POST", `/v1/tafs/${COACH}/messages`, { text: "Also post weekly, please" });
+    expect(sent.status).toBe(200);
+    expect(sent.body).toMatchObject({ run: w.stored.id, new_session: false, held: "approval" });
+    expect(w.agents.calls).toContain(`steerRun ${COACH} ${w.stored.id}`);
+    expect(w.agents.calls.some((c) => c.startsWith("startRun"))).toBe(false);
+    // The card still waits, so the report reaches Coach as the owner's answer.
+    s.grants = [grant({ status: "connected" })];
+    expect((await w.report({ result: "connected" })).body).toMatchObject({ outcome: "answered", answer: "approved" });
+    expect(w.told()).toMatchObject({ answer: "approved" });
+    // Settled: the next message is a message again.
+    w.agents.calls.length = 0;
+    const next = await w.call("POST", `/v1/tafs/${COACH}/messages`, { text: "Thanks" });
+    expect(next.body.held).toBeUndefined();
+  });
+
+  it("an approval settled after its card stopped waiting still reaches Coach, and the card shows it, never a conflict", async () => {
+    const s = services();
+    const w = await asked(s);
+    // The run went on before the report came in (an app that sent the message as a new run).
+    w.stored.status = "COMPLETED";
+    s.grants = [grant({ status: "connected" })];
+    const r = await w.report({ result: "connected" });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ outcome: "answered", answer: "approved" });
+    const notes = (await w.coach.take("t_acme#coach-notes#u_ana")) as Array<{ text?: string }>;
+    expect(notes.map((n) => n.text)).toContainEqual(expect.stringContaining("[approval a1] The owner's approval was settled after their message: approved"));
+  });
+
   it("a report this phone didn't sign is refused, and Coach hears nothing", async () => {
     const s = services();
     const w = await asked(s);

@@ -3081,6 +3081,9 @@ async function message(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
   if (answered) return { session: answered.session, new_session: false, run: answered.id };
   const lines = await takeCoachLines(me, taf, deps);
   try {
+    const waiting = await approvalWaiting(event, me, taf, deps);
+    const held = waiting ? await holdForApproval(me, taf, waiting, lines.text(owner), deps) : undefined;
+    if (held) return { session: held.session, new_session: false, run: held.id, held: "approval" };
     return await startMessage(event, me, taf, lines.text(owner), deps);
   } catch (err) {
     // The message didn't start: Coach reads its lines with the next one.
@@ -3435,7 +3438,51 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
     const told = await tellCoach(me, taf, card, component, decision.answer, deps);
     return { outcome: "answered", answer: decision.answer, note: decision.note, ...told };
   }
+  // The person is now approving on the phone (a fingerprint, a sign-in): a message they send meanwhile waits in
+  // this run, read once the approval is settled, and never voids the card (go-to-market job 3, 13 Nov).
+  if (decision.outcome === "sign") {
+    await deps.coach!.put(approvalWaitKey(me.tenantID, taf.id, me.subject), { session: card.session, run: card.run, component } satisfies ApprovalWaiting,
+      new Date(nowOf(deps).getTime() + APPROVAL_WAIT_MS)).catch((err) => console.error("approval wait not kept:", err));
+  }
   return decision;
+}
+
+/** How long a message waits for an approval in progress: as long as its ask is kept (approval.ts). */
+const APPROVAL_WAIT_MS = 20 * 60_000;
+const approvalWaitKey = (tenant: string, taf: string, person: string) => `${tenant}#${taf}#${person}#approval-waiting`;
+/** The approval a person is in the middle of: the chat and the run its card waits in. */
+interface ApprovalWaiting { session: string; run: string; component: string }
+
+/** The approval this person is in the middle of in the chat a message goes to, if any. A new chat waits for none. */
+async function approvalWaiting(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<ApprovalWaiting | undefined> {
+  if (!deps.coach || files(event).length) return undefined;
+  const body = parseBody(event);
+  if (body.new_chat === true) return undefined;
+  const w = (await deps.coach.get(approvalWaitKey(me.tenantID, taf.id, me.subject)).catch(() => undefined)) as ApprovalWaiting | undefined;
+  if (!w || typeof w.run !== "string" || typeof w.session !== "string") return undefined;
+  const session = str(body.session).trim();
+  return !session || session === w.session ? w : undefined;
+}
+
+/**
+ * A message typed while the person approves: steered into the run the approval card waits in, so Coach reads it
+ * once the approval is settled, and the card isn't voided by a new run. What the run never reads, tafs cloud
+ * sends as the next message once the run is over, as for any held message. Undefined when the run went on or
+ * ended (the approval is over): the message then starts as usual.
+ */
+async function holdForApproval(me: KIFFIdentity, taf: Taf, w: ApprovalWaiting, text: string, deps: Deps): Promise<Run | undefined> {
+  try {
+    const out = await deps.agents.steerRun(me.tenantID, taf.id, w.run, text, member(me));
+    await deps.coach!.put(steerKeys.run(me.tenantID, out.id), { person: me.subject, session: out.session } satisfies SteeredRun, steerKept(deps));
+    await deps.coach!.append(chatKeys(me, taf, out.session).steered, { run: out.id } satisfies SteeredChat, steerKept(deps));
+    return out;
+  } catch (err) {
+    if (err instanceof AgentsError && err.status === 409) {
+      await deps.coach!.remove(approvalWaitKey(me.tenantID, taf.id, me.subject)).catch(() => undefined);
+      return undefined;
+    }
+    throw agentsFailure(err);
+  }
 }
 
 /**
@@ -3455,7 +3502,20 @@ async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf,
   const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
   const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
   const outcome = await settleApproval(askID, report, { ...ctx, signed }).catch(approvalFailure);
-  const told = await tellCoach(me, taf, card, component, outcome.answer, deps);
+  await deps.coach!.remove(approvalWaitKey(me.tenantID, taf.id, me.subject)).catch(() => undefined);
+  let told: Awaited<ReturnType<typeof tellCoach>> | { session: string };
+  try {
+    told = await tellCoach(me, taf, card, component, outcome.answer, deps);
+  } catch (err) {
+    // The card stopped waiting while the person approved (a message started a new run before this came in): the
+    // approval still happened, so Coach reads its outcome with the next message, and the card shows it, never
+    // "changed in the meantime" beside a connection that's made.
+    if (!(err instanceof HTTPError && err.status === 409)) throw err;
+    const at = nowOf(deps);
+    await deps.coach!.append(coachKeys.notes(me.tenantID, me.subject), { at: at.toISOString(), text: `[approval ${component}] The owner's approval was settled after their message: ${outcome.answer}`, taf: taf.name, taf_id: taf.id } satisfies CoachLine,
+      new Date(at.getTime() + TASK_KEPT_MS));
+    told = { session: card.session };
+  }
   return { outcome: "answered", answer: outcome.answer, ...(outcome.note ? { note: outcome.note } : {}), ...told };
 }
 
@@ -5421,6 +5481,15 @@ export async function handleStream(event: HTTPEvent, given: Deps): Promise<Strea
     timing.mark("answer");
     const lines = await takeCoachLines(me, taf, deps);
     timing.mark("lines");
+    // A message sent while the person approves waits in the approval's run: no new run voids the card.
+    const waiting = await approvalWaiting(event, me, taf, deps);
+    const held = waiting ? await holdForApproval(me, taf, waiting, lines.text(owner), deps).catch(async (err) => { await lines.putBack(); throw err; }) : undefined;
+    if (held) {
+      return { statusCode: 200, headers: { "content-type": "text/event-stream", "cache-control": "no-store" }, body: (async function* () {
+        yield sse("session", { session: held.session, new_session: false, run: held.id, held: "approval" });
+        yield sse("taken", {});
+      })() };
+    }
     let run: AsyncGenerator<RunStreamEvent> | undefined;
     let first: IteratorResult<RunStreamEvent> | undefined;
     let at: RunAt;
