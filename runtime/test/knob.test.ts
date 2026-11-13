@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { cronWords, dayIn, knobOf, type KnobInput, recipeOf } from "../src/cloud/knob.js";
+import { cronWords, dayIn, knobOf, type KnobInput, recipeOf, ringWords } from "../src/cloud/knob.js";
+import { wordsIn } from "../src/cloud/words/index.js";
 
 const now = new Date("2026-11-02T21:00:00Z");
 const base: KnobInput = {
@@ -252,5 +253,18 @@ describe("a schedule in words", () => {
     expect(dayIn("2026-11-02T12:00:00Z", "Pacific/Kiritimati")).toBe("2026-11-03");
     expect(dayIn("2026-11-02T12:00:00Z", "Pacific/Pago_Pago")).toBe("2026-11-02");
     expect(dayIn("2026-11-02T12:00:00Z", "Pacific/Kiritimati")).toBe("2026-11-03");
+  });
+});
+
+describe("a dial's words never show a code", () => {
+  it("names tafs' own places by their words, and an app's by its name", () => {
+    const r = ringWords({ wakes: [], busy: "skip", results: ["door_reply", "app"] });
+    expect(r.results).toEqual(["Replies to whoever wrote", "Shows each result in the app"]);
+    expect(r.results.join(" ")).not.toMatch(/door_reply|app,/);
+  });
+
+  it("says the days by name in English, as in every other language", () => {
+    expect(wordsIn("en").dial_weekly_at(["mon", "fri"], "09:00")).toBe("Monday and Friday at 09:00");
+    expect(wordsIn("en").dial_weekly_at(["mon"], "09:00")).toBe("Monday at 09:00");
   });
 });

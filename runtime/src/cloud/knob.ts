@@ -317,7 +317,8 @@ function groupsOf(s: KnobSetting, lang: Lang = "en"): NonNullable<Knob["draft"]>
   for (const t of s.wakes) of(t.kind === "app_event" ? t.grant : undefined, t.name).wakes.push(checkedWords(t, s.check, lang));
   for (const [i, w] of (s.what ?? []).entries()) own.what.push(`${i + 1} · ${w.label}: ${w.words}`);
   for (const p of s.results) {
-    if (typeof p === "string") own.results.push(w.dial_results_go(p));
+    // One of tafs' own places by its words ("Replies to whoever wrote"), never its code (`door_reply`).
+    if (typeof p === "string") own.results.push(placeOf(lang)[p]?.words ?? w.dial_results_go(p));
     else if (p.place === "taf") own.results.push(w.dial_results_handed(p.name));
     else of(p.grant, p.name).results.push(w.dial_results_go(p.name));
   }
@@ -405,7 +406,8 @@ export function ringWords(k: KnobSetting, lang: Lang = "en"): { wakes: string[];
   return {
     wakes: k.wakes.map((t) => checkedWords(t, k.check, lang)),
     when: [k.busy === "latest" ? w.dial_busy_latest_line : w.dial_busy_skip_line],
-    results: [w.dial_results_go(k.results.map((p) => (typeof p === "string" ? p : p.name)).join(", "))],
+    // tafs' own places by their words, never their codes; an app's place by its name.
+    results: k.results.map((p) => (typeof p === "string" ? (placeOf(lang)[p]?.words ?? w.dial_results_go(p)) : w.dial_results_go(p.name))),
   };
 }
 

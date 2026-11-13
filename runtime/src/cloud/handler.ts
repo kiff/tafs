@@ -5952,7 +5952,9 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
   // answer: only KIFF's keys for it, never what the tool answered, but why it failed, in words.
   const ended = (callID: unknown, r: { text?: unknown; is_error?: unknown; state?: unknown; hold?: { exception?: unknown }; invocation?: unknown; tool?: unknown }, notMade = false): string => {
     // A connection request that went through: what was refused for its vendor earlier in the run is past.
-    const connected = r.is_error !== true && r.state !== "held" && !notMade ? steps.requestTarget(callID) : undefined;
+    // Any connection call whose answer shows it signed in or connected clears the same too (a status read after a refused tools
+    // call): "couldn't connect" never stands under "signed in".
+    const connected = r.is_error !== true && r.state !== "held" && !notMade ? steps.requestTarget(callID) ?? steps.connectedBy(callID, r.text) : undefined;
     if (connected !== undefined && runID) keep?.connected?.(runID, connected);
     steps.result(callID, r.text);
     if (typeof callID === "string" && typeof r.tool === "string" && !toolOf.has(callID)) toolOf.set(callID, r.tool);

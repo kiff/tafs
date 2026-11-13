@@ -325,7 +325,12 @@ export interface Connected { vendor: string; read_only: boolean }
  * and never repeats the connection's text. Never fails what it rides on: a note not kept is a card as before.
  */
 async function noteConnected(store: CoachStore, tenant: string, grant: ApprovalGrant, now: Date): Promise<void> {
-  if (grant.status !== "connected" && grant.status !== "listed") return;
+  // Connected only: one signed in whose tools wait (`listed`), or one asking for more tools again (`pending`), still asks for
+  // something, so a card for it shows what it asks, never "connected". Such a grant's note goes.
+  if (grant.status !== "connected") {
+    await store.remove(connectedKey(tenant, grant.id)).catch(() => undefined);
+    return;
+  }
   const note: Connected = { vendor: vendorOf(grant), read_only: readsOnly(grant) };
   await store.put(connectedKey(tenant, grant.id), note, new Date(now.getTime() + CONNECTED_KEPT_MS)).catch(() => undefined);
 }
@@ -426,6 +431,8 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   const vendor = vendorOf(grant);
   // The same taf's other connections: a Card may cover their tools too (two apps, one Card).
   const sameTaf = grants.filter((g) => g.id !== grant.id && g.request.agent && g.request.agent === grant.request.agent && !["failed", "disconnected", "revoked"].includes(g.status));
+  // A grant asking for something again (tools added once connected) loses its "connected" note, so its card shows what it asks.
+  if (grant.status !== "connected") await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
   if (grant.status === "connected") {
     await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
     // The second approval: the vendor is connected, and the taf's Cards over its tools wait as a
