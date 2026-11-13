@@ -777,7 +777,8 @@ cloud marks each waiting approval card with `signs: {card, words?}` (read lenien
 - `card: false`: the Card's lines, dimmed, under tafs cloud's `words` ("Its Card: you approve it next"), never
   under its own title as if signed now; with no `words`, not drawn.
 - No mark (a tafs cloud from before it): as before, Its Card once the grant is connected.
-The approve flow asks with `signs` in `can` too. Once the ask is back, and before any signature, a step
+The approve flow asks with `signs` in `can` too, only from a card that carries the mark: a card read without
+it (no read proof, or tafs cloud's read timed out) never says it draws what it signs. Once the ask is back, and before any signature, a step
 that disagrees with the mark is never signed (`AppModel.stepMatchesMark`): `card: true` takes only
 `cards`, `key_and_cards` or `tools_and_cards`, and `card: false` only another step. On a mismatch the card says
 "What you're asked to approve changed since it was shown. Read it again, then approve." and the thread

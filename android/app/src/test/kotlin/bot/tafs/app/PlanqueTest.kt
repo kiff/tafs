@@ -1092,7 +1092,7 @@ class PlanqueTest {
 
     // The phone said it can sign the step; one fingerprint, for both.
     val ask = bodyOf(transport.requestsTo(askRoute).single())
-    assertEquals("""["key_and_cards","signs"]""", ask.getValue("can").toString())
+    assertEquals("a card with no mark never says it draws it", """["key_and_cards"]""", ask.getValue("can").toString())
     assertEquals(listOf("Connect the bank to Invoices"), auth.asked)
 
     // Each request carries the one signature and the other's message hash, at the same time.
@@ -1143,9 +1143,9 @@ class PlanqueTest {
     transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
     val m = model()
     coachWithCard(m)
-    m.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3")
+    m.approveCoach(approvalComponent().copy(draft = "dr_1", signsRead = KiffClient.json.parseToJsonElement("""{"card":true}""")), digest, "v3")
 
-    // The phone said it can sign the step; one fingerprint, for both.
+    // The phone said it can sign the step, and that the card drew what it signs; one fingerprint, for both.
     assertEquals("""["tools_and_cards","signs"]""", bodyOf(transport.requestsTo(askRoute).single()).getValue("can").toString())
     assertEquals(listOf("Connect Stripe to Refunds"), auth.asked)
 
@@ -1214,6 +1214,17 @@ class PlanqueTest {
       assertTrue(transport.requestsTo(approve).isEmpty())
       assertTrue(transport.requestsTo(confirmRoute).isEmpty())
     }
+  }
+
+  @Test fun aCardWithNoMarkNeverSaysItDrawsWhatItSigns() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, """{"outcome":"refused","error":"not now"}""")
+    val m = model()
+    coachWithCard(m)
+    m.approveCoach(approvalComponent().copy(draft = "dr_1"), digest, "v3")
+    assertEquals("""["tools_and_cards"]""", bodyOf(transport.requestsTo(askRoute).single()).getValue("can").toString())
+    assertTrue(auth.asked.isEmpty())
   }
 
   @Test fun aStepIsSignedOnlyWhenItMatchesWhatTheCardDrew() {

@@ -4477,10 +4477,13 @@ class AppModel(
         session?.let { put("session", it) }
         // This build signs the key and its Card under one fingerprint: tafs cloud offers that step only when it's asked for. Without
         // a key, a connection's tools and its Card the same way (`tools_and_cards`), where the session's approval key can sign.
-        // `signs`: this build draws tafs cloud's `signs` mark, so a step that signs the Card is only offered where the card shows it.
+        // `signs` only from a card that carries tafs cloud's mark: then what it drew is what tafs cloud offers. A card read without
+        // it (no read proof, or tafs cloud's read timed out) never says it draws it, so a held sign-in's first tools and their
+        // Card are never offered under one fingerprint the card didn't show.
+        val drawsSigns = if (c.signs != null) listOf("signs") else emptyList()
         val can = when {
-          together != null -> listOf("key_and_cards", "signs")
-          c.draft != null && sessionHasApprovalKey && !_state.value.approvalKeyLost -> listOf("tools_and_cards", "signs")
+          together != null -> listOf("key_and_cards") + drawsSigns
+          c.draft != null && sessionHasApprovalKey && !_state.value.approvalKeyLost -> listOf("tools_and_cards") + drawsSigns
           else -> emptyList()
         }
         if (can.isNotEmpty()) put("can", kotlinx.serialization.json.buildJsonArray { can.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) } })
