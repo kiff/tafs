@@ -213,6 +213,10 @@ fun HomeView(
                   Text(HomeWords.empty(state.mayUseCoach), style = scaled(14, color = Theme.soft))
                 }
               }
+              // With no job listed, "Say it in your own words" under the line: there's always a way to Coach.
+              onOwnWords?.takeIf { state.mayUseCoach }?.let { open ->
+                Box(Modifier.padding(top = 8.dp)) { OwnWordsRow(recipes?.home, open) }
+              }
             }
           }
         }
