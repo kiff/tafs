@@ -864,7 +864,7 @@ struct SlackDoorSheet: View {
                                 Task { channels = await model.slackChannels(bot.id) ?? [] }
                             } label: {
                                 HStack {
-                                    Text(bot.account ?? bot.vendor).foregroundColor(Theme.ink)
+                                    Text(bot.name ?? bot.vendor).foregroundColor(Theme.ink)
                                     Spacer()
                                     if grant?.id == bot.id { Image(systemName: "checkmark").foregroundColor(Theme.ok) }
                                 }

@@ -480,10 +480,10 @@ struct AppConnectionsView: View {
         .frame(minHeight: 44)
     }
 
-    /// What a connection is: the vendor's account when planque gives one, else the app's
+    /// What a connection is: planque's name for it (`Grant.name`), else the app's
     /// name; planque's words for its status; the other tafs whose Card uses it; its last failure.
     @ViewBuilder private func lines(_ g: PlanqueClient.Grant) -> some View {
-        Text(g.account.flatMap { $0.isEmpty ? nil : $0 } ?? app.title)
+        Text(g.name ?? app.title)
             .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
         if let also = model.alsoOnCards(g) {
             Text(also).scaledFont(13).foregroundColor(Theme.soft)
@@ -503,7 +503,7 @@ struct AppConnectionsView: View {
     /// planque keeps, planque's status words, and the tafs whose Cards still use it.
     private func removedRow(_ g: PlanqueClient.Grant, usedBy: [TafsCloud.ConnectApps.UsedBy]?) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(g.account.flatMap { $0.isEmpty ? nil : $0 } ?? app.title)
+            Text(g.name ?? app.title)
                 .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
             if let name = g.agentName, !name.trimmingCharacters(in: .whitespaces).isEmpty {
                 Text(name).scaledFont(13).foregroundColor(Theme.soft)
