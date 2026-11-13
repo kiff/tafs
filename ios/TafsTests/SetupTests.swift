@@ -192,6 +192,10 @@ final class SetupTests: XCTestCase {
         XCTAssertFalse(try XCTUnwrap(TafsCloud.CoachStart.read(Data(Self.startJSON(draftPath: "/v1/me/agents").utf8))).startable,
                        "a request to another route is never signed")
         XCTAssertNil(TafsCloud.CoachStart.read(Data(#"{"setup":null,"tools":null}"#.utf8)), "a tafs cloud from before it")
+        // Never Cards the person hasn't read in KIFF's own words: a draft without them is no start.
+        let unworded = Self.startJSON().replacingOccurrences(of: #","card_title":"Coach's Cards","cards":[{"title":"Reads","lines":["See your tafs, up to 500 a day"]}]"#, with: "")
+        XCTAssertNotEqual(unworded, Self.startJSON())
+        XCTAssertFalse(try XCTUnwrap(TafsCloud.CoachStart.read(Data(unworded.utf8))).startable)
     }
 
     /// Start opens what Coach is given, and its one button starts Coach and gives its tools under
@@ -236,6 +240,22 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(together.split(separator: "\n").count, 5, "the scheme, the account, the time, two hashes")
         XCTAssertEqual(body(sent("POST", "cloud.test", "/v1/setup").first) as? [String: String], ["draft_id": "drf_s", "claim_secret": "kiff_claim_x"])
         XCTAssertTrue(sent("POST", "api.test", "/v1/me/agent-drafts").count == 1, "no empty draft first")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// Words handed over and Send, before Coach exists: with tafs cloud's first start, Send opens
+    /// the step that shows what Coach is given and sends nothing; the words stay in the composer.
+    func testSendOpensTheStepBeforeCoachStarts() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["GET /v1/setup"] = (200, Self.startJSON())
+        await model.loadSetup()
+        StubProtocol.sent = []
+        let taken = await model.submitSetup("Chase my overdue invoices")
+        XCTAssertFalse(taken, "the words stay in the composer")
+        XCTAssertTrue(model.coachToolsAsked, "the step opens")
+        XCTAssertTrue(signer.prompts.isEmpty, "no Face ID yet")
+        XCTAssertTrue(StubProtocol.sent.allSatisfy { $0.httpMethod == "GET" }, "nothing sent")
         Keychain.delete(AppModel.planqueAccount)
     }
 
