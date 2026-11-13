@@ -317,6 +317,16 @@ taken once: a second signed report of the same ask finds nothing waiting. On
 Android: `AppModel.approveCoach`; on iOS, `AppModel.approve`. A sign-in card's **Sign in
 again**, and Connect apps' sheet, still approve on the phone as before.
 
+
+**A message during an approval waits.** Once tafs cloud asks the phone to sign, the person is approving
+(a fingerprint, perhaps a vendor's sign-in), and the card's run waits for the report. A message they send
+meanwhile, to that chat, doesn't start a new run, which would leave the card waiting for nothing. It's
+steered into the run the card waits in (`held: "approval"` in the answer, or in the stream's `session`
+event), and Coach reads it once the approval is settled. What that run never reads is sent as the next
+message once it's over, as for any held message. The wait lasts as long as the ask (20 minutes). A report
+that comes in after the card stopped waiting anyway (a run that went on) still counts: the phone gets the
+outcome, never a conflict, and Coach reads "[approval …] The owner's approval was settled after their
+message: …" with the next message (go-to-market job 3, 13 Nov).
 ## Connections
 
 A taf's connections are on its Card tab (`ConnectionsPanel`): whose keys, which tools,

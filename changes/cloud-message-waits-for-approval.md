@@ -1,0 +1,1 @@
+- A message sent while the person approves a connection waits in the approval's run and is read once the approval is settled; it no longer voids the card. An approval settled after its card stopped waiting still reaches Coach, and the phone gets its outcome, not "changed in the meantime".
