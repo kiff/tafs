@@ -184,7 +184,9 @@ the app in sample mode.
   
   Each item opens its existing screen beside the sidebar (`HomeSelection`). The app's tab and the
   selection follow each other, so a notification, a drive or a shortcut that opens a tab opens its
-  screen here. The iPhone keeps the bar.
+  screen here; ⌘1 from a screen goes back to the taf the app opened on. Each item is in the drive's
+  registry, as the rail's were. Account and Record are built again on each pick, not kept as the
+  phone's tabs are. The iPhone keeps the bar.
 - **Plan & usage** (`UsageView`, opened from Settings' Plan card and Home's plan line), with
   credits as the balance ([accounts.md](accounts.md#credits-and-plans)). Every line is tafs
   cloud's or KIFF's, as written; the app adds nothing but the order:

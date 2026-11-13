@@ -93,11 +93,12 @@ struct HomeSplitView: View {
         NavigationSplitView {
             sidebar
         } detail: {
-            // Account and Record bring their own stack: drawn as they are, beside the sidebar.
+            // Account brings its own stack; Record gets one, as on the phone. Both are built
+            // again on each pick, not kept as a tab is.
             if selection == .account {
                 SettingsView()
             } else if selection == .record {
-                RecordView()
+                NavigationStack { RecordView() }
             } else {
             NavigationStack {
                 switch selection {
@@ -175,7 +176,15 @@ struct HomeSplitView: View {
         }
         // A tab opened from elsewhere (a notification, a drive) opens its screen here.
         .onChange(of: tab?.wrappedValue) { t in
-            guard let t, let screen = HomeSelection.of(t), selection != screen else { return }
+            guard let t else { return }
+            // The tafs (⌘1) from a screen: back to the taf the app opened on. From a taf, nothing moves.
+            if t == .tafs {
+                guard selection?.tab != .tafs, let back = opened ?? Self.opening(model.listedTafs, screenshot: false) else { return }
+                chosen = true
+                selection = back
+                return
+            }
+            guard let screen = HomeSelection.of(t), selection != screen else { return }
             chosen = true
             selection = screen
         }
@@ -384,7 +393,9 @@ struct HomeSplitView: View {
     /// One of the app's screens as a sidebar item, with its count where it has one.
     private func screenItem(_ screen: HomeSelection, _ title: String, _ icon: String, badge: Int = 0) -> some View {
         NavigationLink(value: screen) {
+            // In the drive's registry, as every sidebar row is (docs/drive.md).
             Label(title, systemImage: icon).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                .modifier(drives(title, screen))
         }
         .badge(badge)
         .accessibilityIdentifier("sidebar." + title)
