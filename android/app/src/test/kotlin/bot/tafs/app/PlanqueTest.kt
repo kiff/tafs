@@ -1334,6 +1334,23 @@ class PlanqueTest {
 
   // MARK: A removed taf takes its connections with it (the owner, 5 Nov: they stayed connected and Coach offered them again)
 
+  @Test fun theRemoveQuestionSaysWhatGoesWithItInTafsCloudsWordsBeforeTheFingerprint() = runTest {
+    reads()
+    transport.answer(
+      "GET /v1/home", 200,
+      """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"working","status":"active","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""",
+    )
+    transport.answer("GET /v1/tafs/taf_1/removal", 200, """{"taf":"taf_1","goes":["Qonto"],"stays":[{"app":"Stripe","used_by":["Chargebacks"]}],"words":"Qonto goes with it. Stripe stays: Chargebacks uses it."}""")
+    val m = model()
+    m.refresh()
+    assertEquals("Qonto goes with it. Stripe stays: Chargebacks uses it.", m.removalWords("refunds-1"))
+    assertTrue("read only: nothing is asked, ended or removed", auth.asked.isEmpty())
+    assertTrue(transport.requests.none { it.method == "DELETE" || it.method == "POST" && it.url.contains("/v1/tafs/") })
+    // A tafs cloud from before the route, or with nothing to say: the question says only that the taf goes.
+    transport.answer("GET /v1/tafs/taf_1/removal", 404, """{"error":"not_found"}""")
+    assertNull(m.removalWords("refunds-1"))
+  }
+
   @Test fun removingATafDisconnectsItsConnectionsUnderTheSameConfirmation() = runTest {
     reads()
     transport.answer(

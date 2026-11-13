@@ -579,6 +579,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       openRequest = model::openRequest,
       setPaused = model::setPaused,
       remove = model::removeTaf,
+      removalWords = model::removalWords,
       report = model::reportAnswer,
       setResults = model::setResults,
       loadSetup = model::loadTafSetup,

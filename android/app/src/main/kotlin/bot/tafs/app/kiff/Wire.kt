@@ -408,6 +408,10 @@ data class SecurePaste(
   val next: String? = null,
 )
 
+/** What removing a taf takes with it (`GET /v1/tafs/{id}/removal`): its apps that go, those that stay, and tafs cloud's words. */
+@Serializable
+data class RemovalPreview(val words: String? = null)
+
 @Serializable
 data class SecureDetails(val title: String = "", val lines: List<SecureDetail> = emptyList())
 

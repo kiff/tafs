@@ -3,3 +3,4 @@
 - **The key sheet's Connect sits right under the pasted key**, with Details below it.
 - **The lock-screen alerts in Account are marked Example.**
 - **A signed approval in Coach names the Card**, with its lines under it, never the key's words.
+- **Removing a taf says which apps go with it** before the fingerprint, in tafs cloud's words.

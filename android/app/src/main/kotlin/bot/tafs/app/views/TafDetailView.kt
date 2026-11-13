@@ -128,6 +128,8 @@ class TafActions(
   val setPaused: suspend (String, Boolean) -> Unit = { _, _ -> },
   /** Removes it for good, after one confirmation: what to tell the owner, null when nothing was done. */
   val remove: suspend (String) -> String? = { null },
+  /** tafs cloud's words for what removing it takes with it; null when it sends none. */
+  val removalWords: suspend (String) -> String? = { null },
   /** Reports an answer Coach or the taf wrote: the chat, the answer, a reason and an optional note. */
   val report: suspend (String, ChatMessage, String, String?) -> ReportResult = { _, _, _, _ -> ReportResult.NotSent("") },
   /** Where its results go, of tafs' own places (taf, places). */
@@ -299,10 +301,13 @@ fun TafDetailView(
         LaunchedEffect(asked) { removeAsked = null }
         return@let
       }
+      // What goes with it, in tafs cloud's words, read as the question opens: said before the fingerprint, never after only.
+      var goes by remember(asked) { mutableStateOf<String?>(null) }
+      LaunchedEffect(asked) { goes = actions.removalWords(asked) }
       DriveAlert(
         onDismissRequest = { removeAsked = null },
         title = { Text(Words.Taf.removeTitle(taf.name)) },
-        text = { Text(Words.Taf.removeBody) },
+        text = { Text(goes?.let { Words.Taf.removeBody + "\n\n" + it } ?: Words.Taf.removeBody) },
         confirmButton = {
           TextButton({
             removeAsked = null

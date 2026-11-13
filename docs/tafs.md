@@ -212,7 +212,11 @@ On Android the page is `views/TafDetailView.kt`, with the same tabs and parts
 (`RunsPanel`, `RunReportPanel`, `MemoryPanel`), and no second column yet. Revoke asks KIFF
 to revoke each of the taf's Cards (`POST /v1/me/mandates/{id}/revoke`, unsigned, since it
 takes authority away) and shows the taf stopped only once KIFF has. Remove for good takes
-one confirmation and a fingerprint, every time, before anything is undone. The dialog removes
+one confirmation and a fingerprint, every time, before anything is undone. The confirmation
+says what goes with it in tafs cloud's words, read as it opens (`GET /v1/tafs/{id}/removal`,
+`words`: "Qonto goes with it. Stripe stays: Chargebacks uses it."; Android:
+`AppModel.removalWords`). With none sent, or from a tafs cloud from before the route, it says
+only that the taf goes. The dialog removes
 the taf it named when it opened, by its id. It closes, removing nothing, if a refresh changes
 Home's list under it, and its button takes a tap only once it has been up half a second
 (`REMOVE_CONFIRM_DELAY_MS`). The approval key signs the DELETE itself (`kiff.request.v1` over
