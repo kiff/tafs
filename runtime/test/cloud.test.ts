@@ -5128,6 +5128,11 @@ describe("the account's connections a Coach conversation starts with", () => {
     const text = (await firstMessage(w, first.session))!;
     expect(text).toMatch(/\n\[tafs time zone\] The account's time zone is Europe\/Paris: it's [A-Z][a-z]+day \d\d:\d\d there now\. .*never convert it to UTC\.\nThe owner says: Mondays at 9$/);
     expect(ownerWords(text)).toBe("Mondays at 9");
+    // With nothing after "The owner says:" (an attachment alone, the line trimmed), nothing of the envelope is the owner's.
+    expect(ownerWords(text.replace(/ Mondays at 9$/, ""))).toBe("");
+    expect(ownerWords("[tafs coach lines] [connection refused] Coach couldn't connect the app yet.")).toBe("");
+    expect(ownerWords("[door knock Refunds] The owner says:")).toBe("");
+    expect(ownerWords("Plain words [tafs coach lines]")).toBe("Plain words [tafs coach lines]");
     // An account in UTC adds nothing.
     const utc = await send("ana", { text: "Tuesdays then", session: first.session });
     const said = (await w.agents.api.session("t_acme", utc.session)).events.filter((e) => e.kind === "owner_message").map((e) => (e.body as { text: string }).text);

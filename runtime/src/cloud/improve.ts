@@ -151,11 +151,13 @@ export function improveContext(taf: ImprovedTaf, card: CardSummary, calls: Activ
  * (doors.ts), which quotes the message. Any other message is shown as it is.
  */
 export function ownerWords(text: string): string {
+  // An envelope with no owner part (an attachment alone: "The owner says:" ends it, trimmed of its space) is all
+  // tafs cloud's, never the owner's: nothing of it is shown (qa-kiff on the coach-lines leak, 13 Nov).
   if (text.startsWith("[door knock ")) {
-    const m = text.match(/^\[door knock [^\]\n]*\] The owner says: ([\s\S]*?)\n\n/);
-    return m?.[1]?.trim() ?? text;
+    const m = text.match(/^\[door knock [^\]\n]*\] The owner says:[ \t]*([\s\S]*?)(?:\n\n|$)/);
+    return m?.[1]?.trim() ?? "";
   }
   if (!text.startsWith("[improve taf ") && !text.startsWith("[tafs coach lines]") && !text.startsWith("[did this happen ") && !text.startsWith("[tafs connections]") && !text.startsWith("[tafs language]") && !text.startsWith("[tafs time zone]")) return text;
-  const at = text.lastIndexOf("\nThe owner says: ");
-  return at < 0 ? text : text.slice(at + "\nThe owner says: ".length).trim();
+  const at = text.lastIndexOf("\nThe owner says:");
+  return at < 0 ? "" : text.slice(at + "\nThe owner says:".length).trim();
 }

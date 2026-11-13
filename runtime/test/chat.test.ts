@@ -1393,6 +1393,28 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     expect(JSON.stringify(r.body)).not.toContain("[tafs coach lines]");
   });
 
+  // qa-kiff on #906: an attachment sent alone while coach lines waited ends "The owner says:" with nothing after it, and the
+  // trim took the space ownerWords looked for: the whole envelope showed. An envelope with no owner part shows nothing of it.
+  it("shows an attachment sent alone while coach lines waited with no text, as the run's message and as a card's answer", async () => {
+    const w = world();
+    await waiting(w);
+    const other = await w.agents.api.startRun("t_acme", RAE, "And the limits?", ANA);
+    w.agents.show(other, { type: "confirm", id: "rules" });
+    const list = w.agents.events.get(other.session)!;
+    const file = { id: "att_1", kind: "image", media_type: "image/png", name: "receipt.png", size: 2048 };
+    list.push({ session: other.session, run: other.id, seq: list.length + 1, time: "2026-11-13T17:40:00.000Z", kind: "answered", body: { id: "rules", type: "confirm", wrote: ENVELOPE("").trim() } });
+    list.push({ session: other.session, run: other.id, seq: list.length + 1, time: "2026-11-13T17:41:00.000Z", kind: "owner_message", body: { text: ENVELOPE("").trim(), attachments: [file] } });
+    list.push({ session: other.session, run: other.id, seq: list.length + 1, time: "2026-11-13T17:42:00.000Z", kind: "owner_message", body: { text: ENVELOPE("").trim() } });
+    const r = await call(w, "GET", `/v1/tafs/${RAE}/conversation`, { token: "ana" });
+    const mine = r.body.messages.filter((m: { from: string; session: string }) => m.from === "owner" && m.session === other.session);
+    expect(mine).toHaveLength(2);
+    expect(mine[1]).toMatchObject({ text: "", attachments: [file] });
+    const card = r.body.components.find((c: { component: { id: string } }) => c.component.id === "rules");
+    expect(card.answer.words).toBe("");
+    expect(JSON.stringify(r.body)).not.toContain("The owner says");
+    expect(JSON.stringify(r.body)).not.toContain("[tafs");
+  });
+
   it("never marks a question asked while a card waited as its answer when Coach answers it and shows the card again", async () => {
     const w = world();
     await waiting(w);

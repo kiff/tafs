@@ -2688,14 +2688,17 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         if (door) doorRuns.set(e.run, door.app);
         // Words written while a card waited are already the card's answer, at the same time: one message.
         // It keeps the run's id, the one its send answered, so the app matches its send to it.
-        const same = !door && !attached.length ? sameOwnerMessage(messages, r.session.id, iso(e.time), ownerWords(text)) : undefined;
+        const said = ownerWords(text);
+        // An envelope with nothing of the owner's in it and nothing attached isn't a message of theirs.
+        if (!door && !said && !attached.length) continue;
+        const same = !door && !attached.length ? sameOwnerMessage(messages, r.session.id, iso(e.time), said) : undefined;
         if (same) {
           if (first) same.id = inputID(e.run);
           continue;
         }
         messages.push({
           id: first ? inputID(e.run) : `${e.run}.${e.seq}`,
-          at: iso(e.time), from: "owner", kind, text: door ? door.text.trim() : kind === "kickoff" ? checkStart(ownerWords(text), lang) : ownerWords(text), session: r.session.id,
+          at: iso(e.time), from: "owner", kind, text: door ? door.text.trim() : kind === "kickoff" ? checkStart(said, lang) : said, session: r.session.id,
           ...(door ? { door: { app: door.app, from: door.from, ...(door.subject ? { subject: door.subject } : {}) } } : {}),
           ...(attached.length ? { attachments: attached } : {}),
         });
