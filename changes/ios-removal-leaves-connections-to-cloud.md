@@ -1,0 +1,1 @@
+- **iOS: removing a taf asks for one Face ID.** The taf's access to apps is now ended as part of the removal itself, including requests that were still waiting, and the result says so only when it happened.
