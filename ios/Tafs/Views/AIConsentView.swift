@@ -32,12 +32,10 @@ struct AIConsentView: View {
                         .buttonStyle(PrimaryButtonStyle())
                         .disabled(model.aiConsentBusy)
                         .accessibilityIdentifier("consent.allow")
-                    if !consent.words.notNow.trimmingCharacters(in: .whitespaces).isEmpty {
-                        Button(consent.words.notNow) { model.notNowAI() }
-                            .buttonStyle(OutlineButtonStyle())
-                            .disabled(model.aiConsentBusy)
-                            .accessibilityIdentifier("consent.not-now")
-                    }
+                    Button(consent.words.notNow) { model.notNowAI() }
+                        .buttonStyle(OutlineButtonStyle())
+                        .disabled(model.aiConsentBusy)
+                        .accessibilityIdentifier("consent.not-now")
                 }
                 .padding(.horizontal, 24).padding(.vertical, 24)
                 .frame(maxWidth: 560, alignment: .leading)

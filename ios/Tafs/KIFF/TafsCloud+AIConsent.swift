@@ -24,10 +24,10 @@ extension TafsCloud {
         let version: String
         let words: Words
         var id: String { version }
-        /// Drawn only with what it must say: a title, the lines and Allow. Anything less is no screen.
+        /// Drawn only with everything it must say: a title, the lines, Allow and Not now, as on
+        /// Android. Anything less is no screen.
         var drawable: Bool {
-            !words.title.trimmingCharacters(in: .whitespaces).isEmpty && !words.lines.isEmpty
-                && !words.allow.trimmingCharacters(in: .whitespaces).isEmpty
+            [words.title, words.allow, words.notNow].allSatisfy { !$0.trimmingCharacters(in: .whitespaces).isEmpty } && !words.lines.isEmpty
         }
     }
 

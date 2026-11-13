@@ -4190,6 +4190,13 @@ final class AppModel: ObservableObject {
             }
             keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
             return .kept
+        } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+            // Refused for want of the AI-data consent: its screen says why, and the message goes
+            // back in the composer with its files, with no Not sent row, to send once it's allowed.
+            guard current() else { return .notTried }
+            chats[tafID]?.removeAll { $0.id == pending.id }
+            chatSent[tafID]?.removeAll { $0.id == pending.id }
+            return .notTried
         } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
             // The tafs wait for credits: tafs cloud's words, and the message stays in the
             // composer, with no Retry, since sending again changes nothing until they go on.
@@ -4597,6 +4604,9 @@ final class AppModel: ObservableObject {
                 return false
             } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
                 chatErrors[tafID] = Self.waitsForCredits(e)
+                return false
+            } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+                // The consent's screen says why; the words stay in the composer.
                 return false
             } catch let e as TafsCloud.CloudError where e.status == 429 && e.words == nil {
                 keepUnsent(text, tafID, why: Self.busyWords(c.name), busy: true)
@@ -6978,6 +6988,13 @@ final class AppModel: ObservableObject {
             setupAwaiting = clock()
             await loadSetupThread()
             return .sent
+        } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+            // Refused for want of the AI-data consent: its screen says why, and the message goes
+            // back in the composer, with no Not sent row, to send once it's allowed.
+            guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
+            setupSent.removeAll { $0.id == mine.id }
+            setupThread.messages.removeAll { $0.id == mine.id }
+            return .notTried
         } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
             // Coach past its fair use waits as the tafs do: its words, the message kept to send later.
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
@@ -7053,6 +7070,9 @@ final class AppModel: ObservableObject {
                 return false
             } catch let e as TafsCloud.CloudError where Self.waitsForCredits(e) != nil {
                 setupError = Self.waitsForCredits(e)
+                return false
+            } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+                // The consent's screen says why; the words stay in the composer.
                 return false
             } catch {
                 // Not reached: it stays in the thread as not sent, with why and Retry; never resent on its own.

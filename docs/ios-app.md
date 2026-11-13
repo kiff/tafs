@@ -264,6 +264,8 @@ the app in sample mode.
   words, which then show. **Not now** closes it and sends nothing; a refresh doesn't put it up again, a refused turn
   does. **Account** shows tafs cloud's "AI use: allowed" with **Withdraw** (`DELETE`), or the screen's title to open
   it. A tafs cloud without the route asks nothing.
+  A screen missing its title, a line, Allow or Not now isn't drawn, as on Android. A message or a card's answer refused
+  for want of it goes back where it was (the composer, with its files; the card, as chosen), with no Not sent row.
 - **Account › Language:** the language tafs's lines are in, by its own name ("Français", "Polski",
   `AppLanguage.name`), so someone in a language they don't read still finds theirs, and **Change
   language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. No picker

@@ -46,8 +46,10 @@ final class AIConsentTests: XCTestCase {
         XCTAssertEqual(c.words.notNow, "Not now")
         XCTAssertEqual(c.words.given, "AI use: allowed")
         XCTAssertTrue(c.drawable)
-        let bare = TafsCloud.AIConsent(given: false, version: "1", words: .init(title: " ", lines: ["x"], allow: "Allow", notNow: "", withdraw: "", given: ""))
+        let bare = TafsCloud.AIConsent(given: false, version: "1", words: .init(title: " ", lines: ["x"], allow: "Allow", notNow: "Not now", withdraw: "", given: ""))
         XCTAssertFalse(bare.drawable, "no title: no screen, and no words of the app's own")
+        XCTAssertFalse(TafsCloud.AIConsent(given: false, version: "1", words: .init(title: "T", lines: ["x"], allow: "Allow", notNow: " ", withdraw: "", given: "")).drawable,
+                       "no Not now: no screen, as on Android")
         XCTAssertFalse(TafsCloud.AIConsent(given: false, version: "1", words: .init(title: "T", lines: [], allow: "Allow", notNow: "", withdraw: "", given: "")).drawable)
     }
 
@@ -141,6 +143,21 @@ final class AIConsentTests: XCTestCase {
         XCTAssertFalse(branch.contains("cardNotes"), "no note of its own: the screen says why")
         let card = try String(contentsOf: views.appendingPathComponent("Views/QuestionsCard.swift"), encoding: .utf8)
         XCTAssertEqual(card.components(separatedBy: "selection = ").count, 1, "nothing clears what was chosen")
+    }
+
+    /// A message refused for want of the consent goes back in the composer, in Coach and in a
+    /// taf's chat, whether it was a new message or one to the run at work: no Not sent row, and
+    /// no error line of its own, since the screen says why.
+    func testARefusedMessageGoesBackInTheComposer() throws {
+        let file = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/App/AppModel.swift"), encoding: .utf8)
+        let branches = file.components(separatedBy: "where e.code == TafsCloud.aiConsentRequired {").dropFirst()
+        XCTAssertEqual(branches.count, 5, "Coach and a taf's chat, each sent and steered, and a card's answer")
+        for branch in branches {
+            let body = branch.components(separatedBy: "} catch").first ?? ""
+            XCTAssertFalse(body.contains("Unsent"), "no Not sent row: \(body)")
+            XCTAssertFalse(body.contains("Errors[") || body.contains("setupError"), "no error line of its own: \(body)")
+        }
     }
 
     /// Every word on the screen and in Account's row is tafs cloud's.
