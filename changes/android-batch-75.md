@@ -1,0 +1,1 @@
+- **Android 1.19 (75): starting Coach for the first time takes one fingerprint.** The first message to Coach shows what Coach is given, its tools and its Cards in KIFF's words, and one fingerprint starts Coach and gives them, where it used to ask twice.

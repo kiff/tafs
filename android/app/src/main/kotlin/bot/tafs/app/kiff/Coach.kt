@@ -237,7 +237,79 @@ data class CloudSetup(
 )
 
 @Serializable
-internal data class SetupResponse(val setup: CloudSetup? = null, val tools: CoachTools? = null)
+internal data class SetupResponse(
+  val setup: CloudSetup? = null,
+  val tools: CoachTools? = null,
+  /** Coach's first start under one fingerprint, read leniently: one the app can't read is none, never the setup with it. */
+  val start: JsonElement? = null,
+)
+
+/**
+ * Coach's first start under one fingerprint (docs/coach.md), as tafs cloud builds it before Coach exists (`GET /v1/setup`'s
+ * `start`): the tools batch for KIFF's gateway and Coach's agent draft with its Cards, each body exactly as tafs cloud wrote
+ * it, with the step's words and KIFF's own words for the Cards. The phone builds neither; it signs both with one fingerprint.
+ */
+@Serializable
+data class CoachStart(
+  val state: String = "unknown",
+  val scheme: String = "",
+  @SerialName("agent_id") val agentId: String = "",
+  val requests: List<Request> = emptyList(),
+  @SerialName("coach_tools_step") val step: CoachToolsStep? = null,
+  val taken: String? = null,
+) {
+  @Serializable
+  data class Request(
+    val id: String = "",
+    val method: String = "",
+    val path: String = "",
+    val gateway: Boolean = false,
+    val body: kotlinx.serialization.json.JsonObject = kotlinx.serialization.json.JsonObject(emptyMap()),
+    val lines: List<String> = emptyList(),
+    @SerialName("card_title") val cardTitle: String? = null,
+    val cards: List<JsonElement> = emptyList(),
+  )
+
+  val connect: Request? get() = requests.firstOrNull { it.id == "connect" }
+  val draft: Request? get() = requests.firstOrNull { it.id == "draft" }
+
+  /** The batch and the draft under one `kiff.requests.v1` signature. */
+  val together: Boolean get() = scheme == TOGETHER && connect != null && draft != null
+
+  /**
+   * Whether the phone may sign it: only Coach's draft (`POST /v1/me/agent-drafts`, not on the gateway) and, for the pair, the
+   * gateway's batch (`POST /v1/connections/batch`). Anything else is no start, and Coach starts as before.
+   */
+  val startable: Boolean
+    get() {
+      val d = draft ?: return false
+      if (state != "to_give" || d.method != "POST" || d.path != DRAFT_PATH || d.gateway) return false
+      val c = connect ?: return scheme == ALONE
+      return together && c.method == "POST" && c.path == BATCH_PATH && c.gateway
+    }
+
+  /** The step that shows it, as Coach's tools: the connections' lines, and the Cards in KIFF's words beside the signed draft. */
+  val tools: CoachTools
+    get() = CoachTools(
+      state = state,
+      taken = taken,
+      connect = connect?.let { CoachConnect(it.body, it.lines) },
+      card = draft?.let { CoachCardDraft(it.body, it.cardTitle, it.cards) },
+      step = step,
+    )
+
+  companion object {
+    const val TOGETHER = "kiff.requests.v1"
+    const val ALONE = "kiff.request.v1"
+    const val DRAFT_PATH = "/v1/me/agent-drafts"
+    const val BATCH_PATH = "/v1/connections/batch"
+
+    /** tafs cloud's `start`, or null: none, or one the app can't read. */
+    fun read(element: JsonElement?): CoachStart? = element?.takeIf { it is kotlinx.serialization.json.JsonObject }?.let {
+      runCatching { KiffClient.json.decodeFromJsonElement(serializer(), it) }.getOrNull()
+    }
+  }
+}
 
 @Serializable
 internal data class CreatedVersion(val version: Int)
