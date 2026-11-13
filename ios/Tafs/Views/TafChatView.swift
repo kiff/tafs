@@ -121,6 +121,8 @@ struct TafChatView: View {
                                         }
                                         // What the run did, counted from the record: tafs cloud's line, under them.
                                         if let line = m.runLines.under { RunLine(text: line).accessibilityIdentifier("taf-counted") }
+                                        // A connection its work asked for that was refused: tafs cloud's lines, never folded.
+                                        if let refused = m.refusedLines { RefusedLines(refused: refused).accessibilityIdentifier("taf-refused") }
                                     }
                                 case .held(let call):
                                     HeldCallCard(call: call)
@@ -544,6 +546,24 @@ struct TafChatView: View {
 
 /// One of tafs cloud's lines about a run, beside the taf's own words: small and secondary, drawn
 /// as written. The app adds no word of its own and counts nothing.
+/// A refused connection's lines, each as tafs cloud wrote it: the step's in the failure
+/// colour, then why and what to do next (docs/chat.md).
+struct RefusedLines: View {
+    let refused: TafsCloud.ChatMessage.Refused
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(refused.words).scaledFont(13, weight: .medium, relativeTo: .footnote).foregroundColor(Theme.no)
+            if let why = refused.why { Text(why).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft) }
+            Text(refused.next).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .textSelection(.enabled)
+        .accessibilityElement(children: .combine)
+    }
+}
+
 struct RunLine: View {
     let text: String
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { attachWhys, failedStep, foldRetried, stepWords, Steps, vendorName, whyOf } from "../src/cloud/steps.js";
+import { attachWhys, failedStep, foldRetried, stepWords, Steps, takeRefused, vendorName, whyOf } from "../src/cloud/steps.js";
 import { LANGUAGES } from "../src/cloud/words/index.js";
 
 describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
@@ -98,6 +98,30 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
       { tool: "create_refund", error: true, failed: true },
     ]);
     expect(whys).toEqual([]); // consumed: a run's parts share one list
+  });
+
+  it("lifts a refused connection off the steps onto its message, the last one not connected since, before a retry folds it", () => {
+    const refused = (vendor: string) => ({ vendor, reason: "Why: managed sign-in isn't set up", next: `Next: ask Coach to connect ${vendor} with its key instead, or to use another app.` });
+    const whys = [
+      { call: "c1", tool: "planque", why: "Coach couldn't connect Shippo yet", refused: refused("Shippo"), resolved: true as const },
+      { call: "c2", tool: "planque", why: "Coach couldn't connect Qonto yet", refused: refused("Qonto") },
+      { call: "c3", tool: "get_order", why: "Not found." },
+    ];
+    const steps = [
+      { tool: "planque", error: true as const, inputHash: "a" }, { tool: "planque", error: true as const, inputHash: "b" },
+      { tool: "planque", inputHash: "c" }, { tool: "get_order", error: true as const },
+    ];
+    const { steps: left, refused: said } = takeRefused(attachWhys(steps, whys));
+    // Qonto's, not connected since; Shippo's was, so it isn't said. The step's words, the reason, what to do next.
+    expect(said).toEqual({ words: "Coach couldn't connect Qonto yet", why: "Why: managed sign-in isn't set up", next: "Next: ask Coach to connect Qonto with its key instead, or to use another app." });
+    // The steps keep their own words and no lines; the later read still folds the refused tries away.
+    expect(left.every((s) => !("refused" in s))).toBe(true);
+    expect(foldRetried(left)).toEqual([{ tool: "planque", inputHash: "c" }, { tool: "get_order", error: true, failed: true, why: "Not found." }]);
+    // Nothing refused: nothing said. A server that said nothing readable: no reason line, still what to do next.
+    expect(takeRefused(attachWhys([{ tool: "get_order", error: true as const }], [{ call: "c1", tool: "get_order", why: "Not found." }])).refused).toBeUndefined();
+    const bare = takeRefused(attachWhys([{ tool: "planque", error: true as const }], [{ call: "c1", tool: "planque", why: "Coach couldn't connect the app yet",
+      refused: { vendor: "", next: "Next: ask Coach to connect it with its key instead, or to use another app." } }]));
+    expect(bare.refused).toEqual({ words: "Coach couldn't connect the app yet", next: "Next: ask Coach to connect it with its key instead, or to use another app." });
   });
 
   it("folds a failed call into a real retry only: the same tool with the same input digest", () => {

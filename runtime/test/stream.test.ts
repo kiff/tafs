@@ -354,9 +354,36 @@ describe("a message streamed (kiff/tafs#60)", () => {
     await new Promise((f) => setTimeout(f, 0));
     const run = r2.events[0]!.data.run as string;
     const refusal = "the body must be a JSON object with the documented fields";
-    expect(await w2.coach.get(stepWhyKey("t_acme", run))).toEqual([{ call: "c1", tool: "planque", why: "Coach couldn't connect Qonto yet", refusal }]);
+    expect(await w2.coach.get(stepWhyKey("t_acme", run))).toEqual([{ call: "c1", tool: "planque", why: "Coach couldn't connect Qonto yet", refusal,
+      // The person's two lines, tafs cloud's words, for the thread's message (`refused`): the reason and what to do next.
+      refused: { vendor: "Qonto", reason: `Why: ${refusal}`, next: "Next: ask Coach to connect Qonto with its key instead, or to use another app." } }]);
     expect(await w2.coach.get("t_acme#coach-notes#u_ana")).toEqual([expect.objectContaining({
       text: `[connection refused] Coach couldn't connect Qonto yet. The connection server said: ${JSON.stringify(refusal)}` })]);
+  });
+
+  it("marks a refused connection past once a request for the same app goes through in the run, and not for another app", async () => {
+    const w = world();
+    const refused = { text: "planque answered 409: managed sign-in isn't set up for this app", is_error: true };
+    const qonto = { url: "https://thirdparty.qonto.com/openapi.json" };
+    const shippo = { url: "https://api.goshippo.com/openapi.yaml" };
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", api: shippo, name: "labels" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: refused } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "request", api: qonto, name: "invoices" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: refused } },
+      // A read that went through connects nothing: Qonto's refusal stands.
+      { event: "delta", data: { kind: "tool_call", call_id: "c3", tool: "planque", input: { action: "catalog" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c3", result: { text: "catalog: 12 apps" } } },
+      // Shippo by its key: through, so Shippo's refusal is past.
+      { event: "delta", data: { kind: "tool_call", call_id: "c4", tool: "planque", input: { action: "request", api: shippo, name: "labels", key: true } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c4", result: { text: "grant grt_Shippo1234 pending; agent labels-k3f9" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Get my unused labels refunded" } });
+    await new Promise((f) => setTimeout(f, 0));
+    const kept = await w.coach.get(stepWhyKey("t_acme", r.events[0]!.data.run as string)) as Array<{ call: string; resolved?: true }>;
+    expect(kept.map((k) => [k.call, k.resolved ?? false])).toEqual([["c1", true], ["c2", false]]);
+    // The stream still sends only the step's own words: the lines are for the thread's message.
+    expect(r.raw).not.toContain("Next: ask Coach");
   });
 
   it("keeps a failed step when the same tool is called again with other input: that is a new call, not a retry", async () => {

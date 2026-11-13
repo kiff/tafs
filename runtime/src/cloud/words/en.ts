@@ -32,6 +32,8 @@ export const en = {
   doing_grants: "Looking up your connections…",
   doing_connection: "Working on the connection…",
   step_connection_not_yet: (vendor: string) => vendor ? `Coach couldn't connect ${vendor} yet` : "Coach couldn't connect the app yet",
+  step_connection_why: (reason: string) => `Why: ${reason}`,
+  step_connection_next: (vendor: string) => vendor ? `Next: ask Coach to connect ${vendor} with its key instead, or to use another app.` : "Next: ask Coach to connect it with its key instead, or to use another app.",
   removal_goes: (apps: string[]) => `${new Intl.ListFormat("en", { type: "conjunction" }).format(apps)} ${apps.length > 1 ? "go" : "goes"} with it.`,
   removal_stays: (app: string, tafs: string[]) => `${app} stays: ${new Intl.ListFormat("en", { type: "conjunction" }).format(tafs)} ${tafs.length > 1 ? "use" : "uses"} it.`,
   doing_draft: "Drafting the Card…",

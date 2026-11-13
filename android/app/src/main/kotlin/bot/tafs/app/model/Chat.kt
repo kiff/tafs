@@ -20,6 +20,15 @@ data class StepLine(val words: String, val failed: Boolean = false, val why: Str
 /** How long a taf worked on a message, and the tools it called, in order, by name. */
 data class Work(val ms: Int, val steps: List<WorkStep>)
 
+/**
+ * A connection the message's work asked for and the connection server refused (docs/chat.md): the step's words, the server's
+ * reason as a line ("Why: …", when it said something readable), and what to do next. All tafs cloud's, drawn as they are.
+ */
+data class Refused(val words: String, val why: String? = null, val next: String) {
+  /** Its lines, in order, the blank ones left out. */
+  val lines: List<String> get() = listOfNotNull(words, why, next).map(String::trim).filter(String::isNotEmpty)
+}
+
 /** One tool call of an answer as it streams: its call's id, the tool, what it's doing in words, and how it ended. */
 data class LiveStep(val call: String?, val tool: String, val words: String, val status: Status = Status.running) {
   enum class Status {
@@ -125,6 +134,8 @@ data class ChatMessage(
    * line, shown under the taf's words. The phone counts nothing itself: with none, no line.
    */
   val counted: String? = null,
+  /** A connection its work asked for that was refused and not connected since: tafs cloud's lines, under the taf's words, never folded. */
+  val refused: Refused? = null,
 ) {
   enum class From { owner, taf }
   enum class Kind { kickoff, message }

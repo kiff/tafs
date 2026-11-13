@@ -389,6 +389,18 @@ totals of its own (kiff/agents#421), so this is where the owner reads them, neve
 numbers. None for a run that counted nothing. `GET /v1/tafs/{id}/runs/{session}` gives the same line
 on its `report`.
 
+**A connection the server refused** (`refused`, on the message that carries the run's `work`): when a
+connection Coach asked for in that run was refused by the connection server, and no request for the
+same app went through later in the run, the message says so in three lines, all tafs cloud's words in
+the person's language: `words`, the failed step's own ("Coach couldn't connect Shippo yet"); `why`, the
+server's reason, scrubbed as any step's reason is (`whyOf`), as a line ("Why: managed sign-in isn't set up
+for this app"), left out when nothing readable is left; and `next`, what to do ("Next: ask Coach to connect
+Shippo with its key instead, or to use another app."). It's taken before a retry folds the step away, so
+a later read that went through (the catalog, say) doesn't hide it; a later request for the same app
+that went through does (`resolved`, `takeRefused` and `Steps.connectionRefusal` in
+`runtime/src/cloud/steps.ts`). Both apps draw the lines under the taf's words, never folded, the first in
+the failure colour, and add none of their own (`RefusedLines`). The live stream's `step` keeps only `why`.
+
 - A job run's first message is the job's instruction, shown as a small note. When its schedule's check handed it
   items, the note says how many after the instruction ("Its check found 2 new items.", `checkStart`), never the
   items themselves: they're the app's data, kept whole in the run's input for the taf, not the owner's words.

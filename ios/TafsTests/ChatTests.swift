@@ -167,6 +167,32 @@ final class ChatTests: XCTestCase {
         XCTAssertEqual(messages[3].text, "Done again.")
     }
 
+    /// A connection the server refused: tafs cloud's lines on the message, read as written. A
+    /// blank reason is no line; none sent, or all blank, is nothing drawn (as Android's RefusedConnectionTest).
+    func testARefusedConnectionsLinesAreReadAsTafsCloudWroteThem() async throws {
+        let (model, id) = await kiffModel()
+        StubProtocol.responses["GET /v1/tafs/depl_1/conversation"] = (200, """
+        {"messages":[
+          {"id":"run_1.2","at":"2026-11-13T03:00:00Z","from":"taf","kind":"message","text":"Shippo's sign-in isn't set up here.","session":"s1",
+           "refused":{"words":"Coach couldn't connect Shippo yet","why":"Why: managed sign-in isn't set up for this app",
+             "next":"Next: ask Coach to connect Shippo with its key instead, or to use another app."}},
+          {"id":"run_2.2","at":"2026-11-13T03:05:00Z","from":"taf","kind":"message","text":"Tried again.","session":"s2",
+           "refused":{"words":"Coach couldn't connect the app yet","why":" ","next":"Next: ask Coach to connect it with its key instead, or to use another app."}},
+          {"id":"run_3.2","at":"2026-11-13T03:10:00Z","from":"taf","kind":"message","text":"Hm.","session":"s3","refused":{}},
+          {"id":"run_4.2","at":"2026-11-13T03:15:00Z","from":"taf","kind":"message","text":"Connected.","session":"s4"}]}
+        """)
+        await model.loadChat(id)
+        let messages = try XCTUnwrap(model.chats[id])
+        XCTAssertEqual(messages[0].refusedLines, TafsCloud.ChatMessage.Refused(words: "Coach couldn't connect Shippo yet",
+            why: "Why: managed sign-in isn't set up for this app", next: "Next: ask Coach to connect Shippo with its key instead, or to use another app."))
+        XCTAssertNil(messages[1].refused?.why, "a blank reason is no line")
+        XCTAssertEqual(messages[1].refused?.lines, ["Coach couldn't connect the app yet", "Next: ask Coach to connect it with its key instead, or to use another app."])
+        XCTAssertNil(messages[2].refused, "all blank: nothing drawn")
+        XCTAssertNil(messages[3].refused, "none from tafs cloud: nothing drawn")
+        let owner = TafsCloud.ChatMessage(at: Date(), from: .owner, text: "Connect Shippo", session: "s1", refused: messages[0].refused)
+        XCTAssertNil(owner.refusedLines, "an owner's message draws none")
+    }
+
     /// The lines are a taf's: an owner's message or a run's kickoff draws none, whatever it carries.
     func testOnlyATafsMessageDrawsARunsLines() {
         let at = Date(timeIntervalSince1970: 1_700_000_000)
