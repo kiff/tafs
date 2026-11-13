@@ -2006,6 +2006,7 @@
     <string name="taf_remove_not_finished">Niet afgerond: %1$s kon niet worden verwijderd. tafs probeert het bij elke vernieuwing opnieuw.</string>
     <string name="taf_remove_not_finished_after">%1$s Niet afgerond: %2$s kon niet worden verwijderd. tafs probeert het bij elke vernieuwing opnieuw.</string>
     <string name="taf_remove_prompt">%1$s definitief verwijderen</string>
+    <string name="taf_remove_step_connections">toegang tot apps</string>
     <string name="taf_remove_step_history">runs en chats</string>
     <string name="taf_remove_step_key">sleutel</string>
     <string name="taf_remove_step_memory">geheugen</string>

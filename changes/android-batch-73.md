@@ -1,1 +1,2 @@
 - **Android 1.17.1: a request this phone just connected, or one holding a sign-in already, is no longer offered as one to cancel.**
+- **Removing a taf leaves its connections to tafs cloud,** which ends every one only that taf used, waiting and failed ones too. The phone no longer signs a disconnect for each.

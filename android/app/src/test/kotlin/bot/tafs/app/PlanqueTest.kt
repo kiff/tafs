@@ -1355,51 +1355,44 @@ class PlanqueTest {
     assertNull(m.removalWords("refunds-1"))
   }
 
-  @Test fun removingATafDisconnectsItsConnectionsUnderTheSameConfirmation() = runTest {
+  @Test fun removingATafLeavesItsConnectionsToTafsCloudUnderTheSameConfirmation() = runTest {
     reads()
-    transport.answer(
-      "GET /v1/home", 200,
-      """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"working","status":"active","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""",
-    )
-    // Two of the taf's (one live, one already gone) and another taf's, which stays.
-    val other = """{"server":"mcp.stripe.com","agent":"chargebacks-1","tools":[]}"""
-    transport.answer(
-      grants, 200,
-      """{"grants":[${grant("g1", "connected")},${grant("g2", "disconnected")},{"id":"g3","status":"connected","text":"","digest":"","request":$other,"events":[]}]}""",
-    )
-    transport.answer("POST /v1/me/mandates/c1/revoke", 200)
-    transport.answer("DELETE /v1/accounts/t_01/grants/g1", 200, grant("g1", "disconnected"))
-    transport.answer("DELETE /v1/tafs/taf_1", 200, """{"done":true,"removed":["schedule"],"failed":[]}""")
-    val m = model()
-    m.refresh()
-    m.refreshConnections()
-    val words = m.removeTaf("refunds-1")
-    // One confirmation, the removal's: the connection is signed under it, with no second prompt.
-    assertEquals(listOf("Remove Refunds for good"), auth.asked)
-    assertEquals(1, transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").size)
-    assertTrue("a gone grant isn't asked again", transport.requestsTo("DELETE /v1/accounts/t_01/grants/g2").isEmpty())
-    assertTrue("another taf's stays", transport.requestsTo("DELETE /v1/accounts/t_01/grants/g3").isEmpty())
-    val order = transport.requests.map { "${it.method} ${java.net.URI.create(it.url).path}" }
-    assertTrue(order.indexOf("DELETE /v1/accounts/t_01/grants/g1") < order.indexOf("DELETE /v1/tafs/taf_1"))
-    assertTrue(words!!.startsWith("Its Cards are revoked in KIFF. Its access to apps is removed."))
-  }
-
-  @Test fun aConnectionThatWontDisconnectIsNamedAndTheRemovalGoesOn() = runTest {
-    reads()
-    transport.answer(
-      "GET /v1/home", 200,
-      """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"working","status":"active","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""",
-    )
+    transport.answer("GET /v1/home", 200, """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"working","status":"active","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""")
     transport.answer(grants, 200, """{"grants":[${grant("g1", "connected")}]}""")
     transport.answer("POST /v1/me/mandates/c1/revoke", 200)
-    transport.answer("DELETE /v1/accounts/t_01/grants/g1", 502, """{"error":"the vendor didn't answer"}""")
-    transport.answer("DELETE /v1/tafs/taf_1", 200, """{"done":true,"removed":["schedule"],"failed":[]}""")
+    transport.answer("DELETE /v1/tafs/taf_1", 200, """{"done":true,"removed":["schedule","connections"],"failed":[]}""")
     val m = model()
     m.refresh()
     m.refreshConnections()
     val words = m.removeTaf("refunds-1")!!
-    assertTrue(words, words.contains("Access to 1 of its apps couldn't be removed: remove it in Connect apps."))
+    // One confirmation, the removal's. tafs cloud ends the connections; the phone sends none of its own.
+    assertEquals(listOf("Remove Refunds for good"), auth.asked)
+    assertTrue("no disconnect from the phone", transport.requests.none { it.method == "DELETE" && it.url.contains("/grants/") })
     assertEquals(1, transport.requestsTo("DELETE /v1/tafs/taf_1").size)
+    assertTrue(words, words.startsWith("Its Cards are revoked in KIFF. Its access to apps is removed."))
+  }
+
+  @Test fun connectionsTafsCloudCouldntEndAreNamedAndTheRemovalTriesAgain() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"working","status":"active","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""")
+    transport.answer("POST /v1/me/mandates/c1/revoke", 200)
+    transport.answer("DELETE /v1/tafs/taf_1", 200, """{"done":false,"removed":["schedule"],"failed":["connections"]}""")
+    val m = model()
+    m.refresh()
+    val words = m.removeTaf("refunds-1")!!
+    assertTrue(words, words.contains("Not finished: its access to apps couldn't be removed."))
+    assertFalse(words, words.contains("Its access to apps is removed."))
+  }
+
+  @Test fun aRemovalThatEndedNoConnectionSaysNothingOfThem() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, """{"tafs":[{"id":"taf_1","name":"Refunds","kiff_agent":"refunds-1","color":1,"state":"working","status":"active","card":{"ids":["c1"],"active":true}}],"others":[],"removing":[]}""")
+    transport.answer("POST /v1/me/mandates/c1/revoke", 200)
+    transport.answer("DELETE /v1/tafs/taf_1", 200, """{"done":true,"removed":["schedule"],"failed":[]}""")
+    val m = model()
+    m.refresh()
+    val words = m.removeTaf("refunds-1")!!
+    assertFalse(words, words.contains("access to apps"))
   }
 
   /** Refunds asked for g1; Chargebacks, when listed, draws on its refund tool through its own Card. */
@@ -1408,36 +1401,6 @@ class PlanqueTest {
       (if (withChargebacks) "," + """{"id":"taf_2","name":"Chargebacks","kiff_agent":"chargebacks-1","color":2,"state":"working","status":"active",""" +
         """"card":{"ids":["c2"],"active":true,"rules":[{"action":"create_refund_repg","label":"Refund a payment","outside":"hold","window":"day"}]}}""" else "") +
       """],"others":[],"removing":[]}"""
-
-  @Test fun aConnectionAnotherTafUsesIsKeptAndTheOwnerToldWhich() = runTest {
-    reads()
-    transport.answer("GET /v1/home", 200, sharedHome(withChargebacks = true))
-    transport.answer(grants, 200, """{"grants":[${grant("g1", "connected", extra = ",\"vendor\":\"Stripe\"")}]}""")
-    transport.answer("POST /v1/me/mandates/c1/revoke", 200)
-    transport.answer("DELETE /v1/tafs/taf_1", 200, """{"done":true,"removed":["schedule"],"failed":[]}""")
-    val m = model()
-    m.refresh()
-    m.refreshConnections()
-    val words = m.removeTaf("refunds-1")!!
-    assertTrue("Chargebacks still runs on it", transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").isEmpty())
-    assertTrue(words, words.contains("Kept your Stripe connection: Chargebacks uses it."))
-    assertFalse(words, words.contains("Its access to apps is removed."))
-  }
-
-  @Test fun aSharedConnectionIsDisconnectedOnceItsOtherTafIsGone() = runTest {
-    reads()
-    transport.answer("GET /v1/home", 200, sharedHome(withChargebacks = false))
-    transport.answer(grants, 200, """{"grants":[${grant("g1", "connected")}]}""")
-    transport.answer("POST /v1/me/mandates/c1/revoke", 200)
-    transport.answer("DELETE /v1/accounts/t_01/grants/g1", 200, grant("g1", "disconnected"))
-    transport.answer("DELETE /v1/tafs/taf_1", 200, """{"done":true,"removed":["schedule"],"failed":[]}""")
-    val m = model()
-    m.refresh()
-    m.refreshConnections()
-    val words = m.removeTaf("refunds-1")!!
-    assertEquals(1, transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").size)
-    assertFalse(words, words.contains("Kept"))
-  }
 
   @Test fun aConnectedAppListsItsConnectionsEachWithItsTafOrNone() = runTest {
     reads()

@@ -2006,6 +2006,7 @@
     <string name="taf_remove_not_finished">Não concluído: não foi possível remover %1$s. O tafs tenta novamente sempre que atualiza.</string>
     <string name="taf_remove_not_finished_after">%1$s Não concluído: não foi possível remover %2$s. O tafs tenta novamente sempre que atualiza.</string>
     <string name="taf_remove_prompt">Remover %1$s definitivamente</string>
+    <string name="taf_remove_step_connections">acesso às apps</string>
     <string name="taf_remove_step_history">execuções e chats</string>
     <string name="taf_remove_step_key">chave</string>
     <string name="taf_remove_step_memory">memória</string>

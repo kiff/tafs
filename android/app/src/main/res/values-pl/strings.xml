@@ -2122,6 +2122,7 @@
     <string name="taf_remove_not_finished">Nie ukończono: nie udało się usunąć: %1$s. tafs próbuje ponownie przy każdym odświeżeniu.</string>
     <string name="taf_remove_not_finished_after">%1$s Nie ukończono: nie udało się usunąć: %2$s. tafs próbuje ponownie przy każdym odświeżeniu.</string>
     <string name="taf_remove_prompt">Usuń %1$s na zawsze</string>
+    <string name="taf_remove_step_connections">dostęp do aplikacji</string>
     <string name="taf_remove_step_history">uruchomienia i czaty</string>
     <string name="taf_remove_step_key">klucz</string>
     <string name="taf_remove_step_memory">pamięć</string>
