@@ -165,6 +165,10 @@ done
 # from tafs-cloud on a rerun like the doors' settings, so a rerun never turns one off. runtime/test checks every
 # TAFS_ flag the code reads is named here.
 FLAGS_ENV=""
+# Coach's tools and Cards under one fingerprint: on from here, an approval fewer at the start ("connecting an app works
+# first time"). It falls back to the two steps by itself when KIFF can't word Coach's Cards. TAFS_COACH_START_ONE=off on
+# a rerun turns it off.
+TAFS_COACH_START_ONE="${TAFS_COACH_START_ONE:-on}"
 for v in TAFS_KEY_AND_CARDS TAFS_SIGNED_REMOVE TAFS_YOUR_STEP TAFS_COACH_START_ONE; do
   if [ -z "${!v:-}" ]; then
     kept=$(aws lambda get-function-configuration --function-name "$FN" --query "Environment.Variables.$v" --output text 2>/dev/null || true)

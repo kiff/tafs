@@ -1,0 +1,1 @@
+- Coach's first start asks for its tools and Cards under one fingerprint: one approval fewer when a new account starts Coach.
