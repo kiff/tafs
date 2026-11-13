@@ -1,0 +1,1 @@
+- **iOS: Account shows your email once, and Connect is a button again on iPad.** A personal account no longer repeats your email or shows its internal id in Account, and each app's Connect button in Connect apps is as wide as its word.

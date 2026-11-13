@@ -93,8 +93,13 @@ struct ConnectAppsView: View {
                 Label(Words.Connect.Status.connected, systemImage: "checkmark").labelStyle(.iconOnly).foregroundColor(Theme.ok)
                     .accessibilityLabel(Words.Connect.Status.connected)
             } else {
-                Button(app.needsReconnect ? Words.Connect.signInAgain : Words.Connect.Apps.connect) { connect(app) }
+                // As wide as its words, never the row's width: on an iPad a button stretched
+                // across the screen reads as a field to type in.
+                Button { connect(app) } label: {
+                    Text(app.needsReconnect ? Words.Connect.signInAgain : Words.Connect.Apps.connect).padding(.horizontal, 16)
+                }
                     .buttonStyle(OutlineButtonStyle())
+                    .fixedSize(horizontal: true, vertical: false)
                     .disabled(starting != nil || (taf == nil && model.connectableTafs.isEmpty))
             }
         }
