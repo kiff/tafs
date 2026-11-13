@@ -1,0 +1,1 @@
+- **iPhone and iPad: a connection is called by its name, never by an id.** Connect apps and a Slack door's list name each connection as the connection service does (“Gmail · Demo Shop”). A managed app's connection no longer shows the provider's id; without a name, the row says the app (docs/ios-app.md).

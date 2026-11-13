@@ -211,8 +211,11 @@ then shows its plan. Then, each step behind the owner's yes:
    (`answer.by`, `answer.outcome`: `{taf_id}`, with `check` when its first check couldn't read, or `{failed}`), and the card shows it:
    set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
    itself; and until the answer comes, "Setting up…". A result whose Card the owner hasn't
-   approved yet (KIFF's `draft_not_ready`) isn't answered: it waits, and the taf is made once they
-   approve, with the next note, chat read or sweep, never answered failed. The app starts nothing itself
+   approved yet (KIFF's `draft_not_ready`) isn't answered at first: it waits, and the taf is made once they
+   approve, with the next note, chat read or sweep. Each wait is logged. Still unapproved 15 minutes after
+   its first try, nothing is asking for that Card, so the result is answered in plain words (`{failed: "The
+   Card for <taf> was never approved, so <taf> isn't set up yet: approve its Card to finish"}`), and Coach
+   asks for the Card. The app starts nothing itself
    (Android: `CoachWords.handOver`, `HandOverCard`; it reads the list again once for a taf
    set up that isn't listed yet). The iPhone app does the same.
    A taf's next version is still made by the app, from an improvement's result.

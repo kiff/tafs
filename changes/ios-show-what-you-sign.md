@@ -1,0 +1,1 @@
+- **iPhone and iPad: an approval with its Card waits until the Card is on screen.** On Coach's card, Approve stays off until the taf's Card has been read and drawn, limits included. The tools and the Card are signed together only for the Card the card shows, at the version shown (docs/ios-app.md).

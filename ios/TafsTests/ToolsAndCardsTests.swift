@@ -74,6 +74,27 @@ final class ToolsAndCardsTests: XCTestCase {
                                                       tenant: "t_01", shownDigest: "d1", shownDraft: "v7"))
     }
 
+    /// Show what you sign: the combined step is offered only for a Card the card drew, read and
+    /// at the version shown; and Approve waits for the Card to be read.
+    func testOnlyACardDrawnOnTheCardIsSignedWithTheTools() throws {
+        func draft(_ json: String) throws -> KIFFClient.AgentDraft {
+            try KIFFClient.decoder.decode(KIFFClient.AgentDraft.self, from: Data(json.utf8))
+        }
+        let read = try draft(#"{"id":"dr_1","agent_id":"mail","status":"pending","version":"v7","cards":[{"grants":[{"action":"gmail_list_threads","per_action_max":[{"quantity":"count","max":100}]}]}]}"#)
+        XCTAssertTrue(AppModel.cardDrawn(read, shownDraft: "v7"))
+        XCTAssertFalse(AppModel.cardDrawn(read, shownDraft: "v8"), "another version than the one shown")
+        XCTAssertFalse(AppModel.cardDrawn(read, shownDraft: nil), "nothing shown")
+        XCTAssertFalse(AppModel.cardDrawn(nil, shownDraft: "v7"), "not read yet")
+        XCTAssertFalse(AppModel.cardDrawn(try draft(#"{"id":"dr_1","agent_id":"mail","status":"pending","version":"v7"}"#), shownDraft: "v7"), "no Cards to draw")
+        XCTAssertFalse(AppModel.cardDrawn(try draft(#"{"id":"dr_1","agent_id":"mail","status":"pending","version":"v7","cards":[]}"#), shownDraft: "v7"), "an empty list: only the eyebrow is drawn")
+        XCTAssertFalse(AppModel.cardDrawn(try draft(#"{"id":"dr_1","agent_id":"mail","status":"pending","version":"v7","cards":[{"grants":[]}]}"#), shownDraft: "v7"), "a Card with no lines")
+        XCTAssertFalse(AppModel.cardDrawn(try draft(#"{"id":"dr_1","agent_id":"mail","status":"pending","version":"v7","cards":[],"no_tools":true}"#), shownDraft: "v7"), "a draft with no tools")
+
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let chat = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(chat.contains("|| (component.draft != nil && draft == nil) ||"), "Approve waits for the Card")
+    }
+
     /// The flow's order, read from its source: Approve on Coach's card says it can sign the step
     /// when the card has a Card drafted; the ask is checked before anything is signed; the
     /// approval key signs once; the tools go before the Card, and the Card only once connected.
@@ -83,7 +104,7 @@ final class ToolsAndCardsTests: XCTestCase {
         let approve = try XCTUnwrap(file.range(of: "func approve(_ component: SetupComponent, shown: String?, shownDraft: String?) async {"))
         let approveEnd = try XCTUnwrap(file.range(of: "nonisolated static let signInNotConfirmed", range: approve.upperBound..<file.endIndex))
         let card = String(file[approve.upperBound..<approveEnd.lowerBound])
-        XCTAssertTrue(card.contains("component.draft != nil && shownDraft != nil ? [RequestsTogether.toolsAndCards] : nil"), "it says it can, with a Card drafted")
+        XCTAssertTrue(card.contains("Self.cardDrawn(drawn, shownDraft: shownDraft) ? [RequestsTogether.toolsAndCards] : nil"), "it says it can, with the Card drawn")
         XCTAssertTrue(card.contains("can: can), proof: proof)"))
         let branch = try XCTUnwrap(card.range(of: "if ask.step == RequestsTogether.toolsAndCards {"))
         let older = try XCTUnwrap(card.range(of: "ask.message == Self.expectedApprovalMessage("))

@@ -654,7 +654,7 @@ struct ConnectionsPanel: View {
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(KIFFMapping.vendorWords(grant.vendor)).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                            Text(grant.account.map { Words.Taf.keysKeptSealed + " · " + $0 } ?? Words.Taf.keysKeptSealed)
+                            Text(grant.name.map { Words.Taf.keysKeptSealed + " · " + $0 } ?? Words.Taf.keysKeptSealed)
                                 .scaledFont(12).foregroundColor(Theme.dim)
                             if grant.needsReconnect {
                                 // Its vendor signed it out: planque's words, and the owner signs in again.

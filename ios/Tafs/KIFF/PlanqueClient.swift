@@ -128,7 +128,12 @@ final class PlanqueClient {
         var terms: [String]?
         let digest: String
         let request: Request
+        /// The account at the vendor, as planque keeps it: what a trigger is sent back with, never
+        /// a name to draw (for a managed app it can be the provider's id).
         let account: String?
+        /// The connection's name for people, the same in every app: its app and, when known,
+        /// its account ("Gmail · Demo Shop"). Drawn as sent.
+        var title: String?
         let tools: [String]?
         let reason: String?
         let events: [Event]
@@ -156,13 +161,21 @@ final class PlanqueClient {
         /// approving. Set by `grants()`, never decoded.
         var profile: JCS.Value?
 
-        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name" }
+        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, title, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name" }
 
         /// The vendor, as the owner knows it: its server's host.
         /// The vendor's name, as planque gives it: what its server calls itself, else its
         /// host (kiff/planque#17). Shown as it is.
         let vendorName: String?
         var vendor: String { vendorName ?? request.server }
+        /// What a connection's row is called: planque's `title`, else the account it names, else
+        /// nil (the row then says the app). Never the provider's id for a managed app, which planque
+        /// sends as `account` only to be sent back.
+        var name: String? {
+            if let t = title?.trimmingCharacters(in: .whitespaces), !t.isEmpty { return t }
+            if request.connector == nil, let a = account?.trimmingCharacters(in: .whitespaces), !a.isEmpty { return a }
+            return nil
+        }
         var connected: Bool { status == "connected" || connectedNow }
         /// planque answered connected to this phone's approval, before its list says so
         /// (kiff/tafs#245): never decoded, only set by `marked(connected:)`.
