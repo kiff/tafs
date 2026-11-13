@@ -4752,7 +4752,9 @@ class AppModel(
     } catch (e: Exception) {
       if (generation != accountGeneration) return false
       val gone = e is CloudError && e.status == 409
-      if (!gone) _state.update { it.copy(cardErrors = it.cardErrors + (key to Words.Coach.cardAnswerNotSent(why = ErrorWords.of(e)))) }
+      // Refused until AI use is allowed: its screen is up and says why, so the card keeps its answer with no line of its own.
+      val needsConsent = e is CloudError && e.code == bot.tafs.app.kiff.AI_CONSENT_REQUIRED
+      if (!gone && !needsConsent) _state.update { it.copy(cardErrors = it.cardErrors + (key to Words.Coach.cardAnswerNotSent(why = ErrorWords.of(e)))) }
       _state.update { it.copy(cardsAnswering = it.cardsAnswering - key) }
       readThread(chat)
       return false
@@ -4986,7 +4988,8 @@ class AppModel(
           s.copy(
             chats = s.chats + (tafId to s.chats[tafId].orEmpty().filterNot { it == pending }),
             chatSent = if (left.isEmpty()) s.chatSent - tafId else s.chatSent + (tafId to left),
-            chatErrors = s.chatErrors + (tafId to (waitsForCredits ?: e.message ?: "")),
+            // Refused until AI use is allowed: its screen is up and says why, so no line under the box as well.
+            chatErrors = if (needsConsent) s.chatErrors - tafId else s.chatErrors + (tafId to (waitsForCredits ?: e.message ?: "")),
           )
         }
         if (waitsForCredits != null || needsConsent) putBackFiles(files, tafId)

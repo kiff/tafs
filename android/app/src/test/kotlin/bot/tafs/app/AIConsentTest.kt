@@ -103,7 +103,8 @@ class AIConsentTest {
     testScheduler.runCurrent()
     assertEquals("Refund order 42", back)
     assertTrue(m.state.value.chatUnsent["refunds-1"].orEmpty().isEmpty())
-    assertEquals("Allow AI use first: Coach and your tafs need it to answer.", m.state.value.chatErrors["refunds-1"])
+    // The screen says why: no line under the box as well (as on iPhone).
+    assertNull(m.state.value.chatErrors["refunds-1"])
     assertTrue(m.state.value.aiConsentAsked)
   }
 
