@@ -156,8 +156,10 @@ the connect step requires, and the version of the draft it read from KIFF (the r
 the ask, it signs nothing and says the card is out of date. So a wrong digest or version from tafs cloud is never
 signed without being shown. One test in each app pins it.
 
-**Coach** drafts the Card before the key sheet opens, from the grant's tools, which a key
-grant lists before the key is given. That's a skill change, and it takes an Eval.
+**Coach** drafts the Card before the key sheet opens, from the grant's tools, which the connection
+server declares in KIFF at the request (`declared: true` on the grant) and which can't be used until
+the key is in (`connect-an-app@10`, `draft-the-card@8`). Not declared, Coach asks for the key first,
+then the Card, as before.
 
 **Until this ships:** an approval card whose connection is already connected never repeats
 the connection's text. tafs cloud marks it on Coach's approval component in the conversation

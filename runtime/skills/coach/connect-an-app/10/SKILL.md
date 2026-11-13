@@ -12,8 +12,7 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
 - Before you propose any app, look at the account's connections: the lines
   after [tafs connections] in the conversation's first message are tafs'
   data, each with its vendor, the taf that uses it and its kind
-  (vendor_sign_in, the vendor's own sign-in on its page; provider, an app
-  through a provider, with its mode; key; browser). Without them, planque
+  (vendor_sign_in, provider with its mode, key, browser). Without them, planque
   grants with no agent lists the same, each with its agent (a taf's
   kiff_agent in tafs_state). Offer only one a taf uses, or one made in this
   conversation; another agent's grant (a test's) is never offered or reused. For a vendor a taf already connects, the
@@ -25,23 +24,21 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   Another kind comes only if the owner picks it: another sign-in.
 - When the owner names no app for a need, find it before you ask to connect
   anything: search {q} with two or three short searches of words from the job
-  ("overdue invoice", "send reminder email") finds tools across every app the
-  catalog can connect, each with its app and the app's state. Propose the apps
+  ("overdue invoice") finds tools across every app the catalog can connect,
+  each with its app and state. Propose the apps
   in a questions card, the ones the account already has first; an app that
   needs_setup can't be connected until an operator sets it up: say so and offer
   another. Connect the chosen app with request {entry, name, taf_name}, and no
-  other field: the connection refuses a request with a field it doesn't take. Offer only what a connection can do: before an option needs an
-  operation (re-sending an invoice, refunding), check the vendor has it, with
-  search {q} before connecting and catalog {grant, q} after. When the owner's
-  answer can't be met, say so and why in one sentence, then offer what can. An app the owner names is connected as they name it. events {entry}
-  lists what in an app can wake a taf, before connecting; events {grant} once
-  connected: pick an event as you pick an action, and draft it into the taf's
-  dial. A write whose outcome comes later, as one of the app's events (a reply
-  the customer answers, a call that ends): the taf must wake on that event, or
-  the connection refuses the call as not_listening, naming the event. Draft
-  the event into the dial with the write, in the same request, so the taf
-  waits for the outcome and goes on with it.
-- Ask before you connect anything ("Is it OK if I connect to your help desk?").
+  other field: the connection refuses a request with a field it doesn't take. Offer only what a connection can do: check the vendor has an operation
+  (re-sending an invoice) with search {q} before connecting and catalog
+  {grant, q} after. When the owner's
+  answer can't be met, say why in one sentence and offer what can. An app the owner names is connected as they name it. events {entry}
+  (before connecting) and events {grant} (after) list what can wake a taf:
+  pick one as you pick an action, and draft it into the taf's dial. A write whose outcome comes later as an app event (a reply, a call that
+  ends) needs the taf to wake on that event, or the connection refuses it as
+  not_listening: draft the event into the dial with the write, in the same
+  request.
+- Ask before you connect a sign-in ("Is it OK if I connect to your help desk?").
   For a vendor's own MCP server, connect first, to look: planque request with
   its server, a name for the taf's agent (name, such as "reembolsos"), taf_name
   (the taf's name as the owner reads it), and no tools but your own setup reads (name-the-tools: the accounts list and
@@ -53,7 +50,11 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   the description the owner or the vendor's docs point to; never make one up.
   The owner gives the key on a secure sheet on their phone, outside this chat,
   straight to planque: it never reaches you. Never ask for it in the chat, and
-  if they paste one, don't use it: say it belongs on that sheet. planque's answer gives the taf's agent id: use it from then on. A tool's
+  if they paste one, don't use it: say it belongs on that sheet. For a key, the
+  sheet is the ask, with no card before it. Set the taf's tools on the grant
+  (planque tools) while it waits for its key; once its status says declared:
+  true, agree the rules, draft the Card and show one approval with the grant
+  and the draft: the sheet signs both. Not declared: the key, then the Card. planque's answer gives the taf's agent id: use it from then on. A tool's
   answer isn't kept between your turns: when you no
   longer have the taf's agent id or a grant's id, planque grants with no agent
   lists every connection you asked for, with its agent, status and when it

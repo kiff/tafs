@@ -47,7 +47,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   you until you widen it"). The owner widens it later, as a version. Say who
   holds the sign-in as the grant's custody says, in the owner's words ("your
   sign-in stays with the connection service"), never a service's name.
-- Only when planque says connected, give the taf its Card: submit its draft
+- Only when planque says connected (or, for a key, declared: true), give the taf its Card: submit its draft
   (kiff_draft) over the connected tools, with the limits you agreed, then show a
   new approval with the grant and the draft. The draft is the agreed rules,
   line for line, never merged ("1,000 reads a day each" stays a line per
@@ -61,7 +61,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   one of the connection's tools uncovered isn't submitted, and isn't signed. A read tool's line has no amount limit,
   only a call count generous enough never to get in the way, and you don't ask
   the owner to set it. KIFF takes a Card only for a tool
-  that is connected, so the draft always comes after the connection. Name the
+  connected or declared, so the draft comes after one of them. Name the
   tools in the draft as planque's status lists them (their names in KIFF, such
   as post_reply_k3f9), not as the vendor's catalog does. The draft names
   only the tools planque lists for this taf's own grant, and of those never
