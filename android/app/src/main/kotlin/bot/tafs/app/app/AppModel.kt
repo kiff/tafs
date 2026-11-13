@@ -4455,7 +4455,13 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return true
-      note(c.id, Words.Coach.answerNotReached(why = ErrorWords.of(e)))
+      // A sign-in planque holds but this phone hasn't confirmed yet: tafs cloud's own line, as it is (as on iPhone and iPad).
+      val confirmFirst = when (e) {
+        is CloudError -> e.takeIf { it.code == "sign_in_not_confirmed" }?.let { it.words ?: it.message }
+        is KiffError.Server -> e.takeIf { it.code == "sign_in_not_confirmed" }?.message
+        else -> null
+      }?.takeIf { it.isNotBlank() }
+      note(c.id, confirmFirst ?: Words.Coach.answerNotReached(why = ErrorWords.of(e)))
       readThread(COACH_CHAT)
       return true
     } finally {
@@ -4607,7 +4613,13 @@ class AppModel(
         val p = asked.planque ?: return Came.Of("failed", why = "tafs cloud named no connection to approve")
         val approved = planque.approveAsAsked(p.grant, p.body)
         val url = approved.signInUrl
-        if (url == null) {
+        if (url == null && approved.status == "signed_in" && !approved.confirm.isNullOrBlank()) {
+          // Signed in at the provider already: no second sign-in. planque revokes the held sign-in unless this phone confirms it
+          // with its one-use code, so it's confirmed first, then reported as planque answers it (tafs cloud approves listed).
+          _state.update { it.copy(connectStep = CoachWords.CHECKING_SIGN_IN) }
+          val connected = planque.confirm(p.grant, approved.confirm)
+          if (connected.connected || connected.listed) Came.Of(connected.status) else Came.Of("not_connected", status = connected.status)
+        } else if (url == null) {
           // planque already holds the sign-in: approving connected it, with no second sign-in.
           if (approved.status == "connected" || approved.status == "listed") Came.Of(approved.status) else Came.Of("not_connected", status = approved.status)
         } else {
