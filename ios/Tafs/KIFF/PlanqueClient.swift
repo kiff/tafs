@@ -189,6 +189,12 @@ final class PlanqueClient {
         /// Approved, and waiting on a sign-in at the vendor that hasn't come back: the owner may
         /// cancel it, which ends the grant, and connect again.
         var waitingSignIn: Bool { status == "approved" && signedIn != true && !connectedNow }
+        /// A request nobody answered yet, holding no sign-in: it's cancelled, not removed, since
+        /// nothing was connected.
+        var pendingRequest: Bool { status == "pending" && !holdsSignIn && !connectedNow }
+        /// Ended with Cancel, not Remove access: a sign-in that never came back, or a request
+        /// not answered yet.
+        var cancellable: Bool { waitingSignIn || pendingRequest }
         /// The signed-out connection in planque's words; before planque sends them, the app's.
         var signedOutWords: String {
             statusWords.flatMap { $0.trimmingCharacters(in: .whitespaces).isEmpty ? nil : $0 } ?? Words.Connect.Status.signedOut(vendor: "\(vendor)")

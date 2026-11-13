@@ -116,7 +116,38 @@ final class ConnectionSheetTests: XCTestCase {
         // Marked connected by this phone: not waiting, as on Android.
         XCTAssertFalse(try grant("g7", agent: "cal-1", status: "approved").marked(connected: true).waitingSignIn)
         XCTAssertEqual(ConnectionFixWords.waiting("Google Calendar"), "Waiting for the sign-in at Google Calendar")
-        XCTAssertEqual(ConnectionFixWords.cancelTitle("Google Calendar"), "Cancel the sign-in to Google Calendar?")
+        let waiting = try grant("g7", agent: "cal-1", status: "approved")
+        XCTAssertEqual(ConnectionFixWords.cancelTitle(waiting), "Cancel the sign-in to Google Calendar?")
+        XCTAssertEqual(ConnectionFixWords.cancelWord(waiting), "Cancel the sign-in")
+        XCTAssertEqual(ConnectionFixWords.endWord(waiting), "Cancel")
+    }
+
+    /// A request nobody answered is cancelled, in its own words: nothing was connected, so it
+    /// isn't "Remove access". A connected one is removed; a pending one this phone just
+    /// connected isn't a request any more.
+    func testARequestNobodyAnsweredIsCancelledNotRemoved() throws {
+        let asked = try grant("g10", agent: "cal-1", status: "pending")
+        XCTAssertTrue(asked.pendingRequest)
+        XCTAssertTrue(asked.cancellable)
+        XCTAssertFalse(asked.waitingSignIn)
+        XCTAssertEqual(ConnectionFixWords.endWord(asked), "Cancel the request")
+        XCTAssertEqual(ConnectionFixWords.cancelTitle(asked), "Cancel the request for Google Calendar?")
+        XCTAssertEqual(ConnectionFixWords.cancelWord(asked), "Cancel the request")
+        let connected = try grant("g8", agent: "cal-1", status: "connected")
+        XCTAssertFalse(connected.pendingRequest)
+        XCTAssertFalse(connected.cancellable)
+        XCTAssertEqual(ConnectionFixWords.endWord(connected), "Remove access")
+        XCTAssertFalse(asked.marked(connected: true).pendingRequest, "connected by this phone since")
+        for status in ["approved", "failed", "disconnected", "listed"] {
+            XCTAssertFalse(try grant("g11", agent: "cal-1", status: status).pendingRequest, status)
+        }
+        // Both screens end a connection by the same rule.
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        for file in ["ConnectAppsView.swift", "TafDetailView.swift"] {
+            let source = try String(contentsOf: views.appendingPathComponent(file), encoding: .utf8)
+            XCTAssertTrue(source.contains(".cancellable { cancelling = g"), file)
+            XCTAssertFalse(source.contains("waitingSignIn { cancelling"), file)
+        }
     }
 
     // MARK: From removed tafs (tafs cloud's `removed_tafs`, as Android's ConnectAppsByTafTest)
