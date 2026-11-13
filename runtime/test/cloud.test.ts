@@ -4024,7 +4024,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds");
     Object.assign(w.agents.runs.find((r) => r.id === run.id)!, {
-      status: "PAUSED", ...(requester ? { requester } : {}),
+      // Paused now, on the card: kiff/agents' updated is the pause.
+      status: "PAUSED", updated: w.now.toISOString(), ...(requester ? { requester } : {}),
       requirements: [{ call_id: "s1", tool: "show", input: card, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card" }],
     });
     w.agents.calls.length = 0;
@@ -4238,6 +4239,49 @@ describe("Coach's result, handed over by tafs cloud", () => {
       expect(w.agents.calls.filter((c) => c.startsWith("answerResult")).length).toBe(answered);
     } finally {
       console.warn = warn;
+    }
+  });
+
+  // The owner's run waited 40 minutes before the first try after a deploy: the 15 minutes count from the pause.
+  it("a result already waiting past 15 minutes is answered at its first try", async () => {
+    const { w, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.now = new Date(w.now.getTime() + 20 * 60_000);
+    w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+    await note();
+    expect(answer()).toEqual({ answer: { failed: "The Card for Refunds was never approved, so Refunds isn't set up yet: approve its Card to finish" }, answered_by: "tafs cloud" });
+  });
+
+  // No one need open the app to be told: the sweep tries a waiting hand-over every 5 minutes in its first hour.
+  it("the sweep tries a waiting hand-over every 5 minutes in its first hour, and says each try", async () => {
+    const { w, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const start = w.now;
+    const notReady = () => w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+    const tries = () => w.agents.calls.filter((c) => c.startsWith("claimTafDraft")).length;
+    const logged: string[] = [];
+    const log = console.log;
+    console.log = (...a: unknown[]) => { logged.push(a.join(" ")); };
+    try {
+      notReady();
+      await note();
+      expect(tries()).toBe(1);
+      for (const [at, want] of [[1, 2], [4, 2], [6, 3], [11, 4]] as const) {
+        w.now = new Date(start.getTime() + at * 60_000);
+        notReady();
+        await sweepHandOvers(deps);
+        expect([at, tries()]).toEqual([at, want]);
+      }
+      expect(answer()).toBeUndefined();
+      // 15 minutes from the pause: the sweep's try answers it, with no one in the app.
+      w.now = new Date(start.getTime() + 16 * 60_000);
+      notReady();
+      await sweepHandOvers(deps);
+      expect(answer()?.answer).toMatchObject({ failed: expect.stringContaining("was never approved") });
+      expect(logged.filter((l) => l.includes('"event":"handover_try"')).length).toBeGreaterThanOrEqual(5);
+      expect(logged.some((l) => l.includes('"event":"handover_sweep"'))).toBe(true);
+    } finally {
+      console.log = log;
     }
   });
 
