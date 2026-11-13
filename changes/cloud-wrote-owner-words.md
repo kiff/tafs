@@ -1,0 +1,2 @@
+- Words the owner wrote while a Coach card waited show as the owner's words alone: tafs cloud's lines to Coach (its notes, the time zone) never reach the thread or the card's answer.
+- A question asked while a card waits isn't that card's answer: Coach answers it and shows the card again (connect-an-app@17), and the thread doesn't mark the message as answering the earlier card.

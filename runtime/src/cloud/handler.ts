@@ -2571,6 +2571,8 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   const read = await Promise.all(picked.map((s) => deps.agents.session(me.tenantID, s.id, readerOf(me, s)).catch(() => undefined)));
   const messages: ThreadMessage[] = [];
   const components: ThreadComponent[] = [];
+  // Words written while a card waited, by where they were recorded: unless Coach showed that card again, they answered it.
+  const wroteWhile: Array<{ run: string; seq: number; type: unknown; message: ThreadMessage }> = [];
   const held: ThreadHeld[] = [];
   /** Runs a door's message started, by run: their answers go back through it. */
   const doorRuns = new Map<string, string>();
@@ -2655,12 +2657,17 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
         const b = (e.body ?? {}) as { id?: unknown; type?: unknown; answer?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown; answered_by?: unknown };
         const card = components.findLast((c) => c.run === e.run && (c.component as { id?: unknown })?.id === b.id);
         if (card) card.answer = cardAnswer(b, iso(e.time), lang);
-        // Words the owner wrote while the card waited answered it: they show as their message, as sent.
-        if (typeof b.wrote === "string" && b.wrote.trim()) {
+        // Words the owner wrote while the card waited answered it: they show as their message, as sent. kiff/agents records
+        // the whole turn Coach was given ([tafs coach lines], [tafs time zone]… then "The owner says: …"): only the owner's
+        // words are theirs, the same as an owner_message's (go-to-market job 3, 13 Nov: the envelope showed as the owner's).
+        const wrote = typeof b.wrote === "string" ? ownerWords(b.wrote.trim()) : "";
+        if (wrote) {
           // Recorded also as the run's message, at the same time: one message, marked as the answer.
-          const same = sameOwnerMessage(messages, r.session.id, iso(e.time), b.wrote.trim());
-          if (same) same.answers = str(b.id);
-          else messages.push({ id: `${e.run}.${e.seq}`, at: iso(e.time), from: "owner", kind: "message", text: b.wrote.trim(), session: r.session.id, answers: str(b.id) });
+          const same = sameOwnerMessage(messages, r.session.id, iso(e.time), wrote);
+          const message: ThreadMessage = same ?? { id: `${e.run}.${e.seq}`, at: iso(e.time), from: "owner", kind: "message", text: wrote, session: r.session.id };
+          message.answers = str(b.id);
+          if (!same) messages.push(message);
+          wroteWhile.push({ run: e.run, seq: e.seq, type: b.type, message });
         }
         continue;
       }
@@ -2748,6 +2755,12 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
   if (!only && taf.weekOne) {
     const newest = [...picked].sort((a, b) => b.updated.localeCompare(a.updated))[0];
     messages.push({ id: `week-one.${taf.id}`, at: taf.weekOne.at, from: "taf", kind: "message", text: weekOneWords(taf.name, taf.weekOne, lang), session: newest?.id ?? "", note: true });
+  }
+  // A question asked while a card waited isn't its answer (go-to-market job 3, 13 Nov: "What time is it now" was labelled
+  // as answering the rules card): Coach answers it and shows the card again, the same kind, in the same run. The message is
+  // then the owner's own, never marked as the earlier card's answer.
+  for (const w of wroteWhile) {
+    if (components.some((c) => c.run === w.run && c.seq > w.seq && (c.component as { type?: unknown } | undefined)?.type === w.type)) delete w.message.answers;
   }
   messages.sort((a, b) => a.at.localeCompare(b.at));
   components.sort((a, b) => a.at.localeCompare(b.at) || a.seq - b.seq);
@@ -2976,7 +2989,7 @@ async function markConnected(tenant: string, components: ThreadComponent[], deps
 /** An `answered` event's body as the app shows it. */
 function cardAnswer(b: { type?: unknown; answer?: unknown; words?: unknown; wrote?: unknown; unanswered?: unknown; answered_by?: unknown }, at: string, lang: Lang = "en"): CardAnswer {
   if (b.unanswered === true) return { state: "no_answer", words: "", at };
-  if (typeof b.wrote === "string" && b.wrote) return { state: "wrote", words: b.wrote, at };
+  if (typeof b.wrote === "string" && b.wrote.trim()) return { state: "wrote", words: ownerWords(b.wrote.trim()), at };
   const out: CardAnswer = { state: "answered", words: approvalAnswerWords(b, lang) ?? (typeof b.words === "string" ? b.words : ""), at };
   if (typeof b.answered_by === "string" && b.answered_by) out.by = b.answered_by;
   const o = b.answer as { taf_id?: unknown; version?: unknown; failed?: unknown } | null | undefined;
