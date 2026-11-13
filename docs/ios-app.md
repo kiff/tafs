@@ -528,8 +528,9 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   or no `start`, starts Coach as before. Send, with words handed over before Coach exists, opens the same step and keeps
   the words in the composer.
 - **Start's own screen** (`start.words`, `CoachStart.oneScreen`): where tafs cloud sends `start.words` `{lead, start,
-  does}`, Coach's intro draws `lead`, then what's signed (`CoachToolsGiven`, as the step draws it: the groups, each tool
-  folded under `details`, and Coach's Cards in KIFF's words), then one button, `start`, with `does` under it. That one
+  does}`, Coach's intro draws `lead`, then what's signed as Android draws it (`CoachToolsGiven(start: true)`): Coach's
+  Cards in KIFF's words, then every group and tool folded under `details`, with no group lines up front. Then one
+  button, `start`, with `does` under it. That one
   tap signs and starts, so no step opens after it and nothing signed is left unread. With words handed over, Send in
   the box below is that tap: it signs, starts Coach, then sends. Without a line or a button in `start.words`, or from
   a tafs cloud from before them, Start opens the step as above.

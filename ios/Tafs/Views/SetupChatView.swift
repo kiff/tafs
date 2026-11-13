@@ -160,7 +160,7 @@ struct SetupChatView: View {
                     Text(Words.Coach.coachMode).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.coach)
                     Text(words.lead).scaledFont(16).foregroundColor(Theme.ink)
                         .fixedSize(horizontal: false, vertical: true)
-                    CoachToolsGiven(tools: start.tools)
+                    CoachToolsGiven(tools: start.tools, start: true)
                     if let error = model.coachToolsError ?? model.setupError ?? model.lastError {
                         Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
                             .fixedSize(horizontal: false, vertical: true)
@@ -199,8 +199,9 @@ struct SetupChatView: View {
             Text(Words.Coach.nameToolTafShouldWork(biometry: "\(Biometry.name)"))
                 .scaledFont(16).foregroundColor(Theme.soft)
                 .fixedSize(horizontal: false, vertical: true)
-            if model.tafs.isEmpty {
-                // Before the first taf (kiff/tafs#423): finishing it takes approvals.
+            if model.tafs.isEmpty, model.approvalBlocked {
+                // Before the first taf (kiff/tafs#423), on a phone that can't approve yet: finishing
+                // it takes approvals. Otherwise the line above says it already (as on Android).
                 Text(Words.Coach.approvingNeededFinishYourFirst)
                     .scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)

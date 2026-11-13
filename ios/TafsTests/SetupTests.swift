@@ -294,7 +294,23 @@ final class SetupTests: XCTestCase {
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let chat = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
         XCTAssertTrue(chat.contains("if let start = model.coachStart, start.oneScreen, let words = start.words {"))
-        XCTAssertTrue(chat.contains("CoachToolsGiven(tools: start.tools)"), "what's signed, drawn on Start's screen")
+        XCTAssertTrue(chat.contains("CoachToolsGiven(tools: start.tools, start: true)"), "what's signed, drawn on Start's screen as Android draws it")
+        // The intro's second line only where it adds something: a phone that can't approve yet.
+        XCTAssertTrue(chat.contains("if model.tafs.isEmpty, model.approvalBlocked {\n                // Before the first taf"))
+        let tools = try String(contentsOf: views.appendingPathComponent("CoachToolsStep.swift"), encoding: .utf8)
+        let start = try XCTUnwrap(tools.range(of: "private var startBody: some View {"))
+        let rest = tools[start.upperBound...]
+        let cardsAt = try XCTUnwrap(rest.range(of: "cards\n"))
+        let foldAt = try XCTUnwrap(rest.range(of: "Button { folded.toggle() }"))
+        XCTAssertLessThan(cardsAt.lowerBound, foldAt.lowerBound, "the Cards first, then the tools under one fold")
+        let body = rest[..<(rest.range(of: "private func groupTools")?.lowerBound ?? rest.endIndex)]
+        XCTAssertFalse(body.contains("group.line"), "no group lines up front on Start")
+        // The alerts offer after sign-in is Android's one line.
+        let needs = try String(contentsOf: views.appendingPathComponent("NeedsYouView.swift"), encoding: .utf8)
+        let offer = try XCTUnwrap(needs.range(of: "struct AlertsOfferSheet: View {"))
+        let sheet = needs[offer.upperBound...]
+        XCTAssertTrue(sheet.contains("Text(Words.Alert.prompt)"))
+        XCTAssertFalse(sheet.prefix(1500).contains("whenTafAsksSomethingOutside"))
         Keychain.delete(AppModel.planqueAccount)
     }
 
