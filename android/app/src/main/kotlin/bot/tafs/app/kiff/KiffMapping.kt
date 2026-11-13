@@ -324,6 +324,9 @@ object KiffMapping {
 
   /** The called-for answer of a held call: what the owner reads, and what they sign. [coach]: see [install]. */
   fun held(e: CardException, coach: String? = null): HeldCall {
+    // Coach's install of a version keeps KIFF's title ("Install a version") but isn't drawn as a call: no `n:`/`taf:` Details,
+    // and no rule badge, since installing is asked every time by design, never something outside the Card.
+    val installs = install(e, coach)
     val breach = reasonBreach(e)
     // KIFF's own words first; the app's only where KIFF sends none.
     val reason = e.reasonText?.takeIf { it.isNotBlank() } ?: moneyReason(e) ?: countReason(e) ?: breach?.reason ?: e.reason ?: outcomeText(breach?.outcome)
@@ -335,7 +338,7 @@ object KiffMapping {
       id = heldId(e.id),
       tafId = e.subject,
       proposed = ProposedAction(e.action, summary, amountOf(e)),
-      reason = reason,
+      reason = if (installs != null) "" else reason,
       heldAt = e.createdAt,
       expiresAt = e.expiresAt ?: e.createdAt.plus(Duration.ofMinutes(10)),
       kiffId = e.id,
@@ -343,10 +346,10 @@ object KiffMapping {
       approvableOnce = e.canApproveOnce ?: true,
       accountingVersion = e.accountingVersion,
       nextSteps = e.nextSteps ?: emptyList(),
-      details = details(e),
+      details = if (installs != null) emptyList() else details(e),
       tafSays = tafSays(e.tafReason),
       tafAbout = tafSays(e.tafAbout, TAF_ABOUT_MAX),
-      install = install(e, coach),
+      install = installs,
       kind = e.kind,
       breachOutcomes = e.breaches.map { it.outcome },
     )

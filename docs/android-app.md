@@ -588,6 +588,9 @@ like this one go on their own.
   (`AppState.offersAllow`, `HoldAllow.allowable`): someone who manages Cards, on a hold that isn't a
   currency mismatch (`card_unit`) or Coach's install, whose every breach is `per_action_exceeded`,
   `limit_reached` or `resource_not_on_card`.
+- **Coach's install** (`KiffMapping.install`, a held `version_install` of Coach's own agent) keeps KIFF's title
+  ("Install a version") but isn't drawn as a call: no Details (its `n` and `taf` arguments) and no reason badge,
+  since installing is asked every time by design, never something outside the Card. Its Install button says the rest.
 - **A tap** opens the sheet (`AllowSheet`) and posts tafs cloud's `…/holds/{exception}/allow`,
   which makes the draft. A `none` shows tafs cloud's words, with nothing to sign.
 - **The sheet** shows tafs cloud's change, before and after, and KIFF's own lines for each Card that
