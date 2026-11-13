@@ -1,0 +1,1 @@
+- Coach says why a connection failed in one sentence of its own plain words, never planque's or the app's (connect-an-app@19).
