@@ -48,6 +48,7 @@ const ARGS: Record<string, unknown[][]> = {
 /** Each word filled in: a string, or a function's answer for sample values. */
 function sample(v: unknown, key = ""): string[] {
   if (typeof v === "string") return [v];
+  if (Array.isArray(v)) return v.flatMap((x) => sample(x, key));
   if (typeof v !== "function") return [];
   const f = v as (...a: unknown[]) => string;
   if (ARGS[key]) return ARGS[key].map((a) => f(...a));

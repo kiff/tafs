@@ -692,4 +692,12 @@ export const nl: Words = {
   sheet_receipt: (vendor) => `${vendor} gekoppeld · sleutel …{last4}`,
   sheet_disconnect: "Ontkoppelen",
   sheet_done: (vendor, readOnly) => (readOnly ? `${vendor} is gekoppeld (alleen lezen)` : `${vendor} is gekoppeld`),
+  // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
+  ai_consent_title: "Je gegevens en de AI",
+  ai_consent_lines: ["tafs gebruikt de AI Claude van Anthropic om Coach en je tafs te laten werken.", "Wat ernaartoe gaat: wat je aan Coach en je tafs schrijft, de bestanden die je bijvoegt en wat je gekoppelde apps een taf teruggeven terwijl hij werkt.", "Wat nooit wordt verzonden: de wachtwoorden en sleutels die je gekoppelde apps gebruiken, of je vingerafdruk.", "Anthropic gebruikt het om te antwoorden en bewaart het tot 30 dagen.", "Er wordt niets verzonden voordat je het toestaat. Je kunt het intrekken bij Account."],
+  ai_consent_allow: "Toestaan",
+  ai_consent_not_now: "Niet nu",
+  ai_consent_withdraw: "Intrekken",
+  ai_consent_given: "AI-gebruik: toegestaan",
+  ai_consent_needed: "Sta eerst AI-gebruik toe: Coach en je tafs hebben het nodig om te antwoorden.",
 };

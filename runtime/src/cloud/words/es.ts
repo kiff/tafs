@@ -692,4 +692,12 @@ export const es: Words = {
   sheet_receipt: (vendor) => `${vendor} conectado · clave …{last4}`,
   sheet_disconnect: "Desconectar",
   sheet_done: (vendor, readOnly) => (readOnly ? `${vendor} está conectado (solo lectura)` : `${vendor} está conectado`),
+  // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
+  ai_consent_title: "Tus datos y la IA",
+  ai_consent_lines: ["tafs usa la IA Claude de Anthropic para hacer funcionar Coach y tus tafs.", "Lo que se le envía: lo que escribes a Coach y a tus tafs, los archivos que adjuntas y lo que tus apps conectadas devuelven a un taf mientras trabaja.", "Lo que nunca se envía: las contraseñas y claves que usan tus apps conectadas, ni tu huella.", "Anthropic lo usa para responder y lo guarda hasta 30 días.", "No se envía nada hasta que lo permitas. Puedes retirarlo en Cuenta."],
+  ai_consent_allow: "Permitir",
+  ai_consent_not_now: "Ahora no",
+  ai_consent_withdraw: "Retirar",
+  ai_consent_given: "Uso de la IA: permitido",
+  ai_consent_needed: "Permite primero el uso de la IA: Coach y tus tafs la necesitan para responder.",
 };

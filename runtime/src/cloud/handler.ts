@@ -37,6 +37,7 @@ import { accountConnections, connectionLines, endConnections, withConnections } 
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
+import { aiConsentOf, aiConsentView, giveAIConsent, withdrawAIConsent } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
 import { attachWhys, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords } from "./doors/hold.js";
@@ -107,6 +108,8 @@ import { RECIPES } from "../recipes.js";
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
  *   GET  /v1/me/suggestions             the account's "Show suggestions" setting, with its words
+ *   GET  /v1/me/ai-consent              whether this person allowed AI use, with the consent screen's words
+ *   POST /v1/me/ai-consent              {version}: they allow it; DELETE withdraws it (docs/accounts.md)
  *   PUT  /v1/me/suggestions             {show}: a manager turns suggestions off for good, or on again
  *   PUT  /v1/tafs/{id}/knob             {wakes, when, results?}: the dial changed, as the taf's next version; live, its triggers are scheduled
  *   GET  /v1/tafs/{id}/requests/{run}   one request from the rim: where it came from, what it did step by step, what comes next
@@ -195,6 +198,12 @@ export type AgentsAPI = Pick<Agents,
 
 export interface Deps {
   agents: AgentsAPI;
+  /**
+   * The AI-data consent is required (consent.ts): every route that starts a model turn for a person refuses
+   * with `ai_consent_required` until they allow it. Production sets it always (lambda.ts); a test that isn't
+   * about consent leaves it off.
+   */
+  aiConsent?: boolean;
   /** The tafs' KIFF agent keys, where kiff/agents reads them. */
   keys: Keys;
   /** Each KIFF account's alert secret, where kiff/agents checks KIFF's alerts with it. */
@@ -686,6 +695,21 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     }
     return { suggestions: await suggestionsOf(me, deps, langOf(event)) };
   }
+  if (parts.length === 3 && parts[1] === "me" && parts[2] === "ai-consent" && (method === "GET" || method === "POST" || method === "DELETE")) {
+    // The AI-data consent (docs/accounts.md): each person's own, for what they write. No fingerprint: it grants no
+    // authority, it only lets their words reach the model.
+    const me = await person(event, deps);
+    const lang = langOf(event);
+    if (method !== "GET") {
+      if (!deps.coach) throw new HTTPError(503, "the consent can't be kept here");
+      if (method === "DELETE") await withdrawAIConsent(deps.coach, me.tenantID, me.subject);
+      else {
+        const given = await giveAIConsent(deps.coach, me.tenantID, me.subject, parseBody(event).version, deps.now?.() ?? new Date());
+        if (given === "stale") throw new HTTPError(409, "the consent's words changed: read them again", { consent: aiConsentView(undefined, lang) });
+      }
+    }
+    return { consent: aiConsentView(await aiConsentOf(deps.coach, me.tenantID, me.subject), lang) };
+  }
   if (parts[1] === "me" && parts.length === 4 && parts[2] === "chats" && parts[3] === "export" && method === "GET") {
     return exportChats(await person(event, deps), deps);
   }
@@ -919,6 +943,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   }
   if (parts.length === 4 && method === "POST" && action === "run") {
     await needTaf(event, me, taf, deps);
+    await requireAIConsent(event, me, deps);
     const fired = await agentsCall(() => fireNow(me.tenantID, taf.id, deps));
     if ("session" in fired) return { session: fired.session };
     // Its check started no run (it found nothing new, the taf is halted, its check couldn't read…): said so in
@@ -3399,7 +3424,20 @@ async function loadToolSkills(name: string, call: CoachCall, deps: Deps): Promis
   }
 }
 
+/**
+ * Nothing a person writes reaches the model before they allow it (docs/accounts.md, "Your data and the AI"): a
+ * route that would start a model turn for them refuses with `ai_consent_required`, the consent screen's words
+ * with it, so the app can show it there and then. With no store to read the answer from, it refuses too.
+ */
+async function requireAIConsent(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<void> {
+  if (!deps.aiConsent) return;
+  if (await aiConsentOf(deps.coach, me.tenantID, me.subject)) return;
+  const lang = langOf(event);
+  throw new HTTPError(403, wordsIn(lang).ai_consent_needed, { code: "ai_consent_required", consent: aiConsentView(undefined, lang) });
+}
+
 async function startMessage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text: string, deps: Deps): Promise<unknown> {
+  await requireAIConsent(event, me, deps);
   const [at, ai] = await Promise.all([chatAt(event, me, taf, deps), aiBound(event, deps)]);
   const attached = files(event);
   if (attached.length) at.attachments = attached;
@@ -3454,6 +3492,7 @@ async function versionRoute(event: HTTPEvent, method: string, parts: string[], m
   const version = (await agentsCall(() => deps.agents.versions(me.tenantID, taf.id))).versions.find((v) => v.n === n);
   if (!version) throw new HTTPError(404, "no such version");
   if (sub === "trial") {
+    await requireAIConsent(event, me, deps);
     // What a trial works on: the owner's words, else what each scheduled run asks of it.
     const asked = str(parseBody(event).input).trim();
     const input = asked || jobMaybe(taf)?.kickoff || "";
@@ -3542,6 +3581,7 @@ async function trialRoute(event: HTTPEvent, method: string, parts: string[], me:
     return { trial: await trialFor(me, taf, await agentsCall(() => deps.agents.openTrial(me.tenantID, taf.id, n, draft, member(me))), deps, langOf(event)) };
   }
   if (sub === "messages" && method === "POST") {
+    await requireAIConsent(event, me, deps);
     const text = chatText(event);
     const { run, trial } = await agentsCall(() => deps.agents.trialMessage(me.tenantID, taf.id, text, member(me)));
     return { session: run.session, run: run.id, trial };
@@ -4197,6 +4237,7 @@ async function cancelSwitch(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: 
  * day by someone who manages the taf), so a call KIFF doesn't list for this person is 404.
  */
 async function checkCall(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  await requireAIConsent(event, me, deps);
   const setup = await setupOf(me, deps);
   if (!setup) throw new HTTPError(409, "this account has no Setup yet");
   const body = parseBody(event);
@@ -4243,6 +4284,7 @@ async function checkCall(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promis
 }
 
 async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  await requireAIConsent(event, me, deps);
   if (taf.job === SETUP_JOB) throw new HTTPError(400, "Setup improves tafs, not itself");
   const setup = await setupOf(me, deps);
   if (!setup) throw new HTTPError(409, "this account has no Setup yet");
@@ -4270,6 +4312,7 @@ async function improve(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps)
  * be this taf's: kiff/agents answers another agent's as not found.
  */
 async function steer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<unknown> {
+  await requireAIConsent(event, me, deps);
   const body = parseBody(event);
   const run = str(body.run).trim();
   if (!run) throw new HTTPError(400, "name the run to write to");
@@ -4550,6 +4593,7 @@ async function latestOf(me: KIFFIdentity, taf: Taf, session: string, deps: Deps)
 
 /** The person's next message in a chat, sent by tafs cloud with their session: Coach's unread lines go with it. */
 async function sendNext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, session: string, text: string, deps: Deps): Promise<Run> {
+  await requireAIConsent(event, me, deps);
   const lines = await takeCoachLines(me, taf, deps);
   try {
     const [at, ai] = await Promise.all([granted(event, taf.kiffAgent, { session, requester: member(me) }, deps), aiBound(event, deps)]);
@@ -4962,6 +5006,7 @@ export async function handleStream(event: HTTPEvent, given: Deps): Promise<Strea
     timing.mark("person");
     const taf = await owned(me, parts[2] ?? "", deps);
     timing.mark("taf");
+    await requireAIConsent(event, me, deps);
     const attached = files(event);
     const owner = chatText(event, attached.length > 0);
     const answered = await oldFormAnswer(event, me, taf, owner, deps);
