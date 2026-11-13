@@ -94,7 +94,7 @@ describe("the AI-data consent's trigger matrix: no consent, no model turn", () =
   }
 });
 
-// Runs no person starts in the moment take the taf owner's consent (the PM's 09:46 decision on (1a) and (2a)).
+// Runs no person starts in the moment take the taf owner's consent (docs/accounts.md, "Your data and the AI").
 // Each trigger goes through tafs cloud before kiff/agents, so each gets the same matrix once the owner's consent
 // is read there.
 describe.todo("the trigger matrix for runs with no person in the moment: a door's message (doors.ts), an app's event and a held one released (inbound.ts, hold.ts), a handoff and a retry (delivery.ts), a task Coach hands a taf (handler.ts startRun for an MCP call), a paused run continued after KIFF's alert (continueReady)");
