@@ -4562,8 +4562,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(fresh.others).toEqual([]);
   });
 
-  // qa-kiff and the PM on #886: a result card is what Coach says. Only a draft the setup submitted, naming that agent, is proof
-  // that tafs is making it; nothing KIFF has from elsewhere is ever listed.
+  // A result card is only what Coach says. Only a draft the setup submitted, naming that agent, is proof that tafs is making
+  // it; nothing KIFF has from elsewhere is ever listed.
   it("lists a taf being set up only when the result's draft is the setup's own and names that agent", async () => {
     const w = world();
     w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
