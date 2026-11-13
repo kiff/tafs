@@ -518,7 +518,9 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
   then tafs cloud claims the draft's key (`POST /v1/setup`). With every tool connected, `start` carries the draft
   alone and it goes signed as one request. A draft KIFF refuses after the batch went in is started again from the
   next read, which carries the draft alone, under a new Face ID. The phone signs only `POST /v1/connections/batch`
-  on the gateway and `POST /v1/me/agent-drafts`; anything else, or no `start`, starts Coach as before.
+  on the gateway and `POST /v1/me/agent-drafts`, and only with KIFF's words for the Cards on the draft; anything else,
+  or no `start`, starts Coach as before. Send, with words handed over before Coach exists, opens the same step and keeps
+  the words in the composer.
 - **Giving** (`AppModel.giveCoachTools`): one Face ID. Under it the phone signs and sends the
   batch to KIFF's gateway (`POST /v1/connections/batch`), then the Cards' draft to KIFF
   (`POST /v1/me/agent-drafts`), each as it came. Where the Cards didn't come with the batch,

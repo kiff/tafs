@@ -1,0 +1,5 @@
+- **A simpler first run, tafs cloud's part.**
+  - **No time-zone question for a new account:** tafs cloud sets its zone once from the phone's.
+  - **One line before Coach's Start:** Start sets up approvals and gives Coach its tools, with one face or fingerprint.
+  - **Home leads with "Say it in your own words":** then every job, so there's no separate gallery for a new account.
+  - **A taf made with no plan says so:** "Choose a plan to start it." No run starts until there is one, and the hand-over card says so too.

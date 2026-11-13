@@ -172,7 +172,7 @@ export const es: Words = {
   recipes_label_never: "Nunca lo hace",
   recipes_label_hand: "Pasárselo a Coach",
   recipes_home_lead: "Elige un trabajo para tu primer taf.",
-  recipes_home_empty_coach: "Aún no hay tafs. Conecta una app para configurar tu primer taf.",
+  recipes_home_empty_coach: "Aún no hay tafs. Dile a Coach qué trabajo debe hacer un taf.",
   recipes_home_empty_shared: "Aún no hay tafs. Aquí aparecen los tafs compartidos contigo.",
   gallery_title: "Nuevo taf",
   gallery_all: "Todos los trabajos",
@@ -566,6 +566,11 @@ export const es: Words = {
   ct_app_act: "Tocar, escribir y desplazarse en la app de tu dispositivo mientras la maneja",
   ct_replaces: "sustituye a la conexión anterior",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
+  // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
+  start_lead: "Inicias sesión en la página de cada app. Ningún taf ve nunca tu contraseña.",
+  start_button: "Empezar",
+  start_does: "Empezar configura las aprobaciones en este dispositivo y da a Coach sus herramientas, con tu cara o huella una sola vez.",
+  plan_needed: "Elige un plan para ponerlo en marcha.",
   cts_title: "Dale a Coach sus herramientas",
   cts_intro: "Coach necesita algunas herramientas para ocuparse de tus tafs. Van en la propia Card de Coach, con sus límites, y solo tú puedes firmarla, en tu dispositivo.",
   cts_details: "Cada herramienta y sus límites",
@@ -693,4 +698,14 @@ export const es: Words = {
   sheet_receipt: (vendor) => `${vendor} conectado · clave …{last4}`,
   sheet_disconnect: "Desconectar",
   sheet_done: (vendor, readOnly) => (readOnly ? `${vendor} está conectado (solo lectura)` : `${vendor} está conectado`),
+  // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
+  ai_consent_title: "Tus datos y la IA",
+  ai_consent_lines: ["tafs usa la IA Claude de Anthropic para hacer funcionar Coach y tus tafs.", "Lo que se le envía: lo que escribes a Coach y a tus tafs, los archivos que adjuntas, lo que tus apps conectadas devuelven a un taf mientras trabaja y lo que hay en tu pantalla mientras Coach te ayuda en la app.", "Lo que nunca se envía: las contraseñas y claves que usan tus apps conectadas, ni tu huella.", "Anthropic lo usa para responder y lo guarda hasta 30 días.", "No se envía nada hasta que lo permitas. Puedes retirarlo en Cuenta."],
+  ai_consent_allow: "Permitir",
+  ai_consent_not_now: "Ahora no",
+  ai_consent_withdraw: "Retirar",
+  ai_consent_given: "Uso de la IA: permitido",
+  ai_consent_needed: "Permite primero el uso de la IA: Coach y tus tafs la necesitan para responder.",
+  ai_consent_paused_no_one: "En pausa: nadie ha permitido aún el uso de la IA para las ejecuciones de este taf. Sigue en cuanto alguien que gestiona los tafs lo permita en Cuenta.",
+  ai_consent_paused_not_given: "En pausa: se retiró el uso de la IA para las ejecuciones de este taf. Sigue en cuanto se vuelva a permitir o alguien que gestiona los tafs se haga cargo.",
 };

@@ -2093,6 +2093,8 @@ final class TafsCloud {
         /// Something the phone can sign and send now: the pair, or the draft alone.
         var startable: Bool {
             guard state == "to_give", let draft, draft.method == "POST", draft.path == "/v1/me/agent-drafts", !draft.gateway else { return false }
+            // Never Cards the person hasn't read in KIFF's own words.
+            guard !draft.cards.isEmpty else { return false }
             if let connect { return together && connect.method == "POST" && connect.path == "/v1/connections/batch" && connect.gateway }
             return scheme == "kiff.request.v1"
         }

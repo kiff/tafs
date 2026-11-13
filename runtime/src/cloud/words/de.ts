@@ -172,7 +172,7 @@ export const de: Words = {
   recipes_label_never: "Macht es nie",
   recipes_label_hand: "An Coach übergeben",
   recipes_home_lead: "Wähle eine Aufgabe für deinen ersten taf.",
-  recipes_home_empty_coach: "Noch keine tafs. Verbinde eine App, um deinen ersten taf einzurichten.",
+  recipes_home_empty_coach: "Noch keine tafs. Sag Coach, welche Aufgabe ein taf erledigen soll.",
   recipes_home_empty_shared: "Noch keine tafs. Mit dir geteilte tafs erscheinen hier.",
   gallery_title: "Neuer taf",
   gallery_all: "Alle Aufgaben",
@@ -566,6 +566,11 @@ export const de: Words = {
   ct_app_act: "In der App auf deinem Gerät tippen, schreiben und scrollen, während er sie bedient",
   ct_replaces: "ersetzt die frühere Verbindung",
   // Coach's tools step, at the end of a first Start (coach.ts coachToolsStep): its groups, each tool, and their limits from Coach's Cards.
+  // Coach's start and a taf made with no plan yet (the first run, 13 Nov).
+  start_lead: "Du meldest dich auf der Seite jeder App selbst an. Kein taf sieht je dein Passwort.",
+  start_button: "Starten",
+  start_does: "Starten richtet Genehmigungen auf diesem Gerät ein und gibt Coach seine Tools, mit einmal Gesicht oder Fingerabdruck.",
+  plan_needed: "Wähle einen Tarif, um ihn zu starten.",
   cts_title: "Gib Coach seine Werkzeuge",
   cts_intro: "Coach braucht ein paar Werkzeuge, um sich um deine tafs zu kümmern. Sie kommen auf Coachs eigene Card, mit ihren Limits, und nur du kannst sie unterschreiben, auf deinem Gerät.",
   cts_details: "Jedes Werkzeug und seine Limits",
@@ -693,4 +698,14 @@ export const de: Words = {
   sheet_receipt: (vendor) => `${vendor} verbunden · Schlüssel …{last4}`,
   sheet_disconnect: "Trennen",
   sheet_done: (vendor, readOnly) => (readOnly ? `${vendor} ist verbunden (nur lesen)` : `${vendor} ist verbunden`),
+  // The AI-data consent (docs/accounts.md, "Your data and the AI"): what's sent to the model and what never is.
+  ai_consent_title: "Deine Daten und die KI",
+  ai_consent_lines: ["tafs nutzt die KI Claude von Anthropic, um Coach und deine tafs auszuführen.", "Was gesendet wird: was du Coach und deinen tafs schreibst, die Dateien, die du anhängst, was deine verbundenen Apps einem taf bei der Arbeit zurückgeben, und was auf deinem Bildschirm ist, während Coach dir in der App hilft.", "Was nie gesendet wird: die Passwörter und Schlüssel deiner verbundenen Apps oder dein Fingerabdruck.", "Anthropic nutzt es, um zu antworten, und bewahrt es bis zu 30 Tage auf.", "Nichts wird gesendet, bevor du es erlaubst. Du kannst es unter Konto widerrufen."],
+  ai_consent_allow: "Erlauben",
+  ai_consent_not_now: "Nicht jetzt",
+  ai_consent_withdraw: "Widerrufen",
+  ai_consent_given: "KI-Nutzung: erlaubt",
+  ai_consent_needed: "Erlaube zuerst die KI-Nutzung: Coach und deine tafs brauchen sie, um zu antworten.",
+  ai_consent_paused_no_one: "Pausiert: Noch niemand hat die KI-Nutzung für die Läufe dieses tafs erlaubt. Er läuft weiter, sobald jemand, der tafs verwaltet, sie unter Konto erlaubt.",
+  ai_consent_paused_not_given: "Pausiert: Die KI-Nutzung für die Läufe dieses tafs wurde widerrufen. Er läuft weiter, sobald sie wieder erlaubt ist oder jemand, der tafs verwaltet, ihn übernimmt.",
 };
