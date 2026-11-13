@@ -70,7 +70,8 @@ struct HomeSplitView: View {
                     // No taf yet: the recipes take the pane beside the sidebar, which is
                     // narrow for a headline (docs/ios-app.md).
                     ScrollView {
-                        HomeRecipes(recipes: model.recipes ?? TafsCloud.Recipes(), logo: { model.cloud.logoURL($0) }) { openRecipe = $0 }
+                        HomeRecipes(recipes: model.recipes ?? TafsCloud.Recipes(), logo: { model.cloud.logoURL($0) },
+                                    ownWords: model.mayUseCoach ? { model.startNewTaf() } : nil) { openRecipe = $0 }
                             .padding(.horizontal, 24).padding(.vertical, 20)
                             .frame(maxWidth: 720, alignment: .leading)
                             .frame(maxWidth: .infinity)
@@ -82,7 +83,14 @@ struct HomeSplitView: View {
                         Text(model.loadingList ? Words.Home.loading : model.listUnread ? Words.Home.notLoaded
                              : model.tafs.isEmpty ? Words.Home.noTafs : Words.Home.chooseTaf)
                             .scaledFont(16).foregroundColor(Theme.dim)
+                        // No taf and no job listed: "Say it in your own words" still leads to Coach.
+                        if model.mode == .kiff, model.listLoaded, !model.listUnread, model.tafs.isEmpty, model.mayUseCoach,
+                           let own = model.recipes?.homeOwnWords {
+                            OwnWordsRow(title: own.title, line: own.line) { model.startNewTaf() }
+                                .frame(maxWidth: 420)
+                        }
                     }
+                    .padding(.horizontal, 24)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .screenBackground()
                 }

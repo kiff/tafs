@@ -1,13 +1,16 @@
 import SwiftUI
 
 /// Home with no taf, where tafs cloud lists the recipes (`home.shown`, docs/ios-app.md): its
-/// line, then a chip per category to narrow the list, then each recipe led by the problem it
-/// ends (its headline) with its line under it. A tap opens its sheet. Every word is tafs
-/// cloud's, in the person's language: the app has none of its own here.
+/// line, then "Say it in your own words" where tafs cloud sent it, then a chip per category to
+/// narrow the list, then each recipe led by the problem it ends (its headline) with its line
+/// under it. A tap opens its sheet. Every word is tafs cloud's, in the person's language: the
+/// app has none of its own here.
 struct HomeRecipes: View {
     let recipes: TafsCloud.Recipes
     /// Where an app's logo loads from: only ever tafs cloud (`TafsCloud.logoURL`).
     var logo: (String?) -> URL? = { _ in nil }
+    /// Coach with nothing in its box, from "Say it in your own words"; nil, the row isn't drawn.
+    var ownWords: (() -> Void)? = nil
     let open: (TafsCloud.Recipes.Recipe) -> Void
     /// A category picked narrows the list; picked again, every recipe shows.
     @State private var picked: String?
@@ -17,6 +20,9 @@ struct HomeRecipes: View {
             if let words = recipes.homeWords {
                 Text(words).scaledFont(17, weight: .semibold).foregroundColor(Theme.ink)
                     .fixedSize(horizontal: false, vertical: true)
+            }
+            if let ownWords, let own = recipes.homeOwnWords {
+                OwnWordsRow(title: own.title, line: own.line, action: ownWords)
             }
             let all = recipes.byCategory
             if all.count > 1 {
@@ -59,6 +65,37 @@ struct HomeRecipes: View {
     /// One recipe: the problem it ends first, then its line.
     private func row(_ recipe: TafsCloud.Recipes.Recipe) -> some View {
         RecipeRow(recipe: recipe, category: recipes.categories.first { $0.id == recipe.category }, logo: logo) { open(recipe) }
+    }
+}
+
+/// "Say it in your own words": Coach, with nothing in its box. Home's list leads with it, in
+/// tafs cloud's words (`home.own_words`), and so does + New's gallery, in its own.
+struct OwnWordsRow: View {
+    let title: String
+    let line: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Panel {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                            .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                        if !line.isEmpty {
+                            Text(line).scaledFont(14).foregroundColor(Theme.soft)
+                                .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
+                        .accessibilityHidden(true)
+                }
+            }
+        }
+        .buttonStyle(.drivablePlain)
+        .driveWords(title)
+        .accessibilityIdentifier("gallery.own-words")
     }
 }
 

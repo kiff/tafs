@@ -66,26 +66,7 @@ struct RecipeGallerySheet: View {
 
     /// "Say it in your own words": Coach, with nothing in its box.
     private var ownWords: some View {
-        Button { choose(.ownWords) } label: {
-            Panel {
-                HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(gallery.words.ownWords).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
-                            .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-                        if !gallery.words.ownWordsLine.isEmpty {
-                            Text(gallery.words.ownWordsLine).scaledFont(14).foregroundColor(Theme.soft)
-                                .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                    Spacer(minLength: 8)
-                    Image(systemName: "chevron.right").scaledFont(13, weight: .semibold).foregroundColor(Theme.dim)
-                        .accessibilityHidden(true)
-                }
-            }
-        }
-        .buttonStyle(.drivablePlain)
-        .driveWords(gallery.words.ownWords)
-        .accessibilityIdentifier("gallery.own-words")
+        OwnWordsRow(title: gallery.words.ownWords, line: gallery.words.ownWordsLine) { choose(.ownWords) }
     }
 }
 

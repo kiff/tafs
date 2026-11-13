@@ -1,0 +1,1 @@
+- **iPhone and iPad: Home leads with "Say it in your own words".** For a new account, Home shows "Say it in your own words" first, then every job, in tafs cloud's words. It opens Coach with an empty message box. The "Connect an app" row is gone from Home (docs/ios-app.md › Home with no taf).
