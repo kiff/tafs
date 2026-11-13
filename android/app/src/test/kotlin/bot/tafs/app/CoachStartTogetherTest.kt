@@ -63,11 +63,12 @@ class CoachStartTogetherTest {
     transport.answer("POST /v1/setup", 200, """{"setup":$coach}""")
   }
 
-  private suspend fun model(): AppModel {
+  /** A signed-in model; [keyRegistered] false is a phone that signed in before KIFF held its approval key. */
+  private suspend fun model(keyRegistered: Boolean = true): AppModel {
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
     secrets.save("1", AppModel.KEYED)
-    secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
+    if (keyRegistered) secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
     return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false).also { it.restore() }
   }
 
@@ -150,6 +151,33 @@ class CoachStartTogetherTest {
     assertTrue(transport.requestsTo("POST /v1/setup").isEmpty())
     assertEquals(bot.tafs.app.model.Words.Coach.connectOtherDevice, m.state.value.coachToolsError)
     assertEquals(listOf("Start Coach"), auth.fingerprints)
+  }
+
+  @Test fun aPhoneThatSignedInBeforeItCouldApproveRegistersItsKeyAtStartBeforeAnythingIsSigned() = runTest {
+    reads("""{"setup":null,"tools":null,"start":${start()}}""")
+    // At launch KIFF couldn't take the key (not found); at Start it does.
+    transport.answer("POST /v1/me/device/approval-key", 404, """{"error":"not_found"}""")
+    transport.answer("POST /v1/me/device/approval-key", 200, """{"fingerprint":"${KiffClient.fingerprint(signer.approvalPublicKeyDER)}"}""")
+    val m = model(keyRegistered = false)
+    m.loadCoach()
+    startAnswers()
+    assertTrue(m.startCoach())
+    val order = transport.requests.filter { it.method == "POST" }.map { java.net.URI.create(it.url).path }
+      .filter { it in listOf("/v1/me/device/approval-key", "/v1/connections/batch") }
+    assertEquals(listOf("/v1/me/device/approval-key", "/v1/me/device/approval-key", "/v1/connections/batch"), order)
+    assertEquals("setup_1", m.state.value.coachCloudId)
+  }
+
+  @Test fun noSignatureWhileKiffHoldsNoApprovalKeyForThisPhone() = runTest {
+    reads("""{"setup":null,"tools":null,"start":${start()}}""")
+    transport.answer("POST /v1/me/device/approval-key", 404, """{"error":"not_found"}""")
+    val m = model(keyRegistered = false)
+    m.loadCoach()
+    assertFalse(m.startCoach())
+    assertTrue("no fingerprint asked", auth.fingerprints.isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/connections/batch").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/me/agent-drafts").isEmpty())
+    assertEquals(bot.tafs.app.model.ApprovalWords.FIRST_TAF, m.state.value.coachToolsError)
   }
 
   @Test fun theDraftAloneGoesUnderItsOwnSingleFingerprint() = runTest {

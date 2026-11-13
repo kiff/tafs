@@ -303,23 +303,15 @@ fun RootView(model: AppModel) {
   var readiness by remember { mutableStateOf(bot.tafs.app.views.approvalReadiness(context)) }
   val recheck = { readiness = bot.tafs.app.views.approvalReadiness(context) }
   androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { recheck() }
-  // Before sign-in, only when this phone can't approve yet: Set up approvals on this device, or sign in without.
-  var settingUpApprovals by rememberSaveable { mutableStateOf(false) }
-  // A fingerprint added meanwhile: on to sign-in at once.
-  LaunchedEffect(readiness, settingUpApprovals) {
-    if (settingUpApprovals && readiness == bot.tafs.app.model.ApprovalReadiness.Ready) { settingUpApprovals = false; signingIn = true }
-  }
+  // Approvals are set up at Coach's Start, not before sign-in (docs/android-app.md): signing in never waits on a fingerprint.
 
   bot.tafs.app.views.ProvideApprovalReadiness(state.mode, readiness, recheck) {
   Box(Modifier.fillMaxSize().background(Theme.background)) {
     when {
       // Nothing draws until it is known, so the first screen never flashes up for someone signed in.
       !state.ready -> Unit
-      !state.signedIn && settingUpApprovals -> bot.tafs.app.views.ApprovalsSetupScreen(
-        readiness, onCheckAgain = recheck, onContinue = { settingUpApprovals = false; signingIn = true },
-      )
       !state.signedIn -> OnboardingView(
-        onSignIn = { if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready) signingIn = true else settingUpApprovals = true },
+        onSignIn = { signingIn = true },
         onSample = model::startSample,
       )
       else -> CompositionLocalProvider(

@@ -209,11 +209,12 @@ needed, never only at a prompt that fails.
   - temporarily unavailable (the sensor locked after tries, busy, an update pending): wait a
     moment, or unlock the phone once, then **Check again**;
   - unsupported (no strong biometric at all): approve from another supported device.
-- **Before sign-in,** only when it isn't set up: the screen **Set up approvals on this device**,
-  with **Continue without approvals**. Without them the person can still sign in, review,
-  refuse and halt. Once the phone says it's set up, sign-in goes on by itself.
-- **Before the first taf:** Coach's Start is an approval, so while the phone can't approve it
-  says "Setting up a taf needs approvals" with the state and what to do, in Start's place.
+- **Sign-in never waits on it** (Android 1.20). Without approvals the person can still sign in,
+  review, refuse and halt.
+- **At Coach's Start, approvals are set up:** while the phone can't approve, it says "Setting up
+  a taf needs approvals" with the state and what to do, in Start's place. Once it can, Start
+  registers the approval key with KIFF if KIFF doesn't hold it yet (a phone that signed in before
+  it could approve), and signs nothing unless KIFF holds it.
 - **At each approval** (Approve once, Extra room, Install, Issue, Resume, Coach's Approve, a
   trial's Install): while the phone can't approve, the state and what to do stand in the
   button's place (`ApprovalGate`). Refuse, Decline and Halt stay. When it can, the button
