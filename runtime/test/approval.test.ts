@@ -730,6 +730,63 @@ describe("the approval window (kiff/tafs#494): which key an ask takes, and the r
   });
 });
 
+describe("one signature for a connection's added tools and its Card (tools_and_cards, docs/secure-connection.md)", () => {
+  const SIGNED = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" };
+  // A connected grant whose new tools wait for their approval: what it had before is in connected.
+  const adding = (over: Record<string, unknown> = {}) => grant({ status: "pending", connected: [{ tool: "list_charges" }], ...over });
+  afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; });
+
+  async function addWorld(on: boolean, can = ["tools_and_cards"]) {
+    if (on) process.env.TAFS_TOOLS_AND_CARDS = "on";
+    else delete process.env.TAFS_TOOLS_AND_CARDS;
+    const s = services();
+    s.grants = [adding()];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(adding().request), draft: "drf_1", shown_draft: "v3", can });
+    return { s, w, r };
+  }
+
+  it("asks the addition's approve and the Card's confirm as one signature, behind the fingerprint", async () => {
+    const { r, w } = await addWorld(true);
+    expect(r.body).toMatchObject({
+      outcome: "sign",
+      ask: { step: "tools_and_cards", scheme: "kiff.requests.v1", message: "", key: "critical", planque: { grant: "g_1", body: { digest: adding().digest } }, kiff: { draft: "drf_1", version: "v3" } },
+    });
+    expect(w.told()).toBeUndefined();
+  });
+
+  it("keeps the two steps for an app that can't sign it, a first connection, a card without a draft, or the flag off", async () => {
+    expect((await addWorld(true, [])).r.body).toMatchObject({ ask: { step: "connect" } });
+    expect((await addWorld(false)).r.body).toMatchObject({ ask: { step: "connect" } });
+    process.env.TAFS_TOOLS_AND_CARDS = "on";
+    const s = services();
+    // A first connection (nothing connected before): its tools come with the sign-in, so the two steps.
+    s.grants = [grant()];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request), draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards"] })).body).toMatchObject({ ask: { step: "connect" } });
+    // No draft on the card: the addition alone.
+    s.grants = [adding()];
+    expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(adding().request), can: ["tools_and_cards"] })).body).toMatchObject({ ask: { step: "connect" } });
+  });
+
+  it("answers approved only when the tools are in and the Card is issued, and says which half didn't", async () => {
+    const both = await addWorld(true);
+    both.s.grants = [adding({ status: "connected" })];
+    both.s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
+    expect((await both.w.call("POST", `${ASK}/${(both.r.body.ask as { id: string }).id}`, { result: "confirmed" }, SIGNED)).body).toMatchObject({ answer: "approved" });
+    const half = await addWorld(true);
+    half.s.grants = [adding({ status: "connected" })];
+    const r = await half.w.call("POST", `${ASK}/${(half.r.body.ask as { id: string }).id}`, { result: "failed", why: "the confirm wasn't answered" }, SIGNED);
+    expect(r.body.answer).toMatch(/^failed: Stripe is connected; /);
+    const none = await addWorld(true);
+    const r2 = await none.w.call("POST", `${ASK}/${(none.r.body.ask as { id: string }).id}`, { result: "failed", why: "the approve was refused" }, SIGNED);
+    expect(r2.body.answer).toMatch(/^failed: /);
+    expect(r2.body.answer).not.toMatch(/is connected/);
+  });
+});
+
 describe("one signature for a key and its Card (key_and_cards, docs/secure-connection.md)", () => {
   const API = { kind: "api_key", api: { url: "https://example.com/desk/openapi.json", digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } } };
   const keyGrant = (over: Record<string, unknown> = {}) => grant(over, API);

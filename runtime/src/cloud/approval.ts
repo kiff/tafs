@@ -40,6 +40,8 @@ export interface ApprovalGrant {
   /** The app's sign-in was set up on the owner's pick, not by an operator (kiff/planque#87). */
   on_demand?: boolean;
   request: { agent?: string; server?: string; profile?: unknown; tools?: Array<{ tool?: string; name?: string; title?: string; read_only?: boolean; setup_reads?: boolean }> } & Record<string, unknown>;
+  /** The tools it had before the addition that waits now: a connected grant whose new tools wait for their approval. */
+  connected?: unknown[];
 }
 
 /**
@@ -191,7 +193,7 @@ export interface Signing {
    * under one fingerprint. The phone builds both requests itself, with one `signed_at`, and signs `kiff.requests.v1`
    * over their two messages' hashes; `message` is then empty, and `scheme` says so.
    */
-  step: "connect" | "cards" | "key_and_cards";
+  step: "connect" | "cards" | "key_and_cards" | "tools_and_cards";
   /** For `key_and_cards`: what the phone signs, built by it from the two requests it makes. */
   scheme?: "kiff.requests.v1";
   /** The exact bytes the device's key signs, under biometrics. */
@@ -218,7 +220,7 @@ export type Decision =
 
 /** What a pending ask keeps, so the report is checked against what was asked. */
 interface Pending {
-  step: "connect" | "cards" | "key_and_cards";
+  step: "connect" | "cards" | "key_and_cards" | "tools_and_cards";
   grant: string;
   vendor: string;
   draft?: string;
@@ -358,6 +360,11 @@ export interface DecideContext {
    * the Card are signed apart, as before.
    */
   keyAndCards?: boolean;
+  /**
+   * Whether a connected grant's added tools with the Card's draft over them are asked as one signature
+   * (`tools_and_cards`): on once planque takes the paired approve and declares an addition's tools to KIFF while they wait.
+   */
+  toolsAndCards?: boolean;
   tenant: string;
   taf: string;
   component: string;
@@ -422,6 +429,25 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   if (grant.request.profile !== undefined) {
     if (!ask.words || ask.words.profile_sha256 !== sha256(grant.request.profile)) return { outcome: "read_again", note: W.wordsUnread };
     kiffProfile = { profile_sha256: ask.words.profile_sha256, words_sha256: ask.words.words_sha256 };
+  }
+  // A connected grant's added tools, with the Card's draft over them: the addition's approve and the Card under one
+  // fingerprint (docs/secure-connection.md), as a key and its Card are, once planque takes the paired approve.
+  if (ctx.toolsAndCards && ask.can?.includes("tools_and_cards") && !takesKey(grant) && grant.status === "pending" && Array.isArray(grant.connected) && grant.connected.length > 0 && ask.draft) {
+    const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx);
+    if ("outcome" in checked) return checked;
+    const id = ctx.newID();
+    const pending: Pending = { step: "tools_and_cards", grant: grant.id, vendor, draft: ask.draft, version: checked.draft.version, made: ctx.now.toISOString(), key: "critical" };
+    await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
+    await noteSending(grant, ctx);
+    return {
+      outcome: "sign",
+      ask: {
+        id, step: "tools_and_cards", scheme: "kiff.requests.v1", message: "",
+        reason: W.reasonConnect(appNameOf(grant) || vendor, await nameOf(ctx, grant.request.agent, grant.agent_name)), key: "critical",
+        planque: { grant: grant.id, body: { digest: grant.digest, ...(kiffProfile ? { kiff_profile: kiffProfile } : {}) } },
+        kiff: { draft: ask.draft, version: checked.draft.version },
+      },
+    };
   }
   // A key grant whose Card is drafted already: the key and the Card under one fingerprint (docs/secure-connection.md),
   // once both services take kiff.requests.v1. The phone builds both requests and signs their two hashes.
@@ -556,7 +582,7 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   // above spends nothing, so the phone can report again.
   if (!(await ctx.store.once(`${key}#taken`, new Date(ctx.now.getTime() + ASK_KEPT_MS)))) throw new ApprovalError(404, "no approval waits for that answer");
   await ctx.store.remove(key);
-  if (pending.step === "key_and_cards") {
+  if (pending.step === "key_and_cards" || pending.step === "tools_and_cards") {
     // One signature, two requests: approved only when the connection server says connected and KIFF says the
     // Card is issued. A key that went in with a Card that didn't says so, and the card's next tap asks the Card alone.
     const [grants, draft] = await Promise.all([
