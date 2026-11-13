@@ -708,4 +708,5 @@ export const de: Words = {
   ai_consent_needed: "Erlaube zuerst die KI-Nutzung: Coach und deine tafs brauchen sie, um zu antworten.",
   ai_consent_paused_no_one: "Pausiert: Noch niemand hat die KI-Nutzung für die Läufe dieses tafs erlaubt. Er läuft weiter, sobald jemand, der tafs verwaltet, sie unter Konto erlaubt.",
   ai_consent_paused_not_given: "Pausiert: Die KI-Nutzung für die Läufe dieses tafs wurde widerrufen. Er läuft weiter, sobald sie wieder erlaubt ist oder jemand, der tafs verwaltet, ihn übernimmt.",
+  ai_consent_paused_left: "Pausiert: Die Person, deren KI-Erlaubnis die Läufe nutzten, ist nicht mehr im Konto. Er läuft weiter, sobald jemand, der tafs verwaltet, ihn übernimmt.",
 };

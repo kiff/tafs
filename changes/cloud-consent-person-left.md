@@ -1,0 +1,1 @@
+- **A taf whose consenting person left the account pauses.** Someone KIFF no longer lists as active consents for no one, so their tafs' runs with no person in the moment pause, with the reason, until a manager takes them over.
