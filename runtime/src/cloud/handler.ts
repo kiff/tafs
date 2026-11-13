@@ -33,7 +33,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { accountConnections, connectionLines, endConnections, withConnections } from "./connections.js";
+import { type AppGuide, accountConnections, connectionLines, endConnections, heldGuides, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
@@ -3665,14 +3665,14 @@ async function coachStart(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, e
     }
   }
   const entry = entryOf(text);
-  const [state, lines, live] = await Promise.all([coachStartState(me, event, deps), entry === "door" ? [] : startConnections(me, event, deps),
+  const [state, held, live] = await Promise.all([coachStartState(me, event, deps), entry === "door" ? { lines: [], guides: [] } : startConnections(me, event, deps),
     // The skills at the versions Coach's live definition names: kiff/agents loads no other (asNamed).
     deps.agents.getAgent(me.tenantID, taf.id).catch(() => undefined),
     // Beside the start's reads, never after them: a chat's first words wait on none of it (qa-kiff on #574).
     me.companyName ? keepCompany(me.tenantID, me.companyName, deps) : undefined, keepLanguage(me.tenantID, lang, deps)]);
   const skills = asNamed(startSkills(entry, state), live?.skills);
   if (skills.length) at.skills = skills;
-  return withConnections(text, lines, me.companyName);
+  return withConnections(text, held.lines, me.companyName, held.guides);
 }
 
 /** How long tafs cloud keeps an account's company name, read from KIFF with a person's session: a quarter. */
@@ -3741,8 +3741,8 @@ async function liveChatOf(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<strin
  * may see as home lists them, read with their own session. Best effort: what can't be read is left out, and
  * Coach reads planque's grants itself.
  */
-async function startConnections(me: KIFFIdentity, event: HTTPEvent, deps: Deps): Promise<string[]> {
-  if (!deps.planqueBase) return [];
+async function startConnections(me: KIFFIdentity, event: HTTPEvent, deps: Deps): Promise<{ lines: string[]; guides: AppGuide[] }> {
+  if (!deps.planqueBase) return { lines: [], guides: [] };
   try {
     const token = bearer(event);
     const [conns, records, access] = await Promise.all([
@@ -3750,10 +3750,12 @@ async function startConnections(me: KIFFIdentity, event: HTTPEvent, deps: Deps):
       deps.tafs.list(me.tenantID), readAccess(token, deps.fetch, deps.kiffBase),
     ]);
     const tafs = new Map(records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent)).map((t) => [t.kiffAgent, t.name]));
-    return connectionLines(conns, tafs);
+    // The guides of the apps those tafs hold, the most used first: Coach has read them before it offers a job with one.
+    const guides = await heldGuides(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token, conns, tafs).catch(() => []);
+    return { lines: connectionLines(conns, tafs), guides };
   } catch (err) {
     console.error(`coach connections for ${me.tenantID}:`, err);
-    return [];
+    return { lines: [], guides: [] };
   }
 }
 
