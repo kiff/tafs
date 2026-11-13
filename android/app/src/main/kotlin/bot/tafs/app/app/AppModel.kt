@@ -476,6 +476,14 @@ data class AppState(
   /** The account's "Show suggestions" setting as tafs cloud last said it, while it's being changed, and why a change didn't go. */
   val suggestions: bot.tafs.app.kiff.Suggestions? = null,
   val suggestionsBusy: Boolean = false,
+  /**
+   * The person's AI-data consent as tafs cloud last said it, with the screen's words (docs/accounts.md, "Your data and the AI").
+   * [aiConsentAsked] shows the screen: after sign-in until they answer, and again when tafs cloud refuses a model turn for it.
+   */
+  val aiConsent: bot.tafs.app.kiff.AIConsent? = null,
+  val aiConsentAsked: Boolean = false,
+  val aiConsentBusy: Boolean = false,
+  val aiConsentError: String? = null,
   val suggestionsError: String? = null,
   /** KIFF's words for the next approval while this phone holds an approval window ("No fingerprint for the next 4 minutes"). */
   val windowWords: String? = null,
@@ -923,6 +931,8 @@ class AppModel(
   init {
     // KIFF wants the approval key this phone doesn't hold (kiff/tafs#233).
     kiff.approvalKeyRequired = { lostApprovalKey() }
+    // tafs cloud refused a model turn until the person allows AI use: its screen shows there and then, in its words.
+    cloud.aiConsentNeeded = { consent -> _state.update { it.copy(aiConsent = consent, aiConsentAsked = true, aiConsentError = null) } }
   }
 
   // MARK: Where the owner left off
@@ -957,6 +967,7 @@ class AppModel(
     _state.update { it.copy(mode = Mode.kiff, ready = true, sessionHasKey = keyed, alertsAvailable = push.available, alertSound = secrets.load(ALERT_SOUND) != "0") }
     if (keyGone) lostApprovalKey()
     refresh()
+    loadAIConsent()
     // A session from before the approval key registers it once (kiff/tafs#233).
     registerApprovalKey()
     // This phone's alerts, where its owner turned them on.
@@ -1128,6 +1139,7 @@ class AppModel(
     // This sign-in, so a later one that overtook it while it read gets nothing of it: no alert registration, no notice.
     val generation = accountGeneration
     refresh()
+    loadAIConsent()
     registerApprovalKey()
     if (generation != accountGeneration) return
     // Alerts were on for this account when this phone signed out of it: they come back on with no new confirmation while the
@@ -2717,6 +2729,46 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation == accountGeneration) _state.update { it.copy(calendarError = Words.Home.calendarNotRead(why = ErrorWords.of(e))) }
+    }
+  }
+
+  /**
+   * Reads the person's AI-data consent: after sign-in and at launch, so its screen shows before anything they write is sent, and
+   * for Account. Unread (tafs cloud not reached), nothing shows: tafs cloud still refuses every model turn until it's given.
+   */
+  suspend fun loadAIConsent() {
+    if (_state.value.mode != Mode.kiff) return
+    val generation = accountGeneration
+    val read = attempt { cloud.aiConsent() } ?: return
+    if (generation == accountGeneration) _state.update { it.copy(aiConsent = read, aiConsentAsked = !read.given) }
+  }
+
+  /** The person allows AI use, for the version of the words on their screen. Words changed since come back to read again. */
+  suspend fun allowAI() = answerAIConsent { cloud.giveAIConsent(it.version) }
+
+  /** The person withdraws it, from Account. */
+  suspend fun withdrawAI() = answerAIConsent { cloud.withdrawAIConsent() }
+
+  /** "Not now": the screen goes; nothing is sent, and it shows again when they write to a taf or Coach. */
+  fun notNowAI() = _state.update { it.copy(aiConsentAsked = false, aiConsentError = null) }
+
+  private suspend fun answerAIConsent(call: suspend (bot.tafs.app.kiff.AIConsent) -> bot.tafs.app.kiff.AIConsent) {
+    val shown = _state.value.aiConsent ?: return
+    if (_state.value.mode != Mode.kiff || _state.value.aiConsentBusy) return
+    val generation = accountGeneration
+    _state.update { it.copy(aiConsentBusy = true, aiConsentError = null) }
+    try {
+      val now = call(shown)
+      if (generation == accountGeneration) _state.update { it.copy(aiConsent = now, aiConsentAsked = false) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      // Words changed since they read them (409): the new ones are shown, to read and allow again.
+      val cloudError = e as? bot.tafs.app.kiff.CloudError
+      if (generation == accountGeneration) _state.update { it.copy(aiConsentError = cloudError?.message ?: ErrorWords.of(e)) }
+      if (cloudError?.status == 409) loadAIConsent()
+    } finally {
+      if (generation == accountGeneration) _state.update { it.copy(aiConsentBusy = false) }
     }
   }
 

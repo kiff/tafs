@@ -838,6 +838,21 @@ and an activity launched then never gets a window ("No compose hierarchies found
 also closes a system dialog left over from boot, and each test sets its screen with `setShown`,
 which waits until there's a Compose hierarchy to read before reading it.
 
+## Your data and the AI
+
+The AI-data consent is tafs cloud's (docs/accounts.md, "Your data and the AI"); the app draws its words and sends the
+answer (`AIConsentSheet` in `views/AIConsentViews.kt`, `loadAIConsent`, `allowAI`, `notNowAI` and `withdrawAI` in
+`AppModel`, `TafsCloud.aiConsent`).
+
+- **When it shows:** after sign-in and at launch while it isn't given, and whenever tafs cloud refuses a model turn with
+  `ai_consent_required`. `TafsCloud` reads that refusal once, for every route, plain or streamed, and the sheet shows the
+  `consent` it carries.
+- **Allow** sends the version on the screen. A 409 (the words changed) shows the newer words to read again.
+- **Not now** sends nothing and closes the sheet; the next refused turn brings it back. Reading Home, a taf and the Record
+  goes on as before.
+- **Account** shows the section under tafs cloud's title: "AI use: allowed" with Withdraw, or the lines with Allow.
+- With no answer from tafs cloud (a build before the route), nothing shows.
+
 ## Account and paged taf presentation
 
 Account names the KIFF account, its id and who's signed in. A personal account is named after its
