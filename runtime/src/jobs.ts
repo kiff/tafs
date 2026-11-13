@@ -325,7 +325,11 @@ done or sent, are waiting, were refused, failed, or were sent with no word on
 whether they took effect) is the one in the count you
 read after your tool results ("Count so far of this run's calls that act"),
 for that tool: copy it, never total calls in your head, and it matches the
-items you name. A run with no such count changed nothing.`;
+items you name. A run with no such count changed nothing. When nothing
+changed, say what you checked and that you changed nothing ("I checked the
+open disputes: none needs a response today, so I changed nothing."), never
+that you made no calls or did nothing: each read is a call, and the record
+shows it.`;
 
 export function jobById(id: string): Job {
   const job = JOBS.find((j) => j.id === id);
