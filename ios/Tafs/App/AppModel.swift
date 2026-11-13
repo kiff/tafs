@@ -2949,6 +2949,12 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return nil }
             if !refused.cards.isEmpty { discardCardsLeft[agent] = refused.cards }
             await refresh()
+            guard gen == accountGeneration else { return nil }
+            // KIFF's read can lag just behind the phone's revoke: if Home no longer lists it, it's done.
+            if !settingUp.contains(where: { $0.id == tafID }) {
+                discardCardsLeft[agent] = nil
+                return nil
+            }
             return Words.Card.kiffDidNotRevokeCards(cardsLeft: "\(max(refused.cards.count, cardsLeft, 1))")
         } catch {
             guard gen == accountGeneration else { return nil }

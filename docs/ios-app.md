@@ -495,8 +495,8 @@ The person whose Coach chat it was gets `finish: {taf, session, words}` (docs/ta
 a Discard beside it (`DiscardSettingUpButton`) whose confirmation is all tafs cloud's words. Its yes revokes the
 agent's Cards in KIFF (from `others`' repeat of it), then calls `POST /v1/home/setting-up/{kiff_agent}/discard`
 signed as a removal is (the approval key over the POST and its empty body, behind Face ID), and Home is read again
-(`AppModel.discardSettingUp`). A refusal is read against Home: if Home no longer lists it (revoking its Cards can
-be what ended it), it's done, never "Not done". The row says `words` ("Finish setting up") in amber in place of what it's
+(`AppModel.discardSettingUp`). A refusal, `cards_in_force` included, is read against Home: if Home no longer lists it
+(revoking its Cards can be what ended it, or KIFF's read lagged the revoke), it's done, never "Not done". The row says `words` ("Finish setting up") in amber in place of what it's
 doing. A tap opens Coach on `session`, where it stopped (`AppModel.finishSetup`): reading that
 chat is what makes the taf at tafs cloud, and the next Home read lists it with the tafs. Only
 Coach's own chat (`taf` is Coach's), for someone who may use Coach (`canFinishSetup`); anything
