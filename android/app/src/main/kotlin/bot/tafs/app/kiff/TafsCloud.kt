@@ -75,6 +75,14 @@ class TafsCloud(
   /** The account's Coach and its tools, from one read. */
   suspend fun setupAndTools(): Pair<CloudSetup?, CoachTools?> = get<SetupResponse>("/v1/setup").let { it.setup to it.tools }
 
+  /** The account's Coach, its tools and, before Coach exists, its first start under one fingerprint, from one read. */
+  suspend fun setupRead(): SetupRead = get<SetupResponse>("/v1/setup").let { r ->
+    SetupRead(r.setup, r.tools, if (r.setup == null) CoachStart.read(r.start) else null)
+  }
+
+  /** What `GET /v1/setup` answers. */
+  data class SetupRead(val setup: CloudSetup?, val tools: CoachTools?, val start: CoachStart?)
+
   /** The recipes a new Coach conversation opens to, by category (kiff/tafs#476). */
   suspend fun recipes(): Recipes = get("/v1/recipes")
 

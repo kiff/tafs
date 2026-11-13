@@ -395,6 +395,11 @@ data class AppState(
   val coachRequested: Boolean = false,
   /** Coach's tools as KIFF has them, from tafs cloud; null until read. And why giving them didn't go. */
   val coachTools: bot.tafs.app.kiff.CoachTools? = null,
+  /**
+   * Coach's first start under one fingerprint, as tafs cloud builds it before Coach exists (docs/coach.md); null once Coach is
+   * there, or from a tafs cloud that sends none. Startable, its step is Coach's tools step, and its one button starts Coach.
+   */
+  val coachStart: bot.tafs.app.kiff.CoachStart? = null,
   /** The recipes a new Coach conversation opens to, from tafs cloud; null until read, or when they couldn't be. */
   val recipes: bot.tafs.app.kiff.Recipes? = null,
   /** Every job a taf can take, for + New and the strip under the tafs list; null before it's read, or from an older tafs cloud. */
@@ -2666,7 +2671,7 @@ class AppModel(
     if (_state.value.mode != Mode.kiff) return
     val generation = accountGeneration
     val setup = try {
-      cloud.setupAndTools()
+      cloud.setupRead()
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -2674,8 +2679,16 @@ class AppModel(
       return
     }
     if (generation == accountGeneration) {
-      val (coach, tools) = setup
-      _state.update { it.copy(coachCloudId = coach?.id, coachAgent = coach?.kiffAgent, coachChecked = true, coachTools = tools, chatErrors = it.chatErrors - COACH_CHAT) }
+      val coach = setup.setup
+      // No Coach yet: tafs cloud's first start, when it sends one the phone may sign, is drawn as Coach's tools step, whose one
+      // button starts Coach and gives it its tools under one fingerprint.
+      val start = setup.start?.takeIf { coach == null && it.startable }
+      _state.update {
+        it.copy(
+          coachCloudId = coach?.id, coachAgent = coach?.kiffAgent, coachChecked = true, coachStart = start,
+          coachTools = if (coach == null) start?.tools else setup.tools, chatErrors = it.chatErrors - COACH_CHAT,
+        )
+      }
     }
     loadRecipes()
   }
@@ -2820,6 +2833,12 @@ class AppModel(
     }
     if (_state.value.planqueReady && _state.value.coachCloudId != null) return true
     if (_state.value.startingCoach) return false
+    // tafs cloud's first start: the step that shows what Coach is given opens, and its one button starts Coach and gives its
+    // tools under one fingerprint (giveCoachTools). Nothing is sent from here.
+    if (_state.value.coachCloudId == null && _state.value.coachStart?.startable == true) {
+      _state.update { it.copy(coachToolsAsked = true, coachStartError = null, coachToolsError = null) }
+      return false
+    }
     _state.update { it.copy(startingCoach = true, coachStartError = null) }
     val generation = accountGeneration
     val signer = signer
@@ -2860,27 +2879,8 @@ class AppModel(
           }
           claim = draft.id to secret
         }
-        if (!_state.value.planqueReady) {
-          try {
-            planque.enrol(signer.publicKeyDER, kiff.mintConnectorKey())
-          } catch (e: CancellationException) {
-            throw e
-          } catch (e: KiffError.Server) {
-            startFailed(if (e.status == 403) Words.Coach.connectAdminOnly else Words.Coach.connectingNotSetUp(why = ErrorWords.of(e)))
-            return false
-          } catch (e: PlanqueError.Server) {
-            startFailed(
-              when (e.status) {
-                409 -> Words.Coach.connectOtherDevice
-                // planque couldn't check this phone with KIFF. KIFF's session works, so it isn't a sign-out.
-                401 -> CoachWords.CONNECTING_FAILED
-                else -> Words.Coach.connectingNotSetUp(why = ErrorWords.of(e))
-              },
-            )
-            return false
-          }
-          if (generation != accountGeneration) return false
-        }
+        if (!enrolForCoach(::startFailed)) return false
+        if (generation != accountGeneration) return false
         claim?.let { (draft, secret) -> setup = cloud.startSetup(draft, secret) }
       } catch (e: SignerException) {
         if (generation == accountGeneration) notSigned(e, "").takeIf { it.isNotEmpty() }?.let { startFailed(it) }
@@ -2909,6 +2909,128 @@ class AppModel(
     return true
   }
 
+  /**
+   * Enrols this phone with planque for Coach, once: planque gets the phone's key and a connector key minted with a signed setup
+   * call, never kept here. False, with why said through [failed], when it didn't go. [kiff]'s and [planque]'s signers are the
+   * caller's, under the confirmation it took.
+   */
+  private suspend fun enrolForCoach(failed: (String) -> Unit): Boolean {
+    if (_state.value.planqueReady) return true
+    try {
+      planque.enrol(signer.publicKeyDER, kiff.mintConnectorKey())
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: KiffError.Server) {
+      failed(if (e.status == 403) Words.Coach.connectAdminOnly else Words.Coach.connectingNotSetUp(why = ErrorWords.of(e)))
+      return false
+    } catch (e: PlanqueError.Server) {
+      failed(
+        when (e.status) {
+          409 -> Words.Coach.connectOtherDevice
+          // planque couldn't check this phone with KIFF. KIFF's session works, so it isn't a sign-out.
+          401 -> CoachWords.CONNECTING_FAILED
+          else -> Words.Coach.connectingNotSetUp(why = ErrorWords.of(e))
+        },
+      )
+      return false
+    }
+    return true
+  }
+
+  /**
+   * Coach's first start under one fingerprint, from tafs cloud's [start] (docs/coach.md): the batch for KIFF's gateway and Coach's
+   * draft with its Cards, each body as tafs cloud wrote it, signed once together by the approval key (`kiff.requests.v1`, one
+   * `signed_at`). Right after the fingerprint this phone enrols with planque, before anything goes to KIFF, so a refused
+   * enrolment leaves no tools and no confirmed draft nobody claims. Then the batch, the draft once it answered, and tafs cloud
+   * claims the draft's key. With every tool connected, [start] carries the draft alone, signed on its own. A draft refused after the batch
+   * went in comes back on the next read as the draft alone. True once Coach is started; why not is in `coachToolsError`.
+   */
+  private suspend fun startCoachTogether(start: bot.tafs.app.kiff.CoachStart): Boolean {
+    val tenant = kiffTenant
+    val failed: (String) -> Unit = { words -> _state.update { it.copy(coachToolsError = words) } }
+    if (!_state.value.sessionHasKey || tenant == null) {
+      failed(Words.SignIn.againToSignDevice(bot.tafs.app.model.ThisDevice.word))
+      return false
+    }
+    if (_state.value.approvalKeyLost) {
+      failed(KiffClient.APPROVAL_KEY_LOST)
+      return false
+    }
+    val draftRequest = start.draft ?: return false
+    if (_state.value.startingCoach) return false
+    _state.update { it.copy(startingCoach = true, coachToolsError = null, coachStartError = null) }
+    val generation = accountGeneration
+    val signer = signer
+    val sign: (ByteArray) -> String = { signer.signConfirmed(it) }
+    val started = try {
+      kiff.tenant = tenant
+      kiff.setupSigner = sign
+      planque.tenant = tenant
+      planque.deviceLoader = { kiff.thisDeviceId() }
+      planque.signer = sign
+      val draft = if (start.together) {
+        val connectRequest = start.connect ?: return false
+        var batch: KiffClient.Prepared? = null
+        var cards: KiffClient.Prepared? = null
+        // One fingerprint for both, the time taken once the person approved: inside the prompt's success.
+        val signature = signer.signApproval(Words.Coach.Prompt.start) {
+          val signedAt = kiff.nextSignedAt()
+          val b = kiff.prepare(connectRequest.method, connectRequest.path, connectRequest.body, gateway = true, signedAt = signedAt)
+          val c = kiff.prepare(draftRequest.method, draftRequest.path, draftRequest.body, gateway = false, signedAt = signedAt)
+          batch = b
+          cards = c
+          KiffClient.requestsMessage(tenant, signedAt, b.hash, c.hash)
+        }
+        val b = batch ?: return false
+        val c = cards ?: return false
+        // Enrolled before anything goes to KIFF, under the same confirmation.
+        if (!enrolForCoach(failed)) return false
+        if (generation != accountGeneration) return false
+        // The batch first: KIFF refuses a Card naming an action no tool declares yet.
+        kiff.sendTogether(b, signature, with = c.hash)
+        if (generation != accountGeneration) return false
+        KiffClient.json.decodeFromString(bot.tafs.app.kiff.AgentDraft.serializer(), String(kiff.sendTogether(c, signature, with = b.hash)).ifEmpty { "{}" })
+      } else {
+        // Every tool connected already: the draft alone, behind its own fingerprint, taken first; then the enrolment; then the draft.
+        var alone: KiffClient.Prepared? = null
+        val signature = signer.signApproval(Words.Coach.Prompt.start) {
+          kiff.prepare(draftRequest.method, draftRequest.path, draftRequest.body, gateway = false, signedAt = kiff.nextSignedAt()).also { alone = it }.message
+        }
+        val d = alone ?: return false
+        if (!enrolForCoach(failed)) return false
+        if (generation != accountGeneration) return false
+        KiffClient.json.decodeFromString(bot.tafs.app.kiff.AgentDraft.serializer(), String(kiff.sendSigned(d, signature)).ifEmpty { "{}" })
+      }
+      if (generation != accountGeneration) return false
+      val secret = draft.claimSecret
+      if (secret == null) {
+        failed(Words.Coach.didntStart(why = ErrorWords.OURS))
+        return false
+      }
+      cloud.startSetup(draft.id, secret)
+    } catch (e: SignerException) {
+      if (generation == accountGeneration) notSigned(e, "").takeIf { it.isNotEmpty() }?.let(failed)
+      return false
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) failed(Words.Coach.couldntStart(why = ErrorWords.of(e)))
+      // A draft refused after the batch went in: the next read carries the draft alone.
+      if (generation == accountGeneration) loadCoach()
+      return false
+    } finally {
+      planque.signer = null
+      kiff.setupSigner = null
+      if (generation == accountGeneration) _state.update { it.copy(startingCoach = false) }
+    }
+    if (generation != accountGeneration) return false
+    _state.update { it.copy(coachCloudId = started.id, coachAgent = started.kiffAgent, coachChecked = true, coachStart = null, coachToolsAsked = false) }
+    loadCoachTools()
+    refreshConnections()
+    readThread(COACH_CHAT)
+    return true
+  }
+
   /** The tools step put off, or done: the row above the conversation opens it again. */
   fun notNowCoachTools() = _state.update { it.copy(coachToolsAsked = false) }
 
@@ -2932,6 +3054,10 @@ class AppModel(
    * before anything is sent, and says which. True once nothing's left to give.
    */
   suspend fun giveCoachTools(): Boolean {
+    // Before Coach exists, its tools are given by starting it, under one fingerprint.
+    if (_state.value.mode == Mode.kiff && _state.value.coachCloudId == null) {
+      return _state.value.coachStart?.takeIf { it.startable }?.let { startCoachTogether(it) } ?: false
+    }
     val tenant = kiffTenant ?: return false
     if (_state.value.mode != Mode.kiff || _state.value.coachCloudId == null) return false
     val generation = accountGeneration
