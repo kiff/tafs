@@ -1,1 +1,1 @@
-- **Android 1.22.1 (82): Coach's last words always reach the chat.** A long run is followed to its end, and a stream that went quiet after its run ended no longer leaves "…" and Stop on screen (docs/chat.md).
+- **Android 1.22.0 (81): Coach's last words always reach the chat.** A long run is followed to its end, and a stream that went quiet after its run ended no longer leaves "…" and Stop on screen (docs/chat.md).
