@@ -102,6 +102,11 @@ to 30 days ([data.md](data.md)). The screen asks for **Allow**, or **Not now**.
     steer and Run now go on, on their own consent. Coach is never paused: its runs come from a person's routes. A door's message or an app's event waits, as for
     credits, and is said unanswered after 48 hours. A hand-off and a retry wait for their sweep; a run waiting
     after KIFF's alert stays paused; Coach is told the taf is paused.
+  - **Someone who leaves:** a person KIFF no longer lists as active on the account (removed or suspended)
+    consents for no one. KIFF says nothing when someone leaves, and the sweep has no session, so a manager's read
+    of Home checks the consenting people against KIFF's list (`GET /v1/tenant/members`), at most every 10 minutes
+    per account. Their tafs are paused (`left`) until someone who manages tafs takes them over; someone back on the
+    account is cleared.
   - **Back:** a yes, or a take-over, resumes the taf at once, and what waited starts. The consent sweep does the
     same for every account, once at each deploy (`infra/aws.sh`, `{"sweep":"consent"}`) and every 5 minutes after, so a withdrawal or new words pause a taf whose schedule would
     otherwise fire. A yes never turns on the schedule of a taf its owner paused, and the owner's resume is refused

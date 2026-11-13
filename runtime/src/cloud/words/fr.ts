@@ -708,4 +708,5 @@ export const fr: Words = {
   ai_consent_needed: "Autorisez d'abord l'usage de l'IA : Coach et vos tafs en ont besoin pour répondre.",
   ai_consent_paused_no_one: "En pause : personne n'a encore autorisé l'usage de l'IA pour les exécutions de ce taf. Il reprend dès qu'une personne qui gère les tafs l'autorise dans Compte.",
   ai_consent_paused_not_given: "En pause : l'usage de l'IA pour les exécutions de ce taf a été retiré. Il reprend dès qu'il est de nouveau autorisé ou qu'une personne qui gère les tafs le reprend.",
+  ai_consent_paused_left: "En pause : la personne dont l'autorisation d'IA servait à ses exécutions ne fait plus partie du compte. Il reprend dès qu'une personne qui gère les tafs le reprend.",
 };
