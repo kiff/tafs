@@ -205,7 +205,11 @@ final class AppModel: ObservableObject {
         // The app's recent errors, in its own words, for a drive's diagnostics (docs/drive.md).
         didSet {
             lastErrorFrom = nil
-            if let lastError, lastError != oldValue { DriveDiagnostics.shared.error(lastError) }
+            if let lastError, lastError != oldValue {
+                DriveDiagnostics.shared.error(lastError)
+                // Something refused or failed, said to the person: a warning tick (Haptics).
+                Haptics.warning()
+            }
         }
     }
     /// What the last error came from, when a screen shows only its own: set with `fail`,
@@ -4145,7 +4149,14 @@ final class AppModel: ObservableObject {
 
     /// `files` go with the message (kiff/tafs#209): a message may be files alone. One with
     /// files that doesn't go is left with the composer, files and all, rather than kept unsent.
+    /// A send that went through ticks (Haptics), whichever way it went.
     private func deliverChat(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
+        let delivery = await deliverChatOnce(text, to: tafID, files: files)
+        if delivery == .sent { Haptics.success() }
+        return delivery
+    }
+
+    private func deliverChatOnce(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !files.isEmpty else { return .notTried }
         guard text.count <= Self.chatLimit else {
@@ -5456,6 +5467,8 @@ final class AppModel: ObservableObject {
         let id = (call.proposalID ?? call.kiffID).map(KIFFMapping.recordID) ?? UUID()
         var entry = RecordEntry(id: id, tafID: call.tafID, kind: kind, title: title, detail: detail, at: call.heldAt, signature: signature)
         if kind == .approved { entry.ownerApproved = true }
+        // An approval that went through ticks (Haptics); a refusal is the person's own choice.
+        if kind == .approved { Haptics.success() }
         entry.byYou = true
         record.removeAll { $0.id == id }
         record.insert(entry, at: 0)
@@ -7056,7 +7069,14 @@ final class AppModel: ObservableObject {
     /// was tried and failed), or didn't try (nothing to send, too long, or busy).
     enum Delivery { case sent, kept, notTried }
 
+    /// A send to Coach that went through ticks (Haptics), whichever way it went.
     private func deliverSetup(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
+        let delivery = await deliverSetupOnce(text, files: files)
+        if delivery == .sent { Haptics.success() }
+        return delivery
+    }
+
+    private func deliverSetupOnce(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
         let text = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty || !files.isEmpty, text.count <= Self.chatLimit, let s = setupTaf, !setupSending else { return .notTried }
         // An improvement's first message carries no files: tafs cloud adds the taf's context to it.

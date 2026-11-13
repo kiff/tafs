@@ -262,7 +262,8 @@ struct DriveButton<Inner: ButtonStyle>: PrimitiveButtonStyle {
         @Environment(\.driveWords) private var words
 
         var body: some View {
-            Button(role: configuration.role, action: configuration.trigger) { configuration.label }
+            // A person's press taps once (Haptics); a drive's activation doesn't.
+            Button(role: configuration.role, action: { Haptics.tap(); configuration.trigger() }) { configuration.label }
                 .buttonStyle(inner)
                 .modifier(Drivable(words: words ?? "", role: .button, id: nil, confirm: false, secret: false, terms: false,
                                    actions: [.activate: { configuration.trigger() }]))

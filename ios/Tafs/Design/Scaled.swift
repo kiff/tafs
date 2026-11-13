@@ -26,16 +26,41 @@ extension View {
     }
 }
 
-/// The taps the chat gives (kiff/tafs#58): a light one on send, a success one when an
-/// approval completes. None when Haptics is off in Settings (the 901 test).
+/// The app's haptics, one rule on both apps: a light tap on every button press (the shared
+/// button styles, `DriveButton`), a success tick when an approval or a send goes through, a
+/// warning tick when something the person just did is refused or fails, and a step tick on dial
+/// and selector stops.
+/// None when Haptics is off in Settings (the 901 test).
 @MainActor
 enum Haptics {
     static let key = "haptics"
     static var enabled: Bool { UserDefaults.standard.object(forKey: key) as? Bool ?? true }
-    static func tap() { if enabled { UIImpactFeedbackGenerator(style: .light).impactOccurred() } }
-    static func success() { if enabled { UINotificationFeedbackGenerator().notificationOccurred(.success) } }
-    /// A click as a dial reaches each stop.
-    static func step() { if enabled { UISelectionFeedbackGenerator().selectionChanged() } }
+    /// What played, for the tests: "tap", "success", "warning" or "step".
+    static var played: ((String) -> Void)?
+    /// A press and the action it starts tap once, not twice: a second tap this soon is the same one.
+    private static var lastTap = Date.distantPast
+    /// A failure warns only when the person just acted (a press, an approval or a send, whose
+    /// answer can take a few seconds): a background read that fails never buzzes.
+    static let warnsWithin: TimeInterval = 15
+    static func tap() {
+        guard enabled, Date().timeIntervalSince(lastTap) > 0.15 else { return }
+        lastTap = Date()
+        play("tap") { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+    }
+    static func success() { if enabled { play("success") { UINotificationFeedbackGenerator().notificationOccurred(.success) } } }
+    static func warning() {
+        guard enabled, Date().timeIntervalSince(lastTap) < warnsWithin else { return }
+        play("warning") { UINotificationFeedbackGenerator().notificationOccurred(.warning) }
+    }
+    /// A click as a dial or a selector reaches each stop.
+    static func step() { if enabled { play("step") { UISelectionFeedbackGenerator().selectionChanged() } } }
+
+    /// For the tests: no press yet, so each starts from the same place.
+    static func forgetPresses() { lastTap = .distantPast }
+
+    private static func play(_ kind: String, _ feel: () -> Void) {
+        if let played { played(kind) } else { feel() }
+    }
 }
 
 /// One line at the usual text sizes; at the accessibility sizes the text wraps rather than
