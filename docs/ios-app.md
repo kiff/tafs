@@ -722,7 +722,9 @@ resolved to), never the browser's:
 Light/Dark/System choice. Account contains the searchable cloud time-zone
 picker and phone alert controls. Each alert-kind choice is sent to cloud;
 Off removes this phone's registration. Time zone changes retain KIFF's signed
-setup flow.
+setup flow. The setup read sends this phone's zone (`X-Time-Zone`); when tafs
+cloud set a new account's zone from it and answers `time_zone`, the account
+takes it and no offer is asked.
 
 `TafsCloud+Presentation` decodes the same DTOs used on Android. `SourcePages`
 and `AppModel` cache pages and validators per taf and view, clearing on account
