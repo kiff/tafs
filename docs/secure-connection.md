@@ -177,7 +177,9 @@ the flag stays off and the two steps work as before. A first connection (nothing
 **Until this ships:** an approval card whose connection is already connected never repeats
 the connection's text. tafs cloud marks it on Coach's approval component in the conversation
 (`connection: {done: true, words: "Qonto is connected (read only)"}`), and the apps draw only
-that line and Its Card.
+that line and Its Card. Only a connection planque shows `connected` is marked: one signed in whose tools
+wait (`listed`), or one asking for more tools again (`pending`), isn't, and its mark goes, so its card
+shows what it asks, never "connected" twice for two asks (`noteConnected`).
 
 ## Lanes
 

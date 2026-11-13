@@ -5,6 +5,9 @@ export interface When { hm: string; day?: string }
 export interface Counted { sent: number; held: number; refused: number; failed: number; unknown: number }
 
 const bare = (t: When) => (t.day ? `${t.day} ${t.hm}` : t.hm);
+const list = (xs: string[]) => new Intl.ListFormat("en", { type: "conjunction" }).format(xs);
+const day = (d: number) => new Intl.DateTimeFormat("en", { weekday: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2023, 0, 1 + d)));
+const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri", "sat"].indexOf(c));
 
 /** English: the source of every line (docs/languages.md). Another language has these keys, each in its own words. */
 export const en = {
@@ -496,7 +499,8 @@ export const en = {
   dial_last_day_at: (t: string) => `On the last day of each month at ${t}`,
   dial_times_a_day: (times: string[]) => `Every day at ${times.join(", ")}`,
   dial_n_a_day: (n: number) => `${n} a day`,
-  dial_weekly_at: (codes: string[], t: string) => `${codes.join(", ")} at ${t}`,
+  // The days by name ("Monday and Friday at 09:00"), as every other language says them, never their codes ("mon at 09:00").
+  dial_weekly_at: (codes: string[], t: string) => `${list(codes.map((c) => day(code(c))))} at ${t}`,
   // `every` is everyWords (words/index.ts): "Every 15 minutes", "Every 4 hours".
   dial_every_on: (every: string, between: { from: string; to: string } | undefined, codes: string[]) =>
     `${every}${between ? ` from ${between.from} to ${between.to}` : ""}${codes.length ? ` on ${codes.join(", ")}` : ""}`,

@@ -199,6 +199,20 @@ describe("Coach's steps in the person's language", () => {
   });
 });
 
+describe("a connection signed in after a refusal clears it", () => {
+  it("is cleared by any connection call whose answer shows it signed in or connected, never by one showing it failed", () => {
+    const s = new Steps();
+    s.call("planque", { action: "request", server: "https://sheets.googleapis.com/mcp" }, "c1");
+    s.call("planque", { action: "status", grant: "g1" }, "c2");
+    s.call("planque", { action: "status", grant: "g1" }, "c3");
+    s.call("web_read", {}, "c4");
+    expect(s.connectedBy("c2", '{"id":"g1","status":"listed"}')).toEqual({ key: "g1", vendor: "" });
+    expect(s.connectedBy("c3", '{"id":"g1","status":"failed"}')).toBeUndefined();
+    expect(s.connectedBy("c1", '{"id":"g1","status":"signed_in"}')?.key).toBe("https://sheets.googleapis.com/mcp");
+    expect(s.connectedBy("c4", '{"status":"connected"}')).toBeUndefined();
+  });
+});
+
 describe("a refused connection's way forward (go-to-market job 3, 13 Nov)", () => {
   it("offers a key only for an app planque listed with one, and keeps Coach's own step guards from the person", () => {
     const s = new Steps();

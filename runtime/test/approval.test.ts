@@ -222,6 +222,18 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(w.told()).toMatchObject({ answer: "already approved: Stripe is signed in; its tools wait for approval" });
   });
 
+  it("a connection asking for more tools again loses its connected note, so its card shows what it asks", async () => {
+    const s = services();
+    s.grants = [grant({ status: "connected" })];
+    const w = await world(s);
+    await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    expect(await w.coach.get(connectedKey("t_acme", "g_1"))).toEqual({ vendor: "Stripe", read_only: false });
+    // Tools added once connected: planque shows it pending again, and the card is no longer marked connected.
+    s.grants = [grant({ status: "pending" })];
+    await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    expect(await w.coach.get(connectedKey("t_acme", "g_1"))).toBeUndefined();
+  });
+
   it("a connection connected as the card showed it (its report lost) is already approved on a new tap, never failed", async () => {
     const s = services();
     s.grants = [grant({ status: "connected" })];

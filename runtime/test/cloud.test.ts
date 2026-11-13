@@ -2860,7 +2860,7 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     } });
     expect(put.status).toBe(200);
     const n = put.body.version as number;
-    expect(put.body.words).toEqual(["Every day at 09:00, 15:00, 12:30", "Wakes on its door", "If busy, runs the latest once it's free", "Results go to door_reply, app"]);
+    expect(put.body.words).toEqual(["Every day at 09:00, 15:00, 12:30", "Wakes on its door", "If busy, runs the latest once it's free", "Replies to whoever wrote", "Shows each result in the app"]);
     // Nothing reached the scheduler yet.
     expect(w.agents.calls.slice(before).filter((c: string) => /Schedule/.test(c))).toEqual([]);
     // Until it's live, the dial shows it as the change waiting for the owner.
@@ -2870,10 +2870,10 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     expect(asDraft.body.shown).toBe(n);
     expect(asDraft.body.setting.busy).toBe("latest");
     expect((await call(w, "GET", `/v1/tafs/${RAE}/knob`, { token: "ana", query: "version=99" })).status).toBe(404);
-    expect(waiting.body.draft.groups).toEqual([{ name: "This taf", wakes: ["Every day at 09:00, 15:00, 12:30", "Wakes on its door", "If busy, runs the latest once it's free"], what: [], results: ["Results go to door_reply", "Results go to app"] }]);
+    expect(waiting.body.draft.groups).toEqual([{ name: "This taf", wakes: ["Every day at 09:00, 15:00, 12:30", "Wakes on its door", "If busy, runs the latest once it's free"], what: [], results: ["Replies to whoever wrote", "Shows each result in the app"] }]);
     delete waiting.body.draft.groups;
     expect(waiting.body.draft).toEqual({ version: n, words: put.body.words, wakes: ["Every day at 09:00, 15:00, 12:30", "Wakes on its door"],
-      when: ["If busy, runs the latest once it's free"], results: ["Results go to door_reply, app"], what: [] });
+      when: ["If busy, runs the latest once it's free"], results: ["Replies to whoever wrote", "Shows each result in the app"], what: [] });
     expect((await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" })).body).toEqual({ live: n });
     const writes = w.agents.calls.slice(before).filter((c: string) => /(create|update)Schedule/.test(c));
     expect(writes).toEqual([`updateSchedule ${RAE} cron 0 9,15 * * * latest`, `createSchedule ${RAE}-t2 30 12 * * * UTC`]);
@@ -3008,7 +3008,8 @@ describe("a taf's versions (kiff/tafs#107)", () => {
     const put = await call(w, "PUT", `/v1/tafs/${RAE}/knob`, { token: "ana", body: { wakes: [{ kind: "door" }], results: ["app", notion] } });
     expect(put.status).toBe(200);
     const n = put.body.version as number;
-    expect(put.body.words).toContain("Results go to app, Notion · Support log");
+    expect(put.body.words).toContain("Shows each result in the app");
+    expect(put.body.words).toContain("Results go to Notion · Support log");
     expect(JSON.stringify(w.agents.versionDefs.get(`t_acme|${RAE}|${n}`) ?? [...w.agents.versionDefs.values()].at(-1))).toContain("Call notion_add_page_k3f9 with these arguments as given");
     await call(w, "POST", `/v1/tafs/${RAE}/versions/${n}/live`, { token: "ana" });
     const rec = w.tafs.held.get(`t_acme#${RAE}`)!;

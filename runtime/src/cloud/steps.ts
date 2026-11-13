@@ -150,6 +150,21 @@ export class Steps {
     return { vendor, ...(key ? { key } : {}), ...(reason ? { reason } : {}), next };
   }
 
+  /**
+   * What any connection call went through for, once planque's answer shows its connection signed in or connected
+   * (`signed_in`, `listed`, `connected`): earlier refusals for the same are past, so "Coach couldn't connect" never stands
+   * under "signed in". A call whose answer shows any other state (failed, pending) clears nothing.
+   */
+  connectedBy(callID: unknown, text: unknown): { vendor: string; key?: string } | undefined {
+    if (typeof callID !== "string" || !this.connections.has(callID)) return undefined;
+    const said = typeof text === "string" ? text : JSON.stringify(text ?? "");
+    if (!/"status"\s*:\s*"(signed_in|listed|connected)"/.test(said)) return undefined;
+    const vendor = this.connections.get(callID) ?? "";
+    const key = this.targets.get(callID);
+    if (!vendor && !key) return undefined;
+    return { vendor, ...(key ? { key } : {}) };
+  }
+
   /** What a connection request was for, once it went through: earlier refusals for the same are past. */
   requestTarget(callID: unknown): { vendor: string; key?: string } | undefined {
     if (typeof callID !== "string" || !this.requests.has(callID)) return undefined;
