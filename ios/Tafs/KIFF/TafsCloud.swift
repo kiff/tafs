@@ -829,13 +829,42 @@ final class TafsCloud {
         /// words ("From the record: 5 done · 1 refused"). Drawn as written, under the taf's
         /// words. The phone counts nothing: none where tafs cloud sends none, or a blank one.
         var counted: String? = nil
+        /// A connection its work asked for that the connection server refused, not connected
+        /// since (docs/chat.md): tafs cloud's lines, drawn under the taf's words, never folded.
+        var refused: Refused? = nil
 
         init(at: Date, from: From, kind: Kind = .message, text: String, session: String, door: DoorMark? = nil, work: Work? = nil,
-             attachments: [AttachmentRef] = [], serverID: String? = nil, answers: String? = nil, delivered: String? = nil, counted: String? = nil) {
+             attachments: [AttachmentRef] = [], serverID: String? = nil, answers: String? = nil, delivered: String? = nil, counted: String? = nil,
+             refused: Refused? = nil) {
             self.at = at; self.from = from; self.kind = kind; self.text = text; self.session = session; self.door = door; self.work = work
             self.attachments = attachments; self.serverID = serverID; self.answers = answers
             self.delivered = Self.line(delivered); self.counted = Self.line(counted)
+            self.refused = refused.flatMap { $0.lines.isEmpty ? nil : $0 }
         }
+
+        /// A refused connection's lines, each tafs cloud's words: the step's ("Coach couldn't
+        /// connect Shippo yet"), the server's reason ("Why: …"), and what to do next.
+        struct Refused: Decodable, Equatable {
+            var words: String
+            var why: String? = nil
+            var next: String
+            init(words: String, why: String? = nil, next: String) {
+                self.words = words; self.why = ChatMessage.line(why); self.next = next
+            }
+            enum CodingKeys: String, CodingKey { case words, why, next }
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                words = (try? c.decodeIfPresent(String.self, forKey: .words)) ?? ""
+                why = ChatMessage.line(try? c.decodeIfPresent(String.self, forKey: .why))
+                next = (try? c.decodeIfPresent(String.self, forKey: .next)) ?? ""
+            }
+            /// Its lines, in order, the blank ones left out.
+            var lines: [String] { [words, why ?? "", next].compactMap { ChatMessage.line($0) } }
+        }
+
+        /// The refused connection the chat draws under a taf's words: none on an owner's message
+        /// or a run's kickoff.
+        var refusedLines: Refused? { from == .taf && kind != .kickoff ? refused : nil }
 
         /// One of tafs cloud's lines as the app draws it: as written, without the space around it;
         /// none for a blank one.
@@ -851,7 +880,7 @@ final class TafsCloud {
             return (delivered, counted)
         }
 
-        enum CodingKeys: String, CodingKey { case at, from, kind, text, session, door, work, attachments, answers, delivered, counted, serverID = "id" }
+        enum CodingKeys: String, CodingKey { case at, from, kind, text, session, door, work, attachments, answers, delivered, counted, refused, serverID = "id" }
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             at = try c.decode(Date.self, forKey: .at)
@@ -868,6 +897,7 @@ final class TafsCloud {
             // A line the app can't read as words leaves the message without it.
             delivered = Self.line(try? c.decodeIfPresent(String.self, forKey: .delivered))
             counted = Self.line(try? c.decodeIfPresent(String.self, forKey: .counted))
+            refused = (try? c.decodeIfPresent(Refused.self, forKey: .refused)).flatMap { $0.lines.isEmpty ? nil : $0 }
         }
     }
 

@@ -9,6 +9,7 @@ import bot.tafs.app.model.DoorMark
 import bot.tafs.app.model.InstantAsString
 import bot.tafs.app.model.MemoryNote
 import java.time.Instant
+import bot.tafs.app.model.Refused
 import bot.tafs.app.model.Work
 import bot.tafs.app.model.WorkStep
 import kotlinx.serialization.json.JsonPrimitive
@@ -132,6 +133,7 @@ class TafsCloud(
           at = m.at, from = from, text = m.text, session = m.session, serverId = m.id, answers = m.answers,
           delivered = m.delivered?.trim()?.ifEmpty { null },
           counted = m.counted?.trim()?.ifEmpty { null },
+          refused = m.refused?.let { r -> Refused(r.words, r.why?.trim()?.ifEmpty { null }, r.next) }?.takeIf { it.lines.isNotEmpty() },
           kind = if (m.kind == "kickoff") ChatMessage.Kind.kickoff else ChatMessage.Kind.message,
           work = m.work?.let { w -> Work(w.ms, w.steps.map { WorkStep(it.tool, it.error == true || it.failed == true, it.notMade == true, it.words?.trim()?.ifEmpty { null }, it.why) }) },
           // A mark the app can't read leaves the message as a plain one.

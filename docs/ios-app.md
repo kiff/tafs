@@ -88,6 +88,11 @@ counted from the record ("From the record: 5 done · 1 refused"). Each is drawn 
 `delivered` above the taf's words and `counted` under them. A blank one is none, and with none sent
 nothing is drawn: the phone counts nothing itself. Only a taf's message draws them.
 
+**A connection that was refused** (`TafsCloud.ChatMessage.refusedLines`, `RefusedLines`): a taf's message
+may carry tafs cloud's `refused` ([chat.md](chat.md)), the failed step's words, the server's reason ("Why:
+…") and what to do next. They're drawn under the taf's words and under `counted`, never folded into its
+steps, the first in the failure colour. A blank line is left out, and with none sent nothing is drawn.
+
 **What a run used:** under a run's line, in the work and in Its runs, tafs cloud's `requests[].credits.words` as sent
 ("34 credits", or why it used none; `TafWork.Request.creditsLine`). A run KIFF hasn't counted has no line, and the phone
 counts nothing.

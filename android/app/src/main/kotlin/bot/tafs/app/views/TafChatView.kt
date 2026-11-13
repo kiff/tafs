@@ -64,6 +64,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -90,6 +91,7 @@ import bot.tafs.app.model.ReportResult
 import bot.tafs.app.model.ChatItem
 import bot.tafs.app.model.LiveAnswer
 import bot.tafs.app.model.ChatMessage
+import bot.tafs.app.model.Refused
 import bot.tafs.app.model.Work
 import bot.tafs.app.kiff.KiffMapping
 import bot.tafs.app.model.RecordEntry
@@ -446,6 +448,15 @@ private fun MessageRow(
     }
     return
   }
+  // A connection its work asked for that was refused: tafs cloud's lines, under the taf's own words and never folded, so the
+  // person sees why and what to do next without opening the steps (docs/chat.md). The step's words in the failure colour.
+  message.refused?.takeIf { message.from == ChatMessage.From.taf }?.let { refused ->
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+      MessageRow(message.copy(refused = null), tafId, files, onEdit, onResend, onReport)
+      RefusedLines(refused)
+    }
+    return
+  }
   // What the run did, counted from the record: tafs cloud's one line, under the taf's own words (docs/chat.md).
   message.counted?.takeIf { message.from == ChatMessage.From.taf }?.let { line ->
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -528,6 +539,19 @@ private fun MessageBody(
         MarkdownText(message.text, size = 16, modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp))
       }
     }
+  }
+}
+
+/** A refused connection's lines, each as tafs cloud wrote it: the step's in the failure colour, then why and what to do next. */
+@Composable
+internal fun RefusedLines(refused: Refused) {
+  Column(
+    Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}.testTag("refused"),
+    verticalArrangement = Arrangement.spacedBy(2.dp),
+  ) {
+    Text(refused.words, style = scaled(13, FontWeight.Medium, Theme.no))
+    refused.why?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+    Text(refused.next, style = scaled(13, color = Theme.soft))
   }
 }
 

@@ -32,6 +32,8 @@ export const de: Words = {
   doing_grants: "Ich suche deine Verbindungen…",
   doing_connection: "Ich arbeite an der Verbindung…",
   step_connection_not_yet: (vendor: string) => vendor ? `Coach konnte ${vendor} noch nicht verbinden` : "Coach konnte die App noch nicht verbinden",
+  step_connection_why: (reason: string) => `Grund: ${reason}`,
+  step_connection_next: (vendor: string) => vendor ? `Als Nächstes: Bitte Coach, ${vendor} stattdessen mit dem Schlüssel zu verbinden oder eine andere App zu nutzen.` : "Als Nächstes: Bitte Coach, die App stattdessen mit dem Schlüssel zu verbinden oder eine andere App zu nutzen.",
   removal_goes: (apps: string[]) => `${list(apps)} ${apps.length > 1 ? "gehen" : "geht"} mit.`,
   removal_stays: (app: string, tafs: string[]) => `${app} bleibt: ${list(tafs)} ${tafs.length > 1 ? "nutzen" : "nutzt"} es.`,
   doing_draft: "Ich entwerfe die Card…",
