@@ -373,6 +373,18 @@ held call was answered, then `end`.
   the answer lands in the live answer's own row. The thread follows its end on the last row's
   height as well as on the words arriving, at once and only while the owner is at the end.
 
+**A run Android follows to its end, never left as "…"** (Android 1.22):
+- With no stream open (one couldn't open, or a run went on with none, as Coach's does once tafs cloud
+  answers its result), the thread is read every 2.5 s for about 6 minutes, then every 15 s for about
+  25 more, while tafs cloud says a run is at work (`followChat`).
+- A run those reads find at work that this phone hasn't followed yet is picked back up by its stream,
+  which takes over from the reads.
+- While a stream is open, the thread is still read every 30 s (`STREAM_CHECK_MS`). A stream can stay
+  quiet for many minutes after its run ended without saying so. Once tafs cloud says nothing is at
+  work there, and the live answer has stood for more than 15 s, any read (that check, or coming back
+  to the chat) drops the live answer, so "…" and Stop go and the thread shows what the run wrote.
+  It also closes the quiet stream, so the next run is followed again.
+
 ## The thread and the chats list
 
 `GET /v1/tafs/{id}/conversation` is the thread: the taf's last 5 job runs and the

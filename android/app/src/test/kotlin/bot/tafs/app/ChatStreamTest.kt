@@ -262,6 +262,68 @@ class ChatStreamTest {
     assertTrue(m.state.value.chats["refunds-1"].orEmpty().any { it.text == "Version 2 is ready to try." })
   }
 
+  /** run_1's resumed stream left open and silent after its first event, as a stream whose run ended unsaid. */
+  private fun quietStream() {
+    transport.openStream = { request ->
+      if (!request.url.contains("/runs/run_1/stream")) null
+      else {
+        transport.send(request)
+        bot.tafs.app.kiff.StreamedResponse(200, kotlinx.coroutines.flow.flow {
+          sse("activity" to """{"tool":"list_charges","step":"Reading payments…","call_id":"c1"}""").lines().forEach { emit(it) }
+          kotlinx.coroutines.awaitCancellation()
+        })
+      }
+    }
+  }
+
+  @Test fun aStreamThatWentQuietAfterItsRunEndedLeavesNoDotsAndTheThreadShowsTheEnd() = runTest {
+    reads(thread = """{"messages":[],"working":{"session":"s1","run":"run_1"}}""")
+    transport.answer("GET /v1/tafs/taf_1/runs/run_1/stream", 200, "")
+    quietStream()
+    val m = model()
+    m.loadChat("refunds-1")
+    settle()
+    assertTrue("the live answer while the stream is open", m.state.value.chatLive.containsKey("refunds-1"))
+    // The run ends, and the stream says nothing more. The thread says so at the next check.
+    transport.answer(conversation, 200, """{"messages":[{"at":"2026-10-28T09:00:05Z","from":"taf","text":"Done: 3 refunds.","session":"s1"}]}""")
+    testScheduler.advanceTimeBy(AppModel.STREAM_CHECK_MS + 1)
+    testScheduler.runCurrent()
+    settle()
+    assertTrue("no …", m.state.value.chatLive.isEmpty())
+    assertNull("no Stop", m.state.value.chatWorking["refunds-1"])
+    assertTrue(m.state.value.chats["refunds-1"].orEmpty().any { it.text == "Done: 3 refunds." })
+  }
+
+  @Test fun aLongRunIsReadUntilItEndsPastTheFastReads() = runTest {
+    // A run at work whose stream can't open: read every few seconds, then every quarter minute, until it ends.
+    reads(thread = """{"messages":[],"working":{"session":"s1","run":"run_1"}}""")
+    transport.answer("GET /v1/tafs/taf_1/runs/run_1/stream", 404, """{"error":"not_found"}""")
+    val m = model()
+    m.loadChat("refunds-1")
+    testScheduler.advanceTimeBy(AppModel.CHAT_POLL_MS * AppModel.CHAT_POLL_BUDGET + AppModel.CHAT_SLOW_POLL_MS * 3)
+    testScheduler.runCurrent()
+    assertTrue("still followed past the fast reads", m.state.value.chatWorking.containsKey("refunds-1"))
+    transport.answer(conversation, 200, """{"messages":[{"at":"2026-10-28T09:20:00Z","from":"taf","text":"Set up.","session":"s1"}]}""")
+    testScheduler.advanceTimeBy(AppModel.CHAT_SLOW_POLL_MS + 1)
+    testScheduler.runCurrent()
+    assertNull(m.state.value.chatWorking["refunds-1"])
+    assertTrue(m.state.value.chats["refunds-1"].orEmpty().any { it.text == "Set up." })
+  }
+
+  @Test fun aRunThatStartsWhileTheChatIsReadIsFollowedByItsStream() = runTest {
+    // Followed by reads (run_1's stream can't open); then a new run, run_2, goes on with no stream open: its stream is picked up.
+    reads(thread = """{"messages":[],"working":{"session":"s1","run":"run_1"}}""")
+    transport.answer("GET /v1/tafs/taf_1/runs/run_1/stream", 404, """{"error":"not_found"}""")
+    transport.answer("GET /v1/tafs/taf_1/runs/run_2/stream", 200, sse("end" to """{"status":"COMPLETED","stop":"answered"}"""))
+    val m = model()
+    m.loadChat("refunds-1")
+    transport.answer(conversation, 200, """{"messages":[],"working":{"session":"s1","run":"run_2"}}""")
+    testScheduler.advanceTimeBy(AppModel.CHAT_POLL_MS + 1)
+    testScheduler.runCurrent()
+    settle()
+    assertEquals(1, transport.requestsTo("GET /v1/tafs/taf_1/runs/run_2/stream").size)
+  }
+
   @Test fun aRunAtWorkIsPickedBackUpOnceWhenTheChatIsRead() = runTest {
     reads(thread = """{"messages":[],"working":{"session":"s1","run":"run_1"}}""")
     transport.answer("GET /v1/tafs/taf_1/runs/run_1/stream", 200, sse(
