@@ -121,8 +121,9 @@ struct SettingsView: View {
                     LabeledContent(Words.Settings.mode, value: modeText)
                     if model.mode == .kiff, let account = model.kiffAccount {
                         NavigationLink { AccountView(account: account, done: { dismiss() }).environmentObject(model) } label: { LabeledContent(Words.Settings.kiffAccount, value: account.name) }
-                        LabeledContent(Words.Settings.accountId, value: account.slug)
-                        if let email = account.email { LabeledContent(Words.Settings.signedInAs, value: email) }
+                        // Who is signed in, said once: an account named after its owner's email
+                        // (a Solo account) has no second line. Its id is on the account's own screen.
+                        if let email = AccountLines.signedInAs(account) { LabeledContent(Words.Settings.signedInAs, value: email) }
                     }
                 }
                 if model.mode == .kiff {
@@ -258,7 +259,7 @@ struct AccountView: View {
                 if account.name != account.slug {
                     LabeledContent(Words.Settings.accountId, value: account.slug)
                 }
-                if let email = account.email, !email.isEmpty {
+                if let email = AccountLines.signedInAs(account) {
                     LabeledContent(Words.Settings.signedInAs, value: email)
                 }
             }
@@ -295,4 +296,21 @@ struct AccountView: View {
 
     /// The account's time zone as KIFF holds it now.
     private var zone: String { model.kiffAccount?.timeZone ?? account.timeZone ?? "UTC" }
+}
+
+/// What Account says of who is signed in, each thing once.
+enum AccountLines {
+    /// The email under the account's name; none when the account is named after it (a Solo
+    /// account), so it isn't shown twice, or when KIFF sent none.
+    static func signedInAs(_ account: KIFFClient.Account) -> String? {
+        guard let email = account.email?.trimmingCharacters(in: .whitespacesAndNewlines), !email.isEmpty else { return nil }
+        return email.caseInsensitiveCompare(account.name.trimmingCharacters(in: .whitespacesAndNewlines)) == .orderedSame ? nil : email
+    }
+
+    /// People & groups' first line: the account and how many people; the count alone when the
+    /// account is named after its one owner.
+    static func people(_ account: KIFFClient.Account, count: Int) -> String {
+        let people = Words.People.count(count: count)
+        return signedInAs(account) == nil && account.email?.isEmpty == false ? people : "\(account.name) · " + people
+    }
 }

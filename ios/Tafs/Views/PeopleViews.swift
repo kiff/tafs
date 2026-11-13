@@ -20,7 +20,7 @@ struct PeopleGroupsView: View {
             }
             if let account = model.kiffAccount {
                 Section {
-                    Text("\(account.name) · " + Words.People.count(count: model.people.count))
+                    Text(AccountLines.people(account, count: model.people.count))
                         .scaledFont(14).foregroundColor(Theme.soft)
                 }
             }

@@ -255,6 +255,9 @@ the app in sample mode.
   `AppLanguage.name`), so someone in a language they don't read still finds theirs, and **Change
   language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. No picker
   of the app's own, as on Android (`settings.language_title`, `settings.change_language`).
+- **Account says who is signed in once** (`AccountLines`): the account's name, then "Signed in as" only when the
+  email differs from it (a Solo account is named after its owner's email). The account's id is on the account's
+  own screen only. People & groups' first line is the count alone for such an account.
 - **Setup › Connected tools** (`ConnectedToolsRing`): one node per app (`ConnectedToolsRing.nodes`),
   the connection with actions in front; another sign-in to the same app is under Other
   connections in its sheet, with its own Disconnect. Starts when and Results go to are rows
@@ -286,6 +289,7 @@ the app in sample mode.
 - **Connect apps** (`ConnectAppsView`, from Account): `GET /v1/connect/apps`, searched as the
   owner types, in tafs cloud's order and words. Rows show only the app's catalog title;
   internal provider ids are not shown. "Not listed? Ask Coach" appears when `by_key`.
+  A row's Connect button is as wide as its words, never the row: stretched across an iPad it read as a field.
   Connecting (`POST /v1/connect/apps/{entry}`) opens the approval as a sheet over the list,
   with KIFF's words: approve first, then sign in at the vendor, as for any connection. An
   API-key vendor takes its key in the sheet: planque gets the key in `Planque-Vendor-Key`, and
