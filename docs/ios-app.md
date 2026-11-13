@@ -352,6 +352,11 @@ the app in sample mode.
   and no text field.
   **A later approval card whose connection is already connected** carries tafs cloud's mark (`connection: {done,
   words}`, `SetupComponent.Connection`): the card draws that line and the Card, never the connection's text again.
+  **What the fingerprint covers** is tafs cloud's mark too (`signs: {card, words}`, `SetupComponent.Signs`), set from
+  the same decision as the step it then asks, since the phone learns the step only after the tap. With `card: false`
+  the Card is the one approved next: drawn under tafs cloud's words ("Its Card: you approve it next") with its lines
+  dimmed, never under its own title as if signed now, and not drawn at all without words. With `card: true`, or no
+  mark from an older tafs cloud, the card draws the Card as before.
   **The key and its Card under one Face ID** (`AppModel.approveKeyAndCard`, `RequestsTogether`), when the sheet is
   opened from Coach's card and that card carries the taf's Card as a draft:
   - The sheet draws **Its Card**: KIFF's own lines for the draft this phone read from KIFF.
