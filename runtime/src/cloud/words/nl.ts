@@ -579,6 +579,7 @@ export const nl: Words = {
   cts_give: "Coach zijn tools geven",
   cts_not_now: "Niet nu",
   cts_row: "Coach' tools wachten op jou · Geven",
+  cts_row_cards: "Coach heeft nieuwe tools: keur hun limieten goed",
   cts_g_watch: "Je tafs in de gaten houden",
   cts_g_watch_line: "Je tafs en hun runs zien, en vinden wat er misging.",
   cts_g_run: "Ze voor je laten werken",

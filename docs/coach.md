@@ -501,7 +501,15 @@ tools are `to_give` (`coachToolsStep` in `coach.ts`):
 - **One confirmation** gives the tools on either phone. The words never name a biometric (fingerprint,
   Face ID): the phone knows which it asks for, and tafs cloud doesn't.
 - **Buttons:** `give` and `not_now`. After **Not now**, the Coach screen keeps one line, `row`, which
-  opens the same step. It's never a panel above the conversation.
+  opens the same step. It's never a panel above the conversation. When only Cards for tools Coach gained
+  since are missing (every tool connected), `row` says so: "Coach has new tools: approve their limits".
+- **An account that has Coach, with tools and Cards missing** (`TAFS_COACH_START_ONE=on`): `tools` also
+  carries `scheme: "kiff.requests.v1"` and `requests`, the tools batch (`connect`) and the Cards' draft
+  for Coach's own agent (`draft`), worded by KIFF's gateway over the tools the batch would connect and
+  carrying that `contract_digest`, as a first start's pair. The phone signs both hashes once, sends the
+  batch, then the draft; the draft's submit is the confirmation, as for `card`. Without the flag, or when
+  KIFF can't word the pair, it's the batch, then the Cards on the next read, as before; `connect` and
+  `card` stay for apps that don't read `requests`.
 
 When a run Coach handed a taf pauses or ends, kiff/agents tells tafs cloud
 (`POST /v1/runs/ended`). tafs cloud reads the run back from kiff/agents rather than

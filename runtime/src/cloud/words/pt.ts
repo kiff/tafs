@@ -579,6 +579,7 @@ export const pt: Words = {
   cts_give: "Dar ao Coach as suas ferramentas",
   cts_not_now: "Agora não",
   cts_row: "As ferramentas do Coach esperam por si · Dar",
+  cts_row_cards: "O Coach tem ferramentas novas: aprove os seus limites",
   cts_g_watch: "Acompanhar os seus tafs",
   cts_g_watch_line: "Ver os seus tafs e as execuções deles, e encontrar o que correu mal.",
   cts_g_run: "Pô-los a trabalhar por si",
