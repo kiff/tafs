@@ -793,6 +793,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onPickTimeZone = { zone -> scope.launch { model.setAccountTimeZone(zone) } },
         onLoadSuggestions = { scope.launch { model.loadSuggestions() } },
         onShowSuggestions = { show -> scope.launch { model.setSuggestions(show) } },
+        onLoadAIConsent = { scope.launch { model.loadAIConsent() } },
+        onAllowAI = { scope.launch { model.allowAI() } },
+        onWithdrawAI = { scope.launch { model.withdrawAI() } },
         onOpenAlertTaf = { cloudId ->
           state.tafs.firstOrNull { it.cloudId == cloudId }?.let {
             showingSettings = false; tab = Tab.Tafs; coachOpen = false; openTaf = it.id
@@ -846,6 +849,13 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onGiveKey = { grant, key -> model.startGiveKey(grant.id, grant.digest, key) },
         loadSecure = model::loadSecureSheet,
         onDisconnect = model::disconnectFromReceipt,
+      )
+    }
+    // Your data and the AI: after sign-in until answered, and when tafs cloud refuses a model turn for it (docs/accounts.md).
+    state.aiConsent?.takeIf { state.aiConsentAsked && !it.given && it.drawable }?.let { consent ->
+      bot.tafs.app.views.AIConsentSheet(
+        consent, busy = state.aiConsentBusy, error = state.aiConsentError,
+        onAllow = { scope.launch { model.allowAI() } }, onNotNow = model::notNowAI,
       )
     }
     // "Allow this from now on", over whatever screen the held call was on.

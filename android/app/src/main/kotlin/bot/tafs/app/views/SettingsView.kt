@@ -91,6 +91,10 @@ fun SettingsSheet(
   onOpenAlertTaf: (String) -> Unit = {},
   onLoadSuggestions: () -> Unit = {},
   onShowSuggestions: (Boolean) -> Unit = {},
+  /** The person's AI-data consent, in tafs cloud's words: read, allowed, withdrawn (docs/accounts.md). */
+  onLoadAIConsent: () -> Unit = {},
+  onAllowAI: () -> Unit = {},
+  onWithdrawAI: () -> Unit = {},
 ) {
   val scope = rememberCoroutineScope()
   val uri = LocalUriHandler.current
@@ -101,7 +105,7 @@ fun SettingsSheet(
   var zoneQuery by remember { mutableStateOf("") }
   var answeringTafs by remember { mutableStateOf(false) }
   val version = remember(context) { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).let { versionWords(androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it), it.versionName) } }.getOrNull() ?: "–" }
-  LaunchedEffect(state.mode) { if (state.mode == Mode.kiff) { onLoadAlerts(); onLoadSuggestions() } }
+  LaunchedEffect(state.mode) { if (state.mode == Mode.kiff) { onLoadAlerts(); onLoadSuggestions(); onLoadAIConsent() } }
   if (zonePicker) LaunchedEffect(zoneQuery) { kotlinx.coroutines.delay(250); onLoadTimeZones(zoneQuery) }
 
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
@@ -158,6 +162,20 @@ fun SettingsSheet(
               val manages = state.kiffAccount?.capabilities?.contains("cards.manage") == true
               AccountSwitch(Words.Settings.showSuggestions, s.words, s.show, manages && !state.suggestionsBusy, onShowSuggestions)
               state.suggestionsError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
+            }
+          }
+          // Your data and the AI, in tafs cloud's words: whether the person allowed it, and the way to withdraw or allow it.
+          if (state.mode == Mode.kiff) state.aiConsent?.takeIf { it.drawable }?.let { consent ->
+            Section(consent.words.title) {
+              if (consent.given) {
+                Text(consent.words.given, style = scaled(16, color = Theme.ink), modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp))
+                HorizontalDivider(color = Theme.line, modifier = Modifier.padding(start = 12.dp))
+                if (!state.aiConsentBusy) Action(consent.words.withdraw, Theme.no, onWithdrawAI)
+              } else {
+                consent.words.lines.forEach { Text(it, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) }
+                if (!state.aiConsentBusy) Action(consent.words.allow, Theme.amberText, onAllowAI)
+              }
+              state.aiConsentError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
             }
           }
           Section(Words.Settings.themeTitle) {
