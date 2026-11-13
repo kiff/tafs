@@ -1,1 +1,2 @@
 - Coach names an object argument's fields one by one, never the object (name-the-tools@9), and names the agent from the taf's name, lower case with hyphens (connect-an-app@20).
+- Coach asks for a taf's tools once, complete (read-only, pins, arguments), so one connection never comes back for a second or third approval.

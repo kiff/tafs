@@ -76,14 +76,13 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   no money here. It has no amount argument, and its Card limits its calls a
   day. Name what each tool that changes things acts on
   (resource_argument): the item it takes (the ticket, the event, the
-  payment), as one of its string arguments, required. When it can take
-  several, keep the one the taf's read of it takes and leave the others out. For a tool that
+  payment), as one of its string arguments, required. For a tool that
   moves money, name the read that says its unit (unit_lookup: that read's
   name, the read's argument that takes the same id, and where the unit is in
   its answer, such as currency): KIFF refuses a call in another unit than the
-  Card's. Mark tools that
-  only read as read_only: reading in the owner's account is open, with no
-  limits.
+  Card's. Ask for a taf's tools once, complete (read_only, pins,
+  arguments): each change is one more approval. Mark tools that
+  only read as read_only: reading in the owner's account is open, with no limits.
 - Test or live is the owner's choice, never yours, when the vendor has both.
   Ask it before you propose tools that move money or change data, and before
   any rules or draft name a mode: "Test mode, recommended to start" or "Live

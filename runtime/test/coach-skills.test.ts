@@ -131,6 +131,9 @@ describe("Coach's core", () => {
   it("names an object's fields one by one, and the agent from the taf's name", () => {
     const tools = COACH_SKILLS.find((k) => k.name === "name-the-tools")!.body.replace(/\s+/g, " ");
     expect(tools).toContain("An argument is never an object: name its fields one by one, each at its path (values.Status).");
+    // agentgabo's Gmail count on Android 80: "Gmail is connected", then "Gmail is connected (read only)", two more approvals
+    // for one connection. The tools go once, complete.
+    expect(tools).toContain("Ask for a taf's tools once, complete (read_only, pins, arguments): each change is one more approval.");
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(connect).toContain("You choose the name: the taf's name in lower case, words joined by hyphens (introduction-drafts)");
   });
