@@ -10,7 +10,7 @@ import { doorKeys, type DoorSecrets, type DoorStore } from "../src/cloud/doors/m
 import { signedWebhook, whatsappSigned } from "../src/cloud/doors/sign.js";
 import { cut, htmlText, ownText } from "../src/cloud/doors/text.js";
 import type { WhatsAppClient } from "../src/cloud/doors/whatsapp.js";
-import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
+import { fakeAgents, memoryAccounts, memoryCoach, memoryArchived, memoryClaims, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import { eventLog } from "../src/cloud/events.js";
 
 const NOW = new Date("2026-10-24T09:00:00Z");
@@ -111,6 +111,8 @@ function world() {
     agents, tafs, store, secrets, inbox, outbox, waSent, config, pushed, devices,
     /** Set: the account's deletion was accepted, and nothing of it may run. */
     deleting: false,
+    /** Set: the AI-data consent is required, kept in this store (consent.ts). */
+    consent: undefined as ReturnType<typeof memoryCoach> | undefined,
     slots: memorySlots(),
     at: (d: Date) => { clock = d; },
     now,
@@ -159,6 +161,7 @@ function depsOf(w: World): Deps {
     doors: { store: w.store, secrets: w.secrets, config: async () => w.config },
     events: eventLog(w.store),
     now: w.now,
+    ...(w.consent ? { aiConsent: true, coach: w.consent } : {}),
     ...(w.deleting ? { deletions: { get: async (t: string) => (t === "t_acme" ? { tenant: t, intent: "", signature: "", accepted: "", done: [] } : undefined), put: async () => undefined, pending: async () => [], finished: async () => undefined } } : {}),
   };
 }
@@ -1620,5 +1623,29 @@ describe("while the account's tafs wait for credits", () => {
     w.at(new Date(NOW.getTime() + 61 * 60_000));
     await appEvent(w, { id: "ev_busy_later" });
     expect(w.pushed).toHaveLength(2);
+  });
+});
+
+// Runs with no person in the moment take their taf's consent (consent.ts): an app's event for a taf no one has
+// allowed AI use for starts no run. It waits, as for credits, and the taf is paused; the account's first manager
+// yes resumes the taf and starts what waited.
+describe("an app's event for a taf whose runs have no consent", () => {
+  it("is held, pauses the taf, and runs once a manager allows AI use", async () => {
+    const w = world();
+    w.consent = memoryCoach(w.now);
+    const rec = w.tafs.held.get(`t_acme#${REFUNDS}`)!;
+    w.tafs.held.set(`t_acme#${REFUNDS}`, { ...rec, appEvents: [{ kind: "app_event", grant: "grt_hub", event: "HUBSPOT_DEAL_CREATED", subscription: "sub_1", name: "HubSpot · new deal" }] });
+    const r = await appEvent(w, { id: "ev_consent1" });
+    expect(r.status).toBe(202);
+    expect(r.body).toEqual({ outcome: "held" });
+    expect(w.agents.runs.filter((x) => x.agent === REFUNDS)).toHaveLength(0);
+    expect((await w.agents.api.halted("t_acme", REFUNDS)).own).toBe(true);
+    // A second event waits behind it, and still starts nothing.
+    expect((await appEvent(w, { id: "ev_consent2" })).body).toEqual({ outcome: "held" });
+    expect(w.agents.runs.filter((x) => x.agent === REFUNDS)).toHaveLength(0);
+    // Ana manages tafs: her yes is the account's first, the taf goes on, and both events run, oldest first.
+    expect((await send(w, "POST", "/v1/me/ai-consent", { token: "ana", body: { version: "1" } })).status).toBe(200);
+    expect((await w.agents.api.halted("t_acme", REFUNDS)).own).toBe(false);
+    expect(w.agents.runs.filter((x) => x.agent === REFUNDS)).toHaveLength(2);
   });
 });

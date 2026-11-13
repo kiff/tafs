@@ -125,4 +125,4 @@ describe("runs with no person in the moment take their taf's consent", () => {
 
 // Each trigger goes through requireUnattended (a door's message, an app's event and a held one released via the doors'
 // startRun; a hand-off and a retry via the deliveries'; continueReady; Coach's task). Their own end-to-end cases are next.
-describe.todo("the trigger matrix, end to end: a door's message held, an app's event held, a hand-off and a retry waiting, a run after KIFF's alert left paused, Coach's task refused");
+describe.todo("the trigger matrix, end to end (an app's event held: doors.test.ts): a door's message held, a hand-off and a retry waiting, a run after KIFF's alert left paused, Coach's task refused");
