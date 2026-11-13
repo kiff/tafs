@@ -174,7 +174,9 @@ connected with the tools and the Card is issued; tools in with a Card that didn'
 declare an addition's tools in KIFF while they wait (and withdraw them if the addition ends unapproved); until then
 the flag stays off and the two steps work as before. A sign-in planque already holds (one reused for another taf)
 counts too: its first tools wait as `pending` with `signed_in: true` and, declared in KIFF meanwhile, `declared: true`,
-and approving them connects at once, with no sign-in between, so they go with the Card under one fingerprint. A first
+and approving them connects at once, with no sign-in between, so they go with the Card under one fingerprint, for a
+phone that also sends `can: ["signs"]`: one that draws the card by its `signs` mark ([chat.md](chat.md)), so the Card's
+limits are on screen whatever the grant's status. A phone without it keeps the two steps here. A first
 connection that still needs its sign-in, or tools not declared, keeps its steps: its card may carry the draft, but
 tafs cloud asks the `connect` step, which signs the connection alone. The draft isn't signed, so the report never answers `approved` while KIFF says it
 isn't issued (at the version the card showed): it answers `failed: <app> is connected; KIFF didn't issue the taf's

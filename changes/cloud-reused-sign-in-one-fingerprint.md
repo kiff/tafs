@@ -1,1 +1,1 @@
-- A sign-in already held, reused for another taf, takes its first tools and the Card under one fingerprint (`tools_and_cards`), as added tools do: no sign-in comes between, and both are declared before the owner signs.
+- A sign-in already held, reused for another taf, takes its first tools and the Card under one fingerprint (`tools_and_cards`), as added tools do, for a phone that draws the card by its `signs` mark (`can: signs`): no sign-in comes between, and both are declared before the owner signs. Other phones keep the two steps.

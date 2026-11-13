@@ -875,7 +875,7 @@ describe("a held sign-in's first tools and the Card, under one fingerprint", () 
   afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; });
   const held = (over: Record<string, unknown> = {}) => grant({ status: "pending", signed_in: true, declared: true, ...over });
 
-  async function heldWorld(g = held(), can = ["tools_and_cards"]) {
+  async function heldWorld(g = held(), can = ["tools_and_cards", "signs"]) {
     process.env.TAFS_TOOLS_AND_CARDS = "on";
     const s = services();
     s.grants = [g];
@@ -888,7 +888,7 @@ describe("a held sign-in's first tools and the Card, under one fingerprint", () 
   it("asks the tools and the Card as one signature, marks the card so, and is approved once both hold", async () => {
     const { s, w, r } = await heldWorld();
     expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "tools_and_cards", scheme: "kiff.requests.v1", key: "critical", kiff: { draft: "drf_1", version: "v3" } } });
-    const chat = await w.call("GET", `/v1/tafs/${COACH}/conversation`, undefined, {}, "can=tools_and_cards");
+    const chat = await w.call("GET", `/v1/tafs/${COACH}/conversation`, undefined, {}, "can=tools_and_cards,signs");
     expect((chat.body.components as Array<{ component: { id?: string; signs?: unknown } }>).find((c) => c.component.id === "a1")?.component.signs).toEqual({ card: true });
     s.grants = [held({ status: "connected" })];
     s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
@@ -908,6 +908,19 @@ describe("a held sign-in's first tools and the Card, under one fingerprint", () 
     expect((await heldWorld(held({ declared: false }))).r.body).toMatchObject({ ask: { step: "connect" } });
     expect((await heldWorld(held({ signed_in: false }))).r.body).toMatchObject({ ask: { step: "connect" } });
     expect((await heldWorld(held(), [])).r.body).toMatchObject({ ask: { step: "connect" } });
+  });
+
+  // A phone that signs both but draws the Card only for a connected grant (builds already in people's hands) would
+  // sign this Card without its limits on screen: the new path is only for one that draws by the mark (can: signs).
+  it("is offered only to a phone that draws the card by its mark", async () => {
+    const old = await heldWorld(held(), ["tools_and_cards"]);
+    expect(old.r.body).toMatchObject({ ask: { step: "connect" } });
+    const chat = await old.w.call("GET", `/v1/tafs/${COACH}/conversation`, undefined, {}, "can=tools_and_cards");
+    expect((chat.body.components as Array<{ component: { id?: string; signs?: unknown } }>).find((c) => c.component.id === "a1")?.component.signs)
+      .toEqual({ card: false, words: "Its Card: you approve it next" });
+    // Added tools on a connected app are as before: a phone that signs both takes them with the Card.
+    const added = await heldWorld(grant({ status: "pending", connected: [{ tool: "list_charges" }] }), ["tools_and_cards"]);
+    expect(added.r.body).toMatchObject({ ask: { step: "tools_and_cards" } });
   });
 });
 

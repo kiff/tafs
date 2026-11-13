@@ -439,7 +439,9 @@ export function stepFor(grant: ApprovalGrant, ask: { draft?: string; can?: strin
   // (docs/secure-connection.md). A connected grant's added tools, or a held sign-in's first tools (one reused for
   // another taf), declared in KIFF meanwhile: the approve connects at once, with no sign-in between the two halves.
   const added = Array.isArray(grant.connected) && grant.connected.length > 0;
-  const heldFirst = grant.signed_in === true && grant.declared === true;
+  // Only for a phone that draws the card by its mark (`can: signs`): one that draws the Card only for a connected
+  // grant would sign it unseen here, and builds already in people's hands don't update with this rule.
+  const heldFirst = grant.signed_in === true && grant.declared === true && ask.can?.includes("signs") === true;
   if (flags.toolsAndCards && ask.can?.includes("tools_and_cards") && !takesKey(grant) && grant.status === "pending" && (added || heldFirst) && ask.draft) return "tools_and_cards";
   // A key grant whose Card is drafted already: the key and the Card under one fingerprint.
   if (flags.keyAndCards && ask.can?.includes("key_and_cards") && takesKey(grant) && ask.draft) return "key_and_cards";
