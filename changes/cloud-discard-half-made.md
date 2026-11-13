@@ -1,0 +1,1 @@
+- The person who started a taf whose setup stopped partway can discard it from Home: the chat that drafted it ends and Home stops listing it, once the phone has revoked its Card.
