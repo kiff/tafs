@@ -125,6 +125,10 @@ export class Steps {
    */
   connectionRefusal(callID: unknown, text: unknown): { vendor: string; key?: string; reason?: string; next: string } | undefined {
     if (typeof callID !== "string" || !this.connections.has(callID)) return undefined;
+    // A guard on the order of Coach's own steps ("read the app's tool catalog before selecting this action") is about how
+    // Coach asked, never the person's app: Coach reads it and goes on, and the person is shown neither its words nor a
+    // way forward that isn't theirs to take (go-to-market job 3, 13 Nov).
+    if (coachGuard(text)) return undefined;
     const vendor = this.connections.get(callID) ?? "";
     const key = this.targets.get(callID);
     const w = wordsIn(this.lang);
@@ -359,4 +363,13 @@ export function keyAppsIn(text: string): string[] {
   };
   walk(v, 0);
   return [...out];
+}
+
+/**
+ * Whether a connection server's refusal is a guard on the order of Coach's own steps (read the catalog, or the
+ * tools, before asking for an action): Coach's to correct, never the person's to read.
+ */
+export function coachGuard(text: unknown): boolean {
+  const line = whyOf(text) ?? "";
+  return /\b(read|check|list)\b[^.]*\b(catalog|tools?)\b[^.]*\bbefore\b/i.test(line) || /\bbefore (selecting|choosing|adding|asking for) (this|an|the) (action|tool)\b/i.test(line);
 }

@@ -1,1 +1,2 @@
 - A connection that couldn't be made offers a key only for an app that has one (planque listed it with a key earlier in the chat); otherwise it offers signing in again, or connecting a refused key request again.
+- A refusal that is a guard on the order of Coach's own steps (reading the catalog before an action) is Coach's to correct: the person is shown neither its words nor a way forward.
