@@ -1,0 +1,1 @@
+- A connection that couldn't be made offers a key only for an app that has one (planque listed it with a key earlier in the chat); otherwise it offers signing in again, or connecting a refused key request again.
