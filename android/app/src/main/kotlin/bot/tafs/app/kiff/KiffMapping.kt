@@ -133,9 +133,9 @@ object KiffMapping {
    * The tafs whose setup stopped partway: each by its name, with no state. The person whose Coach chat it was gets `finish`:
    * tafs cloud's words in place of a state, and the chat. Anyone else, or a finish with no chat or words, gets the name alone.
    */
-  fun settingUp(list: List<HomeSettingUp>, owner: String): List<Taf> = list.map { s ->
+  fun settingUp(list: List<HomeSettingUp>, owner: String): List<Taf> = list.filter { it.name.isNotBlank() }.map { s ->
     val finish = s.finish?.takeIf { it.session.isNotBlank() && it.words.isNotBlank() }
-    Taf(id = s.kiffAgent, name = s.name, job = "", tools = emptyList(), colorIndex = s.color, card = Card(emptyList(), owner), now = finish?.words.orEmpty(), finish = finish)
+    Taf(id = s.kiffAgent.ifBlank { "setting-up:" + s.name }, name = s.name, job = "", tools = emptyList(), colorIndex = s.color, card = Card(emptyList(), owner), now = finish?.words.orEmpty(), finish = finish)
   }
 
   fun taf(h: HomeTaf, owner: String): Taf {

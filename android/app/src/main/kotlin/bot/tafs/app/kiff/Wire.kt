@@ -152,7 +152,7 @@ data class Home(
   /** Agents from before `setting_up`; a tafs cloud that sends `setting_up` repeats it here, and the app draws `setting_up` then. */
   val others: List<HomeTaf> = emptyList(),
   /** The tafs whose setup stopped partway, by the name Coach gave each, with the chat that finishes it (docs/tafs.md); null from a tafs cloud from before it. */
-  @SerialName("setting_up") val settingUp: List<HomeSettingUp>? = null,
+  @SerialName("setting_up") @Serializable(with = SettingUpList::class) val settingUp: List<HomeSettingUp>? = null,
   val removing: List<PendingRemoval> = emptyList(),
   /** The doors tafs cloud offers here (docs/doors.md); absent when none, and the app shows no Doors. */
   @SerialName("doors_offered") val doorsOffered: List<String>? = null,
@@ -591,11 +591,27 @@ data class CalendarEvent(
 }
 
 
+/**
+ * `setting_up`, read item by item: an item that isn't one, or has a field of the wrong kind, reads as
+ * nameless and is skipped (`KiffMapping.settingUp`), never failing Home's read, as on iPhone and iPad.
+ */
+object SettingUpList : kotlinx.serialization.KSerializer<List<HomeSettingUp>> {
+  private val items = kotlinx.serialization.builtins.ListSerializer(JsonElement.serializer())
+  override val descriptor = items.descriptor
+  override fun serialize(encoder: kotlinx.serialization.encoding.Encoder, value: List<HomeSettingUp>) =
+    kotlinx.serialization.builtins.ListSerializer(HomeSettingUp.serializer()).serialize(encoder, value)
+  override fun deserialize(decoder: kotlinx.serialization.encoding.Decoder): List<HomeSettingUp> {
+    val json = (decoder as? kotlinx.serialization.json.JsonDecoder)?.json ?: return emptyList()
+    return items.deserialize(decoder).map { runCatching { json.decodeFromJsonElement(HomeSettingUp.serializer(), it) }.getOrDefault(HomeSettingUp()) }
+  }
+}
+
 /** A taf whose setup stopped partway, as `GET /v1/home` lists it: its name, its colour and the Coach chat that finishes it. No state. */
 @Serializable
 data class HomeSettingUp(
-  val name: String,
-  @SerialName("kiff_agent") val kiffAgent: String,
+  /** Read leniently: an item with no name is skipped (`KiffMapping.settingUp`), never the whole Home with it. */
+  val name: String = "",
+  @SerialName("kiff_agent") val kiffAgent: String = "",
   val color: Int = 0,
   val finish: HomeFinish? = null,
 )

@@ -15,7 +15,7 @@ final class HomeFinishSetupTests: XCTestCase {
         return String(entry.dropLast()) + extra + "}"
     }
 
-    private func model(others: [String], capabilities: String = #"["members.manage","cards.manage"]"#) async -> AppModel {
+    private func model(others: [String], settingUp: String? = nil, capabilities: String = #"["members.manage","cards.manage"]"#) async -> AppModel {
         StubProtocol.responses = [:]
         StubProtocol.thenRespond = [:]
         StubProtocol.sent = []
@@ -25,7 +25,8 @@ final class HomeFinishSetupTests: XCTestCase {
         let model = AppModel(signer: FaceIDSigner(),
                              kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
                              cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
-        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([], others: others))
+        let home = HomeJSON.list([], others: others)
+        StubProtocol.responses["GET /v1/home"] = (200, settingUp.map { String(home.dropLast()) + #","setting_up":\#($0)}"# } ?? home)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
         StubProtocol.responses["GET /v1/me"] = (200, #"{"tenant_id":"t_01","tenant_slug":"acme","capabilities":\#(capabilities)}"#)
@@ -83,5 +84,36 @@ final class HomeFinishSetupTests: XCTestCase {
             XCTAssertTrue(source.contains("if let finish = taf.finish, model.canFinishSetup(finish) {"), file)
             XCTAssertTrue(source.contains("Button { Task { await model.finishSetup(finish) } }"), file)
         }
+    }
+
+    /// Home lists tafs only (docs/tafs.md): `setting_up` is drawn among the tafs, each by its name,
+    /// with no state, so never "Ready". `others`, which then only repeats them for older apps,
+    /// isn't drawn, so no KIFF agent shows. A tafs cloud from before it still has `others` drawn.
+    func testATafBeingSetUpIsAmongTheTafsAndKIFFsAgentsNeverShow() async throws {
+        let half = #"[{"name":"Invoicing day test","kiff_agent":"invoicing-x","color":2,"finish":{"taf":"taf-setup","session":"s7","words":"Finish setting up"}},{"name":"Leads","kiff_agent":"leads-x","color":3}]"#
+        let model = await model(others: [Self.other(), HomeJSON.entry(agent: "kiff-ops", name: "ops-bot", id: nil)], settingUp: half)
+        XCTAssertEqual(model.settingUp.map(\.name), ["Invoicing day test", "Leads"])
+        XCTAssertTrue(model.settingUp.allSatisfy(\.settingUp))
+        XCTAssertEqual(model.settingUp.first?.now, "Finish setting up")
+        XCTAssertTrue(model.canFinishSetup(model.settingUp.first?.finish), "its starter finishes it in Coach")
+        XCTAssertNil(model.settingUp.last?.finish, "anyone else sees the name alone")
+        XCTAssertEqual(model.settingUp.last?.now, "", "no state: never Ready")
+        XCTAssertTrue(model.otherAgents.isEmpty, "others isn't drawn beside setting_up: no KIFF agent shows")
+
+        // An item that isn't one is skipped, and the rest of Home still reads.
+        let odd = await self.model(others: [], settingUp: #"[7,{"name":"Leads","kiff_agent":"leads-x"},{"kiff_agent":"no-name"}]"#)
+        XCTAssertEqual(odd.settingUp.map(\.name), ["Leads"])
+        XCTAssertTrue(odd.listLoaded, "Home still reads")
+
+        let before = await self.model(others: [Self.other()])
+        XCTAssertTrue(before.settingUp.isEmpty)
+        XCTAssertEqual(before.otherAgents.map(\.name), ["Invoicing day test"], "a tafs cloud from before it: others, as before")
+
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        for file in ["HomeView.swift", "HomeSplitView.swift"] {
+            XCTAssertTrue(try String(contentsOf: views.appendingPathComponent(file), encoding: .utf8).contains("ForEach(model.settingUp)"), file)
+        }
+        let home = try String(contentsOf: views.appendingPathComponent("HomeView.swift"), encoding: .utf8)
+        XCTAssertTrue(home.contains("} else if !taf.settingUp, !(taf.attention && taf.state == .working) {"), "no state chip")
     }
 }

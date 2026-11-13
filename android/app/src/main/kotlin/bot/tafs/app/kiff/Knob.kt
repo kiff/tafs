@@ -249,7 +249,19 @@ data class ConnectApps(
     /** For `needs_setup`: tafs cloud's line in place of Connect. */
     val words: String? = null,
     val grant: String? = null,
+    /** How it connects, `sign_in` or `key`, as tafs cloud names it; it wins over [how] when sent. */
+    val method: String? = null,
+    /** The row's second line, in tafs cloud's words ("Sign in · Connected · Used by Refunds"): drawn as sent when present. */
+    val line: String? = null,
+    /** Whose it is (the person's own, or the account's), in tafs cloud's words, drawn as sent. */
+    val whose: String? = null,
+    /** The tafs that use it, as tafs cloud reads them; null from a tafs cloud that sends none, and this phone reads them itself. */
+    @SerialName("used_by") val usedBy: List<UsedBy>? = null,
   ) {
+    /** The account's own: connected, signed in, or to sign in again. Listed under Yours; the rest under Discover. */
+    val yours: Boolean get() = connected || needsReconnect || signedIn
+    /** Connects with a key the person pastes, rather than a sign-in page. */
+    val byKey: Boolean get() = (method ?: how) == "key"
     val connected: Boolean get() = state == "connected"
     /** Not set up for anyone to connect yet (kiff/planque#87): no Connect, only tafs cloud's words. */
     val needsSetup: Boolean get() = state == "needs_setup"
