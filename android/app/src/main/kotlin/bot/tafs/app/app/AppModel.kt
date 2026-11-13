@@ -213,6 +213,8 @@ data class AppState(
   val listUnread: Boolean = false,
   /** Agents made through KIFF's API, not run by tafs: their Cards, apart from the tafs. */
   val otherAgents: List<Taf> = emptyList(),
+  /** The tafs whose setup stopped partway, drawn among the tafs with tafs cloud's "Finish setting up" (docs/tafs.md). */
+  val settingUp: List<Taf> = emptyList(),
   /** This session holds this phone's signing key: KIFF knows it, so it checks this phone's signature on an answer. */
   val sessionHasKey: Boolean = false,
   /**
@@ -1336,7 +1338,9 @@ class AppModel(
   /** Shows tafs cloud's list as it is, and KIFF's held calls and activity. */
   private fun show(read: Fetched) {
     val tafs = read.home.tafs.map { KiffMapping.taf(it, ownerName) }
-    val others = read.home.others.map { KiffMapping.taf(it, ownerName) }
+    // A tafs cloud that lists `setting_up` lists tafs only: `others` then only repeats it for apps from before, so it isn't drawn.
+    val settingUp = read.home.settingUp?.let { KiffMapping.settingUp(it, ownerName) }
+    val others = if (settingUp != null) emptyList() else read.home.others.map { KiffMapping.taf(it, ownerName) }
     val holders = (tafs + others).map { it.id }.toSet()
     // A held install is Coach's only from Coach's own agent, which KIFF holds only under Coach's install Card.
     val coach = _state.value.coachAgent?.takeIf { it.isNotEmpty() }
@@ -1346,6 +1350,7 @@ class AppModel(
       s.copy(
         tafs = tafs,
         otherAgents = others,
+        settingUp = settingUp.orEmpty(),
         held = held,
         cardUnitExceptions = read.home.cardUnitExceptions.orEmpty().filterNot { it.id in s.dismissedCardUnits },
         yourSteps = read.home.yourSteps.orEmpty().filterNot { it.handoff in s.answeredSteps },
