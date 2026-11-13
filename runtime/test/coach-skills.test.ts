@@ -181,8 +181,10 @@ describe("Coach's core", () => {
   // so the taf could invoice one order and never another. KIFF counts a total for each item (per).
   it("drafts a limit for each item as a total per its resource argument, never a lifetime cap on the tool", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
-    expect(body).toContain('A limit for each item ("one invoice per order, ever", "a reminder a week per invoice") is a total with per: the tool\'s resource_argument (lifetime, or rolling_7d), beside the day\'s total.');
-    expect(body).toContain("Never a lifetime total on the whole tool: it stops after the first item.");
+    expect(body).toContain('A limit for each item ("one invoice per order, ever") is a total with per: the tool\'s resource_argument (lifetime, or rolling_7d), beside the day\'s total.');
+    // A tool with no resource argument: KIFF would refuse a per naming an argument it doesn't declare (qa-kiff on #851).
+    expect(body).toContain("With none, it goes in the taf's instructions, and the rules say KIFF can't count it.");
+    expect(body).toContain("Never a lifetime total on the tool: it stops after one item.");
     expect(body).not.toContain("KIFF can't enforce it yet");
   });
 
