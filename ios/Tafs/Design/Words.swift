@@ -1468,6 +1468,14 @@ enum Words {
             static func alsoOnOne(owner: String) -> String { Words.line("connect.apps.also_on_one", owner, Words.possessive(owner)) }
             /// Clearing…
             static var clearing: String { Words.line("connect.apps.clearing") }
+            /// App
+            static var columnApp: String { Words.line("connect.apps.column_app") }
+            /// How it connects
+            static var columnHow: String { Words.line("connect.apps.column_how") }
+            /// Status
+            static var columnStatus: String { Words.line("connect.apps.column_status") }
+            /// Whose
+            static var columnWhose: String { Words.line("connect.apps.column_whose") }
             /// Connect
             static var connect: String { Words.line("connect.apps.connect") }
             /// Connected ✓

@@ -766,6 +766,10 @@
     <string name="connect_apps_also_on_many">Auch auf den Cards von %1$s</string>
     <string name="connect_apps_also_on_one">Auch auf %2$s Card</string>
     <string name="connect_apps_clearing">Wird entfernt…</string>
+    <string name="connect_apps_column_app">App</string>
+    <string name="connect_apps_column_how">Verbindungsart</string>
+    <string name="connect_apps_column_status">Zustand</string>
+    <string name="connect_apps_column_whose">Von wem</string>
     <string name="connect_apps_connect">Verbinden</string>
     <string name="connect_apps_connected">Verbunden ✓</string>
     <string name="connect_apps_disconnect_why">Wenn du einen Zugriff entfernst, werden seine Tools nur von diesem taf entfernt und von jedem taf, dessen Card sie nutzt. Andere tafs behalten ihre.</string>

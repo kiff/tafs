@@ -766,6 +766,10 @@
     <string name="connect_apps_also_on_many">Also on the Cards of %1$s</string>
     <string name="connect_apps_also_on_one">Also on %2$s Card</string>
     <string name="connect_apps_clearing">Clearing…</string>
+    <string name="connect_apps_column_app">App</string>
+    <string name="connect_apps_column_how">How it connects</string>
+    <string name="connect_apps_column_status">Status</string>
+    <string name="connect_apps_column_whose">Whose</string>
     <string name="connect_apps_connect">Connect</string>
     <string name="connect_apps_connected">Connected ✓</string>
     <string name="connect_apps_disconnect_why">Removing access takes its tools from that taf only, and from any taf whose Card uses them. Other tafs keep theirs.</string>

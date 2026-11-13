@@ -826,6 +826,10 @@
     <string name="connect_apps_also_on_many">Także na Card: %1$s</string>
     <string name="connect_apps_also_on_one">Także na Card %1$s</string>
     <string name="connect_apps_clearing">Czyszczenie…</string>
+    <string name="connect_apps_column_app">Aplikacja</string>
+    <string name="connect_apps_column_how">Sposób łączenia</string>
+    <string name="connect_apps_column_status">Stan</string>
+    <string name="connect_apps_column_whose">Czyje</string>
     <string name="connect_apps_connect">Połącz</string>
     <string name="connect_apps_connected">Połączono ✓</string>
     <string name="connect_apps_disconnect_why">Usunięcie dostępu zabiera jego narzędzia tylko z tego tafa i z każdego tafa, którego Card ich używa. Inne tafy zachowują swoje.</string>

@@ -766,6 +766,10 @@
     <string name="connect_apps_also_on_many">Ook op de Cards van %1$s</string>
     <string name="connect_apps_also_on_one">Ook op de Card van %1$s</string>
     <string name="connect_apps_clearing">Opruimen…</string>
+    <string name="connect_apps_column_app">App</string>
+    <string name="connect_apps_column_how">Hoe het koppelt</string>
+    <string name="connect_apps_column_status">Status</string>
+    <string name="connect_apps_column_whose">Van wie</string>
     <string name="connect_apps_connect">Koppelen</string>
     <string name="connect_apps_connected">Gekoppeld ✓</string>
     <string name="connect_apps_disconnect_why">Toegang intrekken haalt de tools alleen weg bij die taf, en bij elke taf waarvan de Card ze gebruikt. Andere tafs houden de hunne.</string>

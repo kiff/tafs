@@ -766,6 +766,10 @@
     <string name="connect_apps_also_on_many">Também nos Cards de %1$s</string>
     <string name="connect_apps_also_on_one">Também no Card de %1$s</string>
     <string name="connect_apps_clearing">A limpar…</string>
+    <string name="connect_apps_column_app">App</string>
+    <string name="connect_apps_column_how">Como se liga</string>
+    <string name="connect_apps_column_status">Estado</string>
+    <string name="connect_apps_column_whose">De quem</string>
     <string name="connect_apps_connect">Ligar</string>
     <string name="connect_apps_connected">Ligado ✓</string>
     <string name="connect_apps_disconnect_why">Remover um acesso retira as suas ferramentas apenas desse taf, e de qualquer taf cujo Card as use. Os outros tafs mantêm as suas.</string>
