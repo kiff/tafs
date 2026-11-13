@@ -3,7 +3,7 @@
   "alert.all_halted": "Alle deine tafs angehalten",
   "alert.allow_notifications": "Erlaube Benachrichtigungen für tafs in den Einstellungen und versuch es dann erneut.",
   "alert.always": "Ton, immer",
-  "alert.answer_nothing_sent_until_you": "{what} · {why}. Antworte bis {zone}.",
+  "alert.answer_nothing_sent_until_you": "{what} · {why}. Antworte bis {zone}. Nichts wird gesendet, bevor du genehmigst.",
   "alert.answered": "Ein taf hat jemandem geantwortet",
   "alert.approve_once": "Einmal genehmigen…",
   "alert.by_email": "Per E-Mail",

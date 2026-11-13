@@ -239,6 +239,6 @@ class CoachScreenTest {
     rule.setShown {
       TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(sample, actions, loadCoach = {}, onBack = {}) } }
     }
-    rule.onNodeWithText("Name an app a taf should work with", substring = true).assertIsDisplayed()
+    rule.onNodeWithText("Name an app for your taf", substring = true).assertIsDisplayed()
   }
 }

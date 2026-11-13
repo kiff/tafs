@@ -6,7 +6,7 @@
     <string name="alert_all_halted">Al je tafs stilgezet</string>
     <string name="alert_allow_notifications">Sta meldingen voor tafs toe in Instellingen en probeer het opnieuw.</string>
     <string name="alert_always">Geluid, altijd</string>
-    <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Antwoord vóór %3$s.</string>
+    <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Antwoord vóór %3$s. Er wordt niets verzonden tot je goedkeurt.</string>
     <string name="alert_answered">Een taf heeft iemand geantwoord</string>
     <string name="alert_approve_once">Eenmalig goedkeuren…</string>
     <string name="alert_by_email">Via e-mail</string>

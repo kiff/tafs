@@ -433,49 +433,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Antworte bis %3$@."
+            "value": "%1$@ · %2$@. Antworte bis %3$@. Nichts wird gesendet, bevor du genehmigst."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Answer by %3$@."
+            "value": "%1$@ · %2$@. Answer by %3$@. Nothing is sent until you approve."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Responde antes de %3$@."
+            "value": "%1$@ · %2$@. Responde antes de %3$@. No se envía nada hasta que apruebes."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Répondez avant %3$@."
+            "value": "%1$@ · %2$@. Répondez avant %3$@. Rien n'est envoyé tant que vous n'approuvez pas."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Rispondi entro le %3$@."
+            "value": "%1$@ · %2$@. Rispondi entro le %3$@. Non viene inviato nulla finché non approvi."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Antwoord vóór %3$@."
+            "value": "%1$@ · %2$@. Antwoord vóór %3$@. Er wordt niets verzonden tot je goedkeurt."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Odpowiedz do %3$@."
+            "value": "%1$@ · %2$@. Odpowiedz do %3$@. Nic nie zostanie wysłane, dopóki nie zatwierdzisz."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ · %2$@. Responda até %3$@."
+            "value": "%1$@ · %2$@. Responda até %3$@. Nada é enviado até aprovar."
           }
         }
       }

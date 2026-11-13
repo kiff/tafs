@@ -13,7 +13,7 @@ enum Words {
         static var allowNotifications: String { Words.line("alert.allow_notifications") }
         /// Sound, always
         static var always: String { Words.line("alert.always") }
-        /// {what} · {why}. Answer by {zone}.
+        /// {what} · {why}. Answer by {zone}. Nothing is sent until you approve.
         static func answerNothingSentUntilYou(what: String, why: String, zone: String) -> String { Words.line("alert.answer_nothing_sent_until_you", what, why, zone) }
         /// A taf answered someone
         static var answered: String { Words.line("alert.answered") }

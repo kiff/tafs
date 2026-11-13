@@ -3,7 +3,7 @@
   "alert.all_halted": "Tous vos tafs bloqués",
   "alert.allow_notifications": "Autorisez les notifications pour tafs dans Réglages, puis réessayez.",
   "alert.always": "Son, toujours",
-  "alert.answer_nothing_sent_until_you": "{what} · {why}. Répondez avant {zone}.",
+  "alert.answer_nothing_sent_until_you": "{what} · {why}. Répondez avant {zone}. Rien n'est envoyé tant que vous n'approuvez pas.",
   "alert.answered": "Un taf a répondu à quelqu'un",
   "alert.approve_once": "Approuver une fois…",
   "alert.by_email": "Par e-mail",

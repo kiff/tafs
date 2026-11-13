@@ -6,7 +6,7 @@
     <string name="alert_all_halted">All your tafs halted</string>
     <string name="alert_allow_notifications">Allow notifications for tafs in Settings, then try again.</string>
     <string name="alert_always">Sound, always</string>
-    <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Answer by %3$s.</string>
+    <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Answer by %3$s. Nothing is sent until you approve.</string>
     <string name="alert_answered">A taf answered someone</string>
     <string name="alert_approve_once">Approve once…</string>
     <string name="alert_by_email">By email</string>

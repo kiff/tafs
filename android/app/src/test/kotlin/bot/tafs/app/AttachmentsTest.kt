@@ -383,6 +383,6 @@ class AttachmentsTest {
     transport.answer("GET /v1/tafs/taf_1/attachments/$att2", 404, """{"error":"not found"}""")
     val m = model()
     assertNull(m.openFile(bot.tafs.app.model.AttachmentRef(att2, "pdf", "application/pdf", "receipt.pdf", 11), "refunds-1"))
-    assertEquals("receipt.pdf couldn't be opened. This phone and the server didn't understand each other. Nothing to do on your side; we're on it.", m.state.value.fileNotices["refunds-1"])
+    assertEquals("receipt.pdf couldn't be opened. This phone and the server didn't understand each other. We're on it.", m.state.value.fileNotices["refunds-1"])
   }
 }

@@ -3,7 +3,7 @@
   "alert.all_halted": "Wszystkie Twoje tafs zablokowane",
   "alert.allow_notifications": "Zezwól tafs na powiadomienia w Ustawieniach, a potem spróbuj ponownie.",
   "alert.always": "Dźwięk, zawsze",
-  "alert.answer_nothing_sent_until_you": "{what} · {why}. Odpowiedz do {zone}.",
+  "alert.answer_nothing_sent_until_you": "{what} · {why}. Odpowiedz do {zone}. Nic nie zostanie wysłane, dopóki nie zatwierdzisz.",
   "alert.answered": "Taf komuś odpowiedział",
   "alert.approve_once": "Zatwierdź raz…",
   "alert.by_email": "Przez e-mail",

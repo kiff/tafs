@@ -6,7 +6,7 @@
     <string name="alert_all_halted">Alle deine tafs angehalten</string>
     <string name="alert_allow_notifications">Erlaube Benachrichtigungen für tafs in den Einstellungen und versuch es dann erneut.</string>
     <string name="alert_always">Ton, immer</string>
-    <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Antworte bis %3$s.</string>
+    <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Antworte bis %3$s. Nichts wird gesendet, bevor du genehmigst.</string>
     <string name="alert_answered">Ein taf hat jemandem geantwortet</string>
     <string name="alert_approve_once">Einmal genehmigen…</string>
     <string name="alert_by_email">Per E-Mail</string>

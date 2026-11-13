@@ -6,7 +6,7 @@
     <string name="alert_all_halted">Tous vos tafs bloqués</string>
     <string name="alert_allow_notifications">Autorisez les notifications pour tafs dans Réglages, puis réessayez.</string>
     <string name="alert_always">Son, toujours</string>
-    <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Répondez avant %3$s.</string>
+    <string name="alert_answer_nothing_sent_until_you">%1$s · %2$s. Répondez avant %3$s. Rien n\'est envoyé tant que vous n\'approuvez pas.</string>
     <string name="alert_answered">Un taf a répondu à quelqu\'un</string>
     <string name="alert_approve_once">Approuver une fois…</string>
     <string name="alert_by_email">Par e-mail</string>

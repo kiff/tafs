@@ -3,7 +3,7 @@
   "alert.all_halted": "Al je tafs stilgezet",
   "alert.allow_notifications": "Sta meldingen voor tafs toe in Instellingen en probeer het opnieuw.",
   "alert.always": "Geluid, altijd",
-  "alert.answer_nothing_sent_until_you": "{what} · {why}. Antwoord vóór {zone}.",
+  "alert.answer_nothing_sent_until_you": "{what} · {why}. Antwoord vóór {zone}. Er wordt niets verzonden tot je goedkeurt.",
   "alert.answered": "Een taf heeft iemand geantwoord",
   "alert.approve_once": "Eenmalig goedkeuren…",
   "alert.by_email": "Via e-mail",

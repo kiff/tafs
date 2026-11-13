@@ -122,7 +122,7 @@ class HaltTest {
     transport.answer("POST /v1/tafs/taf_1/halt", 502, """{"error":"kiff/agents is unreachable"}""")
     val m = model()
     m.halt("refunds-1")
-    assertEquals("tafs couldn't halt it. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.haltError)
+    assertEquals("tafs couldn't halt it. It isn't working on our side right now. Try again later.", m.state.value.haltError)
     assertTrue(m.state.value.haltOf("refunds-1").running)
   }
 
@@ -131,7 +131,7 @@ class HaltTest {
     transport.answer("POST /v1/halt", 500, """{"error":"nope"}""")
     val m = model()
     m.halt(null)
-    assertEquals("tafs couldn't halt your tafs. It isn't working on our side right now. Nothing to do on your side; try again later.", m.state.value.haltError)
+    assertEquals("tafs couldn't halt your tafs. It isn't working on our side right now. Try again later.", m.state.value.haltError)
   }
 
   @Test fun anAgentTafsDoesNotRunCannotBeHaltedHere() = runTest {
@@ -284,13 +284,13 @@ class HaltTest {
   }
 
   @Test fun theExplanationNamesWhoIsStoppedAndWhatDoesNotComeBack() {
-    assertTrue(HaltWords.explanation(Halt.Running, all = true).startsWith("Halting stops your tafs:"))
-    assertTrue(HaltWords.explanation(Halt.Running, all = false).startsWith("Halting stops it:"))
+    assertTrue(HaltWords.explanation(Halt.Running, all = true).startsWith("Halting stops your tafs until you resume."))
+    assertTrue(HaltWords.explanation(Halt.Running, all = false).startsWith("Halting stops it until you resume."))
     assertEquals("Nothing new starts. Halted shows once KIFF and the connection both confirm.", HaltWords.explanation(Halt(state = "halting"), all = false))
     val halted = HaltWords.explanation(Halt(state = "halted", haltedAt = Instant.parse("2026-10-28T09:00:00Z")), all = false)
     assertTrue(halted, halted.startsWith("Halted since "))
-    assertTrue(halted, halted.endsWith("nothing from before the halt picks up again."))
-    assertTrue(HaltWords.explanation(Halt(state = "halted"), all = false).startsWith("Halted. Nothing reaches your apps."))
+    assertTrue(halted, halted.endsWith("Resuming starts only new work."))
+    assertTrue(HaltWords.explanation(Halt(state = "halted"), all = false).startsWith("Halted. Resuming starts only new work."))
   }
 
   @Test fun aTafHaltedWithTheAccountIsResumedWithIt() {
