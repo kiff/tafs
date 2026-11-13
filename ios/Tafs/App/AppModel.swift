@@ -1745,12 +1745,9 @@ final class AppModel: ObservableObject {
                             colorIndex: s.color, card: Card(rules: [], issuedBy: ownerName))
                 t.settingUp = true
                 t.finish = s.finish
-<<<<<<< HEAD
                 t.discard = s.discard
                 // Its Cards, to revoke on Discard: as `discard` names them, else from `others`' repeat of it.
                 t.kiffCardIDs = s.discardCards ?? home.others.first { $0.kiffAgent == s.kiffAgent && !s.kiffAgent.isEmpty }?.card.ids ?? []
-=======
->>>>>>> origin/main
                 t.now = s.finish?.words ?? ""
                 return t
             }

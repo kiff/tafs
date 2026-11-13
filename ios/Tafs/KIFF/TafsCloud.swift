@@ -378,7 +378,6 @@ final class TafsCloud {
         /// A taf whose setup stopped partway: the name Coach gave it, and for the person whose
         /// Coach chat it was, the chat that finishes it.
         struct SettingUp: Decodable, Equatable {
-<<<<<<< HEAD
             /// Discard, for the person whose setup it was: tafs cloud's words for the button and
             /// its confirmation. Anyone else gets none.
             struct Discard: Codable, Hashable {
@@ -390,7 +389,6 @@ final class TafsCloud {
                 init(button: String = "", title: String = "", text: String = "", yes: String = "", no: String = "") {
                     self.button = button; self.title = title; self.text = text; self.yes = yes; self.no = no
                 }
-                private struct Wrapper: Decodable { let words: Discard? }
                 enum CodingKeys: String, CodingKey { case button, title, text, yes, no }
                 init(from decoder: Decoder) throws {
                     guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
@@ -413,20 +411,14 @@ final class TafsCloud {
                     else { cards = (try? c.decodeIfPresent([Ref].self, forKey: .cards))?.flatMap { $0.compactMap(\.id) } }
                 }
             }
-=======
->>>>>>> origin/main
             var name = ""
             var kiffAgent = ""
             var color = 0
             var finish: HomeTaf.Finish?
-<<<<<<< HEAD
             var discard: Discard?
             /// The agent's Cards, as `discard` names them; nil when it names none.
             var discardCards: [String]?
             enum CodingKeys: String, CodingKey { case name, color, finish, discard, kiffAgent = "kiff_agent" }
-=======
-            enum CodingKeys: String, CodingKey { case name, color, finish, kiffAgent = "kiff_agent" }
->>>>>>> origin/main
             init(from decoder: Decoder) throws {
                 // An item that isn't one reads as nameless and is skipped, never failing Home's read.
                 guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
@@ -434,12 +426,9 @@ final class TafsCloud {
                 kiffAgent = ((try? c.decodeIfPresent(String.self, forKey: .kiffAgent)) ?? nil) ?? ""
                 color = ((try? c.decodeIfPresent(Int.self, forKey: .color)) ?? nil) ?? 0
                 finish = (try? c.decodeIfPresent(HomeTaf.Finish.self, forKey: .finish)).flatMap { $0 }.flatMap { $0.usable ? $0 : nil }
-<<<<<<< HEAD
                 let field = (try? c.decodeIfPresent(DiscardField.self, forKey: .discard)) ?? nil
                 discard = field?.words.flatMap { $0.usable ? $0 : nil }
                 discardCards = field?.cards
-=======
->>>>>>> origin/main
             }
         }
 
