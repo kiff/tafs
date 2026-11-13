@@ -696,6 +696,15 @@ xcodebuild test -project Tafs.xcodeproj -scheme Tafs \
   -destination 'platform=iOS Simulator,name=iPhone 14 Pro'
 ```
 
+## What a refusal says
+
+No raw reason reaches the person. tafs cloud's `words`, and its `error`, which it writes for the person in their
+language, are shown as they are. KIFF's and planque's own reasons (an English line, a code, a vendor's words) never are:
+`KIFFError.server` and `PlanqueError.server` say a plain line of the app's own by what happened (`PlainError`): signed
+out (401), not allowed (403), changed meanwhile (409), busy (429), down (5xx), offline, or else "didn't understand each
+other". The raw reason stays in the error, for the code that acts on it (a refusal's code, a 409's reason) and for a
+drive's diagnostics.
+
 ## Words and languages
 
 The app's own lines are in the shared `app/strings/en/`, one file per feature, by key (`needs_you.approve_once` is in

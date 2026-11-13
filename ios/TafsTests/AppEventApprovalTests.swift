@@ -126,7 +126,7 @@ final class AppEventApprovalTests: XCTestCase {
         StubProtocol.responses["POST " + subscriptionPath] = (403, #"{"error":"This connection cannot listen to this event."}"#)
         let approved = await model.approveKnobEvent(id, item: try item(model, id))
         XCTAssertFalse(approved)
-        XCTAssertEqual(model.lastError, "This connection cannot listen to this event.")
+        XCTAssertEqual(model.lastError, PlainError.words(status: 403), "planque's reason never reaches the person as-is")
         XCTAssertEqual(model.knobs[id]?.wakes.first?.approval?.state, "needed")
         XCTAssertTrue(requests("POST", knobPath + "/subscriptions").isEmpty)
         model.forgetSession()

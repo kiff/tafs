@@ -71,7 +71,7 @@ final class Retest789Tests: XCTestCase {
         XCTAssertNil(AppModel.lastingRefusal(later), "a moment later it may take the answer")
 
         let other = KIFFClient.KIFFError.server(status: 500, message: "boom")
-        XCTAssertEqual(AppModel.answerRefusedWords(other), "KIFF didn't take the answer: boom")
+        XCTAssertEqual(AppModel.answerRefusedWords(other), Words.NeedsYou.Refused.other(why: PlainError.words(status: 500)), "never KIFF's raw reason")
         XCTAssertNil(AppModel.lastingRefusal(other))
         XCTAssertNil(AppModel.lastingRefusal(URLError(.notConnectedToInternet)))
     }
