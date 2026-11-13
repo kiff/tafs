@@ -1,0 +1,1 @@
+- **Android 1.17.1: a request this phone just connected, or one holding a sign-in already, is no longer offered as one to cancel.**

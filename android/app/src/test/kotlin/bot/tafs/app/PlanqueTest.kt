@@ -1317,6 +1317,10 @@ class PlanqueTest {
     val connected = g("connected")
     assertFalse(connected.cancellable)
     assertEquals("Remove access", words.endButton(connected))
+    // Pending, but holding a sign-in already, or connected by this phone since: not a request to cancel (as iOS reads it).
+    assertFalse(g("pending", ",\"signed_in\":true").pendingRequest)
+    assertFalse(pending.copy(connectedNow = true).pendingRequest)
+    listOf("approved", "failed", "disconnected", "listed").forEach { assertFalse(it, g(it).pendingRequest) }
   }
 
   @Test fun removingAKeysAccessSaysTheKeyIsDeletedFromTafsNeverRevokedAtTheVendor() {
