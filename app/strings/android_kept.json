@@ -1,7 +1,4 @@
 {
-  "TafsApplication.kt": {
-    "Android ": "the platform's name, in the device name KIFF lists"
-  },
   "app/AppModel.kt": {
     "#trial": "a link's fragment",
     "#coach": "a link's fragment",
