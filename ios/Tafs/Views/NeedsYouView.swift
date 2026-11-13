@@ -441,8 +441,8 @@ struct AlertsCard: View {
     }
 }
 
-/// Alerts offered up front, right after signing in (the 755 retest), over the screen: why, in a few words,
-/// then iOS's own question. Not now keeps tafs usable; Needs you offers it again.
+/// Alerts offered up front, right after signing in (the 755 retest), over the screen: one line, as
+/// on Android, then iOS's own question. Not now keeps tafs usable; Needs you offers it again.
 struct AlertsOfferSheet: View {
     @EnvironmentObject private var model: AppModel
 
@@ -450,11 +450,8 @@ struct AlertsOfferSheet: View {
         VStack(alignment: .leading, spacing: 16) {
             Image(systemName: "bell.badge").scaledFont(40, weight: .semibold).foregroundColor(Theme.amber)
                 .accessibilityHidden(true)
-            Text(Words.Settings.AlertsOff.titleDevice(device: "\(ThisDevice.kind)")).scaledFont(24, weight: .bold, relativeTo: .title2).foregroundColor(Theme.ink)
-            Text(Words.NeedsYou.whenTafAsksSomethingOutside(device: "\(ThisDevice.kind)"))
-                .scaledFont(16).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
-            Text(Words.NeedsYou.iosAsksNextConfirmingSets(biometry: "\(Biometry.name)"))
-                .scaledFont(14, relativeTo: .footnote).foregroundColor(Theme.dim).fixedSize(horizontal: false, vertical: true)
+            Text(Words.Alert.prompt).scaledFont(24, weight: .bold, relativeTo: .title2).foregroundColor(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
             if let error = model.lastError, !model.turningOnAlerts {
                 Text(error).scaledFont(14, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
             }

@@ -45,8 +45,9 @@ the old session is dropped when it finishes (`accountGeneration`).
 The phone remembers that alerts were enabled for this account. Signing back in restores
 its token without another unlock when that consent is saved, or when cloud confirms this
 phone is already enrolled for the same person/account. A different account does not inherit
-that consent. If alerts cannot be restored, the sign-in shows **Alerts are off on this
-phone**, with Turn on and Not now; a previous account's declined offer does not suppress it.
+that consent. If alerts cannot be restored, the sign-in offers them in one line, **Get an
+alert when a taf needs you**, with Turn on and Not now; a previous account's declined offer
+does not suppress it.
 
 **The session ends at KIFF first.** Sign out and Sign in again ask KIFF to
 end the session before anything changes on the phone, so a phone that shows signed out
