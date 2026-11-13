@@ -1,6 +1,7 @@
 package bot.tafs.app
 
 import bot.tafs.app.model.Words
+import bot.tafs.app.model.ErrorWords
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.COACH_CHAT
 import bot.tafs.app.kiff.InMemorySecretStore
@@ -1669,13 +1670,15 @@ class PlanqueTest {
     assertEquals(listOf("sub_1", "sub_1"), transport.requestsTo(record).map { KiffClient.json.parseToJsonElement(String(it.body!!)).jsonObject.getValue("subscription").jsonPrimitive.content })
   }
 
-  @Test fun aRefusalFromPlanqueIsSaidInItsWords() = runTest {
+  @Test fun aRefusalFromPlanqueIsSaidInPlainWordsNeverItsOwn() = runTest {
     val m = slackModel()
     transport.answer(knobRoute, 200, eventKnob())
     transport.answer(eventTriggers, 400, """{"error":"amount_over isn't a filter of this event"}""")
     m.loadKnob("refunds-1")
     assertFalse(m.approveKnobEvent("refunds-1", "trg_e"))
-    assertTrue(m.state.value.knobErrors.getValue("refunds-1").contains("amount_over isn't a filter of this event"))
+    val said = m.state.value.knobErrors.getValue("refunds-1")
+    assertFalse("planque's raw reason never reaches the person", said.contains("amount_over"))
+    assertTrue(said, said.contains(ErrorWords.OURS))
     assertTrue(transport.requestsTo(record).isEmpty())
   }
 
@@ -1832,12 +1835,14 @@ class PlanqueTest {
     assertTrue(m.state.value.coachNotes.getValue("gs").contains("wasn't on the connection's own address"))
   }
 
-  @Test fun planquesRefusalIsSaidOnTheConnection() = runTest {
+  @Test fun planquesRefusalIsSaidOnTheConnectionInPlainWords() = runTest {
     val m = slackModel()
     transport.answer(signInRoute, 409, """{"error":"a sign-in view is open for this connection: finish it on the phone, or wait for it to lapse"}""")
     m.openSiteSignIn("gs")
     assertNull(m.state.value.siteSignIn)
-    assertTrue(m.state.value.coachNotes.getValue("gs").contains("a sign-in view is open for this connection"))
+    val said = m.state.value.coachNotes.getValue("gs")
+    assertFalse("planque's raw reason never reaches the person", said.contains("sign-in view is open"))
+    assertTrue(said, said.contains(ErrorWords.CHANGED))
   }
 
   @Test fun aBrowserConnectionCarriesTafsCloudsSignInAction() {

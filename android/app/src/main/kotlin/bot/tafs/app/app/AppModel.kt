@@ -3495,7 +3495,7 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       // planque's own words say why (a view already open, the connection not connected); anything else, in the app's.
-      if (generation == accountGeneration) note(grantId, Words.Connect.SignInView.notOpened(why = (e as? PlanqueError.Server)?.message ?: ErrorWords.of(e)))
+      if (generation == accountGeneration) note(grantId, Words.Connect.SignInView.notOpened(why = ErrorWords.of(e)))
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(openingSiteSignIn = null) }
     }
@@ -3669,7 +3669,8 @@ class AppModel(
       throw e
     } catch (e: Exception) {
       if (generation != accountGeneration) return false
-      val said = (e as? PlanqueError.Server)?.message ?: (e as? bot.tafs.app.kiff.CloudError)?.takeIf { it.status == 409 && it.words == null }?.message
+      // tafs cloud's own line for a 409 it words for the person; planque's raw reason never (a plain line by status), as on iOS.
+      val said = (e as? bot.tafs.app.kiff.CloudError)?.takeIf { it.status == 409 && it.words == null }?.message
       return knobError(tafId, Words.Setup.Knob.notApproved(why = said ?: ErrorWords.of(e)))
     } finally {
       approvingEvents.remove(tafId)
@@ -4523,7 +4524,7 @@ class AppModel(
       // A sign-in planque holds but this phone hasn't confirmed yet: tafs cloud's own line, as it is (as on iPhone and iPad).
       val confirmFirst = when (e) {
         is CloudError -> e.takeIf { it.code == "sign_in_not_confirmed" }?.let { it.words ?: it.message }
-        is KiffError.Server -> e.takeIf { it.code == "sign_in_not_confirmed" }?.message
+        is KiffError.Server -> e.takeIf { it.code == "sign_in_not_confirmed" }?.words
         else -> null
       }?.takeIf { it.isNotBlank() }
       note(c.id, confirmFirst ?: Words.Coach.answerNotReached(why = ErrorWords.of(e)))

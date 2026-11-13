@@ -471,8 +471,13 @@ line: the phone counts nothing.
 The owner reads the app's own words for what happened and what, if anything, they can do
 (`ErrorWords`): offline, try again online; signed out, sign in; not allowed by their
 role; changed in the meantime; too many tries, wait a minute; down on our side, nothing to
-do but try later; anything else, nothing to do on their side. A server's error text never
-reaches the screen, and "try again" is said only where trying again can help. The app's own
+do but try later; anything else, nothing to do on their side. KIFF's and planque's error text
+never reaches the screen: every KIFF and planque refusal says one of these lines by its status, and its
+raw reason stays in the error for the code that acts on it (including an approval window's refusal,
+whose `detail` or `error` is the app's own line now). tafs cloud writes its `words`, else its `error`,
+for the person, so those are shown as sent; one that isn't is fixed in tafs cloud. The one planque line
+shown as planque says it is a vendor refusing planque's client (`vendor_refused_client`), since it says
+whose it is. iPhone and iPad do the same. "Try again" is said only where trying again can help. The app's own
 failures (signing, signing in, a file that didn't upload) keep their words (`OwnWords`).
 Coach still hears the server's reason for an approval that failed, as the card's answer,
 so it can say what went wrong and ask again.

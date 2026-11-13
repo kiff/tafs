@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.model.Words
 import bot.tafs.app.kiff.ApprovalWindow
 import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.KiffError
@@ -105,7 +106,7 @@ class ApprovalWindowTest {
     assertNull(c.window)
   }
 
-  @Test fun withNoApprovalKeyARefusalInTheWindowIsSaidAsKiffsCode() = runTest {
+  @Test fun withNoApprovalKeyARefusalInTheWindowKeepsKiffsCodeAndSaysItInTheAppsWords() = runTest {
     val c = client().also {
       it.setupSigner = { "dev" }
       it.window = ApprovalWindow(window, open = true)
@@ -116,7 +117,8 @@ class ApprovalWindowTest {
       fail("refused")
     } catch (e: KiffError.WindowRefused) {
       assertEquals("critical_key_required", e.code)
-      assertEquals("Resuming takes your fingerprint", e.message)
+      // KIFF's `detail` is for the log: the person reads the app's own line.
+      assertEquals(Words.Error.needsConfirmationFirst, e.message)
     }
   }
 
@@ -141,7 +143,8 @@ class ApprovalWindowTest {
       planque.approveAsAsked("g1", kotlinx.serialization.json.JsonObject(emptyMap()))
       fail("refused")
     } catch (e: PlanqueError.WindowRequired) {
-      assertEquals("Your approval window has ended.", e.message)
+      // planque's `error` is for the log: the person reads the app's own line.
+      assertEquals(Words.Error.approvalWindowEnded, e.message)
     }
     val header = transport.requestsTo("POST /v1/accounts/t_01/grants/g1/approve").single().headers["Planque-Device-Signature"]!!
     assertTrue(header, Regex("^t=[^,]+,v2=dev,w=$window,d=dev_phone$").matches(header))

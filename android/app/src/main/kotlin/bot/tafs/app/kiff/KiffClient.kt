@@ -823,7 +823,8 @@ class KiffClient(
       val refused = fields["error"]
       if (status == 403 && held != null && (refused == CRITICAL_KEY_REQUIRED || refused == WINDOW_REQUIRED)) {
         if (refused == WINDOW_REQUIRED && window?.id == held) window = null
-        if (approvalSigner == null) throw KiffError.WindowRefused(refused, fields["detail"] ?: refused)
+        // The app's own words: KIFF's `detail` is for the log, never the person.
+        if (approvalSigner == null) throw KiffError.WindowRefused(refused, if (refused == WINDOW_REQUIRED) Words.Error.approvalWindowEnded else Words.Error.needsConfirmationFirst)
         return sendJson(method, path, body, authorized, signedBy, gateway, inWindow = false)
       }
       if (status == 403 && (fields["error"] == "approval_key_required" || fields["reason"] == "approval_key_required")) {
