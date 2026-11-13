@@ -314,11 +314,14 @@ the app in sample mode.
     other grant shows "This request doesn't match what it shows", with nothing to paste or sign.
   - **The key is pasted, never typed.** The sheet has no text field. Apple's own paste button reads the clipboard only
     on that tap, so iOS asks nothing more. Only the key's last 4 characters are drawn (`SecureKey.last4`; none for a
-    key shorter than 12), and the clipboard is emptied.
+    key shorter than 12), and the clipboard is emptied. Under the pasted key, tafs cloud's line for what to do next
+    (`paste.next`, "Key pasted. Tap Connect") where it sends one.
+  - **One legal line**, with its two links as tafs cloud sends them. A link that isn't https is words alone. It sits above
+    Connect: what the tap agrees to is in sight before the tap.
+  - **Connect**, behind Face ID, right under the pasted key, the Card when it signs both, and the legal line: never below the
+    technical lines. The key goes to the connection server as before.
   - **Details**, collapsed: tafs cloud's technical lines, and the connection server's own text, which its digest covers.
     KIFF's words for a profile, and a digest that doesn't match, stay in sight above it.
-  - **One legal line**, with its two links as tafs cloud sends them. A link that isn't https is words alone.
-  - **Connect**, behind Face ID. The key goes to the connection server as before.
   - **The receipt**, on the sheet: tafs cloud's line with the last 4, **Done**, and **Disconnect** (asked first, then
     Face ID). The key is forgotten as soon as it's given, and the last 4 when the sheet closes. Disconnecting there
     leaves Coach's card unapproved.

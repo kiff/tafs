@@ -526,7 +526,7 @@ struct ConnectApprovalSheet: View {
         mismatch(grant)
         paste(what: sheet.paste.what,
               pasted: SecureKey.filled(sheet.paste.pasted, last4: last4, vendor: sheet.vendor.name),
-              cleared: sheet.paste.cleared)
+              cleared: sheet.paste.cleared, next: sheet.paste.next)
         // Its Card, when the setup has one drafted: KIFF's own lines for the draft this phone read.
         // Connect then signs the key and this Card together, when tafs cloud asks for that.
         if let draft = cardDraft {
@@ -542,6 +542,20 @@ struct ConnectApprovalSheet: View {
             .background(Theme.raised)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .accessibilityIdentifier("connect.sheet.card")
+        }
+        // What the tap agrees to, in sight before it: the one legal line, then Connect, right
+        // under the pasted key (and the Card it signs with it), never below the technical lines.
+        if let legal = sheet.legal {
+            Text(SecureKey.legal(legal)).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                .tint(Theme.amberText).fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("connect.sheet.legal")
+        }
+        errorLine
+        ApprovalGate {
+            Button(busy ? Words.Approval.approving : sheet.button) { approve(grant) }
+                .buttonStyle(PrimaryButtonStyle())
+                .disabled(busy || !ready(grant))
+                .accessibilityIdentifier("connect.sheet.connect")
         }
         DisclosureGroup(isExpanded: $detailsOpen) {
             VStack(alignment: .leading, spacing: 10) {
@@ -561,18 +575,6 @@ struct ConnectApprovalSheet: View {
             Text(sheet.details?.title ?? "").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
         }
         .accessibilityIdentifier("connect.sheet.details")
-        if let legal = sheet.legal {
-            Text(SecureKey.legal(legal)).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
-                .tint(Theme.amberText).fixedSize(horizontal: false, vertical: true)
-                .accessibilityIdentifier("connect.sheet.legal")
-        }
-        errorLine
-        ApprovalGate {
-            Button(busy ? Words.Approval.approving : sheet.button) { approve(grant) }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(busy || !ready(grant))
-                .accessibilityIdentifier("connect.sheet.connect")
-        }
     }
 
     /// The vendor's logo and name with a lock, and tafs cloud's title.
@@ -601,7 +603,7 @@ struct ConnectApprovalSheet: View {
     /// Paste the key: Apple's own paste button, so the clipboard is read only on that tap and
     /// iOS asks nothing more. Never a typing field. Once pasted, only the key's last 4
     /// characters show, and the copy is taken off the clipboard, where other apps could read it.
-    @ViewBuilder private func paste(what: String, pasted: String, cleared: String) -> some View {
+    @ViewBuilder private func paste(what: String, pasted: String, cleared: String, next: String? = nil) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(what).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             if !key.isEmpty {
@@ -609,6 +611,12 @@ struct ConnectApprovalSheet: View {
                     Text(pasted).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
                         .accessibilityIdentifier("connect.key.pasted")
                     Text(cleared).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    // What to do next, in tafs cloud's words: the app has none of its own for it.
+                    if let next = next?.trimmingCharacters(in: .whitespacesAndNewlines), !next.isEmpty {
+                        Text(next).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("connect.key.next")
+                    }
                 }
                 .padding(12).frame(maxWidth: .infinity, alignment: .leading)
                 .background(Theme.raised).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
