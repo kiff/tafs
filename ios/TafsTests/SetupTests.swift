@@ -259,6 +259,45 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// With Start's own words (`start.words`), Start's screen draws them and what's signed, so
+    /// Send signs and starts Coach under the one Face ID, then goes on to send: no step opens.
+    /// Without a line or a button, it's the step as before.
+    func testStartsOwnWordsMakeOneScreenAndSendSignsAndSends() async throws {
+        let worded = Self.startJSON().replacingOccurrences(of: #""coach_tools_step":"#,
+            with: #""words":{"lead":"Start sets up approvals and gives Coach its tools.","start":"Start","does":"One fingerprint, on this device."},"coach_tools_step":"#)
+        let read = try XCTUnwrap(TafsCloud.CoachStart.read(Data(worded.utf8)))
+        XCTAssertEqual(read.words, TafsCloud.CoachStart.Words(lead: "Start sets up approvals and gives Coach its tools.", start: "Start", does: "One fingerprint, on this device."))
+        XCTAssertTrue(read.oneScreen)
+        XCTAssertFalse(try XCTUnwrap(TafsCloud.CoachStart.read(Data(Self.startJSON().utf8))).oneScreen, "a tafs cloud from before them")
+        let noButton = worded.replacingOccurrences(of: #""start":"Start","#, with: #""start":" ","#)
+        XCTAssertNil(try XCTUnwrap(TafsCloud.CoachStart.read(Data(noButton.utf8))).words, "no button, no screen of its own")
+        let unworded = worded.replacingOccurrences(of: #","card_title":"Coach's Cards","cards":[{"title":"Reads","lines":["See your tafs, up to 500 a day"]}]"#, with: "")
+        XCTAssertFalse(try XCTUnwrap(TafsCloud.CoachStart.read(Data(unworded.utf8))).oneScreen, "never Cards unread")
+
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer)
+        StubProtocol.responses["GET /v1/setup"] = (200, worded)
+        await model.loadSetup()
+        XCTAssertEqual(model.coachStart?.oneScreen, true)
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/connections/batch"] = (200, "{}")
+        StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","cards":[]}"#)
+        StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.sent = []
+        _ = await model.submitSetup("Chase my overdue invoices")
+        XCTAssertFalse(model.coachToolsAsked, "no step opens")
+        XCTAssertEqual(signer.prompts, ["tafs.setup.v1|t_01"], "one Face ID")
+        XCTAssertEqual(model.setupTaf?.id, "taf-setup")
+        XCTAssertEqual(sent("POST", "mcp.test", "/v1/connections/batch").count, 1)
+        XCTAssertEqual(sent("POST", "api.test", "/v1/me/agent-drafts").count, 1)
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let chat = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(chat.contains("if let start = model.coachStart, start.oneScreen, let words = start.words {"))
+        XCTAssertTrue(chat.contains("CoachToolsGiven(tools: start.tools)"), "what's signed, drawn on Start's screen")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// The phone enrols before anything goes to KIFF: an enrolment the connection server refuses
     /// (another device holds it) sends neither the batch nor the draft, so KIFF is left with no
     /// tools and no draft nobody claims.

@@ -140,7 +140,59 @@ struct SetupChatView: View {
         typing = true
     }
 
+    @ViewBuilder
     private var intro: some View {
+        if let start = model.coachStart, start.oneScreen, let words = start.words {
+            startScreen(start, words)
+        } else {
+            introBefore
+        }
+    }
+
+    /// Start's own screen, from tafs cloud's first start (docs/ios-app.md): its one line, then
+    /// what's signed (Coach's tools and its Cards in KIFF's words), then the one button, which
+    /// signs all of it under one Face ID. Nothing signed is left unread, so there's no step after.
+    /// With words handed over, Send below is that tap.
+    private func startScreen(_ start: TafsCloud.CoachStart, _ words: TafsCloud.CoachStart.Words) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(Words.Coach.coachMode).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.coach)
+                    Text(words.lead).scaledFont(16).foregroundColor(Theme.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+                    CoachToolsGiven(tools: start.tools)
+                    if let error = model.coachToolsError ?? model.setupError ?? model.lastError {
+                        Text(error).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            if !model.setupHanded || model.approvalBlocked {
+                // The one confirmation: the person's, never a drive's. A phone that can't approve
+                // yet reads why in the button's place.
+                ApprovalGate {
+                    Button {
+                        Task { _ = await model.giveCoachTools() }
+                    } label: {
+                        Label(model.givingCoachTools || model.startingSetup ? Words.Common.starting : words.start, systemImage: Biometry.symbol)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .disabled(model.givingCoachTools || model.startingSetup || model.mode != .kiff)
+                    .accessibilityIdentifier("coach-start")
+                }
+            }
+            if !words.does.isEmpty {
+                Text(words.does).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity)
+            }
+        }
+        .padding(20)
+    }
+
+    /// Start as before tafs cloud's words for it: the app's own lines, and Start opens the step.
+    private var introBefore: some View {
         VStack(alignment: .leading, spacing: 14) {
             Spacer()
             Text(Words.Coach.coachMode).scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.coach)

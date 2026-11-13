@@ -7060,13 +7060,19 @@ final class AppModel: ObservableObject {
             guard !text.isEmpty || !files.isEmpty else { return false }
             // A phone that can't approve yet starts nothing and is asked nothing: the words stay.
             guard !approvalBlocked else { return false }
-            // tafs cloud's first start: the step that shows what Coach is given opens first, and its
-            // one button starts Coach. The words stay in the composer, to send once it's started.
-            if coachStart?.startable == true {
+            if coachStart?.oneScreen == true {
+                // tafs cloud's first start, on Start's own screen: what's signed is drawn above the
+                // box, so Send signs it, under the one Face ID, then sends.
+                _ = await giveCoachTools()
+                guard setupStarted else { return false }
+            } else if coachStart?.startable == true {
+                // A tafs cloud from before Start's words: the step that shows what Coach is given
+                // opens first, and its one button starts Coach. The words stay in the composer.
                 coachToolsAsked = true
                 return false
+            } else {
+                guard await startSetup() else { return false }
             }
-            guard await startSetup() else { return false }
         }
         // A message with files goes as a message of its own (kiff/tafs#209): the composer sends it once Setup is done.
         if !files.isEmpty { return await deliverSetup(text, files: files) == .sent }

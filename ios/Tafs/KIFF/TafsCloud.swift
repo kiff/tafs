@@ -2063,12 +2063,21 @@ final class TafsCloud {
             var cardTitle: String? = nil
             var cards: [CoachTools.CardDraft.Words] = []
         }
+        /// Start's own words: the one line before it, its button, and what it does. With them,
+        /// Start's screen draws Coach's Cards under them and the one tap signs: no step of its own.
+        struct Words: Equatable {
+            var lead = ""
+            var start = ""
+            var does = ""
+        }
         var state = "unknown"
         var scheme = ""
         var agentID = ""
         var requests: [Request] = []
         var step: CoachTools.Step? = nil
         var taken: String? = nil
+        /// nil from a tafs cloud from before them, or without a line or a button: the step opens as before.
+        var words: Words? = nil
 
         var connect: Request? { requests.first { $0.id == "connect" } }
         var draft: Request? { requests.first { $0.id == "draft" } }
@@ -2082,6 +2091,10 @@ final class TafsCloud {
             if let connect { return together && connect.method == "POST" && connect.path == "/v1/connections/batch" && connect.gateway }
             return scheme == "kiff.request.v1"
         }
+
+        /// Start on its own screen, in tafs cloud's words, with what's signed drawn under them:
+        /// the one tap signs, and there's no step to open.
+        var oneScreen: Bool { startable && words != nil }
 
         /// What the tools step draws for it: its words, the batch's lines, and what's to give.
         var tools: CoachTools {
@@ -2123,6 +2136,11 @@ final class TafsCloud {
                 }
             }
             if let step = RawJSON.value(of: "coach_tools_step", in: raw) { s.step = try? JSONDecoder().decode(CoachTools.Step.self, from: step) }
+            if let w = fields["words"] as? [String: Any] {
+                func said(_ key: String) -> String { ((w[key] as? String) ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
+                let words = Words(lead: said("lead"), start: said("start"), does: said("does"))
+                if !words.lead.isEmpty, !words.start.isEmpty { s.words = words }
+            }
             return s
         }
     }
