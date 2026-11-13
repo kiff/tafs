@@ -84,6 +84,7 @@
   "taf.remove.not_finished": "Nie ukończono: nie udało się usunąć: {steps}. tafs próbuje ponownie przy każdym odświeżeniu.",
   "taf.remove.not_finished_after": "{cards} Nie ukończono: nie udało się usunąć: {failed}. tafs próbuje ponownie przy każdym odświeżeniu.",
   "taf.remove.prompt": "Usuń {taf} na zawsze",
+  "taf.remove.step_connections": "dostęp do aplikacji",
   "taf.remove.step_history": "uruchomienia i czaty",
   "taf.remove.step_key": "klucz",
   "taf.remove.step_memory": "pamięć",

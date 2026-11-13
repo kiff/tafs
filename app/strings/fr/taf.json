@@ -80,6 +80,7 @@
   "taf.remove.not_finished": "Non terminé : éléments non supprimés : {steps}. tafs réessaie à chaque actualisation.",
   "taf.remove.not_finished_after": "{cards} Non terminé : éléments non supprimés : {failed}. tafs réessaie à chaque actualisation.",
   "taf.remove.prompt": "Supprimer définitivement {taf}",
+  "taf.remove.step_connections": "accès aux apps",
   "taf.remove.step_history": "exécutions et chats",
   "taf.remove.step_key": "clé",
   "taf.remove.step_memory": "mémoire",

@@ -2126,17 +2126,9 @@ class AppModel(
       }
     }
     if (generation != accountGeneration) return null
-    // Its connections go with it: each grant its agent asked for is disconnected in planque (its tools out of KIFF, its
-    // sign-in revoked at the vendor), signed under the confirmation just given. Left connected, they stayed live and Coach
-    // offered them to the next taf as "already connected".
-    // A connection another taf still uses stays: KIFF's tools are the account's, so a later taf can draw on this one's.
-    val connections = disconnectGrantsOf(taf.id, generation) ?: return null
-    val cards = (if (cardsLeft == 0) Words.Taf.Remove.cardsRevoked else Words.Taf.Remove.cardsLeft(count = cardsLeft)) +
-      when {
-        connections.left > 0 -> " " + Words.Taf.Remove.connectionsLeft(count = connections.left)
-        connections.done > 0 -> " " + Words.Taf.Remove.connectionsDisconnected
-        else -> ""
-      } + connections.kept.joinToString("") { " $it" }
+    // Its connections go with it, ended by tafs cloud as part of the removal (every status, and one another taf uses stays):
+    // the phone no longer disconnects them itself, which signed one more request each and missed waiting and failed ones.
+    val cards = if (cardsLeft == 0) Words.Taf.Remove.cardsRevoked else Words.Taf.Remove.cardsLeft(count = cardsLeft)
     val removal = try {
       cloud.remove(cloudId, signature)
     } catch (e: CancellationException) {
@@ -2147,12 +2139,15 @@ class AppModel(
     }
     if (generation != accountGeneration) return null
     if (cardsLeft == 0) _state.value.taf(tafId)?.let { update(it.copy(card = it.card.copy(revoked = true), state = TafState.revoked, now = Words.Taf.Now.removed)) }
+    // What tafs cloud did with its connections: ended (said once), or not (named among the steps left).
+    val apps = if ("connections" in removal.removed) " " + Words.Taf.Remove.connectionsDisconnected else ""
     if (!removal.done) {
-      return "$cards " + Words.Taf.Remove.notFinished(steps = removal.failed.joinToString(", ") { removalStep(it) })
+      return "$cards$apps " + Words.Taf.Remove.notFinished(steps = removal.failed.joinToString(", ") { removalStep(it) })
     }
     log(tafId, RecordEntry.Kind.revoked, Words.Record.Removed.title(taf = taf.name), Words.Record.Removed.detail)
     refresh()
-    return "$cards " + Words.Taf.Remove.done(taf = taf.name)
+    refreshConnections()
+    return "$cards$apps " + Words.Taf.Remove.done(taf = taf.name)
   }
 
   /**
@@ -2189,6 +2184,7 @@ class AppModel(
 
   private fun removalStep(step: String): String = when (step) {
     "history" -> Words.Taf.Remove.stepHistory
+    "connections" -> Words.Taf.Remove.stepConnections
     else -> step
   }
 
@@ -4443,48 +4439,6 @@ class AppModel(
   private fun improvedTaf(c: SetupComponent): Taf? = c.taf?.let { t -> _state.value.tafs.firstOrNull { it.cloudId == t.improves || it.id == t.improves || it.id == t.agent } }
 
   /**
-   * Disconnects every live grant [agent] asked for, signed by the device key under a confirmation the caller already took
-   * (removing the taf). Returns how many were disconnected and how many couldn't be, or null when the account changed
-   * meanwhile. Without planque here, there's nothing to disconnect from this phone.
-   */
-  private suspend fun disconnectGrantsOf(agent: String, generation: Int): Disconnected? {
-    val tenant = kiffTenant ?: return Disconnected()
-    if (!_state.value.planqueReady) return Disconnected()
-    refreshConnections()
-    if (generation != accountGeneration) return null
-    // Only the ones holding a sign-in: a pending grant never signed in has nothing to end.
-    val asked = _state.value.connections(agent)
-    val users = asked.associate { it.id to _state.value.tafsUsing(it, except = agent) }
-    val kept = asked.filter { users[it.id].orEmpty().isNotEmpty() }.map { g ->
-      val names = users[g.id].orEmpty().map { it.name }
-      Words.Connect.keptConnection(count = names.size, vendor = g.vendor, names = names.reduce { a, b -> Words.Common.andJoin(first = a, second = b) })
-    }
-    val grants = asked.filter { users[it.id].orEmpty().isEmpty() }
-    if (grants.isEmpty()) return Disconnected(kept = kept)
-    planque.tenant = tenant
-    planque.deviceLoader = { kiff.thisDeviceId() }
-    val signer = signer
-    planque.signer = { signer.signConfirmed(it) }
-    var left = 0
-    try {
-      for (g in grants) {
-        if (generation != accountGeneration) return null
-        try {
-          planque.disconnect(g.id)
-        } catch (e: CancellationException) {
-          throw e
-        } catch (_: Exception) {
-          left += 1
-        }
-      }
-    } finally {
-      planque.signer = null
-    }
-    refreshConnections()
-    return Disconnected(grants.size - left, left, kept)
-  }
-
-  /**
    * Clears the connections of tafs removed since, from Connect apps (the owner's ask): one confirmation, one fingerprint, then the
    * device key signs each disconnect, as removing a taf does. Only the ones tafs cloud lists, and one a live taf's Card still uses
    * (tafs cloud's `used_by`) is kept, with the line naming that taf.
@@ -4541,9 +4495,6 @@ class AppModel(
       if (generation == accountGeneration) _state.update { it.copy(clearingRemoved = false) }
     }
   }
-
-  /** What removing a taf did to its connections: disconnected, couldn't be, and kept for another taf (in words). */
-  private data class Disconnected(val done: Int = 0, val left: Int = 0, val kept: List<String> = emptyList())
 
   /** Disconnects a vendor: planque removes its tools from KIFF and revokes the sign-in at the vendor. Asks for the owner's confirmation. */
   suspend fun disconnect(grantId: String): Boolean {

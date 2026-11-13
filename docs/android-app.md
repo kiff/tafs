@@ -780,7 +780,8 @@ one fingerprint for them all, and **Other connections** last.
 **Remove access**, and asks first, naming the taf it ends. For a key, the confirmation says the key
 is deleted from tafs once no taf uses it, since a key another taf's connection shares stays for that
 taf; only a sign-in says it's revoked at the vendor. What never connected is
-cancelled instead: a request not answered yet (`Grant.pendingRequest`) says **Cancel the request**,
+cancelled instead: a request not answered yet (`Grant.pendingRequest`: pending, holding no sign-in, and not connected by
+this phone since) says **Cancel the request**,
 and a sign-in that never came back says **Cancel**, each with its own question. Once access is
 removed, Connect apps is read again at once (`AppModel.disconnect`), so it no longer says
 Connected until it's reopened.

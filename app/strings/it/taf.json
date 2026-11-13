@@ -80,6 +80,7 @@
   "taf.remove.not_finished": "Non completato: non è stato possibile rimuovere {steps}. tafs riprova a ogni aggiornamento.",
   "taf.remove.not_finished_after": "{cards} Non completato: non è stato possibile rimuovere {failed}. tafs riprova a ogni aggiornamento.",
   "taf.remove.prompt": "Rimuovi {taf} definitivamente",
+  "taf.remove.step_connections": "accesso alle app",
   "taf.remove.step_history": "esecuzioni e chat",
   "taf.remove.step_key": "chiave",
   "taf.remove.step_memory": "memoria",

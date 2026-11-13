@@ -80,6 +80,7 @@
   "taf.remove.not_finished": "Nicht abgeschlossen, nicht entfernt: {steps}. tafs versucht es bei jeder Aktualisierung erneut.",
   "taf.remove.not_finished_after": "{cards} Nicht abgeschlossen, nicht entfernt: {failed}. tafs versucht es bei jeder Aktualisierung erneut.",
   "taf.remove.prompt": "{taf} endgültig entfernen",
+  "taf.remove.step_connections": "App-Zugriffe",
   "taf.remove.step_history": "Läufe und Chats",
   "taf.remove.step_key": "Schlüssel",
   "taf.remove.step_memory": "Gedächtnis",
