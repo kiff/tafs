@@ -1610,6 +1610,57 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// Coach pausing on a card its person answers reads Home once, as the stream ends, so Needs
+    /// you lists it while the chat is still open (the iPad walk on 2279: it came only after Coach
+    /// closed, and a while later). A run that goes on, or ends, reads nothing more.
+    func testCoachPausingOnACardReadsNeedsYouOnce() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        await model.loadSetup()
+        var events: [TafsCloud.StreamEvent] = []
+        model.streamOpener = { _, _ in
+            let sending = events
+            return AsyncThrowingStream { c in
+                sending.forEach { c.yield($0) }
+                c.finish()
+            }
+        }
+        func homeReads() -> Int { sent("GET", "cloud.test", "/v1/home").count }
+
+        // Paused on a question card: one read, at the stream's end.
+        events = [.session("s1", newSession: true), .state("thinking"), .component, .state("waiting_for_you"),
+                  .state("done"), .end(status: "PAUSED", stop: "paused")]
+        var before = homeReads()
+        let paused = await model.sendSetup("Connect my Stripe")
+        XCTAssertTrue(paused)
+        await model.setupStream?.value
+        XCTAssertEqual(homeReads() - before, 1, "Needs you read once, while Coach is open")
+
+        // Answered in the chat and gone on to the end: nothing waits, nothing read.
+        events = [.session("s1", newSession: false), .state("waiting_for_you"), .part, .state("thinking"),
+                  .state("done"), .end(status: "COMPLETED", stop: "answered")]
+        before = homeReads()
+        let answered = await model.sendSetup("yes")
+        XCTAssertTrue(answered)
+        await model.setupStream?.value
+        XCTAssertEqual(homeReads() - before, 0)
+
+        // A stream that only ends PAUSED still says so.
+        events = [.session("s1", newSession: false), .end(status: "PAUSED", stop: "paused")]
+        before = homeReads()
+        let again = await model.sendSetup("and the other one")
+        XCTAssertTrue(again)
+        await model.setupStream?.value
+        XCTAssertEqual(homeReads() - before, 1)
+
+        XCTAssertTrue(AppModel.stillWaitsOnYou(false, state: "waiting_for_you"))
+        XCTAssertTrue(AppModel.stillWaitsOnYou(true, state: "done"), "the run's last line keeps the pause")
+        XCTAssertFalse(AppModel.stillWaitsOnYou(true, state: "working"), "it went on")
+        XCTAssertFalse(AppModel.stillWaitsOnYou(false, state: "done"))
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// Setup shows a second approval of a grant in the turn it changes the grant: a read
     /// between the two finds the grant as it was, signed in, and that says nothing of the new
     /// card (kiff/tafs#236, item 3). It waits for the owner until the grant changes after it.

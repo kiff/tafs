@@ -545,14 +545,23 @@ text, add nothing: no line and no button.
 The same rows as Android, from the same tafs cloud fields (`GET /v1/connect/apps`: `title`, `logo`, `state` or
 `connected`, `method` (else `how`), and `line`, `whose` and `used_by` when sent; `ConnectRow`):
 - **Yours first, then Discover:** connected apps (or ones to sign in again) under Yours, the rest under Discover,
-  each in tafs cloud's order, with search.
+  each in tafs cloud's order, with search. An app under Yours is never under Discover again in another catalog form
+  (`ConnectRow.split`): Stripe connected through a managed provider's entry (`connector:composio:stripe`) leaves out
+  its reviewed entry (`stripe@3`), matched by the entry's last part without its version, or by vendor, each folded
+  as tafs cloud folds them (lower case, no spaces, dots, dashes or underscores).
 - **No taf to connect for:** opened from Settings on an account where no taf can have an app, "Apps connect for a taf.
   Make one first…" heads Discover, where Connect needs a taf, and never Yours; with nothing under Discover it doesn't
   show (`ConnectRow.saysMakeATaf`).
 - **On a phone, two lines:** the name, then tafs cloud's `line` as sent ("Sign in · Connected · Used by Refunds"). From a
   tafs cloud without it, the app says the same: how it connects ("Sign in" or "With a key"), whose it is (`whose`, as
   sent), where it stands, and which tafs use it ("Used by …", from `used_by`, or this phone's planque read). A ✓ for a connected app; else a compact Connect, as wide as its words.
-- **On an iPad's full width, a table:** App, How it connects, Whose, Status.
+- **On an iPad's full width, a table:** App, How it connects, Whose, Status, laid out by `ConnectColumns`, the same
+  in the header and every row. The App column gets its room first (200 points at least), so names read whole in
+  portrait and landscape: the other three are 150, 130 and 230 points while there's room, then give way together
+  down to 96, 84 and 180. A name is one line, cut at its end only as a last resort, never broken inside a word.
+- **An app's name is tafs cloud's `title`**, as on Android. A reviewed entry whose title is a whole sentence ("Qonto
+  invoicing: reads, and invoice drafts from quotes") shows it as sent: tafs cloud sends no separate name and
+  description (`vendor` is planque's key, sometimes a slug such as `gmail`), and the app doesn't cut titles apart.
 - **A connected app opens its detail** (`AppConnectionsView`): what each connection can read and do, which taf it
   serves, and Disconnect. The whole row opens it, name, logo and second line included, not only its ✓.
   Its footer ("Removing access takes its tools from that taf only…") shows only when a connection there is one of
@@ -723,6 +732,11 @@ Home lists it ([api.md](api.md) › Coach waiting; `KIFF/TafsCloud+CoachWaiting.
 - **Read leniently:** one without its chat (`session`) or either line is left out, never Home with it.
 - **The way in** opens Coach on that chat (`openSetupChat(session)`), where its card waits. Someone who may not
   use Coach (`mayUseCoach`) sees the line alone, never a button that does nothing.
+- **At once:** when Coach's run pauses on a card while its chat is open (its stream's live line ends on
+  `waiting_for_you`, or it ends `PAUSED`), the app reads Home once as that stream ends
+  (`AppModel.stillWaitsOnYou`), so the row and the badge come while Coach is still open, not after it closes.
+  A run that went on after the card, or ended, reads nothing more.
+- **The line's date** ("depuis le 14 nov.") is tafs cloud's, inside `words.line`; the app draws it as sent.
 
 **Set aside** is "not now", never an approval: nothing is signed, and no Face ID. Only signed in (not the
 sample), and only what tafs cloud offers: KIFF's holds, "Did this happen?" and steps never get it. As on

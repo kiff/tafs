@@ -7664,6 +7664,9 @@ final class AppModel: ObservableObject {
     private func followSetupStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, text: String, gen: Int,
                                    conversation: Int, sent: String? = nil) async {
         var ended: String?
+        // Coach paused on a card its person answers: Needs you is read once then, so its row
+        // and badge come while the chat is still open, not after it closes.
+        var waitsOnYou = false
         do {
             for try await e in events {
                 guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
@@ -7680,6 +7683,7 @@ final class AppModel: ObservableObject {
                     setupLive?.thinking += t
                 case .state(let state, let words):
                     setupLive?.state = LiveState(state: state, words: words)
+                    waitsOnYou = Self.stillWaitsOnYou(waitsOnYou, state: state)
                 case .activity(let tool, let step, let call):
                     // The step shows at once; the thread then picks up the words written so far.
                     let words = step ?? Self.activityWords(tool)
@@ -7703,6 +7707,7 @@ final class AppModel: ObservableObject {
                     setupLiveBefore = Set(setupThread.items.map(\.id))
                 case .end(let status, _, _, _, _):
                     ended = status
+                    if status == "PAUSED" { waitsOnYou = true }
                 case .held:
                     setupLive?.ended(nil, .held)
                 case .broken, .taken:
@@ -7719,6 +7724,19 @@ final class AppModel: ObservableObject {
         await loadSetupThread()
         guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         setupLive = nil
+        // Paused on a card: Home, and its Needs you, read once now, as a taf's chat does at its end.
+        if waitsOnYou { await refresh() }
+    }
+
+    /// Whether Coach's run still waits on its person after this live line: `waiting_for_you`
+    /// (a card that waits on them, or a held call) says it does; any other line but the last,
+    /// `done`, says it went on. One Home read per pause, at the stream's end.
+    nonisolated static func stillWaitsOnYou(_ before: Bool, state: String) -> Bool {
+        switch state {
+        case "waiting_for_you": return true
+        case "done": return before
+        default: return false
+        }
     }
 
     /// What Setup is doing, in the owner's words, from the tool it calls.
