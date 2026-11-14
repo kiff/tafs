@@ -685,7 +685,6 @@
     <string name="coach_drive_cant">Coach nie może sterować: %1$s</string>
     <string name="coach_drive_not_started_unconfirmed">Nie rozpoczęto: nie zostało potwierdzone.</string>
     <string name="coach_driving">Steruje</string>
-    <string name="coach_each_waits">Każde połączenie i każda Card czekają na %1$s.</string>
     <string name="coach_earlier_request">Wcześniejsza prośba</string>
     <string name="coach_folds_plan">Zwija plan</string>
     <string name="coach_full_screen">Pełny ekran</string>
@@ -694,7 +693,7 @@
     <string name="coach_improve_why_refused">Dlaczego coś zostało odrzucone lub jest oczekujące?</string>
     <string name="coach_improve_line">Powiedz, co powinno się zmienić, albo zapytaj, jak idzie. Tryb Coach zaczyna od tego, co zrobił %1$s i na co pozwala jego Card.</string>
     <string name="coach_improve_taf">Ulepsz %1$s</string>
-    <string name="coach_intro">Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Żaden taf nie widzi Twojego logowania.</string>
+    <string name="coach_intro">Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności.</string>
     <string name="coach_kiff_counts_way">KIFF liczy to w ten sposób</string>
     <string name="coach_making_live">Uruchamianie na żywo…</string>
     <string name="coach_name_tool_taf_should_work">Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Zatwierdzasz przez %1$s.</string>
@@ -1227,11 +1226,10 @@
     <string name="halt_again">Zablokuj ponownie</string>
     <string name="halt_all_now">Zablokuj wszystko teraz</string>
     <string name="halt_explain_halted">Zablokowane. Wznowienie uruchamia tylko nową pracę.</string>
-    <string name="halt_explain_halted_since">Zablokowane od %1$s. Wznowienie uruchamia tylko nową pracę.</string>
+    <string name="halt_explain_halted_since">Od %1$s. Wznowienie uruchamia tylko nową pracę.</string>
     <string name="halt_explain_halting">Nic nowego się nie zaczyna. Zablokowane pojawi się, gdy potwierdzą to KIFF i połączenie.</string>
     <string name="halt_explain_running_all">Blokada zatrzymuje Twoje tafs, dopóki ich nie wznowisz. Wysłane już wywołanie może jeszcze dotrzeć.</string>
     <string name="halt_explain_running_one">Blokada go zatrzymuje, dopóki go nie wznowisz. Wysłane już wywołanie może jeszcze dotrzeć.</string>
-    <string name="halt_halted_nothing_reaches_your_tools">Zablokowane%1$s. Wznowienie uruchamia tylko nową pracę.</string>
     <string name="halt_halting_stops_no_run_starts">Blokada zatrzymuje: %1$s, do wznowienia. Wysłane już wywołanie może jeszcze dotrzeć.</string>
     <string name="halt_now">Zablokuj teraz</string>
     <string name="halt_row_running">Zatrzymaj, dopóki nie wznowisz</string>
@@ -1289,7 +1287,6 @@
     <string name="home_sample_label">Co zgłosił po przebiegu testowym</string>
     <string name="home_see_all_jobs">Zobacz wszystkie zadania</string>
     <string name="home_shared_you">Udostępnione Tobie</string>
-    <string name="home_sign_approve_each_step">Logujesz się i zatwierdzasz każdy krok</string>
     <string name="home_start_new_taf">Utwórz nowego tafa</string>
     <string name="home_status">Stan</string>
     <string name="home_status_retrying">%1$s · ponowna próba</string>

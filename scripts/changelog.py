@@ -8,9 +8,12 @@ the same line. A change with nothing user-visible adds an empty file.
     changelog.py check --base origin/main --branch <head branch>
         In a pull request: exactly one fragment added, named for the branch,
         and CHANGELOG.md untouched. A branch whose name comes back after its
-        pull request merged finds its fragment on the base, empty until the
-        next fold: filling it is its entry, and leaving it empty is the empty
-        file. Dependabot's pull requests are exempt. A
+        pull request merged finds its fragment on the base until the next
+        fold. An empty one: filling it is its entry, and leaving it empty is
+        the empty file. One holding an earlier pull request's entry: leaving
+        it as it is stands for this pull request's empty file, and changing
+        it would rewrite that entry, so it fails. Dependabot's pull requests
+        are exempt. A
         release branch (release/...) carries the fold instead: CHANGELOG.md
         edited and fragments only removed, none added or changed.
     changelog.py fold [--release "1.8.0 (2026-11-12)"]
@@ -38,10 +41,11 @@ def git(*args: str, cwd: str = ROOT) -> str:
     return subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True).stdout
 
 
-def check(changed: list[tuple[str, str]], branch: str, empty_on_base: bool = False) -> list[str]:
+def check(changed: list[tuple[str, str]], branch: str, empty_on_base: bool = False, filled_on_base: bool = False) -> list[str]:
     """What's wrong with a pull request's changes ((status, path) pairs against its base).
 
-    empty_on_base: the branch's own fragment is already on the base, and empty."""
+    empty_on_base: the branch's own fragment is already on the base, and empty.
+    filled_on_base: it's already on the base, holding an earlier pull request's entry."""
     if branch.startswith("dependabot/"):
         return []
     fragments = [(status, path) for status, path in changed
@@ -66,6 +70,11 @@ def check(changed: list[tuple[str, str]], branch: str, empty_on_base: bool = Fal
         # fold: filling it is this pull request's entry, and leaving it is the empty file.
         others = [path for path in others if path != want]
         added = added or [want]
+    if filled_on_base and not any(path == want for _, path in fragments):
+        # The name came back before the fold, and its fragment holds an earlier pull request's entry:
+        # left as it is, it stands for this pull request's empty file. Changing or removing it stays
+        # an error below, so no entry is ever rewritten or lost.
+        added = added or [want]
     if others:
         errors.append(f"another pull request's fragment is changed or removed: {', '.join(others)}")
     if added != [want]:
@@ -74,10 +83,20 @@ def check(changed: list[tuple[str, str]], branch: str, empty_on_base: bool = Fal
     return errors
 
 
-def own_fragment_empty(base: str, branch: str, cwd: str = ROOT) -> bool:
-    """Whether the branch's fragment is on the base already, and empty: the name came back after a merge."""
+def own_fragment_size(base: str, branch: str, cwd: str = ROOT) -> int | None:
+    """The size of the branch's fragment on the base, or None when there's none: the name came back after a merge."""
     size = subprocess.run(["git", "cat-file", "-s", f"{base}:{fragment_name(branch)}"], cwd=cwd, capture_output=True, text=True)
-    return size.returncode == 0 and size.stdout.strip() == "0"
+    return int(size.stdout.strip()) if size.returncode == 0 else None
+
+
+def own_fragment_empty(base: str, branch: str, cwd: str = ROOT) -> bool:
+    """Whether the branch's fragment is on the base already, and empty."""
+    return own_fragment_size(base, branch, cwd) == 0
+
+
+def own_fragment_filled(base: str, branch: str, cwd: str = ROOT) -> bool:
+    """Whether the branch's fragment is on the base already, holding an earlier pull request's entry."""
+    return (own_fragment_size(base, branch, cwd) or 0) > 0
 
 
 def fold(root: str = ROOT, release: str | None = None) -> int:
@@ -128,7 +147,8 @@ def main(argv: list[str]) -> int:
     if args.cmd == "check":
         out = git("diff", "--name-status", "--no-renames", f"{args.base}...HEAD")
         changed = [tuple(line.split("\t", 1)) for line in out.splitlines() if line]
-        errors = check(changed, args.branch, empty_on_base=own_fragment_empty(args.base, args.branch))
+        size = own_fragment_size(args.base, args.branch)
+        errors = check(changed, args.branch, empty_on_base=size == 0, filled_on_base=(size or 0) > 0)
         for e in errors:
             print(f"::error::{e}")
         return 1 if errors else 0

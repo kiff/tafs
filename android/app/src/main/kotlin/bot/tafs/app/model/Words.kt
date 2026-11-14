@@ -633,7 +633,6 @@ object Words {
       val notStartedUnconfirmed: String get() = Res.s(R.string.coach_drive_not_started_unconfirmed)
     }
     val driving: String get() = Res.s(R.string.coach_driving)
-    fun eachWaits(biometry: String): String = Res.s(R.string.coach_each_waits, biometry)
     val earlierRequest: String get() = Res.s(R.string.coach_earlier_request)
     val foldsPlan: String get() = Res.s(R.string.coach_folds_plan)
     val fullScreen: String get() = Res.s(R.string.coach_full_screen)
@@ -1194,7 +1193,6 @@ object Words {
       val runningAll: String get() = Res.s(R.string.halt_explain_running_all)
       val runningOne: String get() = Res.s(R.string.halt_explain_running_one)
     }
-    fun haltedNothingReachesYourTools(since: String): String = Res.s(R.string.halt_halted_nothing_reaches_your_tools, since)
     fun haltingStopsNoRunStarts(who: String): String = Res.s(R.string.halt_halting_stops_no_run_starts, who)
     val now: String get() = Res.s(R.string.halt_now)
     val rowRunning: String get() = Res.s(R.string.halt_row_running)
@@ -1250,7 +1248,6 @@ object Words {
     val sampleLabel: String get() = Res.s(R.string.home_sample_label)
     val seeAllJobs: String get() = Res.s(R.string.home_see_all_jobs)
     val sharedYou: String get() = Res.s(R.string.home_shared_you)
-    val signApproveEachStep: String get() = Res.s(R.string.home_sign_approve_each_step)
     val startNewTaf: String get() = Res.s(R.string.home_start_new_taf)
     val status: String get() = Res.s(R.string.home_status)
     fun statusRetrying(words: String): String = Res.s(R.string.home_status_retrying, words)

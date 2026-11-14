@@ -625,7 +625,6 @@
     <string name="coach_drive_cant">Coach can\'t drive: %1$s</string>
     <string name="coach_drive_not_started_unconfirmed">Not started: it wasn\'t confirmed.</string>
     <string name="coach_driving">Driving</string>
-    <string name="coach_each_waits">Each connection and each Card waits for %1$s.</string>
     <string name="coach_earlier_request">Earlier request</string>
     <string name="coach_folds_plan">Folds the plan</string>
     <string name="coach_full_screen">Full screen</string>
@@ -634,7 +633,7 @@
     <string name="coach_improve_why_refused">Why was something refused or held?</string>
     <string name="coach_improve_line">Say what should change, or ask how it\'s going. Coach mode starts from what %1$s did and what its Card allows.</string>
     <string name="coach_improve_taf">Improve %1$s</string>
-    <string name="coach_intro">Name an app for your taf, like your payment provider. No taf sees your sign-in.</string>
+    <string name="coach_intro">Name an app for your taf, like your payment provider.</string>
     <string name="coach_kiff_counts_way">KIFF counts it this way</string>
     <string name="coach_making_live">Making it live…</string>
     <string name="coach_name_tool_taf_should_work">Name an app for your taf, like your payment provider. You approve with %1$s.</string>
@@ -1141,11 +1140,10 @@
     <string name="halt_again">Halt again</string>
     <string name="halt_all_now">Halt all now</string>
     <string name="halt_explain_halted">Halted. Resuming starts only new work.</string>
-    <string name="halt_explain_halted_since">Halted since %1$s. Resuming starts only new work.</string>
+    <string name="halt_explain_halted_since">Since %1$s. Resuming starts only new work.</string>
     <string name="halt_explain_halting">Nothing new starts. Halted shows once KIFF and the connection both confirm.</string>
     <string name="halt_explain_running_all">Halting stops your tafs until you resume. A call already sent may still arrive.</string>
     <string name="halt_explain_running_one">Halting stops it until you resume. A call already sent may still arrive.</string>
-    <string name="halt_halted_nothing_reaches_your_tools">Halted%1$s. Resuming starts only new work.</string>
     <string name="halt_halting_stops_no_run_starts">Halting stops %1$s until you resume. A call already sent may still arrive.</string>
     <string name="halt_now">Halt now</string>
     <string name="halt_row_running">Stop it until you resume</string>
@@ -1199,7 +1197,6 @@
     <string name="home_sample_label">What it reported after its test run</string>
     <string name="home_see_all_jobs">See all jobs</string>
     <string name="home_shared_you">Shared with you</string>
-    <string name="home_sign_approve_each_step">You sign in and approve each step</string>
     <string name="home_start_new_taf">Start a new taf</string>
     <string name="home_status">Status</string>
     <string name="home_status_retrying">%1$s · trying again</string>

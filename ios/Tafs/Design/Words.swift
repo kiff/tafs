@@ -1163,8 +1163,6 @@ enum Words {
         }
         /// Driving
         static var driving: String { Words.line("coach.driving") }
-        /// Each connection and each Card waits for {biometry}.
-        static func eachWaits(biometry: String) -> String { Words.line("coach.each_waits", biometry) }
         /// Earlier request
         static var earlierRequest: String { Words.line("coach.earlier_request") }
         /// Folds the plan
@@ -1183,7 +1181,7 @@ enum Words {
         static func improveLine(name: String) -> String { Words.line("coach.improve_line", name) }
         /// Improve {taf}
         static func improveTaf(taf: String) -> String { Words.line("coach.improve_taf", taf) }
-        /// Name an app for your taf, like your payment provider. No taf sees your sign-in.
+        /// Name an app for your taf, like your payment provider.
         static var intro: String { Words.line("coach.intro") }
         /// KIFF counts it this way
         static var kiffCountsWay: String { Words.line("coach.kiff_counts_way") }
@@ -2196,7 +2194,7 @@ enum Words {
         enum Explain {
             /// Halted. Resuming starts only new work.
             static var halted: String { Words.line("halt.explain.halted") }
-            /// Halted since {time}. Resuming starts only new work.
+            /// Since {time}. Resuming starts only new work.
             static func haltedSince(time: String) -> String { Words.line("halt.explain.halted_since", time) }
             /// Nothing new starts. Halted shows once KIFF and the connection both confirm.
             static var halting: String { Words.line("halt.explain.halting") }
@@ -2205,8 +2203,6 @@ enum Words {
             /// Halting stops it until you resume. A call already sent may still arrive.
             static var runningOne: String { Words.line("halt.explain.running_one") }
         }
-        /// Halted{since}. Resuming starts only new work.
-        static func haltedNothingReachesYourTools(since: String) -> String { Words.line("halt.halted_nothing_reaches_your_tools", since) }
         /// Halting stops {who} until you resume. A call already sent may still arrive.
         static func haltingStopsNoRunStarts(who: String) -> String { Words.line("halt.halting_stops_no_run_starts", who) }
         /// Halt now
@@ -2309,8 +2305,6 @@ enum Words {
         static var seeAllJobs: String { Words.line("home.see_all_jobs") }
         /// Shared with you
         static var sharedYou: String { Words.line("home.shared_you") }
-        /// You sign in and approve each step
-        static var signApproveEachStep: String { Words.line("home.sign_approve_each_step") }
         /// Start a new taf
         static var startNewTaf: String { Words.line("home.start_new_taf") }
         /// Status

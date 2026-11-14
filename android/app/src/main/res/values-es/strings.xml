@@ -625,7 +625,6 @@
     <string name="coach_drive_cant">Coach no puede manejar la app: %1$s</string>
     <string name="coach_drive_not_started_unconfirmed">No empezó: no se confirmó.</string>
     <string name="coach_driving">Manejando la app</string>
-    <string name="coach_each_waits">Cada conexión y cada Card esperan %1$s.</string>
     <string name="coach_earlier_request">Solicitud anterior</string>
     <string name="coach_folds_plan">Contrae el plan</string>
     <string name="coach_full_screen">Pantalla completa</string>
@@ -634,7 +633,7 @@
     <string name="coach_improve_why_refused">¿Por qué algo fue rechazado o retenido?</string>
     <string name="coach_improve_line">Di qué debería cambiar, o pregunta cómo va. El modo Coach parte de lo que hizo %1$s y de lo que permite su Card.</string>
     <string name="coach_improve_taf">Mejorar %1$s</string>
-    <string name="coach_intro">Nombra una app para tu taf, como tu proveedor de pagos. Ningún taf ve tu inicio de sesión.</string>
+    <string name="coach_intro">Nombra una app para tu taf, como tu proveedor de pagos.</string>
     <string name="coach_kiff_counts_way">KIFF lo cuenta así</string>
     <string name="coach_making_live">Activando…</string>
     <string name="coach_name_tool_taf_should_work">Nombra una app para tu taf, como tu proveedor de pagos. Apruebas con %1$s.</string>
@@ -1141,11 +1140,10 @@
     <string name="halt_again">Volver a bloquear</string>
     <string name="halt_all_now">Bloquear todo ahora</string>
     <string name="halt_explain_halted">Bloqueado. Al reanudar, solo empieza trabajo nuevo.</string>
-    <string name="halt_explain_halted_since">Bloqueado desde %1$s. Al reanudar, solo empieza trabajo nuevo.</string>
+    <string name="halt_explain_halted_since">Desde %1$s. Al reanudar, solo empieza trabajo nuevo.</string>
     <string name="halt_explain_halting">No empieza nada nuevo. Aparece Bloqueado cuando KIFF y la conexión lo confirman.</string>
     <string name="halt_explain_running_all">Bloquear detiene tus tafs hasta que los reanudes. Una llamada ya enviada aún puede llegar.</string>
     <string name="halt_explain_running_one">Bloquear lo detiene hasta que lo reanudes. Una llamada ya enviada aún puede llegar.</string>
-    <string name="halt_halted_nothing_reaches_your_tools">Bloqueado%1$s. Al reanudar, solo empieza trabajo nuevo.</string>
     <string name="halt_halting_stops_no_run_starts">Bloquear detiene %1$s hasta que reanudes. Una llamada ya enviada aún puede llegar.</string>
     <string name="halt_now">Bloquear ahora</string>
     <string name="halt_row_running">Detenlo hasta que lo reanudes</string>
@@ -1199,7 +1197,6 @@
     <string name="home_sample_label">Lo que informó tras su ejecución de prueba</string>
     <string name="home_see_all_jobs">Ver todos los trabajos</string>
     <string name="home_shared_you">Compartidos contigo</string>
-    <string name="home_sign_approve_each_step">Inicias sesión y apruebas cada paso</string>
     <string name="home_start_new_taf">Empezar un taf nuevo</string>
     <string name="home_status">Estado</string>
     <string name="home_status_retrying">%1$s · reintentando</string>

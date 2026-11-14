@@ -394,7 +394,8 @@ describe("Setup's definition on kiff/agents", () => {
     // The account list, when it must pin the account, joins that request: one approval, not two (kiff/tafs#138).
     expect(flat).toContain("When you must pin the account, pin the grant's own account, as planque's status lists it: never a read of the accounts.");
     expect(flat).toContain("gets its describing tool connected by planque with the sign-in when it has one: never ask for it, or any read, alone.");
-    expect(flat).toContain("Draft it once, after reading the fields, with all its tools.");
+    expect(flat).toContain("Draft it once, with all its tools, from the catalog's fields (or the describing tool's): the approval that adds its tools carries the Card, never a Card before its tools are known.");
+    expect(flat).toContain("A managed app's connect names the taf's planned tools (uses).");
     expect(flat).toContain("The connection's one approval and sign-in then cover it, with no question of its own and no second approval");
     // One connection per vendor per taf (kiff/tafs#138, the owner's retest: five Face IDs and Stripe sign-ins).
     expect(flat).toContain("Never in a connection of its own: each new connection is one more approval and vendor sign-in for the owner");

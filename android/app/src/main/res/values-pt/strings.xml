@@ -625,7 +625,6 @@
     <string name="coach_drive_cant">O Coach não pode conduzir: %1$s</string>
     <string name="coach_drive_not_started_unconfirmed">Não iniciado: não foi confirmado.</string>
     <string name="coach_driving">A conduzir</string>
-    <string name="coach_each_waits">Cada ligação e cada Card aguardam %1$s.</string>
     <string name="coach_earlier_request">Pedido anterior</string>
     <string name="coach_folds_plan">Recolhe o plano</string>
     <string name="coach_full_screen">Ecrã inteiro</string>
@@ -634,7 +633,7 @@
     <string name="coach_improve_why_refused">Porque é que algo foi recusado ou retido?</string>
     <string name="coach_improve_line">Diga o que deve mudar, ou pergunte como está a correr. O modo Coach parte do que %1$s fez e do que o seu Card permite.</string>
     <string name="coach_improve_taf">Melhorar %1$s</string>
-    <string name="coach_intro">Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Nenhum taf vê o seu início de sessão.</string>
+    <string name="coach_intro">Indique uma app para o seu taf, como o seu fornecedor de pagamentos.</string>
     <string name="coach_kiff_counts_way">O KIFF conta desta forma</string>
     <string name="coach_making_live">A pôr em produção…</string>
     <string name="coach_name_tool_taf_should_work">Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Aprova com %1$s.</string>
@@ -1141,11 +1140,10 @@
     <string name="halt_again">Bloquear novamente</string>
     <string name="halt_all_now">Bloquear tudo agora</string>
     <string name="halt_explain_halted">Bloqueado. Ao retomar, só começa trabalho novo.</string>
-    <string name="halt_explain_halted_since">Bloqueado desde %1$s. Ao retomar, só começa trabalho novo.</string>
+    <string name="halt_explain_halted_since">Desde %1$s. Ao retomar, só começa trabalho novo.</string>
     <string name="halt_explain_halting">Nada de novo começa. Bloqueado aparece quando o KIFF e a ligação o confirmarem.</string>
     <string name="halt_explain_running_all">Bloquear para os seus tafs até retomar. Uma chamada já enviada pode ainda chegar.</string>
     <string name="halt_explain_running_one">Bloquear para-o até retomar. Uma chamada já enviada pode ainda chegar.</string>
-    <string name="halt_halted_nothing_reaches_your_tools">Bloqueado%1$s. Ao retomar, só começa trabalho novo.</string>
     <string name="halt_halting_stops_no_run_starts">Bloquear para %1$s até retomar. Uma chamada já enviada pode ainda chegar.</string>
     <string name="halt_now">Bloquear agora</string>
     <string name="halt_row_running">Pará-lo até retomar</string>
@@ -1199,7 +1197,6 @@
     <string name="home_sample_label">O que reportou após a execução de teste</string>
     <string name="home_see_all_jobs">Ver todas as tarefas</string>
     <string name="home_shared_you">Partilhados consigo</string>
-    <string name="home_sign_approve_each_step">Inicia sessão e aprova cada passo</string>
     <string name="home_start_new_taf">Começar um novo taf</string>
     <string name="home_status">Estado</string>
     <string name="home_status_retrying">%1$s · nova tentativa</string>
