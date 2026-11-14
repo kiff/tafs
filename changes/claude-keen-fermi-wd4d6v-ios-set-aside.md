@@ -1,0 +1,1 @@
+- **iPhone and iPad: set a waiting Coach chat aside.** In Needs you, swipe a waiting Coach chat away or tap Set aside; with two or more, Set all aside ends them after one ask, in tafs cloud's words. Nothing is approved or sent, one request goes per swipe, and a new job then starts a new Coach conversation (docs/ios-app.md).

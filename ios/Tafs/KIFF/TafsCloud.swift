@@ -384,6 +384,8 @@ final class TafsCloud {
         var yourSteps: [YourStep]? = nil
         /// Coach's chats waiting on their person (`coach_waiting`), oldest first.
         var coachWaiting: [CoachWaiting]? = nil
+        /// "Set all aside" (`coach_waiting_clear`), for two or more waiting chats; absent, none.
+        var coachWaitingClear: CoachWaitingClear? = nil
         /// Everything that waits for the person, counted by tafs cloud with its words; absent
         /// when KIFF's "Did this happen?" can't be read, and the app counts what it has.
         var needsYou: NeedsYou? = nil
@@ -455,6 +457,7 @@ final class TafsCloud {
             case cardUnitExceptions = "card_unit_exceptions"
             case yourSteps = "your_steps"
             case coachWaiting = "coach_waiting"
+            case coachWaitingClear = "coach_waiting_clear"
             case needsYou = "needs_you"
         }
     }
