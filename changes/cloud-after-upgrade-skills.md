@@ -1,0 +1,1 @@
+- **Coach takes a check's list from the read it made, and answers in the owner's language.** set-up-a-taf (version 12) and the-dial (version 7) no longer give data.messages as the check's example: items is the path of the list in what the read Coach made answered. Coach's rules add that the owner's last message sets the language, never a tool's words ([Coach](../docs/coach.md)).
