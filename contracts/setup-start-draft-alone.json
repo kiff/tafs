@@ -256,6 +256,24 @@
                     "window": "calendar_day"
                   }
                 ]
+              },
+              {
+                "id": "coach-labels",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "taf_labels"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 100,
+                    "window": "calendar_day"
+                  }
+                ]
               }
             ]
           },
@@ -338,6 +356,12 @@
               "lines": [
                 "KIFF's line for coach-web-reads"
               ]
+            },
+            {
+              "id": "coach-labels",
+              "lines": [
+                "KIFF's line for coach-labels"
+              ]
             }
           ]
         }
@@ -410,6 +434,11 @@
                 "name": "Read a public page",
                 "does": "Read one public web page, such as an app's documentation or its published API description, to connect it the right way. Only public pages, with nothing signed in. Up to 50 a day.",
                 "why": "It reads only what anyone can open on the web."
+              },
+              {
+                "name": "Label tafs",
+                "does": "Put labels on your tafs, such as Money or Customers, so you can filter the list. A label is only a name: it changes nothing a taf may do. Up to 100 a day.",
+                "why": "It changes only how your list is filtered."
               },
               {
                 "name": "Try a version",

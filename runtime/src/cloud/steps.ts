@@ -107,6 +107,7 @@ export class Steps {
       case "taf_check": return w.doing_check;
       case "taf_estimate": return w.doing_estimate;
       case "web_read": return w.doing_web_read;
+      case "taf_labels": return w.doing_labels;
       case "taf_task": return w.doing_task;
       case "run_stop": return w.doing_stop;
       case "taf_pause": return w.doing_pause;
