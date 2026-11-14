@@ -50,7 +50,8 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
    */
   const outcomes = new Map<string, { outcome: string; reason?: string }>();
   /** A kiff/agents from before a result's `check`: it refuses the field, as its strict decoder does. */
-  const old = { rejectCheck: false };
+  // refusesCards: kiff/agents before agents#465, which refused to cancel a run paused on a card (409 paused_run).
+  const old = { rejectCheck: false, refusesCards: true };
   /** Accounts whose tafs wait for credits: every run they start is refused with this code, as kiff/agents does on KIFF's word. */
   const credits = new Map<string, string>();
   /** What a streamed run's agent does, in order: kiff/agents' stream events, or an Error that breaks it. */
@@ -626,7 +627,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       if (!r || (requester && r.requester && (r.requester.kind !== requester.kind || r.requester.id !== requester.id))) throw gone();
       if (r.status !== "PENDING" && r.status !== "RUNNING" && r.status !== "PAUSED") throw new AgentsError(409, "the run is over", undefined, "run_ended");
       // As kiff/agents' cancelPaused: a run paused on a call KIFF gave no exception to withdraw by (a card) isn't cancelled.
-      if (r.status === "PAUSED" && (r.requirements ?? []).some((q) => !q.exception && !q.answered)) {
+      if (old.refusesCards && r.status === "PAUSED" && (r.requirements ?? []).some((q) => !q.exception && !q.answered)) {
         throw new AgentsError(409, "a paused run can't be cancelled: KIFF holds a call it gave no ID to withdraw it by", undefined, "paused_run");
       }
       r.status = "CANCELLED";

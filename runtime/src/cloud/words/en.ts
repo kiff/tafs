@@ -115,7 +115,8 @@ export const en = {
   approval_window_closed: "Your approval window has ended. Nothing was approved; approve it again with your fingerprint.",
   approval_sign_in_closed: "The sign-in was closed. Nothing was connected.",
   approval_no_code: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,
-  approval_came_back: (status: string) => `The connection came back ${status} with no sign-in link. Nothing was connected.`,
+  approval_came_back: (vendor: string) => `${vendor} didn't open a sign-in page, so nothing was connected. Try again.`,
+  approval_came_back_signed_in: (vendor: string) => `You're already signed in to ${vendor}, so no sign-in page opened, and nothing new is connected yet. Its actions come next.`,
   apps_method_sign_in: "Sign in",
   apps_method_key: "With a key",
   apps_connected: "Connected",
@@ -126,7 +127,7 @@ export const en = {
   apps_whose_yours: "Yours",
   apps_whose_company: "Company",
   approval_confirm_first: "Your sign-in went through, but it isn't confirmed yet. Approve again to confirm it.",
-  approval_not_connected: (vendor: string, status: string) => `The sign-in at ${vendor} didn't connect: the connection is ${status}. Nothing was connected. Try signing in again.`,
+  approval_not_connected: (vendor: string) => `The sign-in at ${vendor} didn't finish, so nothing was connected. Try signing in again.`,
   approval_failed: (why: string) => `Not connected: ${why}`,
   approval_failed_default: "it didn't go through",
   // A connection's status in those notes: planque's word, in the person's language.

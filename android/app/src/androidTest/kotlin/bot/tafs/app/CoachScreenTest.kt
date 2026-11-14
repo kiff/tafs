@@ -122,7 +122,7 @@ class CoachScreenTest {
   }
 
   /** The tools and their Card under one fingerprint (`tools_and_cards`): the grant waits on its added tools, the card carries a draft. */
-  private fun showToolsAndCards(drafts: Map<String, bot.tafs.app.kiff.AgentDraft>, signs: String = """{"card":true}""") = rule.setShown {
+  private fun showToolsAndCards(drafts: Map<String, bot.tafs.app.kiff.AgentDraft>, signs: String = """{"card":true}""", withDraft: Boolean = true) = rule.setShown {
     // As the planque client marks a grant whose digest it checked against its request.
     val pending = KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(
       """{"id":"g1","status":"pending","text":"Read your payments and refund one.","digest":"d1","request":{"server":"https://mcp.stripe.example"}}""",
@@ -133,7 +133,7 @@ class CoachScreenTest {
     )
     val s = state(null).copy(
       grants = listOf(pending), setupDrafts = drafts.mapValues { open }, planqueReady = true,
-      coachComponents = listOf(ShownComponent(t0.plusSeconds(10), "s1", "r1", connect.copy(signsRead = KiffClient.json.parseToJsonElement(signs)))),
+      coachComponents = listOf(ShownComponent(t0.plusSeconds(10), "s1", "r1", connect.copy(signsRead = KiffClient.json.parseToJsonElement(signs), draft = if (withDraft) connect.draft else null))),
     )
     TafsTheme { CompositionLocalProvider(LocalBiometry provides "your fingerprint") { CoachScreen(s, actions, loadCoach = {}, onBack = {}) } }
   }
@@ -154,6 +154,13 @@ class CoachScreenTest {
     rule.onNodeWithText("Up to €20 a day").assertExists()
     rule.onNodeWithText(Words.Card.itsCard.uppercase()).assertDoesNotExist()
     rule.onNodeWithText(Words.Approval.approveWith("your fingerprint")).assertIsEnabled()
+  }
+
+  // An app's first sign-in carries no draft yet (a Card is drafted over the tools it brings), yet tafs cloud says a Card follows.
+  @Test fun aFirstSignInWithNoDraftStillSaysItsCardComesNext() {
+    showToolsAndCards(emptyMap(), """{"card":false,"words":"Its Card: you approve it next"}""", withDraft = false)
+    rule.onNodeWithText("Its Card: you approve it next").assertExists()
+    rule.onNodeWithText(Words.Card.itsCard.uppercase()).assertDoesNotExist()
   }
 
   @Test fun untilTheCardIsReadApproveWaits() {

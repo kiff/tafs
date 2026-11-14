@@ -5544,12 +5544,17 @@ async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind:
  * The taf's chats, newest first, each named by the start of what the owner asked
  * (kiff/tafs#82): their first message that isn't a component's answer. Archived
  * ones are left out, or, with `archivedOnly`, are the only ones (kiff/tafs#97).
+ * A Coach chat its person set aside says so (`set_aside: true`): the apps never open it as the newest, on any device.
  */
-async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false): Promise<Array<{ session: string; started: string; updated: string; title: string }>> {
+async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false): Promise<Array<{ session: string; started: string; updated: string; title: string; set_aside?: true }>> {
   await moveArchived(me, taf, deps);
   const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me)));
   const listed = all.filter((s) => s.kind === "chat" && (s.archived === true) === archivedOnly).slice(0, CHAT.chatsListed);
   const read = await Promise.all(listed.map((s) => deps.agents.session(me.tenantID, s.id, ownerKey(me)).catch(() => undefined)));
+  // Coach's chats set aside (setAsideCoach keeps each by its session for 30 days); a read that fails marks none.
+  const setAside = taf.job === SETUP_JOB && deps.coach
+    ? await Promise.all(listed.map((s) => deps.coach!.get(setAsideKey(me.tenantID, s.id)).then((v) => v !== undefined && v !== null, () => false)))
+    : [];
   return listed.flatMap((s, i) => {
     const events = read[i]?.events ?? [];
     const text = chatTitle(events.filter((e) => e.kind === "owner_message").map((e) => {
@@ -5558,7 +5563,7 @@ async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = fals
     }), events.filter((e) => e.kind === "component").map((e) => e.body));
     if (!text) return [];
     const title = text.length > CHAT.chatTitle ? text.slice(0, CHAT.chatTitle - 1).trimEnd() + "…" : text;
-    return [{ session: s.id, started: iso(s.started), updated: iso(s.updated), title }];
+    return [{ session: s.id, started: iso(s.started), updated: iso(s.updated), title, ...(setAside[i] ? { set_aside: true as const } : {}) }];
   });
 }
 
@@ -6989,6 +6994,27 @@ async function endCoachRun(deps: Deps, tenant: string, coach: string, r: Run, no
 /** The cards a run waits on, unanswered, by their call ids: what an end kept here covers. */
 const cardsWaitedOn = (r: Run): string[] => (r.requirements ?? []).filter((q) => q.kind === "card" && !q.answered).map((q) => q.call_id);
 
+/**
+ * Asks kiff/agents once more to cancel each run kept as ended here because it refused (`kept`, 409 `paused_run`): kiff/agents
+ * cancels a run paused only on cards since agents#465, and the runs kept before it stay PAUSED until their cards expire. Once
+ * per run: a 200, or a run that had ended, marks it done; anything else stays kept, and isn't asked again. Nothing is answered.
+ */
+async function retryKeptEnds(deps: Deps, tenant: string, coach: string, runs: Run[], now: Date): Promise<void> {
+  if (!deps.coach) return;
+  for (const r of runs) {
+    if (r.agent !== coach || r.status !== "PAUSED") continue;
+    const kept = await deps.coach.get(coachEndedKey(tenant, r.id)).catch(() => undefined) as { how?: string; waits?: unknown; retried?: boolean } | undefined;
+    if (kept?.how !== "kept" || kept.retried || !Array.isArray(kept.waits)) continue;
+    const waits = kept.waits;
+    // Answered in Coach and paused on a new card since: not the end it kept, so not this one's to retry.
+    if (!cardsWaitedOn(r).every((id) => waits.includes(id))) continue;
+    const how = await deps.agents.cancelRun(tenant, coach, r.id).then(() => "cancelled", (err) =>
+      err instanceof AgentsError && (err.status === 404 || (err.status === 409 && err.code !== "paused_run")) ? "over" : "kept");
+    await deps.coach.put(coachEndedKey(tenant, r.id), { how, waits, retried: true }, new Date(now.getTime() + COACH_ENDED_KEPT_MS)).catch(() => undefined);
+    console.log(JSON.stringify({ event: "coach_kept_retry", tenant, run: r.id, ended: how !== "kept" }));
+  }
+}
+
 /** Coach's paused runs, less those tafs cloud already ended (endCoachRun) that still wait on the same cards. */
 async function notEndedHere(deps: Deps, tenant: string, runs: Run[]): Promise<Run[]> {
   if (!deps.coach || !runs.length) return runs;
@@ -7016,8 +7042,11 @@ export async function sweepStaleCoach(deps: Deps): Promise<Array<{ run: string; 
     const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
     if (!coach) continue;
     const removing = new Set(records.filter((t) => t.removing).flatMap((t) => t.kiffAgent ? [t.kiffAgent] : []));
-    // A run already ended here (kept PAUSED by kiff/agents) isn't ended again.
-    const paused = await notEndedHere(deps, tenant, await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]));
+    // A run kept as ended here because kiff/agents refused it is asked once more (retryKeptEnds); then a run already ended
+    // here isn't ended again.
+    const all = await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]);
+    await retryKeptEnds(deps, tenant, coach.id, all, now);
+    const paused = await notEndedHere(deps, tenant, all);
     for (const r of paused) {
       if (r.agent !== coach.id || r.status !== "PAUSED") continue;
       const cards = waitingCards(r, now);
@@ -9037,14 +9066,15 @@ function foldVendor(name: string): string {
  * The fields both apps draw a Connect-apps row from (the owner's reference, 13 Nov): whether it's connected, how it
  * connects, whose it is (the account's own connections: a company's are shared by its people, a personal account's
  * are the person's), which tafs use it, and `line`, the row's second line in the person's language ("Sign in ·
- * Connected · Used by Refunds").
+ * Connected · Used by Refunds"; an app to connect, its method alone: "Sign in").
  */
 function appRow(app: { entry: string; vendor: string; title: string; how: "oauth" | "key"; state: string }, me: KIFFIdentity, uses: Map<string, AppUser[]> | undefined, lang: Lang) {
   const w = wordsIn(lang);
   const own = app.state === "connected" || app.state === "needs_reconnect";
   const used = own && uses ? [...new Map([...(uses.get(app.entry) ?? []), ...(uses.get(foldVendor(app.vendor)) ?? []), ...(uses.get(foldVendor(app.title)) ?? [])].map((u) => [u.taf, u])).values()] : undefined;
-  const status = app.state === "connected" ? w.apps_connected : app.state === "needs_reconnect" ? w.apps_reconnect : app.state === "needs_setup" ? w.apps_needs_setup : w.apps_not_connected;
-  const line = [app.how === "key" ? w.apps_method_key : w.apps_method_sign_in, status, ...(used?.length ? [w.apps_used_by(used.map((u) => u.name).join(", "))] : [])].join(" · ");
+  // An app to connect says no status: under Discover, "Not connected" on every row says nothing.
+  const status = app.state === "connected" ? w.apps_connected : app.state === "needs_reconnect" ? w.apps_reconnect : app.state === "needs_setup" ? w.apps_needs_setup : undefined;
+  const line = [app.how === "key" ? w.apps_method_key : w.apps_method_sign_in, ...(status ? [status] : []), ...(used?.length ? [w.apps_used_by(used.map((u) => u.name).join(", "))] : [])].join(" · ");
   return {
     connected: app.state === "connected",
     method: app.how === "key" ? "key" as const : "sign_in" as const,

@@ -1,0 +1,3 @@
+- Benachrichtigungen einschalten fragt nicht mehr nach deinem Fingerabdruck: eine Abfrage weniger vor deinem ersten taf.
+- Beim ersten Verbinden einer App steht, dass ihre Card als Nächstes kommt, damit du weißt, dass eine zweite Genehmigung folgt.
+- Tippen vibriert jetzt auch auf Telefonen, die das Berührungsfeedback auf eigene Weise einstellen.

@@ -663,7 +663,11 @@ approval.") and its **Open Coach** button, which opens Coach on that chat (`AppM
 where the card is answered; someone who can't use Coach reads the line alone. tafs cloud counts each in `needs_you`, so Home never says "Nothing needs
 you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
 
-**Set aside** is "not now", never an approval, and only signed in (not the sample). One request goes per chat at a
+**Set aside** is "not now", never an approval, and only signed in (not the sample). A chat set aside is no longer the one
+Coach shows: Coach starts a new conversation, so a new job never goes on in the ended session (Android 1.27.1). Opening
+Coach with no chat chosen skips a chat tafs cloud marks `set_aside` (set aside on any device, or before a relaunch): the
+newest of the rest, or a new conversation when every one was set aside. **Ask Coach** in Connect apps always starts a new
+conversation (Android 1.27.3). One request goes per chat at a
 time (Android 1.26.1): a swipe fires once per gesture, and a chat already being set aside isn't asked again until
 tafs cloud answers.
 - **One chat:** a row whose `words.set_aside` tafs cloud sends can be swiped away either way, and has
@@ -677,7 +681,7 @@ tafs cloud answers.
   says why (`ErrorWords`) and keeps the rows. A row being set aside isn't drawn again by a Home read
   meanwhile.
 
-iPhone and iPad follow.
+iPhone and iPad do the same ([ios-app.md](ios-app.md#coach-waiting)).
 
 ## Your step
 
@@ -723,6 +727,10 @@ taf needs you and every taf halted, with sound, always; a taf answered someone, 
 tafs whose results include our phones (`Taf.results` has `app`; "N tafs ›" lists them); a reply
 wasn't sent, silent.
 
+**Turning alerts on** (`AppModel.turnOnAlerts`) asks for the phone's notification permission, then points the account's KIFF
+alert target at tafs cloud: a setup call signed with this phone's device key, never the approval key, so there's no
+fingerprint (Android 1.27.2; before, one signed a message nothing sent or checked). As on iPhone and iPad.
+
 ## Haptics
 
 The same rule as on iPhone and iPad (`design/Haptics.kt`):
@@ -737,8 +745,11 @@ The same rule as on iPhone and iPad (`design/Haptics.kt`):
 - **A step tick** on a selector's stops: the theme picker and the jobs' category chips.
 - **Settings › Haptics** turns all of it off, on this phone (`tafs.display`, `haptics`). It's on until turned off.
 - **The phone's own touch feedback setting** is followed: the platform's feedback (`performHapticFeedback`) plays nothing
-  when it's off. The first time a launch's feedback plays nothing (that setting, or a view that plays none), that's
-  written to the diagnostics, so "nothing vibrates" can be told apart from a tap the app never asked for.
+  when it's off. Some phones keep that switch off and use a touch slider of their own (ColorOS), so where the view plays
+  none, Android 13+ plays the same kind as a predefined effect marked as touch (`USAGE_TOUCH`, `VIBRATE`, a normal
+  permission): the phone's touch intensity decides, and off there is still off (Android 1.27.2). The first time a launch's
+  feedback plays nothing at all, that's written to the diagnostics, so "nothing vibrates" can be told apart from a tap the
+  app never asked for.
 
 ## Dark
 
@@ -777,7 +788,10 @@ Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#conne
     yours, **Used by** the tafs that use it, as a list in the app's language. iPhone and iPad put it together the same way.
   - "Used by" is tafs cloud's `used_by` when sent, else this phone's own read of its connections, by taf (`usedBy`).
 - **The trailing button is compact:** **Connect**, **Sign in again**, or for one signed in, **Signed in · choose its actions**.
-  A connected app opens its connections, each with Disconnect. Its tap always answers (Android 1.26.1): with none of its
+  With no taf yet, an app to connect offers **Ask Coach** instead, which opens Coach, where a taf is made; "Make a taf first"
+  sits above Discover only, never above Yours (Android 1.27.1).
+  A connected app opens its connections, each with Disconnect, from anywhere on its row (Android 1.27.1; before, only its
+  "Connected" label). The note on what removing access takes shows only when a taf uses one of them. Its tap always answers (Android 1.26.1): with none of its
   connections on this phone, planque's connections are read again first (`refreshConnections`), and if there are still
   none, the sheet says why: the read's failure (`connectionsError`, kept in words and written to the diagnostics), or
   that connecting isn't set up from this phone.
@@ -995,6 +1009,8 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
 - **When KIFF doesn't take this phone's approval key at Start,** Start says "KIFF didn't accept this device's approval key.
   Try again." (`approval.key_not_accepted`), and from the second time in a row the support line under it
   (`approval.key_not_accepted_support`). A phone with no fingerprint keeps "Setting up a taf needs approvals".
+- **An app's first sign-in card** has no draft yet (a Card is drafted over the tools that sign-in brings), and still draws
+  tafs cloud's `signs.words` ("Its Card: you approve it next"), so the owner knows a second approval follows (Android 1.27.2).
 - **Coach's Start is one screen** (`StartScreen`): tafs cloud's line, Coach's Cards in KIFF's words, the tools folded under
   their details, what Start does (tafs cloud's `words.does`, drawn only when sent: the app has no line of its own about the
   fingerprint, since 1.26.1), and its button. Start, or the first Send, signs it all under one fingerprint.

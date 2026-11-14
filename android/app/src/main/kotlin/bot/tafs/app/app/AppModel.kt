@@ -1879,6 +1879,9 @@ class AppModel(
       val done = cloud.setAsideCoach(session, coachReadProof())
       if (gen == accountGeneration) {
         _state.update { s -> s.copy(coachWaiting = s.coachWaiting.filterNot { it.session in done.setAside }) }
+        // Coach no longer shows a chat that was set aside: its next message would go on in the ended session (an audit wrote a
+        // new job there, and Needs you named it after the old one). A new conversation instead.
+        if (_state.value.coachChat in done.setAside) newCoachChat()
         bot.tafs.app.design.Haptics.success()
       }
       refresh()
@@ -2485,7 +2488,14 @@ class AppModel(
       val chats = attempt { cloud.chats(cloudId) }
       if (!current()) return
       chats?.let { list -> _state.update { it.copy(coachChats = list) } }
-      chats?.maxByOrNull { it.updated }?.let { newest -> _state.update { if (it.coachChat == null && !it.coachFresh) it.copy(coachChat = newest.session) else it } }
+      // A chat set aside (tafs cloud's `set_aside`, from any device) is never the one opened: the newest of the rest, or, with
+      // every one set aside, a new conversation.
+      val open = chats?.filterNot { it.setAside }
+      open?.maxByOrNull { it.updated }?.let { newest -> _state.update { if (it.coachChat == null && !it.coachFresh) it.copy(coachChat = newest.session) else it } }
+      if (open != null && open.isEmpty() && chats.isNotEmpty()) {
+        _state.update { if (it.coachChat == null && !it.coachFresh) it.copy(coachFresh = true) else it }
+        return
+      }
     }
     val thread = try {
       if (isTrialChat(tafId)) cloud.trialConversation(cloudId)
@@ -2841,11 +2851,8 @@ class AppModel(
       }
       var handoff = pendingHandoff()
       if (handoff == null) {
-        try {
-          signer.sign("tafs.alerts.v1|$tenant".toByteArray(), Words.Alert.prompt)
-        } catch (_: SignerException) {
-          return false
-        }
+        // No fingerprint first: it signed a message nothing sent or checked. The alert target's registration is signed with this
+        // phone's device key (a setup call), as when alerts are kept, never the approval key. One prompt fewer before a first job.
         if (generation != accountGeneration) return false
         kiff.tenant = tenant
         val signer = signer

@@ -236,6 +236,8 @@ class TafsCloud(
     @kotlinx.serialization.Serializable(with = InstantAsString::class) val started: Instant,
     @kotlinx.serialization.Serializable(with = InstantAsString::class) val updated: Instant,
     val title: String = "",
+    /** A Coach chat its person set aside, as tafs cloud says: never opened as the newest. */
+    @kotlinx.serialization.SerialName("set_aside") val setAside: Boolean = false,
   )
 
   @kotlinx.serialization.Serializable
