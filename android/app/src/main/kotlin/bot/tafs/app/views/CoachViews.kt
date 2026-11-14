@@ -162,7 +162,6 @@ private fun Note(text: String) {
 /** Above a conversation Coach isn't started for yet: what it is, that the first message asks for one fingerprint, and why a Start didn't go. */
 @Composable
 private fun StartNote(state: AppState, chats: CoachChatActions) {
-  val biometry = LocalBiometry.current
   val start = state.coachStart
   if (start != null) {
     StartScreen(state, start, chats)
@@ -171,7 +170,8 @@ private fun StartNote(state: AppState, chats: CoachChatActions) {
   Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     // That each connection and Card waits for approval is said where one does: the first approval card, not here too.
     Text(CoachWords.INTRO, style = scaled(14, color = Theme.soft))
-    Text(if (state.startingCoach) Words.Common.starting else Words.Coach.startingAsks(biometry), style = scaled(12, color = Theme.dim))
+    // No line of the app's own about what starting asks: tafs cloud's Start says it when it applies (StartScreen, `words.does`).
+    if (state.startingCoach) Text(Words.Common.starting, style = scaled(12, color = Theme.dim))
     (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
 }
@@ -183,7 +183,6 @@ private fun StartNote(state: AppState, chats: CoachChatActions) {
  */
 @Composable
 private fun StartScreen(state: AppState, start: bot.tafs.app.kiff.CoachStart, chats: CoachChatActions) {
-  val biometry = LocalBiometry.current
   val scope = rememberCoroutineScope()
   var folded by remember { mutableStateOf(true) }
   val words = start.words
@@ -218,7 +217,9 @@ private fun StartScreen(state: AppState, start: bot.tafs.app.kiff.CoachStart, ch
         }
       }
     } else tools.connect?.lines?.forEach { Text("· $it", style = scaled(13, color = Theme.ink)) }
-    Text(words?.does?.ifBlank { null } ?: Words.Coach.startingAsks(biometry), style = scaled(12, color = Theme.dim))
+    // tafs cloud's line about what starting asks, only when it sends one: the app's own ("asks for your fingerprint once") was
+    // drawn after tafs cloud stopped sending it, and no longer held.
+    words?.does?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
     bot.tafs.app.design.PrimaryButton(
       if (state.startingCoach) Words.Common.starting else words?.start?.ifBlank { null } ?: Words.Coach.start,
       { scope.launch { chats.giveTools() } },
