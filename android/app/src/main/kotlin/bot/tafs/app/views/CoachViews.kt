@@ -441,13 +441,15 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           if (readiness != bot.tafs.app.model.ApprovalReadiness.Ready && !grant.needsReconnect) ApprovalsUnavailable(readiness)
           // An app connected with a key, not connected yet: the chat never takes a secret. The card opens the key sheet, outside it.
           val needsKey = grant.takesKey && !grant.connected && !grant.needsReconnect
+          // The window's words only where Approve is a tap, as tafs cloud marks the card: never over one that takes the fingerprint.
+          val windowWords = windowWordsFor(c, state.windowWords)
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready || grant.needsReconnect) OutlineButton(
               when {
                 state.connecting == grant.id -> state.connectStep ?: Words.Approval.approving
                 grant.needsReconnect -> Words.Connect.signInAgain
                 needsKey -> Words.Connect.giveKeyOnSheet
-                state.windowWords != null -> Words.Approval.approve
+                windowWords != null -> Words.Approval.approve
                 else -> Words.Approval.approveWith(biometry)
               },
               { if (needsKey) actions.openKeySheet(c, draft?.version) else actions.approve(c, grant.digest, draft?.version) },
@@ -458,7 +460,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
             OutlineButton(Words.Coach.Approval.decline, { actions.answer("approval", c.id, "declined") }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
           }
           // While this phone holds an approval window, KIFF's words for the next tap (kiff/tafs#494).
-          state.windowWords?.takeIf { state.connecting == null }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
+          windowWords?.takeIf { state.connecting == null }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
           if (state.connecting == grant.id) {
             if (state.vendorPageOpen) Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
             Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).tapping { actions.cancelSignIn() })
@@ -583,6 +585,9 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
 }
 
 /** A sign-in card's line: the card's service, else the connection's app name, else "the vendor". */
+/** KIFF's approval-window words for [c], only when tafs cloud marks its Approve a tap (`signs.takes`, docs/chat.md). */
+internal fun windowWordsFor(c: SetupComponent, windowWords: String?): String? = windowWords?.takeIf { c.signs?.tap == true }
+
 internal fun signInWords(service: String?, app: String?): String =
   (service?.takeIf { it.isNotBlank() } ?: app?.takeIf { it.isNotBlank() })?.let { Words.Coach.SignIn.at(it) } ?: Words.Coach.SignIn.atVendor
 

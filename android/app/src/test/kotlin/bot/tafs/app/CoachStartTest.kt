@@ -778,4 +778,22 @@ class CoachStartTest {
     runCurrent()
     assertTrue(m.state.value.grants.any { it.id == "g1" })
   }
+
+  // Review of Android 96: a grant was marked followed on a read planque refused, so no later thread read followed it.
+  @Test fun aGrantFirstReadWhilePlanqueRefusedIsStillReadAgainLater() = runTest {
+    reads()
+    coachThread("""{"type":"approval","id":"a1","grant":"g1","title":"Connect Stripe"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 403, """{"error":"unknown device"}""")
+    val m = model(scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    assertFalse(m.state.value.planqueReady)
+    // planque answers again, without the grant yet: this read starts the re-reads.
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    m.loadChat(COACH_CHAT)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    advanceTimeBy(AppModel.SET_UP_READ_MS + 1)
+    runCurrent()
+    assertTrue(m.state.value.grants.any { it.id == "g1" })
+  }
 }
