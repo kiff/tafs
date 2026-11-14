@@ -560,7 +560,8 @@ never named, and a taf shared with no one else reads "Not shared".
     place in a connected app by its name, a switch from its own on/off choice; **Add a place from
     a connected app…** (Coach). The last place on can't be turned off. A delivery given up on shows
     under **Not sent**, with the place's name for one of the taf's own, and **Send again** by its place.
-  - **What it remembers**, **Versions**, Pause (in the sample) and **Remove for good**.
+  - **What it remembers**, **Versions**, Pause (in the sample) and **Remove for good**. Remove for good reads tafs cloud's
+    words before its confirmation opens; meanwhile the button takes no second tap and reads as disabled (Android 1.27.11).
 
 A change to the dial's setting (a size, Skip it / Run after, a place in an app) makes the taf's
 next version: "DRAFT · Vn · NOT LIVE" and **Make N changes live** show in the sheet while it waits
@@ -804,6 +805,9 @@ shade per theme.
 ## Connect apps
 
 Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#connect-apps) says.
+
+**It opens at full height** from the first frame, saying "Loading…" where the list goes until tafs cloud's list is read,
+never as a small sheet that grows once the list comes (Android 1.27.11).
 
 **The list, as on iPhone and iPad** (Android 1.20.3):
 - **Yours, then Discover.** The account's own apps (connected, signed in, or to sign in again) come first under **Yours**,

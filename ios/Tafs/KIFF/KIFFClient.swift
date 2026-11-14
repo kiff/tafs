@@ -21,6 +21,10 @@ final class KIFFClient {
         case approvalKeyRequired
         /// The session has an approval key already: KIFF's fingerprint of it.
         case approvalKeyExists(fingerprint: String?)
+        /// Refused inside an approval window (kiff/tafs#494): `code` is KIFF's, `critical_key_required`
+        /// (the act takes the approval key every time) or `window_required` (the window has ended).
+        /// Thrown only where no approval key can sign it again.
+        case windowRefused(code: String)
 
         var errorDescription: String? {
             switch self {
@@ -32,8 +36,103 @@ final class KIFFClient {
             case .server(let status, _, _): return PlainError.words(status: status)
             case .approvalKeyRequired: return KIFFClient.approvalKeyLost
             case .approvalKeyExists: return Words.Error.approvalKeyExists
+            // The app's own words: KIFF's `detail` is for the log, never the person.
+            case .windowRefused(let code): return code == KIFFClient.windowRequired ? Words.Error.approvalWindowEnded : Words.Error.needsConfirmationFirst
             }
         }
+    }
+
+    // MARK: The approval window
+
+    /// An approval window as KIFF answers it (kiff/tafs#494): one Face ID opened it, and inside it a
+    /// routine approval is a tap, signed by the device key with the window's id. KIFF alone says
+    /// whether it is open; `words` are KIFF's for the next tap. Read leniently: a field of another
+    /// shape is none (a window with no id isn't one).
+    struct ApprovalWindow: Decodable, Equatable {
+        let id: String
+        var expires = ""
+        var cap = ""
+        var open = false
+        var words: String?
+        enum CodingKeys: String, CodingKey { case id, expires, cap, open, words }
+        init(id: String, expires: String = "", cap: String = "", open: Bool = false, words: String? = nil) {
+            self.id = id; self.expires = expires; self.cap = cap; self.open = open; self.words = words
+        }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decode(String.self, forKey: .id)
+            expires = ((try? c.decodeIfPresent(String.self, forKey: .expires)) ?? nil) ?? ""
+            cap = ((try? c.decodeIfPresent(String.self, forKey: .cap)) ?? nil) ?? ""
+            open = ((try? c.decodeIfPresent(Bool.self, forKey: .open)) ?? nil) ?? false
+            words = (try? c.decodeIfPresent(String.self, forKey: .words)) ?? nil
+        }
+    }
+
+    /// `GET /v1/me/window`: the open window, if any, and KIFF's words for the next approval.
+    struct WindowRead: Decodable, Equatable {
+        var window: ApprovalWindow?
+        var words: String?
+        enum CodingKeys: String, CodingKey { case window, words }
+        init(window: ApprovalWindow? = nil, words: String? = nil) { self.window = window; self.words = words }
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            window = (try? c.decodeIfPresent(ApprovalWindow.self, forKey: .window)) ?? nil
+            words = (try? c.decodeIfPresent(String.self, forKey: .words)) ?? nil
+        }
+    }
+
+    /// KIFF's approval window (kiff/tafs#494): read, opened with the approval key, closed with the device key.
+    nonisolated static let windowPath = "/v1/me/window"
+    /// What opening a window signs, as its body's `message`.
+    nonisolated static let windowMessage = "kiff.window.v1"
+    /// KIFF's refusals inside a window: the act takes the approval key every time, or the window has ended.
+    nonisolated static let criticalKeyRequired = "critical_key_required"
+    nonisolated static let windowRequired = "window_required"
+
+    /// What the device key signs inside an approval window: `kiff.request.v1`'s lines under
+    /// `kiff.request.v2`, with the window's id last, so the signature can't be moved to another
+    /// window (KIFF's `RequestMessageWindow`).
+    nonisolated static func requestMessageWindow(tenant: String, method: String, uri: String, body: Data, signedAt: String, window: String) -> Data {
+        let bodyHash = SHA256.hash(data: body).map { String(format: "%02x", $0) }.joined()
+        return Data(["kiff.request.v2", tenant, method, uri, bodyHash, signedAt, window].joined(separator: "\n").utf8)
+    }
+
+    /// The approval window this phone holds at KIFF (kiff/tafs#494), as KIFF last answered it.
+    /// While it is held and `signsInWindow` is on, a call the approval key would sign goes with the
+    /// device key and the window's id, a tap; KIFF decides whether it takes it. A refusal drops back
+    /// to the approval key, and `window_required` forgets the window.
+    var window: ApprovalWindow?
+    /// On only while the approval step that took the window runs: its calls go as a tap. Off, the
+    /// approval key signs as before.
+    var signsInWindow = false
+    /// Asks for Face ID again, so the approval key can sign a call KIFF refused inside the window.
+    /// Set with `signsInWindow`; without it, or without an approval key, the refusal is thrown.
+    var windowReconfirm: (@MainActor () async throws -> Void)?
+
+    /// The open window, if any, with KIFF's words for the next approval.
+    func readWindow() async throws -> WindowRead {
+        try await send("GET", Self.windowPath)
+    }
+
+    private struct WindowOpenBody: Encodable { let message: String; let expires: String; let nonce: String }
+
+    /// Opens an approval window with the approval key, under the Face ID this step just took:
+    /// KIFF's `kiff.window.v1`, to `expires` at most five minutes ahead, with a fresh `nonce`; KIFF
+    /// takes the signer's own session and device. The window is held once KIFF answers it. Set
+    /// `setupSigner` first.
+    func openWindow(expires: String, nonce: String) async throws -> ApprovalWindow {
+        let read: WindowRead = try await send("POST", Self.windowPath, body: WindowOpenBody(message: Self.windowMessage, expires: expires, nonce: nonce))
+        guard let opened = read.window else { throw KIFFError.server(status: 0, message: Words.Error.kiffOpenedNoWindow) }
+        window = opened
+        return opened
+    }
+
+    /// Closes the held window, signed by the device key (`signedBy`): the app was away, or the
+    /// screen locked. Forgotten here either way.
+    func closeWindow(signedBy sign: @escaping @MainActor (Data) throws -> String) async throws {
+        guard let held = window else { return }
+        window = nil
+        let _: Empty = try await send("POST", "\(Self.windowPath)/\(escaped(held.id))/close", body: [String: String](), signedBy: sign)
     }
 
     let baseURL: URL
@@ -69,6 +168,8 @@ final class KIFFClient {
     /// a raise or a pack (`/v1/me/pack-requests/{id}/decline`).
     static func signsSetup(_ path: String) -> Bool {
         if signedSetupPaths.contains(path) { return true }
+        // Opening an approval window, and closing it (kiff/tafs#494).
+        if path == windowPath || (path.hasPrefix(windowPath + "/") && path.hasSuffix("/close")) { return true }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
         // Groups and sharing: each change is the person's act behind Face ID.
         // A group, renamed or deleted (/v1/groups/{id}), or its people
@@ -95,6 +196,8 @@ final class KIFFClient {
     /// a trial, and resuming a halt. Ending a trial takes authority away: the current key.
     static func grantsAuthority(_ method: String, _ path: String) -> Bool {
         guard method == "POST" else { return false }
+        // Opening an approval window stands for a Face ID: only the approval key opens one (kiff/tafs#494).
+        if path == windowPath { return true }
         if path == "/v1/me/agent-drafts" || answersHappened(path) { return true }
         let parts = path.split(separator: "/", omittingEmptySubsequences: false)
         // Sharing a taf gives people its use. Taking it away is the current key.
@@ -1377,8 +1480,10 @@ final class KIFFClient {
     /// `signedBy` signs this one request, whatever `setupSigner` holds.
     /// `presigned` is the whole signature header of a request built and signed beforehand
     /// (`prepareConfirmDraft`): sent as it is, and nothing here signs.
+    /// `inWindow` false signs it outside any approval window: KIFF refused it inside one.
     private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, base: URL? = nil, authorized: Bool = true,
-                                                   signedBy: (@MainActor (Data) throws -> String)? = nil, presigned: String? = nil) async throws -> T {
+                                                   signedBy: (@MainActor (Data) throws -> String)? = nil, presigned: String? = nil,
+                                                   inWindow: Bool = true) async throws -> T {
         guard let url = URL(string: path, relativeTo: base ?? baseURL) else { throw KIFFError.server(status: 0, message: Words.Error.badPath) }
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -1398,16 +1503,26 @@ final class KIFFClient {
         // What grants authority is signed by the approval key, once the session has one,
         // within a step the owner confirmed; KIFF picks the key by route, so the header is
         // the same (kiff/tafs#233).
+        let authority = signedBy == nil && setupSigner != nil && base == nil && Self.grantsAuthority(method, path)
+        // Inside a held approval window, for the approval step that took it, what the approval key would
+        // sign goes with the device key and the window's id: a tap (kiff/tafs#494). Opening a window is
+        // never signed in one.
+        let held = inWindow && signsInWindow && authority && presigned == nil && path != Self.windowPath ? window?.id : nil
         let signer = signedBy ?? setupSigner.map { current in
-            base == nil && Self.grantsAuthority(method, path) ? (approvalSigner ?? current) : current
+            authority && held == nil ? (approvalSigner ?? current) : current
         }
         if let presigned {
             request.setValue(presigned, forHTTPHeaderField: "KIFF-Device-Signature")
         } else if ["POST", "PUT", "PATCH", "DELETE"].contains(method), signed, let signer, let tenant {
             let signedAt = SigningTime.next()
             let uri = url.path + (url.query.map { "?" + $0 } ?? "")
-            let message = Self.requestMessage(tenant: tenant, method: method, uri: uri, body: request.httpBody ?? Data(), signedAt: signedAt)
-            request.setValue("t=\(signedAt),v1=\(try signer(message))", forHTTPHeaderField: "KIFF-Device-Signature")
+            if let held {
+                let message = Self.requestMessageWindow(tenant: tenant, method: method, uri: uri, body: request.httpBody ?? Data(), signedAt: signedAt, window: held)
+                request.setValue("t=\(signedAt),v2=\(try signer(message)),w=\(held)", forHTTPHeaderField: "KIFF-Device-Signature")
+            } else {
+                let message = Self.requestMessage(tenant: tenant, method: method, uri: uri, body: request.httpBody ?? Data(), signedAt: signedAt)
+                request.setValue("t=\(signedAt),v1=\(try signer(message))", forHTTPHeaderField: "KIFF-Device-Signature")
+            }
         }
         if authorized {
             guard let token else { throw KIFFError.unauthorized }
@@ -1422,15 +1537,23 @@ final class KIFFClient {
         guard (200..<300).contains(status) else {
             // The refusal's string fields: a body with a number in it too (a raise's `limit_cents`)
             // still gives its `error` and `reason`.
-            let body = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?.compactMapValues { $0 as? String }
-            if status == 403, body?["error"] == "approval_key_required" || body?["reason"] == "approval_key_required" {
+            let fields = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?.compactMapValues { $0 as? String }
+            // Refused in the window: the act takes the approval key every time, or the window ended. The
+            // approval key signs it again, once, behind a new Face ID; an ended window is forgotten.
+            if status == 403, let held, let refused = fields?["error"], refused == Self.criticalKeyRequired || refused == Self.windowRequired {
+                if refused == Self.windowRequired, window?.id == held { window = nil }
+                guard approvalSigner != nil, let reconfirm = windowReconfirm else { throw KIFFError.windowRefused(code: refused) }
+                try await reconfirm()
+                return try await send(method, path, body: body, base: base, authorized: authorized, signedBy: signedBy, presigned: presigned, inWindow: false)
+            }
+            if status == 403, fields?["error"] == "approval_key_required" || fields?["reason"] == "approval_key_required" {
                 approvalKeyRequired?()
                 throw KIFFError.approvalKeyRequired
             }
             if status == 409, base == nil, path == "/v1/me/device/approval-key" {
-                throw KIFFError.approvalKeyExists(fingerprint: body?["fingerprint"])
+                throw KIFFError.approvalKeyExists(fingerprint: fields?["fingerprint"])
             }
-            throw KIFFError.server(status: status, message: body?["error"] ?? Words.Error.kiffAnswered(status: "\(status)"), reason: body?["reason"])
+            throw KIFFError.server(status: status, message: fields?["error"] ?? Words.Error.kiffAnswered(status: "\(status)"), reason: fields?["reason"])
         }
         if T.self == RawBody.self, let raw = RawBody(data: data) as? T { return raw }
         if T.self == Empty.self || data.isEmpty { return try JSONDecoder().decode(T.self, from: Data("{}".utf8)) }

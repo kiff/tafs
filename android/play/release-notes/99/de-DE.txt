@@ -1,0 +1,2 @@
+- Endgültig entfernen nimmt einen Tipp; ein zweiter bewirkt nichts.
+- Apps verbinden öffnet sich in voller Größe und zeigt, dass es lädt.

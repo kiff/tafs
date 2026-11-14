@@ -1421,6 +1421,12 @@ final class TafsCloud {
             let reason: String
             let planque: Planque?
             let kiff: KIFF?
+            /// Which key the call takes, as tafs cloud hints it (kiff/tafs#494): `window`, the device key
+            /// inside an open approval window, a tap; `critical`, the approval key behind Face ID. A
+            /// hint: the service the call goes to decides. Read leniently: another shape is none.
+            private let keyHint: LenientItem<String>?
+            var key: String? { keyHint?.value }
+            enum CodingKeys: String, CodingKey { case id, step, message, reason, planque, kiff, keyHint = "key" }
         }
         let outcome: String
         let answer: String?
@@ -2867,3 +2873,7 @@ final class TafsCloud {
         return data
     }
 }
+
+/// Equal when its values are, as the file-level `LenientItem` is, so a type that holds one (an approval's
+/// `Ask`, with its key hint) keeps its own `Equatable`.
+extension TafsCloud.LenientItem: Equatable where T: Equatable {}

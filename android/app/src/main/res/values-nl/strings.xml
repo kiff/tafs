@@ -636,7 +636,7 @@
     <string name="coach_intro">Noem een app voor je taf, zoals je betaalprovider.</string>
     <string name="coach_kiff_counts_way">KIFF telt het zo</string>
     <string name="coach_making_live">Live zetten…</string>
-    <string name="coach_name_tool_taf_should_work">Noem een app voor je taf, zoals je betaalprovider. Geen enkel taf ziet je login. Je keurt goed met %1$s.</string>
+    <string name="coach_name_tool_taf_should_work">Noem een app voor je taf, zoals je betaalprovider. Je keurt goed met %1$s.</string>
     <string name="coach_needs_you_approve">Wacht op jou · goedkeuren</string>
     <string name="coach_needs_you_question">Wacht op jou · een vraag</string>
     <string name="coach_new_conversation">Nieuw gesprek</string>

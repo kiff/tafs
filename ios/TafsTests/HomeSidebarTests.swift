@@ -117,4 +117,14 @@ final class HomeSidebarTests: XCTestCase {
         let calendar = try String(contentsOf: views.appendingPathComponent("CalendarView.swift"), encoding: .utf8)
         XCTAssertTrue(calendar.contains("model.calendarState ?? Screenshots.calendar ?? CalendarState(selected: today)"))
     }
+
+    /// A tab asked for before the sidebar drew opens its screen, not the tafs list over it: an alert that
+    /// opened the app on Needs you landed on the Overview (the iPad's `-tab needs-you` shot showed it).
+    func testATabAskedForAtLaunchOpensItsScreen() throws {
+        let file = try source()
+        let task = String(file[try XCTUnwrap(file.range(of: "if Screenshots.calendar != nil { opened = .calendar }")).upperBound...].prefix(400))
+        XCTAssertTrue(task.contains("selection = tab.flatMap { HomeSelection.of($0.wrappedValue) } ?? opened"))
+        XCTAssertEqual(HomeSelection.of(.needsYou), .needsYou)
+        XCTAssertNil(HomeSelection.of(.tafs), "the tafs tab: the list, as before")
+    }
 }

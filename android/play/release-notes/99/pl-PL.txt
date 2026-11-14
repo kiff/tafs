@@ -1,0 +1,2 @@
+- Usuń na zawsze przyjmuje jedno dotknięcie; drugie nic nie robi.
+- Połącz aplikacje otwiera się w pełnym rozmiarze i pokazuje wczytywanie.
