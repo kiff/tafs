@@ -7,8 +7,6 @@ import SwiftUI
 struct BriefView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.horizontalSizeClass) private var sizeClass
-    /// The label chips past the first two, shown once "+N" is tapped.
-    @State private var allLabels = false
     /// A screenshot's `-screen mission-log`: the first mission's log, opened over the brief.
     @State private var screenshotLog = Screenshots.brief && Screenshots.screen == "mission-log"
 
@@ -63,27 +61,10 @@ struct BriefView: View {
         }
     }
 
-    /// All, then two labels, then "+N" for the rest: the tafs list's chips, filtering the brief.
+    /// All, then two labels, then "+N": the tafs list's chips, filtering the brief.
     private func chips(_ brief: TafsCloud.Brief) -> some View {
-        let shown = allLabels ? brief.labels : Array(brief.labels.prefix(2))
-        let hidden = brief.labels.count - shown.count
-        return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                LabelChip(words: brief.words.all, count: nil, waiting: false, selected: model.briefLabel == nil) {
-                    Task { await model.filterBrief(nil) }
-                }
-                ForEach(shown) { label in
-                    LabelChip(words: label.name, count: label.count, waiting: label.waiting, selected: model.briefLabel == label.id) {
-                        Task { await model.filterBrief(model.briefLabel == label.id ? nil : label.id) }
-                    }
-                }
-                if hidden > 0 {
-                    LabelChip(words: "+\(hidden)", count: nil, waiting: false, selected: false) { allLabels = true }
-                }
-            }
-            .padding(.vertical, 2)
-        }
-        .accessibilityIdentifier("brief.labels")
+        LabelChips(labels: brief.labels, selected: model.briefLabel, all: brief.words.all) { id in Task { await model.filterBrief(id) } }
+            .accessibilityIdentifier("brief.labels")
     }
 
     // MARK: Decisions
@@ -375,5 +356,54 @@ struct LogRow: View {
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).stroke(Theme.line, lineWidth: 1))
         .opacity(item.removed ? 0.5 : 1)
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// A row of label chips: All, two labels, then "+N" for the rest, which shows them all once tapped. The
+/// chosen one is inverted; tapped again, it goes back to All.
+struct LabelChips: View {
+    let labels: [TafsCloud.Brief.Label]
+    let selected: String?
+    /// tafs cloud's word for All; the app's own only where it sent none.
+    let all: String
+    let choose: (String?) -> Void
+    @State private var expanded = false
+
+    var body: some View {
+        let shown = expanded ? labels : Array(labels.prefix(2))
+        let hidden = labels.count - shown.count
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                LabelChip(words: all.isEmpty ? Words.Record.Filter.all : all, count: nil, waiting: false, selected: selected == nil) { choose(nil) }
+                ForEach(shown) { label in
+                    LabelChip(words: label.name, count: label.count, waiting: label.waiting, selected: selected == label.id) {
+                        choose(selected == label.id ? nil : label.id)
+                    }
+                }
+                if hidden > 0 { LabelChip(words: "+\(hidden)", count: nil, waiting: false, selected: false) { expanded = true } }
+            }
+            .padding(.vertical, 2)
+        }
+        .accessibilityIdentifier("labels")
+    }
+}
+
+/// A taf's labels (Missions draft), as small grey chips under its line; nothing without labels.
+struct TafLabels: View {
+    @EnvironmentObject private var model: AppModel
+    let taf: Taf
+
+    var body: some View {
+        let labels = model.labels(of: taf)
+        if !labels.isEmpty {
+            HStack(spacing: 4) {
+                ForEach(labels) { label in
+                    Text(label.name).scaledFont(11, weight: .medium).foregroundColor(Theme.soft)
+                        .padding(.horizontal, 7).padding(.vertical, 2)
+                        .background(Capsule().fill(Theme.raised))
+                }
+            }
+            .accessibilityIdentifier("taf.labels")
+        }
     }
 }

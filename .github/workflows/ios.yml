@@ -472,10 +472,11 @@ jobs:
           shoot 8c-results-go-to -screenshots YES -tab tafs -screen results
           shoot 9-account -screenshots YES -tab account
           shoot 9b-alerts -screenshots YES -tab account -screen alerts
-          # Missions (draft): Your brief, filtered to Money, and a mission's log, over the sample's brief.
+          # Missions (draft): Your brief, filtered to Money, a mission's log and the labelled tafs list, over the sample's brief.
           shoot 10-brief -screenshots YES -tab needs-you -brief YES
           shoot 10b-brief-money -screenshots YES -tab needs-you -brief YES -briefLabel money
           shoot 10c-mission-log -screenshots YES -tab needs-you -brief YES -screen mission-log
+          shoot 10d-tafs-labels -screenshots YES -tab tafs -brief YES
           # Each product's purchase screen, for its review screenshot in App Store Connect:
           # Solo, and the Add credits screen with one pack at a time.
           shoot iap-solo -screenshots YES -screen solo
@@ -533,6 +534,7 @@ jobs:
           shoot ipad-signed-in -screenshots YES -tab tafs -signedIn YES
           shoot ipad-land-signed-in -screenshots YES -tab tafs -signedIn YES -landscape YES
           shoot ipad-brief -screenshots YES -tab needs-you -brief YES -signedIn YES
+          shoot ipad-tafs-labels -screenshots YES -tab tafs -brief YES -signedIn YES
           xcrun simctl ui "$DEVICE_ID" appearance dark
           shoot ipad-dark-tafs -screenshots YES -tab tafs
           shoot ipad-dark-setup -screenshots YES -tab tafs -screen setup

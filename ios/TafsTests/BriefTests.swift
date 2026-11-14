@@ -82,6 +82,29 @@ final class BriefTests: XCTestCase {
         XCTAssertTrue(TafsCloud.Brief.sampleLog().items.contains { $0.removed })
     }
 
+    /// The tafs list's chips: none without labels, so the list is as today; a chip keeps only its tafs,
+    /// in the same order, and All gives them all back.
+    func testTheTafsListsChipsFilterWithoutReordering() throws {
+        let model = AppModel()
+        XCTAssertTrue(model.listLabels.isEmpty, "no labels: no chips")
+        XCTAssertNil(model.listLabel)
+        model.filterList(TafsCloud.Brief.sampleMoney)
+        XCTAssertEqual(model.listLabel, TafsCloud.Brief.sampleMoney)
+        model.filterList(nil)
+        XCTAssertNil(model.listLabel)
+        XCTAssertEqual(TafsCloud.Brief.sampleLabels.map(\.label.id), [TafsCloud.Brief.sampleMoney, TafsCloud.Brief.sampleClients, "ops"])
+
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        let app = try String(contentsOf: root.appendingPathComponent("App/AppModel.swift"), encoding: .utf8)
+        let filtered = String(app[try XCTUnwrap(app.range(of: "func filtered(_ tafs: [Taf]) -> [Taf] {")).upperBound...].prefix(200))
+        XCTAssertTrue(filtered.contains("return tafs.filter {"), "a filter keeps the list's order")
+        let home = try String(contentsOf: root.appendingPathComponent("Views/HomeView.swift"), encoding: .utf8)
+        XCTAssertTrue(home.contains("if !model.listLabels.isEmpty { LabelChips("))
+        XCTAssertTrue(home.contains("TafLabels(taf: taf)"))
+        let overview = try String(contentsOf: root.appendingPathComponent("Views/ShareViews.swift"), encoding: .utf8)
+        XCTAssertTrue(overview.contains("ForEach(model.filtered(model.listedTafs)) { taf in"))
+    }
+
     /// Needs you stays, unchanged, until there's a brief; its tab then says tafs cloud's word for it.
     /// Answering from the brief signs nothing.
     func testNeedsYouStaysUntilThereIsABriefAndNothingIsSignedFromIt() throws {

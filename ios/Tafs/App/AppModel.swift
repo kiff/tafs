@@ -1985,6 +1985,40 @@ final class AppModel: ObservableObject {
 
     func dismissNextMove() { nextMoveDismissed = true }
 
+    // MARK: Labels on the tafs list (Missions draft)
+
+    /// The label the tafs list is filtered to; nil is All.
+    @Published private(set) var listLabel: String?
+
+    /// Each taf's labels: tafs cloud's once its labels ship (design v2.1 §3); the sample's for
+    /// screenshots (`-brief YES`). None, and the list draws no chips, as today.
+    func labels(of taf: Taf) -> [TafsCloud.Brief.Label] {
+        guard mode == .sample, Screenshots.brief else { return [] }
+        guard let key = templateOf[taf.id] else { return [] }
+        return TafsCloud.Brief.sampleLabels.filter { $0.tafs.contains(key) }.map(\.label)
+    }
+
+    /// The list's chips: each label with how many of the listed tafs carry it, and an amber dot while one
+    /// of them waits for the person. In tafs cloud's order; none without labels.
+    var listLabels: [TafsCloud.Brief.Label] {
+        guard mode == .sample, Screenshots.brief else { return [] }
+        return TafsCloud.Brief.sampleLabels.map { entry in
+            let tafs = listedTafs.filter { templateOf[$0.id].map(entry.tafs.contains) ?? false }
+            var label = entry.label
+            label.count = tafs.count
+            label.waiting = tafs.contains { !heldCalls(for: $0.id).isEmpty }
+            return label
+        }.filter { $0.count > 0 }
+    }
+
+    func filterList(_ label: String?) { listLabel = label }
+
+    /// The tafs the list shows under its chip: all, or those carrying it. The order never changes.
+    func filtered(_ tafs: [Taf]) -> [Taf] {
+        guard let listLabel else { return tafs }
+        return tafs.filter { labels(of: $0).contains { $0.id == listLabel } }
+    }
+
     /// A mission's log, newest first: the sample's for screenshots; tafs cloud's route once it's on.
     func missionLog(_ mission: String) async -> TafsCloud.MissionLog? {
         if mode == .sample { return TafsCloud.Brief.sampleLog() }

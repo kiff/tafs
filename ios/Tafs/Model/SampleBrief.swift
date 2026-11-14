@@ -7,6 +7,13 @@ extension TafsCloud.Brief {
     static let sampleMoney = "money"
     static let sampleClients = "clients"
 
+    /// The sample's labels, over its tafs by template, so a translated sample keeps them.
+    static let sampleLabels: [(label: TafsCloud.Brief.Label, tafs: [String])] = [
+        (Label(id: sampleMoney, name: "Money", color: 2), ["billpay", "refunds", "chargebacks"]),
+        (Label(id: sampleClients, name: "Clients", color: 4), ["refunds", "access"]),
+        (Label(id: "ops", name: "Ops", color: 6), ["deploys"]),
+    ]
+
     /// The sample's brief, filtered to `label` as tafs cloud filters it: a label keeps its own
     /// decisions and cases, and the rest line counts only its own.
     static func sample(label: String? = nil) -> TafsCloud.Brief {

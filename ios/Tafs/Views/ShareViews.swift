@@ -246,6 +246,8 @@ struct OverviewView: View {
                     }
                 }
                 if !model.held.isEmpty { needsYou }
+                // The labels' chips (Missions draft), filtering the table below.
+                if !model.listLabels.isEmpty { LabelChips(labels: model.listLabels, selected: model.listLabel, all: model.brief?.words.all ?? "") { model.filterList($0) } }
                 tafsTable
                 Text(Words.Home.Overview.eachLineOpens).scaledFont(12).foregroundColor(Theme.dim)
             }
@@ -294,7 +296,7 @@ struct OverviewView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            ForEach(model.listedTafs) { taf in
+            ForEach(model.filtered(model.listedTafs)) { taf in
                 Divider().gridCellUnsizedAxes(.horizontal)
                 row(taf)
             }
@@ -313,6 +315,7 @@ struct OverviewView: View {
                         Text(taf.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
                         let who = usedBy(taf)
                         if !who.isEmpty { Text(who).scaledFont(12).foregroundColor(Theme.dim).oneLineUnlessLarge() }
+                        TafLabels(taf: taf)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
