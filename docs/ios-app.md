@@ -807,6 +807,15 @@ Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideB
   newest chat by itself and that's one set aside on this phone, it starts a new conversation instead. These
   are kept in memory only, never written to the phone (docs/data.md). Reopened from Previous conversations by the
   person, the chat opens as any other.
+- **A new job after a hand-over:** every message to Coach says the app follows a new chat
+  (`new_chat_after_handover: true`, [api.md](api.md) › `POST /v1/tafs/{id}/messages`). When tafs cloud
+  starts one because the chat shown already handed a taf over, its answer, or the stream's `session` event,
+  says `new_session: true` with another session, and Coach follows it (`followNewSetupChat`): the new chat
+  is the one shown (`setupChat`), with the message just sent and the answer streaming into it, and the old
+  chat stays under Previous conversations. The message shows once: it's matched to tafs cloud's copy by
+  id, as any send. The same session, or no `new_session`, keeps the chat shown. Needs you's rows are tafs
+  cloud's, by session, so they follow at the next Home read; this phone keeps no current-chat id of its own.
+  Set aside's `words.done` ("You'll find it in Previous conversations.") isn't drawn yet.
 
 Tests: `TafsTests/CoachWaitingTests.swift`; a run's end, `SetupTests.testACoachRunEndingReadsHome`; the
 pencil, `VersionsTests.testThePencilInATafsCoachModeStartsAPlainChat`. One tap opening the chat is pinned

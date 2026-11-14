@@ -348,6 +348,185 @@ final class CoachWaitingTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    // MARK: A new job after a hand-over (docs/api.md, `new_chat_after_handover`)
+
+    private static let s1Chats = #"{"chats":[{"session":"s1","started":"2026-11-13T23:00:00.000Z","updated":"2026-11-13T23:34:46.000Z","title":"Refunds"}]}"#
+    private static let s1Thread = #"{"messages":[{"at":"2026-11-13T23:00:00.000Z","from":"owner","kind":"message","text":"Refunds, please","session":"s1","id":"r1.in"}],"components":[]}"#
+
+    /// Signed in with Coach, its chat s1 (which handed a taf over) the one shown.
+    private func coachOnS1() async -> AppModel {
+        let model = await signedIn([])
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats"] = (200, Self.s1Chats)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, Self.s1Thread)
+        await model.loadSetup()
+        await model.openSetupChat("s1")
+        return model
+    }
+
+    /// Every message to Coach says the app follows a new chat, on the stream route and the plain one,
+    /// in the chat shown and in a new one. A target says nothing of it unless Coach's send sets it.
+    func testEveryCoachMessageSaysItFollowsANewChat() async throws {
+        let model = await coachOnS1()
+        XCTAssertEqual(model.setupChat, "s1")
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false,"run":"r2","message":{"id":"r2.in","at":"2026-11-14T09:00:00.000Z"}}"#)
+        StubProtocol.sent = []
+        let sent = await model.sendSetup("Remind me each Monday")
+        XCTAssertTrue(sent)
+        // No stream here (404): it was asked first, then the plain route took it. Both say so.
+        let stream = try XCTUnwrap(posts("/v1/tafs/taf-setup/messages/stream").last)
+        XCTAssertEqual(body(stream)["new_chat_after_handover"] as? Bool, true)
+        XCTAssertEqual(body(stream)["session"] as? String, "s1")
+        let post = try XCTUnwrap(posts("/v1/tafs/taf-setup/messages").last)
+        XCTAssertEqual(body(post)["new_chat_after_handover"] as? Bool, true)
+        XCTAssertEqual(body(post)["session"] as? String, "s1", "the chat shown: tafs cloud says whether it's finished")
+        XCTAssertNil(body(post)["new_chat"])
+        XCTAssertEqual(model.setupChat, "s1")
+
+        // A new conversation says it too.
+        model.newSetupChat()
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s_new","new_session":true}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s_new"] = (200, #"{"messages":[],"components":[]}"#)
+        StubProtocol.sent = []
+        let fresh = await model.sendSetup("A new job")
+        XCTAssertTrue(fresh)
+        let next = try XCTUnwrap(posts("/v1/tafs/taf-setup/messages").last)
+        XCTAssertEqual(body(next)["new_chat"] as? Bool, true)
+        XCTAssertEqual(body(next)["new_chat_after_handover"] as? Bool, true)
+        XCTAssertEqual(model.setupChat, "s_new")
+
+        XCTAssertFalse(TafsCloud.ChatTarget.live.newChatAfterHandover)
+        XCTAssertFalse(TafsCloud.ChatTarget.new.newChatAfterHandover)
+        XCTAssertFalse(TafsCloud.ChatTarget(session: "s1").newChatAfterHandover)
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// tafs cloud's answer and the stream's `session` event, as sent: `new_session` with the new chat's
+    /// `session`. A `session` event without the flag is no new chat.
+    func testTheNewChatIsReadFromTheAnswerAndTheSessionEvent() throws {
+        let reply = #"{"session":"s2","new_session":true,"run":"r2","message":{"id":"r2.in","at":"2026-11-14T09:00:00.000Z"}}"#
+        let sent = try KIFFClient.decoder.decode(TafsCloud.Sent.self, from: Data(reply.utf8))
+        XCTAssertEqual(sent.session, "s2")
+        XCTAssertTrue(sent.newSession)
+        XCTAssertEqual(sent.message?.id, "r2.in")
+        XCTAssertEqual(TafsCloud.streamEvent("session", data: Data(reply.utf8)),
+                       .session("s2", newSession: true, run: "r2", message: "r2.in"))
+        XCTAssertEqual(TafsCloud.streamEvent("session", data: Data(#"{"session":"s1","run":"r2"}"#.utf8)),
+                       .session("s1", newSession: false, run: "r2", message: nil), "no flag: the same chat")
+    }
+
+    /// The plain answer says tafs cloud started a new chat for the message (the chat shown had handed a
+    /// taf over): Coach shows the new chat, with the message just sent, once; the next message goes on
+    /// there; the old chat stays under Previous conversations.
+    func testANewChatInTheAnswerIsTheOneShownWithTheMessageSent() async throws {
+        let model = await coachOnS1()
+        XCTAssertEqual(model.setupThread.messages.map(\.text), ["Refunds, please"])
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s2","new_session":true,"run":"r2","message":{"id":"r2.in","at":"2026-11-14T09:00:00.000Z"}}"#)
+        // tafs cloud's thread for the new chat has the message, by the id the send gave.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s2"] = (200, #"{"messages":[{"at":"2026-11-14T09:00:00.000Z","from":"owner","kind":"message","text":"Remind me each Monday","session":"s2","id":"r2.in"}],"components":[]}"#)
+        StubProtocol.sent = []
+        let sent = await model.sendSetup("Remind me each Monday")
+        XCTAssertTrue(sent)
+        XCTAssertEqual(model.setupChat, "s2", "the new chat is the one shown")
+        XCTAssertFalse(model.setupFresh)
+        XCTAssertEqual(model.setupThread.messages.map(\.text), ["Remind me each Monday"], "the message sent, once, and not the old chat's")
+        XCTAssertEqual(model.setupThread.messages.first?.session, "s2")
+        XCTAssertTrue(model.setupUnsent.isEmpty, "nothing kept as not sent")
+        XCTAssertFalse(StubProtocol.sent.filter { $0.url?.path == "/v1/tafs/taf-setup/conversation/s2" }.isEmpty, "the new chat is read")
+
+        // The next message goes on in the new chat.
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s2","new_session":false,"run":"r3","message":{"id":"r3.in","at":"2026-11-14T09:01:00.000Z"}}"#)
+        StubProtocol.sent = []
+        let again = await model.sendSetup("At 9")
+        XCTAssertTrue(again)
+        XCTAssertEqual(body(posts("/v1/tafs/taf-setup/messages").last)["session"] as? String, "s2")
+
+        // The old chat stays under Previous conversations, as tafs cloud lists it.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/chats"] = (200, #"{"chats":[{"session":"s2","started":"2026-11-14T09:00:00.000Z","updated":"2026-11-14T09:01:00.000Z","title":"Remind me each Monday"},{"session":"s1","started":"2026-11-13T23:00:00.000Z","updated":"2026-11-13T23:34:46.000Z","title":"Refunds"}]}"#)
+        await model.loadSetupChats()
+        XCTAssertEqual(model.setupChats.map(\.session), ["s2", "s1"])
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// The stream's `session` event says the new chat: the answer streams into it, under the message
+    /// just sent, and the recorded answer then takes the live one's place, each shown once.
+    func testANewChatInTheStreamIsTheOneShownWithTheAnswerStreaming() async throws {
+        let model = await coachOnS1()
+        var continuation: AsyncThrowingStream<TafsCloud.StreamEvent, Error>.Continuation?
+        let events = AsyncThrowingStream<TafsCloud.StreamEvent, Error> { continuation = $0 }
+        let stream = try XCTUnwrap(continuation)
+        model.streamOpener = { _, _ in events }
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s2"] = (200, #"{"messages":[],"components":[]}"#)
+        let sent = await model.sendSetup("Remind me each Monday")
+        XCTAssertTrue(sent)
+        stream.yield(.session("s2", newSession: true, run: "r2", message: "r2.in"))
+        for _ in 0..<2000 where model.setupChat != "s2" { try await Task.sleep(nanoseconds: 1_000_000) }
+        XCTAssertEqual(model.setupChat, "s2", "the new chat is the one shown")
+        XCTAssertEqual(model.setupLive?.session, "s2")
+        XCTAssertEqual(model.setupLive?.run, "r2")
+        XCTAssertEqual(model.setupThread.messages.map(\.text), ["Remind me each Monday"], "the message sent, not the old chat's")
+        stream.yield(.text("Every Monday at 9."))
+        for _ in 0..<2000 where model.setupLiveText.isEmpty { try await Task.sleep(nanoseconds: 1_000_000) }
+        XCTAssertEqual(model.setupLiveText, "Every Monday at 9.", "the answer streams into the new chat")
+
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s2"] = (200, """
+        {"messages":[{"at":"2026-11-14T09:00:00.000Z","from":"owner","kind":"message","text":"Remind me each Monday","session":"s2","id":"r2.in"},
+                     {"at":"2026-11-14T09:00:05.000Z","from":"taf","kind":"message","text":"Every Monday at 9.","session":"s2"}],"components":[]}
+        """)
+        stream.yield(.end(status: "COMPLETED", stop: "answered"))
+        stream.finish()
+        await model.setupStream?.value
+        XCTAssertNil(model.setupLive)
+        XCTAssertEqual(model.setupChat, "s2")
+        XCTAssertEqual(model.setupThread.messages.map(\.text), ["Remind me each Monday", "Every Monday at 9."], "each once")
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// No new chat: the same session, even with `new_session`, or no flag, keeps the chat shown, with
+    /// what it held and the message sent.
+    func testTheSameChatOrNoFlagKeepsTheChatShown() async throws {
+        let model = await coachOnS1()
+        let both = #"{"messages":[{"at":"2026-11-13T23:00:00.000Z","from":"owner","kind":"message","text":"Refunds, please","session":"s1","id":"r1.in"},{"at":"2026-11-14T09:00:00.000Z","from":"owner","kind":"message","text":"Remind me each Monday","session":"s1","id":"r2.in"}],"components":[]}"#
+        // The stream names the chat shown, with new_session: still that chat.
+        model.streamOpener = { _, _ in
+            AsyncThrowingStream { c in
+                c.yield(.session("s1", newSession: true, run: "r2", message: "r2.in"))
+                c.yield(.end(status: "COMPLETED", stop: "answered"))
+                c.finish()
+            }
+        }
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, both)
+        let sent = await model.sendSetup("Remind me each Monday")
+        XCTAssertTrue(sent)
+        await model.setupStream?.value
+        XCTAssertEqual(model.setupChat, "s1")
+        XCTAssertEqual(model.setupThread.messages.map(\.text), ["Refunds, please", "Remind me each Monday"])
+
+        // A session event without the flag: no new chat, whatever it names.
+        model.streamOpener = { _, _ in
+            AsyncThrowingStream { c in
+                c.yield(.session("s9", newSession: false, run: "r3"))
+                c.yield(.end(status: "COMPLETED", stop: "answered"))
+                c.finish()
+            }
+        }
+        let other = await model.sendSetup("And Fridays")
+        XCTAssertTrue(other)
+        await model.setupStream?.value
+        XCTAssertEqual(model.setupChat, "s1")
+        XCTAssertTrue(model.setupThread.messages.contains { $0.text == "Refunds, please" }, "the chat shown keeps what it held")
+
+        // The plain answer: the same chat, no new one.
+        model.streamOpener = nil
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false,"run":"r4","message":{"id":"r4.in","at":"2026-11-14T09:02:00.000Z"}}"#)
+        let plain = await model.sendSetup("Thanks")
+        XCTAssertTrue(plain)
+        XCTAssertEqual(model.setupChat, "s1")
+        XCTAssertTrue(model.setupThread.messages.contains { $0.text == "Refunds, please" })
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     // MARK: The chat open on screen
 
     /// The Coach chat open on screen isn't in Needs you while it's open: no row for it, and the
