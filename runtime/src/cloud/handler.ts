@@ -40,7 +40,7 @@ import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
-import { attachWhys, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles } from "./steps.js";
+import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
@@ -5975,7 +5975,7 @@ class Pace {
 }
 
 /** Keeps a failed step's reason for its run's thread (kiff/tafs#476, gap 9): by run and call, with the call's tool. */
-type WhyKeeper = ((run: string, call: string, tool: string, why: string, refusal?: string, refused?: StepWhys[number]["refused"]) => void)
+type WhyKeeper = ((run: string, call: string, tool: string, why: string, refusal?: string, refused?: StepWhys[number]["refused"], notMade?: boolean) => void)
   & { connected?: (run: string, through: { vendor: string; key?: string }) => void };
 
 /**
@@ -5990,13 +5990,13 @@ function whyKeeper(me: KIFFIdentity, deps: Deps): WhyKeeper | undefined {
   // One write at a time for this stream: a refusal and the connection that follows it touch the same list.
   let queue: Promise<unknown> = Promise.resolve();
   const then = (f: () => Promise<unknown>): void => { queue = queue.then(f).catch(() => undefined); };
-  const keeper: WhyKeeper = (run, call, tool, why, refusal, refused) => {
+  const keeper: WhyKeeper = (run, call, tool, why, refusal, refused, notMade) => {
     const key = stepWhyKey(me.tenantID, run);
     const at = deps.now?.() ?? new Date();
     then(() => store.get(key).then(async (kept) => {
       const whys = Array.isArray(kept) ? kept as StepWhys : [];
       if (whys.some((w) => w.call === call)) return undefined;
-      await store.put(key, [...whys, { call, tool, why, ...(refusal ? { refusal } : {}), ...(refused ? { refused } : {}) }].slice(-STEP_WHYS_KEPT), new Date(at.getTime() + STEP_WHY_KEPT_MS));
+      await store.put(key, [...whys, { call, tool, why, ...(refusal ? { refusal } : {}), ...(refused ? { refused } : {}), ...(notMade ? { not_made: true as const } : {}) }].slice(-STEP_WHYS_KEPT), new Date(at.getTime() + STEP_WHY_KEPT_MS));
       if (!refusal) return undefined;
       // A connection the server refused: its reason, scrubbed, is kept where it can be read (the log), and goes
       // before the person's next words to Coach, so Coach can still say why once the turn it failed in is over.
@@ -6049,9 +6049,9 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
   };
   // A failed step's reason, in the owner's words, kept for the run's thread (kiff/tafs#476, gap 9):
   // the stored thread knows only that the call failed, and the tool's words end with the run.
-  const keepWhy = (callID: string, why: string | undefined, refusal?: string, refused?: StepWhys[number]["refused"]): void => {
+  const keepWhy = (callID: string, why: string | undefined, refusal?: string, refused?: StepWhys[number]["refused"], notMade?: boolean): void => {
     const tool = toolOf.get(callID);
-    if (why && tool && callID && runID && keep) keep(runID, callID, tool, why, refusal, refused);
+    if (why && tool && callID && runID && keep) keep(runID, callID, tool, why, refusal, refused, notMade);
   };
   // How a call ended. Where KIFF held it, the app shows the owner's card there in the
   // answer: only KIFF's keys for it, never what the tool answered, but why it failed, in words.
@@ -6076,6 +6076,12 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     // A connection call's refusal is about Coach's request: its reason is tafs cloud's words, never the server's.
     // The server's own reason is kept beside it, for Coach and the log (keepWhy), never shown as the step's.
     const plain = steps.connectionWhy(callID);
+    // A connection call refused for how Coach wrote it (its order or its shape) isn't a failure of the person's app: nothing
+    // was made, and Coach asks again. It ends not made, never "Coach couldn't connect" in red (Android 85, 14 Nov).
+    if (plain && coachGuard(r.text)) {
+      keepWhy(id, plain, undefined, undefined, true);
+      return sse("step", { call_id: id, status: "not_made" });
+    }
     const failed = plain ? { failed: true as const, why: plain } : failedStep(r.text);
     keepWhy(id, failed.why, plain ? whyOf(r.text) : undefined, plain ? steps.connectionRefusal(callID, r.text) : undefined);
     const event = sse("step", { call_id: id, status, ...failed });
