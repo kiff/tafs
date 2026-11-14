@@ -2112,7 +2112,7 @@ describe("Setup (kiff/agents#91)", () => {
     // The button says what it does: no question above it (the app-words cut, screen 1), and a short intro.
     expect(first.coach_tools_step).not.toHaveProperty("ask");
     expect(first.coach_tools_step.intro).toBe("Coach needs these to look after your tafs.");
-    expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 7, 2]);
+    expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 8, 2]);
     // Tools missing: the batch alone. KIFF refuses a Card naming an action no tool declares yet,
     // so the Cards come on the read after the tools are connected, and nothing is previewed now.
     expect(first.card).toBeUndefined();

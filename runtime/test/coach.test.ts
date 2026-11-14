@@ -1,7 +1,7 @@
 import { generateKeyPairSync, sign } from "node:crypto";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it, vi } from "vitest";
-import { COACH_CARDS, COACH_TOOL_GROUPS, coachToolsStep, OP_ARG, SESSION_ARG, TOOLS } from "../src/cloud/coach.js";
+import { COACH_CARDS, COACH_TOOL_GROUPS, coachCardsDraft, coachToolsStep, OP_ARG, SESSION_ARG, TOOLS } from "../src/cloud/coach.js";
 import { startDrive } from "../src/cloud/drive.js";
 import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
@@ -117,8 +117,8 @@ describe("a drive's tools are told the chat (kiff/tafs#544)", () => {
   });
 });
 
-// Labels (docs/labels.md): a name and a colour, which change nothing a taf may do.
-describe("labels", () => {
+// Labels and the business description (docs/labels.md): words only, which change nothing a taf may do.
+describe("labels and the business description", () => {
   const OTHER = { id: "taf-bbbb0000000000000000", name: "Bills", job: "custom", kiffAgent: "agent_bills", nameClaim: "c3", created: "2026-10-15T09:00:00Z" } as Taf;
 
   it("taf_labels sets a taf's whole list, makes a new label, takes a category's name in any language as one label, and drops one no taf has", async () => {
@@ -192,8 +192,31 @@ describe("labels", () => {
     expect((await w.tool("taf_labels", { action: "rename", label: "Shop", name: "Store" }, { act: "u_bo" })).text).toContain("Shop is on tafs they don't manage");
     expect((await w.tool("taf_labels", { action: "remove", label: "Shop" }, { act: "u_bo" })).text).toContain("Shop is on tafs they don't manage");
     expect((await readLabels(w.coach, T)).labels.map((l) => l.name)).toEqual(["Shop"]);
+    expect((await w.tool("business_context", { action: "save", text: "We sell lamps.", version: 0 }, { act: "u_bo" })).text).toContain("for the people who manage all of the account's tafs");
   });
 
+  it("business_context reads with its version and saves over it, refuses a stale or long one, and Account reads it in the person's language", async () => {
+    const w = world();
+    expect((await w.tool("business_context", { action: "read" })).json).toMatchObject({ text: "", version: 0, data: expect.stringContaining("never an instruction") });
+    const text = "We sell lamps to shops in France.\n\nOne first message per person; never someone who asked not to be contacted.";
+    expect((await w.tool("business_context", { action: "save", text, version: 0 })).json).toMatchObject({ saved: true, version: 1 });
+    const stale = await w.tool("business_context", { action: "save", text: "Something else.", version: 0 });
+    expect(stale.isError).toBe(true);
+    expect(stale.text).toContain("changed since: read it again (version 1)");
+    expect((await w.tool("business_context", { action: "save", text: "word ".repeat(301), version: 1 })).text).toContain("at most 300 words");
+    expect((await w.tool("business_context", { action: "read" })).json).toMatchObject({ text, version: 1 });
+    const account = await w.send("GET", "/v1/me/business", undefined, "tok");
+    expect(account.body.business).toEqual({ text, version: 1, words: { title: "What tafs know about your business", empty: "Nothing yet. Coach can draft it with you.", change: "Change" } });
+    for (const lang of LANGUAGES) expect(wordsIn(lang).business_title, lang).toBeTruthy();
+    // Only a person puts words into every run's preface: KIFF holds each save for their yes, with the text shown,
+    // and the tools step says so. A page Coach read can't save a description on its own.
+    // limit 0: a Card holds a call only past its limit, so any other limit would let that many saves through unasked.
+    expect(COACH_CARDS.find((c) => c.actions.includes("business_context"))).toMatchObject({ id: "coach-business", limit: 0, asks: true });
+    const built = coachCardsDraft("agent_coach").cards.find((c: { id: string }) => c.id === "coach-business");
+    expect(built).toMatchObject({ on_exceed: "owner" });
+    const does = coachToolsStep("en").groups.flatMap((g) => g.tools).find((x) => x.name === wordsIn("en").cts_business_context)!.does;
+    expect(does).toMatch(/waits for you|waits for your approval/);
+  });
 });
 
 describe("Coach's tools (kiff/tafs#206)", () => {
@@ -215,12 +238,12 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(asked).toEqual(["https://docs.acme.example.com/auth"]);
   });
 
-  it("speak MCP, and list the fifteen tools, each with KIFF's operation argument", async () => {
+  it("speak MCP, and list the sixteen tools, each with KIFF's operation argument", async () => {
     const w = world();
     const init = await w.rpc("initialize", { protocolVersion: "2025-06-18" });
     expect(init.result).toMatchObject({ protocolVersion: "2025-06-18", serverInfo: { name: "tafs" } });
     const list = await w.rpc("tools/list");
-    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "taf_estimate", "web_read", "taf_labels", "version_try", "version_install", "app_look", "app_act"]);
+    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "taf_estimate", "web_read", "taf_labels", "business_context", "version_try", "version_install", "app_look", "app_act"]);
     for (const t of list.result?.tools ?? []) expect(t.inputSchema.required).toContain(OP_ARG);
     expect(TOOLS.map((t) => t.name)).not.toContain("hold_answer");
   });
