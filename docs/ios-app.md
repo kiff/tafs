@@ -672,6 +672,20 @@ exports receipts ([api.md](api.md): `GET /v1/record`, `/v1/record/cases/{about}`
 
 Tests: `TafsTests/RecordSearchTests.swift`.
 
+## Coach waiting
+
+A Coach chat paused on a card its person answers (an approval, a sign-in, questions, a confirm), as
+Home lists it ([api.md](api.md) › Coach waiting; `KIFF/TafsCloud+CoachWaiting.swift`,
+`CoachWaitingCard` in `Views/NeedsYouView.swift`, `AppModel.openCoachWaiting`):
+
+- **Where:** Needs you lists Home's `coach_waiting` after the steps, oldest first, one per chat, in
+  tafs cloud's words only: `words.line` ("Coach is waiting for your approval.") and `words.open`
+  ("Open Coach"). Needs you never says nothing is waiting while one is listed, and Home's count is
+  tafs cloud's `needs_you`, which has each once.
+- **Read leniently:** one without its chat (`session`) or either line is left out, never Home with it.
+- **The way in** opens Coach on that chat (`openSetupChat(session)`), where its card waits. Someone who may not
+  use Coach (`mayUseCoach`) sees the line alone, never a button that does nothing.
+
 ## Your step
 
 A step a taf may never take itself, prepared and handed to its owner ([api.md](api.md) › Your

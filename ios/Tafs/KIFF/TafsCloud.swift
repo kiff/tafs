@@ -367,6 +367,8 @@ final class TafsCloud {
         var cardUnitExceptions: [CardUnitException]? = nil
         /// The steps tafs handed the person, oldest first (docs/api.md › Your step); absent when none.
         var yourSteps: [YourStep]? = nil
+        /// Coach's chats waiting on their person (`coach_waiting`), oldest first.
+        var coachWaiting: [CoachWaiting]? = nil
         /// Everything that waits for the person, counted by tafs cloud with its words; absent
         /// when KIFF's "Did this happen?" can't be read, and the app counts what it has.
         var needsYou: NeedsYou? = nil
@@ -437,6 +439,7 @@ final class TafsCloud {
             case tafs, others, removing, doorsOffered = "doors_offered"
             case cardUnitExceptions = "card_unit_exceptions"
             case yourSteps = "your_steps"
+            case coachWaiting = "coach_waiting"
             case needsYou = "needs_you"
         }
     }
