@@ -161,6 +161,8 @@ server declares in KIFF at the request (`declared: true` on the grant) and which
 the key is in (`connect-an-app@10`, `draft-the-card@8`). Not declared, Coach asks for the key first,
 then the Card, as before.
 
+**A Card over two apps (14 Nov).** One signature carries one connection's approve. So while a Card's draft also covers another app of the same taf that isn't connected yet, the Card isn't signed. A card that would carry this app's tools with the Card (`tools_and_cards` or `key_and_cards`) becomes this app's own `connect`, so whichever card the person taps first moves forward, and the last app carries the Card. A Card alone (`cards`) for a connected app is refused, naming the app that waits ("Approve Stripe first; this Card comes with the last app"). A report is "approved" only when every app the Card covers is connected, never while another app's tools still wait. Signing every app's approve in one signature, with N+1 hashes, is the follow-up, and it needs the phones.
+
 **A connection's added tools and its Card together (`tools_and_cards`).** The same shape, for an app already
 signed in: Coach adds the taf's tools to a connected grant (the addition waits as `pending`, with what it had in
 `connected`), drafts the Card over them, and shows one approval with the grant and the draft. With

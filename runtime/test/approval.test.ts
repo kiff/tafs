@@ -1276,3 +1276,100 @@ describe("one signature for a key and its Card (key_and_cards, docs/secure-conne
     expect(r.body.answer).not.toMatch(/is connected/);
   });
 });
+
+// P0, 14 Nov 2026 (Win-back offers): a Card over two apps, signed once, approved only the card's own app's tools;
+// the other app's tools stayed waiting while the setup heard "approved". Whatever the fix, one signature never
+// covers a Card whose other app's tools it doesn't approve, and "approved" waits for every app the Card covers.
+describe("a Card over two apps approves every app's tools, or says which waits (P0, 14 Nov)", () => {
+  const SIGNED = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" };
+  afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; });
+  const gmail = (over: Record<string, unknown> = {}) =>
+    grant({ id: "g_1", vendor: "Gmail", signed_in: true, declared: true, ...over }, { server: "gmail.example", tools: [{ tool: "send", name: "send_draft_m1" }] });
+  const stripe = (over: Record<string, unknown> = {}) =>
+    grant({ id: "g_2", vendor: "Stripe", connected: [{ tool: "list_customers", name: "list_customers_k3f9" }], ...over },
+      { tools: [{ tool: "list_customers", name: "list_customers_k3f9" }, { tool: "create_coupon", name: "create_coupon_k3f9" }] });
+  const both = { grants: [{ action: "send_draft_m1" }, { action: "list_customers_k3f9" }, { action: "create_coupon_k3f9" }], aggregates: [] };
+
+  async function twoApps(stripeNow = stripe()) {
+    process.env.TAFS_TOOLS_AND_CARDS = "on";
+    const s = services();
+    s.grants = [gmail(), stripeNow];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [both] };
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: gmail().digest, draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards", "signs"] });
+    return { s, w, r };
+  }
+
+  it("never signs the Card with only one app's tools while the other app's wait", async () => {
+    const { r } = await twoApps();
+    const ask = r.body.ask as { step?: string; planque?: unknown } | undefined;
+    // One signature over the Card carries the other app's approve too, or the Card isn't in this signature at all.
+    const signsCard = r.body.outcome === "sign" && (ask?.step === "tools_and_cards" || ask?.step === "cards");
+    expect(signsCard && !JSON.stringify(ask?.planque ?? "").includes("g_2")).toBe(false);
+  });
+
+  it("says Stripe waits, and is never approved while it does", async () => {
+    const { s, w, r } = await twoApps();
+    const ask = r.body.ask as { id?: string } | undefined;
+    if (r.body.outcome !== "sign" || !ask?.id) {
+      // Not signed now: what it says names the app to approve first.
+      expect(`${r.body.answer} ${r.body.note}`).toMatch(/Stripe/);
+      return;
+    }
+    s.grants = [gmail({ status: "connected" }), stripe()];
+    s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x", cards: [both] };
+    const rep = await w.call("POST", `${ASK}/${ask.id}`, { result: "confirmed" }, SIGNED);
+    expect(rep.body.answer).not.toBe("approved");
+    expect(String(rep.body.answer)).toMatch(/Stripe/);
+  });
+
+  it("with Stripe connected first, takes Gmail's tools and the Card in one signature, approved once both hold", async () => {
+    const { s, w, r } = await twoApps(stripe({ status: "connected", connected: undefined }));
+    expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "tools_and_cards" } });
+    s.grants = [gmail({ status: "connected" }), stripe({ status: "connected", connected: undefined })];
+    s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x", cards: [both] };
+    expect((await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "confirmed" }, SIGNED)).body.answer).toBe("approved");
+  });
+
+  // Defence in depth: the Card signed with Gmail's tools while Stripe was connected, but Stripe is waiting again by
+  // the time the report comes (tools asked again): never "approved", and the answer names Stripe.
+  it("is never approved while another app the Card covers waits, whenever that happens", async () => {
+    const { s, w, r } = await twoApps(stripe({ status: "connected", connected: undefined }));
+    expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "tools_and_cards" } });
+    s.grants = [gmail({ status: "connected" }), stripe()];
+    s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x", cards: [both] };
+    const rep = await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "confirmed" }, SIGNED);
+    expect(rep.body.answer).not.toBe("approved");
+    expect(String(rep.body.answer)).toMatch(/Stripe's tools still wait/);
+  });
+
+  // Both apps waiting (Win-back: Gmail a held sign-in, Stripe added tools): each card moves forward, never sending the
+  // person to the other. The first tapped is its own connect; the last carries the Card.
+  it("Stripe's card, asked with the same draft while Gmail waits too, signs Stripe's tools rather than sending back to Gmail", async () => {
+    process.env.TAFS_TOOLS_AND_CARDS = "on";
+    const s = services();
+    s.grants = [gmail(), stripe()];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [both] };
+    const w = await world(s, { draft: "drf_1", grant: "g_2" });
+    const r2 = await w.call("POST", ASK, { grant: "g_2", shown_digest: stripe().digest, draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards", "signs"] });
+    expect(r2.body.outcome).toBe("sign");
+    expect(JSON.stringify((r2.body.ask as { planque?: unknown }).planque ?? "")).toContain("g_2");
+  });
+
+  it("with both waiting, the first card is its own connect and the last carries the Card, approved once both hold", async () => {
+    const { s, w, r } = await twoApps();
+    // Gmail first: its tools alone, never the Card while Stripe waits.
+    expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+    expect(JSON.stringify((r.body.ask as { planque?: unknown }).planque)).toContain("g_1");
+    s.grants = [gmail({ status: "connected" }), stripe()];
+    const rep = await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "connected" }, SIGNED);
+    expect(rep.body.answer).not.toBe("approved");
+    // Then Stripe's card: its tools with the Card, in one signature.
+    const w2 = await world(s, { draft: "drf_1", grant: "g_2" });
+    const r2 = await w2.call("POST", ASK, { grant: "g_2", shown_digest: stripe().digest, draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards", "signs"] });
+    expect(r2.body).toMatchObject({ outcome: "sign", ask: { step: "tools_and_cards" } });
+    s.grants = [gmail({ status: "connected" }), stripe({ status: "connected", connected: undefined })];
+    s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x", cards: [both] };
+    expect((await w2.call("POST", `${ASK}/${(r2.body.ask as { id: string }).id}`, { result: "confirmed" }, SIGNED)).body.answer).toBe("approved");
+  });
+});
