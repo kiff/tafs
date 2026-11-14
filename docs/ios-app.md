@@ -5,6 +5,8 @@ tafs for iPhone and iPad is SwiftUI, iOS 16 and later. The project is generated:
 page is a map of the code; what each feature does is on its own page
 ([README.md](README.md)).
 
+The same project builds the Mac app, with Mac Catalyst: [mac-app.md](mac-app.md).
+
 ## Targets
 
 | Target | Sources | What it is |

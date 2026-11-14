@@ -40,7 +40,8 @@ The build is unsigned for now. Signing, and the disk image, are set up at releas
 ## What differs from the iPad
 
 - **The device's name.** `ThisDevice` tells KIFF what the device is. A Mac build says `kind` "Mac", `platform` `macos` and KIFF's kind `other`, which is what KIFF records for a computer. The Mac build reports an iPad's model, so the build decides before the model does (`ThisDevice.kind(model:mac:)`).
-- **No Live Activity.** A held call doesn't show on a lock screen. Notifications work as on the iPad.
+- **No Live Activity.** Live Activities are unavailable to a Mac Catalyst build, so `Shared/HeldActivity.swift` and the Live Activity half of `LockScreen` compile for iPhone and iPad only. `LockScreen.endActivities()` does nothing on the Mac. Notifications work as on the iPad.
+- **No Siri tip on the Halt screen.** `SiriTipView` is unavailable to a Mac Catalyst build.
 
 `ThisDevice.isMac` and `#if targetEnvironment(macCatalyst)` are the only two ways the code asks whether it's the Mac build. The Mac workflow finds Mac-specific files by those names.
 
@@ -55,6 +56,11 @@ The build is unsigned for now. Signing, and the disk image, are set up at releas
 A draft pull request runs it too. The Mac build can only be checked on a machine with Xcode, so this workflow is where a change to it is tried.
 
 `ThisDeviceTests` checks the name, platform and kind KIFF is told, for an iPhone, an iPad and a Mac.
+
+**The Mac's tests run on the Mac itself, not on a Simulator.** So a test can't assume the Simulator's answers:
+
+- **Approvals are always ready on the Simulator.** On a Mac they depend on its Touch ID, and a runner has none. A test that needs an approval sets its model ready (`model.readApprovalReadiness = { .ready }`), with a stub signer.
+- **`testTheSimulatorIsReady` is skipped** off the Simulator.
 
 ## Not done yet
 
