@@ -6547,9 +6547,12 @@ final class AppModel: ObservableObject {
     /// The same for each taf's chat (kiff/tafs#138, item 48): one rule for both chats.
     private var chatSent: [UUID: [TafsCloud.ChatMessage]] = [:]
 
-    /// Where Setup's next message goes.
+    /// Where Setup's next message goes. Every one says the app follows a new chat: tafs cloud
+    /// starts one for a message to a chat that already handed a taf over (`followNewSetupChat`).
     private var setupTarget: TafsCloud.ChatTarget {
-        setupFresh ? .new : setupChat.map { TafsCloud.ChatTarget(session: $0) } ?? .live
+        var target = setupFresh ? TafsCloud.ChatTarget.new : setupChat.map { TafsCloud.ChatTarget(session: $0) } ?? .live
+        target.newChatAfterHandover = true
+        return target
     }
 
     /// The taf a new Setup conversation improves (kiff/tafs#107), by its id in tafs cloud:
@@ -6972,6 +6975,26 @@ final class AppModel: ObservableObject {
         setupFresh = false
     }
 
+    /// tafs cloud started a new chat for the message just sent to the chat shown, which had
+    /// already handed a taf over (docs/api.md, `new_chat_after_handover`): the answer or the
+    /// stream's `session` event says `new_session: true` with another session. Coach follows it:
+    /// the new chat is the one shown, with the message just sent (`sent`, the local copy) and the
+    /// answer streaming into it; the old chat stays under Previous conversations, as tafs cloud
+    /// lists it. What else was on its way belonged to the old chat, which tafs cloud has. True
+    /// once it moved: the conversation is a new one then, and the caller goes on in it.
+    @discardableResult
+    private func followNewSetupChat(_ session: String, newSession: Bool, sent: String?) -> Bool {
+        guard newSession, !session.isEmpty, let open = setupChat, open != session else { return false }
+        setupConversationGeneration += 1
+        setupChat = session
+        setupFresh = false
+        setupSent = setupSent.filter { $0.id == sent }
+        setupThread = SetupThread(messages: setupSent)
+        setupAnsweredCard = nil
+        setupLiveBefore = Set(setupThread.items.map(\.id))
+        return true
+    }
+
     /// Setup's KIFF agent: one per account.
     static let setupAgent = "setup"
 
@@ -7294,7 +7317,8 @@ final class AppModel: ObservableObject {
         guard !text.isEmpty || !files.isEmpty, text.count <= Self.chatLimit, let s = setupTaf, !setupSending else { return .notTried }
         // An improvement's first message carries no files: tafs cloud adds the taf's context to it.
         if !files.isEmpty, setupImproving != nil { return .notTried }
-        let conversation = setupConversationGeneration
+        // A var: a new chat tafs cloud started for this message is still this send's (`followNewSetupChat`).
+        var conversation = setupConversationGeneration
         setupSending = true
         defer { if conversation == setupConversationGeneration { setupSending = false } }
         let gen = accountGeneration
@@ -7343,6 +7367,7 @@ final class AppModel: ObservableObject {
             let sent = try await cloud.sendMessage(s.id, text: text, to: setupTarget, files: files)
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
             settleSetupChat(sent.session)
+            if followNewSetupChat(sent.session, newSession: sent.newSession, sent: mine.id) { conversation = setupConversationGeneration }
             if let id = sent.message?.id { markSetupSent(mine.id, serverID: id) }
             setupAwaiting = clock()
             await loadSetupThread()
@@ -7670,6 +7695,8 @@ final class AppModel: ObservableObject {
     /// A stream that drops leaves the conversation to show the rest, as it does without one.
     private func followSetupStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, text: String, gen: Int,
                                    conversation: Int, sent: String? = nil) async {
+        // The answer follows the new chat tafs cloud started for the message (`followNewSetupChat`).
+        var conversation = conversation
         var ended: String?
         // Coach paused on a card its person answers: Needs you is read once then, so its row
         // and badge come while the chat is still open, not after it closes.
@@ -7678,7 +7705,8 @@ final class AppModel: ObservableObject {
             for try await e in events {
                 guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                 switch e {
-                case .session(let session, _, let run, let message):
+                case .session(let session, let newSession, let run, let message):
+                    if followNewSetupChat(session, newSession: newSession, sent: sent) { conversation = setupConversationGeneration }
                     setupLive?.session = session
                     if let run { setupLive?.run = run }
                     settleSetupChat(session)
