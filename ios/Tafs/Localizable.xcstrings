@@ -92448,6 +92448,59 @@
         }
       }
     },
+    "settings.devices.signout_needs_approver": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um ein anderes Gerät abzumelden, nutze ein Gerät, das genehmigen kann."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To sign another device out, use a device that can approve."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para cerrar la sesión de otro dispositivo, usa un dispositivo que pueda aprobar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour déconnecter un autre appareil, utilisez un appareil qui peut approuver."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per disconnettere un altro dispositivo, usa un dispositivo che può approvare."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik een apparaat dat kan goedkeuren om een ander apparaat uit te loggen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aby wylogować inne urządzenie, użyj urządzenia, które może zatwierdzać."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para terminar a sessão de outro dispositivo, use um dispositivo que possa aprovar."
+          }
+        }
+      }
+    },
     "settings.devices.this_device": {
       "extractionState": "manual",
       "localizations": {

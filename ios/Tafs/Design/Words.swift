@@ -3620,6 +3620,8 @@ enum Words {
             static func signOutPrompt(device: String) -> String { Words.line("settings.devices.sign_out_prompt", device) }
             /// Sign this device out?
             static var signOutThis: String { Words.line("settings.devices.sign_out_this") }
+            /// To sign another device out, use a device that can approve.
+            static var signoutNeedsApprover: String { Words.line("settings.devices.signout_needs_approver") }
             /// this device
             static var thisDevice: String { Words.line("settings.devices.this_device") }
             /// tafs on {device}

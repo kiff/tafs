@@ -1831,6 +1831,7 @@
     <string name="settings_devices_sign_out_named">Disconnettere %1$s?</string>
     <string name="settings_devices_sign_out_prompt">Disconnetti %1$s dal tuo account</string>
     <string name="settings_devices_sign_out_this">Disconnettere questo dispositivo?</string>
+    <string name="settings_devices_signout_needs_approver">Per disconnettere un altro dispositivo, usa un dispositivo che può approvare.</string>
     <string name="settings_devices_this_device">questo dispositivo</string>
     <string name="settings_devices_this_device_name">tafs su %1$s</string>
     <string name="settings_devices_this_device_title">Questo dispositivo</string>

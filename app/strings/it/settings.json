@@ -59,6 +59,7 @@
   "settings.devices.sign_out_named": "Disconnettere {device}?",
   "settings.devices.sign_out_prompt": "Disconnetti {device} dal tuo account",
   "settings.devices.sign_out_this": "Disconnettere questo dispositivo?",
+  "settings.devices.signout_needs_approver": "Per disconnettere un altro dispositivo, usa un dispositivo che può approvare.",
   "settings.devices.this_device": "questo dispositivo",
   "settings.devices.this_device_name": "tafs su {device}",
   "settings.devices.this_device_title": "Questo dispositivo",

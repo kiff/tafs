@@ -1831,6 +1831,7 @@
     <string name="settings_devices_sign_out_named">¿Cerrar la sesión de %1$s?</string>
     <string name="settings_devices_sign_out_prompt">Cerrar la sesión de %1$s en tu cuenta</string>
     <string name="settings_devices_sign_out_this">¿Cerrar la sesión de este dispositivo?</string>
+    <string name="settings_devices_signout_needs_approver">Para cerrar la sesión de otro dispositivo, usa un dispositivo que pueda aprobar.</string>
     <string name="settings_devices_this_device">este dispositivo</string>
     <string name="settings_devices_this_device_name">tafs en %1$s</string>
     <string name="settings_devices_this_device_title">Este dispositivo</string>

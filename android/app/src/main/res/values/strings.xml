@@ -1831,6 +1831,7 @@
     <string name="settings_devices_sign_out_named">Sign %1$s out?</string>
     <string name="settings_devices_sign_out_prompt">Sign %1$s out of your account</string>
     <string name="settings_devices_sign_out_this">Sign this device out?</string>
+    <string name="settings_devices_signout_needs_approver">To sign another device out, use a device that can approve.</string>
     <string name="settings_devices_this_device">this device</string>
     <string name="settings_devices_this_device_name">tafs on %1$s</string>
     <string name="settings_devices_this_device_title">This device</string>
