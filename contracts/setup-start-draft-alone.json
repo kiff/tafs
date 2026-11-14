@@ -289,7 +289,7 @@
                 "aggregates": [
                   {
                     "quantity": "count",
-                    "limit": 50,
+                    "limit": 0,
                     "window": "calendar_day"
                   }
                 ]
@@ -526,7 +526,7 @@
               },
               {
                 "name": "Keep your business description",
-                "does": "Keep a short description of your business that you confirmed: what you sell, to whom, your tone and your contact rules. Up to 50 a day; after that, each one waits for you.",
+                "does": "Keep a short description of your business that you confirmed: what you sell, to whom, your tone and your contact rules. Each one waits for your approval.",
                 "why": "It's words only, and you see it in Account."
               },
               {
