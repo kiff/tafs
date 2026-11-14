@@ -115,7 +115,9 @@ struct HomeSplitView: View {
                 case .haltAll?:
                     HaltScreen(tafID: nil)
                 case .overview?:
-                    OverviewView { open in withMotion(.easeInOut(duration: 0.25)) { selection = open } }
+                    // As the whole app's sidebar (an iPad's full width), Calendar is its item: the
+                    // Overview doesn't draw a second way to it.
+                    OverviewView(showsCalendar: !calendarInSidebar) { open in withMotion(.easeInOut(duration: 0.25)) { selection = open } }
                 case .calendar?:
                     CalendarView { id in withMotion(.easeInOut(duration: 0.25)) { selection = .taf(id) } }
                 case nil where model.homeListsRecipes:
@@ -240,6 +242,10 @@ struct HomeSplitView: View {
 
     /// The signed-in account's items: KIFF mode, or its screenshot over the sample (`-signedIn`).
     private var signedInLayout: Bool { model.mode == .kiff || Screenshots.signedIn }
+
+    /// Calendar is a sidebar item: the sidebar is the whole app's (`tab` set, an iPad's full
+    /// width), signed in. The Overview then has no calendar button of its own.
+    private var calendarInSidebar: Bool { tab != nil && signedInLayout }
 
     private var sidebar: some View {
         // Only the owner's taps write through this binding, so each one is a choice, a tap on

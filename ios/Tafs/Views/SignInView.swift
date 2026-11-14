@@ -178,9 +178,10 @@ struct SettingsView: View {
                     Text(Words.SignIn.everyActionTafTakesGoes(device: "\(ThisDevice.kind)"))
                         .scaledFont(14).foregroundColor(Theme.soft)
                 }
+                // tafs's own pages, in English only for now: outside English the rows say so (Android 1.27.8).
                 Section(Words.Settings.legal) {
-                    Link(Words.Settings.terms, destination: Legal.terms)
-                    Link(Words.Settings.privacyPolicy, destination: Legal.privacy)
+                    Link(Legal.label(Words.Settings.terms), destination: Legal.terms)
+                    Link(Legal.label(Words.Settings.privacyPolicy), destination: Legal.privacy)
                 }
                 Section(Words.Settings.about) {
                     LabeledContent(Words.Settings.version, value: Self.versionLabel())

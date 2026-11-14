@@ -180,7 +180,8 @@ the app in sample mode.
   - **at the top,** the mascot and "tafs": the way to the tafs list (the Overview screen, every taf),
     which is what opens first;
   - **the app's screens as items:** Needs you (with its count), Record, Calendar, Usage (Plan &
-    usage) and Connect apps, then the held calls;
+    usage) and Connect apps, then the held calls. With Calendar an item, the Overview has no calendar
+    button of its own (`calendarInSidebar`);
   - **only the tafs relevant now** (`AppModel.relevantNow`): one with an item in Needs you (a held
     call, a step it handed over, a knock at its door), or a run or a change in the last 24 hours
     (`last_run`, `last_change`), and
@@ -393,6 +394,17 @@ the app in sample mode.
   At Approve, the step tafs cloud asks must sign the Card as the mark said (`AppModel.stepMatchesMark`): a Card drawn
   as signed with only the connection asked, or drawn as next and asked now, is out of date. Nothing is signed, and the
   card is read again, as for `read_again`.
+  **Whether Approve is a tap** is on the mark too (`signs.takes`, `"tap"` or `"fingerprint"`, docs/chat.md), read
+  as `Signs.takes`. KIFF's approval-window words ("No fingerprint for the next 4 minutes") may go only on a `"tap"`
+  card (`SetupComponent.windowWords`, as Android 1.27.9's `windowWordsFor`): never on one that takes the fingerprint
+  or has no mark. The iPhone holds no approval window yet, so its cards draw no such line and Approve always names
+  Face ID; the gate is there for when it does.
+  **A sign-in card names its app**: the card's `service`, else the connection's app as Connect apps names it, else
+  planque's vendor in people's words (`AppModel.signInApp`, `appName`): "Sign in at Gmail", and "Sign in at the
+  vendor" only when no app is known, never a connection's status. When the connection takes no approval now
+  (signed in already, or past approving), Sign in asks tafs cloud's approval route, which takes a sign-in card too
+  (docs/api.md): tafs cloud answers Coach and the card shows its note in the person's words, never "This connection
+  is listed." Where tafs cloud can't be asked, the app's line stands, as on Android 1.27.8.
   **The key and its Card under one Face ID** (`AppModel.approveKeyAndCard`, `RequestsTogether`), when the sheet is
   opened from Coach's card and that card carries the taf's Card as a draft:
   - The sheet draws **Its Card**: KIFF's own lines for the draft this phone read from KIFF.
@@ -701,10 +713,15 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
 
 ## The calendar
 
-The tafs' scheduled work still to come (kiff/tafs#534), opened from the calendar
-icon at the top right of the Overview (the iPad's sidebar) and, on the iPhone,
-beside + in the home's bar. `Views/CalendarView.swift` draws Day, Week and Month,
-Week first, with Today, previous and next, and a date to pick. On a phone the range
+The tafs' scheduled work still to come (kiff/tafs#534), opened from the sidebar's
+Calendar item on an iPad's full width, from the calendar icon at the top right of the
+Overview beside the Tafs tab's own sidebar (an iPad's narrower split; never beside the
+whole app's sidebar, which already has Calendar, `OverviewView.showsCalendar`) and, on
+the iPhone, beside + in the home's bar. `Views/CalendarView.swift` draws Day, Week and Month,
+Week first, with Today, previous and next, and a date to pick. Today is a pill as wide as
+its word in every language ("Aujourd'hui", "Hoje", "Vandaag"), on one line with room inside
+its stroke; with today already shown a tap does nothing and its word stays readable, never
+faded. On a phone the range
 ("9 – 15 Nov") has a line of its own above the buttons, so it's never cut. tafs cloud computes
 every occurrence (`GET /v1/calendar`, docs/api.md): live schedules' firings in the
 account's zone, follow-ups and runs' next tries, only for the tafs the person may
@@ -714,8 +731,10 @@ zone, so the app places it and converts nothing. `Model/CalendarModel.swift`
 one read per grid), groups events by day and hour, and picks the layout: wide
 (`CalendarLayout.of`: at least 700 points wide, on its side, a tablet's height),
 with a month navigator at the upper left, the calendar beside it and the agenda
-under them; compact otherwise, with a scrolling week strip and the selected day's
-work under it. What it shows (`CalendarState`) is kept on `AppModel`, so a rotation
+under them; compact otherwise, with a week strip and the selected day's
+work under it. In Week the strip is exactly the seven days its heading names, sharing
+the width at any width (`CalendarMath.stripDays`): an upright iPad showed "9 – 15 novembre"
+over a strip from 9 to 21. In Day it scrolls the month's weeks. What it shows (`CalendarState`) is kept on `AppModel`, so a rotation
 or a new layout keeps it, and cleared with the rest of an account's state. A tap
 opens the taf. Read-only; no new dependency. Tests: `TafsTests/CalendarTests.swift`.
 
@@ -953,8 +972,11 @@ reads from KIFF's own answers (" · it didn't go through: "), and the sign-in's 
 The pages the app opens follow the lines' language (`KIFFClient.appLanguage`, the first of the languages the screens
 resolved to), never the browser's:
 
-- **kiff.dev's Terms and Privacy policy** (Sign-in, Settings, Plan & usage): `/terms#tafs` in English, `/de/terms#tafs` in
-  German, and so on (`Legal`).
+- **tafs's own Terms and Privacy policy** (Sign-in, Account › Legal, Plan & usage): `kiff.dev/tafs/terms` and
+  `kiff.dev/tafs/privacy`, the pages Google's consent screen names (`Legal`), as Android 1.27.8 opens. They're in
+  English only until kiff.dev serves them in other languages, so outside English the Account and Plan & usage links
+  say so ("Terms (auf Englisch)", `settings.legal_in_english`, `Legal.label`). Before, they opened KIFF's pages
+  (`/terms#tafs`, `/de/terms#tafs`).
 - **KIFF's approval page**, for a sign-in and for approving again after Face ID changed: the link KIFF answers gets
   `lang=<language>`, and a link that already names one keeps it (`DeviceStart.inAppLanguage`).
 - **A held call's page in KIFF**: `/needs-you/{id}?lang=<language>` (`KIFFClient.answerPage`).
