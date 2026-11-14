@@ -106,7 +106,7 @@
   "connect.more_apps": "Mais apps",
   "connect.more_apps_could_not_listed": "Não foi possível listar mais apps: {why}",
   "connect.no_confirmation_code": "O início de sessão em {vendor} voltou sem o código de confirmação. Nada foi ligado.",
-  "connect.no_sign_in_link": "A ligação voltou {status} sem link de início de sessão. Nada foi ligado.",
+  "connect.no_sign_in_link": "Não abriu nenhuma página de início de sessão de {vendor}, por isso nada foi ligado. Pode tentar novamente.",
   "connect.no_such_connection": "Não há nenhuma ligação com esse ID.",
   "connect.no_taf": "Crie primeiro um taf: uma app é ligada para um taf a usar.",
   "connect.not_connected": "Não ligado. {why}",

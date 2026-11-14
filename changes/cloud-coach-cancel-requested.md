@@ -1,0 +1,1 @@
+- **tafs cloud: Set aside and the 48-hour end now hold.** kiff/agents keeps a Coach chat paused on a card even when asked to stop, so a set-aside row came back on the next Home read and the sweep ended the same chat every 5 minutes. tafs cloud now keeps such a chat as ended, and Home, Discard and the sweep skip it (docs/api.md).

@@ -534,7 +534,11 @@ announces only to URLs it is set to allow (`AGENTS_NOTIFY_URLS`), so tafs cloud'
 `/v1/runs/ended` must be among them: when it isn't, kiff/agents refuses the run and
 `taf_task` fails with "notify.url is not one this server announces runs to". Moving tafs
 cloud to a new URL means updating that list too. The app shows
-these as lines in Coach's chat ("coach lines"). While the owner is away, what isn't
+these as lines in Coach's chat ("coach lines"). A run cut off at its turn or cost cap (its `stop`
+`turn_cap` or `cost_cap`), or stopped any other way short of an answer, never reads as finished:
+its line and its notification say it stopped before it finished, and at which limit ("It stopped
+before it finished: it reached its cost limit for one run"), and Coach hears what it last wrote as
+its last words, never as its answer. While the owner is away, what isn't
 urgent waits there as one "While you were away" message instead of a notification
 ([approvals.md](approvals.md#notifications)).
 
@@ -572,6 +576,13 @@ A taf keeps its own records (`set-up-a-taf@8`). When it works from the owner's s
 proposes that it adds and updates its own columns there (who it wrote to, replies, do not contact), with a
 tool that writes to the sheet on its Card. Coach asks only what only the owner knows, never how they
 track the work: the owner talks to Coach and never types into the sheet.
+
+A taf finds things by id, never by name (`set-up-a-taf@10`, `the-dial@5`). What it makes and uses
+again, such as a sheet, it keeps by the id the call gives back; an app's guide names those (its
+`returns`, such as `data.spreadsheetId`), and its instructions say so. For something that already
+exists, Coach asks the owner for its link, never its name: a search by name often needs more than the
+connection gives (a Sheets sign-in doesn't search Drive). When a place for results has no read on the
+taf's connection that lists places by name, Coach asks for the place's link and takes the id from it.
 
 ## A vendor the account already connects
 

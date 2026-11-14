@@ -1,0 +1,2 @@
+- „Odłóż” wysyła jedno żądanie na czat, jakkolwiek przesuniesz.
+- Połączona aplikacja zawsze otwiera się po dotknięciu. Jeśli nie da się odczytać jej połączeń, mówi dlaczego.

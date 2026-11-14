@@ -34,6 +34,11 @@ struct ConnectAppsView: View {
                 }
                 if !parts.discover.isEmpty {
                     Section {
+                        // Connecting needs a taf: said over the apps to connect, never over Yours.
+                        if ConnectRow.saysMakeATaf(discover: parts.discover, forTaf: taf != nil, connectable: model.connectableTafs) {
+                            Text(Words.Connect.appsConnectTafMakeOne)
+                                .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+                        }
                         if table, parts.yours.isEmpty { columns }
                         ForEach(parts.discover) { app in row(app) }
                     } header: { Text(Words.Connect.Apps.discover) }
@@ -52,10 +57,6 @@ struct ConnectAppsView: View {
                 }
             } else {
                 ProgressView().frame(maxWidth: .infinity)
-            }
-            if model.connectApps != nil, taf == nil, model.connectableTafs.isEmpty {
-                Text(Words.Connect.appsConnectTafMakeOne)
-                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
             }
         }
         .navigationTitle(Self.title)
@@ -84,20 +85,17 @@ struct ConnectAppsView: View {
         var id: String { start.grant }
     }
 
-    /// The table's header, on an iPad: the same widths as each row's cells.
+    /// The table's header, on an iPad: the same widths as each row's cells (`ConnectColumns`).
     private var columns: some View {
-        HStack(spacing: 12) {
-            Text(Words.Connect.Apps.columnApp).frame(maxWidth: .infinity, alignment: .leading)
-            Text(Words.Connect.Apps.columnHow).frame(width: Self.howWidth, alignment: .leading)
-            Text(Words.Connect.Apps.columnWhose).frame(width: Self.whoseWidth, alignment: .leading)
-            Text(Words.Connect.Apps.columnStatus).frame(width: Self.statusWidth, alignment: .leading)
+        ConnectColumns {
+            Text(Words.Connect.Apps.columnApp).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+            Text(Words.Connect.Apps.columnHow).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+            Text(Words.Connect.Apps.columnWhose).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+            Text(Words.Connect.Apps.columnStatus).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
         }
         .scaledFont(12, weight: .semibold, relativeTo: .caption).foregroundColor(Theme.dim)
         .accessibilityHidden(true)
     }
-    private static let howWidth: CGFloat = 150
-    private static let whoseWidth: CGFloat = 130
-    private static let statusWidth: CGFloat = 230
 
     /// One app: its connected apps open their detail (what it can read and do, which tafs use
     /// it, and Disconnect); the rest have a compact Connect.
@@ -117,10 +115,10 @@ struct ConnectAppsView: View {
     @ViewBuilder
     private func cells(_ app: TafsCloud.ConnectApps.App, _ said: ConnectRow) -> some View {
         if table {
-            HStack(spacing: 12) {
+            ConnectColumns {
                 name(app, said).frame(maxWidth: .infinity, alignment: .leading)
-                Text(said.how).scaledFont(14).foregroundColor(Theme.soft).frame(width: Self.howWidth, alignment: .leading)
-                Text(said.whose ?? "").scaledFont(14).foregroundColor(Theme.soft).frame(width: Self.whoseWidth, alignment: .leading)
+                Text(said.how).scaledFont(14).foregroundColor(Theme.soft).frame(maxWidth: .infinity, alignment: .leading)
+                Text(said.whose ?? "").scaledFont(14).foregroundColor(Theme.soft).frame(maxWidth: .infinity, alignment: .leading)
                 HStack(spacing: 8) {
                     if let setup = said.setup, !setup.isEmpty {
                         Text(setup).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).lineLimit(2)
@@ -133,7 +131,7 @@ struct ConnectAppsView: View {
                     Spacer(minLength: 4)
                     trailing(app)
                 }
-                .frame(width: Self.statusWidth, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             .frame(minHeight: 52)
         } else {
@@ -163,7 +161,10 @@ struct ConnectAppsView: View {
                 .frame(width: 24, height: 24)
                 .accessibilityHidden(true)
             }
+            // One line, never broken inside a word ("G m ail"): the table gives the name its room
+            // first, and a name longer than that is cut at its end, the last resort.
             Text(app.title).scaledFont(16, weight: .semibold).foregroundColor(app.needsSetup ? Theme.soft : Theme.ink)
+                .lineLimit(1).truncationMode(.tail)
                 .accessibilityIdentifier("connect.title." + app.entry)
         }
     }
@@ -204,6 +205,48 @@ struct ConnectAppsView: View {
     }
 }
 
+/// Connect apps' table on an iPad: App, How it connects, Whose and Status, the same widths in the
+/// header and every row. The App column is given its room first, so a name reads whole at an
+/// iPad's widths, portrait or landscape, beside a sidebar too; the other three give way down to
+/// their least, then the App column takes what is left.
+struct ConnectColumns: Layout {
+    static let spacing: CGFloat = 12
+    /// The App column's least: "Google Sheets" with its logo, at the default text size.
+    static let appLeast: CGFloat = 200
+    /// How it connects, Whose and Status: as wide as they like to be, and the least they give way to.
+    static let wide: [CGFloat] = [150, 130, 230]
+    static let least: [CGFloat] = [96, 84, 180]
+
+    /// The four columns' widths in `total`: App first, then How it connects, Whose and Status.
+    static func widths(_ total: CGFloat) -> [CGFloat] {
+        let room = max(0, total - spacing * 3)
+        let wideSum = wide.reduce(0, +)
+        if room - wideSum >= appLeast { return [room - wideSum] + wide }
+        // The three give way together, each in proportion to what it can give, so the App column keeps its least.
+        let leastSum = least.reduce(0, +)
+        let give = wideSum - leastSum
+        let need = min(give, appLeast - (room - wideSum))
+        let others = zip(wide, least).map { w, l in give > 0 ? w - (w - l) * need / give : w }
+        return [max(0, room - others.reduce(0, +))] + others
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let ideal = Self.appLeast + Self.wide.reduce(0, +) + Self.spacing * 3
+        let total = proposal.width.flatMap { $0.isFinite ? $0 : nil } ?? ideal
+        let widths = Self.widths(total)
+        let height = zip(subviews, widths).map { $0.sizeThatFits(ProposedViewSize(width: $1, height: nil)).height }.max() ?? 0
+        return CGSize(width: total, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX
+        for (view, width) in zip(subviews, Self.widths(bounds.width)) {
+            view.place(at: CGPoint(x: x, y: bounds.midY), anchor: .leading, proposal: ProposedViewSize(width: width, height: bounds.height))
+            x += width + Self.spacing
+        }
+    }
+}
+
 /// What a Connect apps row says, from tafs cloud's fields (the same as Android's): how it connects,
 /// whose it is, where it stands, and which tafs use it. Every word but the app's own is tafs
 /// cloud's or a shared key.
@@ -233,8 +276,33 @@ struct ConnectRow: Equatable {
     var second: String { setup ?? line ?? [how, whose, status, usedBy].compactMap { $0 }.joined(separator: " · ") }
 
     /// The person's own first (connected, or to sign in again), then the rest, each in tafs cloud's order.
+    /// An app under Yours isn't under Discover again in another of its catalog forms: Stripe connected
+    /// through a managed provider's entry (`connector:composio:stripe`) leaves out its reviewed entry
+    /// (`stripe@3`), and the other way round.
     static func split(_ apps: [TafsCloud.ConnectApps.App]) -> (yours: [TafsCloud.ConnectApps.App], discover: [TafsCloud.ConnectApps.App]) {
-        (apps.filter(\.yours), apps.filter { !$0.yours })
+        let yours = apps.filter(\.yours)
+        let had = Set(yours.flatMap(keys))
+        return (yours, apps.filter { !$0.yours && keys($0).isDisjoint(with: had) })
+    }
+
+    /// The names one app goes by across the catalog's forms, as tafs cloud matches them (`firstRank`
+    /// and `foldVendor` in runtime/src/cloud): its entry's last part without its version ("stripe" of
+    /// `stripe@3` and of `connector:composio:stripe`), and its vendor, each in lower case without
+    /// spaces, dots, dashes or underscores.
+    static func keys(_ app: TafsCloud.ConnectApps.App) -> Set<String> {
+        let last = app.entry.split(separator: ":").last.map(String.init) ?? app.entry
+        let slug = last.replacingOccurrences(of: #"@\d+$"#, with: "", options: .regularExpression)
+        return Set([slug, app.vendor].map(fold).filter { !$0.isEmpty })
+    }
+
+    private static func fold(_ name: String) -> String {
+        String(name.lowercased().filter { !$0.isWhitespace && !".-_".contains($0) })
+    }
+
+    /// "Make one first" shows over Discover only, where connecting needs a taf: there are apps to
+    /// connect, the list wasn't opened from a taf, and no taf can have them. Never over Yours.
+    static func saysMakeATaf(discover: [TafsCloud.ConnectApps.App], forTaf: Bool, connectable: [Taf]) -> Bool {
+        !discover.isEmpty && !forTaf && connectable.isEmpty
     }
 }
 
@@ -270,6 +338,11 @@ enum ConnectionFixWords {
 enum DisconnectWords {
     static let footer = Words.Connect.Apps.disconnectWhy
 
+    /// The footer speaks of "that taf": shown only to whoever manages Cards, and only when a
+    /// connection here is a taf's. With no taf, it applies to nothing.
+    static func showsFooter(manages: Bool, tafs: [AppModel.ConnectionGroup]) -> Bool {
+        manages && !tafs.isEmpty
+    }
 
     /// The question, naming the one taf it ends and `alsoStops`, the other tafs whose Card
     /// draws on its tools; the Face ID prompt asks the same.
@@ -412,7 +485,7 @@ struct AppConnectionsView: View {
                     Text(ConnectionGroupWords.others)
                 }
             }
-            if model.canManageCards {
+            if DisconnectWords.showsFooter(manages: model.canManageCards, tafs: groups.tafs) {
                 Section { } footer: { Text(DisconnectWords.footer) }
             }
             if model.lastErrorFrom == .disconnect, let error = model.lastError {

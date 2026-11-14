@@ -1,0 +1,1 @@
+- **tafs cloud: Coach chats kept as ended before kiff/agents could cancel them now end there too.** The sweep asks kiff/agents once more to cancel each, now that it cancels a chat paused only on cards; nothing is answered (docs/api.md).

@@ -273,7 +273,9 @@ export const STEP_WHYS_KEPT = 50;
  * vendor, until a request for that vendor goes through in the same run (`resolved`).
  */
 export type StepWhys = Array<{ call: string; tool: string; why: string; refusal?: string;
-  refused?: { vendor: string; key?: string; reason?: string; next: string }; resolved?: true }>;
+  refused?: { vendor: string; key?: string; reason?: string; next: string }; resolved?: true;
+  /** Refused for how Coach wrote the call (coachGuard): not made, never a failure, on every read as in the stream. */
+  not_made?: true }>;
 
 /**
  * Whether a request that went through connects what a kept refusal was for: the same server, description or
@@ -312,11 +314,13 @@ export function foldRetried<T extends { tool: string; error?: true; inputHash?: 
  */
 export const CONNECTION_TOOL = "planque";
 
-export function attachWhys<T extends { tool: string; error?: true }>(steps: T[], whys: StepWhys): Array<T & { failed?: true; why?: string; refused?: Refused }> {
+export function attachWhys<T extends { tool: string; error?: true }>(steps: T[], whys: StepWhys): Array<T & { failed?: true; why?: string; refused?: Refused; not_made?: true }> {
   return steps.map((s) => {
     if (!s.error) return s;
     const i = whys.findIndex((w) => w.tool === s.tool);
     const kept = i >= 0 ? whys.splice(i, 1)[0]! : undefined;
+    // Refused for how Coach wrote it: not made, as the stream said, never red.
+    if (kept?.not_made) { const { error: _e, ...rest } = s; return { ...(rest as T), not_made: true as const }; }
     const why = kept?.why;
     const refused = kept?.refused && !kept.resolved
       ? { words: kept.why, ...(kept.refused.reason ? { why: kept.refused.reason } : {}), next: kept.refused.next } : undefined;
@@ -396,7 +400,14 @@ export function coachGuard(text: unknown): boolean {
   const line = whyOf(text) ?? "";
   return /\b(read|check|list)\b[^.]*\b(catalog|tools?)\b[^.]*\bbefore\b/i.test(line) || /\bbefore (selecting|choosing|adding|asking for) (this|an|the) (action|tool)\b/i.test(line)
     // The request's own shape, as planque checks it ("fixed argument … must be a dotted path with a JSON value"): Coach wrote it.
-    || /\bargument\b[^.]*\b(?:is not a valid|must be|needs)\b|\bdotted path\b/i.test(line);
+    || /\bargument\b[^.]*\b(?:is not a valid|must be|needs)\b|\bdotted path\b/i.test(line)
+    // What a request takes, as planque says it ("reusing a managed app's sign-in takes agent, agent_name and tools: [] alone",
+    // "grant is planque's grant id"): Coach asked wrong and asks again, never the person's app (Android 85, 14 Nov).
+    || /\btakes\b[^.]*\balone\b/i.test(line) || /\bgrant is\b[^.]*\bgrant id\b/i.test(line)
+    // A tool Coach named that the catalog doesn't hold by that name ("the catalog has no tool named GMAIL_FETCH_EMAILS",
+    // "mcp.example.com lists no tool named …"): Coach looked it up wrong and looks again, never the person's app (14 Nov,
+    // Gmail: a red "Coach couldn't connect the app yet" over a sign-in that had worked).
+    || /\b(?:has|lists) no tool named\b/i.test(line);
 }
 
 /**

@@ -77,5 +77,83 @@ final class ConnectRowTests: XCTestCase {
         XCTAssertTrue(source.contains("} header: { Text(Words.Connect.Apps.yours) }"))
         XCTAssertTrue(source.contains("} header: { Text(Words.Connect.Apps.discover) }"))
         XCTAssertTrue(source.contains("if app.needsSetup {\n            // Not set up for anyone to connect yet"), "no Connect for an app to set up")
+        // The whole connected row is the tap target: its ✓ is a picture inside the link, not a button of its own.
+        XCTAssertTrue(source.contains("} else if app.connected {\n            Image(systemName: \"checkmark\")"),
+                      "the ✓ is part of the row's link, not a tap of its own")
+    }
+
+    /// An app under Yours isn't under Discover again in another catalog form (the iPad walk on 2279):
+    /// Stripe connected through the managed provider's entry leaves out its reviewed entry, matched by
+    /// the entry's last part without its version, or by vendor, as tafs cloud folds them.
+    func testAnAppUnderYoursIsntInDiscoverAgain() throws {
+        let list = try [
+            #"{"entry":"connector:composio:stripe","vendor":"stripe","title":"Stripe","state":"connected"}"#,
+            #"{"entry":"stripe@3","vendor":"Stripe","title":"Stripe","how":"key"}"#,
+            #"{"entry":"qonto-key@1","vendor":"qonto","title":"Qonto","how":"key","state":"needs_reconnect"}"#,
+            #"{"entry":"connector:composio:qonto","vendor":"qonto","title":"Qonto"}"#,
+            #"{"entry":"sheets@1","vendor":"Google Sheets","title":"Google Sheets","state":"connected"}"#,
+            #"{"entry":"connector:composio:googlesheets","vendor":"googlesheets","title":"Google Sheets"}"#,
+            #"{"entry":"connector:composio:gmail","vendor":"gmail","title":"Gmail"}"#,
+            #"{"entry":"connector:composio:stripe_atlas","vendor":"stripe_atlas","title":"Stripe Atlas"}"#,
+        ].map(app)
+        let parts = ConnectRow.split(list)
+        XCTAssertEqual(parts.yours.map(\.entry), ["connector:composio:stripe", "qonto-key@1", "sheets@1"])
+        XCTAssertEqual(parts.discover.map(\.entry), ["connector:composio:gmail", "connector:composio:stripe_atlas"],
+                       "each app once; another app whose name starts the same stays")
+        XCTAssertEqual(ConnectRow.keys(list[0]), ["stripe"])
+        XCTAssertEqual(ConnectRow.keys(list[2]), ["qontokey", "qonto"])
+    }
+
+    /// iPad's table gives the App column its room first, so "Gmail", "Google Sheets" or "LinkedIn"
+    /// read whole: the other columns as wide as they like while there's room, then giving way to
+    /// their least; the header and each row lay out the same; a name is one line.
+    func testTheAppColumnKeepsItsRoom() throws {
+        func check(_ total: CGFloat) -> [CGFloat] {
+            let w = ConnectColumns.widths(total)
+            XCTAssertEqual(w.count, 4)
+            XCTAssertEqual(w.reduce(0, +) + ConnectColumns.spacing * 3, total, accuracy: 0.5, "the columns fill the row at \(total)")
+            return w
+        }
+        // Landscape, or a wide portrait: the three at their widths, the App column takes the rest.
+        let wide = check(1000)
+        XCTAssertEqual(Array(wide.dropFirst()), ConnectColumns.wide)
+        XCTAssertEqual(wide[0], 1000 - 36 - 510)
+        // An iPad mini in portrait, or beside a sidebar: the three give way, the App column keeps its least.
+        for total in [700, 650, 620] as [CGFloat] {
+            let w = check(total)
+            XCTAssertEqual(w[0], ConnectColumns.appLeast, accuracy: 0.5, "at \(total)")
+            for (i, width) in w.dropFirst().enumerated() {
+                XCTAssertLessThanOrEqual(width, ConnectColumns.wide[i] + 0.5)
+                XCTAssertGreaterThanOrEqual(width, ConnectColumns.least[i] - 0.5)
+            }
+        }
+        // Narrower than any table should be: the three at their least, the App column what's left.
+        XCTAssertEqual(Array(check(500).dropFirst()), ConnectColumns.least)
+
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let source = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
+        XCTAssertEqual(source.components(separatedBy: "ConnectColumns {").count, 3, "the header and the rows, the same layout")
+        XCTAssertTrue(source.contains(".lineLimit(1).truncationMode(.tail)\n                .accessibilityIdentifier(\"connect.title.\" + app.entry)"),
+                      "a name on one line, never broken inside a word")
+    }
+
+    /// "Make one first" sits over Discover, where connecting needs a taf, and never over Yours: on an
+    /// account with no taf and only connected apps, it doesn't show at all.
+    func testMakeATafShowsOnlyOverAppsToConnect() throws {
+        let list = try [#"{"entry":"b","title":"B","state":"connected"}"#, #"{"entry":"a","title":"A"}"#].map(app)
+        let parts = ConnectRow.split(list)
+        let one = Taf(name: "Refunds", job: "Refunds", tools: [], colorIndex: 0, card: Card(rules: [], issuedBy: "You"))
+        XCTAssertTrue(ConnectRow.saysMakeATaf(discover: parts.discover, forTaf: false, connectable: []), "apps to connect, and no taf to have them")
+        XCTAssertFalse(ConnectRow.saysMakeATaf(discover: [], forTaf: false, connectable: []), "only Yours: nothing there needs a taf")
+        XCTAssertFalse(ConnectRow.saysMakeATaf(discover: parts.discover, forTaf: false, connectable: [one]), "a taf can have them")
+        XCTAssertFalse(ConnectRow.saysMakeATaf(discover: parts.discover, forTaf: true, connectable: []), "opened from a taf")
+
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let source = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
+        XCTAssertEqual(source.components(separatedBy: "Text(Words.Connect.appsConnectTafMakeOne)").count, 2, "said in one place")
+        let line = try XCTUnwrap(source.range(of: "Text(Words.Connect.appsConnectTafMakeOne)"))
+        let discover = try XCTUnwrap(source.range(of: "} header: { Text(Words.Connect.Apps.discover) }"))
+        let yours = try XCTUnwrap(source.range(of: "} header: { Text(Words.Connect.Apps.yours) }"))
+        XCTAssertTrue(yours.upperBound < line.lowerBound && line.upperBound < discover.lowerBound, "inside Discover's section, not Yours'")
     }
 }

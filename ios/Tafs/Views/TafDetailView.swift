@@ -78,7 +78,8 @@ struct TafDetailView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     header(taf)
                     if !folded { headerLine(taf) }
-                    Picker(Words.Taf.viewPicker, selection: $section) {
+                    // The person's change of tab ticks (Haptics); one made for them (the Card bar) doesn't.
+                    Picker(Words.Taf.viewPicker, selection: Binding(get: { section }, set: { Haptics.select(section, $0); section = $0 })) {
                         if model.canChat(taf.id) { Text(Words.Taf.Section.chat).tag(0) }
                         Text(Words.Taf.Section.activity).tag(1)
                         Text(Words.Taf.Section.card).tag(2)

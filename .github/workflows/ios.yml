@@ -512,10 +512,15 @@ jobs:
           # itself (-landscape), as simctl can't.
           shoot ipad-land-tafs -screenshots YES -tab tafs -landscape YES
           shoot ipad-land-setup -screenshots YES -tab tafs -screen setup -landscape YES
+          # The sidebar as a signed-in account has it: its screens, and Coach above the account.
+          shoot ipad-signed-in -screenshots YES -tab tafs -signedIn YES
+          shoot ipad-land-signed-in -screenshots YES -tab tafs -signedIn YES -landscape YES
           xcrun simctl ui "$DEVICE_ID" appearance dark
           shoot ipad-dark-tafs -screenshots YES -tab tafs
           shoot ipad-dark-setup -screenshots YES -tab tafs -screen setup
           shoot ipad-dark-land-taf -screenshots YES -tab tafs -screen taf -landscape YES
+          shoot ipad-dark-signed-in -screenshots YES -tab tafs -signedIn YES
+          shoot ipad-dark-land-signed-in -screenshots YES -tab tafs -signedIn YES -landscape YES
           xcrun simctl ui "$DEVICE_ID" appearance light
           ls -la "$RUNNER_TEMP/shots"
 

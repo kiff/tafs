@@ -20,6 +20,10 @@ export interface AccountConnection {
   api?: { url: string };
   status: string;
   mode_words?: string;
+  /** The day it was asked for (YYYY-MM-DD), as the connection server says it. */
+  since?: string;
+  /** The taf's name its request gave, as the connection server says it. */
+  agent_name?: string;
 }
 
 /** At most this many lines: a conversation's start stays small. */
@@ -52,6 +56,8 @@ export async function accountConnections(fetchFn: Fetch, base: string, tenant: s
       ...(typeof c.entry === "string" && c.entry ? { entry: line(c.entry, 300) } : {}),
       ...(api && api.url.startsWith("https://") ? { api: { url: line(api.url, 300) } } : {}),
       ...(typeof c.mode_words === "string" && c.mode_words ? { mode_words: line(c.mode_words, 120) } : {}),
+      ...(typeof c.since === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.since) ? { since: c.since } : {}),
+      ...(typeof c.agent_name === "string" && line(c.agent_name, 100) ? { agent_name: line(c.agent_name, 100) } : {}),
     });
   }
   return out;
@@ -184,4 +190,71 @@ export async function endConnections(fetchFn: Fetch, base: string, tenant: strin
     kept: list(got.kept).map((k) => ({ vendor: line(k.vendor, 60) || "an app",
       used_by: (Array.isArray(k.used_by) ? k.used_by : []).filter((u): u is string => typeof u === "string").map((u) => line(u, 60)).filter(Boolean) })),
   };
+}
+
+/**
+ * A KIFF agent id with the suffix a taf's agent gets when it's made ("news-digest-k3f9x2ab"): eight letters and
+ * digits with a digit among them, so an ordinary word ("follow-up-invoices") is never taken for one.
+ */
+const SUFFIXED = /^(.+)-([a-z0-9]{8})$/;
+const baseOf = (agent: string) => {
+  const m = SUFFIXED.exec(agent);
+  return m && /\d/.test(m[2]!) ? m[1] : undefined;
+};
+
+/** Whether a and b are the same agent name, one with its generated suffix and one without. */
+export function otherForm(a: string, b: string): boolean {
+  return a !== b && ((baseOf(a) !== undefined && baseOf(a) === b && baseOf(b) === undefined) || (baseOf(b) !== undefined && baseOf(b) === a && baseOf(a) === undefined));
+}
+
+/**
+ * The agents a taf's connections were asked under. Its KIFF agent; and for a taf whose agent and connections were
+ * named apart (made before its agent carried the suffix its connections were asked under, or the reverse), the other
+ * form of the same name, when every connection under it was asked for this same taf (its `agent_name`), and never a
+ * live taf's own. 13 Nov: a taf on `news-digest` (a made-up name) was removed and its connection, asked under
+ * `news-digest-k3f9x2ab` for the same taf, was never ended.
+ */
+export function connectionAgents(kiffAgent: string, tafName: string, conns: AccountConnection[], live: Set<string>): string[] {
+  const out = [kiffAgent];
+  const name = tafName.trim();
+  const byAgent = new Map<string, AccountConnection[]>();
+  for (const c of conns) byAgent.set(c.agent, [...(byAgent.get(c.agent) ?? []), c]);
+  for (const [a, cs] of byAgent) {
+    if (a === kiffAgent || live.has(a) || !otherForm(a, kiffAgent)) continue;
+    if (name && cs.every((c) => c.agent_name === name)) out.push(a);
+  }
+  return out;
+}
+
+/**
+ * Whether an agent is a removed taf's: KIFF reports it archived for the account; or it is the other form of an
+ * archived agent's name and was asked for on or before that agent's archive day (`askedOn`, YYYY-MM-DD or an ISO
+ * time), so a new taf re-made under the same name, its draft agent not live yet, is never taken for the removed one.
+ * Never one a live taf runs as. A draft, an approval or a hand-over onto it is refused.
+ */
+export function removedAgent(agent: string, archived: Map<string, string>, live: Set<string>, askedOn?: string): boolean {
+  if (!agent || live.has(agent)) return false;
+  if (archived.has(agent)) return true;
+  if (!askedOn) return false;
+  // A full time (a grant's created_at) is compared with the archive's time: a taf removed at 21:26 and made again at
+  // 22:00 is its own. A day alone (a connection's since) is compared by day.
+  const full = askedOn.length > 10 && !Number.isNaN(Date.parse(askedOn));
+  return [...archived].some(([k, at]) => otherForm(agent, k) && typeof at === "string"
+    && (full ? Date.parse(askedOn) <= Date.parse(at) : askedOn.slice(0, 10) <= at.slice(0, 10)));
+}
+
+/**
+ * The agents holding connections that a removed taf left behind, for the sweep to end: only agents KIFF reports
+ * archived for this account, or the other form of one, never a live taf's (nor the other form of a live taf's
+ * name), and never one asked yesterday or today. An agent tafs cloud can't show was a taf of this account (one made
+ * elsewhere, or a draft whose taf isn't made yet) is never swept.
+ */
+export function leftoverAgents(conns: AccountConnection[], live: Set<string>, archived: Map<string, string>, now: Date): string[] {
+  const before = new Date(now.getTime() - 24 * 3600_000).toISOString().slice(0, 10);
+  const byAgent = new Map<string, AccountConnection[]>();
+  for (const c of conns) byAgent.set(c.agent, [...(byAgent.get(c.agent) ?? []), c]);
+  return [...byAgent.entries()]
+    .filter(([a, cs]) => ![...live].some((k) => otherForm(a, k))
+      && cs.every((c) => c.since !== undefined && c.since < before && removedAgent(a, archived, live, c.since)))
+    .map(([a]) => a);
 }

@@ -42,6 +42,10 @@ export interface ApprovalGrant {
   request: { agent?: string; server?: string; profile?: unknown; tools?: Array<{ tool?: string; name?: string; title?: string; read_only?: boolean; setup_reads?: boolean }> } & Record<string, unknown>;
   /** The tools it had before the addition that waits now: a connected grant whose new tools wait for their approval. */
   connected?: unknown[];
+  /** planque holds a confirmed sign-in for it (a reused one, or one made earlier): approving its tools needs no sign-in. */
+  signed_in?: boolean;
+  /** Its tools are declared in KIFF while they wait for approval, so a Card can be drafted and confirmed over them. */
+  declared?: boolean;
 }
 
 /**
@@ -280,6 +284,8 @@ export function approvalWords(lang: Lang = "en") {
     nothingToApprove: w.approval_nothing_new,
     digestMismatch: w.approval_digest_mismatch,
     noGrant: w.approval_no_grant,
+    removedTafsConnection: w.approval_removed_tafs_connection,
+    otherTafsConnection: w.approval_other_tafs_connection,
     cardsNotIssued: w.approval_cards_not_issued,
     connectedCardNext: w.approval_connected_card_next,
     draftIs: (status: string) => w.approval_draft_is(w.approval_status(status)),
@@ -294,9 +300,10 @@ export function approvalWords(lang: Lang = "en") {
     windowClosed: w.approval_window_closed,
     signInClosed: w.approval_sign_in_closed,
     noCode: w.approval_no_code,
-    cameBack: (status: string) => w.approval_came_back(w.approval_status(status)),
+    // What came back, in the owner's words, never planque's status: already signed in (its actions come next), or nothing opened.
+    cameBack: (vendor: string, status: string) => (status === "signed_in" || status === "listed" ? w.approval_came_back_signed_in(vendor) : w.approval_came_back(vendor)),
     confirmFirst: w.approval_confirm_first,
-    notConnected: (vendor: string, status: string) => w.approval_not_connected(vendor, w.approval_status(status)),
+    notConnected: (vendor: string) => w.approval_not_connected(vendor),
     failed: (why?: string) => w.approval_failed(why ?? w.approval_failed_default),
     reasonConnect: (vendor: string, taf?: string) => (taf ? w.approval_reason_connect(vendor, taf) : w.approval_reason_connect_unnamed(vendor)),
     reasonCard: (taf?: string) => (taf ? w.approval_reason_card(taf) : w.approval_reason_card_unnamed),
@@ -371,8 +378,13 @@ async function nameOf(ctx: DecideContext, agent: string | undefined, ...given: A
   return [name, ...given].map((n) => (typeof n === "string" ? n.trim() : "")).find((n) => n !== "") || undefined;
 }
 
-/** The app as the owner knows it ("Stripe" for mcp.stripe.com), for the phone's signing prompt: its server's name, else the grant's vendor. */
+/**
+ * The app as the owner knows it ("Stripe" for mcp.stripe.com), for the phone's signing prompt: its server's name, else
+ * the grant's vendor. A managed app's server is the sign-in partner's, never the app: its name is the grant's vendor
+ * ("Gmail"), as planque keeps it, so the partner's name never reaches the prompt.
+ */
 function appNameOf(g: ApprovalGrant): string {
+  if (g.request.kind === "connector") return typeof g.vendor === "string" ? g.vendor.trim() : "";
   const server = typeof g.request.server === "string" ? g.request.server.trim() : "";
   return vendorName(server) || (server && !server.includes("://") ? vendorName(`https://${server}/`) : "") || g.vendor || "";
 }
@@ -424,6 +436,36 @@ export interface DecideContext {
   lang?: Lang;
   /** A taf's name by its KIFF agent, as its owner reads it: what the phone's signing prompt names, never the agent id. */
   tafName?: (agent?: string) => Promise<string | undefined>;
+  /**
+   * Whether an agent is a removed taf's (connections.ts `removedAgent`): archived in KIFF, or the other form of an
+   * archived agent's name, and no live taf runs as it. Unset, or unable to read, it says no: nothing is refused on a
+   * read that failed.
+   */
+  removedAgent?: (agent: string, askedOn?: string) => Promise<boolean>;
+}
+
+/**
+ * An approval that would sign over the wrong agent is refused before anything is signed: a grant asked for a taf
+ * that was removed (its connection still held), or a Card drafted for another agent than the grant's. 14 Nov: one
+ * fingerprint signed a removed taf's Gmail connection with a new taf's Card, and the new taf ran as the removed one.
+ * Coach hears what to do instead: connect the app for this taf, reusing the sign-in on a new request.
+ */
+async function agentRefusal(ask: ApprovalAsk, grant: ApprovalGrant, vendor: string, ctx: DecideContext): Promise<Decision | undefined> {
+  const W = approvalWords(ctx.lang);
+  const agent = typeof grant.request.agent === "string" ? grant.request.agent : "";
+  const askedOn = typeof (grant.request as { created_at?: unknown }).created_at === "string" ? (grant.request as { created_at: string }).created_at : undefined;
+  if (agent && ctx.removedAgent && await ctx.removedAgent(agent, askedOn).catch(() => false)) {
+    return { outcome: "answered", note: W.removedTafsConnection(vendor),
+      answer: `failed: this ${vendor} connection was asked for a taf that was removed, so it can't be approved for another; request ${vendor} again for this taf (reuse its sign-in with a new request), never this grant` };
+  }
+  if (ask.draft && agent) {
+    const draft = await draftInfo(ctx.token, ask.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now).catch(() => undefined);
+    if (draft?.agent && draft.agent !== agent) {
+      return { outcome: "answered", note: W.otherTafsConnection(vendor),
+        answer: `failed: the Card draft is for another taf than this ${vendor} connection's; show an approval with this taf's own grant and its draft` };
+    }
+  }
+  return undefined;
 }
 
 /** The steps a phone signs for an approval card. */
@@ -438,17 +480,30 @@ export function stepFor(grant: ApprovalGrant, ask: { draft?: string; can?: strin
   if (grant.status === "connected") return ask.draft ? "cards" : undefined;
   if (grant.status === "listed" && !ask.draft) return undefined;
   if (!APPROVABLE.has(grant.status)) return undefined;
-  // A connected grant's added tools with the Card's draft over them: one fingerprint (docs/secure-connection.md).
-  if (flags.toolsAndCards && ask.can?.includes("tools_and_cards") && !takesKey(grant) && grant.status === "pending" && Array.isArray(grant.connected) && grant.connected.length > 0 && ask.draft) return "tools_and_cards";
+  // Tools that wait on a sign-in planque already holds, with the Card's draft over them: one fingerprint
+  // (docs/secure-connection.md). A connected grant's added tools, or a held sign-in's first tools (one reused for
+  // another taf), declared in KIFF meanwhile: the approve connects at once, with no sign-in between the two halves.
+  const added = Array.isArray(grant.connected) && grant.connected.length > 0;
+  // Only for a phone that draws the card by its mark (`can: signs`): one that draws the Card only for a connected
+  // grant would sign it unseen here, and builds already in people's hands don't update with this rule.
+  const heldFirst = grant.signed_in === true && grant.declared === true && ask.can?.includes("signs") === true;
+  if (flags.toolsAndCards && ask.can?.includes("tools_and_cards") && !takesKey(grant) && grant.status === "pending" && (added || heldFirst) && ask.draft) return "tools_and_cards";
   // A key grant whose Card is drafted already: the key and the Card under one fingerprint.
   if (flags.keyAndCards && ask.can?.includes("key_and_cards") && takesKey(grant) && ask.draft) return "key_and_cards";
   return "connect";
 }
 
-/** What an approval card's fingerprint will sign, for the apps to draw before Approve: the Card, or the connection alone. */
-export function signsOf(step: SignStep, draft: string | undefined, lang: Lang = "en"): { card: boolean; words?: string } {
+/**
+ * What an approval card's fingerprint will sign, for the apps to draw before Approve: the Card, or the connection alone.
+ * The connection alone says the Card comes next (`words`) when the card carries the Card's draft, or when it's an app's
+ * first connection, before its tools: a Card always follows that one (its draft can only be made over the tools the
+ * sign-in brings), so the owner knows a second approval is coming. Never on a sign-in again (its Card is in force) or
+ * on tools added to a connected app with no draft.
+ */
+export function signsOf(step: SignStep, draft: string | undefined, lang: Lang = "en", grant?: Pick<ApprovalGrant, "status" | "connected">): { card: boolean; words?: string } {
   const card = step !== "connect";
-  return { card, ...(!card && draft ? { words: wordsIn(lang).approval_card_next } : {}) };
+  const first = !!grant && grant.status !== "needs_reconnect" && !(Array.isArray(grant.connected) && grant.connected.length > 0);
+  return { card, ...(!card && (draft || first) ? { words: wordsIn(lang).approval_card_next } : {}) };
 }
 
 /**
@@ -461,6 +516,8 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   const grant = grants.find((g) => g.id === ask.grant);
   if (!grant) return { outcome: "answered", answer: `failed: ${W.noGrant}`, note: W.noGrant };
   const vendor = vendorOf(grant);
+  const refused = await agentRefusal(ask, grant, vendor, ctx);
+  if (refused) return refused;
   // The same taf's other connections: a Card may cover their tools too (two apps, one Card).
   const sameTaf = grants.filter((g) => g.id !== grant.id && g.request.agent && g.request.agent === grant.request.agent && !["failed", "disconnected", "revoked"].includes(g.status));
   // A grant asking for something again (tools added once connected) loses its "connected" note, so its card shows what it asks.
@@ -671,7 +728,7 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
     if (connected) await noteConnected(ctx.store, ctx.tenant, grant!, ctx.now);
     if (connected && draft && issued(draft.status)) return { answer: "approved" };
     if (!connected) {
-      const why = report.result === "failed" && report.why ? W.failed(report.why) : W.notConnected(pending.vendor, grant?.status ?? "unknown");
+      const why = report.result === "failed" && report.why ? W.failed(report.why) : W.notConnected(pending.vendor);
       return { answer: `failed: ${why}`, note: why };
     }
     const why = report.result === "failed" && report.why ? report.why : draft ? W.draftIs(draft.status) : W.noDraft;
@@ -725,9 +782,9 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
     case "sign_in_closed": why = W.signInClosed; break;
     case "no_code": why = W.noCode(vendor); break;
     // planque's approve came back with no sign-in link and not connected: its status, as it answered.
-    case "not_connected": why = W.cameBack(report.status ?? grant?.status ?? "unknown"); break;
+    case "not_connected": why = W.cameBack(vendor, report.status ?? grant?.status ?? "unknown"); break;
     case "failed": why = W.failed(report.why); break;
-    default: why = W.notConnected(vendor, grant?.status ?? "unknown");
+    default: why = W.notConnected(vendor);
   }
   return { answer: `failed: ${why}`, note: why };
 }

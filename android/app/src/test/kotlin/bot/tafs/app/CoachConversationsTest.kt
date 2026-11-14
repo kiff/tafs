@@ -182,6 +182,26 @@ class CoachConversationsTest {
     assertEquals(listOf("s3", "s4"), m.state.value.coachChats.map { it.session })
   }
 
+  // An audit, 14 Nov: a chat set aside on another install came back as the open conversation.
+  @Test fun aChatSetAsideIsNeverOpenedAsTheNewest() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, """{"chats":[{"session":"s3","started":"2026-10-26T09:00:00Z","updated":"2026-10-26T10:00:00Z","title":"Refunds"},{"session":"s4","started":"2026-10-27T09:00:00Z","updated":"2026-10-27T10:00:00Z","title":"Chargebacks","set_aside":true}]}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation/s3", 200, """{"messages":[{"at":"2026-10-26T09:00:00Z","from":"owner","text":"Set up Refunds","session":"s3"}]}""")
+    val m = model()
+    m.loadChat(COACH_CHAT)
+    assertEquals("s3", m.state.value.coachChat)
+  }
+
+  @Test fun withEveryChatSetAsideCoachOpensANewConversation() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, """{"chats":[{"session":"s4","started":"2026-10-27T09:00:00Z","updated":"2026-10-27T10:00:00Z","title":"Chargebacks","set_aside":true}]}""")
+    val m = model()
+    m.loadChat(COACH_CHAT)
+    assertNull(m.state.value.coachChat)
+    assertTrue(m.state.value.coachFresh)
+    assertTrue(transport.requestsTo("GET /v1/tafs/setup_1/conversation/s4").isEmpty())
+  }
+
   @Test fun withNoConversationYetCoachsThreadReadsAsBefore() = runTest {
     reads()
     transport.answer("GET /v1/tafs/setup_1/chats", 200, """{"chats":[]}""")

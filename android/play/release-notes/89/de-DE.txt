@@ -1,0 +1,3 @@
+- Eine verbundene App öffnet sich, wo du auch auf ihre Zeile tippst.
+- Ohne taf bietet eine App „Coach fragen“ an, wo du einen erstellst.
+- Nachdem du einen Coach-Chat beiseitegelegt hast, beginnt Coach ein neues Gespräch.

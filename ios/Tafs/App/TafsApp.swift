@@ -108,8 +108,14 @@ struct RootView: View {
                 // The bar's tabs, each kept as it was left once opened; the bar along the
                 // foot on a phone, a rail down the left on a wide screen (the taf layout).
                 let rail = sizeClass == .regular
+                if rail {
+                    // On an iPad's full width, one sidebar for the whole app (the owner's layout):
+                    // the mascot and its name at the top, every screen as an item, the tafs, and
+                    // Coach and the account at its foot. The tabs open beside it.
+                    HomeSplitView(tab: $tab, coachAvailable: coachAvailable || Screenshots.signedIn)
+                        .onChange(of: tab) { _ = opened.insert($0); DriveWaits.emit("screen_shown") }
+                } else {
                 HStack(spacing: 0) {
-                    if rail { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: true) }
                     // Below the tabs, not over them: a screen's own foot (a chat's field) stays
                     // above the bar.
                     VStack(spacing: 0) {
@@ -124,10 +130,11 @@ struct RootView: View {
                             }
                         }
                         // Off while the keyboard is up, as a tab bar is.
-                        if !rail && !keyboardUp { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: false) }
+                        if !keyboardUp { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: false) }
                     }
                 }
                 .onChange(of: tab) { _ = opened.insert($0); DriveWaits.emit("screen_shown") }
+                }
             } else {
                 OnboardingView()
             }
