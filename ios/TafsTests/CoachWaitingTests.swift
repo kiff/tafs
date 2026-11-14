@@ -181,6 +181,62 @@ final class CoachWaitingTests: XCTestCase {
                       "checked and marked before anything is awaited")
     }
 
+    /// A row being set aside isn't drawn while tafs cloud answers, and the badge leaves it out (as
+    /// Android 94): drawn on, it sprang back and looked untouched, so the person swiped again. A
+    /// refusal brings it back with tafs cloud's words; once set aside, it stays gone. Set all aside
+    /// hides every row it covers the same way.
+    func testARowBeingSetAsideIsHiddenUntilTafsCloudAnswers() async throws {
+        let model = await signedIn([Self.row1, Self.row2], clear: Self.clear)
+        XCTAssertEqual(model.needsYouCount, 2)
+
+        // Refused: hidden while held, then back with why.
+        StubProtocol.responses["POST /v1/home/coach-waiting/s1/set-aside"] = (409, #"{"error":"no Coach chat of yours waits by that id","words":"That chat no longer waits on you."}"#)
+        StubProtocol.holdOnce = "POST /v1/home/coach-waiting/s1/set-aside"
+        let refused = Task { await model.setAsideCoach("s1") }
+        await untilHeldRequestArrives()
+        XCTAssertEqual(model.coachWaiting.map(\.session), ["s2"], "not drawn while in flight")
+        XCTAssertEqual(model.needsYouCount, 1, "and the badge leaves it out")
+        // A Home read meanwhile doesn't draw it again.
+        model.show(try home("[\(Self.row1),\(Self.row2)]"), [])
+        XCTAssertEqual(model.coachWaiting.map(\.session), ["s2"])
+        XCTAssertEqual(model.needsYouCount, 0, "tafs cloud's 1, less the row in flight")
+        StubProtocol.release.signal()
+        let wasRefused = await refused.value
+        XCTAssertFalse(wasRefused)
+        XCTAssertEqual(model.coachWaiting.map(\.session), ["s1", "s2"], "refused: back")
+        XCTAssertEqual(model.lastError, "That chat no longer waits on you.", "with tafs cloud's words")
+
+        // Taken: hidden while held, and gone after.
+        let taken = await signedIn([Self.row1, Self.row2], clear: Self.clear)
+        StubProtocol.responses["POST /v1/home/coach-waiting/s1/set-aside"] = (200, #"{"set_aside":["s1"],"withdrawn":0}"#)
+        StubProtocol.holdOnce = "POST /v1/home/coach-waiting/s1/set-aside"
+        let done = Task { await taken.setAsideCoach("s1") }
+        await untilHeldRequestArrives()
+        XCTAssertEqual(taken.coachWaiting.map(\.session), ["s2"])
+        XCTAssertEqual(taken.needsYouCount, 1)
+        StubProtocol.responses["GET /v1/home"] = (200, Self.homeJSON([Self.row2]))
+        StubProtocol.release.signal()
+        let wasTaken = await done.value
+        XCTAssertTrue(wasTaken)
+        XCTAssertEqual(taken.coachWaiting.map(\.session), ["s2"], "set aside: stays gone")
+        XCTAssertEqual(taken.needsYouCount, 1)
+
+        // Set all aside: every row it covers is hidden while in flight, and the count never goes below 0.
+        let all = await signedIn([Self.row1, Self.row2], clear: Self.clear)
+        StubProtocol.responses["POST /v1/home/coach-waiting/set-aside"] = (409, #"{"error":"busy","words":"Try again in a moment."}"#)
+        StubProtocol.holdOnce = "POST /v1/home/coach-waiting/set-aside"
+        let every = Task { await all.setAsideCoach(nil) }
+        await untilHeldRequestArrives()
+        XCTAssertTrue(all.coachWaiting.isEmpty, "none drawn while in flight")
+        XCTAssertNil(all.setAllAside)
+        XCTAssertEqual(all.needsYouCount, 0)
+        StubProtocol.release.signal()
+        let allSet = await every.value
+        XCTAssertFalse(allSet)
+        XCTAssertEqual(all.coachWaiting.map(\.session), ["s1", "s2"], "refused: both back")
+        XCTAssertEqual(all.needsYouCount, 2)
+    }
+
     /// A refusal keeps the row and says why, in tafs cloud's words, with a warning; set aside, it's
     /// a success tick, and never Face ID: it's "not now", never an approval.
     func testARefusalKeepsTheRowAndSaysWhy() async throws {
