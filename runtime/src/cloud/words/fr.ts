@@ -92,6 +92,7 @@ export const fr: Words = {
   connect_again_words: (app: string, taf: string) => `La connexion à ${app} a expiré, donc ${taf} ne peut plus l'utiliser. Reconnectez-vous pour vous identifier.`,
   connect_again_done: (app: string, taf: string) => `${app} est de nouveau connecté. ${taf} peut l'utiliser.`,
   check_key_not_ready: "sa clé n'était pas encore prête ; il vérifie de nouveau la prochaine fois",
+  check_dropped: "Sa vérification n'a pas pu lire l'app, il tourne donc à ses heures sans vérification pour l'instant. Coach peut corriger la vérification.",
   approval_cards_unread: "La Card n'a pas encore pu être vérifiée. Relisez-la, puis approuvez.",
   approval_uncovered: (tool: string) => `Cette Card ne couvre pas « ${tool} », que le taf a reçu : chacun de ses appels serait refusé. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_stray: (tool: string) => `Cette Card permettrait aussi au taf d'utiliser « ${tool} », qu'aucune de ses connexions ne lui donne. Rien n'a été approuvé. Coach la rédige à nouveau.`,

@@ -363,6 +363,8 @@ export interface Taf {
    * result, or a dial version once live. Absent on a taf from before, whose schedules wake it every time.
    */
   check?: Check;
+  /** Its first check couldn't read the app, so its schedule runs as plain timing without one: when, and why. */
+  checkDropped?: { at: string; why: string };
   /**
    * Its tools in KIFF, as Coach's results named them (the taf's, then each improvement's): what a dial's check
    * may read when no Card can be read with the person's session (Coach's taf_dial). Absent on a taf from before.
@@ -1427,7 +1429,7 @@ async function start(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<un
 }
 
 /** POST /v1/tafs's work, for the person me: from their request, or from a result tafs cloud hands over for them. */
-async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: Deps, lang?: Lang, token?: string): Promise<{ taf: unknown; session: string | null; outcome?: string; words?: string; reason?: string; plan_needed?: { words: string } }> {
+async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: Deps, lang?: Lang, token?: string): Promise<{ taf: unknown; session: string | null; outcome?: string; words?: string; reason?: string; check_dropped?: boolean; plan_needed?: { words: string } }> {
   let name = str(body.name).trim();
   if (!name || name.length > MAX_NAME) throw new HTTPError(400, `give the taf a name of ${MAX_NAME} characters at most`);
   // Setup's word that the taf's tools can't find its work (kiff/tafs#138): no
@@ -1620,9 +1622,38 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
     }
     throw new HTTPError(502, `${name} is started, but its first ${workCheck ? "check" : "run"} didn't start (${(err as Error).message}). Run it now from the app`);
   }
+  // A first check that couldn't read the app (not a key still being stored) never leaves the taf waiting for its
+  // owner to write: its schedule stays, as plain timing without the check, and the answer says so in plain words.
+  // 14 Nov: a Gmail taf's check named a list its read doesn't have, and it would never have run on its own.
+  if (!("session" in fired) && fired.outcome === "failed_check" && !fired.keyNotStored && workCheck) {
+    const kept = await keepScheduleWithoutCheck(me.tenantID, taf, { cron, timezone, kickoff: job.kickoff }, fired.reason ?? "", deps);
+    if (kept) {
+      const W = wordsIn(lang ?? ownerLang);
+      return { taf: await view(kept, me, deps), session: null, outcome: "failed_check", check_dropped: true, words: W.check_dropped, ...(fired.reason ? { reason: fired.reason } : {}) };
+    }
+  }
   // A first check that started no run says why (quiet, halted, a read that failed…): the taf is made all the same.
   if (!("session" in fired)) return { taf: await view(taf, me, deps), ...noRun(fired, lang ?? ownerLang) };
   return { taf: await view(taf, me, deps), session: fired.session };
+}
+
+/**
+ * A new taf's schedule, kept as plain timing when its first check couldn't read the app: the same cron and zone, no
+ * check, so it runs at its times rather than wait for its owner to write. Its record keeps why, for Coach and the apps.
+ * Undefined when the schedule couldn't be written: the taf is then answered as before, with the check's reason.
+ */
+async function keepScheduleWithoutCheck(tenant: string, taf: Taf, when: { cron: string; timezone: string; kickoff: string }, why: string, deps: Deps): Promise<Taf | undefined> {
+  try {
+    await deps.agents.updateSchedule(tenant, { id: taf.id, agent: taf.id, cron: when.cron, time_zone: when.timezone, input: when.kickoff, enabled: true });
+    const kept: Taf = { ...taf, check: undefined, checkDropped: { at: (deps.now?.() ?? new Date()).toISOString(), why: why.slice(0, 500) } };
+    await deps.tafs.put(tenant, kept);
+    console.log(JSON.stringify({ event: "first_check_dropped", taf: taf.id }));
+    await tellChange(tenant, "taf", taf.id, deps);
+    return kept;
+  } catch (err) {
+    console.error(`first check dropped ${taf.id}: ${(err as Error).message}`);
+    return undefined;
+  }
 }
 
 /** Where tafs cloud keeps the tafs whose first run waits for a plan: one list per account. */
@@ -1719,7 +1750,7 @@ async function fireFirst(tenant: string, id: string, deps: Deps, lang: Lang): Pr
     if (i >= FIRST_CHECK_TRIES) {
       // The plain words replace the store's reason in the answer; the log keeps it, to diagnose.
       console.warn(JSON.stringify({ msg: "first check: key still not stored", tenant, schedule: id, tries: i, reason: fired.reason ?? "" }));
-      return { outcome: fired.outcome, reason: wordsIn(lang).check_key_not_ready };
+      return { outcome: fired.outcome, reason: wordsIn(lang).check_key_not_ready, keyNotStored: true };
     }
     await wait(FIRST_CHECK_WAIT_MS * i);
   }
@@ -8629,7 +8660,9 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
     // it reads with the owner's next message: Coach drafted that check, and fixes it.
     if (out.outcome === "failed_check" && deps.coach) {
       const at = deps.now?.() ?? new Date();
-      const line = `[taf ${taf.name ?? id} first check] The taf is set up, but its first check couldn't read: ${out.reason ?? "no reason given"}; fix the check with taf_dial.`;
+      const line = out.check_dropped
+        ? `[taf ${taf.name ?? id} first check] The taf is set up and runs at its set times without its check for now, since its first check couldn't read: ${out.reason ?? "no reason given"}; fix the check with taf_dial.`
+        : `[taf ${taf.name ?? id} first check] The taf is set up, but its first check couldn't read: ${out.reason ?? "no reason given"}; fix the check with taf_dial.`;
       await deps.coach.append(coachKeys.notes(tenant, me.subject), { at: at.toISOString(), text: line, taf: taf.name ?? id, taf_id: id, said: out.words ?? "" },
         new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${id} first check:`, err));
       // Said in the answer too, so Coach's closing message never calls the taf working (A4).

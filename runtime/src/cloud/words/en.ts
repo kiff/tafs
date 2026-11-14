@@ -99,6 +99,7 @@ export const en = {
   connect_again_done: (app: string, taf: string) => `${app} is connected again. ${taf} can use it.`,
   /** A first check that ran before the taf's key was stored: said in place of the store's own words. */
   check_key_not_ready: "its key wasn't ready yet; it checks again at its next time",
+  check_dropped: "Its check couldn't read the app, so it runs at its set times without the check for now. Coach can fix the check.",
   approval_cards_unread: "The Card couldn't be checked yet. Read it again, then approve.",
   approval_uncovered: (tool: string) => `This Card doesn't cover "${tool}", which the taf was given, so every call of it would be refused. Nothing was approved. Coach drafts it again.`,
   approval_stray: (tool: string) => `This Card would also let the taf use "${tool}", which no connection of it gives. Nothing was approved. Coach drafts it again.`,

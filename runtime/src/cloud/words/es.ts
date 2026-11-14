@@ -92,6 +92,7 @@ export const es: Words = {
   connect_again_words: (app: string, taf: string) => `El inicio de sesión de ${app} ha caducado, así que ${taf} no puede usarlo. Conecta de nuevo para iniciar sesión.`,
   connect_again_done: (app: string, taf: string) => `${app} vuelve a estar conectado. ${taf} puede usarlo.`,
   check_key_not_ready: "su clave aún no estaba lista; vuelve a comprobarlo la próxima vez",
+  check_dropped: "Su comprobación no pudo leer la app, así que por ahora se ejecuta a sus horas sin comprobación. Coach puede arreglarla.",
   approval_cards_unread: "La Card aún no se pudo comprobar. Vuelve a leerla y luego apruébala.",
   approval_uncovered: (tool: string) => `Esta Card no cubre «${tool}», que el taf recibió, así que cada llamada se rechazaría. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_stray: (tool: string) => `Esta Card también dejaría al taf usar «${tool}», que ninguna conexión suya le da. No se aprobó nada. Coach la redacta de nuevo.`,

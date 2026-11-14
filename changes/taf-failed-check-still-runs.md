@@ -1,0 +1,1 @@
+- A new taf whose first check couldn't read the app keeps its schedule as plain timing, without the check, so it runs at its set times rather than wait for its owner to write. The answer says so in plain words (8 languages), the taf's record keeps why, and Coach hears it to fix the check. A key still being stored isn't such a failure: it's tried again, as before.
