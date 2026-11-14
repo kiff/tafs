@@ -6,14 +6,17 @@ import type { SessionEvent } from "./agents.js";
  * a check it hasn't seen read, but copied a skill's example path (`data.messages`) that the app's answer doesn't have,
  * and every Gmail taf's first check failed (14 Nov). So the hand-over says it, with the paths the reads do have.
  *
- * Undefined when the check fits, or when no read in the conversation answered JSON (nothing to judge by): the first
- * check still tells then. Otherwise the words for Coach.
+ * Undefined when the check fits, when no read in the conversation answered JSON (nothing to judge by), or when any read
+ * answered text that isn't whole JSON: kiff/agents cuts a long answer (32 KB), and a cut list read may be the very one
+ * that has the list, so nothing is judged by the reads left (kiff-qa on this guard). The first check still tells then.
+ * Otherwise the words for Coach.
  */
 export function checkMisfitSeen(events: SessionEvent[], check: unknown): string | undefined {
   const items = typeof (check as { items?: unknown } | null)?.items === "string" ? (check as { items: string }).items.trim() : "";
   if (!items) return undefined;
   const reads = new Set<string>();
   const answers: unknown[] = [];
+  let unread = false;
   for (const e of events) {
     const b = (e.body ?? {}) as { tool?: unknown; input?: unknown; call_id?: unknown; text?: unknown; is_error?: unknown };
     if (e.kind === "tool_call" && b.tool === "planque" && (b.input as { action?: unknown } | null)?.action === "read" && typeof b.call_id === "string") {
@@ -22,9 +25,10 @@ export function checkMisfitSeen(events: SessionEvent[], check: unknown): string 
     if (e.kind === "tool_result" && typeof b.call_id === "string" && reads.has(b.call_id) && b.is_error !== true && typeof b.text === "string") {
       const parsed = jsonOf(b.text);
       if (parsed !== undefined) answers.push(parsed);
+      else unread = true;
     }
   }
-  if (answers.length === 0) return undefined;
+  if (answers.length === 0 || unread) return undefined;
   if (answers.some((a) => Array.isArray(at(a, items)))) return undefined;
   const lists = [...new Set(answers.flatMap((a) => listPaths(a, "", 0)))].slice(0, 8);
   return lists.length

@@ -4541,6 +4541,24 @@ describe("Coach's result, handed over by tafs cloud", () => {
     }
   });
 
+  // kiff-qa on the guard: a long list read is cut at 32 KB and no longer parses, and a small profile read beside it has
+  // no list. The check isn't judged by the profile alone: a cut read may be the one with the list.
+  it("hands over a result when one of Coach's reads was cut, whatever the others answered", async () => {
+    const { w, run, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const session = w.agents.runs.find((r) => r.id === run)!.session;
+    const ev = (seq: number, call: string, kind: "tool_call" | "tool_result", body: Record<string, unknown>): SessionEvent =>
+      ({ session, run, seq, time: "2026-11-14T13:00:00Z", kind, body: { tool: "planque", call_id: call, ...body } });
+    w.agents.events.set(session, [
+      ev(1, "r1", "tool_call", { input: { action: "read", grant: "grt_Mail1234567", tool: "profile_x" } }),
+      ev(2, "r1", "tool_result", { text: JSON.stringify({ emailAddress: "a@b.c", messagesTotal: 3 }) }),
+      ev(3, "r2", "tool_call", { input: { action: "read", grant: "grt_Mail1234567", tool: "list_x" } }),
+      ev(4, "r2", "tool_result", { text: `{"${(WORK_CHECK as { items: string }).items}":[{"id":"a","body":"${"x".repeat(200)}"…(cut at 32 KB of 40 KB)` }),
+    ]);
+    await note();
+    expect((answer()?.answer as { failed?: string } | undefined)?.failed ?? "").not.toContain("isn't a list");
+  });
+
   // The owner's run waited 40 minutes before the first try after a deploy: the 15 minutes count from the pause.
   it("a result already waiting past 15 minutes is answered at its first try", async () => {
     const { w, note, answer } = await paused();
