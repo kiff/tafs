@@ -804,8 +804,8 @@ export const en = {
   // The secure connection sheet for an app's key (docs/secure-connection.md): every word the phone draws.
   sheet_title: (vendor: string) => `Secure connection to ${vendor}`,
   sheet_reads_only: (vendor: string) => `Read only: it can't pay, send or change anything in ${vendor}`,
-  sheet_may_change: (vendor: string) => `It can change things in ${vendor}. Its Card decides each action`,
-  sheet_sealed: "Your key is sealed: it's never shown again, and the taf never sees it",
+  sheet_may_change: (vendor: string) => `It can change things in ${vendor}, as its Card allows`,
+  sheet_sealed: "Your key is never shown again, and no taf sees it",
   sheet_leave: "You can disconnect it any time, in Connect apps",
   sheet_paste: "Paste the key",
   sheet_paste_what: (vendor: string) => `Copy it in ${vendor}, then paste it here`,

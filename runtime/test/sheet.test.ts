@@ -34,7 +34,7 @@ describe("the secure connection sheet (docs/secure-connection.md)", () => {
     expect(s.title).toBe("Secure connection to Qonto");
     expect(s.lines).toEqual([
       { kind: "reads_only", text: "Read only: it can't pay, send or change anything in Qonto" },
-      { kind: "sealed", text: "Your key is sealed: it's never shown again, and the taf never sees it" },
+      { kind: "sealed", text: "Your key is never shown again, and no taf sees it" },
       { kind: "disconnect", text: "You can disconnect it any time, in Connect apps" },
     ]);
     expect(s.paste).toEqual({ button: "Paste the key", what: "Copy it in Qonto, then paste it here", pasted: "Key …{last4}", cleared: "Clipboard cleared" });
@@ -52,7 +52,7 @@ describe("the secure connection sheet (docs/secure-connection.md)", () => {
 
   it("says it can change things for a grant with a write, and never a read-only line then", () => {
     const s = sheetOf(grant([...READS, { tool: "create_invoice", read_only: false }]), "fr");
-    expect(s.lines[0]).toEqual({ kind: "may_change", text: "Il peut modifier des choses dans Qonto. Sa Card décide de chaque action" });
+    expect(s.lines[0]).toEqual({ kind: "may_change", text: "Il peut modifier des choses dans Qonto, comme sa Card le permet" });
     expect(s.legal.terms.url).toBe("https://kiff.dev/fr/terms");
   });
 
