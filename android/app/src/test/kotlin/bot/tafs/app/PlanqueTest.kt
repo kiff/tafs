@@ -2179,6 +2179,30 @@ class PlanqueTest {
     assertTrue(transport.requestsTo("POST /v1/me/window/$win/close").isEmpty())
   }
 
+  @Test fun aSignInAgainOnAnotherAccountIsSaidInPlanquesWordsNeverAsChanged() = runTest {
+    // The owner's loop: planque refused a sign-in to another account (409), and the app said "It changed in the meantime".
+    val words = "You signed in as another Google account (a…@example.com). Sign in again as b…@example.com, the account this taf uses."
+    transport.answer("POST /v1/accounts/t_01/grants/g1/confirm", 409, """{"error":"that sign-in is to another account","code":"other_account","words":"$words"}""")
+    try {
+      planque().confirm("g1", "c0de"); fail("refused")
+    } catch (e: PlanqueError.Server) {
+      assertEquals("the reason stays for the code", "that sign-in is to another account", e.message)
+      assertEquals(words, bot.tafs.app.model.ErrorWords.of(e))
+    }
+    // Blank words, or words of another shape, are none: the line by status.
+    for (odd in listOf(""""words":"  """", """"words":{"en":"x"}""", """"words":7""")) {
+      transport.answer("POST /v1/accounts/t_01/grants/g1/confirm", 409, """{"error":"stale",$odd}""")
+      try { planque().confirm("g1", "c0de"); fail("refused") } catch (e: PlanqueError.Server) {
+        assertEquals(odd, bot.tafs.app.model.ErrorWords.CHANGED, bot.tafs.app.model.ErrorWords.of(e))
+      }
+    }
+    // A real version race with no words is still the app's line.
+    transport.answer("POST /v1/accounts/t_01/grants/g1/confirm", 409, """{"error":"stale"}""")
+    try { planque().confirm("g1", "c0de"); fail("refused") } catch (e: PlanqueError.Server) {
+      assertEquals(bot.tafs.app.model.ErrorWords.CHANGED, bot.tafs.app.model.ErrorWords.of(e))
+    }
+  }
+
   @Test fun aVendorThatRefusesPlanquesClientIsSaidInPlanquesWords() = runTest {
     val words = "mcp.vendor.example doesn't allow tafs to sign in yet, so nothing was connected. It isn't something you can change from here."
     transport.answer("GET /v1/accounts/t_01/grants", 502, """{"error":"$words","code":"vendor_refused_client"}""")
@@ -2241,6 +2265,12 @@ class PlanqueTest {
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
     planque().grants()
     assertEquals(bot.tafs.app.kiff.KiffClient.screenLanguage(), transport.requests.single().headers["Accept-Language"])
+  }
+
+  @Test fun everyRequestToPlanqueSaysThePersonsTimeZoneForTheTimesInItsWords() = runTest {
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    planque().grants()
+    assertEquals(java.time.ZoneId.systemDefault().id, transport.requests.single().headers["X-Time-Zone"])
   }
 
   @Test fun theSharedVectorIsTheSameOnEveryApp() = runTest {

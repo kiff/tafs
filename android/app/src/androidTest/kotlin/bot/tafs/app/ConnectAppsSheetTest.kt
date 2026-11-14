@@ -93,6 +93,79 @@ class ConnectAppsSheetTest {
     assertEquals(listOf("g1"), disconnected)
   }
 
+  /** Gmail as planque describes it (title, used_by, health, actions): two connections, one signed out and one left over. */
+  private val signedIn = mutableListOf<String>()
+
+  private fun showDescribed() = rule.setShown {
+    val refunds = taf("refunds-1", "Unanswered customer emails")
+    fun described(id: String, json: String) = bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.Grant>(json)
+    val out = described("g1", """{"id":"g1","status":"needs_reconnect","vendor":"Gmail","entry":"connector:composio:gmail",
+      "request":{"server":"mcp.composio.dev","agent":"refunds-1","connector":{"provider":"composio","toolkit":"gmail"}},
+      "title":"Gmail · name@example.com","used_by":["Unanswered customer emails"],
+      "health":{"state":"signed_out","ok":false,"words":"Gmail's sign-in expired on 14 Nov"},
+      "actions":[{"id":"sign_in_again","words":"Sign in again","how":"approve"},
+                 {"id":"remove","words":"Remove access","how":"delete","stops":"Unanswered customer emails will stop using Gmail."}]}""")
+    val left = described("g7", """{"id":"g7","status":"listed","vendor":"Gmail","entry":"connector:composio:gmail",
+      "request":{"server":"mcp.composio.dev","agent":"","connector":{"provider":"composio","toolkit":"gmail"}},
+      "title":"Gmail · name@example.com","used_by":[],
+      "health":{"state":"unfinished","ok":false,"words":"Unfinished · signed in on 13 Nov, no tools chosen, no taf uses it"},
+      "actions":[{"id":"remove_unfinished","words":"Remove unfinished connection","how":"delete","stops":"No taf uses it, so nothing stops."},
+                 {"id":"later","words":"Something newer","how":"teleport"}]}""")
+    val apps = ConnectApps(listOf(ConnectApps.App("connector:composio:gmail", "Gmail", "Gmail", state = "connected", grant = "g1")), byKey = true)
+    TafsTheme {
+      ConnectAppsSheet(
+        AppState(mode = Mode.kiff, ready = true, connectApps = apps, tafs = listOf(refunds), grants = listOf(out, left),
+          access = mapOf(refunds.id to bot.tafs.app.kiff.Access(use = true, manage = true))),
+        load = {}, onConnect = null, onAskCoach = {}, onClose = {},
+        onDisconnect = { disconnected += it },
+        onSignInAgain = { signedIn += it.id },
+      )
+    }
+  }
+
+  /** The owner's bar: each row is planque's title, who uses it and its health; no id, and no button beside it. */
+  @Test fun aDescribedConnectionShowsPlanquesWordsAndNoButtonBesideIt() {
+    showDescribed()
+    rule.onNodeWithText(ConnectAppsWords.CONNECTED).performClick()
+    assertEquals(2, count("Gmail · name@example.com"))
+    rule.onNodeWithText("Gmail's sign-in expired on 14 Nov").assertIsDisplayed()
+    rule.onNodeWithText("Unfinished · signed in on 13 Nov, no tools chosen, no taf uses it").assertIsDisplayed()
+    assertEquals("no id", 0, count("g7"))
+    assertEquals("Remove is never beside the row", 0, count("Remove access"))
+    assertEquals(0, count(ConnectAppsWords.DISCONNECT))
+    assertEquals(0, count("Sign in again"))
+  }
+
+  /** Tapping opens the detail first: health, who depends on it, then planque's actions alone; Remove asks again with what stops. */
+  @Test fun aRowOpensItsDetailWithPlanquesActionsAndRemoveAsksAgain() {
+    showDescribed()
+    rule.onNodeWithText(ConnectAppsWords.CONNECTED).performClick()
+    rule.onNodeWithText("Gmail's sign-in expired on 14 Nov").performClick()
+    rule.onNodeWithText("Sign in again").assertIsDisplayed()
+    rule.onNodeWithText("Remove access").performClick()
+    rule.onNodeWithText("Unanswered customer emails will stop using Gmail.").assertIsDisplayed()
+    rule.onNodeWithText("Cancel").performClick()
+    rule.waitForIdle()
+    assertEquals("Cancel sends nothing", emptyList<String>(), disconnected)
+    rule.onNodeWithText("Sign in again").performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("g1"), signedIn)
+  }
+
+  /** A leftover gets only what planque sent for it: Remove unfinished connection, never Sign in again; an unknown action isn't drawn. */
+  @Test fun aLeftoverOffersOnlyRemoveUnfinished() {
+    showDescribed()
+    rule.onNodeWithText(ConnectAppsWords.CONNECTED).performClick()
+    rule.onNodeWithText("Unfinished · signed in on 13 Nov, no tools chosen, no taf uses it").performClick()
+    assertEquals(0, count("Sign in again"))
+    assertEquals(0, count("Something newer"))
+    rule.onNodeWithText("Remove unfinished connection").performClick()
+    rule.onNodeWithText("No taf uses it, so nothing stops.").assertIsDisplayed()
+    rule.onAllNodes(hasText("Remove unfinished connection"))[1].performClick()
+    rule.waitForIdle()
+    assertEquals(listOf("g7"), disconnected)
+  }
+
   @Test fun anAppNotSetUpSaysSoInTafsCloudsWordsAndOffersNoConnect() {
     show(connect = true)
     rule.onNodeWithText("Jira").assertIsDisplayed()
