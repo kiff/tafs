@@ -1218,6 +1218,40 @@ describe("the home list", () => {
   };
   const demoCard: Mandate = { id: "card_demo", subject: "support-demo", active: true, grants: [{ action: "lookup" }], aggregates: [] };
 
+  // The owner, 14 Nov: one approval of a Gmail taf read "2 Cards", and Follow-up leads "4 Cards".
+  it("shows the Cards a draft issued as one Card, its lines together, and keeps every id to revoke", async () => {
+    const w = world();
+    const read = (id: string, action: string, limit: number): Mandate => ({ id, subject: "rae", active: true, on_exceed: "hold", valid_until: "2026-12-31T00:00:00Z",
+      grants: [{ action, title: action === "list_threads" ? "List threads" : "Read a thread" }], aggregates: [{ quantity: "count", limit, window: "calendar_day" }] });
+    const other = { ...read("card_hold", "send_reply", 5), grants: [{ action: "send_reply", title: "Send a reply" }] };
+    w.account.mandates = [read("card_list", "list_threads", 200), read("card_read", "read_thread", 500), other];
+    // Its live version went live under the two read Cards: approved as one.
+    w.agents.versions.set(`t_acme|${RAE}`, [{ n: 1, note: "Reads Gmail", by: "setup", created: "2026-11-14T01:44:11Z", digest: "d", live: true,
+      cards: [{ id: "card_list", revision: 1 }, { id: "card_read", revision: 1 }] }]);
+    const tafRead = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0];
+    const card = tafRead.card;
+    // Its last change is its newest version.
+    expect(tafRead.last_change).toBe("2026-11-14T01:44:11Z");
+    // Every Card stays in ids: revoking stops all of them.
+    expect([...card.ids].sort()).toEqual(["card_hold", "card_list", "card_read"]);
+    // The two approved together are one Card, with both lines; the Card given later stays its own.
+    expect(card.cards).toHaveLength(2);
+    const one = card.cards.find((c: { ids?: string[] }) => c.ids)!;
+    expect([...one.ids].sort()).toEqual(["card_list", "card_read"]);
+    expect(one.rules.map((r: { action: string }) => r.action).sort()).toEqual(["list_threads", "read_thread"]);
+    expect(card.cards.find((c: { ids?: string[] }) => !c.ids).id).toBe("card_hold");
+  });
+
+  it("groups by KIFF's draft_id once KIFF sends it, with no version read needed, and says a taf's last change", async () => {
+    const w = world();
+    const m = (id: string, draft: string): Mandate => ({ id, subject: "rae", active: true, draft_id: draft, grants: [{ action: id }], aggregates: [] });
+    w.account.mandates = [m("a", "drf_1"), m("b", "drf_1"), m("c", "drf_2")];
+    const home = (await call(w, "GET", "/v1/home", { token: "ana" })).body.tafs[0];
+    expect(home.card.cards).toHaveLength(2);
+    expect(home.card.cards.map((c: { ids?: string[] }) => c.ids?.length ?? 1).sort()).toEqual([1, 2]);
+    expect(Date.parse(home.last_change)).not.toBeNaN();
+  });
+
   it("gives each taf its state, colour and Card summary, so the app combines nothing", async () => {
     const w = world();
     w.account.mandates = [raeCard];
@@ -1232,6 +1266,8 @@ describe("the home list", () => {
       // A custom name with no saved job never borrows the starter template's description.
       job_summary: "Ask Coach to describe this taf's job",
       color: 0, state: "working", waiting: 0,
+      // Its last change: no version yet, so when it was made.
+      last_change: "2026-10-15T09:00:00Z",
       // Where its work stands, in words (docs/reliability.md).
       work: { status: "idle", line: "Next run Fri 12:30", needs_you: 0 },
       // Its health over its recent work (health.ts): nothing against it.

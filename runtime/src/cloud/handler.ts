@@ -1977,6 +1977,24 @@ async function zoneFromPhone(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Pr
   }
 }
 
+/** A taf's versions, read at most once a minute per taf: Home asks on every open, and they change rarely. */
+const versionsSeen = new WeakMap<object, Map<string, { at: number; state: VersionState | undefined }>>();
+const VERSIONS_KEPT_MS = 60_000;
+
+async function keptVersions(deps: Deps, tenant: string, taf: string, now: Date): Promise<VersionState | undefined> {
+  // Kept per kiff/agents client: one for the running service, and never shared between two worlds.
+  let kept = versionsSeen.get(deps.agents);
+  if (!kept) { kept = new Map(); versionsSeen.set(deps.agents, kept); }
+  const key = `${tenant}|${taf}`;
+  const seen = kept.get(key);
+  if (seen && now.getTime() - seen.at < VERSIONS_KEPT_MS) return seen.state;
+  // A read that fails leaves the Cards apart and no last change, as before.
+  const state = await deps.agents.versions(tenant, taf).catch(() => undefined);
+  kept.set(key, { at: now.getTime(), state });
+  if (kept.size > 5000) kept.delete(kept.keys().next().value!);
+  return state;
+}
+
 /** Where tafs cloud keeps the account's zone, as KIFF last answered someone who manages its Cards. */
 const accountZoneKey = (tenant: string) => `${tenant}#account-zone`;
 
@@ -6593,10 +6611,16 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const dead = await Promise.all(tafs.map((t) => deadOf(deps, me.tenantID, t.id, now)));
   // Each taf's doors, for its avatar's rim: a read that fails shows none.
   const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
+  // Each taf's versions, kept a minute: the Cards its live version was approved with show as one Card, and its last change.
+  const versionsOf = await Promise.all(tafs.map((t) => keptVersions(deps, me.tenantID, t.id, now)));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
     const trial = trials[i];
-    const card = summary(cards.get(t.kiffAgent) ?? [], langOf(event));
+    const versions = versionsOf[i]?.versions ?? [];
+    const together = versions.filter((x) => x.live).map((x) => (x.cards ?? []).map((c) => c.id));
+    const card = summary(cards.get(t.kiffAgent) ?? [], langOf(event), together);
+    // Its last change: its newest version (a Card or a setting changes it), else when it was made.
+    const lastChange = [t.created, ...versions.map((x) => x.created)].filter((x) => !Number.isNaN(Date.parse(x ?? ""))).sort().at(-1);
     const held = waiting.get(t.kiffAgent) ?? 0;
     // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count: what Coach said this taf does, else its
     // job's fixed line. A taf Coach made on the nearest job (a cancel saver on refunds) never shows another job's line.
@@ -6605,7 +6629,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const runs = recent[i];
     const health = runs && fired[i] ? healthOf(runs, fired[i]!, now) : undefined;
     const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run, fired: fired[i] ?? [] }, me.timeZone ?? "UTC", now, langOf(event), health, deadLines(dead[i] ?? [], t.name, langOf(event))) : undefined;
-    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, me.timeZone ?? "UTC", now) } : {}),
+    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), ...(lastChange ? { last_change: lastChange } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, me.timeZone ?? "UTC", now) } : {}),
       // The promise is a setting: said even when the runs couldn't be read, so the apps' "Answer within" holds.
       ...(runs ? waitingOf(runs, fired[i], t, now, langOf(event)) : (t.respondWithin ? { promise: { hours: t.respondWithin } } : {})) };
   });
