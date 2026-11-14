@@ -769,6 +769,29 @@ exports receipts ([api.md](api.md): `GET /v1/record`, `/v1/record/cases/{about}`
 
 Tests: `TafsTests/RecordSearchTests.swift`.
 
+## Your brief (Missions, draft)
+
+"Your brief" takes Needs you's place once there is one (Missions design v2.1 §7; `BriefView`,
+`KIFF/TafsCloud+Brief.swift`). Until then, and for anyone tafs cloud doesn't send one to, Needs you is
+exactly as today. The draft draws the sample's brief only (`-brief YES` over the sample,
+`Brief.sample`); tafs cloud's `GET /v1/brief?label=` isn't read until its `TAFS_MISSIONS` flag is on.
+
+- **Read leniently, in v2.1's names:** `decisions` (`question`, `answers` with `recommended`, `why`,
+  `meanwhile`, `deadline`, `urgent`, `later`, `ref`), `more`, `done` (cases with `state` and
+  `next_check`, `value`, `log`), `next_move`, `rest`, `credits`, `labels` and the headings' `words`. A
+  part the app can't read is left out, never the brief.
+- **Drawn as sent:** decisions first, each with its taf, Coach's recommendation and its why, what
+  happens meanwhile, why it can't wait when it can't, and its answers (the recommended one filled, a
+  decline in red, Later beside them). Then one next move, then Done case by case (green once closed,
+  amber while waiting), with its value and the mission's log. Then the rest in one line, which opens
+  today's Needs you list. On an iPad's width, decisions beside Done, the next move under Done.
+- **Label chips** (All, two labels, "+N") filter the brief, as tafs cloud filters it.
+- **A recommendation is shown, never acted on.** An answer goes through the route its decision already
+  has (`ref`: a held call, a step, a connection, a proposal); nothing is signed from the brief.
+- **A mission's log** (`MissionLogView`, `GET /v1/missions/{id}/log`): read only, newest first, by
+  day; each entry's taf or Coach or You, its kind in colour and word, its evidence and value; a removed
+  taf's entries greyed and marked.
+
 ## Coach waiting
 
 A Coach chat paused on a card its person answers (an approval, a sign-in, questions, a confirm), as

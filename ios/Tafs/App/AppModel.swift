@@ -1923,9 +1923,77 @@ final class AppModel: ObservableObject {
         listOrder = [last] + listOrder.dropLast()
     }
 
+    // MARK: Your brief (Missions design v2.1, draft)
+
+    /// "Your brief", in Needs you's place once there is one: tafs cloud's (`GET /v1/brief`, behind its
+    /// `TAFS_MISSIONS` flag), or the sample's for screenshots (`-brief YES`). Nil: Needs you, as today.
+    @Published private(set) var brief: TafsCloud.Brief?
+    /// The label the brief is filtered to; nil is All.
+    @Published private(set) var briefLabel: String?
+    /// Decisions answered or put off here, until the next read drops them.
+    @Published private(set) var briefSetAside: Set<String> = []
+    /// The next move dismissed here: it isn't shown again for the same cases.
+    @Published private(set) var nextMoveDismissed = false
+
+    /// The tab's name: tafs cloud's ("Your brief") once there's a brief, else Needs you.
+    var needsYouTabTitle: String {
+        guard let words = brief?.words.tab, !words.isEmpty else { return Words.NeedsYou.title }
+        return words
+    }
+
+    /// The brief's decisions still to answer here.
+    var briefDecisions: [TafsCloud.Brief.Decision] { (brief?.decisions ?? []).filter { !briefSetAside.contains($0.id) } }
+
+    /// Reads the brief for the label chosen. The sample's for screenshots; tafs cloud's route isn't read
+    /// until its flag is on in production, so nothing changes for anyone before then.
+    func loadBrief() async {
+        if mode == .sample, Screenshots.brief {
+            brief = .sample(label: briefLabel)
+            return
+        }
+        brief = nil
+    }
+
+    func filterBrief(_ label: String?) async {
+        briefLabel = label
+        briefSetAside = []
+        await loadBrief()
+    }
+
+    /// One tap answers one decision through the route it already has (design v2.1: a held call, a step, a
+    /// connection, a proposal), where its own signed answer is given; nothing is signed from the brief
+    /// itself. Draft: on the sample the card is set aside; the route is wired once tafs cloud's is live.
+    func answerBrief(_ decision: TafsCloud.Brief.Decision, _ answer: TafsCloud.Brief.Answer) {
+        briefSetAside.insert(decision.id)
+    }
+
+    /// "Later": the decision moves to the next brief (`POST /v1/brief/decisions/{id}/later`, wired once
+    /// tafs cloud's route is live). Draft: set aside here.
+    func laterBrief(_ decision: TafsCloud.Brief.Decision) {
+        guard decision.later != nil else { return }
+        briefSetAside.insert(decision.id)
+    }
+
+    /// Start the next move: Coach opens with it, where the person and Coach take it on.
+    func startNextMove(_ move: TafsCloud.Brief.NextMove) {
+        nextMoveDismissed = true
+        guard mayUseCoach || mode == .sample else { return }
+        setupDraft = move.words
+        coachOpen = true
+    }
+
+    func dismissNextMove() { nextMoveDismissed = true }
+
+    /// A mission's log, newest first: the sample's for screenshots; tafs cloud's route once it's on.
+    func missionLog(_ mission: String) async -> TafsCloud.MissionLog? {
+        if mode == .sample { return TafsCloud.Brief.sampleLog() }
+        return try? await cloud.missionLog(mission)
+    }
+
     func startSample() async {
         mode = .sample
         await loadSample()
+        await loadBrief()
         save()
         if Screenshots.listSettlesOnReturn { settleListOrder() }
         if Screenshots.purchases {
@@ -8748,6 +8816,8 @@ enum Screenshots {
     static var narrow: Bool { UserDefaults.standard.bool(forKey: "narrow") }
     /// `-landscape YES`: the iPad's window turned to landscape, for its screenshots.
     static var landscape: Bool { UserDefaults.standard.bool(forKey: "landscape") }
+    /// `-brief YES`: "Your brief" in Needs you's place, over the sample's own brief (Missions draft).
+    static var brief: Bool { enabled && UserDefaults.standard.bool(forKey: "brief") }
     /// `-signedIn YES`: the iPad's sidebar laid out as for a signed-in account (its screens and
     /// Coach above the account), over the sample's tafs. A screenshot of the layout only: nothing
     /// is read from KIFF, and the screens it lists aren't opened.

@@ -103,7 +103,7 @@ struct HomeSplitView: View {
             NavigationStack {
                 switch selection {
                 case .needsYou?:
-                    NeedsYouView()
+                    BriefView()
                 case .usage?:
                     UsageView()
                 case .connectApps?:
@@ -264,7 +264,7 @@ struct HomeSplitView: View {
             if tab != nil {
                 // The app's screens, each an item, opened beside the sidebar.
                 Section {
-                    screenItem(.needsYou, Words.NeedsYou.title, "bell", badge: model.needsYouCount)
+                    screenItem(.needsYou, model.needsYouTabTitle, "bell", badge: model.needsYouCount)
                     screenItem(.record, Words.Record.title, "list.bullet")
                     if signedInLayout {
                         screenItem(.calendar, Words.Calendar.heading, "calendar")
