@@ -129,6 +129,7 @@ object Words {
     val touchId: String get() = Res.s(R.string.approval_touch_id)
     fun turnedOffTafsOpenSettings(either: String, either2: String): String = Res.s(R.string.approval_turned_off_tafs_open_settings, either, either2)
     fun turnedOffTafsTurnTafs(either: String): String = Res.s(R.string.approval_turned_off_tafs_turn_tafs, either)
+    val viewOnly: String get() = Res.s(R.string.approval_view_only)
     val why: String get() = Res.s(R.string.approval_why)
     val withoutAllows: String get() = Res.s(R.string.approval_without_allows)
     val yourPasscode: String get() = Res.s(R.string.approval_your_passcode)

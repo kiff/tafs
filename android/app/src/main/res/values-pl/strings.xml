@@ -110,6 +110,7 @@
     <string name="approval_touch_id">Touch ID</string>
     <string name="approval_turned_off_tafs_open_settings">%1$s jest wyłączone dla tafs. Otwórz Ustawienia i włącz %2$s dla tafs.</string>
     <string name="approval_turned_off_tafs_turn_tafs">%1$s jest wyłączone dla tafs. Włącz je w ustawieniach tafs, aby zatwierdzać.</string>
+    <string name="approval_view_only">Zaloguj się ponownie na tym telefonie, aby zatwierdzać, lub zatwierdź na drugim telefonie.</string>
     <string name="approval_why">Każde zatwierdzenie w tafs, Card, połączenie czy płatność ponad limit, jest podpisywane na tym telefonie kluczem, który odblokowuje tylko Twój odcisk palca. Twój PIN ani wzór nie mogą zatwierdzać.</string>
     <string name="approval_without_allows">Bez zatwierdzania nadal możesz się zalogować, przeglądać, odrzucać i blokować.</string>
     <string name="approval_your_passcode">Twój kod</string>

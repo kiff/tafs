@@ -229,6 +229,8 @@ enum Words {
         static func turnedOffTafsOpenSettings(either: String, either2: String) -> String { Words.line("approval.turned_off_tafs_open_settings", either, either2) }
         /// {either} is turned off for tafs. Turn it on in tafs' settings to approve.
         static func turnedOffTafsTurnTafs(either: String) -> String { Words.line("approval.turned_off_tafs_turn_tafs", either) }
+        /// Sign in again on this phone to approve, or approve from your other phone.
+        static var viewOnly: String { Words.line("approval.view_only") }
         /// Every approval you give in tafs, a Card, a connection or a payment over a limit, is signed on this phone with a key only your fingerprint unlocks. Your PIN or pattern can't approve.
         static var why: String { Words.line("approval.why") }
         /// Without approvals you can still sign in, review, refuse and halt.

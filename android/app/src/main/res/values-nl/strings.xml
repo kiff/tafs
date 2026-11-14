@@ -108,6 +108,7 @@
     <string name="approval_touch_id">Touch ID</string>
     <string name="approval_turned_off_tafs_open_settings">%1$s staat uit voor tafs. Open Instellingen en zet %2$s aan voor tafs.</string>
     <string name="approval_turned_off_tafs_turn_tafs">%1$s staat uit voor tafs. Zet het aan in de instellingen van tafs om goed te keuren.</string>
+    <string name="approval_view_only">Log opnieuw in op deze telefoon om goed te keuren, of keur goed vanaf je andere telefoon.</string>
     <string name="approval_why">Elke goedkeuring die je in tafs geeft, een Card, een koppeling of een betaling boven een limiet, wordt op deze telefoon ondertekend met een sleutel die alleen je vingerafdruk ontgrendelt. Je pincode of patroon kan niet goedkeuren.</string>
     <string name="approval_without_allows">Zonder goedkeuringen kun je nog steeds inloggen, bekijken, weigeren en stilzetten.</string>
     <string name="approval_your_passcode">je toegangscode</string>

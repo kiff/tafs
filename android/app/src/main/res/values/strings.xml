@@ -108,6 +108,7 @@
     <string name="approval_touch_id">Touch ID</string>
     <string name="approval_turned_off_tafs_open_settings">%1$s is turned off for tafs. Open Settings and turn on %2$s for tafs.</string>
     <string name="approval_turned_off_tafs_turn_tafs">%1$s is turned off for tafs. Turn it on in tafs\' settings to approve.</string>
+    <string name="approval_view_only">Sign in again on this phone to approve, or approve from your other phone.</string>
     <string name="approval_why">Every approval you give in tafs, a Card, a connection or a payment over a limit, is signed on this phone with a key only your fingerprint unlocks. Your PIN or pattern can\'t approve.</string>
     <string name="approval_without_allows">Without approvals you can still sign in, review, refuse and halt.</string>
     <string name="approval_your_passcode">your passcode</string>

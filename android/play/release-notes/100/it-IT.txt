@@ -1,0 +1,1 @@
+- Aggiungi un dispositivo: in Account, Dispositivi, scansiona il codice del computer, verifica che mostri gli stessi 6 caratteri e approva con l'impronta.

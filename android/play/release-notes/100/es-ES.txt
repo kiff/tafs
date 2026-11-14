@@ -1,0 +1,1 @@
+- Añadir un dispositivo: en Cuenta, Dispositivos, escanea el código de tu ordenador, comprueba que muestra los mismos 6 caracteres y aprueba con tu huella.

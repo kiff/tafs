@@ -108,6 +108,7 @@
     <string name="approval_touch_id">Touch ID</string>
     <string name="approval_turned_off_tafs_open_settings">%1$s è disattivato per tafs. Apri Impostazioni e attiva %2$s per tafs.</string>
     <string name="approval_turned_off_tafs_turn_tafs">%1$s è disattivato per tafs. Attivalo nelle impostazioni di tafs per approvare.</string>
+    <string name="approval_view_only">Accedi di nuovo su questo telefono per approvare, oppure approva dall\'altro telefono.</string>
     <string name="approval_why">Ogni approvazione che dai in tafs, una Card, un collegamento o un pagamento oltre un limite, viene firmata su questo telefono con una chiave che solo la tua impronta sblocca. Il PIN o la sequenza non possono approvare.</string>
     <string name="approval_without_allows">Senza approvazioni puoi comunque accedere, controllare, rifiutare e bloccare.</string>
     <string name="approval_your_passcode">il tuo codice</string>

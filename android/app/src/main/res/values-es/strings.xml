@@ -108,6 +108,7 @@
     <string name="approval_touch_id">Touch ID</string>
     <string name="approval_turned_off_tafs_open_settings">%1$s está desactivado para tafs. Abre Ajustes y activa %2$s para tafs.</string>
     <string name="approval_turned_off_tafs_turn_tafs">%1$s está desactivado para tafs. Actívalo en los ajustes de tafs para aprobar.</string>
+    <string name="approval_view_only">Vuelve a iniciar sesión en este teléfono para aprobar, o aprueba desde tu otro teléfono.</string>
     <string name="approval_why">Cada aprobación que das en tafs, una Card, una conexión o un pago por encima de un límite, se firma en este teléfono con una clave que solo tu huella desbloquea. Tu PIN o patrón no pueden aprobar.</string>
     <string name="approval_without_allows">Sin aprobaciones aún puedes iniciar sesión, revisar, rechazar y bloquear.</string>
     <string name="approval_your_passcode">tu código</string>

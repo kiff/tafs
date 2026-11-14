@@ -108,6 +108,7 @@
     <string name="approval_touch_id">Touch ID</string>
     <string name="approval_turned_off_tafs_open_settings">%1$s ist für tafs ausgeschaltet. Öffne die Einstellungen und schalte %2$s für tafs ein.</string>
     <string name="approval_turned_off_tafs_turn_tafs">%1$s ist für tafs ausgeschaltet. Schalte es in den Einstellungen von tafs ein, um zu genehmigen.</string>
+    <string name="approval_view_only">Melde dich auf diesem Telefon erneut an, um zu genehmigen, oder genehmige auf deinem anderen Telefon.</string>
     <string name="approval_why">Jede Genehmigung, die du in tafs gibst, ob für eine Card, eine Verbindung oder eine Zahlung über einem Limit, wird auf diesem Telefon mit einem Schlüssel signiert, den nur dein Fingerabdruck entsperrt. Deine PIN oder dein Muster kann nicht genehmigen.</string>
     <string name="approval_without_allows">Ohne Genehmigungen kannst du dich weiterhin anmelden, prüfen, ablehnen und anhalten.</string>
     <string name="approval_your_passcode">deinen Code</string>

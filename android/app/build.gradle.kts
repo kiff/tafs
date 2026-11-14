@@ -12,8 +12,8 @@ android {
     applicationId = "dev.kiff.tafs"
     minSdk = 30
     targetSdk = 37
-    versionCode = 99
-    versionName = "1.27.11"
+    versionCode = 100
+    versionName = "1.28.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
@@ -123,6 +123,8 @@ dependencies {
   implementation(libs.firebase.messaging)
   // Play's flexible in-app update: a new version on the track is offered in one tap, then a restart.
   implementation(libs.play.app.update.ktx)
+  // Pairing a computer: Google's code scanner reads its QR in its own screen, so the app asks for no camera permission.
+  implementation(libs.play.services.code.scanner)
 
   // Navigation
   implementation(libs.androidx.navigation3.ui)

@@ -5749,6 +5749,59 @@
         }
       }
     },
+    "approval.view_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melde dich auf diesem Telefon erneut an, um zu genehmigen, oder genehmige auf deinem anderen Telefon."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in again on this phone to approve, or approve from your other phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuelve a iniciar sesión en este teléfono para aprobar, o aprueba desde tu otro teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnectez-vous sur ce téléphone pour approuver, ou approuvez depuis votre autre téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accedi di nuovo su questo telefono per approvare, oppure approva dall'altro telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log opnieuw in op deze telefoon om goed te keuren, of keur goed vanaf je andere telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaloguj się ponownie na tym telefonie, aby zatwierdzać, lub zatwierdź na drugim telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicie sessão novamente neste telefone para aprovar, ou aprove a partir do seu outro telefone."
+          }
+        }
+      }
+    },
     "approval.why": {
       "extractionState": "manual",
       "localizations": {
