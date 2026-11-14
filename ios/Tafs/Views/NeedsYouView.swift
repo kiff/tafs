@@ -535,6 +535,8 @@ struct CoachWaitingCard: View {
                 Button(waiting.words.setAside) { setAside() }
                     .buttonStyle(OutlineButtonStyle(color: Theme.soft))
                     .disabled(asked || model.settingAside.contains(waiting.session))
+                    // Coach driving the app never sets a chat aside: it's the person's to confirm (docs/drive.md).
+                    .confirming()
                     .accessibilityIdentifier("needs-you.coach-waiting.set-aside." + waiting.session)
             }
         }
@@ -563,6 +565,7 @@ struct SetAllAsideButton: View {
         Button(clear.words.button) { confirming = true }
             .buttonStyle(OutlineButtonStyle(color: Theme.amberText))
             .disabled(!model.settingAside.isEmpty)
+            .confirming()
             .accessibilityIdentifier("needs-you.coach-waiting.set-all-aside")
             .confirmationDialog(clear.words.title, isPresented: $confirming, titleVisibility: .visible) {
                 Button(clear.words.yes, role: .destructive) { Task { await model.setAsideCoach(nil) } }

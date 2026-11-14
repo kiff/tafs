@@ -737,6 +737,8 @@ Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideB
 - **After:** the row goes once tafs cloud answers, with a success tick, and Home is read again: the badge is
   tafs cloud's `needs_you` count as sent. A refusal keeps the row and says why in tafs cloud's words
   (`lastError`), with a warning tick.
+- **Coach driving the app** can't set a chat aside: Set aside and Set all aside carry the confirm mark
+  ([drive.md](drive.md)), so a driven touch on either is refused, and the row's swipe isn't registered.
 - **A new conversation:** a chat set aside is never the one Coach goes on in. When it's the chat shown (or
   the latest one shown together), Coach starts a new conversation (`newSetupChat`), so a new job's first
   message asks for a new chat (`new_chat`) and never names the ended session. When Coach next picks its

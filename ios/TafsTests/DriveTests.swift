@@ -456,6 +456,9 @@ final class DriveTests: XCTestCase {
         ("Views/DoorsView.swift", #"Button("Remove door""#),
         ("Views/DeleteAccountView.swift", #"Button(role: .destructive) {"#),
         ("Views/DevicesView.swift", #"Button("Sign out") { removing = device }"#),
+        // Set aside and Set all aside: ending a waiting Coach chat is the person's to confirm.
+        ("Views/NeedsYouView.swift", #"Button(waiting.words.setAside) { setAside() }"#),
+        ("Views/NeedsYouView.swift", #"Button(clear.words.button) { confirming = true }"#),
         // Coach's Send, which starts Coach while it isn't started (docs/ios-app.md).
         ("Views/SetupChatView.swift", #"Button(action: send) {"#),
     ]
