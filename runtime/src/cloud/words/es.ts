@@ -83,6 +83,8 @@ export const es: Words = {
   approval_nothing_new: (vendor: string) => `${vendor} ya está conectado. No hay nada nuevo que aprobar, así que no se aprobó nada.`,
   approval_digest_mismatch: "Esta solicitud no coincide con lo que pide. No se aprobó nada.",
   approval_no_grant: "No hay ninguna conexión con ese id.",
+  approval_removed_tafs_connection: (app: string) => `Esta conexión de ${app} pertenece a un taf eliminado, así que no se usa para este. Coach conecta ${app} para este taf en su lugar.`,
+  approval_other_tafs_connection: (app: string) => `Esta tarjeta es para otro taf distinto de esta conexión de ${app}. Coach vuelve a mostrar la aprobación con la conexión propia de este taf.`,
   approval_cards_not_issued: (why: string) => `KIFF no emitió las Cards del taf: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} está conectado. Ahora, la Card.`,
   approval_draft_is: (status: string) => `estado del borrador: ${status}`,

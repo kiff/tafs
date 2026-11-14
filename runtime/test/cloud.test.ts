@@ -1811,13 +1811,17 @@ describe("removing a taf", () => {
   // 13 Nov: a taf on KIFF agent `rae` was removed, but its connection had been asked under `rae-k3f9x2ab`, so the
   // end found nothing and the Gmail connection lived on. The removal and its words read every form of the name,
   // and never another live taf's own agent.
-  it("ends the connections asked under the other form of the taf's agent, never a live taf's", async () => {
+  it("ends the connections asked under the other form of the taf's agent for the same taf, never a live taf's, a word or another taf's", async () => {
     const w = world();
     const asked: string[] = [];
     const conns = [
-      { agent: "rae-k3f9x2ab", vendor: "Gmail", kind: "provider", status: "connected" },
+      { agent: "rae-k3f9x2ab", agent_name: "Rae", vendor: "Gmail", kind: "provider", status: "connected" },
       { agent: "max", vendor: "Stripe", kind: "provider", status: "connected" },
-      { agent: "rae-live0001", vendor: "Gmail", kind: "provider", status: "connected" },
+      { agent: "rae-live0001", agent_name: "Rae", vendor: "Gmail", kind: "provider", status: "connected" },
+      // An ordinary word, not a generated suffix: another agent's, kept.
+      { agent: "rae-contacts", agent_name: "Rae", vendor: "Gmail", kind: "provider", status: "connected" },
+      // A generated suffix, but asked for another taf: kept.
+      { agent: "rae-x9y8z7w6", agent_name: "Rae's invoices", vendor: "Qonto", kind: "key", status: "connected" },
     ];
     w.tafs.held.set("t_acme#taf-live", { id: "taf-live", name: "Live", job: "j", kiffAgent: "rae-live0001", created: "2026-11-13T00:00:00Z" } as never);
     const d = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
@@ -1838,29 +1842,40 @@ describe("removing a taf", () => {
 
   // The leftovers from before: on a person's read of the list, at most hourly, connections no live taf uses, asked
   // before yesterday, end. A live taf's (or the other form of its name), and one asked today, stay.
-  it("sweeps the connections of tafs gone, hourly, sparing live tafs' and today's", async () => {
+  it("sweeps only removed tafs' connections, hourly: archived agents and their other form, never another agent's or yesterday's", async () => {
     const w = world();
     const asked: string[] = [];
     w.now = new Date("2026-11-14T01:00:00Z");
     const conns = [
+      // The other form of an archived agent's name, asked two days ago: ended.
       { agent: "gone-iy6yt4fc", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-12" },
+      // Archived in KIFF itself: ended.
+      { agent: "old-taf", vendor: "Stripe", kind: "provider", status: "connected", since: "2026-11-10" },
       { agent: "rae", vendor: "Qonto", kind: "key", status: "connected", since: "2026-11-01" },
       { agent: "rae-k3f9x2ab", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-01" },
-      { agent: "draft-abcdefgh", vendor: "Slack", kind: "provider", status: "listed", since: "2026-11-13" },
+      // Archived, but asked yesterday: kept for now.
+      { agent: "fresh-gone", vendor: "Slack", kind: "provider", status: "listed", since: "2026-11-13" },
+      // Not archived in KIFF, and no taf of this account: an agent tafs cloud can't show was a taf, never swept.
+      { agent: "stripe-refunds", vendor: "Stripe", kind: "provider", status: "connected", since: "2026-11-01" },
+      { agent: "my-own-agent", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-01" },
+      { agent: "inbox-summary-iy6yt4fc", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-01" },
     ];
+    const archived = [{ id: "gone", archived_at: "2026-11-12T20:00:00Z" }, { id: "old-taf", archived_at: "2026-11-11T20:00:00Z" },
+      { id: "fresh-gone", archived_at: "2026-11-13T20:00:00Z" }, { id: "my-own-agent" }];
     const claimed = new Set<string>();
     const coach = { once: async (k: string) => (claimed.has(k) ? false : (claimed.add(k), true)), get: async () => undefined, put: async () => {}, append: async () => {}, take: async () => [] } as unknown as Deps["coach"];
     const d = { ...depsOf(w), coach, planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
       if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: conns }), { status: 200 });
+      if (url.endsWith("/v1/me/agents")) return new Response(JSON.stringify({ agents: archived }), { status: 200 });
       if (url.startsWith("https://planque.test/")) { asked.push(url); return new Response(JSON.stringify({ ended: [{ vendor: "Gmail" }], kept: [] }), { status: 200 }); }
       return depsOf(w).fetch!(url, init);
     }) as Deps["fetch"] };
     const list = () => handle({ rawPath: "/v1/tafs", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, d);
     expect((await list()).statusCode).toBe(200);
-    expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/agents/gone-iy6yt4fc/end"]);
+    expect(asked.sort()).toEqual(["https://planque.test/v1/accounts/t_acme/agents/gone-iy6yt4fc/end", "https://planque.test/v1/accounts/t_acme/agents/old-taf/end"]);
     // Within the hour, it doesn't look again.
     await list();
-    expect(asked).toHaveLength(1);
+    expect(asked).toHaveLength(2);
   });
 
   it("deletes nothing else while kiff/agents may still run it, and a second remove finishes", async () => {

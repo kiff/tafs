@@ -83,6 +83,8 @@ export const fr: Words = {
   approval_nothing_new: (vendor: string) => `${vendor} est déjà connecté. Il n'y a rien de nouveau à approuver, donc rien n'a été approuvé.`,
   approval_digest_mismatch: "Cette demande ne correspond pas à ce qu'elle demande. Rien n'a été approuvé.",
   approval_no_grant: "Aucune connexion ne porte cet identifiant.",
+  approval_removed_tafs_connection: (app: string) => `Cette connexion ${app} appartient à un taf supprimé, elle n'est donc pas utilisée pour celui-ci. Coach connecte ${app} pour ce taf à la place.`,
+  approval_other_tafs_connection: (app: string) => `Cette carte est pour un autre taf que cette connexion ${app}. Coach montre à nouveau l'approbation avec la connexion propre à ce taf.`,
   approval_cards_not_issued: (why: string) => `KIFF n'a pas émis les Cards du taf : ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} est connecté. Ensuite, la Card.`,
   approval_draft_is: (status: string) => `état du brouillon : ${status}`,

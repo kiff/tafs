@@ -83,6 +83,8 @@ export const nl: Words = {
   approval_nothing_new: (vendor: string) => `${vendor} is al gekoppeld. Er is niets nieuws om goed te keuren, dus er is niets goedgekeurd.`,
   approval_digest_mismatch: "Dit verzoek klopt niet met wat het vraagt. Er is niets goedgekeurd.",
   approval_no_grant: "Er is geen koppeling met die id.",
+  approval_removed_tafs_connection: (app: string) => `Deze ${app}-koppeling hoort bij een verwijderde taf en wordt dus niet voor deze gebruikt. Coach koppelt ${app} voor deze taf.`,
+  approval_other_tafs_connection: (app: string) => `Deze kaart is voor een andere taf dan deze ${app}-koppeling. Coach toont de goedkeuring opnieuw met de eigen koppeling van deze taf.`,
   approval_cards_not_issued: (why: string) => `KIFF heeft de Cards van het taf niet uitgegeven: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} is verbonden. Nu de Card.`,
   approval_draft_is: (status: string) => `het concept is ${status}`,

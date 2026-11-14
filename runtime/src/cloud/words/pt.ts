@@ -83,6 +83,8 @@ export const pt: Words = {
   approval_nothing_new: (vendor: string) => `${vendor} já está ligado. Não há nada de novo para aprovar, por isso nada foi aprovado.`,
   approval_digest_mismatch: "Este pedido não corresponde ao que pede. Nada foi aprovado.",
   approval_no_grant: "Não existe nenhuma ligação com esse id.",
+  approval_removed_tafs_connection: (app: string) => `Esta ligação a ${app} pertence a um taf que foi removido, por isso não é usada para este. O Coach liga ${app} para este taf.`,
+  approval_other_tafs_connection: (app: string) => `Este cartão é para outro taf que não o desta ligação a ${app}. O Coach mostra de novo a aprovação com a ligação própria deste taf.`,
   approval_cards_not_issued: (why: string) => `O KIFF não emitiu os Cards do taf: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} está ligado. A seguir, o Card.`,
   approval_draft_is: (status: string) => `estado do rascunho: ${status}`,

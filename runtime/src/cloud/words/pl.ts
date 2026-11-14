@@ -83,6 +83,8 @@ export const pl: Words = {
   approval_nothing_new: (vendor: string) => `Połączenie z ${vendor} już istnieje. Nie ma nic nowego do zatwierdzenia, więc nic nie zostało zatwierdzone.`,
   approval_digest_mismatch: "Ta prośba nie zgadza się z tym, o co prosi. Nic nie zostało zatwierdzone.",
   approval_no_grant: "Nie ma połączenia o tym identyfikatorze.",
+  approval_removed_tafs_connection: (app: string) => `To połączenie z ${app} należy do usuniętego tafa, więc nie jest używane dla tego. Coach połączy ${app} dla tego tafa.`,
+  approval_other_tafs_connection: (app: string) => `Ta karta jest dla innego tafa niż to połączenie z ${app}. Coach pokaże zatwierdzenie ponownie z własnym połączeniem tego tafa.`,
   approval_cards_not_issued: (why: string) => `KIFF nie wydał Card tafa: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} jest połączony. Teraz Card.`,
   approval_draft_is: (status: string) => `stan szkicu: ${status}`,

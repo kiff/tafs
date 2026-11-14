@@ -34,7 +34,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { type AccountConnection, type AppGuide, accountConnections, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, withConnections } from "./connections.js";
+import { type AccountConnection, type AppGuide, accountConnections, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
@@ -2260,7 +2260,7 @@ async function endTafConnections(taf: Taf, me: { tenantID: string }, token: stri
     deps.tafs.list(me.tenantID),
   ]);
   const live = new Set(tafs.filter((t) => t.id !== taf.id && !t.removing && t.kiffAgent).map((t) => t.kiffAgent));
-  const agents = connectionAgents(taf.kiffAgent, conns, live);
+  const agents = connectionAgents(taf.kiffAgent, taf.name, conns, live);
   const out: EndedConnections & { agents: number } = { ended: [], kept: [], agents: agents.length };
   for (const agent of agents) {
     const r = await endConnections(deps.fetch ?? fetch, base, me.tenantID, agent, token, preview);
@@ -2284,9 +2284,10 @@ async function sweepLeftovers(me: { tenantID: string }, token: string, deps: Dep
   if (!deps.planqueBase || !deps.coach || !token) return;
   const now = deps.now?.() ?? new Date();
   if (!await deps.coach.once(`connections_sweep#${me.tenantID}`, new Date(now.getTime() + SWEEP_EVERY_MS))) return;
-  const [conns, tafs] = await Promise.all([accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token), deps.tafs.list(me.tenantID)]);
+  const [conns, tafs, archived] = await Promise.all([accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token),
+    deps.tafs.list(me.tenantID), readArchived(token, deps.fetch, deps.kiffBase)]);
   const live = new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent));
-  const agents = leftoverAgents(conns, live, now);
+  const agents = leftoverAgents(conns, live, new Set(archived.keys()), now);
   let ended = 0;
   for (const agent of agents) {
     const r = await endConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, agent, token).catch(() => null);
@@ -3612,6 +3613,11 @@ function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     toolsAndCards: process.env.TAFS_TOOLS_AND_CARDS === "on",
     // The prompt names the taf being set up, by its name: the card is Coach's, so not `taf`'s.
     tafName: async (agent) => (agent ? (await deps.tafs.list(me.tenantID)).find((t) => t.kiffAgent === agent)?.name : undefined),
+    // A removed taf's agent is never approved over (connections.ts removedAgent), read with the person's session.
+    removedAgent: async (agent) => {
+      const [archived, tafs] = await Promise.all([readArchived(bearer(event), deps.fetch, deps.kiffBase), deps.tafs.list(me.tenantID)]);
+      return removedAgent(agent, new Set(archived.keys()), new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent)));
+    },
   };
 }
 

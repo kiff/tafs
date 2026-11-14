@@ -83,6 +83,8 @@ export const de: Words = {
   approval_nothing_new: (vendor: string) => `${vendor} ist bereits verbunden. Es gibt nichts Neues zu genehmigen, also wurde nichts genehmigt.`,
   approval_digest_mismatch: "Diese Anfrage passt nicht zu dem, worum sie bittet. Es wurde nichts genehmigt.",
   approval_no_grant: "Es gibt keine Verbindung mit dieser ID.",
+  approval_removed_tafs_connection: (app: string) => `Diese ${app}-Verbindung gehört zu einem entfernten taf und wird für diesen nicht genutzt. Coach verbindet ${app} stattdessen für diesen taf.`,
+  approval_other_tafs_connection: (app: string) => `Diese Karte ist für einen anderen taf als diese ${app}-Verbindung. Coach zeigt die Genehmigung mit der eigenen Verbindung dieses tafs erneut.`,
   approval_cards_not_issued: (why: string) => `KIFF hat die Cards des tafs nicht ausgestellt: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} ist verbunden. Als Nächstes die Card.`,
   approval_draft_is: (status: string) => `der Entwurf ist ${status}`,
