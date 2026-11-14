@@ -5071,6 +5071,12 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The same set aside again (a resend): done, marked already.
     expect(JSON.parse((await call(`/v1/home/coach-waiting/${stored.session}/set-aside`)).body)).toEqual({ set_aside: [stored.session], already: true });
 
+    // Coach's chat list says it was set aside, so no app opens it as the newest, on any device or after a relaunch.
+    w.agents.sessions.find((x) => x.id === stored.session)!.owner = "member:u_ana";
+    const listed = JSON.parse((await handle({ rawPath: `/v1/tafs/${COACH}/chats`, requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, deps)).body) as { chats: Array<{ session: string; set_aside?: boolean }> };
+    expect(listed.chats.find((c) => c.session === stored.session)?.set_aside).toBe(true);
+
     // Opened in Coach after all and answered there, the run goes on and pauses on a new card: that one shows, it isn't hidden.
     const first = stored.requirements![0]!;
     first.answered = w.now.toISOString();

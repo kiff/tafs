@@ -5543,12 +5543,17 @@ async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind:
  * The taf's chats, newest first, each named by the start of what the owner asked
  * (kiff/tafs#82): their first message that isn't a component's answer. Archived
  * ones are left out, or, with `archivedOnly`, are the only ones (kiff/tafs#97).
+ * A Coach chat its person set aside says so (`set_aside: true`): the apps never open it as the newest, on any device.
  */
-async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false): Promise<Array<{ session: string; started: string; updated: string; title: string }>> {
+async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false): Promise<Array<{ session: string; started: string; updated: string; title: string; set_aside?: true }>> {
   await moveArchived(me, taf, deps);
   const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me)));
   const listed = all.filter((s) => s.kind === "chat" && (s.archived === true) === archivedOnly).slice(0, CHAT.chatsListed);
   const read = await Promise.all(listed.map((s) => deps.agents.session(me.tenantID, s.id, ownerKey(me)).catch(() => undefined)));
+  // Coach's chats set aside (setAsideCoach keeps each by its session for 30 days); a read that fails marks none.
+  const setAside = taf.job === SETUP_JOB && deps.coach
+    ? await Promise.all(listed.map((s) => deps.coach!.get(setAsideKey(me.tenantID, s.id)).then((v) => v !== undefined && v !== null, () => false)))
+    : [];
   return listed.flatMap((s, i) => {
     const events = read[i]?.events ?? [];
     const text = chatTitle(events.filter((e) => e.kind === "owner_message").map((e) => {
@@ -5557,7 +5562,7 @@ async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = fals
     }), events.filter((e) => e.kind === "component").map((e) => e.body));
     if (!text) return [];
     const title = text.length > CHAT.chatTitle ? text.slice(0, CHAT.chatTitle - 1).trimEnd() + "…" : text;
-    return [{ session: s.id, started: iso(s.started), updated: iso(s.updated), title }];
+    return [{ session: s.id, started: iso(s.started), updated: iso(s.updated), title, ...(setAside[i] ? { set_aside: true as const } : {}) }];
   });
 }
 
