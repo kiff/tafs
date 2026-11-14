@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
-import { AgentsError } from "../src/cloud/agents.js";
+import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
 import { atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
@@ -4501,6 +4501,43 @@ describe("Coach's result, handed over by tafs cloud", () => {
       expect(w.agents.calls.filter((c) => c.startsWith("answerResult")).length).toBe(answered);
     } finally {
       console.warn = warn;
+    }
+  });
+
+  // 14 Nov: every Gmail taf's first check named data.messages, a skill's example, where the read Coach made had its
+  // list elsewhere. A check whose list isn't where Coach's own reads found one goes back to Coach, with their paths.
+  it("answers a result whose check's list isn't where Coach's reads found one, with the paths they have, and makes nothing", async () => {
+    const { w, run, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const session = w.agents.runs.find((r) => r.id === run)!.session;
+    const items = (WORK_CHECK as { items: string }).items;
+    const seen = (answerText: string): SessionEvent[] => [
+      { session, run, seq: 1, time: "2026-11-14T13:00:00Z", kind: "tool_call", body: { tool: "planque", call_id: "r1", input: { action: "read", grant: "grt_Desk123456", tool: "list_x" } } },
+      { session, run, seq: 2, time: "2026-11-14T13:00:01Z", kind: "tool_result", body: { tool: "planque", call_id: "r1", text: answerText } },
+    ];
+    w.agents.events.set(session, seen(JSON.stringify({ results: [{ id: "a" }], meta: { pages: [] } })));
+    await note();
+    expect(answer()?.answer).toEqual({ failed: `the check's items, ${items}, isn't a list in what the reads you made answered: their lists are at results, meta.pages. Take items (and its cursor and id, inside each item) from a read you've seen, and hand over again` });
+    expect([...w.tafs.held.values()].some((t) => t.kiffAgent === "refunds-x")).toBe(false);
+    expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft"))).toBe(false);
+  });
+
+  it("hands over a result whose check's list is where Coach's read found one, or when no read answered JSON", async () => {
+    for (const text of ["fits", "not json at all"]) {
+      const { w, run, note, answer } = await paused();
+      w.agents.access.set("u_ana", { cards_manage: true });
+      const session = w.agents.runs.find((r) => r.id === run)!.session;
+      const items = (WORK_CHECK as { items: string }).items;
+      const body: Record<string, unknown> = {};
+      let cur = body;
+      const keys = items.split(".");
+      keys.forEach((k, i) => { cur[k] = i === keys.length - 1 ? [{ id: "a" }] : {}; cur = cur[k] as Record<string, unknown>; });
+      w.agents.events.set(session, [
+        { session, run, seq: 1, time: "2026-11-14T13:00:00Z", kind: "tool_call", body: { tool: "planque", call_id: "r1", input: { action: "read", grant: "grt_Desk123456", tool: "list_x" } } },
+        { session, run, seq: 2, time: "2026-11-14T13:00:01Z", kind: "tool_result", body: { tool: "planque", call_id: "r1", text: text === "fits" ? JSON.stringify(body) : text } },
+      ]);
+      await note();
+      expect([text, (answer()?.answer as { failed?: string } | undefined)?.failed]).toEqual([text, undefined]);
     }
   });
 
