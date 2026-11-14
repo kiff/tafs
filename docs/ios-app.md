@@ -171,7 +171,8 @@ the app in sample mode.
 - **The bar** (`TafsBar`, in `TafsApp`'s `RootView`): **Account · Tafs · Needs you · Record**,
   then **Coach**, a filled ink button that opens Coach mode, shown only when
   `signedIn && mode == .kiff && mayUseCoach`. Along the foot on a compact width, below the
-  screens so a chat's field stays above it, and hidden while the keyboard is up. Each tab is
+  screens so a chat's field stays above it, and hidden while the app's own keyboard is up (not
+  for a system alert's, such as "Sign in to Apple Account", or another app's beside it). Each tab is
   built the first time it's opened and then kept. Account is `SettingsView`; ⌘1–3 open Tafs,
   Needs you and Record, ⌘, Account, ⌘K Coach.
 - **On an iPad's full width, one sidebar for the whole app** (`HomeSplitView(tab:coachAvailable:)`,
@@ -748,13 +749,24 @@ Home lists it ([api.md](api.md) › Coach waiting; `KIFF/TafsCloud+CoachWaiting.
   tafs cloud's words only: `words.line` ("Coach is waiting for your approval.") and `words.open`
   ("Open Coach"). Needs you never says nothing is waiting while one is listed, and Home's count is
   tafs cloud's `needs_you`, which has each once.
+- **Not the chat on screen:** while Coach is open on a chat (`AppModel.coachChatOnScreen`: `setupChat`, or
+  the thread's session), that chat's row isn't drawn and isn't counted (`coachWaiting` is Home's
+  `coachWaitingListed` less it). Of tafs cloud's `needs_you` count only the rows hidden come off, never below
+  0, and the line under the count is then the app's own count words, not tafs cloud's line that counts it.
+  Closed, the row and its count are back as Home listed them. Open Coach takes the row and the badge
+  together, in the same tap.
 - **Read leniently:** one without its chat (`session`) or either line is left out, never Home with it.
-- **The way in** opens Coach on that chat (`openSetupChat(session)`), where its card waits. Someone who may not
-  use Coach (`mayUseCoach`) sees the line alone, never a button that does nothing.
+- **The way in** opens Coach on that chat (`openSetupChat(session)`), where its card waits, on one tap. Someone who may not
+  use Coach (`mayUseCoach`) sees the line alone, never a button that does nothing. The Set aside swipe is on
+  the row's line alone, never over its buttons, so no drag recognizer sits around Open Coach.
 - **At once:** when Coach's run pauses on a card while its chat is open (its stream's live line ends on
   `waiting_for_you`, or it ends `PAUSED`), the app reads Home once as that stream ends
   (`AppModel.stillWaitsOnYou`), so the row and the badge come while Coach is still open, not after it closes.
-  A run that went on after the card, or ended, reads nothing more.
+- **When the run ends:** a run that ends on its stream, however it ends (`COMPLETED`, `CANCELLED`,
+  `ERROR`; `AppModel.readsHomeAtEnd`), reads Home once too, and so does a run seen ending on a read of the
+  thread (at work at the last read, idle now, with no stream), or handed over. A row of that chat that
+  waited on the person goes, with its badge, without waiting for the next read. A stream that drops with
+  no end reads nothing.
 - **The line's date** ("depuis le 14 nov.") is tafs cloud's, inside `words.line`; the app draws it as sent.
 
 **Set aside** is "not now", never an approval: nothing is signed, and no Face ID. Only signed in (not the
@@ -773,15 +785,22 @@ Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideB
   then `text`, `yes` and `no`), then calls `POST /v1/home/coach-waiting/set-aside`, with no body.
 - **One call per gesture:** the swipe asks only as it ends, once. A chat already being set aside
   (`settingAside`, marked before anything is awaited) sends nothing again until tafs cloud answers, nor does
-  Set all aside meanwhile. A Home read meanwhile doesn't draw it again.
-- **After:** the row goes once tafs cloud answers, with a success tick, and Home is read again: the badge is
-  tafs cloud's `needs_you` count as sent. A refusal keeps the row and says why in tafs cloud's words
+  Set all aside meanwhile.
+- **While tafs cloud answers:** a row being set aside isn't drawn, and the badge leaves it out (never below
+  0), so a swipe that took never springs back looking untouched (as Android 94). Set all aside hides every
+  row it covers the same way. A Home read meanwhile doesn't draw it again. A refusal brings the row back.
+- **After:** the row stays gone once tafs cloud takes it, with a success tick, and Home is read again: the badge is
+  tafs cloud's `needs_you` count as sent. A refusal brings the row back and says why in tafs cloud's words
   (`lastError`), with a warning tick.
 - **Coach driving the app** can't set a chat aside: Set aside, Set all aside and its ask's yes carry the
   confirm mark ([drive.md](drive.md)), so a driven touch on either button is refused and nothing is sent
   (`DriveTests.testATouchOnSetAsideIsRefusedBeforeAnythingRuns`). The row that carries the swipe and its
   accessibility action is marked too, though the drive registers neither; its Open Coach is marked as not
   confirming.
+- **The pencil** (New conversation) in Coach opened on a taf ("Improve <taf>") starts a plain Coach chat,
+  on no taf (`newCoachConversation`), and so does New taf at the chat's top. It stays plain: Coach closed
+  and opened again on the same taf's page doesn't go back to that taf's mode; another taf's page opens on
+  that taf.
 - **A new conversation:** a chat set aside is never the one Coach goes on in. When it's the chat shown (or
   the latest one shown together), Coach starts a new conversation (`newSetupChat`), so a new job's first
   message asks for a new chat (`new_chat`) and never names the ended session. When Coach next picks its
@@ -798,7 +817,9 @@ Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideB
   cloud's, by session, so they follow at the next Home read; this phone keeps no current-chat id of its own.
   Set aside's `words.done` ("You'll find it in Previous conversations.") isn't drawn yet.
 
-Tests: `TafsTests/CoachWaitingTests.swift`.
+Tests: `TafsTests/CoachWaitingTests.swift`; a run's end, `SetupTests.testACoachRunEndingReadsHome`; the
+pencil, `VersionsTests.testThePencilInATafsCoachModeStartsAPlainChat`. One tap opening the chat is pinned
+by the card's structure only; the tap itself needs a device.
 
 ## Your step
 

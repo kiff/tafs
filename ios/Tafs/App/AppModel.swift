@@ -32,7 +32,22 @@ final class AppModel: ObservableObject {
     /// › Your step), less those this phone just answered.
     @Published private(set) var yourSteps: [TafsCloud.YourStep] = []
     /// Coach's chats waiting on the owner, as Home lists them (docs/api.md › Coach waiting).
-    @Published private(set) var coachWaiting: [TafsCloud.CoachWaiting] = []
+    @Published private(set) var coachWaitingListed: [TafsCloud.CoachWaiting] = []
+    /// Coach's waiting chats as Needs you draws them: Home's, less the chat open in Coach now (the
+    /// person is in it), and less those being set aside, so a swipe that took never springs back
+    /// while tafs cloud answers (as Android 94 does). Neither shows as a row nor counts; a refusal
+    /// brings the row back.
+    var coachWaiting: [TafsCloud.CoachWaiting] {
+        let open = coachChatOnScreen
+        return coachWaitingListed.filter { $0.session != open && !settingAside.contains($0.session) }
+    }
+    /// The Coach chat open on screen: Coach is open, on a chat that has a session; nil otherwise.
+    var coachChatOnScreen: String? {
+        guard coachOpen else { return nil }
+        return setupChat ?? (setupFresh ? nil : setupThread.session)
+    }
+    /// Of Home's waiting chats, those Needs you leaves out: open on screen, or being set aside.
+    private var coachWaitingHidden: Int { coachWaitingListed.count - coachWaiting.count }
     /// Home's "Set all aside" (`coach_waiting_clear`), as tafs cloud sent it; nil when it sent none.
     @Published private(set) var coachWaitingClear: TafsCloud.CoachWaitingClear?
     /// The Coach chats being set aside now: one call per chat at a time, so a swipe that fires
@@ -58,13 +73,13 @@ final class AppModel: ObservableObject {
     /// What waits for the person: tafs cloud's count, or, when it sent none, the app's own
     /// count of held calls, currency requests, steps and "Did this happen?" calls.
     var needsYouCount: Int {
-        homeNeedsYou.map { max(0, $0.count - answeredStillCounted) }
+        homeNeedsYou.map { max(0, $0.count - answeredStillCounted - coachWaitingHidden) }
             ?? held.count + cardUnitExceptions.count + yourSteps.count + unproven.count + coachWaiting.count
     }
 
     /// Home's line under the working count, in tafs cloud's words when it sent them.
     var needsYouWords: String {
-        if answeredStillCounted == 0, let words = homeNeedsYou?.words { return words }
+        if answeredStillCounted == 0, coachWaitingHidden == 0, let words = homeNeedsYou?.words { return words }
         let n = needsYouCount
         return n == 0 ? Words.NeedsYou.nothing : Words.NeedsYou.count(count: n)
     }
@@ -678,7 +693,7 @@ final class AppModel: ObservableObject {
             recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
             recordTyping?.cancel(); recordTyping = nil
             cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil; homeHeadline = nil
-            yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaiting = []
+            yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaitingListed = []
             coachWaitingClear = nil; settingAside = []; setAsideChats = []
             haltErrors = [:]
             alertsOffered = false
@@ -706,7 +721,8 @@ final class AppModel: ObservableObject {
                 return try await kiff.startDeviceSignIn(publicKey: key.isEmpty ? nil : key,
                                                         approvalPublicKey: key.isEmpty || approvalKey.isEmpty ? nil : approvalKey,
                                                         deviceName: Words.Settings.Devices.thisDeviceName(device: "\(ThisDevice.kind)"),
-                                                        platform: key.isEmpty ? nil : ThisDevice.platform)
+                                                        platform: key.isEmpty ? nil : ThisDevice.platform,
+                                                        kind: ThisDevice.kiffKind)
             } catch where Self.transient(error) && tries < 2 {
                 tries += 1
                 try await Task.sleep(nanoseconds: 500_000_000)
@@ -1767,8 +1783,9 @@ final class AppModel: ObservableObject {
     func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
         cardUnitExceptions = home.cardUnitExceptions ?? []
         showSteps(home.yourSteps ?? [])
-        // A chat being set aside isn't drawn again by a read meanwhile, as on Android.
-        coachWaiting = (home.coachWaiting ?? []).filter { $0.usable && !settingAside.contains($0.session) }
+        // A chat being set aside isn't drawn again by a read meanwhile, as on Android: `coachWaiting`
+        // leaves it out until tafs cloud answers, and a refusal brings it back.
+        coachWaitingListed = (home.coachWaiting ?? []).filter { $0.usable }
         coachWaitingClear = home.coachWaitingClear.flatMap { $0.usable ? $0 : nil }
         homeNeedsYou = home.needsYou
         homeHeadline = home.headlineWords
@@ -6585,9 +6602,13 @@ final class AppModel: ObservableObject {
 
     /// A new conversation in Coach mode is on no taf (kiff/tafs#138, item 36): the owner
     /// asked for a new taf in one opened on a taf's page, and got that taf's next version.
-    /// The taf on screen is offered in it, to improve with one tap.
+    /// The taf on screen is offered in it, to improve with one tap. The pencil is a plain chat
+    /// for good: Coach reopened on the same taf's page stays on it, never back in that taf's mode,
+    /// so the taf on screen is marked as already chosen against.
     func newCoachConversation() {
+        let onScreen = tafOnScreen.flatMap { cloudTaf(for: $0)?.id }
         newSetupChat()
+        setupContextTafID = onScreen
     }
 
     /// Coach's conversation has nothing in it yet: no message, card or answer, sent or on its
@@ -6866,7 +6887,9 @@ final class AppModel: ObservableObject {
     @discardableResult
     func setAsideCoach(_ session: String?) async -> Bool {
         guard mode == .kiff else { return false }
-        let sessions = session.map { Set([$0]) } ?? Set(coachWaiting.map(\.session))
+        // Set all aside ends every chat tafs cloud listed, so it's guarded by all of them, rows
+        // hidden while being set aside included: no second call for a chat already on its way.
+        let sessions = session.map { Set([$0]) } ?? Set(coachWaitingListed.map(\.session))
         // Checked and marked before anything is awaited, so on the main actor no second call slips in between.
         guard !sessions.isEmpty, settingAside.isDisjoint(with: sessions) else { return false }
         settingAside.formUnion(sessions)
@@ -6889,7 +6912,7 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return false }
         settingAside.subtract(sessions)
         let ended = Set(done.setAside)
-        coachWaiting.removeAll { ended.contains($0.session) }
+        coachWaitingListed.removeAll { ended.contains($0.session) }
         setAsideChats.formUnion(ended)
         // Coach no longer shows a chat that was set aside: its next message would go on in the
         // ended session. A new conversation instead, as Android 1.27.1 does.
@@ -7117,9 +7140,13 @@ final class AppModel: ObservableObject {
         var proof: String?
         if planqueReady && sessionHasKey { proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) }) }
         guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
+        // Coach's run ended since the last read, seen here rather than on a stream: Home is read again.
+        var runEnded = false
         do {
             let thread = try await cloud.setupThread(s.id, session: setupChat, proof: proof, can: Self.stepsSignedHere)
             guard gen == accountGeneration, conversation == setupConversationGeneration, !setupFresh else { return }
+            // At work at the last read, idle now, and no stream to say so at its end.
+            runEnded = setupThread.working != nil && thread.working == nil && setupLive == nil
             setupThread = withSent(thread)
             setupError = nil
             settleSetupAwaiting()
@@ -7130,11 +7157,17 @@ final class AppModel: ObservableObject {
             if setupLive != nil, thread.working == nil, !setupSending, setupSent.isEmpty, thread.handedOver(session: setupLive?.session) {
                 setupLive = nil
                 setupAwaiting = nil
+                runEnded = true
             }
         } catch {
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
             setupError = Words.Coach.conversationNotLoaded(why: "\(error.localizedDescription)")
             return
+        }
+        // Setup ended or was handed over: Needs you's row for this chat, and its badge, go now.
+        if runEnded {
+            await refresh()
+            guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         }
         // What an approval needs to be shown: planque's grant and KIFF's draft.
         let approvals = setupThread.components.map(\.component).filter { $0.type == .approval || $0.type == .signIn }
@@ -7760,7 +7793,15 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         setupLive = nil
         // Paused on a card: Home, and its Needs you, read once now, as a taf's chat does at its end.
-        if waitsOnYou { await refresh() }
+        // Any other end (done, stopped, failed) reads it too: a row of this chat that waited on the
+        // person goes, with its badge, rather than wait for the next read.
+        if Self.readsHomeAtEnd(ended: ended, waitsOnYou: waitsOnYou) { await refresh() }
+    }
+
+    /// Whether a Coach run's stream, at its end, reads Home again: when the run ended, however it
+    /// ended, or paused on a card. A stream that dropped with no end leaves it to the next read.
+    nonisolated static func readsHomeAtEnd(ended: String?, waitsOnYou: Bool) -> Bool {
+        waitsOnYou || ended != nil
     }
 
     /// Whether Coach's run still waits on its person after this live line: `waiting_for_you`

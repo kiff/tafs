@@ -369,8 +369,9 @@ else. The Strings workflow runs on every change to `android/app/src/main/kotlin`
 
 A line that names the device says what it is (`{device}`): "phone", or "tablet" where the screen's smallest width is 600 dp
 or more, as Android's `sw600dp` does (`ThisDevice`, set in `TafsApplication`). Both words are lines of their own
-(`device.phone`, `device.tablet`), so each language says them. The device name KIFF lists for the phone's key reads "tafs
-on Android phone" (`settings.devices.this_device_name`).
+(`device.phone`, `device.tablet`), so each language says them. The device name the phone sends KIFF at sign-in reads "tafs
+on Android phone" (`settings.devices.this_device_name`), with its `kind` (`android_phone` or `android_tablet`, `ThisDevice`);
+Devices shows KIFF's `display_name`, drawn from the kind in the app's language, and that name only without one.
 
 The Terms and Privacy policy links (Settings, Sign-in, Plan & usage) open kiff.dev's page in the lines' language:
 `/terms#tafs` in English, `/de/terms#tafs` in German, and so on (`Legal`).

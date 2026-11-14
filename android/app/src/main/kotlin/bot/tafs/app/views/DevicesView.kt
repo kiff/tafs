@@ -74,7 +74,7 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
           Panel {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
               Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(device.name ?: Words.Settings.Devices.unnamed, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+                Text(device.shown ?: Words.Settings.Devices.unnamed, style = scaled(15, FontWeight.SemiBold, Theme.ink))
                 Text(lastUsed(device), style = scaled(13, color = Theme.dim))
               }
               if (device.thisDevice) {
@@ -96,7 +96,7 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
   removing?.let { device ->
     DriveAlert(
       onDismissRequest = { removing = null },
-      title = { Text(device.name?.let { Words.Settings.Devices.signOutNamed(it) } ?: Words.Settings.Devices.signOutThis) },
+      title = { Text(device.shown?.let { Words.Settings.Devices.signOutNamed(it) } ?: Words.Settings.Devices.signOutThis) },
       confirmButton = {
         TextButton(onClick = { removing = null; scope.launch { remove(device) } }, modifier = Modifier.confirms()) { Text(Words.Settings.Devices.signOut, color = Theme.no) }
       },

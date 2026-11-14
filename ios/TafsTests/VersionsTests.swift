@@ -127,6 +127,43 @@ final class VersionsTests: XCTestCase {
         XCTAssertFalse(model.coachChatIsEmpty, "one on a taf gives way to a new one, on no taf")
     }
 
+    /// The pencil in Coach opened on a taf ("Improve <taf>") starts a plain Coach chat, with no
+    /// taf mode, and it stays plain: Coach closed and opened again on the same taf's page doesn't
+    /// put the taf back (the live run: the pencil kept the taf's mode). Another taf's page still
+    /// opens on that taf.
+    func testThePencilInATafsCoachModeStartsAPlainChat() async throws {
+        let (model, first) = await kiffModel(signer: StubSigner())
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae, HomeJSON.entry(agent: "example-second", name: "Second", id: "depl_2")]))
+        await model.refresh()
+        let second = try XCTUnwrap(model.tafs.first { $0.name == "Second" }?.id)
+        model.tafOnScreen = first
+        model.openCoach()
+        XCTAssertEqual(model.setupImproving?.id, "depl_1", "Coach mode on the taf")
+        XCTAssertFalse(model.coachChatIsEmpty, "so the pencil starts a new chat, not the view's top")
+
+        model.newCoachConversation()
+        XCTAssertNil(model.setupImproving, "a plain Coach chat")
+        XCTAssertTrue(model.setupFresh)
+        XCTAssertTrue(model.coachChatIsEmpty)
+
+        model.coachOpen = false
+        model.openCoach()
+        XCTAssertNil(model.setupImproving, "opened again on the same taf: still plain")
+        XCTAssertTrue(model.coachOpen)
+
+        model.coachOpen = false
+        model.tafOnScreen = second
+        model.openCoach()
+        XCTAssertEqual(model.setupImproving?.id, "depl_2", "another taf's page opens on that taf")
+
+        // The pencil, and "New taf" at the chat's top, both start it this way.
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        let view = try String(contentsOf: root.appendingPathComponent("Views/SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(view.contains("Button(action: newConversation) { Image(systemName: \"square.and.pencil\") }"))
+        XCTAssertTrue(view.contains("else { landed = true; following = true; model.newCoachConversation() }"))
+        XCTAssertTrue(view.contains("startChoice(Words.Home.newTaf, selected: improving == nil) { model.newCoachConversation() }"))
+    }
+
     /// Start a new taf opens Coach mode in a new conversation on no taf, even from a taf's
     /// page (kiff/tafs#138, item 59): the old form is gone.
     func testStartANewTafIsANewCoachConversation() async throws {
