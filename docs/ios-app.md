@@ -905,8 +905,8 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
 - **The scan:** the camera reads the computer's QR. `PairingRequest.read` checks it strictly before
   anything is shown or signed: `kiff.pair.v1`, no field KIFF doesn't take, `exp` not passed and at
   most 5 minutes ahead, a known `kind` and `platform`, a usable `name`, a 32-byte nonce, P-256 keys
-  that differ, `approval_pub` exactly for `hello` and `enclave`, `key_store` only `software` and
-  only for `passkey`, and `credential` (the computer's own platform passkey, as Windows pairs with
+  that differ, `approval_pub` exactly for `hello` and `enclave`, `key_store` only `software` (with it, whatever the kind, a `view` device: no approval key and no
+  credential, the code over `pub` alone), and `credential` (the computer's own platform passkey, as Windows pairs with
   Windows Hello) only for `passkey`, exactly `{id, public_key}`, an id of at most 1023 bytes and a
   P-256 key that isn't the device key. The body sends it on as read. A code it won't pair is said in words, and the camera keeps reading.
 - **Before the fingerprint:** what pairing gives by kind ("… will be able to approve your tafs'

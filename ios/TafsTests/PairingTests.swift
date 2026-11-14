@@ -70,7 +70,8 @@ final class PairingTests: XCTestCase {
         XCTAssertEqual(read(code { $0["approval_pub"] = 7 }), .failure(.badKeys))
     }
 
-    /// `key_store` (KIFF's pairing contract §5.1): only "software", only on a passkey computer, and sent on as read.
+    /// `key_store` (KIFF's pairing contract §5.1): only "software", sent on as read. With it, whatever the kind,
+    /// the device is `view`: no approval key and no credential, and the check code covers `pub` alone.
     func testASoftwareKeyedComputerIsReadAsOne() throws {
         let software = try read(code { $0["kind"] = "passkey"; $0["approval_pub"] = nil; $0["key_store"] = "software" }).get()
         XCTAssertTrue(software.softwareKey)
@@ -79,7 +80,12 @@ final class PairingTests: XCTestCase {
         XCTAssertFalse(try read(code()).get().softwareKey)
         XCTAssertNil((try JSONSerialization.jsonObject(with: try read(code()).get().body) as? [String: String])?["key_store"], "omitted otherwise")
 
-        XCTAssertEqual(read(code { $0["key_store"] = "software" }), .failure(.badField), "a hello computer's key is in hardware")
+        XCTAssertEqual(read(code { $0["key_store"] = "software" }), .failure(.badKeys), "a view device brings no approval key")
+        let enclave = try read(code { $0["platform"] = "macos"; $0["kind"] = "enclave"; $0["approval_pub"] = nil; $0["key_store"] = "software" }).get()
+        XCTAssertTrue(enclave.softwareKey, "whatever the kind")
+        XCTAssertEqual(enclave.checkCode, "F2ULUM", "over pub alone")
+        XCTAssertEqual(read(code { $0["kind"] = "passkey"; $0["approval_pub"] = nil; $0["key_store"] = "software"
+            $0["credential"] = ["id": "AQID", "public_key": Self.approvalPub] }), .failure(.badKeys), "nor a credential")
         XCTAssertEqual(read(code { $0["kind"] = "passkey"; $0["approval_pub"] = nil; $0["key_store"] = "hardware" }), .failure(.badField))
         XCTAssertEqual(read(code { $0["kind"] = "passkey"; $0["approval_pub"] = nil; $0["key_store"] = true }), .failure(.badField))
     }
