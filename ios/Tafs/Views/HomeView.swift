@@ -43,7 +43,7 @@ struct HomeView: View {
 
                 // The labels' chips (Missions draft): All, two labels, then "+N"; a chip filters the list,
                 // whose order never changes.
-                if !model.listLabels.isEmpty { LabelChips(labels: model.listLabels, selected: model.listLabel, all: model.brief?.words.all ?? "") { model.filterList($0) } }
+                if !model.listLabels.isEmpty { LabelChips(labels: model.listLabels, selected: model.listLabel, all: model.labelsAllWords) { model.filterList($0) } }
 
                 // Theirs, then the ones shared with them (kiff/tafs#306).
                 let all = model.tafSections
@@ -300,7 +300,7 @@ struct HomeView: View {
                 // With no taf and the recipes listed, tafs cloud's line leads: no "0 tafs
                 // working" above them (as on Android).
                 // tafs cloud's line as sent; the app's own count only when it sent none.
-                Text(model.workingWords)
+                Text(model.listHeadline)
                     .foregroundColor(Theme.ink)
                 Text(model.needsYouWords)
                     .foregroundColor(Theme.dim)

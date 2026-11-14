@@ -9,9 +9,9 @@ extension TafsCloud.Brief {
 
     /// The sample's labels, over its tafs by template, so a translated sample keeps them.
     static let sampleLabels: [(label: TafsCloud.Brief.Label, tafs: [String])] = [
-        (Label(id: sampleMoney, name: "Money", color: 2), ["billpay", "refunds", "chargebacks"]),
-        (Label(id: sampleClients, name: "Clients", color: 4), ["refunds", "access"]),
-        (Label(id: "ops", name: "Ops", color: 6), ["deploys"]),
+        (Label(id: sampleMoney, name: "Money", color: "money"), ["billpay", "refunds", "chargebacks"]),
+        (Label(id: sampleClients, name: "Clients", color: "customers"), ["refunds", "access"]),
+        (Label(id: "ops", name: "Ops", color: "operations"), ["deploys"]),
     ]
 
     /// The sample's brief, filtered to `label` as tafs cloud filters it: a label keeps its own
@@ -29,9 +29,9 @@ extension TafsCloud.Brief {
             return w
         }()
         b.labels = [
-            Label(id: sampleMoney, name: "Money", color: 2, count: 5, waiting: true),
-            Label(id: sampleClients, name: "Clients", color: 4, count: 2),
-            Label(id: "support", name: "Support", color: 6, count: 1),
+            Label(id: sampleMoney, name: "Money", color: "money", count: 5, waiting: 2),
+            Label(id: sampleClients, name: "Clients", color: "customers", count: 2),
+            Label(id: "support", name: "Support", color: "operations", count: 1),
         ]
         var pay = Decision()
         pay.id = "d-pay"; pay.question = "Pay 3 supplier bills due Friday, €1,240?"

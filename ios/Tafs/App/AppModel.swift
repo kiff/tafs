@@ -693,6 +693,7 @@ final class AppModel: ObservableObject {
             recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
             recordTyping?.cancel(); recordTyping = nil
             cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil; homeHeadline = nil
+            homeLabels = []; homeLabelsAll = nil; listLabel = nil
             yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaitingListed = []
             coachWaitingClear = nil; settingAside = []; setAsideChats = []
             haltErrors = [:]
@@ -1789,6 +1790,8 @@ final class AppModel: ObservableObject {
         coachWaitingClear = home.coachWaitingClear.flatMap { $0.usable ? $0 : nil }
         homeNeedsYou = home.needsYou
         homeHeadline = home.headlineWords
+        homeLabels = home.labels?.items ?? []
+        homeLabelsAll = home.labelsWords?.all
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
         cloudTafs = running
@@ -1990,32 +1993,54 @@ final class AppModel: ObservableObject {
     /// The label the tafs list is filtered to; nil is All.
     @Published private(set) var listLabel: String?
 
-    /// Each taf's labels: tafs cloud's once its labels ship (design v2.1 §3); the sample's for
-    /// screenshots (`-brief YES`). None, and the list draws no chips, as today.
+    /// The account's labels as Home sends them (docs/labels.md), in the order to show them; none
+    /// with no labelled taf, and the list draws no chips, as today.
+    @Published private(set) var homeLabels: [TafsCloud.Brief.Label] = []
+    /// Home's word for the first chip (`labels_words.all`).
+    @Published private(set) var homeLabelsAll: String?
+
+    /// The sample's labels, for screenshots only (`-brief YES`).
+    private var sampleLabelled: Bool { mode == .sample && Screenshots.brief }
+
+    /// Each taf's labels, in the account's order: Home's `labels` on the taf, or the sample's.
     func labels(of taf: Taf) -> [TafsCloud.Brief.Label] {
-        guard mode == .sample, Screenshots.brief else { return [] }
-        guard let key = templateOf[taf.id] else { return [] }
-        return TafsCloud.Brief.sampleLabels.filter { $0.tafs.contains(key) }.map(\.label)
+        if sampleLabelled {
+            guard let key = templateOf[taf.id] else { return [] }
+            return TafsCloud.Brief.sampleLabels.filter { $0.tafs.contains(key) }.map(\.label)
+        }
+        guard let ids = cloudTaf(for: taf.id)?.labels, !ids.isEmpty else { return [] }
+        return homeLabels.filter { ids.contains($0.id) }
     }
 
-    /// The list's chips: each label with how many of the listed tafs carry it, and an amber dot while one
-    /// of them waits for the person. In tafs cloud's order; none without labels.
+    /// The list's chips: each label with how many listed tafs carry it, and how many of them wait for the
+    /// person (the amber dot), counted by tafs cloud; the sample counts its own.
     var listLabels: [TafsCloud.Brief.Label] {
-        guard mode == .sample, Screenshots.brief else { return [] }
+        guard sampleLabelled else { return homeLabels }
         return TafsCloud.Brief.sampleLabels.map { entry in
             let tafs = listedTafs.filter { templateOf[$0.id].map(entry.tafs.contains) ?? false }
             var label = entry.label
             label.count = tafs.count
-            label.waiting = tafs.contains { !heldCalls(for: $0.id).isEmpty }
+            label.waiting = tafs.filter { !heldCalls(for: $0.id).isEmpty }.count
             return label
         }.filter { $0.count > 0 }
     }
 
+    /// The first chip's word: Home's, the brief's, or the app's own where neither sent one.
+    var labelsAllWords: String {
+        homeLabelsAll ?? brief.flatMap { $0.words.all.isEmpty ? nil : $0.words.all } ?? Words.Record.Filter.all
+    }
+
+    /// Home's first line: filtered to the chosen label, tafs cloud's line for it ("2 tafs working · Money").
+    var listHeadline: String {
+        listLabel.flatMap { id in listLabels.first { $0.id == id }?.headline } ?? workingWords
+    }
+
     func filterList(_ label: String?) { listLabel = label }
 
-    /// The tafs the list shows under its chip: all, or those carrying it. The order never changes.
+    /// The tafs the list shows under its chip: all, or those carrying it. The order never changes; a
+    /// label that's gone shows them all.
     func filtered(_ tafs: [Taf]) -> [Taf] {
-        guard let listLabel else { return tafs }
+        guard let listLabel, listLabels.contains(where: { $0.id == listLabel }) else { return tafs }
         return tafs.filter { labels(of: $0).contains { $0.id == listLabel } }
     }
 

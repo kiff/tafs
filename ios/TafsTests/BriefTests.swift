@@ -105,6 +105,40 @@ final class BriefTests: XCTestCase {
         XCTAssertTrue(overview.contains("ForEach(model.filtered(model.listedTafs)) { taf in"))
     }
 
+    /// Home's labels as tafs cloud sends them (docs/labels.md): in order, `waiting` a count, `headline` an
+    /// object, `labels_words.all`, and each taf's ids. A label or a field the app can't read is left out,
+    /// never Home; with none sent, no chips and the line as before.
+    func testHomesLabelsReadAsSent() throws {
+        let read = { (extra: String, taf: String) throws -> TafsCloud.Home in
+            try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(#"{"tafs":[{"id":"t1","name":"Rae","job":"j","kiff_agent":"rae","status":"active","next_run":null,"last_run":null,"color":0,"state":"idle","waiting":0,"card":{"ids":[],"active":true,"expires":null,"tools":[],"rules":[],"used":{},"usage_unknown":[]}\#(taf)}],"others":[],"removing":[]\#(extra)}"#.utf8))
+        }
+        let home = try read(#","labels":[{"id":"l1","name":"Money","color":"money","count":2,"waiting":1,"headline":{"words":"2 tafs working · Money"}},{"id":"l2","name":"Ops","color":"operations","count":1,"waiting":0},{"id":"","name":"x"},7],"labels_words":{"all":"All"}"#,
+                            #","labels":["l1","l2"]"#)
+        let labels = try XCTUnwrap(home.labels?.items)
+        XCTAssertEqual(labels.map(\.id), ["l1", "l2"], "in order; one with no id, and one that isn't a label, left out")
+        XCTAssertEqual(labels[0].waiting, 1)
+        XCTAssertEqual(labels[0].color, "money")
+        XCTAssertEqual(labels[0].headline, "2 tafs working · Money")
+        XCTAssertNil(labels[1].headline)
+        XCTAssertEqual(home.labelsWords?.all, "All")
+        XCTAssertEqual(home.tafs.first?.cloudTaf?.labels, ["l1", "l2"])
+
+        let none = try read("", "")
+        XCTAssertNil(none.labels)
+        XCTAssertEqual(none.tafs.first?.cloudTaf?.labels, [], "missing is none")
+        let odd = try read(#","labels":{"id":"l1"},"labels_words":"All""#, #","labels":"l1""#)
+        XCTAssertEqual(odd.labels?.items ?? [], [], "another shape: none, and Home still reads")
+        XCTAssertNil(odd.labelsWords?.all)
+        XCTAssertEqual(odd.tafs.first?.cloudTaf?.labels, [])
+
+        let model = AppModel()
+        XCTAssertTrue(model.listLabels.isEmpty, "no labels: no chips")
+        XCTAssertEqual(model.listHeadline, model.workingWords, "and the line as before")
+        model.filterList("gone")
+        XCTAssertEqual(model.listHeadline, model.workingWords, "a label that's gone: the whole list's line")
+        XCTAssertEqual(model.labelsAllWords, Words.Record.Filter.all)
+    }
+
     /// Needs you stays, unchanged, until there's a brief; its tab then says tafs cloud's word for it.
     /// Answering from the brief signs nothing.
     func testNeedsYouStaysUntilThereIsABriefAndNothingIsSignedFromIt() throws {

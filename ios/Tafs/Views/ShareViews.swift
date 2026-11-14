@@ -247,7 +247,7 @@ struct OverviewView: View {
                 }
                 if !model.held.isEmpty { needsYou }
                 // The labels' chips (Missions draft), filtering the table below.
-                if !model.listLabels.isEmpty { LabelChips(labels: model.listLabels, selected: model.listLabel, all: model.brief?.words.all ?? "") { model.filterList($0) } }
+                if !model.listLabels.isEmpty { LabelChips(labels: model.listLabels, selected: model.listLabel, all: model.labelsAllWords) { model.filterList($0) } }
                 tafsTable
                 Text(Words.Home.Overview.eachLineOpens).scaledFont(12).foregroundColor(Theme.dim)
             }

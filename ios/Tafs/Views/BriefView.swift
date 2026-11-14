@@ -63,7 +63,7 @@ struct BriefView: View {
 
     /// All, then two labels, then "+N": the tafs list's chips, filtering the brief.
     private func chips(_ brief: TafsCloud.Brief) -> some View {
-        LabelChips(labels: brief.labels, selected: model.briefLabel, all: brief.words.all) { id in Task { await model.filterBrief(id) } }
+        LabelChips(labels: brief.labels, selected: model.briefLabel, all: brief.words.all.isEmpty ? model.labelsAllWords : brief.words.all) { id in Task { await model.filterBrief(id) } }
             .accessibilityIdentifier("brief.labels")
     }
 
@@ -364,7 +364,7 @@ struct LogRow: View {
 struct LabelChips: View {
     let labels: [TafsCloud.Brief.Label]
     let selected: String?
-    /// tafs cloud's word for All; the app's own only where it sent none.
+    /// tafs cloud's word for All (`AppModel.labelsAllWords`).
     let all: String
     let choose: (String?) -> Void
     @State private var expanded = false
@@ -374,9 +374,9 @@ struct LabelChips: View {
         let hidden = labels.count - shown.count
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 6) {
-                LabelChip(words: all.isEmpty ? Words.Record.Filter.all : all, count: nil, waiting: false, selected: selected == nil) { choose(nil) }
+                LabelChip(words: all, count: nil, waiting: false, selected: selected == nil) { choose(nil) }
                 ForEach(shown) { label in
-                    LabelChip(words: label.name, count: label.count, waiting: label.waiting, selected: selected == label.id) {
+                    LabelChip(words: label.name, count: label.count, waiting: label.waiting > 0, selected: selected == label.id) {
                         choose(selected == label.id ? nil : label.id)
                     }
                 }
@@ -388,7 +388,7 @@ struct LabelChips: View {
     }
 }
 
-/// A taf's labels (Missions draft), as small grey chips under its line; nothing without labels.
+/// A taf's labels (Missions draft), as small grey chips under its line: two, then "+N"; nothing without labels.
 struct TafLabels: View {
     @EnvironmentObject private var model: AppModel
     let taf: Taf
@@ -396,14 +396,18 @@ struct TafLabels: View {
     var body: some View {
         let labels = model.labels(of: taf)
         if !labels.isEmpty {
+            // Two, then "+1" (docs/labels.md: a taf carries at most three).
             HStack(spacing: 4) {
-                ForEach(labels) { label in
-                    Text(label.name).scaledFont(11, weight: .medium).foregroundColor(Theme.soft)
-                        .padding(.horizontal, 7).padding(.vertical, 2)
-                        .background(Capsule().fill(Theme.raised))
-                }
+                ForEach(labels.prefix(2)) { label in chip(label.name) }
+                if labels.count > 2 { chip("+\(labels.count - 2)") }
             }
             .accessibilityIdentifier("taf.labels")
         }
+    }
+
+    private func chip(_ words: String) -> some View {
+        Text(words).scaledFont(11, weight: .medium).foregroundColor(Theme.soft)
+            .padding(.horizontal, 7).padding(.vertical, 2)
+            .background(Capsule().fill(Theme.raised))
     }
 }

@@ -157,22 +157,32 @@ extension TafsCloud {
             }
         }
 
-        /// A label chip, as filtered to the brief: its taf count, and whether one of its tafs waits.
+        /// A label chip, as Home (`labels`, docs/labels.md) and the brief send it: its name in the person's
+        /// language, its colour as one of Explore's category tokens, how many listed tafs carry it, how many
+        /// of those wait for the person (the amber dot above 0), and Home's line filtered to it.
         struct Label: Decodable, Equatable, Identifiable {
-            var id = "", name = ""
-            var color = 0, count = 0
-            var waiting = false
-            enum CodingKeys: String, CodingKey { case id, name, color, count, waiting }
-            init(id: String = "", name: String = "", color: Int = 0, count: Int = 0, waiting: Bool = false) {
-                self.id = id; self.name = name; self.color = color; self.count = count; self.waiting = waiting
+            var id = "", name = "", color = ""
+            var count = 0, waiting = 0
+            var headline: String?
+            enum CodingKeys: String, CodingKey { case id, name, color, count, waiting, headline }
+            private enum HeadlineKeys: String, CodingKey { case words }
+            init(id: String = "", name: String = "", color: String = "", count: Int = 0, waiting: Int = 0, headline: String? = nil) {
+                self.id = id; self.name = name; self.color = color; self.count = count; self.waiting = waiting; self.headline = headline
             }
             init(from decoder: Decoder) throws {
                 guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
-                id = Brief.text(c, .id) ?? ""; name = Brief.text(c, .name) ?? ""
-                color = ((try? c.decodeIfPresent(Int.self, forKey: .color)) ?? nil) ?? 0
+                id = Brief.text(c, .id) ?? ""; name = Brief.text(c, .name) ?? ""; color = Brief.text(c, .color) ?? ""
                 count = ((try? c.decodeIfPresent(Int.self, forKey: .count)) ?? nil) ?? 0
-                waiting = ((try? c.decodeIfPresent(Bool.self, forKey: .waiting)) ?? nil) ?? false
+                // A count; a yes/no from an earlier draft reads as one waiting.
+                waiting = ((try? c.decodeIfPresent(Int.self, forKey: .waiting)) ?? nil)
+                    ?? (((try? c.decodeIfPresent(Bool.self, forKey: .waiting)) ?? nil) == true ? 1 : 0)
+                if let h = try? c.nestedContainer(keyedBy: HeadlineKeys.self, forKey: .headline) {
+                    headline = ((try? h.decodeIfPresent(String.self, forKey: .words)) ?? nil)
+                        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.flatMap { $0.isEmpty ? nil : $0 }
+                }
             }
+            /// One the app can draw and filter by.
+            var usable: Bool { !id.isEmpty && !name.isEmpty }
         }
 
         var at: String?
@@ -202,7 +212,7 @@ extension TafsCloud {
             nextMove = ((try? c.decodeIfPresent(NextMove.self, forKey: .nextMove)) ?? nil).flatMap { $0.usable ? $0 : nil }
             rest = ((try? c.decodeIfPresent(Counted.self, forKey: .rest)) ?? nil).flatMap { $0.words.isEmpty ? nil : $0 }
             credits = ((try? c.decodeIfPresent(CreditWords.self, forKey: .credits)) ?? nil)?.words.flatMap { $0.isEmpty ? nil : $0 }
-            labels = (Self.list(c, .labels) as [Label]).filter { !$0.id.isEmpty && !$0.name.isEmpty }
+            labels = (Self.list(c, .labels) as [Label]).filter(\.usable)
             words = ((try? c.decodeIfPresent(Words.self, forKey: .words)) ?? nil) ?? Words()
         }
 
@@ -217,6 +227,35 @@ extension TafsCloud {
         fileprivate static func list<K: CodingKey, T: Decodable>(_ c: KeyedDecodingContainer<K>, _ key: K) -> [T] {
             struct Lenient: Decodable { let value: T?; init(from decoder: Decoder) throws { value = try? T(from: decoder) } }
             return (((try? c.decodeIfPresent([Lenient].self, forKey: key)) ?? nil) ?? []).compactMap(\.value)
+        }
+    }
+
+    /// Home's labels (`labels`, docs/labels.md), in the order to show them: read one by one, so a label
+    /// the app can't read is left out, and another shape is none, never Home unread.
+    struct LabelList: Decodable, Equatable {
+        var items: [Brief.Label] = []
+        init(_ items: [Brief.Label] = []) { self.items = items }
+        init(from decoder: Decoder) throws {
+            struct Lenient: Decodable { let value: Brief.Label?; init(from decoder: Decoder) throws { value = try? Brief.Label(from: decoder) } }
+            items = ((try? [Lenient](from: decoder)) ?? []).compactMap(\.value).filter(\.usable)
+        }
+    }
+
+    /// A taf's labels on Home, by id; another shape reads as none.
+    struct LabelIDs: Decodable, Equatable {
+        var ids: [String] = []
+        init(from decoder: Decoder) throws {
+            ids = ((try? [JSONValue](from: decoder)) ?? []).compactMap { if case .string(let s) = $0, !s.isEmpty { return s }; return nil }
+        }
+    }
+
+    /// Home's words for the labels' first chip (`labels_words.all`); nil when it sent none.
+    struct LabelsWords: Decodable, Equatable {
+        var all: String?
+        enum CodingKeys: String, CodingKey { case all }
+        init(from decoder: Decoder) throws {
+            guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+            all = Brief.text(c, .all)
         }
     }
 

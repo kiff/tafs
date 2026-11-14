@@ -787,9 +787,12 @@ exactly as today. The draft draws the sample's brief only (`-brief YES` over the
   today's Needs you list. On an iPad's width, decisions beside Done, the next move under Done.
 - **Label chips** (All, two labels, "+N"; `LabelChips`) filter the brief, as tafs cloud filters it.
   The same chips sit over the tafs list (Home on a phone, the Overview on an iPad) and filter it
-  without changing its order; each label counts its listed tafs and shows an amber dot while one waits
-  for the person. Each taf's row carries its labels as small grey chips (`TafLabels`). No labels, no
-  chips: the list is as today.
+  without changing its order. They're Home's (`labels`, `labels_words`, each taf's `labels`;
+  `docs/labels.md` › What the apps get, in tafs cloud), drawn as sent: each label's count, an amber dot while
+  `waiting` is above 0, and, filtered, Home's line becomes the label's `headline`. The list opens on All
+  every time. Each taf's row carries its labels as small grey chips, two then "+1" (`TafLabels`). With
+  no labelled taf none of it is sent, and the list is as today. The sample's labels are for screenshots
+  only (`-brief YES`).
 - **A recommendation is shown, never acted on.** An answer goes through the route its decision already
   has (`ref`: a held call, a step, a connection, a proposal); nothing is signed from the brief.
 - **A mission's log** (`MissionLogView`, `GET /v1/missions/{id}/log`): read only, newest first, by
