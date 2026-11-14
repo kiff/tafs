@@ -1,7 +1,7 @@
 import { generateKeyPairSync, sign } from "node:crypto";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it, vi } from "vitest";
-import { COACH_CARDS, COACH_TOOL_GROUPS, coachToolsStep, OP_ARG, SESSION_ARG, TOOLS } from "../src/cloud/coach.js";
+import { COACH_CARDS, COACH_TOOL_GROUPS, coachCardsDraft, coachToolsStep, OP_ARG, SESSION_ARG, TOOLS } from "../src/cloud/coach.js";
 import { startDrive } from "../src/cloud/drive.js";
 import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
@@ -210,7 +210,10 @@ describe("labels and the business description", () => {
     for (const lang of LANGUAGES) expect(wordsIn(lang).business_title, lang).toBeTruthy();
     // Only a person puts words into every run's preface: KIFF holds each save for their yes, with the text shown,
     // and the tools step says so. A page Coach read can't save a description on its own.
-    expect(COACH_CARDS.find((c) => c.actions.includes("business_context"))).toMatchObject({ id: "coach-business", asks: true });
+    // limit 0: a Card holds a call only past its limit, so any other limit would let that many saves through unasked.
+    expect(COACH_CARDS.find((c) => c.actions.includes("business_context"))).toMatchObject({ id: "coach-business", limit: 0, asks: true });
+    const built = coachCardsDraft("agent_coach").cards.find((c: { id: string }) => c.id === "coach-business");
+    expect(built).toMatchObject({ on_exceed: "owner" });
     const does = coachToolsStep("en").groups.flatMap((g) => g.tools).find((x) => x.name === wordsIn("en").cts_business_context)!.does;
     expect(does).toMatch(/waits for you|waits for your approval/);
   });
