@@ -2101,6 +2101,13 @@ object Words {
     fun notSignedOutDevice(why: String, device: String): String = Res.s(R.string.sign_in_not_signed_out_device, why, device)
     val openKiff: String get() = Res.s(R.string.sign_in_open_kiff)
     val otherBrowser: String get() = Res.s(R.string.sign_in_other_browser)
+    fun pairCheck(device: String, code: String): String = Res.s(R.string.sign_in_pair_check, device, code)
+    fun pairHow(account: String, devices: String, add: String): String = Res.s(R.string.sign_in_pair_how, account, devices, add)
+    val pairNewCode: String get() = Res.s(R.string.sign_in_pair_new_code)
+    fun pairNoKey(device: String): String = Res.s(R.string.sign_in_pair_no_key, device)
+    fun pairPrompt(device: String): String = Res.s(R.string.sign_in_pair_prompt, device)
+    val pairStart: String get() = Res.s(R.string.sign_in_pair_start)
+    val pairWaiting: String get() = Res.s(R.string.sign_in_pair_waiting)
     object Relink {
       val codeExpired: String get() = Res.s(R.string.sign_in_relink_code_expired)
       val didntTake: String get() = Res.s(R.string.sign_in_relink_didnt_take)

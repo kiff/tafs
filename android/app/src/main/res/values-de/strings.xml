@@ -1951,6 +1951,13 @@
     <string name="sign_in_not_signed_out_device">Bei KIFF noch nicht abgemeldet: %1$s. Versuch es erneut oder melde dieses %2$s über „Geräte“ auf einem anderen Gerät ab.</string>
     <string name="sign_in_open_kiff">KIFF zum Genehmigen öffnen</string>
     <string name="sign_in_other_browser">Oder öffne diesen Link in einem anderen Browser:</string>
+    <string name="sign_in_pair_check">Es fragt, ob dieses %1$s %2$s zeigt.</string>
+    <string name="sign_in_pair_how">Öffne auf dem Telefon, das du schon mit tafs nutzt, %1$s → %2$s → %3$s und scanne diesen Code.</string>
+    <string name="sign_in_pair_new_code">Der Code ist abgelaufen, hier ist ein neuer.</string>
+    <string name="sign_in_pair_no_key">Dieses %1$s kann keinen Schlüssel halten und lässt sich daher nicht koppeln. Melde dich stattdessen mit KIFF an.</string>
+    <string name="sign_in_pair_prompt">Dieses %1$s mit deinem anderen Telefon koppeln</string>
+    <string name="sign_in_pair_start">Mit deinem anderen Telefon anmelden</string>
+    <string name="sign_in_pair_waiting">Wartet auf dein anderes Telefon…</string>
     <string name="sign_in_relink_code_expired">Der Code ist abgelaufen, bevor er in deinem Browser genehmigt wurde. Versuch es erneut.</string>
     <string name="sign_in_relink_didnt_take">Dieses Telefon kann immer noch nicht genehmigen. Versuch es erneut oder melde dich in den Einstellungen erneut an.</string>
     <string name="sign_in_relink_failed">Das erneute Genehmigen hat nicht geklappt. Versuch es erneut oder melde dich in den Einstellungen erneut an.</string>

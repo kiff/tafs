@@ -2063,6 +2063,13 @@
     <string name="sign_in_not_signed_out_device">Jeszcze nie wylogowano w KIFF: %1$s. Spróbuj ponownie albo wyloguj to urządzenie (%2$s) z sekcji Urządzenia na innym urządzeniu.</string>
     <string name="sign_in_open_kiff">Otwórz KIFF, aby zatwierdzić</string>
     <string name="sign_in_other_browser">Albo otwórz ten link w innej przeglądarce:</string>
+    <string name="sign_in_pair_check">Zapyta, czy to urządzenie (%1$s) pokazuje %2$s.</string>
+    <string name="sign_in_pair_how">Na telefonie, którego już używasz z tafs, otwórz %1$s → %2$s → %3$s i zeskanuj ten kod.</string>
+    <string name="sign_in_pair_new_code">Ten kod wygasł, więc oto nowy.</string>
+    <string name="sign_in_pair_no_key">To urządzenie (%1$s) nie może przechowywać klucza, więc nie da się go sparować. Zaloguj się przez KIFF.</string>
+    <string name="sign_in_pair_prompt">Sparuj to urządzenie (%1$s) z drugim telefonem</string>
+    <string name="sign_in_pair_start">Zaloguj się drugim telefonem</string>
+    <string name="sign_in_pair_waiting">Czeka na Twój drugi telefon…</string>
     <string name="sign_in_relink_code_expired">Kod wygasł, zanim został zatwierdzony w przeglądarce. Spróbuj ponownie.</string>
     <string name="sign_in_relink_didnt_take">Ten telefon nadal nie może zatwierdzać. Spróbuj ponownie albo zaloguj się ponownie w Ustawieniach.</string>
     <string name="sign_in_relink_failed">Ponowne zatwierdzenie nie powiodło się. Spróbuj ponownie albo zaloguj się ponownie w Ustawieniach.</string>

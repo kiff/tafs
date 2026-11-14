@@ -3879,6 +3879,20 @@ enum Words {
         static var openKiff: String { Words.line("sign_in.open_kiff") }
         /// Or open this link in another browser:
         static var otherBrowser: String { Words.line("sign_in.other_browser") }
+        /// It will ask whether this {device} shows {code}.
+        static func pairCheck(device: String, code: String) -> String { Words.line("sign_in.pair_check", device, code) }
+        /// On the phone you already use with tafs, open {account} → {devices} → {add}, and scan this code.
+        static func pairHow(account: String, devices: String, add: String) -> String { Words.line("sign_in.pair_how", account, devices, add) }
+        /// That code expired, so here's a new one.
+        static var pairNewCode: String { Words.line("sign_in.pair_new_code") }
+        /// This {device} can't hold a key, so it can't be paired. Sign in with KIFF instead.
+        static func pairNoKey(device: String) -> String { Words.line("sign_in.pair_no_key", device) }
+        /// Pair this {device} with your other phone
+        static func pairPrompt(device: String) -> String { Words.line("sign_in.pair_prompt", device) }
+        /// Sign in with your other phone
+        static var pairStart: String { Words.line("sign_in.pair_start") }
+        /// Waiting for your other phone…
+        static var pairWaiting: String { Words.line("sign_in.pair_waiting") }
         enum Relink {
             /// The code expired before it was approved in your browser. Try again.
             static var codeExpired: String { Words.line("sign_in.relink.code_expired") }

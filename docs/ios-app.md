@@ -921,6 +921,24 @@ Account → Devices → **Add a computer** pairs one of the person's computers f
 - **Coach** can't start or confirm a pairing: both controls carry the confirm mark.
 - Its lines are tafs#1033's `settings.devices.pair*` keys, shared with Android.
 
+### Signing in from another phone
+
+A new iPhone or iPad gets approval authority the way a computer does (KIFF's pairing contract §5.8;
+`KIFF/PairingOffer.swift`, `PairSignInView`, `AppModel.startPairingSignIn`/`finishPairingSignIn`).
+On the sign-in screen, **Sign in with your other phone**:
+
+- The device shows the `kiff.pair.v1` QR from the keys it already holds: `platform` `ios` or
+  `ipados`, `kind` `enclave`, its approval key, and `device_kind` `iphone` or `ipad`. The Mac build
+  sends `macos` and no `device_kind`, so it pairs as a computer through the same screen. The code
+  lasts 4½ minutes, and an expired one is replaced by a new one.
+- Beside it: how to scan it from the other phone (its Account, Devices and add button, in the app's
+  own words) and the check code that phone will ask about.
+- **The claim:** the device key signs `kiff.pair.claim.v1` (the nonce and the key's sha256) once,
+  behind Face ID or the passcode, and that proof is sent with `POST /v1/pair/claim` at least every
+  3 s until the other phone approves. KIFF's session is then used as a sign-in's is. A device with
+  no Secure Enclave holds no key, so it can't be paired and says to sign in with KIFF instead.
+- Nothing is approved on this device: the other phone approves, behind its own Face ID.
+
 ## Tests and CI
 
 - **Unit tests** (`TafsTests`) sit by feature: `ChatTests`, `WorkLogTests`,

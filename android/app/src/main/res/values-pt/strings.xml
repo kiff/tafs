@@ -1951,6 +1951,13 @@
     <string name="sign_in_not_signed_out_device">Ainda sem sessão terminada no KIFF: %1$s. Tente novamente, ou termine a sessão deste %2$s em Dispositivos noutro dispositivo.</string>
     <string name="sign_in_open_kiff">Abrir o KIFF para aprovar</string>
     <string name="sign_in_other_browser">Ou abra este link noutro navegador:</string>
+    <string name="sign_in_pair_check">Vai perguntar se este %1$s mostra %2$s.</string>
+    <string name="sign_in_pair_how">No telefone que já usa com o tafs, abra %1$s → %2$s → %3$s e leia este código.</string>
+    <string name="sign_in_pair_new_code">Esse código expirou, por isso aqui está um novo.</string>
+    <string name="sign_in_pair_no_key">Este %1$s não consegue guardar uma chave, por isso não pode ser associado. Inicie sessão com o KIFF.</string>
+    <string name="sign_in_pair_prompt">Associar este %1$s ao seu outro telefone</string>
+    <string name="sign_in_pair_start">Iniciar sessão com o seu outro telefone</string>
+    <string name="sign_in_pair_waiting">À espera do seu outro telefone…</string>
     <string name="sign_in_relink_code_expired">O código expirou antes de ser aprovado no seu navegador. Tente novamente.</string>
     <string name="sign_in_relink_didnt_take">Este telefone continua sem poder aprovar. Tente novamente, ou inicie sessão novamente nas Definições.</string>
     <string name="sign_in_relink_failed">Não foi possível aprovar novamente. Tente novamente, ou inicie sessão novamente nas Definições.</string>
