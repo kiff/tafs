@@ -1,0 +1,2 @@
+- Włączenie powiadomień nie prosi już o odcisk palca: jedno pytanie mniej przed pierwszym tafem.
+- Przy pierwszym połączeniu aplikacji widać, że jej Card przyjdzie potem, więc wiesz, że nastąpi drugie zatwierdzenie.

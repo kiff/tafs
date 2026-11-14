@@ -248,14 +248,16 @@ class PushTest {
 
   // MARK: Turning alerts on
 
-  @Test fun turningOnAlertsAsksPermissionThenConfirmsThenPointsKiffAtTafsCloudThenRegistersThePhone() = runTest {
+  @Test fun turningOnAlertsAsksPermissionThenPointsKiffAtTafsCloudThenRegistersThePhone() = runTest {
     reads()
     transport.answer(alertTarget, 200, target)
     transport.answer(register, 200, """{"answers":true,"alerts":true}""")
     val m = model()
     assertTrue(m.turnOnAlerts())
     assertEquals(1, push.asked)
-    assertEquals(listOf("Get an alert when a taf needs you"), auth.asked)
+    // No fingerprint: the one it asked for signed a message nothing checked. The target's registration is signed with the
+    // device key, with no prompt.
+    assertTrue(auth.asked.isEmpty())
     val kiffRequest = transport.requestsTo(alertTarget).single()
     assertEquals("https://cloud.tafs.kiff.dev/v1/kiff/alerts", body(alertTarget).getValue("url").jsonPrimitive.content)
     assertTrue("a signed setup call", kiffRequest.headers.containsKey("KIFF-Device-Signature"))
@@ -319,12 +321,16 @@ class PushTest {
     assertEquals(0, push.asked)
   }
 
-  @Test fun anOwnerWhoDoesNotConfirmTurnsNothingOn() = runTest {
+  // No fingerprint is asked, so one the phone would refuse doesn't stop alerts: the registration is signed with the device key.
+  @Test fun alertsTurnOnWithNoFingerprintAsked() = runTest {
     reads()
     auth.confirms = false
+    transport.answer(alertTarget, 200, target)
+    transport.answer(register, 200, """{"answers":true,"alerts":true}""")
     val m = model()
-    assertFalse(m.turnOnAlerts())
-    assertTrue(transport.requestsTo(alertTarget).isEmpty() && transport.requestsTo(register).isEmpty())
+    assertTrue(m.turnOnAlerts())
+    assertTrue(auth.asked.isEmpty())
+    assertEquals(1, transport.requestsTo(alertTarget).size)
     assertFalse(m.state.value.turningOnAlerts)
   }
 

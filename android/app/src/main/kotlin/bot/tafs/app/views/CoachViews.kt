@@ -426,6 +426,10 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
               draft?.cardLines?.flatten()?.forEach { Text(it, style = scaled(13, color = Theme.dim.copy(alpha = 0.7f))) }
             }
           }
+        } else if (c.draft == null && c.signs?.card != true && done == null) {
+          // An app's first sign-in has no draft yet (a Card is drafted over the tools it brings): tafs cloud's words still say a
+          // Card comes next ("Its Card: you approve it next"), so the owner knows a second approval follows.
+          c.signs?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, FontWeight.Medium, Theme.dim)) }
         }
         if (!grant.digestMatches) {
           Text(CoachWords.DIGEST_MISMATCH, style = scaled(13, color = Theme.no))

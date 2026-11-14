@@ -1,0 +1,2 @@
+- Activer les alertes ne demande plus votre empreinte : une demande de moins avant votre premier taf.
+- Connecter une app pour la première fois indique que sa Card vient ensuite : vous savez qu'une seconde approbation suit.

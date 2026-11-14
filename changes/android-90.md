@@ -1,0 +1,1 @@
+- **Android 1.27.2 (90): one fingerprint fewer before a first job, and a first sign-in says its Card comes next.** Turning alerts on no longer asks for a fingerprint, which signed nothing that was checked; an app's first sign-in card draws tafs cloud's "Its Card: you approve it next" (docs/android-app.md).

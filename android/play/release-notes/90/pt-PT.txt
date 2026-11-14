@@ -1,0 +1,2 @@
+- Ativar os alertas já não pede a sua impressão digital: um pedido a menos antes do seu primeiro taf.
+- Ao ligar uma app pela primeira vez, indica-se que o seu Card vem a seguir: sabe que se segue uma segunda aprovação.
