@@ -192,7 +192,8 @@ the app in sample mode.
   
   Each item opens its existing screen beside the sidebar (`HomeSelection`). The app's tab and the
   selection follow each other, so a notification, a drive or a shortcut that opens a tab opens its
-  screen here; ⌘1 from a screen goes back to the tafs list. Each item is in the drive's
+  screen here, at launch too (a tab asked for before the sidebar drew opens its screen, not the tafs list); ⌘1
+  from a screen goes back to the tafs list. Each item is in the drive's
   registry, as the rail's were. Account and Record are built again on each pick, not kept as the
   phone's tabs are. The iPhone keeps the bar.
 - **Plan & usage** (`UsageView`, opened from Settings' Plan card and Home's plan line), with
