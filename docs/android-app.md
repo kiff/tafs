@@ -743,6 +743,26 @@ Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#conne
 - **The trailing button is compact:** **Connect**, **Sign in again**, or for one signed in, **Signed in · choose its actions**.
   A connected app opens its connections, each with Disconnect.
 
+**An app's connections, as planque describes them** (Android 1.25.0, planque's `title`, `used_by`,
+`health` and `actions` on each grant; `Grant.health`, `Grant.actions`, read leniently). A connected app
+opens its connections, under each taf's name:
+- **Each row** is planque's `title` ("Gmail · name@example.com"), then **Used by** its `used_by`, then its
+  `health.words` ("Gmail's sign-in expired on 14 Nov"), amber when not `ok`. No id, and no button beside
+  it (`DescribedConnectionRow`).
+- **A tap opens its detail first:** its health, the tafs that depend on it, then only the `actions`
+  planque sent, in its order: `approve` is Sign in again on itself (`reconnect`), `key` a new key, and
+  `delete` the signed removal. An action whose `how` this build doesn't know isn't drawn, so a leftover
+  shows only planque's **Remove unfinished connection**, never Sign in again.
+- **A removal asks once more,** with planque's `stops` ("Unanswered customer emails will stop using
+  Gmail."), and only then the fingerprint. Remove is never beside a row.
+- Every request to planque says the person's time zone (`X-Time-Zone`), so the times in its words are
+  theirs.
+- A planque from before it sends no `actions`, and the row is the app's own, as below, until it does.
+- **planque's refusals in its own words:** any refusal that carries planque's `words` (a sign-in again
+  to another account than the connection's, say) shows those words as sent (`PlanqueError.Server.words`,
+  `ErrorWords.of`), never a line of the app's over them. "It changed in the meantime" is kept for a
+  409 with no words. planque's `error` stays the reason, for the code.
+
 tafs cloud's list, searched as the owner types, and **Connect** opens the approval as a sheet
 over the list (`ConnectApprovalSheet`). With several tafs, **Which taf is this for?** is asked
 first, in a dialog over the list wherever Connect was tapped, as on iPhone and iPad. When a sign-in

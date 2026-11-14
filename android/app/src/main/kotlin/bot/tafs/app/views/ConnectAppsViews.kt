@@ -167,6 +167,9 @@ fun ConnectAppsSheet(
   var confirmingDisconnect by androidx.compose.runtime.remember { mutableStateOf<bot.tafs.app.kiff.Grant?>(null) }
   var confirmingCancel by androidx.compose.runtime.remember { mutableStateOf<bot.tafs.app.kiff.Grant?>(null) }
   var confirmingClear by androidx.compose.runtime.remember { mutableStateOf<List<String>?>(null) }
+  // A connection planque describes (title, who uses it, health, actions): its row opens this detail first, and a removal asks again.
+  var detail by androidx.compose.runtime.remember { mutableStateOf<bot.tafs.app.kiff.Grant?>(null) }
+  var confirmingRemove by androidx.compose.runtime.remember { mutableStateOf<Pair<bot.tafs.app.kiff.Grant, bot.tafs.app.kiff.GrantAction>?>(null) }
   val tafs = state.connectableTafs
   val connect: ((ConnectApps.App) -> Unit)? = onConnect?.takeIf { tafs.isNotEmpty() }?.let { start ->
     { app -> if (tafs.size > 1 && !app.needsReconnect) picking = app else start(app, tafs.singleOrNull()?.id) }
@@ -222,6 +225,8 @@ fun ConnectAppsSheet(
             groups.forEach { (heading, grants) ->
             Text(heading, style = scaled(13, FontWeight.SemiBold, Theme.dim), modifier = Modifier.padding(top = 4.dp).semantics { heading() })
             grants.forEach { g ->
+              // planque describes it: its title, who uses it and its health; the row opens its detail, where its actions are.
+              if (g.actions != null) { DescribedConnectionRow(g, app.title, state) { detail = g }; return@forEach }
               Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Column(Modifier.weight(1f)) {
                   Text(ConnectAppsWords.rowTitle(app.title, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
@@ -279,6 +284,54 @@ fun ConnectAppsSheet(
         dismissButton = {
           Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable { managing = null }.padding(12.dp))
         },
+      )
+    }
+    // A connection's detail, as planque describes it: its health and who depends on it first, then only the actions planque sent.
+    detail?.let { g ->
+      val live = state.grants.firstOrNull { it.id == g.id } ?: g
+      DriveAlert(
+        onDismissRequest = { detail = null },
+        containerColor = Theme.background,
+        title = { Text(live.title?.takeIf { it.isNotBlank() } ?: ConnectAppsWords.rowTitle(app0(state, live), live), style = scaled(20, FontWeight.Bold, Theme.ink)) },
+        text = {
+          Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            live.health?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(15, FontWeight.SemiBold, if (live.health?.ok == true) Theme.ok else Theme.amberText)) }
+            live.usedBy?.filter { it.isNotBlank() }?.takeIf { it.isNotEmpty() }?.let { bot.tafs.app.model.ConnectionWords.usedBy(it) }?.let { Text(it, style = scaled(14, color = Theme.soft)) }
+            state.coachNotes[live.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+            live.actions.orEmpty().forEach { a ->
+              val act: (() -> Unit)? = when (a.how) {
+                "approve" -> onSignInAgain?.let { f -> { f(live) } }
+                "key" -> onReplaceKey?.let { f -> { detail = null; f(live) } }
+                "delete" -> onDisconnect?.let { { confirmingRemove = live to a } }
+                else -> null
+              }
+              act?.let { go ->
+                Text(
+                  if (a.how == "approve" && state.connecting == live.id) state.connectStep ?: a.words else a.words,
+                  style = scaled(15, FontWeight.SemiBold, if (a.how == "delete") Theme.no else Theme.amberText),
+                  modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = state.connecting == null) { go() }.padding(top = 6.dp),
+                )
+              }
+            }
+          }
+        },
+        confirmButton = {},
+        dismissButton = {
+          Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable { detail = null }.padding(12.dp))
+        },
+      )
+    }
+    // A removal planque offers asks once more, with planque's words for what stops; only then the fingerprint.
+    confirmingRemove?.let { (g, a) ->
+      DriveAlert(
+        onDismissRequest = { confirmingRemove = null },
+        containerColor = Theme.panel,
+        title = { Text(a.words) },
+        text = { a.stops?.takeIf { it.isNotBlank() }?.let { Text(it) } },
+        confirmButton = {
+          androidx.compose.material3.TextButton({ confirmingRemove = null; detail = null; onDisconnect?.invoke(g.id) }, modifier = Modifier.confirms()) { Text(a.words, color = Theme.no) }
+        },
+        dismissButton = { androidx.compose.material3.TextButton({ confirmingRemove = null }) { Text(Words.Common.cancel, color = Theme.soft) } },
       )
     }
     // Disconnect asks first, naming the one taf it ends; only then the fingerprint, in the same words.
@@ -576,3 +629,23 @@ fun ConnectApprovalSheet(
 fun usedBy(state: AppState, app: ConnectApps.App): List<String> =
   app.usedBy?.map { it.name }?.filter { it.isNotBlank() }?.distinct()
     ?: byTaf(state, connectionsOf(state, app)).sections.map { it.taf }
+
+/** The app a connection belongs to, by its Connect apps title, for a detail opened from its row. */
+private fun app0(state: AppState, g: bot.tafs.app.kiff.Grant): String = bot.tafs.app.model.ConnectionWords.appName(g, state.connectApps)
+
+/**
+ * A connection as planque describes it (planque's `title`, `used_by`, `health`): no id, no button beside it. A tap opens its detail,
+ * where planque's actions are; Remove is never beside the row.
+ */
+@Composable
+internal fun DescribedConnectionRow(g: bot.tafs.app.kiff.Grant, app: String, state: AppState, onOpen: () -> Unit) {
+  Column(
+    Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onOpen).padding(vertical = 4.dp),
+    verticalArrangement = Arrangement.spacedBy(2.dp),
+  ) {
+    Text(g.title?.takeIf { it.isNotBlank() } ?: ConnectAppsWords.rowTitle(app, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
+    g.usedBy?.filter { it.isNotBlank() }?.takeIf { it.isNotEmpty() }?.let { bot.tafs.app.model.ConnectionWords.usedBy(it) }?.let { Text(it, style = scaled(13, color = Theme.soft)) }
+    g.health?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = if (g.health?.ok == true) Theme.dim else Theme.amberText)) }
+    state.coachNotes[g.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+  }
+}
