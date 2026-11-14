@@ -163,5 +163,18 @@ final class DevicesTests: XCTestCase {
         XCTAssertEqual(PairComputerView.words(.notAPairingCode), Words.Settings.Devices.pairNotAPairing)
         XCTAssertEqual(PairComputerView.words(.expired), Words.Settings.Devices.pairExpired)
         XCTAssertEqual(PairComputerView.words(.badKeys), Words.Settings.Devices.pairInvalid)
+        XCTAssertEqual(PairComputerView.check(try pairingCode()), Words.Settings.Devices.pairCheck(code: "XFI4MD"))
+    }
+
+    /// A phone or tablet (§5.8): what it gets whatever its biometric, only one in hand now, and the
+    /// question names the new phone or tablet, not a computer.
+    func testThePhoneAlertSaysWhatAPhoneGets() throws {
+        let exp = ISO8601DateFormatter().string(from: Date().addingTimeInterval(120))
+        let fields: [String: Any] = ["v": "kiff.pair.v1", "pub": PairingTests.pub, "approval_pub": PairingTests.approvalPub, "name": "tafs on iPad",
+                                     "platform": "ipados", "kind": "enclave", "device_kind": "ipad", "nonce": PairingTests.nonce, "exp": exp]
+        let ipad = try PairingRequest.read(String(decoding: try JSONSerialization.data(withJSONObject: fields), as: UTF8.self)).get()
+        XCTAssertEqual(PairComputerView.lines(ipad), [Words.Settings.Devices.pairGivesPhone(device: "tafs on iPad"), Words.Settings.Devices.pairOnlyNowPhone])
+        XCTAssertEqual(PairComputerView.check(ipad), Words.Settings.Devices.pairCheckPhone(code: "XFI4MD"))
+        XCTAssertEqual(Words.Settings.Devices.pair, "Add a device")
     }
 }

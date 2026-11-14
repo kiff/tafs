@@ -110,6 +110,23 @@ final class PairingTests: XCTestCase {
         XCTAssertEqual(read(passkey(["id": "AQID", "public_key": Self.nonce])), .failure(.badKeys), "a P-256 key")
     }
 
+    /// A phone or tablet paired from another phone (§5.8): `keystore` is a kind, an approval key always,
+    /// and `device_kind` sent on as it came. Whether a kind matches its platform is KIFF's check.
+    func testAPhoneOrTabletIsReadAsOne() throws {
+        let iphone = try read(code { $0["platform"] = "ios"; $0["kind"] = "enclave"; $0["device_kind"] = "iphone" }).get()
+        XCTAssertTrue(iphone.isPhone)
+        XCTAssertEqual(iphone.deviceKind, "iphone")
+        XCTAssertEqual(iphone.checkCode, "XFI4MD", "the check code is unchanged: the two keys")
+        XCTAssertEqual((try JSONSerialization.jsonObject(with: iphone.body) as? [String: String])?["device_kind"], "iphone", "sent on as read")
+        XCTAssertNil(try read(code { $0["platform"] = "ipados"; $0["kind"] = "enclave" }).get().deviceKind, "optional")
+        XCTAssertTrue(try read(code { $0["platform"] = "android"; $0["kind"] = "keystore"; $0["device_kind"] = "android_tablet" }).get().isPhone)
+        XCTAssertFalse(try read(code()).get().isPhone)
+
+        XCTAssertEqual(read(code { $0["platform"] = "ios"; $0["kind"] = "enclave"; $0["approval_pub"] = nil }), .failure(.badKeys), "an approval key always")
+        XCTAssertEqual(read(code { $0["platform"] = "android"; $0["kind"] = "keystore"; $0["approval_pub"] = nil }), .failure(.badKeys))
+        XCTAssertEqual(read(code { $0["platform"] = "ios"; $0["kind"] = "enclave"; $0["device_kind"] = 1 }), .failure(.badField))
+    }
+
     func testTheEncodings() {
         XCTAssertEqual(PairingRequest.base32(Data("foobar".utf8)), "MZXW6YTBOI", "RFC 4648's own example, unpadded")
         XCTAssertEqual(PairingRequest.base64url("-_8"), Data([0xFB, 0xFF]))
