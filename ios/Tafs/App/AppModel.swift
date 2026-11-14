@@ -5931,7 +5931,7 @@ final class AppModel: ObservableObject {
         } catch KIFFClient.KIFFError.server(403, _, _) {
             lastError = Words.Coach.connectAdminOnly
             return false
-        } catch PlanqueClient.PlanqueError.server(409, _) {
+        } catch PlanqueClient.PlanqueError.server(409, _, _) {
             lastError = Words.Coach.connectOtherDevice
             return false
         } catch {
@@ -8338,7 +8338,7 @@ final class AppModel: ObservableObject {
     /// name already in use, a field it won't take). Not a sign-in that lapsed (401, 403),
     /// a timeout or too many calls.
     static func refusesTheRequest(_ error: Error) -> Bool {
-        guard case PlanqueClient.PlanqueError.server(let status, _) = error else { return false }
+        guard case PlanqueClient.PlanqueError.server(let status, _, _) = error else { return false }
         return (400..<500).contains(status) && ![401, 403, 408, 429].contains(status)
     }
 

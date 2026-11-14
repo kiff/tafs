@@ -17,7 +17,9 @@ final class PlanqueClient {
         case digestMismatch
         /// A connection with a profile is approved only once KIFF's words for it are shown.
         case wordsUnread
-        case server(status: Int, message: String)
+        /// `words`: planque's own line for the person, in their language, when it sends one ("You signed in
+        /// as another account…"): shown as it is, before any line of the app's own.
+        case server(status: Int, message: String, words: String? = nil)
 
         var errorDescription: String? {
             switch self {
@@ -25,8 +27,10 @@ final class PlanqueClient {
             case .noDevice: return Words.Error.noDeviceName
             case .digestMismatch: return Words.Error.requestMismatch
             case .wordsUnread: return Words.Connect.profileWordsUnread
-            // planque's reason is for the code and the diagnostics; the person reads a plain line.
-            case .server(let status, _): return PlainError.words(status: status)
+            // planque's own words for the person when it sends them, never a generic line over them (a 409
+            // "changed" over "you signed in as another account" read as "try again"). Its reason is for the
+            // code and the diagnostics; without words, the person reads a plain line by what happened.
+            case .server(let status, _, let words): return words ?? PlainError.words(status: status)
             }
         }
     }
@@ -564,6 +568,17 @@ final class PlanqueClient {
 
     // MARK: Transport
 
+    /// planque's refusal: its reason (`error`, for the code) and its line for the person (`words`), each
+    /// only when it's a line of text. Read leniently: a body of another shape says neither.
+    nonisolated static func refusal(_ data: Data) -> (error: String?, words: String?) {
+        guard let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else { return (nil, nil) }
+        func line(_ key: String) -> String? {
+            guard let s = (object[key] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines), !s.isEmpty else { return nil }
+            return s
+        }
+        return (line("error"), line("words"))
+    }
+
     private func escaped(_ s: String) -> String {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }
@@ -617,8 +632,8 @@ final class PlanqueClient {
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
-            let message = (try? JSONDecoder().decode([String: String].self, from: data))?["error"] ?? Words.Error.connectionAnswered(status: "\(status)")
-            throw PlanqueError.server(status: status, message: message)
+            let said = Self.refusal(data)
+            throw PlanqueError.server(status: status, message: said.error ?? Words.Error.connectionAnswered(status: "\(status)"), words: said.words)
         }
         return data
     }
