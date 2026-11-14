@@ -1,0 +1,6 @@
+- Een nieuwe taf verschijnt zodra Coach hem heeft ingesteld.
+- ‘Wacht op jou’ toont Coach die wacht, met de chat nog open.
+- Home telt een nieuwe taf die vanuit zijn chat werkt als gereed.
+- De Kaarten van een nieuwe taf verschijnen als één Kaart.
+- De agenda en het pictogram trillen bij een tik.
+- De laatste verbinding van een app verwijderen sluit de lijst, zonder fout.

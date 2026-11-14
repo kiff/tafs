@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.design.tapping
 import androidx.lifecycle.lifecycleScope
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveAlert
@@ -15,7 +16,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import bot.tafs.app.model.ThemePreference
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -248,6 +248,11 @@ class MainActivity : FragmentActivity() {
   }
 
   // A vendor's sign-in waits while its tab is in front; the app back with no link from it means the tab was closed.
+  override fun onStart() {
+    super.onStart()
+    app.vendorSignIn.attach(this)
+  }
+
   override fun onPause() {
     super.onPause()
     app.vendorSignIn.paused()
@@ -277,6 +282,7 @@ class MainActivity : FragmentActivity() {
     driveEntry?.let { bot.tafs.app.drive.DriveInput.windows.remove(it) }
     bot.tafs.app.drive.DriveInput.unguard(window)
     app.authenticator.detach(this)
+    app.vendorSignIn.detach(this)
     app.push.askPermission = null
     runCatching { updates?.close() }
     super.onDestroy()
@@ -588,6 +594,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         approve = model::startApproval,
         openKeySheet = model::openCardKeySheet,
         cancelSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.cancel() },
+        reopenSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.reopen() },
         signInAgain = model::startSignInAgain,
         improve = model::improveTaf,
         openTaf = { coachOpen = false; openTaf = it },
@@ -630,6 +637,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   BackHandler(enabled = tab == Tab.Tafs && calendarOpen && openTaf == null && !coachOpen) { calendarOpen = false }
   BackHandler(enabled = tab == Tab.Tafs && trialTaf != null) { trialTaf = null }
   BackHandler(enabled = tab == Tab.Tafs && coachOpen) { coachOpen = false }
+  // Whether Coach is on screen, for the badge: its own chat waiting on the person isn't counted while it's open.
+  LaunchedEffect(coachOpen) { model.coachShown(coachOpen) }
   // Coach asked for from another screen (a hold's "Change the limit in Coach mode"): it opens here, on the Tafs tab.
   LaunchedEffect(state.coachRequested) {
     if (state.coachRequested) {
@@ -751,7 +760,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                 androidx.compose.material3.Text(
                   Words.Home.Overview.title,
                   style = scaled(15, androidx.compose.ui.text.font.FontWeight.SemiBold, if (overviewOpen) Theme.amber else Theme.amberText),
-                  modifier = Modifier.fillMaxWidth().clickable { coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = true }
+                  modifier = Modifier.fillMaxWidth().tapping { coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = true }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 )
               }
@@ -998,7 +1007,7 @@ private fun FoldHandle(folded: Boolean, onToggle: () -> Unit) {
       style = scaled(18, androidx.compose.ui.text.font.FontWeight.SemiBold, Theme.dim),
       modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp).size(24.dp, 44.dp)
         .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp)).background(Theme.panel)
-        .clickable(onClickLabel = if (folded) Words.Common.showTheList else Words.Common.hideTheList, onClick = onToggle)
+        .tapping(onClickLabel = if (folded) Words.Common.showTheList else Words.Common.hideTheList, onClick = onToggle)
         .semantics { role = androidx.compose.ui.semantics.Role.Button; contentDescription = if (folded) Words.Common.showTheList else Words.Common.hideTheList }
         .wrapContentSize(Alignment.Center),
     )
@@ -1009,7 +1018,7 @@ private fun FoldHandle(folded: Boolean, onToggle: () -> Unit) {
 @Composable
 private fun TabIcon(t: Tab, state: bot.tafs.app.app.AppState) {
   val icon = @Composable { Icon(painterResource(t.icon), contentDescription = null, modifier = Modifier.size(20.dp)) }
-  val waiting = state.needsYouCount
+  val waiting = state.needsYouBadge
   if (t == Tab.NeedsYou && waiting > 0) {
     BadgedBox(badge = { Badge(containerColor = Theme.no, contentColor = Theme.panel) { Text("$waiting") } }) { icon() }
   } else {
@@ -1029,7 +1038,7 @@ private fun CoachButton(onClick: () -> Unit, modifier: Modifier = Modifier, comp
     softWrap = false,
     modifier = modifier.heightIn(min = 40.dp).then(Modifier.driveStopZone()).clip(androidx.compose.foundation.shape.CircleShape)
       .background(if (acting) Theme.amber else Theme.ink)
-      .clickable { bot.tafs.app.design.Haptics.tap(); onClick() }.semantics { role = androidx.compose.ui.semantics.Role.Button }
+      .tapping { onClick() }.semantics { role = androidx.compose.ui.semantics.Role.Button }
       .padding(horizontal = if (compact) 8.dp else 14.dp, vertical = 10.dp),
   )
 }

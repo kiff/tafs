@@ -687,13 +687,15 @@ async function dropPending(ctx: DoorsContext, tenant: string, taf: string | unde
  * as kiff/agents heads a taf's own messages), then the taf's answer and what it didn't read.
  */
 export function replyText(taf: Taf, r: Run, reply: Pick<Reply, "attachments" | "cut">): string {
-  // A run cut off at its turn or cost cap (or any other stop but an answer) with nothing written never says "Done".
+  // A run cut off at its turn or cost cap (or any other stop but an answer) never says "Done", and never sends
+  // what it wrote on the way ("Now let me check order 43."): that's a half-step, not a reply.
   const finished = !r.stop || r.stop === "answered";
+  const couldntFinish = "I couldn't finish this. My owner can see what happened in the tafs app.";
   const answer = r.status === "COMPLETED"
-    ? (r.output?.trim() || (finished ? "Done. I have nothing to add." : "I couldn't finish this. My owner can see what happened in the tafs app."))
+    ? (finished ? (r.output?.trim() || "Done. I have nothing to add.") : couldntFinish)
     : r.status === "CANCELLED"
       ? "This was stopped in the tafs app before I finished."
-      : "I couldn't finish this. My owner can see what happened in the tafs app.";
+      : couldntFinish;
   const notes: string[] = [];
   if (reply.attachments) notes.push(`I read only the text of your message; I didn't open its ${reply.attachments === 1 ? "attachment" : `${reply.attachments} attachments`}.`);
   if (reply.cut) notes.push(`Your message was long, so I read its first ${DOOR.maxChars.toLocaleString("en")} characters.`);

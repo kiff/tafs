@@ -625,7 +625,6 @@
     <string name="coach_drive_cant">Coach kan de app niet bedienen: %1$s</string>
     <string name="coach_drive_not_started_unconfirmed">Niet gestart: het is niet bevestigd.</string>
     <string name="coach_driving">Bedient de app</string>
-    <string name="coach_each_waits">Elke koppeling en elke Card wacht op %1$s.</string>
     <string name="coach_earlier_request">Eerder verzoek</string>
     <string name="coach_folds_plan">Klapt het plan in</string>
     <string name="coach_full_screen">Volledig scherm</string>
@@ -634,7 +633,7 @@
     <string name="coach_improve_why_refused">Waarom is iets geweigerd of vastgehouden?</string>
     <string name="coach_improve_line">Zeg wat er moet veranderen, of vraag hoe het gaat. De Coach-modus begint bij wat %1$s heeft gedaan en wat zijn Card toestaat.</string>
     <string name="coach_improve_taf">%1$s verbeteren</string>
-    <string name="coach_intro">Noem een app voor je taf, zoals je betaalprovider. Geen enkel taf ziet je login.</string>
+    <string name="coach_intro">Noem een app voor je taf, zoals je betaalprovider.</string>
     <string name="coach_kiff_counts_way">KIFF telt het zo</string>
     <string name="coach_making_live">Live zetten…</string>
     <string name="coach_name_tool_taf_should_work">Noem een app voor je taf, zoals je betaalprovider. Geen enkel taf ziet je login. Je keurt goed met %1$s.</string>
@@ -701,8 +700,11 @@
     <string name="coach_sign_in_at_vendor">Inloggen bij de leverancier</string>
     <string name="coach_sign_in_eyebrow">Wacht op jou · inloggen</string>
     <string name="coach_sign_in_open">%1$s openen</string>
+    <string name="coach_sign_in_open_again">Inloggen opnieuw openen</string>
+    <string name="coach_sign_in_open_again_app">Inloggen bij %1$s opnieuw openen</string>
     <string name="coach_sign_in_open_sign_in">De login openen</string>
     <string name="coach_sign_in_opens">Opent %1$s</string>
+    <string name="coach_sign_in_opens_app">Opent het inloggen bij %1$s</string>
     <string name="coach_sign_in_note">De eigen pagina van de leverancier opent. Geen enkel taf ziet je login.</string>
     <string name="coach_signed_reading_what_offers">Ingelogd bij %1$s · lezen wat het biedt</string>
     <string name="coach_start">Starten</string>
@@ -721,6 +723,7 @@
     <string name="coach_tools_not_read">Kon de tools van Coach niet lezen. %1$s</string>
     <string name="coach_tools_unknown">KIFF gaf geen antwoord over de tools van Coach. Probeer het zo opnieuw.</string>
     <string name="coach_unknown_answer">Setup gaf een antwoord dat deze app niet kan lezen. Werk de app bij.</string>
+    <string name="coach_waiting_for_app">Als de inlogpagina van %1$s is geopend, rond het daar af en kom terug.</string>
     <string name="coach_waiting_for_vendor">Als de inlogpagina van de leverancier is geopend, rond het daar af en kom terug.</string>
     <string name="coach_what_conversation_about">Waar dit gesprek over gaat</string>
     <string name="coach_will_work_like">" gaat zo werken"</string>
@@ -1141,11 +1144,10 @@
     <string name="halt_again">Opnieuw stilzetten</string>
     <string name="halt_all_now">Alles nu stilzetten</string>
     <string name="halt_explain_halted">Stilgezet. Hervatten start alleen nieuw werk.</string>
-    <string name="halt_explain_halted_since">Stilgezet sinds %1$s. Hervatten start alleen nieuw werk.</string>
+    <string name="halt_explain_halted_since">Sinds %1$s. Hervatten start alleen nieuw werk.</string>
     <string name="halt_explain_halting">Er start niets nieuws. Stilgezet verschijnt zodra KIFF en de koppeling het allebei bevestigen.</string>
     <string name="halt_explain_running_all">Stilzetten stopt je tafs tot je hervat. Een al verzonden aanroep kan nog aankomen.</string>
     <string name="halt_explain_running_one">Stilzetten stopt het tot je hervat. Een al verzonden aanroep kan nog aankomen.</string>
-    <string name="halt_halted_nothing_reaches_your_tools">Stilgezet%1$s. Hervatten start alleen nieuw werk.</string>
     <string name="halt_halting_stops_no_run_starts">Stilzetten stopt %1$s tot je hervat. Een al verzonden aanroep kan nog aankomen.</string>
     <string name="halt_now">Nu stilzetten</string>
     <string name="halt_row_running">Zet het stil tot je hervat</string>
@@ -1199,7 +1201,6 @@
     <string name="home_sample_label">Wat het meldde na de testrun</string>
     <string name="home_see_all_jobs">Alle taken bekijken</string>
     <string name="home_shared_you">Met je gedeeld</string>
-    <string name="home_sign_approve_each_step">Je logt in en keurt elke stap goed</string>
     <string name="home_start_new_taf">Een nieuw taf starten</string>
     <string name="home_status">Status</string>
     <string name="home_status_retrying">%1$s · nieuwe poging</string>
@@ -1804,6 +1805,7 @@
     <string name="settings_kiff_account">KIFF-account</string>
     <string name="settings_language_title">Taal</string>
     <string name="settings_legal">Juridisch</string>
+    <string name="settings_legal_in_english">%1$s (in het Engels)</string>
     <string name="settings_light_taps_when_you_send">Een lichte tik als je verzendt of antwoordt.</string>
     <string name="settings_mode">Modus</string>
     <string name="settings_mode_kiff">Ingelogd met KIFF</string>

@@ -1,17 +1,17 @@
 package bot.tafs.app.model
 
 /**
- * kiff.dev's legal pages for a tafs user, in the language the app's lines resolved to ([Res.language]), never the phone's
- * own setting: English at its own path (`/terms#tafs`), every other language under its prefix (`/de/terms#tafs`).
- * docs/android-app.md, Words and languages.
+ * tafs's own legal pages on kiff.dev, `/tafs/terms` and `/tafs/privacy`: the ones Google's consent screen names, apart from
+ * KIFF's. They're in English only for now (`/de/tafs/terms` isn't served), so every language opens them; a page in the lines'
+ * language comes once kiff.dev serves one. docs/android-app.md, Words and languages.
  */
 object Legal {
-  private const val SITE = "https://kiff.dev"
+  private const val SITE = "https://kiff.dev/tafs"
 
-  fun terms(language: String = Res.language): String = page("terms", "tafs", language)
+  fun terms(): String = "$SITE/terms"
 
-  fun privacy(language: String = Res.language): String = page("privacy", "tafs", language)
+  fun privacy(): String = "$SITE/privacy"
 
-  private fun page(path: String, section: String, language: String): String =
-    if (language == "en") "$SITE/$path#$section" else "$SITE/$language/$path#$section"
+  /** A link's words, saying the page is in English when the app's lines aren't ("Datenschutz (auf Englisch)"), as kiff.dev does. */
+  fun label(words: String, language: String = Res.language): String = if (language == "en") words else Words.Settings.legalInEnglish(label = words)
 }

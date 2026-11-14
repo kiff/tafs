@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.driveTyped
@@ -9,7 +10,6 @@ import android.content.ClipData
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -135,7 +135,7 @@ fun DoorsList(taf: Taf, state: AppState, actions: DoorActions, myEmail: String?)
       Text(
         SetupWords.EDIT,
         style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-        modifier = Modifier.heightIn(min = 44.dp).clickable { editing = door.id }.padding(horizontal = 6.dp, vertical = 12.dp),
+        modifier = Modifier.heightIn(min = 44.dp).tapping { editing = door.id }.padding(horizontal = 6.dp, vertical = 12.dp),
       )
     }
   }
@@ -276,7 +276,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
             Text(
               Words.Door.unpair,
               style = scaled(13, FontWeight.Medium, Theme.soft),
-              modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { scope.launch { actions.unpair(taf.id, door, key) } }.padding(start = 8.dp, top = 8.dp),
+              modifier = Modifier.heightIn(min = 44.dp).confirms().tapping { scope.launch { actions.unpair(taf.id, door, key) } }.padding(start = 8.dp, top = 8.dp),
             )
           }
         }
@@ -287,7 +287,7 @@ private fun DoorPanels(taf: Taf, door: Door, doors: TafDoors, myEmail: String?, 
     } else {
       Text(DoorWords.noKeys(door, taf.name), style = scaled(15, color = Theme.ink))
     }
-    Text(Words.Door.removeDoor, style = scaled(14, FontWeight.Medium, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(onClick = onRemove).padding(top = 8.dp))
+    Text(Words.Door.removeDoor, style = scaled(14, FontWeight.Medium, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().tapping(onClick = onRemove).padding(top = 8.dp))
   }
 }
 
@@ -332,7 +332,7 @@ private fun AddDoorSheet(doors: TafDoors, slack: SlackPicking, bots: BotPicking,
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.6f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(Words.Door.addDoor, style = scaled(24, FontWeight.Bold, Theme.ink, display = true))
-        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
       }
       Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         // WhatsApp's signup runs in a browser this app doesn't open yet.
@@ -369,7 +369,7 @@ private fun AppSection(title: String, apps: List<DoorApp>, busy: Boolean, onPick
         .clip(shape)
         .background(Theme.panel)
         .border(BorderStroke(1.dp, Theme.line), shape)
-        .clickable(enabled = !busy) { onPick(app) }
+        .tapping(enabled = !busy) { onPick(app) }
         .padding(8.dp),
       horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.CenterVertically,
@@ -454,20 +454,20 @@ fun KnockCard(knock: Knock, tafName: String?, busy: Boolean, compact: Boolean = 
           Text(
             Words.Door.doItButton,
             style = scaled(14, FontWeight.SemiBold, Theme.panel),
-            modifier = Modifier.heightIn(min = 44.dp).clip(CircleShape).background(Theme.amberText).clickable(enabled = !busy) { asking = true }.padding(horizontal = 12.dp, vertical = 8.dp),
+            modifier = Modifier.heightIn(min = 44.dp).clip(CircleShape).background(Theme.amberText).tapping(enabled = !busy) { asking = true }.padding(horizontal = 12.dp, vertical = 8.dp),
           )
         }
         DoorWords.pairLabel(knock)?.let { label ->
           Text(
             label,
             style = scaled(14, FontWeight.Medium, Theme.ink),
-            modifier = Modifier.heightIn(min = 44.dp).clip(CircleShape).border(BorderStroke(1.dp, Theme.ink.copy(alpha = 0.2f)), CircleShape).clickable(enabled = !busy) { onAnswer("pair", null) }.padding(horizontal = 10.dp, vertical = 8.dp),
+            modifier = Modifier.heightIn(min = 44.dp).clip(CircleShape).border(BorderStroke(1.dp, Theme.ink.copy(alpha = 0.2f)), CircleShape).tapping(enabled = !busy) { onAnswer("pair", null) }.padding(horizontal = 10.dp, vertical = 8.dp),
           )
         }
         Text(
           Words.Door.ignore,
           style = scaled(14, FontWeight.Medium, Theme.soft),
-          modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy) { onAnswer("ignore", null) }.padding(horizontal = 8.dp, vertical = 8.dp),
+          modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = !busy) { onAnswer("ignore", null) }.padding(horizontal = 8.dp, vertical = 8.dp),
         )
       }
     }
@@ -543,7 +543,7 @@ private fun SlackDoorStep(app: DoorApp, slack: SlackPicking, busy: Boolean) {
         Text(
           grant.account ?: grant.vendor,
           style = scaled(15, FontWeight.SemiBold, Theme.amber),
-          modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { bot = grant }.padding(top = 10.dp),
+          modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping { bot = grant }.padding(top = 10.dp),
         )
       }
       return@Panel
@@ -559,7 +559,7 @@ private fun SlackDoorStep(app: DoorApp, slack: SlackPicking, busy: Boolean) {
         Text(
           (if (channel.private) "🔒 " else "#") + channel.name.ifBlank { channel.id },
           style = scaled(15, FontWeight.SemiBold, if (busy) Theme.dim else Theme.amber),
-          modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(enabled = !busy) { slack.add(app, grant, channel) }.padding(top = 10.dp),
+          modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(enabled = !busy) { slack.add(app, grant, channel) }.padding(top = 10.dp),
         )
       }
     }
@@ -591,7 +591,7 @@ private fun BotDoorStep(app: DoorApp, picking: BotPicking, busy: Boolean) {
       Text(
         grant.botName ?: grant.account ?: grant.vendor,
         style = scaled(15, FontWeight.SemiBold, if (busy) Theme.dim else Theme.amber),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(enabled = !busy) { picking.add(app, grant) }.padding(top = 10.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(enabled = !busy) { picking.add(app, grant) }.padding(top = 10.dp),
       )
     }
   }

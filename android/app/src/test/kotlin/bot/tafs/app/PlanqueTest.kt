@@ -332,7 +332,8 @@ class PlanqueTest {
     m.loadProfileWords("g1")
     // Asked of KIFF with the person's own session, the profile as the body: tafs cloud and planque never hand the phone words.
     val asked = transport.requestsTo(words).single()
-    assertEquals("https://api.kiff.dev/v1/profiles/words", asked.url)
+    // v2: the owner's words without KIFF's bookkeeping (a KIFF before it answers v1, still taken).
+    assertEquals("https://api.kiff.dev/v1/profiles/words?v=2", asked.url)
     assertEquals("Bearer at_1", asked.headers["Authorization"])
     assertEquals(Jcs.canonical(stripeProfile), Jcs.canonical(String(asked.body!!)))
     val shown = m.state.value.profileWords.getValue("g1")
@@ -344,6 +345,20 @@ class PlanqueTest {
     val expected = KiffClient.json.parseToJsonElement(resource("stripe-refunds.expected")).jsonObject
     assertEquals(expected["profile_sha256"], signed["profile_sha256"])
     assertEquals(expected["words_sha256"], signed["words_sha256"])
+  }
+
+  // KIFF's words v2 drop its bookkeeping (no "isn't pinned to a version"; the lost-answer line only where money moves). Either
+  // version is checked and signed as KIFF sent it; any other is refused.
+  @Test fun wordsV2AreTakenAsV1AreAndAnotherVersionIsRefused() {
+    val profile = KiffClient.json.parseToJsonElement(stripeProfile).jsonObject
+    fun answer(v: String): kotlinx.serialization.json.JsonObject {
+      val words = KiffClient.json.parseToJsonElement("""{"v":"$v","lines":[{"kind":"op","text":"Draft a reply: makes a draft in Gmail. Nothing leaves until it's approved."}]}""").jsonObject
+      return kotlinx.serialization.json.JsonObject(mapOf("words" to words, "profile_sha256" to kotlinx.serialization.json.JsonPrimitive(bot.tafs.app.kiff.ProfileWords.digest(profile)),
+        "words_sha256" to kotlinx.serialization.json.JsonPrimitive(bot.tafs.app.kiff.ProfileWords.digest(words))))
+    }
+    assertEquals(1, bot.tafs.app.kiff.ProfileWords.checked(profile, answer("kiff.words.v2")).lines.size)
+    assertEquals(1, bot.tafs.app.kiff.ProfileWords.checked(profile, answer("kiff.words.v1")).lines.size)
+    assertTrue(runCatching { bot.tafs.app.kiff.ProfileWords.checked(profile, answer("kiff.words.v3")) }.exceptionOrNull() is bot.tafs.app.kiff.ProfileWords.Mismatch)
   }
 
   /**

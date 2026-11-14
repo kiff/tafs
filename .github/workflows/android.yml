@@ -9,10 +9,10 @@ name: Android
 on:
   push:
     branches: [main]
-    paths: ["android/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "contracts/**", ".github/workflows/android.yml"]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    paths: ["android/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "contracts/**", ".github/workflows/android.yml"]
   # The signed release bundle for Play, on demand (the release job).
   workflow_dispatch:
 

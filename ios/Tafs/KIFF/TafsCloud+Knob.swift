@@ -366,7 +366,15 @@ extension TafsCloud {
         struct App: Decodable, Equatable, Identifiable {
             let entry: String
             var vendor = ""
+            /// tafs cloud's title, as planque gives it ("Qonto invoicing: reads, …"): kept for matching
+            /// and the rest; a row draws `displayName`.
             var title = ""
+            /// The app's name for people ("Qonto", "Gmail"); nil when tafs cloud sends none (one before
+            /// it) or a blank one.
+            var name: String?
+            /// What this entry of the app is, drawn under its name ("Invoicing: reads, and invoice drafts
+            /// from quotes"); nil when there's none.
+            var subtitle: String?
             var icon: String?
             /// Its logo's path on tafs cloud (`/v1/logos/{key}`), the only place the app loads one
             /// from; nil when tafs cloud has none.
@@ -391,6 +399,8 @@ extension TafsCloud {
             /// planque read stands in).
             var usedBy: [String]?
             var id: String { entry }
+            /// What a row reads as: tafs cloud's `name`, else its `title`.
+            var displayName: String { name ?? title }
             var connected: Bool { state == "connected" || connectedFlag }
             /// Connects with a key, by `method` where tafs cloud sends it, else `how`.
             var takesKey: Bool { (method ?? how) == "key" }
@@ -400,7 +410,7 @@ extension TafsCloud {
             /// Connected, signed in, or to sign in again: the person's own, listed first, under Yours.
             var yours: Bool { connected || needsReconnect || state == "signed_in" }
 
-            enum CodingKeys: String, CodingKey { case entry, vendor, title, icon, logo, how, state, grant, line, whose, method, usedBy = "used_by", connectedFlag = "connected", setupWords = "words" }
+            enum CodingKeys: String, CodingKey { case entry, vendor, title, name, subtitle, icon, logo, how, state, grant, line, whose, method, usedBy = "used_by", connectedFlag = "connected", setupWords = "words" }
             private struct Named: Decodable { let name: String? }
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -416,6 +426,8 @@ extension TafsCloud {
                     ((try? c.decodeIfPresent(String.self, forKey: k)) ?? nil)
                         .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.flatMap { $0.isEmpty ? nil : $0 }
                 }
+                name = words(.name)
+                subtitle = words(.subtitle)
                 line = words(.line)
                 whose = words(.whose)
                 method = words(.method)

@@ -1,12 +1,12 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.drive.confirms
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -74,14 +74,14 @@ fun ApprovalsUnavailable(readiness: ApprovalReadiness, modifier: Modifier = Modi
         Text(
           ApprovalWords.OPEN_SETTINGS,
           style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-          modifier = Modifier.heightIn(min = 44.dp).clickable { openApprovalSettings(context) }.padding(vertical = 12.dp),
+          modifier = Modifier.heightIn(min = 44.dp).tapping { openApprovalSettings(context) }.padding(vertical = 12.dp),
         )
       }
       if (readiness != ApprovalReadiness.Unsupported) {
         Text(
           ApprovalWords.CHECK_AGAIN,
           style = scaled(14, FontWeight.SemiBold, Theme.dim),
-          modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = recheck).padding(vertical = 12.dp),
+          modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = recheck).padding(vertical = 12.dp),
         )
       }
     }

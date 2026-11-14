@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveAlert
 import android.Manifest
@@ -11,7 +12,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -68,7 +68,7 @@ fun MicButton(dictation: Dictation, text: String, onText: (String) -> Unit) {
     Box(
       Modifier
         .sizeIn(minWidth = 40.dp, minHeight = 40.dp)
-        .clickable { dictation.switchLanguage(text, onText) }
+        .tapping { dictation.switchLanguage(text, onText) }
         .semantics { contentDescription = Words.Voice.dictationIn(SpeechLanguage.name(now)) },
       contentAlignment = Alignment.Center,
     ) {
@@ -86,7 +86,7 @@ fun MicButton(dictation: Dictation, text: String, onText: (String) -> Unit) {
       .clip(CircleShape)
       .background(if (listening) Theme.no else Theme.panel)
       .border(BorderStroke(1.dp, Theme.line), CircleShape)
-      .clickable {
+      .tapping {
         if (listening) dictation.stop()
         else if (!dictation.mayListen && dictation.available) ask.launch(Manifest.permission.RECORD_AUDIO)
         else dictation.start(text, onText)

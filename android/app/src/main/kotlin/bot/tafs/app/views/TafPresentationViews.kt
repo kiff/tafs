@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.model.ConnectionWords
@@ -8,7 +9,6 @@ import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -78,13 +78,13 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
         }
       }
       // The ring's center stays a plain letter tile, independent of the list avatar's ring.
-      Box(Modifier.align(Alignment.Center).size(54.dp).clip(RoundedCornerShape(16.dp)).background(Theme.tafColor(taf.colorIndex)).clickable { showJob = true }, contentAlignment = Alignment.Center) {
+      Box(Modifier.align(Alignment.Center).size(54.dp).clip(RoundedCornerShape(16.dp)).background(Theme.tafColor(taf.colorIndex)).tapping { showJob = true }, contentAlignment = Alignment.Center) {
         Text(taf.initial, style = scaled(26, FontWeight.Bold, androidx.compose.ui.graphics.Color.White))
       }
       apps.forEachIndexed { i, app ->
         val angle = -Math.PI / 2 + i * 2 * Math.PI / slots
         Column(Modifier.align(Alignment.Center).offset(x = radius * cos(angle).toFloat(), y = radius * sin(angle).toFloat()).width(82.dp)
-          .clip(RoundedCornerShape(14.dp)).background(Theme.panel).clickable { chosen = app.id }.padding(6.dp)
+          .clip(RoundedCornerShape(14.dp)).background(Theme.panel).tapping { chosen = app.id }.padding(6.dp)
           .semantics { contentDescription = "${app.name}. ${app.actionWords}" }, horizontalAlignment = Alignment.CenterHorizontally) {
           Text(app.name, style = scaled(13, FontWeight.SemiBold, Theme.ink), maxLines = 2, overflow = TextOverflow.Ellipsis)
           Text(app.actionWords, style = scaled(11, color = if (app.running) Theme.ok else Theme.soft), maxLines = 2)
@@ -93,7 +93,7 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
       onConnect?.let { connect ->
         val angle = -Math.PI / 2 + apps.size * 2 * Math.PI / slots
         Box(Modifier.align(Alignment.Center).offset(x = radius * cos(angle).toFloat(), y = radius * sin(angle).toFloat()).size(48.dp)
-          .clip(CircleShape).background(Theme.raised).clickable(onClick = connect).semantics { contentDescription = Words.Connect.connectAnApp }, contentAlignment = Alignment.Center) {
+          .clip(CircleShape).background(Theme.raised).tapping(onClick = connect).semantics { contentDescription = Words.Connect.connectAnApp }, contentAlignment = Alignment.Center) {
           Canvas(Modifier.fillMaxSize()) { drawCircle(line, style = Stroke(1.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 4.dp.toPx())))) }
           Text("+", style = scaled(26, color = Theme.amberText))
         }
@@ -234,7 +234,7 @@ internal fun SourceActivityRow(source: TafActivityEntry, taf: Taf, state: AppSta
   val entry = RecordEntry(id = source.id, tafId = taf.id, kind = kind, title = source.title, detail = source.detail, at = call.createdAt,
     readOnly = call.readOnly, amountText = source.amountText, amountValue = call.amount?.value, amountUnit = call.amount?.unit,
     entityId = call.entityId, onHash = call.onHash, onArg = call.onArg, answer = call.answer, receipt = call.receipt, why = call.reasons, madeAt = call.madeAt, reason = call.reason)
-  Panel(Modifier.clickable { open = true }) {
+  Panel(Modifier.tapping { open = true }) {
     Row(Modifier.fillMaxWidth()) { Text(source.title, style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f)); Text(source.time, style = scaled(12, color = Theme.dim)) }
     Text(source.detail, style = scaled(13, color = Theme.soft))
     source.amountText?.let { Text(it, style = scaled(14, FontWeight.Medium, Theme.ink)) }

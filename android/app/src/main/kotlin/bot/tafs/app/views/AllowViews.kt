@@ -1,6 +1,6 @@
 package bot.tafs.app.views
 
-import androidx.compose.foundation.clickable
+import bot.tafs.app.design.tapping
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -93,7 +93,7 @@ fun AllowSheet(open: AllowSheetState, actions: AllowActions) {
       Text(
         Words.Common.cancel,
         style = scaled(15, FontWeight.SemiBold, Theme.dim),
-        modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = actions.close).padding(top = 10.dp),
+        modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = actions.close).padding(top = 10.dp),
       )
     }
   }

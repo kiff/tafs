@@ -1,11 +1,11 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.layout.fillMaxWidth
 import bot.tafs.app.design.OutlineButton
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.heightIn
@@ -83,7 +83,7 @@ fun ConnectionsPanel(taf: Taf, state: AppState, actions: ConnectionActions) {
         Text(
           ConnectionWords.endButton(grant),
           style = scaled(14, FontWeight.Medium, Theme.no),
-          modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { if (grant.cancellable) cancelling = grant else ending = grant }.padding(top = 8.dp),
+          modifier = Modifier.heightIn(min = 44.dp).confirms().tapping { if (grant.cancellable) cancelling = grant else ending = grant }.padding(top = 8.dp),
         )
       }
     }
