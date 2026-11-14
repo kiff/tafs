@@ -780,9 +780,12 @@ Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideB
   then `text`, `yes` and `no`), then calls `POST /v1/home/coach-waiting/set-aside`, with no body.
 - **One call per gesture:** the swipe asks only as it ends, once. A chat already being set aside
   (`settingAside`, marked before anything is awaited) sends nothing again until tafs cloud answers, nor does
-  Set all aside meanwhile. A Home read meanwhile doesn't draw it again.
-- **After:** the row goes once tafs cloud answers, with a success tick, and Home is read again: the badge is
-  tafs cloud's `needs_you` count as sent. A refusal keeps the row and says why in tafs cloud's words
+  Set all aside meanwhile.
+- **While tafs cloud answers:** a row being set aside isn't drawn, and the badge leaves it out (never below
+  0), so a swipe that took never springs back looking untouched (as Android 94). Set all aside hides every
+  row it covers the same way. A Home read meanwhile doesn't draw it again. A refusal brings the row back.
+- **After:** the row stays gone once tafs cloud takes it, with a success tick, and Home is read again: the badge is
+  tafs cloud's `needs_you` count as sent. A refusal brings the row back and says why in tafs cloud's words
   (`lastError`), with a warning tick.
 - **Coach driving the app** can't set a chat aside: Set aside, Set all aside and its ask's yes carry the
   confirm mark ([drive.md](drive.md)), so a driven touch on either button is refused and nothing is sent

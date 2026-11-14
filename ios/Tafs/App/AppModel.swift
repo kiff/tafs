@@ -33,18 +33,20 @@ final class AppModel: ObservableObject {
     @Published private(set) var yourSteps: [TafsCloud.YourStep] = []
     /// Coach's chats waiting on the owner, as Home lists them (docs/api.md › Coach waiting).
     @Published private(set) var coachWaitingListed: [TafsCloud.CoachWaiting] = []
-    /// Coach's waiting chats as Needs you draws them: Home's, less the chat open in Coach now. The
-    /// person is in it, so it neither shows as a row nor counts while it's open (as on Android).
+    /// Coach's waiting chats as Needs you draws them: Home's, less the chat open in Coach now (the
+    /// person is in it), and less those being set aside, so a swipe that took never springs back
+    /// while tafs cloud answers (as Android 94 does). Neither shows as a row nor counts; a refusal
+    /// brings the row back.
     var coachWaiting: [TafsCloud.CoachWaiting] {
-        guard let open = coachChatOnScreen else { return coachWaitingListed }
-        return coachWaitingListed.filter { $0.session != open }
+        let open = coachChatOnScreen
+        return coachWaitingListed.filter { $0.session != open && !settingAside.contains($0.session) }
     }
     /// The Coach chat open on screen: Coach is open, on a chat that has a session; nil otherwise.
     var coachChatOnScreen: String? {
         guard coachOpen else { return nil }
         return setupChat ?? (setupFresh ? nil : setupThread.session)
     }
-    /// Of Home's waiting chats, those Needs you leaves out because they're open on screen.
+    /// Of Home's waiting chats, those Needs you leaves out: open on screen, or being set aside.
     private var coachWaitingHidden: Int { coachWaitingListed.count - coachWaiting.count }
     /// Home's "Set all aside" (`coach_waiting_clear`), as tafs cloud sent it; nil when it sent none.
     @Published private(set) var coachWaitingClear: TafsCloud.CoachWaitingClear?
@@ -1780,8 +1782,9 @@ final class AppModel: ObservableObject {
     func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
         cardUnitExceptions = home.cardUnitExceptions ?? []
         showSteps(home.yourSteps ?? [])
-        // A chat being set aside isn't drawn again by a read meanwhile, as on Android.
-        coachWaitingListed = (home.coachWaiting ?? []).filter { $0.usable && !settingAside.contains($0.session) }
+        // A chat being set aside isn't drawn again by a read meanwhile, as on Android: `coachWaiting`
+        // leaves it out until tafs cloud answers, and a refusal brings it back.
+        coachWaitingListed = (home.coachWaiting ?? []).filter { $0.usable }
         coachWaitingClear = home.coachWaitingClear.flatMap { $0.usable ? $0 : nil }
         homeNeedsYou = home.needsYou
         homeHeadline = home.headlineWords
