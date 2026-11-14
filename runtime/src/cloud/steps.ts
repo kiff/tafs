@@ -109,6 +109,7 @@ export class Steps {
       case "web_read": return w.doing_web_read;
       case "taf_labels": return w.doing_labels;
       case "business_context": return w.doing_business;
+      case "mission": case "mission_create": return w.doing_mission;
       case "taf_task": return w.doing_task;
       case "run_stop": return w.doing_stop;
       case "taf_pause": return w.doing_pause;

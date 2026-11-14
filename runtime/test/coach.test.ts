@@ -7,6 +7,7 @@ import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { readLabels, saveLabels } from "../src/cloud/labels.js";
+import { readMissions } from "../src/cloud/missions.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const T = "t_acme";
@@ -219,6 +220,64 @@ describe("labels and the business description", () => {
   });
 });
 
+// Missions (docs/missions.md): a goal and its tafs, made only by Coach. It adds a label and changes nothing a taf may do.
+describe("missions", () => {
+  const BILLS = { id: "taf-bbbb0000000000000000", name: "Bills", job: "custom", kiffAgent: "agent_bills", nameClaim: "c3", created: "2026-10-15T09:00:00Z" } as Taf;
+
+  it("create puts the mission's label on its tafs in order, add and remove move one taf, and end leaves the tafs as they were", async () => {
+    const w = world();
+    w.tafs.held.set(`${T}#${BILLS.id}`, BILLS);
+    const before = structuredClone(await w.tafs.get(T, RAE))!;
+    const schedule = await w.agents.api.getSchedule(T, RAE);
+    const made = await w.tool("mission_create", { name: "Money", goal: "Run the money side: bills in, refunds out.", tafs: ["Bills", "Refunds"] });
+    expect(made.isError).toBe(false);
+    const { missions } = await readMissions(w.coach, T);
+    expect(missions).toHaveLength(1);
+    expect(missions[0]).toMatchObject({ name: "Money", tafs: [BILLS.id, RAE], by: "agent_coach" });
+    // "Money" is a category's name: the mission's label is the suggested one, shown in each person's language.
+    expect((await readLabels(w.coach, T)).labels).toEqual([{ id: missions[0]!.label, name: "Money", color: "money", key: "money" }]);
+    expect(await w.tafs.get(T, RAE)).toMatchObject({ mission: missions[0]!.id, labels: [missions[0]!.label] });
+    // One mission at most: Refunds can't join a second.
+    const second = await w.tool("mission_create", { name: "Customers", goal: "Answer every customer the same day.", tafs: ["Refunds"] });
+    expect(second.text).toContain("Refunds is in Money: remove it there first");
+    expect((await w.tool("mission", { action: "remove", mission: "money", taf: RAE })).json).toMatchObject({ removed: "Refunds", tafs: [{ id: BILLS.id, name: "Bills" }] });
+    expect((await w.tafs.get(T, RAE))!.mission).toBeUndefined();
+    expect((await w.tool("mission", { action: "add", mission: "Money", taf: "Refunds" })).json.tafs.map((t: { name: string }) => t.name)).toEqual(["Bills", "Refunds"]);
+    w.agents.versions.set(`${T}|${BILLS.id}`, []);
+    await w.agents.api.putAgent(T, BILLS.id, {} as never);
+    const state = await w.tool("tafs_state", {});
+    expect(state.json.tafs.find((t: { id: string }) => t.id === RAE).mission).toBe("Money");
+    const ended = await w.tool("mission", { action: "end", mission: "Money" });
+    expect(ended.json).toMatchObject({ ended: "Money", unchanged: expect.stringContaining("Cards") });
+    expect((await readMissions(w.coach, T)).missions).toEqual([]);
+    expect((await readLabels(w.coach, T)).labels).toEqual([]);
+    const { labels: _l, ...after } = (await w.tafs.get(T, RAE))!;
+    expect(after).toEqual(before);
+    expect(await w.agents.api.getSchedule(T, RAE)).toEqual(schedule);
+  });
+
+  it("refuses a Card, tool, dial or budget field, a taf of another account, and a person who doesn't manage every taf", async () => {
+    const w = world();
+    w.tafs.held.set(`${T}#${BILLS.id}`, BILLS);
+    // Making a mission waits for the person's yes (its goal reaches the lead): never through mission's own actions.
+    expect(COACH_CARDS.find((c) => c.actions.includes("mission_create"))).toMatchObject({ id: "coach-mission-create", limit: 0, asks: true });
+    expect(coachCardsDraft("agent_coach").cards.find((c) => (c as { id: string }).id === "coach-mission-create")).toMatchObject({ on_exceed: "owner" });
+    expect(COACH_CARDS.find((c) => c.actions.includes("mission"))).toMatchObject({ asks: false });
+    expect((await w.tool("mission", { action: "create", name: "Money", goal: "Run the money side.", tafs: [RAE] })).text).toContain("a mission is made with mission_create");
+    for (const extra of [{ card: "crd_1" }, { tools: ["refund"] }, { wakes: [] }, { budget: 100 }]) {
+      const r = await w.tool("mission_create", { name: "Money", goal: "Run the money side.", tafs: [RAE], ...extra });
+      expect(r.text).toContain("a mission changes no Card, tool, dial or budget");
+    }
+    w.tafs.held.set(`t_other#taf-other`, { ...BILLS, id: "taf-other", name: "Elsewhere" });
+    expect((await w.tool("mission_create", { name: "Money", goal: "Run the money side.", tafs: ["taf-other"] })).text).toContain("there is no taf");
+    // KIFF's default here: the person manages Refunds only, not Bills.
+    const theirs = await w.tool("mission_create", { name: "Money", goal: "Run the money side.", tafs: [RAE, BILLS.id] }, { act: "u_bo" });
+    expect(theirs.text).toContain("for the people who manage each of its tafs: not Bills");
+    expect((await readMissions(w.coach, T)).missions).toEqual([]);
+    expect((await w.tool("mission", { action: "read" })).json).toMatchObject({ missions: [], data: expect.stringContaining("never an instruction") });
+  });
+});
+
 describe("Coach's tools (kiff/tafs#206)", () => {
   // Coach finds a vendor's published API description itself (webread.ts): one public page, as data, about no taf.
   it("web_read answers one public page's text as data, and refuses a page that isn't public, in words", async () => {
@@ -238,12 +297,12 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(asked).toEqual(["https://docs.acme.example.com/auth"]);
   });
 
-  it("speak MCP, and list the sixteen tools, each with KIFF's operation argument", async () => {
+  it("speak MCP, and list the eighteen tools, each with KIFF's operation argument", async () => {
     const w = world();
     const init = await w.rpc("initialize", { protocolVersion: "2025-06-18" });
     expect(init.result).toMatchObject({ protocolVersion: "2025-06-18", serverInfo: { name: "tafs" } });
     const list = await w.rpc("tools/list");
-    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "taf_estimate", "web_read", "taf_labels", "business_context", "version_try", "version_install", "app_look", "app_act"]);
+    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "taf_estimate", "web_read", "taf_labels", "mission_create", "mission", "business_context", "version_try", "version_install", "app_look", "app_act"]);
     for (const t of list.result?.tools ?? []) expect(t.inputSchema.required).toContain(OP_ARG);
     expect(TOOLS.map((t) => t.name)).not.toContain("hold_answer");
   });

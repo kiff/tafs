@@ -1,0 +1,1 @@
+- **Missions, in tafs cloud.** Coach gathers the tafs working on one goal into a mission, on the person's yes. The mission's label goes on its tafs, and a taf is in one mission at most. Ending a mission or taking a taf out changes nothing a taf may do ([missions.md](docs/missions.md)).

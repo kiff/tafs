@@ -58,6 +58,7 @@ import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samples
 import { RECIPES } from "../recipes.js";
 import { findLabel, LabelRefusal, labelsView, readLabels, saveLabels, withLabelChanged, withTafLabels } from "./labels.js";
 import { BusinessRefusal, businessView, readBusiness, saveBusiness } from "./business.js";
+import { MissionRefusal, planMission, readMissions, saveMissions } from "./missions.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -419,6 +420,8 @@ export interface Taf {
   weekOne?: WeekOne;
   /** Its labels, by id (labels.ts): chips to filter the list by, set by Coach. They change nothing it may do. */
   labels?: string[];
+  /** The mission it works in, by id (missions.ts): one at most, set by Coach. It changes nothing it may do. */
+  mission?: string;
 }
 
 /** The most a taf's one-line summary keeps, in characters. */
@@ -7731,6 +7734,44 @@ async function businessTool(args: Record<string, unknown>, call: CoachCall, deps
   }
 }
 
+/**
+ * Coach's mission (docs/missions.md): a mission read, made, given or relieved of a taf, or ended, worked out by
+ * planMission from one read and written in order: the account's labels, its missions, then each taf it changes. In a
+ * person's chat, only over tafs KIFF says they manage. A write that lost to another is tried again on what that one left.
+ */
+async function missionTool(args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer> {
+  const store = deps.coach;
+  if (!store) throw new ToolRefusal("missions can't be kept here");
+  const { action, ...rest } = args;
+  const may = call.person && action !== "read" ? (await coachAct(call, undefined, deps)).agents ?? {} : undefined;
+  const now = deps.now?.() ?? new Date();
+  try {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const [labels, missions, records] = await Promise.all([readLabels(store, call.tenant), readMissions(store, call.tenant), deps.tafs.list(call.tenant)]);
+      const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB);
+      const plan = planMission(typeof action === "string" ? action : "", rest, { labels, missions, tafs, now, by: call.person?.subject ?? call.coach,
+        newID: (prefix) => `${prefix}_${randomBytes(6).toString("base64url")}` });
+      if (action === "read") return plan.answer;
+      const theirs = plan.tafs.filter((t) => may && !may[t.kiffAgent]?.manage).map((t) => tafs.find((x) => x.id === t.id)!.name);
+      if (theirs.length) throw new ToolRefusal(`a mission is for the people who manage each of its tafs: not ${theirs.join(", ")}`);
+      if (!(await saveLabels(store, call.tenant, labels, plan.labels, now)) || !(await saveMissions(store, call.tenant, missions, plan.missions, now))) continue;
+      for (const change of plan.tafs) {
+        for (let i = 0; i < 3; i++) {
+          const cur = await deps.tafs.get(call.tenant, change.id);
+          if (!cur) break;
+          const { mission: _m, ...without } = cur;
+          if (await deps.tafs.putIf(call.tenant, { ...without, labels: change.labels, ...(change.mission ? { mission: change.mission } : {}) }, cur)) break;
+        }
+      }
+      return plan.answer;
+    }
+  } catch (err) {
+    if (err instanceof MissionRefusal) throw new ToolRefusal(err.message);
+    throw err;
+  }
+  throw new ToolRefusal("the missions changed meanwhile: try again");
+}
+
 async function coachTaf(tenant: string, ref: unknown, deps: Deps): Promise<Taf> {
   const want = str(ref).trim();
   const tafs = (await deps.tafs.list(tenant)).filter((t) => !t.removing && t.job !== SETUP_JOB);
@@ -7905,6 +7946,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
       tafs = tafs.filter((t) => may[t.kiffAgent]?.use || may[t.kiffAgent]?.oversee);
     }
     const labels = deps.coach ? (await readLabels(deps.coach, call.tenant)).labels : [];
+    const missions = deps.coach ? (await readMissions(deps.coach, call.tenant)).missions : [];
     return {
       tafs: await Promise.all(tafs.map(async (t) => {
         const [state, schedule, runs] = await Promise.all([
@@ -7916,6 +7958,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
         return {
           id: t.id, name: t.name, job: t.job, kiff_agent: t.kiffAgent, results: placesOf(t),
           ...(t.labels?.length ? { labels: labels.filter((l) => t.labels!.includes(l.id)).map((l) => ({ id: l.id, name: l.name })) } : {}),
+          ...(t.mission && missions.some((m) => m.id === t.mission) ? { mission: missions.find((m) => m.id === t.mission)!.name } : {}),
           ...(t.unscheduled ? { works_from_chat: true } : schedule
             ? { schedule: { cron: schedule.cron, time_zone: schedule.time_zone || "UTC", on: schedule.enabled, ...(schedule.next ? { next: iso(schedule.next) } : {}),
               // The read each firing makes first; none on a taf from before, whose firings all wake it (taf_dial adds one).
@@ -7941,6 +7984,12 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   // Labels and the business description: words only, about no taf's authority (labels.ts, business.ts).
   if (name === "taf_labels") return labelsTool(args, call, deps);
   if (name === "business_context") return businessTool(args, call, deps);
+  // Making a mission is its own tool, held for the person's yes (coach-mission-create); the rest only moves tafs and labels.
+  if (name === "mission_create") return missionTool({ ...args, action: "create" }, call, deps);
+  if (name === "mission") {
+    if (args.action === "create") throw new ToolRefusal("a mission is made with mission_create, which waits for the person's yes");
+    return missionTool(args, call, deps);
+  }
   // A public page, read as anyone could (webread.ts): about no taf.
   if (name === "web_read") {
     try {
