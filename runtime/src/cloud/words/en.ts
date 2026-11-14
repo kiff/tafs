@@ -32,6 +32,13 @@ export const en = {
   coach_waiting_approval: "Coach is waiting for your approval.",
   coach_waiting_answer: "Coach is waiting for your answer.",
   coach_waiting_open: "Open Coach",
+  coach_waiting_named_approval: (title: string, day: string) => `${title}: Coach is waiting for your approval since ${day}.`,
+  coach_waiting_named_answer: (title: string, day: string) => `${title}: Coach is waiting for your answer since ${day}.`,
+  coach_waiting_set_aside: "Set aside",
+  coach_waiting_clear: "Set all aside",
+  coach_waiting_clear_title: (n: number) => `End ${n} waiting Coach chats?`,
+  coach_waiting_clear_text: "Nothing is approved or sent. Each chat ends, and a connection it asked for that no taf uses is withdrawn.",
+  coach_waiting_clear_no: "Keep them",
   // What Coach is doing, one line per tool, in the person's language (steps.ts); a tool KIFF titles keeps its title.
   doing_show: "Showing you a card…",
   doing_results: "Setting where its results go…",

@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Held, Mandate } from "../src/cloud/home.js";
 import { windowWords } from "../src/cloud/home.js";
+import { coachWaitingClear } from "../src/cloud/coachwaiting.js";
 import type { Device, Notification } from "../src/cloud/push.js";
 import { firings } from "../src/cloud/calendar.js";
 import { type ActivityCall, heldCards, improveContext, ownerWords, recentCalls } from "../src/cloud/improve.js";
@@ -4844,14 +4845,14 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const waits = await home(deps);
     const stored = w.agents.runs.find((r) => r.id === run)!;
     expect(waits.coach_waiting).toEqual([{ taf: COACH, session: stored.session, run, since: w.now.toISOString(),
-      words: { line: "Coach is waiting for your approval.", open: "Open Coach" } }]);
+      words: { line: "Coach is waiting for your approval.", open: "Open Coach", set_aside: "Set aside" } }]);
     expect(waits.needs_you).toEqual({ count: 1, words: "1 needs you." });
 
     // Questions are an answer, not an approval; in the person's language.
     stored.requirements![0]!.input = { id: "q1", type: "questions" };
     const fr = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
       headers: { Authorization: "Bearer ana", "Accept-Language": "fr" } }, deps)).body) as Home;
-    expect(fr.coach_waiting?.[0]?.words).toEqual({ line: "Coach attend votre réponse.", open: "Ouvrir Coach" });
+    expect(fr.coach_waiting?.[0]?.words).toEqual({ line: "Coach attend votre réponse.", open: "Ouvrir Coach", set_aside: "Mettre de côté" });
 
     // Answered: nothing waits, and the count says so.
     stored.requirements![0]!.input = approval;
@@ -4864,6 +4865,91 @@ describe("Coach's result, handed over by tafs cloud", () => {
     delete stored.requirements![0]!.answered;
     stored.requirements![0]!.expires = new Date(w.now.getTime() - 60_000).toISOString();
     expect((await home(deps)).coach_waiting).toBeUndefined();
+  });
+
+  // The owner, 14 Nov: five rows that read the same, "why can't I remove them, or clear them all?"
+  it("names each waiting chat as Coach's history does, with what it waits for and since when", async () => {
+    const { w, run, deps } = await paused({ id: "approve-card-2", type: "approval", grant: "g1" });
+    w.account.unsure = 0;
+    // Ana's own chat, as kiff/agents keeps a person's Coach chat.
+    const session = w.agents.runs.find((r) => r.id === run)!.session;
+    w.agents.sessions.find((x) => x.id === session)!.owner = "member:u_ana";
+    const home = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, deps)).body) as { coach_waiting: Array<{ words: { line: string; set_aside: string } }>; coach_waiting_clear?: unknown };
+    expect(home.coach_waiting[0]!.words.line).toMatch(/^Set up refunds: Coach is waiting for your approval since \d{1,2} [A-Z][a-z]{2}\.$/);
+    expect(home.coach_waiting[0]!.words.set_aside).toBe("Set aside");
+    // One chat: no "Set all aside".
+    expect(home.coach_waiting_clear).toBeUndefined();
+  });
+
+  it("sets a waiting chat aside as \"not now\": its run ends, nothing is answered or approved, and Home drops it in the same read", async () => {
+    const { w, run, deps } = await paused({ id: "approve-card-2", type: "approval", grant: "g1", draft: "drf_s1" });
+    w.account.unsure = 0;
+    const stored = w.agents.runs.find((r) => r.id === run)!;
+    const call = (path: string, token = "ana") => handle({ rawPath: path, requestContext: { http: { method: "POST" } }, headers: { Authorization: `Bearer ${token}` } }, deps);
+    // Someone else can't set it aside.
+    expect((await call(`/v1/home/coach-waiting/${stored.session}/set-aside`, "owner")).statusCode).toBe(404);
+    expect(stored.status).toBe("PAUSED");
+    const r = await call(`/v1/home/coach-waiting/${stored.session}/set-aside`);
+    expect(r.statusCode).toBe(200);
+    expect(JSON.parse(r.body)).toEqual({ set_aside: [stored.session], withdrawn: 0 });
+    expect(stored.status).toBe("CANCELLED");
+    // Nothing answered, so nothing approved: the card stays unanswered, and no approval, confirm or claim was made.
+    expect(stored.requirements![0]!.answered).toBeUndefined();
+    expect(w.agents.calls.filter((c) => /answerCard|answerResult|claimTafDraft/.test(c))).toEqual([]);
+    const home = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps)).body) as { coach_waiting?: unknown; needs_you: { count: number } };
+    expect(home.coach_waiting).toBeUndefined();
+    expect(home.needs_you.count).toBe(0);
+    // The same set aside again (a resend): done, marked already.
+    expect(JSON.parse((await call(`/v1/home/coach-waiting/${stored.session}/set-aside`)).body)).toEqual({ set_aside: [stored.session], already: true });
+  });
+
+  it("withdraws a connection the chat asked for a taf that isn't live, through planque's end, never a live taf's", async () => {
+    const { w, run, deps } = await paused({ id: "sign-in-1", type: "sign_in", grant: "grt_new" });
+    const stored = w.agents.runs.find((r) => r.id === run)!;
+    const ended: string[] = [];
+    const planque = { ...deps, planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.startsWith("https://planque.test/") && url.endsWith("/grants")) return new Response(JSON.stringify({ grants: [
+        { id: "grt_new", status: "pending", vendor: "Gmail", request: { agent: "inbox-new" } },
+        { id: "grt_live", status: "connected", vendor: "Stripe", request: { agent: "rae" } },
+      ] }), { status: 200 });
+      if (url.startsWith("https://planque.test/") && url.includes("/agents/")) {
+        ended.push(decodeURIComponent(url.split("/agents/")[1]!.split("/")[0]!));
+        return new Response(JSON.stringify({ ended: [{ vendor: "Gmail" }], kept: [] }), { status: 200 });
+      }
+      return deps.fetch!(url, init);
+    }) as Deps["fetch"] };
+    const r = await handle({ rawPath: "/v1/home/coach-waiting/set-aside", requestContext: { http: { method: "POST" } },
+      headers: { Authorization: "Bearer ana", "planque-device-signature": "t=1,v1=s,d=dev" } }, planque);
+    expect(JSON.parse(r.body)).toEqual({ set_aside: [stored.session], withdrawn: 1 });
+    expect(ended).toEqual(["inbox-new"]);
+    expect(stored.status).toBe("CANCELLED");
+  });
+
+  it("offers Set all aside only for two or more, naming the count, in the person's language", () => {
+    const row = (session: string) => ({ taf: "c", session, run: session, since: "2026-11-13T10:00:00Z", words: { line: "x", open: "Open Coach", set_aside: "Set aside" } });
+    expect(coachWaitingClear([row("a")])).toBeUndefined();
+    expect(coachWaitingClear([row("a"), row("b"), row("c"), row("d"), row("e")])).toEqual({ words: { button: "Set all aside", title: "End 5 waiting Coach chats?",
+      text: "Nothing is approved or sent. Each chat ends, and a connection it asked for that no taf uses is withdrawn.", yes: "Set all aside", no: "Keep them" } });
+    expect(coachWaitingClear([row("a"), row("b")], "de")?.words.title).toBe("2 wartende Coach-Chats beenden?");
+  });
+
+  it("ends a Coach chat that waited 48 hours, or whose Card draft another run already made, never one paused on its result", async () => {
+    const { w, run, deps } = await paused({ id: "q1", type: "questions" });
+    const stored = w.agents.runs.find((r) => r.id === run)!;
+    expect(await sweepStaleCoach(deps)).toEqual([]);
+    expect(stored.status).toBe("PAUSED");
+    stored.updated = new Date(w.now.getTime() - 49 * 3600_000).toISOString();
+    expect(await sweepStaleCoach(deps)).toEqual([{ run, why: "stale" }]);
+    expect(stored.status).toBe("CANCELLED");
+    // Replaced: its approval names a draft a taf already claimed.
+    const replaced = await paused({ id: "a1", type: "approval", grant: "g1", draft: "drf_s1" });
+    replaced.w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x", keyRef: "k_made" });
+    expect((await sweepStaleCoach(replaced.deps)).map((x) => x.why)).toEqual(["replaced"]);
+    // A result (a taf being set up) keeps its own way back, however old.
+    const result = await paused();
+    result.w.agents.runs.find((r) => r.id === result.run)!.updated = new Date(result.w.now.getTime() - 72 * 3600_000).toISOString();
+    expect(await sweepStaleCoach(result.deps)).toEqual([]);
   });
 
   it("never counts another person's Coach chat, nor a setup's result card, as waiting on you", async () => {
