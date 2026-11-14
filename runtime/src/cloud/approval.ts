@@ -300,9 +300,10 @@ export function approvalWords(lang: Lang = "en") {
     windowClosed: w.approval_window_closed,
     signInClosed: w.approval_sign_in_closed,
     noCode: w.approval_no_code,
-    cameBack: (status: string) => w.approval_came_back(w.approval_status(status)),
+    // What came back, in the owner's words, never planque's status: already signed in (its actions come next), or nothing opened.
+    cameBack: (vendor: string, status: string) => (status === "signed_in" || status === "listed" ? w.approval_came_back_signed_in(vendor) : w.approval_came_back(vendor)),
     confirmFirst: w.approval_confirm_first,
-    notConnected: (vendor: string, status: string) => w.approval_not_connected(vendor, w.approval_status(status)),
+    notConnected: (vendor: string) => w.approval_not_connected(vendor),
     failed: (why?: string) => w.approval_failed(why ?? w.approval_failed_default),
     reasonConnect: (vendor: string, taf?: string) => (taf ? w.approval_reason_connect(vendor, taf) : w.approval_reason_connect_unnamed(vendor)),
     reasonCard: (taf?: string) => (taf ? w.approval_reason_card(taf) : w.approval_reason_card_unnamed),
@@ -715,7 +716,7 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
     if (connected) await noteConnected(ctx.store, ctx.tenant, grant!, ctx.now);
     if (connected && draft && issued(draft.status)) return { answer: "approved" };
     if (!connected) {
-      const why = report.result === "failed" && report.why ? W.failed(report.why) : W.notConnected(pending.vendor, grant?.status ?? "unknown");
+      const why = report.result === "failed" && report.why ? W.failed(report.why) : W.notConnected(pending.vendor);
       return { answer: `failed: ${why}`, note: why };
     }
     const why = report.result === "failed" && report.why ? report.why : draft ? W.draftIs(draft.status) : W.noDraft;
@@ -769,9 +770,9 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
     case "sign_in_closed": why = W.signInClosed; break;
     case "no_code": why = W.noCode(vendor); break;
     // planque's approve came back with no sign-in link and not connected: its status, as it answered.
-    case "not_connected": why = W.cameBack(report.status ?? grant?.status ?? "unknown"); break;
+    case "not_connected": why = W.cameBack(vendor, report.status ?? grant?.status ?? "unknown"); break;
     case "failed": why = W.failed(report.why); break;
-    default: why = W.notConnected(vendor, grant?.status ?? "unknown");
+    default: why = W.notConnected(vendor);
   }
   return { answer: `failed: ${why}`, note: why };
 }
