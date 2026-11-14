@@ -1,0 +1,1 @@
+- Gdy logowanie nie łączy, komunikat mówi to prostymi słowami, bez technicznego stanu.

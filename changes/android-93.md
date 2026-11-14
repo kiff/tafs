@@ -1,0 +1,1 @@
+- **Android 1.27.5 (93), and iPhone and iPad: a sign-in that didn't connect says so in plain words.** The line no longer shows the connection's status ("the connection is needs reconnect", "came back signed_in with no sign-in link"); it uses tafs cloud's wording, in 8 languages (docs/android-app.md).

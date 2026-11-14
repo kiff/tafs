@@ -651,7 +651,9 @@ manages the taf, its `title` as the button. The tap signs that same connection i
 sign-in, planque's confirm), so the taf keeps its tools and its Card, with no list and no picking an app.
 Once planque says it's connected, tafs cloud's `done_words` ("Gmail is connected again. Mail can use
 it.") show on the taf, and its Setup page is read again. A sign-in that didn't go through says so under
-the button, and Connect again stays. The app decides nothing about whether it's needed. iPhone and iPad
+the button, and Connect again stays. That line never names the connection's status: "The sign-in at Gmail didn't
+finish, so nothing was connected. Try signing in again.", or "Gmail didn't open a sign-in page…", tafs cloud's own
+wording for its card (Android 1.27.5; iPhone and iPad the same). The app decides nothing about whether it's needed. iPhone and iPad
 do the same.
 
 ## Coach waiting

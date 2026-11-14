@@ -104,7 +104,7 @@
   "coach.not_allowed": "Coach è per le persone a cui KIFF lo consente, di norma gli amministratori dell'account.",
   "coach.not_archived_try_again": "Non archiviata. Riprova.",
   "coach.not_connectable": "Il collegamento delle app non è configurato per questo account da questo telefono. Apri Coach per avviarlo.",
-  "coach.not_connected": "L'accesso su {vendor} non si è collegato: il collegamento è {status}. Non è stato collegato nulla. Prova ad accedere di nuovo.",
+  "coach.not_connected": "L'accesso a {vendor} non si è concluso, quindi non è stato collegato nulla. Accedi di nuovo.",
   "coach.not_improved": "La nuova versione di {owner} non è stata creata: {why}.",
   "coach.not_no_sign": "Non ora: nessun accesso su {vendor}",
   "coach.not_put_back_try_again": "Non ripristinata. Riprova.",
