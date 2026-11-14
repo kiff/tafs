@@ -749,6 +749,37 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     expect(again.told()).toMatchObject({ answer: "approved" });
   });
 
+  // Coach found something wrong after the owner approved the Card (a rule pointed at the wrong tool) and drafted another
+  // over the same connection: doubled Cards, a third approval, and a taf that never started. Once a connection's Card is
+  // approved in a conversation, no other draft over it is approved there; the same draft is still what it was, and
+  // another conversation (a later Improve) is its own.
+  it("never approves a second draft over a connection whose Card this conversation approved", async () => {
+    const s = services();
+    s.grants = [grant({ status: "connected" })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await asked(s, { draft: "drf_1" }, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
+    expect((await w.report({ result: "confirmed" })).body).toMatchObject({ answer: "approved" });
+
+    // The re-draft, in the same conversation: refused, nothing to sign, and Coach hears why.
+    s.drafts.drf_2 = { status: "draft", version: "v1", agent_id: "refunds-x" };
+    w.agents.ask(w.stored, { type: "approval", id: "a2", grant: "g_1", draft: "drf_2" });
+    const redraft = await w.call("POST", `/v1/tafs/${COACH}/components/a2/approval`, { grant: "g_1", draft: "drf_2", shown_draft: "v1" });
+    expect(redraft.body).toMatchObject({ outcome: "answered" });
+    expect(String(redraft.body.answer)).toContain("failed: Stripe's Card was approved earlier in this conversation (draft drf_1), so no second draft over it is approved here");
+    // The approved draft itself is still what it was: already approved.
+    w.agents.ask(w.stored, { type: "approval", id: "a3", grant: "g_1", draft: "drf_1" });
+    const same = await w.call("POST", `/v1/tafs/${COACH}/components/a3/approval`, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect(String(same.body.answer)).toMatch(/^already approved/);
+
+    // Another conversation (an Improve later) drafts over the connection as its own.
+    const later = await w.agents.api.startRun("t_acme", COACH, "Change Refunds", ANA);
+    const laterRun = w.agents.runs.find((r) => r.id === later.id)!;
+    w.agents.ask(laterRun, { type: "approval", id: "b1", grant: "g_1", draft: "drf_2" });
+    const improve = await w.call("POST", `/v1/tafs/${COACH}/components/b1/approval`, { grant: "g_1", draft: "drf_2", shown_draft: "v1", session: later.session });
+    expect(improve.body).toMatchObject({ outcome: "sign", ask: { step: "cards", kiff: { draft: "drf_2" } } });
+  });
+
   it("an ask is taken once: two signed reports that arrive together settle it once, and Coach hears once", async () => {
     const s = services();
     const w = await asked(s);

@@ -3720,8 +3720,8 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
   await requireAIConsent(event, me, deps);
   const body = parseBody(event);
   const ask = askOrRefuse(() => askOf(body));
-  const ctx = approvalContext(event, me, taf, component, deps);
   const session = str(body.session).trim();
+  const ctx = approvalContext(event, me, taf, component, deps);
   const approval = await shownCard(me, taf, component, "approval", session, deps);
   // A sign-in card asks too when its connection takes no approval now (signed in already, or past approving): tafs cloud
   // answers it in the person's words, never planque's status ("This connection is listed."). Anything to sign, it leaves to
@@ -3729,7 +3729,7 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
   const signIn = approval ? undefined : await shownCard(me, taf, component, "sign_in", session, deps);
   const card = approval ?? signIn;
   if (!card) throw new HTTPError(404, "no card of yours by that id");
-  const decision = await decideApproval(ask, ctx).catch(approvalFailure);
+  const decision = await decideApproval(ask, { ...ctx, session: card.session }).catch(approvalFailure);
   if (signIn && decision.outcome !== "answered") return { outcome: "sign_in" };
   if (decision.outcome === "answered") {
     // A sign-in card's answer is "signed in" or "failed: …": already approved means already signed in.
@@ -3800,7 +3800,7 @@ async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf,
   if (!card) throw new HTTPError(404, "no card of yours by that id");
   const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
   const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
-  const outcome = await settleApproval(askID, report, { ...ctx, signed }).catch(approvalFailure);
+  const outcome = await settleApproval(askID, report, { ...ctx, signed, session: card.session }).catch(approvalFailure);
   await deps.coach!.remove(approvalWaitKey(me.tenantID, taf.id, me.subject)).catch(() => undefined);
   let told: Awaited<ReturnType<typeof tellCoach>> | { session: string };
   try {
