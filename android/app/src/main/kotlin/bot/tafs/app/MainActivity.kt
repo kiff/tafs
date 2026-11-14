@@ -936,7 +936,7 @@ internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
   ) {
     NavigationBarItem(
       selected = false,
-      onClick = onAccount,
+      onClick = { bot.tafs.app.design.Haptics.tap(); onAccount() },
       icon = { Icon(painterResource(R.drawable.ic_person), contentDescription = null, modifier = Modifier.size(20.dp)) },
       label = { Text(ACCOUNT, style = scaled(11), maxLines = 1, softWrap = false) },
       colors = barColors(),
@@ -944,7 +944,7 @@ internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
     Tab.entries.forEach { t ->
       NavigationBarItem(
         selected = tab == t,
-        onClick = { onTab(t) },
+        onClick = { bot.tafs.app.design.Haptics.tap(); onTab(t) },
         icon = { TabIcon(t, state) },
         label = { Text(t.title, style = scaled(11), maxLines = 1, softWrap = false) },
         colors = barColors(),
@@ -964,7 +964,7 @@ private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
   ) {
     androidx.compose.material3.NavigationRailItem(
       selected = false,
-      onClick = onAccount,
+      onClick = { bot.tafs.app.design.Haptics.tap(); onAccount() },
       icon = { Icon(painterResource(R.drawable.ic_person), contentDescription = null, modifier = Modifier.size(20.dp)) },
       label = { Text(ACCOUNT, style = scaled(11), maxLines = 1, softWrap = false) },
       colors = railColors(),
@@ -972,7 +972,7 @@ private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
     Tab.entries.forEach { t ->
       androidx.compose.material3.NavigationRailItem(
         selected = tab == t,
-        onClick = { onTab(t) },
+        onClick = { bot.tafs.app.design.Haptics.tap(); onTab(t) },
         icon = { TabIcon(t, state) },
         label = { Text(t.title, style = scaled(11), maxLines = 1, softWrap = false) },
         colors = railColors(),
@@ -1027,7 +1027,7 @@ private fun CoachButton(onClick: () -> Unit, modifier: Modifier = Modifier, comp
     softWrap = false,
     modifier = modifier.heightIn(min = 40.dp).then(Modifier.driveStopZone()).clip(androidx.compose.foundation.shape.CircleShape)
       .background(if (acting) Theme.amber else Theme.ink)
-      .clickable(onClick = onClick).semantics { role = androidx.compose.ui.semantics.Role.Button }
+      .clickable { bot.tafs.app.design.Haptics.tap(); onClick() }.semantics { role = androidx.compose.ui.semantics.Role.Button }
       .padding(horizontal = if (compact) 8.dp else 14.dp, vertical = 10.dp),
   )
 }

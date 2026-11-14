@@ -81,7 +81,7 @@ fun CoachWaitingPanel(waiting: bot.tafs.app.kiff.CoachWaiting, onOpen: ((bot.taf
   // Once per gesture: confirmValueChange is asked more than once in one swipe, and the model also ignores a chat in flight.
   var fired by remember(waiting.session) { mutableStateOf(false) }
   val swipe = androidx.compose.material3.rememberSwipeToDismissBoxState(confirmValueChange = { v ->
-    if (v != androidx.compose.material3.SwipeToDismissBoxValue.Settled && !fired) { fired = true; onSetAside(waiting.session) }
+    if (v != androidx.compose.material3.SwipeToDismissBoxValue.Settled && !fired) { fired = true; bot.tafs.app.design.Haptics.tap(); onSetAside(waiting.session) }
     false
   })
   LaunchedEffect(swipe.targetValue) { if (swipe.targetValue == androidx.compose.material3.SwipeToDismissBoxValue.Settled) fired = false }

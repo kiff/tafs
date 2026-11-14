@@ -1878,11 +1878,12 @@ class AppModel(
     return try {
       val done = cloud.setAsideCoach(session, coachReadProof())
       if (gen == accountGeneration) _state.update { s -> s.copy(coachWaiting = s.coachWaiting.filterNot { it.session in done.setAside }) }
+      bot.tafs.app.design.Haptics.success()
       refresh()
       true
     } catch (e: CancellationException) { throw e
     } catch (e: Exception) {
-      if (gen == accountGeneration) fail(ErrorWords.of(e))
+      if (gen == accountGeneration) { bot.tafs.app.design.Haptics.warning(); fail(ErrorWords.of(e)) }
       false
     } finally {
       _state.update { it.copy(settingAside = it.settingAside - sessions) }

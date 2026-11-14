@@ -112,5 +112,8 @@
   },
   "views/SiteSignInViews.kt": {
     "SetJavaScriptEnabled": "a lint rule's name"
+  },
+  "design/Haptics.kt": {
+    "haptics: the phone played none (${kind.name})": "the diagnostics, never shown"
   }
 }

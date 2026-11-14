@@ -44,10 +44,17 @@ object Haptics {
     runCatching { performer?.invoke(kind) }
   }
 
-  /** The platform's own feedback for each kind, on [view] (Android 11+: confirm and reject exist). */
+  /** Whether the phone already said once that it played no feedback: said in the diagnostics once per launch. */
+  @Volatile private var saidNone = false
+
+  /**
+   * The platform's own feedback for each kind, on [view] (Android 11+: confirm and reject exist). It follows the phone's own
+   * touch feedback setting: off there, the phone plays nothing, and that's said once in the diagnostics, so a "nothing
+   * vibrates" report can be told apart from a tap the app never asked for.
+   */
   fun on(view: View): (Kind) -> Unit = { kind ->
     view.post {
-      view.performHapticFeedback(
+      val played = view.performHapticFeedback(
         when (kind) {
           Kind.Tap -> HapticFeedbackConstants.VIRTUAL_KEY
           Kind.Success -> HapticFeedbackConstants.CONFIRM
@@ -55,6 +62,10 @@ object Haptics {
           Kind.Step -> HapticFeedbackConstants.CLOCK_TICK
         },
       )
+      if (!played && !saidNone) {
+        saidNone = true
+        bot.tafs.app.drive.DriveDiagnostics.error("haptics: the phone played none (${kind.name})")
+      }
     }
   }
 }
