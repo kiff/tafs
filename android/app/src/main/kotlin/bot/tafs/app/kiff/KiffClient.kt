@@ -654,10 +654,21 @@ class KiffClient(
     send("POST", "/v1/me/mandates/${escaped(cardId)}/revoke", mapOf<String, String>())
   }
 
-  /** Signs a device out of the account: it no longer approves, and its sessions are over. */
+  /**
+   * Signs a device out of the account: it no longer approves, and its sessions are over. Removing a device that holds an
+   * approval key takes an approval (KIFF's docs/desktop-client.md §6), and the phone can't tell which do, so it's always
+   * signed: by the approval key behind its fingerprint, never inside an approval window. Set [setupSigner] first.
+   */
   suspend fun removeDevice(id: String) {
-    send("DELETE", "/v1/me/devices/" + escaped(id))
+    sendJson("DELETE", DEVICES + escaped(id), null, inWindow = false)
   }
+
+  /**
+   * Pairs the computer whose QR the person scanned (docs/desktop-client.md §5.3): its fields as the QR gave them, signed by the
+   * approval key behind the fingerprint, and never inside an approval window, which never covers a pairing.
+   */
+  suspend fun pair(qr: PairQr): Pairing =
+    json.decodeFromString(PairingBody.serializer(), String(sendJson("POST", PAIRINGS, qr.body(), inWindow = false))).pairing
 
   /**
    * Deletes the account in KIFF (kiff/tafs#185): its keys stop at once, and KIFF erases its data after its grace window.
@@ -874,7 +885,13 @@ class KiffClient(
      * taf, the alert target that tells tafs cloud when a call is held, the connector key planque
      * keeps, the account's time zone, deleting the account (kiff/tafs#185), and raising the spend limit.
      */
-    val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", USAGE_LIMIT)
+    val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", USAGE_LIMIT, PAIRINGS)
+
+    /** A device of the account, by id after it: removing one is signed by the approval key (desktop-client.md §6). */
+    const val DEVICES = "/v1/me/devices/"
+
+    /** Pairing a computer (KIFF's docs/desktop-client.md §5.3): signed by the approval key, never inside an approval window. */
+    const val PAIRINGS = "/v1/me/pairings"
 
     /** KIFF's "Did this happen?": each answer is a POST under it, signed by the approval key. */
     const val DID_THIS_HAPPEN = "/v1/me/did-this-happen"
@@ -889,6 +906,7 @@ class KiffClient(
      */
     fun signsSetup(path: String): Boolean {
       if (path in SIGNED_SETUP_PATHS) return true
+      if (isDevice(path)) return true
       // Opening an approval window, and closing it (kiff/tafs#494).
       if (path == WINDOW || (path.startsWith("$WINDOW/") && path.endsWith("/close"))) return true
       if (path.startsWith("$DID_THIS_HAPPEN/")) return true
@@ -914,6 +932,8 @@ class KiffClient(
      * resuming a halt. Taking authority away (ending a trial, unsharing) is the current key.
      */
     fun grantsAuthority(method: String, path: String): Boolean {
+      // Removing a device: one that holds an approval key or a passkey goes only with an approval (§6).
+      if (method == "DELETE") return isDevice(path)
       if (method != "POST") return false
       // Opening an approval window stands for a fingerprint: only the approval key opens one (kiff/tafs#494).
       if (path == WINDOW) return true
@@ -921,12 +941,17 @@ class KiffClient(
       // "Not sure" decides nothing: the device key takes it.
       if (path.startsWith("$DID_THIS_HAPPEN/") && path.length > DID_THIS_HAPPEN.length + 1 && !path.endsWith("/check")) return true
       if (path == "/v1/me/agent-drafts") return true
+      // Pairing a computer gives it approval authority: only the approval key grants it.
+      if (path == PAIRINGS) return true
       val parts = path.split("/")
       // Sharing a taf gives people its use. Taking it away is the current key.
       if (parts.size == 5 && path.startsWith("/v1/agents/") && parts[4] == "grants" && parts[3].isNotEmpty()) return true
       if (path == "/v1/resume" || (parts.size == 5 && path.startsWith("/v1/agents/") && parts[4] == "resume" && parts[3].isNotEmpty())) return true
       return parts.size == 6 && path.startsWith("/v1/me/agent-drafts/") && parts[5] == "confirm" && parts[4].isNotEmpty()
     }
+
+    /** `/v1/me/devices/{id}`: one device, never the list. */
+    private fun isDevice(path: String): Boolean = path.startsWith(DEVICES) && path.length > DEVICES.length && '/' !in path.substring(DEVICES.length)
 
     /** KIFF's approval window (kiff/tafs#494): read, opened with the approval key, closed with the device key. */
     const val WINDOW = "/v1/me/window"

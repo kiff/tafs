@@ -109,3 +109,15 @@ as KIFF's.
 - **tafs's part — not built.** Once the vocabulary is published, both apps word
   the kinds they know in the person's language, and show KIFF's signed `message`
   as it is under Details. A kind they don't know shows its `message`, as now.
+
+## 9. Pairing a computer: the routes, and words for each refusal — open
+
+Tracked on KIFF's side, privately.
+- **The need:** `POST /v1/me/pairings` as KIFF's `docs/desktop-client.md` §5.3
+  sets it out, and a `words` line on each of its refusals (`pairing_expired`,
+  `pairing_used`, `key_registered`, `invalid_pairing`) in the person's language,
+  as KIFF's other refusals carry.
+- **tafs's part — built on Android, not live.** Devices → Add a computer scans
+  the QR, shows the check code, and signs the pairing with the approval key
+  ([android-app.md](android-app.md#pairing-a-computer)). Until KIFF sends
+  `words`, the app words those four codes itself. iPhone and iPad follow.

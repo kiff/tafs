@@ -823,7 +823,12 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     }
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
     if (showingDevices) {
-      DevicesSheet(state, refresh = model::refreshDevices, remove = model::removeDevice, onClose = { showingDevices = false })
+      DevicesSheet(
+        state, refresh = model::refreshDevices, remove = model::removeDevice, onClose = { showingDevices = false },
+        // Pairing a computer gives it approval authority: offered only on a KIFF account.
+        scan = drivingActivity?.takeIf { state.mode == bot.tafs.app.app.Mode.kiff }?.let { activity -> { bot.tafs.app.app.scanPairingQr(activity) } },
+        pair = model::pairComputer,
+      )
     }
     if (showingConnectApps) {
       // Connect is for whoever manages the account's Cards; anyone else sees what's connected.

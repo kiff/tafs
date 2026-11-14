@@ -50,6 +50,8 @@ import bot.tafs.app.model.threeMonthsOn
 import bot.tafs.app.kiff.Account
 import bot.tafs.app.kiff.AlertTarget
 import bot.tafs.app.kiff.Grant
+import bot.tafs.app.kiff.PairQr
+import bot.tafs.app.kiff.Pairing
 import bot.tafs.app.kiff.CloudSetup
 import bot.tafs.app.kiff.PlanqueClient
 import bot.tafs.app.kiff.PlanqueError
@@ -7214,29 +7216,100 @@ class AppModel(
     }
   }
 
-  /** Signs another device out of the account, behind one confirmation. This device signs out with Sign out instead. False when it didn't go through. */
+  /**
+   * Signs another device out of the account, behind one fingerprint that names it. This device signs out with Sign out instead.
+   * Removing a device that holds an approval key takes an approval at KIFF (desktop-client.md §6), so the approval key signs it,
+   * its fingerprint the confirmation; a session KIFF holds no approval key for confirms here, and KIFF decides. False when it
+   * didn't go through.
+   */
   suspend fun removeDevice(device: Device): Boolean {
     val tenant = kiffTenant
-    if (_state.value.mode != Mode.kiff || tenant == null || device.thisDevice) return false
+    if (_state.value.mode != Mode.kiff || tenant == null || device.thisDevice || !_state.value.sessionHasKey) return false
     val generation = accountGeneration
     val what = Words.Settings.Devices.signOutPrompt(device = device.shown ?: Words.Settings.Devices.thisDevice)
+    kiff.tenant = tenant
+    val signer = signer
     try {
-      signer.sign("tafs.devices.v1|$tenant|${device.id}".toByteArray(), what)
+      if (!sessionHasApprovalKey) signer.sign("tafs.devices.v1|$tenant|${device.id}".toByteArray(), what)
+      if (generation != accountGeneration) return false
+      approvalReason = what
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      kiff.removeDevice(device.id)
     } catch (_: SignerException) {
       return false
-    }
-    if (generation != accountGeneration) return false
-    kiff.tenant = tenant
-    try {
-      kiff.removeDevice(device.id)
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = KiffClient.APPROVAL_KEY_LOST) }
+      return false
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
       if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))) }
       return false
+    } finally {
+      kiff.setupSigner = null
+      approvalReason = Words.Approval.Prompt.approveOnKiff
     }
     refreshDevices()
     return true
+  }
+
+  /**
+   * Pairs the computer whose QR the person scanned and whose check code they said matches (KIFF's docs/desktop-client.md §5):
+   * the QR's fields, signed by the approval key behind its fingerprint, which names the computer. Whether it's paired is KIFF's:
+   * the phone shows KIFF's answer, the computer then listed in Devices with Sign out. Null when it didn't go through, why in
+   * [AppState.devicesError]; also null, with nothing to say, when the person put the fingerprint away.
+   */
+  suspend fun pairComputer(qr: PairQr): Pairing? {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null) return null
+    // Only an approval device grants approval authority: a session KIFF holds no approval key for can't pair one.
+    if (!_state.value.sessionHasKey || !sessionHasApprovalKey || _state.value.approvalKeyLost) {
+      _state.update { it.copy(devicesError = KiffClient.APPROVAL_KEY_LOST) }
+      return null
+    }
+    val generation = accountGeneration
+    val what = Words.Settings.Devices.pairPrompt(device = qr.name)
+    approvalReason = what
+    kiff.tenant = tenant
+    val signer = signer
+    kiff.setupSigner = { signer.signConfirmed(it) }
+    _state.update { it.copy(devicesError = null) }
+    val pairing = try {
+      kiff.pair(qr)
+    } catch (_: SignerException) {
+      return null
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = KiffClient.APPROVAL_KEY_LOST) }
+      return null
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Common.didntGoThrough(what = Words.Settings.Devices.pair, why = pairingWhy(e))) }
+      return null
+    } finally {
+      kiff.setupSigner = null
+      approvalReason = Words.Approval.Prompt.approveOnKiff
+    }
+    if (generation != accountGeneration) return null
+    refreshDevices()
+    return pairing
+  }
+
+  /**
+   * Why a pairing didn't go through: KIFF's own words where it sends them; for its codes (§5.3), the app's words until KIFF
+   * words them; else the usual.
+   */
+  internal fun pairingWhy(e: Throwable): String {
+    if (e is KiffError.Server) {
+      e.words?.takeIf { it.isNotBlank() }?.let { return it }
+      when {
+        e.refused("pairing_expired") -> return Words.Settings.Devices.pairExpired
+        e.refused("pairing_used") -> return Words.Settings.Devices.pairUsed
+        e.refused("key_registered") -> return Words.Settings.Devices.pairKeyRegistered
+        e.refused("invalid_pairing") -> return Words.Settings.Devices.pairInvalid
+      }
+    }
+    return ErrorWords.of(e)
   }
 
   // MARK: Deleting the account

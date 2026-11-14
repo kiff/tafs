@@ -3532,6 +3532,42 @@ enum Words {
             static var note: String { Words.line("settings.devices.note") }
             /// Signing a device out ends its sign-in on this account at once. To sign out this {device}, use Sign out of KIFF.
             static func noteDevice(device: String) -> String { Words.line("settings.devices.note_device", device) }
+            /// Add a computer
+            static var pair: String { Words.line("settings.devices.pair") }
+            /// Does your computer show {code}?
+            static func pairCheck(code: String) -> String { Words.line("settings.devices.pair_check", code) }
+            /// KIFF paired {device} with the code {kiff}, not {shown} as checked. If that isn't your computer, sign it out here.
+            static func pairCodeDiffers(device: String, kiff: String, shown: String) -> String { Words.line("settings.devices.pair_code_differs", device, kiff, shown) }
+            /// {device} is paired. It showed {code}.
+            static func pairDone(device: String, code: String) -> String { Words.line("settings.devices.pair_done", device, code) }
+            /// The code on your computer expired. Show a new one and scan it again.
+            static var pairExpired: String { Words.line("settings.devices.pair_expired") }
+            /// {device} will be able to approve your tafs' actions with Touch ID.
+            static func pairGivesEnclave(device: String) -> String { Words.line("settings.devices.pair_gives_enclave", device) }
+            /// {device} will be able to approve your tafs' actions with Windows Hello.
+            static func pairGivesHello(device: String) -> String { Words.line("settings.devices.pair_gives_hello", device) }
+            /// {device} will be able to approve your tafs' actions with a passkey.
+            static func pairGivesPasskey(device: String) -> String { Words.line("settings.devices.pair_gives_passkey", device) }
+            /// KIFF couldn't read that code. Show a new one on your computer and scan it again.
+            static var pairInvalid: String { Words.line("settings.devices.pair_invalid") }
+            /// That computer is already paired.
+            static var pairKeyRegistered: String { Words.line("settings.devices.pair_key_registered") }
+            /// Pair {device}?
+            static func pairNamed(device: String) -> String { Words.line("settings.devices.pair_named", device) }
+            /// That QR code isn't a computer asking to be paired.
+            static var pairNotAPairing: String { Words.line("settings.devices.pair_not_a_pairing") }
+            /// Only pair a computer you're using right now.
+            static var pairOnlyNow: String { Words.line("settings.devices.pair_only_now") }
+            /// Pair {device}: it can approve actions
+            static func pairPrompt(device: String) -> String { Words.line("settings.devices.pair_prompt", device) }
+            /// Couldn't open the scanner. {why}
+            static func pairScannerFailed(why: String) -> String { Words.line("settings.devices.pair_scanner_failed", why) }
+            /// This computer approves only through your phone or a passkey.
+            static var pairSoftwareKey: String { Words.line("settings.devices.pair_software_key") }
+            /// That code was used already. Show a new one on your computer.
+            static var pairUsed: String { Words.line("settings.devices.pair_used") }
+            /// Yes, pair it
+            static var pairYes: String { Words.line("settings.devices.pair_yes") }
             /// Sign out
             static var signOut: String { Words.line("settings.devices.sign_out") }
             /// Sign {device} out?
