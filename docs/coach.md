@@ -32,9 +32,10 @@ account admin (`AppModel.mayUseCoach`).
 On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
 (`CoachScreen`). It has what's below, with these differences:
 - **A compact header,** one row: back, Coach, and a menu with **New conversation** and
-  **Previous conversations** (`CoachHeader`). New conversation is never greyed out: on a
-  conversation with nothing in it yet, it keeps that one and shows its top; otherwise it opens a
-  new one (iOS's New conversation button does the same: `coachChatIsEmpty`). Under it, the plan in tafs cloud's one line
+  **Previous conversations** (`CoachHeader`). New conversation is never greyed out: on a plain
+  conversation with nothing in it yet, it keeps that one and shows its top; otherwise, an empty one
+  about a taf ("Improve Refunds") included, it opens a plain new one (Android `CoachWords.newChatStays`,
+  1.27.6; iOS's New conversation button keeps an empty one, `coachChatIsEmpty`, and follows). Under it, the plan in tafs cloud's one line
   (`line`, [The plan in one line](#the-plan-in-one-line)); tapped, it opens to the steps. The
   plan line folds away while the thread scrolls down and comes back on the way up, so a card
   has the screen. The phone never counts the plan's steps.

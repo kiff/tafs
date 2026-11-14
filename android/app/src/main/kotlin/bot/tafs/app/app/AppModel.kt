@@ -243,6 +243,8 @@ data class AppState(
   val needsYou: bot.tafs.app.kiff.NeedsYouCount? = null,
   /** Home's first line, in tafs cloud's words; null from a tafs cloud that sends none, where the app's own count stands in. */
   val headline: String? = null,
+  /** Coach is on screen (its chat `coachChat`): set by the screen, for the badge. */
+  val coachShown: Boolean = false,
   /** Cards asked to take another currency, as tafs cloud draws them from KIFF; counted with the held calls in Needs you. */
   val cardUnitExceptions: List<bot.tafs.app.kiff.CardUnitException> = emptyList(),
   /** The ones whose Dismiss is on its way to KIFF. */
@@ -643,6 +645,13 @@ data class AppState(
    * of it) the app's own of what it has, held calls, currency requests and "Did this happen?".
    */
   val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size + coachWaiting.size)
+
+  /**
+   * The tab's badge: Needs you's count, less a Coach chat waiting on its person while that very chat is on screen, where the
+   * card is answered (the owner's badge read 1 for the chat they were in). Only the app knows what's on screen, so this can't
+   * be tafs cloud's; the count itself is.
+   */
+  val needsYouBadge: Int get() = (needsYouCount - if (coachShown) coachWaiting.count { it.session == coachChat } else 0).coerceAtLeast(0)
 
   /** Home's line for it: tafs cloud's words, else the app's for its own count. */
   val needsYouWords: String get() = needsYou?.words ?: needsYouCount.let { if (it == 0) Words.NeedsYou.nothing else Words.NeedsYou.count(count = it) }
@@ -1858,6 +1867,9 @@ class AppModel(
   /** The tab screen opened Coach. */
   fun coachOpened() = _state.update { it.copy(coachRequested = false) }
 
+  /** Coach shown or hidden, for the badge (`needsYouBadge`). */
+  fun coachShown(shown: Boolean) = _state.update { if (it.coachShown == shown) it else it.copy(coachShown = shown) }
+
   /**
    * "Finish setting up" on another agent whose setup stopped partway (docs/tafs.md): Coach opens on the chat where it stopped.
    * Reading that chat is what makes the taf, at tafs cloud; the next Home read lists it as a taf.
@@ -1908,6 +1920,8 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || !_state.value.mayUseCoach || waiting.session.isBlank()) return
     _state.update { it.copy(coachRequested = true) }
     openCoachChat(waiting.session)
+    // The row may be stale (its chat answered or ended since): Home is read again, so it goes once tafs cloud says so.
+    scope.launch { refresh() }
   }
 
   /**
@@ -4934,6 +4948,9 @@ class AppModel(
     session?.let { if (_state.value.coachChat == null) settleCoachChat(it) }
     _state.update { it.copy(chatAwaiting = it.chatAwaiting + (COACH_CHAT to clock()), chatEnded = it.chatEnded - COACH_CHAT) }
     readThread(COACH_CHAT)
+    // Answered: Coach no longer waits on it, so Home is read again and its waiting row and the badge go (the owner's row stayed
+    // after setup ended).
+    scope.launch { refresh() }
     run?.let { resumeChat(COACH_CHAT, cloudId, it, again = true) } ?: followChat(COACH_CHAT)
   }
 

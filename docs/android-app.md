@@ -673,7 +673,9 @@ where the card is answered; someone who can't use Coach reads the line alone. ta
 you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
 Home is read when a chat's stream ends, and when it closes with no end line after its last live line said
 `waiting_for_you` (`AppModel.stillWaitsOnYou`), so the row and the badge come while Coach's chat is still open
-(Android 1.27.6, as iPhone and iPad).
+(Android 1.27.6, as iPhone and iPad). Home is read again too when a Coach card is answered and when a row is opened, so
+a row whose chat was answered or ended goes once tafs cloud says so. The tab's badge leaves out the chat that's on
+screen (`needsYouBadge`): only the app knows what's on screen, so that's the app's; the count is tafs cloud's.
 
 **Set aside** is "not now", never an approval, and only signed in (not the sample). A chat set aside is no longer the one
 Coach shows: Coach starts a new conversation, so a new job never goes on in the ended session (Android 1.27.1). Opening
