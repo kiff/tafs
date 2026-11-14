@@ -1,0 +1,1 @@
+- **A mission's log, in tafs cloud.** Each member run that completes is logged once, with the record's counts and the items it acted on as refs. The person reads the log, newest first, in their own language. A removed taf's entries stay marked in that read-only log, but never reach what runs read ([missions.md](docs/missions.md#the-log)).

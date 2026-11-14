@@ -221,6 +221,7 @@ export const nl: Words = {
   home_discard_no: "Bewaren",
   home_needs_you_none: "Niets wacht op jou.",
   labels_all: "Alle",
+  mission_log_delivered: (done, held, refused) => [`${done} gedaan`, held ? `${held} vastgehouden` : "", refused ? `${refused} geweigerd` : ""].filter(Boolean).join(" · "),
   business_title: "Wat tafs over je bedrijf weten",
   business_empty: "Nog niets. Coach kan het met je opstellen.",
   business_change: "Wijzigen",

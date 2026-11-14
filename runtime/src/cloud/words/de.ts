@@ -221,6 +221,7 @@ export const de: Words = {
   home_discard_no: "Behalten",
   home_needs_you_none: "Nichts braucht dich.",
   labels_all: "Alle",
+  mission_log_delivered: (done, held, refused) => [`${done} erledigt`, held ? `${held} zurückgehalten` : "", refused ? `${refused} abgelehnt` : ""].filter(Boolean).join(" · "),
   business_title: "Was tafs über dein Unternehmen wissen",
   business_empty: "Noch nichts. Coach kann sie mit dir entwerfen.",
   business_change: "Ändern",

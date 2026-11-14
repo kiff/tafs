@@ -236,6 +236,7 @@ export const en = {
   home_discard_no: "Keep it",
   home_needs_you_none: "Nothing needs you.",
   labels_all: "All",
+  mission_log_delivered: (done: number, held: number, refused: number) => [`${done} done`, held ? `${held} held for you` : "", refused ? `${refused} refused` : ""].filter(Boolean).join(" · "),
   business_title: "What tafs know about your business",
   business_empty: "Nothing yet. Coach can draft it with you.",
   business_change: "Change",
