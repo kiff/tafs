@@ -1042,15 +1042,48 @@ struct VersionCardSheet: View {
 }
 
 /// The Cards a draft brings, as the owner reads them before Face ID: each Card it revises
-/// as it is now and as it will be, each new one, and each it removes.
+/// as it is now and as it will be, its new Cards as one, and each it removes.
 struct DraftCardsView: View {
     let draft: KIFFClient.AgentDraft
 
+    /// How a draft's Cards show: its new Cards as one, "A new Card" (KIFF's draft has one per
+    /// tool, and five panels read as five Cards to approve); a changed or unchanged Card alone.
+    enum Shown: Equatable {
+        /// Every new Card's lines, each once, in the draft's order.
+        case new(lines: [String])
+        case one(card: KIFFClient.DraftCard, lines: [String])
+    }
+
+    /// The new Cards go together where the first of them is; the others keep their place.
+    static func shown(_ draft: KIFFClient.AgentDraft) -> [Shown] {
+        let cards = draft.cards ?? []
+        let lines = draft.cardLines
+        let fresh = cards.indices.filter { cards[$0].current == nil }
+        return cards.indices.compactMap { i -> Shown? in
+            if !fresh.contains(i) { return .one(card: cards[i], lines: lines[i]) }
+            guard i == fresh.first else { return nil }
+            var seen = Set<String>()
+            return .new(lines: fresh.flatMap { lines[$0] }.filter { seen.insert($0).inserted })
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            let lines = draft.cardLines
-            ForEach(Array((draft.cards ?? []).enumerated()), id: \.offset) { i, card in cardView(card, lines: lines[i]) }
+            ForEach(Array(Self.shown(draft).enumerated()), id: \.offset) { _, shown in
+                switch shown {
+                case .new(let lines): newCardsView(lines)
+                case .one(let card, let lines): cardView(card, lines: lines)
+                }
+            }
             ForEach(draft.retires ?? [], id: \.id) { retiredView($0) }
+        }
+    }
+
+    /// A version's new Cards, as one: what they allow, together.
+    private func newCardsView(_ lines: [String]) -> some View {
+        Panel {
+            Eyebrow(text: Words.Version.newCard)
+            ForEach(lines, id: \.self) { Text($0).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink) }
         }
     }
 

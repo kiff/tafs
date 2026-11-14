@@ -1,0 +1,2 @@
+- Logowanie nie zamyka się już, gdy wyjdziesz po kod i wrócisz.
+- Karta logowania podaje aplikację, którą otwiera.

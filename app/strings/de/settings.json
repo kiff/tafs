@@ -50,6 +50,7 @@
   "settings.kiff_account": "KIFF-Konto",
   "settings.language_title": "Sprache",
   "settings.legal": "Rechtliches",
+  "settings.legal_in_english": "{label} (auf Englisch)",
   "settings.light_taps_when_you_send": "Ein leichtes Tippen, wenn du sendest oder antwortest.",
   "settings.mode": "Modus",
   "settings.mode_kiff": "Mit KIFF angemeldet",

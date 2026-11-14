@@ -208,6 +208,10 @@ includes, tafs cloud's sentence as kiff.dev says it; none sent, no line.
   purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
   Restore purchases right there.
 
+**Home's first line** is tafs cloud's `headline` ("2 tafs working.", or "1 taf ready." for a new taf with no
+schedule, [api.md](api.md)); the app counts nothing for it (Android 1.27.6). A tafs cloud from before `headline`
+leaves the app's own count of the tafs at work.
+
 **Needs you's count** (Home's line and the tab's badge) is tafs cloud's (`needs_you`: its count and
 words, covering held calls, "Did this happen?" calls, currency requests and tafs with a knock). When
 tafs cloud leaves it out (it couldn't read all of it), the app counts what it has (`needsYouCount`).
@@ -365,11 +369,14 @@ else. The Strings workflow runs on every change to `android/app/src/main/kotlin`
 
 A line that names the device says what it is (`{device}`): "phone", or "tablet" where the screen's smallest width is 600 dp
 or more, as Android's `sw600dp` does (`ThisDevice`, set in `TafsApplication`). Both words are lines of their own
-(`device.phone`, `device.tablet`), so each language says them. The device name KIFF lists for the phone's key reads "tafs
-on Android phone" (`settings.devices.this_device_name`).
+(`device.phone`, `device.tablet`), so each language says them. The device name the phone sends KIFF at sign-in reads "tafs
+on Android phone" (`settings.devices.this_device_name`), with its `kind` (`android_phone` or `android_tablet`, `ThisDevice`);
+Devices shows KIFF's `display_name`, drawn from the kind in the app's language, and that name only without one.
 
-The Terms and Privacy policy links (Settings, Sign-in, Plan & usage) open kiff.dev's page in the lines' language:
-`/terms#tafs` in English, `/de/terms#tafs` in German, and so on (`Legal`).
+The Terms and Privacy policy links (Settings, Sign-in, Plan & usage) open tafs's own pages, `kiff.dev/tafs/terms` and
+`kiff.dev/tafs/privacy`, the ones Google's consent screen names (`Legal`, Android 1.27.8). They're in English only until
+kiff.dev serves them in other languages, so outside English the Settings and Plan & usage links say so ("Terms (auf
+Englisch)", `settings.legal_in_english`), as kiff.dev does; before, the links opened KIFF's pages (`/terms#tafs`).
 
 The chat shows the owner's own answer line as it is by a flag on the line (`RecordEntry.byYou`, set where the phone
 records the answer and kept when KIFF's outcome matches), never by matching its words, so it holds in every language.
@@ -559,6 +566,11 @@ A change to the dial's setting (a size, Skip it / Run after, a place in an app) 
 next version: "DRAFT · Vn · NOT LIVE" and **Make N changes live** show in the sheet while it waits
 (tafs cloud's `pending`), the usual version switch.
 
+**A draft's Cards** (`DraftCardsView`, in Coach's approval card and in Versions): its new Cards show as one
+panel, **A new Card**, with each of their lines once (KIFF's draft has one Card per tool, which read as five Cards to
+approve). A Card the draft changes keeps its own panel, now then after, and one it removes its own (Android 1.27.6;
+iPhone and iPad follow).
+
 **An app's event** (`kind: app_event`) waits for the owner while its `approval` is `needed`:
 Approve opens its filters, as tafs cloud gives them, and **Approve with your fingerprint**
 approves exactly those (`AppModel.approveKnobEvent`, `EventApprovalSheet`). The live dial is read
@@ -664,8 +676,15 @@ you** ([api.md](api.md#coach-waiting)): Home's `coach_waiting`, after the steps,
 approval.") and its **Open Coach** button, which opens Coach on that chat (`AppModel.openWaitingCoach`),
 where the card is answered; someone who can't use Coach reads the line alone. tafs cloud counts each in `needs_you`, so Home never says "Nothing needs
 you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
+Home is read when a chat's stream ends, and when it closes with no end line after its last live line said
+`waiting_for_you` (`AppModel.stillWaitsOnYou`), so the row and the badge come while Coach's chat is still open
+(Android 1.27.6, as iPhone and iPad). Home is read again too when a Coach card is answered and when a row is opened, so
+a row whose chat was answered or ended goes once tafs cloud says so. The tab's badge leaves out the chat that's on
+screen (`needsYouBadge`): only the app knows what's on screen, so that's the app's; the count is tafs cloud's.
 
-**Set aside** is "not now", never an approval, and only signed in (not the sample). A chat set aside is no longer the one
+**Set aside** is "not now", never an approval, and only signed in (not the sample). After it, Needs you says where the chat
+went, in tafs cloud's words (`words.done`: "Set aside. You'll find it in Previous conversations."), until Coach opens
+(Android 1.27.7). A chat set aside is no longer the one
 Coach shows: Coach starts a new conversation, so a new job never goes on in the ended session (Android 1.27.1). Opening
 Coach with no chat chosen skips a chat tafs cloud marks `set_aside` (set aside on any device, or before a relaunch): the
 newest of the rest, or a new conversation when every one was set aside. **Ask Coach** in Connect apps always starts a new
@@ -681,8 +700,8 @@ tafs cloud answers.
   above them. It asks once, in tafs cloud's words (the title names the count), then calls
   `POST /v1/home/coach-waiting/set-aside`.
 - **After:** the row goes once tafs cloud answers, and Home is read again for its count. A refusal
-  says why (`ErrorWords`) and keeps the rows. A row being set aside isn't drawn again by a Home read
-  meanwhile.
+  says why (`ErrorWords`) and keeps the rows. A row being set aside isn't drawn while tafs cloud is asked
+  (`coachWaitingShown`), so one full swipe takes on the first try; a refusal brings it back (Android 1.27.6).
 
 iPhone and iPad do the same ([ios-app.md](ios-app.md#coach-waiting)).
 
@@ -740,7 +759,11 @@ The same rule as on iPhone and iPad (`design/Haptics.kt`):
 
 - **A light tap on every button press,** from the shared buttons (`PrimaryButton`, `OutlineButton`), so every new button
   gets it. Also on the bottom bar and rail (Account and each tab), Coach's button, a segment changed in a segmented control
-  (a taf's Chat, Activity, Card and Setup), a Coach chat swiped aside, and Set all aside (Android 1.27.0).
+  (a taf's Chat, Activity, Card and Setup), a Coach chat swiped aside, and Set all aside (Android 1.27.0). Home's calendar
+  icon and everything tapped in the calendar (days, weeks, the chevrons, Choose a date, a taf's slot) tap too, through
+  `Modifier.tapping`, the shared tappable for anything that isn't a button (Android 1.27.6). Since Android 1.27.7 every
+  tappable does: rows, chips, links and the halt chip, and a unit test fails on a raw `clickable` outside the design
+  components (`HapticsTapTest`).
 - **A success tick** when a send goes through (`deliverChat`), a held call's answer goes through (`answer`), tafs cloud
   approves Coach's approval card, or a Coach chat is set aside (`setAsideCoach`).
 - **A warning tick** when one of those is refused or fails. Only the outcome of something the person did, never a background
@@ -785,7 +808,9 @@ Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#conne
 **The list, as on iPhone and iPad** (Android 1.20.3):
 - **Yours, then Discover.** The account's own apps (connected, signed in, or to sign in again) come first under **Yours**,
   with **Connected ✓**. The rest of the catalog follows under **Discover**. Within each list, tafs cloud's order is kept.
-- **Each row has two lines:** the app's title, then tafs cloud's `line` as sent ("Sign in · Connected · Used by Refunds").
+- **Each row has two lines:** the app's name, then tafs cloud's `line` as sent ("Sign in · Connected · Used by Refunds").
+  The name is tafs cloud's `name` ("Qonto"), with its `subtitle` under it when sent ("Invoicing: reads, and invoice drafts from
+  quotes"); a tafs cloud from before `name` leaves `title` (`ConnectApps.App.displayName`, Android 1.27.7, as iPhone and iPad).
   - Without `line`, the same shared words are put together here: how it connects (`method`, else `how`: **Sign in** or
     **With a key**), `whose` as sent, where it stands (**Connected**, or **Sign in again**), and, for an app that's
     yours, **Used by** the tafs that use it, as a list in the app's language. iPhone and iPad put it together the same way.
@@ -797,7 +822,8 @@ Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#conne
   "Connected" label). The note on what removing access takes shows only when a taf uses one of them. Its tap always answers (Android 1.26.1): with none of its
   connections on this phone, planque's connections are read again first (`refreshConnections`), and if there are still
   none, the sheet says why: the read's failure (`connectionsError`, kept in words and written to the diagnostics), or
-  that connecting isn't set up from this phone.
+  that connecting isn't set up from this phone. A sheet emptied by removing its app's last connection closes instead,
+  never "The apps couldn't be read." over a list that's simply empty now; a failed read still says why (Android 1.27.6).
 
 **An app's connections, as planque describes them** (Android 1.25.0, planque's `title`, `used_by`,
 `health` and `actions` on each grant; `Grant.health`, `Grant.actions`, read leniently). A connected app
@@ -1012,6 +1038,19 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
 - **When KIFF doesn't take this phone's approval key at Start,** Start says "KIFF didn't accept this device's approval key.
   Try again." (`approval.key_not_accepted`), and from the second time in a row the support line under it
   (`approval.key_not_accepted_support`). A phone with no fingerprint keeps "Setting up a taf needs approvals".
+- **A sign-in card names its app**: the card's `service`, else the connection's app as Connect apps and planque name it
+  ("Sign in at Gmail"); "Sign in at the vendor" only when neither is known (`signInWords`, Android 1.27.8).
+- **"If the vendor's sign-in page opened, finish it there"** shows under an approval or sign-in in progress only while the
+  vendor's page is actually open (`AppState.vendorPageOpen`): an approval that reuses a sign-in opens none, and says nothing
+  of it (Android 1.27.8). It names the app ("If Gmail's sign-in page opened…", `waitingWords`), and Sign in says where it
+  goes ("Opens Gmail's sign-in", `opensWords`; a service the card names is shown as it is). "The vendor" only when no app is
+  known (Android 1.27.10).
+- **An approval card whose grant planque doesn't list yet** ("Reading what it asks for…") reads the grants again, three
+  times, three seconds apart, until planque lists it: tafs cloud can write the card as the grant is made (`readApprovals`,
+  Android 1.27.8). Before, it waited for another tab to read them.
+- **The approval window's words** ("No fingerprint for the next 4 minutes") and Approve without the fingerprint named
+  go only on a card tafs cloud marks a tap (`signs.takes: "tap"`, `windowWordsFor`): a card that takes the fingerprint, or
+  says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9).
 - **An app's first sign-in card** has no draft yet (a Card is drafted over the tools that sign-in brings), and still draws
   tafs cloud's `signs.words` ("Its Card: you approve it next"), so the owner knows a second approval follows (Android 1.27.2).
 - **Coach's Start is one screen** (`StartScreen`): tafs cloud's line, Coach's Cards in KIFF's words, the tools folded under
@@ -1092,5 +1131,5 @@ The API contracts and recent-run history bound are in [api.md](api.md).
 
 ### A vendor sign-in left in its tab
 
-The vendor's sign-in opens in a Custom Tab, and the app waits for planque to send the owner back (`tafs://planque/signed-in`). If the owner closes the tab without finishing, the app comes back to the front with no link. After a short grace (`VendorWait.RETURN_GRACE_MS`, for a link that arrives just after the resume), the wait ends as a closed sign-in, the card offers the sign-in again, and other approvals aren't held behind it. Only a resume after the tab took the screen counts: the fingerprint dialog before the tab opens doesn't.
+The vendor's sign-in opens in a Custom Tab, from tafs's own screen and in tafs's task (`BrowserVendorSignIn.attach`), and the app waits for planque to send the owner back (`tafs://planque/signed-in`), which also closes the tab. An owner who leaves for another app mid-way (an authenticator, for a code) and comes back to tafs from Recents comes back to the vendor's page. Coming back from the launcher's icon, or after closing the tab, the app is in front with no link: Android closes a tab above tafs's screen there, since that screen is `singleTask`. After a short grace (`VendorWait.RETURN_GRACE_MS`, for a link that arrives just after the resume), the sign-in is marked left (`VendorSignIn.left`, `AppState.vendorPageLeft`), never dropped: the card offers **Open Gmail's sign-in again** (the same link, which planque takes until its approve expires, 15 minutes) and **Cancel**. While it's left, other approvals wait behind it, as they do while any sign-in is open, until the owner reopens the page, taps Cancel, or 15 minutes end the wait as a closed sign-in; the card then offers the sign-in again. Only a resume after the tab took the screen counts: the fingerprint dialog before the tab opens doesn't (Android 1.27.10; before it, a resume with no link closed the sign-in, with Google's page still waiting).
 Coming back to tafs before finishing also ends that sign-in, and a link the tab sends later is dropped, with nothing connected: start it again from the card. With tafs and the tab side by side, tafs may never pause, and the wait keeps its 15 minutes.

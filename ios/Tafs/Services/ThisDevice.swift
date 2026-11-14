@@ -9,4 +9,6 @@ enum ThisDevice {
     static var kind: String { UIDevice.current.model.hasPrefix("iPad") ? "iPad" : "iPhone" }
     /// The platform KIFF records for this device's key.
     static var platform: String { kind == "iPad" ? "ipados" : "ios" }
+    /// What KIFF records the device as: its list draws the name from it, in the reader's language.
+    static var kiffKind: String { kind == "iPad" ? "ipad" : "iphone" }
 }

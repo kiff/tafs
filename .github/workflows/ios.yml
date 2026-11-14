@@ -27,12 +27,12 @@ on:
     tags: ["v*"]
     # What the app is built from (the strings are generated into ios/). GitHub
     # doesn't apply paths to a tag push, so a tag always runs.
-    paths: ["ios/**", "app/strings/**", ".github/workflows/ios.yml"]
+    paths: ["ios/**", "app/strings/**", "contracts/**", ".github/workflows/ios.yml"]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     # Only a change to the Apple app, its strings or this workflow: a change to
     # tafs cloud or to Android doesn't wait for a macOS runner.
-    paths: ["ios/**", "app/strings/**", ".github/workflows/ios.yml"]
+    paths: ["ios/**", "app/strings/**", "contracts/**", ".github/workflows/ios.yml"]
   workflow_dispatch:
     inputs:
       upload:
@@ -40,7 +40,7 @@ on:
         type: boolean
         default: true
       screenshots:
-        description: "Which screenshots: none, full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark) or languages (the main screens in each of the eight languages). A screenshot run waits for an empty queue: it stops if another manual or tag run is queued or running."
+        description: "Which screenshots: none, full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark) or languages (the main screens in each of the eight languages, then the iPad's Overview, Calendar and Week in French and Portuguese). A screenshot run waits for an empty queue: it stops if another manual or tag run is queued or running."
         type: choice
         options: [none, full, key, languages]
         default: none
@@ -133,7 +133,7 @@ jobs:
       # upload goes straight to the archive. Each part on its own rule, the
       # rule main and pull requests use to decide when to run it:
       # - the unit tests (tested): no change since to what the app is built
-      #   from (the push paths);
+      #   from or tested against (the push paths, contracts/ among them);
       # - the iPhone's UI tests (ui): no change since to what draws the screens
       #   or to the UI tests;
       # - the iPad's (ipad_tested): no change since to the iPad's layout.
@@ -146,7 +146,7 @@ jobs:
           HEAD: ${{ github.sha }}
           RUN: ${{ github.run_id }}
         run: |
-          app='^(ios/|app/strings/|\.github/workflows/ios\.yml$)'
+          app='^(ios/|app/strings/|contracts/|\.github/workflows/ios\.yml$)'
           uitests='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|ios/TafsUITests/|\.github/workflows/ios\.yml$)'
           ipad='^(ios/Tafs/Views/(HomeSplitView|HomeView|TafsBar)\.swift$|ios/Tafs/App/TafsApp\.swift$|ios/TafsUITests/ListTapUITests\.swift$|\.github/workflows/ios\.yml$)'
           tested=false; ui_tested=false; ipad_tested=false
@@ -397,6 +397,8 @@ jobs:
           # or left in English shows here. The app's language and region come from the launch
           # arguments, as a phone set to that language gives them. Each language starts from a
           # fresh install, so a permission asked in one doesn't hang over the next one's screens.
+          # After the iPhone's, an iPad pass in French and Portuguese: the Overview, Calendar
+          # and Week on the 13-inch iPad.
           if [ "$SET" = languages ]; then
             for lang in en de fr es it pt nl pl; do
               xcrun simctl uninstall "$DEVICE_ID" bot.tafs.app || true
@@ -414,6 +416,30 @@ jobs:
               shoot "$lang-9-account" -screenshots YES -tab account "${loc[@]}"
               shoot "$lang-9b-alerts" -screenshots YES -tab account -screen alerts "${loc[@]}"
               shoot "$lang-iap-pack" -screenshots YES -screen buy-credits -pack vonk "${loc[@]}"
+            done
+            # Then the 13-inch iPad, as the ipad job picks it, in French and Portuguese: the
+            # Overview beside the whole-app sidebar (no calendar button of its own), Calendar on
+            # today with its Today pill, and Week with its 7-day strip under the heading. -signedIn lays the sidebar out as a signed-in account's, with Calendar
+            # as its item. The iPhone's build runs on it, as the full set's iPad shots do.
+            xcrun simctl shutdown "$DEVICE_ID" || true
+            DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ios = sorted(k for k in devices if "iOS" in k)
+          ipads = [d for d in devices[ios[-1]] if d["name"].startswith("iPad")]
+          print(next(d for d in ipads if "13-inch" in d["name"])["udid"])
+          ')
+            xcrun simctl boot "$DEVICE_ID" || true
+            xcrun simctl bootstatus "$DEVICE_ID" -b
+            xcrun simctl status_bar "$DEVICE_ID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
+            for lang in fr pt; do
+              xcrun simctl uninstall "$DEVICE_ID" bot.tafs.app || true
+              xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
+              region=$(echo "$lang" | tr a-z A-Z)
+              loc=(-AppleLanguages "($lang)" -AppleLocale "${lang}_${region}")
+              shoot "$lang-ipad-overview" -screenshots YES -tab tafs -signedIn YES "${loc[@]}"
+              shoot "$lang-ipad-calendar" -screenshots YES -tab tafs -screen calendar -signedIn YES "${loc[@]}"
+              shoot "$lang-ipad-calendar-week" -screenshots YES -tab tafs -screen calendar-week -signedIn YES "${loc[@]}"
             done
             ls -la "$RUNNER_TEMP/shots"
             exit 0

@@ -1,0 +1,2 @@
+- A sign-in no longer closes when you step away for a code and come back.
+- The sign-in card names the app it opens.

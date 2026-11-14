@@ -1,0 +1,2 @@
+- Inloggen sluit niet meer als je even een code ophaalt en terugkomt.
+- De inlogkaart noemt de app die ze opent.

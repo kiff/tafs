@@ -247,6 +247,8 @@ struct HomeView: View {
             case "buy-credits": showingBuyCredits = true
             case "solo": showingSolo = true
             case "export": showingExport = true
+            // As Home's calendar button opens it.
+            case "calendar", "calendar-week": showingCalendar = true
             default: break
             }
         }

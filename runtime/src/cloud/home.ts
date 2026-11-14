@@ -8,7 +8,7 @@
  * An amount carries the unit and decimal places KIFF declares for it, or none:
  * nothing here guesses a currency or a scale from a parameter's name.
  */
-import { type Lang, wordsIn } from "./words/index.js";
+import { type Lang, plural, wordsIn } from "./words/index.js";
 import { amountWords } from "./activity.js";
 import { type Fetch, KIFF_API, KIFFError } from "./kiff.js";
 
@@ -546,6 +546,23 @@ export function stateOf(card: CardSummary, held: number, run: "paused" | "active
   if (!card.active) return "stopped";
   if (run === null) return "idle";
   return run === "paused" ? "paused" : "working";
+}
+
+/** What Home's first line counts of a taf: its state, whether it works from its chat, and its work's status. */
+export type HeadlineTaf = { state: string; unscheduled?: boolean; work?: { status?: string; attention?: boolean; line?: string } };
+
+/**
+ * Home's first line (docs/api.md, Home): how many tafs are at work; with none, how many are ready to work from their chat; else
+ * "0 tafs working". Counted as each taf's row reads, so a new taf with no schedule reads "1 taf ready.", never "0 tafs working."
+ * A taf waiting on a connected app's event, or with something gone wrong (`work.attention`), counts as neither.
+ */
+export function headlineOf(tafs: HeadlineTaf[], lang: Lang = "en"): { words: string } {
+  const w = wordsIn(lang);
+  const fine = tafs.filter((t) => t.state === "working" && t.work?.status !== "waiting_on_app" && !(t.work?.attention === true && t.work.line));
+  const working = fine.filter((t) => t.unscheduled !== true).length;
+  const ready = fine.length - working;
+  if (working === 0 && ready > 0) return { words: w.home_ready(ready, plural(lang, ready)) };
+  return { words: w.home_working(working, plural(lang, working)) };
 }
 
 /** The first colour no other taf has, so a new taf never takes another's. */

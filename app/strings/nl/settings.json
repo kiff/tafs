@@ -50,6 +50,7 @@
   "settings.kiff_account": "KIFF-account",
   "settings.language_title": "Taal",
   "settings.legal": "Juridisch",
+  "settings.legal_in_english": "{label} (in het Engels)",
   "settings.light_taps_when_you_send": "Een lichte tik als je verzendt of antwoordt.",
   "settings.mode": "Modus",
   "settings.mode_kiff": "Ingelogd met KIFF",

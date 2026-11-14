@@ -226,6 +226,9 @@ struct ShareTafSheet: View {
 /// Each line opens the taf.
 struct OverviewView: View {
     @EnvironmentObject private var model: AppModel
+    /// The calendar's button at the top right: off where the whole app's sidebar already has
+    /// Calendar as an item, so the iPad doesn't show it twice.
+    var showsCalendar = true
     /// Opens a taf, or a held call on its taf's page, beside the sidebar.
     let open: (HomeSelection) -> Void
     @State private var shares: [String: [KIFFClient.Share]] = [:]
@@ -239,15 +242,17 @@ struct OverviewView: View {
                         Text(Words.Home.Overview.subtitle).scaledFont(14).foregroundColor(Theme.dim)
                     }
                     Spacer()
-                    // The tafs' scheduled work to come (kiff/tafs#534).
-                    Button { open(.calendar) } label: {
-                        Image(systemName: "calendar").scaledFont(20, weight: .semibold).foregroundColor(Theme.ink)
-                            .frame(width: 44, height: 44)
-                            .background(Circle().fill(Theme.raised))
+                    // The tafs' scheduled work to come (kiff/tafs#534), unless the sidebar beside has it.
+                    if showsCalendar {
+                        Button { open(.calendar) } label: {
+                            Image(systemName: "calendar").scaledFont(20, weight: .semibold).foregroundColor(Theme.ink)
+                                .frame(width: 44, height: 44)
+                                .background(Circle().fill(Theme.raised))
+                        }
+                        .buttonStyle(.drivablePlain)
+                        .accessibilityLabel(Words.Calendar.heading)
+                        .accessibilityIdentifier("overview.calendar")
                     }
-                    .buttonStyle(.drivablePlain)
-                    .accessibilityLabel(Words.Calendar.heading)
-                    .accessibilityIdentifier("overview.calendar")
                 }
                 if !model.held.isEmpty { needsYou }
                 tafsTable

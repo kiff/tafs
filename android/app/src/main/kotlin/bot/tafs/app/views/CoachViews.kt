@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveMenu
@@ -11,7 +12,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -85,8 +85,9 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
   }
   Column(Modifier.fillMaxSize().statusBarsPadding()) {
     val started = state.mayUseCoach && state.coachChecked && state.coachCloudId != null
-    // New conversation always does something: on a conversation with nothing in it yet, it stays there and shows its top.
-    val newChat = { if (CoachWords.isEmptyChat(state)) folded = false else chats.newChat() }
+    // New conversation always does something: on a plain conversation with nothing in it yet, it stays there and shows its
+    // top; on an empty one about a taf, it opens a plain new one.
+    val newChat = { if (CoachWords.newChatStays(state)) folded = false else chats.newChat() }
     if (started) CoachHeader(state, chats, newChat, onBack) else BackBar(onBack)
     when {
       !state.mayUseCoach -> Note(CoachWords.NOT_ALLOWED)
@@ -130,7 +131,7 @@ private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () 
     Text(
       "‹",
       style = scaled(26, color = Theme.amber),
-      modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = Words.Common.back, onClick = onBack).padding(start = 10.dp, top = 4.dp),
+      modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).tapping(onClickLabel = Words.Common.back, onClick = onBack).padding(start = 10.dp, top = 4.dp),
     )
     Text(Words.Coach.title, style = scaled(18, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
     androidx.compose.material3.IconButton(onClick = onNewChat) {
@@ -141,7 +142,7 @@ private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () 
       Text(
         "⋯",
         style = scaled(22, FontWeight.Bold, Theme.amberText),
-        modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = Words.Coach.conversations) { menu = true }.padding(top = 6.dp, start = 12.dp),
+        modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).tapping(onClickLabel = Words.Coach.conversations) { menu = true }.padding(top = 6.dp, start = 12.dp),
       )
       DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
         androidx.compose.material3.DropdownMenuItem(
@@ -206,7 +207,7 @@ private fun StartScreen(state: AppState, start: bot.tafs.app.kiff.CoachStart, ch
       Text(
         step.details + if (folded) " ⌄" else " ⌃",
         style = scaled(13, FontWeight.SemiBold, Theme.amberText),
-        modifier = Modifier.heightIn(min = 44.dp).clickable { folded = !folded }.padding(vertical = 10.dp),
+        modifier = Modifier.heightIn(min = 44.dp).tapping { folded = !folded }.padding(vertical = 10.dp),
       )
       if (!folded) step.groups.forEach { g ->
         Text(g.name, style = scaled(13, FontWeight.SemiBold, Theme.ink))
@@ -253,7 +254,7 @@ fun PlanPanel(plan: SetupComponent, modifier: Modifier = Modifier) {
   val steps = plan.steps.orEmpty()
   Column(modifier.fillMaxWidth()) {
     Row(
-      Modifier.fillMaxWidth().heightIn(min = 36.dp).clickable(onClickLabel = if (open) Words.Coach.Plan.fold else Words.Coach.Plan.show) { open = !open },
+      Modifier.fillMaxWidth().heightIn(min = 36.dp).tapping(onClickLabel = if (open) Words.Coach.Plan.fold else Words.Coach.Plan.show) { open = !open },
       horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -294,6 +295,8 @@ class CoachActions(
   val approve: (SetupComponent, String?, String?) -> Unit,
   /** The owner gave up waiting on the vendor's sign-in page. */
   val cancelSignIn: () -> Unit,
+  /** Opens the vendor's page again, for a sign-in the owner came back from with no link. */
+  val reopenSignIn: () -> Unit = {},
   /** Signs in again at the vendor, for a sign-in card: a new approval, one confirmation. */
   val signInAgain: (SetupComponent) -> Unit = {},
   /** A new conversation about improving one taf, by its id: Coach starts from what it did and what its Card allows. */
@@ -367,7 +370,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
       return
     }
     var open by remember(c.id) { mutableStateOf(false) }
-    Column(Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { open = !open }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping { open = !open }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
       Text((if (open) "▾ " else "▸ ") + line, style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = if (open) Int.MAX_VALUE else 1, overflow = TextOverflow.Ellipsis)
       if (open) DraftCardsView(draft) else if (signed) draft.cardLines.flatten().forEach { Text(it, style = scaled(13, color = Theme.soft)) }
     }
@@ -404,7 +407,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           }
         }
         grant.terms?.takeIf { it.isNotEmpty() && done == null }?.let { terms ->
-          Text(if (details) Words.Coach.detailsOpen else Words.Coach.detailsClosed, style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).clickable { details = !details })
+          Text(if (details) Words.Coach.detailsOpen else Words.Coach.detailsClosed, style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).tapping { details = !details })
           if (details) Column(Modifier.approvalTerms(grant.vendor)) { terms.forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) } }
         }
         // What this fingerprint covers is tafs cloud's to say (`signs`): the app learns the step only after the tap.
@@ -440,13 +443,15 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           if (readiness != bot.tafs.app.model.ApprovalReadiness.Ready && !grant.needsReconnect) ApprovalsUnavailable(readiness)
           // An app connected with a key, not connected yet: the chat never takes a secret. The card opens the key sheet, outside it.
           val needsKey = grant.takesKey && !grant.connected && !grant.needsReconnect
+          // The window's words only where Approve is a tap, as tafs cloud marks the card: never over one that takes the fingerprint.
+          val windowWords = windowWordsFor(c, state.windowWords)
           Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (readiness == bot.tafs.app.model.ApprovalReadiness.Ready || grant.needsReconnect) OutlineButton(
               when {
                 state.connecting == grant.id -> state.connectStep ?: Words.Approval.approving
                 grant.needsReconnect -> Words.Connect.signInAgain
                 needsKey -> Words.Connect.giveKeyOnSheet
-                state.windowWords != null -> Words.Approval.approve
+                windowWords != null -> Words.Approval.approve
                 else -> Words.Approval.approveWith(biometry)
               },
               { if (needsKey) actions.openKeySheet(c, draft?.version) else actions.approve(c, grant.digest, draft?.version) },
@@ -457,10 +462,12 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
             OutlineButton(Words.Coach.Approval.decline, { actions.answer("approval", c.id, "declined") }, Modifier.weight(1f), color = Theme.no, enabled = !busy)
           }
           // While this phone holds an approval window, KIFF's words for the next tap (kiff/tafs#494).
-          state.windowWords?.takeIf { state.connecting == null }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
+          windowWords?.takeIf { state.connecting == null }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
           if (state.connecting == grant.id) {
-            Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
-            Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable { actions.cancelSignIn() })
+            val app = bot.tafs.app.model.ConnectionWords.appName(grant, state.connectApps)
+            if (state.vendorPageOpen) Text(waitingWords(app), style = scaled(12, color = Theme.dim))
+            if (state.vendorPageLeft) ReopenSignIn(app, actions)
+            Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).tapping { actions.cancelSignIn() })
           }
         }
       }
@@ -512,7 +519,7 @@ private fun QuestionsCard(c: SetupComponent, answered: String?, error: String?, 
   if (answered == null && chatting) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
       Text(Words.Coach.Questions.talking, style = scaled(13, color = Theme.soft), modifier = Modifier.weight(1f, fill = false))
-      Text(Words.Coach.Questions.showAgain, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).clickable { chatting = false }.padding(top = 12.dp))
+      Text(Words.Coach.Questions.showAgain, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).tapping { chatting = false }.padding(top = 12.dp))
     }
     return
   }
@@ -542,7 +549,7 @@ private fun QuestionsCard(c: SetupComponent, answered: String?, error: String?, 
     Text(
       Words.Coach.Questions.chatAbout,
       style = scaled(15, FontWeight.SemiBold, Theme.amberText),
-      modifier = Modifier.heightIn(min = 44.dp).clickable { chatting = true }.padding(top = 12.dp),
+      modifier = Modifier.heightIn(min = 44.dp).tapping { chatting = true }.padding(top = 12.dp),
     )
   }
 }
@@ -558,7 +565,7 @@ private fun Choice(label: String, selected: Boolean, onClick: () -> Unit) {
       .clip(shape)
       .background(if (selected) Theme.amber.copy(alpha = 0.18f) else Color.Transparent)
       .border(BorderStroke(1.dp, if (selected) Theme.amber else Theme.line), shape)
-      .clickable(onClick = onClick)
+      .tapping(onClick = onClick)
       .padding(horizontal = 10.dp, vertical = 8.dp),
   )
 }
@@ -581,14 +588,45 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
   )
 }
 
+/** A sign-in card's line: the card's service, else the connection's app name, else "the vendor". */
+/** KIFF's approval-window words for [c], only when tafs cloud marks its Approve a tap (`signs.takes`, docs/chat.md). */
+internal fun windowWordsFor(c: SetupComponent, windowWords: String?): String? = windowWords?.takeIf { c.signs?.tap == true }
+
+/** Back in tafs with no link from the vendor's page: the same page again (planque takes it until its approve expires). */
+@Composable
+private fun ReopenSignIn(app: String?, actions: CoachActions) {
+  Text(reopenWords(app), style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).tapping { actions.reopenSignIn() })
+}
+
+internal fun reopenWords(app: String?): String = app?.takeIf { it.isNotBlank() }?.let { Words.Coach.SignIn.openAgainApp(it) } ?: Words.Coach.SignIn.openAgain
+
+/** Under an open sign-in: the app by name ("If Gmail's sign-in page opened…"), "the vendor" only when no app is known. */
+internal fun waitingWords(app: String?): String = app?.takeIf { it.isNotBlank() }?.let { Words.Coach.waitingForApp(it) } ?: CoachWords.WAITING_FOR_VENDOR
+
+/**
+ * Where Sign in goes: the card's service as it is (a host the owner can check), else the app by name ("Opens Gmail's sign-in"),
+ * else [destination] ("the vendor's page").
+ */
+internal fun opensWords(service: String?, app: String?, destination: String): String = when {
+  !service.isNullOrBlank() -> Words.Coach.SignIn.opens(service)
+  !app.isNullOrBlank() -> Words.Coach.SignIn.opensApp(app)
+  else -> Words.Coach.SignIn.opens(destination)
+}
+
+internal fun signInWords(service: String?, app: String?): String =
+  (service?.takeIf { it.isNotBlank() } ?: app?.takeIf { it.isNotBlank() })?.let { Words.Coach.SignIn.at(it) } ?: Words.Coach.SignIn.atVendor
+
 /**
  * The vendor's sign-in, for a connection the owner approved and whose sign-in was left: one confirmation opens the vendor's own
  * page. Where it goes is always the app's own words (the card's service), whatever Coach's button says.
  */
 @Composable
 private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, error: String?, actions: CoachActions) {
-  val signInAt = c.service?.let { Words.Coach.SignIn.at(it) } ?: Words.Coach.SignIn.atVendor
   val grant = state.grants.firstOrNull { it.id == c.grant }
+  // The app by name ("Sign in to Gmail"): the card's service, else the connection's app as planque and Connect apps name it;
+  // "the vendor" only when neither is known (the owner's card read "Sign in at the vendor" for Gmail).
+  val app = grant?.let { bot.tafs.app.model.ConnectionWords.appName(it, state.connectApps) }
+  val signInAt = signInWords(c.service, app)
   val again = grant?.needsReconnect == true
   when {
     answered != null -> Text("$signInAt · $answered", style = scaled(14, FontWeight.Medium, Theme.dim))
@@ -613,15 +651,16 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, er
           { actions.signInAgain(c) },
           enabled = !busy && c.grant != null,
         )
-        Text(Words.Coach.SignIn.opens(c.destination.toString()), style = scaled(12, color = Theme.dim, mono = true))
+        Text(opensWords(c.service, app, c.destination), style = scaled(12, color = Theme.dim, mono = true))
         if (waiting) {
-          Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
-          Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable { actions.cancelSignIn() })
+          if (state.vendorPageOpen) Text(waitingWords(app ?: c.service), style = scaled(12, color = Theme.dim))
+          if (state.vendorPageLeft) ReopenSignIn(app ?: c.service, actions)
+          Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).tapping { actions.cancelSignIn() })
         } else {
           Text(
             c.no ?: Words.Common.notNow,
             style = scaled(14, color = Theme.dim),
-            modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy) { actions.answer("sign_in", c.id, "not now") },
+            modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = !busy) { actions.answer("sign_in", c.id, "not now") },
           )
         }
         state.coachNotes[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
@@ -678,7 +717,7 @@ private fun AlertsOffer(actions: CoachActions) {
     Text(
       Words.Common.notNow,
       style = scaled(14, color = Theme.dim),
-      modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = actions.notNowAlerts),
+      modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = actions.notNowAlerts),
     )
   }
 }

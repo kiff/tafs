@@ -1,0 +1,6 @@
+- Un taf nuevo aparece en cuanto Coach lo configura.
+- «Te esperan» muestra a Coach esperando con el chat abierto.
+- Inicio cuenta como listo un taf nuevo que trabaja desde su chat.
+- Las Tarjetas de un taf nuevo se muestran como una sola.
+- El calendario y su icono vibran al tocarlos.
+- Quitar la última conexión de una app cierra su lista, sin errores.

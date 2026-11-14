@@ -1,0 +1,1 @@
+- **iOS: Connect apps rows read by the app's name.** Each row, on a phone and in the iPad table, draws tafs cloud's `name` (else `title`), with its `subtitle` under it when sent: "Qonto", then "Invoicing: reads, and invoice drafts from quotes" (docs/ios-app.md).

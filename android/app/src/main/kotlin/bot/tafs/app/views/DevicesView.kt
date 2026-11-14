@@ -1,11 +1,11 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveAlert
 import android.text.format.DateUtils
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -63,7 +63,7 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(Words.Settings.Devices.title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
       }
       Column(
         Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -74,13 +74,13 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
           Panel {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
               Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text(device.name ?: Words.Settings.Devices.unnamed, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+                Text(device.shown ?: Words.Settings.Devices.unnamed, style = scaled(15, FontWeight.SemiBold, Theme.ink))
                 Text(lastUsed(device), style = scaled(13, color = Theme.dim))
               }
               if (device.thisDevice) {
                 Text(Words.Settings.Devices.thisDeviceTitle, style = scaled(13, color = Theme.dim))
               } else {
-                Text(Words.Settings.Devices.signOut, style = scaled(15, FontWeight.SemiBold, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { removing = device }.padding(top = 8.dp))
+                Text(Words.Settings.Devices.signOut, style = scaled(15, FontWeight.SemiBold, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().tapping { removing = device }.padding(top = 8.dp))
               }
             }
           }
@@ -96,7 +96,7 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
   removing?.let { device ->
     DriveAlert(
       onDismissRequest = { removing = null },
-      title = { Text(device.name?.let { Words.Settings.Devices.signOutNamed(it) } ?: Words.Settings.Devices.signOutThis) },
+      title = { Text(device.shown?.let { Words.Settings.Devices.signOutNamed(it) } ?: Words.Settings.Devices.signOutThis) },
       confirmButton = {
         TextButton(onClick = { removing = null; scope.launch { remove(device) } }, modifier = Modifier.confirms()) { Text(Words.Settings.Devices.signOut, color = Theme.no) }
       },

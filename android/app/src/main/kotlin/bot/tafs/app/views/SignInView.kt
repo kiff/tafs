@@ -1,11 +1,11 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
 import android.content.ClipData
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -103,7 +103,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
       Text(
         Words.Common.cancel,
         style = scaled(17, color = Theme.amber),
-        modifier = Modifier.padding(horizontal = 24.dp).heightIn(min = 44.dp).clickable(onClick = close).padding(top = 8.dp),
+        modifier = Modifier.padding(horizontal = 24.dp).heightIn(min = 44.dp).tapping(onClick = close).padding(top = 8.dp),
       )
       Column(
         Modifier.verticalScroll(rememberScrollState()).padding(24.dp),
@@ -139,7 +139,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
               Text(
                 if (copied) Words.Common.copied else Words.Common.copy,
                 style = scaled(13, FontWeight.SemiBold, Theme.amber),
-                modifier = Modifier.heightIn(min = 44.dp).clickable {
+                modifier = Modifier.heightIn(min = 44.dp).tapping {
                   scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("KIFF sign-in link", s.verificationUriComplete))) }
                   copied = true
                 }.padding(horizontal = 4.dp),

@@ -71,4 +71,50 @@ final class HomeSidebarTests: XCTestCase {
         XCTAssertTrue(file.contains("opened = onList ? .overview :"), "the tafs list opens first")
         XCTAssertTrue(file.contains("(own: all.own.filter(model.relevantNow), shared: all.shared.filter(model.relevantNow))"))
     }
+
+    /// The owner's iPad: the Overview's calendar button at the top right was a second Calendar beside the
+    /// sidebar's item. As the whole app's sidebar, the Overview draws none; the phone keeps its own button.
+    func testTheOverviewHasNoCalendarButtonBesideTheSidebarsCalendar() throws {
+        let file = try source()
+        XCTAssertTrue(file.contains("private var calendarInSidebar: Bool { tab != nil && signedInLayout }"))
+        XCTAssertTrue(file.contains("OverviewView(showsCalendar: !calendarInSidebar) {"))
+        XCTAssertTrue(file.contains("if signedInLayout {\n                        screenItem(.calendar, Words.Calendar.heading, \"calendar\")"),
+                      "the sidebar's own Calendar item, under the same condition")
+
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let overview = try String(contentsOf: views.appendingPathComponent("ShareViews.swift"), encoding: .utf8)
+        let body = String(overview[try XCTUnwrap(overview.range(of: "struct OverviewView: View {")).upperBound...].prefix(2200))
+        let gate = try XCTUnwrap(body.range(of: "if showsCalendar {"))
+        let button = try XCTUnwrap(body.range(of: ".accessibilityIdentifier(\"overview.calendar\")"))
+        XCTAssertLessThan(gate.lowerBound, button.lowerBound, "the button only when the sidebar doesn't have Calendar")
+
+        // The phone has no Overview: its calendar opens from Home's bar, as before.
+        let home = try String(contentsOf: views.appendingPathComponent("HomeView.swift"), encoding: .utf8)
+        XCTAssertTrue(home.contains(".accessibilityIdentifier(\"home.calendar\")"))
+    }
+
+    /// CI's iPad screenshots of Calendar: `-screen calendar` opens it on today in Day mode, `-screen
+    /// calendar-week` in Week mode on today's week, only with `-screenshots YES`. The iPad's sidebar selects
+    /// its Calendar item; the phone opens it as Home's button does.
+    func testTheCalendarScreenshotArguments() throws {
+        let defaults = UserDefaults.standard
+        defer { defaults.removeObject(forKey: "screenshots"); defaults.removeObject(forKey: "screen") }
+        let today = CalendarMath.today(in: AccountTime.zone)
+        defaults.set("calendar", forKey: "screen")
+        defaults.set(false, forKey: "screenshots")
+        XCTAssertNil(Screenshots.calendar, "only for a screenshot")
+        defaults.set(true, forKey: "screenshots")
+        XCTAssertEqual(Screenshots.calendar, CalendarState(mode: .day, selected: today))
+        defaults.set("calendar-week", forKey: "screen")
+        XCTAssertEqual(Screenshots.calendar, CalendarState(mode: .week, selected: today), "today's week: the Today pill already today")
+        defaults.set("taf", forKey: "screen")
+        XCTAssertNil(Screenshots.calendar)
+
+        XCTAssertTrue(try source().contains("if Screenshots.calendar != nil { opened = .calendar }"), "the sidebar's Calendar item")
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let home = try String(contentsOf: views.appendingPathComponent("HomeView.swift"), encoding: .utf8)
+        XCTAssertTrue(home.contains("case \"calendar\", \"calendar-week\": showingCalendar = true"), "the phone, as Home's button")
+        let calendar = try String(contentsOf: views.appendingPathComponent("CalendarView.swift"), encoding: .utf8)
+        XCTAssertTrue(calendar.contains("model.calendarState ?? Screenshots.calendar ?? CalendarState(selected: today)"))
+    }
 }
