@@ -616,7 +616,9 @@ class KiffClient(
    * approving, checked against their digests here ([ProfileWords.checked]).
    */
   suspend fun profileWords(profile: JsonObject): ProfileWords {
-    val answer = json.parseToJsonElement(String(sendJson("POST", "/v1/profiles/words", profile))).jsonObject
+    // `kiff.words.v2`: the owner's words without KIFF's bookkeeping (no "isn't pinned to a version", and the lost-answer line only
+    // where money moves). A KIFF before v2 answers v1, which is still taken.
+    val answer = json.parseToJsonElement(String(sendJson("POST", "/v1/profiles/words?v=2", profile))).jsonObject
     return ProfileWords.checked(profile, answer)
   }
 

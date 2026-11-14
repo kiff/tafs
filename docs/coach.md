@@ -380,7 +380,9 @@ A connection can carry a **profile**: KIFF's facts about how each of its tools i
 what its outcomes mean. planque puts it in the grant's `request.profile`, so the grant's digest
 the phone already checks covers it. Before the owner approves:
 - the phone asks KIFF for its words with its own session (`POST /v1/profiles/words`, never
-  through tafs cloud or planque);
+  through tafs cloud or planque). Android asks for `kiff.words.v2` (`?v=2`, Android 1.27.7): v1's lines without KIFF's
+  bookkeeping (no "isn't pinned to a version", and the lost-answer line only where money moves). It takes v1 or v2 and
+  signs whichever KIFF sent; iOS follows;
 - it checks that the profile's SHA-256 (JCS) is KIFF's `profile_sha256` and the words' is
   `words_sha256`;
 - the approval card shows each line verbatim, in KIFF's order. What KIFF can't check,
