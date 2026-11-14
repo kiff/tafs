@@ -110,6 +110,8 @@ export const it: Words = {
   approval_no_code: (vendor: string) => `L'accesso a ${vendor} è tornato senza il suo codice di conferma. Non è stato collegato nulla.`,
   approval_came_back: (vendor: string) => `Non si è aperta nessuna pagina di accesso di ${vendor}, quindi non è stato collegato nulla. Riprova.`,
   approval_came_back_signed_in: (vendor: string) => `Hai già effettuato l'accesso a ${vendor}, quindi non si è aperta nessuna pagina di accesso e non è ancora collegato nulla di nuovo. Le sue azioni vengono dopo.`,
+  approval_listed_already: (vendor: string) => `Hai già effettuato l'accesso a ${vendor} su questo collegamento, quindi qui non c'è nulla da collegare.`,
+  approval_not_approvable: (vendor: string) => `Questo collegamento a ${vendor} non può più essere approvato, quindi non è stato firmato nulla.`,
   apps_method_sign_in: "Accesso",
   apps_method_key: "Con una chiave",
   apps_connected: "Collegata",

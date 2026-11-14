@@ -201,7 +201,16 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     s.grants = [grant({ status: "failed", reason: "the tool name is taken" })];
     const w = await world(s);
     const failed = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
-    expect(failed.body).toMatchObject({ outcome: "answered", answer: "failed: This connection is failed: the tool name is taken" });
+    // Coach hears the status and why; the person reads plain words, never "This connection is failed".
+    expect(failed.body).toMatchObject({ outcome: "answered", answer: "failed: This connection is failed: the tool name is taken", note: "This Stripe connection can't be approved any more, so nothing was signed." });
+    for (const lang of ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const) {
+      const L = approvalWords(lang);
+      for (const line of [L.notApprovable("Gmail", "listed"), L.notApprovable("Gmail", "failed"), L.notApprovable("Gmail", "disconnected")]) {
+        expect(line).toContain("Gmail");
+        expect(line).not.toMatch(/listed|failed|disconnected|signed_in|connection is/);
+      }
+    }
+    expect(WORDS.notApprovable("Gmail", "listed")).toBe("You're already signed in to Gmail on this connection, so there's nothing to sign in to here.");
     const w2 = await world(services());
     const none = await w2.call("POST", ASK, { grant: "g_9" });
     expect(none.body).toMatchObject({ outcome: "answered", answer: `failed: ${WORDS.noGrant}`, note: WORDS.noGrant });

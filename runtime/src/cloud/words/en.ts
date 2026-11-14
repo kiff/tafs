@@ -118,6 +118,8 @@ export const en = {
   approval_no_code: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,
   approval_came_back: (vendor: string) => `${vendor} didn't open a sign-in page, so nothing was connected. Try again.`,
   approval_came_back_signed_in: (vendor: string) => `You're already signed in to ${vendor}, so no sign-in page opened, and nothing new is connected yet. Its actions come next.`,
+  approval_listed_already: (vendor: string) => `You're already signed in to ${vendor} on this connection, so there's nothing to sign in to here.`,
+  approval_not_approvable: (vendor: string) => `This ${vendor} connection can't be approved any more, so nothing was signed.`,
   apps_method_sign_in: "Sign in",
   apps_method_key: "With a key",
   apps_connected: "Connected",

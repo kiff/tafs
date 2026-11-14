@@ -110,6 +110,8 @@ export const pt: Words = {
   approval_no_code: (vendor: string) => `O início de sessão em ${vendor} voltou sem o seu código de confirmação. Nada foi ligado.`,
   approval_came_back: (vendor: string) => `Não abriu nenhuma página de início de sessão de ${vendor}, por isso nada foi ligado. Pode tentar novamente.`,
   approval_came_back_signed_in: (vendor: string) => `Já tem sessão iniciada em ${vendor}, por isso não abriu nenhuma página de início de sessão, e ainda não há nada de novo ligado. As ações dele vêm a seguir.`,
+  approval_listed_already: (vendor: string) => `Já tem sessão iniciada em ${vendor} nesta ligação, por isso aqui não há nada para iniciar.`,
+  approval_not_approvable: (vendor: string) => `Esta ligação a ${vendor} já não pode ser aprovada, por isso nada foi assinado.`,
   apps_method_sign_in: "Início de sessão",
   apps_method_key: "Com uma chave",
   apps_connected: "Ligado",

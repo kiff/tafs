@@ -110,6 +110,8 @@ export const de: Words = {
   approval_no_code: (vendor: string) => `Die Anmeldung bei ${vendor} kam ohne ihren Bestätigungscode zurück. Es wurde nichts verbunden.`,
   approval_came_back: (vendor: string) => `${vendor} hat keine Anmeldeseite geöffnet, also wurde nichts verbunden. Versuch es noch einmal.`,
   approval_came_back_signed_in: (vendor: string) => `Du bist bei ${vendor} schon angemeldet, also öffnete sich keine Anmeldeseite, und noch ist nichts Neues verbunden. Seine Aktionen kommen als Nächstes.`,
+  approval_listed_already: (vendor: string) => `Du bist bei ${vendor} auf dieser Verbindung schon angemeldet, hier gibt es also nichts anzumelden.`,
+  approval_not_approvable: (vendor: string) => `Diese Verbindung zu ${vendor} kann nicht mehr genehmigt werden, also wurde nichts unterschrieben.`,
   apps_method_sign_in: "Anmeldung",
   apps_method_key: "Mit Schlüssel",
   apps_connected: "Verbunden",
