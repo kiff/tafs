@@ -115,8 +115,14 @@ describe("Setup's definition on kiff/agents", () => {
     // Where results go (results to destination, step 3): the write found, the place fixed by name, fill, another taf, the draft.
     expect(flat).toContain("A place moves no money: never a money tool as a place; when the only write that fits moves money, say so and stop.");
     expect(flat).toContain("come from the owner's words; never ask for an id.");
+    // A place no read on the connection lists by name (Sheets without Drive) is asked for by its link, never searched by name.
+    expect(flat).toContain("Without one (a Sheets sign-in lists no sheets: that's Drive), ask for the place's link, and take the id from it.");
+    // A taf keeps what it makes by the id the call gives back (the guide's returns), and asks for an existing one's link.
+    expect(flat).toContain("A taf finds things by id, never by name.");
+    expect(flat).toContain("it keeps by the id the call gives back, as the guide's returns name it (data.spreadsheetId)");
+    expect(flat).toContain("For what exists, ask the owner for its link: a search by name often needs more than the connection gives");
     expect(flat).toContain("ask the owner's OK to read that list, as for the accounts list, read it on the taf's connection, and let the owner pick by name in a questions card.");
-    expect(flat).toContain('The id goes in args, the name in name ("Google Sheets · Refunds 2026").');
+    expect(flat).toContain('The id goes in args, the name in name ("Google Sheets · Refunds 2026"); the taf never looks the place up by name.');
     expect(flat).toContain("fill names each field the taf fills from its result, one line in words about the result");
     expect(flat).toContain("The result is handed to it as its work, under its own Card, and never Coach.");
     // How far a result is handed on is tafs cloud's rule (delivery.ts): Coach says it, so the owner isn't promised a longer chain or a loop.
