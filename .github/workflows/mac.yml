@@ -77,7 +77,7 @@ jobs:
           xcodebuild build-for-testing \
             -project Tafs.xcodeproj -scheme TafsMac \
             -destination "platform=macOS,variant=Mac Catalyst" \
-            CODE_SIGNING_ALLOWED=NO
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO
 
       - name: Unit tests on the Mac
         run: |
@@ -85,4 +85,54 @@ jobs:
           xcodebuild test-without-building \
             -project Tafs.xcodeproj -scheme TafsMac \
             -destination "platform=macOS,variant=Mac Catalyst" \
-            CODE_SIGNING_ALLOWED=NO
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO
+
+      # They show the Mac app, they don't test it: the whole screen, so the
+      # menu bar is in the picture with the window. The same launch arguments
+      # as the iPhone's and iPad's screenshots (ios.yml), in the three
+      # languages a Mac's screens are checked in.
+      - name: Run the Mac app and take screenshots
+        run: |
+          cd ios
+          app="$PWD/build/Build/Products/Debug-maccatalyst/Tafs.app"
+          mkdir -p "$RUNNER_TEMP/mac-shots"
+          # A shot is taken once two frames a second apart are within 0.5% of
+          # each other's size. After 30 s it's taken as it is, with a warning.
+          shoot() {
+            name=$1; shift
+            frame="$RUNNER_TEMP/frame.png"
+            "$app/Contents/MacOS/Tafs" "$@" >/dev/null 2>&1 &
+            pid=$!
+            sleep 5
+            prev=0
+            ready=""
+            for _ in $(seq 30); do
+              screencapture -x "$frame"
+              size=$(wc -c < "$frame")
+              if [ $(( (size - prev) * 200 )) -le "$size" ] && [ $(( (prev - size) * 200 )) -le "$size" ]; then
+                ready=1; break
+              fi
+              prev=$size
+              sleep 1
+            done
+            [ -n "$ready" ] || echo "::warning::$name: the screen hadn't settled after 30 s"
+            kill -0 "$pid" 2>/dev/null || echo "::warning::$name: the app wasn't running when the shot was taken"
+            mv "$frame" "$RUNNER_TEMP/mac-shots/$name.png"
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+          }
+          for lang in en fr pt; do
+            region=$(echo "$lang" | tr a-z A-Z); [ "$lang" = en ] && region=US
+            loc=(-AppleLanguages "($lang)" -AppleLocale "${lang}_${region}")
+            shoot "$lang-1-welcome" "${loc[@]}"
+            shoot "$lang-2-overview" -screenshots YES -tab tafs -signedIn YES "${loc[@]}"
+            shoot "$lang-3-needs-you" -screenshots YES -tab needs-you -signedIn YES "${loc[@]}"
+            shoot "$lang-4-taf" -screenshots YES -tab tafs -screen taf -signedIn YES "${loc[@]}"
+            shoot "$lang-5-account" -screenshots YES -tab account -signedIn YES "${loc[@]}"
+          done
+          ls -la "$RUNNER_TEMP/mac-shots"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mac-screenshots
+          path: ${{ runner.temp }}/mac-shots
