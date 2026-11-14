@@ -695,8 +695,8 @@ tafs cloud answers.
   above them. It asks once, in tafs cloud's words (the title names the count), then calls
   `POST /v1/home/coach-waiting/set-aside`.
 - **After:** the row goes once tafs cloud answers, and Home is read again for its count. A refusal
-  says why (`ErrorWords`) and keeps the rows. A row being set aside isn't drawn again by a Home read
-  meanwhile.
+  says why (`ErrorWords`) and keeps the rows. A row being set aside isn't drawn while tafs cloud is asked
+  (`coachWaitingShown`), so one full swipe takes on the first try; a refusal brings it back (Android 1.27.6).
 
 iPhone and iPad do the same ([ios-app.md](ios-app.md#coach-waiting)).
 

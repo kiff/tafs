@@ -644,6 +644,9 @@ data class AppState(
    * What Needs you holds, as Home's headline and the bar's badge count it: tafs cloud's count, else (when it couldn't count all
    * of it) the app's own of what it has, held calls, currency requests and "Did this happen?".
    */
+  /** Coach's waiting rows as Needs you draws them: one being set aside isn't drawn while tafs cloud is asked. */
+  val coachWaitingShown: List<bot.tafs.app.kiff.CoachWaiting> get() = coachWaiting.filterNot { it.session in settingAside }
+
   val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size + coachWaiting.size)
 
   /**

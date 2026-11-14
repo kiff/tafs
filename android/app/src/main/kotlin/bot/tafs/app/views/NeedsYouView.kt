@@ -218,7 +218,9 @@ fun NeedsYouView(
           modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = state.settingAside.isEmpty()) { bot.tafs.app.design.Haptics.tap(); confirmingClear = true }.padding(vertical = 10.dp))
       }
     }
-    items(state.coachWaiting, key = { "cw|" + it.session }) { waiting -> CoachWaitingPanel(waiting, onOpenCoach, onSetAside?.takeIf { waiting.words.setAside.isNotBlank() }) }
+    // A row being set aside goes at once, so one full swipe takes on the first try (the owner's sprang back and looked
+    // untouched until tafs cloud answered); a refusal brings it back, with why.
+    items(state.coachWaitingShown, key = { "cw|" + it.session }) { waiting -> CoachWaitingPanel(waiting, onOpenCoach, onSetAside?.takeIf { waiting.words.setAside.isNotBlank() }) }
     // Cards asked to take another currency: tafs cloud's rows, apart from the held calls, with no Approve once.
     items(state.cardUnitExceptions, key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
     if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty() && state.coachWaiting.isEmpty()) {
