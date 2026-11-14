@@ -273,6 +273,17 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(JSON.stringify(unnamed.body)).not.toContain("taf-x9\"");
   });
 
+  it("names a managed app by the app, never by the sign-in partner whose platform its server is", async () => {
+    // 14 Nov: the owner's fingerprint prompt for Gmail named the sign-in partner, from the grant's server host.
+    const s = services();
+    const managed = { kind: "connector", server: "https://backend.partner-platform.example/api/v3", tools: [] };
+    s.grants = [grant({ vendor: "Gmail" }, managed)];
+    const w = await world(s);
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant({}, managed).request) });
+    expect((r.body.ask as { reason: string }).reason).toBe("Connect Gmail to Refunds");
+    expect(JSON.stringify(r.body.ask)).not.toMatch(/partner-platform/i);
+  });
+
   it("a connect while Coach sets the taf up, before it's listed: the prompt names it as planque keeps it, and a Card by the draft's label", async () => {
     const s = services();
     const setup = { agent: "remb-x2" };

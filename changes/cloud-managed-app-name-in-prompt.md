@@ -1,0 +1,1 @@
+- **The fingerprint prompt names a managed app, never its sign-in partner.** For an app connected through the sign-in partner (Gmail, say), the phone's signing prompt read the app's name from the connection's server, which is the partner's platform, so it named the partner. It now names the app as the connection server keeps it: "Connect Gmail to Client email drafts".
