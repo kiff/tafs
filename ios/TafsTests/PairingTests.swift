@@ -28,6 +28,15 @@ final class PairingTests: XCTestCase {
         XCTAssertEqual(passkey.checkCode, "F2ULUM", "no approval key: the device key's alone")
     }
 
+    /// The vector every implementation asserts literally: the P-256 public keys of private keys 1 and 2
+    /// (the curve's G and 2G), so anyone can rebuild them, with the codes worked out apart from any app.
+    func testTheSharedVector() throws {
+        let g = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEaxfR8uEsQkf4vOblY6RA8ncDfYEt6zOg9KE5RdiYwpZP40Li_hp_m47n60p8D54WK84zV2sxXs7LtkBoN79R9Q"
+        let twoG = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEfPJ7GI0DT36KUjgDBLUaw8CJaeJ38hs1pgtI_EdmmXgHd1UQ247QQCk9msafdDDbun2t5jzpgimeBLedInhz0Q"
+        XCTAssertEqual(try read(code { $0["pub"] = g; $0["approval_pub"] = twoG }).get().checkCode, "H6SJNU")
+        XCTAssertEqual(try read(code { $0["pub"] = g; $0["approval_pub"] = nil; $0["kind"] = "passkey" }).get().checkCode, "LTJFF6")
+    }
+
     func testTheBodyIsTheCodesFieldsAsSent() throws {
         let request = try read(code()).get()
         let body = try XCTUnwrap(JSONSerialization.jsonObject(with: request.body) as? [String: String])
