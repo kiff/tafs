@@ -207,6 +207,9 @@ fun TafDetailView(
     // What goes with it, in tafs cloud's words: read before the question opens, so its text never changes under a tap.
     var removalGoes by rememberSaveable { mutableStateOf<String?>(null) }
     val removeScope = rememberCoroutineScope()
+    // Remove for good reads tafs cloud's words before its confirmation opens: a tap meanwhile takes nothing more, and the button
+    // reads as working until the confirmation is up (the owner tapped it twice on Android 97).
+    var removeOpening by remember { mutableStateOf(false) }
     val cards = taf.shownCards
     // A wide screen in landscape (as iOS on an iPad): beside the chat or the activity, a second column with the call waiting for
     // the owner and the Cards, when the chat keeps at least a phone's width beside it.
@@ -266,7 +269,13 @@ fun TafDetailView(
             // How it runs; removing it for good (its Cards revoked, its schedule, chats, run reports, memory and key deleted, its
             // name freed) is its last row.
             val managesHere = state.mode == Mode.kiff && taf.cloudId != null && state.manages(taf.id)
-            SetupTab(taf, state, actions, onVersions = { onVersions(taf.id) }, onConnectApps = onConnectApps, onRemove = if (managesHere) ({ onRemoving(taf.id); removeScope.launch { removalGoes = actions.removalWords(taf.id); removeAsked = taf.id } }) else null, onActivity = { activitySelection = it; section = Section.Activity })
+            SetupTab(taf, state, actions, onVersions = { onVersions(taf.id) }, onConnectApps = onConnectApps, onRemove = if (managesHere) ({
+              if (!removeOpening) {
+                removeOpening = true
+                onRemoving(taf.id)
+                removeScope.launch { try { removalGoes = actions.removalWords(taf.id); removeAsked = taf.id } finally { removeOpening = false } }
+              }
+            }) else null, removeOpening = removeOpening, onActivity = { activitySelection = it; section = Section.Activity })
           }
           Section.Chat -> Unit
         }

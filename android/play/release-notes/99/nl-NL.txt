@@ -1,0 +1,2 @@
+- Definitief verwijderen neemt één tik; een tweede doet niets.
+- Apps koppelen opent op volle grootte en toont dat het laadt.
