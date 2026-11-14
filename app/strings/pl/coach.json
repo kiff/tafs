@@ -161,6 +161,7 @@
   "coach.sign_in.open": "Otwórz {service}",
   "coach.sign_in.open_sign_in": "Otwórz logowanie",
   "coach.sign_in.opens": "Otwiera {destination}",
+  "coach.sign_in.opens_app": "Otwiera logowanie do {app}",
   "coach.sign_in_note": "Otworzy się strona samego dostawcy. Żaden taf nie widzi Twojego logowania.",
   "coach.signed_reading_what_offers": "Zalogowano w {vendor} · odczytywanie, co oferuje",
   "coach.start": "Start",
@@ -179,6 +180,7 @@
   "coach.tools_not_read": "Nie udało się odczytać narzędzi Coacha. {why}",
   "coach.tools_unknown": "KIFF nie odpowiedział w sprawie narzędzi Coacha. Spróbuj ponownie za chwilę.",
   "coach.unknown_answer": "Konfiguracja odpowiedziała czymś, czego ta aplikacja nie odczytuje. Zaktualizuj aplikację.",
+  "coach.waiting_for_app": "Jeśli otworzyła się strona logowania do {app}, dokończ tam i wróć.",
   "coach.waiting_for_vendor": "Jeśli otworzyła się strona logowania dostawcy, dokończ tam i wróć.",
   "coach.what_conversation_about": "O czym jest ta rozmowa",
   "coach.will_work_like": " będzie działać tak"

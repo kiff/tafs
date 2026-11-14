@@ -161,6 +161,7 @@
   "coach.sign_in.open": "Abrir {service}",
   "coach.sign_in.open_sign_in": "Abrir o início de sessão",
   "coach.sign_in.opens": "Abre {destination}",
+  "coach.sign_in.opens_app": "Abre o início de sessão em {app}",
   "coach.sign_in_note": "Abre-se a própria página do fornecedor. Nenhum taf vê o seu início de sessão.",
   "coach.signed_reading_what_offers": "Sessão iniciada em {vendor} · a ler o que oferece",
   "coach.start": "Começar",
@@ -179,6 +180,7 @@
   "coach.tools_not_read": "Não foi possível ler as ferramentas do Coach. {why}",
   "coach.tools_unknown": "O KIFF não respondeu sobre as ferramentas do Coach. Tente novamente daqui a pouco.",
   "coach.unknown_answer": "A Configuração respondeu algo que esta app não lê. Atualize a app.",
+  "coach.waiting_for_app": "Se a página de início de sessão de {app} abriu, conclua-o lá e volte.",
   "coach.waiting_for_vendor": "Se a página de início de sessão do fornecedor abriu, conclua-o lá e volte.",
   "coach.what_conversation_about": "Sobre o que é esta conversa",
   "coach.will_work_like": " vai funcionar assim"

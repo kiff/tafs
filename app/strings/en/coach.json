@@ -161,6 +161,7 @@
   "coach.sign_in.open": "Open {service}",
   "coach.sign_in.open_sign_in": "Open the sign-in",
   "coach.sign_in.opens": "Opens {destination}",
+  "coach.sign_in.opens_app": "Opens {app}'s sign-in",
   "coach.sign_in_note": "The vendor's own page opens. No taf sees your sign-in.",
   "coach.signed_reading_what_offers": "Signed in at {vendor} · reading what it offers",
   "coach.start": "Start",
@@ -179,6 +180,7 @@
   "coach.tools_not_read": "Couldn't read Coach's tools. {why}",
   "coach.tools_unknown": "KIFF didn't answer about Coach's tools. Try again in a moment.",
   "coach.unknown_answer": "Setup answered something this app doesn't read. Update the app.",
+  "coach.waiting_for_app": "If {app}'s sign-in page opened, finish it there and come back.",
   "coach.waiting_for_vendor": "If the vendor's sign-in page opened, finish it there and come back.",
   "coach.what_conversation_about": "What this conversation is about",
   "coach.will_work_like": " will work like this"

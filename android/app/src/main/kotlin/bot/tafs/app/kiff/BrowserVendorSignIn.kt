@@ -1,5 +1,6 @@
 package bot.tafs.app.kiff
 
+import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -10,6 +11,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import java.lang.ref.WeakReference
 
 /**
  * The vendor's sign-in page in a Chrome Custom Tab. planque sends the owner back to `tafs://planque/signed-in?...`, which the
@@ -17,9 +19,19 @@ import kotlinx.coroutines.withTimeout
  * left unfinished for 15 minutes (how long planque takes the confirmation) is closed, and so is one the owner left: the app back
  * in front with no link from the vendor ([resumed]) means the tab was closed, so the step lets go and the sign-in is offered again,
  * instead of every other approval waiting on it.
+ *
+ * The tab opens from the app's own screen ([attach]), in tafs's task: an owner who leaves for another app mid-way (an
+ * authenticator for a code) and comes back to tafs from the launcher comes back to the vendor's tab, not to tafs's screen, which
+ * would read as the tab closed (the owner on Android 97). Only with no screen to open it from does it take a task of its own.
  */
 class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
   private val wait = VendorWait()
+  @Volatile private var screen: WeakReference<Activity>? = null
+
+  /** The screen the vendor's tab opens from, so it stays in tafs's task. */
+  fun attach(activity: Activity) { screen = WeakReference(activity) }
+
+  fun detach(activity: Activity) { if (screen?.get() === activity) screen = null }
 
   override suspend fun signIn(url: String): String {
     // Only a vendor's secure page is opened.
@@ -27,8 +39,12 @@ class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
     val waiting = wait.start()
     try {
       val tab = CustomTabsIntent.Builder().build()
-      tab.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-      tab.launchUrl(context, Uri.parse(url))
+      val from = screen?.get()?.takeIf { !it.isFinishing && !it.isDestroyed }
+      if (from != null) tab.launchUrl(from, Uri.parse(url))
+      else {
+        tab.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        tab.launchUrl(context, Uri.parse(url))
+      }
       return withTimeout(FIFTEEN_MINUTES_MS) { waiting.await() }
     } catch (_: TimeoutCancellationException) {
       throw VendorSignInCancelled()

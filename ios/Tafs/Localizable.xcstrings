@@ -34848,6 +34848,59 @@
         }
       }
     },
+    "coach.sign_in.opens_app": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet die Anmeldung bei %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens %1$@'s sign-in"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre el inicio de sesión de %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvre la connexion à %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apre l'accesso a %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opent het inloggen bij %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwiera logowanie do %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre o início de sessão em %1$@"
+          }
+        }
+      }
+    },
     "coach.sign_in_note": {
       "extractionState": "manual",
       "localizations": {
@@ -35798,6 +35851,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "A Configuração respondeu algo que esta app não lê. Atualize a app."
+          }
+        }
+      }
+    },
+    "coach.waiting_for_app": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn sich die Anmeldeseite von %1$@ geöffnet hat, schließ die Anmeldung dort ab und komm zurück."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If %1$@'s sign-in page opened, finish it there and come back."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si se abrió la página de inicio de sesión de %1$@, termina allí y vuelve."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si la page de connexion de %1$@ s'est ouverte, terminez-la là-bas et revenez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se si è aperta la pagina di accesso di %1$@, completala lì e torna qui."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Als de inlogpagina van %1$@ is geopend, rond het daar af en kom terug."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeśli otworzyła się strona logowania do %1$@, dokończ tam i wróć."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se a página de início de sessão de %1$@ abriu, conclua-o lá e volte."
           }
         }
       }

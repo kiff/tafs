@@ -724,6 +724,7 @@ object Words {
       fun open(service: String): String = Res.s(R.string.coach_sign_in_open, service)
       val openSignIn: String get() = Res.s(R.string.coach_sign_in_open_sign_in)
       fun opens(destination: String): String = Res.s(R.string.coach_sign_in_opens, destination)
+      fun opensApp(app: String): String = Res.s(R.string.coach_sign_in_opens_app, app)
     }
     val signInNote: String get() = Res.s(R.string.coach_sign_in_note)
     fun signedReadingWhatOffers(vendor: String): String = Res.s(R.string.coach_signed_reading_what_offers, vendor)
@@ -747,6 +748,7 @@ object Words {
     fun toolsNotRead(why: String): String = Res.s(R.string.coach_tools_not_read, why)
     val toolsUnknown: String get() = Res.s(R.string.coach_tools_unknown)
     val unknownAnswer: String get() = Res.s(R.string.coach_unknown_answer)
+    fun waitingForApp(app: String): String = Res.s(R.string.coach_waiting_for_app, app)
     val waitingForVendor: String get() = Res.s(R.string.coach_waiting_for_vendor)
     val whatConversationAbout: String get() = Res.s(R.string.coach_what_conversation_about)
     val willWorkLike: String get() = Res.s(R.string.coach_will_work_like)

@@ -703,6 +703,7 @@
     <string name="coach_sign_in_open">Ouvrir %1$s</string>
     <string name="coach_sign_in_open_sign_in">Ouvrir la connexion</string>
     <string name="coach_sign_in_opens">Ouvre %1$s</string>
+    <string name="coach_sign_in_opens_app">Ouvre la connexion à %1$s</string>
     <string name="coach_sign_in_note">La page du fournisseur s\'ouvre. Aucun taf ne voit votre connexion.</string>
     <string name="coach_signed_reading_what_offers">Connecté à %1$s · lecture de ce qu\'il propose</string>
     <string name="coach_start">Démarrer</string>
@@ -721,6 +722,7 @@
     <string name="coach_tools_not_read">Impossible de lire les outils de Coach. %1$s</string>
     <string name="coach_tools_unknown">KIFF n\'a pas répondu au sujet des outils de Coach. Réessayez dans un instant.</string>
     <string name="coach_unknown_answer">La Configuration a répondu quelque chose que cette app ne sait pas lire. Mettez l\'app à jour.</string>
+    <string name="coach_waiting_for_app">Si la page de connexion de %1$s s\'est ouverte, terminez-la là-bas et revenez.</string>
     <string name="coach_waiting_for_vendor">Si la page de connexion du fournisseur s\'est ouverte, terminez-la là-bas et revenez.</string>
     <string name="coach_what_conversation_about">Le sujet de cette conversation</string>
     <string name="coach_will_work_like">" fonctionnera ainsi"</string>

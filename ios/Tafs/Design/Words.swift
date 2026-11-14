@@ -1332,6 +1332,8 @@ enum Words {
             static var openSignIn: String { Words.line("coach.sign_in.open_sign_in") }
             /// Opens {destination}
             static func opens(destination: String) -> String { Words.line("coach.sign_in.opens", destination) }
+            /// Opens {app}'s sign-in
+            static func opensApp(app: String) -> String { Words.line("coach.sign_in.opens_app", app) }
         }
         /// The vendor's own page opens. No taf sees your sign-in.
         static var signInNote: String { Words.line("coach.sign_in_note") }
@@ -1373,6 +1375,8 @@ enum Words {
         static var toolsUnknown: String { Words.line("coach.tools_unknown") }
         /// Setup answered something this app doesn't read. Update the app.
         static var unknownAnswer: String { Words.line("coach.unknown_answer") }
+        /// If {app}'s sign-in page opened, finish it there and come back.
+        static func waitingForApp(app: String) -> String { Words.line("coach.waiting_for_app", app) }
         /// If the vendor's sign-in page opened, finish it there and come back.
         static var waitingForVendor: String { Words.line("coach.waiting_for_vendor") }
         /// What this conversation is about

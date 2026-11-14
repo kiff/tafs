@@ -703,6 +703,7 @@
     <string name="coach_sign_in_open">Open %1$s</string>
     <string name="coach_sign_in_open_sign_in">Open the sign-in</string>
     <string name="coach_sign_in_opens">Opens %1$s</string>
+    <string name="coach_sign_in_opens_app">Opens %1$s\'s sign-in</string>
     <string name="coach_sign_in_note">The vendor\'s own page opens. No taf sees your sign-in.</string>
     <string name="coach_signed_reading_what_offers">Signed in at %1$s · reading what it offers</string>
     <string name="coach_start">Start</string>
@@ -721,6 +722,7 @@
     <string name="coach_tools_not_read">Couldn\'t read Coach\'s tools. %1$s</string>
     <string name="coach_tools_unknown">KIFF didn\'t answer about Coach\'s tools. Try again in a moment.</string>
     <string name="coach_unknown_answer">Setup answered something this app doesn\'t read. Update the app.</string>
+    <string name="coach_waiting_for_app">If %1$s\'s sign-in page opened, finish it there and come back.</string>
     <string name="coach_waiting_for_vendor">If the vendor\'s sign-in page opened, finish it there and come back.</string>
     <string name="coach_what_conversation_about">What this conversation is about</string>
     <string name="coach_will_work_like">" will work like this"</string>

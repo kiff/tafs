@@ -703,6 +703,7 @@
     <string name="coach_sign_in_open">Apri %1$s</string>
     <string name="coach_sign_in_open_sign_in">Apri l\'accesso</string>
     <string name="coach_sign_in_opens">Apre %1$s</string>
+    <string name="coach_sign_in_opens_app">Apre l\'accesso a %1$s</string>
     <string name="coach_sign_in_note">Si apre la pagina del fornitore. Nessun taf vede il tuo accesso.</string>
     <string name="coach_signed_reading_what_offers">Accesso effettuato su %1$s · lettura di ciò che offre</string>
     <string name="coach_start">Avvia</string>
@@ -721,6 +722,7 @@
     <string name="coach_tools_not_read">Impossibile leggere gli strumenti di Coach. %1$s</string>
     <string name="coach_tools_unknown">KIFF non ha risposto sugli strumenti di Coach. Riprova tra un attimo.</string>
     <string name="coach_unknown_answer">La configurazione ha risposto qualcosa che questa app non sa leggere. Aggiorna l\'app.</string>
+    <string name="coach_waiting_for_app">Se si è aperta la pagina di accesso di %1$s, completala lì e torna qui.</string>
     <string name="coach_waiting_for_vendor">Se si è aperta la pagina di accesso del fornitore, completala lì e torna qui.</string>
     <string name="coach_what_conversation_about">Di cosa parla questa conversazione</string>
     <string name="coach_will_work_like">" funzionerà così"</string>
