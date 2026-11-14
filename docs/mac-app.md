@@ -43,6 +43,34 @@ The build is unsigned for now. Signing, and the disk image, are set up at releas
 - **No Live Activity.** Live Activities are unavailable to a Mac Catalyst build, so `Shared/HeldActivity.swift` and the Live Activity half of `LockScreen` compile for iPhone and iPad only. `LockScreen.endActivities()` does nothing on the Mac. Notifications work as on the iPad.
 - **No Siri tip on the Halt screen.** `SiriTipView` is unavailable to a Mac Catalyst build.
 
+## The menu bar
+
+On an iPad, the shortcuts that work on every screen are hidden buttons (`GlobalKeyCommands`, `Design/Keyboard.swift`). On the Mac the same shortcuts are menu items (`MacCommands`, `Design/Mac.swift`), and the hidden buttons aren't used, so no shortcut is there twice.
+
+Both come from one list, `KeyCommand`. `MacMenu` says where each sits:
+
+| Menu | Item | Shortcut |
+|---|---|---|
+| File | New taf, in place of "New Window" | ⌘N |
+| tafs (the app's menu) | Account, in place of "Settings…" | ⌘, |
+| View | Tafs | ⌘1 |
+| View | Needs you | ⌘2 |
+| View | Record | ⌘3 |
+| View | Coach mode | ⌘K |
+
+- **The items sit in the system's own menus**, so no menu has a name of its own to translate. Each item's title is the shortcut's title, from the app's words.
+- **An item does what its shortcut does** (`AppModel.run`): a tab's item asks for the tab, and New taf and Coach mode open Coach mode.
+- **An item is off when its shortcut is** (`AppModel.allows`): signed out, while Coach drives the app, and for Coach's two items where Coach isn't offered.
+- **Send (⌘↩), Close (Esc) and Stop (⌘.) aren't in the menu bar.** They belong to the screen that shows their button, and work there as on the iPad.
+
+A new global shortcut is added to `KeyCommand.global` and to one of `MacMenu`'s lists. `MacMenuTests` fails until it's in both.
+
+## The window
+
+The window never goes smaller than 820 × 600 points (`MacWindow.minimumSize`): the width of an iPad held upright, so the sidebar and a screen beside it always fit. It has no default size of its own: macOS chooses the first one and remembers the person's.
+
+## How the code asks whether it's the Mac
+
 `ThisDevice.isMac` and `#if targetEnvironment(macCatalyst)` are the only two ways the code asks whether it's the Mac build. The Mac workflow finds Mac-specific files by those names.
 
 ## Tests
@@ -57,6 +85,8 @@ A draft pull request runs it too. The Mac build can only be checked on a machine
 
 `ThisDeviceTests` checks the name, platform and kind KIFF is told, for an iPhone, an iPad and a Mac.
 
+`MacMenuTests` checks that every global shortcut is in the menu bar once, what each item does, when it's off, and the window's smallest size.
+
 **The Mac's tests run on the Mac itself, not on a Simulator.** So a test can't assume the Simulator's answers:
 
 - **Approvals are always ready on the Simulator.** On a Mac they depend on its Touch ID, and a runner has none. A test that needs an approval sets its model ready (`model.readApprovalReadiness = { .ready }`), with a stub signer.
@@ -66,7 +96,8 @@ A draft pull request runs it too. The Mac build can only be checked on a machine
 
 | What | State |
 |---|---|
-| A menu bar, a minimum window size, pointer hover | next |
+| Pointer hover on rows and buttons | next, with screenshots of the Mac app from CI |
+| **The menu bar and the window, seen by a person** | **owed.** The menu bar and the smallest window size are built and unit-tested, but nobody has seen them on a Mac. |
 | Approvals with Touch ID on a Mac, and a Mac without Touch ID | next; today the Mac build uses the iPad's approval code as it is |
 | Adding a Mac from a phone (the QR code and the check code) | after KIFF's pairing routes |
 | Signing, notarizing and the disk image | at release |
