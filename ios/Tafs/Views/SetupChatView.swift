@@ -604,7 +604,7 @@ struct SetupChatView: View {
         let onScreen = model.tafOnScreen.flatMap { id in model.cloudTaf(for: id).map { (id, $0) } }
         if let name = improving?.name ?? onScreen?.1.name {
             HStack(spacing: 0) {
-                startChoice(Words.Home.newTaf, selected: improving == nil) { model.newSetupChat() }
+                startChoice(Words.Home.newTaf, selected: improving == nil) { model.newCoachConversation() }
                 startChoice(Words.Coach.improveTaf(taf: "\(name)"), selected: improving != nil) {
                     if let id = onScreen?.0 { model.improveTaf(id) }
                 }

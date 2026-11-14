@@ -1612,7 +1612,7 @@ final class SetupTests: XCTestCase {
 
     /// Coach pausing on a card its person answers reads Home once, as the stream ends, so Needs
     /// you lists it while the chat is still open (the iPad walk on 2279: it came only after Coach
-    /// closed, and a while later). A run that goes on, or ends, reads nothing more.
+    /// closed, and a while later). A run that goes on and ends reads it once at its end too.
     func testCoachPausingOnACardReadsNeedsYouOnce() async throws {
         let model = await model(signer: FaceIDSigner())
         model.planqueSetUp(for: "t_01")
@@ -1637,14 +1637,14 @@ final class SetupTests: XCTestCase {
         await model.setupStream?.value
         XCTAssertEqual(homeReads() - before, 1, "Needs you read once, while Coach is open")
 
-        // Answered in the chat and gone on to the end: nothing waits, nothing read.
+        // Answered in the chat and gone on to the end: read once more, so the row of it goes.
         events = [.session("s1", newSession: false), .state("waiting_for_you"), .part, .state("thinking"),
                   .state("done"), .end(status: "COMPLETED", stop: "answered")]
         before = homeReads()
         let answered = await model.sendSetup("yes")
         XCTAssertTrue(answered)
         await model.setupStream?.value
-        XCTAssertEqual(homeReads() - before, 0)
+        XCTAssertEqual(homeReads() - before, 1)
 
         // A stream that only ends PAUSED still says so.
         events = [.session("s1", newSession: false), .end(status: "PAUSED", stop: "paused")]
@@ -1658,6 +1658,60 @@ final class SetupTests: XCTestCase {
         XCTAssertTrue(AppModel.stillWaitsOnYou(true, state: "done"), "the run's last line keeps the pause")
         XCTAssertFalse(AppModel.stillWaitsOnYou(true, state: "working"), "it went on")
         XCTAssertFalse(AppModel.stillWaitsOnYou(false, state: "done"))
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A Coach run ending reads Home again, so Needs you's "Coach is waiting…" row of it, and its
+    /// badge, go (the live run on Android: the row stayed after setup completed). However the run
+    /// ends, on its stream (done, stopped, failed) or seen on a read of the thread (at work, then
+    /// not), Home is read once; a stream that drops with no end reads nothing.
+    func testACoachRunEndingReadsHome() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        await model.loadSetup()
+        var events: [TafsCloud.StreamEvent] = []
+        model.streamOpener = { _, _ in
+            let sending = events
+            return AsyncThrowingStream { c in
+                sending.forEach { c.yield($0) }
+                c.finish()
+            }
+        }
+        func homeReads() -> Int { sent("GET", "cloud.test", "/v1/home").count }
+
+        for status in ["COMPLETED", "CANCELLED", "ERROR"] {
+            events = [.session("s1", newSession: false), .state("thinking"), .end(status: status, stop: "done")]
+            let before = homeReads()
+            let delivered = await model.sendSetup("Finish the refunds taf")
+            XCTAssertTrue(delivered)
+            await model.setupStream?.value
+            XCTAssertEqual(homeReads() - before, 1, "\(status): Home read once at the run's end")
+        }
+
+        events = [.session("s1", newSession: false), .state("thinking")]
+        var before = homeReads()
+        let dropped = await model.sendSetup("and then")
+        XCTAssertTrue(dropped)
+        await model.setupStream?.value
+        XCTAssertEqual(homeReads() - before, 0, "no end, nothing read: the thread's next read says")
+        XCTAssertTrue(AppModel.readsHomeAtEnd(ended: "COMPLETED", waitsOnYou: false))
+        XCTAssertTrue(AppModel.readsHomeAtEnd(ended: nil, waitsOnYou: true))
+        XCTAssertFalse(AppModel.readsHomeAtEnd(ended: nil, waitsOnYou: false))
+
+        // Seen on a read of the thread, with no stream: at work, then not.
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":{"session":"s1","run":"r1"}}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, #"{"messages":[],"components":[],"working":{"session":"s1","run":"r1"}}"#)
+        await model.loadSetupThread()
+        before = homeReads()
+        await model.loadSetupThread()
+        XCTAssertEqual(homeReads() - before, 0, "still at work: nothing read")
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[],"working":null}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, #"{"messages":[],"components":[],"working":null}"#)
+        await model.loadSetupThread()
+        XCTAssertEqual(homeReads() - before, 1, "the run ended: Home read once")
+        await model.loadSetupThread()
+        XCTAssertEqual(homeReads() - before, 1, "and not again while it stays idle")
         Keychain.delete(AppModel.planqueAccount)
     }
 
