@@ -737,7 +737,9 @@ No raw reason reaches the person. tafs cloud's `words`, and its `error`, which i
 language, are shown as they are. KIFF's and planque's own reasons (an English line, a code, a vendor's words) never are:
 `KIFFError.server` and `PlanqueError.server` say a plain line of the app's own by what happened (`PlainError`): signed
 out (401), not allowed (403), changed meanwhile (409), busy (429), down (5xx), offline, or else "didn't understand each
-other". The raw reason stays in the error, for the code that acts on it (a refusal's code, a 409's reason) and for a
+other". planque's own `words` on a refusal (`PlanqueClient.refusal`), its line for the person in their language, come
+first and are shown as they are: a sign-in to another account says so, never "changed meanwhile", which read as "try
+again". The raw reason stays in the error, for the code that acts on it (a refusal's code, a 409's reason) and for a
 drive's diagnostics.
 
 ## Words and languages
