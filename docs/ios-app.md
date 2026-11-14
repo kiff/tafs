@@ -734,8 +734,9 @@ capability) when the person hasn't it, else `signed-in`: a screen only someone s
 KIFF opens. `{taf}` is the sample's first taf.
 
 - **How it drives the app.** It launches once, with `-screenshots YES -tab tafs -routeWalk YES`.
-  The hook (`ios/Tafs/App/RouteWalk.swift`) is a small window above the app and its sheets: the
-  test types each path into its field, and the hook clears every request, builds the screens
+  The hook (`ios/Tafs/App/RouteWalk.swift`) is a small window above the app and its sheets, at
+  the right edge halfway down (XCUITest can't tap over the status bar): the test types each path
+  into its field, a `DriveField` like every other, and the hook clears every request, builds the screens
   again from the start (no push, no sheet, the launch's tab), then opens the path and writes
   `path|opened` or `path|refused:why` on its label. The hook is in debug builds only (`#if
   DEBUG`; a release build's `routeWalk()` is the view itself), and only with the argument.

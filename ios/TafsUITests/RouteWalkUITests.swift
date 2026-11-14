@@ -58,10 +58,11 @@ final class RouteWalkUITests: XCTestCase {
         var entries: [Entry] = []
         for route in routes {
             let path = route.route.replacingOccurrences(of: "{taf}", with: taf)
-            // The field takes the keyboard a moment after the tap on a slow simulator.
+            // The field takes the keyboard a moment after the tap on a slow simulator. Tapped where
+            // it is, as the hook's window is its own, above the app's.
             XCTAssertTrue(within(10) {
                 if (field.value(forKey: "hasKeyboardFocus") as? Bool) == true { return true }
-                field.tap()
+                field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
                 RunLoop.current.run(until: Date().addingTimeInterval(0.3))
                 return (field.value(forKey: "hasKeyboardFocus") as? Bool) == true
             }, "\(route.route): the hook's field has the keyboard")
