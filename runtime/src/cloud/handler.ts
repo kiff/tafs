@@ -59,6 +59,7 @@ import { RECIPES } from "../recipes.js";
 import { findLabel, LabelRefusal, labelsView, readLabels, saveLabels, withLabelChanged, withTafLabels } from "./labels.js";
 import { BusinessRefusal, businessView, readBusiness, saveBusiness } from "./business.js";
 import { MissionRefusal, planMission, readMissions, saveMissions } from "./missions.js";
+import { logDelivered, logPage, readLog } from "./missionlog.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -119,6 +120,7 @@ import { MissionRefusal, planMission, readMissions, saveMissions } from "./missi
  *   POST /v1/me/ai-consent              {version}: they allow it; DELETE withdraws it (docs/accounts.md)
  *   PUT  /v1/me/suggestions             {show}: a manager turns suggestions off for good, or on again
  *   GET  /v1/me/business                what tafs know about the business, read-only: Coach changes it on the person's confirmed draft (docs/labels.md)
+ *   GET  /v1/missions/{id}/log          ?before=: a mission's log, newest first, a page at a time, read-only (docs/missions.md)
  *   PUT  /v1/tafs/{id}/knob             {wakes, when, results?}: the dial changed, as the taf's next version; live, its triggers are scheduled
  *   GET  /v1/tafs/{id}/requests/{run}   one request from the rim: where it came from, what it did step by step, what comes next
  *   DELETE /v1/tafs/{id}/follow-ups/{fid}  a follow-up the taf set itself, removed
@@ -650,6 +652,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "push") return push(event, method, parts, deps);
   if (parts[1] === "alerts" && parts.length === 2) return alerts(event, method, await person(event, deps), deps);
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
+  if (parts[1] === "missions" && parts.length === 4 && parts[3] === "log" && method === "GET") return missionLog(event, await person(event, deps), parts[2]!, deps);
   if (parts[1] === "home" && parts[2] === "coach-waiting" && method === "POST" && (parts.length === 4 || parts.length === 5) && parts[parts.length - 1] === "set-aside") {
     let session: string | undefined;
     if (parts.length === 5) {
@@ -7104,6 +7107,47 @@ async function notEndedHere(deps: Deps, tenant: string, runs: Run[]): Promise<Ru
     return cardsWaitedOn(r).every((id) => waits.includes(id));
   }, () => false)));
   return runs.filter((_, i) => !ended[i]);
+}
+
+/**
+ * GET /v1/missions/{id}/log (missionlog.ts): read-only, newest first, a page at a time, kept 90 days after its mission
+ * ends. An entry by a taf the person may not see is left out; one by a removed taf is marked removed (M7).
+ */
+async function missionLog(event: HTTPEvent, me: KIFFIdentity, id: string, deps: Deps) {
+  if (!deps.coach) throw new HTTPError(503, "missions can't be kept here");
+  const log = await readLog(deps.coach, me.tenantID, id);
+  if (!log) {
+    if ((await readMissions(deps.coach, me.tenantID)).missions.some((m) => m.id === id)) return { items: [] };
+    throw new HTTPError(404, "no such mission");
+  }
+  const [records, access] = await Promise.all([deps.tafs.list(me.tenantID), readAccess(bearer(event), deps.fetch, deps.kiffBase)]);
+  const live = records.filter((t) => !t.removing && t.job !== SETUP_JOB);
+  const hidden = new Set(live.filter((t) => !listable(access, t.kiffAgent)).map((t) => t.id));
+  const names = new Map(live.map((t) => [t.id, t.name]));
+  const before = new URLSearchParams(event.rawQueryString ?? "").get("before") ?? undefined;
+  return logPage(log.entries.filter((e) => !(e.by.kind === "taf" && hidden.has(e.by.id ?? ""))), names, langOf(event), before);
+}
+
+/**
+ * Each mission's delivered entries (missionlog.ts): a member's run that completed since the mission began is logged
+ * once, with the record's counts. One read of each member's latest runs a pass; an account with no mission reads nothing more.
+ */
+export async function sweepMissionLog(deps: Deps): Promise<number> {
+  if (!deps.coach) return 0;
+  const now = deps.now?.() ?? new Date();
+  let logged = 0;
+  for (const tenant of await deps.tafs.tenants()) {
+    const { missions } = await readMissions(deps.coach, tenant).catch(() => ({ missions: [] as Array<{ id: string; tafs: string[]; created: string }> }));
+    for (const m of missions) {
+      for (const taf of m.tafs) {
+        const runs = await deps.agents.runs(tenant, taf, false, 10).catch(() => [] as Run[]);
+        for (const r of runs.filter((x) => (x.created ?? "") >= m.created)) {
+          if (await logDelivered(deps.coach, tenant, m.id, taf, r, now).catch((err) => { console.error(`mission log: ${(err as Error).message}`); return false; })) logged++;
+        }
+      }
+    }
+  }
+  return logged;
 }
 
 /**

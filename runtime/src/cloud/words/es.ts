@@ -221,6 +221,7 @@ export const es: Words = {
   home_discard_no: "Conservarla",
   home_needs_you_none: "Nada te necesita.",
   labels_all: "Todos",
+  mission_log_delivered: (done, held, refused) => [`${done} hecho${done === 1 ? "" : "s"}`, held ? `${held} retenida${held === 1 ? "" : "s"}` : "", refused ? `${refused} rechazado${refused === 1 ? "" : "s"}` : ""].filter(Boolean).join(" · "),
   business_title: "Lo que los tafs saben de tu negocio",
   business_empty: "Nada todavía. Coach puede redactarla contigo.",
   business_change: "Cambiar",
