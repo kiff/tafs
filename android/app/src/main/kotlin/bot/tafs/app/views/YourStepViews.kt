@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import bot.tafs.app.drive.confirms
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -73,7 +74,8 @@ fun CoachWaitingPanel(waiting: bot.tafs.app.kiff.CoachWaiting, onOpen: ((bot.taf
       Text(waiting.words.line, style = scaled(16, FontWeight.SemiBold, Theme.ink))
       if (onOpen != null && waiting.words.open.isNotBlank()) PrimaryButton(waiting.words.open, { onOpen(waiting) }, Modifier.fillMaxWidth())
       // The swipe's words, as a button too: a swipe isn't the only way (accessibility).
-      if (onSetAside != null) OutlineButton(waiting.words.setAside, { onSetAside(waiting.session) }, Modifier.fillMaxWidth())
+      // Coach driving the app never sets a chat aside: it's the person's to confirm (docs/drive.md).
+      if (onSetAside != null) OutlineButton(waiting.words.setAside, { onSetAside(waiting.session) }, Modifier.fillMaxWidth().confirms())
     }
   }
   if (onSetAside == null) { panel(); return }
@@ -85,7 +87,7 @@ fun CoachWaitingPanel(waiting: bot.tafs.app.kiff.CoachWaiting, onOpen: ((bot.taf
     false
   })
   LaunchedEffect(swipe.targetValue) { if (swipe.targetValue == androidx.compose.material3.SwipeToDismissBoxValue.Settled) fired = false }
-  androidx.compose.material3.SwipeToDismissBox(swipe, backgroundContent = {
+  androidx.compose.material3.SwipeToDismissBox(swipe, modifier = Modifier.confirms(), backgroundContent = {
     androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().padding(horizontal = 16.dp), contentAlignment = androidx.compose.ui.Alignment.CenterEnd) {
       Text(waiting.words.setAside, style = scaled(14, FontWeight.SemiBold, Theme.amberText))
     }
