@@ -39,6 +39,7 @@ struct TafsApp: App {
                     push.onToken = { [weak model] token in Task { await model?.pushTokenArrived(token) } }
                     push.onHeldChanged = { [weak model] in await model?.refresh() }
                     push.onHoldAlert = { [weak model] hold in await model?.refreshUntilHeld(hold) }
+                    push.onBrief = { [weak model] in await model?.loadBrief() }
                     push.onChange = { [weak model] change, taf in await model?.liveChange(change, cloudTafID: taf) }
                     push.onOpen = { [weak model] destination in model?.open(destination) }
                     Routes.shared.onOpen = { [weak model] destination in model?.open(destination) }
@@ -103,7 +104,8 @@ struct RootView: View {
         switch t {
         // A sidebar beside the open taf on a wide screen (kiff/tafs#85).
         case .tafs: TafsTab(tab: $tab)
-        case .needsYou: NavigationStack { NeedsYouView() }
+        // "Your brief" in its place once there is one (Missions draft); Needs you, as today, otherwise.
+        case .needsYou: NavigationStack { BriefView() }
         case .record: NavigationStack { RecordView() }
         case .account: SettingsView()
         }

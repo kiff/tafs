@@ -782,6 +782,43 @@ exports receipts ([api.md](api.md): `GET /v1/record`, `/v1/record/cases/{about}`
 
 Tests: `TafsTests/RecordSearchTests.swift`.
 
+## Your brief (Missions, draft)
+
+"Your brief" takes Needs you's place once there is one (Missions design v2.1 §7; `BriefView`,
+`KIFF/TafsCloud+Brief.swift`). Until then, and for anyone tafs cloud doesn't send one to, Needs you is
+exactly as today. The draft draws the sample's brief only (`-brief YES` over the sample,
+`Brief.sample`); tafs cloud's `GET /v1/brief?label=` isn't read until its `TAFS_MISSIONS` flag is on.
+
+- **Read leniently, in v2.1's names:** `decisions` (`question`, `answers` with `recommended`, `why`,
+  `meanwhile`, `deadline`, `urgent`, `later`, `ref`), `more`, `done` (cases with `state` and
+  `next_check`, `value`, `log`), `next_move`, `rest`, `credits`, `labels` and the headings' `words`. A
+  part the app can't read is left out, never the brief.
+- **Drawn as sent:** decisions first, each with its taf, Coach's recommendation and its why, what
+  happens meanwhile, why it can't wait when it can't, and its answers (the recommended one filled, a
+  decline in red, Later beside them). Then one next move, then Done case by case (green once closed,
+  amber while waiting), with its value and the mission's log. Then the rest in one line, which opens
+  today's Needs you list. On an iPad's width, decisions beside Done, the next move under Done.
+- **Label chips** (All, two labels, "+N"; `LabelChips`) filter the brief, as tafs cloud filters it.
+  The same chips sit over the tafs list (Home on a phone, the Overview on an iPad) and filter it
+  without changing its order. They're Home's (`labels`, `labels_words`, each taf's `labels`;
+  `docs/labels.md` › What the apps get, in tafs cloud), drawn as sent: each label's count, an amber dot while
+  `waiting` is above 0, and, filtered, Home's line becomes the label's `headline`. The list opens on All
+  every time. Each taf's row carries its labels as small grey chips, two then "+1" (`TafLabels`). With
+  no labelled taf none of it is sent, and the list is as today. The sample's labels are for screenshots
+  only (`-brief YES`).
+- **A recommendation is shown, never acted on.** An answer goes through the route its decision already
+  has (`ref`: a held call, a step, a connection, a proposal); nothing is signed from the brief.
+- **The urgent alert** (the owner's mockup 3). Urgency is tafs cloud's call, never the app's. A
+  decision it marks `urgent` is drawn with a red border and tafs cloud's word on its badge
+  (`words.urgent`), its why it can't wait (`cant_wait`), and never a Later, whatever was sent. Its push
+  is time-sensitive (tafs cloud's `interruption-level`; the app holds the entitlement already). A push
+  whose `kind` is `brief` or `urgent` opens the brief, unless it names where it opens (`open`), and with
+  the app open the brief is read again. `-briefUrgent YES` adds the mockup's urgent decision to the
+  sample's brief for screenshots.
+- **A mission's log** (`MissionLogView`, `GET /v1/missions/{id}/log`): read only, newest first, by
+  day; each entry's taf or Coach or You, its kind in colour and word, its evidence and value; a removed
+  taf's entries greyed and marked.
+
 ## Coach waiting
 
 A Coach chat paused on a card its person answers (an approval, a sign-in, questions, a confirm), as

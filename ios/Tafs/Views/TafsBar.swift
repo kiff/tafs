@@ -66,7 +66,9 @@ struct TafsBar: View {
                                 .offset(x: 10, y: -6)
                         }
                     }
-                Text(item.title).scaledFont(11, weight: selected ? .semibold : .regular).lineLimit(1).minimumScaleFactor(0.8)
+                // Needs you's place says "Your brief" once there is one (tafs cloud's words).
+                Text(item.tab == .needsYou ? model.needsYouTabTitle : item.title)
+                    .scaledFont(11, weight: selected ? .semibold : .regular).lineLimit(1).minimumScaleFactor(0.8)
             }
             .foregroundColor(selected ? Theme.amberText : Theme.soft)
             .frame(maxWidth: .infinity, minHeight: 48)

@@ -41,8 +41,13 @@ struct HomeView: View {
                         .buttonStyle(.drivablePlain)
                 }
 
+                // The labels' chips (Missions draft): All, two labels, then "+N"; a chip filters the list,
+                // whose order never changes.
+                if !model.listLabels.isEmpty { LabelChips(labels: model.listLabels, selected: model.listLabel, all: model.labelsAllWords) { model.filterList($0) } }
+
                 // Theirs, then the ones shared with them (kiff/tafs#306).
-                let sections = model.tafSections
+                let all = model.tafSections
+                let sections = (own: model.filtered(all.own), shared: model.filtered(all.shared))
                 VStack(spacing: 10) {
                     ForEach(sections.own) { taf in tafLinks(taf) }
                     // A taf being set up, among the tafs: by its name, with no state; its Coach chat
@@ -295,7 +300,7 @@ struct HomeView: View {
                 // With no taf and the recipes listed, tafs cloud's line leads: no "0 tafs
                 // working" above them (as on Android).
                 // tafs cloud's line as sent; the app's own count only when it sent none.
-                Text(model.workingWords)
+                Text(model.listHeadline)
                     .foregroundColor(Theme.ink)
                 Text(model.needsYouWords)
                     .foregroundColor(Theme.dim)
@@ -375,6 +380,7 @@ struct TafRow: View {
                     StateChip(state: taf.state)
                 }
             }
+            TafLabels(taf: taf)
             if let rule = taf.card.rules.first(where: { $0.perWindow != nil }), let limit = rule.perWindow {
                 let used = taf.used[rule.action] ?? .zero
                 // KIFF couldn't read the use: say so, never show an empty meter.
