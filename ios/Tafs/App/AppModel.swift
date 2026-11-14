@@ -537,6 +537,23 @@ final class AppModel: ObservableObject {
     /// The list in two (kiff/tafs#306): the tafs this person manages, and those shared with
     /// them to use, each in the list's order. Which is which is KIFF's answer; a taf whose
     /// answer isn't in yet counts as theirs, so nothing moves into "Shared with you" and back.
+    /// Whether a taf belongs in the iPad's sidebar now (the owner's layout): it has an item in Needs you (a held
+    /// call, a step it handed over, a knock at its door), or it ran or changed in the last 24 hours, as tafs cloud says. The
+    /// rest are in the tafs list behind the mascot.
+    func relevantNow(_ taf: Taf) -> Bool {
+        let cloud = cloudTaf(for: taf.id)
+        return Self.relevantNow(held: !heldCalls(for: taf.id).isEmpty,
+                                step: cloud.map { c in yourSteps.contains { $0.taf?.id == c.id } } ?? false,
+                                knock: (taf.doors ?? []).contains { $0.knocks > 0 },
+                                lastRun: cloud?.lastRun, lastChange: cloud?.lastChange, now: clock())
+    }
+
+    nonisolated static func relevantNow(held: Bool, step: Bool, knock: Bool, lastRun: Date?, lastChange: Date? = nil, now: Date) -> Bool {
+        if held || step || knock { return true }
+        // A run, or a change (a version, its Card, a setting: tafs cloud's `last_change`), in the last 24 hours.
+        return [lastRun, lastChange].contains { $0.map { now.timeIntervalSince($0) < 24 * 60 * 60 } ?? false }
+    }
+
     var tafSections: (own: [Taf], shared: [Taf]) {
         let listed = listedTafs
         return (listed.filter { !sharedWithMe($0.id) }, listed.filter { sharedWithMe($0.id) })
@@ -8463,6 +8480,10 @@ enum Screenshots {
     static var narrow: Bool { UserDefaults.standard.bool(forKey: "narrow") }
     /// `-landscape YES`: the iPad's window turned to landscape, for its screenshots.
     static var landscape: Bool { UserDefaults.standard.bool(forKey: "landscape") }
+    /// `-signedIn YES`: the iPad's sidebar laid out as for a signed-in account (its screens and
+    /// Coach above the account), over the sample's tafs. A screenshot of the layout only: nothing
+    /// is read from KIFF, and the screens it lists aren't opened.
+    static var signedIn: Bool { enabled && UserDefaults.standard.bool(forKey: "signedIn") }
 
     @MainActor static func turnToLandscape() {
         for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {

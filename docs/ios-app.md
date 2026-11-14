@@ -160,6 +160,7 @@ the app in sample mode.
 | `-tab account \| tafs \| needs-you \| record` | Opens that tab |
 | `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| buy-credits` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
 | `-landscape YES` | The iPad's window turned to landscape, for its screenshots |
+| `-signedIn YES` | The iPad's sidebar laid out as for a signed-in account, its screens and Coach above the account, over the sample's tafs: a layout shot, nothing read from KIFF |
 | `-pack <id>` | The Add credits screen with that pack alone |
 | `-narrow YES` | Laid out at Slide Over's width on an iPad |
 | `-sampleReplySeconds <s>` | The sample taf answers slowly enough for a UI test to see each part |
@@ -170,10 +171,27 @@ the app in sample mode.
 - **The bar** (`TafsBar`, in `TafsApp`'s `RootView`): **Account · Tafs · Needs you · Record**,
   then **Coach**, a filled ink button that opens Coach mode, shown only when
   `signedIn && mode == .kiff && mayUseCoach`. Along the foot on a compact width, below the
-  screens so a chat's field stays above it, and hidden while the keyboard is up; a rail down
-  the left on a regular width, Coach at its foot. Each tab is built the first time it's
-  opened and then kept. Account is `SettingsView`; ⌘1–3 open Tafs, Needs you and Record, ⌘,
-  Account, ⌘K Coach.
+  screens so a chat's field stays above it, and hidden while the keyboard is up. Each tab is
+  built the first time it's opened and then kept. Account is `SettingsView`; ⌘1–3 open Tafs,
+  Needs you and Record, ⌘, Account, ⌘K Coach.
+- **On an iPad's full width, one sidebar for the whole app** (`HomeSplitView(tab:coachAvailable:)`,
+  the owner's layout), in place of a rail beside the Tafs tab's own sidebar:
+  - **at the top,** the mascot and "tafs": the way to the tafs list (the Overview screen, every taf),
+    which is what opens first;
+  - **the app's screens as items:** Needs you (with its count), Record, Calendar, Usage (Plan &
+    usage) and Connect apps, then the held calls;
+  - **only the tafs relevant now** (`AppModel.relevantNow`): one with an item in Needs you (a held
+    call, a step it handed over, a knock at its door), or a run or a change in the last 24 hours
+    (`last_run`, `last_change`), and
+    those being set up. The rest are in the list behind the mascot;
+  - **at its foot, always in sight:** Coach, then the account button, which says who is signed in
+    and opens Account beside the sidebar.
+  
+  Each item opens its existing screen beside the sidebar (`HomeSelection`). The app's tab and the
+  selection follow each other, so a notification, a drive or a shortcut that opens a tab opens its
+  screen here; ⌘1 from a screen goes back to the tafs list. Each item is in the drive's
+  registry, as the rail's were. Account and Record are built again on each pick, not kept as the
+  phone's tabs are. The iPhone keeps the bar.
 - **Plan & usage** (`UsageView`, opened from Settings' Plan card and Home's plan line), with
   credits as the balance ([accounts.md](accounts.md#credits-and-plans)). Every line is tafs
   cloud's or KIFF's, as written; the app adds nothing but the order:
