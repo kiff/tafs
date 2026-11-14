@@ -171,7 +171,8 @@ the app in sample mode.
 - **The bar** (`TafsBar`, in `TafsApp`'s `RootView`): **Account · Tafs · Needs you · Record**,
   then **Coach**, a filled ink button that opens Coach mode, shown only when
   `signedIn && mode == .kiff && mayUseCoach`. Along the foot on a compact width, below the
-  screens so a chat's field stays above it, and hidden while the keyboard is up. Each tab is
+  screens so a chat's field stays above it, and hidden while the app's own keyboard is up (not
+  for a system alert's, such as "Sign in to Apple Account", or another app's beside it). Each tab is
   built the first time it's opened and then kept. Account is `SettingsView`; ⌘1–3 open Tafs,
   Needs you and Record, ⌘, Account, ⌘K Coach.
 - **On an iPad's full width, one sidebar for the whole app** (`HomeSplitView(tab:coachAvailable:)`,
