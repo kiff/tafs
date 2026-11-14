@@ -120,6 +120,15 @@
                 "idempotency_argument": "tafs_op"
               },
               {
+                "name": "business_context",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "business_context",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
                 "name": "version_try",
                 "url": "https://tafs.test/v1/mcp",
                 "tool": "version_try",
@@ -170,6 +179,7 @@
             "Say what a taf will likely use",
             "Read a public web page",
             "Label tafs",
+            "Keep what tafs know about your business",
             "Try a version of a taf, sending nothing",
             "Install a version of a taf",
             "See the app on your device while it drives",
@@ -442,6 +452,24 @@
                     "window": "calendar_day"
                   }
                 ]
+              },
+              {
+                "id": "coach-business",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "business_context"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 50,
+                    "window": "calendar_day"
+                  }
+                ]
               }
             ],
             "contract_digest": "cd_123"
@@ -531,6 +559,12 @@
               "lines": [
                 "KIFF's line for coach-labels"
               ]
+            },
+            {
+              "id": "coach-business",
+              "lines": [
+                "KIFF's line for coach-business"
+              ]
             }
           ]
         }
@@ -608,6 +642,11 @@
                 "name": "Label tafs",
                 "does": "Put labels on your tafs, such as Money or Customers, so you can filter the list. A label is only a name: it changes nothing a taf may do. Up to 100 a day.",
                 "why": "It changes only how your list is filtered."
+              },
+              {
+                "name": "Keep your business description",
+                "does": "Keep a short description of your business that you confirmed: what you sell, to whom, your tone and your contact rules. Up to 50 a day.",
+                "why": "It's words only, and you see it in Account."
               },
               {
                 "name": "Try a version",

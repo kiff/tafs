@@ -176,6 +176,18 @@ export const TOOLS: ToolDef[] = [
       "A label no taf has is dropped. At most 3 a taf and 12 an account. tafs_state shows each taf's labels. Say what you did in one line.",
   },
   {
+    name: "business_context", line: "Keep what tafs know about your business",
+    properties: {
+      action: { type: "string", enum: ["read", "save"] },
+      text: { type: "string", description: "save: the whole description as the person confirmed it, at most 300 words (\"\" clears it)." },
+      version: { type: "integer", minimum: 0, description: "save: the version you read." },
+    },
+    required: ["action"],
+    description: "The account's description, \"What tafs know about your business\": what it sells, to whom, its tone and languages, the links tafs use and its contact rules, " +
+      "in the person's words. Words only: never a tool, a limit, an amount or personal data, and it changes no Card. read answers it with its version; " +
+      "save keeps a draft the person confirmed, over the version you read, and is refused when it changed since: read it again. The person sees it in Account.",
+  },
+  {
     name: "version_try", line: "Try a version of a taf, sending nothing",
     properties: { taf: TAF, n: { type: "integer", minimum: 1 }, input: { type: "string", description: "What the trial works on; omitted, what each scheduled run asks." } },
     required: ["taf", "n"],
@@ -246,15 +258,16 @@ export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; 
   { id: "coach-estimates", actions: ["taf_estimate"], limit: 200, asks: false },
   // A read of a public page, with a Card of its own as every Card added later: asked for on the phone's next read.
   { id: "coach-web-reads", actions: ["web_read"], limit: 50, asks: false },
-  // Labels change no authority: a Card of their own, as every Card added later.
+  // Labels and the business description change no authority: Cards of their own, as every Card added later.
   { id: "coach-labels", actions: ["taf_labels"], limit: 100, asks: false },
+  { id: "coach-business", actions: ["business_context"], limit: 50, asks: false },
 ];
 
 /** Coach's tools in the four groups the tools step shows, in TOOLS' order within each. */
 export const COACH_TOOL_GROUPS: Array<{ id: "watch" | "run" | "build" | "drive"; tools: string[] }> = [
   { id: "watch", tools: ["tafs_state", "taf_run", "taf_check"] },
   { id: "run", tools: ["taf_task", "run_stop", "taf_pause"] },
-  { id: "build", tools: ["taf_dial", "taf_estimate", "web_read", "taf_labels", "version_try", "version_install", "taf_results"] },
+  { id: "build", tools: ["taf_dial", "taf_estimate", "web_read", "taf_labels", "business_context", "version_try", "version_install", "taf_results"] },
   { id: "drive", tools: ["app_look", "app_act"] },
 ];
 

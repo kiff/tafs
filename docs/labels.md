@@ -1,6 +1,11 @@
-# Labels
+# Labels and the business description
 
-Chips on the tafs list, for the person to filter it by. Coach keeps them for an account, in tafs cloud. A label isn't a container, and it changes nothing a taf may do.
+Two light things Coach keeps for an account, in tafs cloud. Neither one is a container, and neither changes what a taf may do.
+
+- **Labels** are chips on the tafs list, for the person to filter it by.
+- **The business description** is "What tafs know about your business", the account's words about itself.
+
+## Labels
 
 **What a label is:**
 
@@ -18,7 +23,7 @@ Chips on the tafs list, for the person to filter it by. Coach keeps them for an 
 
 **An empty label is dropped.** A label no taf carries never shows. A label is dropped from the account's list at the next change, so it doesn't count toward the 12.
 
-## What the apps get
+### What the apps get
 
 `GET /v1/home` ([api.md](api.md)) adds:
 
@@ -33,7 +38,7 @@ With no labelled taf, none of these is sent: the apps draw no filter row, and Ho
 
 The list opens on All every time. A taf's row shows two chips, then "+1". Filtering never reorders the list. Needs you's holds already name their taf, so the apps filter them with the same labels.
 
-## Coach's tool
+### Coach's tool
 
 `taf_labels` has its own Card, `coach-labels`, at 100 changes a day. There's no fingerprint and no confirm card, since a label changes no authority. Coach says what it did in one line.
 
@@ -52,7 +57,31 @@ The list opens on All every time. A taf's row shows two chips, then "+1". Filter
 
 Each write moves the account's labels on by one version. A write that lost to another tries again on what that one left. `tafs_state` lists each taf's labels.
 
+## The business description
+
+**What it is:** one per account, up to 300 words (2,400 characters), in the person's words. It says:
+
+- what the company sells;
+- who it sells to;
+- its tone and languages;
+- the links tafs use;
+- its contact rules ("one first message per person").
+
+**What it never holds:** a tool, a limit, an amount or personal data. It changes no Card.
+
+**How it's made:** Coach drafts it with the person, from their answers and, where they agree, their public website (`web_read`). The person confirms it. Coach then saves it with `business_context`, which has its own Card, `coach-business`, at 50 a day:
+
+- `read` answers `{text, version}`;
+- `save {text, version}` keeps the confirmed draft over the version Coach read. It's refused when the description changed since, so Coach reads it again.
+
+In a person's chat, saving is for someone who manages every taf of the account, that is, its owner and admins.
+
+**In the apps:** `GET /v1/me/business` answers `{business: {text, version, words: {title, empty, change}}}`, in the person's language, for a read-only section in Account. Its "Change" opens Coach.
+
+**What's next:** each taf's runs read it as a block marked data, never instructions. That's kiff/agents' preface, in the missions work that follows.
+
 ## Rules
 
 1. **A label never widens anything.** No label route touches a Card, a connection or a dial, and each taf's Card is drafted from its own job.
-2. **A label never exists in KIFF.**
+2. **The description is words, never permissions.** A line in it that reads like an order changes nothing.
+3. **Neither one exists in KIFF.**
