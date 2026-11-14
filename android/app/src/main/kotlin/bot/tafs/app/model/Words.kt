@@ -413,6 +413,44 @@ object Words {
     }
     val withinCard: String get() = Res.s(R.string.card_within_card)
   }
+  object Catalog {
+    fun connectsTo(server: String): String = Res.s(R.string.catalog_connects_to, server)
+    fun descriptionAt(url: String, sha: String): String = Res.s(R.string.catalog_description_at, url, sha)
+    val doesNotAgree: String get() = Res.s(R.string.catalog_does_not_agree)
+    fun enrolText(device: String, biometry: String): String = Res.s(R.string.catalog_enrol_text, device, biometry)
+    fun enrolTitle(device: String): String = Res.s(R.string.catalog_enrol_title, device)
+    fun fixedTo(argument: String, value: String): String = Res.s(R.string.catalog_fixed_to, argument, value)
+    fun keyInHeader(name: String): String = Res.s(R.string.catalog_key_in_header, name)
+    fun keyInQuery(name: String): String = Res.s(R.string.catalog_key_in_query, name)
+    fun keySentTo(base: String): String = Res.s(R.string.catalog_key_sent_to, base)
+    fun labelDiffers(tool: String): String = Res.s(R.string.catalog_label_differs, tool)
+    fun leftOpen(argument: String, value: String): String = Res.s(R.string.catalog_left_open, argument, value)
+    val makeKey: String get() = Res.s(R.string.catalog_make_key)
+    fun notDescribed(tool: String): String = Res.s(R.string.catalog_not_described, tool)
+    fun notInEntry(tool: String): String = Res.s(R.string.catalog_not_in_entry, tool)
+    val notWhatIsSigned: String get() = Res.s(R.string.catalog_not_what_is_signed)
+    val nothingToSign: String get() = Res.s(R.string.catalog_nothing_to_sign)
+    val open: String get() = Res.s(R.string.catalog_open)
+    val openTitle: String get() = Res.s(R.string.catalog_open_title)
+    val operatorId: String get() = Res.s(R.string.catalog_operator_id)
+    val operatorRow: String get() = Res.s(R.string.catalog_operator_row)
+    fun publicKey(device: String): String = Res.s(R.string.catalog_public_key, device)
+    val publish: String get() = Res.s(R.string.catalog_publish)
+    fun publishReason(id: String): String = Res.s(R.string.catalog_publish_reason, id)
+    fun publishedNow(id: String): String = Res.s(R.string.catalog_published_now, id)
+    val reads: String get() = Res.s(R.string.catalog_reads)
+    val retire: String get() = Res.s(R.string.catalog_retire)
+    fun retireReason(id: String): String = Res.s(R.string.catalog_retire_reason, id)
+    fun retiredNow(id: String): String = Res.s(R.string.catalog_retired_now, id)
+    val revisionId: String get() = Res.s(R.string.catalog_revision_id)
+    object State {
+      val draft: String get() = Res.s(R.string.catalog_state_draft)
+      val published: String get() = Res.s(R.string.catalog_state_published)
+      val retired: String get() = Res.s(R.string.catalog_state_retired)
+      val reviewed: String get() = Res.s(R.string.catalog_state_reviewed)
+    }
+    val writes: String get() = Res.s(R.string.catalog_writes)
+  }
   object Chat {
     object Answer {
       val copyLabel: String get() = Res.s(R.string.chat_answer_copy_label)
