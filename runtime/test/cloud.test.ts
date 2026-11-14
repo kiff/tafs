@@ -1662,6 +1662,7 @@ describe("removing a taf", () => {
     let down = true;
     const deps = (absent = false) => ({ ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
       if (url.startsWith("https://planque.test/")) {
+        if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: [] }), { status: 200 });
         ended.push({ url, auth: String((init?.headers as Record<string, string>)?.authorization ?? ""), method: init?.method ?? "GET" });
         if (absent) return new Response("no route", { status: 404 });
         if (down) return new Response("down", { status: 503 });
@@ -1694,7 +1695,7 @@ describe("removing a taf", () => {
     const w = world();
     const asked: string[] = [];
     const d = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
-      if (url.startsWith("https://planque.test/")) { asked.push(url); return new Response("no route", { status: 404 }); }
+      if (url.startsWith("https://planque.test/")) { if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: [] }), { status: 200 }); asked.push(url); return new Response("no route", { status: 404 }); }
       return depsOf(w).fetch!(url, init);
     }) as Deps["fetch"] };
     const r = await handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana" } }, d);
@@ -1712,7 +1713,7 @@ describe("removing a taf", () => {
     const w = world();
     const asked: string[] = [];
     const d = (answer: () => Response) => ({ ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
-      if (url.startsWith("https://planque.test/")) { asked.push(url); return answer(); }
+      if (url.startsWith("https://planque.test/")) { if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: [] }), { status: 200 }); asked.push(url); return answer(); }
       return depsOf(w).fetch!(url, init);
     }) as Deps["fetch"] });
     const get = async (dd: Deps, lang = "en") => JSON.parse((await handle({ rawPath: `/v1/tafs/${RAE}/removal`, requestContext: { http: { method: "GET" } },
@@ -1727,6 +1728,61 @@ describe("removing a taf", () => {
     expect(await get(d(() => new Response("down", { status: 503 })))).toEqual({ taf: RAE, goes: [], stays: [], words: null });
     expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
     expect((await handle({ rawPath: `/v1/tafs/${RAE}/removal`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer viewer" } }, d(both))).statusCode).toBe(403);
+  });
+
+  // 13 Nov: a taf on KIFF agent `rae` was removed, but its connection had been asked under `rae-k3f9x2ab`, so the
+  // end found nothing and the Gmail connection lived on. The removal and its words read every form of the name,
+  // and never another live taf's own agent.
+  it("ends the connections asked under the other form of the taf's agent, never a live taf's", async () => {
+    const w = world();
+    const asked: string[] = [];
+    const conns = [
+      { agent: "rae-k3f9x2ab", vendor: "Gmail", kind: "provider", status: "connected" },
+      { agent: "max", vendor: "Stripe", kind: "provider", status: "connected" },
+      { agent: "rae-live0001", vendor: "Gmail", kind: "provider", status: "connected" },
+    ];
+    w.tafs.held.set("t_acme#taf-live", { id: "taf-live", name: "Live", job: "j", kiffAgent: "rae-live0001", created: "2026-11-13T00:00:00Z" } as never);
+    const d = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: conns }), { status: 200 });
+      if (url.startsWith("https://planque.test/")) {
+        asked.push(url);
+        return new Response(JSON.stringify({ ended: url.includes("rae-k3f9x2ab") ? [{ vendor: "Gmail" }] : [], kept: [] }), { status: 200 });
+      }
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] };
+    const words = JSON.parse((await handle({ rawPath: `/v1/tafs/${RAE}/removal`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, d)).body);
+    expect(words.goes).toEqual(["Gmail"]);
+    asked.length = 0;
+    const r = JSON.parse((await handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana" } }, d)).body);
+    expect(r).toMatchObject({ done: true });
+    expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/agents/rae/end", "https://planque.test/v1/accounts/t_acme/agents/rae-k3f9x2ab/end"]);
+  });
+
+  // The leftovers from before: on a person's read of the list, at most hourly, connections no live taf uses, asked
+  // before yesterday, end. A live taf's (or the other form of its name), and one asked today, stay.
+  it("sweeps the connections of tafs gone, hourly, sparing live tafs' and today's", async () => {
+    const w = world();
+    const asked: string[] = [];
+    w.now = new Date("2026-11-14T01:00:00Z");
+    const conns = [
+      { agent: "gone-iy6yt4fc", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-12" },
+      { agent: "rae", vendor: "Qonto", kind: "key", status: "connected", since: "2026-11-01" },
+      { agent: "rae-k3f9x2ab", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-01" },
+      { agent: "draft-abcdefgh", vendor: "Slack", kind: "provider", status: "listed", since: "2026-11-13" },
+    ];
+    const claimed = new Set<string>();
+    const coach = { once: async (k: string) => (claimed.has(k) ? false : (claimed.add(k), true)), get: async () => undefined, put: async () => {}, append: async () => {}, take: async () => [] } as unknown as Deps["coach"];
+    const d = { ...depsOf(w), coach, planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: conns }), { status: 200 });
+      if (url.startsWith("https://planque.test/")) { asked.push(url); return new Response(JSON.stringify({ ended: [{ vendor: "Gmail" }], kept: [] }), { status: 200 }); }
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] };
+    const list = () => handle({ rawPath: "/v1/tafs", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, d);
+    expect((await list()).statusCode).toBe(200);
+    expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/agents/gone-iy6yt4fc/end"]);
+    // Within the hour, it doesn't look again.
+    await list();
+    expect(asked).toHaveLength(1);
   });
 
   it("deletes nothing else while kiff/agents may still run it, and a second remove finishes", async () => {

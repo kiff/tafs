@@ -20,6 +20,8 @@ export interface AccountConnection {
   api?: { url: string };
   status: string;
   mode_words?: string;
+  /** The day it was asked for (YYYY-MM-DD), as the connection server says it. */
+  since?: string;
 }
 
 /** At most this many lines: a conversation's start stays small. */
@@ -52,6 +54,7 @@ export async function accountConnections(fetchFn: Fetch, base: string, tenant: s
       ...(typeof c.entry === "string" && c.entry ? { entry: line(c.entry, 300) } : {}),
       ...(api && api.url.startsWith("https://") ? { api: { url: line(api.url, 300) } } : {}),
       ...(typeof c.mode_words === "string" && c.mode_words ? { mode_words: line(c.mode_words, 120) } : {}),
+      ...(typeof c.since === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.since) ? { since: c.since } : {}),
     });
   }
   return out;
@@ -184,4 +187,40 @@ export async function endConnections(fetchFn: Fetch, base: string, tenant: strin
     kept: list(got.kept).map((k) => ({ vendor: line(k.vendor, 60) || "an app",
       used_by: (Array.isArray(k.used_by) ? k.used_by : []).filter((u): u is string => typeof u === "string").map((u) => line(u, 60)).filter(Boolean) })),
   };
+}
+
+/** A KIFF agent id with the eight-character suffix a taf's agent carries now ("inbox-summary-iy6yt4fc"): its base and suffix. */
+const SUFFIXED = /^(.+)-[a-z0-9]{8}$/;
+const baseOf = (agent: string) => SUFFIXED.exec(agent)?.[1];
+
+/**
+ * The agents a taf's connections were asked under. Its KIFF agent; and for a taf whose agent and connections were
+ * named apart (a taf made before its agent carried the suffix its connections were asked under, or the reverse),
+ * the other form of the same name, unless that one is a live taf's own. 13 Nov: a taf on `inbox-summary` was removed
+ * and its Gmail connection, asked under `inbox-summary-iy6yt4fc`, was never ended.
+ */
+export function connectionAgents(kiffAgent: string, conns: AccountConnection[], live: Set<string>): string[] {
+  const out = [kiffAgent];
+  for (const a of new Set(conns.map((c) => c.agent))) {
+    if (a === kiffAgent || live.has(a)) continue;
+    const other = baseOf(kiffAgent) === undefined ? baseOf(a) === kiffAgent : baseOf(a) === undefined && baseOf(kiffAgent) === a;
+    if (other) out.push(a);
+  }
+  return out;
+}
+
+/**
+ * The agents holding connections no live taf uses: leftovers of a taf gone (removed before its connections were
+ * found under another form of its name, or never made), for the sweep to end. Never a live taf's own, nor the
+ * other form of a live taf's name (connectionAgents), nor one asked yesterday or today, which may still be a
+ * setup on its way.
+ */
+export function leftoverAgents(conns: AccountConnection[], live: Set<string>, now: Date): string[] {
+  const before = new Date(now.getTime() - 24 * 3600_000).toISOString().slice(0, 10);
+  const spared = (a: string) => live.has(a) || [...live].some((k) => (baseOf(k) === undefined ? baseOf(a) === k : baseOf(a) === undefined && baseOf(k) === a));
+  const byAgent = new Map<string, AccountConnection[]>();
+  for (const c of conns) byAgent.set(c.agent, [...(byAgent.get(c.agent) ?? []), c]);
+  return [...byAgent.entries()]
+    .filter(([a, cs]) => !spared(a) && cs.every((c) => c.since !== undefined && c.since < before))
+    .map(([a]) => a);
 }
