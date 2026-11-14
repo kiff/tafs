@@ -1,0 +1,1 @@
+- **iPhone and iPad:** a phone KIFF keeps view-only says "Sign in again on this phone to approve, or approve from your other phone.", offers Sign in again alone, and stops asking KIFF for its key until then, as Android 100 does ([approvals.md](../docs/approvals.md)).

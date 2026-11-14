@@ -156,6 +156,12 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
   registered once (`POST /v1/me/device/approval-key`), or replaced by a re-link the owner
   approved in the browser. If KIFF holds an approval key that isn't this phone's, approving
   waits for Approve again or a new sign-in.
+- **A view-only session** (`403 view_only` on registering the approval key): the phone signed in
+  with no approval key while the person has another device that approves, so KIFF gives it none.
+  Both apps say "Sign in again on this phone to approve, or approve from your other phone.", offer
+  **Sign in again** alone (no Approve again, which KIFF would refuse), keep Refuse, and ask KIFF
+  nothing more until a new sign-in (`approvalViewOnly`). Pairing the phone from the other one is the
+  way to approve on it (KIFF's pairing contract §5.8).
 - A held call is answered on the phone only when KIFF checks the phone's signature on it:
   the session holds the phone's key, and the hold says which version the owner saw
   (`canAnswer`). Otherwise the card links to answering it in KIFF.

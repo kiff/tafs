@@ -406,21 +406,24 @@ struct ApprovalKeyLostLine: View {
                         .buttonStyle(OutlineButtonStyle(color: Theme.no))
                 }
             } else {
-                Text(KIFFClient.approvalKeyLost)
+                Text(model.approvalKeyLostWords)
                     .scaledFont(13).foregroundColor(Theme.soft)
                     .fixedSize(horizontal: false, vertical: true)
-                Button {
-                    starting = true
-                    Task {
-                        if let url = await model.startRelink() { openURL(url) }
-                        starting = false
+                // A view-only session can't be re-linked: Sign in again alone, as on Android.
+                if !model.approvalViewOnly {
+                    Button {
+                        starting = true
+                        Task {
+                            if let url = await model.startRelink() { openURL(url) }
+                            starting = false
+                        }
+                    } label: {
+                        Label(Words.NeedsYou.approveAgain, systemImage: Biometry.symbol)
                     }
-                } label: {
-                    Label(Words.NeedsYou.approveAgain, systemImage: Biometry.symbol)
+                    .buttonStyle(PrimaryButtonStyle())
+                    .confirming()
+                    .disabled(starting)
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .confirming()
-                .disabled(starting)
                 Button {
                     confirming = .signInAgain
                 } label: {

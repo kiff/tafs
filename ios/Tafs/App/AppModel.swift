@@ -393,6 +393,12 @@ final class AppModel: ObservableObject {
     /// KIFF holds an approval key for the session that isn't this phone's (it changed after
     /// registering, or another was registered): approving waits for a new sign-in.
     @Published private(set) var approvalKeyLost = false
+    /// KIFF keeps this session view-only (`view_only`): the phone signed in with no approval key while the
+    /// person has another device that approves, so it gains none here. Approving takes a new sign-in on
+    /// this phone, or the other phone; KIFF is asked nothing more of it until then.
+    @Published private(set) var approvalViewOnly = false
+    /// What the person reads while this phone can't approve: the view-only words, or the lost key's.
+    var approvalKeyLostWords: String { approvalViewOnly ? Words.Approval.viewOnly : KIFFClient.approvalKeyLost }
     /// A re-link waiting for the person's browser: the code to check there, and the page.
     struct Relink: Equatable { let userCode: String; let url: URL }
     @Published private(set) var relink: Relink?
@@ -851,6 +857,12 @@ final class AppModel: ObservableObject {
             held = try await kiff.registerApprovalKey(key, signer: { try signer.signConfirmed($0) })
         } catch KIFFClient.KIFFError.approvalKeyExists(let fingerprint) {
             held = fingerprint // the key sent at sign-in, or another
+        } catch KIFFClient.KIFFError.server(403, "view_only", _) {
+            // KIFF keeps this session view-only: say so, once, and ask nothing more of it until a new sign-in.
+            guard gen == accountGeneration else { return }
+            approvalKeyLost = true
+            approvalViewOnly = true
+            return
         } catch {
             return
         }
@@ -873,7 +885,7 @@ final class AppModel: ObservableObject {
     /// the second refusal in a row, where to write too. A key KIFF holds another of keeps the lost
     /// key's words.
     private func approvalKeyRefused() -> String {
-        if approvalKeyLost { return KIFFClient.approvalKeyLost }
+        if approvalKeyLost { return approvalKeyLostWords }
         approvalKeyRefusals += 1
         return approvalKeyRefusals >= 2 ? Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport : Words.Approval.keyNotAccepted
     }
@@ -886,6 +898,7 @@ final class AppModel: ObservableObject {
         approvalKeyRefusals = 0
         sessionHasApprovalKey = true
         approvalKeyLost = false
+        approvalViewOnly = false
         let signer = self.signer
         kiff.approvalSigner = { try signer.signApprovalConfirmed($0) }
     }
@@ -895,6 +908,7 @@ final class AppModel: ObservableObject {
         cancelRelink()
         sessionHasApprovalKey = false
         approvalKeyLost = false
+        approvalViewOnly = false
         kiff.approvalSigner = nil
     }
 
@@ -914,7 +928,8 @@ final class AppModel: ObservableObject {
     /// page to open, or nil when it couldn't start (`lastError` says why).
     @discardableResult
     func startRelink() async -> URL? {
-        guard mode == .kiff, approvalKeyLost, sessionHasKey, relink == nil, let tenant = kiffTenant else { return nil }
+        // A view-only session can't be re-linked: KIFF refuses it, so only a new sign-in, or the other phone, approves.
+        guard mode == .kiff, approvalKeyLost, !approvalViewOnly, sessionHasKey, relink == nil, let tenant = kiffTenant else { return nil }
         let key = signer.approvalPublicKeyDER
         guard !key.isEmpty else {
             lastError = Words.Approval.addFaceIdFirst(device: "\(ThisDevice.kind)")
@@ -968,7 +983,7 @@ final class AppModel: ObservableObject {
                 guard gen == accountGeneration else { return }
                 // KIFF's fingerprint says which key it holds now: only ours lets this phone approve.
                 guard KIFFClient.sameKey(held, key) else {
-                    lastError = KIFFClient.approvalKeyLost
+                    lastError = approvalKeyLostWords
                     return
                 }
                 Keychain.save(KIFFClient.fingerprint(key), for: Self.approvalKeyedAccount)
@@ -2857,7 +2872,7 @@ final class AppModel: ObservableObject {
         // Approving, or raising a Card, needs the approval key KIFF holds: without it, only a
         // new sign-in lets this phone approve (kiff/tafs#233).
         if approvalKeyLost, call.kiffID != nil, answer == .approveOnce || answer == .extraRoom {
-            lastError = KIFFClient.approvalKeyLost
+            lastError = approvalKeyLostWords
             return
         }
         let reason = Words.NeedsYou.Prompt.answer(summary: call.proposed.summary)
@@ -2905,7 +2920,7 @@ final class AppModel: ObservableObject {
                 case .extraRoom: try await kiff.changeCard(kiffID, signature: signed)
                 }
             } catch KIFFClient.KIFFError.approvalKeyRequired {
-                lastError = KIFFClient.approvalKeyLost
+                lastError = approvalKeyLostWords
                 return
             } catch {
                 lastError = Self.answerRefusedWords(error)
