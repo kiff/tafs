@@ -1,0 +1,1 @@
+- **tafs cloud: a Coach chat set aside says so in the chat list** (`set_aside: true`), so the apps never open it as the newest, on any device or after a relaunch (docs/api.md).
