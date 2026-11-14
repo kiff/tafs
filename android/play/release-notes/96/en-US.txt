@@ -1,0 +1,2 @@
+- Terms and Privacy open tafs's own pages.
+- A sign-in card names the app it signs in to.

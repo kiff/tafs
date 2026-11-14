@@ -1,0 +1,2 @@
+- Términos y Privacidad abren las páginas propias de tafs.
+- Una tarjeta de inicio de sesión nombra la app a la que conecta.

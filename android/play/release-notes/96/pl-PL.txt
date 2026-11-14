@@ -1,0 +1,2 @@
+- Warunki i Prywatność otwierają własne strony tafs.
+- Karta logowania podaje nazwę aplikacji, do której się logujesz.

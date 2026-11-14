@@ -373,8 +373,9 @@ or more, as Android's `sw600dp` does (`ThisDevice`, set in `TafsApplication`). B
 on Android phone" (`settings.devices.this_device_name`), with its `kind` (`android_phone` or `android_tablet`, `ThisDevice`);
 Devices shows KIFF's `display_name`, drawn from the kind in the app's language, and that name only without one.
 
-The Terms and Privacy policy links (Settings, Sign-in, Plan & usage) open kiff.dev's page in the lines' language:
-`/terms#tafs` in English, `/de/terms#tafs` in German, and so on (`Legal`).
+The Terms and Privacy policy links (Settings, Sign-in, Plan & usage) open tafs's own pages, `kiff.dev/tafs/terms` and
+`kiff.dev/tafs/privacy`, the ones Google's consent screen names (`Legal`, Android 1.27.8). They're in English only until
+kiff.dev serves them in other languages; before, the links opened KIFF's pages (`/terms#tafs`, `/de/terms#tafs`).
 
 The chat shows the owner's own answer line as it is by a flag on the line (`RecordEntry.byYou`, set where the phone
 records the answer and kept when KIFF's outcome matches), never by matching its words, so it holds in every language.
@@ -1036,6 +1037,8 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
 - **When KIFF doesn't take this phone's approval key at Start,** Start says "KIFF didn't accept this device's approval key.
   Try again." (`approval.key_not_accepted`), and from the second time in a row the support line under it
   (`approval.key_not_accepted_support`). A phone with no fingerprint keeps "Setting up a taf needs approvals".
+- **A sign-in card names its app**: the card's `service`, else the connection's app as Connect apps and planque name it
+  ("Sign in at Gmail"); "Sign in at the vendor" only when neither is known (`signInWords`, Android 1.27.8).
 - **An app's first sign-in card** has no draft yet (a Card is drafted over the tools that sign-in brings), and still draws
   tafs cloud's `signs.words` ("Its Card: you approve it next"), so the owner knows a second approval follows (Android 1.27.2).
 - **Coach's Start is one screen** (`StartScreen`): tafs cloud's line, Coach's Cards in KIFF's words, the tools folded under
