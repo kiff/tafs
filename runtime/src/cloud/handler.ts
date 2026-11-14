@@ -6652,12 +6652,13 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // Coach's paused chats, read once: for a taf whose setup stopped partway, and for the cards Coach waits on its person with.
   // A read that fails shows neither: Home then lists no half-made taf and counts no Coach card.
   const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
-  const coachPaused = coach ? await deps.agents.pausedRuns(me.tenantID).catch(() => [] as Run[]) : [];
-  const halfMade = agents.length ? await halfMadeTafs(me, records, new Set(agents), deps, coachPaused) : new Map<string, HalfMade>();
+  // A run tafs cloud ended (set aside, stale or discarded) that kiff/agents keeps PAUSED waits on no one.
+  const coachOpen = coach ? await notEndedHere(deps, me.tenantID, await deps.agents.pausedRuns(me.tenantID).catch(() => [] as Run[])) : [];
+  const halfMade = agents.length ? await halfMadeTafs(me, records, new Set(agents), deps, coachOpen) : new Map<string, HalfMade>();
   // A card Coach waits on its person with (an approval, a sign-in, questions): in Needs you and its count, one per chat, so
   // Home never says "Nothing needs you." while Coach waits (docs/api.md, Coach waiting).
   // Each names its chat as Coach's history does: one read of each waiting chat, few at most. One that can't be read is unnamed.
-  const waitingChats = coach ? waitingRuns(coachPaused, coach.id, me.subject, now) : [];
+  const waitingChats = coach ? waitingRuns(coachOpen, coach.id, me.subject, now) : [];
   const titles = new Map((await Promise.all(waitingChats.map(async (r) => {
     const read = await deps.agents.session(me.tenantID, r.session, ownerKey(me)).catch(() => undefined);
     const events = read?.events ?? [];
@@ -6667,7 +6668,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     }), events.filter((e) => e.kind === "component").map((e) => e.body));
     return [r.session, title.length > CHAT.chatTitle ? title.slice(0, CHAT.chatTitle - 1).trimEnd() + "…" : title] as [string, string];
   }))).filter(([, t]) => t));
-  const coachWaiting = coach ? coachWaitingOf(coachPaused, coach.id, me.subject, now, langOf(event), me.timeZone ?? "UTC", titles) : [];
+  const coachWaiting = coach ? coachWaitingOf(coachOpen, coach.id, me.subject, now, langOf(event), me.timeZone ?? "UTC", titles) : [];
   const coachWaitingAll = coachWaitingClear(coachWaiting, langOf(event));
   const settingUp = agents.flatMap((agent) => {
     const half = halfMade.get(agent);
@@ -6739,7 +6740,8 @@ async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string
   if (!/^[A-Za-z0-9._-]{1,128}$/.test(agent)) throw new HTTPError(404, "no taf being set up of yours by that agent");
   const records = await deps.tafs.list(me.tenantID);
   const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
-  const paused = coach ? await agentsCall(() => deps.agents.pausedRuns(me.tenantID)) : [];
+  // A chat already ended here (kiff/agents keeps a run paused on its result PAUSED) is a discard already done.
+  const paused = coach ? await notEndedHere(deps, me.tenantID, await agentsCall(() => deps.agents.pausedRuns(me.tenantID))) : [];
   let found: Run | undefined;
   for (const r of paused) {
     if (!coach || r.agent !== coach.id || r.requester?.kind !== "member" || r.requester.id !== me.subject) continue;
@@ -6776,11 +6778,9 @@ async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string
     console.log(JSON.stringify({ event: "half_made_discard", refused: "cards_in_force", tenant: me.tenantID, agent, cards: left.length }));
     throw new HTTPError(409, `${left.length} Card${left.length === 1 ? "" : "s"} still in force on this agent: revoke ${left.length === 1 ? "it" : "them"} first`, { code: "cards_in_force", cards: left.map((m) => m.id) });
   }
-  // A run that already moved on (ended, or no longer paused) is a chat that no longer waits: that's done too.
-  await deps.agents.cancelRun(me.tenantID, coach.id, found.id, member(me)).catch((err) => {
-    if (err instanceof AgentsError && (err.status === 404 || err.status === 409)) return;
-    return agentsCall(() => Promise.reject(err));
-  });
+  // A run that already moved on is a chat that no longer waits: that's done too. One kiff/agents can't cancel (paused on its
+  // result card) is kept as ended here (endCoachRun).
+  await endCoachRun(deps, me.tenantID, coach.id, found.id, deps.now?.() ?? new Date(), member(me)).catch((err) => agentsCall(() => Promise.reject(err)));
   await deps.coach?.remove(halfMadeKey(me.tenantID, agent)).catch(() => undefined);
   await deps.coach?.put(discardedKey(me.tenantID, agent), { by: me.subject }, new Date((deps.now?.() ?? new Date()).getTime() + DISCARDED_KEPT_MS)).catch(() => undefined);
   console.log(JSON.stringify({ event: "half_made_discard", tenant: me.tenantID, agent, run: found.id }));
@@ -6801,7 +6801,8 @@ async function setAsideCoach(event: HTTPEvent, me: KIFFIdentity, session: string
   const records = await deps.tafs.list(me.tenantID);
   const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
   const now = deps.now?.() ?? new Date();
-  const runs = coach ? waitingRuns(await agentsCall(() => deps.agents.pausedRuns(me.tenantID)), coach.id, me.subject, now)
+  const paused = coach ? await agentsCall(() => deps.agents.pausedRuns(me.tenantID)) : [];
+  const runs = coach ? waitingRuns(await notEndedHere(deps, me.tenantID, paused), coach.id, me.subject, now)
     .filter((r) => session === undefined || r.session === session) : [];
   if (session !== undefined && !runs.length) {
     // The same chat set aside again (a phone resends a POST on a dropped connection): done, marked already.
@@ -6821,11 +6822,8 @@ async function setAsideCoach(event: HTTPEvent, me: KIFFIdentity, session: string
       const agent = typeof g?.request.agent === "string" ? g.request.agent : "";
       return agent && !live.has(agent) ? [agent] : [];
     }));
-    // The chat ends first: a run that already moved on (ended, or no longer paused) is a chat that no longer waits.
-    await deps.agents.cancelRun(me.tenantID, coach!.id, r.id, member(me)).catch((err) => {
-      if (err instanceof AgentsError && (err.status === 404 || err.status === 409)) return;
-      return agentsCall(() => Promise.reject(err));
-    });
+    // The chat ends first. kiff/agents can't cancel a run paused on a card; tafs cloud then keeps it as ended (endCoachRun).
+    await endCoachRun(deps, me.tenantID, coach!.id, r.id, now, member(me)).catch((err) => agentsCall(() => Promise.reject(err)));
     ended.push(r.session);
     await deps.coach?.put(setAsideKey(me.tenantID, r.session), { by: me.subject }, new Date(now.getTime() + DISCARDED_KEPT_MS)).catch(() => undefined);
     for (const agent of agents) {
@@ -6843,6 +6841,35 @@ async function setAsideCoach(event: HTTPEvent, me: KIFFIdentity, session: string
 const setAsideKey = (tenant: string, session: string) => `${tenant}#set-aside#${session}`;
 
 /**
+ * A Coach run tafs cloud ended (set aside, or stale), by its id. kiff/agents refuses to cancel a run paused on a card (409
+ * `paused_run`: a card has no KIFF exception to withdraw), so the run stays PAUSED until its card expires. Home, set aside and
+ * the sweep skip it from then on. Kept past kiff/agents' card wait (7 days).
+ */
+const coachEndedKey = (tenant: string, run: string) => `${tenant}#coach-ended#${run}`;
+const COACH_ENDED_KEPT_MS = 8 * 24 * 3600_000;
+
+/**
+ * Ends a Coach run: kiff/agents cancels it ("cancelled"), it had already ended ("over"), or it's paused on a card kiff/agents
+ * can't cancel ("kept"). Each of those leaves it no longer waiting, and is kept as ended here. Any other failure throws.
+ */
+async function endCoachRun(deps: Deps, tenant: string, coach: string, run: string, now: Date, requester?: Requester): Promise<"cancelled" | "over" | "kept"> {
+  const how = await deps.agents.cancelRun(tenant, coach, run, requester).then(() => "cancelled" as const, (err) => {
+    if (err instanceof AgentsError && err.status === 409 && err.code === "paused_run") return "kept" as const;
+    if (err instanceof AgentsError && (err.status === 404 || err.status === 409)) return "over" as const;
+    throw err;
+  });
+  await deps.coach?.put(coachEndedKey(tenant, run), { how }, new Date(now.getTime() + COACH_ENDED_KEPT_MS)).catch(() => undefined);
+  return how;
+}
+
+/** Coach's paused runs, less those tafs cloud already ended (endCoachRun). */
+async function notEndedHere(deps: Deps, tenant: string, runs: Run[]): Promise<Run[]> {
+  if (!deps.coach || !runs.length) return runs;
+  const ended = await Promise.all(runs.map((r) => deps.coach!.get(coachEndedKey(tenant, r.id)).then((v) => v !== undefined && v !== null, () => false)));
+  return runs.filter((_, i) => !ended[i]);
+}
+
+/**
  * Ends the Coach chats that wait on their person for longer than COACH_WAITING_KEPT_MS (48 hours), and those whose card
  * names a Card draft already claimed by a taf, or one for a taf being removed: a setup the person left, replaced or
  * removed never waits for days. tafs cloud ends each run itself; with no person's session, a connection a card asked for
@@ -6857,7 +6884,8 @@ export async function sweepStaleCoach(deps: Deps): Promise<Array<{ run: string; 
     const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
     if (!coach) continue;
     const removing = new Set(records.filter((t) => t.removing).flatMap((t) => t.kiffAgent ? [t.kiffAgent] : []));
-    const paused = await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]);
+    // A run already ended here (kept PAUSED by kiff/agents) isn't ended again.
+    const paused = await notEndedHere(deps, tenant, await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]));
     for (const r of paused) {
       if (r.agent !== coach.id || r.status !== "PAUSED") continue;
       const cards = waitingCards(r, now);
@@ -6870,9 +6898,10 @@ export async function sweepStaleCoach(deps: Deps): Promise<Array<{ run: string; 
         else if (held && removing.has(held.agent_id)) why = "removed";
       }
       if (!why) continue;
-      const done = await deps.agents.cancelRun(tenant, coach.id, r.id).then(() => true, (err) => err instanceof AgentsError && (err.status === 404 || err.status === 409));
-      console.log(JSON.stringify({ event: "coach_stale", tenant, run: r.id, why, ended: done }));
-      if (done) out.push({ run: r.id, why });
+      // ended: kiff/agents cancelled it, or it had ended; kept: paused on a card kiff/agents can't cancel, kept as ended here.
+      const how = await endCoachRun(deps, tenant, coach.id, r.id, now).catch(() => undefined);
+      console.log(JSON.stringify({ event: "coach_stale", tenant, run: r.id, why, ended: how === "cancelled" || how === "over", ...(how === "kept" ? { code: "paused_run" } : {}) }));
+      if (how) out.push({ run: r.id, why });
     }
   }
   return out;
@@ -6920,7 +6949,7 @@ async function halfMadeTafs(me: KIFFIdentity, records: Taf[], agents: Set<string
   const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
   // The agents a result still names this read: for them, the proof decides, and a kept name never stands in for it.
   const named = new Set<string>();
-  const paused = coachPaused ?? (coach ? await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]) : []);
+  const paused = coachPaused ?? (coach ? await notEndedHere(deps, tenant, await deps.agents.pausedRuns(tenant).catch(() => [] as Run[])) : []);
   for (const r of paused) {
     if (!coach || r.agent !== coach.id) continue;
     for (const q of r.requirements ?? []) {
