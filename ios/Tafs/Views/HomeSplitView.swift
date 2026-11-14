@@ -244,7 +244,8 @@ struct HomeSplitView: View {
     private var sidebar: some View {
         // Only the owner's taps write through this binding, so each one is a choice, a tap on
         // the taf already open too: the list settling later doesn't take them away from it.
-        List(selection: Binding(get: { selection }, set: { chosen = true; selection = $0 })) {
+        // A new item chosen ticks (Haptics).
+        List(selection: Binding(get: { selection }, set: { chosen = true; Haptics.select(selection, $0); selection = $0 })) {
             // The app's own mark at the top, as its header (the owner's layout).
             // As one sidebar for the whole app, the mascot and "tafs" is the way to the tafs list (the owner's
             // layout): every taf is there; beside it, only those relevant now.
@@ -525,7 +526,8 @@ struct HomeSplitView: View {
 
     /// Coach at the sidebar's foot: ink fill, as on the phone's bar; a tap while Coach drives stops it.
     private var coachButton: some View {
-        Button { model.openCoach() } label: {
+        // Its own style, so it taps here, as the sidebar's buttons do (Haptics).
+        Button { Haptics.tap(); model.openCoach() } label: {
             Label(drive.isOn ? Words.Coach.driving : Words.Coach.title, systemImage: drive.isOn ? "sparkles" : "sparkle")
                 .scaledFont(15, weight: .semibold).lineLimit(1)
                 .frame(maxWidth: .infinity, minHeight: 44)

@@ -281,7 +281,9 @@ the app in sample mode.
 - **Account › Alerts** (`NotificationSettingsView`): two lock-screen examples, Alerts on this
   device (Turn on alerts while off), Sound (off and greyed while alerts are off, its choice
   kept), and What alerts you, read-only, drawn only with something in it; "A taf answered
-  someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).
+  someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`). Turn on alerts,
+  here and in the offer of alerts, asks for notifications and no Face ID: KIFF's alert target is
+  signed by the device key, which needs no prompt (`turnOnAlerts`, `AlertsTests`).
 - **The AI-data consent** (`AIConsentView`, `TafsCloud+AIConsent.swift`; docs/accounts.md, "Your data and the AI"): a
   full screen with tafs cloud's words as sent (`GET /v1/me/ai-consent`: title, lines, Allow, Not now), and no line of
   the app's own. It comes up after sign-in while the person hasn't allowed it, and whenever tafs cloud refuses a
@@ -531,7 +533,10 @@ language: the app has none of its own for it.
 When the account has no plan, tafs cloud makes the taf Coach handed over and starts no run. Its
 answer to the result carries `outcome.plan_needed.words` ("Choose a plan to start it.", in the
 person's language), and the hand-over card says them under its own words, above the button that
-opens the taf (`SetupThread.planNeeded`). No words, or none that are text, add nothing.
+opens the taf (`SetupThread.planNeeded`). Under them, **Choose a plan** (`usage.choose_plan`) opens
+Plan & usage on its own screen (`usageRequested`), where a plan is chosen, as on Android. tafs cloud
+sends only the words, no plan and no link, so the button names none. No words, or none that are
+text, add nothing: no line and no button.
 
 ## Connect apps
 
@@ -838,11 +843,20 @@ One rule, as on Android (`Haptics`, `Design/Scaled.swift`):
 - **A light tap on every button press,** played once in `DriveButton`, the style under `PrimaryButtonStyle`,
   `OutlineButtonStyle` and `.drivablePlain`. Every new button taps without wiring. A press and the action it
   starts tap once: a second tap within 150 ms is the same one. A drive's activation doesn't tap.
+  The bar's tabs and the sidebar's foot are such buttons; Coach's own button, on the bar and in the
+  sidebar, taps too (`Haptics.tap()`), as on Android 88.
 - **A success tick** when an approval goes through (a held call approved, Coach's card approved) or a send
   does (to Coach or a taf).
 - **A warning tick** when something the person just did is refused or fails (`lastError`, within 15 s of their own press,
-  approval or send). A background read that fails never buzzes.
+  approval or send): also Coach's card when its approval fails (`AppModel.feel(approving:)`, a signature not given,
+  tafs cloud's refusal or no answer) and a send kept unsent (`Delivery.feel`). One failure warns once, within a
+  second. A background read that fails never buzzes.
+- **A selection tick** (`Haptics.select`) when the person changes a taf's tab (Chat, Activity, Card, Setup)
+  or picks another item in the iPad's sidebar; the same one again, or a change made for them, plays nothing.
 - **A step tick** on dial and selector stops.
+- The system's generators only (`UIImpactFeedbackGenerator`, `UINotificationFeedbackGenerator`,
+  `UISelectionFeedbackGenerator`), so the phone's own System Haptics setting is followed too.
+- **Set aside** and **Set all aside**, which tap and tick on Android, aren't in Needs you on iPhone and iPad yet.
 - **Settings › Haptics** turns all of it off on this device (`HapticsTests`).
 
 ## Conventions
