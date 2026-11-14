@@ -1,9 +1,9 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -79,7 +79,7 @@ fun UsageSheet(state: AppState, actions: AccountActions, onClose: () -> Unit) {
         // Billed by Google Play: Play's own page to manage or cancel it. The app never points anywhere else to buy.
         if (usage.billing?.source == "google") {
           val uri = LocalUriHandler.current
-          Text(Words.Usage.manage, style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(Purchases.MANAGE_SUBSCRIPTIONS) }.padding(vertical = 6.dp))
+          Text(Words.Usage.manage, style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.tapping { uri.openUri(Purchases.MANAGE_SUBSCRIPTIONS) }.padding(vertical = 6.dp))
         }
       }
     }
@@ -147,8 +147,8 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
           // What Coach's help includes, in tafs cloud's words: the same sentence kiff.dev says.
           offer.coachIncluded?.let { Text(it, style = scaled(13, color = Theme.soft)) }
           Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(Words.Settings.terms, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(bot.tafs.app.model.Legal.terms()) }.padding(vertical = 6.dp))
-            Text(Words.Settings.privacyPolicy, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(bot.tafs.app.model.Legal.privacy()) }.padding(vertical = 6.dp))
+            Text(Words.Settings.terms, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.tapping { uri.openUri(bot.tafs.app.model.Legal.terms()) }.padding(vertical = 6.dp))
+            Text(Words.Settings.privacyPolicy, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.tapping { uri.openUri(bot.tafs.app.model.Legal.privacy()) }.padding(vertical = 6.dp))
           }
           PrimaryButton(if (state.buying == id) Words.Usage.buying else Words.Usage.startSolo, { scope.launch { actions.buy(id) } }, enabled = state.buying == null, modifier = Modifier.confirms())
           PurchaseNoteLine(state, id, actions)
@@ -168,7 +168,7 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
         Text(
           if (state.buying == id) Words.Usage.buying else product.price,
           style = scaled(15, FontWeight.SemiBold, if (state.buying == null) Theme.amberText else Theme.dim),
-          modifier = Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
+          modifier = Modifier.confirms().tapping(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
         )
       }
       PurchaseNoteLine(state, id, actions)
@@ -184,7 +184,7 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
         Text(
           if (state.buying == id) Words.Usage.buying else product.price,
           style = scaled(15, FontWeight.SemiBold, if (state.buying == null) Theme.amberText else Theme.dim),
-          modifier = Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
+          modifier = Modifier.confirms().tapping(enabled = state.buying == null) { scope.launch { actions.buy(id) } }.padding(8.dp),
         )
       }
       PurchaseNoteLine(state, id, actions)
@@ -202,7 +202,7 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
     if (state.restoreShown || state.buying == PurchaseNote.RESTORE) Text(
       if (state.buying == PurchaseNote.RESTORE) Words.Usage.restoring else Words.Usage.restorePurchases,
       style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-      modifier = Modifier.clickable(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 6.dp),
+      modifier = Modifier.tapping(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 6.dp),
     )
     PurchaseNoteLine(state, PurchaseNote.RESTORE, actions)
     state.tasksMessage?.let { Text(it, style = scaled(14, color = Theme.ink)) }
@@ -222,7 +222,7 @@ private fun PurchaseNoteLine(state: AppState, at: String, actions: AccountAction
     Text(
       Words.Usage.restorePurchases,
       style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-      modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 10.dp),
+      modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = state.buying == null) { scope.launch { actions.restorePurchases() } }.padding(vertical = 10.dp),
     )
   }
 }
@@ -247,7 +247,7 @@ private fun CreditsPanel(state: AppState, actions: AccountActions) {
         // The row for tafs removed since has no taf, and doesn't open.
         val taf = row.taf?.takeIf { state.mode == Mode.kiff }
         Row(
-          Modifier.fillMaxWidth().heightIn(min = 44.dp).then(if (taf != null) Modifier.clickable { scope.launch { actions.openTafCredits(taf) } } else Modifier),
+          Modifier.fillMaxWidth().heightIn(min = 44.dp).then(if (taf != null) Modifier.tapping { scope.launch { actions.openTafCredits(taf) } } else Modifier),
           verticalAlignment = Alignment.CenterVertically,
         ) {
           Text(row.words, style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))
@@ -267,7 +267,7 @@ private fun CreditsPanel(state: AppState, actions: AccountActions) {
     Text(
       if (previous) UsageWords.THIS_PERIOD else UsageWords.LAST_PERIOD,
       style = scaled(15, FontWeight.SemiBold, if (state.readingCredits) Theme.dim else Theme.amberText),
-      modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !state.readingCredits) { scope.launch { actions.showCreditsPeriod(!previous) } }.padding(vertical = 10.dp),
+      modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = !state.readingCredits) { scope.launch { actions.showCreditsPeriod(!previous) } }.padding(vertical = 10.dp),
     )
   }
 }
@@ -282,7 +282,7 @@ fun CreditsRunsSheet(open: bot.tafs.app.kiff.TafCredits, state: AppState, action
     if (open.items.isNotEmpty()) Panel {
       open.items.forEach { run ->
         Row(
-          Modifier.fillMaxWidth().heightIn(min = 48.dp).then(if (run.opens) Modifier.clickable { scope.launch { actions.openCreditsRun(open.taf, run.run) } } else Modifier),
+          Modifier.fillMaxWidth().heightIn(min = 48.dp).then(if (run.opens) Modifier.tapping { scope.launch { actions.openCreditsRun(open.taf, run.run) } } else Modifier),
           verticalAlignment = Alignment.CenterVertically,
         ) {
           Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -304,7 +304,7 @@ fun CreditsRunsSheet(open: bot.tafs.app.kiff.TafCredits, state: AppState, action
 /** The row on a taf's page that opens its credits this period: its runs. */
 @Composable
 fun UsageRow(onClick: () -> Unit) {
-  Panel(Modifier.clickable(onClick = onClick)) {
+  Panel(Modifier.tapping(onClick = onClick)) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       Text(Words.Usage.label, style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.weight(1f))
       Text("›", style = scaled(20, color = Theme.dim))
@@ -324,7 +324,7 @@ private fun UsageFrame(title: String, onClose: () -> Unit, content: @Composable 
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
-        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(start = 8.dp, top = 8.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(start = 8.dp, top = 8.dp))
       }
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),

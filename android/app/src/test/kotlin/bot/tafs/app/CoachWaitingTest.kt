@@ -31,11 +31,11 @@ class CoachWaitingTest {
     transport.answer("GET /v1/me/access", 200, """{"agents":{}}""")
   }
 
-  private suspend fun model(): AppModel {
+  private suspend fun model(scope: kotlinx.coroutines.CoroutineScope? = null): AppModel {
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
     secrets.save("1", AppModel.KEYED)
-    return testModel(transport = transport, secrets = secrets, clock = { t0 }, start = false).also { it.restore() }
+    return testModel(transport = transport, secrets = secrets, clock = { t0 }, start = false, scope = scope).also { it.restore() }
   }
 
   private val approval =
@@ -122,6 +122,19 @@ class CoachWaitingTest {
     assertTrue(m.state.value.settingAside.isEmpty())
   }
 
+  // After Set aside, Coach opened blank and the owner went looking for the chat: tafs cloud's line says where it went, until
+  // Coach opens.
+  @Test fun aSetAsideSaysWhereTheChatWentUntilCoachOpens() = runTest {
+    reads(approval)
+    val m = model()
+    m.refresh()
+    transport.answer("POST /v1/home/coach-waiting/sess_1/set-aside", 200, """{"set_aside":["sess_1"],"withdrawn":0,"words":{"done":"Set aside. You'll find it in Previous conversations."}}""")
+    assertTrue(m.setAsideCoach("sess_1"))
+    assertEquals("Set aside. You'll find it in Previous conversations.", m.state.value.setAsideNote)
+    m.coachShown(true)
+    assertNull(m.state.value.setAsideNote)
+  }
+
   // The owner's swipe sprang back and looked untouched until tafs cloud answered, so they swiped again: a row being set aside
   // isn't drawn meanwhile, and a refusal brings it back.
   @Test fun aRowBeingSetAsideGoesAtOnceAndARefusalBringsItBack() = runTest {
@@ -163,12 +176,14 @@ class CoachWaitingTest {
   // chat was answered or ended goes once tafs cloud says so.
   @Test fun openingAWaitingRowReadsHomeAgain() = runTest {
     reads(approval)
-    val m = model()
+    // The read after opening runs in the background: on this test's own scope, so virtual time settles it.
+    val m = model(backgroundScope)
     m.refresh()
     val homes = transport.requestsTo("GET /v1/home").size
     reads("", count = 0)
     m.openWaitingCoach(m.state.value.coachWaiting.single())
     testScheduler.advanceUntilIdle()
+    testScheduler.runCurrent()
     assertTrue("Home read again", transport.requestsTo("GET /v1/home").size > homes)
     assertTrue("the stale row goes", m.state.value.coachWaiting.isEmpty())
   }

@@ -29,6 +29,7 @@ import bot.tafs.app.model.ChatEnd
 import bot.tafs.app.model.LiveAnswer
 import bot.tafs.app.model.LiveStep
 import bot.tafs.app.kiff.StreamEvent
+import bot.tafs.app.kiff.displayName
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -245,6 +246,8 @@ data class AppState(
   val headline: String? = null,
   /** Coach is on screen (its chat `coachChat`): set by the screen, for the badge. */
   val coachShown: Boolean = false,
+  /** After a set-aside, where the chats went, in tafs cloud's words (`words.done`); gone once Coach opens. */
+  val setAsideNote: String? = null,
   /** Cards asked to take another currency, as tafs cloud draws them from KIFF; counted with the held calls in Needs you. */
   val cardUnitExceptions: List<bot.tafs.app.kiff.CardUnitException> = emptyList(),
   /** The ones whose Dismiss is on its way to KIFF. */
@@ -1872,7 +1875,9 @@ class AppModel(
   fun coachOpened() = _state.update { it.copy(coachRequested = false) }
 
   /** Coach shown or hidden, for the badge (`needsYouBadge`). */
-  fun coachShown(shown: Boolean) = _state.update { if (it.coachShown == shown) it else it.copy(coachShown = shown) }
+  fun coachShown(shown: Boolean) = _state.update {
+    if (it.coachShown == shown) it else it.copy(coachShown = shown, setAsideNote = if (shown) null else it.setAsideNote)
+  }
 
   /**
    * "Finish setting up" on another agent whose setup stopped partway (docs/tafs.md): Coach opens on the chat where it stopped.
@@ -1900,7 +1905,7 @@ class AppModel(
     return try {
       val done = cloud.setAsideCoach(session, coachReadProof())
       if (gen == accountGeneration) {
-        _state.update { s -> s.copy(coachWaiting = s.coachWaiting.filterNot { it.session in done.setAside }) }
+        _state.update { s -> s.copy(coachWaiting = s.coachWaiting.filterNot { it.session in done.setAside }, setAsideNote = done.words?.done?.takeIf { it.isNotBlank() }) }
         // Coach no longer shows a chat that was set aside: its next message would go on in the ended session (an audit wrote a
         // new job there, and Needs you named it after the old one). A new conversation instead.
         if (_state.value.coachChat in done.setAside) newCoachChat()
@@ -1995,6 +2000,25 @@ class AppModel(
       )
     }
     readThread(COACH_CHAT)
+  }
+
+  /**
+   * The chat a Coach message went into, as tafs cloud answered: a new one it started for a message to a chat that already handed a
+   * taf over (docs/api.md) is the one shown from then on, with the message on its way and nothing of the finished chat; otherwise
+   * as `settleCoachChat`.
+   */
+  private fun coachSession(session: String, new: Boolean) {
+    val shown = _state.value.coachChat
+    if (!new || shown == null || shown == session) { settleCoachChat(session); return }
+    _state.update { s ->
+      val sending = s.chatSent[COACH_CHAT].orEmpty()
+      s.copy(
+        coachChat = session, coachFresh = false, coachImproving = null, coachContext = null,
+        coachComponents = emptyList(), coachDrives = emptyList(), coachLines = emptyList(),
+        chats = s.chats + (COACH_CHAT to s.chats[COACH_CHAT].orEmpty().filter { it in sending }),
+        chatEnded = s.chatEnded - COACH_CHAT, chatUnsent = s.chatUnsent - COACH_CHAT,
+      )
+    }
   }
 
   /** The conversation a message went into is the one shown from then on, once a new one is started. */
@@ -4059,7 +4083,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = Words.Connect.appNotStarted(app = app.title, why = ErrorWords.of(e))) }
+      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = Words.Connect.appNotStarted(app = app.displayName, why = ErrorWords.of(e))) }
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(startingApp = null) }
     }
@@ -5505,10 +5529,10 @@ class AppModel(
             }
           }
           // Streamed, so the taf's words show as it writes them; sent plainly when the stream can't open.
-          if (!steered) streamed = openStream(cloudId, words, refs, session, fresh)
-          if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs, session, fresh).also { sent ->
+          if (!steered) streamed = openStream(cloudId, words, refs, session, fresh, followsNewChat = coach)
+          if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs, session, fresh, followsNewChat = coach).also { sent ->
             if (current()) {
-              if (coach) settleCoachChat(sent.session)
+              if (coach) coachSession(sent.session, sent.newSession)
               sent.message?.let { markSent(tafId, pending, it.id) }
             }
           }
@@ -5671,8 +5695,9 @@ class AppModel(
     files: List<AttachmentRef> = emptyList(),
     session: String? = null,
     newChat: Boolean = false,
+    followsNewChat: Boolean = false,
   ): kotlinx.coroutines.flow.Flow<StreamEvent>? = try {
-    cloud.streamMessage(cloudId, text, files, session, newChat)
+    cloud.streamMessage(cloudId, text, files, session, newChat, followsNewChat)
   } catch (e: CancellationException) {
     throw e
   } catch (e: CloudError) {
@@ -5735,8 +5760,8 @@ class AppModel(
             is StreamEvent.Session -> {
               live { it.copy(session = e.session, run = e.run ?: it.run) }
               if (sent != null && e.messageId != null) markSent(tafId, sent, e.messageId)
-              // A new Coach conversation is the one shown once it has begun.
-              if (tafId == COACH_CHAT) settleCoachChat(e.session)
+              // A new Coach conversation is the one shown once it has begun, and so is one tafs cloud started after a hand-over.
+              if (tafId == COACH_CHAT) coachSession(e.session, e.newSession)
               // At work in that chat, for steering and Stop.
               _state.update { it.copy(chatWorking = it.chatWorking + (tafId to ChatRun(e.session, e.run))) }
             }

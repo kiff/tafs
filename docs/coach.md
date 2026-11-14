@@ -35,7 +35,10 @@ On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
   **Previous conversations** (`CoachHeader`). New conversation is never greyed out: on a plain
   conversation with nothing in it yet, it keeps that one and shows its top; otherwise, an empty one
   about a taf ("Improve Refunds") included, it opens a plain new one (Android `CoachWords.newChatStays`,
-  1.27.6; iOS's New conversation button keeps an empty one, `coachChatIsEmpty`, and follows). Under it, the plan in tafs cloud's one line
+  1.27.6; iOS's New conversation button keeps an empty one, `coachChatIsEmpty`, and follows). A message to a chat that
+  already handed a taf over goes to a new chat tafs cloud starts (`new_chat_after_handover`, [api.md](api.md)): Android
+  sends the flag and shows that chat from then on, with the message on its way (`AppModel.coachSession`, 1.27.7); iOS
+  follows. Under it, the plan in tafs cloud's one line
   (`line`, [The plan in one line](#the-plan-in-one-line)); tapped, it opens to the steps. The
   plan line folds away while the thread scrolls down and comes back on the way up, so a card
   has the screen. The phone never counts the plan's steps.
@@ -377,7 +380,9 @@ A connection can carry a **profile**: KIFF's facts about how each of its tools i
 what its outcomes mean. planque puts it in the grant's `request.profile`, so the grant's digest
 the phone already checks covers it. Before the owner approves:
 - the phone asks KIFF for its words with its own session (`POST /v1/profiles/words`, never
-  through tafs cloud or planque);
+  through tafs cloud or planque). Android asks for `kiff.words.v2` (`?v=2`, Android 1.27.7): v1's lines without KIFF's
+  bookkeeping (no "isn't pinned to a version", and the lost-answer line only where money moves). It takes v1 or v2 and
+  signs whichever KIFF sent; iOS follows;
 - it checks that the profile's SHA-256 (JCS) is KIFF's `profile_sha256` and the words' is
   `words_sha256`;
 - the approval card shows each line verbatim, in KIFF's order. What KIFF can't check,

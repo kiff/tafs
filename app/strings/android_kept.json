@@ -64,7 +64,7 @@
   },
   "kiff/ProfileWords.kt": {
     "no words": "a check's reason, for the logs",
-    "words aren't $WORDS_V1": "a check's reason, for the logs",
+    "words version": "a check's reason, for the logs",
     "profile digest": "a check's reason, for the logs",
     "words digest": "a check's reason, for the logs",
     "no lines": "a check's reason, for the logs"
