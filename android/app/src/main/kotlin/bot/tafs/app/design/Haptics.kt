@@ -1,6 +1,11 @@
 package bot.tafs.app.design
 
 import android.content.Context
+import android.os.Build
+import android.os.VibrationAttributes
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.view.HapticFeedbackConstants
 import android.view.View
 
@@ -47,10 +52,27 @@ object Haptics {
   /** Whether the phone already said once that it played no feedback: said in the diagnostics once per launch. */
   @Volatile private var saidNone = false
 
+  /** [kind] as a predefined effect marked as touch, on Android 13+: true when the phone has a vibrator and it was asked. */
+  private fun touchEffect(context: Context, kind: Kind): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
+    val vibrator: Vibrator = context.getSystemService(VibratorManager::class.java)?.defaultVibrator ?: return false
+    if (!vibrator.hasVibrator()) return false
+    val effect = VibrationEffect.createPredefined(
+      when (kind) {
+        Kind.Tap, Kind.Step -> VibrationEffect.EFFECT_TICK
+        Kind.Success -> VibrationEffect.EFFECT_CLICK
+        Kind.Warning -> VibrationEffect.EFFECT_DOUBLE_CLICK
+      },
+    )
+    return runCatching { vibrator.vibrate(effect, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH)); true }.getOrDefault(false)
+  }
+
   /**
-   * The platform's own feedback for each kind, on [view] (Android 11+: confirm and reject exist). It follows the phone's own
-   * touch feedback setting: off there, the phone plays nothing, and that's said once in the diagnostics (as is a view that
-   * plays none), so a "nothing vibrates" report can be told apart from a tap the app never asked for.
+   * The platform's own feedback for each kind, on [view] (Android 11+: confirm and reject exist). Where the view plays none
+   * (some phones keep the standard touch feedback switch off and use their own touch slider: ColorOS), Android 13+ plays the
+   * same kind as a predefined effect marked as touch (`USAGE_TOUCH`), so the phone's own touch intensity decides, and off
+   * there is still off. Nothing played at all is said once in the diagnostics, so a "nothing vibrates" report can be told
+   * apart from a tap the app never asked for.
    */
   fun on(view: View): (Kind) -> Unit = { kind ->
     view.post {
@@ -61,7 +83,7 @@ object Haptics {
           Kind.Warning -> HapticFeedbackConstants.REJECT
           Kind.Step -> HapticFeedbackConstants.CLOCK_TICK
         },
-      )
+      ) || touchEffect(view.context, kind)
       if (!played && !saidNone) {
         saidNone = true
         // The only log Coach and a tester can read (docs/drive.md, diagnostics). false also comes from a view not attached

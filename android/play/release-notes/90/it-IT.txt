@@ -1,0 +1,3 @@
+- Attivare gli avvisi non chiede più l'impronta: una richiesta in meno prima del tuo primo taf.
+- Collegando un'app per la prima volta, si dice che la sua Card viene dopo: sai che segue una seconda approvazione.
+- I tocchi ora vibrano sui telefoni che regolano il feedback tattile a modo loro.

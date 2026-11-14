@@ -2851,11 +2851,8 @@ class AppModel(
       }
       var handoff = pendingHandoff()
       if (handoff == null) {
-        try {
-          signer.sign("tafs.alerts.v1|$tenant".toByteArray(), Words.Alert.prompt)
-        } catch (_: SignerException) {
-          return false
-        }
+        // No fingerprint first: it signed a message nothing sent or checked. The alert target's registration is signed with this
+        // phone's device key (a setup call), as when alerts are kept, never the approval key. One prompt fewer before a first job.
         if (generation != accountGeneration) return false
         kiff.tenant = tenant
         val signer = signer

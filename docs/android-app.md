@@ -727,6 +727,10 @@ taf needs you and every taf halted, with sound, always; a taf answered someone, 
 tafs whose results include our phones (`Taf.results` has `app`; "N tafs ›" lists them); a reply
 wasn't sent, silent.
 
+**Turning alerts on** (`AppModel.turnOnAlerts`) asks for the phone's notification permission, then points the account's KIFF
+alert target at tafs cloud: a setup call signed with this phone's device key, never the approval key, so there's no
+fingerprint (Android 1.27.2; before, one signed a message nothing sent or checked). As on iPhone and iPad.
+
 ## Haptics
 
 The same rule as on iPhone and iPad (`design/Haptics.kt`):
@@ -741,8 +745,11 @@ The same rule as on iPhone and iPad (`design/Haptics.kt`):
 - **A step tick** on a selector's stops: the theme picker and the jobs' category chips.
 - **Settings › Haptics** turns all of it off, on this phone (`tafs.display`, `haptics`). It's on until turned off.
 - **The phone's own touch feedback setting** is followed: the platform's feedback (`performHapticFeedback`) plays nothing
-  when it's off. The first time a launch's feedback plays nothing (that setting, or a view that plays none), that's
-  written to the diagnostics, so "nothing vibrates" can be told apart from a tap the app never asked for.
+  when it's off. Some phones keep that switch off and use a touch slider of their own (ColorOS), so where the view plays
+  none, Android 13+ plays the same kind as a predefined effect marked as touch (`USAGE_TOUCH`, `VIBRATE`, a normal
+  permission): the phone's touch intensity decides, and off there is still off (Android 1.27.2). The first time a launch's
+  feedback plays nothing at all, that's written to the diagnostics, so "nothing vibrates" can be told apart from a tap the
+  app never asked for.
 
 ## Dark
 
@@ -1002,6 +1009,8 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
 - **When KIFF doesn't take this phone's approval key at Start,** Start says "KIFF didn't accept this device's approval key.
   Try again." (`approval.key_not_accepted`), and from the second time in a row the support line under it
   (`approval.key_not_accepted_support`). A phone with no fingerprint keeps "Setting up a taf needs approvals".
+- **An app's first sign-in card** has no draft yet (a Card is drafted over the tools that sign-in brings), and still draws
+  tafs cloud's `signs.words` ("Its Card: you approve it next"), so the owner knows a second approval follows (Android 1.27.2).
 - **Coach's Start is one screen** (`StartScreen`): tafs cloud's line, Coach's Cards in KIFF's words, the tools folded under
   their details, what Start does (tafs cloud's `words.does`, drawn only when sent: the app has no line of its own about the
   fingerprint, since 1.26.1), and its button. Start, or the first Send, signs it all under one fingerprint.
