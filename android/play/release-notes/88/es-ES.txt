@@ -1,0 +1,3 @@
+- Un toque leve en la barra inferior, Coach, las pestañas de un taf y «Dejar de lado», como en cada botón.
+- Dejar un chat de lado termina con una señal: éxito, o un aviso si no salió bien.
+- La vibración sigue la respuesta táctil de tu teléfono; Ajustes › Vibración la apaga.

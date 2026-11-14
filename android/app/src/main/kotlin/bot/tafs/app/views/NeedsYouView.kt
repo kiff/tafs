@@ -215,7 +215,7 @@ fun NeedsYouView(
     state.coachWaitingClear?.takeIf { onSetAside != null && state.coachWaiting.size > 1 }?.let { clear ->
       item(key = "cw|clear") {
         Text(clear.words.button, style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-          modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = state.settingAside.isEmpty()) { confirmingClear = true }.padding(vertical = 10.dp))
+          modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = state.settingAside.isEmpty()) { bot.tafs.app.design.Haptics.tap(); confirmingClear = true }.padding(vertical = 10.dp))
       }
     }
     items(state.coachWaiting, key = { "cw|" + it.session }) { waiting -> CoachWaitingPanel(waiting, onOpenCoach, onSetAside?.takeIf { waiting.words.setAside.isNotBlank() }) }
