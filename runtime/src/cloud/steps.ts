@@ -73,8 +73,12 @@ export class Steps {
         const ofGrant = (g: unknown): string => typeof g === "string" ? this.vendors.get(g) ?? this.apps.get(g) ?? "" : "";
         const grant = ofGrant(i.grant);
         const api = i.api && typeof i.api === "object" ? (i.api as { url?: unknown }).url : undefined;
-        if (callID) this.connections.set(callID, i.action === "request" ? (reuse ? ofGrant(reuse) : vendorName(i.server ?? api)) : grant);
-        const target = i.action === "request" ? i.server ?? api ?? reuse : i.grant;
+        // An app from search (`entry`, such as connector:composio:gmail): named by its app and keyed by its entry, so a refused
+        // connect of it is cleared once a connect of the same entry goes through (kiff-qa, 14 Nov: entry was never read).
+        const entry = i.action === "request" && typeof i.entry === "string" && i.entry ? i.entry : undefined;
+        const asked = reuse ? ofGrant(reuse) : entry ? entryApp(entry) : vendorName(i.server ?? api);
+        if (callID) this.connections.set(callID, i.action === "request" ? asked : grant);
+        const target = i.action === "request" ? i.server ?? api ?? entry ?? reuse : i.grant;
         // Setting a grant's tools that went through is Coach's corrected ask for that grant, whatever planque answers
         // (pending: the owner's approval comes next): an earlier refused tools call on it is past (14 Nov, 13:13 UTC:
         // "Coach couldn't connect the app yet" in red over a grant the owner had just approved).
@@ -82,7 +86,7 @@ export class Steps {
         if (callID && typeof target === "string" && target) this.targets.set(callID, target);
         switch (i.action) {
           case "request": {
-            const vendor = vendorName(i.server ?? api);
+            const vendor = asked;
             if (callID) { this.asked.set(callID, vendor); this.requests.add(callID); }
             const tools = Array.isArray(i.tools) && i.tools.length > 0;
             return tools ? w.doing_tools_for(vendor) : w.doing_connect_to(vendor);
@@ -439,4 +443,10 @@ export function refusalKind(text: unknown): RefusalKind {
 export function lacksAccess(text: unknown): boolean {
   const line = whyOf(text) ?? "";
   return /\bscopes?\b|\bpermission\b|\bforbidden\b|\bnot (?:allowed|authori[sz]ed)\b/i.test(line);
+}
+
+/** The app an entry from search names, as the person would ("connector:composio:google_sheets@2" → "Google sheets"). */
+export function entryApp(entry: string): string {
+  const slug = entry.replace(/^connector:[^:]+:/, "").replace(/@\d+$/, "").replace(/[_-]+/g, " ").trim();
+  return slug ? slug[0]!.toUpperCase() + slug.slice(1) : "";
 }

@@ -1,11 +1,11 @@
 ---
 name: draft-the-card
-description: Proposes a taf's rules and drafts its Card: the limits in plain words, held or refused, a day's total, an app set up on demand, the draft over the connected tools, read tools, money tools limited by amount. Use when the rules are proposed or a Card is drafted.
+description: Proposes a taf's rules and drafts its Card: the limits in plain words, held or refused, a day's total, an app set up on demand, the draft, read tools and money tools' amounts. Use when the rules are proposed or a Card is drafted.
 ---
 
 ## When to use
 
-Proposes a taf's rules and drafts its Card: the limits in plain words, held or refused, a day's total, an app set up on demand, the draft over the connected tools, read tools, money tools limited by amount. Use when the rules are proposed or a Card is drafted.
+Proposes a taf's rules and drafts its Card: the limits in plain words, held or refused, a day's total, an app set up on demand, the draft, read tools and money tools' amounts. Use when the rules are proposed or a Card is drafted.
 
 ## Procedure
 
@@ -36,7 +36,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   Ask about each limit they didn't give. Then set the tools
   on the grant (planque tools). When planque says declared: true, draft the Card
   at once, in the grant's approval, without saying so; else the grant's, then
-  the Card's. Draft it once, after reading the fields, with all its tools. A limit over a day follows the account's
+  the Card's. Draft it once, with all its tools, from the catalog's fields (or the describing tool's): its first approval carries the Card. A limit over a day follows the account's
   day: say so as a line of the rules notice ("a day ends at midnight in your
   account's time zone"), not in a message: messages stay short.
 - A grant whose status says on_demand: true is an app whose sign-in was set up
@@ -72,8 +72,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   moves money always has its amount limited, each call and over a day: KIFF
   refuses a draft that counts a money tool's calls without limiting its amount.
   Count a money tool's calls only when the owner did.
-  A tool that writes to anyone outside the company (an email, a reply,
-  evidence) goes in the result's taf as disclose: [{tool: its name in KIFF,
+  A tool that writes to anyone outside the company (an email, a reply) goes in the result's taf as disclose: [{tool: its name in KIFF,
   fields: its text fields' paths, from planque read}]: KIFF's runtime then
   starts each such call with "Written by an AI agent on behalf of <writes_for>.", in
   the message's language when it's Spanish, French, German, Portuguese or
@@ -96,9 +95,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   writes_for. For a mail app whose connection can set it, set the
   inbox's sender name to it with the app's own tool, and when the app sends
   from a domain of its own and takes a custom one, offer sending from the
-  company's domain in the same question: show the owner the
-  DNS records as the app gives them, and check them with its tool before
-  saying the domain works.
+  company's domain in the same question: show the owner its DNS records, and check them with its tool before saying the domain works.
   A tool that changes data but moves no money is limited by its calls, each day
   ("post up to 20 replies a day"): never promise an amount limit for it,
   such as "up to €500 a reply", since the call carries no amount to check.
