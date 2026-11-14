@@ -9,6 +9,8 @@ struct BriefView: View {
     @Environment(\.horizontalSizeClass) private var sizeClass
     /// The label chips past the first two, shown once "+N" is tapped.
     @State private var allLabels = false
+    /// A screenshot's `-screen mission-log`: the first mission's log, opened over the brief.
+    @State private var screenshotLog = Screenshots.brief && Screenshots.screen == "mission-log"
 
     var body: some View {
         if let brief = model.brief {
@@ -40,6 +42,9 @@ struct BriefView: View {
                 .padding(.horizontal, 16).padding(.vertical, 12)
             }
             .screenBackground()
+            .navigationDestination(isPresented: $screenshotLog) {
+                if let group = brief.done.first(where: { $0.log != nil }), let log = group.log { MissionLogView(mission: log, title: group.mission ?? "") }
+            }
             .accessibilityIdentifier("brief")
         } else {
             NeedsYouView()

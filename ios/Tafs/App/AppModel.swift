@@ -1948,6 +1948,7 @@ final class AppModel: ObservableObject {
     /// until its flag is on in production, so nothing changes for anyone before then.
     func loadBrief() async {
         if mode == .sample, Screenshots.brief {
+            if brief == nil, briefLabel == nil { briefLabel = Screenshots.briefLabel }
             brief = .sample(label: briefLabel)
             return
         }
@@ -8818,6 +8819,8 @@ enum Screenshots {
     static var landscape: Bool { UserDefaults.standard.bool(forKey: "landscape") }
     /// `-brief YES`: "Your brief" in Needs you's place, over the sample's own brief (Missions draft).
     static var brief: Bool { enabled && UserDefaults.standard.bool(forKey: "brief") }
+    /// `-briefLabel money`: the brief filtered to that label from the start.
+    static var briefLabel: String? { brief ? UserDefaults.standard.string(forKey: "briefLabel") : nil }
     /// `-signedIn YES`: the iPad's sidebar laid out as for a signed-in account (its screens and
     /// Coach above the account), over the sample's tafs. A screenshot of the layout only: nothing
     /// is read from KIFF, and the screens it lists aren't opened.

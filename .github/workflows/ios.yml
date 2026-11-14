@@ -472,6 +472,10 @@ jobs:
           shoot 8c-results-go-to -screenshots YES -tab tafs -screen results
           shoot 9-account -screenshots YES -tab account
           shoot 9b-alerts -screenshots YES -tab account -screen alerts
+          # Missions (draft): Your brief, filtered to Money, and a mission's log, over the sample's brief.
+          shoot 10-brief -screenshots YES -tab needs-you -brief YES
+          shoot 10b-brief-money -screenshots YES -tab needs-you -brief YES -briefLabel money
+          shoot 10c-mission-log -screenshots YES -tab needs-you -brief YES -screen mission-log
           # Each product's purchase screen, for its review screenshot in App Store Connect:
           # Solo, and the Add credits screen with one pack at a time.
           shoot iap-solo -screenshots YES -screen solo
@@ -488,6 +492,7 @@ jobs:
           # Dark (the taf layout): the same screens in the phone's dark appearance.
           xcrun simctl ui "$DEVICE_ID" appearance dark
           shoot dark-alerts -screenshots YES -tab account -screen alerts
+          shoot dark-brief -screenshots YES -tab needs-you -brief YES
           for screen in "tafs" "needs-you" "record" "account"; do
             shoot "dark-tab-$screen" -screenshots YES -tab "$screen"
           done
@@ -527,11 +532,13 @@ jobs:
           # The sidebar as a signed-in account has it: its screens, and Coach above the account.
           shoot ipad-signed-in -screenshots YES -tab tafs -signedIn YES
           shoot ipad-land-signed-in -screenshots YES -tab tafs -signedIn YES -landscape YES
+          shoot ipad-brief -screenshots YES -tab needs-you -brief YES -signedIn YES
           xcrun simctl ui "$DEVICE_ID" appearance dark
           shoot ipad-dark-tafs -screenshots YES -tab tafs
           shoot ipad-dark-setup -screenshots YES -tab tafs -screen setup
           shoot ipad-dark-land-taf -screenshots YES -tab tafs -screen taf -landscape YES
           shoot ipad-dark-signed-in -screenshots YES -tab tafs -signedIn YES
+          shoot ipad-dark-brief -screenshots YES -tab needs-you -brief YES -signedIn YES
           shoot ipad-dark-land-signed-in -screenshots YES -tab tafs -signedIn YES -landscape YES
           xcrun simctl ui "$DEVICE_ID" appearance light
           ls -la "$RUNNER_TEMP/shots"
