@@ -1,2 +1,3 @@
 - Termini e Privacy aprono le pagine di tafs.
 - Una scheda di accesso nomina l'app a cui accede.
+- Un accesso non necessario lo dice in parole semplici.

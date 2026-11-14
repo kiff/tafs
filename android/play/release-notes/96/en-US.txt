@@ -1,2 +1,3 @@
 - Terms and Privacy open tafs's own pages.
 - A sign-in card names the app it signs in to.
+- A sign-in that isn't needed says so in plain words.

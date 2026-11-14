@@ -11,4 +11,7 @@ object Legal {
   fun terms(): String = "$SITE/terms"
 
   fun privacy(): String = "$SITE/privacy"
+
+  /** A link's words, saying the page is in English when the app's lines aren't ("Datenschutz (auf Englisch)"), as kiff.dev does. */
+  fun label(words: String, language: String = Res.language): String = if (language == "en") words else Words.Settings.legalInEnglish(label = words)
 }

@@ -3428,7 +3428,7 @@ class AppModel(
      * It didn't go through: [why] for the owner, in the app's words; [told] for Coach, the card's answer, which keeps the server's own
      * reason so Coach can say what went wrong and ask again.
      */
-    data class Failed(val why: String, val told: String = why) : Connected
+    data class Failed(val why: String, val told: String = why, val notApprovable: Boolean = false) : Connected
   }
 
   private fun note(cardId: String, words: String?) {
@@ -4448,6 +4448,7 @@ class AppModel(
         return Connected.Failed(
           grant.status.replace('_', ' ').let { status -> grant.reason?.let { Words.Connect.connectionIsBecause(status = status, reason = it) } ?: Words.Connect.connectionIs(status = status) },
           told = "This connection is ${grant.status.replace('_', ' ')}" + (grant.reason?.let { ": $it" } ?: "."),
+          notApprovable = true,
         )
       }
       if (!grant.digestMatches) return Connected.Failed(PlanqueError.DigestMismatch.message!!)
@@ -4995,11 +4996,32 @@ class AppModel(
       // Only an approval with a Card to confirm comes back already approved; a sign-in has none.
       is Connected.AlreadyApproved -> Unit
       is Connected.Failed -> {
+        // A connection that takes no approval now (signed in already, or past approving): tafs cloud answers the card in the
+        // person's words, never planque's status ("This connection is listed."). Where it can't be asked, the app's line stands.
+        if (result.notApprovable && notApprovableAnswered(c, grantId)) return
         note(c.id, result.why)
         answerCard("sign_in", c.id, "failed: " + result.told)
       }
       Connected.Stopped -> Unit
     }
+  }
+
+  /** Asks tafs cloud about a sign-in card whose connection takes no approval now; true once it answered Coach, with its note shown. */
+  private suspend fun notApprovableAnswered(c: SetupComponent, grantId: String): Boolean {
+    val cloudId = _state.value.coachCloudId ?: return false
+    val shown = _state.value.coachComponents.lastOrNull { it.id == c.id && it.answer == null } ?: _state.value.coachComponents.lastOrNull { it.id == c.id }
+    val session = shown?.session?.ifEmpty { null } ?: _state.value.coachChat
+    val key = shown?.ref ?: CoachWords.cardKey(session, c.id)
+    val generation = accountGeneration
+    val decision = try {
+      val ask = kotlinx.serialization.json.buildJsonObject { put("grant", grantId); session?.let { put("session", it) } }
+      cloud.approval(cloudId, c.id, ask, coachReadProof())
+    } catch (e: CancellationException) { throw e
+    } catch (_: Exception) { return false }
+    if (generation != accountGeneration || decision.outcome != "answered") return false
+    note(c.id, decision.note?.takeIf { it.isNotBlank() })
+    coachAnswered(cloudId, key, decision.session, decision.run)
+    return true
   }
 
   // MARK: Coach's hand-overs

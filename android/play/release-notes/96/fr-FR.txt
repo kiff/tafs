@@ -1,2 +1,3 @@
 - Conditions et Confidentialité ouvrent les pages propres à tafs.
 - Une carte de connexion nomme l'app à laquelle elle se connecte.
+- Une connexion inutile le dit en termes simples.

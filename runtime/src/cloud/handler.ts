@@ -125,7 +125,7 @@ import { RECIPES } from "../recipes.js";
  *   POST /v1/tafs/{id}/holds/{exception}/continue  the run that paused on that held call goes on, once KIFF has answered it (kiff/tafs#206)
  *   POST /v1/tafs/{id}/holds/{exception}/allow  {round?}: "Allow this from now on" on a held call: KIFF's draft with the narrowest Card change, checked and worded, with what it would have done (docs/allow-from-now-on.md)
  *   POST /v1/tafs/{id}/components/{component}/answer  {answer, session?}: the person's answer to a card that waits for it, as data
- *   POST /v1/tafs/{id}/components/{component}/approval  {grant, shown_digest?, draft?, shown_draft?, words?, session?}: Approve tapped on an approval card; tafs cloud decides what needs signing, if anything, and answers Coach itself when nothing does (kiff/tafs#413)
+ *   POST /v1/tafs/{id}/components/{component}/approval  {grant, shown_digest?, draft?, shown_draft?, words?, session?}: Approve tapped on an approval card (or Sign in on a sign-in card whose connection takes no approval now); tafs cloud decides what needs signing, if anything, and answers Coach itself when nothing does (kiff/tafs#413)
  *   POST /v1/tafs/{id}/components/{component}/approval/{ask}  {result, status?, why?}: what came of the signed call, signed as a setup call (KIFF-Device-Signature); tafs cloud checks it and answers Coach approved or failed
  *   GET  /v1/tafs/{id}/versions        the taf's versions, oldest first, the live one marked, and a switch under way (kiff/tafs#107)
  *   POST /v1/tafs/{id}/versions         {note, notes?, draft?, from?, agent?}: its next version, as Setup drafted it, once per result (kiff/tafs#107); nothing goes live
@@ -3710,12 +3710,21 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
   const body = parseBody(event);
   const ask = askOrRefuse(() => askOf(body));
   const ctx = approvalContext(event, me, taf, component, deps);
-  const card = await shownCard(me, taf, component, "approval", str(body.session).trim(), deps);
+  const session = str(body.session).trim();
+  const approval = await shownCard(me, taf, component, "approval", session, deps);
+  // A sign-in card asks too when its connection takes no approval now (signed in already, or past approving): tafs cloud
+  // answers it in the person's words, never planque's status ("This connection is listed."). Anything to sign, it leaves to
+  // the phone's own sign-in (`sign_in`).
+  const signIn = approval ? undefined : await shownCard(me, taf, component, "sign_in", session, deps);
+  const card = approval ?? signIn;
   if (!card) throw new HTTPError(404, "no card of yours by that id");
   const decision = await decideApproval(ask, ctx).catch(approvalFailure);
+  if (signIn && decision.outcome !== "answered") return { outcome: "sign_in" };
   if (decision.outcome === "answered") {
-    const told = await tellCoach(me, taf, card, component, decision.answer, deps);
-    return { outcome: "answered", answer: decision.answer, note: decision.note, ...told };
+    // A sign-in card's answer is "signed in" or "failed: …": already approved means already signed in.
+    const answer = signIn && decision.answer.startsWith("already approved") ? "signed in" : decision.answer;
+    const told = await tellCoach(me, taf, card, component, answer, deps);
+    return { outcome: "answered", answer, note: decision.note, ...told };
   }
   // The person is now approving on the phone (a fingerprint, a sign-in): a message they send meanwhile waits in
   // this run, read once the approval is settled, and never voids the card (go-to-market job 3, 13 Nov).

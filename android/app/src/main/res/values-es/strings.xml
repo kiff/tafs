@@ -1804,6 +1804,7 @@
     <string name="settings_kiff_account">Cuenta de KIFF</string>
     <string name="settings_language_title">Idioma</string>
     <string name="settings_legal">Legal</string>
+    <string name="settings_legal_in_english">%1$s (en inglés)</string>
     <string name="settings_light_taps_when_you_send">Una vibración suave al enviar o responder.</string>
     <string name="settings_mode">Modo</string>
     <string name="settings_mode_kiff">Sesión iniciada con KIFF</string>

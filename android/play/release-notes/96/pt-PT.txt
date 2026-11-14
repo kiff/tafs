@@ -1,2 +1,3 @@
 - Termos e Privacidade abrem as páginas próprias da tafs.
 - Um cartão de início de sessão indica a app em que inicia sessão.
+- Um início de sessão desnecessário di-lo em palavras simples.

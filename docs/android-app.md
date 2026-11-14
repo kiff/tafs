@@ -375,7 +375,8 @@ Devices shows KIFF's `display_name`, drawn from the kind in the app's language, 
 
 The Terms and Privacy policy links (Settings, Sign-in, Plan & usage) open tafs's own pages, `kiff.dev/tafs/terms` and
 `kiff.dev/tafs/privacy`, the ones Google's consent screen names (`Legal`, Android 1.27.8). They're in English only until
-kiff.dev serves them in other languages; before, the links opened KIFF's pages (`/terms#tafs`, `/de/terms#tafs`).
+kiff.dev serves them in other languages, so outside English the Settings and Plan & usage links say so ("Terms (auf
+Englisch)", `settings.legal_in_english`), as kiff.dev does; before, the links opened KIFF's pages (`/terms#tafs`).
 
 The chat shows the owner's own answer line as it is by a flag on the line (`RecordEntry.byYou`, set where the phone
 records the answer and kept when KIFF's outcome matches), never by matching its words, so it holds in every language.

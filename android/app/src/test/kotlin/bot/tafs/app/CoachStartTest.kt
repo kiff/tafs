@@ -685,6 +685,36 @@ class CoachStartTest {
     assertNull(m.state.value.coachNotes["s1"])
   }
 
+  // The owner's card read "it didn't go through: This connection is listed.": the phone worded planque's status itself. A
+  // connection that takes no approval now is tafs cloud's to answer, in the person's words.
+  @Test fun aSignInWhoseConnectionTakesNoApprovalShowsTafsCloudsWords() = runTest {
+    reads()
+    coachThread(signInCard)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("listed")}]}""")
+    transport.answer("POST /v1/tafs/setup_1/components/s1/approval", 200,
+      """{"outcome":"answered","answer":"signed in","note":"You're already signed in to Stripe on this connection, so there's nothing to sign in to here.","session":"s1","run":"r1"}""")
+    val m = model(FakeSignIn(back = null))
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    m.signInAgain(KiffClient.json.decodeFromString(signInCard))
+    assertEquals("You're already signed in to Stripe on this connection, so there's nothing to sign in to here.", m.state.value.coachNotes["s1"])
+    // tafs cloud told Coach itself: the phone sends no answer of its own, and nothing was approved at planque.
+    assertTrue(transport.requestsTo("POST /v1/tafs/setup_1/components/s1/answer").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/accounts/t_01/grants/g1/approve").isEmpty())
+  }
+
+  @Test fun whereTafsCloudCantBeAskedTheSignInSaysWhyAsBefore() = runTest {
+    reads()
+    coachThread(signInCard)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("listed")}]}""")
+    transport.answer("POST /v1/tafs/setup_1/components/s1/approval", 503, """{"error":"down"}""")
+    val m = model(FakeSignIn(back = null))
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    m.signInAgain(KiffClient.json.decodeFromString(signInCard))
+    assertTrue(answered("s1").startsWith("failed: This connection is listed"))
+  }
+
   @Test fun aSignInClosedAtTheVendorIsToldToCoachAsFailed() = runTest {
     reads()
     coachThread(signInCard)
