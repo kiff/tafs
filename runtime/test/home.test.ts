@@ -192,6 +192,9 @@ describe("Home's first line", () => {
   });
   it("speaks the person's language, in all 8, by its plural forms", () => {
     expect(headlineOf([fromChat], "fr").words).toBe("1 taf prêt.");
+    // European Portuguese: 0 is plural (CLDR's plain pt would say "0 taf").
+    expect(headlineOf([], "pt").words).toBe("0 tafs a trabalhar.");
+    expect(headlineOf([working], "pt").words).toBe("1 taf a trabalhar.");
     expect(headlineOf([working, working, working], "pl").words).toBe("3 tafs pracują.");
     expect(headlineOf(Array(5).fill(fromChat), "pl").words).toBe("5 tafs gotowych.");
     for (const lang of LANGUAGES) {
