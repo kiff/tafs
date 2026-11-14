@@ -511,6 +511,9 @@ struct CoachWaitingCard: View {
                     withMotion { dragged = 0 }
                 })
             .accessibilityAction(named: Text(waiting.words.setAside)) { setAside() }
+            // The swipe and its accessibility action set the chat aside: the person's to confirm, never Coach's
+            // (docs/drive.md), whether or not a drive can reach them. Inside, only Set aside confirms.
+            .confirming()
         } else {
             panel
         }
@@ -528,6 +531,8 @@ struct CoachWaitingCard: View {
             if model.mayUseCoach {
                 Button(waiting.words.open) { Task { await model.openCoachWaiting(waiting) } }
                     .buttonStyle(PrimaryButtonStyle())
+                    // Opening the chat confirms nothing, inside a row whose swipe does.
+                    .environment(\.driveConfirm, false)
                     .accessibilityIdentifier("needs-you.coach-waiting." + waiting.session)
             }
             // The swipe's words as a button too, only when tafs cloud sent them.
@@ -537,6 +542,8 @@ struct CoachWaitingCard: View {
                     .disabled(asked || model.settingAside.contains(waiting.session))
                     // Coach driving the app never sets a chat aside: it's the person's to confirm (docs/drive.md).
                     .confirming()
+                    .driveID("needs-you.set-aside." + waiting.session)
+                    .driveWords(waiting.words.setAside)
                     .accessibilityIdentifier("needs-you.coach-waiting.set-aside." + waiting.session)
             }
         }
@@ -566,9 +573,11 @@ struct SetAllAsideButton: View {
             .buttonStyle(OutlineButtonStyle(color: Theme.amberText))
             .disabled(!model.settingAside.isEmpty)
             .confirming()
+            .driveID("needs-you.set-all-aside")
+            .driveWords(clear.words.button)
             .accessibilityIdentifier("needs-you.coach-waiting.set-all-aside")
             .confirmationDialog(clear.words.title, isPresented: $confirming, titleVisibility: .visible) {
-                Button(clear.words.yes, role: .destructive) { Task { await model.setAsideCoach(nil) } }
+                Button(clear.words.yes, role: .destructive) { Task { await model.setAsideCoach(nil) } }.confirming()
                 Button(clear.words.no.isEmpty ? Words.Common.cancel : clear.words.no, role: .cancel) {}
             } message: {
                 if !clear.words.text.isEmpty { Text(clear.words.text) }

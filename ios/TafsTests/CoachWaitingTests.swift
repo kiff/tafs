@@ -139,7 +139,7 @@ final class CoachWaitingTests: XCTestCase {
         let view = try String(contentsOf: root.appendingPathComponent("Views/NeedsYouView.swift"), encoding: .utf8)
         XCTAssertTrue(view.contains("if let clear = model.setAllAside { SetAllAsideButton(clear: clear) }"))
         let card = try XCTUnwrap(view.range(of: "struct CoachWaitingCard: View {"))
-        let cardBody = String(view[card.upperBound...].prefix(3500))
+        let cardBody = String(view[card.upperBound...].prefix(5000))
         XCTAssertTrue(cardBody.contains("if model.canSetAside(waiting) {\n            ZStack"), "the swipe only when offered")
         XCTAssertTrue(cardBody.contains("if model.canSetAside(waiting) {\n                Button(waiting.words.setAside) { setAside() }"), "the button too")
         XCTAssertEqual(view.components(separatedBy: "setAsideCoach(").count - 1, 2, "a row and Set all aside, nowhere else")

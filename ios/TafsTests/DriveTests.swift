@@ -170,6 +170,65 @@ final class DriveTests: XCTestCase {
         XCTAssertEqual(unknown.line, "This app can't do that step")
     }
 
+    /// Setting a waiting Coach chat aside is the person's to confirm (docs/drive.md): Coach's touch on a row's
+    /// Set aside, or on Set all aside, is refused before anything runs, and nothing reaches tafs cloud. The
+    /// real Needs you controls, on a signed-in model with tafs cloud's words.
+    func testATouchOnSetAsideIsRefusedBeforeAnythingRuns() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let model = AppModel(signer: FaceIDSigner(),
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session),
+                             planque: PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: session))
+        let row = #"{"taf":"taf-setup","session":"s1","words":{"line":"Coach is waiting for your approval.","open":"Open Coach","set_aside":"Set aside"}}"#
+        let rows = row + "," + row.replacingOccurrences(of: "\"s1\"", with: "\"s2\"")
+        let clear = #"{"words":{"button":"Set all aside","title":"End 2 waiting Coach chats?","text":"Nothing is approved or sent.","yes":"Set all aside","no":"Keep them"}}"#
+        StubProtocol.responses["GET /v1/home"] = (200, #"{"tafs":[],"others":[],"removing":[],"coach_waiting":[\#(rows)],"coach_waiting_clear":\#(clear),"needs_you":{"count":2,"words":"2 need you."}}"#)
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":null}"#)
+        StubProtocol.responses["POST /v1/home/coach-waiting/s1/set-aside"] = (200, #"{"set_aside":["s1"],"withdrawn":0}"#)
+        StubProtocol.responses["POST /v1/home/coach-waiting/set-aside"] = (200, #"{"set_aside":["s1","s2"],"withdrawn":0}"#)
+        await model.useSession("kiff_dev_x", tenant: "t_01")
+        let waiting = try XCTUnwrap(model.coachWaiting.first)
+        XCTAssertTrue(model.canSetAside(waiting))
+        let all = try XCTUnwrap(model.setAllAside)
+
+        targets.reset()
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let w = UIWindow(windowScene: scene)
+        w.windowLevel = .normal + 1
+        w.frame = scene.coordinateSpace.bounds
+        w.rootViewController = UIHostingController(rootView: VStack(spacing: 16) {
+            SetAllAsideButton(clear: all)
+            CoachWaitingCard(waiting: waiting)
+        }.padding().environmentObject(model))
+        w.makeKeyAndVisible()
+        window = w
+        await settle(1.2)
+        StubProtocol.sent = []
+
+        let one = await act("tap", element: "needs-you.set-aside.s1")
+        XCTAssertEqual(one.outcome, "refused")
+        XCTAssertEqual(one.line, "That's yours to confirm")
+        let setAll = await act("tap", element: "needs-you.set-all-aside")
+        XCTAssertEqual(setAll.outcome, "refused")
+        XCTAssertEqual(setAll.line, "That's yours to confirm")
+        // By its place on the screenshot too.
+        let button = try XCTUnwrap(targets.shown(id: "needs-you.set-aside.s1"))
+        let px = DriveCapture.geometry().toPixels(button.frame)
+        let byPoint = await act("tap", at: CGPoint(x: px.midX, y: px.midY))
+        XCTAssertEqual(byPoint.line, "That's yours to confirm")
+        await settle(0.3)
+        XCTAssertTrue(StubProtocol.sent.filter { $0.url?.path.hasPrefix("/v1/home/coach-waiting/") == true }.isEmpty, "nothing reached tafs cloud")
+        XCTAssertTrue(model.settingAside.isEmpty)
+        XCTAssertEqual(model.coachWaiting.map(\.session), ["s1", "s2"], "both rows stay")
+    }
+
     /// A point on the scaled screenshot, on a sheet: the sheet's control is hit, and the screen behind
     /// the sheet can't be reached.
     func testAPointOnTheScaledScreenshotReachesTheSheet() async throws {
@@ -459,6 +518,9 @@ final class DriveTests: XCTestCase {
         // Set aside and Set all aside: ending a waiting Coach chat is the person's to confirm.
         ("Views/NeedsYouView.swift", #"Button(waiting.words.setAside) { setAside() }"#),
         ("Views/NeedsYouView.swift", #"Button(clear.words.button) { confirming = true }"#),
+        ("Views/NeedsYouView.swift", #"Button(clear.words.yes, role: .destructive)"#),
+        // The row's swipe and its accessibility action: the row carries the mark.
+        ("Views/NeedsYouView.swift", #".accessibilityAction(named: Text(waiting.words.setAside)) { setAside() }"#),
         // Coach's Send, which starts Coach while it isn't started (docs/ios-app.md).
         ("Views/SetupChatView.swift", #"Button(action: send) {"#),
     ]

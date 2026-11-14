@@ -206,7 +206,7 @@ Enforced in the app, with no prompt:
    - deleting the account, a group or a door, and unpairing someone from a door;
    - signing out another device, and removing someone from a group;
    - revoking a Card, forgetting a memory note, installing a version or going back to one;
-   - setting a waiting Coach chat aside, one or all, in Needs you (on iPhone and iPad; the row's swipe isn't registered);
+   - setting a waiting Coach chat aside, one or all, in Needs you: on iPhone and iPad, Set aside, Set all aside and its ask's yes, and the row that carries the swipe and its accessibility action, though neither is registered;
    - anything else whose words take something away or grant it: on Android a contract
      test reads every control's words (Delete, Remove, Disconnect, Halt, Revoke, Sign
      out, Buy, Resume, Approve, Install, Refuse, Pair, Unpair, Forget, Go back) and fails
