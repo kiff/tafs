@@ -91706,6 +91706,59 @@
         }
       }
     },
+    "settings.devices.pair_gives_view": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ zeigt deine tafs und schickt Genehmigungen an dieses Telefon."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ will show your tafs and send approvals to this phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mostrará tus tafs y enviará las aprobaciones a este teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ affichera vos tafs et enverra les approbations à ce téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mostrerà i tuoi tafs e invierà le approvazioni a questo telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ toont je tafs en stuurt goedkeuringen naar deze telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ będzie pokazywać Twoje tafs i wysyłać zatwierdzenia na ten telefon."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ vai mostrar os seus tafs e enviar as aprovações para este telefone."
+          }
+        }
+      }
+    },
     "settings.devices.pair_invalid": {
       "extractionState": "manual",
       "localizations": {

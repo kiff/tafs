@@ -905,12 +905,14 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
 - **The scan:** the camera reads the computer's QR. `PairingRequest.read` checks it strictly before
   anything is shown or signed: `kiff.pair.v1`, no field KIFF doesn't take, `exp` not passed and at
   most 5 minutes ahead, a known `kind` and `platform`, a usable `name`, a 32-byte nonce, P-256 keys
-  that differ, `approval_pub` exactly for `hello` and `enclave`, `key_store` only `software` and
-  only for `passkey`, and `credential` (the computer's own platform passkey, as Windows pairs with
+  that differ, `approval_pub` exactly for `hello` and `enclave`, `key_store` only `software` (with it, whatever the kind, a `view` device: no approval key and no
+  credential, the code over `pub` alone), and `credential` (the computer's own platform passkey, as Windows pairs with
   Windows Hello) only for `passkey`, exactly `{id, public_key}`, an id of at most 1023 bytes and a
   P-256 key that isn't the device key. The body sends it on as read. A code it won't pair is said in words, and the camera keeps reading.
 - **Before the fingerprint:** what pairing gives by kind ("… will be able to approve your tafs'
-  actions with Windows Hello"), the software-key line when it applies, "Only pair a computer you're
+  actions with Windows Hello"), or for a computer whose key is in software (`key_store: "software"`,
+  which KIFF pairs view-only) "… will show your tafs and send approvals to this phone" in its place
+  (`pair_gives_view`), "Only pair a computer you're
   using right now", and "Does your computer show XFI4MD?" with the check code (§5.2, base32 of
   sha256 over the keys' DER, a passkey's key in the approval key's place; the shared vector `H6SJNU` and `LTJFF6` is asserted literally).
 - **Yes:** the approval key signs `POST /v1/me/pairings` (`kiff.request.v1` over the QR's fields),

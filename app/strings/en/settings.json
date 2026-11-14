@@ -44,6 +44,7 @@
   "settings.devices.pair_gives_hello": "{device} will be able to approve your tafs' actions with Windows Hello.",
   "settings.devices.pair_gives_passkey": "{device} will be able to approve your tafs' actions with a passkey.",
   "settings.devices.pair_gives_phone": "{device} will be able to approve your tafs' actions.",
+  "settings.devices.pair_gives_view": "{device} will show your tafs and send approvals to this phone.",
   "settings.devices.pair_invalid": "KIFF couldn't read that code. Show a new one on your computer and scan it again.",
   "settings.devices.pair_key_registered": "That computer is already paired.",
   "settings.devices.pair_named": "Pair {device}?",
