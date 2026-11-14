@@ -212,6 +212,8 @@ struct HomeSplitView: View {
             // that asks for a screen still opens Refunds.
             let onList = tab != nil && !(Screenshots.enabled && Screenshots.screen != nil)
             opened = onList ? .overview : Self.opening(model.listedTafs, screenshot: Screenshots.enabled && !Screenshots.listSettlesOnReturn)
+            // `-screen calendar` and `calendar-week` select Calendar, the sidebar's item (Screenshots.calendar).
+            if Screenshots.calendar != nil { opened = .calendar }
             chosen = false
             selection = opened
         }

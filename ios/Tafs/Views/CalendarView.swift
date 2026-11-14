@@ -15,7 +15,8 @@ struct CalendarView: View {
     private static let hourHeight: CGFloat = 44
 
     private var today: String { CalendarMath.today(in: AccountTime.zone) }
-    private var state: CalendarState { model.calendarState ?? CalendarState(selected: today) }
+    /// Until a choice is made here, a screenshot's `-screen calendar` or `calendar-week` (Screenshots.calendar).
+    private var state: CalendarState { model.calendarState ?? Screenshots.calendar ?? CalendarState(selected: today) }
     /// The read for the selected date's range, or nil while it's being read.
     private var read: TafsCloud.CalendarRead? { CalendarMath.current(model.calendarRead, selected: state.selected) }
     private var events: [TafsCloud.CalendarEvent] { read?.events ?? [] }
