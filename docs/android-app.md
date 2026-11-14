@@ -1025,6 +1025,26 @@ and an activity launched then never gets a window ("No compose hierarchies found
 also closes a system dialog left over from boot, and each test sets its screen with `setShown`,
 which waits until there's a Compose hierarchy to read before reading it.
 
+## The app map
+
+`AppMapWalkTest` (a UI test, run with the others by `connectedDebugAndroidTest` in the
+workflow's `ui` job) walks every screen in app/routes.json. It launches `MainActivity`, starts
+the sample on the activity's own `AppModel`, and for each `AppRoute` calls `open(path)` with
+`{taf}` filled by the sample's first taf. Between routes it goes back to Home: back closes any
+sheet or dialog, then the `tafs` route clears the rest. For each route it records `opened`
+(what `open` returned), `title_shown` (whether the route's English title, from the app's
+`app/strings/en` resources, is on screen, ignoring case; a refused route opened nothing, so
+it's false and not looked for), and, for a refused route, `refused_because`: what it `needs`
+when the sample lacks that, else `signed_in_only`.
+
+The walk writes `{generated_by, mode: "sample", routes: [...]}`, sorted by route, as
+`app-map-android.json` in the connected run's additional test output (CI keeps it as the
+`android-app-map` artifact) and to logcat (tag `AppMap`, between `APP MAP BEGIN` and
+`APP MAP END`). It fails when a route that opens doesn't show its title, or when the walk
+differs from the committed `app/map/android.json`, packed as the UI tests' asset. A change
+to what a screen opens in the sample updates that file with it: the failure prints the
+walk's map to copy in.
+
 ## The first run
 
 A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](coach.md#starting-coach-once-per-account),
