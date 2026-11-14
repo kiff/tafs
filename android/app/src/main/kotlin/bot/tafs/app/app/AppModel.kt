@@ -7272,7 +7272,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Common.didntGoThrough(what = what, why = pairingWhy(e))) }
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Common.didntGoThrough(what = Words.Settings.Devices.pair, why = pairingWhy(e))) }
       return null
     } finally {
       kiff.setupSigner = null

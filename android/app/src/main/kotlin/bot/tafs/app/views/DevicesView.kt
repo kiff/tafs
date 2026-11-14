@@ -148,7 +148,15 @@ fun DevicesSheet(
     DriveAlert(
       onDismissRequest = { asking = null },
       title = { Text(Words.Settings.Devices.pairNamed(device = qr.name)) },
-      text = { Text(Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty()), modifier = Modifier.testTag(PAIR_CHECK)) },
+      text = {
+        // What saying yes gives that computer, before the code: the code protects against a swapped QR only if the person
+        // knows why it matters.
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          Text(pairGives(qr))
+          Text(Words.Settings.Devices.pairOnlyNow)
+          Text(Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty()), fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag(PAIR_CHECK))
+        }
+      },
       confirmButton = {
         TextButton(
           onClick = {
@@ -156,7 +164,7 @@ fun DevicesSheet(
             pairing = true
             scope.launch {
               try {
-                pair?.invoke(qr)?.let { pairLine = Words.Settings.Devices.pairDone(device = qr.name, code = it.code.ifBlank { qr.checkCode.orEmpty() }) }
+                pair?.invoke(qr)?.let { pairLine = pairedLine(qr, it) }
               } finally {
                 pairing = false
               }
@@ -167,6 +175,26 @@ fun DevicesSheet(
       },
       dismissButton = { TextButton(onClick = { asking = null }) { Text(Words.Common.cancel) } },
     )
+  }
+}
+
+/** What pairing gives the computer, by what approves on it (§5.1's `kind`). */
+internal fun pairGives(qr: PairQr): String = when (qr.kind) {
+  "hello" -> Words.Settings.Devices.pairGivesHello(device = qr.name)
+  "enclave" -> Words.Settings.Devices.pairGivesEnclave(device = qr.name)
+  else -> Words.Settings.Devices.pairGivesPasskey(device = qr.name)
+}
+
+/**
+ * KIFF's answer, as the person reads it: paired with the code they checked, or, when KIFF paired another code than the one
+ * shown, that, so they can sign the computer out.
+ */
+internal fun pairedLine(qr: PairQr, pairing: Pairing): String {
+  val shown = qr.checkCode.orEmpty()
+  return if (pairing.code.isNotBlank() && pairing.code != shown) {
+    Words.Settings.Devices.pairCodeDiffers(device = qr.name, kiff = pairing.code, shown = shown)
+  } else {
+    Words.Settings.Devices.pairDone(device = qr.name, code = shown)
   }
 }
 

@@ -84,6 +84,7 @@ class PairingTest {
     }
   }
 
+  /** The formula's parts, on random keys; [theCheckCodeMatchesAFixedVector] is what ties it to every other implementation. */
   @Test fun theCheckCodeIsTheFirstSixOfBase32OfBothKeysHashed() {
     val qr = PairQr.read(qrText())!!
     val want = PairQr.base32(MessageDigest.getInstance("SHA-256").digest(device + approval)).take(6)
@@ -95,6 +96,37 @@ class PairingTest {
     assertEquals(PairQr.base32(MessageDigest.getInstance("SHA-256").digest(device)).take(6), passkey.checkCode)
     // Another approval key, another code: a page showing its own QR shows another code.
     assertNotEquals(qr.checkCode, PairQr.read(qrText(approvalPub = url(key())))!!.checkCode)
+  }
+
+  /**
+   * A fixed vector, worked out outside the app: the P-256 public keys of private keys 1 and 2, as SPKI DER, and the code from
+   * Python's hashlib and base64.b32encode. Every implementation of §5.2 must give these two codes literally.
+   */
+  @Test fun theCheckCodeMatchesAFixedVector() {
+    fun hex(text: String) = text.chunked(2).map { it.toInt(16).toByte() }.toByteArray()
+    val pub = hex("3059301306072a8648ce3d020106082a8648ce3d030107034200046b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c2964fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5")
+    val approvalPub = hex("3059301306072a8648ce3d020106082a8648ce3d030107034200047cf27b188d034f7e8a52380304b51ac3c08969e277f21b35a60b48fc4766997807775510db8ed040293d9ac69f7430dbba7dade63ce982299e04b79d227873d1")
+    assertEquals("H6SJNU", PairQr.read(qrText(pub = url(pub), approvalPub = url(approvalPub)))!!.checkCode)
+    assertEquals("LTJFF6", PairQr.read(qrText(pub = url(pub), approvalPub = null))!!.checkCode)
+  }
+
+  @Test fun theAlertSaysWhatPairingGivesByWhatApprovesOnTheComputer() {
+    val hello = PairQr.read(qrText())!!
+    assertEquals("tafs on this Windows PC will be able to approve your tafs' actions with Windows Hello.", bot.tafs.app.views.pairGives(hello))
+    assertTrue(bot.tafs.app.views.pairGives(PairQr.read(qrText().replace("\"kind\":\"hello\"", "\"kind\":\"enclave\""))!!).endsWith("with Touch ID."))
+    assertTrue(bot.tafs.app.views.pairGives(PairQr.read(qrText(approvalPub = null))!!).endsWith("with a passkey."))
+  }
+
+  @Test fun aCodeKiffPairedThatIsntTheOneCheckedIsSaid() {
+    val qr = PairQr.read(qrText())!!
+    val code = qr.checkCode!!
+    assertEquals("tafs on this Windows PC is paired. It showed $code.", bot.tafs.app.views.pairedLine(qr, bot.tafs.app.kiff.Pairing("pair_1", code, "")))
+    assertEquals("tafs on this Windows PC is paired. It showed $code.", bot.tafs.app.views.pairedLine(qr, bot.tafs.app.kiff.Pairing("pair_1", "", "")))
+    val other = if (code == "AAAAAA") "BBBBBB" else "AAAAAA"
+    assertEquals(
+      "KIFF paired tafs on this Windows PC with the code $other, not $code as checked. If that isn't your computer, sign it out here.",
+      bot.tafs.app.views.pairedLine(qr, bot.tafs.app.kiff.Pairing("pair_1", other, "")),
+    )
   }
 
   @Test fun theCheckCodeIsTheSameForAPaddedKey() {
@@ -111,6 +143,7 @@ class PairingTest {
     assertNull("no name", PairQr.read(qrText(name = "")))
     assertNull("no nonce", PairQr.read(qrText(nonce = "")))
     assertNull("no expiry", PairQr.read(qrText(exp = "")))
+    assertNull("a kind the phone can't word", PairQr.read(qrText().replace("\"kind\":\"hello\"", "\"kind\":\"usb\"")))
     assertNull("a web address", PairQr.read("https://example.com/pair"))
     assertNull("not JSON at all", PairQr.read("K7Q2MX"))
   }
@@ -133,7 +166,7 @@ class PairingTest {
     val pairing = m.pairComputer(qr)
     assertEquals("pair_1", pairing?.id)
     assertEquals("K7Q2MX", pairing?.code)
-    assertEquals(listOf("Pair tafs on this Windows PC with your account"), auth.asked)
+    assertEquals(listOf("Pair tafs on this Windows PC: it can approve actions"), auth.asked)
     val sent = transport.requestsTo("POST /v1/me/pairings").single()
     val body = Json.parseToJsonElement(String(sent.body!!)).jsonObject
     assertEquals(qr.body(), JsonObject(body))
@@ -188,7 +221,7 @@ class PairingTest {
       transport.answer("POST /v1/me/pairings", status, """{"error":"$code"}""")
       assertNull(m.pairComputer(qr))
       val said = m.state.value.devicesError!!
-      assertTrue(said, said.startsWith("Pair tafs on this Windows PC with your account didn't go through") && said.contains(words))
+      assertTrue(said, said.startsWith("Pair a computer didn't go through") && said.contains(words))
     }
   }
 

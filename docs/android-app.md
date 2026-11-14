@@ -1014,26 +1014,32 @@ pair one; without it, Devices says approving needs a new sign-in and sends nothi
    screen, so the app asks for no camera permission; the manifest has Play services fetch it as
    the app installs (`app/PairScan.kt`). Closing the scanner does nothing.
 2. **The QR** is read by `kiff/Pairing.kt` (`PairQr.read`): `kiff.pair.v1`, a device key, a
-   name, a nonce and an expiry, and keys that decode as base64url. Anything else, a web address
+   name, a nonce, an expiry, a `kind` of `hello`, `enclave` or `passkey`, and keys that decode as base64url. Anything else, a web address
    say, says "That QR code isn't a computer asking to be paired." Whether the fields are within
    KIFF's bounds, the keys P-256, or the expiry still ahead, is KIFF's to say.
 3. **The check code** is the first 6 characters of base32(sha256(device key ‖ approval key)),
    RFC 4648 with no padding, the device key alone for a passkey computer. The alert asks
-   "Pair {name}?" with "Does your computer show {code}?", and **Yes, pair it** or Cancel. A
-   page showing its own QR shows another code.
+   "Pair {name}?", says first what yes gives ("{name} will be able to approve your tafs' actions
+   with Windows Hello", Touch ID for `enclave`, a passkey for `passkey`) and "Only pair a computer
+   you're using right now.", then "Does your computer show {code}?", with **Yes, pair it** or
+   Cancel. A page showing its own QR shows another code; the code protects only if the person
+   knows what yes gives.
 4. **The approval.** On yes, `POST /v1/me/pairings` carries the QR's fields as they came,
-   signed by the approval key behind a fingerprint that reads "Pair {name} with your account".
+   signed by the approval key behind a fingerprint that reads "Pair {name}: it can approve actions".
    The route grants authority (`KiffClient.grantsAuthority`), so it is never signed inside an
    approval window, which never covers a pairing.
 5. **KIFF's answer.** `201 {pairing: {id, code, expires}}`: Devices shows "{name} is paired. It
-   showed {code}." with KIFF's code, and reads the list again, where the computer has Sign out
+   showed {code}.", and reads the list again. When KIFF's code isn't the one the person checked,
+   it says so instead, and to sign the computer out if it isn't theirs. In the list the computer has Sign out
    like any other device. A refusal says what didn't go through, in KIFF's `words` when it sends
    them; until then, the app words its codes: `pairing_expired`, `pairing_used`,
    `key_registered` and `invalid_pairing` each say to show a new code or that the computer is
    paired already, and `approval_key_required` that approving needs a new sign-in.
 
 Both controls carry the confirm mark: Coach never pairs a computer ([drive.md](drive.md)).
-Tests: `PairingTest` (the check code against RFC 4648's vectors, what is read, the signed
+Tests: `PairingTest` (a fixed check-code vector worked out outside the app, which every
+implementation of §5.2 must give literally: the P-256 keys of private keys 1 and 2 give `H6SJNU`,
+the first alone `LTJFF6`; RFC 4648's base32 vectors; what is read, the signed
 request, the window, each refusal) and `PairComputerTest` (the sheet).
 
 ## The calendar

@@ -90328,6 +90328,59 @@
         }
       }
     },
+    "settings.devices.pair_code_differs": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF hat %1$@ mit dem Code %2$@ gekoppelt, nicht mit %3$@ wie geprüft. Ist das nicht dein Computer, melde ihn hier ab."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF paired %1$@ with the code %2$@, not %3$@ as checked. If that isn't your computer, sign it out here."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF vinculó %1$@ con el código %2$@, no con %3$@ como comprobaste. Si no es tu ordenador, cierra su sesión aquí."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF a associé %1$@ avec le code %2$@, et non %3$@ comme vérifié. Si ce n'est pas votre ordinateur, déconnectez-le ici."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF ha associato %1$@ con il codice %2$@, non %3$@ come verificato. Se non è il tuo computer, disconnettilo qui."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF heeft %1$@ gekoppeld met de code %2$@, niet %3$@ zoals gecontroleerd. Is dat niet jouw computer, log hem hier dan uit."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF sparował %1$@ z kodem %2$@, a nie %3$@, jak sprawdzono. Jeśli to nie Twój komputer, wyloguj go tutaj."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O KIFF associou %1$@ com o código %2$@, não %3$@ como verificou. Se não for o seu computador, termine a sessão dele aqui."
+          }
+        }
+      }
+    },
     "settings.devices.pair_done": {
       "extractionState": "manual",
       "localizations": {
@@ -90430,6 +90483,165 @@
           "stringUnit": {
             "state": "translated",
             "value": "O código no seu computador expirou. Mostre um novo e leia-o outra vez."
+          }
+        }
+      }
+    },
+    "settings.devices.pair_gives_enclave": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kann dann die Aktionen deiner tafs mit Touch ID genehmigen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ will be able to approve your tafs' actions with Touch ID."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ podrá aprobar las acciones de tus tafs con Touch ID."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ pourra approuver les actions de vos tafs avec Touch ID."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ potrà approvare le azioni dei tuoi tafs con Touch ID."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kan dan de acties van je tafs goedkeuren met Touch ID."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ będzie mógł zatwierdzać działania Twoich tafs za pomocą Touch ID."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ poderá aprovar as ações dos seus tafs com Touch ID."
+          }
+        }
+      }
+    },
+    "settings.devices.pair_gives_hello": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kann dann die Aktionen deiner tafs mit Windows Hello genehmigen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ will be able to approve your tafs' actions with Windows Hello."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ podrá aprobar las acciones de tus tafs con Windows Hello."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ pourra approuver les actions de vos tafs avec Windows Hello."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ potrà approvare le azioni dei tuoi tafs con Windows Hello."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kan dan de acties van je tafs goedkeuren met Windows Hello."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ będzie mógł zatwierdzać działania Twoich tafs za pomocą Windows Hello."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ poderá aprovar as ações dos seus tafs com Windows Hello."
+          }
+        }
+      }
+    },
+    "settings.devices.pair_gives_passkey": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kann dann die Aktionen deiner tafs mit einem Passkey genehmigen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ will be able to approve your tafs' actions with a passkey."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ podrá aprobar las acciones de tus tafs con una llave de acceso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ pourra approuver les actions de vos tafs avec une clé d'accès."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ potrà approvare le azioni dei tuoi tafs con una passkey."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kan dan de acties van je tafs goedkeuren met een passkey."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ będzie mógł zatwierdzać działania Twoich tafs za pomocą klucza dostępu."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ poderá aprovar as ações dos seus tafs com uma chave de acesso."
           }
         }
       }
@@ -90646,55 +90858,108 @@
         }
       }
     },
+    "settings.devices.pair_only_now": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopple nur einen Computer, den du gerade selbst benutzt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only pair a computer you're using right now."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincula solo un ordenador que estés usando ahora mismo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "N'associez qu'un ordinateur que vous utilisez en ce moment."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Associa solo un computer che stai usando in questo momento."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppel alleen een computer die je nu zelf gebruikt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paruj tylko komputer, którego właśnie używasz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Associe apenas um computador que esteja a usar neste momento."
+          }
+        }
+      }
+    },
     "settings.devices.pair_prompt": {
       "extractionState": "manual",
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ mit deinem Konto koppeln"
+            "value": "%1$@ koppeln: Er kann Aktionen genehmigen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pair %1$@ with your account"
+            "value": "Pair %1$@: it can approve actions"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vincular %1$@ con tu cuenta"
+            "value": "Vincular %1$@: podrá aprobar acciones"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Associer %1$@ à votre compte"
+            "value": "Associer %1$@ : il pourra approuver des actions"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Associa %1$@ al tuo account"
+            "value": "Associa %1$@: potrà approvare azioni"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ koppelen aan je account"
+            "value": "%1$@ koppelen: hij kan acties goedkeuren"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sparuj %1$@ z Twoim kontem"
+            "value": "Sparuj %1$@: będzie mógł zatwierdzać działania"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Associar %1$@ à sua conta"
+            "value": "Associar %1$@: poderá aprovar ações"
           }
         }
       }

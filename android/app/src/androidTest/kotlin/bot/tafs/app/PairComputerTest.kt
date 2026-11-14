@@ -61,6 +61,8 @@ class PairComputerTest {
     rule.onNodeWithText("Pair tafs on this Windows PC?").assertIsDisplayed()
     rule.onNodeWithTag(PAIR_CHECK).assertIsDisplayed()
     rule.onNodeWithText("Does your computer show $code?").assertIsDisplayed()
+    rule.onNodeWithText("tafs on this Windows PC will be able to approve your tafs' actions with Windows Hello.").assertIsDisplayed()
+    rule.onNodeWithText("Only pair a computer you're using right now.").assertIsDisplayed()
     assertTrue("nothing is signed before the yes", paired.isEmpty())
     rule.onNodeWithText("Yes, pair it").performClick()
     rule.waitForIdle()

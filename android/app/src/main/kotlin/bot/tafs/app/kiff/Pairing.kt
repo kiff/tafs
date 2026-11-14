@@ -52,10 +52,16 @@ data class PairQr(
   companion object {
     const val VERSION = "kiff.pair.v1"
 
-    /** A scanned QR, when it's a computer asking to be paired: the version, a key, a name, a nonce and an expiry. Else null. */
+    /** The kinds of computer §5.1 names: what approves on it, which the alert tells the person before they say yes. */
+    val KINDS = setOf("hello", "enclave", "passkey")
+
+    /**
+     * A scanned QR, when it's a computer asking to be paired: the version, a key, a name, a nonce, an expiry and a kind the
+     * phone can word. Else null.
+     */
     fun read(text: String): PairQr? {
       val qr = runCatching { KiffClient.json.decodeFromString(serializer(), text) }.getOrNull() ?: return null
-      if (qr.v != VERSION || qr.pub.isBlank() || qr.name.isBlank() || qr.nonce.isBlank() || qr.exp.isBlank()) return null
+      if (qr.v != VERSION || qr.pub.isBlank() || qr.name.isBlank() || qr.nonce.isBlank() || qr.exp.isBlank() || qr.kind !in KINDS) return null
       return qr.takeIf { it.checkCode != null }
     }
 
