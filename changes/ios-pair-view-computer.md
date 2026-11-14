@@ -1,0 +1,1 @@
+- **iPhone and iPad:** pairing a computer whose key is in software (an Intel Mac with no Secure Enclave) now says it will show your tafs and send approvals to this phone, never that it approves with a passkey ([ios-app.md](../docs/ios-app.md#pairing-a-computer)).

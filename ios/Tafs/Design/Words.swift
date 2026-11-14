@@ -3592,6 +3592,8 @@ enum Words {
             static func pairGivesPasskey(device: String) -> String { Words.line("settings.devices.pair_gives_passkey", device) }
             /// {device} will be able to approve your tafs' actions.
             static func pairGivesPhone(device: String) -> String { Words.line("settings.devices.pair_gives_phone", device) }
+            /// {device} will show your tafs and send approvals to this phone.
+            static func pairGivesView(device: String) -> String { Words.line("settings.devices.pair_gives_view", device) }
             /// KIFF couldn't read that code. Show a new one on your computer and scan it again.
             static var pairInvalid: String { Words.line("settings.devices.pair_invalid") }
             /// That computer is already paired.

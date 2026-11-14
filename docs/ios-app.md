@@ -910,7 +910,9 @@ Account → Devices → **Add a device** pairs one of the person's computers, or
   Windows Hello) only for `passkey`, exactly `{id, public_key}`, an id of at most 1023 bytes and a
   P-256 key that isn't the device key. The body sends it on as read. A code it won't pair is said in words, and the camera keeps reading.
 - **Before the fingerprint:** what pairing gives by kind ("… will be able to approve your tafs'
-  actions with Windows Hello"), the software-key line when it applies, "Only pair a computer you're
+  actions with Windows Hello"), or for a computer whose key is in software (`key_store: "software"`,
+  which KIFF pairs view-only) "… will show your tafs and send approvals to this phone" in its place
+  (`pair_gives_view`), "Only pair a computer you're
   using right now", and "Does your computer show XFI4MD?" with the check code (§5.2, base32 of
   sha256 over the keys' DER, a passkey's key in the approval key's place; the shared vector `H6SJNU` and `LTJFF6` is asserted literally).
 - **Yes:** the approval key signs `POST /v1/me/pairings` (`kiff.request.v1` over the QR's fields),
