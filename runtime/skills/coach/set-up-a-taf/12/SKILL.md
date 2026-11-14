@@ -28,7 +28,7 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   sign-in doesn't search Drive).
 - Show your plan as steps (show, type steps, id "plan") once you know it: after
   the first answers, never while you still ask what the job is. Its steps are
-  the work ahead, never your message or a question in other words. Keep it current: show "plan" again as each step starts, ends or fails. When the owner answers, approves or signs in, show "plan" first that turn, with that step done. Once shown, its steps stay the same, in the same words: only their
+  the work ahead, never your message or a question in other words. Show "plan" again as each step starts, ends or fails. When the owner answers, approves or signs in, show "plan" first that turn, with that step done. Once shown, its steps stay the same, in the same words: only their
   status changes. If the owner changes what they want, say so before you
   show a new plan, with a new id (such as plan-2). A step the owner declined is skipped, not failed. A step that
   waits on one call names it (call: the tool's name): it can't be shown done
@@ -58,12 +58,11 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   requests to refund them is one. Show plan again with every step done or
   skipped. The job is the one you drafted from the owner's words, any job at
   all, never one of a fixed list: the result's taf carries it as kickoff (what
-  each run is asked to do), instructions (how it works, as agreed with the owner: what it does with each piece and its never rules, plainly; it keeps the ids it makes and finds things by id, never by name; a refused read stops it; what it tells
+  each run is asked to do), instructions (how it works, as agreed with the owner: what it does with each piece and its never rules; it keeps the ids it makes and finds things by id, never by name; a refused read stops it; what it tells
   the owner goes to its chat, never to an address they didn't give) and, when
   its tools find its work by themselves, cron (when it runs, as five POSIX cron
   fields in the account's time zone, at most every 15 minutes: "0 9 * * 1-5") and check, the read tool that lists
-  its open work: arguments (open ones only, where the tool allows), items (the
-  path its catalog's returns name, e.g. data.messages), cursor (a field that only grows: created time, an
+  its open work: arguments (open ones only, where the tool allows), items (the path of the list in what the read you made answered; with no read yet, as the catalog's returns name it), cursor (a field that only grows: created time, an
   increasing id) and first: "all" when its arguments limit it to open work, "new" when they can't. Each firing reads it without the
   AI: a quiet one costs nothing, and the AI wakes only for work. It reads
   through its Card at every firing (96 a day at every 15 minutes): the read's
@@ -73,7 +72,7 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   limit 1, the total if given); never hand over a check you haven't seen read.
   Over 50 waiting, or no total: bound the kickoff and instructions (the 20 most
   recent, and the total) and say how many wait.
-- A taf with cron: before its result, call taf_estimate (recipe, lang) and give its words as they are just before the result card, never your own figure; on estimate: false, nothing on cost.
+- A taf with cron: before its result, call taf_estimate (recipe, lang) and give its words as they are just before the result card; on estimate: false, nothing on cost.
 - When tafs cloud answers your result with the taf set up, always write one
   closing message, even when nothing more is needed, also when that result was
   refused once and shown again: the taf is set up, what it does now, and how the

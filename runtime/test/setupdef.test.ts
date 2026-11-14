@@ -427,6 +427,8 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("setup_reads goes on that one only, never on the taf's own reads: those read the owner's account");
     expect(flat).toContain("read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments} (before a key: describe's arguments, by in and type), and place each argument you name");
     expect(flat).toContain("with no question of its own and no second approval");
+    // 14 Nov: an English message got a French answer; the owner's last message sets the language, never a tool's words.
+    expect(flat).toContain("Their last message sets it, not a tool's.");
     expect(flat).toContain("Reading first doesn't split the owner's questions: ask the ones that don't depend on each other together, in one questions card");
     // The account and the mode, pinned on reads too: the owner's taf looked the account
     // up on every message, one more wait each time (kiff/tafs#138, item 58).
