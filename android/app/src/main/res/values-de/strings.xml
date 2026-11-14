@@ -625,7 +625,6 @@
     <string name="coach_drive_cant">Coach kann nicht steuern: %1$s</string>
     <string name="coach_drive_not_started_unconfirmed">Nicht gestartet: Es wurde nicht bestätigt.</string>
     <string name="coach_driving">Steuert</string>
-    <string name="coach_each_waits">Jede Verbindung und jede Card wartet auf %1$s.</string>
     <string name="coach_earlier_request">Frühere Anfrage</string>
     <string name="coach_folds_plan">Klappt den Plan ein</string>
     <string name="coach_full_screen">Vollbild</string>
@@ -634,7 +633,7 @@
     <string name="coach_improve_why_refused">Warum wurde etwas abgelehnt oder zurückgehalten?</string>
     <string name="coach_improve_line">Sag, was sich ändern soll, oder frag, wie es läuft. Der Coach-Modus geht davon aus, was %1$s getan hat und was seine Card erlaubt.</string>
     <string name="coach_improve_taf">%1$s verbessern</string>
-    <string name="coach_intro">Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter. Kein taf sieht deine Anmeldung.</string>
+    <string name="coach_intro">Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter.</string>
     <string name="coach_kiff_counts_way">KIFF zählt es so</string>
     <string name="coach_making_live">Wird live geschaltet…</string>
     <string name="coach_name_tool_taf_should_work">Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter. Kein taf sieht deine Anmeldung. Du genehmigst mit %1$s.</string>
@@ -1141,11 +1140,10 @@
     <string name="halt_again">Erneut anhalten</string>
     <string name="halt_all_now">Alle jetzt anhalten</string>
     <string name="halt_explain_halted">Angehalten. Fortsetzen startet nur neue Arbeit.</string>
-    <string name="halt_explain_halted_since">Angehalten seit %1$s. Fortsetzen startet nur neue Arbeit.</string>
+    <string name="halt_explain_halted_since">Seit %1$s. Fortsetzen startet nur neue Arbeit.</string>
     <string name="halt_explain_halting">Nichts Neues startet. „Angehalten“ erscheint, sobald KIFF und die Verbindung beide bestätigen.</string>
     <string name="halt_explain_running_all">Anhalten stoppt deine tafs, bis du fortsetzt. Ein schon gesendeter Aufruf kann noch ankommen.</string>
     <string name="halt_explain_running_one">Anhalten stoppt ihn, bis du fortsetzt. Ein schon gesendeter Aufruf kann noch ankommen.</string>
-    <string name="halt_halted_nothing_reaches_your_tools">Angehalten%1$s. Fortsetzen startet nur neue Arbeit.</string>
     <string name="halt_halting_stops_no_run_starts">Anhalten stoppt %1$s, bis du fortsetzt. Ein schon gesendeter Aufruf kann noch ankommen.</string>
     <string name="halt_now">Jetzt anhalten</string>
     <string name="halt_row_running">Bis zum Fortsetzen stoppen</string>
@@ -1199,7 +1197,6 @@
     <string name="home_sample_label">Was es nach seinem Testlauf berichtet hat</string>
     <string name="home_see_all_jobs">Alle Aufgaben ansehen</string>
     <string name="home_shared_you">Mit dir geteilt</string>
-    <string name="home_sign_approve_each_step">Du meldest dich an und genehmigst jeden Schritt</string>
     <string name="home_start_new_taf">Einen neuen taf starten</string>
     <string name="home_status">Status</string>
     <string name="home_status_retrying">%1$s · neuer Versuch</string>

@@ -30714,59 +30714,6 @@
         }
       }
     },
-    "coach.each_waits": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jede Verbindung und jede Card wartet auf %1$@."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Each connection and each Card waits for %1$@."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cada conexión y cada Card esperan %1$@."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Chaque connexion et chaque Card attend %1$@."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ogni collegamento e ogni Card aspettano %1$@."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elke koppeling en elke Card wacht op %1$@."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Każde połączenie i każda Card czekają na %1$@."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cada ligação e cada Card aguardam %1$@."
-          }
-        }
-      }
-    },
     "coach.earlier_request": {
       "extractionState": "manual",
       "localizations": {
@@ -31197,49 +31144,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter. Kein taf sieht deine Anmeldung."
+            "value": "Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name an app for your taf, like your payment provider. No taf sees your sign-in."
+            "value": "Name an app for your taf, like your payment provider."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nombra una app para tu taf, como tu proveedor de pagos. Ningún taf ve tu inicio de sesión."
+            "value": "Nombra una app para tu taf, como tu proveedor de pagos."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nommez une app pour votre taf, comme votre prestataire de paiement. Aucun taf ne voit votre connexion."
+            "value": "Nommez une app pour votre taf, comme votre prestataire de paiement."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Indica un'app per il tuo taf, come il tuo fornitore di pagamenti. Nessun taf vede il tuo accesso."
+            "value": "Indica un'app per il tuo taf, come il tuo fornitore di pagamenti."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noem een app voor je taf, zoals je betaalprovider. Geen enkel taf ziet je login."
+            "value": "Noem een app voor je taf, zoals je betaalprovider."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Żaden taf nie widzi Twojego logowania."
+            "value": "Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Nenhum taf vê o seu início de sessão."
+            "value": "Indique uma app para o seu taf, como o seu fornecedor de pagamentos."
           }
         }
       }
@@ -56976,49 +56923,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Angehalten seit %1$@. Fortsetzen startet nur neue Arbeit."
+            "value": "Seit %1$@. Fortsetzen startet nur neue Arbeit."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Halted since %1$@. Resuming starts only new work."
+            "value": "Since %1$@. Resuming starts only new work."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqueado desde %1$@. Al reanudar, solo empieza trabajo nuevo."
+            "value": "Desde %1$@. Al reanudar, solo empieza trabajo nuevo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqué depuis %1$@. La reprise ne lance que du nouveau travail."
+            "value": "Depuis %1$@. La reprise ne lance que du nouveau travail."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloccato dalle %1$@. Riprendendo, parte solo lavoro nuovo."
+            "value": "Dalle %1$@. Riprendendo, parte solo lavoro nuovo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stilgezet sinds %1$@. Hervatten start alleen nieuw werk."
+            "value": "Sinds %1$@. Hervatten start alleen nieuw werk."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zablokowane od %1$@. Wznowienie uruchamia tylko nową pracę."
+            "value": "Od %1$@. Wznowienie uruchamia tylko nową pracę."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bloqueado desde %1$@. Ao retomar, só começa trabalho novo."
+            "value": "Desde %1$@. Ao retomar, só começa trabalho novo."
           }
         }
       }
@@ -57178,59 +57125,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bloquear para-o até retomar. Uma chamada já enviada pode ainda chegar."
-          }
-        }
-      }
-    },
-    "halt.halted_nothing_reaches_your_tools": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Angehalten%1$@. Fortsetzen startet nur neue Arbeit."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Halted%1$@. Resuming starts only new work."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloqueado%1$@. Al reanudar, solo empieza trabajo nuevo."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloqué%1$@. La reprise ne lance que du nouveau travail."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloccato%1$@. Riprendendo, parte solo lavoro nuovo."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Stilgezet%1$@. Hervatten start alleen nieuw werk."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zablokowane%1$@. Wznowienie uruchamia tylko nową pracę."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bloqueado%1$@. Ao retomar, só começa trabalho novo."
           }
         }
       }
@@ -59872,59 +59766,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Partilhados consigo"
-          }
-        }
-      }
-    },
-    "home.sign_approve_each_step": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Du meldest dich an und genehmigst jeden Schritt"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "You sign in and approve each step"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inicias sesión y apruebas cada paso"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vous vous connectez et approuvez chaque étape"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accedi e approvi ogni passo"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Je logt in en keurt elke stap goed"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Logujesz się i zatwierdzasz każdy krok"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inicia sessão e aprova cada passo"
           }
         }
       }
