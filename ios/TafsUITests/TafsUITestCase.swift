@@ -19,7 +19,9 @@ class TafsUITestCase: XCTestCase {
         _ = addUIInterruptionMonitor(withDescription: "Sign in to Apple Account") { alert in
             // Only this alert: any other (a permission prompt, where the last button is "Allow")
             // is left to the test and XCTest's own handling.
-            guard alert.label.contains("Apple Account") else { return false }
+            // Springboard's title has a non-breaking space between "Apple" and "Account" (U+00A0).
+            let title = alert.label.replacingOccurrences(of: "\u{00A0}", with: " ")
+            guard title.contains("Apple Account") else { return false }
             // The alert's own way out, in this order; else its last button.
             for title in ["Not Now", "Cancel", "Later", "Close"] {
                 let button = alert.buttons.matching(NSPredicate(format: "label == %@ OR identifier == %@", title, title)).firstMatch
