@@ -4929,7 +4929,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const r = await call(`/v1/home/coach-waiting/${stored.session}/set-aside`);
     expect(r.statusCode).toBe(200);
     expect(JSON.parse(r.body)).toEqual({ set_aside: [stored.session], withdrawn: 0 });
-    expect(stored.status).toBe("CANCELLED");
+    // kiff/agents can't cancel a run paused on a card (409 paused_run): it stays PAUSED there, and tafs cloud keeps it as ended.
+    expect(stored.status).toBe("PAUSED");
     // Nothing answered, so nothing approved: the card stays unanswered, and no approval, confirm or claim was made.
     expect(stored.requirements![0]!.answered).toBeUndefined();
     expect(w.agents.calls.filter((c) => /answerCard|answerResult|claimTafDraft/.test(c))).toEqual([]);
@@ -4938,6 +4939,15 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(home.needs_you.count).toBe(0);
     // The same set aside again (a resend): done, marked already.
     expect(JSON.parse((await call(`/v1/home/coach-waiting/${stored.session}/set-aside`)).body)).toEqual({ set_aside: [stored.session], already: true });
+
+    // Opened in Coach after all and answered there, the run goes on and pauses on a new card: that one shows, it isn't hidden.
+    const first = stored.requirements![0]!;
+    first.answered = w.now.toISOString();
+    stored.requirements!.push({ ...first, call_id: `${first.call_id}-next`, answered: undefined,
+      input: { ...(first.input as object), id: "approve-card-3" } });
+    const after = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps)).body) as { coach_waiting?: Array<{ session: string }>; needs_you: { count: number } };
+    expect(after.coach_waiting?.map((x) => x.session)).toEqual([stored.session]);
+    expect(after.needs_you.count).toBe(1);
   });
 
   it("withdraws a connection the chat asked for a taf that isn't live, through planque's end, never a live taf's", async () => {
@@ -4959,7 +4969,10 @@ describe("Coach's result, handed over by tafs cloud", () => {
       headers: { Authorization: "Bearer ana", "planque-device-signature": "t=1,v1=s,d=dev" } }, planque);
     expect(JSON.parse(r.body)).toEqual({ set_aside: [stored.session], withdrawn: 1 });
     expect(ended).toEqual(["inbox-new"]);
-    expect(stored.status).toBe("CANCELLED");
+    expect(stored.status).toBe("PAUSED");
+    // Set aside, it's gone from Home, though kiff/agents keeps the run PAUSED.
+    const home = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps)).body) as { coach_waiting?: unknown };
+    expect(home.coach_waiting).toBeUndefined();
   });
 
   it("offers Set all aside only for two or more, naming the count, in the person's language", () => {
@@ -4977,7 +4990,15 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(stored.status).toBe("PAUSED");
     stored.updated = new Date(w.now.getTime() - 49 * 3600_000).toISOString();
     expect(await sweepStaleCoach(deps)).toEqual([{ run, why: "stale" }]);
-    expect(stored.status).toBe("CANCELLED");
+    // kiff/agents keeps a run paused on a card PAUSED (409 paused_run); tafs cloud keeps it as ended, so the next sweep
+    // doesn't end it again (it did every 5 minutes, logging "ended" each time) and Home no longer lists it.
+    expect(stored.status).toBe("PAUSED");
+    const cancels = w.agents.calls.filter((c) => c.startsWith("cancelRun")).length;
+    expect(await sweepStaleCoach(deps)).toEqual([]);
+    expect(w.agents.calls.filter((c) => c.startsWith("cancelRun")).length).toBe(cancels);
+    stored.requester = { kind: "member", id: "u_ana" };
+    const home = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps)).body) as { coach_waiting?: unknown };
+    expect(home.coach_waiting).toBeUndefined();
     // Replaced: its approval names a draft a taf already claimed.
     const replaced = await paused({ id: "a1", type: "approval", grant: "g1", draft: "drf_s1" });
     replaced.w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x", keyRef: "k_made" });
