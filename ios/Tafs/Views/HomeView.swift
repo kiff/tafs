@@ -13,6 +13,8 @@ struct HomeView: View {
     /// what resumes it), else the taf's.
     @State private var showingHalt = false
     @State private var haltTaf: UUID?
+    /// A taf asked for by name (`AppModel.requestedTafPage`), pushed here.
+    @State private var namedTaf: UUID?
     /// A recipe's sheet, opened from Home with no taf, or from the strip under the tafs list.
     @State private var openRecipe: TafsCloud.Recipes.Recipe?
     /// + New's gallery of every ready-made job, and what was chosen in it: acted on once it closes.
@@ -22,6 +24,20 @@ struct HomeView: View {
     private func openHalt(_ tafID: UUID) {
         haltTaf = model.haltState(nil).state == .running ? tafID : nil
         showingHalt = true
+    }
+
+    /// A taf's page asked for by name: pushed, unless it's on screen already. The taf's page
+    /// opens on the part asked for and clears the request.
+    private func take(_ request: AppModel.TafPageRequest?) {
+        guard let request, !model.sidebarShown, model.tafOnScreen != request.taf else { return }
+        namedTaf = request.taf
+    }
+
+    /// The calendar asked for by name.
+    private func takeCalendar() {
+        guard model.calendarRequested else { return }
+        showingCalendar = true
+        model.calendarRequested = false
     }
 
     var body: some View {
@@ -146,6 +162,13 @@ struct HomeView: View {
         .screenBackground()
         .navigationDestination(isPresented: $showingCalendar) { CalendarView() }
         .navigationDestination(isPresented: $showingHalt) { HaltScreen(tafID: haltTaf) }
+        .navigationDestination(isPresented: Binding(get: { namedTaf != nil }, set: { if !$0 { namedTaf = nil } })) {
+            // A new page for each taf asked for, which opens on what was asked.
+            if let id = namedTaf { TafDetailView(tafID: id).id(id) }
+        }
+        .onAppear { take(model.requestedTafPage); takeCalendar() }
+        .onChange(of: model.requestedTafPage) { take($0) }
+        .onChange(of: model.calendarRequested) { _ in takeCalendar() }
         .sheet(item: $openRecipe) { recipe in
             // A recipe no longer listed (the account has a taf now) shows no sheet's worth: the
             // sheet draws what was tapped, and handing it over closes it.

@@ -1269,6 +1269,131 @@ final class AppModel: ObservableObject {
         }
     }
 
+    // MARK: Opening a screen by name (app/routes.json)
+
+    /// A part of a taf's page, as the app map names it.
+    enum TafPage: Equatable, Sendable { case chat, activity, card, setup, startsWhen, resultsGoTo, versions, workflow, memory, share }
+    struct TafPageRequest: Equatable, Sendable {
+        let taf: UUID
+        let page: TafPage
+    }
+    /// A taf's page, asked for by name: Home pushes it, or the sidebar selects it, and the taf's
+    /// page opens on the part asked for and clears this (its Share line and its workflow take
+    /// theirs themselves).
+    @Published var requestedTafPage: TafPageRequest?
+
+    /// A screen of Settings, asked for by name: Settings opens it and clears this.
+    enum AccountPage: Equatable, Sendable { case people, devices, apps, alerts, timeZone, deleteAccount }
+    @Published var requestedAccountPage: AccountPage?
+
+    /// The calendar, asked for by name: Home opens it, or the sidebar selects it, and clears this.
+    @Published var calendarRequested = false
+
+    /// Opens a screen by its path in the app map (`taf/3f2a/setup/versions`). False, with nothing
+    /// changed, when no route matches, the taf it names isn't one the app holds, or the person
+    /// may not use that screen.
+    @discardableResult
+    func open(route path: String) -> Bool {
+        guard let match = AppRoute.match(path) else { return false }
+        return open(match.route, values: match.values)
+    }
+
+    /// Opens a route of the app map with its values. Each route has its case here: a new route
+    /// doesn't build until it opens something. Only a screen the person can use opens.
+    @discardableResult
+    func open(_ route: AppRoute, values: [String: String] = [:]) -> Bool {
+        guard signedIn else { return false }
+        var id: UUID?
+        if route.parameters.contains("taf") {
+            guard let named = values["taf"].flatMap({ tafNamed($0) }) else { return false }
+            id = named
+        }
+        guard hasNeeds(of: route, taf: id) else { return false }
+        let kiff = mode == .kiff
+        let cloud = id.flatMap { cloudTaf(for: $0) } != nil
+        switch route {
+        case .tafs: requestedTab = .tafs
+        case .needsYou: requestedTab = .needsYou
+        case .record: requestedTab = .record
+        case .calendar:
+            guard kiff else { return false }
+            requestedTab = .tafs
+            calendarRequested = true
+        case .coach:
+            guard kiff, mayUseCoach else { return false }
+            coachOpen = true
+        case .haltAll:
+            guard showsAccountHalt else { return false }
+            haltRequestedTaf = nil
+            haltRequested = true
+        // The theme and the language are on Settings itself.
+        case .account, .accountTheme, .accountLanguage: requestedTab = .account
+        case .accountPeople: return openAccount(.people, when: kiff)
+        case .accountDevices: return openAccount(.devices, when: kiff)
+        case .accountApps: return openAccount(.apps, when: kiff)
+        // Members' requests are on Plan & usage.
+        case .accountUsage, .accountUsageRequests:
+            guard kiff else { return false }
+            usageRequested = true
+        case .accountAlerts: return openAccount(.alerts, when: true)
+        case .accountTimeZone: return openAccount(.timeZone, when: kiff)
+        case .accountDelete: return openAccount(.deleteAccount, when: kiff && kiffAccount != nil)
+        case .taf: return openTaf(id, .chat, when: true)
+        case .tafActivity: return openTaf(id, .activity, when: true)
+        case .tafCard: return openTaf(id, .card, when: true)
+        case .tafSetup: return openTaf(id, .setup, when: true)
+        case .tafSetupStartsWhen: return openTaf(id, .startsWhen, when: kiff && cloud)
+        case .tafSetupResultsGoTo: return openTaf(id, .resultsGoTo, when: kiff && cloud)
+        case .tafSetupVersions: return openTaf(id, .versions, when: kiff && cloud)
+        case .tafWorkflow: return openTaf(id, .workflow, when: kiff && cloud)
+        // The sample's memory is on Setup; a taf on tafs cloud has its own page of it.
+        case .tafMemory: return openTaf(id, .memory, when: mode == .sample || (kiff && cloud))
+        case .tafHalt:
+            guard let id, kiff, cloud, taf(id)?.state != .revoked else { return false }
+            haltRequestedTaf = id
+            haltRequested = true
+        case .tafShare: return openTaf(id, .share, when: kiff)
+        }
+        return true
+    }
+
+    private func openTaf(_ id: UUID?, _ page: TafPage, when allowed: Bool) -> Bool {
+        guard let id, allowed else { return false }
+        requestedTab = .tafs
+        requestedTafPage = TafPageRequest(taf: id, page: page)
+        return true
+    }
+
+    private func openAccount(_ page: AccountPage, when allowed: Bool) -> Bool {
+        guard allowed else { return false }
+        requestedTab = .account
+        requestedAccountPage = page
+        return true
+    }
+
+    /// Whether the person has what a route needs (app/routes.json): to manage the taf it names,
+    /// or an account capability, as the app already reads them. A need it doesn't know opens nothing.
+    func hasNeeds(of route: AppRoute, taf id: UUID?) -> Bool {
+        switch route.needs {
+        case nil: return true
+        case "manages"?: return id.map { manages($0) } ?? false
+        case "cards.manage"?: return canManageCards
+        case "members.manage"?: return canManagePeople
+        case "billing.manage"?: return managesBilling
+        case "account.delete"?: return mayDeleteAccount
+        default: return false
+        }
+    }
+
+    /// The taf a route's `{taf}` names: tafs cloud's id for it (app/routes.py), or the app's own
+    /// id, or its KIFF agent. Nil for a taf the app doesn't list, and never a trial's chat.
+    func tafNamed(_ value: String) -> UUID? {
+        let listed = tafs + otherAgents
+        if let id = UUID(uuidString: value), listed.contains(where: { $0.id == id }) { return id }
+        let agent = cloudTafs.first { $0.value.id == value }?.key ?? value
+        return holderIDs[agent].flatMap { id in listed.contains { $0.id == id } ? id : nil }
+    }
+
     static let alertHandoffAccount = "kiff.alert-handoff"
 
     /// A KIFF alert target whose secret tafs cloud hasn't confirmed yet. Registering a target
