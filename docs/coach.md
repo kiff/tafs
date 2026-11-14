@@ -208,7 +208,9 @@ then shows its plan. Then, each step behind the owner's yes:
    person KIFF names and answers the card itself (`answered_by: "tafs cloud"`): kiff/agents
    claims the key from Coach's draft, and the taf joins the account's list
    ([tafs.md](tafs.md#starting-a-taf)). The conversation carries the card's answer
-   (`answer.by`, `answer.outcome`: `{taf_id}`, with `check` when its first check couldn't read, or `{failed}`), and the card shows it:
+   (`answer.by`, `answer.outcome`: `{taf_id}`, with `check` when its first check couldn't read, or `{failed}`), and the card shows it.
+   A first check that finds the taf's key not stored yet (the hand-over has just claimed it) is tried again, up to
+   4 times over a few seconds; still not stored, `check` says so in plain words, never the secrets store's own:
    set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
    itself; and until the answer comes, "Setting up…". A result whose Card the owner hasn't
    approved yet (KIFF's `draft_not_ready`) isn't answered at first: it waits, and the taf is made once they

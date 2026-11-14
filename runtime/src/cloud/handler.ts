@@ -1602,7 +1602,7 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
     return { taf: await view(taf, me, deps), session: null, ...plan };
   }
   let fired: Fired_;
-  try { fired = await fireNow(me.tenantID, tafID, deps); } catch (err) {
+  try { fired = await fireFirst(me.tenantID, tafID, deps, lang ?? ownerLang); } catch (err) {
     if (waitsForCredits(err) && err.code === "no_plan") {
       await oweFirstRun(me.tenantID, tafID, deps);
       return { taf: await view(taf, me, deps), session: null, plan_needed: { words: wordsIn(lang ?? ownerLang).plan_needed } };
@@ -1683,7 +1683,36 @@ export async function sweepFirstRuns(deps: Deps): Promise<Array<{ tenant: string
 }
 
 /** What firing a schedule by hand came to: the run it started, or kiff/agents' outcome, with the read's reason when it failed. */
-type Fired_ = { session: string } | { outcome: string; reason?: string };
+type Fired_ = { session: string } | { outcome: string; reason?: string; keyNotStored?: boolean };
+
+/**
+ * A check that couldn't read because the taf's key isn't in the secrets store yet: the hand-over has just claimed it.
+ * Only the store's "no such secret" says that: kiff/agents wraps every failure to read the key ("the agent's KIFF
+ * key: …": access denied, decryption, throttling) the same way, and those fail the same way every time.
+ */
+const KEY_NOT_STORED = /no such secret/i;
+/** How often, and how long apart, a new taf's first check is tried while its key isn't stored yet. */
+const FIRST_CHECK_TRIES = 4;
+const FIRST_CHECK_WAIT_MS = 1500;
+
+/**
+ * A new taf's first firing: tried again, a few times, while its check finds the taf's key not stored yet (the
+ * hand-over has only just claimed it), never answered `no such secret`. Still not stored after the last try, the
+ * reason is said in plain words, and the schedule's next time checks again.
+ */
+async function fireFirst(tenant: string, id: string, deps: Deps, lang: Lang): Promise<Fired_> {
+  const wait = deps.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  for (let i = 1; ; i++) {
+    const fired = await fireNow(tenant, id, deps);
+    if ("session" in fired || !fired.keyNotStored) return fired;
+    if (i >= FIRST_CHECK_TRIES) {
+      // The plain words replace the store's reason in the answer; the log keeps it, to diagnose.
+      console.warn(JSON.stringify({ msg: "first check: key still not stored", tenant, schedule: id, tries: i, reason: fired.reason ?? "" }));
+      return { outcome: fired.outcome, reason: wordsIn(lang).check_key_not_ready };
+    }
+    await wait(FIRST_CHECK_WAIT_MS * i);
+  }
+}
 
 /**
  * Fires the schedule now (kiff/agents' `POST /schedules/{id}/trigger`). A checked schedule's firing that starts
@@ -1693,7 +1722,7 @@ type Fired_ = { session: string } | { outcome: string; reason?: string };
 async function fireNow(tenant: string, id: string, deps: Deps): Promise<Fired_> {
   let r: Awaited<ReturnType<AgentsAPI["trigger"]>>;
   try { r = await deps.agents.trigger(tenant, id); } catch (err) {
-    if (err instanceof AgentsError && err.status === 409 && err.code === "failed_check") return { outcome: "failed_check", reason: oneLine(err.message, 500) };
+    if (err instanceof AgentsError && err.status === 409 && err.code === "failed_check") return { outcome: "failed_check", reason: oneLine(err.message, 500), ...(KEY_NOT_STORED.test(err.message) ? { keyNotStored: true } : {}) };
     throw err;
   }
   if (r?.session) return { session: r.session };
@@ -4379,8 +4408,15 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   const events = active ? await deps.agents.session(me.tenantID, active.session, ownerKey(me)).then((s) => s.events, () => []) : [];
   const rules = summary(cards.mandates.filter((m) => m.subject === taf.kiffAgent)).rules;
   const unitExceptions = cardUnitExceptions(taf, cards.held, rules, me.timeZone ?? "UTC", now, langOf(event));
-  return { ...setupView({ agent: taf.kiffAgent, grants: grants.grants, knob: knob as import("./knob.js").Knob, rules, notes: memory,
-    versions, calls: stats.calls, now, running: runningTool(events, active), statsComplete: stats.complete }),
+  const setup = setupView({ agent: taf.kiffAgent, grants: grants.grants, knob: knob as import("./knob.js").Knob, rules, notes: memory,
+    versions, calls: stats.calls, now, running: runningTool(events, active), statsComplete: stats.complete });
+  // A connection whose sign-in the vendor no longer takes: the taf's own Connect again, naming its grant, so the app
+  // signs that same connection in again (planque's approve) and the taf keeps its tools and Card. One job per view:
+  // never "go to Connect apps".
+  const out = setup.connections.find((c) => c.reconnect);
+  const w = wordsIn(langOf(event));
+  return { ...setup,
+    ...(out ? { connect_again: { grant: out.id, app: out.name, title: w.connect_again_title, words: w.connect_again_words(out.name, taf.name), done_words: w.connect_again_done(out.name, taf.name) } } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}),
     ...(grants.error ? { connections_error: grants.error } : {}) };
 }

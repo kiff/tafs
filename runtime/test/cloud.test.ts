@@ -884,6 +884,27 @@ describe("tafs cloud", () => {
     expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.card_unit_exceptions).toBeUndefined();
   });
 
+  // The owner, 13 Nov: "Connect again" sent them to every connected app, "abstract and bad UX". One job per view: the
+  // taf names its own signed-out connection, and the app signs that same grant in again.
+  it("carries the taf's own Connect again, naming its signed-out connection, in the reader's language", async () => {
+    const w = world();
+    const setup = async (status: string, lang = "en") => {
+      const r = await handle({ rawPath: `/v1/tafs/${RAE}/setup`, requestContext: { http: { method: "GET" } },
+        headers: { Authorization: "Bearer ana", "planque-device-signature": "t=1,v1=s,d=dev", "accept-language": lang } },
+        { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+          if (url.startsWith("https://planque.test/")) return new Response(JSON.stringify({ grants: [
+            { id: "grt_gmail", status, vendor: "Gmail", request: { agent: "rae", tools: [{ tool: "fetch_emails", title: "Fetch emails" }] } },
+          ] }), { status: 200 });
+          return depsOf(w).fetch!(url, init);
+        }) as Deps["fetch"] });
+      return JSON.parse(r.body) as { connect_again?: Record<string, string> };
+    };
+    expect((await setup("needs_reconnect")).connect_again).toEqual({ grant: "grt_gmail", app: "Gmail", title: "Connect again",
+      words: "Gmail's sign-in has expired, so Rae can't use it. Connect again to sign in.", done_words: "Gmail is connected again. Rae can use it." });
+    expect((await setup("needs_reconnect", "fr")).connect_again?.title).toBe("Se reconnecter");
+    expect((await setup("connected")).connect_again).toBeUndefined();
+  });
+
   it("does not claim no currency exceptions wait when KIFF could not be read", async () => {
     const w = world(); w.account.status = 503;
     expect((await call(w, "GET", "/v1/home", { token: "ana" })).status).toBe(502);
@@ -4296,6 +4317,63 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await note();
     expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
     expect([...w.tafs.held.values()].filter((t) => t.kiffAgent === "refunds-x")).toHaveLength(1);
+  });
+
+  // 13 Nov: the first check ran before the taf's key was in the secrets store, and Coach read "registry: … no such
+  // secret". It's tried again while the key isn't stored yet, and said in plain words if it never is.
+  it("tries a new taf's first check again while its key isn't stored yet, and says it plainly if it never is", async () => {
+    const notStored = "schedule: the check couldn't read the app (kept as failed_check): registry: the agent's KIFF key: secretsmanager: no such secret";
+    const once = await paused();
+    once.w.agents.access.set("u_ana", { cards_manage: true });
+    once.w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: notStored });
+    const waits: number[] = [];
+    // The key is stored by the time the first wait ends.
+    once.deps.sleep = async (ms: number) => { waits.push(ms); once.w.agents.outcomes.delete(NEW); };
+    await once.note();
+    expect(once.answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    expect(once.w.agents.calls.filter((c) => c === `trigger ${NEW}`)).toHaveLength(2);
+    expect(waits).toEqual([1500]);
+
+    const never = await paused();
+    never.w.agents.access.set("u_ana", { cards_manage: true });
+    never.w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: notStored });
+    never.deps.sleep = async () => undefined;
+    const warn = console.warn;
+    const warned: string[] = [];
+    console.warn = (line: string) => { warned.push(String(line)); };
+    try { await never.note(); } finally { console.warn = warn; }
+    // The store's reason, replaced in the answer, is kept in the log.
+    expect(warned.some((l) => l.includes("key still not stored") && l.includes("no such secret"))).toBe(true);
+    expect(never.w.agents.calls.filter((c) => c === `trigger ${NEW}`)).toHaveLength(4);
+    const answer = never.answer()?.answer as { taf_id?: string; check?: string };
+    expect(answer.taf_id).toBe(NEW);
+    expect(answer.check).toBe("its key wasn't ready yet; it checks again at its next time");
+    expect(JSON.stringify(never.answer())).not.toMatch(/registry|secretsmanager|no such secret|kept as/);
+  });
+
+  it("answers any other failed first check at once, as before", async () => {
+    const { w, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: 'schedule: the check\'s items have no "created" field' });
+    deps.sleep = async () => { throw new Error("no wait for a check that read and failed"); };
+    await note();
+    expect(w.agents.calls.filter((c) => c === `trigger ${NEW}`)).toHaveLength(1);
+    expect((answer()?.answer as { check?: string }).check).toContain('no "created" field');
+  });
+
+  // Every failure to read the key is wrapped "the agent's KIFF key: …"; only "no such secret" means not stored yet.
+  // Access denied fails the same way every time: answered at once, with its own reason, never "wasn't ready yet".
+  it("answers a key that can't be read, other than not stored yet, at once with its reason", async () => {
+    const { w, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const denied = "schedule: the check couldn't read the app (kept as failed_check): registry: the agent's KIFF key: AccessDeniedException: not authorized";
+    w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: denied });
+    deps.sleep = async () => { throw new Error("no wait for a key that can't be read"); };
+    await note();
+    expect(w.agents.calls.filter((c) => c === `trigger ${NEW}`)).toHaveLength(1);
+    const check = (answer()?.answer as { check?: string }).check;
+    expect(check).toContain("AccessDeniedException");
+    expect(check).not.toContain("wasn't ready yet");
   });
 
   it("acts only while KIFF says the person may manage Cards now, and never on old rights", async () => {

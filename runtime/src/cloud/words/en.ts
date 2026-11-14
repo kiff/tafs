@@ -77,6 +77,12 @@ export const en = {
   approval_no_draft: "KIFF has no such draft",
   /** On an approval card whose fingerprint signs the connection alone, above its Card (`signs.words`). */
   approval_card_next: "Its Card: you approve it next",
+  /** A taf whose connection's sign-in expired: its own Connect again action, and what it says once done. */
+  connect_again_title: "Connect again",
+  connect_again_words: (app: string, taf: string) => `${app}'s sign-in has expired, so ${taf} can't use it. Connect again to sign in.`,
+  connect_again_done: (app: string, taf: string) => `${app} is connected again. ${taf} can use it.`,
+  /** A first check that ran before the taf's key was stored: said in place of the store's own words. */
+  check_key_not_ready: "its key wasn't ready yet; it checks again at its next time",
   approval_cards_unread: "The Card couldn't be checked yet. Read it again, then approve.",
   approval_uncovered: (tool: string) => `This Card doesn't cover "${tool}", which the taf was given, so every call of it would be refused. Nothing was approved. Coach drafts it again.`,
   approval_stray: (tool: string) => `This Card would also let the taf use "${tool}", which no connection of it gives. Nothing was approved. Coach drafts it again.`,
