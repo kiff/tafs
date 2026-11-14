@@ -8,6 +8,6 @@ What to test in this build:
 
 4. Signing in to an app. An app's first sign-in says its Card comes next. A sign-in that didn't connect says so in plain words, never as a status code.
 
-5. Devices. Account › Devices names each device in the app's language ("tafs on iPad").
+5. Your devices. The list of devices you are signed in on names each one in the app's language.
 
 Tell us anything that reads oddly, or any screen where you weren't sure what to do next.
