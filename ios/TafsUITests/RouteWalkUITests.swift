@@ -10,7 +10,7 @@ import XCTest
 /// when the person hasn't it, else `signed-in`, a screen only someone signed in to KIFF opens.
 /// A route that opened and doesn't show its title fails the walk, and so does a map that differs
 /// from app/map/ios.json: the walk prints its map between two markers, and attaches it.
-final class RouteWalkUITests: XCTestCase {
+final class RouteWalkUITests: TafsUITestCase {
     static let begin = "----- BEGIN app/map/ios.json -----"
     static let end = "----- END app/map/ios.json -----"
 
@@ -32,10 +32,6 @@ final class RouteWalkUITests: XCTestCase {
         URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
     }
 
-    override func setUp() {
-        continueAfterFailure = false
-    }
-
     @MainActor
     func testEveryRouteInTheSample() throws {
         try XCTSkipUnless(UIDevice.current.userInterfaceIdiom == .phone, "the map is the iPhone's")
@@ -44,7 +40,7 @@ final class RouteWalkUITests: XCTestCase {
 
         let app = XCUIApplication()
         app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-routeWalk", "YES"]
-        app.launch()
+        launch(app)
 
         // The sample's first taf, which `{taf}` names.
         let state = app.staticTexts["route-walk.state"]
@@ -58,15 +54,7 @@ final class RouteWalkUITests: XCTestCase {
         var entries: [Entry] = []
         for route in routes {
             let path = route.route.replacingOccurrences(of: "{taf}", with: taf)
-            // The field takes the keyboard a moment after the tap on a slow simulator. Tapped where
-            // it is, as the hook's window is its own, above the app's.
-            XCTAssertTrue(within(10) {
-                if (field.value(forKey: "hasKeyboardFocus") as? Bool) == true { return true }
-                field.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
-                RunLoop.current.run(until: Date().addingTimeInterval(0.3))
-                return (field.value(forKey: "hasKeyboardFocus") as? Bool) == true
-            }, "\(route.route): the hook's field has the keyboard")
-            field.typeText(path + "\n")
+            typeInto(field, text: path + "\n")
             guard within(10, { answer.label.hasPrefix(path + "|") }) else {
                 XCTFail("\(route.route): no answer for \(path) (\(answer.label))")
                 continue
