@@ -107,6 +107,15 @@ session, so the app combines nothing (`runtime/src/cloud/home.ts`). It lists onl
 says the person may use or oversee. An agent made through KIFF's API isn't a taf: it's
 KIFF's, and KIFF shows it, never the tafs app.
 
+**One Card per approval.** A draft KIFF confirms issues a KIFF Card for each tool, but the owner
+approved one Card: `card.cards` shows them as one (its lines together, the first total and count
+among them, the earliest end, and every KIFF Card it is in `ids`). The group is KIFF's
+`draft_id` on each Card once KIFF sends it; until then, the Cards the taf's live version went
+live under. A Card given later on its own (a held call's "allow from now on") stays its own.
+`card.ids` still lists every KIFF Card, so revoking stops them all. Each taf also says
+`last_change`, its newest version's time (a Card or a setting changes the version), else when
+it was made. Its versions are read at most once a minute per taf.
+
 A taf whose setup stopped partway (Coach drafted it and its Card is signed, but the owner left
 the chat before the taf was made) is listed in `setting_up`, by the name Coach gave it, never
 its agent's id, and with no state, so never "Ready". For the person whose chat it was, its
