@@ -1,0 +1,4 @@
+- I tuoi collegamenti si leggono chiaramente: cosa sono, chi li usa e come stanno. Toccane uno per i dettagli; rimuoverlo chiede una conferma.
+- Un taf con l'accesso scaduto ha il suo «Connetti di nuovo» e mantiene la sua Card.
+- «Ti aspetta» mostra quando Coach aspetta te.
+- Un accesso all'account sbagliato viene detto chiaramente.

@@ -121,8 +121,25 @@ and `versionName` is what the store shows: `1.x` for a release with new features
 one with fixes only. Every Android batch pull request says its `versionName`. The app went public
 at 1.0 (versionCode 40), and 1.1 (43) is its first feature release since.
 
-**Releases** are signed bundles for Google Play, built by `android.yml`'s release job on a
-manual dispatch, in the `android-release` environment, which the owner approves each time.
+**Releases** are signed bundles for Google Play, built by `android.yml`'s release job by hand,
+or on a merge to main that raises `versionCode` (the `version` job compares it with the commit
+before), once `test` and `ui` passed, in the `android-release` environment, which the owner
+approves each time.
+
+**To Play's internal track, with no upload by hand.** Once the repository variable
+`PLAY_UPLOAD` is `on`, the release job sends the signed bundle to Play's **internal** track
+(`android/play/play_internal.py`): one edit, the bundle, the internal track's release
+(`completed`, this bundle alone, with its notes), committed. It never touches production,
+closed or open testing, or a rollout: the track is fixed in the script, and its tests check
+it. It signs in with Google's workload identity federation (`google-github-actions/auth`,
+`PLAY_WIF_PROVIDER` and `PLAY_SERVICE_ACCOUNT`), a token for the Play Developer API that lasts
+the run: no key file, and no secret holds a key. A bundle Play reads as another `versionCode`
+than the build's commits nothing.
+- **Release notes** live in the repository, one folder per `versionCode`:
+  `android/play/release-notes/<versionCode>/<locale>.txt`, for en-US, de-DE, fr-FR, es-ES,
+  it-IT, pt-PT, nl-NL and pl-PL, each at most 500 characters. A pull request that raises
+  `versionCode` adds that folder; `test` checks it (`play_internal.py --check`), and the upload
+  refuses a version with none.
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
 it once into the secrets store, and `android/release.sh` builds with it. The app has no native
 code of its own. Its only native libraries are two small ones that AndroidX ships already
