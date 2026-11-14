@@ -1,0 +1,2 @@
+- Una chat di Coach messa da parte non torna più come conversazione aperta, su nessun dispositivo.
+- «Chiedi a Coach» in Collega app inizia sempre una nuova conversazione.

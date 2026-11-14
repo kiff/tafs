@@ -664,7 +664,10 @@ where the card is answered; someone who can't use Coach reads the line alone. ta
 you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
 
 **Set aside** is "not now", never an approval, and only signed in (not the sample). A chat set aside is no longer the one
-Coach shows: Coach starts a new conversation, so a new job never goes on in the ended session (Android 1.27.1). One request goes per chat at a
+Coach shows: Coach starts a new conversation, so a new job never goes on in the ended session (Android 1.27.1). Opening
+Coach with no chat chosen skips a chat tafs cloud marks `set_aside` (set aside on any device, or before a relaunch): the
+newest of the rest, or a new conversation when every one was set aside. **Ask Coach** in Connect apps always starts a new
+conversation (Android 1.27.3). One request goes per chat at a
 time (Android 1.26.1): a swipe fires once per gesture, and a chat already being set aside isn't asked again until
 tafs cloud answers.
 - **One chat:** a row whose `words.set_aside` tafs cloud sends can be swiped away either way, and has

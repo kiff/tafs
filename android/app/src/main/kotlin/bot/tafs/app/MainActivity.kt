@@ -822,7 +822,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         state, load = model::loadConnectApps, loadMore = model::loadMoreConnectApps,
         onReadConnections = model::refreshConnections,
         onConnect = if (state.canManageCards) ({ app, taf -> scope.launch { model.startConnectApp(app, taf) } }) else null,
-        onAskCoach = { showingConnectApps = false; coachOpen = true },
+        // A new conversation: asking Coach from Connect apps is a new job, never the last chat (an audit found it reopening one
+        // that ended).
+        onAskCoach = { showingConnectApps = false; model.newCoachChat(); coachOpen = true },
         onClose = { showingConnectApps = false; model.closeListApproval() },
         // The taf it's signed in for, by its grant: that taf's Coach chooses its actions.
         onChooseActions = { app ->

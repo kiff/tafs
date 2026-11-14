@@ -1,0 +1,2 @@
+- Ein beiseitegelegter Coach-Chat kommt nicht mehr als offenes Gespräch zurück, auf keinem Gerät.
+- „Coach fragen“ in „Apps verbinden“ beginnt immer ein neues Gespräch.

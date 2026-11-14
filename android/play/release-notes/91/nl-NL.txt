@@ -1,0 +1,2 @@
+- Een opzijgezette Coach-chat komt niet meer terug als open gesprek, op geen enkel apparaat.
+- 'Coach vragen' in Apps koppelen begint altijd een nieuw gesprek.
