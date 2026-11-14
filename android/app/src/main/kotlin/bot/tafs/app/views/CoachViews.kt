@@ -85,8 +85,9 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
   }
   Column(Modifier.fillMaxSize().statusBarsPadding()) {
     val started = state.mayUseCoach && state.coachChecked && state.coachCloudId != null
-    // New conversation always does something: on a conversation with nothing in it yet, it stays there and shows its top.
-    val newChat = { if (CoachWords.isEmptyChat(state)) folded = false else chats.newChat() }
+    // New conversation always does something: on a plain conversation with nothing in it yet, it stays there and shows its
+    // top; on an empty one about a taf, it opens a plain new one.
+    val newChat = { if (CoachWords.newChatStays(state)) folded = false else chats.newChat() }
     if (started) CoachHeader(state, chats, newChat, onBack) else BackBar(onBack)
     when {
       !state.mayUseCoach -> Note(CoachWords.NOT_ALLOWED)

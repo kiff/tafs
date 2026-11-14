@@ -1,0 +1,6 @@
+- Um taf novo aparece assim que o Coach o configura.
+- «À sua espera» mostra o Coach à espera com a conversa aberta.
+- O início conta como pronto um taf novo que trabalha a partir da conversa.
+- Os Cartões de um taf novo aparecem como um só Cartão.
+- O calendário e o seu ícone vibram ao toque.
+- Remover a última ligação de uma app fecha a sua lista, sem erros.

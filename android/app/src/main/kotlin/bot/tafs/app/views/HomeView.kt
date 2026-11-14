@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
 import bot.tafs.app.design.Panel
+import bot.tafs.app.design.tapping
 import bot.tafs.app.design.Dot
 import bot.tafs.app.design.Eyebrow
 import bot.tafs.app.design.Mascot
@@ -304,7 +305,7 @@ private fun Header(accountLabel: String?, onCalendar: (() -> Unit)? = null) {
     // The calendar of the tafs' scheduled work (kiff/tafs#534): the phone has no Overview, so it opens from here.
     if (onCalendar != null) {
       Box(
-        Modifier.size(36.dp).clip(CircleShape).clickable(onClick = onCalendar).semantics { contentDescription = Words.Calendar.heading },
+        Modifier.size(36.dp).clip(CircleShape).tapping(onClick = onCalendar).semantics { contentDescription = Words.Calendar.heading },
         contentAlignment = Alignment.Center,
       ) {
         Icon(painterResource(R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(22.dp))
@@ -322,7 +323,6 @@ internal val AppState.homeLeadsWithRecipes: Boolean
 
 @Composable
 private fun Headline(state: AppState) {
-  val working = state.workingCount
   Column {
     // Never "0 tafs working" before the tafs are read (#91).
     if (state.mode == Mode.kiff && !state.listLoaded) {
@@ -333,7 +333,8 @@ private fun Headline(state: AppState) {
       Text(Words.Home.notLoaded, style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
       return@Column
     }
-    Text(Words.Home.working(count = working), style = scaled(36, FontWeight.Bold, Theme.ink, display = true))
+    // tafs cloud's line, counted from the tafs it lists: a new taf with no schedule reads "1 taf ready.", never "0 tafs working."
+    Text(state.headlineWords, style = scaled(36, FontWeight.Bold, Theme.ink, display = true))
     // tafs cloud's words for what Needs you holds, else the app's for its own count.
     Text(state.needsYouWords, style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
   }

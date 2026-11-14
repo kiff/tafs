@@ -405,9 +405,43 @@ fun VersionCardSheet(
 @Composable
 fun DraftCardsView(draft: AgentDraft) {
   Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-    val lines = draft.cardLines
-    draft.cards.orEmpty().forEachIndexed { i, card -> CardView(card, lines[i]) }
+    draftCardsShown(draft).forEach { shown ->
+      when (shown) {
+        is DraftCardShown.New -> NewCards(shown.lines)
+        is DraftCardShown.One -> CardView(shown.card, shown.lines)
+      }
+    }
     draft.retires.orEmpty().forEach { Retired(it) }
+  }
+}
+
+/** How a draft's Cards show: its new Cards as one, "A new Card" (KIFF's draft has one per tool); a changed or unchanged Card alone. */
+internal sealed interface DraftCardShown {
+  /** Every new Card's lines, each once, in the draft's order. */
+  data class New(val lines: List<String>) : DraftCardShown
+  data class One(val card: DraftCard, val lines: List<String>) : DraftCardShown
+}
+
+/** The new Cards go together where the first of them is; the others keep their place. */
+internal fun draftCardsShown(draft: AgentDraft): List<DraftCardShown> {
+  val cards = draft.cards.orEmpty()
+  val lines = draft.cardLines
+  val fresh = cards.indices.filter { cards[it].current == null }
+  return cards.indices.mapNotNull { i ->
+    when {
+      i !in fresh -> DraftCardShown.One(cards[i], lines.getOrElse(i) { emptyList() })
+      i == fresh.first() -> DraftCardShown.New(fresh.flatMap { lines.getOrElse(it) { emptyList() } }.distinct())
+      else -> null
+    }
+  }
+}
+
+/** A version's new Cards, as one: what they allow, together. */
+@Composable
+private fun NewCards(lines: List<String>) {
+  Panel {
+    Eyebrow(Words.Version.newCard)
+    lines.forEach { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink)) }
   }
 }
 

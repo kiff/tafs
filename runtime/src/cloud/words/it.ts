@@ -215,6 +215,8 @@ export const it: Words = {
   home_discard_no: "Tienila",
   home_needs_you_none: "Niente ti aspetta.",
   home_needs_you: (n, form) => (form === "one" ? `${n} ti aspetta.` : `${n} ti aspettano.`),
+  home_working: (n, form) => (form === "one" ? `${n} taf al lavoro.` : `${n} tafs al lavoro.`),
+  home_ready: (n, form) => (form === "one" ? `${n} taf pronto.` : `${n} tafs pronti.`),
   recipes_category_money: "Denaro",
   recipes_category_customers: "Clienti",
   recipes_category_operations: "Operazioni",

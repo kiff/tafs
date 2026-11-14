@@ -514,6 +514,18 @@ class TafPageTest {
     assertEquals("2 need you.", model.state.value.needsYouWords)
   }
 
+  // Home's first line is tafs cloud's: the app counted a new taf with no schedule as "0 tafs working".
+  @Test fun homesFirstLineIsTafsCloudsElseTheAppsOwnCount() = runTest {
+    reads("""{"tafs":[${taf()}],"others":[],"removing":[],"headline":{"words":"1 taf ready."}}""")
+    val model = model()
+    model.refresh()
+    assertEquals("1 taf ready.", model.state.value.headlineWords)
+    // A tafs cloud from before it: the app's own count stands in.
+    reads("""{"tafs":[${taf()}],"others":[],"removing":[]}""")
+    model.refresh()
+    assertEquals(bot.tafs.app.model.Words.Home.working(count = model.state.value.workingCount), model.state.value.headlineWords)
+  }
+
   @Test fun theCardsBehindAreEachAShadeDarkerNeverHidden() {
     assertEquals(0f, bot.tafs.app.views.behindShade(0))
     val shades = (1..6).map { bot.tafs.app.views.behindShade(it) }

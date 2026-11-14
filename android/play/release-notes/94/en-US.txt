@@ -1,0 +1,6 @@
+- A new taf shows on your list as soon as Coach sets it up.
+- Needs you shows Coach waiting while the chat is still open.
+- Home counts a new taf that works from its chat as ready.
+- A new taf's Cards show as one Card to approve.
+- The calendar and its icon vibrate on a tap.
+- Removing an app's last connection closes its list, with no error.

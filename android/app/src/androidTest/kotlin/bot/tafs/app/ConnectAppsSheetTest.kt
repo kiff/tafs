@@ -94,6 +94,34 @@ class ConnectAppsSheetTest {
     assertEquals(listOf("g1"), disconnected)
   }
 
+  /**
+   * The owner removed an app's last connection and the sheet said "The apps couldn't be read." over a list that was simply
+   * empty now. Emptied by a removal, it closes; opened with none, it still says why.
+   */
+  @Test fun anAppsLastConnectionRemovedClosesTheSheetNeverAnError() {
+    val refunds = taf("refunds-1", "Refunds")
+    val grant = bot.tafs.app.kiff.Grant(id = "g1", status = "connected", request = bot.tafs.app.kiff.GrantRequest(server = "https://mcp.stripe.com", agent = "refunds-1"),
+      vendorName = "Stripe", entry = "stripe@1")
+    val grants = androidx.compose.runtime.mutableStateOf(listOf(grant))
+    rule.setShown {
+      TafsTheme {
+        ConnectAppsSheet(
+          AppState(mode = Mode.kiff, ready = true, connectApps = list, tafs = listOf(refunds), grants = grants.value, planqueReady = true,
+            access = mapOf(refunds.id to bot.tafs.app.kiff.Access(use = true, manage = true))),
+          load = {}, onConnect = null, onAskCoach = {}, onClose = {},
+          onDisconnect = { disconnected += it },
+        )
+      }
+    }
+    rule.onNodeWithText(ConnectAppsWords.CONNECTED).performClick()
+    rule.onNodeWithText(ConnectAppsWords.yourConnections("Stripe")).assertIsDisplayed()
+    // Removed: planque's list no longer has it.
+    grants.value = emptyList()
+    rule.waitForIdle()
+    assertEquals("the sheet closed", 0, count(ConnectAppsWords.yourConnections("Stripe")))
+    assertEquals("no error over an empty list", 0, rule.onAllNodes(hasText("couldn't be read", substring = true)).fetchSemanticsNodes().size)
+  }
+
   /** Gmail as planque describes it (title, used_by, health, actions): two connections, one signed out and one left over. */
   private val signedIn = mutableListOf<String>()
 

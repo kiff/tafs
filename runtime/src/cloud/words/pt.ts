@@ -215,6 +215,8 @@ export const pt: Words = {
   home_discard_no: "Manter",
   home_needs_you_none: "Nada precisa de si.",
   home_needs_you: (n, form) => (form === "one" ? `${n} precisa de si.` : `${n} precisam de si.`),
+  home_working: (n, form) => (form === "one" ? `${n} taf a trabalhar.` : `${n} tafs a trabalhar.`),
+  home_ready: (n, form) => (form === "one" ? `${n} taf pronto.` : `${n} tafs prontos.`),
   recipes_category_money: "Dinheiro",
   recipes_category_customers: "Clientes",
   recipes_category_operations: "Operações",

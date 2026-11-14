@@ -215,6 +215,12 @@ fun ConnectAppsSheet(
     }
     managing?.let { app ->
       val (sections, removed, others) = byTaf(state, connectionsOf(state, app))
+      // Its last connection removed: the sheet closes, never "The apps couldn't be read." over a list that's simply empty now.
+      val none = sections.isEmpty() && removed.isEmpty() && others.isEmpty()
+      var hadSome by androidx.compose.runtime.remember(app.entry) { mutableStateOf(false) }
+      LaunchedEffect(app.entry, none, state.connectionsError) {
+        if (!none) hadSome = true else if (hadSome && closesWhenEmptied(state.connectionsError)) managing = null
+      }
       DriveAlert(
         onDismissRequest = { managing = null },
         containerColor = Theme.background,
@@ -222,7 +228,7 @@ fun ConnectAppsSheet(
         text = {
           Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             // None on the phone even after reading again: why, in words (the read's failure, or that planque isn't set up here).
-            if (sections.isEmpty() && removed.isEmpty() && others.isEmpty()) {
+            if (none && !(hadSome && closesWhenEmptied(state.connectionsError))) {
               Text(state.connectionsError?.let { Words.Connect.appsNotRead(why = it) }
                 ?: if (!state.planqueReady) bot.tafs.app.model.CoachWords.NOT_CONNECTABLE else Words.Connect.appsNotRead(why = ""),
                 style = scaled(14, color = Theme.amberText))
@@ -680,3 +686,6 @@ internal fun DescribedConnectionRow(g: bot.tafs.app.kiff.Grant, app: String, sta
     state.coachNotes[g.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
 }
+
+/** A connections sheet emptied by a removal closes, unless the read failed: then it says why. */
+internal fun closesWhenEmptied(connectionsError: String?): Boolean = connectionsError == null
