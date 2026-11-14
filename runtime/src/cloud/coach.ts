@@ -282,11 +282,11 @@ export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; 
   { id: "coach-web-reads", actions: ["web_read"], limit: 50, asks: false },
   // Labels and the business description change no authority: Cards of their own, as every Card added later.
   { id: "coach-labels", actions: ["taf_labels"], limit: 100, asks: false },
-  // A save waits for the person's yes, the text shown: only a person puts words into every run's preface.
-  { id: "coach-business", actions: ["business_context"], limit: 50, asks: true },
+  // Every save waits for the person's yes, the text shown (limit 0: a Card holds a call only past its limit): only a person puts words into every run's preface.
+  { id: "coach-business", actions: ["business_context"], limit: 0, asks: true },
   // Moving tafs and labels in and out of missions changes no authority; making one sets a goal the lead reads, so the person says yes.
   { id: "coach-missions", actions: ["mission"], limit: 50, asks: false },
-  { id: "coach-mission-create", actions: ["mission_create"], limit: 20, asks: true },
+  { id: "coach-mission-create", actions: ["mission_create"], limit: 0, asks: true },
 ];
 
 /** Coach's tools in the four groups the tools step shows, in TOOLS' order within each. */

@@ -524,7 +524,7 @@
                 "aggregates": [
                   {
                     "quantity": "count",
-                    "limit": 20,
+                    "limit": 0,
                     "window": "calendar_day"
                   }
                 ]
@@ -715,7 +715,7 @@
               },
               {
                 "name": "Gather tafs into a mission",
-                "does": "Gather tafs that work toward one goal into a mission, such as running the money side. Each taf keeps its own job, apps and Card. Up to 20 a day; after that, each one waits for you.",
+                "does": "Gather tafs that work toward one goal into a mission, such as running the money side. Each taf keeps its own job, apps and Card. Each one waits for your approval.",
                 "why": "It changes nothing a taf may do."
               },
               {

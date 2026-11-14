@@ -260,7 +260,8 @@ describe("missions", () => {
     const w = world();
     w.tafs.held.set(`${T}#${BILLS.id}`, BILLS);
     // Making a mission waits for the person's yes (its goal reaches the lead): never through mission's own actions.
-    expect(COACH_CARDS.find((c) => c.actions.includes("mission_create"))).toMatchObject({ id: "coach-mission-create", asks: true });
+    expect(COACH_CARDS.find((c) => c.actions.includes("mission_create"))).toMatchObject({ id: "coach-mission-create", limit: 0, asks: true });
+    expect(coachCardsDraft("agent_coach").cards.find((c) => (c as { id: string }).id === "coach-mission-create")).toMatchObject({ on_exceed: "owner" });
     expect(COACH_CARDS.find((c) => c.actions.includes("mission"))).toMatchObject({ asks: false });
     expect((await w.tool("mission", { action: "create", name: "Money", goal: "Run the money side.", tafs: [RAE] })).text).toContain("a mission is made with mission_create");
     for (const extra of [{ card: "crd_1" }, { tools: ["refund"] }, { wakes: [] }, { budget: 100 }]) {
