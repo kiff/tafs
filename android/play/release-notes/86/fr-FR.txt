@@ -1,0 +1,3 @@
+- « Vous attend » nomme le taf pour lequel une conversation avec Coach attend, et depuis quand.
+- Pas maintenant ? Balayez une conversation avec Coach en attente, ou touchez « Mettre de côté ». Rien n'est approuvé ni envoyé.
+- Deux ou plus en attente : « Tout mettre de côté » les termine en une fois, après une confirmation.

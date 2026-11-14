@@ -1,0 +1,1 @@
+- **Android 1.26.0 (86): set a waiting Coach chat aside.** In Needs you, swipe a waiting Coach chat away or tap Set aside; with two or more, Set all aside ends them after one ask. Nothing is approved or sent (docs/android-app.md).

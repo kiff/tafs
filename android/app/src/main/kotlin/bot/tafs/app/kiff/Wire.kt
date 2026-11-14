@@ -164,6 +164,8 @@ data class Home(
   @SerialName("your_steps") val yourSteps: List<YourStep>? = null,
   /** Coach's chats waiting on this person for an answer or approval, oldest first (docs/api.md › Coach waiting): Needs you draws them. */
   @SerialName("coach_waiting") val coachWaiting: List<CoachWaiting>? = null,
+  /** "Set all aside", when two or more Coach chats wait: drawn only when sent. */
+  @SerialName("coach_waiting_clear") val coachWaitingClear: CoachWaitingClear? = null,
 )
 
 /**
@@ -179,8 +181,20 @@ data class CoachWaiting(
   val words: CoachWaitingWords = CoachWaitingWords(),
 )
 
+/** The row's words, tafs cloud's: its line, the way into the chat, and `set_aside`, the swipe's ("Set aside"); none, no swipe. */
 @Serializable
-data class CoachWaitingWords(val line: String = "", val open: String = "")
+data class CoachWaitingWords(val line: String = "", val open: String = "", @SerialName("set_aside") val setAside: String = "")
+
+/** Home's "Set all aside", for two or more waiting Coach chats: the button, and the one ask that names the count. */
+@Serializable
+data class CoachWaitingClear(val words: CoachWaitingClearWords = CoachWaitingClearWords())
+
+@Serializable
+data class CoachWaitingClearWords(val button: String = "", val title: String = "", val text: String = "", val yes: String = "", val no: String = "")
+
+/** What setting Coach chats aside did: the chats it ended, and the connections it withdrew. */
+@Serializable
+data class SetAside(@SerialName("set_aside") val setAside: List<String> = emptyList(), val withdrawn: Int = 0, val already: Boolean = false)
 
 /**
  * A step a taf may never take itself, handed to its owner, as tafs cloud shows it: KIFF's hand-off id, what to do and why, in

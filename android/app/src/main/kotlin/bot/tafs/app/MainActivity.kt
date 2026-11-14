@@ -770,7 +770,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             (open ?: home)()
           }
         }
-        Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null)
+        Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null, onSetAside = if (state.mode == Mode.kiff) model::startSetAsideCoach else null)
         Tab.Record -> RecordView(
           state,
           record = recordActions,

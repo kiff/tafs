@@ -251,6 +251,10 @@ data class AppState(
   val yourSteps: List<bot.tafs.app.kiff.YourStep> = emptyList(),
   /** Coach's chats waiting on this person, as tafs cloud lists them on Home (docs/api.md › Coach waiting); Needs you draws them. */
   val coachWaiting: List<bot.tafs.app.kiff.CoachWaiting> = emptyList(),
+  /** tafs cloud's "Set all aside", when two or more Coach chats wait. */
+  val coachWaitingClear: bot.tafs.app.kiff.CoachWaitingClear? = null,
+  /** The Coach chats being set aside now, by session. */
+  val settingAside: Set<String> = emptySet(),
   /** The hand-offs whose answer is on its way to KIFF. */
   val answeringSteps: Set<String> = emptySet(),
   /** The hand-offs KIFF took an answer for: kept out of a Home read already on its way. */
@@ -1359,7 +1363,8 @@ class AppModel(
         held = held,
         cardUnitExceptions = read.home.cardUnitExceptions.orEmpty().filterNot { it.id in s.dismissedCardUnits },
         yourSteps = read.home.yourSteps.orEmpty().filterNot { it.handoff in s.answeredSteps },
-        coachWaiting = read.home.coachWaiting.orEmpty().filter { it.session.isNotBlank() && it.words.line.isNotBlank() },
+        coachWaiting = read.home.coachWaiting.orEmpty().filter { it.session.isNotBlank() && it.words.line.isNotBlank() && it.session !in s.settingAside },
+        coachWaitingClear = read.home.coachWaitingClear?.takeIf { it.words.button.isNotBlank() },
         needsYou = read.home.needsYou,
         // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given on this device.
         record = read.activity?.let { withDecisions(KiffMapping.record(it, holders)) } ?: s.record,
@@ -1854,6 +1859,32 @@ class AppModel(
     _state.update { it.copy(coachRequested = true) }
     openCoachChat(finish.session)
   }
+
+  /**
+   * Sets a waiting Coach chat aside, or all of them with null (docs/api.md, Coach waiting): tafs cloud answers "not now", never an
+   * approval. The row goes once tafs cloud says so, and Home is read again for its count. A failure says why and keeps the row.
+   */
+  suspend fun setAsideCoach(session: String?): Boolean {
+    if (_state.value.mode != Mode.kiff) return false
+    val sessions = session?.let { setOf(it) } ?: _state.value.coachWaiting.map { it.session }.toSet()
+    if (sessions.isEmpty()) return false
+    val gen = accountGeneration
+    _state.update { it.copy(settingAside = it.settingAside + sessions) }
+    return try {
+      val done = cloud.setAsideCoach(session, coachReadProof())
+      if (gen == accountGeneration) _state.update { s -> s.copy(coachWaiting = s.coachWaiting.filterNot { it.session in done.setAside }) }
+      refresh()
+      true
+    } catch (e: CancellationException) { throw e
+    } catch (e: Exception) {
+      if (gen == accountGeneration) fail(ErrorWords.of(e))
+      false
+    } finally {
+      _state.update { it.copy(settingAside = it.settingAside - sessions) }
+    }
+  }
+
+  fun startSetAsideCoach(session: String?) { scope.launch { setAsideCoach(session) } }
 
   /** A Coach chat waiting on its person, from Needs you (docs/api.md › Coach waiting): Coach opens on that chat. */
   suspend fun openWaitingCoach(waiting: bot.tafs.app.kiff.CoachWaiting) {
