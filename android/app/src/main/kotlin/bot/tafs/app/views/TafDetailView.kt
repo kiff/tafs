@@ -1,12 +1,12 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveAlert
 import bot.tafs.app.model.Chat
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
@@ -329,7 +329,7 @@ fun TafDetailView(
 @Composable
 internal fun BackBar(onBack: () -> Unit) {
   Row(
-    Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onBack).padding(horizontal = 8.dp),
+    Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(onClick = onBack).padding(horizontal = 8.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = null, tint = Theme.amber, modifier = Modifier.size(20.dp))
@@ -349,7 +349,7 @@ private fun Header(taf: Taf, onBack: (() -> Unit)?) {
     verticalAlignment = Alignment.CenterVertically,
   ) {
     if (onBack != null) {
-      Box(Modifier.size(44.dp).clickable(onClickLabel = Words.Common.back, onClick = onBack), contentAlignment = Alignment.Center) {
+      Box(Modifier.size(44.dp).tapping(onClickLabel = Words.Common.back, onClick = onBack), contentAlignment = Alignment.Center) {
         Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = Words.Common.back, tint = Theme.amber, modifier = Modifier.size(20.dp))
       }
     }
@@ -391,7 +391,7 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
       Text(
         bot.tafs.app.model.ConnectionWords.RECONNECT_IN_COACH,
         style = scaled(13, FontWeight.SemiBold, Theme.amberText),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { improve(taf.id) }.padding(vertical = 12.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping { improve(taf.id) }.padding(vertical = 12.dp),
       )
     }
   }
@@ -465,7 +465,7 @@ internal fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
         is Chat.WorkRow.Skipped -> Text(row.firing.words, style = scaled(13, color = Theme.dim))
         is Chat.WorkRow.Request -> Column(
           // A tap opens it step by step, as from the dial's rim.
-          Modifier.fillMaxWidth().clickable { scope.launch { actions.openRequest(taf.id, row.request.id) } },
+          Modifier.fillMaxWidth().tapping { scope.launch { actions.openRequest(taf.id, row.request.id) } },
           verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
           val r = row.request
@@ -491,7 +491,7 @@ internal fun WorkPanel(taf: Taf, state: AppState, actions: TafActions) {
               Text(
                 RequestWords.ASK_COACH,
                 style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-                modifier = Modifier.heightIn(min = 44.dp).clickable { actions.askCoachAbout(taf.id, words) }.padding(vertical = 10.dp),
+                modifier = Modifier.heightIn(min = 44.dp).tapping { actions.askCoachAbout(taf.id, words) }.padding(vertical = 10.dp),
               )
             }
           }
@@ -523,7 +523,7 @@ internal fun MemoryPanel(tafId: String, notes: List<MemoryNote>?, error: String?
           Text(
             Words.Taf.Memory.forget,
             style = scaled(14, FontWeight.SemiBold, Theme.soft),
-            modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { forgetting = note },
+            modifier = Modifier.heightIn(min = 44.dp).confirms().tapping { forgetting = note },
           )
         }
       }
@@ -579,7 +579,7 @@ private fun HowCounted(counted: List<bot.tafs.app.kiff.CountedTool>) {
     Text(
       (if (open) "▾ " else "▸ ") + bot.tafs.app.model.CardWords.HOW_COUNTED,
       style = scaled(14, FontWeight.SemiBold, Theme.ink),
-      modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { open = !open }.padding(vertical = 12.dp),
+      modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping { open = !open }.padding(vertical = 12.dp),
     )
     if (open) counted.forEach { tool ->
       Text(tool.title.ifBlank { tool.tool }, style = scaled(13, FontWeight.SemiBold, Theme.ink))
@@ -633,7 +633,7 @@ internal fun PromiseRow(hours: Int?, onPick: (Int?) -> Unit) {
   var open by remember { mutableStateOf(false) }
   Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
     Row(
-      Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { open = true }.padding(vertical = 6.dp),
+      Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping { open = true }.padding(vertical = 6.dp),
       horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {

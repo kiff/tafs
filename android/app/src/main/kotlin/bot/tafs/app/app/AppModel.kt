@@ -29,6 +29,7 @@ import bot.tafs.app.model.ChatEnd
 import bot.tafs.app.model.LiveAnswer
 import bot.tafs.app.model.LiveStep
 import bot.tafs.app.kiff.StreamEvent
+import bot.tafs.app.kiff.displayName
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -245,6 +246,8 @@ data class AppState(
   val headline: String? = null,
   /** Coach is on screen (its chat `coachChat`): set by the screen, for the badge. */
   val coachShown: Boolean = false,
+  /** After a set-aside, where the chats went, in tafs cloud's words (`words.done`); gone once Coach opens. */
+  val setAsideNote: String? = null,
   /** Cards asked to take another currency, as tafs cloud draws them from KIFF; counted with the held calls in Needs you. */
   val cardUnitExceptions: List<bot.tafs.app.kiff.CardUnitException> = emptyList(),
   /** The ones whose Dismiss is on its way to KIFF. */
@@ -372,6 +375,8 @@ data class AppState(
   /** Coach's cards whose answer is on its way to tafs cloud, and why one wasn't taken. A card's answer is the thread's, not the phone's. */
   /** Where an approval in progress is, once past opening the vendor's page: "Checking the sign-in…". */
   val connectStep: String? = null,
+  /** The vendor's sign-in page is open for an approval in progress. Only then does the card say to finish it there: a reuse opens none. */
+  val vendorPageOpen: Boolean = false,
   val cardsAnswering: Set<String> = emptySet(),
   /**
    * What the owner wrote in each chat and hasn't sent, Coach's included, by chat: kept while they go elsewhere in the app, and
@@ -1872,7 +1877,9 @@ class AppModel(
   fun coachOpened() = _state.update { it.copy(coachRequested = false) }
 
   /** Coach shown or hidden, for the badge (`needsYouBadge`). */
-  fun coachShown(shown: Boolean) = _state.update { if (it.coachShown == shown) it else it.copy(coachShown = shown) }
+  fun coachShown(shown: Boolean) = _state.update {
+    if (it.coachShown == shown) it else it.copy(coachShown = shown, setAsideNote = if (shown) null else it.setAsideNote)
+  }
 
   /**
    * "Finish setting up" on another agent whose setup stopped partway (docs/tafs.md): Coach opens on the chat where it stopped.
@@ -1900,7 +1907,7 @@ class AppModel(
     return try {
       val done = cloud.setAsideCoach(session, coachReadProof())
       if (gen == accountGeneration) {
-        _state.update { s -> s.copy(coachWaiting = s.coachWaiting.filterNot { it.session in done.setAside }) }
+        _state.update { s -> s.copy(coachWaiting = s.coachWaiting.filterNot { it.session in done.setAside }, setAsideNote = done.words?.done?.takeIf { it.isNotBlank() }) }
         // Coach no longer shows a chat that was set aside: its next message would go on in the ended session (an audit wrote a
         // new job there, and Needs you named it after the old one). A new conversation instead.
         if (_state.value.coachChat in done.setAside) newCoachChat()
@@ -1995,6 +2002,25 @@ class AppModel(
       )
     }
     readThread(COACH_CHAT)
+  }
+
+  /**
+   * The chat a Coach message went into, as tafs cloud answered: a new one it started for a message to a chat that already handed a
+   * taf over (docs/api.md) is the one shown from then on, with the message on its way and nothing of the finished chat; otherwise
+   * as `settleCoachChat`.
+   */
+  private fun coachSession(session: String, new: Boolean) {
+    val shown = _state.value.coachChat
+    if (!new || shown == null || shown == session) { settleCoachChat(session); return }
+    _state.update { s ->
+      val sending = s.chatSent[COACH_CHAT].orEmpty()
+      s.copy(
+        coachChat = session, coachFresh = false, coachImproving = null, coachContext = null,
+        coachComponents = emptyList(), coachDrives = emptyList(), coachLines = emptyList(),
+        chats = s.chats + (COACH_CHAT to s.chats[COACH_CHAT].orEmpty().filter { it in sending }),
+        chatEnded = s.chatEnded - COACH_CHAT, chatUnsent = s.chatUnsent - COACH_CHAT,
+      )
+    }
   }
 
   /** The conversation a message went into is the one shown from then on, once a new one is started. */
@@ -3404,7 +3430,7 @@ class AppModel(
      * It didn't go through: [why] for the owner, in the app's words; [told] for Coach, the card's answer, which keeps the server's own
      * reason so Coach can say what went wrong and ask again.
      */
-    data class Failed(val why: String, val told: String = why) : Connected
+    data class Failed(val why: String, val told: String = why, val notApprovable: Boolean = false) : Connected
   }
 
   private fun note(cardId: String, words: String?) {
@@ -3451,6 +3477,20 @@ class AppModel(
     val approvals = _state.value.coachComponents.map { it.component }.filter { it.type == "approval" || it.type == "sign_in" }
     if (approvals.isEmpty()) return
     refreshConnections()
+    // An open card whose grant planque doesn't list yet: tafs cloud can write the card as the grant is made, and the card would
+    // say "Reading what it asks for…" until another tab read the grants. Read them again a few seconds apart until planque has it.
+    val unread = _state.value.coachComponents.filter { it.answer == null && (it.component.type == "approval" || it.component.type == "sign_in") }
+      .mapNotNull { it.component.grant }.filter { g -> _state.value.grants.none { it.id == g } }
+      // Marked followed only once a re-read starts: a read planque refused leaves them for the next thread read.
+      .takeIf { _state.value.planqueReady }.orEmpty().filter { grantsFollowed.add(it) }
+    if (unread.isNotEmpty()) scope.launch {
+      repeat(SET_UP_READS) {
+        delay(SET_UP_READ_MS)
+        if (generation != accountGeneration) return@launch
+        refreshConnections()
+        if (unread.all { g -> _state.value.grants.any { it.id == g } }) return@launch
+      }
+    }
     for (c in approvals) {
       val id = c.draft ?: continue
       if (_state.value.setupDrafts[id]?.confirmed == true) continue
@@ -4059,7 +4099,7 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = Words.Connect.appNotStarted(app = app.title, why = ErrorWords.of(e))) }
+      if (generation == accountGeneration) _state.update { it.copy(connectAppsError = Words.Connect.appNotStarted(app = app.displayName, why = ErrorWords.of(e))) }
     } finally {
       if (generation == accountGeneration) _state.update { it.copy(startingApp = null) }
     }
@@ -4424,6 +4464,7 @@ class AppModel(
         return Connected.Failed(
           grant.status.replace('_', ' ').let { status -> grant.reason?.let { Words.Connect.connectionIsBecause(status = status, reason = it) } ?: Words.Connect.connectionIs(status = status) },
           told = "This connection is ${grant.status.replace('_', ' ')}" + (grant.reason?.let { ": $it" } ?: "."),
+          notApprovable = true,
         )
       }
       if (!grant.digestMatches) return Connected.Failed(PlanqueError.DigestMismatch.message!!)
@@ -4465,7 +4506,7 @@ class AppModel(
           refreshConnections()
           return Connected.Done(_state.value.grants.firstOrNull { it.id == grant.id && it.connected } ?: grant.marked(true))
         }
-        val back = vendorSignIn.signIn(url)
+        val back = vendorPageOpen { vendorSignIn.signIn(url) }
         val signedIn = PlanqueClient.signedIn(back)
         if (signedIn == null || signedIn.grant != grant.id || signedIn.tenant != tenant) {
           return Connected.Failed(Words.Connect.noConfirmationCode(vendor = grant.vendor), told = "The sign-in at ${grant.vendor} came back without its confirmation code. Nothing was connected.")
@@ -4921,7 +4962,7 @@ class AppModel(
           // planque already holds the sign-in: approving connected it, with no second sign-in.
           if (approved.status == "connected" || approved.status == "listed") Came.Of(approved.status) else Came.Of("not_connected", status = approved.status)
         } else {
-          val back = vendorSignIn.signIn(url)
+          val back = vendorPageOpen { vendorSignIn.signIn(url) }
           val signedIn = PlanqueClient.signedIn(back)
           if (signedIn == null || signedIn.grant != p.grant || signedIn.tenant != planque.tenant) Came.Of("no_code")
           else {
@@ -4962,6 +5003,12 @@ class AppModel(
    * Sign in again, for a grant whose sign-in was left: a new approval, one confirmation. What it came to goes back to Coach as the
    * card's answer: "signed in", or "failed: why".
    */
+  /** The card says "finish it there" only while the vendor's page is actually open: an approval that reuses a sign-in opens none. */
+  private suspend fun <T> vendorPageOpen(open: suspend () -> T): T {
+    _state.update { it.copy(vendorPageOpen = true) }
+    try { return open() } finally { _state.update { it.copy(vendorPageOpen = false) } }
+  }
+
   suspend fun signInAgain(c: SetupComponent) {
     val grantId = c.grant ?: return
     // The sign-in card shows no terms: it approves the grant as the app last showed it.
@@ -4971,6 +5018,9 @@ class AppModel(
       // Only an approval with a Card to confirm comes back already approved; a sign-in has none.
       is Connected.AlreadyApproved -> Unit
       is Connected.Failed -> {
+        // A connection that takes no approval now (signed in already, or past approving): tafs cloud answers the card in the
+        // person's words, never planque's status ("This connection is listed."). Where it can't be asked, the app's line stands.
+        if (result.notApprovable && notApprovableAnswered(c, grantId)) return
         note(c.id, result.why)
         answerCard("sign_in", c.id, "failed: " + result.told)
       }
@@ -4978,10 +5028,31 @@ class AppModel(
     }
   }
 
+  /** Asks tafs cloud about a sign-in card whose connection takes no approval now; true once it answered Coach, with its note shown. */
+  private suspend fun notApprovableAnswered(c: SetupComponent, grantId: String): Boolean {
+    val cloudId = _state.value.coachCloudId ?: return false
+    val shown = _state.value.coachComponents.lastOrNull { it.id == c.id && it.answer == null } ?: _state.value.coachComponents.lastOrNull { it.id == c.id }
+    val session = shown?.session?.ifEmpty { null } ?: _state.value.coachChat
+    val key = shown?.ref ?: CoachWords.cardKey(session, c.id)
+    val generation = accountGeneration
+    val decision = try {
+      val ask = kotlinx.serialization.json.buildJsonObject { put("grant", grantId); session?.let { put("session", it) } }
+      cloud.approval(cloudId, c.id, ask, coachReadProof())
+    } catch (e: CancellationException) { throw e
+    } catch (_: Exception) { return false }
+    if (generation != accountGeneration || decision.outcome != "answered") return false
+    note(c.id, decision.note?.takeIf { it.isNotBlank() })
+    coachAnswered(cloudId, key, decision.session, decision.run)
+    return true
+  }
+
   // MARK: Coach's hand-overs
 
   /** The tafs tafs cloud said it set up that the list was read again for, so a taf not listed yet is read for once. */
   private val setUpTafs = mutableSetOf<String>()
+
+  /** The grants an open approval card names that planque didn't list yet, read again for once each. */
+  private val grantsFollowed = mutableSetOf<String>()
 
   /** The versions tafs cloud said it made from an improvement, by taf and number, that the taf's Versions were read again for. */
   private val versionsRead = mutableSetOf<String>()
@@ -5505,10 +5576,10 @@ class AppModel(
             }
           }
           // Streamed, so the taf's words show as it writes them; sent plainly when the stream can't open.
-          if (!steered) streamed = openStream(cloudId, words, refs, session, fresh)
-          if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs, session, fresh).also { sent ->
+          if (!steered) streamed = openStream(cloudId, words, refs, session, fresh, followsNewChat = coach)
+          if (!steered && streamed == null) cloud.sendMessage(cloudId, words, refs, session, fresh, followsNewChat = coach).also { sent ->
             if (current()) {
-              if (coach) settleCoachChat(sent.session)
+              if (coach) coachSession(sent.session, sent.newSession)
               sent.message?.let { markSent(tafId, pending, it.id) }
             }
           }
@@ -5671,8 +5742,9 @@ class AppModel(
     files: List<AttachmentRef> = emptyList(),
     session: String? = null,
     newChat: Boolean = false,
+    followsNewChat: Boolean = false,
   ): kotlinx.coroutines.flow.Flow<StreamEvent>? = try {
-    cloud.streamMessage(cloudId, text, files, session, newChat)
+    cloud.streamMessage(cloudId, text, files, session, newChat, followsNewChat)
   } catch (e: CancellationException) {
     throw e
   } catch (e: CloudError) {
@@ -5735,8 +5807,8 @@ class AppModel(
             is StreamEvent.Session -> {
               live { it.copy(session = e.session, run = e.run ?: it.run) }
               if (sent != null && e.messageId != null) markSent(tafId, sent, e.messageId)
-              // A new Coach conversation is the one shown once it has begun.
-              if (tafId == COACH_CHAT) settleCoachChat(e.session)
+              // A new Coach conversation is the one shown once it has begun, and so is one tafs cloud started after a hand-over.
+              if (tafId == COACH_CHAT) coachSession(e.session, e.newSession)
               // At work in that chat, for steering and Stop.
               _state.update { it.copy(chatWorking = it.chatWorking + (tafId to ChatRun(e.session, e.run))) }
             }

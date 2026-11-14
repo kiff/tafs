@@ -1929,6 +1929,7 @@ object Words {
     val kiffAccount: String get() = Res.s(R.string.settings_kiff_account)
     val languageTitle: String get() = Res.s(R.string.settings_language_title)
     val legal: String get() = Res.s(R.string.settings_legal)
+    fun legalInEnglish(label: String): String = Res.s(R.string.settings_legal_in_english, label)
     val lightTapsWhenYouSend: String get() = Res.s(R.string.settings_light_taps_when_you_send)
     val mode: String get() = Res.s(R.string.settings_mode)
     val modeKiff: String get() = Res.s(R.string.settings_mode_kiff)

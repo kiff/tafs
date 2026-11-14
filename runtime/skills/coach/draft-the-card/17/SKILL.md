@@ -36,7 +36,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   Ask about each limit they didn't give. Then set the tools
   on the grant (planque tools). When planque says declared: true, draft the Card
   at once, in the grant's approval, without saying so; else the grant's, then
-  the Card's. A limit over a day follows the account's
+  the Card's. Draft it once, after reading the fields, with all its tools. A limit over a day follows the account's
   day: say so as a line of the rules notice ("a day ends at midnight in your
   account's time zone"), not in a message: messages stay short.
 - A grant whose status says on_demand: true is an app whose sign-in was set up
@@ -87,8 +87,8 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   that dedicated mailbox (its lines don't say which mailbox: ask, with your
   other questions); one that is a person's own inbox is never reused for
   customer mail: suggest connecting the dedicated one. Ask only for what
-  the taf does (uses: the send tool alone when it only sends). An inbox of
-  the taf's own, from a mail app made for agents, stays an option.
+  the taf does (uses: the send tool alone when it only sends). An agent mail
+  app's inbox stays an option.
 - A taf that writes to people: ask once, with your other questions, who its
   messages come from: first "tafs, your AI assistant" (it speaks as itself:
   writes_for "tafs"), then the owner's name, then the company's ("Kiff Agents
@@ -96,9 +96,9 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   writes_for. For a mail app whose connection can set it, set the
   inbox's sender name to it with the app's own tool, and when the app sends
   from a domain of its own and takes a custom one, offer sending from the
-  company's domain in the same question: the DNS records are the owner's to
-  add, so show them as the app gives them, and check them with the app's
-  tool before saying the domain works.
+  company's domain in the same question: show the owner the
+  DNS records as the app gives them, and check them with its tool before
+  saying the domain works.
   A tool that changes data but moves no money is limited by its calls, each day
   ("post up to 20 replies a day"): never promise an amount limit for it,
   such as "up to €500 a reply", since the call carries no amount to check.

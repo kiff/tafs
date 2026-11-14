@@ -1801,6 +1801,7 @@
     <string name="settings_kiff_account">KIFF account</string>
     <string name="settings_language_title">Language</string>
     <string name="settings_legal">Legal</string>
+    <string name="settings_legal_in_english">%1$s (in English)</string>
     <string name="settings_light_taps_when_you_send">The light taps when you send or answer.</string>
     <string name="settings_mode">Mode</string>
     <string name="settings_mode_kiff">Signed in with KIFF</string>

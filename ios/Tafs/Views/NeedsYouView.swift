@@ -499,17 +499,6 @@ struct CoachWaitingCard: View {
                     .accessibilityHidden(true)
                 panel.offset(x: dragged)
             }
-            // Beside the scroll, never instead of it: only a mostly sideways drag moves the row.
-            .simultaneousGesture(DragGesture(minimumDistance: 20)
-                .onChanged { drag in
-                    guard !asked, abs(drag.translation.width) > abs(drag.translation.height) else { return }
-                    dragged = drag.translation.width
-                }
-                .onEnded { drag in
-                    let sideways = abs(drag.translation.width) > abs(drag.translation.height)
-                    if sideways, abs(drag.translation.width) >= Self.swipeDistance { setAside() }
-                    withMotion { dragged = 0 }
-                })
             .accessibilityAction(named: Text(waiting.words.setAside)) { setAside() }
             // The swipe and its accessibility action set the chat aside: the person's to confirm, never Coach's
             // (docs/drive.md), whether or not a drive can reach them. Inside, only Set aside confirms.
@@ -521,12 +510,7 @@ struct CoachWaitingCard: View {
 
     private var panel: some View {
         Panel(stroke: Theme.amber.opacity(0.4)) {
-            HStack(alignment: .center, spacing: 10) {
-                Image(systemName: "sparkle").foregroundColor(Theme.amberText).accessibilityHidden(true)
-                Text(waiting.words.line).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-            }
+            line
             // Its way in only for someone who may use Coach: else the line alone, never a button that does nothing.
             if model.mayUseCoach {
                 Button(waiting.words.open) { Task { await model.openCoachWaiting(waiting) } }
@@ -547,6 +531,39 @@ struct CoachWaitingCard: View {
                     .accessibilityIdentifier("needs-you.coach-waiting.set-aside." + waiting.session)
             }
         }
+    }
+
+    /// tafs cloud's line. The swipe is on it alone, never over the row's buttons: a drag recognizer
+    /// beside the scroll and around "Open Coach" could take the first tap's touch, and the person
+    /// had to tap twice. One tap on the way in opens the chat; a swipe on the line sets it aside.
+    @ViewBuilder private var line: some View {
+        let row = HStack(alignment: .center, spacing: 10) {
+            Image(systemName: "sparkle").foregroundColor(Theme.amberText).accessibilityHidden(true)
+            Text(waiting.words.line).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .contentShape(Rectangle())
+        if model.canSetAside(waiting) {
+            row.simultaneousGesture(swipe)
+        } else {
+            row
+        }
+    }
+
+    /// Beside the scroll, never instead of it: only a mostly sideways drag moves the row.
+    private var swipe: some Gesture {
+        // Measured on the screen: the line moves with the row, and its own space would move under the finger.
+        DragGesture(minimumDistance: 20, coordinateSpace: .global)
+            .onChanged { drag in
+                guard !asked, abs(drag.translation.width) > abs(drag.translation.height) else { return }
+                dragged = drag.translation.width
+            }
+            .onEnded { drag in
+                let sideways = abs(drag.translation.width) > abs(drag.translation.height)
+                if sideways, abs(drag.translation.width) >= Self.swipeDistance { setAside() }
+                withMotion { dragged = 0 }
+            }
     }
 
     /// Asks once: a gesture, a tap or an accessibility action while it's on its way sends nothing more.

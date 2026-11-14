@@ -3557,6 +3557,8 @@ enum Words {
         static var languageTitle: String { Words.line("settings.language_title") }
         /// Legal
         static var legal: String { Words.line("settings.legal") }
+        /// {label} (in English)
+        static func legalInEnglish(label: String) -> String { Words.line("settings.legal_in_english", label) }
         /// The light taps when you send or answer.
         static var lightTapsWhenYouSend: String { Words.line("settings.light_taps_when_you_send") }
         /// Mode

@@ -1913,6 +1913,7 @@
     <string name="settings_kiff_account">Konto KIFF</string>
     <string name="settings_language_title">Język</string>
     <string name="settings_legal">Informacje prawne</string>
+    <string name="settings_legal_in_english">%1$s (po angielsku)</string>
     <string name="settings_light_taps_when_you_send">Lekkie stuknięcie, gdy wysyłasz lub odpowiadasz.</string>
     <string name="settings_mode">Tryb</string>
     <string name="settings_mode_kiff">Zalogowano przez KIFF</string>

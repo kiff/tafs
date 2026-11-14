@@ -1,0 +1,5 @@
+- Cada toque vibra, según el ajuste táctil de tu teléfono.
+- «Conectar apps» muestra cada app por su nombre, con lo que hace debajo.
+- Una tarea nueva pedida en un chat de Coach terminado abre su propia conversación.
+- Tras dejar de lado un chat de Coach, «Te esperan» dice dónde encontrarlo.
+- La tarjeta de aprobación de una app muestra lo que el taf puede hacer, sin las notas internas de KIFF.

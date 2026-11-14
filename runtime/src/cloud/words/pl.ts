@@ -110,7 +110,7 @@ export const pl: Words = {
   approval_no_code: (vendor: string) => `Logowanie w ${vendor} wróciło bez kodu potwierdzenia. Nic nie zostało połączone.`,
   approval_came_back: (vendor: string) => `Nie otworzyła się strona logowania ${vendor}, więc nic nie zostało połączone. Spróbuj ponownie.`,
   approval_came_back_signed_in: (vendor: string) => `Logowanie do ${vendor} już istnieje, więc nie otworzyła się strona logowania i nic nowego nie jest jeszcze połączone. Jego działania są następne.`,
-  approval_listed_already: (vendor: string) => `To połączenie z ${vendor} jest już zalogowane, więc nie ma tu nic do zalogowania.`,
+  approval_listed_already: (vendor: string) => `To połączenie z ${vendor} jest już zalogowane, więc nie ma tu nic do zalogowania. Aby użyć innego konta ${vendor}, poproś Coacha, by je połączył.`,
   approval_not_approvable: (vendor: string) => `Tego połączenia z ${vendor} nie można już zatwierdzić, więc nic nie zostało podpisane.`,
   apps_method_sign_in: "Logowanie",
   apps_method_key: "Kluczem",

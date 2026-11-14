@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.design.tapping
 import androidx.lifecycle.lifecycleScope
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveAlert
@@ -15,7 +16,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import bot.tafs.app.model.ThemePreference
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -753,7 +753,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                 androidx.compose.material3.Text(
                   Words.Home.Overview.title,
                   style = scaled(15, androidx.compose.ui.text.font.FontWeight.SemiBold, if (overviewOpen) Theme.amber else Theme.amberText),
-                  modifier = Modifier.fillMaxWidth().clickable { coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = true }
+                  modifier = Modifier.fillMaxWidth().tapping { coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = true }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 )
               }
@@ -1000,7 +1000,7 @@ private fun FoldHandle(folded: Boolean, onToggle: () -> Unit) {
       style = scaled(18, androidx.compose.ui.text.font.FontWeight.SemiBold, Theme.dim),
       modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp).size(24.dp, 44.dp)
         .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp)).background(Theme.panel)
-        .clickable(onClickLabel = if (folded) Words.Common.showTheList else Words.Common.hideTheList, onClick = onToggle)
+        .tapping(onClickLabel = if (folded) Words.Common.showTheList else Words.Common.hideTheList, onClick = onToggle)
         .semantics { role = androidx.compose.ui.semantics.Role.Button; contentDescription = if (folded) Words.Common.showTheList else Words.Common.hideTheList }
         .wrapContentSize(Alignment.Center),
     )
@@ -1031,7 +1031,7 @@ private fun CoachButton(onClick: () -> Unit, modifier: Modifier = Modifier, comp
     softWrap = false,
     modifier = modifier.heightIn(min = 40.dp).then(Modifier.driveStopZone()).clip(androidx.compose.foundation.shape.CircleShape)
       .background(if (acting) Theme.amber else Theme.ink)
-      .clickable { bot.tafs.app.design.Haptics.tap(); onClick() }.semantics { role = androidx.compose.ui.semantics.Role.Button }
+      .tapping { onClick() }.semantics { role = androidx.compose.ui.semantics.Role.Button }
       .padding(horizontal = if (compact) 8.dp else 14.dp, vertical = 10.dp),
   )
 }

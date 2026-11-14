@@ -1,0 +1,1 @@
+- **iPhone and iPad: one "A new Card" for a new taf's Cards.** A draft's new Cards, one per tool in KIFF, show as one "A new Card" with all their lines, as on Android, in place of one panel each; and the pencil on an empty Coach chat about a taf opens a plain one (docs/ios-app.md).

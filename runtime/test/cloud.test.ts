@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
-import { AgentsError } from "../src/cloud/agents.js";
+import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
 import { atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
@@ -16,6 +16,7 @@ import { DISCLOSURE_LINE, disclosureLines, jobById, OLD_DISCLOSURE_LINE } from "
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 import type { AccountEvent } from "../src/cloud/events.js";
 import { RECIPES } from "../src/recipes.js";
+import { contract } from "./contract.js";
 import { connectsToday } from "../src/cloud/recipes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -310,6 +311,8 @@ describe("tafs cloud", () => {
     expect(fresh.body.recipes.length).toBeGreaterThan(0);
     expect(fresh.body.suggestions).toEqual({ show: true, reason: "on", words: "Suggestions show in a new conversation with Coach until the account's first taf is live." });
     expect(fresh.body.home).toEqual({ shown: true, words: "Pick a job for your first taf.", own_words: own });
+    { const { home, labels: shownLabels, suggestions, shown, filtered } = fresh.body;
+      contract("recipes-home", "GET /v1/recipes for someone who manages the tafs, with no live taf: Home's part of the answer (the recipes themselves are left out).", { shown, filtered, suggestions, home, labels: shownLabels }); }
     expect(fresh.body.labels).toEqual(labels);
     // Someone who doesn't manage the account's tafs can't make one: Home doesn't lead with recipes, and says what's shared shows there.
     const viewer = await call(w, "GET", "/v1/recipes", { token: "viewer" });
@@ -1990,7 +1993,8 @@ describe("Setup (kiff/agents#91)", () => {
     expect(await read()).toEqual({ setup: null, tools: null });
     process.env.TAFS_COACH_START_ONE = "on";
     try {
-      const first = (await read()).start;
+      const firstAnswer = await read();
+      const first = firstAnswer.start;
       expect(first).toMatchObject({ state: "to_give", scheme: "kiff.requests.v1", agent_id: "setup" });
       expect(first.requests.map((r: { id: string }) => r.id)).toEqual(["connect", "draft"]);
       const [connect, draft] = first.requests;
@@ -2017,6 +2021,7 @@ describe("Setup (kiff/agents#91)", () => {
       expect(draft.body.contract_digest).toBe("cd_123");
       const { contract_digest: _cd, ...unsigned } = draft.body;
       expect(w.account.previewed).toEqual([{ connections: connect.body.connections, draft: unsigned }]);
+      contract("setup-start", "GET /v1/setup before Coach exists, with TAFS_COACH_START_ONE on: the tools batch and Coach's draft with its Cards, to sign once.", firstAnswer);
       // A gateway preview that names no contract: no start, rather than a draft KIFF can't hold to its words.
       (w.account as { noContractDigest?: boolean }).noContractDigest = true;
       expect(await read()).toEqual({ setup: null, tools: null });
@@ -2030,9 +2035,11 @@ describe("Setup (kiff/agents#91)", () => {
       delete w.account.gatewayStatus;
       // Tools already there (or the batch went in and the draft was refused): the draft alone, one fresh fingerprint.
       w.account.connections = TOOLS.map((t) => ({ name: t.name, url: mcp, control: true }));
-      const retry = (await read()).start;
+      const retryAnswer = await read();
+      const retry = retryAnswer.start;
       expect(retry).toMatchObject({ state: "to_give", scheme: "kiff.request.v1" });
       expect(retry.requests.map((r: { id: string }) => r.id)).toEqual(["draft"]);
+      contract("setup-start-draft-alone", "GET /v1/setup before Coach exists, every tool already connected: Coach's draft alone, signed on its own.", retryAnswer);
       // The draft alone is previewed as ever, with nothing to declare.
       expect(retry.requests[0].cards[0]).toEqual({ id: "coach-reads", lines: ["KIFF's line for coach-reads"] });
       expect(w.account.previewed!.at(-1)).toEqual(retry.requests[0].body);
@@ -4504,6 +4511,61 @@ describe("Coach's result, handed over by tafs cloud", () => {
     }
   });
 
+  // 14 Nov: every Gmail taf's first check named data.messages, a skill's example, where the read Coach made had its
+  // list elsewhere. A check whose list isn't where Coach's own reads found one goes back to Coach, with their paths.
+  it("answers a result whose check's list isn't where Coach's reads found one, with the paths they have, and makes nothing", async () => {
+    const { w, run, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const session = w.agents.runs.find((r) => r.id === run)!.session;
+    const items = (WORK_CHECK as { items: string }).items;
+    const seen = (answerText: string): SessionEvent[] => [
+      { session, run, seq: 1, time: "2026-11-14T13:00:00Z", kind: "tool_call", body: { tool: "planque", call_id: "r1", input: { action: "read", grant: "grt_Desk123456", tool: "list_x" } } },
+      { session, run, seq: 2, time: "2026-11-14T13:00:01Z", kind: "tool_result", body: { tool: "planque", call_id: "r1", text: answerText } },
+    ];
+    w.agents.events.set(session, seen(JSON.stringify({ results: [{ id: "a" }], meta: { pages: [] } })));
+    await note();
+    expect(answer()?.answer).toEqual({ failed: `the check's items, ${items}, isn't a list in what the reads you made answered: their lists are at results, meta.pages. Take items (and its cursor and id, inside each item) from a read you've seen, and hand over again` });
+    expect([...w.tafs.held.values()].some((t) => t.kiffAgent === "refunds-x")).toBe(false);
+    expect(w.agents.calls.some((c) => c.startsWith("claimTafDraft"))).toBe(false);
+  });
+
+  it("hands over a result whose check's list is where Coach's read found one, or when no read answered JSON", async () => {
+    for (const text of ["fits", "not json at all"]) {
+      const { w, run, note, answer } = await paused();
+      w.agents.access.set("u_ana", { cards_manage: true });
+      const session = w.agents.runs.find((r) => r.id === run)!.session;
+      const items = (WORK_CHECK as { items: string }).items;
+      const body: Record<string, unknown> = {};
+      let cur = body;
+      const keys = items.split(".");
+      keys.forEach((k, i) => { cur[k] = i === keys.length - 1 ? [{ id: "a" }] : {}; cur = cur[k] as Record<string, unknown>; });
+      w.agents.events.set(session, [
+        { session, run, seq: 1, time: "2026-11-14T13:00:00Z", kind: "tool_call", body: { tool: "planque", call_id: "r1", input: { action: "read", grant: "grt_Desk123456", tool: "list_x" } } },
+        { session, run, seq: 2, time: "2026-11-14T13:00:01Z", kind: "tool_result", body: { tool: "planque", call_id: "r1", text: text === "fits" ? JSON.stringify(body) : text } },
+      ]);
+      await note();
+      expect([text, (answer()?.answer as { failed?: string } | undefined)?.failed]).toEqual([text, undefined]);
+    }
+  });
+
+  // kiff-qa on the guard: a long list read is cut at 32 KB and no longer parses, and a small profile read beside it has
+  // no list. The check isn't judged by the profile alone: a cut read may be the one with the list.
+  it("hands over a result when one of Coach's reads was cut, whatever the others answered", async () => {
+    const { w, run, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const session = w.agents.runs.find((r) => r.id === run)!.session;
+    const ev = (seq: number, call: string, kind: "tool_call" | "tool_result", body: Record<string, unknown>): SessionEvent =>
+      ({ session, run, seq, time: "2026-11-14T13:00:00Z", kind, body: { tool: "planque", call_id: call, ...body } });
+    w.agents.events.set(session, [
+      ev(1, "r1", "tool_call", { input: { action: "read", grant: "grt_Mail1234567", tool: "profile_x" } }),
+      ev(2, "r1", "tool_result", { text: JSON.stringify({ emailAddress: "a@b.c", messagesTotal: 3 }) }),
+      ev(3, "r2", "tool_call", { input: { action: "read", grant: "grt_Mail1234567", tool: "list_x" } }),
+      ev(4, "r2", "tool_result", { text: `{"${(WORK_CHECK as { items: string }).items}":[{"id":"a","body":"${"x".repeat(200)}"…(cut at 32 KB of 40 KB)` }),
+    ]);
+    await note();
+    expect((answer()?.answer as { failed?: string } | undefined)?.failed ?? "").not.toContain("isn't a list");
+  });
+
   // The owner's run waited 40 minutes before the first try after a deploy: the 15 minutes count from the pause.
   it("a result already waiting past 15 minutes is answered at its first try", async () => {
     const { w, note, answer } = await paused();
@@ -5398,7 +5460,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.tafs.held.delete(`t_acme#${RAE}`);
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@24,draft-the-card@16,name-the-tools@11,set-up-a-taf@11,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@26,draft-the-card@17,name-the-tools@13,set-up-a-taf@11,usage-and-plans@3`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -5406,23 +5468,23 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is it stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@24,draft-the-card@16,name-the-tools@11,set-up-a-taf@11,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@26,draft-the-card@17,name-the-tools@13,set-up-a-taf@11,usage-and-plans@3`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "is everything stopped?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@24,draft-the-card@16,halting@1,name-the-tools@11,set-up-a-taf@11,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@26,draft-the-card@17,halting@1,name-the-tools@13,set-up-a-taf@11,usage-and-plans@3`);
     await w.agents.api.resume("t_acme");
     // An account with a taf of its own: every Coach start has the holds and the halting, whatever its state.
     // "Refunds hasn't done anything" and "stop everything" never name a skill, and the model left to read
     // one didn't (kiff/agents Eval 42788659962).
     w.tafs.held.set(`t_acme#${RAE}`, rae);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Rae hasn't done anything since this morning", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@24,draft-the-card@16,halting@1,name-the-tools@11,set-up-a-taf@11,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@26,draft-the-card@17,halting@1,name-the-tools@13,set-up-a-taf@11,usage-and-plans@3`);
     // An improvement opens on the taf: its skill.
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@24,draft-the-card@16,halting@1,improve-a-taf@1,name-the-tools@11`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@26,draft-the-card@17,halting@1,improve-a-taf@1,name-the-tools@13`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
@@ -5440,7 +5502,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@24,draft-the-card@16,halting@1,name-the-tools@11,set-up-a-taf@2,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@26,draft-the-card@17,halting@1,name-the-tools@13,set-up-a-taf@2,usage-and-plans@3`);
     // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
     w.agents.access.set("u_ana", { cards_manage: true });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
@@ -5791,7 +5853,7 @@ describe("the calendar (kiff/tafs#534)", () => {
 
 // A new taf was connected to Stripe through a provider's live-only app while Chargebacks used Stripe's own
 // sign-in, in test (5 Nov). tafs cloud gives a new Coach conversation the account's connections, so the
-// same kind is there to offer first, named with the taf that uses it (connect-an-app@24).
+// same kind is there to offer first, named with the taf that uses it (connect-an-app@26).
 describe("the account's connections a Coach conversation starts with", () => {
   const COACH = "taf-c0ac4000000000000000";
   const BO = "taf-bo00000000000000000";
@@ -5847,7 +5909,7 @@ describe("the account's connections a Coach conversation starts with", () => {
     expect(text).not.toContain("Docs");
     expect(ownerWords(text)).toBe("I want a taf that chases overdue invoices");
     // The skills are chosen from how the owner opened, as before.
-    expect(w.agents.calls.at(-1)).toContain("skills=cards-and-holds@3,connect-an-app@24,");
+    expect(w.agents.calls.at(-1)).toContain("skills=cards-and-holds@3,connect-an-app@26,");
     // The same chat goes on with what the session holds: nothing is read or sent again.
     await send(deps, `/v1/tafs/${COACH}/messages`, { text: "and remind them twice", session: started.session });
     expect(asked).toHaveLength(1);
@@ -6342,6 +6404,7 @@ describe("the first run", () => {
     expect(r.status).toBe(200);
     expect(r.body.time_zone).toBe("Europe/Paris");
     expect(k.put).toEqual(["Europe/Paris"]);
+    contract("setup-time-zone", "GET /v1/setup with X-Time-Zone for a new account still on UTC: tafs cloud set the zone in KIFF, and says so.", r.body);
     // Set once: a later read, or another phone's zone, changes nothing here; a later mismatch is the apps' question.
     expect((await k.send("GET", "/v1/setup", { "X-Time-Zone": "America/New_York" })).body).not.toHaveProperty("time_zone");
     expect(k.put).toEqual(["Europe/Paris"]);

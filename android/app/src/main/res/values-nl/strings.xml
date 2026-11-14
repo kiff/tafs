@@ -1801,6 +1801,7 @@
     <string name="settings_kiff_account">KIFF-account</string>
     <string name="settings_language_title">Taal</string>
     <string name="settings_legal">Juridisch</string>
+    <string name="settings_legal_in_english">%1$s (in het Engels)</string>
     <string name="settings_light_taps_when_you_send">Een lichte tik als je verzendt of antwoordt.</string>
     <string name="settings_mode">Modus</string>
     <string name="settings_mode_kiff">Ingelogd met KIFF</string>

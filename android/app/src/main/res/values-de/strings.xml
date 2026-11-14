@@ -1801,6 +1801,7 @@
     <string name="settings_kiff_account">KIFF-Konto</string>
     <string name="settings_language_title">Sprache</string>
     <string name="settings_legal">Rechtliches</string>
+    <string name="settings_legal_in_english">%1$s (auf Englisch)</string>
     <string name="settings_light_taps_when_you_send">Ein leichtes Tippen, wenn du sendest oder antwortest.</string>
     <string name="settings_mode">Modus</string>
     <string name="settings_mode_kiff">Mit KIFF angemeldet</string>

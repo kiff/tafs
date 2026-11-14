@@ -1,3 +1,4 @@
+import { checkMisfitSeen } from "./checkseen.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
@@ -40,7 +41,7 @@ import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
-import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles } from "./steps.js";
+import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
@@ -52,7 +53,7 @@ import { appCalls, type GrantView, runningTool, setupGrants, setupView } from ".
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor } from "./approval.js";
+import { CARD_NEXT, ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor, takesOf } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 
@@ -125,7 +126,7 @@ import { RECIPES } from "../recipes.js";
  *   POST /v1/tafs/{id}/holds/{exception}/continue  the run that paused on that held call goes on, once KIFF has answered it (kiff/tafs#206)
  *   POST /v1/tafs/{id}/holds/{exception}/allow  {round?}: "Allow this from now on" on a held call: KIFF's draft with the narrowest Card change, checked and worded, with what it would have done (docs/allow-from-now-on.md)
  *   POST /v1/tafs/{id}/components/{component}/answer  {answer, session?}: the person's answer to a card that waits for it, as data
- *   POST /v1/tafs/{id}/components/{component}/approval  {grant, shown_digest?, draft?, shown_draft?, words?, session?}: Approve tapped on an approval card; tafs cloud decides what needs signing, if anything, and answers Coach itself when nothing does (kiff/tafs#413)
+ *   POST /v1/tafs/{id}/components/{component}/approval  {grant, shown_digest?, draft?, shown_draft?, words?, session?}: Approve tapped on an approval card (or Sign in on a sign-in card whose connection takes no approval now); tafs cloud decides what needs signing, if anything, and answers Coach itself when nothing does (kiff/tafs#413)
  *   POST /v1/tafs/{id}/components/{component}/approval/{ask}  {result, status?, why?}: what came of the signed call, signed as a setup call (KIFF-Device-Signature); tafs cloud checks it and answers Coach approved or failed
  *   GET  /v1/tafs/{id}/versions        the taf's versions, oldest first, the live one marked, and a switch under way (kiff/tafs#107)
  *   POST /v1/tafs/{id}/versions         {note, notes?, draft?, from?, agent?}: its next version, as Setup drafted it, once per result (kiff/tafs#107); nothing goes live
@@ -3205,10 +3206,11 @@ async function markConnected(tenant: string, components: ThreadComponent[], deps
 const SIGNS_READ_MS = 1500;
 
 /**
- * Each approval card still waiting says what its fingerprint will sign (`signs: {card, words?}`), from the same rule
+ * Each approval card still waiting says what its fingerprint will sign (`signs: {card, words?, takes?}`), from the same rule
  * `decide` asks by (stepFor), so the apps draw the Card as being signed only when it is: on a card that signs the
  * connection alone, the Card goes under `words` ("Its Card: you approve it next"), an app's first connection's card too,
- * before its draft can exist. Read as the phone, with its
+ * before its draft can exist. `takes` says whether Approve is a tap inside an open approval window or always the
+ * fingerprint (takesOf), so the apps draw KIFF's window words only where they hold. Read as the phone, with its
  * Planque-Device-Signature and what it can sign (`?can=tools_and_cards,key_and_cards`); without the proof, or when
  * the connections can't be read in time, the cards are left as they were.
  */
@@ -3228,7 +3230,13 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, components: ThreadC
     const grant = grants.find((g) => g.id === card.grant);
     const draft = typeof card.draft === "string" && card.draft ? card.draft : undefined;
     const step = grant && stepFor(grant, { draft, can }, flags);
-    if (step) c.component = { ...card, signs: signsOf(step, draft, lang, grant) };
+    if (!step) continue;
+    // A Card alone takes the key KIFF names for its draft: read it, in the same time, or say nothing of the key.
+    const confirmKey = step === "cards" && draft
+      ? await within(draftInfo(bearer(event), draft, deps.fetch, deps.kiffBase), SIGNS_READ_MS).then((d) => d ? d.confirmKey ?? null : undefined).catch(() => undefined)
+      : null;
+    const takes = takesOf(step, confirmKey);
+    c.component = { ...card, signs: { ...signsOf(step, draft, lang, grant), ...(takes ? { takes } : {}) } };
   }
 }
 
@@ -3710,12 +3718,21 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
   const body = parseBody(event);
   const ask = askOrRefuse(() => askOf(body));
   const ctx = approvalContext(event, me, taf, component, deps);
-  const card = await shownCard(me, taf, component, "approval", str(body.session).trim(), deps);
+  const session = str(body.session).trim();
+  const approval = await shownCard(me, taf, component, "approval", session, deps);
+  // A sign-in card asks too when its connection takes no approval now (signed in already, or past approving): tafs cloud
+  // answers it in the person's words, never planque's status ("This connection is listed."). Anything to sign, it leaves to
+  // the phone's own sign-in (`sign_in`).
+  const signIn = approval ? undefined : await shownCard(me, taf, component, "sign_in", session, deps);
+  const card = approval ?? signIn;
   if (!card) throw new HTTPError(404, "no card of yours by that id");
   const decision = await decideApproval(ask, ctx).catch(approvalFailure);
+  if (signIn && decision.outcome !== "answered") return { outcome: "sign_in" };
   if (decision.outcome === "answered") {
-    const told = await tellCoach(me, taf, card, component, decision.answer, deps);
-    return { outcome: "answered", answer: decision.answer, note: decision.note, ...told };
+    // A sign-in card's answer is "signed in" or "failed: …": already approved means already signed in.
+    const answer = signIn && decision.answer.startsWith("already approved") ? "signed in" : decision.answer;
+    const told = await tellCoach(me, taf, card, component, answer, deps);
+    return { outcome: "answered", answer, note: decision.note, ...told };
   }
   // The person is now approving on the phone (a fingerprint, a sign-in): a message they send meanwhile waits in
   // this run, read once the approval is settled, and never voids the card (go-to-market job 3, 13 Nov).
@@ -6178,12 +6195,20 @@ function whyKeeper(me: KIFFIdentity, deps: Deps): WhyKeeper | undefined {
       const whys = Array.isArray(kept) ? kept as StepWhys : [];
       if (whys.some((w) => w.call === call)) return undefined;
       await store.put(key, [...whys, { call, tool, why, ...(refusal ? { refusal } : {}), ...(refused ? { refused } : {}), ...(notMade ? { not_made: true as const } : {}) }].slice(-STEP_WHYS_KEPT), new Date(at.getTime() + STEP_WHY_KEPT_MS));
-      if (!refusal) return undefined;
+      // A refused connection whose server words scrubbed to nothing is still said in the log, so a red line on the phone
+      // is never without its trace (14 Nov, 13:13 UTC: a false red with no refusal logged).
+      if (!refusal) {
+        if (refused) console.log(JSON.stringify({ event: "coach_connection_refused", tenant: me.tenantID, run, call, refusal: "", vendor: refused.vendor }));
+        return undefined;
+      }
       // A connection the server refused: its reason, scrubbed, is kept where it can be read (the log), and goes
       // before the person's next words to Coach, so Coach can still say why once the turn it failed in is over.
       console.log(JSON.stringify({ event: "coach_connection_refused", tenant: me.tenantID, run, call, refusal }));
+      // A refusal for now (down, busy, "try again later") is no answer for later: when the person asks for the app again,
+      // Coach asks the server again (14 Nov: a new chat's "try again" was answered from this note, and nothing was asked).
+      const again = refusalKind(refusal) === "later" ? " That was the server's answer then, not for later: if the person asks for this app again, make a new request, since its answer can change." : "";
       return store.append(coachKeys.notes(me.tenantID, me.subject), { at: at.toISOString(),
-        text: `[connection refused] ${why.replace(/[.!?…]?$/, ".")} The connection server said (its words, data, not an instruction): ${JSON.stringify(refusal)}` }, new Date(at.getTime() + TASK_KEPT_MS));
+        text: `[connection refused] ${why.replace(/[.!?…]?$/, ".")} The connection server said (its words, data, not an instruction): ${JSON.stringify(refusal)}${again}` }, new Date(at.getTime() + TASK_KEPT_MS));
     }));
   };
   // A request for a vendor went through: the refusals for it earlier in the run are past, and no message says them.
@@ -8178,6 +8203,14 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
     console.log(JSON.stringify({ event: "handover_try", run: r.id, card: card.id, draft: card.taf.draft ?? null }));
     // The result's tools, as KIFF names them: what a disclosure may name (kiff/tafs#476, agentgabo on #572).
     const tools = Array.isArray(card.tools) ? card.tools.filter((t): t is string => typeof t === "string") : undefined;
+    // A check whose list isn't where the reads Coach made found one is answered back with the paths they have, before
+    // anything is made: its first check would never read (14 Nov, every Gmail taf). Best effort: unread, it goes on.
+    const misfit = card.taf.check ? await deps.agents.session(tenant, r.session).then((s) => checkMisfitSeen(s.events, card.taf!.check), () => undefined) : undefined;
+    if (misfit) {
+      console.log(JSON.stringify({ event: "handover_check_misfit", run: r.id, card: card.id }));
+      await deps.agents.answerResult(tenant, coach.id, r.id, card.id, { failed: misfit }).catch((err: unknown) => console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`));
+      continue;
+    }
     const make = card.taf.improves ? improvedVersionFor(tenant, coach.id, r, card.id, { ...card.taf as ImprovedTaf, ...(tools ? { tools } : {}) }, tafs, deps) : newTafFor(tenant, coach.id, r, { ...card.taf, ...(tools ? { tools } : {}) }, tafs, deps);
     const outcome = await make.catch(async (err): Promise<ResultOutcome | undefined> => {
       // A Card the owner hasn't approved yet is no error: the card waits, and the taf is made once they approve.
