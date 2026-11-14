@@ -49,8 +49,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   one approval and sign-in then cover it, with no question of its own and no
   second approval. setup_reads goes on that one only, never on the taf's own
   reads: those read the owner's account. Never in a connection of its own:
-  each new connection is one more approval and vendor sign-in for the owner. The job's own tools are then added to that same
-  connection (tools on a connected grant adds them), declared: one approval with the Card, no
+  each new connection is one more approval and vendor sign-in for the owner. A managed app's connect names the taf's planned tools (uses). The job's own tools are then added to that same connection, declared: one approval with the Card, no
   sign-in. Once it's connected, read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments} (before a key: describe's arguments, by in and type), and place each argument you name (the amount, what the call
   acts on, the read's argument in unit_lookup) at the path its fields give,
   such as parameters.id. Keep that tool as one of the taf's reads, so it
@@ -72,8 +71,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   (contesting a claim on a payment, reminding a customer of an invoice) moves
   no money here. It has no amount argument, and its Card limits its calls a
   day. Name what each tool that changes things acts on
-  (resource_argument): the item it takes (the ticket, the event, the
-  payment), as one of its string arguments, required. When it takes several, keep the one
+  (resource_argument): the item it takes (a ticket, a payment), as one of its string arguments, required. When it takes several, keep the one
   its read takes. For a tool that
   moves money, name the read that says its unit (unit_lookup: that read's
   name, the read's argument that takes the same id, and where the unit is in
