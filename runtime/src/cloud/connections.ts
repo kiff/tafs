@@ -235,9 +235,12 @@ export function connectionAgents(kiffAgent: string, tafName: string, conns: Acco
 export function removedAgent(agent: string, archived: Map<string, string>, live: Set<string>, askedOn?: string): boolean {
   if (!agent || live.has(agent)) return false;
   if (archived.has(agent)) return true;
-  const day = askedOn?.slice(0, 10);
-  if (!day) return false;
-  return [...archived].some(([k, at]) => otherForm(agent, k) && typeof at === "string" && day <= at.slice(0, 10));
+  if (!askedOn) return false;
+  // A full time (a grant's created_at) is compared with the archive's time: a taf removed at 21:26 and made again at
+  // 22:00 is its own. A day alone (a connection's since) is compared by day.
+  const full = askedOn.length > 10 && !Number.isNaN(Date.parse(askedOn));
+  return [...archived].some(([k, at]) => otherForm(agent, k) && typeof at === "string"
+    && (full ? Date.parse(askedOn) <= Date.parse(at) : askedOn.slice(0, 10) <= at.slice(0, 10)));
 }
 
 /**

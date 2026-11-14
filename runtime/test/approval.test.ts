@@ -319,6 +319,13 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     r.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "news-digest-a1b2c3d4" };
     expect((await (await world(r, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "sign", ask: { step: "cards" } });
 
+    // The same day: a taf removed at 20:26 and made again at 22:00 is its own, by the full times.
+    const d = services();
+    d.agents = [{ id: "news-digest", archived_at: "2026-11-13T20:26:00Z" }];
+    d.grants = [grant({ status: "connected" }, { agent: "news-digest-a1b2c3d4", created_at: "2026-11-13T22:00:00Z" })];
+    d.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "news-digest-a1b2c3d4" };
+    expect((await (await world(d, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "sign", ask: { step: "cards" } });
+
     // A live taf on the other form of an archived name is its own: approved as before.
     const u = services();
     u.agents = [{ id: "refunds", archived_at: "2026-11-13T20:26:00Z" }];
