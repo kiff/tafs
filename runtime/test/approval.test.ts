@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
 import { connectedKey, approvalWords, ASK_KEPT_MS, WORDS } from "../src/cloud/approval.js";
-import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { approvalAnswerWords, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -817,6 +817,23 @@ describe("a card with a grant and a draft, signed as the connection alone", () =
     return { s, w, r };
   }
 
+  it("never reads as a failure when it worked by design: the card's words say it's connected and the Card is next, in the person's language", () => {
+    expect(approvalAnswerWords({ type: "approval", answer: "failed: Gmail is connected; its Card is next: show the approval again for its Card alone" }, "en")).toBe("Gmail is connected. Next, its Card.");
+    expect(approvalAnswerWords({ type: "approval", answer: "failed: Gmail is connected; its Card is next: show the approval again for its Card alone" }, "fr")).toBe("Gmail est connecté. Ensuite, la Card.");
+    // A real failure still says so.
+    expect(approvalAnswerWords({ type: "approval", answer: "failed: Gmail is connected; KIFF didn't issue the taf's Cards: the draft is revoked; show the approval again for its Card alone" }, "en"))
+      .toBe("Approve · it didn't go through: Gmail is connected; KIFF didn't issue the taf's Cards: the draft is revoked; show the approval again for its Card alone");
+  });
+
+  it("says it didn't go through when the Card isn't the draft the card showed, or isn't a draft any more", async () => {
+    for (const draft of [{ status: "draft", version: "v4", agent_id: "refunds-x" }, { status: "revoked", version: "v3", agent_id: "refunds-x" }]) {
+      const { s, w, r } = await reused(draft as Services["drafts"][string]);
+      s.grants = [grant({ status: "connected" })];
+      const rep = await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "connected" }, SIGNED);
+      expect(String(rep.body.answer), draft.status + draft.version).toMatch(/^failed: Stripe is connected; KIFF didn't issue the taf's Cards: /);
+    }
+  });
+
   it("signs the connection alone, then tells Coach the Card isn't approved, and the next card asks the Card with its limits", async () => {
     const { s, w, r } = await reused();
     expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
@@ -824,8 +841,9 @@ describe("a card with a grant and a draft, signed as the connection alone", () =
     // The phone's approve went through: Gmail is connected, the draft is still a draft.
     s.grants = [grant({ status: "connected" })];
     const rep = await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "connected" }, SIGNED);
-    expect(rep.body.answer).toMatch(/^failed: Stripe is connected; KIFF didn't issue the taf's Cards: the draft is draft; show the approval again for its Card alone$/);
-    expect(rep.body.note).toBe("KIFF didn't issue the taf's Cards: the draft is draft");
+    // By design, the Card next: Coach shows it again alone, and the person never reads it as a failure.
+    expect(rep.body.answer).toBe("failed: Stripe is connected; its Card is next: show the approval again for its Card alone");
+    expect(rep.body.note).toBe("Stripe is connected. Next, its Card.");
     expect(w.told()?.answer).toBe(rep.body.answer);
     expect(w.stored.status).toBe("RUNNING");
     // Coach shows the approval again: the connection is in, so the Card alone, under the fingerprint.

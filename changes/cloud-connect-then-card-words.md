@@ -1,0 +1,3 @@
+- **tafs cloud: a connect that worked by design never reads as a failure.** When the card said its Card comes next, the connection's report reads "Gmail is connected. Next, its Card.", in your language, never "it didn't go through" (docs/secure-connection.md).
+- **tafs cloud: a taf Coach hands over runs in your account's time zone.** Its schedule is created in the zone Coach wrote its rules in, never UTC by default: "Fridays at 17:00, Paris time" ran at 18:00 (docs/tafs.md).
+- **tafs cloud: Needs you's count logs its parts** (counts only), so a count the list doesn't show names where it comes from.

@@ -24,7 +24,8 @@ sealed class PlanqueError(message: String?) : Exception(message) {
   data object DigestMismatch : PlanqueError(null) { override val message: String get() = Words.Error.requestMismatch }
 
   /** planque's refusal: its status, its words ([message]) and its [code], when it sends one (`vendor_refused_client`…). */
-  class Server(val status: Int, message: String, val code: String? = null) : PlanqueError(message)
+  /** planque refused: its status, its reason ([message], for the code), its [code], and [words], its line for the person, when sent. */
+  class Server(val status: Int, message: String, val code: String? = null, val words: String? = null) : PlanqueError(message)
 
   /** Signed in an approval window that has ended (kiff/tafs#494): nothing was done; a new window, then the same call again. */
   class WindowRequired(message: String) : PlanqueError(message)
@@ -103,6 +104,19 @@ data class GrantEvent(
   val what: String = "",
 )
 
+/** A connection's health, planque's: [state] working, paused, signed_out, unfinished, waiting or ended; [ok] only while it works. */
+@Serializable
+data class GrantHealth(val state: String = "", val ok: Boolean = false, val words: String = "", val at: String? = null)
+
+/**
+ * One thing the person can do with a connection, as planque offers it: [words] on the button, [how] the call it is (`approve`, a
+ * sign-in again on itself; `key`, a new key; `delete`, the signed removal), and for a removal, [stops], what stops, asked once more.
+ */
+@Serializable
+data class GrantAction(val id: String = "", val words: String = "", val how: String = "", val stops: String? = null) {
+  companion object { val KNOWN = setOf("approve", "key", "delete") }
+}
+
 /** A connection planque keeps for the account, or one waiting for the owner. */
 @Serializable
 data class Grant(
@@ -141,7 +155,25 @@ data class Grant(
   @Transient val digestMatches: Boolean = false,
   /** planque answered connected to this phone's approval, before its list says so. Never read, only set. */
   @Transient val connectedNow: Boolean = false,
+  /** planque's name for the connection ("Gmail · name@example.com"): never an id. None from a planque before it. */
+  val title: String? = null,
+  /** The tafs on it, by their names, as planque reads them from the request; empty for an unfinished one. */
+  @SerialName("used_by") val usedBy: List<String>? = null,
+  @SerialName("health") val healthRead: JsonElement? = null,
+  @SerialName("actions") val actionsRead: JsonElement? = null,
 ) {
+  /** How it is, in planque's words ("Working · last used 00:32"); read leniently, so a shape this build doesn't know is none. */
+  val health: GrantHealth? get() = healthRead?.let { runCatching { KiffClient.json.decodeFromJsonElement(GrantHealth.serializer(), it) }.getOrNull() }
+
+  /**
+   * What the person can do with it, as planque offers it, in its order: only these are drawn. Null from a planque before it, and
+   * then the app's own row stands in. An action whose `how` this build doesn't know is left out.
+   */
+  val actions: List<GrantAction>? get() = actionsRead?.let { e ->
+    runCatching { (e as kotlinx.serialization.json.JsonArray).mapNotNull { a -> runCatching { KiffClient.json.decodeFromJsonElement(GrantAction.serializer(), a) }.getOrNull() } }.getOrNull()
+      ?.filter { it.words.isNotBlank() && it.how in GrantAction.KNOWN }
+  }
+
   /** The vendor, as the owner knows it: its name, else its server's host. */
   val vendor: String get() = vendorName ?: request.server
 
@@ -379,7 +411,8 @@ class PlanqueClient(
       val fields = runCatching { KiffClient.json.parseToJsonElement(String(response.body)).jsonObject }.getOrNull()
       val said = runCatching { fields?.get("error")?.jsonPrimitive?.content }.getOrNull()
       val code = runCatching { fields?.get("code")?.jsonPrimitive?.content }.getOrNull()
-      throw PlanqueError.Server(response.status, said ?: Words.Error.connectionAnswered(status = response.status.toString()), code)
+      val words = runCatching { (fields?.get("words") as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim()?.takeIf { it.isNotEmpty() } }.getOrNull()
+      throw PlanqueError.Server(response.status, said ?: Words.Error.connectionAnswered(status = response.status.toString()), code, words)
     }
     return decode(response.body)
   }
@@ -411,8 +444,9 @@ class PlanqueClient(
     if (response.status !in 200..299) {
       val fields = runCatching { KiffClient.json.parseToJsonElement(String(response.body)).jsonObject }.getOrNull()
       val code = runCatching { fields?.get("code")?.jsonPrimitive?.content }.getOrNull()
-      // planque's `error` is for the log: the person reads a plain line by status (ErrorWords).
-      throw PlanqueError.Server(response.status, Words.Error.connectionAnswered(status = response.status.toString()), code)
+      // planque's `error` is for the log: the person reads planque's `words` when sent, else a plain line by status (ErrorWords).
+      val words = runCatching { (fields?.get("words") as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim()?.takeIf { it.isNotEmpty() } }.getOrNull()
+      throw PlanqueError.Server(response.status, Words.Error.connectionAnswered(status = response.status.toString()), code, words)
     }
     return decode(response.body)
   }
@@ -507,6 +541,8 @@ class PlanqueClient(
       "User-Agent" to "tafs-android",
       // The person's language, as tafs cloud gets it: planque writes the words they approve in it, and says which (`lang`).
       "Accept-Language" to KiffClient.screenLanguage(),
+      // The person's time zone, as tafs cloud gets it: the times in planque's words are in it ("last used 00:32").
+      "X-Time-Zone" to java.time.ZoneId.systemDefault().id,
       "Planque-Device-Signature" to if (held != null) "t=$signedAt,v2=${sign(message)},w=$held,d=$device" else "t=$signedAt,v1=${sign(message)},d=$device",
     )
     if (body != null) sent["Content-Type"] = "application/json"
@@ -521,7 +557,8 @@ class PlanqueClient(
         throw PlanqueError.WindowRequired(Words.Error.approvalWindowEnded)
       }
       val code = runCatching { fields?.get("code")?.jsonPrimitive?.content }.getOrNull()
-      throw PlanqueError.Server(response.status, said ?: Words.Error.connectionAnswered(status = response.status.toString()), code)
+      val words = runCatching { (fields?.get("words") as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim()?.takeIf { it.isNotEmpty() } }.getOrNull()
+      throw PlanqueError.Server(response.status, said ?: Words.Error.connectionAnswered(status = response.status.toString()), code, words)
     }
     return response.body
   }

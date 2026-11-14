@@ -1,0 +1,3 @@
+- 'Wacht op jou' noemt de taf waarvoor een Coach-chat wacht, en sinds wanneer.
+- Niet nu? Veeg een wachtende Coach-chat weg of tik op 'Opzijzetten'. Er wordt niets goedgekeurd of verstuurd.
+- Wachten er twee of meer: 'Alles opzijzetten' beëindigt ze in één keer, na één vraag.

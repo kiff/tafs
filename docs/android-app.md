@@ -121,8 +121,25 @@ and `versionName` is what the store shows: `1.x` for a release with new features
 one with fixes only. Every Android batch pull request says its `versionName`. The app went public
 at 1.0 (versionCode 40), and 1.1 (43) is its first feature release since.
 
-**Releases** are signed bundles for Google Play, built by `android.yml`'s release job on a
-manual dispatch, in the `android-release` environment, which the owner approves each time.
+**Releases** are signed bundles for Google Play, built by `android.yml`'s release job by hand,
+or on a merge to main that raises `versionCode` (the `version` job compares it with the commit
+before), once `test` and `ui` passed, in the `android-release` environment, which the owner
+approves each time.
+
+**To Play's internal track, with no upload by hand.** Once the repository variable
+`PLAY_UPLOAD` is `on`, the release job sends the signed bundle to Play's **internal** track
+(`android/play/play_internal.py`): one edit, the bundle, the internal track's release
+(`completed`, this bundle alone, with its notes), committed. It never touches production,
+closed or open testing, or a rollout: the track is fixed in the script, and its tests check
+it. It signs in with Google's workload identity federation (`google-github-actions/auth`,
+`PLAY_WIF_PROVIDER` and `PLAY_SERVICE_ACCOUNT`), a token for the Play Developer API that lasts
+the run: no key file, and no secret holds a key. A bundle Play reads as another `versionCode`
+than the build's commits nothing.
+- **Release notes** live in the repository, one folder per `versionCode`:
+  `android/play/release-notes/<versionCode>/<locale>.txt`, for en-US, de-DE, fr-FR, es-ES,
+  it-IT, pt-PT, nl-NL and pl-PL, each at most 500 characters. A pull request that raises
+  `versionCode` adds that folder; `test` checks it (`play_internal.py --check`), and the upload
+  refuses a version with none.
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
 it once into the secrets store, and `android/release.sh` builds with it. The app has no native
 code of its own. Its only native libraries are two small ones that AndroidX ships already
@@ -645,6 +662,19 @@ you** ([api.md](api.md#coach-waiting)): Home's `coach_waiting`, after the steps,
 approval.") and its **Open Coach** button, which opens Coach on that chat (`AppModel.openWaitingCoach`),
 where the card is answered; someone who can't use Coach reads the line alone. tafs cloud counts each in `needs_you`, so Home never says "Nothing needs
 you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
+
+**Set aside** is "not now", never an approval, and only signed in (not the sample).
+- **One chat:** a row whose `words.set_aside` tafs cloud sends can be swiped away either way, and has
+  a button with the same words, so a swipe isn't the only way. Either one calls
+  `POST /v1/home/coach-waiting/{session}/set-aside` (`AppModel.setAsideCoach`), with the signed read
+  of this phone's connections, so tafs cloud can withdraw a connection that chat asked for.
+- **Every chat:** with two or more rows and Home's `coach_waiting_clear`, its **Set all aside** sits
+  above them. It asks once, in tafs cloud's words (the title names the count), then calls
+  `POST /v1/home/coach-waiting/set-aside`.
+- **After:** the row goes once tafs cloud answers, and Home is read again for its count. A refusal
+  says why (`ErrorWords`) and keeps the rows. A row being set aside isn't drawn again by a Home read
+  meanwhile.
+
 iPhone and iPad follow.
 
 ## Your step
@@ -742,6 +772,26 @@ Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#conne
   - "Used by" is tafs cloud's `used_by` when sent, else this phone's own read of its connections, by taf (`usedBy`).
 - **The trailing button is compact:** **Connect**, **Sign in again**, or for one signed in, **Signed in · choose its actions**.
   A connected app opens its connections, each with Disconnect.
+
+**An app's connections, as planque describes them** (Android 1.25.0, planque's `title`, `used_by`,
+`health` and `actions` on each grant; `Grant.health`, `Grant.actions`, read leniently). A connected app
+opens its connections, under each taf's name:
+- **Each row** is planque's `title` ("Gmail · name@example.com"), then **Used by** its `used_by`, then its
+  `health.words` ("Gmail's sign-in expired on 14 Nov"), amber when not `ok`. No id, and no button beside
+  it (`DescribedConnectionRow`).
+- **A tap opens its detail first:** its health, the tafs that depend on it, then only the `actions`
+  planque sent, in its order: `approve` is Sign in again on itself (`reconnect`), `key` a new key, and
+  `delete` the signed removal. An action whose `how` this build doesn't know isn't drawn, so a leftover
+  shows only planque's **Remove unfinished connection**, never Sign in again.
+- **A removal asks once more,** with planque's `stops` ("Unanswered customer emails will stop using
+  Gmail."), and only then the fingerprint. Remove is never beside a row.
+- Every request to planque says the person's time zone (`X-Time-Zone`), so the times in its words are
+  theirs.
+- A planque from before it sends no `actions`, and the row is the app's own, as below, until it does.
+- **planque's refusals in its own words:** any refusal that carries planque's `words` (a sign-in again
+  to another account than the connection's, say) shows those words as sent (`PlanqueError.Server.words`,
+  `ErrorWords.of`), never a line of the app's over them. "It changed in the meantime" is kept for a
+  409 with no words. planque's `error` stays the reason, for the code.
 
 tafs cloud's list, searched as the owner types, and **Connect** opens the approval as a sheet
 over the list (`ConnectApprovalSheet`). With several tafs, **Which taf is this for?** is asked
