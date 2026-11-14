@@ -37,13 +37,13 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   names aren't the thing's (a read of one item can take it as id): never guess
   or rename them, even from the vendor's API you know: a server's may differ. When the vendor has a read-only tool that
   lists an operation's fields, given its id, ask for it
-  in the first planque request, read_only with setup_reads: true, so
+  in the first planque request's setup_reads field (never a tool), so
   you can read it yourself: it reads the vendor's documentation, not the
   owner's account. Once it's connected, it isn't among your tools until you
   look for it: search for it by its name in KIFF, as planque's status lists
   it (such as api_details_k3f9), then call it. When you must pin the account,
   the read-only tool that lists the accounts the sign-in covers goes in that
-  first request too, with setup_reads: true (by entry: setup_reads): search {q} finds both by name
+  first request's setup_reads too (server or entry): search {q} finds both by name
   before you connect. The connection's one approval and sign-in then cover
   them, with no question of their own and no second approval: the owner
   already agreed to connect, and its approval is enough. setup_reads goes on
