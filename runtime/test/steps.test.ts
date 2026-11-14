@@ -245,6 +245,12 @@ describe("a refused connection's way forward (go-to-market job 3, 13 Nov)", () =
     // How a request is written, as planque refuses it: Coach's to fix, never the person's app.
     expect(coachGuard("reusing a managed app's sign-in takes agent, agent_name and tools: [] alone")).toBe(true);
     expect(coachGuard("grant is planque's grant id")).toBe(true);
+    // A tool looked up by a name the catalog doesn't hold: Coach's own miss, never red (14 Nov, Gmail).
+    expect(coachGuard("the catalog has no tool named GMAIL_FETCH_EMAILS")).toBe(true);
+    expect(coachGuard("mcp.example.com lists no tool named create_refund")).toBe(true);
+    expect(coachGuard("mcp.example.com has no tool named refund; it lists: list_charges, create_refund")).toBe(true);
+    s.call("planque", { action: "catalog", grant: "grt_abc123" }, "c6");
+    expect(s.connectionRefusal("c6", "the catalog has no tool named GMAIL_FETCH_EMAILS")).toBeUndefined();
     expect(coachGuard("Gmail's sign-in has expired (it answered 401), so nothing was done")).toBe(false);
     expect(s.connectionRefusal("c1", "fixed argument visibility.com.linkedin.ugc.MemberNetworkVisibility must be a dotted path with a JSON value")).toBeUndefined();
     expect(lacksAccess("Google Sheets refused the write: the sheet was renamed.")).toBe(false);

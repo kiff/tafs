@@ -50,6 +50,8 @@ final class AppModel: ObservableObject {
     @Published var requestedStep: String?
     /// Home's count of what waits for the person, from tafs cloud (kiff/tafs#469 item 1).
     @Published private(set) var homeNeedsYou: TafsCloud.NeedsYou?
+    /// Home's line as tafs cloud counted it, in its words; nil when it sent none.
+    @Published private(set) var homeHeadline: String?
     /// Of tafs cloud's count, the steps answered here that it still counts.
     private var answeredStillCounted = 0
 
@@ -614,6 +616,10 @@ final class AppModel: ObservableObject {
 
     var workingCount: Int { tafs.filter { $0.state == .working }.count }
 
+    /// Home's line: tafs cloud's words as sent, or, when it sent none, the app's own count of
+    /// the tafs working.
+    var workingWords: String { homeHeadline ?? Words.Home.working(count: workingCount) }
+
     /// Whether KIFF still holds this Record entry's call for an answer: a held call with its
     /// proposal is in Needs you. Before KIFF's list is read, a held entry counts as waiting.
     func isWaiting(_ entry: RecordEntry) -> Bool {
@@ -671,7 +677,7 @@ final class AppModel: ObservableObject {
             tafSetups = [:]; tafSetupErrors = [:]; connectedAgain = [:]; activityPages = [:]; runPages = [:]; timeZones = []
             recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
             recordTyping?.cancel(); recordTyping = nil
-            cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil
+            cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil; homeHeadline = nil
             yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaiting = []
             coachWaitingClear = nil; settingAside = []; setAsideChats = []
             haltErrors = [:]
@@ -1765,6 +1771,7 @@ final class AppModel: ObservableObject {
         coachWaiting = (home.coachWaiting ?? []).filter { $0.usable && !settingAside.contains($0.session) }
         coachWaitingClear = home.coachWaitingClear.flatMap { $0.usable ? $0 : nil }
         homeNeedsYou = home.needsYou
+        homeHeadline = home.headlineWords
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
         cloudTafs = running
@@ -6099,7 +6106,7 @@ final class AppModel: ObservableObject {
                     await refreshConnections()
                     guard gen == accountGeneration else { return nil }
                     guard confirmed.connected || confirmed.listed else {
-                        lastError = Words.Coach.notConnected(vendor: grant.vendor, status: confirmed.status.replacingOccurrences(of: "_", with: " "))
+                        lastError = Words.Coach.notConnected(vendor: grant.vendor)
                         return nil
                     }
                     return confirmed
@@ -6108,7 +6115,7 @@ final class AppModel: ObservableObject {
                 // chose from the vendor's list connected them, with no second sign-in.
                 guard approved.status == "connected" else {
                     await refreshConnections()
-                    lastError = Words.Connect.noSignInLink(status: "\(approved.status)")
+                    lastError = Words.Connect.noSignInLink(vendor: grant.vendor)
                     return nil
                 }
                 // planque said connected: that's the answer (kiff/tafs#245). The list is read
@@ -6146,7 +6153,7 @@ final class AppModel: ObservableObject {
         }
         await refreshConnections()
         guard connected.connected || connected.listed else {
-            lastError = Words.Coach.notConnected(vendor: grant.vendor, status: connected.status.replacingOccurrences(of: "_", with: " "))
+            lastError = Words.Coach.notConnected(vendor: grant.vendor)
             return nil
         }
         return connected
@@ -7664,6 +7671,9 @@ final class AppModel: ObservableObject {
     private func followSetupStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, text: String, gen: Int,
                                    conversation: Int, sent: String? = nil) async {
         var ended: String?
+        // Coach paused on a card its person answers: Needs you is read once then, so its row
+        // and badge come while the chat is still open, not after it closes.
+        var waitsOnYou = false
         do {
             for try await e in events {
                 guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
@@ -7680,6 +7690,7 @@ final class AppModel: ObservableObject {
                     setupLive?.thinking += t
                 case .state(let state, let words):
                     setupLive?.state = LiveState(state: state, words: words)
+                    waitsOnYou = Self.stillWaitsOnYou(waitsOnYou, state: state)
                 case .activity(let tool, let step, let call):
                     // The step shows at once; the thread then picks up the words written so far.
                     let words = step ?? Self.activityWords(tool)
@@ -7703,6 +7714,7 @@ final class AppModel: ObservableObject {
                     setupLiveBefore = Set(setupThread.items.map(\.id))
                 case .end(let status, _, _, _, _):
                     ended = status
+                    if status == "PAUSED" { waitsOnYou = true }
                 case .held:
                     setupLive?.ended(nil, .held)
                 case .broken, .taken:
@@ -7719,6 +7731,19 @@ final class AppModel: ObservableObject {
         await loadSetupThread()
         guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         setupLive = nil
+        // Paused on a card: Home, and its Needs you, read once now, as a taf's chat does at its end.
+        if waitsOnYou { await refresh() }
+    }
+
+    /// Whether Coach's run still waits on its person after this live line: `waiting_for_you`
+    /// (a card that waits on them, or a held call) says it does; any other line but the last,
+    /// `done`, says it went on. One Home read per pause, at the stream's end.
+    nonisolated static func stillWaitsOnYou(_ before: Bool, state: String) -> Bool {
+        switch state {
+        case "waiting_for_you": return true
+        case "done": return before
+        default: return false
+        }
     }
 
     /// What Setup is doing, in the owner's words, from the tool it calls.

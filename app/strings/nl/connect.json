@@ -106,7 +106,7 @@
   "connect.more_apps": "Meer apps",
   "connect.more_apps_could_not_listed": "Meer apps konden niet worden getoond: {why}",
   "connect.no_confirmation_code": "De login bij {vendor} kwam terug zonder bevestigingscode. Er is niets gekoppeld.",
-  "connect.no_sign_in_link": "De koppeling kwam terug als {status} zonder inloglink. Er is niets gekoppeld.",
+  "connect.no_sign_in_link": "Er opende geen inlogpagina van {vendor}, dus er is niets gekoppeld. Je kunt het opnieuw proberen.",
   "connect.no_such_connection": "Er is geen koppeling met die id.",
   "connect.no_taf": "Maak eerst een taf: een app wordt gekoppeld zodat een taf hem kan gebruiken.",
   "connect.not_connected": "Niet gekoppeld. {why}",

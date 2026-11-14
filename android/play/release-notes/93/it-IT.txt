@@ -1,0 +1,1 @@
+- Quando un accesso non si collega, il messaggio lo dice in parole semplici, senza stati tecnici.

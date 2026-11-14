@@ -31833,49 +31833,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Anmeldung bei %1$@ hat keine Verbindung hergestellt: Die Verbindung ist %2$@. Es wurde nichts verbunden. Versuch erneut, dich anzumelden."
+            "value": "Die Anmeldung bei %1$@ wurde nicht abgeschlossen, also wurde nichts verbunden. Melde dich erneut an."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The sign-in at %1$@ didn't connect: the connection is %2$@. Nothing was connected. Try signing in again."
+            "value": "The sign-in at %1$@ didn't finish, so nothing was connected. Try signing in again."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El inicio de sesión en %1$@ no se conectó: la conexión está %2$@. No se conectó nada. Prueba a iniciar sesión de nuevo."
+            "value": "El inicio de sesión en %1$@ no terminó, así que no se conectó nada. Vuelve a iniciar sesión."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La connexion à %1$@ n'a pas abouti : la connexion est %2$@. Rien n'a été connecté. Essayez de vous reconnecter."
+            "value": "La connexion à %1$@ n'a pas abouti : rien n'a été connecté. Reconnectez-vous."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'accesso su %1$@ non si è collegato: il collegamento è %2$@. Non è stato collegato nulla. Prova ad accedere di nuovo."
+            "value": "L'accesso a %1$@ non si è concluso, quindi non è stato collegato nulla. Accedi di nuovo."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De login bij %1$@ heeft niets gekoppeld: de koppeling is %2$@. Er is niets gekoppeld. Probeer opnieuw in te loggen."
+            "value": "Het inloggen bij %1$@ is niet afgerond, dus er is niets gekoppeld. Log opnieuw in."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Logowanie w %1$@ nie utworzyło połączenia: połączenie ma stan %2$@. Nic nie zostało połączone. Spróbuj zalogować się ponownie."
+            "value": "Logowanie w %1$@ nie zostało dokończone, więc nic nie zostało połączone. Zaloguj się ponownie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O início de sessão em %1$@ não ligou: a ligação está %2$@. Nada foi ligado. Tente iniciar sessão novamente."
+            "value": "O início de sessão em %1$@ não terminou, por isso nada foi ligado. Inicie sessão novamente."
           }
         }
       }
@@ -42852,49 +42852,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Verbindung kam mit Status %1$@ ohne Anmeldelink zurück. Es wurde nichts verbunden."
+            "value": "%1$@ hat keine Anmeldeseite geöffnet, also wurde nichts verbunden. Versuch es noch einmal."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The connection came back %1$@ with no sign-in link. Nothing was connected."
+            "value": "%1$@ didn't open a sign-in page, so nothing was connected. Try again."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La conexión volvió %1$@ sin enlace de inicio de sesión. No se conectó nada."
+            "value": "No se abrió ninguna página de inicio de sesión de %1$@, así que no se conectó nada. Puedes reintentarlo."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La connexion est revenue %1$@ sans lien de connexion. Rien n'a été connecté."
+            "value": "Aucune page de connexion à %1$@ ne s'est ouverte : rien n'a été connecté. Réessayez."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il collegamento è tornato %1$@ senza un link di accesso. Non è stato collegato nulla."
+            "value": "Non si è aperta nessuna pagina di accesso di %1$@, quindi non è stato collegato nulla. Riprova."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De koppeling kwam terug als %1$@ zonder inloglink. Er is niets gekoppeld."
+            "value": "Er opende geen inlogpagina van %1$@, dus er is niets gekoppeld. Je kunt het opnieuw proberen."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Połączenie wróciło ze stanem %1$@, bez linku do logowania. Nic nie zostało połączone."
+            "value": "Nie otworzyła się strona logowania %1$@, więc nic nie zostało połączone. Spróbuj ponownie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "A ligação voltou %1$@ sem link de início de sessão. Nada foi ligado."
+            "value": "Não abriu nenhuma página de início de sessão de %1$@, por isso nada foi ligado. Pode tentar novamente."
           }
         }
       }

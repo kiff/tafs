@@ -646,7 +646,7 @@
     <string name="coach_not_allowed">Coach is voor de mensen die KIFF het laat gebruiken, standaard de beheerders van het account.</string>
     <string name="coach_not_archived_try_again">Niet gearchiveerd. Probeer het opnieuw.</string>
     <string name="coach_not_connectable">Apps koppelen is voor dit account niet ingesteld vanaf deze telefoon. Open Coach om ermee te beginnen.</string>
-    <string name="coach_not_connected">De login bij %1$s heeft niets gekoppeld: de koppeling is %2$s. Er is niets gekoppeld. Probeer opnieuw in te loggen.</string>
+    <string name="coach_not_connected">Het inloggen bij %1$s is niet afgerond, dus er is niets gekoppeld. Log opnieuw in.</string>
     <string name="coach_not_improved">De nieuwe versie van %1$s is niet gemaakt: %2$s.</string>
     <string name="coach_not_no_sign">Nu niet: geen login bij %1$s</string>
     <string name="coach_not_put_back_try_again">Niet teruggezet. Probeer het opnieuw.</string>
@@ -865,7 +865,7 @@
     <string name="connect_more_apps">Meer apps</string>
     <string name="connect_more_apps_could_not_listed">Meer apps konden niet worden getoond: %1$s</string>
     <string name="connect_no_confirmation_code">De login bij %1$s kwam terug zonder bevestigingscode. Er is niets gekoppeld.</string>
-    <string name="connect_no_sign_in_link">De koppeling kwam terug als %1$s zonder inloglink. Er is niets gekoppeld.</string>
+    <string name="connect_no_sign_in_link">Er opende geen inlogpagina van %1$s, dus er is niets gekoppeld. Je kunt het opnieuw proberen.</string>
     <string name="connect_no_such_connection">Er is geen koppeling met die id.</string>
     <string name="connect_no_taf">Maak eerst een taf: een app wordt gekoppeld zodat een taf hem kan gebruiken.</string>
     <string name="connect_not_connected">Niet gekoppeld. %1$s</string>
