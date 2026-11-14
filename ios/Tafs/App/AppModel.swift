@@ -1461,7 +1461,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var canAnswerHolds: Bool?
 
     /// Turns on alerts for the account's held calls, so they reach this phone with tafs closed:
-    /// the owner allows notifications and confirms with Face ID; the phone points the
+    /// the owner allows notifications, with no Face ID; the phone points the
     /// account's KIFF alert target at tafs cloud (a signed setup call) and hands tafs cloud
     /// the target's signing secret with its push token. A secret tafs cloud didn't take last
     /// time is handed over again first, without registering a new one. True once done.
@@ -1489,9 +1489,10 @@ final class AppModel: ObservableObject {
 
         var handoff = pendingHandoff
         if handoff == nil {
-            do {
-                _ = try await signer.sign(Data("tafs.alerts.v1|\(tenant)".utf8), reason: Words.Alert.prompt)
-            } catch { return false }
+            // No Face ID here (`AlertsTests`): the alert target is a signed setup call KIFF takes
+            // with the device key, which signs with no prompt, as Refuse and Halt all do. It grants
+            // no authority (`KIFFClient.grantsAuthority`), so the approval key never signs it; a
+            // prompt here only confirmed a signature nothing checks, before any job had started.
             guard gen == accountGeneration else { return false }
             let signer = self.signer
             kiff.tenant = tenant
@@ -4241,10 +4242,10 @@ final class AppModel: ObservableObject {
 
     /// `files` go with the message (kiff/tafs#209): a message may be files alone. One with
     /// files that doesn't go is left with the composer, files and all, rather than kept unsent.
-    /// A send that went through ticks (Haptics), whichever way it went.
+    /// A send that went through ticks (Haptics), whichever way it went; one kept unsent warns.
     private func deliverChat(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
         let delivery = await deliverChatOnce(text, to: tafID, files: files)
-        if delivery == .sent { Haptics.success() }
+        Haptics.play(delivery.feel)
         return delivery
     }
 
@@ -7191,12 +7192,24 @@ final class AppModel: ObservableObject {
 
     /// What a send did with a message: sent it, kept it in the thread as not sent (it
     /// was tried and failed), or didn't try (nothing to send, too long, or busy).
-    enum Delivery { case sent, kept, notTried }
+    enum Delivery {
+        case sent, kept, notTried
 
-    /// A send to Coach that went through ticks (Haptics), whichever way it went.
+        /// What the person feels as their Send ends (Haptics): sent, a success tick; tried and
+        /// kept unsent, a warning; not tried (nothing to send, busy), nothing more than the press.
+        var feel: Haptics.Kind? {
+            switch self {
+            case .sent: return .success
+            case .kept: return .warning
+            case .notTried: return nil
+            }
+        }
+    }
+
+    /// A send to Coach that went through ticks (Haptics), whichever way it went; one kept unsent warns.
     private func deliverSetup(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
         let delivery = await deliverSetupOnce(text, files: files)
-        if delivery == .sent { Haptics.success() }
+        Haptics.play(delivery.feel)
         return delivery
     }
 
@@ -7719,6 +7732,17 @@ final class AppModel: ObservableObject {
     /// with its outcome.
     enum CardState: Equatable { case needsYou, working, done, declined, failed(String?) }
 
+    /// What an approval made on Coach's card plays as the card reaches `state` (Haptics): approved,
+    /// a success tick; failed, a warning. Declined is the person's own choice, and on its way or
+    /// back to asking is no outcome yet: nothing.
+    nonisolated static func feel(approving state: CardState) -> Haptics.Kind? {
+        switch state {
+        case .done: return .success
+        case .failed: return .warning
+        case .needsYou, .working, .declined: return nil
+        }
+    }
+
     /// An approval's or a sign-in's state, from planque's grant, KIFF's draft and the
     /// owner's answer in the thread.
     func setupCardState(_ c: SetupComponent) -> CardState {
@@ -7949,6 +7973,7 @@ final class AppModel: ObservableObject {
                         _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true)
                     } catch {
                         cardNotes[component.id] = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+                        Haptics.warning()
                         return
                     }
                     guard gen == accountGeneration else { return }
@@ -7976,10 +8001,13 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return }
             cardNotes[component.id] = refused.words ?? refused.message
             await loadSetupThread()
+            // Once the thread is read again: a card it shows as failed is the same failure, one buzz.
+            Haptics.warning()
         } catch {
             guard gen == accountGeneration else { return }
             cardNotes[component.id] = Words.Coach.answerNotReached(why: "\(error.localizedDescription)")
             await loadSetupThread()
+            Haptics.warning()
         }
     }
 

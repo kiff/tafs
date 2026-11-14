@@ -1387,6 +1387,13 @@ struct SetupComponentView: View {
                     // Made with no plan, so nothing runs yet: tafs cloud's words say so.
                     Text(words).scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
                         .fixedSize(horizontal: false, vertical: true)
+                    // Where to do it, one tap away, as on Android: Plan & usage, where a plan is chosen.
+                    // Drawn only with tafs cloud's `plan_needed`; it names no plan and no link, so none is made up here.
+                    Button { model.usageRequested = true } label: {
+                        Text(Words.Usage.choosePlan).frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(OutlineButtonStyle())
+                    .accessibilityIdentifier("coach.plan-needed")
                 }
                 if let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent), model.cloudTaf(for: tafID) != nil {
                     if sizeClass == .regular {
@@ -1473,12 +1480,11 @@ struct SetupApproval: View {
             }
         }
         .onChange(of: state) { now in
+            // An approval made here ticks as it goes through, and warns as it fails.
+            if approvingHere { Haptics.play(AppModel.feel(approving: now)) }
             switch now {
             case .working: approvingHere = true
-            case .done:
-                if approvingHere { Haptics.success() }
-                approvingHere = false
-            case .declined, .failed: approvingHere = false
+            case .done, .declined, .failed: approvingHere = false
             case .needsYou: break // between the approval and the grant's refresh
             }
         }

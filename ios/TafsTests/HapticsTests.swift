@@ -72,4 +72,63 @@ final class HapticsTests: XCTestCase {
             .appendingPathComponent("Tafs/Design/Scaled.swift"), encoding: .utf8)
         XCTAssertTrue(source.contains("guard enabled, Date().timeIntervalSince(lastTap) < warnsWithin else { return }"))
     }
+
+    /// A selection the person changes (a taf's tabs, the iPad's sidebar) ticks once it truly changed;
+    /// the same one chosen again plays nothing.
+    func testASelectionTicksOnlyWhenItChanges() {
+        Haptics.select(1, 1)
+        Haptics.select(Optional<HomeSelection>.none, nil)
+        XCTAssertEqual(played, [])
+        Haptics.select(0, 2)
+        Haptics.select(Optional<HomeSelection>.none, .needsYou)
+        XCTAssertEqual(played, ["step", "step"])
+    }
+
+    /// Which outcome plays which feel: a send that went through ticks, one kept unsent warns, one not
+    /// tried plays nothing past the press; an approval on Coach's card that's done ticks, one that
+    /// failed warns, and declining or waiting plays nothing.
+    func testEachOutcomeItsFeel() {
+        XCTAssertEqual(AppModel.Delivery.sent.feel, .success)
+        XCTAssertEqual(AppModel.Delivery.kept.feel, .warning)
+        XCTAssertNil(AppModel.Delivery.notTried.feel)
+
+        XCTAssertEqual(AppModel.feel(approving: .done), .success)
+        XCTAssertEqual(AppModel.feel(approving: .failed("planque said no")), .warning)
+        XCTAssertEqual(AppModel.feel(approving: .failed(nil)), .warning)
+        XCTAssertNil(AppModel.feel(approving: .declined))
+        XCTAssertNil(AppModel.feel(approving: .working))
+        XCTAssertNil(AppModel.feel(approving: .needsYou))
+
+        Haptics.play(nil)
+        XCTAssertEqual(played, [])
+        Haptics.tap()
+        Haptics.play(.success)
+        Haptics.play(.warning)
+        Haptics.play(.step)
+        XCTAssertEqual(played, ["tap", "success", "warning", "step"])
+    }
+
+    /// One failure warns once, though it's said in two places (a card's note, then the thread read again).
+    func testOneFailureWarnsOnce() {
+        Haptics.tap()
+        Haptics.warning()
+        Haptics.warning()
+        XCTAssertEqual(played, ["tap", "warning"])
+    }
+
+    /// Where each plays, as on Android 88: a taf's tabs and the iPad's sidebar tick as the person
+    /// changes them; Coach's button taps on the bar and in the sidebar, as the bar's tabs do through
+    /// `.drivablePlain`; an approval on Coach's card ticks or warns as it ends; a send ticks or warns.
+    func testWhereItPlays() throws {
+        let tafs = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        func source(_ path: String) throws -> String { try String(contentsOf: tafs.appendingPathComponent(path), encoding: .utf8) }
+        XCTAssertTrue(try source("Views/TafDetailView.swift").contains("set: { Haptics.select(section, $0); section = $0 }"))
+        XCTAssertTrue(try source("Views/HomeSplitView.swift").contains("set: { chosen = true; Haptics.select(selection, $0); selection = $0 }"))
+        XCTAssertTrue(try source("Views/HomeSplitView.swift").contains("Button { Haptics.tap(); model.openCoach() }"))
+        let bar = try source("Views/TafsBar.swift")
+        XCTAssertTrue(bar.contains("Button { Haptics.tap(); model.openCoach() }"))
+        XCTAssertTrue(bar.contains("Button { tab = item.tab } label:") && bar.contains(".buttonStyle(.drivablePlain)"), "each tab taps in DriveButton")
+        XCTAssertTrue(try source("Views/SetupChatView.swift").contains("if approvingHere { Haptics.play(AppModel.feel(approving: now)) }"))
+        XCTAssertEqual(try source("App/AppModel.swift").components(separatedBy: "Haptics.play(delivery.feel)").count - 1, 2, "a taf's chat and Coach's")
+    }
 }
