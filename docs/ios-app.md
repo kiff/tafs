@@ -744,13 +744,24 @@ Home lists it ([api.md](api.md) › Coach waiting; `KIFF/TafsCloud+CoachWaiting.
   tafs cloud's words only: `words.line` ("Coach is waiting for your approval.") and `words.open`
   ("Open Coach"). Needs you never says nothing is waiting while one is listed, and Home's count is
   tafs cloud's `needs_you`, which has each once.
+- **Not the chat on screen:** while Coach is open on a chat (`AppModel.coachChatOnScreen`: `setupChat`, or
+  the thread's session), that chat's row isn't drawn and isn't counted (`coachWaiting` is Home's
+  `coachWaitingListed` less it). Of tafs cloud's `needs_you` count only the rows hidden come off, never below
+  0, and the line under the count is then the app's own count words, not tafs cloud's line that counts it.
+  Closed, the row and its count are back as Home listed them. Open Coach takes the row and the badge
+  together, in the same tap.
 - **Read leniently:** one without its chat (`session`) or either line is left out, never Home with it.
-- **The way in** opens Coach on that chat (`openSetupChat(session)`), where its card waits. Someone who may not
-  use Coach (`mayUseCoach`) sees the line alone, never a button that does nothing.
+- **The way in** opens Coach on that chat (`openSetupChat(session)`), where its card waits, on one tap. Someone who may not
+  use Coach (`mayUseCoach`) sees the line alone, never a button that does nothing. The Set aside swipe is on
+  the row's line alone, never over its buttons, so no drag recognizer sits around Open Coach.
 - **At once:** when Coach's run pauses on a card while its chat is open (its stream's live line ends on
   `waiting_for_you`, or it ends `PAUSED`), the app reads Home once as that stream ends
   (`AppModel.stillWaitsOnYou`), so the row and the badge come while Coach is still open, not after it closes.
-  A run that went on after the card, or ended, reads nothing more.
+- **When the run ends:** a run that ends on its stream, however it ends (`COMPLETED`, `CANCELLED`,
+  `ERROR`; `AppModel.readsHomeAtEnd`), reads Home once too, and so does a run seen ending on a read of the
+  thread (at work at the last read, idle now, with no stream), or handed over. A row of that chat that
+  waited on the person goes, with its badge, without waiting for the next read. A stream that drops with
+  no end reads nothing.
 - **The line's date** ("depuis le 14 nov.") is tafs cloud's, inside `words.line`; the app draws it as sent.
 
 **Set aside** is "not now", never an approval: nothing is signed, and no Face ID. Only signed in (not the
@@ -778,6 +789,10 @@ Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideB
   (`DriveTests.testATouchOnSetAsideIsRefusedBeforeAnythingRuns`). The row that carries the swipe and its
   accessibility action is marked too, though the drive registers neither; its Open Coach is marked as not
   confirming.
+- **The pencil** (New conversation) in Coach opened on a taf ("Improve <taf>") starts a plain Coach chat,
+  on no taf (`newCoachConversation`), and so does New taf at the chat's top. It stays plain: Coach closed
+  and opened again on the same taf's page doesn't go back to that taf's mode; another taf's page opens on
+  that taf.
 - **A new conversation:** a chat set aside is never the one Coach goes on in. When it's the chat shown (or
   the latest one shown together), Coach starts a new conversation (`newSetupChat`), so a new job's first
   message asks for a new chat (`new_chat`) and never names the ended session. When Coach next picks its
@@ -785,7 +800,9 @@ Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideB
   are kept in memory only, never written to the phone (docs/data.md). Reopened from Previous conversations by the
   person, the chat opens as any other.
 
-Tests: `TafsTests/CoachWaitingTests.swift`.
+Tests: `TafsTests/CoachWaitingTests.swift`; a run's end, `SetupTests.testACoachRunEndingReadsHome`; the
+pencil, `VersionsTests.testThePencilInATafsCoachModeStartsAPlainChat`. One tap opening the chat is pinned
+by the card's structure only; the tap itself needs a device.
 
 ## Your step
 

@@ -291,4 +291,76 @@ final class CoachWaitingTests: XCTestCase {
         XCTAssertNil(body(next)["session"])
         Keychain.delete(AppModel.planqueAccount)
     }
+
+    // MARK: The chat open on screen
+
+    /// The Coach chat open on screen isn't in Needs you while it's open: no row for it, and the
+    /// badge leaves it out (the live run: the badge said 1 for the very chat the person was in,
+    /// waiting on their own card). Of tafs cloud's count, only the rows hidden come off, never
+    /// below 0; closed, it's back as Home listed it.
+    func testTheChatOpenInCoachIsNotCounted() async throws {
+        let model = await signedIn([Self.row1, Self.row2], clear: Self.clear)
+        XCTAssertEqual(model.needsYouCount, 2)
+        await model.openSetupChat("s1")
+        XCTAssertEqual(model.coachWaiting.map(\.session), ["s1", "s2"], "Coach closed: still listed")
+        XCTAssertNil(model.coachChatOnScreen)
+
+        model.coachOpen = true
+        XCTAssertEqual(model.coachChatOnScreen, "s1")
+        XCTAssertEqual(model.coachWaiting.map(\.session), ["s2"], "no row for the chat on screen")
+        XCTAssertEqual(model.needsYouCount, 1, "tafs cloud's 2, less the row hidden")
+        XCTAssertEqual(model.needsYouWords, Words.NeedsYou.count(count: 1), "not tafs cloud's line, which counts it")
+        XCTAssertNil(model.setAllAside, "one row left: no Set all aside")
+
+        model.coachOpen = false
+        XCTAssertEqual(model.coachWaiting.map(\.session), ["s1", "s2"], "closed: back as Home lists it")
+        XCTAssertEqual(model.needsYouCount, 2)
+        XCTAssertEqual(model.needsYouWords, "2 need you.")
+
+        // A new conversation in Coach is on no waiting chat: nothing hidden.
+        model.coachOpen = true
+        model.newSetupChat()
+        XCTAssertNil(model.coachChatOnScreen)
+        XCTAssertEqual(model.needsYouCount, 2)
+
+        // Never below 0: tafs cloud's count may already leave it out.
+        await model.openSetupChat("s1")
+        let counted = #"{"tafs":[],"others":[],"removing":[],"coach_waiting":[\#(Self.row1)],"needs_you":{"count":0,"words":"Nothing needs you."}}"#
+        model.show(try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(counted.utf8)), [])
+        XCTAssertTrue(model.coachWaiting.isEmpty)
+        XCTAssertEqual(model.needsYouCount, 0)
+
+        // Without tafs cloud's count, the app's own counts the rows it draws.
+        let uncounted = #"{"tafs":[],"others":[],"removing":[],"coach_waiting":[\#(Self.row1),\#(Self.row2)]}"#
+        model.show(try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(uncounted.utf8)), [])
+        XCTAssertEqual(model.needsYouCount, 1)
+
+        // The bar's badge and the sidebar's are this count.
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        let bar = try String(contentsOf: root.appendingPathComponent("Views/TafsBar.swift"), encoding: .utf8)
+        XCTAssertTrue(bar.contains("model.needsYouCount"))
+        let split = try String(contentsOf: root.appendingPathComponent("Views/HomeSplitView.swift"), encoding: .utf8)
+        XCTAssertTrue(split.contains("badge: model.needsYouCount"))
+    }
+
+    /// One tap on a row's way in opens the chat (the live run: the first tap did nothing). The
+    /// swipe that sets it aside is on the row's line alone, never over its buttons, so no drag
+    /// recognizer sits around "Open Coach". The tap itself can't be felt here: only the structure is pinned.
+    func testOneTapOpensTheChatTheSwipeIsOnTheLineAlone() throws {
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        let view = try String(contentsOf: root.appendingPathComponent("Views/NeedsYouView.swift"), encoding: .utf8)
+        let card = try XCTUnwrap(view.range(of: "struct CoachWaitingCard: View {"))
+        let end = try XCTUnwrap(view.range(of: "struct SetAllAsideButton: View {"))
+        let cardBody = String(view[card.upperBound..<end.lowerBound])
+        XCTAssertEqual(cardBody.components(separatedBy: "Gesture(").count - 1, 2, "one drag, and its one use")
+        XCTAssertTrue(cardBody.contains("row.simultaneousGesture(swipe)"), "on the line")
+        XCTAssertFalse(cardBody.contains("onTapGesture"), "no tap recognizer beside the button's")
+        let top = try XCTUnwrap(cardBody.range(of: "var body: some View {"))
+        let panel = try XCTUnwrap(cardBody.range(of: "private var panel: some View {"))
+        XCTAssertFalse(cardBody[top.upperBound..<panel.lowerBound].contains("Gesture"), "nothing around the whole row")
+        XCTAssertTrue(cardBody.contains("DragGesture(minimumDistance: 20, coordinateSpace: .global)"), "the line moves with the row")
+        // The tap opens Coach on that chat at once, and the row and its badge go together.
+        let app = try String(contentsOf: root.appendingPathComponent("App/AppModel.swift"), encoding: .utf8)
+        XCTAssertTrue(app.contains("        coachOpen = true\n        await openSetupChat(waiting.session)"))
+    }
 }
