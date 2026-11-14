@@ -490,7 +490,7 @@ final class VersionsTests: XCTestCase {
     /// is; a Card the draft changes keeps its own panel and place (Android 94).
     func testADraftsNewCardsShowAsOneAndAChangedCardAlone() throws {
         let d = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
-        {"id":"d","status":"draft","version":"v2","cards":[
+        {"id":"d","agent_id":"a1","status":"draft","version":"v2","cards":[
           {"lines":["Read your emails"]},
           {"revises":"c1","current":{"lines":["Read Stripe payments"]},"lines":["Read and refund Stripe payments"]},
           {"lines":["Draft replies"]},
@@ -505,13 +505,13 @@ final class VersionsTests: XCTestCase {
 
         // Only new Cards: one header, every line.
         let fresh = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
-        {"id":"d","status":"draft","version":"v1","cards":[{"lines":["a"]},{"lines":["b"]},{"lines":["c"]}]}
+        {"id":"d","agent_id":"a1","status":"draft","version":"v1","cards":[{"lines":["a"]},{"lines":["b"]},{"lines":["c"]}]}
         """#.utf8))
         XCTAssertEqual(DraftCardsView.shown(fresh), [.new(lines: ["a", "b", "c"])])
 
         // A draft with no new Card shows each as it was.
         let revision = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
-        {"id":"d","status":"draft","version":"v3","cards":[{"revises":"c1","current":{"lines":["a"]},"lines":["b"]}]}
+        {"id":"d","agent_id":"a1","status":"draft","version":"v3","cards":[{"revises":"c1","current":{"lines":["a"]},"lines":["b"]}]}
         """#.utf8))
         let one = DraftCardsView.shown(revision)
         XCTAssertEqual(one.count, 1)
