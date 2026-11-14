@@ -1685,8 +1685,12 @@ export async function sweepFirstRuns(deps: Deps): Promise<Array<{ tenant: string
 /** What firing a schedule by hand came to: the run it started, or kiff/agents' outcome, with the read's reason when it failed. */
 type Fired_ = { session: string } | { outcome: string; reason?: string; keyNotStored?: boolean };
 
-/** A check that couldn't read because the taf's key isn't in the secrets store yet: the hand-over has just claimed it. */
-const KEY_NOT_STORED = /the agent's KIFF key|no such secret/i;
+/**
+ * A check that couldn't read because the taf's key isn't in the secrets store yet: the hand-over has just claimed it.
+ * Only the store's "no such secret" says that: kiff/agents wraps every failure to read the key ("the agent's KIFF
+ * key: …": access denied, decryption, throttling) the same way, and those fail the same way every time.
+ */
+const KEY_NOT_STORED = /no such secret/i;
 /** How often, and how long apart, a new taf's first check is tried while its key isn't stored yet. */
 const FIRST_CHECK_TRIES = 4;
 const FIRST_CHECK_WAIT_MS = 1500;
@@ -1701,7 +1705,11 @@ async function fireFirst(tenant: string, id: string, deps: Deps, lang: Lang): Pr
   for (let i = 1; ; i++) {
     const fired = await fireNow(tenant, id, deps);
     if ("session" in fired || !fired.keyNotStored) return fired;
-    if (i >= FIRST_CHECK_TRIES) return { outcome: fired.outcome, reason: wordsIn(lang).check_key_not_ready };
+    if (i >= FIRST_CHECK_TRIES) {
+      // The plain words replace the store's reason in the answer; the log keeps it, to diagnose.
+      console.warn(JSON.stringify({ msg: "first check: key still not stored", tenant, schedule: id, tries: i, reason: fired.reason ?? "" }));
+      return { outcome: fired.outcome, reason: wordsIn(lang).check_key_not_ready };
+    }
     await wait(FIRST_CHECK_WAIT_MS * i);
   }
 }

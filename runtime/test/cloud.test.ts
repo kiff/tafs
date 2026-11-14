@@ -4338,7 +4338,12 @@ describe("Coach's result, handed over by tafs cloud", () => {
     never.w.agents.access.set("u_ana", { cards_manage: true });
     never.w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: notStored });
     never.deps.sleep = async () => undefined;
-    await never.note();
+    const warn = console.warn;
+    const warned: string[] = [];
+    console.warn = (line: string) => { warned.push(String(line)); };
+    try { await never.note(); } finally { console.warn = warn; }
+    // The store's reason, replaced in the answer, is kept in the log.
+    expect(warned.some((l) => l.includes("key still not stored") && l.includes("no such secret"))).toBe(true);
     expect(never.w.agents.calls.filter((c) => c === `trigger ${NEW}`)).toHaveLength(4);
     const answer = never.answer()?.answer as { taf_id?: string; check?: string };
     expect(answer.taf_id).toBe(NEW);
@@ -4354,6 +4359,21 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await note();
     expect(w.agents.calls.filter((c) => c === `trigger ${NEW}`)).toHaveLength(1);
     expect((answer()?.answer as { check?: string }).check).toContain('no "created" field');
+  });
+
+  // Every failure to read the key is wrapped "the agent's KIFF key: …"; only "no such secret" means not stored yet.
+  // Access denied fails the same way every time: answered at once, with its own reason, never "wasn't ready yet".
+  it("answers a key that can't be read, other than not stored yet, at once with its reason", async () => {
+    const { w, note, answer, deps } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const denied = "schedule: the check couldn't read the app (kept as failed_check): registry: the agent's KIFF key: AccessDeniedException: not authorized";
+    w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: denied });
+    deps.sleep = async () => { throw new Error("no wait for a key that can't be read"); };
+    await note();
+    expect(w.agents.calls.filter((c) => c === `trigger ${NEW}`)).toHaveLength(1);
+    const check = (answer()?.answer as { check?: string }).check;
+    expect(check).toContain("AccessDeniedException");
+    expect(check).not.toContain("wasn't ready yet");
   });
 
   it("acts only while KIFF says the person may manage Cards now, and never on old rights", async () => {
