@@ -1,0 +1,2 @@
+- Coach drafts each Card from the rules as agreed: the rules' confirm offers only Agree and Change something (another rule is its own question first, never a tap on the agreement), and each tool is held for the owner over its limit only where the agreed line says so, refused otherwise (`draft-the-card@19`).
+- A tool that drafts what reaches people outside the company (a draft email, a draft invoice: its connection says `none_until_approved`) carries the AI disclosure too: a taf that has one names it in `disclose`, or Coach's result is refused, naming the tool.

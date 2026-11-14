@@ -953,8 +953,11 @@ object Words {
     fun wordsMismatch(what: String): String = Res.s(R.string.connect_words_mismatch, what)
   }
   object Device {
+    val linux: String get() = Res.s(R.string.device_linux)
+    val mac: String get() = Res.s(R.string.device_mac)
     val phone: String get() = Res.s(R.string.device_phone)
     val tablet: String get() = Res.s(R.string.device_tablet)
+    val windows: String get() = Res.s(R.string.device_windows)
   }
   object Door {
     val addDoor: String get() = Res.s(R.string.door_add_door)
@@ -1409,6 +1412,24 @@ object Words {
   object Overview {
     fun hero(figure: String, words: String): String = Res.s(R.string.overview_hero, figure, words)
     val nothingYet: String get() = Res.s(R.string.overview_nothing_yet)
+  }
+  object Pair {
+    fun added(device: String): String = Res.s(R.string.pair_added, device)
+    fun addedPasskey(device: String): String = Res.s(R.string.pair_added_passkey, device)
+    fun checkCodeLead(device: String): String = Res.s(R.string.pair_check_code_lead, device)
+    val codeExpired: String get() = Res.s(R.string.pair_code_expired)
+    fun deviceName(device: String): String = Res.s(R.string.pair_device_name, device)
+    fun failed(device: String, why: String): String = Res.s(R.string.pair_failed, device, why)
+    fun fromSignIn(device: String): String = Res.s(R.string.pair_from_sign_in, device)
+    val newCode: String get() = Res.s(R.string.pair_new_code)
+    fun steps(account: String, devices: String, pair: String): String = Res.s(R.string.pair_steps, account, devices, pair)
+    fun title(device: String): String = Res.s(R.string.pair_title, device)
+    object ViewOnly {
+      fun add(device: String): String = Res.s(R.string.pair_view_only_add, device)
+      fun lead(device: String): String = Res.s(R.string.pair_view_only_lead, device)
+      val title: String get() = Res.s(R.string.pair_view_only_title)
+    }
+    val waiting: String get() = Res.s(R.string.pair_waiting)
   }
   object People {
     val accountPeople: String get() = Res.s(R.string.people_account_people)
@@ -1916,6 +1937,24 @@ object Words {
       val notUsed: String get() = Res.s(R.string.settings_devices_not_used)
       val note: String get() = Res.s(R.string.settings_devices_note)
       fun noteDevice(device: String): String = Res.s(R.string.settings_devices_note_device, device)
+      val pair: String get() = Res.s(R.string.settings_devices_pair)
+      fun pairCheck(code: String): String = Res.s(R.string.settings_devices_pair_check, code)
+      fun pairCodeDiffers(device: String, kiff: String, shown: String): String = Res.s(R.string.settings_devices_pair_code_differs, device, kiff, shown)
+      fun pairDone(device: String, code: String): String = Res.s(R.string.settings_devices_pair_done, device, code)
+      val pairExpired: String get() = Res.s(R.string.settings_devices_pair_expired)
+      fun pairGivesEnclave(device: String): String = Res.s(R.string.settings_devices_pair_gives_enclave, device)
+      fun pairGivesHello(device: String): String = Res.s(R.string.settings_devices_pair_gives_hello, device)
+      fun pairGivesPasskey(device: String): String = Res.s(R.string.settings_devices_pair_gives_passkey, device)
+      val pairInvalid: String get() = Res.s(R.string.settings_devices_pair_invalid)
+      val pairKeyRegistered: String get() = Res.s(R.string.settings_devices_pair_key_registered)
+      fun pairNamed(device: String): String = Res.s(R.string.settings_devices_pair_named, device)
+      val pairNotAPairing: String get() = Res.s(R.string.settings_devices_pair_not_a_pairing)
+      val pairOnlyNow: String get() = Res.s(R.string.settings_devices_pair_only_now)
+      fun pairPrompt(device: String): String = Res.s(R.string.settings_devices_pair_prompt, device)
+      fun pairScannerFailed(why: String): String = Res.s(R.string.settings_devices_pair_scanner_failed, why)
+      val pairSoftwareKey: String get() = Res.s(R.string.settings_devices_pair_software_key)
+      val pairUsed: String get() = Res.s(R.string.settings_devices_pair_used)
+      val pairYes: String get() = Res.s(R.string.settings_devices_pair_yes)
       val signOut: String get() = Res.s(R.string.settings_devices_sign_out)
       fun signOutNamed(device: String): String = Res.s(R.string.settings_devices_sign_out_named, device)
       fun signOutPrompt(device: String): String = Res.s(R.string.settings_devices_sign_out_prompt, device)

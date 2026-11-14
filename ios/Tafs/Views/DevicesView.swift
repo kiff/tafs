@@ -6,6 +6,7 @@ struct DevicesView: View {
     static let title = Words.Settings.Devices.title
     @EnvironmentObject private var model: AppModel
     @State private var removing: KIFFClient.Device?
+    @State private var pairing = false
 
     var body: some View {
         List {
@@ -34,12 +35,21 @@ struct DevicesView: View {
             } footer: {
                 Text(Words.Settings.Devices.noteDevice(device: "\(ThisDevice.kind)"))
             }
+            // A computer pairs from here (KIFF's pairing contract §5): the phone approves it, never the computer itself.
+            if model.mode == .kiff {
+                Section {
+                    Button { pairing = true } label: { Label(Words.Settings.Devices.pair, systemImage: "desktopcomputer") }
+                        .confirming()
+                        .accessibilityIdentifier("devices.pair")
+                }
+            }
         }
         .scrollContentBackground(.hidden)
         .screenBackground()
         .navigationTitle(Self.title)
         .task { await model.refreshDevices() }
         .refreshable { await model.refreshDevices() }
+        .sheet(isPresented: $pairing) { PairComputerView() }
         .confirmationDialog(removing.map { $0.name.map { Words.Settings.Devices.signOutNamed(device: $0) } ?? Words.Settings.Devices.signOutThis } ?? "",
                             isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
                             titleVisibility: .visible) {

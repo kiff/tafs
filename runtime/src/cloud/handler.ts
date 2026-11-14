@@ -56,6 +56,7 @@ import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
 import { CARD_NEXT, ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor, takesOf } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
+import { findLabel, LabelRefusal, labelsView, readLabels, saveLabels, withLabelChanged, withTafLabels } from "./labels.js";
 
 /**
  * tafs cloud: the few routes the phone needs that act for the person signed
@@ -414,6 +415,8 @@ export interface Taf {
   respondWithin?: number;
   /** What its first week used, once its week-one note is posted in its chat (estimate.ts): posted once, so kept here. */
   weekOne?: WeekOne;
+  /** Its labels, by id (labels.ts): chips to filter the list by, set by Coach. They change nothing it may do. */
+  labels?: string[];
 }
 
 /** The most a taf's one-line summary keeps, in characters. */
@@ -6798,6 +6801,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const lights = await Promise.all(tafs.map((t) => deps.doors ? doorLights(deps.doors.store, me.tenantID, t.id, deps.now?.() ?? new Date()).catch(() => []) : []));
   // Each taf's versions, kept a minute: the Cards its live version was approved with show as one Card, and its last change.
   const versionsOf = await Promise.all(tafs.map((t) => keptVersions(deps, me.tenantID, t.id, now)));
+  // Labels (labels.ts): each taf's that the account still has. One that can't be read leaves the filter row out, never the list.
+  const labelSet = deps.coach ? await readLabels(deps.coach, me.tenantID).catch(() => undefined) : undefined;
+  const labelsOf = new Map(tafs.map((t) => [t.id, (t.labels ?? []).filter((id) => labelSet?.labels.some((l) => l.id === id))]));
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
     const trial = trials[i];
@@ -6814,7 +6820,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const runs = recent[i];
     const health = runs && fired[i] ? healthOf(runs, fired[i]!, now) : undefined;
     const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run, fired: fired[i] ?? [] }, me.timeZone ?? "UTC", now, langOf(event), health, deadLines(dead[i] ?? [], t.name, langOf(event))) : undefined;
-    return { ...v, ...(words ? { job_summary: words } : {}), ...(trial ? { trial } : {}), ...(lastChange ? { last_change: lastChange } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, me.timeZone ?? "UTC", now) } : {}),
+    return { ...v, ...(words ? { job_summary: words } : {}), ...(labelsOf.get(t.id)!.length ? { labels: labelsOf.get(t.id) } : {}), ...(trial ? { trial } : {}), ...(lastChange ? { last_change: lastChange } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, me.timeZone ?? "UTC", now) } : {}),
       // The promise is a setting: said even when the runs couldn't be read, so the apps' "Answer within" holds.
       ...(runs ? waitingOf(runs, fired[i], t, now, langOf(event)) : (t.respondWithin ? { promise: { hours: t.respondWithin } } : {})) };
   });
@@ -6898,7 +6904,10 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   })();
   // Home's first line, in tafs cloud's words: the apps draw it and count nothing themselves.
   const headline = headlineOf(listed, langOf(event));
-  return { tafs: listed, headline, setting_up: settingUp, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
+  // The filter row's labels, with no taf labelled none: the apps then draw no row, and Home is as before.
+  const labels = labelSet ? labelsView(labelSet, listed, labelsOf, langOf(event)) : [];
+  return { tafs: listed, headline, setting_up: settingUp, others, removing, limits,
+    ...(labels.length ? { labels, labels_words: { all: wordsIn(langOf(event)).labels_all } } : {}), ...(doors.length ? { doors_offered: doors } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(coachWaiting.length ? { coach_waiting: coachWaiting } : {}), ...(coachWaitingAll ? { coach_waiting_clear: coachWaitingAll } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 
@@ -7630,6 +7639,64 @@ async function coachOf(tenant: string, deps: Deps): Promise<string | undefined> 
 }
 
 /** A taf of the account by id, or by its name, ignoring case; never Setup. */
+/** What each of taf_labels' actions takes: anything else (a Card, a tool, a dial) is refused, never ignored. */
+const LABEL_ARGS: Record<string, string[]> = { set: ["taf", "labels"], rename: ["label", "name", "color"], remove: ["label"] };
+
+/**
+ * Coach's taf_labels (docs/labels.md): a taf's whole list of labels, a label renamed or recoloured, or one taken off
+ * every taf. In a person's chat, only on tafs KIFF says they manage. Each write moves the account's labels on by one
+ * version, and a write that lost to another is tried again on what that one left.
+ */
+async function labelsTool(args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer> {
+  const store = deps.coach;
+  if (!store) throw new ToolRefusal("labels can't be kept here");
+  const action = typeof args.action === "string" ? args.action : "";
+  const takes = LABEL_ARGS[action];
+  if (!takes) throw new ToolRefusal("action is set, rename or remove");
+  const extra = Object.keys(args).filter((k) => k !== "action" && !takes.includes(k));
+  if (extra.length) throw new ToolRefusal(`taf_labels ${action} takes only ${takes.join(", ")}: a label changes no Card, tool or dial (${extra.join(", ")} refused)`);
+  const may = call.person ? (await coachAct(call, undefined, deps)).agents ?? {} : undefined;
+  const now = deps.now?.() ?? new Date();
+  try {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const [set, records] = await Promise.all([readLabels(store, call.tenant), deps.tafs.list(call.tenant)]);
+      const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB);
+      if (action === "set") {
+        const taf = await coachTaf(call.tenant, args.taf, deps);
+        if (may && !may[taf.kiffAgent]?.manage) throw new ToolRefusal(`${taf.name}'s labels are for the people who manage it`);
+        const next = withTafLabels(set, tafs, taf.id, args.labels, () => `lbl_${randomBytes(6).toString("base64url")}`);
+        if (!(await saveLabels(store, call.tenant, set, next.labels, now)) || !(await deps.tafs.putIf(call.tenant, { ...taf, labels: next.ids }, taf))) continue;
+        return { taf: taf.name, labels: next.ids.map((id) => next.labels.find((l) => l.id === id)!).map((l) => ({ id: l.id, name: l.name })) };
+      }
+      const label = findLabel(set.labels, typeof args.label === "string" ? args.label.trim() : "");
+      if (!label) throw new ToolRefusal("there's no such label: tafs_state lists each taf's labels");
+      const on = tafs.filter((t) => t.labels?.includes(label.id));
+      if (may && on.some((t) => !may[t.kiffAgent]?.manage)) throw new ToolRefusal(`${label.name} is on tafs they don't manage`);
+      if (action === "rename") {
+        if (args.name === undefined && args.color === undefined) throw new ToolRefusal("rename takes a name, a color or both");
+        const labels = withLabelChanged(set, label, { name: args.name, color: args.color });
+        if (!(await saveLabels(store, call.tenant, set, labels, now))) continue;
+        const after = labels.find((l) => l.id === label.id)!;
+        return { label: { id: after.id, name: after.name, color: after.color } };
+      }
+      // Off every taf first, so no taf shows a label the account's list no longer has.
+      for (const t of on) {
+        let cur: Taf | undefined = t;
+        for (let i = 0; cur && i < 3; i++) {
+          if (await deps.tafs.putIf(call.tenant, { ...cur, labels: (cur.labels ?? []).filter((id) => id !== label.id) }, cur)) break;
+          cur = await deps.tafs.get(call.tenant, t.id);
+        }
+      }
+      if (!(await saveLabels(store, call.tenant, set, set.labels.filter((l) => l.id !== label.id), now))) continue;
+      return { removed: label.name, from: on.map((t) => t.name), unchanged: "each taf's Cards, connections, dial, hand-offs and runs" };
+    }
+  } catch (err) {
+    if (err instanceof LabelRefusal) throw new ToolRefusal(err.message);
+    throw err;
+  }
+  throw new ToolRefusal("the labels changed meanwhile: try again");
+}
+
 async function coachTaf(tenant: string, ref: unknown, deps: Deps): Promise<Taf> {
   const want = str(ref).trim();
   const tafs = (await deps.tafs.list(tenant)).filter((t) => !t.removing && t.job !== SETUP_JOB);
@@ -7803,6 +7870,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
       const may = all;
       tafs = tafs.filter((t) => may[t.kiffAgent]?.use || may[t.kiffAgent]?.oversee);
     }
+    const labels = deps.coach ? (await readLabels(deps.coach, call.tenant)).labels : [];
     return {
       tafs: await Promise.all(tafs.map(async (t) => {
         const [state, schedule, runs] = await Promise.all([
@@ -7813,6 +7881,7 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
         const live = state.versions.find((v) => v.live);
         return {
           id: t.id, name: t.name, job: t.job, kiff_agent: t.kiffAgent, results: placesOf(t),
+          ...(t.labels?.length ? { labels: labels.filter((l) => t.labels!.includes(l.id)).map((l) => ({ id: l.id, name: l.name })) } : {}),
           ...(t.unscheduled ? { works_from_chat: true } : schedule
             ? { schedule: { cron: schedule.cron, time_zone: schedule.time_zone || "UTC", on: schedule.enabled, ...(schedule.next ? { next: iso(schedule.next) } : {}),
               // The read each firing makes first; none on a taf from before, whose firings all wake it (taf_dial adds one).
@@ -7835,6 +7904,8 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   }
   // A new taf's estimate has no taf yet: it's read from the draft.
   if (name === "taf_estimate") return estimateTool(args, call, deps);
+  // Labels: a name and a colour, about no taf's authority (labels.ts).
+  if (name === "taf_labels") return labelsTool(args, call, deps);
   // A public page, read as anyone could (webread.ts): about no taf.
   if (name === "web_read") {
     try {
