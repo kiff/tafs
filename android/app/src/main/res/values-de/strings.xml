@@ -646,7 +646,7 @@
     <string name="coach_not_allowed">Coach ist für die Personen da, die KIFF ihn nutzen lässt, standardmäßig die Admins des Kontos.</string>
     <string name="coach_not_archived_try_again">Nicht archiviert. Versuch es erneut.</string>
     <string name="coach_not_connectable">Das Verbinden von Apps ist für dieses Konto auf diesem Telefon nicht eingerichtet. Öffne Coach, um es zu starten.</string>
-    <string name="coach_not_connected">Die Anmeldung bei %1$s hat keine Verbindung hergestellt: Die Verbindung ist %2$s. Es wurde nichts verbunden. Versuch erneut, dich anzumelden.</string>
+    <string name="coach_not_connected">Die Anmeldung bei %1$s wurde nicht abgeschlossen, also wurde nichts verbunden. Melde dich erneut an.</string>
     <string name="coach_not_improved">Die neue Version von %1$s wurde nicht erstellt: %2$s.</string>
     <string name="coach_not_no_sign">Nicht jetzt: keine Anmeldung bei %1$s</string>
     <string name="coach_not_put_back_try_again">Nicht zurückgeholt. Versuch es erneut.</string>
@@ -865,7 +865,7 @@
     <string name="connect_more_apps">Mehr Apps</string>
     <string name="connect_more_apps_could_not_listed">Weitere Apps konnten nicht aufgelistet werden: %1$s</string>
     <string name="connect_no_confirmation_code">Die Anmeldung bei %1$s kam ohne Bestätigungscode zurück. Es wurde nichts verbunden.</string>
-    <string name="connect_no_sign_in_link">Die Verbindung kam mit Status %1$s ohne Anmeldelink zurück. Es wurde nichts verbunden.</string>
+    <string name="connect_no_sign_in_link">%1$s hat keine Anmeldeseite geöffnet, also wurde nichts verbunden. Versuch es noch einmal.</string>
     <string name="connect_no_such_connection">Es gibt keine Verbindung mit dieser ID.</string>
     <string name="connect_no_taf">Erstelle zuerst einen taf: Eine App wird verbunden, damit ein taf sie nutzt.</string>
     <string name="connect_not_connected">Nicht verbunden. %1$s</string>

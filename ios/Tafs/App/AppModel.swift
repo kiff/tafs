@@ -6099,7 +6099,7 @@ final class AppModel: ObservableObject {
                     await refreshConnections()
                     guard gen == accountGeneration else { return nil }
                     guard confirmed.connected || confirmed.listed else {
-                        lastError = Words.Coach.notConnected(vendor: grant.vendor, status: confirmed.status.replacingOccurrences(of: "_", with: " "))
+                        lastError = Words.Coach.notConnected(vendor: grant.vendor)
                         return nil
                     }
                     return confirmed
@@ -6108,7 +6108,7 @@ final class AppModel: ObservableObject {
                 // chose from the vendor's list connected them, with no second sign-in.
                 guard approved.status == "connected" else {
                     await refreshConnections()
-                    lastError = Words.Connect.noSignInLink(status: "\(approved.status)")
+                    lastError = Words.Connect.noSignInLink(vendor: grant.vendor)
                     return nil
                 }
                 // planque said connected: that's the answer (kiff/tafs#245). The list is read
@@ -6146,7 +6146,7 @@ final class AppModel: ObservableObject {
         }
         await refreshConnections()
         guard connected.connected || connected.listed else {
-            lastError = Words.Coach.notConnected(vendor: grant.vendor, status: connected.status.replacingOccurrences(of: "_", with: " "))
+            lastError = Words.Coach.notConnected(vendor: grant.vendor)
             return nil
         }
         return connected

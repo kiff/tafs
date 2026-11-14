@@ -106,7 +106,7 @@
   "connect.more_apps": "More apps",
   "connect.more_apps_could_not_listed": "More apps couldn't be listed: {why}",
   "connect.no_confirmation_code": "The sign-in at {vendor} came back without its confirmation code. Nothing was connected.",
-  "connect.no_sign_in_link": "The connection came back {status} with no sign-in link. Nothing was connected.",
+  "connect.no_sign_in_link": "{vendor} didn't open a sign-in page, so nothing was connected. Try again.",
   "connect.no_such_connection": "There's no connection with that id.",
   "connect.no_taf": "Make a taf first: an app is connected for a taf to use.",
   "connect.not_connected": "Not connected. {why}",
