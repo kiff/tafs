@@ -21,6 +21,14 @@ export const en = {
   your_step_open: (vendor: string) => `Open in ${vendor}`,
   your_step_reminder: (what: string) => `Your step is still waiting: ${what}`,
   your_step_line: (what: string) => `Your step: ${what}`,
+  // KIFF's spending windows: `each` ends a limit ("€300 a day"), `now` names its use so far ("€40 used today").
+  window_words: {
+    calendar_day: { each: "a day", now: "today" },
+    rolling_24h: { each: "in any 24 hours", now: "in the last 24 hours" },
+    rolling_1h: { each: "in any hour", now: "in the last hour" },
+    rolling_7d: { each: "in any 7 days", now: "in the last 7 days" },
+    lifetime: { each: "in total", now: "so far" },
+  },
   coach_waiting_approval: "Coach is waiting for your approval.",
   coach_waiting_answer: "Coach is waiting for your answer.",
   coach_waiting_open: "Open Coach",

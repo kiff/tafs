@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
-import { wordsIn } from "../src/cloud/words/index.js";
+import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { AgentsError } from "../src/cloud/agents.js";
 import { calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
@@ -7,6 +7,7 @@ import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Held, Mandate } from "../src/cloud/home.js";
+import { windowWords } from "../src/cloud/home.js";
 import type { Device, Notification } from "../src/cloud/push.js";
 import { type ActivityCall, heldCards, improveContext, ownerWords, recentCalls } from "../src/cloud/improve.js";
 import { DISCLOSURE_LINE, disclosureLines, jobById, OLD_DISCLOSURE_LINE } from "../src/jobs.js";
@@ -782,6 +783,45 @@ describe("tafs cloud", () => {
     w.account.unsure = "down";
     const r = await call(w, "GET", "/v1/home", { token: "ana" });
     expect(r.status).toBe(200); expect(r.body.needs_you).toBeUndefined();
+  });
+
+  it("says a Card's windows in the person's language, in all 8: no Card line mixes languages", async () => {
+    const english = new Set(["a day", "today", "in any 24 hours", "in the last 24 hours", "in any hour", "in the last hour", "in any 7 days", "in the last 7 days", "in total", "so far"]);
+    const today: Record<string, [string, string]> = {
+      en: ["a day", "today"], de: ["pro Tag", "heute"], fr: ["par jour", "aujourd'hui"], es: ["al día", "hoy"],
+      it: ["al giorno", "oggi"], pt: ["por dia", "hoje"], nl: ["per dag", "vandaag"], pl: ["dziennie", "dzisiaj"],
+    };
+    type Words = { each: string; now: string };
+    const every = (card: { rules: Array<{ window_words: Words }>; cards: Array<{ rules: Array<{ window_words: Words }>; total: { window_words: Words } | null; calls: { window_words: Words } | null }> }) =>
+      [...card.rules.map((r) => r.window_words), ...card.cards.flatMap((c) => [...c.rules.map((r) => r.window_words), ...(c.total ? [c.total.window_words] : []), ...(c.calls ? [c.calls.window_words] : [])])];
+    for (const [lang, [each, now]] of Object.entries(today)) {
+      const w = world();
+      // A Card with a daily total and a daily count: every line that names its window.
+      w.account.mandates = [{ id: "card_rae", subject: "rae", active: true, on_exceed: "hold", valid_until: "2026-12-31T00:00:00Z",
+        grants: [{ action: "stripe_refund", title: "Create refund", per_action_max: [{ quantity: "sum(amount)", max: 10000, unit: "EUR", scale: 2 }] }],
+        aggregates: [{ quantity: "sum(amount)", limit: 100000, window: "calendar_day", unit: "EUR", scale: 2 }, { quantity: "count", limit: 20, window: "calendar_day" }],
+        limits: [{ quantity: "sum(amount)", window: "calendar_day", limit: 100000, used: 20000, status: "ok", unit: "EUR", scale: 2 }] }];
+      const home = await call(w, "GET", "/v1/home", { token: "ana", headers: { "accept-language": lang } });
+      const said = every(home.body.tafs[0].card);
+      expect(said.length, lang).toBeGreaterThan(0);
+      for (const words of said) {
+        expect(words, lang).toEqual({ each, now });
+        // Never English inside another language's line ("llamadas restantes today de 100").
+        if (lang !== "en") expect(english.has(words.each) || english.has(words.now), `${lang}: ${JSON.stringify(words)}`).toBe(false);
+      }
+    }
+  });
+
+  it("has every KIFF window in every language, and a window it doesn't know as sent", () => {
+    for (const lang of LANGUAGES) {
+      for (const win of ["calendar_day", "rolling_24h", "rolling_1h", "rolling_7d", "lifetime"]) {
+        const words = windowWords(win, lang);
+        expect(words.each.trim(), `${lang} ${win}`).not.toBe("");
+        expect(words.now.trim(), `${lang} ${win}`).not.toBe("");
+        if (lang !== "en") expect(words, `${lang} ${win}`).not.toEqual(windowWords(win, "en"));
+      }
+      expect(windowWords("rolling_30d", lang)).toEqual({ each: "rolling_30d", now: "rolling_30d" });
+    }
   });
 
   it("says what Needs you counts in the person's language, in all 8", async () => {

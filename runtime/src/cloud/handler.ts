@@ -6553,7 +6553,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const listed = tafs.map((t, i) => {
     const v = views[i]!;
     const trial = trials[i];
-    const card = summary(cards.get(t.kiffAgent) ?? []);
+    const card = summary(cards.get(t.kiffAgent) ?? [], langOf(event));
     const held = waiting.get(t.kiffAgent) ?? 0;
     // Its job in words, for the taf's page (kiff/tafs#167), not its Cards' count: what Coach said this taf does, else its
     // job's fixed line. A taf Coach made on the nearest job (a cancel saver on refunds) never shows another job's line.
@@ -6600,7 +6600,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   });
   // Apps from before setting_up read the same tafs from others, as they drew them there (Android 77, iPhone and iPad).
   const others = settingUp.map((t) => {
-    const card = summary(cards.get(t.kiff_agent) ?? []);
+    const card = summary(cards.get(t.kiff_agent) ?? [], langOf(event));
     const held = waiting.get(t.kiff_agent) ?? 0;
     return { id: null, name: t.name, job: null, kiff_agent: t.kiff_agent, status: null, next_run: null, last_run: null, color: t.color, state: stateOf(card, held, null), waiting: held, card, ...(t.finish ? { finish: t.finish } : {}) };
   });
@@ -6608,7 +6608,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const doors = deps.doors ? offered(await deps.doors.config()).map((a) => a.id) : [];
   // The limits the apps check before sending: tafs cloud's, never a copy on the phone.
   const limits = { text: CHAT.maxText, trial_idle_days: TRIAL_IDLE_MS / (24 * 3600_000) };
-  const unitExceptions = tafs.flatMap((taf) => cardUnitExceptions(taf, kiff.held, summary(cards.get(taf.kiffAgent) ?? []).rules, me.timeZone ?? "UTC", now, langOf(event)));
+  const unitExceptions = tafs.flatMap((taf) => cardUnitExceptions(taf, kiff.held, summary(cards.get(taf.kiffAgent) ?? [], langOf(event)).rules, me.timeZone ?? "UTC", now, langOf(event)));
   // The steps tafs handed their owner, from the runs read above (yourstep.ts): Needs you lists each, oldest first.
   // A step's link shows only for one of its taf's own vendors, from planque's list of the account's connections,
   // read only when a step waits; a list that can't be read shows no link (yourstep.ts).
