@@ -183,8 +183,15 @@ struct DecisionCard: View {
                 }
                 Spacer()
                 if decision.urgent {
-                    Image(systemName: "bolt.fill").scaledFont(11).foregroundColor(Theme.onFill)
-                        .padding(5).background(Capsule().fill(Theme.no)).accessibilityHidden(true)
+                    // tafs cloud's word for it ("Urgent"); the bolt alone where it sent none.
+                    HStack(spacing: 3) {
+                        Image(systemName: "bolt.fill").scaledFont(10).accessibilityHidden(true)
+                        if !words.urgent.isEmpty { Text(words.urgent).scaledFont(11, weight: .semibold) }
+                    }
+                    .foregroundColor(Theme.onFill)
+                    .padding(.horizontal, 7).padding(.vertical, 4)
+                    .background(Capsule().fill(Theme.no))
+                    .accessibilityIdentifier("brief.urgent")
                 } else if let deadline = decision.deadline {
                     Text(deadline).scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.amberText)
                 }
@@ -225,14 +232,16 @@ struct DecisionCard: View {
                 .buttonStyle(PrimaryButtonStyle())
                 .accessibilityIdentifier("brief.answer." + pick.answer)
         }
-        if !others.isEmpty || decision.later != nil {
+        // An urgent decision can't be put off: no Later, whatever was sent.
+        let later = decision.urgent ? nil : decision.later
+        if !others.isEmpty || later != nil {
             HStack(spacing: 10) {
                 ForEach(others) { a in
                     Button(a.words) { model.answerBrief(decision, a) }
                         .buttonStyle(OutlineButtonStyle(color: a.decline ? Theme.no : Theme.ink))
                         .accessibilityIdentifier("brief.answer." + a.answer)
                 }
-                if let later = decision.later {
+                if let later {
                     Button(later) { model.laterBrief(decision) }
                         .buttonStyle(OutlineButtonStyle())
                         .accessibilityIdentifier("brief.later")

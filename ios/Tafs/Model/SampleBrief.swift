@@ -16,7 +16,9 @@ extension TafsCloud.Brief {
 
     /// The sample's brief, filtered to `label` as tafs cloud filters it: a label keeps its own
     /// decisions and cases, and the rest line counts only its own.
-    static func sample(label: String? = nil) -> TafsCloud.Brief {
+    /// With `urgent` (`-briefUrgent YES`), the owner's urgent mockup: a payment that expires before the
+    /// next brief leads the decisions, with no Later.
+    static func sample(label: String? = nil, urgent: Bool = false) -> TafsCloud.Brief {
         var b = TafsCloud.Brief()
         b.at = "2026-11-14T08:00:00+01:00"
         b.nextAt = "2026-11-14T18:00:00+01:00"
@@ -24,7 +26,7 @@ extension TafsCloud.Brief {
             var w = Words()
             w.tab = "Your brief"; w.title = "Your brief"
             w.when = label == sampleMoney ? "Money · Morning brief · 08:00 · next at 18:00" : "Morning brief · 08:00 · next at 18:00"
-            w.decisions = "Decisions · 2"; w.done = "Done since last evening"; w.nextMove = "Next move"
+            w.decisions = urgent ? "Decisions · 3" : "Decisions · 2"; w.urgent = "Urgent"; w.done = "Done since last evening"; w.nextMove = "Next move"
             w.recommends = "Coach recommends"; w.meanwhile = "Meanwhile:"; w.evidence = "Evidence"; w.all = "All"
             return w
         }()
@@ -51,6 +53,18 @@ extension TafsCloud.Brief {
         remind.later = "Later"
         remind.ref = Ref(kind: "hold", id: "sample-hold-remind", taf: "Refunds")
         b.decisions = [pay, remind]
+        if urgent {
+            var expires = Decision()
+            expires.id = "d-urgent"; expires.question = "Pay Mercier Textiles €2,100 before the payment expires at 12:00?"
+            expires.answers = [Answer(words: "Pay €2,100", answer: "approve", recommended: true),
+                               Answer(words: "Don't pay", answer: "reject", decline: true)]
+            expires.why = "It matches order 0388, and Bill pay checked it this morning."
+            expires.meanwhile = "the payment stays held; nothing is sent."
+            expires.cantWait = "This can't wait: it expires at 12:00, before the next brief."
+            expires.urgent = true
+            expires.ref = Ref(kind: "hold", id: "sample-hold-urgent", taf: "Bill pay")
+            b.decisions.insert(expires, at: 0)
+        }
         b.nextMove = NextMove(words: "Prepare an escalation summary for these 3 invoices past 30 days?", start: "Start", dismiss: "Dismiss",
                               cases: ["0142", "0137", "0129"])
         var money = Done(mission: "Money", value: "€3,400 due back", log: sampleMoney)

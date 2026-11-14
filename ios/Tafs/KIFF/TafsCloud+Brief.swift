@@ -9,9 +9,9 @@ extension TafsCloud {
         /// "Decisions · 2", "Done since last evening", "Next move", "Coach recommends", "Meanwhile:", "Evidence").
         struct Words: Decodable, Equatable {
             var tab = "", title = "", when = "", decisions = "", done = "", nextMove = "", recommends = "",
-                meanwhile = "", evidence = "", all = ""
+                meanwhile = "", evidence = "", all = "", urgent = ""
             enum CodingKeys: String, CodingKey {
-                case tab, title, when, decisions, done, recommends, meanwhile, evidence, all
+                case tab, title, when, decisions, done, recommends, meanwhile, evidence, all, urgent
                 case nextMove = "next_move"
             }
             init() {}
@@ -20,7 +20,7 @@ extension TafsCloud {
                 func text(_ k: CodingKeys) -> String { Brief.text(c, k) ?? "" }
                 tab = text(.tab); title = text(.title); when = text(.when); decisions = text(.decisions); done = text(.done)
                 nextMove = text(.nextMove); recommends = text(.recommends); meanwhile = text(.meanwhile)
-                evidence = text(.evidence); all = text(.all)
+                evidence = text(.evidence); all = text(.all); urgent = text(.urgent)
             }
         }
 

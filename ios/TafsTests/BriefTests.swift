@@ -139,6 +139,32 @@ final class BriefTests: XCTestCase {
         XCTAssertEqual(model.labelsAllWords, Words.Record.Filter.all)
     }
 
+    /// The urgent alert (the owner's mockup 3): a brief's or an urgent push opens the brief, and only those;
+    /// an urgent card has tafs cloud's word on its badge and never offers Later.
+    func testTheUrgentAlertOpensTheBriefAndItsCardHasNoLater() throws {
+        XCTAssertEqual(PushDelegate.briefDestination(["kind": "urgent"]), "needs-you")
+        XCTAssertEqual(PushDelegate.briefDestination(["kind": "brief"]), "needs-you")
+        XCTAssertNil(PushDelegate.briefDestination(["kind": "hold"]), "another kind opens as it says")
+        XCTAssertNil(PushDelegate.briefDestination([:]))
+        XCTAssertNil(PushDelegate.briefDestination(["kind": 1]))
+
+        let words = try KIFFClient.decoder.decode(TafsCloud.Brief.Words.self, from: Data(#"{"urgent":"Urgent","all":"All"}"#.utf8))
+        XCTAssertEqual(words.urgent, "Urgent")
+
+        let brief = TafsCloud.Brief.sample(urgent: true)
+        let first = try XCTUnwrap(brief.decisions.first)
+        XCTAssertTrue(first.urgent, "the urgent one leads")
+        XCTAssertNil(first.later)
+        XCTAssertNotNil(first.cantWait)
+        XCTAssertFalse(TafsCloud.Brief.sample().decisions.contains { $0.urgent }, "only with -briefUrgent")
+
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        let view = try String(contentsOf: root.appendingPathComponent("Views/BriefView.swift"), encoding: .utf8)
+        XCTAssertTrue(view.contains("let later = decision.urgent ? nil : decision.later"), "no Later on an urgent card, whatever was sent")
+        let push = try String(contentsOf: root.appendingPathComponent("Services/PushDelegate.swift"), encoding: .utf8)
+        XCTAssertTrue(push.contains("} else if destination == nil, let brief = Self.briefDestination(info) {"), "an alert's own `open` still wins")
+    }
+
     /// Needs you stays, unchanged, until there's a brief; its tab then says tafs cloud's word for it.
     /// Answering from the brief signs nothing.
     func testNeedsYouStaysUntilThereIsABriefAndNothingIsSignedFromIt() throws {

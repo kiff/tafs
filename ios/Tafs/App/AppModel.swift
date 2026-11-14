@@ -1952,7 +1952,7 @@ final class AppModel: ObservableObject {
     func loadBrief() async {
         if mode == .sample, Screenshots.brief {
             if brief == nil, briefLabel == nil { briefLabel = Screenshots.briefLabel }
-            brief = .sample(label: briefLabel)
+            brief = .sample(label: briefLabel, urgent: Screenshots.briefUrgent)
             return
         }
         brief = nil
@@ -8880,6 +8880,8 @@ enum Screenshots {
     static var brief: Bool { enabled && UserDefaults.standard.bool(forKey: "brief") }
     /// `-briefLabel money`: the brief filtered to that label from the start.
     static var briefLabel: String? { brief ? UserDefaults.standard.string(forKey: "briefLabel") : nil }
+    /// `-briefUrgent YES`: the sample's brief with an urgent decision leading it.
+    static var briefUrgent: Bool { brief && UserDefaults.standard.bool(forKey: "briefUrgent") }
     /// `-signedIn YES`: the iPad's sidebar laid out as for a signed-in account (its screens and
     /// Coach above the account), over the sample's tafs. A screenshot of the layout only: nothing
     /// is read from KIFF, and the screens it lists aren't opened.

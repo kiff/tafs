@@ -795,6 +795,13 @@ exactly as today. The draft draws the sample's brief only (`-brief YES` over the
   only (`-brief YES`).
 - **A recommendation is shown, never acted on.** An answer goes through the route its decision already
   has (`ref`: a held call, a step, a connection, a proposal); nothing is signed from the brief.
+- **The urgent alert** (the owner's mockup 3). Urgency is tafs cloud's call, never the app's. A
+  decision it marks `urgent` is drawn with a red border and tafs cloud's word on its badge
+  (`words.urgent`), its why it can't wait (`cant_wait`), and never a Later, whatever was sent. Its push
+  is time-sensitive (tafs cloud's `interruption-level`; the app holds the entitlement already). A push
+  whose `kind` is `brief` or `urgent` opens the brief, unless it names where it opens (`open`), and with
+  the app open the brief is read again. `-briefUrgent YES` adds the mockup's urgent decision to the
+  sample's brief for screenshots.
 - **A mission's log** (`MissionLogView`, `GET /v1/missions/{id}/log`): read only, newest first, by
   day; each entry's taf or Coach or You, its kind in colour and word, its evidence and value; a removed
   taf's entries greyed and marked.

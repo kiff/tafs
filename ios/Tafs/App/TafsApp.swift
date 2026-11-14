@@ -35,6 +35,7 @@ struct TafsApp: App {
                     push.onToken = { [weak model] token in Task { await model?.pushTokenArrived(token) } }
                     push.onHeldChanged = { [weak model] in await model?.refresh() }
                     push.onHoldAlert = { [weak model] hold in await model?.refreshUntilHeld(hold) }
+                    push.onBrief = { [weak model] in await model?.loadBrief() }
                     push.onChange = { [weak model] change, taf in await model?.liveChange(change, cloudTafID: taf) }
                     push.onOpen = { [weak model] destination in model?.open(destination) }
                     Routes.shared.onOpen = { [weak model] destination in model?.open(destination) }
