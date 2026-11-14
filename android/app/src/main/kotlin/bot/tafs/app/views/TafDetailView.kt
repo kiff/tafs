@@ -128,6 +128,8 @@ class TafActions(
   val setPaused: suspend (String, Boolean) -> Unit = { _, _ -> },
   /** Removes it for good, after one confirmation: what to tell the owner, null when nothing was done. */
   val remove: suspend (String) -> String? = { null },
+  /** The taf's own Connect again: signs in again the connection tafs cloud names on its Setup page (`connect_again`). */
+  val connectAgain: (String) -> Unit = {},
   /** tafs cloud's words for what removing it takes with it; null when it sends none. */
   val removalWords: suspend (String) -> String? = { null },
   /** Reports an answer Coach or the taf wrote: the chat, the answer, a reason and an optional note. */

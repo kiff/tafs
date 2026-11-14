@@ -623,13 +623,27 @@ like this one go on their own.
   (`hold: {id, accounting_version}`) when the switch is on, so KIFF lets it go under the same
   signature. Then Needs you is read again.
 
+## Connect again on the taf
+
+When a connection's sign-in expired, tafs cloud puts the taf's own **Connect again** at the top of its
+Setup page (`connect_again: {grant, app, title, words, done_words}`, [api.md](api.md); read leniently: a
+shape this build doesn't know, or one with no connection or no button, is none). A panel
+(`ConnectAgainPanel`, `views/TafPresentationViews.kt`) shows tafs cloud's `words`, and, for someone who
+manages the taf, its `title` as the button. The tap signs that same connection in again
+(`AppModel.connectAgain`, the path of Connect apps' Sign in again: planque's approve, the provider's
+sign-in, planque's confirm), so the taf keeps its tools and its Card, with no list and no picking an app.
+Once planque says it's connected, tafs cloud's `done_words` ("Gmail is connected again. Mail can use
+it.") show on the taf, and its Setup page is read again. A sign-in that didn't go through says so under
+the button, and Connect again stays. The app decides nothing about whether it's needed. iPhone and iPad
+do the same.
+
 ## Coach waiting
 
 A Coach chat paused on a card its person answers (an approval, a sign-in, questions) is in **Needs
 you** ([api.md](api.md#coach-waiting)): Home's `coach_waiting`, after the steps, each a panel
 (`CoachWaitingPanel`, `views/YourStepViews.kt`) with tafs cloud's line ("Coach is waiting for your
 approval.") and its **Open Coach** button, which opens Coach on that chat (`AppModel.openWaitingCoach`),
-where the card is answered. tafs cloud counts each in `needs_you`, so Home never says "Nothing needs
+where the card is answered; someone who can't use Coach reads the line alone. tafs cloud counts each in `needs_you`, so Home never says "Nothing needs
 you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
 iPhone and iPad follow.
 
