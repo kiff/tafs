@@ -122,3 +122,11 @@ export function ownerLanguageIn(text: string): Lang | undefined {
   const m = /Your owner reads [A-Za-z ]+ \(([a-z]{2})\):/.exec(text);
   return m && (LANGUAGES as readonly string[]).includes(m[1]!) ? (m[1] as Lang) : undefined;
 }
+
+/**
+ * A line that ends its sentence on a date whose short month already ends in a period ("14 nov.", "1 de dez." in fr and
+ * pt): one period, never two ("depuis le 14 nov..").
+ */
+export function endSentence(line: string): string {
+  return line.replace(/\.\.$/, ".");
+}

@@ -1207,8 +1207,8 @@ enum Words {
         static var notArchivedTryAgain: String { Words.line("coach.not_archived_try_again") }
         /// Connecting apps isn't set up for this account from this phone. Open Coach to start it.
         static var notConnectable: String { Words.line("coach.not_connectable") }
-        /// The sign-in at {vendor} didn't connect: the connection is {status}. Nothing was connected. Try signing in again.
-        static func notConnected(vendor: String, status: String) -> String { Words.line("coach.not_connected", vendor, status) }
+        /// The sign-in at {vendor} didn't finish, so nothing was connected. Try signing in again.
+        static func notConnected(vendor: String) -> String { Words.line("coach.not_connected", vendor) }
         /// {owner|possessive} new version wasn't made: {why}.
         static func notImproved(owner: String, why: String) -> String { Words.line("coach.not_improved", owner, why, Words.possessive(owner)) }
         /// Not now: no sign-in at {vendor}
@@ -1637,8 +1637,8 @@ enum Words {
         static func moreAppsCouldNotListed(why: String) -> String { Words.line("connect.more_apps_could_not_listed", why) }
         /// The sign-in at {vendor} came back without its confirmation code. Nothing was connected.
         static func noConfirmationCode(vendor: String) -> String { Words.line("connect.no_confirmation_code", vendor) }
-        /// The connection came back {status} with no sign-in link. Nothing was connected.
-        static func noSignInLink(status: String) -> String { Words.line("connect.no_sign_in_link", status) }
+        /// {vendor} didn't open a sign-in page, so nothing was connected. Try again.
+        static func noSignInLink(vendor: String) -> String { Words.line("connect.no_sign_in_link", vendor) }
         /// There's no connection with that id.
         static var noSuchConnection: String { Words.line("connect.no_such_connection") }
         /// Make a taf first: an app is connected for a taf to use.

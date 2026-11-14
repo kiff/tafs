@@ -1,0 +1,1 @@
+- **iOS: Home's line as tafs cloud counts it.** Home draws `GET /v1/home`'s `headline.words` as sent ("1 taf ready." when none is at work and one is ready to work from its chat), in the person's language, as Android does; with no `headline` the app keeps its own "N tafs working." (docs/ios-app.md).

@@ -1,0 +1,1 @@
+- **A tool Coach looked up by the wrong name never shows red.** When Coach asked for a tool by a name the catalog doesn't hold by that name ("the catalog has no tool named …", "… lists no tool named …"), the chat showed "Coach couldn't connect the app yet" in red over a sign-in that had worked. It's Coach's own miss now: the step is not made, and Coach looks again.

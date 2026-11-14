@@ -11,7 +11,7 @@
  */
 import type { Run } from "./agents.js";
 import type { Lang } from "./words/index.js";
-import { wordsIn } from "./words/index.js";
+import { endSentence, wordsIn } from "./words/index.js";
 
 /** The cards a person answers in Coach's chat that count as waiting on them. */
 const WAITS_ON_YOU = new Set(["approval", "sign_in", "questions", "confirm"]);
@@ -72,7 +72,7 @@ export function coachWaitingOf(paused: Run[], coach: string, subject: string, no
     const title = titles.get(r.session)?.trim();
     const day = new Intl.DateTimeFormat(lang === "en" ? "en-GB" : lang, { timeZone: zone, day: "numeric", month: "short" }).format(new Date(since));
     const line = title
-      ? (approves ? w.coach_waiting_named_approval(title, day) : w.coach_waiting_named_answer(title, day))
+      ? endSentence(approves ? w.coach_waiting_named_approval(title, day) : w.coach_waiting_named_answer(title, day))
       : (approves ? w.coach_waiting_approval : w.coach_waiting_answer);
     return { taf: coach, session: r.session, run: r.id, since, words: { line, open: w.coach_waiting_open, set_aside: w.coach_waiting_set_aside } };
   }).sort((a, b) => a.since.localeCompare(b.since));

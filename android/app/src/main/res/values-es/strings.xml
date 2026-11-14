@@ -646,7 +646,7 @@
     <string name="coach_not_allowed">Coach es para las personas a las que KIFF permite usarlo, por defecto los administradores de la cuenta.</string>
     <string name="coach_not_archived_try_again">No se archivó. Vuelve a intentarlo.</string>
     <string name="coach_not_connectable">La conexión de apps no está configurada para esta cuenta desde este teléfono. Abre Coach para empezar.</string>
-    <string name="coach_not_connected">El inicio de sesión en %1$s no se conectó: la conexión está %2$s. No se conectó nada. Prueba a iniciar sesión de nuevo.</string>
+    <string name="coach_not_connected">El inicio de sesión en %1$s no terminó, así que no se conectó nada. Vuelve a iniciar sesión.</string>
     <string name="coach_not_improved">No se creó la nueva versión de %1$s: %2$s.</string>
     <string name="coach_not_no_sign">Ahora no: sin iniciar sesión en %1$s</string>
     <string name="coach_not_put_back_try_again">No se restauró. Vuelve a intentarlo.</string>
@@ -865,7 +865,7 @@
     <string name="connect_more_apps">Más apps</string>
     <string name="connect_more_apps_could_not_listed">No se pudieron listar más apps: %1$s</string>
     <string name="connect_no_confirmation_code">El inicio de sesión en %1$s volvió sin su código de confirmación. No se conectó nada.</string>
-    <string name="connect_no_sign_in_link">La conexión volvió %1$s sin enlace de inicio de sesión. No se conectó nada.</string>
+    <string name="connect_no_sign_in_link">No se abrió ninguna página de inicio de sesión de %1$s, así que no se conectó nada. Puedes reintentarlo.</string>
     <string name="connect_no_such_connection">No hay ninguna conexión con ese id.</string>
     <string name="connect_no_taf">Crea un taf primero: una app se conecta para que la use un taf.</string>
     <string name="connect_not_connected">No conectado. %1$s</string>

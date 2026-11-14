@@ -666,7 +666,7 @@ class CoachStartTest {
     m.loadChat(COACH_CHAT)
     m.signInAgain(KiffClient.json.decodeFromString(signInCard))
     assertTrue(answered("s1").startsWith("failed: "))
-    assertEquals(CoachWords.notConnected("mcp.stripe.com", "needs_reconnect"), m.state.value.coachNotes["s1"])
+    assertEquals(CoachWords.notConnected("mcp.stripe.com"), m.state.value.coachNotes["s1"])
     assertNull(m.state.value.connectStep)
   }
 

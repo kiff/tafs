@@ -4,16 +4,12 @@ import XCTest
 /// answer's menu opens the sheet, a reason and a note go with Send, and the sheet thanks the
 /// person; reporting it again says it was reported already. The sample's answer stands in for
 /// a taf's, so this runs with no server.
-final class ReportAnswerUITests: XCTestCase {
-    override func setUp() {
-        continueAfterFailure = false
-    }
-
+final class ReportAnswerUITests: TafsUITestCase {
     @MainActor
     func testAnAnswersMenuReportsIt() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-screen", "chat"]
-        app.launch()
+        launch(app)
 
         let answer = app.descendants(matching: .any).matching(identifier: "taf-message").firstMatch
         XCTAssertTrue(answer.waitForExistence(timeout: 30), "the taf's answer")
@@ -32,11 +28,10 @@ final class ReportAnswerUITests: XCTestCase {
     func testTheirOwnMessageHasNoReport() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-screen", "chat"]
-        app.launch()
+        launch(app)
         let field = app.descendants(matching: .any)["chat-field"]
         XCTAssertTrue(field.waitForExistence(timeout: 30), "the chat's field")
-        field.tap()
-        field.typeText("What did you do today?")
+        typeInto(field, text: "What did you do today?")
         app.buttons["chat-send"].tap()
         let mine = app.staticTexts.matching(identifier: "owner-message").firstMatch
         XCTAssertTrue(mine.waitForExistence(timeout: 10), "the sent message")
@@ -63,8 +58,7 @@ final class ReportAnswerUITests: XCTestCase {
         app.buttons["report-reason-\(reason)"].tap()
         if let note {
             let field = app.descendants(matching: .any)["report-note"]
-            field.tap()
-            field.typeText(note)
+            typeInto(field, text: note)
         }
         XCTAssertTrue(send.isEnabled, "a reason is enough to send")
         send.tap()

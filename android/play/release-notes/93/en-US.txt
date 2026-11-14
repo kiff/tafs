@@ -1,0 +1,1 @@
+- When a sign-in doesn't connect, the message says so in plain words, with no technical status.

@@ -4449,14 +4449,14 @@ class AppModel(
           _state.update { it.copy(connectStep = CoachWords.CHECKING_SIGN_IN) }
           val connected = planque.confirm(grant.id, approved.confirm)
           refreshConnections()
-          if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor, connected.status), told = "The sign-in was held, but the connection is ${connected.status}.")
+          if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor), told = "The sign-in was held, but the connection is ${connected.status}.")
           return Connected.Done(connected)
         }
         if (url == null) {
           // planque already holds the sign-in: approving the tools Setup chose from the vendor's list connected them, with no second sign-in.
           if (approved.status != "connected" && approved.status != "listed") {
             refreshConnections()
-            return Connected.Failed(Words.Connect.noSignInLink(status = approved.status), told = "The connection came back ${approved.status} with no sign-in link. Nothing was connected.")
+            return Connected.Failed(Words.Connect.noSignInLink(vendor = grant.vendor), told = "The connection came back ${approved.status} with no sign-in link. Nothing was connected.")
           }
           refreshConnections()
           return Connected.Done(_state.value.grants.firstOrNull { it.id == grant.id && it.connected } ?: grant.marked(true))
@@ -4472,7 +4472,7 @@ class AppModel(
         val connected = planque.confirm(grant.id, signedIn.code)
         refreshConnections()
         // Listed is signed in too: planque holds the sign-in and listed the vendor's tools for Setup to choose from.
-        if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor, connected.status), "the sign-in at ${grant.vendor} came back, but planque says the connection is ${connected.status}")
+        if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor), "the sign-in at ${grant.vendor} came back, but planque says the connection is ${connected.status}")
         return Connected.Done(connected)
       } catch (e: VendorSignInCancelled) {
         refreshConnections()

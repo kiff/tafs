@@ -393,6 +393,24 @@ final class TafsCloud {
         /// tafs cloud from before it, whose `others` are drawn as before. With it, `others` only
         /// repeats them for older apps, and isn't drawn.
         var settingUp: [SettingUp]? = nil
+        /// Home's line, counted by tafs cloud with its words (the tafs at work; with none, the
+        /// tafs ready to work from their chat); nil when it sent none, and the app counts its own.
+        var headline: Headline? = nil
+
+        /// tafs cloud's line for Home, drawn as sent.
+        struct Headline: Decodable, Equatable {
+            var words = ""
+            init(words: String) { self.words = words }
+            enum CodingKeys: String, CodingKey { case words }
+            init(from decoder: Decoder) throws {
+                // A headline that isn't one reads as wordless, never failing Home's read.
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+                words = (((try? c.decodeIfPresent(String.self, forKey: .words)) ?? nil) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+
+        /// tafs cloud's words for Home's line; nil when it sent none the app can draw.
+        var headlineWords: String? { headline.flatMap { $0.words.isEmpty ? nil : $0.words } }
 
         /// A taf whose setup stopped partway: the name Coach gave it, and for the person whose
         /// Coach chat it was, the chat that finishes it.
@@ -459,6 +477,7 @@ final class TafsCloud {
             case coachWaiting = "coach_waiting"
             case coachWaitingClear = "coach_waiting_clear"
             case needsYou = "needs_you"
+            case headline
         }
     }
 

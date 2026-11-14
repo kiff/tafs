@@ -106,7 +106,7 @@
   "connect.more_apps": "Altre app",
   "connect.more_apps_could_not_listed": "Impossibile elencare altre app: {why}",
   "connect.no_confirmation_code": "L'accesso su {vendor} è tornato senza il codice di conferma. Non è stato collegato nulla.",
-  "connect.no_sign_in_link": "Il collegamento è tornato {status} senza un link di accesso. Non è stato collegato nulla.",
+  "connect.no_sign_in_link": "Non si è aperta nessuna pagina di accesso di {vendor}, quindi non è stato collegato nulla. Riprova.",
   "connect.no_such_connection": "Non esiste un collegamento con quell'id.",
   "connect.no_taf": "Crea prima un taf: un'app viene collegata perché un taf la usi.",
   "connect.not_connected": "Non collegato. {why}",

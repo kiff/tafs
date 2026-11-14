@@ -1,0 +1,1 @@
+- Cuando un inicio de sesión no conecta, el mensaje lo dice con palabras claras, sin estados técnicos.
