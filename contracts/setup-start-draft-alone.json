@@ -292,6 +292,24 @@
                     "window": "calendar_day"
                   }
                 ]
+              },
+              {
+                "id": "coach-missions",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "mission"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 50,
+                    "window": "calendar_day"
+                  }
+                ]
               }
             ]
           },
@@ -386,6 +404,12 @@
               "lines": [
                 "KIFF's line for coach-business"
               ]
+            },
+            {
+              "id": "coach-missions",
+              "lines": [
+                "KIFF's line for coach-missions"
+              ]
             }
           ]
         }
@@ -463,6 +487,11 @@
                 "name": "Label tafs",
                 "does": "Put labels on your tafs, such as Money or Customers, so you can filter the list. A label is only a name: it changes nothing a taf may do. Up to 100 a day.",
                 "why": "It changes only how your list is filtered."
+              },
+              {
+                "name": "Gather tafs into a mission",
+                "does": "Gather tafs that work toward one goal into a mission, such as running the money side. Each taf keeps its own job, apps and Card. Up to 50 a day.",
+                "why": "It changes nothing a taf may do."
               },
               {
                 "name": "Keep your business description",
