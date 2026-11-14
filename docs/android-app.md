@@ -1006,7 +1006,7 @@ the taf, it names the app alone ("Connect Stripe").
 
 ## Pairing a computer
 
-Account → Devices → **Pair a computer** gives a computer approval authority on the account, as
+Account → Devices → **Add a computer** gives a computer approval authority on the account, as
 KIFF's `docs/desktop-client.md` §5 sets out. Only a phone KIFF holds an approval key for can
 pair one; without it, Devices says approving needs a new sign-in and sends nothing.
 
@@ -1020,8 +1020,9 @@ pair one; without it, Devices says approving needs a new sign-in and sends nothi
 3. **The check code** is the first 6 characters of base32(sha256(device key ‖ approval key)),
    RFC 4648 with no padding, the device key alone for a passkey computer. The alert asks
    "Pair {name}?", says first what yes gives ("{name} will be able to approve your tafs' actions
-   with Windows Hello", Touch ID for `enclave`, a passkey for `passkey`) and "Only pair a computer
-   you're using right now.", then "Does your computer show {code}?", with **Yes, pair it** or
+   with Windows Hello", Touch ID for `enclave`, a passkey for `passkey`), for a computer whose QR
+   says `key_store: "software"` "This computer approves only through your phone or a passkey.",
+   and "Only pair a computer you're using right now.", then "Does your computer show {code}?", with **Yes, pair it** or
    Cancel. A page showing its own QR shows another code; the code protects only if the person
    knows what yes gives.
 4. **The approval.** On yes, `POST /v1/me/pairings` carries the QR's fields as they came,

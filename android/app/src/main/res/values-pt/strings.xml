@@ -1789,7 +1789,7 @@
     <string name="settings_devices_not_used">Ainda não usado</string>
     <string name="settings_devices_note">Terminar a sessão de um dispositivo termina de imediato o seu início de sessão nesta conta. Para terminar a sessão neste telefone, use Terminar sessão em Conta.</string>
     <string name="settings_devices_note_device">Terminar a sessão de um dispositivo termina de imediato o seu início de sessão nesta conta. Para terminar a sessão neste %1$s, use Terminar sessão no KIFF.</string>
-    <string name="settings_devices_pair">Associar um computador</string>
+    <string name="settings_devices_pair">Adicionar um computador</string>
     <string name="settings_devices_pair_check">O seu computador mostra %1$s?</string>
     <string name="settings_devices_pair_code_differs">O KIFF associou %1$s com o código %2$s, não %3$s como verificou. Se não for o seu computador, termine a sessão dele aqui.</string>
     <string name="settings_devices_pair_done">%1$s está associado. Mostrava %2$s.</string>
@@ -1804,6 +1804,7 @@
     <string name="settings_devices_pair_only_now">Associe apenas um computador que esteja a usar neste momento.</string>
     <string name="settings_devices_pair_prompt">Associar %1$s: poderá aprovar ações</string>
     <string name="settings_devices_pair_scanner_failed">Não foi possível abrir o leitor. %1$s</string>
+    <string name="settings_devices_pair_software_key">Este computador só aprova através do seu telefone ou de uma chave de acesso.</string>
     <string name="settings_devices_pair_used">Esse código já foi usado. Mostre um novo no seu computador.</string>
     <string name="settings_devices_pair_yes">Sim, associar</string>
     <string name="settings_devices_sign_out">Terminar sessão</string>

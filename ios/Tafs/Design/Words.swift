@@ -3532,7 +3532,7 @@ enum Words {
             static var note: String { Words.line("settings.devices.note") }
             /// Signing a device out ends its sign-in on this account at once. To sign out this {device}, use Sign out of KIFF.
             static func noteDevice(device: String) -> String { Words.line("settings.devices.note_device", device) }
-            /// Pair a computer
+            /// Add a computer
             static var pair: String { Words.line("settings.devices.pair") }
             /// Does your computer show {code}?
             static func pairCheck(code: String) -> String { Words.line("settings.devices.pair_check", code) }
@@ -3562,6 +3562,8 @@ enum Words {
             static func pairPrompt(device: String) -> String { Words.line("settings.devices.pair_prompt", device) }
             /// Couldn't open the scanner. {why}
             static func pairScannerFailed(why: String) -> String { Words.line("settings.devices.pair_scanner_failed", why) }
+            /// This computer approves only through your phone or a passkey.
+            static var pairSoftwareKey: String { Words.line("settings.devices.pair_software_key") }
             /// That code was used already. Show a new one on your computer.
             static var pairUsed: String { Words.line("settings.devices.pair_used") }
             /// Yes, pair it

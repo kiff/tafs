@@ -1789,7 +1789,7 @@
     <string name="settings_devices_not_used">Nog niet gebruikt</string>
     <string name="settings_devices_note">Een apparaat uitloggen beëindigt meteen de login ervan op dit account. Gebruik Uitloggen in Account om deze telefoon uit te loggen.</string>
     <string name="settings_devices_note_device">Een apparaat uitloggen beëindigt meteen de login ervan op dit account. Gebruik Uitloggen bij KIFF om deze %1$s uit te loggen.</string>
-    <string name="settings_devices_pair">Computer koppelen</string>
+    <string name="settings_devices_pair">Computer toevoegen</string>
     <string name="settings_devices_pair_check">Toont je computer %1$s?</string>
     <string name="settings_devices_pair_code_differs">KIFF heeft %1$s gekoppeld met de code %2$s, niet %3$s zoals gecontroleerd. Is dat niet jouw computer, log hem hier dan uit.</string>
     <string name="settings_devices_pair_done">%1$s is gekoppeld. Hij toonde %2$s.</string>
@@ -1804,6 +1804,7 @@
     <string name="settings_devices_pair_only_now">Koppel alleen een computer die je nu zelf gebruikt.</string>
     <string name="settings_devices_pair_prompt">%1$s koppelen: hij kan acties goedkeuren</string>
     <string name="settings_devices_pair_scanner_failed">Kon de scanner niet openen. %1$s</string>
+    <string name="settings_devices_pair_software_key">Deze computer keurt alleen goed via je telefoon of een passkey.</string>
     <string name="settings_devices_pair_used">Die code is al gebruikt. Toon een nieuwe op je computer.</string>
     <string name="settings_devices_pair_yes">Ja, koppelen</string>
     <string name="settings_devices_sign_out">Uitloggen</string>

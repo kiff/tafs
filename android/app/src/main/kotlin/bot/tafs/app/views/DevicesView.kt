@@ -54,7 +54,7 @@ private fun lastUsed(device: Device): String {
 
 /**
  * Settings, Devices: the devices signed in as this person on the account, each with when it was last used, and Sign out for any
- * but this one. With [pair], "Pair a computer" scans a computer's QR ([scan]), asks whether the computer shows the same check
+ * but this one. With [pair], "Add a computer" scans a computer's QR ([scan]), asks whether the computer shows the same check
  * code, and on yes pairs it (docs/android-app.md, Pairing a computer).
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -153,6 +153,7 @@ fun DevicesSheet(
         // knows why it matters.
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
           Text(pairGives(qr))
+          if (qr.keyStore == "software") Text(Words.Settings.Devices.pairSoftwareKey)
           Text(Words.Settings.Devices.pairOnlyNow)
           Text(Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty()), fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag(PAIR_CHECK))
         }

@@ -154,6 +154,11 @@ class PairingTest {
     assertEquals(url(device), body.getValue("pub").jsonPrimitive.content)
     // A passkey computer sends no approval key, not an empty one.
     assertFalse(PairQr.read(qrText(approvalPub = null))!!.body().containsKey("approval_pub"))
+    assertFalse(PairQr.read(qrText(approvalPub = null))!!.body().containsKey("key_store"))
+    // A computer whose device key is in software says so (§1.1), and KIFF gets it as it came.
+    val software = PairQr.read(qrText(approvalPub = null).replace("\"exp\":", "\"key_store\":\"software\",\"exp\":"))!!
+    assertEquals("software", software.keyStore)
+    assertEquals("software", software.body().getValue("key_store").jsonPrimitive.content)
   }
 
   // MARK: Pairing
@@ -221,7 +226,7 @@ class PairingTest {
       transport.answer("POST /v1/me/pairings", status, """{"error":"$code"}""")
       assertNull(m.pairComputer(qr))
       val said = m.state.value.devicesError!!
-      assertTrue(said, said.startsWith("Pair a computer didn't go through") && said.contains(words))
+      assertTrue(said, said.startsWith("Add a computer didn't go through") && said.contains(words))
     }
   }
 

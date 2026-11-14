@@ -1931,6 +1931,7 @@ object Words {
       val pairOnlyNow: String get() = Res.s(R.string.settings_devices_pair_only_now)
       fun pairPrompt(device: String): String = Res.s(R.string.settings_devices_pair_prompt, device)
       fun pairScannerFailed(why: String): String = Res.s(R.string.settings_devices_pair_scanner_failed, why)
+      val pairSoftwareKey: String get() = Res.s(R.string.settings_devices_pair_software_key)
       val pairUsed: String get() = Res.s(R.string.settings_devices_pair_used)
       val pairYes: String get() = Res.s(R.string.settings_devices_pair_yes)
       val signOut: String get() = Res.s(R.string.settings_devices_sign_out)

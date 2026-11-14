@@ -1789,7 +1789,7 @@
     <string name="settings_devices_not_used">Noch nicht verwendet</string>
     <string name="settings_devices_note">Wenn du ein Gerät abmeldest, endet seine Anmeldung bei diesem Konto sofort. Um dieses Telefon abzumelden, nutze „Abmelden“ unter „Konto“.</string>
     <string name="settings_devices_note_device">Wenn du ein Gerät abmeldest, endet seine Anmeldung bei diesem Konto sofort. Um dieses %1$s abzumelden, nutze „Von KIFF abmelden“.</string>
-    <string name="settings_devices_pair">Computer koppeln</string>
+    <string name="settings_devices_pair">Computer hinzufügen</string>
     <string name="settings_devices_pair_check">Zeigt dein Computer %1$s?</string>
     <string name="settings_devices_pair_code_differs">KIFF hat %1$s mit dem Code %2$s gekoppelt, nicht mit %3$s wie geprüft. Ist das nicht dein Computer, melde ihn hier ab.</string>
     <string name="settings_devices_pair_done">%1$s ist gekoppelt. Er zeigte %2$s.</string>
@@ -1804,6 +1804,7 @@
     <string name="settings_devices_pair_only_now">Kopple nur einen Computer, den du gerade selbst benutzt.</string>
     <string name="settings_devices_pair_prompt">%1$s koppeln: Er kann Aktionen genehmigen</string>
     <string name="settings_devices_pair_scanner_failed">Der Scanner ließ sich nicht öffnen. %1$s</string>
+    <string name="settings_devices_pair_software_key">Dieser Computer genehmigt nur über dein Telefon oder einen Passkey.</string>
     <string name="settings_devices_pair_used">Dieser Code wurde schon verwendet. Lass einen neuen auf deinem Computer anzeigen.</string>
     <string name="settings_devices_pair_yes">Ja, koppeln</string>
     <string name="settings_devices_sign_out">Abmelden</string>

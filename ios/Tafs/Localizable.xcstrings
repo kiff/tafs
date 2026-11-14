@@ -90228,49 +90228,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Computer koppeln"
+            "value": "Computer hinzufügen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pair a computer"
+            "value": "Add a computer"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vincular un ordenador"
+            "value": "Añadir un ordenador"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Associer un ordinateur"
+            "value": "Ajouter un ordinateur"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Associa un computer"
+            "value": "Aggiungi un computer"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Computer koppelen"
+            "value": "Computer toevoegen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sparuj komputer"
+            "value": "Dodaj komputer"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Associar um computador"
+            "value": "Adicionar um computador"
           }
         }
       }
@@ -91013,6 +91013,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Não foi possível abrir o leitor. %1$@"
+          }
+        }
+      }
+    },
+    "settings.devices.pair_software_key": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Computer genehmigt nur über dein Telefon oder einen Passkey."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This computer approves only through your phone or a passkey."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este ordenador solo aprueba a través de tu teléfono o una llave de acceso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet ordinateur n'approuve que via votre téléphone ou une clé d'accès."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo computer approva solo tramite il tuo telefono o una passkey."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze computer keurt alleen goed via je telefoon of een passkey."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten komputer zatwierdza tylko przez Twój telefon lub klucz dostępu."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este computador só aprova através do seu telefone ou de uma chave de acesso."
           }
         }
       }

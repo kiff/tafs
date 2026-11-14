@@ -23,8 +23,10 @@ data class PairQr(
   val kind: String = "",
   val nonce: String = "",
   val exp: String = "",
+  /** `"software"` for a computer whose device key isn't in hardware (§1.1): it never approves with that key. Else absent. */
+  @SerialName("key_store") val keyStore: String? = null,
 ) {
-  /** The body for `POST /v1/me/pairings`: the QR's fields as they came, `approval_pub` only when the computer gave one. */
+  /** The body for `POST /v1/me/pairings`: the QR's fields as they came, `approval_pub` and `key_store` only when the computer gave them. */
   fun body(): JsonObject = JsonObject(
     buildMap {
       put("v", JsonPrimitive(v))
@@ -35,6 +37,7 @@ data class PairQr(
       put("kind", JsonPrimitive(kind))
       put("nonce", JsonPrimitive(nonce))
       put("exp", JsonPrimitive(exp))
+      keyStore?.let { put("key_store", JsonPrimitive(it)) }
     },
   )
 

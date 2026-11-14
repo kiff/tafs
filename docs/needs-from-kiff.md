@@ -117,7 +117,7 @@ Tracked on KIFF's side, privately.
   sets it out, and a `words` line on each of its refusals (`pairing_expired`,
   `pairing_used`, `key_registered`, `invalid_pairing`) in the person's language,
   as KIFF's other refusals carry.
-- **tafs's part — built on Android, not live.** Devices → Pair a computer scans
+- **tafs's part — built on Android, not live.** Devices → Add a computer scans
   the QR, shows the check code, and signs the pairing with the approval key
   ([android-app.md](android-app.md#pairing-a-computer)). Until KIFF sends
   `words`, the app words those four codes itself. iPhone and iPad follow.
