@@ -130,14 +130,17 @@ one that had none. Its `last_run` is its own
 latest run, scheduled or from its chat, never a trial's. The list reads each taf's recent
 runs once, for its last run and its work line.
 
-A Card's totals carry KIFF's own `window` and its words, `window_words: {each, now}`, which
-the app shows as they are:
+A Card's totals carry KIFF's own `window` and its words, `window_words: {each, now}`, in the
+person's language (`Accept-Language`, all eight: `window_words` in tafs cloud's words), which the
+app shows as they are. English below; never English inside another language's line. Setup's
+limit lines and Coach's prompt, still in English, read the English ones:
 
 | `window` | `each` ("€300 …") | `now` ("€40 used …") |
 |---|---|---|
 | `calendar_day` | a day | today |
 | `rolling_24h` | in any 24 hours | in the last 24 hours |
 | `rolling_1h` | in any hour | in the last hour |
+| `rolling_7d` | in any 7 days | in the last 7 days |
 | `lifetime` | in total | so far |
 
 A window KIFF adds later is shown as it is sent, never as a day.

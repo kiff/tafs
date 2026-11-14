@@ -1,0 +1,1 @@
+- **tafs cloud: a Card's windows in your language.** "today", "a day", "in the last 7 days" and the rest come in each of the eight languages, so no Card line mixes languages ("llamadas restantes today") (docs/tafs.md).
