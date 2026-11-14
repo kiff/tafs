@@ -34,7 +34,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { type AppGuide, accountConnections, connectionLines, endConnections, heldGuides, withConnections } from "./connections.js";
+import { type AccountConnection, type AppGuide, accountConnections, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
@@ -759,6 +759,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // Removed tafs aren't listed; ones whose removal didn't finish are, so it can be finished.
     // Only the tafs KIFF says the person may use or oversee are.
     const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent));
+    // Leftover connections of tafs gone end here, on a person's read (their session), at most hourly.
+    await within(sweepLeftovers(me, bearer(event), deps), 2000).catch((err) => console.warn(`connections sweep: ${(err as Error)?.message ?? "timed out"}`));
     return { tafs: await Promise.all(tafs.map((t) => view(t, me, deps, undefined, undefined, langOf(event)))), removing: await deps.removals.list(me.tenantID) };
   }
   if (parts.length === 2 && method === "POST") {
@@ -856,9 +858,14 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     // only that the taf goes.
     need(me, "cards.manage");
     const preview = deps.planqueBase && taf.kiffAgent
-      ? await endConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, taf.kiffAgent, bearer(event), true).catch(() => null)
+      ? await endTafConnections(taf, me, bearer(event), deps, true).catch(() => null)
       : null;
-    return { taf: taf.id, ...removalWords(preview, langOf(event)) };
+    // The other forms of its agent (connectionAgents) go too: tafs cloud holds no key to archive them in KIFF, so the
+    // phone revokes their Cards in force (`cards`) with the taf's and archives each (`archive`), signed, as it removes it.
+    const archive = preview?.agents.slice(1) ?? [];
+    const cards = archive.length ? await readMandates(bearer(event), deps.fetch, deps.kiffBase)
+      .then((ms) => ms.filter((m) => archive.includes(m.subject) && m.active && !m.revoked_at).map((m) => m.id), () => undefined) : undefined;
+    return { taf: taf.id, ...removalWords(preview, langOf(event)), ...(archive.length ? { archive, ...(cards ? { cards } : {}) } : {}) };
   }
   if (parts.length === 4 && method === "GET" && action === "work") {
     // Where its work stands, for its page (docs/reliability.md): every line and time written here.
@@ -2245,6 +2252,82 @@ export function removalWords(r: { ended: Array<{ vendor: string }>; kept: Array<
   return { goes, stays, words: lines.length ? lines.join(" ") : null };
 }
 
+/**
+ * Ends a taf's connections (or, with `preview`, says what that would end), under every agent they were asked
+ * under (connectionAgents): its KIFF agent, and the other form of its name when its connections were asked under
+ * that for a taf of its name. The confirmation's "goes with it" and the removal read the same agents, so what's
+ * said is what ends. Ending them marks each agent gone (markAgentsGone). `null` from a connection server without the route.
+ */
+async function endTafConnections(taf: Taf, me: { tenantID: string }, token: string, deps: Deps, preview = false): Promise<(EndedConnections & { agents: string[] }) | null> {
+  const base = deps.planqueBase!;
+  const [conns, tafs] = await Promise.all([
+    accountConnections(deps.fetch ?? fetch, base, me.tenantID, token).catch(() => [] as AccountConnection[]),
+    deps.tafs.list(me.tenantID),
+  ]);
+  const live = new Set(tafs.filter((t) => t.id !== taf.id && !t.removing && t.kiffAgent).map((t) => t.kiffAgent));
+  const agents = connectionAgents(taf.kiffAgent, taf.name, conns, live);
+  if (!preview) await markAgentsGone(me.tenantID, agents, deps);
+  const out: EndedConnections & { agents: string[] } = { ended: [], kept: [], agents };
+  for (const agent of agents) {
+    const r = await endConnections(deps.fetch ?? fetch, base, me.tenantID, agent, token, preview);
+    if (!r) return null;
+    out.ended.push(...r.ended);
+    out.kept.push(...r.kept);
+  }
+  return out;
+}
+
+/** Where tafs cloud keeps that an agent was a taf of the account that is gone: a removed taf's, any form of it. */
+const goneKey = (tenant: string, agent: string) => `${tenant}#gone-agent#${agent}`;
+const GONE_KEPT_MS = 2 * 365 * 24 * 3600_000;
+
+/**
+ * Marks agents as a gone taf's (agentGone): every form of a removed taf's agent, and those the sweep ends. KIFF
+ * archives the taf's own agent with its key; tafs cloud holds no key for the other form, so this record, and the
+ * phone's archive of it, keep a new Card off it. Best effort.
+ */
+async function markAgentsGone(tenant: string, agents: string[], deps: Deps): Promise<void> {
+  const until = new Date((deps.now?.() ?? new Date()).getTime() + GONE_KEPT_MS);
+  await Promise.all(agents.map((a) => deps.coach?.put(goneKey(tenant, a), { gone: true }, until).catch(() => undefined)));
+}
+
+/**
+ * Whether an agent was a taf of this account that is gone, and is no live taf's: one tafs cloud marked gone, or,
+ * with the person's session, one KIFF says is archived. A draft, hand-over or approval onto it is refused: a new
+ * taf starts a new agent and reuses only the sign-in. A KIFF that can't be read throws, so nothing goes on a guess.
+ */
+async function agentGone(tenant: string, agent: string, deps: Deps, token = ""): Promise<boolean> {
+  if ((await deps.tafs.list(tenant)).some((t) => !t.removing && t.kiffAgent === agent)) return false;
+  if (await deps.coach?.get(goneKey(tenant, agent)).catch(() => undefined)) return true;
+  return token ? (await readArchived(token, deps.fetch, deps.kiffBase)).has(agent) : false;
+}
+
+/** How often an account's leftover connections are looked for, at most. */
+const SWEEP_EVERY_MS = 3600_000;
+
+/**
+ * Ends the connections of tafs gone (leftoverAgents): an agent KIFF says is archived and no live taf has, and the
+ * other form of its name, a taf removed before its connections were found under that. With the person's own
+ * session, someone who manages Cards, on their read of the tafs list, at most once an hour per account; the
+ * connection server's end route checks they may, and keeps a sign-in another taf still uses. Logged with counts only.
+ */
+async function sweepLeftovers(me: KIFFIdentity, token: string, deps: Deps): Promise<void> {
+  if (!deps.planqueBase || !deps.coach || !token || !me.capabilities.includes("cards.manage")) return;
+  const now = deps.now?.() ?? new Date();
+  if (!await deps.coach.once(`connections_sweep#${me.tenantID}`, new Date(now.getTime() + SWEEP_EVERY_MS))) return;
+  const [conns, tafs, archived] = await Promise.all([accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token),
+    deps.tafs.list(me.tenantID), readArchived(token, deps.fetch, deps.kiffBase)]);
+  const live = new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent));
+  const agents = leftoverAgents(conns, live, new Set(archived.keys()), now);
+  await markAgentsGone(me.tenantID, agents, deps);
+  let ended = 0;
+  for (const agent of agents) {
+    const r = await endConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, agent, token).catch(() => null);
+    ended += r?.ended.length ?? 0;
+  }
+  if (agents.length) console.log(JSON.stringify({ event: "connections_sweep", agents: agents.length, ended }));
+}
+
 async function remove(taf: Taf, me: { tenantID: string }, deps: Deps, token = "") {
   const removed: string[] = [];
   const failed: string[] = [];
@@ -2259,6 +2342,8 @@ async function remove(taf: Taf, me: { tenantID: string }, deps: Deps, token = ""
   // answer lost, the app sees it listed and finishes it.
   await deps.removals.add(me.tenantID, { id: taf.id, name: taf.name });
   if (!taf.removing) await deps.tafs.put(me.tenantID, { ...taf, removing: true });
+  // Its agent is a gone taf's from now on: nothing new is set up on it (agentGone).
+  if (taf.kiffAgent) await markAgentsGone(me.tenantID, [taf.kiffAgent], deps);
   await step(["schedule", "history", "memory"], () => deps.agents.deleteAgent(me.tenantID, taf.id));
   if (failed.length === 0) await step(["key"], () => deps.keys.remove(me.tenantID, taf.id));
   // Its connections end with it, in any status, with the person's own session: a sign-in or key another taf
@@ -2268,8 +2353,8 @@ async function remove(taf: Taf, me: { tenantID: string }, deps: Deps, token = ""
   // no connections to end. Erasing the account (no session) leaves them to the apps' planque erase.
   if (failed.length === 0 && token && deps.planqueBase && taf.kiffAgent) {
     try {
-      const r = await endConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, taf.kiffAgent, token);
-      console.log(JSON.stringify({ event: "taf_connections_end", taf: taf.id, ended: r?.ended.length ?? null, kept: r?.kept.length ?? null }));
+      const r = await endTafConnections(taf, me, token, deps);
+      console.log(JSON.stringify({ event: "taf_connections_end", taf: taf.id, ended: r?.ended.length ?? null, kept: r?.kept.length ?? null, agents: r?.agents.length ?? null }));
       if (!r) throw new Error("the connection server has no route to end them");
       removed.push("connections");
     } catch (err) {

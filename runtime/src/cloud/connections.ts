@@ -20,6 +20,10 @@ export interface AccountConnection {
   api?: { url: string };
   status: string;
   mode_words?: string;
+  /** The day it was asked for (YYYY-MM-DD), as the connection server says it. */
+  since?: string;
+  /** The name of the taf it was asked for, as the connection server keeps it (its request's `agent_name`). */
+  agent_name?: string;
 }
 
 /** At most this many lines: a conversation's start stays small. */
@@ -52,6 +56,8 @@ export async function accountConnections(fetchFn: Fetch, base: string, tenant: s
       ...(typeof c.entry === "string" && c.entry ? { entry: line(c.entry, 300) } : {}),
       ...(api && api.url.startsWith("https://") ? { api: { url: line(api.url, 300) } } : {}),
       ...(typeof c.mode_words === "string" && c.mode_words ? { mode_words: line(c.mode_words, 120) } : {}),
+      ...(typeof c.since === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c.since) ? { since: c.since } : {}),
+      ...(typeof c.agent_name === "string" && c.agent_name.trim() ? { agent_name: line(c.agent_name, 60) } : {}),
     });
   }
   return out;
@@ -184,4 +190,59 @@ export async function endConnections(fetchFn: Fetch, base: string, tenant: strin
     kept: list(got.kept).map((k) => ({ vendor: line(k.vendor, 60) || "an app",
       used_by: (Array.isArray(k.used_by) ? k.used_by : []).filter((u): u is string => typeof u === "string").map((u) => line(u, 60)).filter(Boolean) })),
   };
+}
+
+/**
+ * A KIFF agent id with the eight-character suffix a taf's agent carries now ("inbox-summary-iy6yt4fc"): its base. The
+ * suffix has a digit in it, so an ordinary word ("follow-up-invoices", "stripe-payments") is never one.
+ */
+const SUFFIXED = /^(.+)-(?=[a-z]*[0-9])[a-z0-9]{8}$/;
+const baseOf = (agent: string) => SUFFIXED.exec(agent)?.[1];
+
+/** Whether two agents are the same name with and without the suffix. */
+export function otherForm(a: string, b: string): boolean {
+  return a !== b && (baseOf(a) === b || baseOf(b) === a);
+}
+
+/** A taf's name as its agent id was made from it ("Inbox summary" → "inbox-summary"). */
+const idOf = (name: string) => name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+
+function byAgent(conns: AccountConnection[]): Map<string, AccountConnection[]> {
+  const out = new Map<string, AccountConnection[]>();
+  for (const c of conns) out.set(c.agent, [...(out.get(c.agent) ?? []), c]);
+  return out;
+}
+
+/**
+ * The agents a taf's connections were asked under. Its KIFF agent; and the other form of the same name (with or
+ * without the suffix) when every connection under it was asked for a taf of this one's name (`agent_name`), unless
+ * that agent is a live taf's own. A connection server that doesn't say the name gives no other form. 13 Nov: a taf on
+ * `inbox-summary` was removed and its Gmail connection, asked under `inbox-summary-iy6yt4fc`, was never ended.
+ */
+export function connectionAgents(kiffAgent: string, name: string, conns: AccountConnection[], live: Set<string>): string[] {
+  const out = [kiffAgent];
+  const fold = (s: string) => s.trim().toLowerCase();
+  for (const [a, cs] of byAgent(conns)) {
+    if (live.has(a) || !otherForm(a, kiffAgent)) continue;
+    if (cs.every((c) => c.agent_name !== undefined && fold(c.agent_name) === fold(name))) out.push(a);
+  }
+  return out;
+}
+
+/**
+ * The agents of tafs gone whose connections the sweep ends: an agent KIFF says is archived (as removing a taf
+ * archives it) that no live taf has, and the other form of an archived agent's name when every connection under it
+ * was asked for a taf of that name (its `agent_name`, made an id, is the name without the suffix). Never an agent
+ * tafs cloud can't show was a taf of this account (one made outside tafs, a draft not on record yet), never a live
+ * taf's or the other form of a live taf's name, and only connections asked before yesterday: a newer one may still
+ * be a setup on its way. A connection without its day is never swept.
+ */
+export function leftoverAgents(conns: AccountConnection[], live: Set<string>, archived: Set<string>, now: Date): string[] {
+  const before = new Date(now.getTime() - 24 * 3600_000).toISOString().slice(0, 10);
+  const spared = (a: string) => live.has(a) || [...live].some((k) => otherForm(a, k));
+  const gone = (a: string, cs: AccountConnection[]) => archived.has(a) || [...archived].some((k) => otherForm(a, k)
+    && cs.every((c) => c.agent_name !== undefined && idOf(c.agent_name) === (baseOf(a) ?? a)));
+  return [...byAgent(conns).entries()]
+    .filter(([a, cs]) => !spared(a) && cs.every((c) => c.since !== undefined && c.since < before) && gone(a, cs))
+    .map(([a]) => a);
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type AccountConnection, accountConnections, connectionLines, GUIDES_LINES, heldGuides, MAX_CONNECTIONS, MAX_GUIDES, withConnections } from "../src/cloud/connections.js";
+import { type AccountConnection, accountConnections, connectionAgents, connectionLines, leftoverAgents, otherForm, GUIDES_LINES, heldGuides, MAX_CONNECTIONS, MAX_GUIDES, withConnections } from "../src/cloud/connections.js";
 import { ownerWords } from "../src/cloud/improve.js";
 import { entryOf } from "../src/cloud/coach-skills.js";
 
@@ -99,5 +99,45 @@ describe("the guides of the apps the account already holds, as Coach starts with
     expect(got.every((g) => g.guide.length <= 9000)).toBe(true);
     const down = (async () => { throw new Error("planque down"); }) as never;
     expect(await heldGuides(down, "https://planque.test", "t_acme", "ana", conns, tafs)).toEqual([]);
+  });
+});
+
+describe("the agents a taf's connections were asked under", () => {
+  const conn = (agent: string, agent_name?: string): AccountConnection => ({ agent, vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-01", ...(agent_name ? { agent_name } : {}) });
+  const none = new Set<string>();
+
+  it("takes the other form of the name, with or without the suffix, asked for a taf of this one's name", () => {
+    expect(connectionAgents("inbox-summary", "Inbox summary", [conn("inbox-summary-iy6yt4fc", "Inbox summary")], none)).toEqual(["inbox-summary", "inbox-summary-iy6yt4fc"]);
+    expect(connectionAgents("inbox-summary-iy6yt4fc", "Inbox summary", [conn("inbox-summary", " inbox SUMMARY ")], none)).toEqual(["inbox-summary-iy6yt4fc", "inbox-summary"]);
+  });
+
+  // Review 2: eight letters are an ordinary word, not a suffix, and a name that isn't this taf's is another taf's.
+  it("never takes an ordinary word for a suffix, another taf's name, a connection with no name, or a live taf's", () => {
+    expect(otherForm("follow-up-invoices", "follow-up")).toBe(false);
+    expect(otherForm("stripe-payments", "stripe")).toBe(false);
+    expect(connectionAgents("follow-up", "Follow-up", [conn("follow-up-invoices", "Follow-up invoices")], none)).toEqual(["follow-up"]);
+    expect(connectionAgents("follow-up", "Follow-up", [conn("follow-up-invoices", "Follow-up")], none)).toEqual(["follow-up"]);
+    expect(connectionAgents("stripe-payments", "Stripe payments", [conn("stripe", "Stripe payments")], none)).toEqual(["stripe-payments"]);
+    expect(connectionAgents("inbox-summary", "Inbox summary", [conn("inbox-summary-iy6yt4fc", "Inbox summary 2")], none)).toEqual(["inbox-summary"]);
+    expect(connectionAgents("inbox-summary", "Inbox summary", [conn("inbox-summary-iy6yt4fc")], none)).toEqual(["inbox-summary"]);
+    expect(connectionAgents("inbox-summary", "Inbox summary", [conn("inbox-summary-iy6yt4fc", "Inbox summary"), conn("inbox-summary-iy6yt4fc")], none)).toEqual(["inbox-summary"]);
+    expect(connectionAgents("inbox-summary", "Inbox summary", [conn("inbox-summary-iy6yt4fc", "Inbox summary")], new Set(["inbox-summary-iy6yt4fc"]))).toEqual(["inbox-summary"]);
+  });
+
+  // Review 1: the sweep ends only what KIFF says is archived, and the other form of an archived agent's name.
+  it("sweeps only archived agents, and the other form of one asked for a taf of its name", () => {
+    const now = new Date("2026-11-14T01:00:00Z");
+    const conns = [conn("inbox-summary-iy6yt4fc", "Inbox summary"), conn("my-own-agent"), conn("coach"), conn("stripe", "Stripe payments"), conn("follow-up-x1y2z3w4", "Follow-up invoices")];
+    expect(leftoverAgents(conns, new Set(["inbox-summary-7lxrcc2g"]), new Set(["inbox-summary", "stripe-payments", "follow-up"]), now)).toEqual(["inbox-summary-iy6yt4fc"]);
+    expect(leftoverAgents(conns, new Set(["inbox-summary-7lxrcc2g"]), new Set(), now)).toEqual([]);
+    // The other form of a live taf's name is spared, archived or not.
+    expect(leftoverAgents([conn("inbox-summary")], new Set(["inbox-summary-7lxrcc2g"]), new Set(["inbox-summary"]), now)).toEqual([]);
+  });
+
+  it("reads the taf's name the connection server keeps, on one line", async () => {
+    const got = await accountConnections((async () => new Response(JSON.stringify({ connections: [
+      { agent: "cb", agent_name: "Charge\nbacks", vendor: "Stripe", kind: "provider", status: "connected" }, { agent: "bo", agent_name: " ", vendor: "Gmail", kind: "provider", status: "connected" },
+    ] }))) as never, "https://planque.test", "t_acme", "ana");
+    expect(got.map((c) => c.agent_name)).toEqual(["Charge backs", undefined]);
   });
 });

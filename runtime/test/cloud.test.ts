@@ -1740,6 +1740,7 @@ describe("removing a taf", () => {
     let down = true;
     const deps = (absent = false) => ({ ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
       if (url.startsWith("https://planque.test/")) {
+        if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: [] }), { status: 200 });
         ended.push({ url, auth: String((init?.headers as Record<string, string>)?.authorization ?? ""), method: init?.method ?? "GET" });
         if (absent) return new Response("no route", { status: 404 });
         if (down) return new Response("down", { status: 503 });
@@ -1772,7 +1773,7 @@ describe("removing a taf", () => {
     const w = world();
     const asked: string[] = [];
     const d = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
-      if (url.startsWith("https://planque.test/")) { asked.push(url); return new Response("no route", { status: 404 }); }
+      if (url.startsWith("https://planque.test/")) { if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: [] }), { status: 200 }); asked.push(url); return new Response("no route", { status: 404 }); }
       return depsOf(w).fetch!(url, init);
     }) as Deps["fetch"] };
     const r = await handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana" } }, d);
@@ -1790,7 +1791,7 @@ describe("removing a taf", () => {
     const w = world();
     const asked: string[] = [];
     const d = (answer: () => Response) => ({ ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
-      if (url.startsWith("https://planque.test/")) { asked.push(url); return answer(); }
+      if (url.startsWith("https://planque.test/")) { if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: [] }), { status: 200 }); asked.push(url); return answer(); }
       return depsOf(w).fetch!(url, init);
     }) as Deps["fetch"] });
     const get = async (dd: Deps, lang = "en") => JSON.parse((await handle({ rawPath: `/v1/tafs/${RAE}/removal`, requestContext: { http: { method: "GET" } },
@@ -1805,6 +1806,90 @@ describe("removing a taf", () => {
     expect(await get(d(() => new Response("down", { status: 503 })))).toEqual({ taf: RAE, goes: [], stays: [], words: null });
     expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
     expect((await handle({ rawPath: `/v1/tafs/${RAE}/removal`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer viewer" } }, d(both))).statusCode).toBe(403);
+  });
+
+  // 13 Nov: a taf on KIFF agent `rae` was removed, but its connection had been asked under `rae-k3f9x2ab`, so the
+  // end found nothing and the Gmail connection lived on. The removal and its words read every form of the name asked
+  // for a taf of its name, and never another live taf's own agent. Every form is marked gone, and the confirmation
+  // names the others for the phone to archive, with their Cards in force.
+  it("ends the connections asked under the other form of the taf's agent, for a taf of its name, never a live taf's", async () => {
+    const w = world();
+    const asked: string[] = [];
+    const conns = [
+      { agent: "rae-k3f9x2ab", agent_name: "Rae", vendor: "Gmail", kind: "provider", status: "connected" },
+      { agent: "max", vendor: "Stripe", kind: "provider", status: "connected" },
+      { agent: "rae-live0001", agent_name: "Rae", vendor: "Gmail", kind: "provider", status: "connected" },
+      // Negative (review 2): the other form, asked for another taf's name, or with no name said, stays.
+      { agent: "rae-0th3r0ne", agent_name: "Rae's helper", vendor: "Slack", kind: "provider", status: "connected" },
+      { agent: "rae-n0name00", vendor: "Slack", kind: "provider", status: "connected" },
+    ];
+    w.tafs.held.set("t_acme#taf-live", { id: "taf-live", name: "Live", job: "j", kiffAgent: "rae-live0001", created: "2026-11-13T00:00:00Z" } as never);
+    w.account.mandates = [{ id: "m-old", subject: "rae-k3f9x2ab", active: true }, { id: "m-gone", subject: "rae-k3f9x2ab", active: false }, { id: "m-live", subject: "rae-live0001", active: true }] as never;
+    const coach = memoryCoach(() => w.now);
+    const d = { ...depsOf(w), coach, planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: conns }), { status: 200 });
+      if (url.startsWith("https://planque.test/")) {
+        asked.push(url);
+        return new Response(JSON.stringify({ ended: url.includes("rae-k3f9x2ab") ? [{ vendor: "Gmail" }] : [], kept: [] }), { status: 200 });
+      }
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] };
+    const words = JSON.parse((await handle({ rawPath: `/v1/tafs/${RAE}/removal`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, d)).body);
+    expect(words).toMatchObject({ goes: ["Gmail"], archive: ["rae-k3f9x2ab"], cards: ["m-old"] });
+    expect([...coach.held.keys()].filter((k) => k.includes("gone-agent"))).toEqual([]);
+    asked.length = 0;
+    const r = JSON.parse((await handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana" } }, d)).body);
+    expect(r).toMatchObject({ done: true });
+    expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/agents/rae/end", "https://planque.test/v1/accounts/t_acme/agents/rae-k3f9x2ab/end"]);
+    expect([...coach.held.keys()].filter((k) => k.includes("gone-agent")).sort()).toEqual(["t_acme#gone-agent#rae", "t_acme#gone-agent#rae-k3f9x2ab"]);
+  });
+
+  // The leftovers from before: on a person's read of the list, at most hourly, the connections of agents KIFF says are
+  // archived (and the other form of such an agent's name, asked for a taf of that name), asked before yesterday, end.
+  // Review 1: never an agent tafs cloud can't show was a taf of this account.
+  it("sweeps only archived agents' connections, hourly, sparing live tafs', agents made elsewhere and today's", async () => {
+    const w = world();
+    const asked: string[] = [];
+    w.now = new Date("2026-11-14T01:00:00Z");
+    w.tafs.held.set("t_acme#taf-inbox", { id: "taf-inbox", name: "Inbox summary", job: "j", kiffAgent: "inbox-summary-7lxrcc2g", created: "2026-11-13T00:00:00Z" } as never);
+    const old = { kind: "provider", status: "connected", since: "2026-11-01" };
+    const conns = [
+      { agent: "old-refunds", vendor: "Stripe", ...old },
+      { agent: "inbox-summary-iy6yt4fc", agent_name: "Inbox summary", vendor: "Gmail", ...old },
+      // Negatives: not archived (made outside tafs, Coach's, a draft not on record), live, asked today, a word not a suffix.
+      { agent: "my-own-agent", vendor: "Gmail", ...old },
+      { agent: "coach", vendor: "Gmail", ...old },
+      { agent: "inbox-summary-7lxrcc2g", agent_name: "Inbox summary", vendor: "Gmail", ...old },
+      { agent: "rae", vendor: "Qonto", ...old },
+      { agent: "gone-today", vendor: "Slack", kind: "provider", status: "listed", since: "2026-11-13" },
+      { agent: "stripe", agent_name: "Stripe payments", vendor: "Stripe", ...old },
+      { agent: "no-day", vendor: "Slack", kind: "provider", status: "connected" },
+    ];
+    const archived = ["old-refunds", "inbox-summary", "gone-today", "stripe-payments", "no-day", "rae"].map((id) => ({ id, archived_at: "2026-11-02T00:00:00Z" }));
+    let kiffDown = false;
+    const coach = memoryCoach(() => w.now);
+    const d = { ...depsOf(w), coach, planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: conns }), { status: 200 });
+      if (url.startsWith("https://planque.test/")) { asked.push(url); return new Response(JSON.stringify({ ended: [{ vendor: "Gmail" }], kept: [] }), { status: 200 }); }
+      if (url.endsWith("/v1/me/agents")) return kiffDown ? new Response("{}", { status: 503 }) : new Response(JSON.stringify({ agents: [...archived, { id: "my-own-agent" }, { id: "coach" }] }), { status: 200 });
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] };
+    const list = (token = "ana") => handle({ rawPath: "/v1/tafs", requestContext: { http: { method: "GET" } }, headers: { Authorization: `Bearer ${token}` } }, d);
+    // Someone who can't manage Cards sweeps nothing, and doesn't spend the hour.
+    expect((await list("viewer")).statusCode).toBe(200);
+    expect(asked).toEqual([]);
+    // A KIFF that can't say what's archived: nothing is swept on a guess.
+    kiffDown = true;
+    expect((await list()).statusCode).toBe(200);
+    expect(asked).toEqual([]);
+    kiffDown = false;
+    await coach.remove("connections_sweep#t_acme");
+    expect((await list()).statusCode).toBe(200);
+    expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/agents/old-refunds/end", "https://planque.test/v1/accounts/t_acme/agents/inbox-summary-iy6yt4fc/end"]);
+    expect(coach.held.has("t_acme#gone-agent#inbox-summary-iy6yt4fc")).toBe(true);
+    // Within the hour, it doesn't look again.
+    await list();
+    expect(asked).toHaveLength(2);
   });
 
   it("deletes nothing else while kiff/agents may still run it, and a second remove finishes", async () => {
