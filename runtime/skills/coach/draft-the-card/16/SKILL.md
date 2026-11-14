@@ -32,11 +32,11 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   instructions"), then a
   confirm to agree or change them; the message itself stays one sentence. A
   limit the owner already gave, in their first message or later, is that
-  limit: put it in the rules as they said it, and never propose another in
-  its place. Ask about each limit they didn't give; don't
-  assume one. Then set the tools
-  on the grant (planque tools). Declared: true? Draft the Card now: one approval
-  with grant and draft; else the grant's, then the Card's. A limit over a day follows the account's
+  limit: put it in the rules as they said it, never another in its place.
+  Ask about each limit they didn't give. Then set the tools
+  on the grant (planque tools). When planque says declared: true, draft the Card
+  at once, in the grant's approval, without saying so; else the grant's, then
+  the Card's. A limit over a day follows the account's
   day: say so as a line of the rules notice ("a day ends at midnight in your
   account's time zone"), not in a message: messages stay short.
 - A grant whose status says on_demand: true is an app whose sign-in was set up
