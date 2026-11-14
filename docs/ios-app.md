@@ -398,8 +398,20 @@ the app in sample mode.
   **Whether Approve is a tap** is on the mark too (`signs.takes`, `"tap"` or `"fingerprint"`, docs/chat.md), read
   as `Signs.takes`. KIFF's approval-window words ("No fingerprint for the next 4 minutes") may go only on a `"tap"`
   card (`SetupComponent.windowWords`, as Android 1.27.9's `windowWordsFor`): never on one that takes the fingerprint
-  or has no mark. The iPhone holds no approval window yet, so its cards draw no such line and Approve always names
-  Face ID; the gate is there for when it does.
+  or has no mark. The line under Approve (`SetupApproval.approveLine`) is KIFF's words on a `"tap"` card while this
+  phone holds a window, hidden while the approval runs; anywhere else it names Face ID ("Approving asks for Face ID.").
+  **The approval window** is Android's (docs/approvals.md): `KIFFClient.window`, `openWindow`, `readWindow` and
+  `closeWindow` on `/v1/me/window`, and `AppModel.windowWords`. On an ask with `key: window`, one Face ID over the
+  ask's message opens a window (the approval key signs `kiff.window.v1`, five minutes) unless one is held, and the
+  step's calls go as a tap: planque's with `planque.request.v2` and KIFF's draft confirm with `kiff.request.v2`, the
+  device key with the window's id (`PlanqueClient.window`, `KIFFClient.signsInWindow`, set for that step only). A
+  `critical` ask, no hint, a session without the approval key, a drive, or a KIFF without the route (404) signs as
+  before, with Face ID. planque's `window_required` opens a new window behind Face ID and makes the call once more;
+  KIFF's `critical_key_required` or `window_required` asks Face ID again and the approval key signs it
+  (`windowReconfirm`). KIFF's words are read after each approval and on coming back; a window KIFF says isn't open
+  is forgotten. It closes, device-signed, after 30 seconds in the background (on coming back, if iOS suspended the
+  app first), at once when the screen locks (`protectedDataWillBecomeUnavailable`) and before a drive starts; it is
+  dropped at sign-out and at a new sign-in (`ApprovalWindowTests`).
   **A sign-in card names its app**: the card's `service`, else the connection's app as Connect apps names it, else
   planque's vendor in people's words (`AppModel.signInApp`, `appName`): "Sign in at Gmail", and "Sign in at the
   vendor" only when no app is known, never a connection's status. When the connection takes no approval now
