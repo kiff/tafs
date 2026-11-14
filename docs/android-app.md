@@ -662,6 +662,19 @@ you** ([api.md](api.md#coach-waiting)): Home's `coach_waiting`, after the steps,
 approval.") and its **Open Coach** button, which opens Coach on that chat (`AppModel.openWaitingCoach`),
 where the card is answered; someone who can't use Coach reads the line alone. tafs cloud counts each in `needs_you`, so Home never says "Nothing needs
 you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
+
+**Set aside** is "not now", never an approval, and only signed in (not the sample).
+- **One chat:** a row whose `words.set_aside` tafs cloud sends can be swiped away either way, and has
+  a button with the same words, so a swipe isn't the only way. Either one calls
+  `POST /v1/home/coach-waiting/{session}/set-aside` (`AppModel.setAsideCoach`), with the signed read
+  of this phone's connections, so tafs cloud can withdraw a connection that chat asked for.
+- **Every chat:** with two or more rows and Home's `coach_waiting_clear`, its **Set all aside** sits
+  above them. It asks once, in tafs cloud's words (the title names the count), then calls
+  `POST /v1/home/coach-waiting/set-aside`.
+- **After:** the row goes once tafs cloud answers, and Home is read again for its count. A refusal
+  says why (`ErrorWords`) and keeps the rows. A row being set aside isn't drawn again by a Home read
+  meanwhile.
+
 iPhone and iPad follow.
 
 ## Your step
