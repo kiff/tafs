@@ -12,6 +12,8 @@ struct SignInView: View {
     @State private var problem: String?
     @State private var task: Task<Void, Never>?
     @State private var copied = false
+    /// Signing in from the person's other phone instead (KIFF's pairing contract §5.8).
+    @State private var pairing = false
 
     var body: some View {
         NavigationStack {
@@ -65,6 +67,10 @@ struct SignInView: View {
                     Text(problem).scaledFont(14).foregroundColor(Theme.no)
                     Button(Words.Common.tryAgain) { begin() }.buttonStyle(OutlineButtonStyle())
                 }
+                // A person who already uses tafs on another phone pairs this device from it instead.
+                Button(Words.SignIn.pairStart) { pairing = true }
+                    .buttonStyle(OutlineButtonStyle())
+                    .accessibilityIdentifier("signIn.pair")
                 Spacer()
                 Text(Legal.agreement())
                     .scaledFont(12).foregroundColor(Theme.dim).tint(Theme.amber)
@@ -75,6 +81,9 @@ struct SignInView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(Words.Common.cancel) { task?.cancel(); dismiss() }
                 }
+            }
+            .navigationDestination(isPresented: $pairing) {
+                PairSignInView { task?.cancel(); dismiss() }
             }
         }
         .onAppear(perform: begin)
