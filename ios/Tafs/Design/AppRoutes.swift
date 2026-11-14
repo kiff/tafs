@@ -79,7 +79,7 @@ enum AppRoute: String, CaseIterable, Sendable {
         case .coach: return nil
         case .haltAll: return "cards.manage"
         case .account: return nil
-        case .accountPeople: return "members.manage"
+        case .accountPeople: return nil
         case .accountDevices: return nil
         case .accountApps: return nil
         case .accountUsage: return nil

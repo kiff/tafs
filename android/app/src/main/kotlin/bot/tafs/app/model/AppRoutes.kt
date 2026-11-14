@@ -13,7 +13,7 @@ enum class AppRoute(val pattern: String, val titleKey: String, val needs: String
   Coach("coach", "coach.title", null),
   HaltAll("halt-all", "halt_all.title", "cards.manage"),
   Account("account", "settings.title", null),
-  AccountPeople("account/people", "people.title", "members.manage"),
+  AccountPeople("account/people", "people.title", null),
   AccountDevices("account/devices", "settings.devices.title", null),
   AccountApps("account/apps", "connect.apps.title", null),
   AccountUsage("account/usage", "usage.title", null),

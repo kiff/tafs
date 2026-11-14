@@ -10,6 +10,10 @@ the line key of its title in app/strings, and, when not everyone may open it, wh
 `members.manage`, `account.delete`). Each app opens every route through one function, and a unit test
 in each app fails on a route it has no case for.
 
+A `{taf}` value is the taf's id as tafs cloud names it (the id push alerts carry); each app also
+accepts its own id for the taf. `needs` gates opening the screen only: a screen anyone signed in may
+open, such as People & groups, has none, and what it lets each person do stays the screen's own rule.
+
 Generated here: ios/Tafs/Design/AppRoutes.swift and
 android/app/src/main/kotlin/bot/tafs/app/model/AppRoutes.kt. Nobody edits a generated file by hand.
 """

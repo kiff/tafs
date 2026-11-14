@@ -7,7 +7,7 @@
     {"route": "coach", "title": "coach.title"},
     {"route": "halt-all", "title": "halt_all.title", "needs": "cards.manage"},
     {"route": "account", "title": "settings.title"},
-    {"route": "account/people", "title": "people.title", "needs": "members.manage"},
+    {"route": "account/people", "title": "people.title"},
     {"route": "account/devices", "title": "settings.devices.title"},
     {"route": "account/apps", "title": "connect.apps.title"},
     {"route": "account/usage", "title": "usage.title"},
