@@ -57,7 +57,7 @@ tafs cloud stores one agent definition per taf in kiff/agents
   notes work, that a run works from the items its check handed it (never paging the whole list
   again), how it makes a call under its Card (one request is one call, never split
   to stay under a limit; a money call that doesn't name its customer carries who it's
-  for in a field the customer doesn't see, such as metadata, so the hold says it), and two sections of KIFF's `kiff` skill ("Rules that always apply" and
+  for in a field the customer doesn't see, such as metadata, so the hold says it; a held call "waits for your approval", never "submitted", "sent" or "done", until KIFF says it ran, and a date or a day is named only when it was read), and two sections of KIFF's `kiff` skill ("Rules that always apply" and
   "Handle a KIFF result"). The skill is vendored at one commit; moving it is in the
   [runtime page](runtime.md#the-runtime).
 - **Tools:** only the company's tools, through KIFF's gateway (`mcp.kiff.dev`), and its

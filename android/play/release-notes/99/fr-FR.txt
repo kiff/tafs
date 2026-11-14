@@ -1,0 +1,2 @@
+- Supprimer définitivement prend un seul appui ; un second ne fait rien.
+- Connecter des apps s'ouvre en grand et indique le chargement.

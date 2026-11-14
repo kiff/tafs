@@ -89,6 +89,22 @@ itself. The rule's tests break each condition in turn (`scripts/test_automerge.p
 
 Use [SECURITY.md](../SECURITY.md) for private reports and coordinated disclosure.
 
+## Actions caches
+
+GitHub keeps 10 GB of a repository's Actions caches, then evicts the least
+used, and every run gets slower. Two things keep them small:
+
+- **Android's Gradle cache is saved by one job, on main:** the `test` job in
+  `.github/workflows/android.yml`, after the action's own clean-up of stale
+  entries. The `ui` and `release` jobs only restore it, and pull requests
+  only ever read.
+- **`.github/workflows/caches.yml`** runs `scripts/caches.py` weekly. It
+  deletes each cache that a newer one of the same family on the same branch
+  supersedes, and the caches of pull requests that are no longer open, and it
+  logs the caches' count and size before and after. Run it by hand with
+  `dry_run` on to see what would go; deleting is safe, since a run that needs
+  a cache saves it again.
+
 ## Request logs
 
 tafs cloud logs one line per request (`logRequest` in `handler.ts`): `{event: "request", method,

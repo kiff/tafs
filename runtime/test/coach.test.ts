@@ -183,6 +183,15 @@ describe("labels and the business description", () => {
       : fetchOf(url, init)) as unknown as typeof fetch;
     const theirs = await w.tool("taf_labels", { action: "set", taf: RAE, labels: ["Money"] }, { act: "u_bo" });
     expect(theirs.text).toContain("Refunds's labels are for the people who manage it");
+    // Nor rename or remove a label on a taf they don't manage.
+    w.deps.fetch = fetchOf;
+    await w.tool("taf_labels", { action: "set", taf: RAE, labels: ["Shop"] });
+    w.deps.fetch = (async (url: string, init?: RequestInit) => url.endsWith("/v1/coach/act")
+      ? new Response(JSON.stringify({ agents: { agent_rae: { use: true, oversee: false, manage: false } } }))
+      : fetchOf(url, init)) as unknown as typeof fetch;
+    expect((await w.tool("taf_labels", { action: "rename", label: "Shop", name: "Store" }, { act: "u_bo" })).text).toContain("Shop is on tafs they don't manage");
+    expect((await w.tool("taf_labels", { action: "remove", label: "Shop" }, { act: "u_bo" })).text).toContain("Shop is on tafs they don't manage");
+    expect((await readLabels(w.coach, T)).labels.map((l) => l.name)).toEqual(["Shop"]);
     expect((await w.tool("business_context", { action: "save", text: "We sell lamps.", version: 0 }, { act: "u_bo" })).text).toContain("for the people who manage all of the account's tafs");
   });
 
@@ -199,6 +208,11 @@ describe("labels and the business description", () => {
     const account = await w.send("GET", "/v1/me/business", undefined, "tok");
     expect(account.body.business).toEqual({ text, version: 1, words: { title: "What tafs know about your business", empty: "Nothing yet. Coach can draft it with you.", change: "Change" } });
     for (const lang of LANGUAGES) expect(wordsIn(lang).business_title, lang).toBeTruthy();
+    // Only a person puts words into every run's preface: KIFF holds each save for their yes, with the text shown,
+    // and the tools step says so. A page Coach read can't save a description on its own.
+    expect(COACH_CARDS.find((c) => c.actions.includes("business_context"))).toMatchObject({ id: "coach-business", asks: true });
+    const does = coachToolsStep("en").groups.flatMap((g) => g.tools).find((x) => x.name === wordsIn("en").cts_business_context)!.does;
+    expect(does).toMatch(/waits for you|waits for your approval/);
   });
 });
 

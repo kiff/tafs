@@ -1187,7 +1187,7 @@ enum Words {
         static var kiffCountsWay: String { Words.line("coach.kiff_counts_way") }
         /// Making it live…
         static var makingLive: String { Words.line("coach.making_live") }
-        /// Name an app for your taf, like your payment provider. No taf sees your sign-in. You approve with {biometry}.
+        /// Name an app for your taf, like your payment provider. You approve with {biometry}.
         static func nameToolTafShouldWork(biometry: String) -> String { Words.line("coach.name_tool_taf_should_work", biometry) }
         /// Needs you · approve
         static var needsYouApprove: String { Words.line("coach.needs_you_approve") }

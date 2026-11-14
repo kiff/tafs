@@ -279,7 +279,8 @@
                 "id": "coach-business",
                 "subject": "setup",
                 "domain": "gateway",
-                "on_exceed": "refuse",
+                "on_exceed": "owner",
+                "hold_expiry": "10m",
                 "grants": [
                   {
                     "action": "business_context"
@@ -466,7 +467,7 @@
               },
               {
                 "name": "Keep your business description",
-                "does": "Keep a short description of your business that you confirmed: what you sell, to whom, your tone and your contact rules. Up to 50 a day.",
+                "does": "Keep a short description of your business that you confirmed: what you sell, to whom, your tone and your contact rules. Up to 50 a day; after that, each one waits for you.",
                 "why": "It's words only, and you see it in Account."
               },
               {

@@ -185,7 +185,7 @@ export const TOOLS: ToolDef[] = [
     required: ["action"],
     description: "The account's description, \"What tafs know about your business\": what it sells, to whom, its tone and languages, the links tafs use and its contact rules, " +
       "in the person's words. Words only: never a tool, a limit, an amount or personal data, and it changes no Card. read answers it with its version; " +
-      "save keeps a draft the person confirmed, over the version you read, and is refused when it changed since: read it again. The person sees it in Account.",
+      "save keeps a draft the person confirmed, over the version you read, and is refused when it changed since: read it again. KIFF holds each save for the person's yes, with the text: say \"Waiting for your approval\" once. The person sees it in Account.",
   },
   {
     name: "version_try", line: "Try a version of a taf, sending nothing",
@@ -260,7 +260,8 @@ export const COACH_CARDS: Array<{ id: string; actions: string[]; limit: number; 
   { id: "coach-web-reads", actions: ["web_read"], limit: 50, asks: false },
   // Labels and the business description change no authority: Cards of their own, as every Card added later.
   { id: "coach-labels", actions: ["taf_labels"], limit: 100, asks: false },
-  { id: "coach-business", actions: ["business_context"], limit: 50, asks: false },
+  // A save waits for the person's yes, the text shown: only a person puts words into every run's preface.
+  { id: "coach-business", actions: ["business_context"], limit: 50, asks: true },
 ];
 
 /** Coach's tools in the four groups the tools step shows, in TOOLS' order within each. */
