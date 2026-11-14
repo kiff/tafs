@@ -2,6 +2,7 @@ package bot.tafs.app
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -99,5 +100,36 @@ class RemoveConfirmTest {
     rule.mainClock.autoAdvance = true
     rule.waitForIdle()
     assertEquals(listOf("refunds-3"), removed)
+  }
+
+  // The owner on Android 97: tafs cloud's words take a moment before the confirmation opens, and a second tap meanwhile went
+  // through. One tap asks once, and the button takes nothing more until the confirmation is up.
+  @Test fun aSecondTapWhileTheConfirmationOpensAsksNothingMore() {
+    val words = kotlinx.coroutines.CompletableDeferred<String?>()
+    var asked = 0
+    val slow = TafActions(
+      answer = { _, _ -> }, togglePause = {}, revoke = {}, loadMemory = {}, forget = { _, _ -> }, loadChat = {},
+      sendChat = { _, _, _, _ -> }, issuer = "KIFF",
+      doors = DoorActions({}, { _, _ -> null }, { _, _, _ -> }, { _, _ -> }, { _, _, _, _ -> }, { _, _, _ -> }, { _, _, _, _ -> }, {}),
+      coach = CoachActions(answer = { _, _, _ -> }, approve = { _, _, _ -> }, cancelSignIn = {}),
+      connections = ConnectionActions({}, { false }),
+      remove = { removed += it; null },
+      removalWords = { asked++; words.await() },
+    )
+    rule.setShown {
+      TafsTheme { TafDetailView("refunds-3", shown.value, slow, onBack = {}, onHalt = {}, onUsage = {}, onVersions = {}) }
+    }
+    rule.onNodeWithText("Setup").performClick()
+    val button = rule.onNodeWithText("Remove for good").performScrollTo()
+    button.performClick()
+    rule.waitForIdle()
+    button.assertIsNotEnabled()
+    button.performClick()
+    rule.waitForIdle()
+    assertEquals("one tap, one ask", 1, asked)
+    words.complete(null)
+    rule.waitForIdle()
+    rule.onNodeWithText("Remove Refunds 3 for good?").assertIsDisplayed()
+    assertEquals(1, asked)
   }
 }

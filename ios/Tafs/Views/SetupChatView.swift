@@ -1493,6 +1493,14 @@ struct SetupApproval: View {
         }
     }
 
+    /// The line under Approve: KIFF's approval-window words where tafs cloud marks the card a tap and
+    /// this phone holds a window (`held`), hidden while an approval runs, as Android hides them; else
+    /// that approving asks for Face ID or Touch ID.
+    static func approveLine(_ component: SetupComponent, held: String?, approving: Bool) -> String? {
+        if let words = component.windowWords(held) { return approving ? nil : words }
+        return Words.Coach.approvingAsks(biometry: "\(Biometry.name)")
+    }
+
     /// Whether this card's connection is approved by giving its key: planque says it takes one
     /// (`request.kind` "api_key"), and it isn't connected yet. The card then opens the key sheet
     /// and holds no field itself. Once connected, the card is approved as any other.
@@ -1691,7 +1699,11 @@ struct SetupApproval: View {
                 }
                 .disabled(busy || (answered && !state.isFailure))
                 CardNote(id: component.id)
-                Text(Words.Coach.approvingAsks(biometry: "\(Biometry.name)")).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
+                // Face ID named only where Approve still asks for it: on a card tafs cloud marks a tap, while
+                // this phone holds an approval window, KIFF's words for the next tap instead (as Android).
+                if let line = Self.approveLine(component, held: model.windowWords, approving: model.connecting != nil) {
+                    Text(line).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
+                }
             }
         }
     }

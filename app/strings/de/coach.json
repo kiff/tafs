@@ -94,7 +94,7 @@
   "coach.intro": "Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter.",
   "coach.kiff_counts_way": "KIFF zählt es so",
   "coach.making_live": "Wird live geschaltet…",
-  "coach.name_tool_taf_should_work": "Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter. Kein taf sieht deine Anmeldung. Du genehmigst mit {biometry}.",
+  "coach.name_tool_taf_should_work": "Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter. Du genehmigst mit {biometry}.",
   "coach.needs_you_approve": "Braucht dich · genehmigen",
   "coach.needs_you_question": "Braucht dich · eine Frage",
   "coach.new_conversation": "Neues Gespräch",
