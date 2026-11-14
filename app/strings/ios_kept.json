@@ -63,5 +63,8 @@
     "{vendor}": "a placeholder in the service's line, filled in or replaced by a link",
     "{terms}": "a placeholder in the service's line, filled in or replaced by a link",
     "{privacy}": "a placeholder in the service's line, filled in or replaced by a link"
+  },
+  "Services/ThisDevice.swift": {
+    "Mac": "the device's name, a product's name, the same in every language, as iPhone and iPad are"
   }
 }
