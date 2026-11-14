@@ -91129,49 +91129,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Computer hinzufügen"
+            "value": "Gerät hinzufügen"
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Add a computer"
+            "value": "Add a device"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Añadir un ordenador"
+            "value": "Añadir un dispositivo"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ajouter un ordinateur"
+            "value": "Ajouter un appareil"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aggiungi un computer"
+            "value": "Aggiungi un dispositivo"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Computer toevoegen"
+            "value": "Apparaat toevoegen"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dodaj komputer"
+            "value": "Dodaj urządzenie"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adicionar um computador"
+            "value": "Adicionar um dispositivo"
           }
         }
       }
@@ -91225,6 +91225,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "O seu computador mostra %1$@?"
+          }
+        }
+      }
+    },
+    "settings.devices.pair_check_phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt dein neues Telefon oder Tablet %1$@?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Does your new phone or tablet show %1$@?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Tu nuevo teléfono o tableta muestra %1$@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre nouveau téléphone ou tablette affiche-t-il %1$@ ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo nuovo telefono o tablet mostra %1$@?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toont je nieuwe telefoon of tablet %1$@?"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Czy Twój nowy telefon lub tablet pokazuje %1$@?"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O seu novo telefone ou tablet mostra %1$@?"
           }
         }
       }
@@ -91547,6 +91600,59 @@
         }
       }
     },
+    "settings.devices.pair_gives_phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kann dann die Aktionen deiner tafs genehmigen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ will be able to approve your tafs' actions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ podrá aprobar las acciones de tus tafs."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ pourra approuver les actions de vos tafs."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ potrà approvare le azioni dei tuoi tafs."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ kan dan de acties van je tafs goedkeuren."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ będzie mógł zatwierdzać działania Twoich tafs."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ poderá aprovar as ações dos seus tafs."
+          }
+        }
+      }
+    },
     "settings.devices.pair_invalid": {
       "extractionState": "manual",
       "localizations": {
@@ -91808,6 +91914,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Associe apenas um computador que esteja a usar neste momento."
+          }
+        }
+      }
+    },
+    "settings.devices.pair_only_now_phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füge nur ein Telefon oder Tablet hinzu, das du gerade in der Hand hältst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only add a phone or tablet you're holding right now."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade solo un teléfono o tableta que tengas ahora en la mano."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "N'ajoutez qu'un téléphone ou une tablette que vous tenez en ce moment."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi solo un telefono o tablet che hai in mano in questo momento."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg alleen een telefoon of tablet toe die je nu in je hand hebt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodawaj tylko telefon lub tablet, który właśnie trzymasz w ręce."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicione apenas um telefone ou tablet que tenha na mão neste momento."
           }
         }
       }

@@ -60,7 +60,7 @@ struct PairComputerView: View {
             ForEach(Self.lines(request), id: \.self) { line in
                 Text(line).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             }
-            Text(Words.Settings.Devices.pairCheck(code: request.checkCode))
+            Text(Self.check(request))
                 .scaledFont(17, weight: .semibold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             Text(request.checkCode)
                 .scaledFont(34, weight: .bold, design: .monospaced, relativeTo: .largeTitle).tracking(4)
@@ -95,6 +95,11 @@ struct PairComputerView: View {
         }
     }
 
+    /// The question before the fingerprint: does the computer, or the new phone or tablet, show this code?
+    static func check(_ request: PairingRequest) -> String {
+        request.isPhone ? Words.Settings.Devices.pairCheckPhone(code: request.checkCode) : Words.Settings.Devices.pairCheck(code: request.checkCode)
+    }
+
     /// A code the phone won't pair, in the person's words.
     static func words(_ problem: PairingRequest.Problem) -> String {
         switch problem {
@@ -107,6 +112,10 @@ struct PairComputerView: View {
     /// What saying yes gives, by the computer's kind; a software-keyed one says it never approves alone;
     /// and only a computer in use now.
     static func lines(_ request: PairingRequest) -> [String] {
+        // A phone or tablet (§5.8): what it gets, whatever its biometric, and only one in hand now.
+        if request.isPhone {
+            return [Words.Settings.Devices.pairGivesPhone(device: request.name), Words.Settings.Devices.pairOnlyNowPhone]
+        }
         var lines: [String] = []
         switch request.kind {
         case "hello": lines.append(Words.Settings.Devices.pairGivesHello(device: request.name))

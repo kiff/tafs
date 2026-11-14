@@ -897,7 +897,8 @@ Tests: `TafsTests/YourStepTests.swift`.
 
 ## Pairing a computer
 
-Account → Devices → **Add a computer** pairs one of the person's computers from this phone
+Account → Devices → **Add a device** pairs one of the person's computers, or a new phone or tablet
+(§5.8, `isPhone`: `platform` `ios`, `ipados` or `android`), from this phone
 (KIFF's pairing contract §5; `KIFF/Pairing.swift`, `PairComputerView`,
 `AppModel.pairComputer`). The phone holds the approving half; the computer never pairs itself.
 
@@ -918,6 +919,11 @@ Account → Devices → **Add a computer** pairs one of the person's computers f
   A refusal is KIFF's `words`, or the app's own line for its code where KIFF sent none.
 - **Signing a device out:** the approval key signs `DELETE /v1/me/devices/{id}` too, since removing a
   device that holds an approval key or a passkey is an approval.
+- **A phone or tablet** takes `kind` `enclave` or `keystore` and always an approval key, with
+  `device_kind` sent on as it came; whether a kind matches its platform is KIFF's check
+  (`invalid_pairing`), as on Android. Its alert says what it gets whatever its biometric
+  (`pair_gives_phone`), to add only one in hand now, and asks whether the new phone or tablet shows
+  the code.
 - **Coach** can't start or confirm a pairing: both controls carry the confirm mark.
 - Its lines are tafs#1033's `settings.devices.pair*` keys, shared with Android.
 
