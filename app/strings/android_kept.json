@@ -29,7 +29,9 @@
     "another account or conversation": "a cancellation's reason, never shown",
     "hold off": "the sample's keywords, never shown",
     "carry on": "the sample's keywords, never shown",
-    "kiff.alerts-offered#": "a storage key on this phone, never shown"
+    "kiff.alerts-offered#": "a storage key on this phone, never shown",
+    "connections read: planque ${e.status}": "the diagnostics, never shown",
+    "connections read: ${e::class.simpleName}": "the diagnostics, never shown"
   },
   "design/AvatarDoorRim.kt": {
     "Door rim": "an animation's label, for tools",
