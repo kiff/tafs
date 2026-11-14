@@ -5709,10 +5709,12 @@ describe("the account's connections a Coach conversation starts with", () => {
     const said = (await w.agents.api.session("t_acme", first.session)).events.filter((e) => e.kind === "owner_message").map((e) => (e.body as { text: string }).text);
     expect(said.at(-1)).toBe("[tafs language] The person writing reads German (de), from their app: answer them in it, and write what they read in it (questions, cards, a version's note, a taf's summary). taf, Coach and Card stay as names. A message a taf sends a customer keeps the customer's language.\nThe owner says: und zweimal erinnern");
     expect(ownerWords(said.at(-1)!)).toBe("und zweimal erinnern");
-    // An English app adds nothing: what Coach reads is as before.
+    // An English app in an account whose language was German says English too: the chat and its notes are in German
+    // (14 Nov, an English app's plan came out in French). An account in English adds nothing for English (words.test).
     await sendIn("en-GB", { text: "and a third time", session: first.session });
     const after = (await w.agents.api.session("t_acme", first.session)).events.filter((e) => e.kind === "owner_message").map((e) => (e.body as { text: string }).text);
-    expect(after.at(-1)).toBe("and a third time");
+    expect(after.at(-1)).toContain("[tafs language] The person writing reads English (en)");
+    expect(ownerWords(after.at(-1)!)).toBe("and a third time");
     // The account's language, kept from the chat's start, is what a taf built after says of its owner.
     expect(await coach.get("t_acme#lang")).toBe("de");
     // Kept a quarter from when it was seen, as the company name is: then it's English until a Coach chat says again.
