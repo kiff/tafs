@@ -181,7 +181,8 @@ the app in sample mode.
   - **the app's screens as items:** Needs you (with its count), Record, Calendar, Usage (Plan &
     usage) and Connect apps, then the held calls;
   - **only the tafs relevant now** (`AppModel.relevantNow`): one with an item in Needs you (a held
-    call, a step it handed over, a knock at its door), or a run in the last 24 hours (`last_run`), and
+    call, a step it handed over, a knock at its door), or a run or a change in the last 24 hours
+    (`last_run`, `last_change`), and
     those being set up. The rest are in the list behind the mascot;
   - **at its foot, always in sight:** Coach, then the account button, which says who is signed in
     and opens Account beside the sidebar.

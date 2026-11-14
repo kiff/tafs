@@ -48,6 +48,18 @@ final class HomeSidebarTests: XCTestCase {
         XCTAssertFalse(AppModel.relevantNow(held: false, step: false, knock: false, lastRun: now.addingTimeInterval(-25 * 3600), now: now),
                        "a run two days ago: in the list, not beside it")
         XCTAssertFalse(AppModel.relevantNow(held: false, step: false, knock: false, lastRun: nil, now: now), "never ran, nothing waiting")
+        XCTAssertTrue(AppModel.relevantNow(held: false, step: false, knock: false, lastRun: nil, lastChange: now.addingTimeInterval(-3600), now: now),
+                      "changed an hour ago (tafs cloud's last_change)")
+        XCTAssertFalse(AppModel.relevantNow(held: false, step: false, knock: false, lastRun: nil, lastChange: now.addingTimeInterval(-30 * 3600), now: now))
+        // last_change is read leniently: an ISO time with or without fractions; anything else is none.
+        XCTAssertNotNil(TafsCloud.HomeTaf.time("2026-11-14T02:44:11Z"))
+        XCTAssertNotNil(TafsCloud.HomeTaf.time("2026-11-14T02:44:11.123Z"))
+        XCTAssertNil(TafsCloud.HomeTaf.time("yesterday"))
+        let home = { (lastChange: String) throws -> TafsCloud.Home in
+            try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(#"{"tafs":[{"id":"t1","name":"Rae","job":"j","kiff_agent":"rae","status":"active","next_run":null,"last_run":null,"color":0,"state":"idle","waiting":0,"card":{"ids":[],"active":true,"expires":null,"tools":[],"rules":[],"used":{},"usage_unknown":[]},"last_change":\#(lastChange)}],"others":[],"removing":[]}"#.utf8))
+        }
+        XCTAssertNotNil(try home(#""2026-11-14T02:44:11Z""#).tafs.first?.cloudTaf?.lastChange)
+        XCTAssertNil(try home("7").tafs.first?.cloudTaf?.lastChange, "another shape: none, and Home still reads")
     }
 
     /// The mascot and "tafs" opens the tafs list, which opens first; there's no Overview item beside it.
