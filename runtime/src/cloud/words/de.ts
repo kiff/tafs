@@ -33,6 +33,7 @@ export const de: Words = {
   coach_waiting_named_approval: (title: string, day: string) => `${title}: Coach wartet seit ${day} auf deine Genehmigung.`,
   coach_waiting_named_answer: (title: string, day: string) => `${title}: Coach wartet seit ${day} auf deine Antwort.`,
   coach_waiting_set_aside: "Beiseitelegen",
+  coach_waiting_set_aside_done: (n, form) => (form === "one" ? "Beiseitegelegt. Du findest es unter „Frühere Gespräche“." : `${n} Gespräche beiseitegelegt. Du findest sie unter „Frühere Gespräche“.`),
   coach_waiting_clear: "Alle beiseitelegen",
   coach_waiting_clear_title: (n: number) => `${n} wartende Coach-Chats beenden?`,
   coach_waiting_clear_text: "Nichts wird genehmigt oder gesendet. Jeder Chat endet, und eine Verbindung, die er angefragt hat und die kein taf nutzt, wird zurückgezogen.",

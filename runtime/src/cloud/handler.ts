@@ -100,7 +100,7 @@ import { RECIPES } from "../recipes.js";
  *   POST /v1/tafs/{id}/chats/{session}/archive  hide a chat from the list and the thread (kiff/tafs#82)
  *   GET  /v1/tafs/{id}/chats/archived   the chats the owner archived, to find and reopen one (kiff/tafs#97)
  *   POST /v1/tafs/{id}/chats/{session}/unarchive  put one back in the list (kiff/tafs#97)
- *   POST /v1/tafs/{id}/messages         {text, attachments?, session?, new_chat?}: into the live chat, a chosen one, or a new one
+ *   POST /v1/tafs/{id}/messages         {text, attachments?, session?, new_chat?, new_chat_after_handover?}: into the live chat, a chosen one, or a new one (a Coach chat that handed a taf over, a new one)
  *   POST /v1/tafs/{id}/messages/stream  the same, its answer streamed (handleStream)
  *   GET  /v1/tafs/{id}/runs/{run}/stream?after=N  the person's own run picked back up (handleStream)
  *   POST /v1/tafs/{id}/stop             {session}: its latest run is cancelled
@@ -5499,13 +5499,40 @@ function ownerKey(me: KIFFIdentity): string {
  * for it (new_chat), the one they reopened (session, one of their chats with
  * this taf), else their live one, which kiff/agents picks. kiff/agents keeps
  * each person's flood guard too: past it, the message is 429.
+ *
+ * A Coach chat that already handed a taf over is finished: a message to it starts a new chat, so a new job never goes on
+ * under the last one's plan ("Done · 4 of 4") or its name in Needs you. Only for an app that says it follows the new
+ * chat (`new_chat_after_handover: true`); the run's `session` event names it (`new_session: true`).
  */
 async function chatAt(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<RunAt> {
   const body = parseBody(event);
   if (body.new_chat === true) return granted(event, taf.kiffAgent, { requester: member(me) }, deps);
   const chosen = str(body.session).trim();
-  if (chosen) return granted(event, taf.kiffAgent, { session: (await ownChat(me, taf, chosen, deps)).id, requester: member(me) }, deps);
+  if (chosen) {
+    const own = await ownChat(me, taf, chosen, deps);
+    if (taf.job === SETUP_JOB && body.new_chat_after_handover === true && await handedOverIn(me, own.id, deps)) {
+      console.log(JSON.stringify({ event: "coach_new_chat_after_handover", tenant: me.tenantID }));
+      return granted(event, taf.kiffAgent, { requester: member(me) }, deps);
+    }
+    return granted(event, taf.kiffAgent, { session: own.id, requester: member(me) }, deps);
+  }
   return granted(event, taf.kiffAgent, { requester: member(me), live: true }, deps);
+}
+
+/** Whether a Coach chat handed a taf over: a result card tafs cloud answered with the taf it made. A read that fails says no. */
+async function handedOverIn(me: KIFFIdentity, session: string, deps: Deps): Promise<boolean> {
+  const read = await deps.agents.session(me.tenantID, session, ownerKey(me)).catch(() => undefined);
+  return handedOver(read?.events ?? []);
+}
+
+/** A chat's events show a hand-over: an answered result card whose answer names the taf made. */
+export function handedOver(events: Array<{ kind: string; body?: unknown }>): boolean {
+  return events.some((e) => {
+    if (e.kind !== "answered") return false;
+    const b = (e.body ?? {}) as { type?: unknown; answer?: unknown };
+    const a = b.answer as { taf_id?: unknown } | null | undefined;
+    return b.type === "result" && !!a && typeof a === "object" && typeof a.taf_id === "string" && a.taf_id !== "";
+  });
 }
 
 /**
@@ -6934,7 +6961,7 @@ async function setAsideCoach(event: HTTPEvent, me: KIFFIdentity, session: string
   if (session !== undefined && !runs.length) {
     // The same chat set aside again (a phone resends a POST on a dropped connection): done, marked already.
     const done = (await deps.coach?.get(setAsideKey(me.tenantID, session)).catch(() => undefined)) as { by?: string } | undefined;
-    if (done?.by === me.subject) return { set_aside: [session], already: true };
+    if (done?.by === me.subject) return { set_aside: [session], already: true, words: setAsideWords(1, langOf(event)) };
     throw new HTTPError(404, "no Coach chat of yours waits by that id");
   }
   // The connections its cards asked for, by the agent each was asked for: read with the person's signed read, when sent.
@@ -6961,7 +6988,12 @@ async function setAsideCoach(event: HTTPEvent, me: KIFFIdentity, session: string
   }
   console.log(JSON.stringify({ event: "coach_set_aside", tenant: me.tenantID, chats: ended.length, withdrawn, read: Boolean(grants) }));
   if (ended.length && coach) await tellChange(me.tenantID, "taf", coach.id, deps);
-  return { set_aside: ended, withdrawn };
+  return { set_aside: ended, withdrawn, ...(ended.length ? { words: setAsideWords(ended.length, langOf(event)) } : {}) };
+}
+
+/** What the apps say once chats are set aside: where to find them again ("Set aside. You'll find it in Previous conversations."). */
+function setAsideWords(n: number, lang: Lang): { done: string } {
+  return { done: wordsIn(lang).coach_waiting_set_aside_done(n, plural(lang, n)) };
 }
 
 /** A Coach chat set aside, by its session and who did it, so the same set aside sent again answers done. */

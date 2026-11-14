@@ -33,6 +33,7 @@ export const es: Words = {
   coach_waiting_named_approval: (title: string, day: string) => `${title}: Coach espera tu aprobación desde el ${day}.`,
   coach_waiting_named_answer: (title: string, day: string) => `${title}: Coach espera tu respuesta desde el ${day}.`,
   coach_waiting_set_aside: "Dejar de lado",
+  coach_waiting_set_aside_done: (n, form) => (form === "one" ? "Dejado de lado. Lo encontrarás en «Conversaciones anteriores»." : `${n} chats dejados de lado. Los encontrarás en «Conversaciones anteriores».`),
   coach_waiting_clear: "Dejar todo de lado",
   coach_waiting_clear_title: (n: number) => `¿Terminar ${n} chats de Coach en espera?`,
   coach_waiting_clear_text: "No se aprueba ni se envía nada. Cada chat termina, y se retira una conexión que pidió y que ningún taf usa.",

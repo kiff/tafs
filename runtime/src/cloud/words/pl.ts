@@ -33,6 +33,7 @@ export const pl: Words = {
   coach_waiting_named_approval: (title: string, day: string) => `${title}: Coach czeka na Twoją zgodę od ${day}.`,
   coach_waiting_named_answer: (title: string, day: string) => `${title}: Coach czeka na Twoją odpowiedź od ${day}.`,
   coach_waiting_set_aside: "Odłóż",
+  coach_waiting_set_aside_done: (n, form) => (form === "one" ? "Odłożono. Znajdziesz ją w „Poprzednie rozmowy”." : form === "few" ? `Odłożono ${n} rozmowy. Znajdziesz je w „Poprzednie rozmowy”.` : `Odłożono ${n} rozmów. Znajdziesz je w „Poprzednie rozmowy”.`),
   coach_waiting_clear: "Odłóż wszystkie",
   coach_waiting_clear_title: (n: number) => `Zakończyć oczekujące czaty z Coachem (${n})?`,
   coach_waiting_clear_text: "Nic nie zostaje zatwierdzone ani wysłane. Każdy czat się kończy, a połączenie, o które prosił i którego nie używa żaden taf, zostaje wycofane.",
