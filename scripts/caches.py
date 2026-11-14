@@ -39,6 +39,8 @@ def family(key):
 def decide(caches, open_prs):
     """The caches to delete, each with why, from the repository's caches and its open pull
     requests' numbers. Caches are dicts as the API gives them: id, key, ref, created_at."""
+    # A cache listed twice (the API's pages can overlap) counts once.
+    caches = list({c["id"]: c for c in caches}.values())
     gone, newest = [], {}
     for c in caches:
         m = PULL.match(c.get("ref", ""))
@@ -65,6 +67,13 @@ def gb(n):
 def gh(*args):
     out = subprocess.run(["gh", "api", *args], check=True, capture_output=True, text=True).stdout
     return json.loads(out) if out.strip() else None
+
+
+def delete(repo, cache_id):
+    """Deletes a cache; one already gone (404) is done, not a failure."""
+    r = subprocess.run(["gh", "api", "-X", "DELETE", f"repos/{repo}/actions/caches/{cache_id}"], capture_output=True, text=True)
+    if r.returncode != 0 and "404" not in r.stderr + r.stdout:
+        raise subprocess.CalledProcessError(r.returncode, r.args, r.stdout, r.stderr)
 
 
 def all_caches(repo):
@@ -104,7 +113,7 @@ def main(argv):
     for c, why in sorted(gone, key=lambda g: (family(g[0]["key"]), g[0]["created_at"])):
         print(f"{'Would delete' if args.dry_run else 'Delete'} {c['key']} on {c['ref']} ({gb(c['size_in_bytes'])}): {why}.")
         if not args.dry_run:
-            gh("-X", "DELETE", f"repos/{repo}/actions/caches/{c['id']}")
+            delete(repo, c["id"])
     print(f"{len(gone)} caches, {gb(freed)}, {'would go' if args.dry_run else 'deleted'}.")
     if not args.dry_run:
         count, size = usage(repo)
