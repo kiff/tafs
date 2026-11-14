@@ -61,7 +61,7 @@ final class ConnectionRowsTests: XCTestCase {
         XCTAssertEqual(file.components(separatedBy: "ForEach(groups.others) { g in entry(g) }").count - 1, 1)
         let entry = String(file[try XCTUnwrap(file.range(of: "@ViewBuilder private func entry(")).upperBound...].prefix(1400))
         XCTAssertTrue(entry.contains("if g.rowFromPlanque {"))
-        XCTAssertTrue(entry.contains("NavigationLink { ConnectionDetailView(grantID: g.id, appTitle: app.title)"))
+        XCTAssertTrue(entry.contains("NavigationLink { ConnectionDetailView(grantID: g.id, appTitle: app.displayName)"))
         let planqueRow = String(entry[..<(try XCTUnwrap(entry.range(of: "} else {")).lowerBound)])
         XCTAssertFalse(planqueRow.contains("Button("), "no action beside the row: they're in its detail")
         let detail = String(file[try XCTUnwrap(file.range(of: "struct ConnectionDetailView: View {")).upperBound...])
