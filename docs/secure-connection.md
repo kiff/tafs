@@ -12,9 +12,9 @@ sheet**) or from Connect apps:
 1. **The title:** the app's logo and name, with a lock: "Secure connection to Qonto".
 2. **Three plain lines**, worked out from the grant by tafs cloud:
    - **what it may do:** "Read only: it can't pay, send or change anything in Qonto" when
-     every one of the grant's tools is a read. Otherwise "It can change things in Qonto. Its
-     Card decides each action". The phone never works this out;
-   - **the key:** "Your key is sealed: it's never shown again, and the taf never sees it";
+     every one of the grant's tools is a read. Otherwise "It can change things in Qonto, as its
+     Card allows". The phone never works this out;
+   - **the key:** "Your key is never shown again, and no taf sees it";
    - **leaving:** "You can disconnect it any time, in Connect apps".
 3. **Paste the key**, a button, never a typing field. Once pasted, the sheet shows only the
    key's last 4 characters ("Key …ab12"), and the clipboard is cleared ("Clipboard cleared").
@@ -48,7 +48,7 @@ entry it came from, and answers in the request's `Accept-Language`:
   "title": "Secure connection to Qonto",
   "lines": [
     { "kind": "reads_only", "text": "Read only: it can't pay, send or change anything in Qonto" },
-    { "kind": "sealed", "text": "Your key is sealed: it's never shown again, and the taf never sees it" },
+    { "kind": "sealed", "text": "Your key is never shown again, and no taf sees it" },
     { "kind": "disconnect", "text": "You can disconnect it any time, in Connect apps" } ],
   "paste": { "button": "Paste the key", "what": "Copy it in Qonto, then paste it here",
              "pasted": "Key …{last4}", "cleared": "Clipboard cleared" },

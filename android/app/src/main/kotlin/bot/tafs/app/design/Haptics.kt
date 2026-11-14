@@ -1,5 +1,7 @@
 package bot.tafs.app.design
 
+import androidx.compose.foundation.clickable
+
 import android.content.Context
 import android.os.Build
 import android.os.VibrationAttributes
@@ -95,3 +97,12 @@ object Haptics {
     }
   }
 }
+
+/** A tappable that plays the touch effect, as the app's buttons do (`Haptics.tap`). */
+fun androidx.compose.ui.Modifier.tapping(
+  enabled: Boolean = true,
+  onClickLabel: String? = null,
+  role: androidx.compose.ui.semantics.Role? = null,
+  onClick: () -> Unit,
+): androidx.compose.ui.Modifier =
+  this.then(androidx.compose.ui.Modifier.clickable(enabled = enabled, onClickLabel = onClickLabel, role = role) { Haptics.tap(); onClick() })

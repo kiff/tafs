@@ -86,6 +86,13 @@ struct RootView: View {
 
     private static let tabs: [Tab] = [.account, .tafs, .needsYou, .record]
 
+    /// Whether a keyboard notification is about this app's keyboard. Another's (a system alert's
+    /// password field, an app beside this one) comes with `keyboardIsLocalUserInfoKey` false; a
+    /// notification that doesn't say is this app's.
+    static func ownKeyboard(_ note: Notification) -> Bool {
+        note.userInfo?[UIResponder.keyboardIsLocalUserInfoKey] as? Bool ?? true
+    }
+
     @ViewBuilder private func tabContent(_ t: Tab) -> some View {
         switch t {
         // A sidebar beside the open taf on a wide screen (kiff/tafs#85).
@@ -159,8 +166,11 @@ struct RootView: View {
         // The keyboard's shortcuts on every screen (kiff/tafs#210).
         // Off while Coach drives the app: a key the person presses then isn't a shortcut.
         .background { if model.signedIn && !drive.isOn { GlobalKeyCommands(tab: $tab, coachAvailable: coachAvailable) } }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
+        // Only this app's own keyboard: the system's "Sign in to Apple Account" alert, or another
+        // app beside this one on an iPad, raises its own, and iOS tells this app too. The bar
+        // stayed hidden under that alert, with nothing of this app's to type in.
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { if Self.ownKeyboard($0) { keyboardUp = true } }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { if Self.ownKeyboard($0) { keyboardUp = false } }
         // Both sizes keep the underlying taf and tab mounted while Coach opens.
         .overlay {
             if coachAvailable {

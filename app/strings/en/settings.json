@@ -50,6 +50,7 @@
   "settings.kiff_account": "KIFF account",
   "settings.language_title": "Language",
   "settings.legal": "Legal",
+  "settings.legal_in_english": "{label} (in English)",
   "settings.light_taps_when_you_send": "The light taps when you send or answer.",
   "settings.mode": "Mode",
   "settings.mode_kiff": "Signed in with KIFF",

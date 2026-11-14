@@ -301,6 +301,8 @@ export function approvalWords(lang: Lang = "en") {
     signInClosed: w.approval_sign_in_closed,
     noCode: w.approval_no_code,
     // What came back, in the owner's words, never planque's status: already signed in (its actions come next), or nothing opened.
+    // A connection that takes no approval now, in the owner's words, never planque's status: signed in already, or past approving.
+    notApprovable: (vendor: string, status: string) => (status === "listed" || status === "signed_in" ? w.approval_listed_already(vendor) : w.approval_not_approvable(vendor)),
     cameBack: (vendor: string, status: string) => (status === "signed_in" || status === "listed" ? w.approval_came_back_signed_in(vendor) : w.approval_came_back(vendor)),
     confirmFirst: w.approval_confirm_first,
     notConnected: (vendor: string) => w.approval_not_connected(vendor),
@@ -494,6 +496,18 @@ export function stepFor(grant: ApprovalGrant, ask: { draft?: string; can?: strin
 }
 
 /**
+ * Whether Approve on the card is a tap inside an open approval window or always the fingerprint, from the key `decide`
+ * then asks with: connecting an app takes the window; the key or added tools signed with their Card take the approval
+ * key; a Card alone takes the key KIFF names for its draft (`confirm_key`), the fingerprint until it names one. Undefined
+ * when a Card's key isn't known (KIFF's draft wasn't read): the apps then say nothing of the window on that card.
+ */
+export function takesOf(step: SignStep, confirmKey?: "window" | "critical" | null): "tap" | "fingerprint" | undefined {
+  if (step === "connect") return "tap";
+  if (step === "cards") return confirmKey === undefined ? undefined : confirmKey === "window" ? "tap" : "fingerprint";
+  return "fingerprint";
+}
+
+/**
  * What an approval card's fingerprint will sign, for the apps to draw before Approve: the Card, or the connection alone.
  * The connection alone says the Card comes next (`words`) when the card carries the Card's draft, or when it's an app's
  * first connection, before its tools: a Card always follows that one (its draft can only be made over the tools the
@@ -546,8 +560,9 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   // Approve again answers what holds, as the report would have: approved, never failed.
   if (grant.status === "listed" && !ask.draft) return { outcome: "answered", answer: `already approved: ${vendor} is signed in; its tools wait for approval`, note: W.alreadyApproved };
   if (!APPROVABLE.has(grant.status)) {
+    // Coach hears planque's status and reason, to act on; the person reads plain words (14 Nov: "This connection is listed.").
     const why = `This connection is ${grant.status.replace(/_/g, " ")}${grant.reason ? `: ${grant.reason}` : "."}`;
-    return { outcome: "answered", answer: `failed: ${why}`, note: why };
+    return { outcome: "answered", answer: `failed: ${why}`, note: W.notApprovable(vendor, grant.status) };
   }
   // The digest planque signs is the request's: the phone shows Approve only when it matches, and so does tafs cloud.
   let digest = "";

@@ -1,10 +1,10 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -144,7 +144,7 @@ internal fun RecordHitRow(hit: RecordHit, state: AppState, actions: TafActions?,
       Text(
         "$about ›",
         style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { onCase(about) }.padding(vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping { onCase(about) }.padding(vertical = 10.dp),
       )
     }
   }
@@ -193,7 +193,7 @@ internal fun ExportReceiptsRow(onExport: suspend (String, String) -> ReceiptsRes
     Text(
       if (preparing) Words.Record.exportPreparing else Words.Record.exportReceipts,
       style = scaled(15, FontWeight.SemiBold, if (preparing) Theme.dim else Theme.amberText),
-      modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(enabled = !preparing) { open = !open }.padding(vertical = 10.dp),
+      modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(enabled = !preparing) { open = !open }.padding(vertical = 10.dp),
     )
     if (open && !preparing) {
       FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

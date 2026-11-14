@@ -58,6 +58,17 @@ class DevicesTest {
     assertEquals("read again after", reads + 1, transport.requestsTo("GET /v1/me/devices").size)
   }
 
+  @Test fun eachDeviceIsCalledWhatKiffNamesItInTheAppsLanguage() = runTest {
+    // KIFF's display_name, drawn from the device's kind in the app's language; the name it gave at sign-in (in whatever
+    // language the app had then) only from a KIFF that sends none.
+    transport.answer("GET /v1/me/devices", 200, """{"devices":[
+      {"id":"dev_1","name":"tafs en iPad","display_name":"tafs on iPad","this_device":true},
+      {"id":"dev_2","name":"Ana's iPhone"}]}""")
+    val m = model()
+    m.refreshDevices()
+    assertEquals(listOf("tafs on iPad", "Ana's iPhone"), m.state.value.devices.map { it.shown })
+  }
+
   @Test fun thisDeviceIsNeverSignedOutFromTheList() = runTest {
     transport.answer("GET /v1/me/devices", 200, devices)
     val m = model()

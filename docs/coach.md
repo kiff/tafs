@@ -32,9 +32,13 @@ account admin (`AppModel.mayUseCoach`).
 On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
 (`CoachScreen`). It has what's below, with these differences:
 - **A compact header,** one row: back, Coach, and a menu with **New conversation** and
-  **Previous conversations** (`CoachHeader`). New conversation is never greyed out: on a
-  conversation with nothing in it yet, it keeps that one and shows its top; otherwise it opens a
-  new one (iOS's New conversation button does the same: `coachChatIsEmpty`). Under it, the plan in tafs cloud's one line
+  **Previous conversations** (`CoachHeader`). New conversation is never greyed out: on a plain
+  conversation with nothing in it yet, it keeps that one and shows its top; otherwise, an empty one
+  about a taf ("Improve Refunds") included, it opens a plain new one (Android `CoachWords.newChatStays`,
+  1.27.6; iOS's New conversation button keeps an empty one, `coachChatIsEmpty`, and follows). A message to a chat that
+  already handed a taf over goes to a new chat tafs cloud starts (`new_chat_after_handover`, [api.md](api.md)): Android
+  sends the flag and shows that chat from then on, with the message on its way (`AppModel.coachSession`, 1.27.7); iOS
+  follows. Under it, the plan in tafs cloud's one line
   (`line`, [The plan in one line](#the-plan-in-one-line)); tapped, it opens to the steps. The
   plan line folds away while the thread scrolls down and comes back on the way up, so a card
   has the screen. The phone never counts the plan's steps.
@@ -219,8 +223,9 @@ then shows its plan. Then, each step behind the owner's yes:
    unapproved 15 minutes after the run paused on it, nothing is asking for that Card, so the result is answered in plain words (`{failed: "The
    Card for <taf> was never approved, so <taf> isn't set up yet: approve its Card to finish"}`), and Coach
    asks for the Card. The app starts nothing itself
-   (Android: `CoachWords.handOver`, `HandOverCard`; it reads the list again once for a taf
-   set up that isn't listed yet). The iPhone app does the same.
+   (Android: `CoachWords.handOver`, `HandOverCard`; for a taf set up that isn't listed yet it reads the list
+   again, and, while Home doesn't list it, up to 3 more times 3 seconds apart (`AppModel.SET_UP_READS`), so the
+   card never stays on "Setting up…" until a pull, Android 1.27.6). The iPhone app reads the list again once.
    A taf's next version is still made by the app, from an improvement's result.
 
 A taf whose tools can't find its work by themselves is made **unscheduled**: it works
@@ -375,7 +380,9 @@ A connection can carry a **profile**: KIFF's facts about how each of its tools i
 what its outcomes mean. planque puts it in the grant's `request.profile`, so the grant's digest
 the phone already checks covers it. Before the owner approves:
 - the phone asks KIFF for its words with its own session (`POST /v1/profiles/words`, never
-  through tafs cloud or planque);
+  through tafs cloud or planque). Android asks for `kiff.words.v2` (`?v=2`, Android 1.27.7): v1's lines without KIFF's
+  bookkeeping (no "isn't pinned to a version", and the lost-answer line only where money moves). It takes v1 or v2 and
+  signs whichever KIFF sent; iOS follows;
 - it checks that the profile's SHA-256 (JCS) is KIFF's `profile_sha256` and the words' is
   `words_sha256`;
 - the approval card shows each line verbatim, in KIFF's order. What KIFF can't check,

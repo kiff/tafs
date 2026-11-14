@@ -1,11 +1,11 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -378,7 +378,7 @@ fun VersionCardSheet(
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(Words.Card.itsCard, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
         // Not now: the switch it began is dropped, and the taf runs as it was.
-        Text(Words.Common.cancel, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onCancel).padding(top = 8.dp))
+        Text(Words.Common.cancel, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onCancel).padding(top = 8.dp))
       }
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -405,9 +405,43 @@ fun VersionCardSheet(
 @Composable
 fun DraftCardsView(draft: AgentDraft) {
   Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-    val lines = draft.cardLines
-    draft.cards.orEmpty().forEachIndexed { i, card -> CardView(card, lines[i]) }
+    draftCardsShown(draft).forEach { shown ->
+      when (shown) {
+        is DraftCardShown.New -> NewCards(shown.lines)
+        is DraftCardShown.One -> CardView(shown.card, shown.lines)
+      }
+    }
     draft.retires.orEmpty().forEach { Retired(it) }
+  }
+}
+
+/** How a draft's Cards show: its new Cards as one, "A new Card" (KIFF's draft has one per tool); a changed or unchanged Card alone. */
+internal sealed interface DraftCardShown {
+  /** Every new Card's lines, each once, in the draft's order. */
+  data class New(val lines: List<String>) : DraftCardShown
+  data class One(val card: DraftCard, val lines: List<String>) : DraftCardShown
+}
+
+/** The new Cards go together where the first of them is; the others keep their place. */
+internal fun draftCardsShown(draft: AgentDraft): List<DraftCardShown> {
+  val cards = draft.cards.orEmpty()
+  val lines = draft.cardLines
+  val fresh = cards.indices.filter { cards[it].current == null }
+  return cards.indices.mapNotNull { i ->
+    when {
+      i !in fresh -> DraftCardShown.One(cards[i], lines.getOrElse(i) { emptyList() })
+      i == fresh.first() -> DraftCardShown.New(fresh.flatMap { lines.getOrElse(it) { emptyList() } }.distinct())
+      else -> null
+    }
+  }
+}
+
+/** A version's new Cards, as one: what they allow, together. */
+@Composable
+private fun NewCards(lines: List<String>) {
+  Panel {
+    Eyebrow(Words.Version.newCard)
+    lines.forEach { Text(it, style = scaled(14, FontWeight.SemiBold, Theme.ink)) }
   }
 }
 
@@ -455,7 +489,7 @@ private fun VersionsFrame(title: String, onClose: () -> Unit, content: @Composab
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
       }
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -468,7 +502,7 @@ private fun VersionsFrame(title: String, onClose: () -> Unit, content: @Composab
 /** The row on a taf's page that opens its versions. */
 @Composable
 fun VersionsRow(onClick: () -> Unit, title: String = Words.Version.changesRow, summary: String? = null) {
-  Panel(Modifier.clickable(onClick = onClick)) {
+  Panel(Modifier.tapping(onClick = onClick)) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       Column(Modifier.weight(1f)) { Text(title, style = scaled(15, FontWeight.SemiBold, Theme.amberText)); summary?.let { Text(it, style = scaled(13, color = Theme.soft)) } }
       Text("›", style = scaled(20, color = Theme.dim))

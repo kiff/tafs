@@ -1,8 +1,8 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -99,7 +99,7 @@ fun RequestSheet(
         Text(
           RequestWords.ASK_COACH,
           style = scaled(15, FontWeight.SemiBold, Theme.amber),
-          modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = it).padding(top = 10.dp),
+          modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = it).padding(top = 10.dp),
         )
       }
     }

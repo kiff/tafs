@@ -685,7 +685,6 @@
     <string name="coach_drive_cant">Coach nie może sterować: %1$s</string>
     <string name="coach_drive_not_started_unconfirmed">Nie rozpoczęto: nie zostało potwierdzone.</string>
     <string name="coach_driving">Steruje</string>
-    <string name="coach_each_waits">Każde połączenie i każda Card czekają na %1$s.</string>
     <string name="coach_earlier_request">Wcześniejsza prośba</string>
     <string name="coach_folds_plan">Zwija plan</string>
     <string name="coach_full_screen">Pełny ekran</string>
@@ -694,7 +693,7 @@
     <string name="coach_improve_why_refused">Dlaczego coś zostało odrzucone lub jest oczekujące?</string>
     <string name="coach_improve_line">Powiedz, co powinno się zmienić, albo zapytaj, jak idzie. Tryb Coach zaczyna od tego, co zrobił %1$s i na co pozwala jego Card.</string>
     <string name="coach_improve_taf">Ulepsz %1$s</string>
-    <string name="coach_intro">Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Żaden taf nie widzi Twojego logowania.</string>
+    <string name="coach_intro">Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności.</string>
     <string name="coach_kiff_counts_way">KIFF liczy to w ten sposób</string>
     <string name="coach_making_live">Uruchamianie na żywo…</string>
     <string name="coach_name_tool_taf_should_work">Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Żaden taf nie widzi Twojego logowania. Zatwierdzasz przez %1$s.</string>
@@ -761,8 +760,11 @@
     <string name="coach_sign_in_at_vendor">Zaloguj się u dostawcy</string>
     <string name="coach_sign_in_eyebrow">Czeka na Ciebie · zaloguj się</string>
     <string name="coach_sign_in_open">Otwórz %1$s</string>
+    <string name="coach_sign_in_open_again">Otwórz ponownie logowanie</string>
+    <string name="coach_sign_in_open_again_app">Otwórz ponownie logowanie do %1$s</string>
     <string name="coach_sign_in_open_sign_in">Otwórz logowanie</string>
     <string name="coach_sign_in_opens">Otwiera %1$s</string>
+    <string name="coach_sign_in_opens_app">Otwiera logowanie do %1$s</string>
     <string name="coach_sign_in_note">Otworzy się strona samego dostawcy. Żaden taf nie widzi Twojego logowania.</string>
     <string name="coach_signed_reading_what_offers">Zalogowano w %1$s · odczytywanie, co oferuje</string>
     <string name="coach_start">Start</string>
@@ -781,6 +783,7 @@
     <string name="coach_tools_not_read">Nie udało się odczytać narzędzi Coacha. %1$s</string>
     <string name="coach_tools_unknown">KIFF nie odpowiedział w sprawie narzędzi Coacha. Spróbuj ponownie za chwilę.</string>
     <string name="coach_unknown_answer">Konfiguracja odpowiedziała czymś, czego ta aplikacja nie odczytuje. Zaktualizuj aplikację.</string>
+    <string name="coach_waiting_for_app">Jeśli otworzyła się strona logowania do %1$s, dokończ tam i wróć.</string>
     <string name="coach_waiting_for_vendor">Jeśli otworzyła się strona logowania dostawcy, dokończ tam i wróć.</string>
     <string name="coach_what_conversation_about">O czym jest ta rozmowa</string>
     <string name="coach_will_work_like">" będzie działać tak"</string>
@@ -1227,11 +1230,10 @@
     <string name="halt_again">Zablokuj ponownie</string>
     <string name="halt_all_now">Zablokuj wszystko teraz</string>
     <string name="halt_explain_halted">Zablokowane. Wznowienie uruchamia tylko nową pracę.</string>
-    <string name="halt_explain_halted_since">Zablokowane od %1$s. Wznowienie uruchamia tylko nową pracę.</string>
+    <string name="halt_explain_halted_since">Od %1$s. Wznowienie uruchamia tylko nową pracę.</string>
     <string name="halt_explain_halting">Nic nowego się nie zaczyna. Zablokowane pojawi się, gdy potwierdzą to KIFF i połączenie.</string>
     <string name="halt_explain_running_all">Blokada zatrzymuje Twoje tafs, dopóki ich nie wznowisz. Wysłane już wywołanie może jeszcze dotrzeć.</string>
     <string name="halt_explain_running_one">Blokada go zatrzymuje, dopóki go nie wznowisz. Wysłane już wywołanie może jeszcze dotrzeć.</string>
-    <string name="halt_halted_nothing_reaches_your_tools">Zablokowane%1$s. Wznowienie uruchamia tylko nową pracę.</string>
     <string name="halt_halting_stops_no_run_starts">Blokada zatrzymuje: %1$s, do wznowienia. Wysłane już wywołanie może jeszcze dotrzeć.</string>
     <string name="halt_now">Zablokuj teraz</string>
     <string name="halt_row_running">Zatrzymaj, dopóki nie wznowisz</string>
@@ -1289,7 +1291,6 @@
     <string name="home_sample_label">Co zgłosił po przebiegu testowym</string>
     <string name="home_see_all_jobs">Zobacz wszystkie zadania</string>
     <string name="home_shared_you">Udostępnione Tobie</string>
-    <string name="home_sign_approve_each_step">Logujesz się i zatwierdzasz każdy krok</string>
     <string name="home_start_new_taf">Utwórz nowego tafa</string>
     <string name="home_status">Stan</string>
     <string name="home_status_retrying">%1$s · ponowna próba</string>
@@ -1916,6 +1917,7 @@
     <string name="settings_kiff_account">Konto KIFF</string>
     <string name="settings_language_title">Język</string>
     <string name="settings_legal">Informacje prawne</string>
+    <string name="settings_legal_in_english">%1$s (po angielsku)</string>
     <string name="settings_light_taps_when_you_send">Lekkie stuknięcie, gdy wysyłasz lub odpowiadasz.</string>
     <string name="settings_mode">Tryb</string>
     <string name="settings_mode_kiff">Zalogowano przez KIFF</string>

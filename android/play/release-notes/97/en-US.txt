@@ -1,0 +1,1 @@
+- An approval card no longer says "no fingerprint" when its Approve takes one.

@@ -1,0 +1,1 @@
+- **Already signed in, and how to add another account.** The approval note for a connection that's already signed in now ends with the way forward: "To use another Gmail account, ask Coach to connect it.", with the app's own name, in the 8 languages. Spanish and Portuguese no longer say there's "nothing to start" here; they say no sign-in is needed.

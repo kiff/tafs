@@ -216,8 +216,8 @@ private struct SoloContent: View {
                     Text(SoloView.terms(product)).scaledFont(13).foregroundColor(Theme.dim)
                         .fixedSize(horizontal: false, vertical: true)
                     HStack(spacing: 16) {
-                        Link(Words.Billing.termsUse, destination: Legal.terms)
-                        Link(Words.Settings.privacyPolicy, destination: Legal.privacy)
+                        Link(Legal.label(Words.Billing.termsUse), destination: Legal.terms)
+                        Link(Legal.label(Words.Settings.privacyPolicy), destination: Legal.privacy)
                     }
                     .scaledFont(13)
                     .foregroundColor(Theme.soft)

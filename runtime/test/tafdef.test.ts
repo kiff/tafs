@@ -196,5 +196,7 @@ describe("a section of the kiff skill", () => {
     expect(CALL_INSTRUCTIONS).toContain("Never split it into smaller calls to stay under a\n  limit");
     expect(CALL_INSTRUCTIONS).toContain("put who it's for in a field the customer doesn't see");
     expect(CALL_INSTRUCTIONS).toContain("never an internal id or why");
+    expect(CALL_INSTRUCTIONS).toContain('A held call isn\'t done: it "waits for your approval", never "submitted",\n  "sent" or "done"');
+    expect(CALL_INSTRUCTIONS).toContain("Name a date or a day only when you\n  read it");
   });
 });
