@@ -86,7 +86,10 @@ A taf starts from a KIFF agent draft that holds its Cards:
    phone. A claim works once; the draft is kept on record (never the key), so a retry
    with the same draft resumes.
 4. It stores the definition in kiff/agents and, for a scheduled taf, its schedule, in
-   the time zone given. A scheduled taf runs once at once; an unscheduled one waits for
+   the time zone given, else the account's. A taf Coach hands over has no person's KIFF read,
+   so tafs cloud keeps the account's zone each time someone who manages Cards opens Coach
+   (`GET /v1/setup`), and the hand-over's schedule runs in it, as Coach wrote its rules
+   ("Fridays at 17:00, Paris time"). With none kept, it's UTC, as before. A scheduled taf runs once at once; an unscheduled one waits for
    the owner. A taf of its own on a schedule checks its work first (`check`): its schedule
    reads the work list without the model and wakes the AI only for what's new. Its first
    run is that schedule fired once, so the first check hands it the open queue; an empty

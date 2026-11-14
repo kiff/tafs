@@ -69,6 +69,7 @@ export const pl: Words = {
   approval_digest_mismatch: "Ta prośba nie zgadza się z tym, o co prosi. Nic nie zostało zatwierdzone.",
   approval_no_grant: "Nie ma połączenia o tym identyfikatorze.",
   approval_cards_not_issued: (why: string) => `KIFF nie wydał Card tafa: ${why}`,
+  approval_connected_card_next: (vendor: string) => `${vendor} jest połączony. Teraz Card.`,
   approval_draft_is: (status: string) => `stan szkicu: ${status}`,
   approval_no_draft: "KIFF nie ma takiego szkicu",
   approval_card_next: "Jego Card: zatwierdzisz ją w następnym kroku",

@@ -8,6 +8,7 @@ import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/clo
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Held, Mandate } from "../src/cloud/home.js";
 import type { Device, Notification } from "../src/cloud/push.js";
+import { firings } from "../src/cloud/calendar.js";
 import { type ActivityCall, heldCards, improveContext, ownerWords, recentCalls } from "../src/cloud/improve.js";
 import { DISCLOSURE_LINE, disclosureLines, jobById, OLD_DISCLOSURE_LINE } from "../src/jobs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -4183,6 +4184,31 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.tafs.held.get(`t_acme#${RAE}`)?.versionsFrom?.["better|drf_v9"]).toBe(made[0]!.n);
     await note();
     expect((w.agents.versions.get(`t_acme|${RAE}`) ?? []).filter((v) => v.note === "Reads a charge before refunding it")).toHaveLength(1);
+  });
+
+  // "Fridays at 17:00 (Paris time)" ran at 18:00 Paris (14 Nov): the hand-over made the schedule with no zone, so UTC.
+  it("hands a taf over on the account's zone, as Coach wrote its rules, never UTC by default: winter and summer", async () => {
+    const friday = { ...RESULT, taf: { ...RESULT.taf, cron: "0 17 * * 5" } };
+    const { w, note, deps } = await paused(friday);
+    w.agents.access.set("u_ana", { cards_manage: true });
+    // A manager opened Coach: KIFF answered the account's zone, and tafs cloud keeps it.
+    await handle({ rawPath: "/v1/setup", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_paris" } }, deps);
+    await note();
+    const made = [...w.tafs.held.values()].find((t) => t.kiffAgent === "refunds-x")!;
+    const schedule = w.agents.schedules.get(`t_acme|${made.id}`)!;
+    expect(schedule).toMatchObject({ cron: "0 17 * * 5", time_zone: "Europe/Paris" });
+    // Read by a person on the same zone, its next run is 17:00 there: in winter (UTC+1) and in summer (UTC+2).
+    for (const [now, day, at] of [["2026-11-14T01:00:00Z", "2026-11-20", "2026-11-20T16:00:00Z"], ["2026-06-13T01:00:00Z", "2026-06-19", "2026-06-19T15:00:00Z"]] as const) {
+      expect(firings({ ...schedule, enabled: true }, day, day, "Europe/Paris", new Date(now)), now).toEqual([at]);
+    }
+  });
+
+  it("with no zone kept for the account, a handed-over taf's schedule is UTC, as before", async () => {
+    const { w, note } = await paused({ ...RESULT, taf: { ...RESULT.taf, cron: "0 17 * * 5" } });
+    w.agents.access.set("u_ana", { cards_manage: true });
+    await note();
+    const made = [...w.tafs.held.values()].find((t) => t.kiffAgent === "refunds-x")!;
+    expect(w.agents.schedules.get(`t_acme|${made.id}`)?.time_zone ?? "UTC").toBe("UTC");
   });
 
   it("makes no version for someone KIFF says can't manage Cards, nor for another taf's agent", async () => {

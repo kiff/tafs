@@ -265,6 +265,12 @@ interface Pending {
 export const ASK_KEPT_MS = 20 * 60_000;
 
 /** The words the apps show, all from here: tafs cloud's catalog, in the approving request's language (words/*.ts). */
+/**
+ * The end of a connect step's answer when it worked by design and the taf's Card is next (approval.ts): Coach shows the
+ * approval again for the Card alone, and the person reads tafs cloud's "Gmail is connected. Next, its Card." instead of a failure.
+ */
+export const CARD_NEXT = "its Card is next: show the approval again for its Card alone";
+
 export function approvalWords(lang: Lang = "en") {
   const w = wordsIn(lang);
   return {
@@ -275,6 +281,7 @@ export function approvalWords(lang: Lang = "en") {
     digestMismatch: w.approval_digest_mismatch,
     noGrant: w.approval_no_grant,
     cardsNotIssued: w.approval_cards_not_issued,
+    connectedCardNext: w.approval_connected_card_next,
     draftIs: (status: string) => w.approval_draft_is(w.approval_status(status)),
     noDraft: w.approval_no_draft,
     cardsUnread: w.approval_cards_unread,
@@ -698,6 +705,12 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
       const draft = await draftInfo(ctx.token, pending.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now);
       // Issued at the version the card showed, when it showed one: another version isn't the Card the owner read.
       const other = !!draft && !!pending.version && !!draft.version && draft.version !== pending.version;
+      // By design (connect now, the Card next, as the card said): the connection is connected and its Card is still the
+      // draft the card showed. That never reads as a failure: Coach hears to show the Card alone, and the person reads
+      // "Gmail is connected. Next, its Card." (CARD_NEXT, approvalAnswerWords).
+      if (grant.status === "connected" && draft && draft.status === "draft" && !other) {
+        return { answer: `failed: ${pending.vendor} is connected; ${CARD_NEXT}`, note: W.connectedCardNext(pending.vendor) };
+      }
       if (!draft || !issued(draft.status) || other) {
         const why = !draft ? W.noDraft : other ? W.outOfDate : W.draftIs(draft.status);
         const done = grant.status === "connected" ? "is connected" : "is signed in";
