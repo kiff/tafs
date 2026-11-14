@@ -1,11 +1,13 @@
 What to test in this build:
 
-1. The plan in sight. Settings opens with a Plan card: one line with your plan and the credits left ("Solo · 260 credits left", or "Solo · waiting: this period's credits are used" in amber). Tap it: it opens Plan & usage. Home shows one line about the plan only when it needs you: most of this period's credits used, or your tafs waiting for credits.
+1. Needs you. When Coach is waiting on you, Needs you lists it in plain words. Swipe a waiting chat away, or tap Set aside, to put it off; with two or more, Set all aside asks once. Nothing is approved or sent when you set one aside.
 
-2. Credits. Plan & usage shows this period's credits used, each taf's credits and runs, and the runs that weren't counted (Coach within its fair use, trials of a new version, runs that failed on our side). Each run counts once, when it ends, in whole credits. Credits from packs never expire and are used after the period's own. Packs aren't sold on iPhone and iPad until the App Store carries them.
+2. Home's first line. It now says how many tafs are working or ready, as tafs cloud counts them, in your language.
 
-3. New conversation in Coach always works. On a conversation that's already empty it stays there and shows its top; on one with messages it opens a new one.
+3. Connect apps. Each app is listed once, by its own name, with a short line under it saying what it can do. On iPad the App column keeps its room, so names no longer break mid-word.
 
-4. Signing out asks first. Sign out of KIFF, Switch account, and Sign in again (when this device can't approve) each ask before going ahead. Cancel leaves you signed in.
+4. Signing in to an app. An app's first sign-in says its Card comes next. A sign-in that didn't connect says so in plain words, never as a status code.
 
-5. Your exported chats leave with you. Export my chats in Account, then sign out: the exported files are gone from the device.
+5. Your devices. The list of devices you are signed in on names each one in the app's language.
+
+Tell us anything that reads oddly, or any screen where you weren't sure what to do next.

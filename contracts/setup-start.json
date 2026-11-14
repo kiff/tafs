@@ -1,0 +1,614 @@
+{
+  "about": "GET /v1/setup before Coach exists, with TAFS_COACH_START_ONE on: the tools batch and Coach's draft with its Cards, to sign once. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "setup": null,
+    "tools": null,
+    "start": {
+      "state": "to_give",
+      "scheme": "kiff.requests.v1",
+      "agent_id": "setup",
+      "requests": [
+        {
+          "id": "connect",
+          "method": "POST",
+          "path": "/v1/connections/batch",
+          "gateway": true,
+          "body": {
+            "connections": [
+              {
+                "name": "tafs_state",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "tafs_state",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op",
+                "read_only": true
+              },
+              {
+                "name": "taf_run",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "taf_run",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op",
+                "read_only": true
+              },
+              {
+                "name": "taf_check",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "taf_check",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op",
+                "read_only": true
+              },
+              {
+                "name": "taf_task",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "taf_task",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
+                "name": "run_stop",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "run_stop",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
+                "name": "taf_pause",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "taf_pause",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
+                "name": "taf_results",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "taf_results",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
+                "name": "taf_dial",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "taf_dial",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
+                "name": "taf_estimate",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "taf_estimate",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op",
+                "read_only": true
+              },
+              {
+                "name": "web_read",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "web_read",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op",
+                "read_only": true
+              },
+              {
+                "name": "version_try",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "version_try",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
+                "name": "version_install",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "version_install",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
+                "name": "app_look",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "app_look",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op",
+                "read_only": true
+              },
+              {
+                "name": "app_act",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "app_act",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              }
+            ]
+          },
+          "lines": [
+            "See your tafs, their versions and their runs",
+            "Read one of a taf's runs",
+            "Check what's wrong with a taf",
+            "Give a taf a task or a message",
+            "Stop a taf's run",
+            "Pause or resume a taf's schedule",
+            "Set where a taf's results go",
+            "Draft a change to a taf",
+            "Say what a taf will likely use",
+            "Read a public web page",
+            "Try a version of a taf, sending nothing",
+            "Install a version of a taf",
+            "See the app on your device while it drives",
+            "Tap, type and scroll in the app on your device while it drives"
+          ]
+        },
+        {
+          "id": "draft",
+          "method": "POST",
+          "path": "/v1/me/agent-drafts",
+          "body": {
+            "agent_id": "setup",
+            "label": "Coach",
+            "cards": [
+              {
+                "id": "coach-reads",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "tafs_state"
+                  },
+                  {
+                    "action": "taf_run"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 500,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-taf-task",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "owner",
+                "hold_expiry": "10m",
+                "grants": [
+                  {
+                    "action": "taf_task"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 50,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-version-try",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "owner",
+                "hold_expiry": "10m",
+                "grants": [
+                  {
+                    "action": "version_try"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 20,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-run-stop",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "run_stop"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 50,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-taf-pause",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "taf_pause"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 50,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-version-install",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "owner",
+                "hold_expiry": "10m",
+                "grants": [
+                  {
+                    "action": "version_install"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 0,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-taf-results",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "owner",
+                "hold_expiry": "10m",
+                "grants": [
+                  {
+                    "action": "taf_results"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 0,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-taf-dial",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "taf_dial"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 20,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-app-look",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "app_look"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 2000,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-app-act",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "app_act"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 1000,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-checks",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "taf_check"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 200,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-estimates",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "taf_estimate"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 200,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-web-reads",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "web_read"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 50,
+                    "window": "calendar_day"
+                  }
+                ]
+              }
+            ],
+            "contract_digest": "cd_123"
+          },
+          "card_title": "Coach's Card",
+          "cards": [
+            {
+              "id": "coach-reads",
+              "lines": [
+                "KIFF's line for coach-reads"
+              ]
+            },
+            {
+              "id": "coach-taf-task",
+              "lines": [
+                "KIFF's line for coach-taf-task"
+              ]
+            },
+            {
+              "id": "coach-version-try",
+              "lines": [
+                "KIFF's line for coach-version-try"
+              ]
+            },
+            {
+              "id": "coach-run-stop",
+              "lines": [
+                "KIFF's line for coach-run-stop"
+              ]
+            },
+            {
+              "id": "coach-taf-pause",
+              "lines": [
+                "KIFF's line for coach-taf-pause"
+              ]
+            },
+            {
+              "id": "coach-version-install",
+              "lines": [
+                "KIFF's line for coach-version-install"
+              ]
+            },
+            {
+              "id": "coach-taf-results",
+              "lines": [
+                "KIFF's line for coach-taf-results"
+              ]
+            },
+            {
+              "id": "coach-taf-dial",
+              "lines": [
+                "KIFF's line for coach-taf-dial"
+              ]
+            },
+            {
+              "id": "coach-app-look",
+              "lines": [
+                "KIFF's line for coach-app-look"
+              ]
+            },
+            {
+              "id": "coach-app-act",
+              "lines": [
+                "KIFF's line for coach-app-act"
+              ]
+            },
+            {
+              "id": "coach-checks",
+              "lines": [
+                "KIFF's line for coach-checks"
+              ]
+            },
+            {
+              "id": "coach-estimates",
+              "lines": [
+                "KIFF's line for coach-estimates"
+              ]
+            },
+            {
+              "id": "coach-web-reads",
+              "lines": [
+                "KIFF's line for coach-web-reads"
+              ]
+            }
+          ]
+        }
+      ],
+      "coach_tools_step": {
+        "title": "Give Coach its tools",
+        "intro": "Coach needs these to look after your tafs.",
+        "details": "Each tool and its limits",
+        "give": "Give Coach its tools",
+        "not_now": "Not now",
+        "row": "Coach's tools are waiting for you · Give them",
+        "groups": [
+          {
+            "name": "Watch your tafs",
+            "line": "See your tafs and their runs, and find what went wrong.",
+            "tools": [
+              {
+                "name": "See your tafs",
+                "does": "Read each taf, its versions and its open runs. Up to 500 a day, counted with “Read a run”.",
+                "why": "It reads your account."
+              },
+              {
+                "name": "Read a run",
+                "does": "See what one run did and what it's waiting on. Up to 500 a day, counted with “See your tafs”.",
+                "why": "A run can hold what your apps answered."
+              },
+              {
+                "name": "Check a taf",
+                "does": "Find what failed in a taf's latest runs, and the next step. It calls no app. Up to 200 a day.",
+                "why": "It reads your tafs' runs."
+              }
+            ]
+          },
+          {
+            "name": "Run them for you",
+            "line": "Give a taf a task, stop a run, pause a schedule.",
+            "tools": [
+              {
+                "name": "Give a taf a task",
+                "does": "Hand a taf a task or a message. The taf works under its own Card. Up to 50 a day; after that, each one waits for you.",
+                "why": "It starts work in your name."
+              },
+              {
+                "name": "Stop a run",
+                "does": "Stop a taf's run. Anything in it waiting for you is withdrawn. Up to 50 a day.",
+                "why": "It ends work you might want finished."
+              },
+              {
+                "name": "Pause a schedule",
+                "does": "Pause or resume a taf's schedule. Up to 50 a day.",
+                "why": "A paused taf does nothing until it's resumed."
+              }
+            ]
+          },
+          {
+            "name": "Build new versions",
+            "line": "Draft and try a taf's next version. Installing it, and changing where results go, always wait for you.",
+            "tools": [
+              {
+                "name": "Draft a change",
+                "does": "Write a taf's next version: what starts it, its steps, where results go. Nothing runs from a draft. Up to 20 a day.",
+                "why": "A draft is what you'd install."
+              },
+              {
+                "name": "Estimate a taf's credits",
+                "does": "Say what a taf will likely use in a month, from records, before you approve it. It calls no app. Up to 200 a day.",
+                "why": "It reads your tafs' runs and your plan."
+              },
+              {
+                "name": "Read a public page",
+                "does": "Read one public web page, such as an app's documentation or its published API description, to connect it the right way. Only public pages, with nothing signed in. Up to 50 a day.",
+                "why": "It reads only what anyone can open on the web."
+              },
+              {
+                "name": "Try a version",
+                "does": "Run a version as a trial that sends nothing to your apps. Up to 20 a day; after that, each one waits for you.",
+                "why": "A trial reads your apps as the taf would."
+              },
+              {
+                "name": "Install a version",
+                "does": "Put a version live. Each one waits for your approval.",
+                "why": "It changes what a taf does."
+              },
+              {
+                "name": "Choose where results go",
+                "does": "Set where a taf's results go. Each one waits for your approval.",
+                "why": "Results can leave tafs, by email or into an app."
+              }
+            ]
+          },
+          {
+            "name": "Help while you drive",
+            "line": "Only while you turn on a drive: see and use tafs on your device. It can never approve anything.",
+            "tools": [
+              {
+                "name": "See tafs while it drives",
+                "does": "While you've turned on a drive, see tafs on your device, its own screens only. Up to 2,000 a day.",
+                "why": "It sees what's on your screen."
+              },
+              {
+                "name": "Use tafs while it drives",
+                "does": "While a drive is on, tap, type and scroll in tafs on your phone, with a caption for each step. It can't approve anything: only you approve, on your phone. Up to 1,000 a day.",
+                "why": "It acts in the app as you."
+              }
+            ]
+          }
+        ]
+      },
+      "words": {
+        "lead": "Start gives Coach the tools below. You approve them on this device.",
+        "start": "Start"
+      }
+    }
+  }
+}

@@ -32,9 +32,13 @@ account admin (`AppModel.mayUseCoach`).
 On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
 (`CoachScreen`). It has what's below, with these differences:
 - **A compact header,** one row: back, Coach, and a menu with **New conversation** and
-  **Previous conversations** (`CoachHeader`). New conversation is never greyed out: on a
-  conversation with nothing in it yet, it keeps that one and shows its top; otherwise it opens a
-  new one (iOS's New conversation button does the same: `coachChatIsEmpty`). Under it, the plan in tafs cloud's one line
+  **Previous conversations** (`CoachHeader`). New conversation is never greyed out: on a plain
+  conversation with nothing in it yet, it keeps that one and shows its top; otherwise, an empty one
+  about a taf ("Improve Refunds") included, it opens a plain new one (Android `CoachWords.newChatStays`,
+  1.27.6; iOS's New conversation button keeps an empty one, `coachChatIsEmpty`, and follows). A message to a chat that
+  already handed a taf over goes to a new chat tafs cloud starts (`new_chat_after_handover`, [api.md](api.md)): Android
+  sends the flag and shows that chat from then on, with the message on its way (`AppModel.coachSession`, 1.27.7); iOS
+  follows. Under it, the plan in tafs cloud's one line
   (`line`, [The plan in one line](#the-plan-in-one-line)); tapped, it opens to the steps. The
   plan line folds away while the thread scrolls down and comes back on the way up, so a card
   has the screen. The phone never counts the plan's steps.
@@ -219,8 +223,9 @@ then shows its plan. Then, each step behind the owner's yes:
    unapproved 15 minutes after the run paused on it, nothing is asking for that Card, so the result is answered in plain words (`{failed: "The
    Card for <taf> was never approved, so <taf> isn't set up yet: approve its Card to finish"}`), and Coach
    asks for the Card. The app starts nothing itself
-   (Android: `CoachWords.handOver`, `HandOverCard`; it reads the list again once for a taf
-   set up that isn't listed yet). The iPhone app does the same.
+   (Android: `CoachWords.handOver`, `HandOverCard`; for a taf set up that isn't listed yet it reads the list
+   again, and, while Home doesn't list it, up to 3 more times 3 seconds apart (`AppModel.SET_UP_READS`), so the
+   card never stays on "Setting up…" until a pull, Android 1.27.6). The iPhone app reads the list again once.
    A taf's next version is still made by the app, from an improvement's result.
 
 A taf whose tools can't find its work by themselves is made **unscheduled**: it works
@@ -375,7 +380,9 @@ A connection can carry a **profile**: KIFF's facts about how each of its tools i
 what its outcomes mean. planque puts it in the grant's `request.profile`, so the grant's digest
 the phone already checks covers it. Before the owner approves:
 - the phone asks KIFF for its words with its own session (`POST /v1/profiles/words`, never
-  through tafs cloud or planque);
+  through tafs cloud or planque). Android asks for `kiff.words.v2` (`?v=2`, Android 1.27.7): v1's lines without KIFF's
+  bookkeeping (no "isn't pinned to a version", and the lost-answer line only where money moves). It takes v1 or v2 and
+  signs whichever KIFF sent; iOS follows;
 - it checks that the profile's SHA-256 (JCS) is KIFF's `profile_sha256` and the words' is
   `words_sha256`;
 - the approval card shows each line verbatim, in KIFF's order. What KIFF can't check,
@@ -534,7 +541,11 @@ announces only to URLs it is set to allow (`AGENTS_NOTIFY_URLS`), so tafs cloud'
 `/v1/runs/ended` must be among them: when it isn't, kiff/agents refuses the run and
 `taf_task` fails with "notify.url is not one this server announces runs to". Moving tafs
 cloud to a new URL means updating that list too. The app shows
-these as lines in Coach's chat ("coach lines"). While the owner is away, what isn't
+these as lines in Coach's chat ("coach lines"). A run cut off at its turn or cost cap (its `stop`
+`turn_cap` or `cost_cap`), or stopped any other way short of an answer, never reads as finished:
+its line and its notification say it stopped before it finished, and at which limit ("It stopped
+before it finished: it reached its cost limit for one run"), and Coach hears what it last wrote as
+its last words, never as its answer. While the owner is away, what isn't
 urgent waits there as one "While you were away" message instead of a notification
 ([approvals.md](approvals.md#notifications)).
 
@@ -572,6 +583,13 @@ A taf keeps its own records (`set-up-a-taf@8`). When it works from the owner's s
 proposes that it adds and updates its own columns there (who it wrote to, replies, do not contact), with a
 tool that writes to the sheet on its Card. Coach asks only what only the owner knows, never how they
 track the work: the owner talks to Coach and never types into the sheet.
+
+A taf finds things by id, never by name (`set-up-a-taf@10`, `the-dial@5`). What it makes and uses
+again, such as a sheet, it keeps by the id the call gives back; an app's guide names those (its
+`returns`, such as `data.spreadsheetId`), and its instructions say so. For something that already
+exists, Coach asks the owner for its link, never its name: a search by name often needs more than the
+connection gives (a Sheets sign-in doesn't search Drive). When a place for results has no read on the
+taf's connection that lists places by name, Coach asks for the place's link and takes the id from it.
 
 ## A vendor the account already connects
 

@@ -84,6 +84,13 @@ struct RootView: View {
 
     private static let tabs: [Tab] = [.account, .tafs, .needsYou, .record]
 
+    /// Whether a keyboard notification is about this app's keyboard. Another's (a system alert's
+    /// password field, an app beside this one) comes with `keyboardIsLocalUserInfoKey` false; a
+    /// notification that doesn't say is this app's.
+    static func ownKeyboard(_ note: Notification) -> Bool {
+        note.userInfo?[UIResponder.keyboardIsLocalUserInfoKey] as? Bool ?? true
+    }
+
     @ViewBuilder private func tabContent(_ t: Tab) -> some View {
         switch t {
         // A sidebar beside the open taf on a wide screen (kiff/tafs#85).
@@ -106,8 +113,14 @@ struct RootView: View {
                 // The bar's tabs, each kept as it was left once opened; the bar along the
                 // foot on a phone, a rail down the left on a wide screen (the taf layout).
                 let rail = sizeClass == .regular
+                if rail {
+                    // On an iPad's full width, one sidebar for the whole app (the owner's layout):
+                    // the mascot and its name at the top, every screen as an item, the tafs, and
+                    // Coach and the account at its foot. The tabs open beside it.
+                    HomeSplitView(tab: $tab, coachAvailable: coachAvailable || Screenshots.signedIn)
+                        .onChange(of: tab) { _ = opened.insert($0); DriveWaits.emit("screen_shown") }
+                } else {
                 HStack(spacing: 0) {
-                    if rail { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: true) }
                     // Below the tabs, not over them: a screen's own foot (a chat's field) stays
                     // above the bar.
                     VStack(spacing: 0) {
@@ -122,10 +135,11 @@ struct RootView: View {
                             }
                         }
                         // Off while the keyboard is up, as a tab bar is.
-                        if !rail && !keyboardUp { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: false) }
+                        if !keyboardUp { TafsBar(tab: $tab, coachAvailable: coachAvailable, rail: false) }
                     }
                 }
                 .onChange(of: tab) { _ = opened.insert($0); DriveWaits.emit("screen_shown") }
+                }
             } else {
                 OnboardingView()
             }
@@ -150,8 +164,11 @@ struct RootView: View {
         // The keyboard's shortcuts on every screen (kiff/tafs#210).
         // Off while Coach drives the app: a key the person presses then isn't a shortcut.
         .background { if model.signedIn && !drive.isOn { GlobalKeyCommands(tab: $tab, coachAvailable: coachAvailable) } }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
+        // Only this app's own keyboard: the system's "Sign in to Apple Account" alert, or another
+        // app beside this one on an iPad, raises its own, and iOS tells this app too. The bar
+        // stayed hidden under that alert, with nothing of this app's to type in.
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { if Self.ownKeyboard($0) { keyboardUp = true } }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { if Self.ownKeyboard($0) { keyboardUp = false } }
         // Both sizes keep the underlying taf and tab mounted while Coach opens.
         .overlay {
             if coachAvailable {

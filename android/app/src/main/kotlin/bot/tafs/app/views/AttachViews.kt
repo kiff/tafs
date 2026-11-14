@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveMenu
 import android.content.ActivityNotFoundException
@@ -15,7 +16,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -142,7 +142,7 @@ fun AttachButton(tafId: String, state: AppState, files: FileActions) {
         .background(Theme.panel)
         .border(BorderStroke(1.dp, Theme.line), CircleShape)
         .alpha(if (room == 0) 0.4f else 1f)
-        .clickable(enabled = room > 0) { menu = true }
+        .tapping(enabled = room > 0) { menu = true }
         .semantics {
           contentDescription = if (room == 0) Words.Chat.File.attachFull(count = FilePrep.PER_MESSAGE) else Words.Chat.File.attach
         },
@@ -212,7 +212,7 @@ private fun FileChip(file: PendingFile, remove: () -> Unit) {
       }
     }
     Box(
-      Modifier.size(28.dp).clip(CircleShape).clickable(onClick = remove).semantics { contentDescription = Words.Chat.File.remove(file.name) },
+      Modifier.size(28.dp).clip(CircleShape).tapping(onClick = remove).semantics { contentDescription = Words.Chat.File.remove(file.name) },
       contentAlignment = Alignment.Center,
     ) {
       Icon(painterResource(R.drawable.ic_close), contentDescription = null, tint = Theme.dim, modifier = Modifier.size(12.dp))
@@ -253,7 +253,7 @@ fun MessageFiles(files: List<AttachmentRef>, tafId: String, actions: FileActions
           .clip(shape)
           .background(Theme.panel)
           .border(BorderStroke(1.dp, Theme.line), shape)
-          .clickable(enabled = opening == null) {
+          .tapping(enabled = opening == null) {
             opening = file.id
             scope.launch {
               val copy = actions.open(file, tafId)

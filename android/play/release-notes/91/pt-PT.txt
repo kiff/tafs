@@ -1,0 +1,2 @@
+- Uma conversa do Coach posta de parte já não volta como conversa aberta, em nenhum dispositivo.
+- «Perguntar ao Coach» em Ligar apps começa sempre uma conversa nova.

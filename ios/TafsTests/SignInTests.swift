@@ -122,17 +122,31 @@ final class SignInTests: XCTestCase {
         XCTAssertEqual(String(reordered.characters), "Privacy policy and Terms apply.")
     }
 
-    /// kiff.dev's Terms and Privacy policy open in the language the app's lines resolved to:
-    /// English at its own path, every other language under its prefix, each at its tafs section.
-    func testTheLegalLinksOpenInTheAppsLanguage() {
-        XCTAssertEqual(Legal.terms(in: "en").absoluteString, "https://kiff.dev/terms#tafs")
-        XCTAssertEqual(Legal.privacy(in: "en").absoluteString, "https://kiff.dev/privacy#tafs")
-        for language in Words.languages where language != "en" {
-            XCTAssertEqual(Legal.terms(in: language).absoluteString, "https://kiff.dev/\(language)/terms#tafs")
-            XCTAssertEqual(Legal.privacy(in: language).absoluteString, "https://kiff.dev/\(language)/privacy#tafs")
-        }
-        XCTAssertEqual(Legal.terms, Legal.terms(in: Legal.language))
+    /// Terms and Privacy open tafs's own pages, the ones Google's consent screen names, never
+    /// KIFF's (`/terms#tafs`), in every language, as Android 1.27.8 does.
+    func testTheLegalLinksOpenTafssOwnPages() {
+        XCTAssertEqual(Legal.terms.absoluteString, "https://kiff.dev/tafs/terms")
+        XCTAssertEqual(Legal.privacy.absoluteString, "https://kiff.dev/tafs/privacy")
         XCTAssertTrue(Words.languages.contains(Legal.language))
+    }
+
+    /// The pages are in English only: a row in another language says so, as kiff.dev does.
+    func testALegalRowOutsideEnglishSaysThePageIsInEnglish() {
+        XCTAssertEqual(Legal.label("Terms", language: "en"), "Terms")
+        for language in Words.languages where language != "en" {
+            let label = Legal.label("Terms", language: language)
+            XCTAssertEqual(label, Words.Settings.legalInEnglish(label: "Terms"))
+            XCTAssertTrue(label.hasPrefix("Terms"), "the row's own words first")
+            XCTAssertNotEqual(label, "Terms")
+        }
+    }
+
+    /// Account › Legal draws its two rows from `Legal`, with the same words as Android's.
+    func testAccountsLegalRowsOpenTafssPages() throws {
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let source = try String(contentsOf: views.appendingPathComponent("SignInView.swift"), encoding: .utf8)
+        XCTAssertTrue(source.contains("Link(Legal.label(Words.Settings.terms), destination: Legal.terms)"))
+        XCTAssertTrue(source.contains("Link(Legal.label(Words.Settings.privacyPolicy), destination: Legal.privacy)"))
     }
 
     /// KIFF's approval page and a held call's page carry the app's language (`lang`), so they

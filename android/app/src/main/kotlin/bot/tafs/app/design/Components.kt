@@ -72,7 +72,7 @@ fun StateChip(state: TafState, onClick: (() -> Unit)? = null) {
     style = scaled(12, FontWeight.Medium, color),
     modifier = Modifier
       .clip(CircleShape)
-      .then(if (onClick != null) Modifier.clickable(onClickLabel = Words.Home.openHalt, onClick = onClick) else Modifier)
+      .then(if (onClick != null) Modifier.tapping(onClickLabel = Words.Home.openHalt, onClick = onClick) else Modifier)
       .background(color.copy(alpha = 0.15f))
       .padding(horizontal = 8.dp, vertical = 4.dp),
   )
@@ -182,7 +182,7 @@ fun <T> Segmented(options: List<T>, selected: T, label: (T) -> String, onSelect:
           .heightIn(min = 32.dp)
           .clip(RoundedCornerShape(7.dp))
           .background(if (on) Theme.panel else Color.Transparent)
-          .clickable { onSelect(option) },
+          .clickable { if (!on) Haptics.tap(); onSelect(option) },
         contentAlignment = Alignment.Center,
       ) {
         // One line, whatever the language: a long label ("Configuración") shrinks to fit its segment rather than wrap.

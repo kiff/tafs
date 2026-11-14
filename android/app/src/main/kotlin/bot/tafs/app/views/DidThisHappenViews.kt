@@ -1,6 +1,6 @@
 package bot.tafs.app.views
 
-import androidx.compose.foundation.clickable
+import bot.tafs.app.design.tapping
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -55,7 +55,7 @@ fun UnsureCallCard(
       Text(
         DidThisHappenWords.record(call.vendor),
         style = scaled(13, FontWeight.SemiBold, Theme.amberText),
-        modifier = Modifier.heightIn(min = 44.dp).clickable { runCatching { uri.openUri(url) } }.padding(vertical = 12.dp),
+        modifier = Modifier.heightIn(min = 44.dp).tapping { runCatching { uri.openUri(url) } }.padding(vertical = 12.dp),
       )
     }
     error?.let { Text(it, style = scaled(13, color = Theme.no)) }

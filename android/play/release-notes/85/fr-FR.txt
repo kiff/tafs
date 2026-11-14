@@ -1,0 +1,4 @@
+- Vos connexions se lisent clairement : ce qu'elles sont, qui les utilise et leur état. Touchez-en une pour le détail ; la retirer demande une confirmation.
+- Un taf dont la connexion a expiré a son propre « Se reconnecter », et garde sa Card.
+- « Vous attend » indique quand Coach attend votre réponse.
+- Une connexion au mauvais compte est signalée clairement.

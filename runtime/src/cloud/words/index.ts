@@ -44,9 +44,12 @@ export function languageFrom(header: string | undefined): Lang {
   return best?.lang ?? "en";
 }
 
-/** The plural form of n in a language, for words that count: Intl's categories (Polish has few and many). */
+/**
+ * The plural form of n in a language, for words that count: Intl's categories (Polish has few and many). Our Portuguese is
+ * European, where 0 is plural ("0 tafs"); CLDR's plain `pt` is Brazilian, where 0 is singular.
+ */
 export function plural(lang: Lang, n: number): Intl.LDMLPluralRule {
-  return new Intl.PluralRules(lang).select(n);
+  return new Intl.PluralRules(lang === "pt" ? "pt-PT" : lang).select(n);
 }
 
 /**
@@ -73,11 +76,13 @@ export const LANGUAGE_LINE = "[tafs language]";
 
 /**
  * A Coach message with the person's language said, when it isn't English: Coach replies in it, and words
- * what they read in it. The line goes before the owner's words, after any of tafs' own opening lines, so
- * what reads a message's opening (entryOf, ownerWords) reads it as before.
+ * what they read in it. English is said too when the account's language was another before this chat
+ * (`before`): its notes and earlier chats are in that one, and 14 Nov an English app's plan came out in French.
+ * The line goes before the owner's words, after any of tafs' own opening lines, so what reads a message's
+ * opening (entryOf, ownerWords) reads it as before.
  */
-export function withLanguage(text: string, lang: Lang): string {
-  if (lang === "en") return text;
+export function withLanguage(text: string, lang: Lang, before: Lang = "en"): string {
+  if (lang === "en" && before === "en") return text;
   return withLine(text, `${LANGUAGE_LINE} The person writing reads ${LANGUAGE_NAMES[lang]} (${lang}), from their app: answer them in it, and write what they read in it (questions, cards, a version's note, a taf's summary). taf, Coach and Card stay as names. A message a taf sends a customer keeps the customer's language.`);
 }
 
@@ -119,4 +124,12 @@ export function ownerLanguageLine(lang: Lang): string | undefined {
 export function ownerLanguageIn(text: string): Lang | undefined {
   const m = /Your owner reads [A-Za-z ]+ \(([a-z]{2})\):/.exec(text);
   return m && (LANGUAGES as readonly string[]).includes(m[1]!) ? (m[1] as Lang) : undefined;
+}
+
+/**
+ * A line that ends its sentence on a date whose short month already ends in a period ("14 nov.", "1 de dez." in fr and
+ * pt): one period, never two ("depuis le 14 nov..").
+ */
+export function endSentence(line: string): string {
+  return line.replace(/\.\.$/, ".");
 }

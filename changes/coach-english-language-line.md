@@ -1,0 +1,1 @@
+- Coach is told the person's language in English too when the account's language, as tafs cloud keeps it, was another until then: its notes and earlier chats are in that one, and an English app's plan once came out in French. An account in English still adds nothing for English.

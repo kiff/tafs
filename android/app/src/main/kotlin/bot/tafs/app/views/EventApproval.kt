@@ -1,12 +1,12 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.approvalTerms
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -115,7 +115,7 @@ internal fun EventApprovalSheet(event: bot.tafs.app.kiff.KnobWire.Item, busy: Bo
       Text(
         bot.tafs.app.model.ConnectWords.CANCEL,
         style = scaled(15, FontWeight.SemiBold, Theme.dim),
-        modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy, onClick = onClose).padding(top = 10.dp),
+        modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = !busy, onClick = onClose).padding(top = 10.dp),
       )
     }
   }

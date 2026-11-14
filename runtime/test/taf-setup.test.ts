@@ -78,9 +78,9 @@ describe("a taf's server-composed setup", () => {
     expect(reconnect.connections[0]).toMatchObject({ reconnect: true, status_words: "Signed out by the app" });
     // Who holds the sign-in, in one line as planque says it, and whether the app was set up on the owner's pick (kiff/planque#87).
     const managed = setupView({ ...args, grants: [{ ...grant, custody: "provider", on_demand: true }] });
-    expect(managed.connections[0]).toMatchObject({ custody_words: "Your sign-in stays with the connection service; the taf never sees it.", on_demand: true });
+    expect(managed.connections[0]).toMatchObject({ custody_words: "Your sign-in is kept by our sign-in partner; the taf never sees it.", on_demand: true });
     const own = setupView({ ...args, grants: [{ ...grant, custody: "planque" }] });
-    expect(own.connections[0]).toMatchObject({ custody_words: "Your sign-in is kept by tafs' connection service; the taf never sees it." });
+    expect(own.connections[0]).toMatchObject({ custody_words: "Your sign-in is kept sealed by tafs; the taf never sees it." });
     expect(own.connections[0]).not.toHaveProperty("on_demand");
     expect(view.connections[0]).not.toHaveProperty("custody_words");
     // Which account and mode, one line as planque words them; a part it doesn't send is left out, and with neither, no line.

@@ -45,6 +45,15 @@ final class DevicesTests: XCTestCase {
         XCTAssertEqual(DevicesView.lastUsed(nil), "Not used yet")
     }
 
+    func testEachDeviceIsCalledWhatKIFFNamesItInTheAppsLanguage() throws {
+        // KIFF's display_name, drawn from the device's kind in the app's language; the name it
+        // gave at sign-in (in whatever language the app had then) only from a KIFF that sends none.
+        let json = #"{"devices":[{"id":"dev_1","name":"tafs en iPad","display_name":"tafs on iPad"},{"id":"dev_2","name":"Ana's iPhone"}]}"#
+        struct Response: Decodable { let devices: [KIFFClient.Device] }
+        let r = try JSONDecoder().decode(Response.self, from: Data(json.utf8))
+        XCTAssertEqual(r.devices.map(\.name), ["tafs on iPad", "Ana's iPhone"])
+    }
+
     func testSigningAnotherDeviceOutAsksFaceIDThenRemovesIt() async throws {
         let signer = FaceIDSigner()
         let model = await signedIn(signer: signer)

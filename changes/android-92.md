@@ -1,0 +1,1 @@
+- **Android 1.27.4 (92): haptics on the owner's phone, and Set aside is the person's to confirm.** On Android 13+, taps play as touch effects the phone's own touch setting decides (Android 15 reported a dropped tap as played); and Coach driving the app can't set a chat aside (docs/android-app.md, docs/drive.md).

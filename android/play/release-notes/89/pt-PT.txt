@@ -1,0 +1,3 @@
+- Uma app ligada abre ao tocar em qualquer ponto da sua linha.
+- Sem nenhum taf, uma app oferece «Perguntar ao Coach», onde cria um.
+- Depois de pôr de parte uma conversa do Coach, o Coach começa uma nova.

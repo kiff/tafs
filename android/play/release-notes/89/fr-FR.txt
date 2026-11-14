@@ -1,0 +1,3 @@
+- Une app connectée s'ouvre où que vous touchiez sa ligne.
+- Sans taf, une app propose « Demander à Coach », où vous en créez un.
+- Après avoir mis une conversation avec Coach de côté, Coach en commence une nouvelle.

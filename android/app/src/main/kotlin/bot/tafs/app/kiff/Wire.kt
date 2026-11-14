@@ -158,12 +158,16 @@ data class Home(
   @SerialName("doors_offered") val doorsOffered: List<String>? = null,
   /** What Needs you holds, counted by tafs cloud with its words; absent when it couldn't count all of it. */
   @SerialName("needs_you") val needsYou: NeedsYouCount? = null,
+  /** Home's first line, in tafs cloud's words ("1 taf ready."); absent from a tafs cloud from before it. */
+  val headline: HomeHeadline? = null,
   /** Cards asked to take a currency they have no limit for, for the tafs this person sees: Needs you draws them. */
   @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException>? = null,
   /** Steps a taf handed its owner, oldest first (docs/api.md › Your step): Needs you draws them. */
   @SerialName("your_steps") val yourSteps: List<YourStep>? = null,
   /** Coach's chats waiting on this person for an answer or approval, oldest first (docs/api.md › Coach waiting): Needs you draws them. */
   @SerialName("coach_waiting") val coachWaiting: List<CoachWaiting>? = null,
+  /** "Set all aside", when two or more Coach chats wait: drawn only when sent. */
+  @SerialName("coach_waiting_clear") val coachWaitingClear: CoachWaitingClear? = null,
 )
 
 /**
@@ -179,8 +183,24 @@ data class CoachWaiting(
   val words: CoachWaitingWords = CoachWaitingWords(),
 )
 
+/** The row's words, tafs cloud's: its line, the way into the chat, and `set_aside`, the swipe's ("Set aside"); none, no swipe. */
 @Serializable
-data class CoachWaitingWords(val line: String = "", val open: String = "")
+data class CoachWaitingWords(val line: String = "", val open: String = "", @SerialName("set_aside") val setAside: String = "")
+
+/** Home's "Set all aside", for two or more waiting Coach chats: the button, and the one ask that names the count. */
+@Serializable
+data class CoachWaitingClear(val words: CoachWaitingClearWords = CoachWaitingClearWords())
+
+@Serializable
+data class CoachWaitingClearWords(val button: String = "", val title: String = "", val text: String = "", val yes: String = "", val no: String = "")
+
+/** What setting Coach chats aside did: the chats it ended, and the connections it withdrew. */
+@Serializable
+data class SetAside(@SerialName("set_aside") val setAside: List<String> = emptyList(), val withdrawn: Int = 0, val already: Boolean = false, val words: SetAsideWords? = null)
+
+/** What the app says once chats are set aside, tafs cloud's: where to find them ("Set aside. You'll find it in Previous conversations."). */
+@Serializable
+data class SetAsideWords(val done: String = "")
 
 /**
  * A step a taf may never take itself, handed to its owner, as tafs cloud shows it: KIFF's hand-off id, what to do and why, in
@@ -232,6 +252,10 @@ data class Handoff(val id: String, val version: Int, val status: String = "")
 /** Needs you, counted once by tafs cloud: held calls, "Did this happen?" calls, currency requests and tafs with a knock. */
 @Serializable
 data class NeedsYouCount(val count: Int, val words: String)
+
+/** Home's first line, counted by tafs cloud from the tafs it lists (docs/api.md, Home). */
+@Serializable
+data class HomeHeadline(val words: String = "")
 
 // MARK: tafs cloud's chat
 

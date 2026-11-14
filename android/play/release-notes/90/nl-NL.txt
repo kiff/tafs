@@ -1,0 +1,3 @@
+- Meldingen aanzetten vraagt niet meer om je vingerafdruk: één vraag minder voor je eerste taf.
+- Bij het voor het eerst koppelen van een app staat dat de Card hierna komt, zodat je weet dat er een tweede goedkeuring volgt.
+- Tikken trillen nu ook op telefoons die aanraakfeedback op hun eigen manier instellen.

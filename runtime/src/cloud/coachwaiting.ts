@@ -5,15 +5,21 @@
  * Coach waits for them. Only the person who started the chat sees it: it opens their own chat.
  *
  * A setup's result card isn't one: a taf whose setup stopped partway is Home's `setting_up`, with its own way back.
+ *
+ * The person can set one aside, or all of them: a "not now" tafs cloud answers, never an approval. Nothing is signed or
+ * sent, the chat's run ends, and a connection it asked for a taf that doesn't exist yet is withdrawn (handler.ts).
  */
 import type { Run } from "./agents.js";
 import type { Lang } from "./words/index.js";
-import { wordsIn } from "./words/index.js";
+import { endSentence, wordsIn } from "./words/index.js";
 
 /** The cards a person answers in Coach's chat that count as waiting on them. */
 const WAITS_ON_YOU = new Set(["approval", "sign_in", "questions", "confirm"]);
 /** Of those, the ones that ask for an approval, said as such. */
 const APPROVES = new Set(["approval", "sign_in"]);
+
+/** A Coach chat that has waited on its person this long ends on its own (sweepStaleCoach), as if set aside. */
+export const COACH_WAITING_KEPT_MS = 48 * 3600_000;
 
 export interface CoachWaiting {
   /** Coach's taf and the chat to open. */
@@ -22,32 +28,91 @@ export interface CoachWaiting {
   run: string;
   /** When the chat paused for it. */
   since: string;
-  words: { line: string; open: string };
+  /** The line names the chat, what it waits for and since when; `set_aside` ends it, as "not now". */
+  words: { line: string; open: string; set_aside: string };
+}
+
+/** The cards of a run that wait on its person now, with the connection or draft each names. */
+export function waitingCards(r: Run, now: Date): Array<{ id: string; type: string; grant?: string; draft?: string }> {
+  return (r.requirements ?? []).flatMap((q) => {
+    if (q.kind !== "card" || q.answered) return [];
+    const card = (q.input ?? {}) as { id?: unknown; type?: unknown; grant?: unknown; draft?: unknown };
+    if (typeof card.type !== "string" || !WAITS_ON_YOU.has(card.type)) return [];
+    const expires = Date.parse(q.expires);
+    if (!Number.isNaN(expires) && expires <= now.getTime()) return [];
+    return [{ id: typeof card.id === "string" ? card.id : q.call_id, type: card.type,
+      ...(typeof card.grant === "string" && card.grant ? { grant: card.grant } : {}),
+      ...(typeof card.draft === "string" && card.draft ? { draft: card.draft } : {}) }];
+  });
+}
+
+/** The longest name a waiting row gives what it waits on, cut at a word with "…". */
+const NAMED_MAX = 80;
+
+/**
+ * What a run's waiting card is about, in Coach's own words on the card: its title, else its first question, else its
+ * text. A row then names what waits now ("Which day should it remind you?"), never only the chat's first message, which
+ * may be another job's (a new job asked in a finished chat). Undefined when the card says nothing.
+ */
+export function waitingOn(r: Run, now: Date): string | undefined {
+  for (const q of r.requirements ?? []) {
+    if (q.kind !== "card" || q.answered) continue;
+    const card = (q.input ?? {}) as { type?: unknown; title?: unknown; text?: unknown; questions?: unknown };
+    if (typeof card.type !== "string" || !WAITS_ON_YOU.has(card.type)) continue;
+    const expires = Date.parse(q.expires);
+    if (!Number.isNaN(expires) && expires <= now.getTime()) continue;
+    const first = Array.isArray(card.questions) ? (card.questions[0] as { text?: unknown } | undefined)?.text : undefined;
+    const said = [card.title, first, card.text].find((x): x is string => typeof x === "string" && x.trim() !== "");
+    // The row adds its own ": Coach is waiting…", so the name keeps no end punctuation of its own ("Which day?").
+    if (said) return shortened(said.trim().replace(/\s+/g, " ").replace(/[\s?!.:;,]+$/, ""));
+  }
+  return undefined;
+}
+
+function shortened(line: string): string {
+  if (line.length <= NAMED_MAX) return line;
+  const cut = line.slice(0, NAMED_MAX);
+  const at = cut.lastIndexOf(" ");
+  return `${(at > NAMED_MAX / 2 ? cut.slice(0, at) : cut).replace(/[\s,;:.]+$/, "")}…`;
+}
+
+/** The person's Coach runs that wait on them, one per chat. */
+export function waitingRuns(paused: Run[], coach: string, subject: string, now: Date): Run[] {
+  const out = new Map<string, Run>();
+  for (const r of paused) {
+    if (r.agent !== coach || r.status !== "PAUSED") continue;
+    if (r.requester?.kind !== "member" || r.requester.id !== subject) continue;
+    if (!waitingCards(r, now).length || out.has(r.session)) continue;
+    out.set(r.session, r);
+  }
+  return [...out.values()];
 }
 
 /**
  * The chats of `coach` paused on a card `subject` answers, oldest first, one per chat. A card past its `expires` no
- * longer waits: kiff/agents ends it.
+ * longer waits: kiff/agents ends it. Each row names what waits, in the card's own words (`waitingOn`); a card that says
+ * nothing is named by its chat, as Coach's history does (`titles`, by session); with neither, the row says what it
+ * waits for alone.
  */
-export function coachWaitingOf(paused: Run[], coach: string, subject: string, now: Date, lang: Lang = "en"): CoachWaiting[] {
+export function coachWaitingOf(paused: Run[], coach: string, subject: string, now: Date, lang: Lang = "en", zone = "UTC",
+  titles: Map<string, string> = new Map()): CoachWaiting[] {
   const w = wordsIn(lang);
-  const out = new Map<string, CoachWaiting>();
-  for (const r of paused) {
-    if (r.agent !== coach || r.status !== "PAUSED") continue;
-    if (r.requester?.kind !== "member" || r.requester.id !== subject) continue;
-    const open = (r.requirements ?? []).filter((q) => {
-      if (q.kind !== "card" || q.answered) return false;
-      const type = (q.input as { type?: unknown } | undefined)?.type;
-      if (typeof type !== "string" || !WAITS_ON_YOU.has(type)) return false;
-      const expires = Date.parse(q.expires);
-      return Number.isNaN(expires) || expires > now.getTime();
-    });
-    if (!open.length || out.has(r.session)) continue;
-    const approves = open.some((q) => APPROVES.has((q.input as { type?: string }).type ?? ""));
-    out.set(r.session, {
-      taf: coach, session: r.session, run: r.id, since: r.updated || r.created,
-      words: { line: approves ? w.coach_waiting_approval : w.coach_waiting_answer, open: w.coach_waiting_open },
-    });
-  }
-  return [...out.values()].sort((a, b) => a.since.localeCompare(b.since));
+  return waitingRuns(paused, coach, subject, now).map((r) => {
+    const approves = waitingCards(r, now).some((c) => APPROVES.has(c.type));
+    const since = r.updated || r.created;
+    const title = waitingOn(r, now) ?? titles.get(r.session)?.trim();
+    const day = new Intl.DateTimeFormat(lang === "en" ? "en-GB" : lang, { timeZone: zone, day: "numeric", month: "short" }).format(new Date(since));
+    const line = title
+      ? endSentence(approves ? w.coach_waiting_named_approval(title, day) : w.coach_waiting_named_answer(title, day))
+      : (approves ? w.coach_waiting_approval : w.coach_waiting_answer);
+    return { taf: coach, session: r.session, run: r.id, since, words: { line, open: w.coach_waiting_open, set_aside: w.coach_waiting_set_aside } };
+  }).sort((a, b) => a.since.localeCompare(b.since));
+}
+
+/** Home's "Set all aside", naming the count it ends, with the one ask: only for two or more. */
+export function coachWaitingClear(rows: CoachWaiting[], lang: Lang = "en"): { words: { button: string; title: string; text: string; yes: string; no: string } } | undefined {
+  if (rows.length < 2) return undefined;
+  const w = wordsIn(lang);
+  return { words: { button: w.coach_waiting_clear, title: w.coach_waiting_clear_title(rows.length), text: w.coach_waiting_clear_text,
+    yes: w.coach_waiting_clear, no: w.coach_waiting_clear_no } };
 }

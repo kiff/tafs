@@ -156,7 +156,11 @@ steps have none.
 reads, kiff/agents refuses the act back, unmade, and tells the taf to read first. Nothing
 reached KIFF or the tool, so it isn't a failure. The step ends `not_made` and shows
 "not made · read first" with a ↩ mark; made again, it's one row with its tries; not made
-again, it stays in the list.
+again, it stays in the list. A connection call the connection server refused for how Coach
+wrote it (its order, "read the catalog before…", or its shape, "reusing … takes agent, agent_name and
+tools: [] alone", a missing grant id) ends `not_made` too, never "Coach couldn't connect …" in red:
+nothing was made, and Coach asks again. A reread of the thread says the same (the kept reason is marked
+`not_made`).
 
 **A run that paused on a held call** has its work in parts, one for each stretch between
 pauses. Each part's work goes on the first message written in it, and its time leaves out
@@ -353,11 +357,24 @@ as if the key still waited ([secure-connection.md](secure-connection.md)).
 the fingerprint follows at once, so each approval card still waiting says beforehand what it signs:
 `signs: {card: true}` when its fingerprint signs the Card (the `cards`, `key_and_cards` or `tools_and_cards`
 step), and `signs: {card: false, words?}` when it signs the connection alone, with `words` ("Its Card: you
-approve it next", in the reader's language) when the card carries a draft. It comes from the same rule `decide`
+approve it next", in the reader's language) when the card carries a draft, or when it's an app's first
+connection, before its tools: its Card can only be drafted over the tools the sign-in brings, so the card has
+no draft yet, and a Card always follows. A sign-in again (its Card is in force) and tools added to a connected
+app with no draft carry no `words`. The apps draw `words` with or without a draft. It comes from the same rule `decide`
 asks by (`stepFor`), read as the phone: the chat's read carries `Planque-Device-Signature` and what the phone can
 sign (`?can=tools_and_cards,key_and_cards`). Without the proof, or when the connections can't be read within
-1.5 s, the cards carry no `signs` and the apps draw them as before. With `card: false`, an app never draws the
+1.5 s, the cards carry no `signs` and the apps draw them as before. A phone that draws by the mark says so with
+`signs` in `can` (on the read and on the ask): only then is a held sign-in's first tools offered with the Card
+under one fingerprint ([secure-connection.md](secure-connection.md)). With `card: false`, an app never draws the
 Card's limits as being signed now: they go under `words`.
+
+**Whether Approve is a tap is on the card too:** `signs.takes`, `"tap"` or `"fingerprint"`, from the key `decide`
+then asks with (`takesOf`). Connecting an app (`connect`) is a tap inside an open approval window. The key or added
+tools signed with their Card (`key_and_cards`, `tools_and_cards`) always take the fingerprint. A Card alone (`cards`)
+takes the key KIFF names for its draft (`confirm_key`, read within the same 1.5 s), and the fingerprint while KIFF
+names none. When KIFF's draft can't be read, `takes` is left out. The apps draw KIFF's window words ("No fingerprint
+for the next 4 minutes", [approvals.md](approvals.md#one-fingerprint-then-taps-the-approval-window)) only on a
+`"tap"` card: on any other, Approve asks for the fingerprint, and the card doesn't say otherwise.
 
 ## Coming back to a run at work
 

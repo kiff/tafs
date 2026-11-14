@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.secret
 import bot.tafs.app.drive.confirms
@@ -7,7 +8,6 @@ import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,6 +44,7 @@ import bot.tafs.app.design.Panel
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.kiff.ConnectApps
+import bot.tafs.app.kiff.displayName
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -158,7 +159,10 @@ fun ConnectAppsSheet(
   /** The connection that just came back signed in, and leaving that note. */
   onConnectedNow: (bot.tafs.app.kiff.Grant) -> Unit = {},
   dismissConnectedNow: () -> Unit = {},
+  /** Reads planque's connections again: a connected row whose connections the phone doesn't hold reads them before it opens. */
+  onReadConnections: suspend () -> Unit = {},
 ) {
+  val readScope = androidx.compose.runtime.rememberCoroutineScope()
   var query by rememberSaveable { mutableStateOf("") }
   // An app is connected for a taf: with several, the owner picks which first; with none, there's nothing to connect it for.
   var picking by androidx.compose.runtime.remember { mutableStateOf<ConnectApps.App?>(null) }
@@ -201,24 +205,35 @@ fun ConnectAppsSheet(
             Text(
               bot.tafs.app.model.ConnectWords.CHOOSE_ACTIONS,
               style = scaled(15, FontWeight.SemiBold, Theme.amber),
-              modifier = Modifier.heightIn(min = 44.dp).clickable { onConnectedNow(grant) }.padding(12.dp),
+              modifier = Modifier.heightIn(min = 44.dp).tapping { onConnectedNow(grant) }.padding(12.dp),
             )
           }
         },
         dismissButton = {
-          Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = dismissConnectedNow).padding(12.dp))
+          Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = dismissConnectedNow).padding(12.dp))
         },
       )
     }
     managing?.let { app ->
       val (sections, removed, others) = byTaf(state, connectionsOf(state, app))
+      // Its last connection removed: the sheet closes, never "The apps couldn't be read." over a list that's simply empty now.
+      val none = sections.isEmpty() && removed.isEmpty() && others.isEmpty()
+      var hadSome by androidx.compose.runtime.remember(app.entry) { mutableStateOf(false) }
+      LaunchedEffect(app.entry, none, state.connectionsError) {
+        if (!none) hadSome = true else if (hadSome && closesWhenEmptied(state.connectionsError)) managing = null
+      }
       DriveAlert(
         onDismissRequest = { managing = null },
         containerColor = Theme.background,
-        title = { Text(ConnectAppsWords.yourConnections(app.title), style = scaled(20, FontWeight.Bold, Theme.ink)) },
+        title = { Text(ConnectAppsWords.yourConnections(app.displayName), style = scaled(20, FontWeight.Bold, Theme.ink)) },
         text = {
           Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (onDisconnect != null) Text(ConnectAppsWords.DISCONNECT_WHY, style = scaled(13, color = Theme.soft))
+            // None on the phone even after reading again: why, in words (the read's failure, or that planque isn't set up here).
+            if (none && !(hadSome && closesWhenEmptied(state.connectionsError))) {
+              Text(state.connectionsError?.let { Words.Connect.appsNotRead(why = it) }
+                ?: if (!state.planqueReady) bot.tafs.app.model.CoachWords.NOT_CONNECTABLE else Words.Connect.appsNotRead(why = ""),
+                style = scaled(14, color = Theme.amberText))
+            } else if (onDisconnect != null && sections.isNotEmpty()) Text(ConnectAppsWords.DISCONNECT_WHY, style = scaled(13, color = Theme.soft))
             // Each taf's name over its connections, so no row repeats it; then those whose taf the app can't name, under words that
             // claim nothing about it, with the same row.
             val groups = sections.map { it.taf to it.grants } + listOfNotNull(others.takeIf { it.isNotEmpty() }?.let { bot.tafs.app.model.ConnectionWords.OTHER_CONNECTIONS to it })
@@ -226,10 +241,10 @@ fun ConnectAppsSheet(
             Text(heading, style = scaled(13, FontWeight.SemiBold, Theme.dim), modifier = Modifier.padding(top = 4.dp).semantics { heading() })
             grants.forEach { g ->
               // planque describes it: its title, who uses it and its health; the row opens its detail, where its actions are.
-              if (g.actions != null) { DescribedConnectionRow(g, app.title, state) { detail = g }; return@forEach }
+              if (g.actions != null) { DescribedConnectionRow(g, app.displayName, state) { detail = g }; return@forEach }
               Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Column(Modifier.weight(1f)) {
-                  Text(ConnectAppsWords.rowTitle(app.title, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
+                  Text(ConnectAppsWords.rowTitle(app.displayName, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
                   g.statusWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
                   ConnectAppsWords.alsoOnCards(state, g)?.let { Text(it, style = scaled(13, color = Theme.soft)) }
                   // Its last failed call, in KIFF's words (gap 13), and how to fix the connection.
@@ -241,7 +256,7 @@ fun ConnectAppsSheet(
                     Text(
                       if (g.takesKey) bot.tafs.app.model.ConnectionWords.REPLACE_KEY else bot.tafs.app.model.ConnectionWords.SIGN_IN_AGAIN,
                       style = scaled(15, FontWeight.SemiBold, Theme.amberText),
-                      modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = state.connecting == null) { act(g) }.padding(top = 10.dp),
+                      modifier = Modifier.heightIn(min = 44.dp).confirms().tapping(enabled = state.connecting == null) { act(g) }.padding(top = 10.dp),
                     )
                   }
                   state.coachNotes[g.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
@@ -250,7 +265,7 @@ fun ConnectAppsSheet(
                 if (onDisconnect != null) Text(
                   bot.tafs.app.model.ConnectionWords.endButton(g),
                   style = scaled(15, FontWeight.SemiBold, Theme.no),
-                  modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { if (g.cancellable) confirmingCancel = g else confirmingDisconnect = g }.padding(top = 10.dp),
+                  modifier = Modifier.heightIn(min = 44.dp).confirms().tapping { if (g.cancellable) confirmingCancel = g else confirmingDisconnect = g }.padding(top = 10.dp),
                 )
               }
             }
@@ -264,7 +279,7 @@ fun ConnectAppsSheet(
               Text(bot.tafs.app.model.ConnectionWords.FROM_REMOVED, style = scaled(13, FontWeight.SemiBold, Theme.dim), modifier = Modifier.padding(top = 4.dp).semantics { heading() })
               removed.forEach { g ->
                 Column {
-                  Text(ConnectAppsWords.rowTitle(app.title, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
+                  Text(ConnectAppsWords.rowTitle(app.displayName, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
                   // The removed taf it was made for, by the name planque keeps.
                   g.agentName?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.soft)) }
                   g.statusWords?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.dim)) }
@@ -274,7 +289,7 @@ fun ConnectAppsSheet(
               if (onClearRemoved != null && clearable.isNotEmpty()) Text(
                 if (state.clearingRemoved) Words.Connect.Apps.clearing else bot.tafs.app.model.ConnectionWords.CLEAR_REMOVED,
                 style = scaled(15, FontWeight.SemiBold, if (state.clearingRemoved) Theme.dim else Theme.no),
-                modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = !state.clearingRemoved) { confirmingClear = clearable }.padding(top = 10.dp),
+                modifier = Modifier.heightIn(min = 44.dp).confirms().tapping(enabled = !state.clearingRemoved) { confirmingClear = clearable }.padding(top = 10.dp),
               )
             }
             state.clearNote?.let { Text(it, style = scaled(13, color = Theme.ink), modifier = Modifier.semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite }) }
@@ -282,7 +297,7 @@ fun ConnectAppsSheet(
         },
         confirmButton = {},
         dismissButton = {
-          Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable { managing = null }.padding(12.dp))
+          Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).tapping { managing = null }.padding(12.dp))
         },
       )
     }
@@ -309,7 +324,7 @@ fun ConnectAppsSheet(
                 Text(
                   if (a.how == "approve" && state.connecting == live.id) state.connectStep ?: a.words else a.words,
                   style = scaled(15, FontWeight.SemiBold, if (a.how == "delete") Theme.no else Theme.amberText),
-                  modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = state.connecting == null) { go() }.padding(top = 6.dp),
+                  modifier = Modifier.heightIn(min = 44.dp).confirms().tapping(enabled = state.connecting == null) { go() }.padding(top = 6.dp),
                 )
               }
             }
@@ -317,7 +332,7 @@ fun ConnectAppsSheet(
         },
         confirmButton = {},
         dismissButton = {
-          Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable { detail = null }.padding(12.dp))
+          Text(bot.tafs.app.model.ConnectWords.DONE, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).tapping { detail = null }.padding(12.dp))
         },
       )
     }
@@ -382,39 +397,42 @@ fun ConnectAppsSheet(
         title = { Text(bot.tafs.app.model.ConnectWords.WHICH_TAF, style = scaled(20, FontWeight.Bold, Theme.ink)) },
         text = {
           Column {
-            Text(bot.tafs.app.model.ConnectWords.oneTaf(app.title), style = scaled(14, color = Theme.soft))
+            Text(bot.tafs.app.model.ConnectWords.oneTaf(app.displayName), style = scaled(14, color = Theme.soft))
             tafs.forEach { taf ->
               Text(
                 taf.name,
                 style = scaled(16, FontWeight.SemiBold, Theme.amber),
-                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { picking = null; onConnect?.invoke(app, taf.id) }.padding(top = 14.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).tapping { picking = null; onConnect?.invoke(app, taf.id) }.padding(top = 14.dp),
               )
             }
           }
         },
         confirmButton = {},
         dismissButton = {
-          Text(Words.Common.cancel, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable { picking = null }.padding(12.dp))
+          Text(Words.Common.cancel, style = scaled(15, FontWeight.SemiBold, Theme.dim), modifier = Modifier.heightIn(min = 44.dp).tapping { picking = null }.padding(12.dp))
         },
       )
     }
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(ConnectAppsWords.TITLE, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
       }
       Column(
         Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         OutlinedTextField(query, driveTyped({ query = it }), Modifier.fillMaxWidth(), placeholder = { Text(ConnectAppsWords.SEARCH) }, singleLine = true)
-        if (onConnect != null && tafs.isEmpty()) Text(bot.tafs.app.model.ConnectWords.NO_TAF, style = scaled(14, color = Theme.soft))
         state.connectAppsError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         val apps = state.connectApps
         // Yours first (connected, signed in, or to sign in again), then Discover: tafs cloud's order within each.
         val (yours, discover) = apps?.apps.orEmpty().partition { it.yours }
         val row: @Composable (ConnectApps.App) -> Unit = { app ->
-          AppRow(app, connect, onChooseActions, onManage = if (connectionsOf(state, app).isNotEmpty()) ({ a: ConnectApps.App -> managing = a }) else null, usedBy = usedBy(state, app))
+          // A connected row always opens: with none of its connections on the phone, they're read again first (Android 85 and iPad
+          // 2239 left the row dead when the read had failed), and the sheet then says why when there are still none.
+          AppRow(app, connect, onChooseActions, onManage = { a: ConnectApps.App ->
+            if (connectionsOf(state, a).isNotEmpty()) managing = a else readScope.launch { onReadConnections(); managing = a }
+          }, usedBy = usedBy(state, app), onAskCoach = onAskCoach.takeIf { onConnect != null && tafs.isEmpty() })
         }
         if (yours.isNotEmpty()) {
           bot.tafs.app.design.Eyebrow(Words.Connect.Apps.yours)
@@ -422,6 +440,9 @@ fun ConnectAppsSheet(
         }
         if (discover.isNotEmpty()) {
           if (yours.isNotEmpty()) bot.tafs.app.design.Eyebrow(Words.Connect.Apps.discover)
+          // Above the apps to connect, where it holds: an app is connected for a taf, so with none they can't be yet. Never above
+          // Yours, whose apps are already connected (an audit read it above "Stripe · Connected").
+          if (onConnect != null && tafs.isEmpty()) Text(bot.tafs.app.model.ConnectWords.NO_TAF, style = scaled(14, color = Theme.soft))
           discover.forEach { row(it) }
         }
         if (apps != null && apps.apps.isEmpty() && query.isNotBlank()) Text(ConnectAppsWords.NONE, style = scaled(14, color = Theme.soft))
@@ -431,7 +452,7 @@ fun ConnectAppsSheet(
           Text(
             ConnectAppsWords.MORE,
             style = scaled(15, FontWeight.SemiBold, Theme.amber),
-            modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { more.launch { loadMore() } }.padding(top = 10.dp),
+            modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping { more.launch { loadMore() } }.padding(top = 10.dp),
           )
         }
         if (apps?.byKey == true) {
@@ -439,7 +460,7 @@ fun ConnectAppsSheet(
             Text(
               ConnectAppsWords.NOT_LISTED,
               style = scaled(15, FontWeight.SemiBold, Theme.ink),
-              modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onAskCoach).padding(top = 10.dp),
+              modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(onClick = onAskCoach).padding(top = 10.dp),
             )
             Text(ConnectAppsWords.NOT_LISTED_WHY, style = scaled(13, color = Theme.soft))
           }
@@ -450,8 +471,19 @@ fun ConnectAppsSheet(
 }
 
 @Composable
-private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?, onChooseActions: (ConnectApps.App) -> Unit = {}, onManage: ((ConnectApps.App) -> Unit)? = null, usedBy: List<String> = emptyList()) {
-  Panel {
+private fun AppRow(
+  app: ConnectApps.App,
+  onConnect: ((ConnectApps.App) -> Unit)?,
+  onChooseActions: (ConnectApps.App) -> Unit = {},
+  onManage: ((ConnectApps.App) -> Unit)? = null,
+  usedBy: List<String> = emptyList(),
+  /** With no taf to connect it for, the way to make one: Coach. */
+  onAskCoach: (() -> Unit)? = null,
+) {
+  // A connected app's whole row opens its connections, not only its "Connected" label (an audit: "I tapped the whole Gmail
+  // row and nothing happened").
+  val opens = if (app.connected && onManage != null) Modifier.tapping(onClickLabel = Words.Connect.Apps.manage) { onManage(app) } else Modifier
+  Panel(opens) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
       // The app's logo from tafs cloud, small and as it is; without one, its initial on a tile, which is only a marker.
       val logo = bot.tafs.app.design.rememberLogo(app.logo)
@@ -460,13 +492,15 @@ private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?
           androidx.compose.foundation.Image(logo, contentDescription = null, modifier = Modifier.size(28.dp))
         }
       } else {
-        Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(tileColor(app.title)), contentAlignment = Alignment.Center) {
-          Text(app.title.take(1).uppercase(), style = scaled(15, FontWeight.ExtraBold, Color.White))
+        Box(Modifier.size(36.dp).clip(RoundedCornerShape(10.dp)).background(tileColor(app.displayName)), contentAlignment = Alignment.Center) {
+          Text(app.displayName.take(1).uppercase(), style = scaled(15, FontWeight.ExtraBold, Color.White))
         }
       }
-      // Its title alone: the provider's own id for it means nothing to a person; an app not set up yet says so under it.
+      // Its name alone, tafs cloud's, with what this entry of it is under it when sent ("Qonto" / "Invoicing: reads, …"): the
+      // provider's own id for it means nothing to a person; an app not set up yet says so under it.
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(app.title, style = scaled(15, FontWeight.SemiBold, if (app.needsSetup) Theme.soft else Theme.ink))
+        Text(app.displayName, style = scaled(15, FontWeight.SemiBold, if (app.needsSetup) Theme.soft else Theme.ink))
+        app.subtitle?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.soft), maxLines = 2) }
         app.words?.takeIf { app.needsSetup && it.isNotBlank() }?.let { Text(it, style = scaled(13, color = Theme.soft)) }
         // The second line, as on iPhone and iPad: tafs cloud's own when it sends it; else the same words put together here.
         if (!app.needsSetup) Text(ConnectAppsWords.secondLine(app, usedBy), style = scaled(12, color = Theme.dim), maxLines = 2)
@@ -476,7 +510,7 @@ private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?
         app.connected -> Text(
           ConnectAppsWords.CONNECTED,
           style = scaled(14, FontWeight.SemiBold, Theme.ok),
-          modifier = if (onManage != null) Modifier.heightIn(min = 44.dp).clickable(onClickLabel = Words.Connect.Apps.manage) { onManage(app) }.padding(top = 12.dp) else Modifier,
+          modifier = Modifier.heightIn(min = 44.dp).padding(top = 12.dp),
         )
         // Not set up yet: nothing to tap, only tafs cloud's line under the name.
         app.needsSetup -> Unit
@@ -484,14 +518,20 @@ private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?
         app.signedIn -> Text(
           bot.tafs.app.model.ConnectWords.SIGNED_IN_ROW,
           style = scaled(14, FontWeight.SemiBold, Theme.amber),
-          modifier = Modifier.heightIn(min = 44.dp).clickable { onChooseActions(app) }.padding(top = 10.dp),
+          modifier = Modifier.heightIn(min = 44.dp).tapping { onChooseActions(app) }.padding(top = 10.dp),
         )
         onConnect != null -> Text(
           if (app.needsReconnect) ConnectAppsWords.SIGN_IN_AGAIN else ConnectAppsWords.CONNECT,
           style = scaled(15, FontWeight.SemiBold, if (app.needsReconnect) Theme.amberText else Theme.amber),
-          modifier = Modifier.heightIn(min = 44.dp).clickable { onConnect(app) }.padding(top = 10.dp),
+          modifier = Modifier.heightIn(min = 44.dp).tapping { onConnect(app) }.padding(top = 10.dp),
         )
         app.needsReconnect -> Text(ConnectAppsWords.SIGN_IN_AGAIN, style = scaled(14, color = Theme.amberText))
+        // No taf to connect it for: the way to make one, in Coach (an audit found every such row dead).
+        onAskCoach != null -> Text(
+          Words.Coach.ask,
+          style = scaled(15, FontWeight.SemiBold, Theme.amber),
+          modifier = Modifier.heightIn(min = 44.dp).tapping { onAskCoach() }.padding(top = 10.dp),
+        )
       }
     }
   }
@@ -615,7 +655,7 @@ fun ConnectApprovalSheet(
         Text(
           bot.tafs.app.model.ConnectWords.CANCEL,
           style = scaled(15, FontWeight.SemiBold, Theme.dim),
-          modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp),
+          modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 10.dp),
         )
       }
     }
@@ -640,7 +680,7 @@ private fun app0(state: AppState, g: bot.tafs.app.kiff.Grant): String = bot.tafs
 @Composable
 internal fun DescribedConnectionRow(g: bot.tafs.app.kiff.Grant, app: String, state: AppState, onOpen: () -> Unit) {
   Column(
-    Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onOpen).padding(vertical = 4.dp),
+    Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(onClick = onOpen).padding(vertical = 4.dp),
     verticalArrangement = Arrangement.spacedBy(2.dp),
   ) {
     Text(g.title?.takeIf { it.isNotBlank() } ?: ConnectAppsWords.rowTitle(app, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
@@ -649,3 +689,6 @@ internal fun DescribedConnectionRow(g: bot.tafs.app.kiff.Grant, app: String, sta
     state.coachNotes[g.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
   }
 }
+
+/** A connections sheet emptied by a removal closes, unless the read failed: then it says why. */
+internal fun closesWhenEmptied(connectionsError: String?): Boolean = connectionsError == null

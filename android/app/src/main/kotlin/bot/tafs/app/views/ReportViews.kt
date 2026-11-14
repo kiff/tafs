@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveSheet
@@ -16,7 +17,6 @@ import android.content.ClipData
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -81,7 +81,7 @@ fun AnswerWithActions(text: String, onReport: (suspend (String, String?) -> Repo
         style = scaled(13, FontWeight.Medium, Theme.dim),
         modifier = Modifier
           .heightIn(min = 40.dp)
-          .clickable(onClickLabel = AnswerWords.COPY_LABEL) {
+          .tapping(onClickLabel = AnswerWords.COPY_LABEL) {
             scope.launch {
               clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("answer", text)))
               copied = true
@@ -98,7 +98,7 @@ fun AnswerWithActions(text: String, onReport: (suspend (String, String?) -> Repo
           style = scaled(16, FontWeight.Bold, Theme.dim),
           modifier = Modifier
             .heightIn(min = 40.dp)
-            .clickable(onClickLabel = AnswerWords.MORE) { menu = true }
+            .tapping(onClickLabel = AnswerWords.MORE) { menu = true }
             .semantics { contentDescription = AnswerWords.MORE }
             .padding(horizontal = 10.dp, vertical = 8.dp),
         )
@@ -149,7 +149,7 @@ fun ReportSheet(onReport: suspend (String, String?) -> ReportResult, onClose: ()
             .heightIn(min = 48.dp)
             .clip(RoundedCornerShape(14.dp))
             .border(BorderStroke(1.dp, if (chosen) Theme.amber else Theme.line), RoundedCornerShape(14.dp))
-            .clickable(enabled = !sending, role = Role.RadioButton) { reason = value }
+            .tapping(enabled = !sending, role = Role.RadioButton) { reason = value }
             .semantics { selected = chosen }
             .padding(horizontal = 12.dp),
           verticalAlignment = Alignment.CenterVertically,

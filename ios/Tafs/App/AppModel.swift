@@ -32,7 +32,30 @@ final class AppModel: ObservableObject {
     /// › Your step), less those this phone just answered.
     @Published private(set) var yourSteps: [TafsCloud.YourStep] = []
     /// Coach's chats waiting on the owner, as Home lists them (docs/api.md › Coach waiting).
-    @Published private(set) var coachWaiting: [TafsCloud.CoachWaiting] = []
+    @Published private(set) var coachWaitingListed: [TafsCloud.CoachWaiting] = []
+    /// Coach's waiting chats as Needs you draws them: Home's, less the chat open in Coach now (the
+    /// person is in it), and less those being set aside, so a swipe that took never springs back
+    /// while tafs cloud answers (as Android 94 does). Neither shows as a row nor counts; a refusal
+    /// brings the row back.
+    var coachWaiting: [TafsCloud.CoachWaiting] {
+        let open = coachChatOnScreen
+        return coachWaitingListed.filter { $0.session != open && !settingAside.contains($0.session) }
+    }
+    /// The Coach chat open on screen: Coach is open, on a chat that has a session; nil otherwise.
+    var coachChatOnScreen: String? {
+        guard coachOpen else { return nil }
+        return setupChat ?? (setupFresh ? nil : setupThread.session)
+    }
+    /// Of Home's waiting chats, those Needs you leaves out: open on screen, or being set aside.
+    private var coachWaitingHidden: Int { coachWaitingListed.count - coachWaiting.count }
+    /// Home's "Set all aside" (`coach_waiting_clear`), as tafs cloud sent it; nil when it sent none.
+    @Published private(set) var coachWaitingClear: TafsCloud.CoachWaitingClear?
+    /// The Coach chats being set aside now: one call per chat at a time, so a swipe that fires
+    /// again, or a second tap, sends nothing until tafs cloud answers (Android 86 sent 11 in 3 s).
+    @Published private(set) var settingAside: Set<String> = []
+    /// The Coach chats set aside on this phone: Coach never opens one by itself again, so a new
+    /// job never goes on in an ended session. Kept in memory only (docs/data.md).
+    private var setAsideChats: Set<String> = []
     /// Steps answered here and accepted by KIFF that Home may still list until the run hears the
     /// answer: kept out of Needs you and its count, and forgotten once Home stops listing them.
     private var answeredSteps: Set<String> = []
@@ -42,19 +65,21 @@ final class AppModel: ObservableObject {
     @Published var requestedStep: String?
     /// Home's count of what waits for the person, from tafs cloud (kiff/tafs#469 item 1).
     @Published private(set) var homeNeedsYou: TafsCloud.NeedsYou?
+    /// Home's line as tafs cloud counted it, in its words; nil when it sent none.
+    @Published private(set) var homeHeadline: String?
     /// Of tafs cloud's count, the steps answered here that it still counts.
     private var answeredStillCounted = 0
 
     /// What waits for the person: tafs cloud's count, or, when it sent none, the app's own
     /// count of held calls, currency requests, steps and "Did this happen?" calls.
     var needsYouCount: Int {
-        homeNeedsYou.map { max(0, $0.count - answeredStillCounted) }
+        homeNeedsYou.map { max(0, $0.count - answeredStillCounted - coachWaitingHidden) }
             ?? held.count + cardUnitExceptions.count + yourSteps.count + unproven.count + coachWaiting.count
     }
 
     /// Home's line under the working count, in tafs cloud's words when it sent them.
     var needsYouWords: String {
-        if answeredStillCounted == 0, let words = homeNeedsYou?.words { return words }
+        if answeredStillCounted == 0, coachWaitingHidden == 0, let words = homeNeedsYou?.words { return words }
         let n = needsYouCount
         return n == 0 ? Words.NeedsYou.nothing : Words.NeedsYou.count(count: n)
     }
@@ -537,6 +562,23 @@ final class AppModel: ObservableObject {
     /// The list in two (kiff/tafs#306): the tafs this person manages, and those shared with
     /// them to use, each in the list's order. Which is which is KIFF's answer; a taf whose
     /// answer isn't in yet counts as theirs, so nothing moves into "Shared with you" and back.
+    /// Whether a taf belongs in the iPad's sidebar now (the owner's layout): it has an item in Needs you (a held
+    /// call, a step it handed over, a knock at its door), or it ran or changed in the last 24 hours, as tafs cloud says. The
+    /// rest are in the tafs list behind the mascot.
+    func relevantNow(_ taf: Taf) -> Bool {
+        let cloud = cloudTaf(for: taf.id)
+        return Self.relevantNow(held: !heldCalls(for: taf.id).isEmpty,
+                                step: cloud.map { c in yourSteps.contains { $0.taf?.id == c.id } } ?? false,
+                                knock: (taf.doors ?? []).contains { $0.knocks > 0 },
+                                lastRun: cloud?.lastRun, lastChange: cloud?.lastChange, now: clock())
+    }
+
+    nonisolated static func relevantNow(held: Bool, step: Bool, knock: Bool, lastRun: Date?, lastChange: Date? = nil, now: Date) -> Bool {
+        if held || step || knock { return true }
+        // A run, or a change (a version, its Card, a setting: tafs cloud's `last_change`), in the last 24 hours.
+        return [lastRun, lastChange].contains { $0.map { now.timeIntervalSince($0) < 24 * 60 * 60 } ?? false }
+    }
+
     var tafSections: (own: [Taf], shared: [Taf]) {
         let listed = listedTafs
         return (listed.filter { !sharedWithMe($0.id) }, listed.filter { sharedWithMe($0.id) })
@@ -588,6 +630,10 @@ final class AppModel: ObservableObject {
     }
 
     var workingCount: Int { tafs.filter { $0.state == .working }.count }
+
+    /// Home's line: tafs cloud's words as sent, or, when it sent none, the app's own count of
+    /// the tafs working.
+    var workingWords: String { homeHeadline ?? Words.Home.working(count: workingCount) }
 
     /// Whether KIFF still holds this Record entry's call for an answer: a held call with its
     /// proposal is in Needs you. Before KIFF's list is read, a held entry counts as waiting.
@@ -646,8 +692,9 @@ final class AppModel: ObservableObject {
             tafSetups = [:]; tafSetupErrors = [:]; connectedAgain = [:]; activityPages = [:]; runPages = [:]; timeZones = []
             recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
             recordTyping?.cancel(); recordTyping = nil
-            cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil
-            yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaiting = []
+            cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil; homeHeadline = nil
+            yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaitingListed = []
+            coachWaitingClear = nil; settingAside = []; setAsideChats = []
             haltErrors = [:]
             alertsOffered = false
             remembered?.removeObject(forKey: Self.alertsOfferedKey)
@@ -674,7 +721,8 @@ final class AppModel: ObservableObject {
                 return try await kiff.startDeviceSignIn(publicKey: key.isEmpty ? nil : key,
                                                         approvalPublicKey: key.isEmpty || approvalKey.isEmpty ? nil : approvalKey,
                                                         deviceName: Words.Settings.Devices.thisDeviceName(device: "\(ThisDevice.kind)"),
-                                                        platform: key.isEmpty ? nil : ThisDevice.platform)
+                                                        platform: key.isEmpty ? nil : ThisDevice.platform,
+                                                        kind: ThisDevice.kiffKind)
             } catch where Self.transient(error) && tries < 2 {
                 tries += 1
                 try await Task.sleep(nanoseconds: 500_000_000)
@@ -1444,7 +1492,7 @@ final class AppModel: ObservableObject {
     @Published private(set) var canAnswerHolds: Bool?
 
     /// Turns on alerts for the account's held calls, so they reach this phone with tafs closed:
-    /// the owner allows notifications and confirms with Face ID; the phone points the
+    /// the owner allows notifications, with no Face ID; the phone points the
     /// account's KIFF alert target at tafs cloud (a signed setup call) and hands tafs cloud
     /// the target's signing secret with its push token. A secret tafs cloud didn't take last
     /// time is handed over again first, without registering a new one. True once done.
@@ -1472,9 +1520,10 @@ final class AppModel: ObservableObject {
 
         var handoff = pendingHandoff
         if handoff == nil {
-            do {
-                _ = try await signer.sign(Data("tafs.alerts.v1|\(tenant)".utf8), reason: Words.Alert.prompt)
-            } catch { return false }
+            // No Face ID here (`AlertsTests`): the alert target is a signed setup call KIFF takes
+            // with the device key, which signs with no prompt, as Refuse and Halt all do. It grants
+            // no authority (`KIFFClient.grantsAuthority`), so the approval key never signs it; a
+            // prompt here only confirmed a signature nothing checks, before any job had started.
             guard gen == accountGeneration else { return false }
             let signer = self.signer
             kiff.tenant = tenant
@@ -1734,8 +1783,12 @@ final class AppModel: ObservableObject {
     func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
         cardUnitExceptions = home.cardUnitExceptions ?? []
         showSteps(home.yourSteps ?? [])
-        coachWaiting = (home.coachWaiting ?? []).filter(\.usable)
+        // A chat being set aside isn't drawn again by a read meanwhile, as on Android: `coachWaiting`
+        // leaves it out until tafs cloud answers, and a refusal brings it back.
+        coachWaitingListed = (home.coachWaiting ?? []).filter { $0.usable }
+        coachWaitingClear = home.coachWaitingClear.flatMap { $0.usable ? $0 : nil }
         homeNeedsYou = home.needsYou
+        homeHeadline = home.headlineWords
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
         cloudTafs = running
@@ -2053,7 +2106,7 @@ final class AppModel: ObservableObject {
             connectStart = start
         } catch {
             guard gen == accountGeneration else { return }
-            lastError = Words.Connect.couldNotConnected(vendor: "\(app.vendor.isEmpty ? app.title : app.vendor)", why: "\(error.localizedDescription)")
+            lastError = Words.Connect.couldNotConnected(vendor: "\(app.name ?? (app.vendor.isEmpty ? app.title : app.vendor))", why: "\(error.localizedDescription)")
         }
     }
 
@@ -2440,6 +2493,13 @@ final class AppModel: ObservableObject {
     /// day, week and month and the navigator's marks. Another account's read never lands here.
     func loadCalendar(_ state: CalendarState) async {
         let range = CalendarMath.range(state.selected)
+        // A screenshot over the sample (`-screen calendar`): no KIFF account to read, so an empty
+        // range rather than an error under the header.
+        if Screenshots.calendar != nil, mode != .kiff {
+            calendarRead = TafsCloud.CalendarRead(from: range.from, to: range.to)
+            calendarError = nil
+            return
+        }
         let gen = accountGeneration
         calendarError = nil
         do {
@@ -4224,10 +4284,10 @@ final class AppModel: ObservableObject {
 
     /// `files` go with the message (kiff/tafs#209): a message may be files alone. One with
     /// files that doesn't go is left with the composer, files and all, rather than kept unsent.
-    /// A send that went through ticks (Haptics), whichever way it went.
+    /// A send that went through ticks (Haptics), whichever way it went; one kept unsent warns.
     private func deliverChat(_ text: String, to tafID: UUID, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
         let delivery = await deliverChatOnce(text, to: tafID, files: files)
-        if delivery == .sent { Haptics.success() }
+        Haptics.play(delivery.feel)
         return delivery
     }
 
@@ -5961,6 +6021,7 @@ final class AppModel: ObservableObject {
             return nil
         }
         quietStop = nil
+        notApprovable = false
         guard connecting == nil else {
             quietStop = Words.Connect.anotherApproval
             return nil
@@ -6027,6 +6088,7 @@ final class AppModel: ObservableObject {
         // this phone confirms the new one.
         guard ["pending", "approved", "signed_in", "needs_reconnect"].contains(grant.status) || (again && grant.connected) else {
             failureIsTheRequests = grant.status == "failed"
+            notApprovable = true
             lastError = grant.reason.map { Words.Connect.connectionIsBecause(status: grant.status.replacingOccurrences(of: "_", with: " "), reason: $0) }
                 ?? Words.Connect.connectionIs(status: grant.status.replacingOccurrences(of: "_", with: " "))
             return nil
@@ -6070,7 +6132,7 @@ final class AppModel: ObservableObject {
                     await refreshConnections()
                     guard gen == accountGeneration else { return nil }
                     guard confirmed.connected || confirmed.listed else {
-                        lastError = Words.Coach.notConnected(vendor: grant.vendor, status: confirmed.status.replacingOccurrences(of: "_", with: " "))
+                        lastError = Words.Coach.notConnected(vendor: grant.vendor)
                         return nil
                     }
                     return confirmed
@@ -6079,7 +6141,7 @@ final class AppModel: ObservableObject {
                 // chose from the vendor's list connected them, with no second sign-in.
                 guard approved.status == "connected" else {
                     await refreshConnections()
-                    lastError = Words.Connect.noSignInLink(status: "\(approved.status)")
+                    lastError = Words.Connect.noSignInLink(vendor: grant.vendor)
                     return nil
                 }
                 // planque said connected: that's the answer (kiff/tafs#245). The list is read
@@ -6117,7 +6179,7 @@ final class AppModel: ObservableObject {
         }
         await refreshConnections()
         guard connected.connected || connected.listed else {
-            lastError = Words.Coach.notConnected(vendor: grant.vendor, status: connected.status.replacingOccurrences(of: "_", with: " "))
+            lastError = Words.Coach.notConnected(vendor: grant.vendor)
             return nil
         }
         return connected
@@ -6511,9 +6573,12 @@ final class AppModel: ObservableObject {
     /// The same for each taf's chat (kiff/tafs#138, item 48): one rule for both chats.
     private var chatSent: [UUID: [TafsCloud.ChatMessage]] = [:]
 
-    /// Where Setup's next message goes.
+    /// Where Setup's next message goes. Every one says the app follows a new chat: tafs cloud
+    /// starts one for a message to a chat that already handed a taf over (`followNewSetupChat`).
     private var setupTarget: TafsCloud.ChatTarget {
-        setupFresh ? .new : setupChat.map { TafsCloud.ChatTarget(session: $0) } ?? .live
+        var target = setupFresh ? TafsCloud.ChatTarget.new : setupChat.map { TafsCloud.ChatTarget(session: $0) } ?? .live
+        target.newChatAfterHandover = true
+        return target
     }
 
     /// The taf a new Setup conversation improves (kiff/tafs#107), by its id in tafs cloud:
@@ -6546,13 +6611,19 @@ final class AppModel: ObservableObject {
 
     /// A new conversation in Coach mode is on no taf (kiff/tafs#138, item 36): the owner
     /// asked for a new taf in one opened on a taf's page, and got that taf's next version.
-    /// The taf on screen is offered in it, to improve with one tap.
+    /// The taf on screen is offered in it, to improve with one tap. The pencil is a plain chat
+    /// for good: Coach reopened on the same taf's page stays on it, never back in that taf's mode,
+    /// so the taf on screen is marked as already chosen against.
     func newCoachConversation() {
+        let onScreen = tafOnScreen.flatMap { cloudTaf(for: $0)?.id }
         newSetupChat()
+        setupContextTafID = onScreen
     }
 
     /// Coach's conversation has nothing in it yet: no message, card or answer, sent or on its
-    /// way, and no taf it improves. New conversation keeps it, with what's typed.
+    /// way, and no taf it improves. New conversation keeps it, with what's typed. An empty one
+    /// about a taf ("Improve Refunds") isn't: the pencil opens a plain new one, so it always
+    /// opens a plain chat.
     var coachChatIsEmpty: Bool {
         setupImproving == nil && setupThread.items.isEmpty && setupSent.isEmpty && setupUnsent.isEmpty
             && setupQueued == nil && setupLive == nil && !setupThinking
@@ -6692,6 +6763,26 @@ final class AppModel: ObservableObject {
         KIFFMapping.vendorWords(grant.vendor)
     }
 
+    /// A connection's app as Connect apps names it ("Gmail"), by its grant or its catalog entry,
+    /// else planque's vendor in people's words (as Android's `ConnectionWords.appName`).
+    func appName(_ grant: PlanqueClient.Grant) -> String {
+        let listed = connectApps?.apps.first { $0.grant == grant.id || (grant.entry != nil && $0.entry == grant.entry) }
+        if let name = listed?.displayName.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty { return name }
+        return Self.promptApp(grant)
+    }
+
+    /// A sign-in card's app: the card's service, else the connection's app; nil when neither is
+    /// known (as Android's `signInWords`, Android 1.27.8).
+    nonisolated static func signInApp(service: String?, app: String?) -> String? {
+        [service, app].compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }.first { !$0.isEmpty }
+    }
+
+    /// A sign-in card's title: "Sign in at Gmail", and "Sign in at the vendor" only when no app is
+    /// known. Never a connection's status.
+    nonisolated static func signInWords(app: String?) -> String {
+        app.map { Words.Coach.SignIn.at(vendor: "\($0)") } ?? Words.Coach.SignIn.atVendor
+    }
+
     /// The prompt read last before connecting: "Connect Stripe to Disputes", or "Connect Stripe"
     /// when no taf is named yet, never "to a taf" (as Android's `connectPrompt`).
     func connectPrompt(_ grant: PlanqueClient.Grant) -> String {
@@ -6806,6 +6897,62 @@ final class AppModel: ObservableObject {
         await openSetupChat(waiting.session)
     }
 
+    /// Set aside, on this row: only signed in (not the sample), and only when tafs cloud sent its
+    /// words (`words.set_aside`). The app decides nothing else about it.
+    func canSetAside(_ waiting: TafsCloud.CoachWaiting) -> Bool {
+        mode == .kiff && !waiting.session.isEmpty && !waiting.words.setAside.isEmpty
+    }
+
+    /// "Set all aside", above the rows: only with two or more, signed in, and when tafs cloud sent
+    /// `coach_waiting_clear`.
+    var setAllAside: TafsCloud.CoachWaitingClear? {
+        guard mode == .kiff, coachWaiting.count > 1 else { return nil }
+        return coachWaitingClear
+    }
+
+    /// Sets a waiting Coach chat aside, or every one with nil (docs/api.md › Coach waiting): tafs
+    /// cloud's "not now", never an approval, and nothing is signed. One call per chat at a time: a
+    /// chat already being set aside sends nothing until tafs cloud answers. The row goes once tafs
+    /// cloud says so, Coach no longer shows that chat, and Home is read again for its count. A
+    /// refusal keeps the row and says why, in tafs cloud's words. True once tafs cloud took it.
+    @discardableResult
+    func setAsideCoach(_ session: String?) async -> Bool {
+        guard mode == .kiff else { return false }
+        // Set all aside ends every chat tafs cloud listed, so it's guarded by all of them, rows
+        // hidden while being set aside included: no second call for a chat already on its way.
+        let sessions = session.map { Set([$0]) } ?? Set(coachWaitingListed.map(\.session))
+        // Checked and marked before anything is awaited, so on the main actor no second call slips in between.
+        guard !sessions.isEmpty, settingAside.isDisjoint(with: sessions) else { return false }
+        settingAside.formUnion(sessions)
+        let gen = accountGeneration
+        // This phone's signed read of its connections: tafs cloud withdraws a connection the chat asked for.
+        let signer = self.signer
+        planque.tenant = kiffTenant
+        var proof: String?
+        if planqueReady && sessionHasKey { proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) }) }
+        let done: TafsCloud.SetAside
+        do {
+            guard gen == accountGeneration else { return false }
+            done = try await cloud.setAsideCoach(session, proof: proof)
+        } catch {
+            guard gen == accountGeneration else { return false }
+            settingAside.subtract(sessions)
+            lastError = (error as? TafsCloud.CloudError).map { $0.words ?? $0.message } ?? error.localizedDescription
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        settingAside.subtract(sessions)
+        let ended = Set(done.setAside)
+        coachWaitingListed.removeAll { ended.contains($0.session) }
+        setAsideChats.formUnion(ended)
+        // Coach no longer shows a chat that was set aside: its next message would go on in the
+        // ended session. A new conversation instead, as Android 1.27.1 does.
+        if let shown = setupChat ?? (setupFresh ? nil : setupThread.session), ended.contains(shown) { newSetupChat() }
+        Haptics.success()
+        await refresh()
+        return true
+    }
+
     /// Reopens one of Setup's chats: it's shown alone, and messages go on in it.
     func openSetupChat(_ session: String) async {
         setupConversationGeneration += 1
@@ -6880,6 +7027,26 @@ final class AppModel: ObservableObject {
         guard setupFresh else { return }
         setupChat = session
         setupFresh = false
+    }
+
+    /// tafs cloud started a new chat for the message just sent to the chat shown, which had
+    /// already handed a taf over (docs/api.md, `new_chat_after_handover`): the answer or the
+    /// stream's `session` event says `new_session: true` with another session. Coach follows it:
+    /// the new chat is the one shown, with the message just sent (`sent`, the local copy) and the
+    /// answer streaming into it; the old chat stays under Previous conversations, as tafs cloud
+    /// lists it. What else was on its way belonged to the old chat, which tafs cloud has. True
+    /// once it moved: the conversation is a new one then, and the caller goes on in it.
+    @discardableResult
+    private func followNewSetupChat(_ session: String, newSession: Bool, sent: String?) -> Bool {
+        guard newSession, !session.isEmpty, let open = setupChat, open != session else { return false }
+        setupConversationGeneration += 1
+        setupChat = session
+        setupFresh = false
+        setupSent = setupSent.filter { $0.id == sent }
+        setupThread = SetupThread(messages: setupSent)
+        setupAnsweredCard = nil
+        setupLiveBefore = Set(setupThread.items.map(\.id))
+        return true
     }
 
     /// Setup's KIFF agent: one per account.
@@ -6989,7 +7156,11 @@ final class AppModel: ObservableObject {
         if setupChat == nil, let chats = try? await cloud.chats(s.id) {
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
             setupChats = chats
-            if setupChat == nil, !setupFresh, let newest = chats.max(by: { $0.updated < $1.updated }) { setupChat = newest.session }
+            if setupChat == nil, !setupFresh, let newest = chats.max(by: { $0.updated < $1.updated }) {
+                // A chat set aside here is never the one Coach goes on in: a new conversation instead.
+                if setAsideChats.contains(newest.session) { newSetupChat(); return }
+                setupChat = newest.session
+            }
             if setupFresh { return }
         }
         // This phone's signed read of its connections, and the steps it signs: tafs cloud then marks each
@@ -7000,9 +7171,13 @@ final class AppModel: ObservableObject {
         var proof: String?
         if planqueReady && sessionHasKey { proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) }) }
         guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
+        // Coach's run ended since the last read, seen here rather than on a stream: Home is read again.
+        var runEnded = false
         do {
             let thread = try await cloud.setupThread(s.id, session: setupChat, proof: proof, can: Self.stepsSignedHere)
             guard gen == accountGeneration, conversation == setupConversationGeneration, !setupFresh else { return }
+            // At work at the last read, idle now, and no stream to say so at its end.
+            runEnded = setupThread.working != nil && thread.working == nil && setupLive == nil
             setupThread = withSent(thread)
             setupError = nil
             settleSetupAwaiting()
@@ -7013,11 +7188,17 @@ final class AppModel: ObservableObject {
             if setupLive != nil, thread.working == nil, !setupSending, setupSent.isEmpty, thread.handedOver(session: setupLive?.session) {
                 setupLive = nil
                 setupAwaiting = nil
+                runEnded = true
             }
         } catch {
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
             setupError = Words.Coach.conversationNotLoaded(why: "\(error.localizedDescription)")
             return
+        }
+        // Setup ended or was handed over: Needs you's row for this chat, and its badge, go now.
+        if runEnded {
+            await refresh()
+            guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         }
         // What an approval needs to be shown: planque's grant and KIFF's draft.
         let approvals = setupThread.components.map(\.component).filter { $0.type == .approval || $0.type == .signIn }
@@ -7174,12 +7355,24 @@ final class AppModel: ObservableObject {
 
     /// What a send did with a message: sent it, kept it in the thread as not sent (it
     /// was tried and failed), or didn't try (nothing to send, too long, or busy).
-    enum Delivery { case sent, kept, notTried }
+    enum Delivery {
+        case sent, kept, notTried
 
-    /// A send to Coach that went through ticks (Haptics), whichever way it went.
+        /// What the person feels as their Send ends (Haptics): sent, a success tick; tried and
+        /// kept unsent, a warning; not tried (nothing to send, busy), nothing more than the press.
+        var feel: Haptics.Kind? {
+            switch self {
+            case .sent: return .success
+            case .kept: return .warning
+            case .notTried: return nil
+            }
+        }
+    }
+
+    /// A send to Coach that went through ticks (Haptics), whichever way it went; one kept unsent warns.
     private func deliverSetup(_ text: String, files: [TafsCloud.AttachmentRef] = []) async -> Delivery {
         let delivery = await deliverSetupOnce(text, files: files)
-        if delivery == .sent { Haptics.success() }
+        Haptics.play(delivery.feel)
         return delivery
     }
 
@@ -7188,7 +7381,8 @@ final class AppModel: ObservableObject {
         guard !text.isEmpty || !files.isEmpty, text.count <= Self.chatLimit, let s = setupTaf, !setupSending else { return .notTried }
         // An improvement's first message carries no files: tafs cloud adds the taf's context to it.
         if !files.isEmpty, setupImproving != nil { return .notTried }
-        let conversation = setupConversationGeneration
+        // A var: a new chat tafs cloud started for this message is still this send's (`followNewSetupChat`).
+        var conversation = setupConversationGeneration
         setupSending = true
         defer { if conversation == setupConversationGeneration { setupSending = false } }
         let gen = accountGeneration
@@ -7237,6 +7431,7 @@ final class AppModel: ObservableObject {
             let sent = try await cloud.sendMessage(s.id, text: text, to: setupTarget, files: files)
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
             settleSetupChat(sent.session)
+            if followNewSetupChat(sent.session, newSession: sent.newSession, sent: mine.id) { conversation = setupConversationGeneration }
             if let id = sent.message?.id { markSetupSent(mine.id, serverID: id) }
             setupAwaiting = clock()
             await loadSetupThread()
@@ -7564,12 +7759,18 @@ final class AppModel: ObservableObject {
     /// A stream that drops leaves the conversation to show the rest, as it does without one.
     private func followSetupStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, text: String, gen: Int,
                                    conversation: Int, sent: String? = nil) async {
+        // The answer follows the new chat tafs cloud started for the message (`followNewSetupChat`).
+        var conversation = conversation
         var ended: String?
+        // Coach paused on a card its person answers: Needs you is read once then, so its row
+        // and badge come while the chat is still open, not after it closes.
+        var waitsOnYou = false
         do {
             for try await e in events {
                 guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                 switch e {
-                case .session(let session, _, let run, let message):
+                case .session(let session, let newSession, let run, let message):
+                    if followNewSetupChat(session, newSession: newSession, sent: sent) { conversation = setupConversationGeneration }
                     setupLive?.session = session
                     if let run { setupLive?.run = run }
                     settleSetupChat(session)
@@ -7581,6 +7782,7 @@ final class AppModel: ObservableObject {
                     setupLive?.thinking += t
                 case .state(let state, let words):
                     setupLive?.state = LiveState(state: state, words: words)
+                    waitsOnYou = Self.stillWaitsOnYou(waitsOnYou, state: state)
                 case .activity(let tool, let step, let call):
                     // The step shows at once; the thread then picks up the words written so far.
                     let words = step ?? Self.activityWords(tool)
@@ -7604,6 +7806,7 @@ final class AppModel: ObservableObject {
                     setupLiveBefore = Set(setupThread.items.map(\.id))
                 case .end(let status, _, _, _, _):
                     ended = status
+                    if status == "PAUSED" { waitsOnYou = true }
                 case .held:
                     setupLive?.ended(nil, .held)
                 case .broken, .taken:
@@ -7620,6 +7823,27 @@ final class AppModel: ObservableObject {
         await loadSetupThread()
         guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         setupLive = nil
+        // Paused on a card: Home, and its Needs you, read once now, as a taf's chat does at its end.
+        // Any other end (done, stopped, failed) reads it too: a row of this chat that waited on the
+        // person goes, with its badge, rather than wait for the next read.
+        if Self.readsHomeAtEnd(ended: ended, waitsOnYou: waitsOnYou) { await refresh() }
+    }
+
+    /// Whether a Coach run's stream, at its end, reads Home again: when the run ended, however it
+    /// ended, or paused on a card. A stream that dropped with no end leaves it to the next read.
+    nonisolated static func readsHomeAtEnd(ended: String?, waitsOnYou: Bool) -> Bool {
+        waitsOnYou || ended != nil
+    }
+
+    /// Whether Coach's run still waits on its person after this live line: `waiting_for_you`
+    /// (a card that waits on them, or a held call) says it does; any other line but the last,
+    /// `done`, says it went on. One Home read per pause, at the stream's end.
+    nonisolated static func stillWaitsOnYou(_ before: Bool, state: String) -> Bool {
+        switch state {
+        case "waiting_for_you": return true
+        case "done": return before
+        default: return false
+        }
     }
 
     /// What Setup is doing, in the owner's words, from the tool it calls.
@@ -7701,6 +7925,17 @@ final class AppModel: ObservableObject {
     /// Where a card stands (kiff/tafs#58): waiting for the owner, at work, or answered
     /// with its outcome.
     enum CardState: Equatable { case needsYou, working, done, declined, failed(String?) }
+
+    /// What an approval made on Coach's card plays as the card reaches `state` (Haptics): approved,
+    /// a success tick; failed, a warning. Declined is the person's own choice, and on its way or
+    /// back to asking is no outcome yet: nothing.
+    nonisolated static func feel(approving state: CardState) -> Haptics.Kind? {
+        switch state {
+        case .done: return .success
+        case .failed: return .warning
+        case .needsYou, .working, .declined: return nil
+        }
+    }
 
     /// An approval's or a sign-in's state, from planque's grant, KIFF's draft and the
     /// owner's answer in the thread.
@@ -7932,6 +8167,7 @@ final class AppModel: ObservableObject {
                         _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true)
                     } catch {
                         cardNotes[component.id] = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+                        Haptics.warning()
                         return
                     }
                     guard gen == accountGeneration else { return }
@@ -7959,10 +8195,13 @@ final class AppModel: ObservableObject {
             guard gen == accountGeneration else { return }
             cardNotes[component.id] = refused.words ?? refused.message
             await loadSetupThread()
+            // Once the thread is read again: a card it shows as failed is the same failure, one buzz.
+            Haptics.warning()
         } catch {
             guard gen == accountGeneration else { return }
             cardNotes[component.id] = Words.Coach.answerNotReached(why: "\(error.localizedDescription)")
             await loadSetupThread()
+            Haptics.warning()
         }
     }
 
@@ -8359,6 +8598,16 @@ final class AppModel: ObservableObject {
             lastError = nil
             return
         }
+        // A connection that takes no approval now (signed in already, or past approving): tafs cloud
+        // answers the card in the person's words, never planque's status ("This connection is listed.").
+        // Where it can't be asked, the app's line stands (Android 1.27.8).
+        if done == nil, notApprovable {
+            let answeredByCloud = await notApprovableAnswered(component, grantID: grant)
+            if answeredByCloud {
+                lastError = nil
+                return
+            }
+        }
         if let done, done.connected || done.listed {
             await answer(component, Words.Coach.Answer.signedInLower)
         } else if let e = lastError {
@@ -8366,6 +8615,30 @@ final class AppModel: ObservableObject {
         } else if done == nil {
             cardNotes[component.id] = quietStop ?? Words.Connect.nothingSignedIn
         }
+    }
+
+    /// Set by `connect` when the grant's status takes no approval (anything but pending, approved,
+    /// signed in or signed out by its vendor): a sign-in card then asks tafs cloud for its words.
+    private var notApprovable = false
+
+    /// Asks tafs cloud about a sign-in card whose connection takes no approval now: its approval
+    /// route takes a sign-in card too (docs/api.md). True once it answered Coach, with its note on
+    /// the card; anything else (something to sign, no answer) leaves the card to the app.
+    private func notApprovableAnswered(_ component: SetupComponent, grantID: String) async -> Bool {
+        guard let s = setupTaf, let tenant = kiffTenant else { return false }
+        let gen = accountGeneration
+        let signer = self.signer
+        let ref = cardRef(component.id)
+        let session = setupThread.components.last { $0.ref == ref }?.session
+        planque.tenant = tenant
+        // The read proof: planque shows the grant to tafs cloud only as this phone; it signs and grants nothing there.
+        let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+        guard gen == accountGeneration else { return false }
+        let decision = try? await cloud.approval(s.id, component: component.id, body: .init(grant: grantID, session: session), proof: proof)
+        guard gen == accountGeneration, let decision, decision.outcome == "answered" else { return false }
+        cardNotes[component.id] = decision.note.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+        await setupAnswered(s.id, ref: ref, decision: decision, gen: gen)
+        return true
     }
 
     /// The taf a result hands over to, when this phone shows it.
@@ -8457,12 +8730,28 @@ enum Screenshots {
     /// `-screen taf` opens a taf's page, `-screen card` its Cards; `-screen new` the new-taf flow; `-screen solo` and
     /// `-screen add-tasks` the purchase screens, for the products in App Store Connect.
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
+    /// `-screen calendar` opens Calendar on today in Day mode, `-screen calendar-week` in Week mode on
+    /// today's week: today is in what's shown, so the Today pill is in its "already today" state. An
+    /// iPad's whole-app sidebar selects its Calendar item; the phone opens it as Home's button does.
+    static var calendar: CalendarState? {
+        guard enabled else { return nil }
+        let today = CalendarMath.today(in: AccountTime.zone)
+        switch screen {
+        case "calendar": return CalendarState(mode: .day, selected: today)
+        case "calendar-week": return CalendarState(mode: .week, selected: today)
+        default: return nil
+        }
+    }
     /// `-pack rayo`: the add-tasks screen with that pack alone, one screenshot a product.
     static var pack: String? { UserDefaults.standard.string(forKey: "pack") }
     /// `-narrow YES`: tafs laid out at Slide Over's width on an iPad, compact (kiff/tafs#210).
     static var narrow: Bool { UserDefaults.standard.bool(forKey: "narrow") }
     /// `-landscape YES`: the iPad's window turned to landscape, for its screenshots.
     static var landscape: Bool { UserDefaults.standard.bool(forKey: "landscape") }
+    /// `-signedIn YES`: the iPad's sidebar laid out as for a signed-in account (its screens and
+    /// Coach above the account), over the sample's tafs. A screenshot of the layout only: nothing
+    /// is read from KIFF, and the screens it lists aren't opened.
+    static var signedIn: Bool { enabled && UserDefaults.standard.bool(forKey: "signedIn") }
 
     @MainActor static func turnToLandscape() {
         for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {

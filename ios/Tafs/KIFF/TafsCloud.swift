@@ -81,6 +81,8 @@ final class TafsCloud {
         /// The next run in the person's language, with its weekday when it isn't today ("Next run
         /// Mon 08:00"): drawn as is, never a bare time that reads as tomorrow.
         var nextRunWords: String? = nil
+        /// When it last changed (a version, its Card or a setting), as Home says; not read from a taf's own record.
+        var lastChange: Date? = nil
 
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, unscheduled, results
@@ -292,6 +294,9 @@ final class TafsCloud {
         let status: String?
         let nextRun: Date?
         let lastRun: Date?
+        /// When it last changed (a version, its Card or a setting), an ISO time; read leniently (any shape, never
+        /// failing Home's read) into `CloudTaf.lastChange`.
+        var lastChange: JSONValue? = nil
         let color: Int
         /// working, paused, waiting, idle (an agent tafs doesn't run) or stopped (no active Card).
         let state: String
@@ -344,6 +349,7 @@ final class TafsCloud {
             case timeZoneWords = "time_zone_words", scheduleTimeZone = "schedule_time_zone"
             case scheduleTimeZoneWords = "schedule_time_zone_words"
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", jobSummary = "job_summary"
+            case lastChange = "last_change"
         }
 
         /// tafs cloud's record of it, for its chat, runs and schedule; nil for another agent.
@@ -352,7 +358,16 @@ final class TafsCloud {
             // its chat can't take (kiff/tafs#206 section 2).
             id.map { CloudTaf(id: $0, name: name, job: job ?? "", kiffAgent: kiffAgent, status: status ?? "active", nextRun: nextRun, lastRun: lastRun,
                               unscheduled: unscheduled, results: results, timeZoneWords: timeZoneWords, scheduleTimeZone: scheduleTimeZone, scheduleTimeZoneWords: scheduleTimeZoneWords,
-                              nextRunWords: nextRunWords) }
+                              nextRunWords: nextRunWords, lastChange: { if case .string(let s)? = lastChange { return Self.time(s) }; return nil }()) }
+        }
+
+        /// An ISO time as tafs cloud writes it, with or without fractions of a second; anything else is none.
+        static func time(_ s: String) -> Date? {
+            let f = ISO8601DateFormatter()
+            f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let d = f.date(from: s) { return d }
+            f.formatOptions = [.withInternetDateTime]
+            return f.date(from: s)
         }
     }
 
@@ -369,6 +384,8 @@ final class TafsCloud {
         var yourSteps: [YourStep]? = nil
         /// Coach's chats waiting on their person (`coach_waiting`), oldest first.
         var coachWaiting: [CoachWaiting]? = nil
+        /// "Set all aside" (`coach_waiting_clear`), for two or more waiting chats; absent, none.
+        var coachWaitingClear: CoachWaitingClear? = nil
         /// Everything that waits for the person, counted by tafs cloud with its words; absent
         /// when KIFF's "Did this happen?" can't be read, and the app counts what it has.
         var needsYou: NeedsYou? = nil
@@ -376,6 +393,24 @@ final class TafsCloud {
         /// tafs cloud from before it, whose `others` are drawn as before. With it, `others` only
         /// repeats them for older apps, and isn't drawn.
         var settingUp: [SettingUp]? = nil
+        /// Home's line, counted by tafs cloud with its words (the tafs at work; with none, the
+        /// tafs ready to work from their chat); nil when it sent none, and the app counts its own.
+        var headline: Headline? = nil
+
+        /// tafs cloud's line for Home, drawn as sent.
+        struct Headline: Decodable, Equatable {
+            var words = ""
+            init(words: String) { self.words = words }
+            enum CodingKeys: String, CodingKey { case words }
+            init(from decoder: Decoder) throws {
+                // A headline that isn't one reads as wordless, never failing Home's read.
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+                words = (((try? c.decodeIfPresent(String.self, forKey: .words)) ?? nil) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+
+        /// tafs cloud's words for Home's line; nil when it sent none the app can draw.
+        var headlineWords: String? { headline.flatMap { $0.words.isEmpty ? nil : $0.words } }
 
         /// A taf whose setup stopped partway: the name Coach gave it, and for the person whose
         /// Coach chat it was, the chat that finishes it.
@@ -440,7 +475,9 @@ final class TafsCloud {
             case cardUnitExceptions = "card_unit_exceptions"
             case yourSteps = "your_steps"
             case coachWaiting = "coach_waiting"
+            case coachWaitingClear = "coach_waiting_clear"
             case needsYou = "needs_you"
+            case headline
         }
     }
 
@@ -1279,6 +1316,10 @@ final class TafsCloud {
     struct ChatTarget: Equatable {
         var session: String?
         var newChat = false
+        /// The app follows a new chat (docs/api.md, `POST /v1/tafs/{id}/messages`): a message to a
+        /// Coach chat that already handed a taf over starts a new one, and the answer and the
+        /// stream's `session` event say `new_session: true` with its session. Coach's sends say so.
+        var newChatAfterHandover = false
         static let live = ChatTarget()
         static let new = ChatTarget(newChat: true)
     }
@@ -1288,14 +1329,18 @@ final class TafsCloud {
         let text: String
         let session: String?
         let newChat: Bool?
+        let newChatAfterHandover: Bool?
         /// The files attached to it, by the ids their uploads gave (kiff/tafs#209).
         let attachments: [String]?
-        enum CodingKeys: String, CodingKey { case text, session, attachments, newChat = "new_chat" }
+        enum CodingKeys: String, CodingKey {
+            case text, session, attachments, newChat = "new_chat", newChatAfterHandover = "new_chat_after_handover"
+        }
 
         init(_ text: String, _ target: ChatTarget, files: [AttachmentRef] = []) {
             self.text = text
             session = target.session
             newChat = target.newChat ? true : nil
+            newChatAfterHandover = target.newChatAfterHandover ? true : nil
             attachments = files.isEmpty ? nil : files.map(\.id)
         }
     }

@@ -625,7 +625,6 @@
     <string name="coach_drive_cant">Coach non può guidare: %1$s</string>
     <string name="coach_drive_not_started_unconfirmed">Non avviato: non è stato confermato.</string>
     <string name="coach_driving">Alla guida</string>
-    <string name="coach_each_waits">Ogni collegamento e ogni Card aspettano %1$s.</string>
     <string name="coach_earlier_request">Richiesta precedente</string>
     <string name="coach_folds_plan">Comprime il piano</string>
     <string name="coach_full_screen">Schermo intero</string>
@@ -634,7 +633,7 @@
     <string name="coach_improve_why_refused">Perché qualcosa è stato rifiutato o trattenuto?</string>
     <string name="coach_improve_line">Di\' cosa dovrebbe cambiare, o chiedi come sta andando. La modalità Coach parte da ciò che %1$s ha fatto e da ciò che la sua Card consente.</string>
     <string name="coach_improve_taf">Migliora %1$s</string>
-    <string name="coach_intro">Indica un\'app per il tuo taf, come il tuo fornitore di pagamenti. Nessun taf vede il tuo accesso.</string>
+    <string name="coach_intro">Indica un\'app per il tuo taf, come il tuo fornitore di pagamenti.</string>
     <string name="coach_kiff_counts_way">KIFF lo conteggia così</string>
     <string name="coach_making_live">Attivazione…</string>
     <string name="coach_name_tool_taf_should_work">Indica un\'app per il tuo taf, come il tuo fornitore di pagamenti. Nessun taf vede il tuo accesso. Approvi con %1$s.</string>
@@ -646,7 +645,7 @@
     <string name="coach_not_allowed">Coach è per le persone a cui KIFF lo consente, di norma gli amministratori dell\'account.</string>
     <string name="coach_not_archived_try_again">Non archiviata. Riprova.</string>
     <string name="coach_not_connectable">Il collegamento delle app non è configurato per questo account da questo telefono. Apri Coach per avviarlo.</string>
-    <string name="coach_not_connected">L\'accesso su %1$s non si è collegato: il collegamento è %2$s. Non è stato collegato nulla. Prova ad accedere di nuovo.</string>
+    <string name="coach_not_connected">L\'accesso a %1$s non si è concluso, quindi non è stato collegato nulla. Accedi di nuovo.</string>
     <string name="coach_not_improved">La nuova versione di %1$s non è stata creata: %2$s.</string>
     <string name="coach_not_no_sign">Non ora: nessun accesso su %1$s</string>
     <string name="coach_not_put_back_try_again">Non ripristinata. Riprova.</string>
@@ -701,8 +700,11 @@
     <string name="coach_sign_in_at_vendor">Accedi presso il fornitore</string>
     <string name="coach_sign_in_eyebrow">Ti aspetta · accedi</string>
     <string name="coach_sign_in_open">Apri %1$s</string>
+    <string name="coach_sign_in_open_again">Riapri l\'accesso</string>
+    <string name="coach_sign_in_open_again_app">Riapri l\'accesso a %1$s</string>
     <string name="coach_sign_in_open_sign_in">Apri l\'accesso</string>
     <string name="coach_sign_in_opens">Apre %1$s</string>
+    <string name="coach_sign_in_opens_app">Apre l\'accesso a %1$s</string>
     <string name="coach_sign_in_note">Si apre la pagina del fornitore. Nessun taf vede il tuo accesso.</string>
     <string name="coach_signed_reading_what_offers">Accesso effettuato su %1$s · lettura di ciò che offre</string>
     <string name="coach_start">Avvia</string>
@@ -721,6 +723,7 @@
     <string name="coach_tools_not_read">Impossibile leggere gli strumenti di Coach. %1$s</string>
     <string name="coach_tools_unknown">KIFF non ha risposto sugli strumenti di Coach. Riprova tra un attimo.</string>
     <string name="coach_unknown_answer">La configurazione ha risposto qualcosa che questa app non sa leggere. Aggiorna l\'app.</string>
+    <string name="coach_waiting_for_app">Se si è aperta la pagina di accesso di %1$s, completala lì e torna qui.</string>
     <string name="coach_waiting_for_vendor">Se si è aperta la pagina di accesso del fornitore, completala lì e torna qui.</string>
     <string name="coach_what_conversation_about">Di cosa parla questa conversazione</string>
     <string name="coach_will_work_like">" funzionerà così"</string>
@@ -865,7 +868,7 @@
     <string name="connect_more_apps">Altre app</string>
     <string name="connect_more_apps_could_not_listed">Impossibile elencare altre app: %1$s</string>
     <string name="connect_no_confirmation_code">L\'accesso su %1$s è tornato senza il codice di conferma. Non è stato collegato nulla.</string>
-    <string name="connect_no_sign_in_link">Il collegamento è tornato %1$s senza un link di accesso. Non è stato collegato nulla.</string>
+    <string name="connect_no_sign_in_link">Non si è aperta nessuna pagina di accesso di %1$s, quindi non è stato collegato nulla. Riprova.</string>
     <string name="connect_no_such_connection">Non esiste un collegamento con quell\'id.</string>
     <string name="connect_no_taf">Crea prima un taf: un\'app viene collegata perché un taf la usi.</string>
     <string name="connect_not_connected">Non collegato. %1$s</string>
@@ -1141,11 +1144,10 @@
     <string name="halt_again">Blocca di nuovo</string>
     <string name="halt_all_now">Blocca tutto ora</string>
     <string name="halt_explain_halted">Bloccato. Riprendendo, parte solo lavoro nuovo.</string>
-    <string name="halt_explain_halted_since">Bloccato dalle %1$s. Riprendendo, parte solo lavoro nuovo.</string>
+    <string name="halt_explain_halted_since">Dalle %1$s. Riprendendo, parte solo lavoro nuovo.</string>
     <string name="halt_explain_halting">Non parte nulla di nuovo. Bloccato compare quando KIFF e il collegamento lo confermano entrambi.</string>
     <string name="halt_explain_running_all">Bloccare ferma i tuoi tafs finché non riprendi. Una chiamata già inviata può ancora arrivare.</string>
     <string name="halt_explain_running_one">Bloccare lo ferma finché non riprendi. Una chiamata già inviata può ancora arrivare.</string>
-    <string name="halt_halted_nothing_reaches_your_tools">Bloccato%1$s. Riprendendo, parte solo lavoro nuovo.</string>
     <string name="halt_halting_stops_no_run_starts">Bloccare ferma %1$s finché non riprendi. Una chiamata già inviata può ancora arrivare.</string>
     <string name="halt_now">Blocca ora</string>
     <string name="halt_row_running">Fermalo finché non riprendi</string>
@@ -1199,7 +1201,6 @@
     <string name="home_sample_label">Cosa ha riferito dopo la sua prova</string>
     <string name="home_see_all_jobs">Vedi tutti i lavori</string>
     <string name="home_shared_you">Condivisi con te</string>
-    <string name="home_sign_approve_each_step">Accedi e approvi ogni passo</string>
     <string name="home_start_new_taf">Inizia un nuovo taf</string>
     <string name="home_status">Stato</string>
     <string name="home_status_retrying">%1$s · nuovo tentativo</string>
@@ -1804,6 +1805,7 @@
     <string name="settings_kiff_account">Account KIFF</string>
     <string name="settings_language_title">Lingua</string>
     <string name="settings_legal">Note legali</string>
+    <string name="settings_legal_in_english">%1$s (in inglese)</string>
     <string name="settings_light_taps_when_you_send">Un leggero tocco quando invii o rispondi.</string>
     <string name="settings_mode">Modalità</string>
     <string name="settings_mode_kiff">Accesso effettuato con KIFF</string>

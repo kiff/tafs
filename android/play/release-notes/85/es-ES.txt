@@ -1,0 +1,4 @@
+- Tus conexiones se leen con claridad: qué son, quién las usa y cómo están. Toca una para ver el detalle; quitarla pide confirmación.
+- Un taf cuyo inicio de sesión caducó tiene su propio «Conectar de nuevo» y conserva su Card.
+- «Te necesita» muestra cuándo Coach te espera.
+- Un inicio de sesión en la cuenta equivocada se dice claramente.

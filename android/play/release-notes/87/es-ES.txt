@@ -1,0 +1,2 @@
+- «Dejar de lado» envía una sola petición por chat, sea como sea el deslizamiento.
+- Una app conectada siempre se abre al tocarla. Si no se pueden leer sus conexiones, dice por qué.

@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.model.SecondStep
@@ -21,6 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import bot.tafs.app.drive.DriveAlert
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -39,7 +42,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import bot.tafs.app.design.LocalBiometry
 import bot.tafs.app.kiff.AnswerRefusals
 import androidx.compose.foundation.text.selection.SelectionContainer
-import androidx.compose.foundation.clickable
 import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -114,7 +116,7 @@ fun ApprovalKeyLine(modifier: Modifier = Modifier) {
         Text(
           Words.NeedsYou.signInAgainInstead,
           style = scaled(13, FontWeight.SemiBold, Theme.dim),
-          modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = it).padding(vertical = 12.dp),
+          modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = it).padding(vertical = 12.dp),
         )
       }
     } else {
@@ -131,7 +133,7 @@ fun ApprovalKeyLine(modifier: Modifier = Modifier) {
         CircularProgressIndicator(Modifier.size(18.dp), color = Theme.amber, strokeWidth = 2.dp)
         Text(WAITING_FOR_BROWSER, style = scaled(14, color = Theme.soft), modifier = Modifier.weight(1f))
         // A 44 dp target, its word level with the line beside it.
-        Text(Words.Common.cancel, style = scaled(14, FontWeight.SemiBold, Theme.amber), modifier = Modifier.clickable(onClick = again.cancel).padding(horizontal = 4.dp, vertical = 12.dp))
+        Text(Words.Common.cancel, style = scaled(14, FontWeight.SemiBold, Theme.amber), modifier = Modifier.tapping(onClick = again.cancel).padding(horizontal = 4.dp, vertical = 12.dp))
       }
     }
     again.problem?.let { Text(it, style = scaled(13, color = Theme.no)) }
@@ -170,7 +172,22 @@ fun NeedsYouView(
   onAnswerUnsure: (suspend (bot.tafs.app.kiff.UnsureCall, Boolean) -> Unit)? = null,
   onCheckUnsure: (suspend (bot.tafs.app.kiff.UnsureCall) -> Unit)? = null,
   onOpenCoach: ((bot.tafs.app.kiff.CoachWaiting) -> Unit)? = null,
+  /** Sets a Coach chat aside, or all with null: tafs cloud's "not now". Null where it can't be done (sample mode). */
+  onSetAside: ((String?) -> Unit)? = null,
 ) {
+  var confirmingClear by remember { mutableStateOf(false) }
+  val clearAsk = state.coachWaitingClear?.takeIf { confirmingClear }
+  if (clearAsk != null) {
+    val clear = clearAsk
+    DriveAlert(
+      onDismissRequest = { confirmingClear = false },
+      containerColor = Theme.panel,
+      title = { Text(clear.words.title) },
+      text = { if (clear.words.text.isNotBlank()) Text(clear.words.text) },
+      confirmButton = { androidx.compose.material3.TextButton({ confirmingClear = false; onSetAside?.invoke(null) }, modifier = Modifier.confirms()) { Text(clear.words.yes, color = Theme.no) } },
+      dismissButton = { androidx.compose.material3.TextButton({ confirmingClear = false }) { Text(clear.words.no, color = Theme.soft) } },
+    )
+  }
   val unsureScope = rememberCoroutineScope()
   // Pulling reads KIFF again, as on iOS: a hold made while this screen was open shows without leaving it.
   var refreshing by remember { mutableStateOf(false) }
@@ -191,10 +208,21 @@ fun NeedsYouView(
     verticalArrangement = Arrangement.spacedBy(10.dp),
   ) {
     item { ScreenTitle(Words.NeedsYou.title) }
+    // After a set-aside, where the chat went, in tafs cloud's words: the owner went looking for it in Coach.
+    state.setAsideNote?.let { note -> item(key = "cw|done") { Text(note, style = scaled(14, color = Theme.soft)) } }
     // Steps a taf handed its owner, oldest first, as tafs cloud lists them: before the held calls, as each is the owner's to do.
     items(state.yourSteps, key = { "ys|" + it.handoff }) { step -> YourStepPanel(step, state) }
     // Coach's chats waiting on this person, in tafs cloud's words: the button opens that chat, where the card is answered.
-    items(state.coachWaiting, key = { "cw|" + it.session }) { waiting -> CoachWaitingPanel(waiting, onOpenCoach) }
+    // "Set all aside", tafs cloud's, above them: one ask, naming the count.
+    state.coachWaitingClear?.takeIf { onSetAside != null && state.coachWaiting.size > 1 }?.let { clear ->
+      item(key = "cw|clear") {
+        Text(clear.words.button, style = scaled(14, FontWeight.SemiBold, Theme.amberText),
+          modifier = Modifier.heightIn(min = 44.dp).confirms().tapping(enabled = state.settingAside.isEmpty()) { confirmingClear = true }.padding(vertical = 10.dp))
+      }
+    }
+    // A row being set aside goes at once, so one full swipe takes on the first try (the owner's sprang back and looked
+    // untouched until tafs cloud answered); a refusal brings it back, with why.
+    items(state.coachWaitingShown, key = { "cw|" + it.session }) { waiting -> CoachWaitingPanel(waiting, onOpenCoach, onSetAside?.takeIf { waiting.words.setAside.isNotBlank() }) }
     // Cards asked to take another currency: tafs cloud's rows, apart from the held calls, with no Approve once.
     items(state.cardUnitExceptions, key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
     if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty() && state.coachWaiting.isEmpty()) {
@@ -416,7 +444,7 @@ private fun Details(lines: List<String>) {
     Text(
       if (open) Words.NeedsYou.detailsOpen else Words.NeedsYou.detailsClosed,
       style = scaled(13, FontWeight.SemiBold, Theme.blue),
-      modifier = Modifier.clickable { open = !open }.padding(vertical = 4.dp),
+      modifier = Modifier.tapping { open = !open }.padding(vertical = 4.dp),
     )
     if (open) {
       SelectionContainer {

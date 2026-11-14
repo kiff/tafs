@@ -3,16 +3,12 @@ import XCTest
 /// Export my chats (kiff/tafs#424): the row prepares the person's own chats and offers
 /// tafs-chats.json and tafs-chats.txt in the system's share and save sheet. The sample's
 /// export stands in for tafs cloud's, so this runs with no server.
-final class ExportChatsUITests: XCTestCase {
-    override func setUp() {
-        continueAfterFailure = false
-    }
-
+final class ExportChatsUITests: TafsUITestCase {
     @MainActor
     func testTheRowOffersBothFiles() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-screen", "export"]
-        app.launch()
+        launch(app)
 
         let row = app.buttons["export-chats"]
         XCTAssertTrue(row.waitForExistence(timeout: 30), "Export my chats")

@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.design.tapping
 import androidx.lifecycle.lifecycleScope
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveAlert
@@ -16,7 +17,6 @@ import androidx.activity.compose.setContent
 import bot.tafs.app.model.ThemePreference
 import bot.tafs.app.model.AppRoute
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -249,6 +249,11 @@ class MainActivity : FragmentActivity() {
   }
 
   // A vendor's sign-in waits while its tab is in front; the app back with no link from it means the tab was closed.
+  override fun onStart() {
+    super.onStart()
+    app.vendorSignIn.attach(this)
+  }
+
   override fun onPause() {
     super.onPause()
     app.vendorSignIn.paused()
@@ -278,6 +283,7 @@ class MainActivity : FragmentActivity() {
     driveEntry?.let { bot.tafs.app.drive.DriveInput.windows.remove(it) }
     bot.tafs.app.drive.DriveInput.unguard(window)
     app.authenticator.detach(this)
+    app.vendorSignIn.detach(this)
     app.push.askPermission = null
     runCatching { updates?.close() }
     super.onDestroy()
@@ -591,6 +597,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         approve = model::startApproval,
         openKeySheet = model::openCardKeySheet,
         cancelSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.cancel() },
+        reopenSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.reopen() },
         signInAgain = model::startSignInAgain,
         improve = model::improveTaf,
         openTaf = { coachOpen = false; openTaf = it },
@@ -663,6 +670,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   BackHandler(enabled = tab == Tab.Tafs && calendarOpen && openTaf == null && !coachOpen) { calendarOpen = false }
   BackHandler(enabled = tab == Tab.Tafs && trialTaf != null) { trialTaf = null }
   BackHandler(enabled = tab == Tab.Tafs && coachOpen) { coachOpen = false }
+  // Whether Coach is on screen, for the badge: its own chat waiting on the person isn't counted while it's open.
+  LaunchedEffect(coachOpen) { model.coachShown(coachOpen) }
   // Coach asked for from another screen (a hold's "Change the limit in Coach mode"): it opens here, on the Tafs tab.
   LaunchedEffect(state.coachRequested) {
     if (state.coachRequested) {
@@ -784,7 +793,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                 androidx.compose.material3.Text(
                   Words.Home.Overview.title,
                   style = scaled(15, androidx.compose.ui.text.font.FontWeight.SemiBold, if (overviewOpen) Theme.amber else Theme.amberText),
-                  modifier = Modifier.fillMaxWidth().clickable { coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = true }
+                  modifier = Modifier.fillMaxWidth().tapping { coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = true }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 )
               }
@@ -803,7 +812,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             (open ?: home)()
           }
         }
-        Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null)
+        Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null, onSetAside = if (state.mode == Mode.kiff) model::startSetAsideCoach else null)
         Tab.Record -> RecordView(
           state,
           record = recordActions,
@@ -855,8 +864,11 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       // Connect is for whoever manages the account's Cards; anyone else sees what's connected.
       bot.tafs.app.views.ConnectAppsSheet(
         state, load = model::loadConnectApps, loadMore = model::loadMoreConnectApps,
+        onReadConnections = model::refreshConnections,
         onConnect = if (state.canManageCards) ({ app, taf -> scope.launch { model.startConnectApp(app, taf) } }) else null,
-        onAskCoach = { showingConnectApps = false; coachOpen = true },
+        // A new conversation: asking Coach from Connect apps is a new job, never the last chat (an audit found it reopening one
+        // that ended).
+        onAskCoach = { showingConnectApps = false; model.newCoachChat(); coachOpen = true },
         onClose = { showingConnectApps = false; model.closeListApproval() },
         // The taf it's signed in for, by its grant: that taf's Coach chooses its actions.
         onChooseActions = { app ->
@@ -970,7 +982,7 @@ internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
   ) {
     NavigationBarItem(
       selected = false,
-      onClick = onAccount,
+      onClick = { bot.tafs.app.design.Haptics.tap(); onAccount() },
       icon = { Icon(painterResource(R.drawable.ic_person), contentDescription = null, modifier = Modifier.size(20.dp)) },
       label = { Text(ACCOUNT, style = scaled(11), maxLines = 1, softWrap = false) },
       colors = barColors(),
@@ -978,7 +990,7 @@ internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
     Tab.entries.forEach { t ->
       NavigationBarItem(
         selected = tab == t,
-        onClick = { onTab(t) },
+        onClick = { bot.tafs.app.design.Haptics.tap(); onTab(t) },
         icon = { TabIcon(t, state) },
         label = { Text(t.title, style = scaled(11), maxLines = 1, softWrap = false) },
         colors = barColors(),
@@ -998,7 +1010,7 @@ private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
   ) {
     androidx.compose.material3.NavigationRailItem(
       selected = false,
-      onClick = onAccount,
+      onClick = { bot.tafs.app.design.Haptics.tap(); onAccount() },
       icon = { Icon(painterResource(R.drawable.ic_person), contentDescription = null, modifier = Modifier.size(20.dp)) },
       label = { Text(ACCOUNT, style = scaled(11), maxLines = 1, softWrap = false) },
       colors = railColors(),
@@ -1006,7 +1018,7 @@ private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
     Tab.entries.forEach { t ->
       androidx.compose.material3.NavigationRailItem(
         selected = tab == t,
-        onClick = { onTab(t) },
+        onClick = { bot.tafs.app.design.Haptics.tap(); onTab(t) },
         icon = { TabIcon(t, state) },
         label = { Text(t.title, style = scaled(11), maxLines = 1, softWrap = false) },
         colors = railColors(),
@@ -1030,7 +1042,7 @@ private fun FoldHandle(folded: Boolean, onToggle: () -> Unit) {
       style = scaled(18, androidx.compose.ui.text.font.FontWeight.SemiBold, Theme.dim),
       modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp).size(24.dp, 44.dp)
         .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp)).background(Theme.panel)
-        .clickable(onClickLabel = if (folded) Words.Common.showTheList else Words.Common.hideTheList, onClick = onToggle)
+        .tapping(onClickLabel = if (folded) Words.Common.showTheList else Words.Common.hideTheList, onClick = onToggle)
         .semantics { role = androidx.compose.ui.semantics.Role.Button; contentDescription = if (folded) Words.Common.showTheList else Words.Common.hideTheList }
         .wrapContentSize(Alignment.Center),
     )
@@ -1041,7 +1053,7 @@ private fun FoldHandle(folded: Boolean, onToggle: () -> Unit) {
 @Composable
 private fun TabIcon(t: Tab, state: bot.tafs.app.app.AppState) {
   val icon = @Composable { Icon(painterResource(t.icon), contentDescription = null, modifier = Modifier.size(20.dp)) }
-  val waiting = state.needsYouCount
+  val waiting = state.needsYouBadge
   if (t == Tab.NeedsYou && waiting > 0) {
     BadgedBox(badge = { Badge(containerColor = Theme.no, contentColor = Theme.panel) { Text("$waiting") } }) { icon() }
   } else {
@@ -1061,7 +1073,7 @@ private fun CoachButton(onClick: () -> Unit, modifier: Modifier = Modifier, comp
     softWrap = false,
     modifier = modifier.heightIn(min = 40.dp).then(Modifier.driveStopZone()).clip(androidx.compose.foundation.shape.CircleShape)
       .background(if (acting) Theme.amber else Theme.ink)
-      .clickable(onClick = onClick).semantics { role = androidx.compose.ui.semantics.Role.Button }
+      .tapping { onClick() }.semantics { role = androidx.compose.ui.semantics.Role.Button }
       .padding(horizontal = if (compact) 8.dp else 14.dp, vertical = 10.dp),
   )
 }

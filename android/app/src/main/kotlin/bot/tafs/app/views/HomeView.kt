@@ -11,7 +11,6 @@ import bot.tafs.app.model.localDate
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -53,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
 import bot.tafs.app.design.Panel
+import bot.tafs.app.design.tapping
 import bot.tafs.app.design.Dot
 import bot.tafs.app.design.Eyebrow
 import bot.tafs.app.design.Mascot
@@ -163,7 +163,7 @@ fun HomeView(
                 Text(
                   "+ " + HomeWords.newTaf(state.gallery),
                   style = scaled(15, FontWeight.SemiBold, Theme.amberText),
-                  modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onNewTaf).padding(horizontal = 4.dp, vertical = 10.dp),
+                  modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onNewTaf).padding(horizontal = 4.dp, vertical = 10.dp),
                 )
               }
             }
@@ -255,7 +255,7 @@ fun HomeView(
 @Composable
 internal fun ExploreRow(words: String, onClick: () -> Unit) {
   Row(
-    Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onClick).padding(vertical = 8.dp),
+    Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(onClick = onClick).padding(vertical = 8.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Text(words, style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
@@ -271,7 +271,7 @@ private const val STATUS_PAGE = "https://status.kiff.dev"
 fun PlanLine(words: String, tone: String, onUsage: () -> Unit) {
   val color = planColor(tone, calm = Theme.amberText)
   Row(
-    Modifier.fillMaxWidth().clickable(onClick = onUsage).padding(vertical = 6.dp).semantics { contentDescription = Words.Home.planLineDescription(words) },
+    Modifier.fillMaxWidth().tapping(onClick = onUsage).padding(vertical = 6.dp).semantics { contentDescription = Words.Home.planLineDescription(words) },
     horizontalArrangement = Arrangement.spacedBy(6.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
@@ -288,7 +288,7 @@ fun UnreachableLine(words: String, retrying: Boolean) {
   Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
     Box(Modifier.size(7.dp).clip(CircleShape).background(Theme.amber))
     Text(if (retrying) Words.Home.statusRetrying(words) else words, style = scaled(12, color = Theme.dim))
-    Text(Words.Home.status, style = scaled(12, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { uri.openUri(STATUS_PAGE) }.padding(vertical = 6.dp))
+    Text(Words.Home.status, style = scaled(12, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.tapping { uri.openUri(STATUS_PAGE) }.padding(vertical = 6.dp))
   }
 }
 
@@ -304,7 +304,7 @@ private fun Header(accountLabel: String?, onCalendar: (() -> Unit)? = null) {
     // The calendar of the tafs' scheduled work (kiff/tafs#534): the phone has no Overview, so it opens from here.
     if (onCalendar != null) {
       Box(
-        Modifier.size(36.dp).clip(CircleShape).clickable(onClick = onCalendar).semantics { contentDescription = Words.Calendar.heading },
+        Modifier.size(36.dp).clip(CircleShape).tapping(onClick = onCalendar).semantics { contentDescription = Words.Calendar.heading },
         contentAlignment = Alignment.Center,
       ) {
         Icon(painterResource(R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(22.dp))
@@ -322,7 +322,6 @@ internal val AppState.homeLeadsWithRecipes: Boolean
 
 @Composable
 private fun Headline(state: AppState) {
-  val working = state.workingCount
   Column {
     // Never "0 tafs working" before the tafs are read (#91).
     if (state.mode == Mode.kiff && !state.listLoaded) {
@@ -333,7 +332,8 @@ private fun Headline(state: AppState) {
       Text(Words.Home.notLoaded, style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
       return@Column
     }
-    Text(Words.Home.working(count = working), style = scaled(36, FontWeight.Bold, Theme.ink, display = true))
+    // tafs cloud's line, counted from the tafs it lists: a new taf with no schedule reads "1 taf ready.", never "0 tafs working."
+    Text(state.headlineWords, style = scaled(36, FontWeight.Bold, Theme.ink, display = true))
     // tafs cloud's words for what Needs you holds, else the app's for its own count.
     Text(state.needsYouWords, style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
   }
@@ -348,7 +348,7 @@ private fun NeedsYouStrip(call: HeldCall, taf: Taf, onClick: () -> Unit) {
       .clip(shape)
       .background(Theme.amber.copy(alpha = 0.1f))
       .border(BorderStroke(1.dp, Theme.amber.copy(alpha = 0.4f)), shape)
-      .clickable(onClick = onClick)
+      .tapping(onClick = onClick)
       .padding(10.dp),
     horizontalArrangement = Arrangement.spacedBy(8.dp),
     verticalAlignment = Alignment.CenterVertically,
@@ -372,7 +372,7 @@ fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, 
       .clip(shape)
       .background(Theme.panel)
       .border(BorderStroke(1.dp, Theme.line), shape)
-      .clickable(onClick = onClick)
+      .tapping(onClick = onClick)
       .padding(12.dp),
     verticalArrangement = Arrangement.spacedBy(8.dp),
   ) {

@@ -1,0 +1,4 @@
+- Your connections read plainly: each says what it is, who uses it and how it is. Tap one for its details; removing it asks once more.
+- A taf whose sign-in expired has its own Connect again, which keeps its Card.
+- Needs you shows when Coach is waiting for you.
+- A sign-in to the wrong account says so, in plain words.

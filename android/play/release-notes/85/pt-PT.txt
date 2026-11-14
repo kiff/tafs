@@ -1,0 +1,4 @@
+- As suas ligações leem-se com clareza: o que são, quem as usa e como estão. Toque numa para ver o detalhe; removê-la pede confirmação.
+- Um taf cujo início de sessão expirou tem o seu próprio «Ligar novamente» e mantém o seu Card.
+- «Precisa de si» mostra quando o Coach está à sua espera.
+- Um início de sessão na conta errada é dito com clareza.

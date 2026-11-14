@@ -625,7 +625,6 @@
     <string name="coach_drive_cant">Coach no puede manejar la app: %1$s</string>
     <string name="coach_drive_not_started_unconfirmed">No empezó: no se confirmó.</string>
     <string name="coach_driving">Manejando la app</string>
-    <string name="coach_each_waits">Cada conexión y cada Card esperan %1$s.</string>
     <string name="coach_earlier_request">Solicitud anterior</string>
     <string name="coach_folds_plan">Contrae el plan</string>
     <string name="coach_full_screen">Pantalla completa</string>
@@ -634,7 +633,7 @@
     <string name="coach_improve_why_refused">¿Por qué algo fue rechazado o retenido?</string>
     <string name="coach_improve_line">Di qué debería cambiar, o pregunta cómo va. El modo Coach parte de lo que hizo %1$s y de lo que permite su Card.</string>
     <string name="coach_improve_taf">Mejorar %1$s</string>
-    <string name="coach_intro">Nombra una app para tu taf, como tu proveedor de pagos. Ningún taf ve tu inicio de sesión.</string>
+    <string name="coach_intro">Nombra una app para tu taf, como tu proveedor de pagos.</string>
     <string name="coach_kiff_counts_way">KIFF lo cuenta así</string>
     <string name="coach_making_live">Activando…</string>
     <string name="coach_name_tool_taf_should_work">Nombra una app para tu taf, como tu proveedor de pagos. Ningún taf ve tu inicio de sesión. Apruebas con %1$s.</string>
@@ -646,7 +645,7 @@
     <string name="coach_not_allowed">Coach es para las personas a las que KIFF permite usarlo, por defecto los administradores de la cuenta.</string>
     <string name="coach_not_archived_try_again">No se archivó. Vuelve a intentarlo.</string>
     <string name="coach_not_connectable">La conexión de apps no está configurada para esta cuenta desde este teléfono. Abre Coach para empezar.</string>
-    <string name="coach_not_connected">El inicio de sesión en %1$s no se conectó: la conexión está %2$s. No se conectó nada. Prueba a iniciar sesión de nuevo.</string>
+    <string name="coach_not_connected">El inicio de sesión en %1$s no terminó, así que no se conectó nada. Vuelve a iniciar sesión.</string>
     <string name="coach_not_improved">No se creó la nueva versión de %1$s: %2$s.</string>
     <string name="coach_not_no_sign">Ahora no: sin iniciar sesión en %1$s</string>
     <string name="coach_not_put_back_try_again">No se restauró. Vuelve a intentarlo.</string>
@@ -701,8 +700,11 @@
     <string name="coach_sign_in_at_vendor">Iniciar sesión en el proveedor</string>
     <string name="coach_sign_in_eyebrow">Te necesita · iniciar sesión</string>
     <string name="coach_sign_in_open">Abrir %1$s</string>
+    <string name="coach_sign_in_open_again">Abrir de nuevo el inicio de sesión</string>
+    <string name="coach_sign_in_open_again_app">Abrir de nuevo el inicio de sesión de %1$s</string>
     <string name="coach_sign_in_open_sign_in">Abrir el inicio de sesión</string>
     <string name="coach_sign_in_opens">Abre %1$s</string>
+    <string name="coach_sign_in_opens_app">Abre el inicio de sesión de %1$s</string>
     <string name="coach_sign_in_note">Se abre la propia página del proveedor. Ningún taf ve tu inicio de sesión.</string>
     <string name="coach_signed_reading_what_offers">Sesión iniciada en %1$s · leyendo lo que ofrece</string>
     <string name="coach_start">Empezar</string>
@@ -721,6 +723,7 @@
     <string name="coach_tools_not_read">No se pudieron leer las herramientas de Coach. %1$s</string>
     <string name="coach_tools_unknown">KIFF no respondió sobre las herramientas de Coach. Vuelve a intentarlo en un momento.</string>
     <string name="coach_unknown_answer">Configuración respondió algo que esta app no sabe leer. Actualiza la app.</string>
+    <string name="coach_waiting_for_app">Si se abrió la página de inicio de sesión de %1$s, termina allí y vuelve.</string>
     <string name="coach_waiting_for_vendor">Si se abrió la página de inicio de sesión del proveedor, termina allí y vuelve.</string>
     <string name="coach_what_conversation_about">De qué trata esta conversación</string>
     <string name="coach_will_work_like">" funcionará así"</string>
@@ -865,7 +868,7 @@
     <string name="connect_more_apps">Más apps</string>
     <string name="connect_more_apps_could_not_listed">No se pudieron listar más apps: %1$s</string>
     <string name="connect_no_confirmation_code">El inicio de sesión en %1$s volvió sin su código de confirmación. No se conectó nada.</string>
-    <string name="connect_no_sign_in_link">La conexión volvió %1$s sin enlace de inicio de sesión. No se conectó nada.</string>
+    <string name="connect_no_sign_in_link">No se abrió ninguna página de inicio de sesión de %1$s, así que no se conectó nada. Puedes reintentarlo.</string>
     <string name="connect_no_such_connection">No hay ninguna conexión con ese id.</string>
     <string name="connect_no_taf">Crea un taf primero: una app se conecta para que la use un taf.</string>
     <string name="connect_not_connected">No conectado. %1$s</string>
@@ -1141,11 +1144,10 @@
     <string name="halt_again">Volver a bloquear</string>
     <string name="halt_all_now">Bloquear todo ahora</string>
     <string name="halt_explain_halted">Bloqueado. Al reanudar, solo empieza trabajo nuevo.</string>
-    <string name="halt_explain_halted_since">Bloqueado desde %1$s. Al reanudar, solo empieza trabajo nuevo.</string>
+    <string name="halt_explain_halted_since">Desde %1$s. Al reanudar, solo empieza trabajo nuevo.</string>
     <string name="halt_explain_halting">No empieza nada nuevo. Aparece Bloqueado cuando KIFF y la conexión lo confirman.</string>
     <string name="halt_explain_running_all">Bloquear detiene tus tafs hasta que los reanudes. Una llamada ya enviada aún puede llegar.</string>
     <string name="halt_explain_running_one">Bloquear lo detiene hasta que lo reanudes. Una llamada ya enviada aún puede llegar.</string>
-    <string name="halt_halted_nothing_reaches_your_tools">Bloqueado%1$s. Al reanudar, solo empieza trabajo nuevo.</string>
     <string name="halt_halting_stops_no_run_starts">Bloquear detiene %1$s hasta que reanudes. Una llamada ya enviada aún puede llegar.</string>
     <string name="halt_now">Bloquear ahora</string>
     <string name="halt_row_running">Detenlo hasta que lo reanudes</string>
@@ -1199,7 +1201,6 @@
     <string name="home_sample_label">Lo que informó tras su ejecución de prueba</string>
     <string name="home_see_all_jobs">Ver todos los trabajos</string>
     <string name="home_shared_you">Compartidos contigo</string>
-    <string name="home_sign_approve_each_step">Inicias sesión y apruebas cada paso</string>
     <string name="home_start_new_taf">Empezar un taf nuevo</string>
     <string name="home_status">Estado</string>
     <string name="home_status_retrying">%1$s · reintentando</string>
@@ -1804,6 +1805,7 @@
     <string name="settings_kiff_account">Cuenta de KIFF</string>
     <string name="settings_language_title">Idioma</string>
     <string name="settings_legal">Legal</string>
+    <string name="settings_legal_in_english">%1$s (en inglés)</string>
     <string name="settings_light_taps_when_you_send">Una vibración suave al enviar o responder.</string>
     <string name="settings_mode">Modo</string>
     <string name="settings_mode_kiff">Sesión iniciada con KIFF</string>

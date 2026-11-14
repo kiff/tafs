@@ -12,9 +12,9 @@ sheet**) or from Connect apps:
 1. **The title:** the app's logo and name, with a lock: "Secure connection to Qonto".
 2. **Three plain lines**, worked out from the grant by tafs cloud:
    - **what it may do:** "Read only: it can't pay, send or change anything in Qonto" when
-     every one of the grant's tools is a read. Otherwise "It can change things in Qonto. Its
-     Card decides each action". The phone never works this out;
-   - **the key:** "Your key is sealed: it's never shown again, and the taf never sees it";
+     every one of the grant's tools is a read. Otherwise "It can change things in Qonto, as its
+     Card allows". The phone never works this out;
+   - **the key:** "Your key is never shown again, and no taf sees it";
    - **leaving:** "You can disconnect it any time, in Connect apps".
 3. **Paste the key**, a button, never a typing field. Once pasted, the sheet shows only the
    key's last 4 characters ("Key …ab12"), and the clipboard is cleared ("Clipboard cleared").
@@ -48,7 +48,7 @@ entry it came from, and answers in the request's `Accept-Language`:
   "title": "Secure connection to Qonto",
   "lines": [
     { "kind": "reads_only", "text": "Read only: it can't pay, send or change anything in Qonto" },
-    { "kind": "sealed", "text": "Your key is sealed: it's never shown again, and the taf never sees it" },
+    { "kind": "sealed", "text": "Your key is never shown again, and no taf sees it" },
     { "kind": "disconnect", "text": "You can disconnect it any time, in Connect apps" } ],
   "paste": { "button": "Paste the key", "what": "Copy it in Qonto, then paste it here",
              "pasted": "Key …{last4}", "cleared": "Clipboard cleared" },
@@ -172,9 +172,13 @@ their two hashes once, and sends `with=` on each, as for a key. The report answe
 connected with the tools and the Card is issued; tools in with a Card that didn't answers `failed: <app> is connected;
 …`, so the next card asks for the Card alone. It needs the connection server to take the paired approve and to
 declare an addition's tools in KIFF while they wait (and withdraw them if the addition ends unapproved); until then
-the flag stays off and the two steps work as before. A first connection (nothing connected yet) keeps its steps.
-That includes a reused sign-in's first tools: its card may carry the draft, but tafs cloud asks the `connect` step,
-which signs the connection alone. The draft isn't signed, so the report never answers `approved` while KIFF says it
+the flag stays off and the two steps work as before. A sign-in planque already holds (one reused for another taf)
+counts too: its first tools wait as `pending` with `signed_in: true` and, declared in KIFF meanwhile, `declared: true`,
+and approving them connects at once, with no sign-in between, so they go with the Card under one fingerprint, for a
+phone that also sends `can: ["signs"]`: one that draws the card by its `signs` mark ([chat.md](chat.md)), so the Card's
+limits are on screen whatever the grant's status. A phone without it keeps the two steps here. A first
+connection that still needs its sign-in, or tools not declared, keeps its steps: its card may carry the draft, but
+tafs cloud asks the `connect` step, which signs the connection alone. The draft isn't signed, so the report never answers `approved` while KIFF says it
 isn't issued (at the version the card showed). When the connection is connected and the Card is still the draft the
 card showed, that's by design (connect now, the Card next): it answers `failed: <app> is connected; its Card is next:
 show the approval again for its Card alone`, and the card reads tafs cloud's "Gmail is connected. Next, its Card.", in

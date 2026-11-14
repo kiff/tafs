@@ -115,8 +115,14 @@ describe("Setup's definition on kiff/agents", () => {
     // Where results go (results to destination, step 3): the write found, the place fixed by name, fill, another taf, the draft.
     expect(flat).toContain("A place moves no money: never a money tool as a place; when the only write that fits moves money, say so and stop.");
     expect(flat).toContain("come from the owner's words; never ask for an id.");
+    // A place no read on the connection lists by name (Sheets without Drive) is asked for by its link, never searched by name.
+    expect(flat).toContain("Without one (a Sheets sign-in lists no sheets: that's Drive), ask for the place's link, and take the id from it.");
+    // A taf keeps what it makes by the id the call gives back (the guide's returns), and asks for an existing one's link.
+    expect(flat).toContain("A taf finds things by id, never by name.");
+    expect(flat).toContain("it keeps by the id the call gives back, as the guide's returns name it (data.spreadsheetId)");
+    expect(flat).toContain("For what exists, ask the owner for its link: a search by name often needs more than the connection gives");
     expect(flat).toContain("ask the owner's OK to read that list, as for the accounts list, read it on the taf's connection, and let the owner pick by name in a questions card.");
-    expect(flat).toContain('The id goes in args, the name in name ("Google Sheets · Refunds 2026").');
+    expect(flat).toContain('The id goes in args, the name in name ("Google Sheets · Refunds 2026"); the taf never looks the place up by name.');
     expect(flat).toContain("fill names each field the taf fills from its result, one line in words about the result");
     expect(flat).toContain("The result is handed to it as its work, under its own Card, and never Coach.");
     // How far a result is handed on is tafs cloud's rule (delivery.ts): Coach says it, so the owner isn't promised a longer chain or a loop.
@@ -257,7 +263,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain('until they answer, nothing you write names one, and "as you chose" is only ever their answer');
     // Nothing is read from the owner's account before they approve its tools
     // (kiff/planque#23, describe removed): Setup asks the mode, always. planque's describe {api} since
-    // connect-an-app@21 reads only a public API description, never the account: that one wording is let through.
+    // connect-an-app@26 reads only a public API description, never the account: that one wording is let through.
     expect(flat.replace(/Describe \{api\}|by describe's names|request or describe failed|describe's arguments/g, "")).not.toContain("describe");
     expect(flat).toContain("so don't try to read what the sign-in covers first: ask");
     expect(flat).toContain("with your other questions (confirm if it's the only one). Pin their answer on every call that takes the mode");
@@ -386,8 +392,11 @@ describe("Setup's definition on kiff/agents", () => {
     // them, with no question and no second approval (kiff/tafs#476, gap 2: four consents before a draft).
     expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields, given its id, ask for it in the first planque request");
     // The account list, when it must pin the account, joins that request: one approval, not two (kiff/tafs#138).
-    expect(flat).toContain("the read-only tool that lists the accounts the sign-in covers goes in that first request too, with setup_reads: true");
-    expect(flat).toContain("The connection's one approval and sign-in then cover them, with no question of their own and no second approval");
+    expect(flat).toContain("When you must pin the account, pin the grant's own account, as planque's status lists it: never a read of the accounts.");
+    expect(flat).toContain("gets its describing tool connected by planque with the sign-in when it has one: never ask for it, or any read, alone.");
+    expect(flat).toContain("Draft it once, with all its tools, from the catalog's fields (or the describing tool's): the approval that adds its tools carries the Card, never a Card before its tools are known.");
+    expect(flat).toContain("A managed app's connect names the taf's planned tools (uses).");
+    expect(flat).toContain("The connection's one approval and sign-in then cover it, with no question of its own and no second approval");
     // One connection per vendor per taf (kiff/tafs#138, the owner's retest: five Face IDs and Stripe sign-ins).
     expect(flat).toContain("Never in a connection of its own: each new connection is one more approval and vendor sign-in for the owner");
     expect(flat).toContain("A taf has one connection per vendor: first planque grants {agent: the taf's own agent id}. When it has one to that vendor, add the tool to it");
@@ -413,10 +422,11 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).not.toContain("You can't see such an operation's own fields before the owner approves");
     // Setup reads the fields itself, through planque, once the owner approved that read
     // (kiff/tafs#174): the taf alone held the tool, so Setup could only guess.
-    expect(flat).toContain("read_only with setup_reads: true, so you can read it yourself");
-    expect(flat).toContain("setup_reads goes on those two only, never on the taf's own reads: those read the owner's account");
+    expect(flat).toContain("in the first planque request's setup_reads field (never a tool), so you can read it yourself");
+    expect(flat).not.toContain("setup_reads: true (by entry");
+    expect(flat).toContain("setup_reads goes on that one only, never on the taf's own reads: those read the owner's account");
     expect(flat).toContain("read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments} (before a key: describe's arguments, by in and type), and place each argument you name");
-    expect(flat).toContain("with no question of their own and no second approval: the owner already agreed to connect, and its approval is enough");
+    expect(flat).toContain("with no question of its own and no second approval");
     expect(flat).toContain("Reading first doesn't split the owner's questions: ask the ones that don't depend on each other together, in one questions card");
     // The account and the mode, pinned on reads too: the owner's taf looked the account
     // up on every message, one more wait each time (kiff/tafs#138, item 58).

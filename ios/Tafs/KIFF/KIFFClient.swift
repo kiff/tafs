@@ -166,13 +166,15 @@ final class KIFFClient {
     /// Starts signing in. `publicKey` (SPKI DER) is the phone's signing key: KIFF shows its
     /// fingerprint when the owner approves in their browser, and binds it to this session.
     /// `approvalPublicKey` is the key that signs what grants authority (kiff/tafs#233).
-    func startDeviceSignIn(publicKey: Data? = nil, approvalPublicKey: Data? = nil, deviceName: String? = nil, platform: String? = nil) async throws -> DeviceStart {
+    func startDeviceSignIn(publicKey: Data? = nil, approvalPublicKey: Data? = nil, deviceName: String? = nil, platform: String? = nil, kind: String? = nil) async throws -> DeviceStart {
         var body: [String: String] = [:]
         if let publicKey { body["public_key"] = publicKey.base64EncodedString() }
         if let approvalPublicKey { body["approval_public_key"] = approvalPublicKey.base64EncodedString() }
         if let deviceName { body["device_name"] = deviceName }
         // KIFF's device list names the platform: ios, ipados, macos.
         if let platform { body["platform"] = platform }
+        // What the device is (iphone, ipad): KIFF draws its name in the list from it, in the reader's language.
+        if let kind { body["kind"] = kind }
         let start: DeviceStart = try await send("POST", "/v1/auth/device/start", body: body, authorized: false)
         return start.inAppLanguage()
     }
@@ -296,7 +298,7 @@ final class KIFFClient {
         let lastUsed: Date?
         let thisDevice: Bool
 
-        enum CodingKeys: String, CodingKey { case id, name, lastUsedAt = "last_used_at", lastSeenAt = "last_seen_at", thisDevice = "this_device" }
+        enum CodingKeys: String, CodingKey { case id, name, displayName = "display_name", lastUsedAt = "last_used_at", lastSeenAt = "last_seen_at", thisDevice = "this_device" }
 
         init(id: String, name: String?, lastUsed: Date?, thisDevice: Bool) {
             self.id = id; self.name = name; self.lastUsed = lastUsed; self.thisDevice = thisDevice
@@ -305,7 +307,8 @@ final class KIFFClient {
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             id = try c.decode(String.self, forKey: .id)
-            name = try c.decodeIfPresent(String.self, forKey: .name)
+            // KIFF's name for it in the app's language; the name it gave at sign-in from a KIFF without one.
+            name = try c.decodeIfPresent(String.self, forKey: .displayName) ?? c.decodeIfPresent(String.self, forKey: .name)
             // A device says when it was last used; a session from before devices, when last seen.
             lastUsed = try c.decodeIfPresent(Date.self, forKey: .lastUsedAt) ?? c.decodeIfPresent(Date.self, forKey: .lastSeenAt)
             thisDevice = try c.decodeIfPresent(Bool.self, forKey: .thisDevice) ?? false
