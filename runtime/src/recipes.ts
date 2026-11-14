@@ -702,6 +702,179 @@ export const RECIPES = [
     }
   },
   {
+    "id": "invoice-accepted-quotes",
+    "title": "Invoice accepted quotes",
+    "category": "money",
+    "order": 5,
+    "line": "Drafts the invoice for each quote a customer accepted, from the quote's own lines, and sends it once you approve it.",
+    "headline": "No accepted quote goes uninvoiced.",
+    "today": "An accepted quote waits until someone finds the time to turn it into an invoice.",
+    "say": "Each weekday morning, find the quotes my customers accepted in my accounting app that have no invoice yet. Draft an invoice for each one with the quote's own customer, lines and prices, nothing else, up to 20 a day. Each invoice waits for my approval before it goes to the customer. Never change a quote, never offer a discount or a credit note, and never delete an invoice.",
+    "connections": [
+      [
+        "qonto",
+        "quickbooks",
+        "zohobooks",
+        "moneybird"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Invoice drafts from accepted quotes, up to 20 a day"
+      ],
+      "holds": [
+        "Sending an invoice to a customer, each one"
+      ],
+      "never": [
+        "Changing a quote's lines or prices",
+        "A discount or a credit note",
+        "Deleting an invoice"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Angenommene Angebote abrechnen",
+        "headline": "Kein angenommenes Angebot bleibt ohne Rechnung.",
+        "today": "Ein angenommenes Angebot wartet, bis jemand Zeit findet, daraus eine Rechnung zu machen.",
+        "line": "Entwirft für jedes Angebot, das ein Kunde angenommen hat, die Rechnung aus den Positionen des Angebots und versendet sie, sobald du sie genehmigst.",
+        "say": "Finde jeden Werktag morgens die Angebote in meiner Buchhaltungssoftware, die meine Kunden angenommen haben und zu denen es noch keine Rechnung gibt. Entwirf für jedes eine Rechnung mit Kunde, Positionen und Preisen des Angebots, sonst nichts, bis zu 20 am Tag. Jede Rechnung wartet auf meine Genehmigung, bevor sie an den Kunden geht. Ändere nie ein Angebot, biete nie einen Rabatt oder eine Gutschrift an und lösche nie eine Rechnung.",
+        "card": {
+          "allows": [
+            "Rechnungsentwürfe aus angenommenen Angeboten, bis zu 20 am Tag"
+          ],
+          "holds": [
+            "Jeder Versand einer Rechnung an einen Kunden"
+          ],
+          "never": [
+            "Positionen oder Preise eines Angebots ändern",
+            "Ein Rabatt oder eine Gutschrift",
+            "Eine Rechnung löschen"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Facturer les devis acceptés",
+        "headline": "Aucun devis accepté ne reste sans facture.",
+        "today": "Un devis accepté attend que quelqu'un trouve le temps d'en faire une facture.",
+        "line": "Prépare la facture de chaque devis accepté par un client, à partir des lignes du devis, et l'envoie une fois que vous l'avez approuvée.",
+        "say": "Chaque matin de semaine, trouve dans mon logiciel de comptabilité les devis acceptés par mes clients qui n'ont pas encore de facture. Prépare pour chacun une facture avec le client, les lignes et les prix du devis, rien d'autre, jusqu'à 20 par jour. Chaque facture attend mon approbation avant de partir chez le client. Ne modifie jamais un devis, ne propose jamais de remise ni d'avoir, et ne supprime jamais une facture.",
+        "card": {
+          "allows": [
+            "Brouillons de factures à partir des devis acceptés, jusqu'à 20 par jour"
+          ],
+          "holds": [
+            "L'envoi d'une facture à un client, chaque fois"
+          ],
+          "never": [
+            "Modifier les lignes ou les prix d'un devis",
+            "Une remise ou un avoir",
+            "Supprimer une facture"
+          ]
+        }
+      },
+      "es": {
+        "title": "Facturar los presupuestos aceptados",
+        "headline": "Ningún presupuesto aceptado se queda sin factura.",
+        "today": "Un presupuesto aceptado espera hasta que alguien encuentra tiempo para convertirlo en factura.",
+        "line": "Prepara la factura de cada presupuesto que un cliente aceptó, con las líneas del presupuesto, y la envía cuando la apruebas.",
+        "say": "Cada mañana laborable, busca en mi programa de contabilidad los presupuestos que mis clientes aceptaron y que aún no tienen factura. Prepara para cada uno una factura con el cliente, las líneas y los precios del presupuesto, nada más, hasta 20 al día. Cada factura espera mi aprobación antes de ir al cliente. Nunca cambies un presupuesto, nunca ofrezcas un descuento ni una nota de crédito y nunca borres una factura.",
+        "card": {
+          "allows": [
+            "Borradores de factura de presupuestos aceptados, hasta 20 al día"
+          ],
+          "holds": [
+            "Enviar una factura a un cliente, cada una"
+          ],
+          "never": [
+            "Cambiar las líneas o los precios de un presupuesto",
+            "Un descuento o una nota de crédito",
+            "Borrar una factura"
+          ]
+        }
+      },
+      "it": {
+        "title": "Fatturare i preventivi accettati",
+        "headline": "Nessun preventivo accettato resta senza fattura.",
+        "today": "Un preventivo accettato aspetta finché qualcuno trova il tempo di trasformarlo in fattura.",
+        "line": "Prepara la fattura di ogni preventivo accettato da un cliente, dalle righe del preventivo, e la invia quando la approvi.",
+        "say": "Ogni mattina dei giorni feriali, trova nel mio programma di contabilità i preventivi che i miei clienti hanno accettato e che non hanno ancora una fattura. Prepara per ognuno una fattura con il cliente, le righe e i prezzi del preventivo, nient'altro, fino a 20 al giorno. Ogni fattura aspetta la mia approvazione prima di andare al cliente. Non cambiare mai un preventivo, non offrire mai uno sconto o una nota di credito e non eliminare mai una fattura.",
+        "card": {
+          "allows": [
+            "Bozze di fattura dai preventivi accettati, fino a 20 al giorno"
+          ],
+          "holds": [
+            "L'invio di una fattura a un cliente, ogni volta"
+          ],
+          "never": [
+            "Cambiare le righe o i prezzi di un preventivo",
+            "Uno sconto o una nota di credito",
+            "Eliminare una fattura"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Faturar os orçamentos aceites",
+        "headline": "Nenhum orçamento aceite fica sem fatura.",
+        "today": "Um orçamento aceite fica à espera até alguém ter tempo para o transformar em fatura.",
+        "line": "Prepara a fatura de cada orçamento que um cliente aceitou, a partir das linhas do orçamento, e envia-a depois de a aprovar.",
+        "say": "Todas as manhãs de dias úteis, encontra no meu programa de contabilidade os orçamentos que os meus clientes aceitaram e que ainda não têm fatura. Prepara para cada um uma fatura com o cliente, as linhas e os preços do orçamento, mais nada, até 20 por dia. Cada fatura espera pela minha aprovação antes de seguir para o cliente. Nunca alteres um orçamento, nunca ofereças um desconto ou uma nota de crédito e nunca apagues uma fatura.",
+        "card": {
+          "allows": [
+            "Rascunhos de fatura a partir de orçamentos aceites, até 20 por dia"
+          ],
+          "holds": [
+            "O envio de uma fatura a um cliente, cada uma"
+          ],
+          "never": [
+            "Alterar as linhas ou os preços de um orçamento",
+            "Um desconto ou uma nota de crédito",
+            "Apagar uma fatura"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Geaccepteerde offertes factureren",
+        "headline": "Geen geaccepteerde offerte blijft zonder factuur.",
+        "today": "Een geaccepteerde offerte wacht tot iemand tijd vindt om er een factuur van te maken.",
+        "line": "Maakt voor elke offerte die een klant accepteerde een conceptfactuur met de regels van de offerte, en verstuurt die zodra je hem goedkeurt.",
+        "say": "Zoek elke werkdagochtend in mijn boekhoudprogramma de offertes die mijn klanten hebben geaccepteerd en waar nog geen factuur bij is. Maak voor elke offerte een conceptfactuur met de klant, de regels en de prijzen van de offerte, niets anders, tot 20 per dag. Elke factuur wacht op mijn goedkeuring voordat hij naar de klant gaat. Wijzig nooit een offerte, bied nooit een korting of een creditnota aan en verwijder nooit een factuur.",
+        "card": {
+          "allows": [
+            "Conceptfacturen van geaccepteerde offertes, tot 20 per dag"
+          ],
+          "holds": [
+            "Het versturen van een factuur aan een klant, elke keer"
+          ],
+          "never": [
+            "De regels of prijzen van een offerte wijzigen",
+            "Een korting of een creditnota",
+            "Een factuur verwijderen"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Fakturowanie zaakceptowanych ofert",
+        "headline": "Żadna zaakceptowana oferta nie zostaje bez faktury.",
+        "today": "Zaakceptowana oferta czeka, aż ktoś znajdzie czas, żeby zrobić z niej fakturę.",
+        "line": "Przygotowuje fakturę do każdej oferty zaakceptowanej przez klienta, z pozycji oferty, i wysyła ją, gdy ją zatwierdzisz.",
+        "say": "W każdy dzień roboczy rano znajdź w moim programie księgowym oferty zaakceptowane przez moich klientów, które nie mają jeszcze faktury. Przygotuj do każdej fakturę z klientem, pozycjami i cenami z oferty, niczym więcej, do 20 dziennie. Każda faktura czeka na moje zatwierdzenie, zanim trafi do klienta. Nigdy nie zmieniaj oferty, nigdy nie proponuj rabatu ani korekty i nigdy nie usuwaj faktury.",
+        "card": {
+          "allows": [
+            "Projekty faktur z zaakceptowanych ofert, do 20 dziennie"
+          ],
+          "holds": [
+            "Wysłanie faktury do klienta, za każdym razem"
+          ],
+          "never": [
+            "Zmiana pozycji lub cen oferty",
+            "Rabat lub korekta faktury",
+            "Usunięcie faktury"
+          ]
+        }
+      }
+    }
+  },
+  {
     "id": "answer-questions-about-orders",
     "title": "Answer questions about orders",
     "category": "customers",
