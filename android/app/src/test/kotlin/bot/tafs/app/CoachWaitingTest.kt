@@ -7,6 +7,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -119,6 +120,20 @@ class CoachWaitingTest {
     assertFalse(m.setAsideCoach(null))
     assertEquals(2, m.state.value.coachWaiting.size)
     assertTrue(m.state.value.settingAside.isEmpty())
+  }
+
+  // An audit, 14 Nov: after Set aside, a new job written in Coach went on in the ended session.
+  @Test fun aChatSetAsideIsNoLongerTheOneCoachShows() = runTest {
+    reads(approval.replace("\"open\":\"Open Coach\"", "\"open\":\"Open Coach\",\"set_aside\":\"Set aside\""))
+    val m = model()
+    m.refresh()
+    m.openWaitingCoach(m.state.value.coachWaiting.single())
+    assertEquals("sess_1", m.state.value.coachChat)
+    transport.answer("POST /v1/home/coach-waiting/sess_1/set-aside", 200, """{"set_aside":["sess_1"],"withdrawn":0}""")
+    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[],"needs_you":{"count":0,"words":"Nothing needs you."}}""")
+    assertTrue(m.setAsideCoach("sess_1"))
+    assertNull("the next message starts a new conversation", m.state.value.coachChat)
+    assertTrue(m.state.value.coachFresh)
   }
 
   @Test fun openCoachOpensThatChat() = runTest {
