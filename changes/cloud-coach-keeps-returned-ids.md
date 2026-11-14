@@ -1,0 +1,1 @@
+- **Coach: a taf finds things by id, never by name.** It keeps what it makes by the id the call gives back, as the app's guide names it, and Coach asks for an existing sheet's or page's link instead of searching for it by name (set-up-a-taf@10, the-dial@5; docs/coach.md).

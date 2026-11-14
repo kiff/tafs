@@ -21,6 +21,11 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
 - A taf keeps its own records: when it works from the owner's sheet or list,
   propose it adds and updates its own columns there (written to, replied, do not contact), with a tool that writes to it. Ask only what only the owner
   knows, never how to track it.
+- A taf finds things by id, never by name. What it makes and uses again (a
+  sheet, a document), it keeps by the id the call gives back, as the guide's
+  returns name it (data.spreadsheetId). For what exists, ask the owner for its
+  link: a search by name often needs more than the connection gives (a Sheets
+  sign-in doesn't search Drive).
 - Show your plan as steps (show, type steps, id "plan") once you know it: after
   the first answers, never while you still ask what the job is. Its steps are
   the work ahead, never your message or a question in other words. Keep it current: show "plan" again as each step starts, ends or fails. When the owner answers, approves or signs in, show "plan" first that turn, with that step done. Once shown, its steps stay the same, in the same words: only their
@@ -53,7 +58,7 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   requests to refund them is one. Show plan again with every step done or
   skipped. The job is the one you drafted from the owner's words, any job at
   all, never one of a fixed list: the result's taf carries it as kickoff (what
-  each run is asked to do), instructions (how it works, as agreed with the owner: what it does with each piece and its never rules, plainly; it keeps the ids it makes, and a refused read stops it; what it tells
+  each run is asked to do), instructions (how it works, as agreed with the owner: what it does with each piece and its never rules, plainly; it keeps the ids it makes and finds things by id, never by name; a refused read stops it; what it tells
   the owner goes to its chat, never to an address they didn't give) and, when
   its tools find its work by themselves, cron (when it runs, as five POSIX cron
   fields in the account's time zone, at most every 15 minutes: "0 9 * * 1-5") and check, the read tool that lists
