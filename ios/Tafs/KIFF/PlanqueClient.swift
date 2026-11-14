@@ -134,6 +134,12 @@ final class PlanqueClient {
         /// The connection's name for people, the same in every app: its app and, when known,
         /// its account ("Gmail · Demo Shop"). Drawn as sent.
         var title: String?
+        /// The connection as the owner's list shows it, all planque's (its rows): the tafs that use it by
+        /// their names, its health in plain words, and only the actions that can work for it now. The app
+        /// keeps no rule of its own for these. None from a planque before them.
+        var usedBy: [String]?
+        var health: Health?
+        var actions: [Action]?
         let tools: [String]?
         let reason: String?
         let events: [Event]
@@ -161,13 +167,65 @@ final class PlanqueClient {
         /// approving. Set by `grants()`, never decoded.
         var profile: JCS.Value?
 
-        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, title, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name" }
+        enum CodingKeys: String, CodingKey { case id, status, statusWords = "status_words", text, terms, digest, request, account, title, usedBy = "used_by", health, actions, tools, reason, events, signedIn = "signed_in", heldUntil = "held_until", vendorName = "vendor", entry, provider, agentName = "agent_name" }
 
         /// The vendor, as the owner knows it: its server's host.
         /// The vendor's name, as planque gives it: what its server calls itself, else its
         /// host (kiff/planque#17). Shown as it is.
         let vendorName: String?
         var vendor: String { vendorName ?? request.server }
+
+        /// A connection's health for people (planque's rows): `state` (`working`, `paused`, `signed_out`,
+        /// `unfinished`, `waiting`, `ended`), `ok` only while it works, and `words`, its time in this phone's
+        /// zone. Read leniently.
+        struct Health: Decodable, Equatable {
+            var state = ""
+            var ok = false
+            var words = ""
+            enum CodingKeys: String, CodingKey { case state, ok, words }
+            init(state: String = "", ok: Bool = false, words: String = "") { self.state = state; self.ok = ok; self.words = words }
+            init(from decoder: Decoder) throws {
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+                state = ((try? c.decodeIfPresent(String.self, forKey: .state)) ?? nil) ?? ""
+                ok = ((try? c.decodeIfPresent(Bool.self, forKey: .ok)) ?? nil) ?? false
+                words = (((try? c.decodeIfPresent(String.self, forKey: .words)) ?? nil) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+        }
+
+        /// One thing the owner can do with a connection that works for it now, as planque offers it:
+        /// `sign_in_again` (`approve`: a new sign-in on this same connection; `key`: a new key),
+        /// `remove` (`delete`, with `stops`: what stops, for one more ask), `remove_unfinished` (`delete`).
+        struct Action: Decodable, Equatable, Identifiable {
+            static let signInAgain = "sign_in_again", remove = "remove", removeUnfinished = "remove_unfinished"
+            var id = ""
+            var words = ""
+            var how = ""
+            var stops: String?
+            enum CodingKeys: String, CodingKey { case id, words, how, stops }
+            init(id: String = "", words: String = "", how: String = "", stops: String? = nil) {
+                self.id = id; self.words = words; self.how = how; self.stops = stops
+            }
+            init(from decoder: Decoder) throws {
+                guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
+                func text(_ k: CodingKeys) -> String { (((try? c.decodeIfPresent(String.self, forKey: k)) ?? nil) ?? "").trimmingCharacters(in: .whitespacesAndNewlines) }
+                id = text(.id); words = text(.words); how = text(.how)
+                let s = text(.stops); stops = s.isEmpty ? nil : s
+            }
+            /// One this app knows how to take, with its words: anything else isn't drawn.
+            var known: Bool {
+                guard !words.isEmpty else { return false }
+                switch id {
+                case Self.signInAgain: return how == "approve" || how == "key"
+                case Self.remove, Self.removeUnfinished: return how == "delete"
+                default: return false
+                }
+            }
+            var removes: Bool { id == Self.remove || id == Self.removeUnfinished }
+        }
+
+        /// planque draws this connection's row (its health and actions): the list shows it as sent, and
+        /// a tap opens its detail, where its actions are. Without them, the row is the app's as before.
+        var rowFromPlanque: Bool { !(health?.words.isEmpty ?? true) && actions != nil }
         /// What a connection's row is called: planque's `title`, else the account it names, else
         /// nil (the row then says the app). Never the provider's id for a managed app, which planque
         /// sends as `account` only to be sent back.
@@ -535,6 +593,8 @@ final class PlanqueClient {
         // The person's languages, as tafs cloud gets them: planque writes the words they approve in the first it has.
         // Not part of what's signed (the method, the path and query, the body).
         request.setValue(KIFFClient.acceptLanguage(KIFFClient.screenLanguages), forHTTPHeaderField: "Accept-Language")
+        // This phone's zone, for the times in planque's words ("last used 00:32"); not part of what's signed either.
+        request.setValue(TimeZone.current.identifier, forHTTPHeaderField: "X-Time-Zone")
         if let body {
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.httpBody = body

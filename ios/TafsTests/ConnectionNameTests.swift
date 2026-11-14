@@ -28,7 +28,7 @@ final class ConnectionNameTests: XCTestCase {
     func testTheViewsDrawTheNameAndTriggersSendTheAccount() throws {
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
         let connect = try String(contentsOf: root.appendingPathComponent("Views/ConnectAppsView.swift"), encoding: .utf8)
-        XCTAssertEqual(connect.components(separatedBy: "Text(g.name ?? app.title)").count - 1, 2)
+        XCTAssertEqual(connect.components(separatedBy: "Text(g.name ?? app.title)").count - 1, 3, "the app's row, a removed taf's, and planque's row")
         XCTAssertFalse(connect.contains("g.account"), "no row draws the account")
         let taf = try String(contentsOf: root.appendingPathComponent("Views/TafDetailView.swift"), encoding: .utf8)
         XCTAssertTrue(taf.contains("Text(grant.name.map { Words.Taf.keysKeptSealed + \" · \" + $0 } ?? Words.Taf.keysKeptSealed)"), "the taf's Connected apps")
