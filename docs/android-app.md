@@ -678,7 +678,7 @@ tafs cloud answers.
   says why (`ErrorWords`) and keeps the rows. A row being set aside isn't drawn again by a Home read
   meanwhile.
 
-iPhone and iPad follow.
+iPhone and iPad do the same ([ios-app.md](ios-app.md#coach-waiting)).
 
 ## Your step
 
