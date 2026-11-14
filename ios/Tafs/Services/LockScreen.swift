@@ -1,4 +1,6 @@
+#if !targetEnvironment(macCatalyst)
 import ActivityKit
+#endif
 import Foundation
 import UserNotifications
 
@@ -17,7 +19,10 @@ final class LockScreen {
     func update(held: [HeldCall], tafs: [Taf], names: [UUID: String] = [:], notify: Bool = true) {
         self.names = names
         if notify { notifyNew(held, tafs) } else { notified = Set(held.map(\.id)) }
+        // The Mac has no Live Activity (docs/mac-app.md): its notifications are enough.
+        #if !targetEnvironment(macCatalyst)
         if #available(iOS 16.1, *) { updateActivity(held, tafs) }
+        #endif
     }
     private var names: [UUID: String] = [:]
 
@@ -57,6 +62,16 @@ final class LockScreen {
 
     // MARK: Live Activity
 
+    /// Ends the Live Activity, once nothing is held any more. Nothing to end on the Mac.
+    nonisolated static func endActivities() async {
+        #if !targetEnvironment(macCatalyst)
+        if #available(iOS 16.1, *) {
+            for activity in Activity<HeldActivityAttributes>.activities { await activity.end(dismissalPolicy: .immediate) }
+        }
+        #endif
+    }
+
+    #if !targetEnvironment(macCatalyst)
     @available(iOS 16.1, *)
     private func updateActivity(_ held: [HeldCall], _ tafs: [Taf]) {
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
@@ -88,4 +103,5 @@ final class LockScreen {
             }
         }
     }
+#endif
 }
