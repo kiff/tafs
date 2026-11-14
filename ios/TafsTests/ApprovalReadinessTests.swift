@@ -51,9 +51,14 @@ final class ApprovalReadinessTests: XCTestCase {
         XCTAssertNil(ApprovalReadiness.cancelled(NSError(domain: "x", code: 1)))
     }
 
-    func testTheSimulatorIsReady() {
+    func testTheSimulatorIsReady() throws {
         // The signer lets the Simulator's demo through, so its screens show the approvals.
+        // A Mac's tests run on the Mac itself, which answers for its own Touch ID.
+        #if !targetEnvironment(simulator)
+        throw XCTSkip("Not a Simulator")
+        #else
         XCTAssertTrue(ApprovalReadiness.current().isReady)
+        #endif
     }
 
     /// Check again reads readiness once for every view: a version's notice clears and its

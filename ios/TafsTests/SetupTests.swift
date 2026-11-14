@@ -110,6 +110,8 @@ final class SetupTests: XCTestCase {
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: session)
         let planque = PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: session)
         let model = AppModel(signer: signer, kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: vendor, remembered: remembered)
+        // Ready whatever runs the tests: a Mac with no Touch ID isn't, and the signer here is a stub.
+        model.readApprovalReadiness = { .ready }; model.checkApprovalReadiness()
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
