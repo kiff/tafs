@@ -1,0 +1,1 @@
+- **Labels, in tafs cloud.** Coach puts labels on tafs, such as Money or Customers, for the person to filter the list by. Home sends each taf's labels and the filter row's counts, dots and headline, in all 8 languages. A label changes nothing a taf may do ([labels.md](docs/labels.md)).

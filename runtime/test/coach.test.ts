@@ -6,6 +6,7 @@ import { startDrive } from "../src/cloud/drive.js";
 import { AgentsError } from "../src/cloud/agents.js";
 import { CHAT, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
+import { readLabels, saveLabels } from "../src/cloud/labels.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 const T = "t_acme";
@@ -116,6 +117,76 @@ describe("a drive's tools are told the chat (kiff/tafs#544)", () => {
   });
 });
 
+// Labels (docs/labels.md): a name and a colour, which change nothing a taf may do.
+describe("labels", () => {
+  const OTHER = { id: "taf-bbbb0000000000000000", name: "Bills", job: "custom", kiffAgent: "agent_bills", nameClaim: "c3", created: "2026-10-15T09:00:00Z" } as Taf;
+
+  it("taf_labels sets a taf's whole list, makes a new label, takes a category's name in any language as one label, and drops one no taf has", async () => {
+    const w = world();
+    const set = await w.tool("taf_labels", { action: "set", taf: "Refunds", labels: ["Geld", "VIP"] });
+    expect(set.isError).toBe(false);
+    expect(set.json.labels.map((l: { name: string }) => l.name)).toEqual(["Geld", "VIP"]);
+    const kept = await readLabels(w.coach, T);
+    expect(kept.version).toBe(1);
+    expect(kept.labels[0]).toMatchObject({ name: "Geld", key: "money", color: "money" });
+    expect((await w.tafs.get(T, RAE))!.labels).toEqual(kept.labels.map((l) => l.id));
+    // "money" is Geld's category: the same label, never a second one. VIP is then on no taf, and dropped.
+    const again = await w.tool("taf_labels", { action: "set", taf: RAE, labels: ["money"] });
+    expect(again.json.labels).toEqual([{ id: kept.labels[0]!.id, name: "Geld" }]);
+    expect((await readLabels(w.coach, T)).labels.map((l) => l.name)).toEqual(["Geld"]);
+    const state = await w.tool("tafs_state", {});
+    expect(state.json.tafs.find((t: { id: string }) => t.id === RAE).labels).toEqual([{ id: kept.labels[0]!.id, name: "Geld" }]);
+  });
+
+  it("refuses a Card, tool or dial field, a 4th label on a taf, a 13th on the account and another account's taf, and changes nothing else of the taf", async () => {
+    const w = world();
+    const before = structuredClone(await w.tafs.get(T, RAE))!;
+    for (const extra of [{ card: "crd_1" }, { tools: ["refund"] }, { wakes: [] }, { limit: 5 }]) {
+      const r = await w.tool("taf_labels", { action: "set", taf: RAE, labels: ["Money"], ...extra });
+      expect(r.isError).toBe(true);
+      expect(r.text).toContain("a label changes no Card, tool or dial");
+    }
+    expect((await w.tool("taf_labels", { action: "set", taf: RAE, labels: ["A", "B", "C", "D"] })).text).toContain("a taf has at most 3 labels");
+    // Twelve labels on four other tafs: a new name on Refunds would be the 13th.
+    const twelve = Array.from({ length: 12 }, (_, i) => ({ id: `lbl_${i}`, name: `L${i}`, color: "errands" }));
+    await saveLabels(w.coach, T, { labels: [], version: 0 }, twelve, new Date("2026-10-16T12:00:00Z"));
+    for (let i = 0; i < 4; i++) w.tafs.held.set(`${T}#taf-${i}`, { ...OTHER, id: `taf-${i}`, name: `T${i}`, labels: [0, 1, 2].map((j) => `lbl_${i * 3 + j}`) });
+    const thirteenth = await w.tool("taf_labels", { action: "set", taf: RAE, labels: ["New"] });
+    expect(thirteenth.text).toContain("an account has at most 12 labels");
+    // One the account has is fine.
+    expect((await w.tool("taf_labels", { action: "set", taf: RAE, labels: ["L4"] })).isError).toBe(false);
+    w.tafs.held.set(`t_other#${OTHER.id}`, OTHER);
+    expect((await w.tool("taf_labels", { action: "set", taf: OTHER.id, labels: ["Money"] })).text).toContain("there is no taf");
+    const { labels, ...after } = (await w.tafs.get(T, RAE))!;
+    expect(labels).toEqual(["lbl_4"]);
+    expect(after).toEqual(before);
+  });
+
+  it("rename keeps the label's id, remove takes it off every taf and leaves the rest as it was, and a person labels only tafs they manage", async () => {
+    const w = world();
+    await w.tool("taf_labels", { action: "set", taf: RAE, labels: ["Customers"] });
+    const id = (await readLabels(w.coach, T)).labels[0]!.id;
+    const renamed = await w.tool("taf_labels", { action: "rename", label: "Customers", name: "Shop", color: "errands" });
+    expect(renamed.json.label).toEqual({ id, name: "Shop", color: "errands" });
+    expect((await readLabels(w.coach, T)).labels[0]!.key).toBeUndefined();
+    expect((await w.tool("taf_labels", { action: "rename", label: id, color: "purple" })).text).toContain("color is one of money, customers, operations, errands");
+    const schedule = await w.agents.api.getSchedule(T, RAE);
+    const removed = await w.tool("taf_labels", { action: "remove", label: id });
+    expect(removed.json).toMatchObject({ removed: "Shop", from: ["Refunds"] });
+    expect((await w.tafs.get(T, RAE))!.labels).toEqual([]);
+    expect((await readLabels(w.coach, T)).labels).toEqual([]);
+    expect(await w.agents.api.getSchedule(T, RAE)).toEqual(schedule);
+    // KIFF says this person may use Refunds but not manage it.
+    const fetchOf = w.deps.fetch!;
+    w.deps.fetch = (async (url: string, init?: RequestInit) => url.endsWith("/v1/coach/act")
+      ? new Response(JSON.stringify({ agents: { agent_rae: { use: true, oversee: false, manage: false } } }))
+      : fetchOf(url, init)) as unknown as typeof fetch;
+    const theirs = await w.tool("taf_labels", { action: "set", taf: RAE, labels: ["Money"] }, { act: "u_bo" });
+    expect(theirs.text).toContain("Refunds's labels are for the people who manage it");
+  });
+
+});
+
 describe("Coach's tools (kiff/tafs#206)", () => {
   // Coach finds a vendor's published API description itself (webread.ts): one public page, as data, about no taf.
   it("web_read answers one public page's text as data, and refuses a page that isn't public, in words", async () => {
@@ -135,12 +206,12 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(asked).toEqual(["https://docs.acme.example.com/auth"]);
   });
 
-  it("speak MCP, and list the fourteen tools, each with KIFF's operation argument", async () => {
+  it("speak MCP, and list the fifteen tools, each with KIFF's operation argument", async () => {
     const w = world();
     const init = await w.rpc("initialize", { protocolVersion: "2025-06-18" });
     expect(init.result).toMatchObject({ protocolVersion: "2025-06-18", serverInfo: { name: "tafs" } });
     const list = await w.rpc("tools/list");
-    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "taf_estimate", "web_read", "version_try", "version_install", "app_look", "app_act"]);
+    expect(list.result?.tools?.map((t) => t.name)).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "taf_estimate", "web_read", "taf_labels", "version_try", "version_install", "app_look", "app_act"]);
     for (const t of list.result?.tools ?? []) expect(t.inputSchema.required).toContain(OP_ARG);
     expect(TOOLS.map((t) => t.name)).not.toContain("hold_answer");
   });
