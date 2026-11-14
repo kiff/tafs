@@ -92,6 +92,8 @@ export const nl: Words = {
   connect_again_words: (app: string, taf: string) => `De aanmelding bij ${app} is verlopen, dus ${taf} kan het niet gebruiken. Verbind opnieuw om je aan te melden.`,
   connect_again_done: (app: string, taf: string) => `${app} is weer verbonden. ${taf} kan het gebruiken.`,
   check_key_not_ready: "de sleutel was nog niet klaar; het controleert de volgende keer opnieuw",
+  check_dropped: "De controle kon de app niet lezen, dus hij draait voorlopig op zijn tijden zonder controle. Coach kan de controle herstellen.",
+  check_dropped_hourly: "De controle kon de app niet lezen, dus hij draait voorlopig zonder controle, hooguit één keer per uur. Coach kan de controle herstellen.",
   approval_cards_unread: "De Card kon nog niet worden gecontroleerd. Lees hem opnieuw en keur hem dan goed.",
   approval_uncovered: (tool: string) => `Deze Card dekt "${tool}" niet, terwijl het taf het heeft gekregen, dus elke aanroep ervan zou worden geweigerd. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_stray: (tool: string) => `Deze Card zou het taf ook "${tool}" laten gebruiken, wat geen van zijn koppelingen geeft. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,

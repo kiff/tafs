@@ -92,6 +92,8 @@ export const it: Words = {
   connect_again_words: (app: string, taf: string) => `L'accesso a ${app} è scaduto, quindi ${taf} non può usarlo. Connetti di nuovo per accedere.`,
   connect_again_done: (app: string, taf: string) => `${app} è di nuovo connesso. ${taf} può usarlo.`,
   check_key_not_ready: "la sua chiave non era ancora pronta; ricontrolla la prossima volta",
+  check_dropped: "Il suo controllo non è riuscito a leggere l'app, quindi per ora gira ai suoi orari senza controllo. Coach può correggerlo.",
+  check_dropped_hourly: "Il suo controllo non è riuscito a leggere l'app, quindi per ora gira senza controllo, al massimo una volta all'ora. Coach può correggerlo.",
   approval_cards_unread: "La Card non è ancora stata verificata. Rileggila, poi approva.",
   approval_uncovered: (tool: string) => `Questa Card non copre «${tool}», che il taf ha ricevuto, quindi ogni sua chiamata verrebbe rifiutata. Non è stato approvato nulla. Coach la riscrive.`,
   approval_stray: (tool: string) => `Questa Card permetterebbe al taf di usare anche «${tool}», che nessun suo collegamento gli dà. Non è stato approvato nulla. Coach la riscrive.`,

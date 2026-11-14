@@ -92,6 +92,8 @@ export const pl: Words = {
   connect_again_words: (app: string, taf: string) => `Logowanie do ${app} wygasło, więc ${taf} nie może z niego korzystać. Połącz ponownie, aby się zalogować.`,
   connect_again_done: (app: string, taf: string) => `${app} jest znów połączony. ${taf} może z niego korzystać.`,
   check_key_not_ready: "jego klucz nie był jeszcze gotowy; sprawdzi ponownie następnym razem",
+  check_dropped: "Sprawdzenie nie mogło odczytać aplikacji, więc na razie działa o ustalonych porach bez sprawdzenia. Coach może naprawić sprawdzenie.",
+  check_dropped_hourly: "Sprawdzenie nie mogło odczytać aplikacji, więc na razie działa bez sprawdzenia, najwyżej raz na godzinę. Coach może naprawić sprawdzenie.",
   approval_cards_unread: "Nie udało się jeszcze sprawdzić Card. Przeczytaj ponownie, a potem zatwierdź.",
   approval_uncovered: (tool: string) => `Ta Card nie obejmuje „${tool}”, które taf otrzymał, więc każde jego wywołanie zostałoby odrzucone. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
   approval_stray: (tool: string) => `Ta Card pozwoliłaby tafowi używać także „${tool}”, którego nie daje żadne jego połączenie. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
