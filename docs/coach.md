@@ -635,6 +635,8 @@ key entry alike (`connect-an-app@10`, with the connection server taking a review
 subset of its own; `@9` had dropped `uses` because a reviewed entry refused it, which widened managed
 apps' sign-ins). Coach never connects one without `uses`: its sign-in would ask for every tool (`connect-an-app@22`).
 
+**A sheet's write, and a refused request** (`name-the-tools@15`, `connect-an-app@27`). A sheet's `values` is declared as rows of plain values (an array of arrays of strings), since planque takes no other type for it. A row number is never `resource_argument`, because planque takes only a string argument there, so a sheet write is limited by its calls a day. When planque or KIFF refuses a request itself (a name taken, an argument), Coach changes what the refusal named and never sends the same request again.
+
 **An app in two approvals** (`connect-an-app@26`, `name-the-tools@14`, `draft-the-card@18`). The first connects it:
 its sign-in, asked with the taf's planned tools (`uses`) for a managed app and with Coach's own reads in `setup_reads`
 (such as a tool that lists an operation's fields), never in a connection of their own; a vendor's own server gets its
