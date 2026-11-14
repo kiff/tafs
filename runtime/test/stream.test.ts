@@ -324,6 +324,21 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(r.raw).not.toContain("The connection service is down");
   });
 
+  // Android 85, 14 Nov: planque refused Coach's reuse request for its shape, Coach asked again and it went through, and the red
+  // "Coach couldn't connect the app yet" stayed in the chat.
+  it("ends a connection call refused for how Coach wrote it as not made, never red, and the thread says the same on a reread", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", entry: "connector:composio:gmail", reuse: "grt_old" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "planque answered 400: reusing a managed app's sign-in takes agent, agent_name and tools: [] alone", is_error: true } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Summarise my inbox on Fridays" } });
+    const steps = r.events.filter((e) => e.event === "step").map((e) => e.data);
+    expect(steps).toEqual([{ call_id: "c1", status: "not_made" }]);
+    expect(r.raw).not.toContain("couldn't connect");
+    expect(r.raw).not.toContain("takes agent");
+  });
+
   it("never shows a connection request Coach corrected as failed, nor the connection server's refusal (owner's phone, 12 Nov)", async () => {
     const w = world();
     const refused = { text: "planque answered 400: the body must be a JSON object with the documented fields", is_error: true };
