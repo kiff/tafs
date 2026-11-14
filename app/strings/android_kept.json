@@ -114,6 +114,6 @@
     "SetJavaScriptEnabled": "a lint rule's name"
   },
   "design/Haptics.kt": {
-    "haptics: the phone played none (${kind.name})": "the diagnostics, never shown"
+    "haptics: no feedback played (view or phone setting, ${kind.name})": "the diagnostics, never shown"
   }
 }

@@ -49,8 +49,8 @@ object Haptics {
 
   /**
    * The platform's own feedback for each kind, on [view] (Android 11+: confirm and reject exist). It follows the phone's own
-   * touch feedback setting: off there, the phone plays nothing, and that's said once in the diagnostics, so a "nothing
-   * vibrates" report can be told apart from a tap the app never asked for.
+   * touch feedback setting: off there, the phone plays nothing, and that's said once in the diagnostics (as is a view that
+   * plays none), so a "nothing vibrates" report can be told apart from a tap the app never asked for.
    */
   fun on(view: View): (Kind) -> Unit = { kind ->
     view.post {
@@ -64,7 +64,9 @@ object Haptics {
       )
       if (!played && !saidNone) {
         saidNone = true
-        bot.tafs.app.drive.DriveDiagnostics.error("haptics: the phone played none (${kind.name})")
+        // The only log Coach and a tester can read (docs/drive.md, diagnostics). false also comes from a view not attached
+        // yet, or one with feedback off, so the line names both.
+        bot.tafs.app.drive.DriveDiagnostics.error("haptics: no feedback played (view or phone setting, ${kind.name})")
       }
     }
   }

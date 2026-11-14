@@ -737,8 +737,8 @@ The same rule as on iPhone and iPad (`design/Haptics.kt`):
 - **A step tick** on a selector's stops: the theme picker and the jobs' category chips.
 - **Settings › Haptics** turns all of it off, on this phone (`tafs.display`, `haptics`). It's on until turned off.
 - **The phone's own touch feedback setting** is followed: the platform's feedback (`performHapticFeedback`) plays nothing
-  when it's off. The first time a launch's feedback plays nothing, that's written to the diagnostics, so "nothing
-  vibrates" can be told apart from a tap the app never asked for.
+  when it's off. The first time a launch's feedback plays nothing (that setting, or a view that plays none), that's
+  written to the diagnostics, so "nothing vibrates" can be told apart from a tap the app never asked for.
 
 ## Dark
 
