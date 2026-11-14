@@ -158,6 +158,16 @@ final class BriefTests: XCTestCase {
         XCTAssertNotNil(first.cantWait)
         XCTAssertFalse(TafsCloud.Brief.sample().decisions.contains { $0.urgent }, "only with -briefUrgent")
 
+        // The model refuses Later on an urgent decision too, even one sent with a Later.
+        let model = AppModel()
+        var putOff = first
+        putOff.later = "Later"
+        model.laterBrief(putOff)
+        XCTAssertFalse(model.briefSetAside.contains(putOff.id), "an urgent decision is never put off")
+        putOff.urgent = false
+        model.laterBrief(putOff)
+        XCTAssertTrue(model.briefSetAside.contains(putOff.id))
+
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
         let view = try String(contentsOf: root.appendingPathComponent("Views/BriefView.swift"), encoding: .utf8)
         XCTAssertTrue(view.contains("let later = decision.urgent ? nil : decision.later"), "no Later on an urgent card, whatever was sent")

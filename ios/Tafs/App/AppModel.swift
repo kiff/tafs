@@ -1978,7 +1978,8 @@ final class AppModel: ObservableObject {
     /// "Later": the decision moves to the next brief (`POST /v1/brief/decisions/{id}/later`, wired once
     /// tafs cloud's route is live). Draft: set aside here.
     func laterBrief(_ decision: TafsCloud.Brief.Decision) {
-        guard decision.later != nil else { return }
+        // An urgent decision can't be put off, whatever was sent: refused here as the card hides it.
+        guard decision.later != nil, !decision.urgent else { return }
         briefSetAside.insert(decision.id)
     }
 
