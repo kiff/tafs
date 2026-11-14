@@ -5142,7 +5142,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(await sweepStaleCoach(result.deps)).toEqual([]);
   });
 
-  // The PM, 14 Nov: six runs kept as ended before kiff/agents could cancel a run paused on a card (agents#465), still PAUSED.
+  // Runs kept as ended before kiff/agents could cancel a run paused on a card (agents#465) stay PAUSED there until asked again.
   it("asks kiff/agents once more to cancel a run it refused before, and a run it now cancels is done", async () => {
     const { w, run, deps } = await paused({ id: "q1", type: "questions" });
     const stored = w.agents.runs.find((r) => r.id === run)!;
