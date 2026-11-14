@@ -204,7 +204,7 @@ Enforced in the app, with no prompt:
    - buying a pack or a plan;
    - dismissing a card that signs;
    - deleting the account, a group or a door, and unpairing someone from a door;
-   - signing out another device, and removing someone from a group;
+   - signing out another device, pairing a computer (Pair a computer and its Yes), and removing someone from a group;
    - revoking a Card, forgetting a memory note, installing a version or going back to one;
    - setting a waiting Coach chat aside, one or all, in Needs you: on iPhone and iPad, Set aside, Set all aside and its ask's yes, and the row that carries the swipe and its accessibility action, though neither is registered; on Android, Set aside, its swipe, Set all aside and its ask's yes;
    - anything else whose words take something away or grant it: on Android a contract

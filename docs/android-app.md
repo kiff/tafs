@@ -1004,6 +1004,38 @@ Connect apps title for that connection, else planque's vendor name, and the taf'
 name planque keeps (`agent_name`). It never shows an agent id or a server's slug. With no name for
 the taf, it names the app alone ("Connect Stripe").
 
+## Pairing a computer
+
+Account → Devices → **Pair a computer** gives a computer approval authority on the account, as
+KIFF's `docs/desktop-client.md` §5 sets out. Only a phone KIFF holds an approval key for can
+pair one; without it, Devices says approving needs a new sign-in and sends nothing.
+
+1. **The scan.** Google's code scanner (`play-services-code-scanner`) reads the QR in its own
+   screen, so the app asks for no camera permission; the manifest has Play services fetch it as
+   the app installs (`app/PairScan.kt`). Closing the scanner does nothing.
+2. **The QR** is read by `kiff/Pairing.kt` (`PairQr.read`): `kiff.pair.v1`, a device key, a
+   name, a nonce and an expiry, and keys that decode as base64url. Anything else, a web address
+   say, says "That QR code isn't a computer asking to be paired." Whether the fields are within
+   KIFF's bounds, the keys P-256, or the expiry still ahead, is KIFF's to say.
+3. **The check code** is the first 6 characters of base32(sha256(device key ‖ approval key)),
+   RFC 4648 with no padding, the device key alone for a passkey computer. The alert asks
+   "Pair {name}?" with "Does your computer show {code}?", and **Yes, pair it** or Cancel. A
+   page showing its own QR shows another code.
+4. **The approval.** On yes, `POST /v1/me/pairings` carries the QR's fields as they came,
+   signed by the approval key behind a fingerprint that reads "Pair {name} with your account".
+   The route grants authority (`KiffClient.grantsAuthority`), so it is never signed inside an
+   approval window, which never covers a pairing.
+5. **KIFF's answer.** `201 {pairing: {id, code, expires}}`: Devices shows "{name} is paired. It
+   showed {code}." with KIFF's code, and reads the list again, where the computer has Sign out
+   like any other device. A refusal says what didn't go through, in KIFF's `words` when it sends
+   them; until then, the app words its codes: `pairing_expired`, `pairing_used`,
+   `key_registered` and `invalid_pairing` each say to show a new code or that the computer is
+   paired already, and `approval_key_required` that approving needs a new sign-in.
+
+Both controls carry the confirm mark: Coach never pairs a computer ([drive.md](drive.md)).
+Tests: `PairingTest` (the check code against RFC 4648's vectors, what is read, the signed
+request, the window, each refusal) and `PairComputerTest` (the sheet).
+
 ## The calendar
 
 As iOS's (`docs/ios-app.md`, "The calendar"): the tafs' scheduled work still to

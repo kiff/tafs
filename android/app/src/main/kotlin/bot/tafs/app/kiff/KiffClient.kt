@@ -660,6 +660,13 @@ class KiffClient(
   }
 
   /**
+   * Pairs the computer whose QR the person scanned (docs/desktop-client.md §5.3): its fields as the QR gave them, signed by the
+   * approval key behind the fingerprint, and never inside an approval window, which never covers a pairing.
+   */
+  suspend fun pair(qr: PairQr): Pairing =
+    json.decodeFromString(PairingBody.serializer(), String(sendJson("POST", PAIRINGS, qr.body(), inWindow = false))).pairing
+
+  /**
    * Deletes the account in KIFF (kiff/tafs#185): its keys stop at once, and KIFF erases its data after its grace window.
    * KIFF takes it only signed by this phone, after the owner's confirmation: set [setupSigner] first. It ends this
    * phone's session too, so it comes last.
@@ -874,7 +881,10 @@ class KiffClient(
      * taf, the alert target that tells tafs cloud when a call is held, the connector key planque
      * keeps, the account's time zone, deleting the account (kiff/tafs#185), and raising the spend limit.
      */
-    val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", USAGE_LIMIT)
+    val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", USAGE_LIMIT, PAIRINGS)
+
+    /** Pairing a computer (KIFF's docs/desktop-client.md §5.3): signed by the approval key, never inside an approval window. */
+    const val PAIRINGS = "/v1/me/pairings"
 
     /** KIFF's "Did this happen?": each answer is a POST under it, signed by the approval key. */
     const val DID_THIS_HAPPEN = "/v1/me/did-this-happen"
@@ -921,6 +931,8 @@ class KiffClient(
       // "Not sure" decides nothing: the device key takes it.
       if (path.startsWith("$DID_THIS_HAPPEN/") && path.length > DID_THIS_HAPPEN.length + 1 && !path.endsWith("/check")) return true
       if (path == "/v1/me/agent-drafts") return true
+      // Pairing a computer gives it approval authority: only the approval key grants it.
+      if (path == PAIRINGS) return true
       val parts = path.split("/")
       // Sharing a taf gives people its use. Taking it away is the current key.
       if (parts.size == 5 && path.startsWith("/v1/agents/") && parts[4] == "grants" && parts[3].isNotEmpty()) return true

@@ -32,6 +32,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Tafs">
+        <!-- Pairing a computer: Play services fetches its QR scanner as the app installs, not on the first scan. -->
+        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui" />
         <!-- adjustResize: the app moves itself above the keyboard (imePadding), so the window must not pan as well. -->
         <activity
             android:name=".MainActivity"

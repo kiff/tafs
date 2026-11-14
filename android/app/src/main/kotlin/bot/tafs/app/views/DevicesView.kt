@@ -30,6 +30,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
@@ -37,6 +38,9 @@ import bot.tafs.app.design.Panel
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.kiff.Device
+import bot.tafs.app.kiff.PairQr
+import bot.tafs.app.kiff.Pairing
+import bot.tafs.app.model.ErrorWords
 import java.time.Instant
 import kotlinx.coroutines.launch
 
@@ -48,12 +52,27 @@ private fun lastUsed(device: Device): String {
   return Words.Settings.Devices.lastUsed(DateUtils.getRelativeTimeSpanString(at.toEpochMilli(), now, DateUtils.MINUTE_IN_MILLIS).toString())
 }
 
-/** Settings, Devices: the devices signed in as this person on the account, each with when it was last used, and Sign out for any but this one. */
+/**
+ * Settings, Devices: the devices signed in as this person on the account, each with when it was last used, and Sign out for any
+ * but this one. With [pair], "Pair a computer" scans a computer's QR ([scan]), asks whether the computer shows the same check
+ * code, and on yes pairs it (docs/android-app.md, Pairing a computer).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (Device) -> Boolean, onClose: () -> Unit) {
+fun DevicesSheet(
+  state: AppState,
+  refresh: suspend () -> Unit,
+  remove: suspend (Device) -> Boolean,
+  onClose: () -> Unit,
+  scan: (suspend () -> String?)? = null,
+  pair: (suspend (PairQr) -> Pairing?)? = null,
+) {
   val scope = rememberCoroutineScope()
   var removing by remember { mutableStateOf<Device?>(null) }
+  // The computer whose QR was read, while the person compares its check code; then what came of it.
+  var asking by remember { mutableStateOf<PairQr?>(null) }
+  var pairLine by remember { mutableStateOf<String?>(null) }
+  var pairing by remember { mutableStateOf(false) }
   LaunchedEffect(Unit) { refresh() }
   DriveSheet(
     onDismissRequest = onClose,
@@ -70,6 +89,7 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         state.devicesError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
+        pairLine?.let { Panel(Modifier.testTag(PAIR_LINE)) { Text(it, style = scaled(14, color = Theme.ink)) } }
         state.devices.forEach { device ->
           Panel {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -84,6 +104,26 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
               }
             }
           }
+        }
+        if (scan != null && pair != null) {
+          Text(
+            Words.Settings.Devices.pair,
+            style = scaled(15, FontWeight.SemiBold, if (pairing) Theme.dim else Theme.amber),
+            modifier = Modifier.heightIn(min = 44.dp).testTag(PAIR_BUTTON).confirms().tapping(enabled = !pairing) {
+              pairLine = null
+              scope.launch {
+                val text = try {
+                  scan()
+                } catch (e: kotlinx.coroutines.CancellationException) {
+                  throw e
+                } catch (e: Exception) {
+                  pairLine = Words.Settings.Devices.pairScannerFailed(why = ErrorWords.of(e))
+                  return@launch
+                } ?: return@launch
+                PairQr.read(text)?.let { asking = it } ?: run { pairLine = Words.Settings.Devices.pairNotAPairing }
+              }
+            }.padding(horizontal = 4.dp, vertical = 10.dp),
+          )
         }
         Text(
           Words.Settings.Devices.note,
@@ -103,4 +143,33 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
       dismissButton = { TextButton(onClick = { removing = null }) { Text(Words.Common.cancel) } },
     )
   }
+  asking?.let { qr ->
+    // The check code, before the fingerprint: a page showing its own QR can't get this phone to pair another key unnoticed.
+    DriveAlert(
+      onDismissRequest = { asking = null },
+      title = { Text(Words.Settings.Devices.pairNamed(device = qr.name)) },
+      text = { Text(Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty()), modifier = Modifier.testTag(PAIR_CHECK)) },
+      confirmButton = {
+        TextButton(
+          onClick = {
+            asking = null
+            pairing = true
+            scope.launch {
+              try {
+                pair?.invoke(qr)?.let { pairLine = Words.Settings.Devices.pairDone(device = qr.name, code = it.code.ifBlank { qr.checkCode.orEmpty() }) }
+              } finally {
+                pairing = false
+              }
+            }
+          },
+          modifier = Modifier.confirms(),
+        ) { Text(Words.Settings.Devices.pairYes, color = Theme.amber) }
+      },
+      dismissButton = { TextButton(onClick = { asking = null }) { Text(Words.Common.cancel) } },
+    )
+  }
 }
+
+internal const val PAIR_BUTTON = "devices.pair"
+internal const val PAIR_CHECK = "devices.pair.check"
+internal const val PAIR_LINE = "devices.pair.line"

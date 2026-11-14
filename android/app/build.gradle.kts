@@ -123,6 +123,8 @@ dependencies {
   implementation(libs.firebase.messaging)
   // Play's flexible in-app update: a new version on the track is offered in one tap, then a restart.
   implementation(libs.play.app.update.ktx)
+  // Pairing a computer: Google's code scanner reads its QR in its own screen, so the app asks for no camera permission.
+  implementation(libs.play.services.code.scanner)
 
   // Navigation
   implementation(libs.androidx.navigation3.ui)
