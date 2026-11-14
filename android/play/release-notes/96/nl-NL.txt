@@ -1,3 +1,4 @@
 - Voorwaarden en Privacy openen de eigen pagina's van tafs.
 - Een inlogkaart noemt de app waarbij je inlogt.
 - Een inlog die niet nodig is, zegt dat in gewone woorden.
+- Een goedkeuringskaart toont meteen wat ze vraagt.

@@ -460,7 +460,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           // While this phone holds an approval window, KIFF's words for the next tap (kiff/tafs#494).
           state.windowWords?.takeIf { state.connecting == null }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
           if (state.connecting == grant.id) {
-            Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
+            if (state.vendorPageOpen) Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
             Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).tapping { actions.cancelSignIn() })
           }
         }
@@ -622,7 +622,7 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, er
         )
         Text(Words.Coach.SignIn.opens(c.destination.toString()), style = scaled(12, color = Theme.dim, mono = true))
         if (waiting) {
-          Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
+          if (state.vendorPageOpen) Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
           Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).tapping { actions.cancelSignIn() })
         } else {
           Text(

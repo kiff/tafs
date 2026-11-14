@@ -375,6 +375,8 @@ data class AppState(
   /** Coach's cards whose answer is on its way to tafs cloud, and why one wasn't taken. A card's answer is the thread's, not the phone's. */
   /** Where an approval in progress is, once past opening the vendor's page: "Checking the sign-in…". */
   val connectStep: String? = null,
+  /** The vendor's sign-in page is open for an approval in progress. Only then does the card say to finish it there: a reuse opens none. */
+  val vendorPageOpen: Boolean = false,
   val cardsAnswering: Set<String> = emptySet(),
   /**
    * What the owner wrote in each chat and hasn't sent, Coach's included, by chat: kept while they go elsewhere in the app, and
@@ -3475,6 +3477,18 @@ class AppModel(
     val approvals = _state.value.coachComponents.map { it.component }.filter { it.type == "approval" || it.type == "sign_in" }
     if (approvals.isEmpty()) return
     refreshConnections()
+    // An open card whose grant planque doesn't list yet: tafs cloud can write the card as the grant is made, and the card would
+    // say "Reading what it asks for…" until another tab read the grants. Read them again a few seconds apart until planque has it.
+    val unread = _state.value.coachComponents.filter { it.answer == null && (it.component.type == "approval" || it.component.type == "sign_in") }
+      .mapNotNull { it.component.grant }.filter { g -> _state.value.grants.none { it.id == g } && grantsFollowed.add(g) }
+    if (unread.isNotEmpty() && _state.value.planqueReady) scope.launch {
+      repeat(SET_UP_READS) {
+        delay(SET_UP_READ_MS)
+        if (generation != accountGeneration) return@launch
+        refreshConnections()
+        if (unread.all { g -> _state.value.grants.any { it.id == g } }) return@launch
+      }
+    }
     for (c in approvals) {
       val id = c.draft ?: continue
       if (_state.value.setupDrafts[id]?.confirmed == true) continue
@@ -4490,7 +4504,7 @@ class AppModel(
           refreshConnections()
           return Connected.Done(_state.value.grants.firstOrNull { it.id == grant.id && it.connected } ?: grant.marked(true))
         }
-        val back = vendorSignIn.signIn(url)
+        val back = vendorPageOpen { vendorSignIn.signIn(url) }
         val signedIn = PlanqueClient.signedIn(back)
         if (signedIn == null || signedIn.grant != grant.id || signedIn.tenant != tenant) {
           return Connected.Failed(Words.Connect.noConfirmationCode(vendor = grant.vendor), told = "The sign-in at ${grant.vendor} came back without its confirmation code. Nothing was connected.")
@@ -4946,7 +4960,7 @@ class AppModel(
           // planque already holds the sign-in: approving connected it, with no second sign-in.
           if (approved.status == "connected" || approved.status == "listed") Came.Of(approved.status) else Came.Of("not_connected", status = approved.status)
         } else {
-          val back = vendorSignIn.signIn(url)
+          val back = vendorPageOpen { vendorSignIn.signIn(url) }
           val signedIn = PlanqueClient.signedIn(back)
           if (signedIn == null || signedIn.grant != p.grant || signedIn.tenant != planque.tenant) Came.Of("no_code")
           else {
@@ -4987,6 +5001,12 @@ class AppModel(
    * Sign in again, for a grant whose sign-in was left: a new approval, one confirmation. What it came to goes back to Coach as the
    * card's answer: "signed in", or "failed: why".
    */
+  /** The card says "finish it there" only while the vendor's page is actually open: an approval that reuses a sign-in opens none. */
+  private suspend fun <T> vendorPageOpen(open: suspend () -> T): T {
+    _state.update { it.copy(vendorPageOpen = true) }
+    try { return open() } finally { _state.update { it.copy(vendorPageOpen = false) } }
+  }
+
   suspend fun signInAgain(c: SetupComponent) {
     val grantId = c.grant ?: return
     // The sign-in card shows no terms: it approves the grant as the app last showed it.
@@ -5028,6 +5048,9 @@ class AppModel(
 
   /** The tafs tafs cloud said it set up that the list was read again for, so a taf not listed yet is read for once. */
   private val setUpTafs = mutableSetOf<String>()
+
+  /** The grants an open approval card names that planque didn't list yet, read again for once each. */
+  private val grantsFollowed = mutableSetOf<String>()
 
   /** The versions tafs cloud said it made from an improvement, by taf and number, that the taf's Versions were read again for. */
   private val versionsRead = mutableSetOf<String>()

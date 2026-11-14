@@ -13,6 +13,8 @@ import bot.tafs.app.kiff.VendorSignIn
 import bot.tafs.app.kiff.VendorSignInCancelled
 import bot.tafs.app.model.CoachWords
 import java.time.Instant
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
@@ -727,4 +729,53 @@ class CoachStartTest {
     assertEquals("failed: The sign-in was closed. Nothing was connected.", answered("s1"))
   }
 
+  // The owner on Android 95: "If the vendor's sign-in page opened, finish it there" showed under Approving… on a reuse that opened
+  // no page. The line is drawn only while the vendor's page is open.
+  @Test fun theCardSaysFinishItThereOnlyWhileTheVendorsPageIsOpen() = runTest {
+    reads()
+    coachThread(signInCard)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth"}""")
+    var m: AppModel? = null
+    var openWhileThere: Boolean? = null
+    val m1 = model(object : VendorSignIn {
+      override suspend fun signIn(url: String): String { openWhileThere = m!!.state.value.vendorPageOpen; throw VendorSignInCancelled() }
+    })
+    m = m1
+    m1.loadCoach()
+    m1.loadChat(COACH_CHAT)
+    assertFalse(m1.state.value.vendorPageOpen)
+    m1.signInAgain(KiffClient.json.decodeFromString(signInCard))
+    assertEquals(true, openWhileThere)
+    assertFalse(m1.state.value.vendorPageOpen)
+  }
+
+  @Test fun aSignInThatNeedsNoPageNeverSaysFinishItThere() = runTest {
+    reads()
+    coachThread(signInCard)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("listed")}]}""")
+    transport.answer("POST /v1/tafs/setup_1/components/s1/approval", 200,
+      """{"outcome":"answered","answer":"signed in","note":"Signed in already.","session":"s1","run":"r1"}""")
+    val m = model(object : VendorSignIn { override suspend fun signIn(url: String): String = throw AssertionError("no page opens") })
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    m.signInAgain(KiffClient.json.decodeFromString(signInCard))
+    assertFalse(m.state.value.vendorPageOpen)
+  }
+
+  // The owner on Android 95: the approval card said "Reading what it asks for…" until a tab switch read the grants. tafs cloud
+  // can list the card before planque lists its grant: the phone reads the grants again until it does.
+  @Test fun anApprovalWhoseGrantIsntListedYetIsReadAgain() = runTest {
+    reads()
+    coachThread("""{"type":"approval","id":"a1","grant":"g1","title":"Connect Stripe"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    val m = model(scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    assertTrue(m.state.value.grants.none { it.id == "g1" })
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    advanceTimeBy(AppModel.SET_UP_READ_MS + 1)
+    runCurrent()
+    assertTrue(m.state.value.grants.any { it.id == "g1" })
+  }
 }

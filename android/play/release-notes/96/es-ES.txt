@@ -1,3 +1,4 @@
 - Términos y Privacidad abren las páginas propias de tafs.
 - Una tarjeta de inicio de sesión nombra la app a la que conecta.
 - Un inicio de sesión que no hace falta lo dice con palabras claras.
+- Una tarjeta de aprobación muestra enseguida lo que pide.

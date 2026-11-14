@@ -1,3 +1,4 @@
 - Nutzungsbedingungen und Datenschutz öffnen die eigenen Seiten von tafs.
 - Eine Anmeldekarte nennt die App, bei der sie anmeldet.
 - Eine unnötige Anmeldung sagt es in einfachen Worten.
+- Eine Freigabekarte zeigt sofort, worum sie bittet.
