@@ -1963,6 +1963,7 @@ object Words {
       fun signOutNamed(device: String): String = Res.s(R.string.settings_devices_sign_out_named, device)
       fun signOutPrompt(device: String): String = Res.s(R.string.settings_devices_sign_out_prompt, device)
       val signOutThis: String get() = Res.s(R.string.settings_devices_sign_out_this)
+      val signoutNeedsApprover: String get() = Res.s(R.string.settings_devices_signout_needs_approver)
       val thisDevice: String get() = Res.s(R.string.settings_devices_this_device)
       fun thisDeviceName(device: String): String = Res.s(R.string.settings_devices_this_device_name, device)
       val thisDeviceTitle: String get() = Res.s(R.string.settings_devices_this_device_title)

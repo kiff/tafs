@@ -59,6 +59,7 @@
   "settings.devices.sign_out_named": "{device} uitloggen?",
   "settings.devices.sign_out_prompt": "{device} uitloggen van je account",
   "settings.devices.sign_out_this": "Dit apparaat uitloggen?",
+  "settings.devices.signout_needs_approver": "Gebruik een apparaat dat kan goedkeuren om een ander apparaat uit te loggen.",
   "settings.devices.this_device": "dit apparaat",
   "settings.devices.this_device_name": "tafs op {device}",
   "settings.devices.this_device_title": "Dit apparaat",

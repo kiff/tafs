@@ -59,6 +59,7 @@
   "settings.devices.sign_out_named": "Sign {device} out?",
   "settings.devices.sign_out_prompt": "Sign {device} out of your account",
   "settings.devices.sign_out_this": "Sign this device out?",
+  "settings.devices.signout_needs_approver": "To sign another device out, use a device that can approve.",
   "settings.devices.this_device": "this device",
   "settings.devices.this_device_name": "tafs on {device}",
   "settings.devices.this_device_title": "This device",

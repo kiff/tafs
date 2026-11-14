@@ -1944,6 +1944,7 @@
     <string name="settings_devices_sign_out_named">Wylogować %1$s?</string>
     <string name="settings_devices_sign_out_prompt">Wyloguj %1$s z Twojego konta</string>
     <string name="settings_devices_sign_out_this">Wylogować to urządzenie?</string>
+    <string name="settings_devices_signout_needs_approver">Aby wylogować inne urządzenie, użyj urządzenia, które może zatwierdzać.</string>
     <string name="settings_devices_this_device">to urządzenie</string>
     <string name="settings_devices_this_device_name">tafs na %1$s</string>
     <string name="settings_devices_this_device_title">To urządzenie</string>

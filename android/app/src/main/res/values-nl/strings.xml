@@ -1832,6 +1832,7 @@
     <string name="settings_devices_sign_out_named">%1$s uitloggen?</string>
     <string name="settings_devices_sign_out_prompt">%1$s uitloggen van je account</string>
     <string name="settings_devices_sign_out_this">Dit apparaat uitloggen?</string>
+    <string name="settings_devices_signout_needs_approver">Gebruik een apparaat dat kan goedkeuren om een ander apparaat uit te loggen.</string>
     <string name="settings_devices_this_device">dit apparaat</string>
     <string name="settings_devices_this_device_name">tafs op %1$s</string>
     <string name="settings_devices_this_device_title">Dit apparaat</string>

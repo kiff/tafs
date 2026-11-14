@@ -1832,6 +1832,7 @@
     <string name="settings_devices_sign_out_named">%1$s abmelden?</string>
     <string name="settings_devices_sign_out_prompt">%1$s von deinem Konto abmelden</string>
     <string name="settings_devices_sign_out_this">Dieses Gerät abmelden?</string>
+    <string name="settings_devices_signout_needs_approver">Um ein anderes Gerät abzumelden, nutze ein Gerät, das genehmigen kann.</string>
     <string name="settings_devices_this_device">dieses Gerät</string>
     <string name="settings_devices_this_device_name">tafs auf %1$s</string>
     <string name="settings_devices_this_device_title">Dieses Gerät</string>
