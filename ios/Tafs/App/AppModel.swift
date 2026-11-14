@@ -2493,6 +2493,13 @@ final class AppModel: ObservableObject {
     /// day, week and month and the navigator's marks. Another account's read never lands here.
     func loadCalendar(_ state: CalendarState) async {
         let range = CalendarMath.range(state.selected)
+        // A screenshot over the sample (`-screen calendar`): no KIFF account to read, so an empty
+        // range rather than an error under the header.
+        if Screenshots.calendar != nil, mode != .kiff {
+            calendarRead = TafsCloud.CalendarRead(from: range.from, to: range.to)
+            calendarError = nil
+            return
+        }
         let gen = accountGeneration
         calendarError = nil
         do {
@@ -6014,6 +6021,7 @@ final class AppModel: ObservableObject {
             return nil
         }
         quietStop = nil
+        notApprovable = false
         guard connecting == nil else {
             quietStop = Words.Connect.anotherApproval
             return nil
@@ -6080,6 +6088,7 @@ final class AppModel: ObservableObject {
         // this phone confirms the new one.
         guard ["pending", "approved", "signed_in", "needs_reconnect"].contains(grant.status) || (again && grant.connected) else {
             failureIsTheRequests = grant.status == "failed"
+            notApprovable = true
             lastError = grant.reason.map { Words.Connect.connectionIsBecause(status: grant.status.replacingOccurrences(of: "_", with: " "), reason: $0) }
                 ?? Words.Connect.connectionIs(status: grant.status.replacingOccurrences(of: "_", with: " "))
             return nil
@@ -6752,6 +6761,26 @@ final class AppModel: ObservableObject {
     /// slug ("stripe-mcp") or host.
     nonisolated static func promptApp(_ grant: PlanqueClient.Grant) -> String {
         KIFFMapping.vendorWords(grant.vendor)
+    }
+
+    /// A connection's app as Connect apps names it ("Gmail"), by its grant or its catalog entry,
+    /// else planque's vendor in people's words (as Android's `ConnectionWords.appName`).
+    func appName(_ grant: PlanqueClient.Grant) -> String {
+        let listed = connectApps?.apps.first { $0.grant == grant.id || (grant.entry != nil && $0.entry == grant.entry) }
+        if let name = listed?.displayName.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty { return name }
+        return Self.promptApp(grant)
+    }
+
+    /// A sign-in card's app: the card's service, else the connection's app; nil when neither is
+    /// known (as Android's `signInWords`, Android 1.27.8).
+    nonisolated static func signInApp(service: String?, app: String?) -> String? {
+        [service, app].compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }.first { !$0.isEmpty }
+    }
+
+    /// A sign-in card's title: "Sign in at Gmail", and "Sign in at the vendor" only when no app is
+    /// known. Never a connection's status.
+    nonisolated static func signInWords(app: String?) -> String {
+        app.map { Words.Coach.SignIn.at(vendor: "\($0)") } ?? Words.Coach.SignIn.atVendor
     }
 
     /// The prompt read last before connecting: "Connect Stripe to Disputes", or "Connect Stripe"
@@ -8569,6 +8598,16 @@ final class AppModel: ObservableObject {
             lastError = nil
             return
         }
+        // A connection that takes no approval now (signed in already, or past approving): tafs cloud
+        // answers the card in the person's words, never planque's status ("This connection is listed.").
+        // Where it can't be asked, the app's line stands (Android 1.27.8).
+        if done == nil, notApprovable {
+            let answeredByCloud = await notApprovableAnswered(component, grantID: grant)
+            if answeredByCloud {
+                lastError = nil
+                return
+            }
+        }
         if let done, done.connected || done.listed {
             await answer(component, Words.Coach.Answer.signedInLower)
         } else if let e = lastError {
@@ -8576,6 +8615,30 @@ final class AppModel: ObservableObject {
         } else if done == nil {
             cardNotes[component.id] = quietStop ?? Words.Connect.nothingSignedIn
         }
+    }
+
+    /// Set by `connect` when the grant's status takes no approval (anything but pending, approved,
+    /// signed in or signed out by its vendor): a sign-in card then asks tafs cloud for its words.
+    private var notApprovable = false
+
+    /// Asks tafs cloud about a sign-in card whose connection takes no approval now: its approval
+    /// route takes a sign-in card too (docs/api.md). True once it answered Coach, with its note on
+    /// the card; anything else (something to sign, no answer) leaves the card to the app.
+    private func notApprovableAnswered(_ component: SetupComponent, grantID: String) async -> Bool {
+        guard let s = setupTaf, let tenant = kiffTenant else { return false }
+        let gen = accountGeneration
+        let signer = self.signer
+        let ref = cardRef(component.id)
+        let session = setupThread.components.last { $0.ref == ref }?.session
+        planque.tenant = tenant
+        // The read proof: planque shows the grant to tafs cloud only as this phone; it signs and grants nothing there.
+        let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+        guard gen == accountGeneration else { return false }
+        let decision = try? await cloud.approval(s.id, component: component.id, body: .init(grant: grantID, session: session), proof: proof)
+        guard gen == accountGeneration, let decision, decision.outcome == "answered" else { return false }
+        cardNotes[component.id] = decision.note.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+        await setupAnswered(s.id, ref: ref, decision: decision, gen: gen)
+        return true
     }
 
     /// The taf a result hands over to, when this phone shows it.
@@ -8667,6 +8730,18 @@ enum Screenshots {
     /// `-screen taf` opens a taf's page, `-screen card` its Cards; `-screen new` the new-taf flow; `-screen solo` and
     /// `-screen add-tasks` the purchase screens, for the products in App Store Connect.
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
+    /// `-screen calendar` opens Calendar on today in Day mode, `-screen calendar-week` in Week mode on
+    /// today's week: today is in what's shown, so the Today pill is in its "already today" state. An
+    /// iPad's whole-app sidebar selects its Calendar item; the phone opens it as Home's button does.
+    static var calendar: CalendarState? {
+        guard enabled else { return nil }
+        let today = CalendarMath.today(in: AccountTime.zone)
+        switch screen {
+        case "calendar": return CalendarState(mode: .day, selected: today)
+        case "calendar-week": return CalendarState(mode: .week, selected: today)
+        default: return nil
+        }
+    }
     /// `-pack rayo`: the add-tasks screen with that pack alone, one screenshot a product.
     static var pack: String? { UserDefaults.standard.string(forKey: "pack") }
     /// `-narrow YES`: tafs laid out at Slide Over's width on an iPad, compact (kiff/tafs#210).

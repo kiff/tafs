@@ -258,20 +258,21 @@ extension Date {
     }
 }
 
-/// kiff.dev's Terms and Privacy policy, which cover tafs, in the language the app's lines
-/// resolved to (`KIFFClient.screenLanguages`), never the phone's own setting: English at its
-/// own path (`/terms#tafs`), every other language under its prefix (`/de/terms#tafs`).
+/// tafs's own Terms and Privacy policy on kiff.dev, `/tafs/terms` and `/tafs/privacy`: the pages
+/// Google's consent screen names, apart from KIFF's, as on Android (Android 1.27.8). They're in
+/// English only for now (`/de/tafs/terms` isn't served), so every language opens them, and a
+/// link outside English says so (`label`).
 enum Legal {
-    static var terms: URL { terms(in: language) }
-    static var privacy: URL { privacy(in: language) }
-    static func terms(in language: String) -> URL { page("terms", language) }
-    static func privacy(in language: String) -> URL { page("privacy", language) }
+    static let terms = URL(string: "https://kiff.dev/tafs/terms")!
+    static let privacy = URL(string: "https://kiff.dev/tafs/privacy")!
 
     /// The language the app's own screens are written in.
     static var language: String { KIFFClient.appLanguage }
 
-    private static func page(_ path: String, _ language: String) -> URL {
-        language == "en" ? URL(string: "https://kiff.dev/\(path)#tafs")! : URL(string: "https://kiff.dev/\(language)/\(path)#tafs")!
+    /// A link's words, saying the page is in English when the app's lines aren't
+    /// ("Datenschutzerklärung (auf Englisch)", `settings.legal_in_english`), as Android does.
+    static func label(_ words: String, language: String = Legal.language) -> String {
+        language == "en" ? words : Words.Settings.legalInEnglish(label: words)
     }
 
     /// KIFF's status page, served apart from KIFF, so it answers when KIFF doesn't.

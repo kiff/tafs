@@ -1276,7 +1276,10 @@ struct SetupComponentView: View {
 
     @ViewBuilder private func signIn(_ c: SetupComponent) -> some View {
         let state = model.setupCardState(c)
-        let vendor = c.service ?? Words.Coach.theVendor
+        // The app by name ("Sign in at Gmail"): the card's service, else the connection's app as Connect apps
+        // and planque name it; "the vendor" only when neither is known (Android 1.27.8).
+        let app = AppModel.signInApp(service: c.service, app: model.grants.first { $0.id == c.grant }.map { model.appName($0) })
+        let vendor = app ?? Words.Coach.theVendor
         switch state {
         case .done:
             OutcomeLine(text: Words.Coach.Answer.signedInAt(vendor: "\(vendor)"), tone: Theme.ok)
@@ -1290,7 +1293,7 @@ struct SetupComponentView: View {
                 Eyebrow(text: state.isFailure ? Words.Coach.didNotGoThroughSign : Words.Coach.SignIn.eyebrow,
                         color: state.isFailure ? Theme.no : Theme.amber)
                 // A connection its vendor signed out reads planque's words for it (needs_reconnect).
-                Text(signedOut?.signedOutWords ?? Words.Coach.SignIn.at(vendor: "\(vendor)")).scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                Text(signedOut?.signedOutWords ?? AppModel.signInWords(app: app)).scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 if case .failed(let why) = state {
                     Text(why.map { Words.Coach.Answer.failedWhy(value: "\($0)") } ?? Words.Coach.Answer.failed)
                         .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)

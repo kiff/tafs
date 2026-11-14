@@ -40,7 +40,7 @@ on:
         type: boolean
         default: true
       screenshots:
-        description: "Which screenshots: none, full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark) or languages (the main screens in each of the eight languages). A screenshot run waits for an empty queue: it stops if another manual or tag run is queued or running."
+        description: "Which screenshots: none, full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark) or languages (the main screens in each of the eight languages, then the iPad's Overview, Calendar and Week in French and Portuguese). A screenshot run waits for an empty queue: it stops if another manual or tag run is queued or running."
         type: choice
         options: [none, full, key, languages]
         default: none
@@ -397,6 +397,8 @@ jobs:
           # or left in English shows here. The app's language and region come from the launch
           # arguments, as a phone set to that language gives them. Each language starts from a
           # fresh install, so a permission asked in one doesn't hang over the next one's screens.
+          # After the iPhone's, an iPad pass in French and Portuguese: the Overview, Calendar
+          # and Week on the 13-inch iPad.
           if [ "$SET" = languages ]; then
             for lang in en de fr es it pt nl pl; do
               xcrun simctl uninstall "$DEVICE_ID" bot.tafs.app || true
@@ -414,6 +416,30 @@ jobs:
               shoot "$lang-9-account" -screenshots YES -tab account "${loc[@]}"
               shoot "$lang-9b-alerts" -screenshots YES -tab account -screen alerts "${loc[@]}"
               shoot "$lang-iap-pack" -screenshots YES -screen buy-credits -pack vonk "${loc[@]}"
+            done
+            # Then the 13-inch iPad, as the ipad job picks it, in French and Portuguese: the
+            # Overview beside the whole-app sidebar (no calendar button of its own), Calendar on
+            # today with its Today pill, and Week with its 7-day strip under the heading. -signedIn lays the sidebar out as a signed-in account's, with Calendar
+            # as its item. The iPhone's build runs on it, as the full set's iPad shots do.
+            xcrun simctl shutdown "$DEVICE_ID" || true
+            DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ios = sorted(k for k in devices if "iOS" in k)
+          ipads = [d for d in devices[ios[-1]] if d["name"].startswith("iPad")]
+          print(next(d for d in ipads if "13-inch" in d["name"])["udid"])
+          ')
+            xcrun simctl boot "$DEVICE_ID" || true
+            xcrun simctl bootstatus "$DEVICE_ID" -b
+            xcrun simctl status_bar "$DEVICE_ID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
+            for lang in fr pt; do
+              xcrun simctl uninstall "$DEVICE_ID" bot.tafs.app || true
+              xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
+              region=$(echo "$lang" | tr a-z A-Z)
+              loc=(-AppleLanguages "($lang)" -AppleLocale "${lang}_${region}")
+              shoot "$lang-ipad-overview" -screenshots YES -tab tafs -signedIn YES "${loc[@]}"
+              shoot "$lang-ipad-calendar" -screenshots YES -tab tafs -screen calendar -signedIn YES "${loc[@]}"
+              shoot "$lang-ipad-calendar-week" -screenshots YES -tab tafs -screen calendar-week -signedIn YES "${loc[@]}"
             done
             ls -la "$RUNNER_TEMP/shots"
             exit 0

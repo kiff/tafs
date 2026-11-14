@@ -191,7 +191,8 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`; iOS fol
   again after each approval and on coming back to the app. tafs cloud marks each waiting card
   with `signs.takes` ([chat.md](chat.md)): the words go only under a `"tap"` card, never under one
   whose Approve takes the fingerprint (a Card signed with its tools or key). Android 97 draws
-  by it; iOS follows.
+  by it; iOS reads the mark and gates the words on it (`SetupComponent.windowWords`), and holds
+  no window yet.
 - **Closing.** After 30 seconds in the background, and at once when the screen turns off, the
   app closes it (`POST /v1/me/window/{id}/close`, device-signed). KIFF ends it itself at sign-out,
   at its cap (15 minutes from the fingerprint), on a halt or a new approval key. Whether a window
