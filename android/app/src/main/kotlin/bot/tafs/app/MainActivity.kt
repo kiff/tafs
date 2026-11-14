@@ -567,6 +567,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       files = FileActions(attach = model::attach, refuse = model::refuseFile, remove = model::removeFile, open = model::openFile),
       runNow = { model.runNow(it) },
       routeTaken = model::routeTaken,
+      routeLeft = model::routeLeft,
       loadReport = model::loadReport,
       loadWork = model::loadWork,
       setDraft = model::setDraft,

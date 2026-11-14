@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.getValue
@@ -145,6 +146,8 @@ class TafActions(
   val answerCard: (String, String, String, String) -> Unit = { _, _, _, _ -> },
   /** The screen a route asked for (AppModel.open) is on screen: the request is taken. */
   val routeTaken: () -> Unit = {},
+  /** The taf's page has left: a request for it that nothing took is dropped. */
+  val routeLeft: (String) -> Unit = {},
 )
 
 @Composable
@@ -169,6 +172,7 @@ fun TafDetailView(
   modifier: Modifier = Modifier,
 ) {
   val taf = state.taf(tafId)
+  DisposableEffect(tafId) { onDispose { actions.routeLeft(tafId) } }
   // What removing it did, with the taf's name: shown once it's done, even when the taf is gone from Home by then.
   var removal by rememberSaveable { mutableStateOf<String?>(null) }
   var removedName by rememberSaveable { mutableStateOf("") }
@@ -211,9 +215,12 @@ fun TafDetailView(
         AppRoute.TafSetup, AppRoute.TafSetupVersions -> { section = Section.Setup; actions.routeTaken() }
         AppRoute.TafMemory -> { section = Section.Setup; if (!signedIn) actions.routeTaken() }
         AppRoute.TafSetupStartsWhen, AppRoute.TafSetupResultsGoTo, AppRoute.TafWorkflow -> section = Section.Setup
-        AppRoute.TafShare -> folded = false
+        // Share is on the page only where ShareLine is drawn; elsewhere nothing would take it.
+        AppRoute.TafShare -> { folded = false; if (people == null || taf.cloudId == null) actions.routeTaken() }
         // The account's screens and the tabs, which the root opens.
-        else -> Unit
+        AppRoute.Tafs, AppRoute.NeedsYou, AppRoute.Record, AppRoute.Calendar, AppRoute.Coach, AppRoute.HaltAll, AppRoute.Account,
+        AppRoute.AccountPeople, AppRoute.AccountDevices, AppRoute.AccountApps, AppRoute.AccountUsage, AppRoute.AccountUsageRequests,
+        AppRoute.AccountAlerts, AppRoute.AccountTimeZone, AppRoute.AccountLanguage, AppRoute.AccountTheme, AppRoute.AccountDelete -> Unit
       }
     }
     var activitySelection by rememberSaveable(taf.id) { mutableStateOf("") }

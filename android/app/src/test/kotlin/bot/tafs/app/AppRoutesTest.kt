@@ -8,6 +8,7 @@ import java.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -49,13 +50,16 @@ class AppRoutesTest {
   /** What the screens are asked for: the route, and its taf by its id here. */
   private fun asked(route: AppRoute) = route to (if ("taf" in route.parameters) mapOf("taf" to "refunds-1") else emptyMap())
 
+  /** The request the screens see, without the number that tells it from the last. */
+  private fun AppModel.request() = state.value.requestedRoute?.let { it.route to it.values }
+
   @Test fun everyRouteOpensForSomeoneWhoManagesTheTafAndTheAccount() = runTest {
     reads()
     val m = model()
     for (route in AppRoute.entries) {
       m.routeTaken()
       m.open(path(route))
-      assertEquals(route.pattern, asked(route), m.state.value.requestedRoute)
+      assertEquals(route.pattern, asked(route), m.request())
     }
   }
 
@@ -63,10 +67,35 @@ class AppRoutesTest {
     reads()
     val m = model()
     assertTrue(m.open("taf/taf_1/setup/versions"))
-    assertEquals(asked(AppRoute.TafSetupVersions), m.state.value.requestedRoute)
+    assertEquals(asked(AppRoute.TafSetupVersions), m.request())
     m.routeTaken()
     assertTrue(m.open(AppRoute.TafCard, mapOf("taf" to "refunds-1")))
-    assertEquals(asked(AppRoute.TafCard), m.state.value.requestedRoute)
+    assertEquals(asked(AppRoute.TafCard), m.request())
+  }
+
+  @Test fun theSameScreenAskedForAgainIsANewRequest() = runTest {
+    reads()
+    val m = model()
+    assertTrue(m.open("taf/refunds-1/share"))
+    val first = m.state.value.requestedRoute
+    // Nothing took the first (its sheet wasn't drawn): asking again still reaches the screens, as a value the state hasn't held.
+    assertTrue(m.open("taf/refunds-1/share"))
+    val second = m.state.value.requestedRoute
+    assertEquals(first?.let { it.route to it.values }, second?.let { it.route to it.values })
+    assertNotEquals(first, second)
+  }
+
+  @Test fun aRequestForATafIsDroppedWhenItsPageLeavesAndNoOtherIs() = runTest {
+    reads()
+    val m = model()
+    assertTrue(m.open("taf/refunds-1/setup/starts-when"))
+    m.routeLeft("another-taf")
+    assertEquals(asked(AppRoute.TafSetupStartsWhen), m.request())
+    m.routeLeft("refunds-1")
+    assertNull(m.state.value.requestedRoute)
+    assertTrue(m.open("account/theme"))
+    m.routeLeft("refunds-1")
+    assertEquals(asked(AppRoute.AccountTheme), m.request())
   }
 
   @Test fun aPathThatNamesNoScreenOpensNothing() = runTest {
@@ -107,7 +136,7 @@ class AppRoutesTest {
     val taf = m.state.value.tafs.first().id
     assertTrue(m.open("tafs"))
     assertTrue(m.open(path(AppRoute.TafSetup, taf)))
-    assertEquals(AppRoute.TafSetup to mapOf("taf" to taf), m.state.value.requestedRoute)
+    assertEquals(AppRoute.TafSetup to mapOf("taf" to taf), m.request())
     m.routeTaken()
     val before = m.state.value
     // Nobody manages a sample taf, and the account's own screens are KIFF's.

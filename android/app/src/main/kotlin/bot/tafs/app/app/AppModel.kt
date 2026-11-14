@@ -186,6 +186,12 @@ internal fun allows(capabilities: List<String>?, capability: String): Boolean = 
 /** An Approve again waiting for the browser: the code the phone shows, which KIFF's page shows too, and the page's link. */
 data class Relink(val userCode: String, val link: String)
 
+/**
+ * A screen asked for by its route, with its values (a taf by its id here). [n] tells one request from the next, so asking for
+ * the same screen again is a new request the screens see.
+ */
+data class RouteRequest(val route: AppRoute, val values: Map<String, String>, val n: Long)
+
 /** What the screens draw. */
 /** A search of the Record: what was asked, the pages read so far, and whether one is on its way or failed. */
 data class RecordSearch(
@@ -540,7 +546,7 @@ data class AppState(
    * A screen asked for by its route (app/routes.json) and its values, a taf by its id here, until the screens have gone there:
    * the root view takes what it opens itself, a taf's page what's on it, and a sheet on that page its own.
    */
-  val requestedRoute: Pair<AppRoute, Map<String, String>>? = null,
+  val requestedRoute: RouteRequest? = null,
   /** The doors tafs cloud offers this account: none, and no taf shows Doors. */
   val doorsOffered: List<String> = emptyList(),
   /** Each taf's doors, once read. */
@@ -2678,12 +2684,18 @@ class AppModel(
       AppRoute.TafWorkflow -> tafSignedIn
     }
     if (!here) return false
-    _state.update { it.copy(requestedRoute = route to (taf?.let { t -> mapOf("taf" to t.id) } ?: emptyMap())) }
+    routeRequests += 1
+    _state.update { it.copy(requestedRoute = RouteRequest(route, taf?.let { t -> mapOf("taf" to t.id) } ?: emptyMap(), routeRequests)) }
     return true
   }
 
+  private var routeRequests = 0L
+
   /** The screens have gone where [open] asked. */
   fun routeTaken() = _state.update { it.copy(requestedRoute = null) }
+
+  /** The taf's page has left: a request for it that nothing took is dropped, so it never opens a sheet later on its own. */
+  fun routeLeft(tafId: String) = _state.update { s -> if (s.requestedRoute?.values?.get("taf") == tafId) s.copy(requestedRoute = null) else s }
 
   private fun savedAlertKinds(): Map<String, Boolean>? = secrets.load("$ALERT_KINDS|$kiffTenant")?.let { text ->
     runCatching { KiffClient.json.decodeFromString<Map<String, Boolean>>(text) }.getOrNull()
