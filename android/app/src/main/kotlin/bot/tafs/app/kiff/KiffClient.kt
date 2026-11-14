@@ -656,7 +656,7 @@ class KiffClient(
 
   /**
    * Signs a device out of the account: it no longer approves, and its sessions are over. Removing a device that holds an
-   * approval key takes an approval (KIFF's docs/desktop-client.md §6), and the phone can't tell which do, so it's always
+   * approval key takes an approval (KIFF's pairing contract), and the phone can't tell which do, so it's always
    * signed: by the approval key behind its fingerprint, never inside an approval window. Set [setupSigner] first.
    */
   suspend fun removeDevice(id: String) {
@@ -664,7 +664,7 @@ class KiffClient(
   }
 
   /**
-   * Pairs the computer whose QR the person scanned (docs/desktop-client.md §5.3): its fields as the QR gave them, signed by the
+   * Pairs the computer whose QR the person scanned (KIFF's pairing contract): its fields as the QR gave them, signed by the
    * approval key behind the fingerprint, and never inside an approval window, which never covers a pairing.
    */
   suspend fun pair(qr: PairQr): Pairing =
@@ -887,10 +887,10 @@ class KiffClient(
      */
     val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", USAGE_LIMIT, PAIRINGS)
 
-    /** A device of the account, by id after it: removing one is signed by the approval key (desktop-client.md §6). */
+    /** A device of the account, by id after it: removing one is signed by the approval key (KIFF's pairing contract). */
     const val DEVICES = "/v1/me/devices/"
 
-    /** Pairing a computer (KIFF's docs/desktop-client.md §5.3): signed by the approval key, never inside an approval window. */
+    /** Pairing a computer (KIFF's pairing contract): signed by the approval key, never inside an approval window. */
     const val PAIRINGS = "/v1/me/pairings"
 
     /** KIFF's "Did this happen?": each answer is a POST under it, signed by the approval key. */

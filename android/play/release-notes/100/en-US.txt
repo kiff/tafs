@@ -1,0 +1,1 @@
+- Add a device: in Account, Devices, scan your computer's code, check it shows the same 6 characters, and approve with your fingerprint.

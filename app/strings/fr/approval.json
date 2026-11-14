@@ -61,6 +61,7 @@
   "approval.touch_id": "Touch ID",
   "approval.turned_off_tafs_open_settings": "{either} est désactivé pour tafs. Ouvrez Réglages et activez {either_2} pour tafs.",
   "approval.turned_off_tafs_turn_tafs": "{either} est désactivé pour tafs. Activez-le dans les réglages de tafs pour approuver.",
+  "approval.view_only": "Reconnectez-vous sur ce téléphone pour approuver, ou approuvez depuis votre autre téléphone.",
   "approval.why": "Chaque approbation que vous donnez dans tafs, une Card, une connexion ou un paiement au-delà d'une limite, est signée sur ce téléphone avec une clé que seule votre empreinte déverrouille. Votre code PIN ou votre schéma ne peut pas approuver.",
   "approval.without_allows": "Sans approbations, vous pouvez toujours vous connecter, consulter, refuser et bloquer.",
   "approval.your_passcode": "votre code"

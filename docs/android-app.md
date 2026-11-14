@@ -1006,8 +1006,8 @@ the taf, it names the app alone ("Connect Stripe").
 
 ## Pairing a computer
 
-Account → Devices → **Add a computer** gives a computer approval authority on the account, as
-KIFF's `docs/desktop-client.md` §5 sets out. Only a phone KIFF holds an approval key for can
+Account → Devices → **Add a device** gives a computer, or a new phone or tablet, approval authority on the account, as
+KIFF's pairing contract sets out. Only a phone KIFF holds an approval key for can
 pair one; without it, Devices says approving needs a new sign-in and sends nothing.
 
 1. **The scan.** Google's code scanner (`play-services-code-scanner`) reads the QR in its own
@@ -1018,14 +1018,18 @@ pair one; without it, Devices says approving needs a new sign-in and sends nothi
    say, says "That QR code isn't a computer asking to be paired." Whether the fields are within
    KIFF's bounds, the keys P-256, or the expiry still ahead, is KIFF's to say.
 3. **The check code** is the first 6 characters of base32(sha256(device key ‖ approval key)),
-   RFC 4648 with no padding, the device key alone for a passkey computer. The alert asks
+   RFC 4648 with no padding. A computer's own platform passkey (Windows Hello, §2.6), which a
+   `kind: "passkey"` QR carries as `credential {id, public_key}`, takes the approval key's place,
+   so the code covers the passkey the pairing registers; with neither, the device key alone. The alert asks
    "Pair {name}?", says first what yes gives ("{name} will be able to approve your tafs' actions
-   with Windows Hello", Touch ID for `enclave`, a passkey for `passkey`), for a computer whose QR
+   with Windows Hello" for `hello` or a Windows computer's own passkey, Touch ID for `enclave`, a
+   passkey for any other `passkey`), for a computer whose QR
    says `key_store: "software"` "This computer approves only through your phone or a passkey.",
    and "Only pair a computer you're using right now.", then "Does your computer show {code}?", with **Yes, pair it** or
    Cancel. A page showing its own QR shows another code; the code protects only if the person
    knows what yes gives.
-4. **The approval.** On yes, `POST /v1/me/pairings` carries the QR's fields as they came,
+4. **The approval.** On yes, `POST /v1/me/pairings` carries the QR's fields as they came
+   (`credential` included),
    signed by the approval key behind a fingerprint that reads "Pair {name}: it can approve actions".
    The route grants authority (`KiffClient.grantsAuthority`), so it is never signed inside an
    approval window, which never covers a pairing.
@@ -1038,8 +1042,8 @@ pair one; without it, Devices says approving needs a new sign-in and sends nothi
    paired already, and `approval_key_required` that approving needs a new sign-in.
 
 **Signing a device out** (Devices → Sign out on another device) is signed too. Removing a
-device that holds an approval key or a passkey takes an approval at KIFF (`desktop-client.md`
-§6), and the phone can't tell which devices do, so `DELETE /v1/me/devices/{id}` is always
+device that holds an approval key or a passkey takes an approval at KIFF (KIFF's pairing
+contract), and the phone can't tell which devices do, so `DELETE /v1/me/devices/{id}` is always
 signed by the approval key, behind one fingerprint that names the device ("Sign {device} out of
 your account"), never inside an approval window. A session KIFF holds no approval key for confirms
 on the phone and signs with the device key; KIFF decides, and its `approval_key_required` says

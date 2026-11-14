@@ -54,7 +54,7 @@ private fun lastUsed(device: Device): String {
 
 /**
  * Settings, Devices: the devices signed in as this person on the account, each with when it was last used, and Sign out for any
- * but this one. With [pair], "Add a computer" scans a computer's QR ([scan]), asks whether the computer shows the same check
+ * but this one. With [pair], "Add a device" scans a computer's, or a new phone's, QR ([scan]), asks whether the computer shows the same check
  * code, and on yes pairs it (docs/android-app.md, Pairing a computer).
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -154,8 +154,9 @@ fun DevicesSheet(
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
           Text(pairGives(qr))
           if (qr.keyStore == "software") Text(Words.Settings.Devices.pairSoftwareKey)
-          Text(Words.Settings.Devices.pairOnlyNow)
-          Text(Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty()), fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag(PAIR_CHECK))
+          Text(if (qr.isPhone) Words.Settings.Devices.pairOnlyNowPhone else Words.Settings.Devices.pairOnlyNow)
+          val check = if (qr.isPhone) Words.Settings.Devices.pairCheckPhone(code = qr.checkCode.orEmpty()) else Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty())
+          Text(check, fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag(PAIR_CHECK))
         }
       },
       confirmButton = {
@@ -180,9 +181,11 @@ fun DevicesSheet(
 }
 
 /** What pairing gives the computer, by what approves on it (§5.1's `kind`). */
-internal fun pairGives(qr: PairQr): String = when (qr.kind) {
-  "hello" -> Words.Settings.Devices.pairGivesHello(device = qr.name)
-  "enclave" -> Words.Settings.Devices.pairGivesEnclave(device = qr.name)
+internal fun pairGives(qr: PairQr): String = when {
+  qr.isPhone -> Words.Settings.Devices.pairGivesPhone(device = qr.name)
+  // A Windows computer approves with Windows Hello as its own platform passkey (§2.6).
+  qr.kind == "hello" || (qr.kind == "passkey" && qr.credential != null && qr.platform == "windows") -> Words.Settings.Devices.pairGivesHello(device = qr.name)
+  qr.kind == "enclave" -> Words.Settings.Devices.pairGivesEnclave(device = qr.name)
   else -> Words.Settings.Devices.pairGivesPasskey(device = qr.name)
 }
 

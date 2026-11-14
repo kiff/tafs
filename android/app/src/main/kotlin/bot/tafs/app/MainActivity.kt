@@ -327,9 +327,11 @@ fun RootView(model: AppModel) {
         LocalAnswerPage provides model::answerPage,
         LocalImproveInCoach provides (if (state.mayUseCoach) model::improveInCoach else null),
         LocalSignInAgain provides { confirmingSignInAgain = true },
+        bot.tafs.app.views.LocalViewOnly provides state.approvalViewOnly,
         // Approve again in the browser, signed in to a KIFF that can re-link the phone; else the line offers Sign in again.
         LocalApproveAgain provides (
-          if (state.mode == Mode.kiff && !state.relinkUnavailable) {
+          // A view-only session can't be re-linked either: KIFF refuses it, so the line offers Sign in again alone.
+          if (state.mode == Mode.kiff && !state.relinkUnavailable && !state.approvalViewOnly) {
             ApproveAgain(state.relink, state.relinkProblem, model::startRelink, model::cancelRelink, model::nudgeSignIn)
           } else {
             null

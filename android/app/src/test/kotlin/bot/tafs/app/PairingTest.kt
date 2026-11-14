@@ -27,7 +27,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Pairing a computer (KIFF's docs/desktop-client.md §5): the phone reads the computer's QR, shows the check code both screens
+ * Pairing a computer (KIFF's pairing contract): the phone reads the computer's QR, shows the check code both screens
  * show, and on the person's yes signs the QR's fields to KIFF with its approval key. KIFF decides whether it's paired.
  */
 class PairingTest {
@@ -108,6 +108,28 @@ class PairingTest {
     val approvalPub = hex("3059301306072a8648ce3d020106082a8648ce3d030107034200047cf27b188d034f7e8a52380304b51ac3c08969e277f21b35a60b48fc4766997807775510db8ed040293d9ac69f7430dbba7dade63ce982299e04b79d227873d1")
     assertEquals("H6SJNU", PairQr.read(qrText(pub = url(pub), approvalPub = url(approvalPub)))!!.checkCode)
     assertEquals("LTJFF6", PairQr.read(qrText(pub = url(pub), approvalPub = null))!!.checkCode)
+    // A computer's own passkey (Windows Hello) takes approval_pub's place: the same keys, the same code.
+    val windows = PairQr.read(windowsQr(url(pub), url(approvalPub)))!!
+    assertEquals("H6SJNU", windows.checkCode)
+  }
+
+  /** A Windows computer as §5.1 has it: `kind: "passkey"`, no approval key, and its own platform passkey. */
+  private fun windowsQr(pub: String = url(device), credentialKey: String = url(approval), credentialId: String = "Y3JlZF8x") =
+    qrText(pub = pub, approvalPub = null).replace("\"exp\":", "\"credential\":{\"id\":\"$credentialId\",\"public_key\":\"$credentialKey\"},\"exp\":")
+
+  @Test fun aComputersOwnPasskeyIsCarriedCoveredAndWorded() {
+    val qr = PairQr.read(windowsQr())!!
+    assertEquals("passkey", qr.kind)
+    // The code covers the passkey the pairing registers, not the device key alone.
+    assertEquals(PairQr.base32(MessageDigest.getInstance("SHA-256").digest(device + approval)).take(6), qr.checkCode)
+    assertNotEquals(PairQr.read(qrText(approvalPub = null))!!.checkCode, qr.checkCode)
+    val credential = qr.body().getValue("credential").jsonObject
+    assertEquals("Y3JlZF8x", credential.getValue("id").jsonPrimitive.content)
+    assertEquals(url(approval), credential.getValue("public_key").jsonPrimitive.content)
+    assertNull("a credential with no id", PairQr.read(windowsQr(credentialId = "")))
+    assertNull("a credential key that isn't base64url", PairQr.read(windowsQr(credentialKey = "%%%")))
+    val windows = qr.copy(platform = "windows")
+    assertTrue(bot.tafs.app.views.pairGives(windows).endsWith("with Windows Hello."))
   }
 
   @Test fun theAlertSaysWhatPairingGivesByWhatApprovesOnTheComputer() {
@@ -127,6 +149,22 @@ class PairingTest {
       "KIFF paired tafs on this Windows PC with the code $other, not $code as checked. If that isn't your computer, sign it out here.",
       bot.tafs.app.views.pairedLine(qr, bot.tafs.app.kiff.Pairing("pair_1", other, "")),
     )
+  }
+
+  /** A new Android phone being added from this one: `platform: "android"`, `kind: "keystore"`, its own approval key. */
+  private fun phoneQr() = qrText().replace("\"platform\":\"windows\",\"kind\":\"hello\"", "\"platform\":\"android\",\"kind\":\"keystore\",\"device_kind\":\"android_tablet\"")
+    .replace("tafs on this Windows PC", "Ana's tablet")
+
+  @Test fun aPhoneOrTabletIsAddedTheSameWayAndWordedAsOne() {
+    val qr = PairQr.read(phoneQr())!!
+    assertTrue(qr.isPhone)
+    assertEquals("keystore", qr.kind)
+    // The check code is the same formula: the same keys, the same code.
+    assertEquals(PairQr.base32(MessageDigest.getInstance("SHA-256").digest(device + approval)).take(6), qr.checkCode)
+    assertEquals("android_tablet", qr.body().getValue("device_kind").jsonPrimitive.content)
+    assertFalse(PairQr.read(qrText())!!.body().containsKey("device_kind"))
+    assertFalse(PairQr.read(qrText())!!.isPhone)
+    assertEquals("Ana's tablet will be able to approve your tafs' actions.", bot.tafs.app.views.pairGives(qr))
   }
 
   @Test fun theCheckCodeIsTheSameForAPaddedKey() {
@@ -226,7 +264,7 @@ class PairingTest {
       transport.answer("POST /v1/me/pairings", status, """{"error":"$code"}""")
       assertNull(m.pairComputer(qr))
       val said = m.state.value.devicesError!!
-      assertTrue(said, said.startsWith("Add a computer didn't go through") && said.contains(words))
+      assertTrue(said, said.startsWith("Add a device didn't go through") && said.contains(words))
     }
   }
 

@@ -225,6 +225,11 @@ data class AppState(
    * phone turned its key off when a fingerprint was added. Refusing still works.
    */
   val approvalKeyLost: Boolean = false,
+  /**
+   * KIFF keeps this session view-only (`view_only`): the phone signed in with no approval key while the person has another
+   * device that approves, so it gains none here. Approving takes a new sign-in on this phone, or the other phone.
+   */
+  val approvalViewOnly: Boolean = false,
   /** Approve again, waiting for the browser: the code to compare, and where to approve it. */
   val relink: Relink? = null,
   /** Why the last Approve again didn't go through. */
@@ -1436,6 +1441,10 @@ class AppModel(
       e.fingerprint // the key sent at sign-in, or another
     } catch (e: Exception) {
       if (e is CancellationException) throw e
+      // KIFF keeps this session view-only: say so, once, and ask nothing more of it until a new sign-in.
+      if (e is KiffError.Server && e.refused("view_only") && generation == accountGeneration) {
+        _state.update { it.copy(approvalKeyLost = true, approvalViewOnly = true) }
+      }
       return
     }
     if (generation != accountGeneration) return
@@ -1453,7 +1462,7 @@ class AppModel(
   private fun useApprovalKey() {
     approvalKeyRefusals = 0
     sessionHasApprovalKey = true
-    _state.update { it.copy(approvalKeyLost = false) }
+    _state.update { it.copy(approvalKeyLost = false, approvalViewOnly = false) }
     val signer = signer
     kiff.approvalSigner = { built -> signer.signApproval(approvalReason, built) }
   }
@@ -7218,7 +7227,7 @@ class AppModel(
 
   /**
    * Signs another device out of the account, behind one fingerprint that names it. This device signs out with Sign out instead.
-   * Removing a device that holds an approval key takes an approval at KIFF (desktop-client.md §6), so the approval key signs it,
+   * Removing a device that holds an approval key takes an approval at KIFF (its pairing contract), so the approval key signs it,
    * its fingerprint the confirmation; a session KIFF holds no approval key for confirms here, and KIFF decides. False when it
    * didn't go through.
    */
@@ -7254,7 +7263,7 @@ class AppModel(
   }
 
   /**
-   * Pairs the computer whose QR the person scanned and whose check code they said matches (KIFF's docs/desktop-client.md §5):
+   * Pairs the computer whose QR the person scanned and whose check code they said matches (KIFF's pairing contract):
    * the QR's fields, signed by the approval key behind its fingerprint, which names the computer. Whether it's paired is KIFF's:
    * the phone shows KIFF's answer, the computer then listed in Devices with Sign out. Null when it didn't go through, why in
    * [AppState.devicesError]; also null, with nothing to say, when the person put the fingerprint away.

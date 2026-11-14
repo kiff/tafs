@@ -8,7 +8,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * A computer asking to be paired, as its QR shows it (KIFF's docs/desktop-client.md §5.1, `kiff.pair.v1`): its device key and,
+ * A computer asking to be paired, as its QR shows it (KIFF's pairing contract, `kiff.pair.v1`): its device key and,
  * for Windows Hello or a Secure Enclave, its approval key, its name and platform, a one-use nonce and when it expires. The phone
  * reads it, shows the check code (§5.2), and on the person's yes signs it to KIFF with its approval key (§5.3). Whether the pairing
  * holds is KIFF's: the phone only reads the QR well enough to show what it would sign.
@@ -25,8 +25,15 @@ data class PairQr(
   val exp: String = "",
   /** `"software"` for a computer whose device key isn't in hardware (§1.1): it never approves with that key. Else absent. */
   @SerialName("key_store") val keyStore: String? = null,
+  /** A passkey computer's own platform passkey (§2.6, §5.1: Windows Hello): the pairing registers it for this device. */
+  val credential: PairCredential? = null,
+  /** A phone or tablet being added (KIFF's pairing contract for phones): `iphone`, `ipad`, `android_phone` or `android_tablet`. */
+  @SerialName("device_kind") val deviceKind: String? = null,
 ) {
-  /** The body for `POST /v1/me/pairings`: the QR's fields as they came, `approval_pub` and `key_store` only when the computer gave them. */
+  /** A phone or tablet being added from this one, rather than a computer: KIFF's phone platforms. */
+  val isPhone: Boolean get() = platform in PHONE_PLATFORMS
+
+  /** The body for `POST /v1/me/pairings`: the QR's fields as they came, `approval_pub`, `key_store` and `credential` only when the computer gave them. */
   fun body(): JsonObject = JsonObject(
     buildMap {
       put("v", JsonPrimitive(v))
@@ -38,17 +45,21 @@ data class PairQr(
       put("nonce", JsonPrimitive(nonce))
       put("exp", JsonPrimitive(exp))
       keyStore?.let { put("key_store", JsonPrimitive(it)) }
+      credential?.let { put("credential", JsonObject(mapOf("id" to JsonPrimitive(it.id), "public_key" to JsonPrimitive(it.publicKey)))) }
+      deviceKind?.let { put("device_kind", JsonPrimitive(it)) }
     },
   )
 
   /**
    * The 6 characters both screens show before the fingerprint (§5.2): the first 6 of base32(sha256(pub ‖ approval_pub)), so a
-   * page that shows its own QR can't get this phone to enrol another key unnoticed. Null for a key that isn't base64url.
+   * page that shows its own QR can't get this phone to enrol another key unnoticed. A computer's own passkey takes
+   * approval_pub's place, so the code covers the passkey the pairing registers. Null for a key that isn't base64url.
    */
   val checkCode: String?
     get() {
       val device = decode(pub) ?: return null
-      val approval = approvalPub?.let { decode(it) ?: return null } ?: ByteArray(0)
+      val second = credential?.publicKey ?: approvalPub
+      val approval = second?.let { decode(it) ?: return null } ?: ByteArray(0)
       return base32(MessageDigest.getInstance("SHA-256").digest(device + approval)).take(6)
     }
 
@@ -56,7 +67,10 @@ data class PairQr(
     const val VERSION = "kiff.pair.v1"
 
     /** The kinds of computer §5.1 names: what approves on it, which the alert tells the person before they say yes. */
-    val KINDS = setOf("hello", "enclave", "passkey")
+    val KINDS = setOf("hello", "enclave", "passkey", "keystore")
+
+    /** The platforms of a phone or tablet: added with its own approval key, the same way as a computer. */
+    val PHONE_PLATFORMS = setOf("ios", "ipados", "android")
 
     /**
      * A scanned QR, when it's a computer asking to be paired: the version, a key, a name, a nonce, an expiry and a kind the
@@ -65,6 +79,7 @@ data class PairQr(
     fun read(text: String): PairQr? {
       val qr = runCatching { KiffClient.json.decodeFromString(serializer(), text) }.getOrNull() ?: return null
       if (qr.v != VERSION || qr.pub.isBlank() || qr.name.isBlank() || qr.nonce.isBlank() || qr.exp.isBlank() || qr.kind !in KINDS) return null
+      if (qr.credential != null && (qr.credential.id.isBlank() || qr.credential.publicKey.isBlank())) return null
       return qr.takeIf { it.checkCode != null }
     }
 
@@ -90,6 +105,10 @@ data class PairQr(
     }
   }
 }
+
+/** A computer's own platform passkey, as its QR carries it (§5.1): its credential id and its public key, SPKI DER, base64url. */
+@Serializable
+data class PairCredential(val id: String = "", @SerialName("public_key") val publicKey: String = "")
 
 /** KIFF's answer to a pairing: its id, the check code it computed, and when it expires (§5.3). */
 @Serializable

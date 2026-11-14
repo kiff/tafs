@@ -71,6 +71,16 @@ class PairComputerTest {
     rule.onNodeWithText("tafs on this Windows PC is paired. It showed $code.").assertIsDisplayed()
   }
 
+  @Test fun aPhoneIsAskedAboutAsAPhone() {
+    val phone = qr.replace("\"platform\":\"windows\",", "\"platform\":\"android\",").replace("\"kind\":\"hello\"", "\"kind\":\"keystore\"")
+      .replace("tafs on this Windows PC", "Ana's tablet")
+    open(phone)
+    val code = PairQr.read(phone)!!.checkCode!!
+    rule.onNodeWithText("Does your new phone or tablet show $code?").assertIsDisplayed()
+    rule.onNodeWithText("Only add a phone or tablet you're holding right now.").assertIsDisplayed()
+    rule.onNodeWithText("Ana's tablet will be able to approve your tafs' actions.").assertIsDisplayed()
+  }
+
   @Test fun cancelPairsNothing() {
     open(qr)
     rule.onNodeWithText("Cancel").performClick()
