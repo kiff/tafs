@@ -1409,6 +1409,23 @@ describe("a door's reply (kiff/agents#363)", () => {
     expect(replyText(taf, ran("answered"), {})).toContain("Done. I have nothing to add.");
     expect(replyText(taf, ran(), {})).toContain("Done. I have nothing to add.");
   });
+
+  it("sends a capped run's couldn't-finish line, not what it wrote on the way", () => {
+    const taf = { id: "taf-aaaa0000000000000000", name: "Refunds", job: "refunds", kiffAgent: "rae", nameClaim: "c", created: "2026-10-15T09:00:00Z" };
+    const ran = (output: string, stop?: string) => ({ id: "run1", agent: taf.id, session: "s1", trigger: "owner", status: "COMPLETED", ...(stop ? { stop } : {}), output, cost_micro_usd: 0, turns: 50, created: "", updated: "" }) as never;
+    for (const stop of ["turn_cap", "cost_cap", "max_token"]) {
+      const text = replyText(taf, ran("Now let me check order 43.", stop), {});
+      expect(text, stop).toContain("I couldn't finish this. My owner can see what happened in the tafs app.");
+      // Negative: the partial text isn't sent.
+      expect(text, stop).not.toContain("order 43");
+    }
+    // Negative (over-reach): a run that answered sends its answer, with no couldn't-finish line.
+    for (const stop of ["answered", undefined]) {
+      const text = replyText(taf, ran("Refunded the duplicate on order 4471.", stop), {});
+      expect(text, String(stop)).toContain("Refunded the duplicate on order 4471.");
+      expect(text, String(stop)).not.toContain("couldn't finish");
+    }
+  });
 });
 
 describe("while the account's tafs wait for credits", () => {
