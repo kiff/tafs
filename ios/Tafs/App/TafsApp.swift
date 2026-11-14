@@ -13,6 +13,8 @@ struct TafsApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                // The route walk's hook (RouteWalk.swift): a debug build's, with `-routeWalk YES`.
+                .routeWalk()
                 .preferredColorScheme(ThemePreference(rawValue: theme)?.scheme)
                 // The screenshots' narrow iPad window (kiff/tafs#210): Slide Over's width.
                 .modifier(NarrowForScreenshots())

@@ -27,12 +27,12 @@ on:
     tags: ["v*"]
     # What the app is built from (the strings are generated into ios/). GitHub
     # doesn't apply paths to a tag push, so a tag always runs.
-    paths: ["ios/**", "app/strings/**", "contracts/**", ".github/workflows/ios.yml"]
+    paths: ["ios/**", "app/strings/**", "app/routes.json", "app/map/**", "contracts/**", ".github/workflows/ios.yml"]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     # Only a change to the Apple app, its strings or this workflow: a change to
     # tafs cloud or to Android doesn't wait for a macOS runner.
-    paths: ["ios/**", "app/strings/**", "contracts/**", ".github/workflows/ios.yml"]
+    paths: ["ios/**", "app/strings/**", "app/routes.json", "app/map/**", "contracts/**", ".github/workflows/ios.yml"]
   workflow_dispatch:
     inputs:
       upload:
@@ -79,6 +79,8 @@ jobs:
       shots: ${{ steps.diff.outputs.shots }}
       # The iPhone's UI tests (TafsUITests): a manual run's from the lookup, else the diff's.
       ui: ${{ steps.tested.outputs.ui || steps.diff.outputs.ui }}
+      # The route walk (RouteWalkUITests) beside the unit tests, when the UI tests aren't due.
+      walk: ${{ steps.diff.outputs.walk }}
       tested: ${{ steps.tested.outputs.tested }}
       ipad_tested: ${{ steps.tested.outputs.ipad_tested }}
     steps:
@@ -103,29 +105,35 @@ jobs:
           ui='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|\.github/workflows/ios\.yml$)'
           # What the iPhone's UI tests depend on: what draws the screens, and the UI tests.
           uitests='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|ios/TafsUITests/|\.github/workflows/ios\.yml$)'
+          # What the route walk (RouteWalkUITests) depends on besides the screens: AppModel's
+          # open(route:) and its hook, the routes and the map. With the UI tests it always runs;
+          # otherwise it runs beside the unit tests when one of these changes.
+          walk='^(ios/Tafs/App/|ios/TafsUITests/RouteWalkUITests\.swift$|app/routes\.json$|app/map/)'
           case "$EVENT" in
-            workflow_dispatch) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "shots=$SHOTS" >> "$GITHUB_OUTPUT"; exit 0 ;;
+            workflow_dispatch) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "walk=true" >> "$GITHUB_OUTPUT"; echo "shots=$SHOTS" >> "$GITHUB_OUTPUT"; exit 0 ;;
             push) case "$REF" in
-                    refs/tags/v*) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "shots=full" >> "$GITHUB_OUTPUT"; exit 0 ;;
+                    refs/tags/v*) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "walk=true" >> "$GITHUB_OUTPUT"; echo "shots=full" >> "$GITHUB_OUTPUT"; exit 0 ;;
                   esac
                   # main: the iPad's and the iPhone's UI tests only when the push
                   # touches what they test, as on a pull request.
                   echo "shots=none" >> "$GITHUB_OUTPUT"
                   if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-                    echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; exit 0
+                    echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "walk=true" >> "$GITHUB_OUTPUT"; exit 0
                   fi
                   changed=$(git diff --name-only "$BASE" "$HEAD")
                   if echo "$changed" | grep -Eq "$ipad"; then echo "ipad=true" >> "$GITHUB_OUTPUT"; else echo "ipad=false" >> "$GITHUB_OUTPUT"; fi
                   if echo "$changed" | grep -Eq "$uitests"; then echo "ui=true" >> "$GITHUB_OUTPUT"; else echo "ui=false" >> "$GITHUB_OUTPUT"; fi
+                  if echo "$changed" | grep -Eq "$walk"; then echo "walk=true" >> "$GITHUB_OUTPUT"; else echo "walk=false" >> "$GITHUB_OUTPUT"; fi
                   exit 0 ;;
           esac
           if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-            echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "shots=key" >> "$GITHUB_OUTPUT"   # nothing to compare with
+            echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "walk=true" >> "$GITHUB_OUTPUT"; echo "shots=key" >> "$GITHUB_OUTPUT"   # nothing to compare with
             exit 0
           fi
           changed=$(git diff --name-only "$BASE" "$HEAD")
           if echo "$changed" | grep -Eq "$ipad"; then echo "ipad=true" >> "$GITHUB_OUTPUT"; else echo "ipad=false" >> "$GITHUB_OUTPUT"; fi
           if echo "$changed" | grep -Eq "$uitests"; then echo "ui=true" >> "$GITHUB_OUTPUT"; else echo "ui=false" >> "$GITHUB_OUTPUT"; fi
+          if echo "$changed" | grep -Eq "$walk"; then echo "walk=true" >> "$GITHUB_OUTPUT"; else echo "walk=false" >> "$GITHUB_OUTPUT"; fi
           if echo "$changed" | grep -Eq "$ui"; then echo "shots=key" >> "$GITHUB_OUTPUT"; else echo "shots=none" >> "$GITHUB_OUTPUT"; fi
 
       # A manual run (an upload, or screenshots): has main already passed what
@@ -146,7 +154,7 @@ jobs:
           HEAD: ${{ github.sha }}
           RUN: ${{ github.run_id }}
         run: |
-          app='^(ios/|app/strings/|contracts/|\.github/workflows/ios\.yml$)'
+          app='^(ios/|app/strings/|app/routes\.json$|app/map/|contracts/|\.github/workflows/ios\.yml$)'
           uitests='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|ios/TafsUITests/|\.github/workflows/ios\.yml$)'
           ipad='^(ios/Tafs/Views/(HomeSplitView|HomeView|TafsBar)\.swift$|ios/Tafs/App/TafsApp\.swift$|ios/TafsUITests/ListTapUITests\.swift$|\.github/workflows/ios\.yml$)'
           tested=false; ui_tested=false; ipad_tested=false
@@ -249,14 +257,20 @@ jobs:
             -destination "id=$DEVICE_ID" \
             CODE_SIGNING_ALLOWED=NO
 
+      # With the route walk (RouteWalkUITests, one launch of the app: about two minutes)
+      # when what it depends on changed (changes.walk); the UI tests' steps run it anyway.
       - name: Unit tests on a simulator
         if: needs.changes.outputs.tested != 'true' && needs.changes.outputs.ui != 'true'
+        env:
+          WALK: ${{ needs.changes.outputs.walk }}
         run: |
           cd ios
+          walk=()
+          if [ "$WALK" = true ]; then walk=(-only-testing:TafsUITests/RouteWalkUITests); fi
           xcodebuild test-without-building \
             -project Tafs.xcodeproj -scheme Tafs \
             -destination "id=$DEVICE_ID" \
-            -only-testing:TafsTests \
+            -only-testing:TafsTests "${walk[@]}" \
             CODE_SIGNING_ALLOWED=NO
 
       - name: UI tests on a simulator
