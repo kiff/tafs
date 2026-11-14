@@ -1,0 +1,1 @@
+- **Android 1.27.3 (91): a chat set aside never comes back as Coach's open conversation.** Coach skips a chat tafs cloud marks as set aside, on any device or after a relaunch, and Ask Coach in Connect apps starts a new conversation (docs/android-app.md).
