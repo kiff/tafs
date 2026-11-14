@@ -1,0 +1,1 @@
+- **iPhone and iPad:** Account → Devices → Add a computer pairs one of your computers from your phone: scan its code, check the code it shows, and approve with Face ID or Touch ID. Signing another device out is now signed by your approval key too ([ios-app.md](../docs/ios-app.md#pairing-a-computer)).
