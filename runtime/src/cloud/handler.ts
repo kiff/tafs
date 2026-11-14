@@ -3800,10 +3800,12 @@ async function oldFormAnswer(event: HTTPEvent, me: KIFFIdentity, taf: Taf, text:
  */
 async function withCoachSkills(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, event: HTTPEvent, deps: Deps): Promise<string> {
   if (taf.job !== SETUP_JOB) return text;
-  // Every Coach message says the person's language when it isn't English (docs/languages.md): Coach replies in it.
+  // Every Coach message says the person's language when it isn't English, or when the account's was another (docs/languages.md).
   const lang = langOf(event);
+  // English is said too when the account's language was another until this chat (read before the start keeps this one).
+  const before = await languageKept(me.tenantID, deps);
   // And the account's time zone when it isn't UTC: Coach's own clock line is in UTC, a taf's times aren't.
-  return withZone(withLanguage(await coachStart(me, taf, at, text, event, lang, deps), lang), me.timeZone, deps.now?.() ?? new Date());
+  return withZone(withLanguage(await coachStart(me, taf, at, text, event, lang, deps), lang, before), me.timeZone, deps.now?.() ?? new Date());
 }
 
 async function coachStart(me: KIFFIdentity, taf: Taf, at: RunAt, text: string, event: HTTPEvent, lang: Lang, deps: Deps): Promise<string> {
