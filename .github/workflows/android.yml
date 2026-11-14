@@ -102,6 +102,14 @@ jobs:
         with:
           name: android-ui-test-results
           path: android/app/build/reports/androidTests
+      # The app map (docs/android-app.md, "The app map"): AppMapWalkTest's walk over every route in the sample, kept whether or
+      # not it matched app/map/android.json, so a changed map can be copied from here.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: android-app-map
+          path: android/app/build/outputs/connected_android_test_additional_output/**/app-map-android.json
+          if-no-files-found: warn
 
   # The signed release bundle for Play's internal testing, only when run by hand. The upload key
   # comes from Secrets Manager (the UPLOAD_KEY_SECRET_ID secret names it) through the deploy role,

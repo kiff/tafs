@@ -17,6 +17,9 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
+  // The committed app map (app/map/android.json) is the UI tests' asset: AppMapWalkTest's walk must match it.
+  sourceSets.getByName("androidTest").assets.directories.add("../../app/map")
+
   // The upload key, from outside this public repository: TAFS_UPLOAD_KEYSTORE (a .jks path) and its
   // passwords in TAFS_UPLOAD_STORE_PASSWORD and TAFS_UPLOAD_KEY_PASSWORD, as android/release.sh sets
   // them from Secrets Manager. Without them a release build is left unsigned.
