@@ -1498,6 +1498,14 @@ struct SetupApproval: View {
         return grant.takesKey && !grant.connected
     }
 
+    /// tafs cloud's words for a Card approved next, on a card with no draft (an app's first
+    /// sign-in): only what tafs cloud sends, and none when its mark says the Card is signed now or
+    /// the connection is already done. As Android's.
+    static func cardNextWords(_ component: SetupComponent) -> String? {
+        guard component.draft == nil, component.signs?.card != true, component.connection?.doneWords == nil else { return nil }
+        return component.signs?.words
+    }
+
     /// The Card an approved card signed, as KIFF's own lines for the draft this phone read: what
     /// the folded line says was approved, never the connection's words for its key. None for a
     /// card with no Card, or one whose draft isn't read.
@@ -1627,6 +1635,13 @@ struct SetupApproval: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Theme.raised)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            } else if grant != nil, let words = Self.cardNextWords(component) {
+                // An app's first sign-in has no draft yet (a Card is drafted over the tools it brings):
+                // tafs cloud's words still say a Card comes next, so the owner knows a second approval
+                // follows. As on Android.
+                Text(words).scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("approval.card-next")
             }
             if replaced {
                 // Opened to read again: its words only. The newer request below is the one to act on.
