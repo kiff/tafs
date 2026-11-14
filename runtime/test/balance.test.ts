@@ -262,3 +262,17 @@ describe("a chat refused for credits", () => {
     expect(r.body).toMatchObject({ code: "no_plan", words: "Choose a plan to start your tafs." });
   });
 });
+
+// fr and pt abbreviate a month with a period ("1 déc.", "1 de dez."): a line that ends on the date ends with one, never "..".
+describe("a credits line that ends on a date", () => {
+  it("ends with one period, in every language", async () => {
+    const { LANGUAGES } = await import("../src/cloud/words/index.js");
+    for (const lang of LANGUAGES) {
+      const lines = [
+        waitingWords({ ...balance({ can_buy: { solo: false, packs: false } }), why: "credits_used_up" }, lang),
+        waitingWords({ ...balance({ kind: "company", can_raise: true, raise_to_cents: 5000 }), why: "limit_reached" }, lang),
+      ];
+      for (const line of lines) expect(line, lang).not.toMatch(/\.\.$/);
+    }
+  });
+});

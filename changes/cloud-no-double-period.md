@@ -1,0 +1,1 @@
+- **A line that ends on a date ends with one period.** French and Portuguese short months already end in one ("14 nov.", "1 de dez."), so the Coach waiting row and three credit lines read "depuis le 14 nov..". tafs cloud now collapses a final ".." to "." in those lines, tested in all 8 languages.

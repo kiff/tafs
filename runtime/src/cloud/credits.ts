@@ -1,6 +1,6 @@
 import { type Fetch, KIFF_API, KIFFError } from "./kiff.js";
 import { fromWords } from "./request.js";
-import { type Lang, plural, wordsIn } from "./words/index.js";
+import { endSentence, type Lang, plural, wordsIn } from "./words/index.js";
 
 /**
  * Credits in Plan & usage (docs/accounts.md, "Credits"): read-only, beside the tasks, until
@@ -402,12 +402,12 @@ export function waitingWords(b: Pick<KIFFBalance, "kind" | "why" | "can_raise" |
     case "no_plan":
       return w.cr_w_no_plan;
     case "limit_reached":
-      if (b.can_raise && b.raise_to_cents > 0) return w.cr_w_limit_raise(day);
+      if (b.can_raise && b.raise_to_cents > 0) return endSentence(w.cr_w_limit_raise(day));
       if (b.can_raise) return w.cr_w_limit_ceiling(again);
       return w.cr_w_limit_admin;
     default:
       if (b.can_buy?.packs) return w.cr_w_used_pack(again);
-      return w.cr_w_used_wait(day);
+      return endSentence(w.cr_w_used_wait(day));
   }
 }
 
@@ -440,7 +440,7 @@ export function balanceView(b: KIFFBalance, lang: Lang = "en", ranLately = true)
       if (count(b.packs_left) > 0) parts.push(w.cr_packs_part(c(count(b.packs_left))));
       if (count(b.over) > 0) parts.push(w.cr_over_part(c(count(b.over))));
       detail = parts.length ? parts.join(" · ") : null;
-      if (b.state === "warning") warning = b.can_buy?.packs ? w.cr_solo_warn_pack(p) : w.cr_solo_warn_wait(p, startsAgain(b, lang));
+      if (b.state === "warning") warning = b.can_buy?.packs ? w.cr_solo_warn_pack(p) : endSentence(w.cr_solo_warn_wait(p, startsAgain(b, lang)));
       plan = waiting ? w.cr_solo_plan_waiting : w.cr_solo_plan_left(c(left));
       if (b.state === "warning") home = w.cr_solo_home(p);
       break;
