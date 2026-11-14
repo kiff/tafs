@@ -116,3 +116,67 @@ data class Pairing(val id: String = "", val code: String = "", val expires: Stri
 
 @Serializable
 internal data class PairingBody(val pairing: Pairing = Pairing())
+
+/**
+ * What this phone or tablet shows to be added from the person's other phone (KIFF's pairing contract for phones): the same
+ * `kiff.pair.v1` QR as a computer, with this device's two keys, `kind: "keystore"` and its `device_kind`, the 6-character code both
+ * screens show, and the message its device key signs to claim the session once the other phone approves. It decides nothing:
+ * whether the pairing holds is KIFF's, and the other phone's yes.
+ */
+data class PairOffer(
+  val nonce: String,
+  /** The device key, base64url, as the QR carries it and the claim sends it. */
+  val pub: String,
+  val expires: java.time.Instant,
+  /** The QR's text: the JSON the other phone reads ([PairQr.read]). */
+  val qr: String,
+  /** The 6 characters both screens show. */
+  val checkCode: String,
+  /** `kiff.pair.claim.v1`, the nonce and sha256(pub) in hex: signed once by the device key, the same proof serves every poll. */
+  val claimMessage: ByteArray,
+) {
+  override fun equals(other: Any?): Boolean = other is PairOffer && other.nonce == nonce && other.pub == pub
+  override fun hashCode(): Int = nonce.hashCode() * 31 + pub.hashCode()
+
+  companion object {
+    /** Under the contract's 5 minutes, so the other phone's clock never reads it as too far ahead. As iOS. */
+    const val LIFETIME_SECONDS = 4L * 60 + 30
+    const val KIND = "keystore"
+    const val PLATFORM = "android"
+
+    /** [publicKey] and [approvalKey] are SPKI DER; [nonce] is 32 random bytes. */
+    fun make(publicKey: ByteArray, approvalKey: ByteArray, name: String, deviceKind: String, nonce: ByteArray, now: java.time.Instant): PairOffer {
+      val pub = url(publicKey)
+      val nonceText = url(nonce)
+      val expires = now.plusSeconds(LIFETIME_SECONDS).truncatedTo(java.time.temporal.ChronoUnit.SECONDS)
+      val qr = JsonObject(
+        sortedMapOf(
+          "v" to JsonPrimitive(PairQr.VERSION), "pub" to JsonPrimitive(pub), "approval_pub" to JsonPrimitive(url(approvalKey)),
+          "name" to JsonPrimitive(name), "platform" to JsonPrimitive(PLATFORM), "kind" to JsonPrimitive(KIND),
+          "device_kind" to JsonPrimitive(deviceKind), "nonce" to JsonPrimitive(nonceText), "exp" to JsonPrimitive(expires.toString()),
+        ),
+      ).toString()
+      val code = PairQr.base32(MessageDigest.getInstance("SHA-256").digest(publicKey + approvalKey)).take(6)
+      val keyHash = MessageDigest.getInstance("SHA-256").digest(publicKey).joinToString("") { "%02x".format(it) }
+      return PairOffer(nonceText, pub, expires, qr, code, listOf("kiff.pair.claim.v1", nonceText, keyHash).joinToString("\n").toByteArray())
+    }
+
+    /** 32 bytes from the system's secure random source. */
+    fun freshNonce(): ByteArray = ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
+
+    private fun url(bytes: ByteArray): String = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+  }
+}
+
+/**
+ * KIFF's answer, as the person reads it: paired with the code they checked, or, when KIFF paired another code than the one
+ * shown, that, so they can sign the device out.
+ */
+internal fun pairedLine(qr: PairQr, pairing: Pairing): String {
+  val shown = qr.checkCode.orEmpty()
+  return if (pairing.code.isNotBlank() && pairing.code != shown) {
+    bot.tafs.app.model.Words.Settings.Devices.pairCodeDiffers(device = qr.name, kiff = pairing.code, shown = shown)
+  } else {
+    bot.tafs.app.model.Words.Settings.Devices.pairDone(device = qr.name, code = shown)
+  }
+}
