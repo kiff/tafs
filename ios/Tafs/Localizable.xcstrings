@@ -31303,49 +31303,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter. Kein taf sieht deine Anmeldung. Du genehmigst mit %1$@."
+            "value": "Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter. Du genehmigst mit %1$@."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Name an app for your taf, like your payment provider. No taf sees your sign-in. You approve with %1$@."
+            "value": "Name an app for your taf, like your payment provider. You approve with %1$@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nombra una app para tu taf, como tu proveedor de pagos. Ningún taf ve tu inicio de sesión. Apruebas con %1$@."
+            "value": "Nombra una app para tu taf, como tu proveedor de pagos. Apruebas con %1$@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nommez une app pour votre taf, comme votre prestataire de paiement. Aucun taf ne voit votre connexion. Vous approuvez avec %1$@."
+            "value": "Nommez une app pour votre taf, comme votre prestataire de paiement. Vous approuvez avec %1$@."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Indica un'app per il tuo taf, come il tuo fornitore di pagamenti. Nessun taf vede il tuo accesso. Approvi con %1$@."
+            "value": "Indica un'app per il tuo taf, come il tuo fornitore di pagamenti. Approvi con %1$@."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Noem een app voor je taf, zoals je betaalprovider. Geen enkel taf ziet je login. Je keurt goed met %1$@."
+            "value": "Noem een app voor je taf, zoals je betaalprovider. Je keurt goed met %1$@."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Żaden taf nie widzi Twojego logowania. Zatwierdzasz przez %1$@."
+            "value": "Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Zatwierdzasz przez %1$@."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Nenhum taf vê o seu início de sessão. Aprova com %1$@."
+            "value": "Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Aprova com %1$@."
           }
         }
       }

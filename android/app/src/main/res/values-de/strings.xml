@@ -636,7 +636,7 @@
     <string name="coach_intro">Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter.</string>
     <string name="coach_kiff_counts_way">KIFF zählt es so</string>
     <string name="coach_making_live">Wird live geschaltet…</string>
-    <string name="coach_name_tool_taf_should_work">Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter. Kein taf sieht deine Anmeldung. Du genehmigst mit %1$s.</string>
+    <string name="coach_name_tool_taf_should_work">Nenne eine App für deinen taf, etwa deinen Zahlungsanbieter. Du genehmigst mit %1$s.</string>
     <string name="coach_needs_you_approve">Braucht dich · genehmigen</string>
     <string name="coach_needs_you_question">Braucht dich · eine Frage</string>
     <string name="coach_new_conversation">Neues Gespräch</string>
