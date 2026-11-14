@@ -364,7 +364,7 @@ export interface Taf {
    */
   check?: Check;
   /** Its first check couldn't read the app, so its schedule runs as plain timing without one: when, and why. */
-  checkDropped?: { at: string; why: string };
+  checkDropped?: { at: string; why: string; check?: Check };
   /**
    * Its tools in KIFF, as Coach's results named them (the taf's, then each improvement's): what a dial's check
    * may read when no Card can be read with the person's session (Coach's taf_dial). Absent on a taf from before.
@@ -1625,11 +1625,15 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
   // A first check that couldn't read the app (not a key still being stored) never leaves the taf waiting for its
   // owner to write: its schedule stays, as plain timing without the check, and the answer says so in plain words.
   // 14 Nov: a Gmail taf's check named a list its read doesn't have, and it would never have run on its own.
-  if (!("session" in fired) && fired.outcome === "failed_check" && !fired.keyNotStored && workCheck) {
-    const kept = await keepScheduleWithoutCheck(me.tenantID, taf, { cron, timezone, kickoff: job.kickoff }, fired.reason ?? "", deps);
+  // Only a check that read and whose answer didn't fit (no list where it said, an item without its field): a read the
+  // vendor or KIFF refused, or a sign-in that ended, keeps today's path, and kiff/agents tries again at the next time.
+  if (!("session" in fired) && fired.outcome === "failed_check" && !fired.keyNotStored && workCheck && CHECK_MISFIT.test(fired.reason ?? "")) {
+    const hourly = atMostHourly(cron);
+    const kept = await keepScheduleWithoutCheck(me.tenantID, taf, workCheck, { cron: hourly, timezone, kickoff: job.kickoff }, fired.reason ?? "", deps);
     if (kept) {
       const W = wordsIn(lang ?? ownerLang);
-      return { taf: await view(kept, me, deps), session: null, outcome: "failed_check", check_dropped: true, words: W.check_dropped, ...(fired.reason ? { reason: fired.reason } : {}) };
+      return { taf: await view(kept, me, deps), session: null, outcome: "failed_check", check_dropped: true,
+        words: hourly === cron ? W.check_dropped : W.check_dropped_hourly, ...(fired.reason ? { reason: fired.reason } : {}) };
     }
   }
   // A first check that started no run says why (quiet, halted, a read that failed…): the taf is made all the same.
@@ -1642,10 +1646,11 @@ async function makeTaf(body: Record<string, unknown>, me: KIFFIdentity, deps: De
  * check, so it runs at its times rather than wait for its owner to write. Its record keeps why, for Coach and the apps.
  * Undefined when the schedule couldn't be written: the taf is then answered as before, with the check's reason.
  */
-async function keepScheduleWithoutCheck(tenant: string, taf: Taf, when: { cron: string; timezone: string; kickoff: string }, why: string, deps: Deps): Promise<Taf | undefined> {
+async function keepScheduleWithoutCheck(tenant: string, taf: Taf, check: Check, when: { cron: string; timezone: string; kickoff: string }, why: string, deps: Deps): Promise<Taf | undefined> {
   try {
     await deps.agents.updateSchedule(tenant, { id: taf.id, agent: taf.id, cron: when.cron, time_zone: when.timezone, input: when.kickoff, enabled: true });
-    const kept: Taf = { ...taf, check: undefined, checkDropped: { at: (deps.now?.() ?? new Date()).toISOString(), why: why.slice(0, 500) } };
+    // The check is kept beside, so Coach's taf_dial fixes it rather than draft one from nothing.
+    const kept: Taf = { ...taf, check: undefined, checkDropped: { at: (deps.now?.() ?? new Date()).toISOString(), why: why.slice(0, 500), check } };
     await deps.tafs.put(tenant, kept);
     console.log(JSON.stringify({ event: "first_check_dropped", taf: taf.id }));
     await tellChange(tenant, "taf", taf.id, deps);
@@ -1654,6 +1659,24 @@ async function keepScheduleWithoutCheck(tenant: string, taf: Taf, when: { cron: 
     console.error(`first check dropped ${taf.id}: ${(err as Error).message}`);
     return undefined;
   }
+}
+
+/**
+ * A check that read and whose answer didn't fit what it named (kiff/agents' no-items, not-a-list and no-cursor
+ * reasons): the check is wrong, and only fixing it makes it read. Any other failed check is a read that failed.
+ */
+const CHECK_MISFIT = /the check's read has no |the check's items have no /;
+
+/**
+ * A cron at most hourly: one whose minute is a single number stays as it is; one that fires more often within an hour
+ * ("*\/15", "0,30", "*") fires at its first minute instead. Plain timing reads everything at each run, so a taf running
+ * without its check never runs more than once an hour.
+ */
+export function atMostHourly(cron: string): string {
+  const f = cron.trim().split(/\s+/);
+  if (f.length !== 5 || /^\d{1,2}$/.test(f[0]!)) return cron;
+  const first = /^(\d{1,2})/.exec(f[0]!.replace(/^\*\/?\d*$/, "0"))?.[1] ?? "0";
+  return [first, ...f.slice(1)].join(" ");
 }
 
 /** Where tafs cloud keeps the tafs whose first run waits for a plan: one list per account. */
@@ -8661,7 +8684,7 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
     if (out.outcome === "failed_check" && deps.coach) {
       const at = deps.now?.() ?? new Date();
       const line = out.check_dropped
-        ? `[taf ${taf.name ?? id} first check] The taf is set up and runs at its set times without its check for now, since its first check couldn't read: ${out.reason ?? "no reason given"}; fix the check with taf_dial.`
+        ? `[taf ${taf.name ?? id} first check] The taf is set up and runs without its check for now, at most once an hour, since its first check couldn't read: ${out.reason ?? "no reason given"}; fix the check with taf_dial.`
         : `[taf ${taf.name ?? id} first check] The taf is set up, but its first check couldn't read: ${out.reason ?? "no reason given"}; fix the check with taf_dial.`;
       await deps.coach.append(coachKeys.notes(tenant, me.subject), { at: at.toISOString(), text: line, taf: taf.name ?? id, taf_id: id, said: out.words ?? "" },
         new Date(at.getTime() + TASK_KEPT_MS)).catch((err) => console.error(`coach line, ${id} first check:`, err));

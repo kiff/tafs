@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { AgentsError } from "../src/cloud/agents.js";
-import { calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -2251,7 +2251,8 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
       if (outcome === "quiet") w.agents.quiet.add(NEW); else w.agents.outcomes.set(NEW, outcome === "failed_check" ? { outcome, reason } : { outcome });
       const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY });
       expect(r.status, outcome).toBe(200);
-      expect(r.body, outcome).toMatchObject({ session: null, outcome, words: outcome === "failed_check" ? wordsIn("en").check_dropped : words, taf: { id: NEW } });
+      // Its schedule (every 30 minutes) runs at most hourly without its check, and the words say so.
+      expect(r.body, outcome).toMatchObject({ session: null, outcome, words: outcome === "failed_check" ? wordsIn("en").check_dropped_hourly : words, taf: { id: NEW } });
       expect(r.body.reason).toBe(outcome === "failed_check" ? reason : undefined);
       expect(w.tafs.held.has(`t_acme#${NEW}`)).toBe(true);
       // A check that couldn't read never leaves the taf waiting for its owner: its schedule stays, as plain timing.
@@ -2259,10 +2260,37 @@ describe("a taf Setup made (kiff/agents#91, #94)", () => {
         const sched = await w.agents.api.getSchedule("t_acme", NEW);
         expect(sched).toMatchObject({ enabled: true });
         expect(sched).not.toHaveProperty("check");
-        expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ checkDropped: { why: reason } });
+        expect(w.tafs.held.get(`t_acme#${NEW}`)).toMatchObject({ checkDropped: { why: reason, check: expect.objectContaining({ items: expect.any(String) }) } });
         expect(w.tafs.held.get(`t_acme#${NEW}`)?.check).toBeUndefined();
       }
     }
+  });
+
+  // A check whose read failed (a vendor's error, a read KIFF refused, a sign-in that ended) isn't a wrong check: the
+  // taf keeps its check, and kiff/agents tries again at its next time. Only an answer that didn't fit drops it.
+  it("keeps the check when the first check's read failed, rather than its answer not fitting", async () => {
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: "schedule: the check couldn't read the app (kept as failed_check): KIFF refused the read" });
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: BODY });
+    expect(r.body).toMatchObject({ session: null, outcome: "failed_check", words: "Its check couldn't read the work list: no run started." });
+    expect(r.body).not.toHaveProperty("check_dropped");
+    expect(await w.agents.api.getSchedule("t_acme", NEW)).toHaveProperty("check");
+    expect(w.tafs.held.get(`t_acme#${NEW}`)?.checkDropped).toBeUndefined();
+  });
+
+  // Plain timing reads everything at each run: a taf whose check is dropped runs at most once an hour.
+  it("runs a taf whose check is dropped at most hourly, and says so", async () => {
+    expect(atMostHourly("*/15 * * * *")).toBe("0 * * * *");
+    expect(atMostHourly("0,30 9-17 * * 1-5")).toBe("0 9-17 * * 1-5");
+    expect(atMostHourly("30 9 * * 1")).toBe("30 9 * * 1");
+    const w = world();
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    w.agents.outcomes.set(NEW, { outcome: "failed_check", reason: 'schedule: the check\'s read has no "data.threads"' });
+    const r = await call(w, "POST", "/v1/tafs", { token: "ana", body: { ...BODY, cron: "*/15 * * * *" } });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ check_dropped: true, words: wordsIn("en").check_dropped_hourly });
+    expect(await w.agents.api.getSchedule("t_acme", NEW)).toMatchObject({ cron: "0 * * * *", enabled: true });
   });
 
   // Run now fires the schedule: a check that hands items answers the run it started; a quiet one starts nothing,
@@ -4210,8 +4238,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await note();
     expect(answer()).toEqual({ answer: { taf_id: NEW, check: 'schedule: the check\'s items have no "created" field' }, answered_by: "tafs cloud" });
     const lines = (await deps.coach.get(coachKeys.notes("t_acme", "u_ana"))) as Array<{ text: string; taf: string; said: string }>;
-    expect(lines.map((l) => l.text)).toEqual(['[taf Refunds first check] The taf is set up and runs at its set times without its check for now, since its first check couldn\'t read: schedule: the check\'s items have no "created" field; fix the check with taf_dial.']);
-    expect(lines[0]!.said).toBe(wordsIn("en").check_dropped);
+    expect(lines.map((l) => l.text)).toEqual(['[taf Refunds first check] The taf is set up and runs without its check for now, at most once an hour, since its first check couldn\'t read: schedule: the check\'s items have no "created" field; fix the check with taf_dial.']);
+    expect(lines[0]!.said).toBe(wordsIn("en").check_dropped_hourly);
   });
 
   it("answers a kiff/agents from before check with the taf alone: the taf is made, and the line still tells Coach", async () => {
@@ -4222,7 +4250,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await note();
     expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
     const lines = (await deps.coach.get(coachKeys.notes("t_acme", "u_ana"))) as Array<{ text: string }>;
-    expect(lines.map((l) => l.text)).toEqual(["[taf Refunds first check] The taf is set up and runs at its set times without its check for now, since its first check couldn't read: the read answered with an error; fix the check with taf_dial."]);
+    expect(lines.map((l) => l.text)).toEqual(["[taf Refunds first check] The taf is set up, but its first check couldn't read: the read answered with an error; fix the check with taf_dial."]);
   });
 
   it("makes a taf with the job Coach drafted, outside the five, and runs it (kiff/tafs#476)", async () => {

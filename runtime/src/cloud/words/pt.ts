@@ -93,6 +93,7 @@ export const pt: Words = {
   connect_again_done: (app: string, taf: string) => `${app} voltou a estar ligado. ${taf} pode usá-lo.`,
   check_key_not_ready: "a sua chave ainda não estava pronta; volta a verificar da próxima vez",
   check_dropped: "A verificação não conseguiu ler a app, por isso, por agora, corre nas horas definidas sem verificação. O Coach pode corrigi-la.",
+  check_dropped_hourly: "A verificação não conseguiu ler a app, por isso, por agora, corre sem verificação, no máximo uma vez por hora. O Coach pode corrigi-la.",
   approval_cards_unread: "O Card ainda não pôde ser verificado. Leia-o novamente e depois aprove.",
   approval_uncovered: (tool: string) => `Este Card não cobre «${tool}», que o taf recebeu, por isso cada chamada seria recusada. Nada foi aprovado. O Coach volta a redigi-lo.`,
   approval_stray: (tool: string) => `Este Card também deixaria o taf usar «${tool}», que nenhuma ligação sua lhe dá. Nada foi aprovado. O Coach volta a redigi-lo.`,

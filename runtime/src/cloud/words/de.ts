@@ -93,6 +93,7 @@ export const de: Words = {
   connect_again_done: (app: string, taf: string) => `${app} ist wieder verbunden. ${taf} kann es nutzen.`,
   check_key_not_ready: "sein Schlüssel war noch nicht bereit; es prüft beim nächsten Mal erneut",
   check_dropped: "Seine Prüfung konnte die App nicht lesen, daher läuft er vorerst zu seinen Zeiten ohne Prüfung. Coach kann die Prüfung reparieren.",
+  check_dropped_hourly: "Seine Prüfung konnte die App nicht lesen, daher läuft er vorerst ohne Prüfung, höchstens einmal pro Stunde. Coach kann die Prüfung reparieren.",
   approval_cards_unread: "Die Card konnte noch nicht geprüft werden. Lies sie noch einmal, dann genehmige.",
   approval_uncovered: (tool: string) => `Diese Card deckt „${tool}“ nicht ab, obwohl der taf es bekommen hat, also würde jeder Aufruf davon abgelehnt. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_stray: (tool: string) => `Diese Card würde dem taf auch „${tool}“ erlauben, das keine seiner Verbindungen gibt. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
