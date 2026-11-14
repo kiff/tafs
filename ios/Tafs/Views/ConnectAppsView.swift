@@ -104,7 +104,9 @@ struct ConnectAppsView: View {
     @ViewBuilder
     private func row(_ app: TafsCloud.ConnectApps.App) -> some View {
         let said = ConnectRow(app, usedHere: model.connectionGroups(of: app).tafs.map(\.taf))
-        if app.connected, !model.connections(of: app).isEmpty {
+        // A connected app always opens its detail, never a tap that does nothing: there, the connections this
+        // device reads, or why it reads none.
+        if app.connected {
             NavigationLink { AppConnectionsView(app: app) } label: { cells(app, said) }
                 .accessibilityIdentifier("connect.manage." + app.entry)
         } else {
@@ -369,6 +371,13 @@ struct AppConnectionsView: View {
         let listed = model.removedListed
         let clearable = groups.removed.filter { listed[$0.id]?.usedBy.isEmpty == true }.map(\.id)
         List {
+            // This device hasn't read its connections (connected tools not set up on it, or its session holds no
+            // key): it says so, rather than an empty list.
+            if !model.readsConnections {
+                Text(Words.Connect.startConnectedToolsFirst(device: "\(ThisDevice.kind)"))
+                    .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("connect.not-read")
+            }
             ForEach(groups.tafs) { group in
                 Section {
                     ForEach(group.grants) { g in entry(g) }

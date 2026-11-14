@@ -458,6 +458,9 @@ the app in sample mode.
 
 A connected app (“Connected ✓”) opens its connections (`AppConnectionsView`, `AppModel.connectionGroups`), in four parts:
 
+- **A connected app always opens** its connections, never a tap that does nothing. A device that doesn't read the
+  account's connections (connected tools not set up on it, or a session without its key: `readsConnections`) says so
+  there, in the shared words, instead of an empty list.
 - **One section per taf,** its name as the heading, holding each of the account's live grants for the app (not `disconnected` or `failed`). The tafs with a connection that needs the owner come first (a sign-in waiting, signed out, or a last call that failed), then the rest by name. A row shows the connection's name as the connection service gives it (`title`, such as “Gmail · Demo Shop”; `Grant.name`), else a direct sign-in's or a key's account, else the app's name. A managed app's `account` is the provider's id, kept only to be sent back with a door's trigger, and never drawn. Then the connection's status words, and “Also on Chargebacks' Card” when another taf's Card uses it. When the connection service draws its rows (`used_by`, `health`, `actions`; `Grant.rowFromPlanque`), each row is
   its name, "Used by" its tafs, and its health in its words, as sent; a tap opens `ConnectionDetailView`: the health,
   the tafs on it, and only the actions it offers that the app knows (`sign_in_again` by `approve` or `key`, `remove`,
