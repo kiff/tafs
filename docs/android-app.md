@@ -563,6 +563,11 @@ A change to the dial's setting (a size, Skip it / Run after, a place in an app) 
 next version: "DRAFT · Vn · NOT LIVE" and **Make N changes live** show in the sheet while it waits
 (tafs cloud's `pending`), the usual version switch.
 
+**A draft's Cards** (`DraftCardsView`, in Coach's approval card and in Versions): its new Cards show as one
+panel, **A new Card**, with each of their lines once (KIFF's draft has one Card per tool, which read as five Cards to
+approve). A Card the draft changes keeps its own panel, now then after, and one it removes its own (Android 1.27.6;
+iPhone and iPad follow).
+
 **An app's event** (`kind: app_event`) waits for the owner while its `approval` is `needed`:
 Approve opens its filters, as tafs cloud gives them, and **Approve with your fingerprint**
 approves exactly those (`AppModel.approveKnobEvent`, `EventApprovalSheet`). The live dial is read
