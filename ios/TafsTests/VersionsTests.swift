@@ -164,6 +164,27 @@ final class VersionsTests: XCTestCase {
         XCTAssertTrue(view.contains("startChoice(Words.Home.newTaf, selected: improving == nil) { model.newCoachConversation() }"))
     }
 
+    /// The pencil on an empty chat about a taf opens a plain one (Android 94): the owner opened
+    /// Coach on a taf, tapped the pencil, then "Improve <taf>", and the pencil there must not keep
+    /// "Improve <taf>" as an empty chat to scroll to the top of. Only an empty plain chat stays.
+    func testThePencilOnAnEmptyChatAboutATafOpensAPlainOne() async throws {
+        let (model, id) = await kiffModel(signer: StubSigner())
+        model.tafOnScreen = id
+        model.newCoachConversation()
+        XCTAssertTrue(model.coachChatIsEmpty, "an empty plain chat stays")
+        model.improveTaf(id)
+        XCTAssertNotNil(model.setupImproving)
+        XCTAssertTrue(model.setupThread.items.isEmpty, "nothing in it yet")
+        XCTAssertFalse(model.coachChatIsEmpty, "an empty chat about a taf gives way")
+        // What the pencil does when the chat isn't an empty plain one.
+        model.newCoachConversation()
+        XCTAssertNil(model.setupImproving, "a plain chat")
+        XCTAssertTrue(model.coachChatIsEmpty)
+        model.coachOpen = false
+        model.openCoach()
+        XCTAssertNil(model.setupImproving, "and it stays plain on the same taf's page")
+    }
+
     /// Start a new taf opens Coach mode in a new conversation on no taf, even from a taf's
     /// page (kiff/tafs#138, item 59): the old form is gone.
     func testStartANewTafIsANewCoachConversation() async throws {
@@ -462,6 +483,39 @@ final class VersionsTests: XCTestCase {
         XCTAssertFalse(try card("").isUnchanged, "the same lines alone read now → after")
         let fresh = try JSONDecoder().decode(KIFFClient.DraftCard.self, from: Data(#"{"id":"card_read","unchanged":true,"grants":[{"action":"retrieve_charge"}]}"#.utf8))
         XCTAssertFalse(fresh.isUnchanged, "a new Card isn't unchanged")
+    }
+
+    /// KIFF's draft has one Card per tool: three "A new Card" panels read as three Cards to
+    /// approve (the owner's run). They show as one, every line once, where the first new Card
+    /// is; a Card the draft changes keeps its own panel and place (Android 94).
+    func testADraftsNewCardsShowAsOneAndAChangedCardAlone() throws {
+        let d = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
+        {"id":"d","status":"draft","version":"v2","cards":[
+          {"lines":["Read your emails"]},
+          {"revises":"c1","current":{"lines":["Read Stripe payments"]},"lines":["Read and refund Stripe payments"]},
+          {"lines":["Draft replies"]},
+          {"lines":["Read your emails","Label emails"]}]}
+        """#.utf8))
+        let shown = DraftCardsView.shown(d)
+        XCTAssertEqual(shown.count, 2, "one header for the three new Cards, and the changed one")
+        XCTAssertEqual(shown[0], .new(lines: ["Read your emails", "Draft replies", "Label emails"]))
+        guard case .one(let changed, let lines) = shown[1] else { return XCTFail("the changed Card alone") }
+        XCTAssertEqual(changed.revises, "c1")
+        XCTAssertEqual(lines, ["Read and refund Stripe payments"])
+
+        // Only new Cards: one header, every line.
+        let fresh = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
+        {"id":"d","status":"draft","version":"v1","cards":[{"lines":["a"]},{"lines":["b"]},{"lines":["c"]}]}
+        """#.utf8))
+        XCTAssertEqual(DraftCardsView.shown(fresh), [.new(lines: ["a", "b", "c"])])
+
+        // A draft with no new Card shows each as it was.
+        let revision = try JSONDecoder().decode(KIFFClient.AgentDraft.self, from: Data(#"""
+        {"id":"d","status":"draft","version":"v3","cards":[{"revises":"c1","current":{"lines":["a"]},"lines":["b"]}]}
+        """#.utf8))
+        let one = DraftCardsView.shown(revision)
+        XCTAssertEqual(one.count, 1)
+        guard case .one = try XCTUnwrap(one.first) else { return XCTFail("a changed Card alone") }
     }
 
     /// A connection none of whose tools is on the taf's Card any more is left over

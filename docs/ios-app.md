@@ -493,6 +493,16 @@ A connected app (“Connected ✓”) opens its connections (`AppConnectionsView
 - **From removed tafs** comes between the tafs and Other connections. It holds the connections whose `request.agent` tafs cloud names in `removed_tafs`, and only those, each with the removed taf's name (the grant's `agent_name`). The app sends its signed grants read with the read (`connectApps(proof:)`). A connection a live taf's Card still uses says so (“Kept: Chargebacks' Card uses it”). **Clear these connections** shows only when at least one listed connection has an empty `used_by`, and ends exactly those: it asks first (“Clear 2 connections from removed tafs?”), then one Face ID, and the device key signs each disconnect. The line under them says how it went (“Cleared 1. Kept 1 for Chargebacks, whose Card uses it.”). With no `grants`, the section shows with no Clear. Which to keep is tafs cloud's word, never the phone's (`clearPlan`, `clearRemovedConnections`; the words are `ConnectionGroupWords`, the same as Android's).
 - **Other connections** comes last: those whose taf the app can't name, each with the same row as the rest and nothing that acts on them all at once. A taf missing from this person's list may have been removed, but it may also be one they don't see, or an agent that isn't a taf, so nothing there says it was removed.
 
+## A draft's new Cards
+
+KIFF's draft has one Card per tool, so a new taf's approval drew "A new Card" three or five times for
+what the owner approves as one. As on Android, `DraftCardsView` (in `Views/TafDetailView.swift`, used
+by a version's sheet and a trial) draws the draft's new Cards (no `current`) as one panel, "A new
+Card", with every new Card's lines under it, each once, in the draft's order, where the first new Card
+is (`DraftCardsView.shown`). A Card the draft changes, or keeps unchanged, keeps its own panel and
+place, and the Cards it removes follow, as before. Test:
+`VersionsTests.testADraftsNewCardsShowAsOneAndAChangedCardAlone`.
+
 ## Home's line
 
 Home's big line ("2 tafs working.") is tafs cloud's, as Android draws it: `GET /v1/home` sends
@@ -792,7 +802,8 @@ Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideB
 - **The pencil** (New conversation) in Coach opened on a taf ("Improve <taf>") starts a plain Coach chat,
   on no taf (`newCoachConversation`), and so does New taf at the chat's top. It stays plain: Coach closed
   and opened again on the same taf's page doesn't go back to that taf's mode; another taf's page opens on
-  that taf.
+  that taf. On an empty chat about a taf it opens a plain one too: only an empty plain chat stays, where
+  the pencil shows its top (`coachChatIsEmpty` is false while the chat improves a taf), as on Android.
 - **A new conversation:** a chat set aside is never the one Coach goes on in. When it's the chat shown (or
   the latest one shown together), Coach starts a new conversation (`newSetupChat`), so a new job's first
   message asks for a new chat (`new_chat`) and never names the ended session. When Coach next picks its
@@ -801,7 +812,8 @@ Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideB
   person, the chat opens as any other.
 
 Tests: `TafsTests/CoachWaitingTests.swift`; a run's end, `SetupTests.testACoachRunEndingReadsHome`; the
-pencil, `VersionsTests.testThePencilInATafsCoachModeStartsAPlainChat`. One tap opening the chat is pinned
+pencil, `VersionsTests.testThePencilInATafsCoachModeStartsAPlainChat` and
+`VersionsTests.testThePencilOnAnEmptyChatAboutATafOpensAPlainOne`. One tap opening the chat is pinned
 by the card's structure only; the tap itself needs a device.
 
 ## Your step
