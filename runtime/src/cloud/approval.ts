@@ -378,8 +378,13 @@ async function nameOf(ctx: DecideContext, agent: string | undefined, ...given: A
   return [name, ...given].map((n) => (typeof n === "string" ? n.trim() : "")).find((n) => n !== "") || undefined;
 }
 
-/** The app as the owner knows it ("Stripe" for mcp.stripe.com), for the phone's signing prompt: its server's name, else the grant's vendor. */
+/**
+ * The app as the owner knows it ("Stripe" for mcp.stripe.com), for the phone's signing prompt: its server's name, else
+ * the grant's vendor. A managed app's server is the sign-in partner's, never the app: its name is the grant's vendor
+ * ("Gmail"), as planque keeps it, so the partner's name never reaches the prompt.
+ */
 function appNameOf(g: ApprovalGrant): string {
+  if (g.request.kind === "connector") return typeof g.vendor === "string" ? g.vendor.trim() : "";
   const server = typeof g.request.server === "string" ? g.request.server.trim() : "";
   return vendorName(server) || (server && !server.includes("://") ? vendorName(`https://${server}/`) : "") || g.vendor || "";
 }
