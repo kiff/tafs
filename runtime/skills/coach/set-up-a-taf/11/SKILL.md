@@ -62,8 +62,8 @@ Sets up a new taf from the owner's words: understanding the job, the plan, check
   the owner goes to its chat, never to an address they didn't give) and, when
   its tools find its work by themselves, cron (when it runs, as five POSIX cron
   fields in the account's time zone, at most every 15 minutes: "0 9 * * 1-5") and check, the read tool that lists
-  its open work: arguments (open ones only, where the tool allows), items (where
-  the list is in its result), cursor (a field that only grows: created time, an
+  its open work: arguments (open ones only, where the tool allows), items (the
+  list's path its catalog's returns name: data.messages), cursor (a field that only grows: created time, an
   increasing id) and first: "all" when its arguments limit it to open work, "new" when they can't. Each firing reads it without the
   AI: a quiet one costs nothing, and the AI wakes only for work. It reads
   through its Card at every firing (96 a day at every 15 minutes): the read's

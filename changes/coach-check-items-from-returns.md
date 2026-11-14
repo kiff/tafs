@@ -1,0 +1,1 @@
+- **Coach takes a check's list from the read's returns** (set-up-a-taf@11, the-dial@6). A schedule's check names where its read's list is (`items`) by the path the tool's catalog `returns` gives (`data.messages`), never a guess: Gmail's first check failed on a guessed path ("the check's read has no …").
