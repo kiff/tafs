@@ -322,7 +322,6 @@ internal val AppState.homeLeadsWithRecipes: Boolean
 
 @Composable
 private fun Headline(state: AppState) {
-  val working = state.workingCount
   Column {
     // Never "0 tafs working" before the tafs are read (#91).
     if (state.mode == Mode.kiff && !state.listLoaded) {
@@ -333,7 +332,8 @@ private fun Headline(state: AppState) {
       Text(Words.Home.notLoaded, style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
       return@Column
     }
-    Text(Words.Home.working(count = working), style = scaled(36, FontWeight.Bold, Theme.ink, display = true))
+    // tafs cloud's line, counted from the tafs it lists: a new taf with no schedule reads "1 taf ready.", never "0 tafs working."
+    Text(state.headlineWords, style = scaled(36, FontWeight.Bold, Theme.ink, display = true))
     // tafs cloud's words for what Needs you holds, else the app's for its own count.
     Text(state.needsYouWords, style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
   }

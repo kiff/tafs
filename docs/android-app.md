@@ -208,6 +208,10 @@ includes, tafs cloud's sentence as kiff.dev says it; none sent, no line.
   purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
   Restore purchases right there.
 
+**Home's first line** is tafs cloud's `headline` ("2 tafs working.", or "1 taf ready." for a new taf with no
+schedule, [api.md](api.md)); the app counts nothing for it (Android 1.27.6). A tafs cloud from before `headline`
+leaves the app's own count of the tafs at work.
+
 **Needs you's count** (Home's line and the tab's badge) is tafs cloud's (`needs_you`: its count and
 words, covering held calls, "Did this happen?" calls, currency requests and tafs with a knock). When
 tafs cloud leaves it out (it couldn't read all of it), the app counts what it has (`needsYouCount`).
@@ -662,6 +666,9 @@ you** ([api.md](api.md#coach-waiting)): Home's `coach_waiting`, after the steps,
 approval.") and its **Open Coach** button, which opens Coach on that chat (`AppModel.openWaitingCoach`),
 where the card is answered; someone who can't use Coach reads the line alone. tafs cloud counts each in `needs_you`, so Home never says "Nothing needs
 you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
+Home is read when a chat's stream ends, and when it closes with no end line after its last live line said
+`waiting_for_you` (`AppModel.stillWaitsOnYou`), so the row and the badge come while Coach's chat is still open
+(Android 1.27.6, as iPhone and iPad).
 
 **Set aside** is "not now", never an approval, and only signed in (not the sample). A chat set aside is no longer the one
 Coach shows: Coach starts a new conversation, so a new job never goes on in the ended session (Android 1.27.1). Opening

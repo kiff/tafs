@@ -7,7 +7,7 @@ import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Held, Mandate } from "../src/cloud/home.js";
-import { windowWords } from "../src/cloud/home.js";
+import { headlineOf, windowWords } from "../src/cloud/home.js";
 import { coachWaitingClear } from "../src/cloud/coachwaiting.js";
 import type { Device, Notification } from "../src/cloud/push.js";
 import { firings } from "../src/cloud/calendar.js";
@@ -785,6 +785,13 @@ describe("tafs cloud", () => {
     w.account.unsure = "down";
     const r = await call(w, "GET", "/v1/home", { token: "ana" });
     expect(r.status).toBe(200); expect(r.body.needs_you).toBeUndefined();
+  });
+
+  it("sends Home's first line, counted from the tafs it lists, so the apps count nothing", async () => {
+    const w = world();
+    const home = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
+    expect(home.headline).toEqual(headlineOf(home.tafs));
+    expect(home.headline.words).toMatch(/^\d+ tafs? (working|ready)\.$/);
   });
 
   it("says a Card's windows in the person's language, in all 8: no Card line mixes languages", async () => {

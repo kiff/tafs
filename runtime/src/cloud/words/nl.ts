@@ -215,6 +215,8 @@ export const nl: Words = {
   home_discard_no: "Bewaren",
   home_needs_you_none: "Niets wacht op jou.",
   home_needs_you: (n, form) => (form === "one" ? `${n} wacht op jou.` : `${n} wachten op jou.`),
+  home_working: (n, form) => (form === "one" ? `${n} taf bezig.` : `${n} tafs bezig.`),
+  home_ready: (n, form) => (form === "one" ? `${n} taf gereed.` : `${n} tafs gereed.`),
   recipes_category_money: "Geld",
   recipes_category_customers: "Klanten",
   recipes_category_operations: "Bedrijfsvoering",

@@ -241,6 +241,8 @@ data class AppState(
   val held: List<HeldCall> = emptyList(),
   /** Needs you, counted by tafs cloud on its home read; null when it couldn't count all of it. */
   val needsYou: bot.tafs.app.kiff.NeedsYouCount? = null,
+  /** Home's first line, in tafs cloud's words; null from a tafs cloud that sends none, where the app's own count stands in. */
+  val headline: String? = null,
   /** Cards asked to take another currency, as tafs cloud draws them from KIFF; counted with the held calls in Needs you. */
   val cardUnitExceptions: List<bot.tafs.app.kiff.CardUnitException> = emptyList(),
   /** The ones whose Dismiss is on its way to KIFF. */
@@ -725,6 +727,9 @@ data class AppState(
   val accountLabel: String? get() = if (mode == Mode.kiff) kiffAccount?.name else null
 
   val workingCount: Int get() = tafs.count { it.state == TafState.working }
+
+  /** Home's first line: tafs cloud's, else, from a tafs cloud from before it, the app's own count. */
+  val headlineWords: String get() = headline ?: Words.Home.working(count = workingCount)
 
   fun taf(id: String): Taf? = tafs.firstOrNull { it.id == id } ?: otherAgents.firstOrNull { it.id == id } ?: trialTaf(id) ?: coachTaf(id)
 
@@ -1368,6 +1373,7 @@ class AppModel(
         coachWaiting = read.home.coachWaiting.orEmpty().filter { it.session.isNotBlank() && it.words.line.isNotBlank() && it.session !in s.settingAside },
         coachWaitingClear = read.home.coachWaitingClear?.takeIf { it.words.button.isNotBlank() },
         needsYou = read.home.needsYou,
+        headline = read.home.headline?.words?.takeIf { it.isNotBlank() },
         // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given on this device.
         record = read.activity?.let { withDecisions(KiffMapping.record(it, holders)) } ?: s.record,
         // What this person may do with each agent, as KIFF says: a read that failed leaves what was known.

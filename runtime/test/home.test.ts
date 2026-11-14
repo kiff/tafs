@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { type Mandate, cardView, isLive, summary, windowWords } from "../src/cloud/home.js";
+import { type Mandate, cardView, headlineOf, isLive, summary, windowWords } from "../src/cloud/home.js";
+import { LANGUAGES } from "../src/cloud/words/index.js";
 
 describe("a taf's Card summary", () => {
   // The owner's Card tab read "Read Stripe API data" twice (kiff/tafs#138, item 53).
@@ -170,5 +171,36 @@ describe("a spending window, in the owner's words", () => {
     const v = cardView(card);
     expect(v.total).toMatchObject({ window: "lifetime", window_words: { each: "in total", now: "so far" } });
     expect(v.calls).toMatchObject({ window: "rolling_1h", window_words: { each: "in any hour", now: "in the last hour" } });
+  });
+});
+
+// Home's first line is tafs cloud's: a new taf with no schedule read "0 tafs working" when the app counted it itself.
+describe("Home's first line", () => {
+  const working = { state: "working" };
+  const fromChat = { state: "working", unscheduled: true };
+  it("counts the tafs at work; with none, those ready to work from their chat", () => {
+    expect(headlineOf([working, working, fromChat]).words).toBe("2 tafs working.");
+    expect(headlineOf([fromChat]).words).toBe("1 taf ready.");
+    expect(headlineOf([fromChat, fromChat, { state: "paused" }]).words).toBe("2 tafs ready.");
+    expect(headlineOf([{ state: "paused" }, { state: "stopped" }, { state: "waiting" }]).words).toBe("0 tafs working.");
+    expect(headlineOf([]).words).toBe("0 tafs working.");
+  });
+  it("counts neither a taf waiting on an app's event nor one with something gone wrong", () => {
+    expect(headlineOf([{ ...working, work: { status: "waiting_on_app" } }]).words).toBe("0 tafs working.");
+    expect(headlineOf([{ ...fromChat, work: { attention: true, line: "Its first check failed." } }]).words).toBe("0 tafs working.");
+    expect(headlineOf([{ ...working, work: { attention: true, line: "" } }]).words).toBe("1 taf working.");
+  });
+  it("speaks the person's language, in all 8, by its plural forms", () => {
+    expect(headlineOf([fromChat], "fr").words).toBe("1 taf prêt.");
+    expect(headlineOf([working, working, working], "pl").words).toBe("3 tafs pracują.");
+    expect(headlineOf(Array(5).fill(fromChat), "pl").words).toBe("5 tafs gotowych.");
+    for (const lang of LANGUAGES) {
+      for (const n of [0, 1, 2, 5]) {
+        const line = headlineOf(Array(n).fill(working), lang).words;
+        expect(line, lang).toMatch(new RegExp(`^${n} taf`));
+        expect(line, lang).toMatch(/[^.]\.$/);
+      }
+      expect(headlineOf([fromChat], lang).words, lang).not.toBe(headlineOf([working], lang).words);
+    }
   });
 });

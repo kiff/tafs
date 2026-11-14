@@ -219,8 +219,9 @@ then shows its plan. Then, each step behind the owner's yes:
    unapproved 15 minutes after the run paused on it, nothing is asking for that Card, so the result is answered in plain words (`{failed: "The
    Card for <taf> was never approved, so <taf> isn't set up yet: approve its Card to finish"}`), and Coach
    asks for the Card. The app starts nothing itself
-   (Android: `CoachWords.handOver`, `HandOverCard`; it reads the list again once for a taf
-   set up that isn't listed yet). The iPhone app does the same.
+   (Android: `CoachWords.handOver`, `HandOverCard`; for a taf set up that isn't listed yet it reads the list
+   again, and, while Home doesn't list it, up to 3 more times 3 seconds apart (`AppModel.SET_UP_READS`), so the
+   card never stays on "Setting up…" until a pull, Android 1.27.6). The iPhone app reads the list again once.
    A taf's next version is still made by the app, from an improvement's result.
 
 A taf whose tools can't find its work by themselves is made **unscheduled**: it works

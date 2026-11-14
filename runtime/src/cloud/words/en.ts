@@ -230,6 +230,8 @@ export const en = {
   home_discard_no: "Keep it",
   home_needs_you_none: "Nothing needs you.",
   home_needs_you: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 needs you." : `${n} need you.`),
+  home_working: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 taf working." : `${n} tafs working.`),
+  home_ready: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "1 taf ready." : `${n} tafs ready.`),
   // Recipes (GET /v1/recipes): the categories' titles, the sheet's labels, Home's line, and the suggestions setting's words.
   recipes_category_money: "Money",
   recipes_category_customers: "Customers",
