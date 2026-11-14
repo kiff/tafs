@@ -137,9 +137,10 @@ data class HomeTaf(
 )
 
 /**
- * One of the account's labels, as tafs cloud lists it on Home: a name and a colour, how many tafs carry it, whether one of them
- * waits for the person, and the list's headline filtered to it ("Money · 5 tafs · 2 wait for you"). A label holds no Card,
- * permission or context: the app only filters by it.
+ * One of the account's labels, as tafs cloud lists it on Home (docs/labels.md, "What the apps get"): a name in the person's
+ * language, a colour token (Explore's categories: money, customers, operations, errands), how many tafs carry it, how many of them
+ * wait for the person, and the list's headline filtered to it ("2 tafs working · Money"). A label holds no Card, permission or
+ * context: the app only filters by it.
  */
 @Serializable
 data class HomeLabel(
@@ -147,8 +148,8 @@ data class HomeLabel(
   val name: String = "",
   val color: String? = null,
   val count: Int = 0,
-  val waiting: Boolean = false,
-  val headline: String? = null,
+  val waiting: Int = 0,
+  val headline: HomeHeadline? = null,
 )
 
 /** The label row's own words from tafs cloud: "All". */

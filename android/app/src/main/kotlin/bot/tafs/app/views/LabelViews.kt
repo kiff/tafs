@@ -53,8 +53,8 @@ internal fun onLabel(tafs: List<Taf>, label: String?): List<Taf> = if (label == 
 internal fun labelTags(taf: Taf, labels: List<HomeLabel>): List<String> =
   labels.filter { it.id in taf.labels }.map { it.name }.take(3)
 
-/** The list's headline filtered to a label: tafs cloud's ("Money · 5 tafs · 2 wait for you"), else the label's name. */
-internal fun labelHeadline(label: HomeLabel): String = label.headline?.takeIf { it.isNotBlank() } ?: label.name
+/** The list's headline filtered to a label: tafs cloud's ("2 tafs working · Money"), else the label's name. */
+internal fun labelHeadline(label: HomeLabel): String = label.headline?.words?.takeIf { it.isNotBlank() } ?: label.name
 
 /** The label chosen, while it's still one of the account's: one that went with a refresh falls back to All. */
 internal fun chosenLabel(labels: List<HomeLabel>, selected: String?): HomeLabel? = labels.firstOrNull { it.id == selected }
@@ -68,7 +68,7 @@ internal fun LabelRow(labels: List<HomeLabel>, all: String, allCount: Int, selec
   val (shown, more) = shownLabels(labels, expanded, selected)
   Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
     LabelChip(all, allCount, waiting = false, chosen = selected == null) { onSelect(null) }
-    shown.forEach { label -> LabelChip(label.name, label.count, label.waiting, chosen = selected == label.id) { onSelect(label.id) } }
+    shown.forEach { label -> LabelChip(label.name, label.count, label.waiting > 0, chosen = selected == label.id) { onSelect(label.id) } }
     if (more > 0) LabelChip("+$more", null, waiting = false, chosen = false, dim = true) { expanded = true }
   }
 }

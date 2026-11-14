@@ -337,7 +337,7 @@ private fun Headline(state: AppState, label: bot.tafs.app.kiff.HomeLabel? = null
       Text(Words.Home.notLoaded, style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
       return@Column
     }
-    // Filtered to a label: tafs cloud's line for it ("Money · 5 tafs · 2 wait for you"), in place of the account's two.
+    // Filtered to a label: tafs cloud's line for it ("2 tafs working · Money"), in place of the account's two.
     if (label != null) {
       Text(labelHeadline(label), style = scaled(36, FontWeight.Bold, Theme.ink, display = true))
       return@Column

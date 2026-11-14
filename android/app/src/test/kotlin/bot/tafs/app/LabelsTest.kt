@@ -1,6 +1,7 @@
 package bot.tafs.app
 
 import bot.tafs.app.kiff.Home
+import bot.tafs.app.kiff.HomeHeadline
 import bot.tafs.app.kiff.HomeLabel
 import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.model.Card
@@ -17,7 +18,7 @@ import org.junit.Test
 
 /** Labels on the tafs list (docs/android-app.md, Labels): tafs cloud lists and counts them; the app only filters by them. */
 class LabelsTest {
-  private val money = HomeLabel("l_money", "Money", count = 5, waiting = true, headline = "Money · 5 tafs · 2 wait for you")
+  private val money = HomeLabel("l_money", "Money", count = 5, waiting = 2, headline = HomeHeadline("2 tafs working · Money"))
   private val clients = HomeLabel("l_clients", "Clients", count = 2)
   private val support = HomeLabel("l_support", "Support", count = 1)
   private val labels = listOf(money, clients, support)
@@ -48,7 +49,7 @@ class LabelsTest {
   }
 
   @Test fun theFilteredHeadlineIsTafsCloudsElseTheLabelsName() {
-    assertEquals("Money · 5 tafs · 2 wait for you", labelHeadline(money))
+    assertEquals("2 tafs working · Money", labelHeadline(money))
     assertEquals("Clients", labelHeadline(clients))
   }
 
@@ -67,10 +68,10 @@ class LabelsTest {
   @Test fun homeReadsTheLabelsAndEachTafsLabels() {
     val home = KiffClient.json.decodeFromString<Home>(
       """{"tafs":[{"id":"taf_1","kiff_agent":"bills","name":"Bills in","labels":["l_money"]}],"others":[],"removing":[],
-         "labels":[{"id":"l_money","name":"Money","color":"amber","count":5,"waiting":true,"headline":"Money · 5 tafs"}],
+         "labels":[{"id":"l_money","name":"Money","color":"money","count":5,"waiting":2,"headline":{"words":"2 tafs working · Money"}}],
          "labels_words":{"all":"All"}}""")
     assertEquals(listOf("l_money"), home.tafs.single().labels)
-    assertEquals(money.copy(color = "amber", headline = "Money · 5 tafs"), home.labels!!.single())
+    assertEquals(money.copy(color = "money"), home.labels!!.single())
     assertEquals("All", home.labelsWords?.all)
     // A tafs cloud from before labels: none, and no row.
     assertNull(KiffClient.json.decodeFromString<Home>("""{"tafs":[],"others":[],"removing":[]}""").labels)
