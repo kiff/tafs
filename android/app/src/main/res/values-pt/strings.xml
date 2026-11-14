@@ -637,7 +637,7 @@
     <string name="coach_intro">Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Nenhum taf vê o seu início de sessão.</string>
     <string name="coach_kiff_counts_way">O KIFF conta desta forma</string>
     <string name="coach_making_live">A pôr em produção…</string>
-    <string name="coach_name_tool_taf_should_work">Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Nenhum taf vê o seu início de sessão. Aprova com %1$s.</string>
+    <string name="coach_name_tool_taf_should_work">Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Aprova com %1$s.</string>
     <string name="coach_needs_you_approve">Precisa de si · aprovar</string>
     <string name="coach_needs_you_question">Precisa de si · uma pergunta</string>
     <string name="coach_new_conversation">Nova conversa</string>

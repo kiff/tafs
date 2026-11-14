@@ -95,7 +95,7 @@
   "coach.intro": "Name an app for your taf, like your payment provider. No taf sees your sign-in.",
   "coach.kiff_counts_way": "KIFF counts it this way",
   "coach.making_live": "Making it live…",
-  "coach.name_tool_taf_should_work": "Name an app for your taf, like your payment provider. No taf sees your sign-in. You approve with {biometry}.",
+  "coach.name_tool_taf_should_work": "Name an app for your taf, like your payment provider. You approve with {biometry}.",
   "coach.needs_you_approve": "Needs you · approve",
   "coach.needs_you_question": "Needs you · a question",
   "coach.new_conversation": "New conversation",

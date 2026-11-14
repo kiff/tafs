@@ -697,7 +697,7 @@
     <string name="coach_intro">Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Żaden taf nie widzi Twojego logowania.</string>
     <string name="coach_kiff_counts_way">KIFF liczy to w ten sposób</string>
     <string name="coach_making_live">Uruchamianie na żywo…</string>
-    <string name="coach_name_tool_taf_should_work">Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Żaden taf nie widzi Twojego logowania. Zatwierdzasz przez %1$s.</string>
+    <string name="coach_name_tool_taf_should_work">Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Zatwierdzasz przez %1$s.</string>
     <string name="coach_needs_you_approve">Czeka na Ciebie · zatwierdź</string>
     <string name="coach_needs_you_question">Czeka na Ciebie · pytanie</string>
     <string name="coach_new_conversation">Nowa rozmowa</string>

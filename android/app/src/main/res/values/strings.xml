@@ -637,7 +637,7 @@
     <string name="coach_intro">Name an app for your taf, like your payment provider. No taf sees your sign-in.</string>
     <string name="coach_kiff_counts_way">KIFF counts it this way</string>
     <string name="coach_making_live">Making it live…</string>
-    <string name="coach_name_tool_taf_should_work">Name an app for your taf, like your payment provider. No taf sees your sign-in. You approve with %1$s.</string>
+    <string name="coach_name_tool_taf_should_work">Name an app for your taf, like your payment provider. You approve with %1$s.</string>
     <string name="coach_needs_you_approve">Needs you · approve</string>
     <string name="coach_needs_you_question">Needs you · a question</string>
     <string name="coach_new_conversation">New conversation</string>

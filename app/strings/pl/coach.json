@@ -95,7 +95,7 @@
   "coach.intro": "Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Żaden taf nie widzi Twojego logowania.",
   "coach.kiff_counts_way": "KIFF liczy to w ten sposób",
   "coach.making_live": "Uruchamianie na żywo…",
-  "coach.name_tool_taf_should_work": "Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Żaden taf nie widzi Twojego logowania. Zatwierdzasz przez {biometry}.",
+  "coach.name_tool_taf_should_work": "Podaj aplikację dla swojego tafa, np. Twojego dostawcę płatności. Zatwierdzasz przez {biometry}.",
   "coach.needs_you_approve": "Czeka na Ciebie · zatwierdź",
   "coach.needs_you_question": "Czeka na Ciebie · pytanie",
   "coach.new_conversation": "Nowa rozmowa",
