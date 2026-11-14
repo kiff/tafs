@@ -206,7 +206,10 @@ struct HomeSplitView: View {
                 default: return
                 }
             }
-            opened = Self.opening(model.listedTafs, screenshot: Screenshots.enabled && !Screenshots.listSettlesOnReturn)
+            // As one sidebar for the whole app, the tafs list is what opens first (the owner's layout); a screenshot
+            // that asks for a screen still opens Refunds.
+            let onList = tab != nil && !(Screenshots.enabled && Screenshots.screen != nil)
+            opened = onList ? .overview : Self.opening(model.listedTafs, screenshot: Screenshots.enabled && !Screenshots.listSettlesOnReturn)
             chosen = false
             selection = opened
         }
@@ -243,7 +246,12 @@ struct HomeSplitView: View {
         // the taf already open too: the list settling later doesn't take them away from it.
         List(selection: Binding(get: { selection }, set: { chosen = true; selection = $0 })) {
             // The app's own mark at the top, as its header (the owner's layout).
-            if tab != nil { brand.listRowBackground(Color.clear) }
+            // As one sidebar for the whole app, the mascot and "tafs" is the way to the tafs list (the owner's
+            // layout): every taf is there; beside it, only those relevant now.
+            if tab != nil {
+                NavigationLink(value: HomeSelection.overview) { brand.modifier(drives(Words.App.name, .overview)) }
+                    .listRowBackground(Color.clear)
+            }
             if tab != nil {
                 // The app's screens, each an item, opened beside the sidebar.
                 Section {
@@ -258,8 +266,8 @@ struct HomeSplitView: View {
             }
             if signedInLayout {
                 Section {
-                    // Today across the tafs, one line each.
-                    if !model.tafs.isEmpty {
+                    // Today across the tafs, one line each: as one sidebar for the whole app, the mascot opens it.
+                    if tab == nil, !model.tafs.isEmpty {
                         NavigationLink(value: HomeSelection.overview) {
                             Label(Words.Home.Overview.title, systemImage: "square.grid.2x2").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         }
@@ -280,10 +288,12 @@ struct HomeSplitView: View {
                     }
                 } header: { Eyebrow(text: Words.NeedsYou.title, color: Theme.amber) }
             }
-            let sections = model.tafSections
+            let all = model.tafSections
+            // As one sidebar for the whole app, only the tafs relevant now; all of them are in the list behind the mascot.
+            let sections = tab == nil ? all : (own: all.own.filter(model.relevantNow), shared: all.shared.filter(model.relevantNow))
             // Theirs, then the ones shared with them (kiff/tafs#306); someone with only shared
             // tafs sees just those.
-            if !sections.own.isEmpty || sections.shared.isEmpty {
+            if tab == nil ? (!all.own.isEmpty || all.shared.isEmpty) : (!sections.own.isEmpty || !model.settingUp.isEmpty || model.tafs.isEmpty) {
                 Section {
                     ForEach(sections.own) { taf in tafLinks(taf) }
                     // A taf being set up, among the tafs: by its name, with no state (docs/tafs.md).

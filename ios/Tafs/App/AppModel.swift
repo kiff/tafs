@@ -537,6 +537,23 @@ final class AppModel: ObservableObject {
     /// The list in two (kiff/tafs#306): the tafs this person manages, and those shared with
     /// them to use, each in the list's order. Which is which is KIFF's answer; a taf whose
     /// answer isn't in yet counts as theirs, so nothing moves into "Shared with you" and back.
+    /// Whether a taf belongs in the iPad's sidebar now (the owner's layout): it has an item in Needs you (a held
+    /// call, a step it handed over, a knock at its door), or it ran in the last 24 hours, as tafs cloud says. The
+    /// rest are in the tafs list behind the mascot.
+    func relevantNow(_ taf: Taf) -> Bool {
+        let cloud = cloudTaf(for: taf.id)
+        return Self.relevantNow(held: !heldCalls(for: taf.id).isEmpty,
+                                step: cloud.map { c in yourSteps.contains { $0.taf?.id == c.id } } ?? false,
+                                knock: (taf.doors ?? []).contains { $0.knocks > 0 },
+                                lastRun: cloud?.lastRun, now: clock())
+    }
+
+    nonisolated static func relevantNow(held: Bool, step: Bool, knock: Bool, lastRun: Date?, now: Date) -> Bool {
+        if held || step || knock { return true }
+        guard let lastRun else { return false }
+        return now.timeIntervalSince(lastRun) < 24 * 60 * 60
+    }
+
     var tafSections: (own: [Taf], shared: [Taf]) {
         let listed = listedTafs
         return (listed.filter { !sharedWithMe($0.id) }, listed.filter { sharedWithMe($0.id) })

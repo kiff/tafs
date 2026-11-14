@@ -36,4 +36,27 @@ final class HomeSidebarTests: XCTestCase {
         let body = String(file[start.upperBound...].prefix(500))
         XCTAssertTrue(body.contains(".modifier(drives(title, screen))"))
     }
+
+    /// The owner's second round: a taf is beside the list only while it's relevant now: an item in Needs you
+    /// (a held call, a step, a knock), or a run in the last 24 hours. The rest are behind the mascot.
+    func testOnlyTafsRelevantNowAreInTheSidebar() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        XCTAssertTrue(AppModel.relevantNow(held: true, step: false, knock: false, lastRun: nil, now: now))
+        XCTAssertTrue(AppModel.relevantNow(held: false, step: true, knock: false, lastRun: nil, now: now))
+        XCTAssertTrue(AppModel.relevantNow(held: false, step: false, knock: true, lastRun: nil, now: now))
+        XCTAssertTrue(AppModel.relevantNow(held: false, step: false, knock: false, lastRun: now.addingTimeInterval(-23 * 3600), now: now))
+        XCTAssertFalse(AppModel.relevantNow(held: false, step: false, knock: false, lastRun: now.addingTimeInterval(-25 * 3600), now: now),
+                       "a run two days ago: in the list, not beside it")
+        XCTAssertFalse(AppModel.relevantNow(held: false, step: false, knock: false, lastRun: nil, now: now), "never ran, nothing waiting")
+    }
+
+    /// The mascot and "tafs" opens the tafs list, which opens first; there's no Overview item beside it.
+    func testTheMascotOpensTheTafsList() throws {
+        let file = try source()
+        XCTAssertTrue(file.contains("NavigationLink(value: HomeSelection.overview) { brand.modifier(drives(Words.App.name, .overview)) }"))
+        XCTAssertTrue(file.contains("if tab == nil, !model.tafs.isEmpty {"), "the Overview item only without the whole-app sidebar")
+        XCTAssertTrue(file.contains("let onList = tab != nil && !(Screenshots.enabled && Screenshots.screen != nil)"))
+        XCTAssertTrue(file.contains("opened = onList ? .overview :"), "the tafs list opens first")
+        XCTAssertTrue(file.contains("(own: all.own.filter(model.relevantNow), shared: all.shared.filter(model.relevantNow))"))
+    }
 }

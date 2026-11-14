@@ -176,15 +176,19 @@ the app in sample mode.
   Needs you and Record, ⌘, Account, ⌘K Coach.
 - **On an iPad's full width, one sidebar for the whole app** (`HomeSplitView(tab:coachAvailable:)`,
   the owner's layout), in place of a rail beside the Tafs tab's own sidebar:
-  - **at the top,** the mascot and "tafs", the sidebar's header;
+  - **at the top,** the mascot and "tafs": the way to the tafs list (the Overview screen, every taf),
+    which is what opens first;
   - **the app's screens as items:** Needs you (with its count), Record, Calendar, Usage (Plan &
-    usage) and Connect apps, then the Overview, the held calls and the tafs, as before;
+    usage) and Connect apps, then the held calls;
+  - **only the tafs relevant now** (`AppModel.relevantNow`): one with an item in Needs you (a held
+    call, a step it handed over, a knock at its door), or a run in the last 24 hours (`last_run`), and
+    those being set up. The rest are in the list behind the mascot;
   - **at its foot, always in sight:** Coach, then the account button, which says who is signed in
     and opens Account beside the sidebar.
   
   Each item opens its existing screen beside the sidebar (`HomeSelection`). The app's tab and the
   selection follow each other, so a notification, a drive or a shortcut that opens a tab opens its
-  screen here; ⌘1 from a screen goes back to the taf the app opened on. Each item is in the drive's
+  screen here; ⌘1 from a screen goes back to the tafs list. Each item is in the drive's
   registry, as the rail's were. Account and Record are built again on each pick, not kept as the
   phone's tabs are. The iPhone keeps the bar.
 - **Plan & usage** (`UsageView`, opened from Settings' Plan card and Home's plan line), with
