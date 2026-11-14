@@ -1009,7 +1009,7 @@ describe("a held sign-in's first tools and the Card, under one fingerprint", () 
     const { s, w, r } = await heldWorld();
     expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "tools_and_cards", scheme: "kiff.requests.v1", key: "critical", kiff: { draft: "drf_1", version: "v3" } } });
     const chat = await w.call("GET", `/v1/tafs/${COACH}/conversation`, undefined, {}, "can=tools_and_cards,signs");
-    expect((chat.body.components as Array<{ component: { id?: string; signs?: unknown } }>).find((c) => c.component.id === "a1")?.component.signs).toEqual({ card: true });
+    expect((chat.body.components as Array<{ component: { id?: string; signs?: unknown } }>).find((c) => c.component.id === "a1")?.component.signs).toEqual({ card: true, takes: "fingerprint" });
     s.grants = [held({ status: "connected" })];
     s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
     const rep = await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "confirmed" }, SIGNED);
@@ -1037,7 +1037,7 @@ describe("a held sign-in's first tools and the Card, under one fingerprint", () 
     expect(old.r.body).toMatchObject({ ask: { step: "connect" } });
     const chat = await old.w.call("GET", `/v1/tafs/${COACH}/conversation`, undefined, {}, "can=tools_and_cards");
     expect((chat.body.components as Array<{ component: { id?: string; signs?: unknown } }>).find((c) => c.component.id === "a1")?.component.signs)
-      .toEqual({ card: false, words: "Its Card: you approve it next" });
+      .toEqual({ card: false, words: "Its Card: you approve it next", takes: "tap" });
     // Added tools on a connected app are as before: a phone that signs both takes them with the Card.
     const added = await heldWorld(grant({ status: "pending", connected: [{ tool: "list_charges" }] }), ["tools_and_cards"]);
     expect(added.r.body).toMatchObject({ ask: { step: "tools_and_cards" } });
@@ -1062,18 +1062,18 @@ describe("each waiting approval card says what its fingerprint signs", () => {
     const w = await world(s, { draft: "drf_1" });
     // First tools with no held sign-in: the connection alone, the Card next.
     s.grants = [grant({ status: "pending" })];
-    expect(await signs(w, "can=tools_and_cards")).toEqual({ card: false, words: "Its Card: you approve it next" });
+    expect(await signs(w, "can=tools_and_cards")).toEqual({ card: false, words: "Its Card: you approve it next", takes: "tap" });
     const asked = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request), draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards"] });
     expect(asked.body).toMatchObject({ ask: { step: "connect" } });
     // Added tools on a connected app, with a phone that can sign both: the Card is signed now.
     const adding = grant({ status: "pending", connected: [{ tool: "list_charges" }] });
     s.grants = [adding];
-    expect(await signs(w, "can=tools_and_cards")).toEqual({ card: true });
+    expect(await signs(w, "can=tools_and_cards")).toEqual({ card: true, takes: "fingerprint" });
     // The same, from a phone that can't: the connection alone.
-    expect(await signs(w)).toEqual({ card: false, words: "Its Card: you approve it next" });
+    expect(await signs(w)).toEqual({ card: false, words: "Its Card: you approve it next", takes: "tap" });
     // Connected already: the card signs the Card.
     s.grants = [grant({ status: "connected" })];
-    expect(await signs(w)).toEqual({ card: true });
+    expect(await signs(w)).toEqual({ card: true, takes: "fingerprint" });
   });
 
   it("says it in the reader's language, and an app's first connection says it before its draft exists", async () => {
@@ -1081,16 +1081,16 @@ describe("each waiting approval card says what its fingerprint signs", () => {
     s.grants = [grant({ status: "pending" })];
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
     const fr = await world(s, { draft: "drf_1" });
-    expect(await signs(fr, undefined, { "accept-language": "fr" })).toEqual({ card: false, words: "Sa Card : vous l'approuvez ensuite" });
+    expect(await signs(fr, undefined, { "accept-language": "fr" })).toEqual({ card: false, words: "Sa Card : vous l'approuvez ensuite", takes: "tap" });
     // The first sign-in's card, before its tools: no draft can exist yet, and a Card always follows.
     const first = await world(s);
-    expect(await signs(first)).toEqual({ card: false, words: "Its Card: you approve it next" });
-    expect(await signs(first, undefined, { "accept-language": "de" })).toEqual({ card: false, words: "Seine Card: Du genehmigst sie als Nächstes" });
+    expect(await signs(first)).toEqual({ card: false, words: "Its Card: you approve it next", takes: "tap" });
+    expect(await signs(first, undefined, { "accept-language": "de" })).toEqual({ card: false, words: "Seine Card: Du genehmigst sie als Nächstes", takes: "tap" });
     // A sign-in again keeps the Card in force, and tools added to a connected app with no draft name no Card: no words.
     s.grants = [grant({ status: "needs_reconnect" })];
-    expect(await signs(first)).toEqual({ card: false });
+    expect(await signs(first)).toEqual({ card: false, takes: "tap" });
     s.grants = [grant({ status: "pending", connected: [{ tool: "list_charges" }] })];
-    expect(await signs(first)).toEqual({ card: false });
+    expect(await signs(first)).toEqual({ card: false, takes: "tap" });
   });
 
   it("leaves the card as it was without the phone's proof, when the connections can't be read, or once answered", async () => {
@@ -1104,6 +1104,38 @@ describe("each waiting approval card says what its fingerprint signs", () => {
     s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
     await w.agents.api.answerCard("t_acme", COACH, w.stored.id, "a1", "approved", ANA.requester);
     expect(await signs(w)).toBeUndefined();
+  });
+
+  // The owner on Android 95: "No fingerprint for the next 4 minutes" showed on a card whose Approve took the fingerprint
+  // (the tools and their Card, signed together). Each card says which it is, from the key decide then asks with.
+  it("says whether Approve is a tap in the approval window or the fingerprint, as decide then asks", async () => {
+    process.env.TAFS_TOOLS_AND_CARDS = "on";
+    const s = services();
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    // Tools and their Card under one signature: always the approval key.
+    s.grants = [grant({ status: "pending", connected: [{ tool: "list_charges" }] })];
+    expect(await signs(w, "can=tools_and_cards")).toMatchObject({ takes: "fingerprint" });
+    const both = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(s.grants[0].request), draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards"] });
+    expect(both.body).toMatchObject({ ask: { key: "critical" } });
+    // Connecting alone: a tap inside the window.
+    s.grants = [grant({ status: "pending" })];
+    expect(await signs(w)).toMatchObject({ takes: "tap" });
+    // A Card alone: the key KIFF names for its draft.
+    s.grants = [grant({ status: "connected" })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", confirm_key: "window" };
+    expect(await signs(w)).toMatchObject({ takes: "tap" });
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", confirm_key: "critical" };
+    expect(await signs(w)).toMatchObject({ takes: "fingerprint" });
+  });
+
+  it("says nothing of the key for a Card whose draft KIFF doesn't answer", async () => {
+    const s = services();
+    s.grants = [grant({ status: "connected" })];
+    const w = await world(s, { draft: "drf_gone" });
+    const said = await signs(w) as { card?: boolean; takes?: string } | undefined;
+    expect(said?.card).toBe(true);
+    expect(said?.takes).toBeUndefined();
   });
 });
 

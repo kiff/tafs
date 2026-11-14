@@ -188,7 +188,10 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`; iOS fol
   approval card opens a new window, one fingerprint, and the call is made once more.
 - **Words.** While a window is held, Approve on an approval card reads "Approve" and KIFF's
   words go under it ("No fingerprint for the next 4 minutes", `GET /v1/me/window`), read
-  again after each approval and on coming back to the app.
+  again after each approval and on coming back to the app. tafs cloud marks each waiting card
+  with `signs.takes` ([chat.md](chat.md)): the words go only under a `"tap"` card, never under one
+  whose Approve takes the fingerprint (a Card signed with its tools or key). Android 97 draws
+  by it; iOS follows.
 - **Closing.** After 30 seconds in the background, and at once when the screen turns off, the
   app closes it (`POST /v1/me/window/{id}/close`, device-signed). KIFF ends it itself at sign-out,
   at its cap (15 minutes from the fingerprint), on a halt or a new approval key. Whether a window

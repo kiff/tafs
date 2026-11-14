@@ -368,6 +368,14 @@ sign (`?can=tools_and_cards,key_and_cards`). Without the proof, or when the conn
 under one fingerprint ([secure-connection.md](secure-connection.md)). With `card: false`, an app never draws the
 Card's limits as being signed now: they go under `words`.
 
+**Whether Approve is a tap is on the card too:** `signs.takes`, `"tap"` or `"fingerprint"`, from the key `decide`
+then asks with (`takesOf`). Connecting an app (`connect`) is a tap inside an open approval window. The key or added
+tools signed with their Card (`key_and_cards`, `tools_and_cards`) always take the fingerprint. A Card alone (`cards`)
+takes the key KIFF names for its draft (`confirm_key`, read within the same 1.5 s), and the fingerprint while KIFF
+names none. When KIFF's draft can't be read, `takes` is left out. The apps draw KIFF's window words ("No fingerprint
+for the next 4 minutes", [approvals.md](approvals.md#one-fingerprint-then-taps-the-approval-window)) only on a
+`"tap"` card: on any other, Approve asks for the fingerprint, and the card doesn't say otherwise.
+
 ## Coming back to a run at work
 
 When the owner leaves the chat or the app and comes back while a run works, the app

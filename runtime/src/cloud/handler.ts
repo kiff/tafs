@@ -52,7 +52,7 @@ import { appCalls, type GrantView, runningTool, setupGrants, setupView } from ".
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor } from "./approval.js";
+import { CARD_NEXT, ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor, takesOf } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 
@@ -3205,10 +3205,11 @@ async function markConnected(tenant: string, components: ThreadComponent[], deps
 const SIGNS_READ_MS = 1500;
 
 /**
- * Each approval card still waiting says what its fingerprint will sign (`signs: {card, words?}`), from the same rule
+ * Each approval card still waiting says what its fingerprint will sign (`signs: {card, words?, takes?}`), from the same rule
  * `decide` asks by (stepFor), so the apps draw the Card as being signed only when it is: on a card that signs the
  * connection alone, the Card goes under `words` ("Its Card: you approve it next"), an app's first connection's card too,
- * before its draft can exist. Read as the phone, with its
+ * before its draft can exist. `takes` says whether Approve is a tap inside an open approval window or always the
+ * fingerprint (takesOf), so the apps draw KIFF's window words only where they hold. Read as the phone, with its
  * Planque-Device-Signature and what it can sign (`?can=tools_and_cards,key_and_cards`); without the proof, or when
  * the connections can't be read in time, the cards are left as they were.
  */
@@ -3228,7 +3229,13 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, components: ThreadC
     const grant = grants.find((g) => g.id === card.grant);
     const draft = typeof card.draft === "string" && card.draft ? card.draft : undefined;
     const step = grant && stepFor(grant, { draft, can }, flags);
-    if (step) c.component = { ...card, signs: signsOf(step, draft, lang, grant) };
+    if (!step) continue;
+    // A Card alone takes the key KIFF names for its draft: read it, in the same time, or say nothing of the key.
+    const confirmKey = step === "cards" && draft
+      ? await within(draftInfo(bearer(event), draft, deps.fetch, deps.kiffBase), SIGNS_READ_MS).then((d) => d ? d.confirmKey ?? null : undefined).catch(() => undefined)
+      : null;
+    const takes = takesOf(step, confirmKey);
+    c.component = { ...card, signs: { ...signsOf(step, draft, lang, grant), ...(takes ? { takes } : {}) } };
   }
 }
 
