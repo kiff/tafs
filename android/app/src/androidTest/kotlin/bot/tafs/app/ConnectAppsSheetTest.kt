@@ -2,6 +2,7 @@ package bot.tafs.app
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import bot.tafs.app.app.AppState
@@ -161,7 +162,8 @@ class ConnectAppsSheetTest {
     assertEquals(0, count("Something newer"))
     rule.onNodeWithText("Remove unfinished connection").performClick()
     rule.onNodeWithText("No taf uses it, so nothing stops.").assertIsDisplayed()
-    rule.onAllNodes(hasText("Remove unfinished connection"))[1].performClick()
+    // The detail's action, then the ask's title and its button: the button is the last.
+    rule.onAllNodes(hasText("Remove unfinished connection")).onLast().performClick()
     rule.waitForIdle()
     assertEquals(listOf("g7"), disconnected)
   }
