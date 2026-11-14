@@ -63,7 +63,7 @@ Changes where a taf's results go and what wakes it, as a version of its dial: th
   When the dial gives a taf a schedule, or changes one of a taf whose schedule
   has no check yet (tafs_state), add check: the read tool that lists its open
   work (its arguments filtered to open requests where the tool allows), items
-  (the list's path its catalog's returns name: data.messages), cursor (a field that only grows, such as
+  (the path its catalog's returns name, e.g. data.messages), cursor (a field that only grows, such as
   created time or an increasing id), and first: "all" when the work already
   there is still to do. Each firing then reads that list without the AI: a
   quiet firing costs nothing, and the AI wakes only when there's work. Never a
