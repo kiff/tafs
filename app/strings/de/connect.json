@@ -106,7 +106,7 @@
   "connect.more_apps": "Mehr Apps",
   "connect.more_apps_could_not_listed": "Weitere Apps konnten nicht aufgelistet werden: {why}",
   "connect.no_confirmation_code": "Die Anmeldung bei {vendor} kam ohne Bestätigungscode zurück. Es wurde nichts verbunden.",
-  "connect.no_sign_in_link": "Die Verbindung kam mit Status {status} ohne Anmeldelink zurück. Es wurde nichts verbunden.",
+  "connect.no_sign_in_link": "{vendor} hat keine Anmeldeseite geöffnet, also wurde nichts verbunden. Versuch es noch einmal.",
   "connect.no_such_connection": "Es gibt keine Verbindung mit dieser ID.",
   "connect.no_taf": "Erstelle zuerst einen taf: Eine App wird verbunden, damit ein taf sie nutzt.",
   "connect.not_connected": "Nicht verbunden. {why}",

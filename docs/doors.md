@@ -79,7 +79,9 @@ deployment offers a door; WhatsApp is offered only once it's set up.
 
 A taf's results go to the places set for it (`PUT /v1/tafs/{id}/results`):
 - **`door_reply`:** the answer to the sender, through the door it came in on, on the same thread.
-  A taf that never set its places has only this.
+  A taf that never set its places has only this. A run that wrote nothing says "Done. I have
+  nothing to add." only when it answered; one cut off at its turn or cost cap says it couldn't
+  finish (`replyText` in `doors.ts`).
 - **`app`:** an alert to the phones of the people who manage the taf, never with the taf's words.
   It says who was answered, and through which door, only once the door's reply went out. While the
   reply waits for its retry, the alert waits too. If the reply is given up on, the alert says it

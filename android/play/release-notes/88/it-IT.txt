@@ -1,0 +1,3 @@
+- Un leggero tocco sulla barra in basso, Coach, le schede di un taf e «Metti da parte», come su ogni pulsante.
+- Mettere da parte una chat termina con un segnale: riuscito, o un avviso se non è andato a buon fine.
+- Il feedback aptico segue quello tattile del telefono; Impostazioni › Feedback aptico lo disattiva.

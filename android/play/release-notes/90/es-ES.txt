@@ -1,0 +1,3 @@
+- Activar los avisos ya no pide tu huella: una petición menos antes de tu primer taf.
+- Al conectar una app por primera vez, se indica que su Card viene después, así sabes que sigue una segunda aprobación.
+- Los toques vibran ahora en teléfonos que ajustan la respuesta táctil a su manera.

@@ -1,0 +1,3 @@
+- A connected app opens when you tap anywhere on its row.
+- With no taf yet, an app offers Ask Coach, where you make one.
+- After you set a Coach chat aside, Coach starts a new conversation.

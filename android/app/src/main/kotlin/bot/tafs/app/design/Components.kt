@@ -182,7 +182,7 @@ fun <T> Segmented(options: List<T>, selected: T, label: (T) -> String, onSelect:
           .heightIn(min = 32.dp)
           .clip(RoundedCornerShape(7.dp))
           .background(if (on) Theme.panel else Color.Transparent)
-          .clickable { onSelect(option) },
+          .clickable { if (!on) Haptics.tap(); onSelect(option) },
         contentAlignment = Alignment.Center,
       ) {
         // One line, whatever the language: a long label ("Configuración") shrinks to fit its segment rather than wrap.

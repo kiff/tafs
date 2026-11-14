@@ -1,0 +1,3 @@
+- «Precisa de si» indica o taf para o qual uma conversa do Coach está à espera, e desde quando.
+- Agora não? Deslize uma conversa do Coach em espera, ou toque em «Pôr de parte». Nada é aprovado nem enviado.
+- Duas ou mais à espera: «Pôr tudo de parte» termina-as de uma vez, após uma confirmação.

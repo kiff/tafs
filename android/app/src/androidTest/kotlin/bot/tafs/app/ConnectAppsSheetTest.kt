@@ -235,6 +235,8 @@ class ConnectAppsSheetTest {
     show(connect = true, tafs = emptyList())
     rule.onNodeWithText(bot.tafs.app.model.ConnectWords.NO_TAF).assertIsDisplayed()
     assertEquals(0, count(ConnectAppsWords.CONNECT))
+    // An app that can't be connected yet isn't a dead row: it offers Coach, where a taf is made (an audit, 14 Nov).
+    assertTrue(count(bot.tafs.app.model.Words.Coach.ask) > 0)
   }
 
   @Test fun withNoWayToConnectNoAppOffersConnect() {

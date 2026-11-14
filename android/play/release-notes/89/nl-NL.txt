@@ -1,0 +1,3 @@
+- Een gekoppelde app opent als je ergens op de rij tikt.
+- Zonder taf biedt een app 'Coach vragen' aan, waar je er een maakt.
+- Na het opzijzetten van een Coach-chat begint Coach een nieuw gesprek.

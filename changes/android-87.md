@@ -1,0 +1,1 @@
+- **Android 1.26.1 (87): Set aside sends one request per chat, and a connected app always opens.** A swipe sent the same request many times; and a connected app opened nothing when the read of its connections had failed, which now says why. Coach's Start no longer adds its own "Starting asks for your fingerprint once" (docs/android-app.md).

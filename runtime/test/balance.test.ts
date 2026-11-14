@@ -26,7 +26,8 @@ describe("the balance, in words", () => {
     expect(de.balance.words).toBe(`Company · 4 Plätze · ${fmt("de", 6850)} vom Ausgabenlimit (${new Intl.NumberFormat("de", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(80)}) verbraucht`);
     expect(de.balance.warning).toBe("85 % des Ausgabenlimits sind verbraucht. Am Limit warten deine tafs, bis ein Admin es erhöht.");
     const fr = balanceView(balance({ state: "waiting", why: "credits_used_up", meter_pct: 100, left: 0 }), "fr");
-    expect(fr.balance.warning).toBe(`Vos tafs attendent : les crédits de cette période et vos packs sont utilisés. Un pack leur permet de continuer, sinon ils reprennent au début de la prochaine période, le ${dec1("fr")}.`);
+    expect(fr.balance.warning).toBe(`Vos tafs attendent : les crédits de cette période et vos packs sont utilisés. Un pack leur permet de continuer, sinon ils reprennent au début de la prochaine période, le 1 déc.`);
+    expect(dec1("fr")).toBe("1 déc."); // its own period ends the sentence
     // Polish counts in its three forms; 1,240 written as Polish writes it.
     expect(balanceView(balance({ left: 1 }), "pl").balance.words).toBe("Solo · zostało 1 kredyt w tym okresie");
     expect(balanceView(balance({ left: 3 }), "pl").balance.words).toBe("Solo · zostało 3 kredyty w tym okresie");
@@ -260,5 +261,25 @@ describe("a chat refused for credits", () => {
     const r = await call(w, `/v1/tafs/${REFUNDS}/messages`, "POST", JSON.stringify({ text: "hi" }));
     expect(r.status).toBe(409);
     expect(r.body).toMatchObject({ code: "no_plan", words: "Choose a plan to start your tafs." });
+  });
+});
+
+// fr and pt abbreviate a month with a period ("1 déc.", "1 de dez."): a line that ends on the date ends with one, never "..".
+describe("a credits line that ends on a date", () => {
+  it("ends with one period, in every language and every branch", async () => {
+    const { LANGUAGES } = await import("../src/cloud/words/index.js");
+    for (const lang of LANGUAGES) {
+      // Every branch: no plan; the limit raised to a sum, raised to its ceiling, or the admin's; packs to buy, or the wait.
+      // The period starts again on 1 December.
+      const lines = [
+        waitingWords({ ...balance(), why: "no_plan" }, lang),
+        waitingWords({ ...balance({ kind: "company", can_raise: true, raise_to_cents: 5000 }), why: "limit_reached" }, lang),
+        waitingWords({ ...balance({ kind: "company", can_raise: true, raise_to_cents: 0 }), why: "limit_reached" }, lang),
+        waitingWords({ ...balance({ kind: "company", can_raise: false }), why: "limit_reached" }, lang),
+        waitingWords({ ...balance({ can_buy: { solo: false, packs: true } }), why: "credits_used_up" }, lang),
+        waitingWords({ ...balance({ can_buy: { solo: false, packs: false } }), why: "credits_used_up" }, lang),
+      ];
+      for (const line of lines) expect(line, lang).not.toMatch(/\.\.$/);
+    }
   });
 });

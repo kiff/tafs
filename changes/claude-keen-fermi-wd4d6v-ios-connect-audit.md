@@ -1,0 +1,1 @@
+- **iOS: Connect apps says "make a taf first" only where it applies.** The line heads Discover, never Yours, and an app's connections no longer say "Removing access takes its tools from that taf only" when no taf has a connection there (docs/ios-app.md).

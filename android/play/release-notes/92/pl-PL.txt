@@ -1,0 +1,2 @@
+- Dotknięcia wibrują na telefonach, gdzie wcześniej nie wibrowały, zgodnie z ustawieniem dotyku w telefonie.
+- Odłożenie czatu z Coachem zawsze potwierdzasz ty, nawet gdy Coach porusza się po aplikacji.

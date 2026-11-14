@@ -1,0 +1,1 @@
+- **Android 1.27.0 (88): haptics on the main actions.** A light tap on the bottom bar, Coach, a taf's tabs and Set aside, and a success or warning tick when a chat is set aside; it follows the phone's touch feedback (docs/android-app.md).

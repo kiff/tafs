@@ -1,0 +1,2 @@
+- Taps vibrate on phones where they didn't, following your phone's own touch setting.
+- Setting a Coach chat aside is always yours to confirm, even while Coach moves around the app.

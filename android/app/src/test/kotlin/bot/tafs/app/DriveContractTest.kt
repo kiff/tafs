@@ -135,6 +135,11 @@ class DriveContractTest {
       "views/UsageViews.kt" to "Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }",
       "views/DevicesView.kt" to "scope.launch { remove(device) } }, modifier = Modifier.confirms())",
       "views/ConnectAppsViews.kt" to "Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = state.connecting == null) { act(g) }",
+      // Setting a waiting Coach chat aside ends it: the button, the swipe, Set all aside and its ask's yes.
+      "views/YourStepViews.kt" to "OutlineButton(waiting.words.setAside, { onSetAside(waiting.session) }, Modifier.fillMaxWidth().confirms())",
+      "views/YourStepViews.kt" to "SwipeToDismissBox(swipe, modifier = Modifier.confirms(),",
+      "views/NeedsYouView.kt" to ".confirms().clickable(enabled = state.settingAside.isEmpty()) {",
+      "views/NeedsYouView.kt" to "onSetAside?.invoke(null) }, modifier = Modifier.confirms())",
     ).filter { (file, marked) -> marked !in File(sources, file).text() }
     assertTrue("Delete account, a pack's price, signing out another device and a connection's fix confirm: $onModifiers", onModifiers.isEmpty())
     // And everything ApprovalGate holds is inside it: the approvals, extra room, "Did this happen?", install, resume.

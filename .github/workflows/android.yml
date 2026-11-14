@@ -1,8 +1,10 @@
 name: Android
 
 # Every push and pull request that touches the Android app: build it and run its
-# tests, then run the screens' UI tests on an emulator. Run by hand, it also builds the
-# signed release bundle for Play (the release job), with the upload key from Secrets Manager.
+# tests, then run the screens' UI tests on an emulator. Run by hand, or on a merge to main
+# that raises versionCode, it also builds the signed release bundle for Play (the release
+# job), with the upload key from Secrets Manager, and, once PLAY_UPLOAD is on, uploads it to
+# Play's internal track with its release notes (play/play_internal.py; docs/android-app.md).
 
 on:
   push:
@@ -56,6 +58,11 @@ jobs:
           if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json; fi
       - name: Unit tests and the debug builds
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace
+      # The current versionCode's Play release notes, when there are any: all eight languages, each short enough.
+      - name: Play release notes, and the upload's own tests
+        run: |
+          python3 play/play_internal.py --check
+          python3 -m unittest play/test_play_internal.py
       # What the tests saw, when one fails.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
@@ -103,12 +110,36 @@ jobs:
           name: android-ui-test-results
           path: android/app/build/reports/androidTests
 
-  # The signed release bundle for Play's internal testing, only when run by hand. The upload key
-  # comes from Secrets Manager (the UPLOAD_KEY_SECRET_ID secret names it) through the deploy role,
-  # which may read that one secret, and is written to the runner's temporary directory for the build only. The bundle is
-  # kept one day, to upload to Play.
+  # Whether this push to main raised versionCode: a release, built and sent to Play's internal track.
+  version:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      raised: ${{ steps.compare.outputs.raised }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - id: compare
+        run: |
+          set -euo pipefail
+          code() { sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' | head -1; }
+          now=$(code < app/build.gradle.kts)
+          before=$(git show HEAD^:android/app/build.gradle.kts 2>/dev/null | code || true)
+          echo "versionCode ${before:-none} -> $now"
+          if [ -n "$before" ] && [ "$now" -gt "$before" ]; then echo "raised=true" >> "$GITHUB_OUTPUT"; else echo "raised=false" >> "$GITHUB_OUTPUT"; fi
+
+  # The signed release bundle for Play's internal testing, by hand or on a merge to main that raised versionCode. The
+  # upload key comes from Secrets Manager (the UPLOAD_KEY_SECRET_ID secret names it) through the deploy role, which may read
+  # that one secret, and is written to the runner's temporary directory for the build only. The bundle is kept one day.
   release:
-    if: github.event_name == 'workflow_dispatch'
+    # By hand, or on a merge to main that raised versionCode, once the tests and the UI tests passed.
+    needs: [test, ui, version]
+    if: >-
+      !cancelled() && needs.test.result == 'success' && needs.ui.result == 'success' &&
+      (github.event_name == 'workflow_dispatch' || needs.version.outputs.raised == 'true')
     # The owner approves each release here; the release role trusts only this environment.
     environment: android-release
     runs-on: ubuntu-latest
@@ -161,3 +192,19 @@ jobs:
           name: tafs-android-release-${{ github.run_number }}
           path: android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 1
+      # To Play's internal track, and only that track: signed in with Google's workload identity federation, a token that
+      # lasts the run, for the Play Developer API alone. No key file, and no secret holds a key. Off until PLAY_UPLOAD is on.
+      - id: google
+        if: vars.PLAY_UPLOAD == 'on'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.PLAY_WIF_PROVIDER }}
+          service_account: ${{ vars.PLAY_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+          create_credentials_file: false
+      - name: To Play's internal track
+        if: vars.PLAY_UPLOAD == 'on'
+        env:
+          PLAY_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+        run: python3 play/play_internal.py --upload app/build/outputs/bundle/release/app-release.aab

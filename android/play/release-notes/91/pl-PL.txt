@@ -1,0 +1,2 @@
+- Odłożony czat z Coachem nie wraca już jako otwarta rozmowa, na żadnym urządzeniu.
+- „Zapytaj Coacha” w Połącz aplikacje zawsze zaczyna nową rozmowę.

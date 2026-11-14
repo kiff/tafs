@@ -36,11 +36,48 @@ enum HomeSelection: Hashable {
     case overview
     /// The tafs' scheduled work to come (kiff/tafs#534), opened from the Overview.
     case calendar
+    /// The app's other screens, as sidebar items on an iPad's full width (the owner's layout).
+    case needsYou, record, usage, connectApps, account
+
+    /// The tab each screen is, so the app's tab and the sidebar agree.
+    var tab: Tab {
+        switch self {
+        case .needsYou: return .needsYou
+        case .record: return .record
+        case .account: return .account
+        default: return .tafs
+        }
+    }
+
+    /// The screen a tab opens in the sidebar; nil for the tafs, which keep what's open.
+    static func of(_ tab: Tab) -> HomeSelection? {
+        switch tab {
+        case .needsYou: return .needsYou
+        case .record: return .record
+        case .account: return .account
+        case .tafs: return nil
+        }
+    }
+
+    /// A screen of the app, not a taf: the list settling doesn't take it away.
+    var isScreen: Bool {
+        switch self {
+        case .taf, .held: return false
+        default: return true
+        }
+    }
 }
 
 /// The sidebar (Theme.raised): the overview, the calls waiting for the owner, and the tafs with a line on each. The selected one opens beside it.
 struct HomeSplitView: View {
     @EnvironmentObject private var model: AppModel
+    /// While Coach drives the app, its button says so; a tap on it stops the drive.
+    @ObservedObject private var drive = DriveSession.shared
+    /// The app's tab, when the sidebar is the whole app's (an iPad's full width): kept in step
+    /// with the selection, so a notification or a drive that opens a tab opens it here.
+    var tab: Binding<Tab>? = nil
+    /// Coach's button at the sidebar's foot, for those who may use it.
+    var coachAvailable = false
     @State private var selection: HomeSelection?
     /// What the app opened on by itself, and whether the owner has chosen since: until they
     /// do, the first taf in the list is the one open (the 859 test).
@@ -56,8 +93,23 @@ struct HomeSplitView: View {
         NavigationSplitView {
             sidebar
         } detail: {
+            // Account brings its own stack; Record gets one, as on the phone. Both are built
+            // again on each pick, not kept as a tab is.
+            if selection == .account {
+                SettingsView()
+            } else if selection == .record {
+                NavigationStack { RecordView() }
+            } else {
             NavigationStack {
                 switch selection {
+                case .needsYou?:
+                    NeedsYouView()
+                case .usage?:
+                    UsageView()
+                case .connectApps?:
+                    ConnectAppsView()
+                case .account?, .record?:
+                    EmptyView()
                 case .taf(let id)?, .held(_, let id)?:
                     if let tafID = model.tafOfTrialChat(id) { TrialScreen(chatID: id, tafID: tafID) } else { TafDetailView(tafID: id) }
                 case .haltAll?:
@@ -98,6 +150,7 @@ struct HomeSplitView: View {
             // A new selection starts its own stack: nothing pushed for the last one stays.
             .id(selection)
             .environment(\.sidebarSelects, true)
+            }
         }
         .navigationSplitViewStyle(.balanced)
         .sheet(item: $openRecipe) { recipe in
@@ -118,6 +171,22 @@ struct HomeSplitView: View {
         .onDisappear { model.sidebarShown = false }
         .onChange(of: selection) { s in
             if s != opened { chosen = true }
+            // The app's tab follows: a taf is the Tafs tab, each screen its own.
+            if let tab, let s, tab.wrappedValue != s.tab { tab.wrappedValue = s.tab }
+        }
+        // A tab opened from elsewhere (a notification, a drive) opens its screen here.
+        .onChange(of: tab?.wrappedValue) { t in
+            guard let t else { return }
+            // The tafs (⌘1) from a screen: back to the taf the app opened on. From a taf, nothing moves.
+            if t == .tafs {
+                guard selection?.tab != .tafs, let back = opened ?? Self.opening(model.listedTafs, screenshot: false) else { return }
+                chosen = true
+                selection = back
+                return
+            }
+            guard let screen = HomeSelection.of(t), selection != screen else { return }
+            chosen = true
+            selection = screen
         }
         // "See it on…" in Setup selects the taf it made (kiff/tafs#96).
         .onChange(of: model.requestedTaf) { id in
@@ -134,10 +203,13 @@ struct HomeSplitView: View {
             if chosen, let selected = selection {
                 switch selected {
                 case .taf(let id), .held(_, let id): if model.taf(id) != nil { return }
-                case .haltAll, .overview, .calendar: return
+                default: return
                 }
             }
-            opened = Self.opening(model.listedTafs, screenshot: Screenshots.enabled && !Screenshots.listSettlesOnReturn)
+            // As one sidebar for the whole app, the tafs list is what opens first (the owner's layout); a screenshot
+            // that asks for a screen still opens Refunds.
+            let onList = tab != nil && !(Screenshots.enabled && Screenshots.screen != nil)
+            opened = onList ? .overview : Self.opening(model.listedTafs, screenshot: Screenshots.enabled && !Screenshots.listSettlesOnReturn)
             chosen = false
             selection = opened
         }
@@ -166,14 +238,37 @@ struct HomeSplitView: View {
         return (refunds ?? listed.first?.id).map { .taf($0) }
     }
 
+    /// The signed-in account's items: KIFF mode, or its screenshot over the sample (`-signedIn`).
+    private var signedInLayout: Bool { model.mode == .kiff || Screenshots.signedIn }
+
     private var sidebar: some View {
         // Only the owner's taps write through this binding, so each one is a choice, a tap on
         // the taf already open too: the list settling later doesn't take them away from it.
-        List(selection: Binding(get: { selection }, set: { chosen = true; selection = $0 })) {
-            if model.mode == .kiff {
+        // A new item chosen ticks (Haptics).
+        List(selection: Binding(get: { selection }, set: { chosen = true; Haptics.select(selection, $0); selection = $0 })) {
+            // The app's own mark at the top, as its header (the owner's layout).
+            // As one sidebar for the whole app, the mascot and "tafs" is the way to the tafs list (the owner's
+            // layout): every taf is there; beside it, only those relevant now.
+            if tab != nil {
+                NavigationLink(value: HomeSelection.overview) { brand.modifier(drives(Words.App.name, .overview)) }
+                    .listRowBackground(Color.clear)
+            }
+            if tab != nil {
+                // The app's screens, each an item, opened beside the sidebar.
                 Section {
-                    // Today across the tafs, one line each.
-                    if !model.tafs.isEmpty {
+                    screenItem(.needsYou, Words.NeedsYou.title, "bell", badge: model.needsYouCount)
+                    screenItem(.record, Words.Record.title, "list.bullet")
+                    if signedInLayout {
+                        screenItem(.calendar, Words.Calendar.heading, "calendar")
+                        screenItem(.usage, UsageView.title, "chart.bar")
+                        screenItem(.connectApps, ConnectAppsView.title, "app.connected.to.app.below.fill")
+                    }
+                }
+            }
+            if signedInLayout {
+                Section {
+                    // Today across the tafs, one line each: as one sidebar for the whole app, the mascot opens it.
+                    if tab == nil, !model.tafs.isEmpty {
                         NavigationLink(value: HomeSelection.overview) {
                             Label(Words.Home.Overview.title, systemImage: "square.grid.2x2").scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
                         }
@@ -194,10 +289,12 @@ struct HomeSplitView: View {
                     }
                 } header: { Eyebrow(text: Words.NeedsYou.title, color: Theme.amber) }
             }
-            let sections = model.tafSections
+            let all = model.tafSections
+            // As one sidebar for the whole app, only the tafs relevant now; all of them are in the list behind the mascot.
+            let sections = tab == nil ? all : (own: all.own.filter(model.relevantNow), shared: all.shared.filter(model.relevantNow))
             // Theirs, then the ones shared with them (kiff/tafs#306); someone with only shared
             // tafs sees just those.
-            if !sections.own.isEmpty || sections.shared.isEmpty {
+            if tab == nil ? (!all.own.isEmpty || all.shared.isEmpty) : (!sections.own.isEmpty || !model.settingUp.isEmpty || model.tafs.isEmpty) {
                 Section {
                     ForEach(sections.own) { taf in tafLinks(taf) }
                     // A taf being set up, among the tafs: by its name, with no state (docs/tafs.md).
@@ -288,7 +385,31 @@ struct HomeSplitView: View {
         .background(Theme.raised.ignoresSafeArea())
         .refreshable { await model.refresh() }
         .safeAreaInset(edge: .bottom) { footer }
-        .navigationTitle(Words.App.name)
+        .navigationTitle(tab == nil ? Words.App.name : "")
+        .navigationBarTitleDisplayMode(tab == nil ? .automatic : .inline)
+    }
+
+    /// The mascot and the app's name, the sidebar's header.
+    private var brand: some View {
+        HStack(spacing: 10) {
+            Mascot(size: 34)
+            Text(Words.App.name).scaledFont(22, weight: .bold, design: .rounded, relativeTo: .title2).foregroundColor(Theme.ink)
+        }
+        .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+        .accessibilityIdentifier("sidebar.brand")
+    }
+
+    /// One of the app's screens as a sidebar item, with its count where it has one.
+    private func screenItem(_ screen: HomeSelection, _ title: String, _ icon: String, badge: Int = 0) -> some View {
+        NavigationLink(value: screen) {
+            // In the drive's registry, as every sidebar row is (docs/drive.md).
+            Label(title, systemImage: icon).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
+                .modifier(drives(title, screen))
+        }
+        .badge(badge)
+        .accessibilityIdentifier("sidebar." + title)
     }
 
     /// A new taf starts in Coach mode, a conversation (kiff/tafs#138, item 59). The sample has
@@ -384,19 +505,63 @@ struct HomeSplitView: View {
                 Button { startNewTaf() } label: { Label(Words.Home.startNewTaf, systemImage: "plus") }
                     .buttonStyle(PrimaryButtonStyle())
             }
-            // The account this is, always in sight (the 870 test); its settings are the
-            // rail's Account.
-            if let account = model.accountLabel {
-                Text(account).scaledFont(12).foregroundColor(Theme.dim).lineLimit(1)
-                    .frame(maxWidth: .infinity)
-            }
-            // KIFF can't be reached just now (the 930 test): under the account's name, with
-            // the status page; nothing when all is well.
+            // KIFF can't be reached just now (the 930 test), with the status page; nothing when
+            // all is well.
             if let words = model.unreachable { UnreachableLine(words: words, retrying: model.retryingRefresh) }
             // The plan, only when it needs the owner: a trial ended or ending, tasks nearly gone.
             PlanLine()
+            if tab != nil {
+                // Coach, then the account just under it: always in sight, never behind "…".
+                if coachAvailable { coachButton }
+                accountButton
+            } else if let account = model.accountLabel {
+                // The account this is, always in sight (the 870 test).
+                Text(account).scaledFont(12).foregroundColor(Theme.dim).lineLimit(1)
+                    .frame(maxWidth: .infinity)
+            }
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
         .background(Theme.raised)
+    }
+
+    /// Coach at the sidebar's foot: ink fill, as on the phone's bar; a tap while Coach drives stops it.
+    private var coachButton: some View {
+        // Its own style, so it taps here, as the sidebar's buttons do (Haptics).
+        Button { Haptics.tap(); model.openCoach() } label: {
+            Label(drive.isOn ? Words.Coach.driving : Words.Coach.title, systemImage: drive.isOn ? "sparkles" : "sparkle")
+                .scaledFont(15, weight: .semibold).lineLimit(1)
+                .frame(maxWidth: .infinity, minHeight: 44)
+                .foregroundColor(Theme.onFill)
+                .background(drive.isOn ? Theme.amber : Theme.ink)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        // In the drive's registry with no action: Coach can't use it, and the person's tap on it stops the drive.
+        .drivable(Words.Coach.title, id: DriveSession.coachButtonID)
+        .accessibilityLabel(Words.Coach.coachMode)
+        .accessibilityIdentifier("bar.Coach")
+    }
+
+    /// The account, who is signed in, at the very foot: it opens Account beside the sidebar.
+    private var accountButton: some View {
+        Button { chosen = true; selection = .account } label: {
+            HStack(spacing: 10) {
+                Image(systemName: selection == .account ? "person.crop.circle.fill" : "person.crop.circle")
+                    .scaledFont(20).foregroundColor(selection == .account ? Theme.amberText : Theme.soft)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(Words.Settings.title).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink)
+                    if let account = model.accountLabel {
+                        Text(account).scaledFont(12).foregroundColor(Theme.dim).lineLimit(1)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.drivablePlain)
+        .driveWords(Words.Settings.title)
+        .accessibilityLabel(model.accountLabel.map { Words.Settings.accountNamed(account: "\($0)") } ?? Words.Settings.title)
+        .accessibilityIdentifier("bar.Account")
     }
 }
