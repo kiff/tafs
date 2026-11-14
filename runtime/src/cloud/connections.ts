@@ -193,7 +193,7 @@ export async function endConnections(fetchFn: Fetch, base: string, tenant: strin
 }
 
 /**
- * A KIFF agent id with the suffix a taf's agent gets when it's made ("inbox-summary-iy6yt4fc"): eight letters and
+ * A KIFF agent id with the suffix a taf's agent gets when it's made ("news-digest-k3f9x2ab"): eight letters and
  * digits with a digit among them, so an ordinary word ("follow-up-invoices") is never taken for one.
  */
 const SUFFIXED = /^(.+)-([a-z0-9]{8})$/;
@@ -211,8 +211,8 @@ export function otherForm(a: string, b: string): boolean {
  * The agents a taf's connections were asked under. Its KIFF agent; and for a taf whose agent and connections were
  * named apart (made before its agent carried the suffix its connections were asked under, or the reverse), the other
  * form of the same name, when every connection under it was asked for this same taf (its `agent_name`), and never a
- * live taf's own. 13 Nov: a taf on `inbox-summary` was removed and its Gmail connection, asked under
- * `inbox-summary-iy6yt4fc` for the same taf, was never ended.
+ * live taf's own. 13 Nov: a taf on `news-digest` (a made-up name) was removed and its connection, asked under
+ * `news-digest-k3f9x2ab` for the same taf, was never ended.
  */
 export function connectionAgents(kiffAgent: string, tafName: string, conns: AccountConnection[], live: Set<string>): string[] {
   const out = [kiffAgent];
@@ -227,12 +227,17 @@ export function connectionAgents(kiffAgent: string, tafName: string, conns: Acco
 }
 
 /**
- * Whether an agent is a removed taf's: KIFF reports it archived for the account, or it is the other form of an
- * archived agent's name; and no live taf runs as it. A draft, an approval or a hand-over onto it is refused.
+ * Whether an agent is a removed taf's: KIFF reports it archived for the account; or it is the other form of an
+ * archived agent's name and was asked for on or before that agent's archive day (`askedOn`, YYYY-MM-DD or an ISO
+ * time), so a new taf re-made under the same name, its draft agent not live yet, is never taken for the removed one.
+ * Never one a live taf runs as. A draft, an approval or a hand-over onto it is refused.
  */
-export function removedAgent(agent: string, archived: Set<string>, live: Set<string>): boolean {
+export function removedAgent(agent: string, archived: Map<string, string>, live: Set<string>, askedOn?: string): boolean {
   if (!agent || live.has(agent)) return false;
-  return archived.has(agent) || [...archived].some((k) => otherForm(agent, k));
+  if (archived.has(agent)) return true;
+  const day = askedOn?.slice(0, 10);
+  if (!day) return false;
+  return [...archived].some(([k, at]) => otherForm(agent, k) && typeof at === "string" && day <= at.slice(0, 10));
 }
 
 /**
@@ -241,12 +246,12 @@ export function removedAgent(agent: string, archived: Set<string>, live: Set<str
  * name), and never one asked yesterday or today. An agent tafs cloud can't show was a taf of this account (one made
  * elsewhere, or a draft whose taf isn't made yet) is never swept.
  */
-export function leftoverAgents(conns: AccountConnection[], live: Set<string>, archived: Set<string>, now: Date): string[] {
+export function leftoverAgents(conns: AccountConnection[], live: Set<string>, archived: Map<string, string>, now: Date): string[] {
   const before = new Date(now.getTime() - 24 * 3600_000).toISOString().slice(0, 10);
   const byAgent = new Map<string, AccountConnection[]>();
   for (const c of conns) byAgent.set(c.agent, [...(byAgent.get(c.agent) ?? []), c]);
   return [...byAgent.entries()]
-    .filter(([a, cs]) => removedAgent(a, archived, live) && ![...live].some((k) => otherForm(a, k))
-      && cs.every((c) => c.since !== undefined && c.since < before))
+    .filter(([a, cs]) => ![...live].some((k) => otherForm(a, k))
+      && cs.every((c) => c.since !== undefined && c.since < before && removedAgent(a, archived, live, c.since)))
     .map(([a]) => a);
 }

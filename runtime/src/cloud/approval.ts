@@ -431,7 +431,7 @@ export interface DecideContext {
    * archived agent's name, and no live taf runs as it. Unset, or unable to read, it says no: nothing is refused on a
    * read that failed.
    */
-  removedAgent?: (agent: string) => Promise<boolean>;
+  removedAgent?: (agent: string, askedOn?: string) => Promise<boolean>;
 }
 
 /**
@@ -443,7 +443,8 @@ export interface DecideContext {
 async function agentRefusal(ask: ApprovalAsk, grant: ApprovalGrant, vendor: string, ctx: DecideContext): Promise<Decision | undefined> {
   const W = approvalWords(ctx.lang);
   const agent = typeof grant.request.agent === "string" ? grant.request.agent : "";
-  if (agent && ctx.removedAgent && await ctx.removedAgent(agent).catch(() => false)) {
+  const askedOn = typeof (grant.request as { created_at?: unknown }).created_at === "string" ? (grant.request as { created_at: string }).created_at : undefined;
+  if (agent && ctx.removedAgent && await ctx.removedAgent(agent, askedOn).catch(() => false)) {
     return { outcome: "answered", note: W.removedTafsConnection(vendor),
       answer: `failed: this ${vendor} connection was asked for a taf that was removed, so it can't be approved for another; request ${vendor} again for this taf (reuse its sign-in with a new request), never this grant` };
   }

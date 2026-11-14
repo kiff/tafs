@@ -1840,6 +1840,18 @@ describe("removing a taf", () => {
     expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/agents/rae/end", "https://planque.test/v1/accounts/t_acme/agents/rae-k3f9x2ab/end"]);
   });
 
+  // A removal that can't read which connections are the taf's fails its connections step, never reads as done.
+  it("fails the removal's connections step when the account's connections can't be read", async () => {
+    const w = world();
+    const d = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/connections")) return new Response("down", { status: 503 });
+      if (url.startsWith("https://planque.test/")) return new Response(JSON.stringify({ ended: [], kept: [] }), { status: 200 });
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] };
+    const r = JSON.parse((await handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana" } }, d)).body);
+    expect(r).toMatchObject({ done: false, failed: ["connections"] });
+  });
+
   // The leftovers from before: on a person's read of the list, at most hourly, connections no live taf uses, asked
   // before yesterday, end. A live taf's (or the other form of its name), and one asked today, stay.
   it("sweeps only removed tafs' connections, hourly: archived agents and their other form, never another agent's or yesterday's", async () => {
@@ -1848,7 +1860,7 @@ describe("removing a taf", () => {
     w.now = new Date("2026-11-14T01:00:00Z");
     const conns = [
       // The other form of an archived agent's name, asked two days ago: ended.
-      { agent: "gone-iy6yt4fc", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-12" },
+      { agent: "gone-p4q8r2s7", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-12" },
       // Archived in KIFF itself: ended.
       { agent: "old-taf", vendor: "Stripe", kind: "provider", status: "connected", since: "2026-11-10" },
       { agent: "rae", vendor: "Qonto", kind: "key", status: "connected", since: "2026-11-01" },
@@ -1858,12 +1870,12 @@ describe("removing a taf", () => {
       // Not archived in KIFF, and no taf of this account: an agent tafs cloud can't show was a taf, never swept.
       { agent: "stripe-refunds", vendor: "Stripe", kind: "provider", status: "connected", since: "2026-11-01" },
       { agent: "my-own-agent", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-01" },
-      { agent: "inbox-summary-iy6yt4fc", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-01" },
+      { agent: "news-digest-k3f9x2ab", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-01" },
     ];
     const archived = [{ id: "gone", archived_at: "2026-11-12T20:00:00Z" }, { id: "old-taf", archived_at: "2026-11-11T20:00:00Z" },
       { id: "fresh-gone", archived_at: "2026-11-13T20:00:00Z" }, { id: "my-own-agent" }];
     const claimed = new Set<string>();
-    const coach = { once: async (k: string) => (claimed.has(k) ? false : (claimed.add(k), true)), get: async () => undefined, put: async () => {}, append: async () => {}, take: async () => [] } as unknown as Deps["coach"];
+    const coach = { once: async (k: string) => (claimed.has(k) ? false : (claimed.add(k), true)), get: async (k: string) => (claimed.has(k) ? true : undefined), put: async () => {}, append: async () => {}, take: async () => [] } as unknown as Deps["coach"];
     const d = { ...depsOf(w), coach, planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
       if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: conns }), { status: 200 });
       if (url.endsWith("/v1/me/agents")) return new Response(JSON.stringify({ agents: archived }), { status: 200 });
@@ -1871,10 +1883,20 @@ describe("removing a taf", () => {
       return depsOf(w).fetch!(url, init);
     }) as Deps["fetch"] };
     const list = () => handle({ rawPath: "/v1/tafs", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, d);
+    // Until it's turned on, the sweep ends nothing: a dry run, counted in the log.
     expect((await list()).statusCode).toBe(200);
-    expect(asked.sort()).toEqual(["https://planque.test/v1/accounts/t_acme/agents/gone-iy6yt4fc/end", "https://planque.test/v1/accounts/t_acme/agents/old-taf/end"]);
+    expect(asked).toEqual([]);
+    claimed.clear();
+    process.env.TAFS_SWEEP_LEFTOVERS = "on";
+    try {
+      expect((await list()).statusCode).toBe(200);
+    } finally {
+      delete process.env.TAFS_SWEEP_LEFTOVERS;
+    }
+    expect(asked.sort()).toEqual(["https://planque.test/v1/accounts/t_acme/agents/gone-p4q8r2s7/end", "https://planque.test/v1/accounts/t_acme/agents/old-taf/end"]);
     // Within the hour, it doesn't look again.
-    await list();
+    process.env.TAFS_SWEEP_LEFTOVERS = "on";
+    try { await list(); } finally { delete process.env.TAFS_SWEEP_LEFTOVERS; }
     expect(asked).toHaveLength(2);
   });
 

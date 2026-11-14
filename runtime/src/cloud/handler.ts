@@ -2256,7 +2256,8 @@ export function removalWords(r: { ended: Array<{ vendor: string }>; kept: Array<
 async function endTafConnections(taf: Taf, me: { tenantID: string }, token: string, deps: Deps, preview = false): Promise<(EndedConnections & { agents: number }) | null> {
   const base = deps.planqueBase!;
   const [conns, tafs] = await Promise.all([
-    accountConnections(deps.fetch ?? fetch, base, me.tenantID, token).catch(() => [] as AccountConnection[]),
+    // The confirmation's words go on without it; a removal that can't read them fails here, never reads as done.
+    preview ? accountConnections(deps.fetch ?? fetch, base, me.tenantID, token).catch(() => [] as AccountConnection[]) : accountConnections(deps.fetch ?? fetch, base, me.tenantID, token),
     deps.tafs.list(me.tenantID),
   ]);
   const live = new Set(tafs.filter((t) => t.id !== taf.id && !t.removing && t.kiffAgent).map((t) => t.kiffAgent));
@@ -2283,11 +2284,19 @@ const SWEEP_EVERY_MS = 3600_000;
 async function sweepLeftovers(me: { tenantID: string }, token: string, deps: Deps): Promise<void> {
   if (!deps.planqueBase || !deps.coach || !token) return;
   const now = deps.now?.() ?? new Date();
-  if (!await deps.coach.once(`connections_sweep#${me.tenantID}`, new Date(now.getTime() + SWEEP_EVERY_MS))) return;
+  const key = `connections_sweep#${me.tenantID}`;
+  if (await deps.coach.get(key).catch(() => undefined)) return;
+  // Read first: the hour is claimed only once there's something it can act on.
   const [conns, tafs, archived] = await Promise.all([accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, token),
     deps.tafs.list(me.tenantID), readArchived(token, deps.fetch, deps.kiffBase)]);
+  if (!await deps.coach.once(key, new Date(now.getTime() + SWEEP_EVERY_MS))) return;
   const live = new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent));
-  const agents = leftoverAgents(conns, live, new Set(archived.keys()), now);
+  const agents = leftoverAgents(conns, live, archived, now);
+  // Until it's turned on (TAFS_SWEEP_LEFTOVERS=on), it ends nothing: it logs what it would end, for the owner to read first.
+  if (process.env.TAFS_SWEEP_LEFTOVERS !== "on") {
+    if (agents.length) console.log(JSON.stringify({ event: "connections_sweep", dry_run: true, agents: agents.length }));
+    return;
+  }
   let ended = 0;
   for (const agent of agents) {
     const r = await endConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, agent, token).catch(() => null);
@@ -3614,9 +3623,9 @@ function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     // The prompt names the taf being set up, by its name: the card is Coach's, so not `taf`'s.
     tafName: async (agent) => (agent ? (await deps.tafs.list(me.tenantID)).find((t) => t.kiffAgent === agent)?.name : undefined),
     // A removed taf's agent is never approved over (connections.ts removedAgent), read with the person's session.
-    removedAgent: async (agent) => {
+    removedAgent: async (agent, askedOn) => {
       const [archived, tafs] = await Promise.all([readArchived(bearer(event), deps.fetch, deps.kiffBase), deps.tafs.list(me.tenantID)]);
-      return removedAgent(agent, new Set(archived.keys()), new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent)));
+      return removedAgent(agent, archived, new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent)), askedOn);
     },
   };
 }

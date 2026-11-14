@@ -296,9 +296,9 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
   // agent's name) is never approved again, and a Card drafted for another agent than the grant's is never signed.
   it("refuses to approve over a removed taf's connection, or a Card for another taf than the grant's, signing nothing", async () => {
     const s = services();
-    s.agents = [{ id: "inbox-summary", archived_at: "2026-11-13T20:26:00Z" }, { id: "refunds-x" }];
-    s.grants = [grant({ status: "connected" }, { agent: "inbox-summary-iy6yt4fc" })];
-    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "inbox-summary-iy6yt4fc" };
+    s.agents = [{ id: "news-digest", archived_at: "2026-11-13T20:26:00Z" }, { id: "refunds-x" }];
+    s.grants = [grant({ status: "connected" }, { agent: "news-digest-k3f9x2ab", created_at: "2026-11-13T20:10:00Z" })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "news-digest-k3f9x2ab" };
     const removed = await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
     expect(removed.body).toMatchObject({ outcome: "answered", note: wordsIn("en").approval_removed_tafs_connection("Stripe") });
     expect(String(removed.body.answer)).toContain("asked for a taf that was removed");
@@ -311,6 +311,13 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const other = await (await world(t, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
     expect(other.body).toMatchObject({ outcome: "answered", note: wordsIn("en").approval_other_tafs_connection("Stripe") });
     expect(other.body).not.toHaveProperty("ask");
+
+    // A taf re-made under the removed one's name: its new agent's connection, asked after the archive day, is its own.
+    const r = services();
+    r.agents = [{ id: "news-digest", archived_at: "2026-11-13T20:26:00Z" }];
+    r.grants = [grant({ status: "connected" }, { agent: "news-digest-a1b2c3d4", created_at: "2026-11-14T09:00:00Z" })];
+    r.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "news-digest-a1b2c3d4" };
+    expect((await (await world(r, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "sign", ask: { step: "cards" } });
 
     // A live taf on the other form of an archived name is its own: approved as before.
     const u = services();
