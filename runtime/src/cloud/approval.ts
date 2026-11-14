@@ -496,6 +496,18 @@ export function stepFor(grant: ApprovalGrant, ask: { draft?: string; can?: strin
 }
 
 /**
+ * Whether Approve on the card is a tap inside an open approval window or always the fingerprint, from the key `decide`
+ * then asks with: connecting an app takes the window; the key or added tools signed with their Card take the approval
+ * key; a Card alone takes the key KIFF names for its draft (`confirm_key`), the fingerprint until it names one. Undefined
+ * when a Card's key isn't known (KIFF's draft wasn't read): the apps then say nothing of the window on that card.
+ */
+export function takesOf(step: SignStep, confirmKey?: "window" | "critical" | null): "tap" | "fingerprint" | undefined {
+  if (step === "connect") return "tap";
+  if (step === "cards") return confirmKey === undefined ? undefined : confirmKey === "window" ? "tap" : "fingerprint";
+  return "fingerprint";
+}
+
+/**
  * What an approval card's fingerprint will sign, for the apps to draw before Approve: the Card, or the connection alone.
  * The connection alone says the Card comes next (`words`) when the card carries the Card's draft, or when it's an app's
  * first connection, before its tools: a Card always follows that one (its draft can only be made over the tools the
