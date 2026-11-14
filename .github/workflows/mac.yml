@@ -1,0 +1,89 @@
+name: Mac
+
+# The Mac app (macOS 13 and later, docs/mac-app.md): the iPhone and iPad app
+# built with Mac Catalyst. This builds it and runs the unit tests on a Mac.
+#
+# A macOS runner is scarce, so it runs only when it has to:
+# - a pull request that changes what is specific to the Mac: the project, this
+#   workflow, or a file that names the Mac build (macCatalyst, ThisDevice.isMac);
+# - every night on main, which catches an iPhone or iPad change that stops the
+#   Mac build compiling;
+# - by hand.
+# A draft pull request runs it too: a Mac build can't be checked on a machine
+# without Xcode, so this is where a change to it is tried.
+
+on:
+  pull_request:
+    paths: ["ios/**", "app/strings/**", ".github/workflows/mac.yml"]
+  schedule:
+    - cron: "43 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: mac-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      mac: ${{ steps.diff.outputs.mac }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - id: diff
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.sha }}
+        run: |
+          if [ "$EVENT" != "pull_request" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "mac=true" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          # The files that name the Mac build, as they are in this change.
+          named=$(git grep -lE 'macCatalyst|ThisDevice\.isMac' -- ios || true)
+          changed=$(git diff --name-only "$BASE" "$HEAD")
+          mac=false
+          if echo "$changed" | grep -Eq '^(ios/project\.yml|\.github/workflows/mac\.yml)$'; then mac=true; fi
+          if [ -n "$named" ] && echo "$changed" | grep -Fxq -f <(echo "$named"); then mac=true; fi
+          echo "mac=$mac" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: changes
+    if: needs.changes.outputs.mac == 'true'
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      # Unsigned: the Mac's signing is set up at release. The linker still
+      # signs the binary ad hoc, which is what lets the tests run it.
+      - name: Build for the Mac
+        run: |
+          cd ios
+          xcodebuild -version
+          xcodebuild build-for-testing \
+            -project Tafs.xcodeproj -scheme Tafs \
+            -destination "platform=macOS,variant=Mac Catalyst" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Unit tests on the Mac
+        run: |
+          cd ios
+          xcodebuild test-without-building \
+            -project Tafs.xcodeproj -scheme Tafs \
+            -destination "platform=macOS,variant=Mac Catalyst" \
+            -only-testing:TafsTests \
+            CODE_SIGNING_ALLOWED=NO

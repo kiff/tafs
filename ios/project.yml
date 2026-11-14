@@ -16,6 +16,10 @@ settings:
     CURRENT_PROJECT_VERSION: "1"
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
+    # The Mac (macOS 13 and later, docs/mac-app.md): the same app built with Mac Catalyst,
+    # in the iPad's layout. The bundle ids stay the iPhone's and iPad's, with no "maccatalyst." prefix.
+    SUPPORTS_MACCATALYST: YES
+    DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO
 # A KIFF receipt is checked on the device (kiff/tafs#167): recovering its signer needs
 # secp256k1, which CryptoKit doesn't have. Pinned to an exact release; only its C library
 # is used, since P256K's recovery initializer stops the app on a bad signature.
@@ -29,7 +33,9 @@ targets:
     platform: iOS
     sources: [Tafs, Shared]
     dependencies:
+      # iPhone and iPad only: a Mac has no lock screen Live Activity to draw.
       - target: TafsWidgets
+        platformFilter: iOS
       # Fills in a hold's notification from KIFF (kiff/tafs#210).
       - target: TafsNotify
       - package: swift-secp256k1
@@ -114,6 +120,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.widgets
+        # Not built for the Mac (the app's dependency on it is iPhone and iPad only).
+        SUPPORTS_MACCATALYST: NO
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_WIDGETS)
         # As the app: an extension supports every device its app does.
         TARGETED_DEVICE_FAMILY: "1,2"
