@@ -1,0 +1,1 @@
+- Une carte d'approbation ne dit plus « sans empreinte » quand l'approbation en demande une.

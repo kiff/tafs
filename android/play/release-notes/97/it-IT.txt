@@ -1,0 +1,1 @@
+- Una scheda di approvazione non dice più «senza impronta» quando l'approvazione la chiede.

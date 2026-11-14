@@ -3480,8 +3480,10 @@ class AppModel(
     // An open card whose grant planque doesn't list yet: tafs cloud can write the card as the grant is made, and the card would
     // say "Reading what it asks for…" until another tab read the grants. Read them again a few seconds apart until planque has it.
     val unread = _state.value.coachComponents.filter { it.answer == null && (it.component.type == "approval" || it.component.type == "sign_in") }
-      .mapNotNull { it.component.grant }.filter { g -> _state.value.grants.none { it.id == g } && grantsFollowed.add(g) }
-    if (unread.isNotEmpty() && _state.value.planqueReady) scope.launch {
+      .mapNotNull { it.component.grant }.filter { g -> _state.value.grants.none { it.id == g } }
+      // Marked followed only once a re-read starts: a read planque refused leaves them for the next thread read.
+      .takeIf { _state.value.planqueReady }.orEmpty().filter { grantsFollowed.add(it) }
+    if (unread.isNotEmpty()) scope.launch {
       repeat(SET_UP_READS) {
         delay(SET_UP_READ_MS)
         if (generation != accountGeneration) return@launch

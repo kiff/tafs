@@ -1046,6 +1046,9 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
 - **An approval card whose grant planque doesn't list yet** ("Reading what it asks for…") reads the grants again, three
   times, three seconds apart, until planque lists it: tafs cloud can write the card as the grant is made (`readApprovals`,
   Android 1.27.8). Before, it waited for another tab to read them.
+- **The approval window's words** ("No fingerprint for the next 4 minutes") and Approve without the fingerprint named
+  go only on a card tafs cloud marks a tap (`signs.takes: "tap"`, `windowWordsFor`): a card that takes the fingerprint, or
+  says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9).
 - **An app's first sign-in card** has no draft yet (a Card is drafted over the tools that sign-in brings), and still draws
   tafs cloud's `signs.words` ("Its Card: you approve it next"), so the owner knows a second approval follows (Android 1.27.2).
 - **Coach's Start is one screen** (`StartScreen`): tafs cloud's line, Coach's Cards in KIFF's words, the tools folded under
