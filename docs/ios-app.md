@@ -493,6 +493,21 @@ A connected app (“Connected ✓”) opens its connections (`AppConnectionsView
 - **From removed tafs** comes between the tafs and Other connections. It holds the connections whose `request.agent` tafs cloud names in `removed_tafs`, and only those, each with the removed taf's name (the grant's `agent_name`). The app sends its signed grants read with the read (`connectApps(proof:)`). A connection a live taf's Card still uses says so (“Kept: Chargebacks' Card uses it”). **Clear these connections** shows only when at least one listed connection has an empty `used_by`, and ends exactly those: it asks first (“Clear 2 connections from removed tafs?”), then one Face ID, and the device key signs each disconnect. The line under them says how it went (“Cleared 1. Kept 1 for Chargebacks, whose Card uses it.”). With no `grants`, the section shows with no Clear. Which to keep is tafs cloud's word, never the phone's (`clearPlan`, `clearRemovedConnections`; the words are `ConnectionGroupWords`, the same as Android's).
 - **Other connections** comes last: those whose taf the app can't name, each with the same row as the rest and nothing that acts on them all at once. A taf missing from this person's list may have been removed, but it may also be one they don't see, or an agent that isn't a taf, so nothing there says it was removed.
 
+## Home's line
+
+Home's big line ("2 tafs working.") is tafs cloud's, as Android draws it: `GET /v1/home` sends
+`headline: {words}` in the person's language, and the app draws `words` as sent
+(`TafsCloud.Home.headline`, `AppModel.workingWords`, `headline` in `Views/HomeView.swift`).
+tafs cloud counts the tafs at work; with none at work, the tafs ready to work from their chat
+("1 taf ready."); else "0 tafs working.". A taf waiting on an app's event, or with something gone
+wrong, counts as neither.
+- **Read leniently:** a `headline` that isn't an object, or whose `words` aren't a non-blank
+  string, is none, and Home still reads.
+- **With none** (a tafs cloud from before it, or the list remembered from the last launch before
+  Home is read), the app counts its own tafs working (`workingCount`, `home.working`), as before.
+- Before the first list it still says "Loading your tafs…", and with the recipes listed it shows no line
+  ([Home with no taf](#home-with-no-taf)).
+
 ## Home with no taf
 
 An account with no taf sees the jobs a taf can take on Home, where tafs cloud says so
