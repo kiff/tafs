@@ -65,7 +65,31 @@ import java.net.URLEncoder
 @Serializable data class VersionSummary(val title: String = Words.Version.changesRow, val summary: String = "", val live: Int? = null, val earlier: Int = 0)
 @Serializable data class TafSetup(val connections: List<ConnectedApp> = emptyList(), val workflow: WorkflowView = WorkflowView(),
   val memory: MemorySummary = MemorySummary(), val versions: VersionSummary = VersionSummary(), @SerialName("connections_error") val connectionsError: String? = null,
-  @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException> = emptyList())
+  @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException> = emptyList(),
+  /** The taf's own Connect again, when tafs cloud says a connection's sign-in expired (docs/api.md): the connection it names, in its words. */
+  @SerialName("connect_again") @Serializable(with = LenientConnectAgain::class) val connectAgain: ConnectAgain? = null)
+
+/**
+ * A taf's own Connect again, as tafs cloud sends it: the connection ([grant]) to sign in again, the app's name, the button's
+ * [title], the line above it, and what's said once planque says it's connected again ([doneWords]).
+ */
+@Serializable data class ConnectAgain(val grant: String = "", val app: String = "", val title: String = "", val words: String = "",
+  @SerialName("done_words") val doneWords: String = "")
+
+/** Read leniently: a shape this build doesn't know is no Connect again, never a Setup page that can't be read. */
+object LenientConnectAgain : kotlinx.serialization.KSerializer<ConnectAgain?> {
+  override val descriptor = kotlinx.serialization.json.JsonElement.serializer().descriptor
+  override fun deserialize(decoder: kotlinx.serialization.encoding.Decoder): ConnectAgain? {
+    val d = decoder as kotlinx.serialization.json.JsonDecoder
+    val e = d.decodeJsonElement()
+    return runCatching { d.json.decodeFromJsonElement(ConnectAgain.serializer(), e) }.getOrNull()
+      ?.takeIf { it.grant.isNotBlank() && it.title.isNotBlank() }
+  }
+  override fun serialize(encoder: kotlinx.serialization.encoding.Encoder, value: ConnectAgain?) {
+    val j = encoder as kotlinx.serialization.json.JsonEncoder
+    j.encodeJsonElement(if (value == null) kotlinx.serialization.json.JsonNull else j.json.encodeToJsonElement(ConnectAgain.serializer(), value))
+  }
+}
 
 data class Representation<T>(val value: T?, val etag: String?)
 private fun encoded(value: String) = URLEncoder.encode(value, "UTF-8").replace("+", "%20")

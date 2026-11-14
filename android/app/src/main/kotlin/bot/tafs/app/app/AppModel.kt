@@ -520,6 +520,8 @@ data class AppState(
   val timeZones: List<bot.tafs.app.kiff.TimeZoneChoice> = emptyList(),
   val timeZoneQuery: String = "",
   val tafSetups: Map<String, bot.tafs.app.kiff.TafSetup> = emptyMap(),
+  /** tafs cloud's words for a taf whose Connect again went through ("Gmail is connected again. Rae can use it."), by taf. */
+  val connectedAgain: Map<String, String> = emptyMap(),
   val tafSetupErrors: Map<String, String> = emptyMap(),
   val activityPages: Map<String, SourcePages<bot.tafs.app.kiff.TafActivityPage>> = emptyMap(),
   val runPages: Map<String, SourcePages<bot.tafs.app.kiff.TafRunsPage>> = emptyMap(),
@@ -2568,14 +2570,37 @@ class AppModel(
    * Signs in again to a connection its vendor signed out, from the taf's page: the same approval as Coach's card, behind one
    * fingerprint, then the vendor's own page. Signed in only once planque answers connected.
    */
-  suspend fun reconnect(grant: Grant) {
+  suspend fun reconnect(grant: Grant) { signInAgain(grant) }
+
+  /** Signs a connection in again on itself (planque's approve): what came of it, or null when nothing was asked. */
+  private suspend fun signInAgain(grant: Grant): Connected? {
     // A provider's connection is disconnected and connected again instead: planque would refuse, so nothing is asked.
-    if (grant.signsInThroughProvider) return note(grant.id, bot.tafs.app.model.ConnectionWords.throughProvider(grant))
+    if (grant.signsInThroughProvider) { note(grant.id, bot.tafs.app.model.ConnectionWords.throughProvider(grant)); return null }
     // KIFF's words for its profile, which the approval signs: read now, as the approval card reads them, wherever this starts.
     loadProfileWords(grant.id)
-    _state.value.profileWordsErrors[grant.id]?.let { return note(grant.id, it) }
+    _state.value.profileWordsErrors[grant.id]?.let { note(grant.id, it); return null }
     val result = connect(grant.id, grant.id, grant.digest, again = true)
     if (result is Connected.Failed) note(grant.id, result.why)
+    return result
+  }
+
+  /**
+   * The taf's own Connect again (docs/api.md, `connect_again`): the connection tafs cloud names is signed in again on itself, so
+   * the taf keeps its tools and its Card. Once planque says it's connected, tafs cloud's `done_words` show on the taf, and its
+   * setup is read again. Nothing here decides whether it's needed: tafs cloud sent it.
+   */
+  suspend fun connectAgain(tafId: String) {
+    val ask = _state.value.tafSetups[tafId]?.connectAgain ?: return
+    _state.update { it.copy(connectedAgain = it.connectedAgain - tafId, coachNotes = it.coachNotes - ask.grant) }
+    if (_state.value.grants.none { it.id == ask.grant }) refreshConnections()
+    val grant = _state.value.grants.firstOrNull { it.id == ask.grant }
+    if (grant == null) { note(ask.grant, Words.Common.notDoneUnconfirmed); loadTafSetup(tafId); return }
+    signInAgain(grant) ?: return
+    refreshConnections()
+    if (_state.value.grants.firstOrNull { it.id == ask.grant }?.connected == true && ask.doneWords.isNotBlank()) {
+      _state.update { it.copy(connectedAgain = it.connectedAgain + (tafId to ask.doneWords)) }
+    }
+    loadTafSetup(tafId)
   }
 
   /** Reads again what a live update names (see [changed]). */
@@ -4443,6 +4468,10 @@ class AppModel(
 
   fun startReconnect(grant: Grant) {
     scope.launch { reconnect(grant) }
+  }
+
+  fun startConnectAgain(tafId: String) {
+    scope.launch { connectAgain(tafId) }
   }
 
   /**

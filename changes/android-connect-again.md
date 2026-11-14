@@ -1,0 +1,1 @@
+- **Android: Connect again on the taf.** When a connection's sign-in expired, the taf shows tafs cloud's Connect again, which signs that same connection in again so the taf keeps its Card, and then says it's connected again (docs/android-app.md). Needs you's Open Coach shows only to someone who can use Coach. Android 84 (1.24.0).
