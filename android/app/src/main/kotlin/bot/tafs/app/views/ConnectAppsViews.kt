@@ -158,7 +158,10 @@ fun ConnectAppsSheet(
   /** The connection that just came back signed in, and leaving that note. */
   onConnectedNow: (bot.tafs.app.kiff.Grant) -> Unit = {},
   dismissConnectedNow: () -> Unit = {},
+  /** Reads planque's connections again: a connected row whose connections the phone doesn't hold reads them before it opens. */
+  onReadConnections: suspend () -> Unit = {},
 ) {
+  val readScope = androidx.compose.runtime.rememberCoroutineScope()
   var query by rememberSaveable { mutableStateOf("") }
   // An app is connected for a taf: with several, the owner picks which first; with none, there's nothing to connect it for.
   var picking by androidx.compose.runtime.remember { mutableStateOf<ConnectApps.App?>(null) }
@@ -218,7 +221,12 @@ fun ConnectAppsSheet(
         title = { Text(ConnectAppsWords.yourConnections(app.title), style = scaled(20, FontWeight.Bold, Theme.ink)) },
         text = {
           Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (onDisconnect != null) Text(ConnectAppsWords.DISCONNECT_WHY, style = scaled(13, color = Theme.soft))
+            // None on the phone even after reading again: why, in words (the read's failure, or that planque isn't set up here).
+            if (sections.isEmpty() && removed.isEmpty() && others.isEmpty()) {
+              Text(state.connectionsError?.let { Words.Connect.appsNotRead(why = it) }
+                ?: if (!state.planqueReady) bot.tafs.app.model.CoachWords.NOT_CONNECTABLE else Words.Connect.appsNotRead(why = ""),
+                style = scaled(14, color = Theme.amberText))
+            } else if (onDisconnect != null) Text(ConnectAppsWords.DISCONNECT_WHY, style = scaled(13, color = Theme.soft))
             // Each taf's name over its connections, so no row repeats it; then those whose taf the app can't name, under words that
             // claim nothing about it, with the same row.
             val groups = sections.map { it.taf to it.grants } + listOfNotNull(others.takeIf { it.isNotEmpty() }?.let { bot.tafs.app.model.ConnectionWords.OTHER_CONNECTIONS to it })
@@ -414,7 +422,11 @@ fun ConnectAppsSheet(
         // Yours first (connected, signed in, or to sign in again), then Discover: tafs cloud's order within each.
         val (yours, discover) = apps?.apps.orEmpty().partition { it.yours }
         val row: @Composable (ConnectApps.App) -> Unit = { app ->
-          AppRow(app, connect, onChooseActions, onManage = if (connectionsOf(state, app).isNotEmpty()) ({ a: ConnectApps.App -> managing = a }) else null, usedBy = usedBy(state, app))
+          // A connected row always opens: with none of its connections on the phone, they're read again first (Android 85 and iPad
+          // 2239 left the row dead when the read had failed), and the sheet then says why when there are still none.
+          AppRow(app, connect, onChooseActions, onManage = { a: ConnectApps.App ->
+            if (connectionsOf(state, a).isNotEmpty()) managing = a else readScope.launch { onReadConnections(); managing = a }
+          }, usedBy = usedBy(state, app))
         }
         if (yours.isNotEmpty()) {
           bot.tafs.app.design.Eyebrow(Words.Connect.Apps.yours)

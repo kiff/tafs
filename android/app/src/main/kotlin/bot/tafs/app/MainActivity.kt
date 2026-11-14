@@ -820,6 +820,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       // Connect is for whoever manages the account's Cards; anyone else sees what's connected.
       bot.tafs.app.views.ConnectAppsSheet(
         state, load = model::loadConnectApps, loadMore = model::loadMoreConnectApps,
+        onReadConnections = model::refreshConnections,
         onConnect = if (state.canManageCards) ({ app, taf -> scope.launch { model.startConnectApp(app, taf) } }) else null,
         onAskCoach = { showingConnectApps = false; coachOpen = true },
         onClose = { showingConnectApps = false; model.closeListApproval() },

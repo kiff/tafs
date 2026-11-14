@@ -467,6 +467,8 @@ data class AppState(
   /** Why a grant's words couldn't be read or didn't check out, by grant id. */
   val profileWordsErrors: Map<String, String> = emptyMap(),
   val planqueReady: Boolean = false,
+  /** Why the last read of planque's connections failed, in words; null once a read went through. */
+  val connectionsError: String? = null,
   /** The grant being connected now, so a second tap starts nothing. */
   val connecting: String? = null,
   /** The drafts Coach's approvals name, read from KIFF so the owner sees the Cards. */
@@ -1869,7 +1871,10 @@ class AppModel(
     val sessions = session?.let { setOf(it) } ?: _state.value.coachWaiting.map { it.session }.toSet()
     if (sessions.isEmpty()) return false
     val gen = accountGeneration
-    _state.update { it.copy(settingAside = it.settingAside + sessions) }
+    // One call at a time per chat: a swipe asks more than once in one gesture (Android 86 sent 11 in 3 s).
+    var started = false
+    _state.update { s -> if (sessions.any { it in s.settingAside }) { started = false; s } else { started = true; s.copy(settingAside = s.settingAside + sessions) } }
+    if (!started) return false
     return try {
       val done = cloud.setAsideCoach(session, coachReadProof())
       if (gen == accountGeneration) _state.update { s -> s.copy(coachWaiting = s.coachWaiting.filterNot { it.session in done.setAside }) }
@@ -3391,12 +3396,19 @@ class AppModel(
       throw e
     } catch (e: PlanqueError.Server) {
       // planque has no account for this one, or doesn't know this device: nothing to approve from here.
-      if (generation == accountGeneration && e.status in setOf(401, 403, 404)) _state.update { it.copy(planqueReady = false) }
+      bot.tafs.app.drive.DriveDiagnostics.error("connections read: planque ${e.status}")
+      if (generation == accountGeneration) {
+        if (e.status in setOf(401, 403, 404)) _state.update { it.copy(planqueReady = false, connectionsError = null) }
+        else _state.update { it.copy(connectionsError = ErrorWords.of(e)) }
+      }
       return
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+      // Said where the connections are drawn, and kept for diagnostics: a read that failed silently left rows that opened nothing.
+      bot.tafs.app.drive.DriveDiagnostics.error("connections read: ${e::class.simpleName}")
+      if (generation == accountGeneration) _state.update { it.copy(connectionsError = ErrorWords.of(e)) }
       return
     }
-    if (generation == accountGeneration) _state.update { it.copy(grants = list, planqueReady = true) }
+    if (generation == accountGeneration) _state.update { it.copy(grants = list, planqueReady = true, connectionsError = null) }
   }
 
   /** What an approval needs to be shown: planque's grant and KIFF's draft, read when Coach's thread is. */

@@ -663,7 +663,9 @@ approval.") and its **Open Coach** button, which opens Coach on that chat (`AppM
 where the card is answered; someone who can't use Coach reads the line alone. tafs cloud counts each in `needs_you`, so Home never says "Nothing needs
 you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
 
-**Set aside** is "not now", never an approval, and only signed in (not the sample).
+**Set aside** is "not now", never an approval, and only signed in (not the sample). One request goes per chat at a
+time (Android 1.26.1): a swipe fires once per gesture, and a chat already being set aside isn't asked again until
+tafs cloud answers.
 - **One chat:** a row whose `words.set_aside` tafs cloud sends can be swiped away either way, and has
   a button with the same words, so a swipe isn't the only way. Either one calls
   `POST /v1/home/coach-waiting/{session}/set-aside` (`AppModel.setAsideCoach`), with the signed read
@@ -771,7 +773,10 @@ Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#conne
     yours, **Used by** the tafs that use it, as a list in the app's language. iPhone and iPad put it together the same way.
   - "Used by" is tafs cloud's `used_by` when sent, else this phone's own read of its connections, by taf (`usedBy`).
 - **The trailing button is compact:** **Connect**, **Sign in again**, or for one signed in, **Signed in · choose its actions**.
-  A connected app opens its connections, each with Disconnect.
+  A connected app opens its connections, each with Disconnect. Its tap always answers (Android 1.26.1): with none of its
+  connections on this phone, planque's connections are read again first (`refreshConnections`), and if there are still
+  none, the sheet says why: the read's failure (`connectionsError`, kept in words and written to the diagnostics), or
+  that connecting isn't set up from this phone.
 
 **An app's connections, as planque describes them** (Android 1.25.0, planque's `title`, `used_by`,
 `health` and `actions` on each grant; `Grant.health`, `Grant.actions`, read leniently). A connected app
@@ -987,7 +992,8 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   Try again." (`approval.key_not_accepted`), and from the second time in a row the support line under it
   (`approval.key_not_accepted_support`). A phone with no fingerprint keeps "Setting up a taf needs approvals".
 - **Coach's Start is one screen** (`StartScreen`): tafs cloud's line, Coach's Cards in KIFF's words, the tools folded under
-  their details, what Start does, and its button. Start, or the first Send, signs it all under one fingerprint.
+  their details, what Start does (tafs cloud's `words.does`, drawn only when sent: the app has no line of its own about the
+  fingerprint, since 1.26.1), and its button. Start, or the first Send, signs it all under one fingerprint.
 - **Home leads with "Say it in your own words"** (`GET /v1/recipes`'s `home.own_words`, `OwnWordsRow`): under tafs cloud's
   line and above the jobs, or under Home's empty line when no job is listed, so there's always a way to Coach. It opens Coach,
   empty, for someone who may use it. As on iPhone and iPad.
