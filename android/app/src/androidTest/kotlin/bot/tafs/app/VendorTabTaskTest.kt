@@ -11,8 +11,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -31,6 +33,20 @@ class VendorTabTaskTest {
       resumed = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).any { it is MainActivity }
     }
     return resumed
+  }
+
+  /**
+   * A fresh emulator's Chrome opens its first-run screen, in a task of its own, instead of the Custom Tab: a phone's Chrome is past
+   * it. Chrome reads its flags from /data/local/tmp/chrome-command-line for the debug app, so the test skips the first run there.
+   */
+  @Before fun chromeIsPastItsFirstRun() {
+    val ui = InstrumentationRegistry.getInstrumentation().uiAutomation
+    val (out, input) = ui.executeShellCommandRw("tee /data/local/tmp/chrome-command-line")
+    android.os.ParcelFileDescriptor.AutoCloseOutputStream(input).use { it.write("_ --disable-fre --no-default-browser-check --no-first-run\n".toByteArray()) }
+    android.os.ParcelFileDescriptor.AutoCloseInputStream(out).use { it.readBytes() }
+    for (command in listOf("am set-debug-app --persistent com.android.chrome", "am force-stop com.android.chrome")) {
+      android.os.ParcelFileDescriptor.AutoCloseInputStream(ui.executeShellCommand(command)).use { it.readBytes() }
+    }
   }
 
   private fun tasks(): String {
@@ -83,13 +99,18 @@ class VendorTabTaskTest {
     Thread.sleep(2_000)
     app.startActivity(Intent(launcher))
     Thread.sleep(4_000)
+    // Either the launcher brought the task back as it was (the page in front), or tafs's screen closed the tab above it: then,
+    // and only then, the sign-in is marked left. Either way it still waits.
     assertTrue("the sign-in still waits", app.vendorSignIn.isWaiting)
-    assertTrue("it's marked left, for the card to offer it again", app.vendorSignIn.left.value)
-    InstrumentationRegistry.getInstrumentation().runOnMainSync { app.vendorSignIn.reopen() }
-    repeat(40) { if (!mainResumed()) return@repeat; Thread.sleep(500) }
-    Thread.sleep(1_000)
-    assertFalse("the page is in front again: ${tasks()}", mainResumed())
-    assertFalse(app.vendorSignIn.left.value)
+    val back = mainResumed()
+    assertEquals("marked left exactly when tafs's own screen is in front: ${tasks()}", back, app.vendorSignIn.left.value)
+    if (back) {
+      InstrumentationRegistry.getInstrumentation().runOnMainSync { app.vendorSignIn.reopen() }
+      repeat(40) { if (!mainResumed()) return@repeat; Thread.sleep(500) }
+      Thread.sleep(1_000)
+      assertFalse("the page is in front again: ${tasks()}", mainResumed())
+      assertFalse(app.vendorSignIn.left.value)
+    }
     app.vendorSignIn.cancel()
     Thread.sleep(500)
     assertTrue(signIn.isCompleted)
