@@ -41,14 +41,14 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   you can read it yourself: it reads the vendor's documentation, not the
   owner's account. Once it's connected, it isn't among your tools until you
   look for it: search for it by its name in KIFF, as planque's status lists
-  it (such as api_details_k3f9), then call it. When you must pin the account,
-  the read-only tool that lists the accounts the sign-in covers goes in that
-  first request's setup_reads too (server or entry): search {q} finds both by name
-  before you connect. The connection's one approval and sign-in then cover
-  them, with no question of their own and no second approval: the owner
-  already agreed to connect, and its approval is enough. setup_reads goes on
-  those two only, never on the taf's own reads: those read the owner's
-  account. Never in a connection of its own:
+  it (such as api_details_k3f9), then call it. A vendor's own server, whose
+  tools you can't name before its sign-in, gets its describing tool connected
+  by planque with the sign-in when it has one: never ask for it, or any read,
+  alone. When you must pin the account, pin the grant's own account, as
+  planque's status lists it: never a read of the accounts. The connection's
+  one approval and sign-in then cover it, with no question of its own and no
+  second approval. setup_reads goes on that one only, never on the taf's own
+  reads: those read the owner's account. Never in a connection of its own:
   each new connection is one more approval and vendor sign-in for the owner. The job's own tools are then added to that same
   connection (tools on a connected grant adds them), declared: one approval with the Card, no
   sign-in. Once it's connected, read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments} (before a key: describe's arguments, by in and type), and place each argument you name (the amount, what the call

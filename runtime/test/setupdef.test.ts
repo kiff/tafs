@@ -392,8 +392,10 @@ describe("Setup's definition on kiff/agents", () => {
     // them, with no question and no second approval (kiff/tafs#476, gap 2: four consents before a draft).
     expect(flat).toContain("When the vendor has a read-only tool that lists an operation's fields, given its id, ask for it in the first planque request");
     // The account list, when it must pin the account, joins that request: one approval, not two (kiff/tafs#138).
-    expect(flat).toContain("the read-only tool that lists the accounts the sign-in covers goes in that first request's setup_reads too (server or entry)");
-    expect(flat).toContain("The connection's one approval and sign-in then cover them, with no question of their own and no second approval");
+    expect(flat).toContain("When you must pin the account, pin the grant's own account, as planque's status lists it: never a read of the accounts.");
+    expect(flat).toContain("gets its describing tool connected by planque with the sign-in when it has one: never ask for it, or any read, alone.");
+    expect(flat).toContain("Draft it once, after reading the fields, with all its tools.");
+    expect(flat).toContain("The connection's one approval and sign-in then cover it, with no question of its own and no second approval");
     // One connection per vendor per taf (kiff/tafs#138, the owner's retest: five Face IDs and Stripe sign-ins).
     expect(flat).toContain("Never in a connection of its own: each new connection is one more approval and vendor sign-in for the owner");
     expect(flat).toContain("A taf has one connection per vendor: first planque grants {agent: the taf's own agent id}. When it has one to that vendor, add the tool to it");
@@ -421,9 +423,9 @@ describe("Setup's definition on kiff/agents", () => {
     // (kiff/tafs#174): the taf alone held the tool, so Setup could only guess.
     expect(flat).toContain("in the first planque request's setup_reads field (never a tool), so you can read it yourself");
     expect(flat).not.toContain("setup_reads: true (by entry");
-    expect(flat).toContain("setup_reads goes on those two only, never on the taf's own reads: those read the owner's account");
+    expect(flat).toContain("setup_reads goes on that one only, never on the taf's own reads: those read the owner's account");
     expect(flat).toContain("read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments} (before a key: describe's arguments, by in and type), and place each argument you name");
-    expect(flat).toContain("with no question of their own and no second approval: the owner already agreed to connect, and its approval is enough");
+    expect(flat).toContain("with no question of its own and no second approval");
     expect(flat).toContain("Reading first doesn't split the owner's questions: ask the ones that don't depend on each other together, in one questions card");
     // The account and the mode, pinned on reads too: the owner's taf looked the account
     // up on every message, one more wait each time (kiff/tafs#138, item 58).
