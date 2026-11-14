@@ -65,9 +65,18 @@ struct ConnectedToolsRing: View {
         }
         .sheet(isPresented: $connect) { NavStack { ConnectAppsView().environmentObject(model) } }
         .alert(taf.name, isPresented: $job) { Button(Words.Common.done, role: .cancel) {} } message: { Text(taf.job) }
+        // Its workflow, asked for by name (`AppModel.requestedTafPage`).
+        .onAppear { take(model.requestedTafPage) }
+        .onChange(of: model.requestedTafPage) { take($0) }
     }
 
     private func coach() { model.improveTaf(taf.id); model.coachOpen = true }
+
+    private func take(_ request: AppModel.TafPageRequest?) {
+        guard let request, request.taf == taf.id, request.page == .workflow else { return }
+        workflow = true
+        model.requestedTafPage = nil
+    }
 
     /// One node per app: the connection that does the work, with any other sign-in to the same
     /// app inside its sheet. Two "Stripe" nodes, one "Choose actions" and one "2 actions", read

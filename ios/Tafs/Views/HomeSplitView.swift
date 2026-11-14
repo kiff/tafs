@@ -114,8 +114,12 @@ struct HomeSplitView: View {
                                    close: { showingGallery = nil })
             }
         }
-        .onAppear { model.sidebarShown = true }
+        .onAppear { model.sidebarShown = true; take(model.requestedTafPage); takeCalendar() }
         .onDisappear { model.sidebarShown = false }
+        // A taf's page asked for by name: its row is selected, unless it's on screen already; the
+        // taf's page opens on the part asked for and clears the request.
+        .onChange(of: model.requestedTafPage) { take($0) }
+        .onChange(of: model.calendarRequested) { _ in takeCalendar() }
         .onChange(of: selection) { s in
             if s != opened { chosen = true }
         }
@@ -141,6 +145,20 @@ struct HomeSplitView: View {
             chosen = false
             selection = opened
         }
+    }
+
+    private func take(_ request: AppModel.TafPageRequest?) {
+        guard let request, model.tafOnScreen != request.taf else { return }
+        chosen = true
+        withMotion(.easeInOut(duration: 0.25)) { selection = .taf(request.taf) }
+    }
+
+    /// The calendar asked for by name.
+    private func takeCalendar() {
+        guard model.calendarRequested else { return }
+        chosen = true
+        withMotion(.easeInOut(duration: 0.25)) { selection = .calendar }
+        model.calendarRequested = false
     }
 
     private var haltAllRow: some View {

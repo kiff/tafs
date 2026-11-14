@@ -113,6 +113,10 @@ struct SettingsView: View {
     @State private var confirming: SignOutWay?
     /// `-screen alerts`: the screenshots open Alerts by themselves.
     @State private var openAlerts = Screenshots.enabled && Screenshots.screen == "alerts"
+    /// A screen of Settings asked for by name (`AppModel.requestedAccountPage`), and deleting
+    /// the account, which is its own sheet.
+    @State private var opened: AppModel.AccountPage?
+    @State private var deletingAccount = false
 
     var body: some View {
         NavigationStack {
@@ -205,11 +209,35 @@ struct SettingsView: View {
             .navigationTitle(Words.Settings.title)
             .task(id: model.mode) { await model.loadSuggestions() }
             .navigationDestination(isPresented: $openAlerts) { NotificationSettingsView().environmentObject(model) }
+            .navigationDestination(isPresented: Binding(get: { opened != nil }, set: { if !$0 { opened = nil } })) { requestedPage }
+            .sheet(isPresented: $deletingAccount, onDismiss: { if model.mode != .kiff { dismiss() } }) {
+                DeleteAccountView().environmentObject(model)
+            }
+            .onAppear { take(model.requestedAccountPage) }
+            .onChange(of: model.requestedAccountPage) { take($0) }
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
             .confirmingSignOut($confirming) { _ in
                 Task { if await model.signOut() { dismiss() } }
             }
         }
+    }
+
+    @ViewBuilder private var requestedPage: some View {
+        switch opened {
+        case .people?: PeopleGroupsView()
+        case .devices?: DevicesView()
+        case .apps?: ConnectAppsView()
+        case .alerts?: NotificationSettingsView()
+        case .timeZone?: TimeZonePicker()
+        case .deleteAccount?, nil: EmptyView()
+        }
+    }
+
+    /// Opens the screen asked for by name, and clears the request.
+    private func take(_ page: AppModel.AccountPage?) {
+        guard let page else { return }
+        if page == .deleteAccount { deletingAccount = true } else { opened = page }
+        model.requestedAccountPage = nil
     }
 
     static func versionLabel(bundle: Bundle = .main) -> String {
