@@ -184,7 +184,7 @@ fun NeedsYouView(
       containerColor = Theme.panel,
       title = { Text(clear.words.title) },
       text = { if (clear.words.text.isNotBlank()) Text(clear.words.text) },
-      confirmButton = { androidx.compose.material3.TextButton({ confirmingClear = false; onSetAside?.invoke(null) }) { Text(clear.words.yes, color = Theme.no) } },
+      confirmButton = { androidx.compose.material3.TextButton({ confirmingClear = false; onSetAside?.invoke(null) }, modifier = Modifier.confirms()) { Text(clear.words.yes, color = Theme.no) } },
       dismissButton = { androidx.compose.material3.TextButton({ confirmingClear = false }) { Text(clear.words.no, color = Theme.soft) } },
     )
   }
@@ -215,7 +215,7 @@ fun NeedsYouView(
     state.coachWaitingClear?.takeIf { onSetAside != null && state.coachWaiting.size > 1 }?.let { clear ->
       item(key = "cw|clear") {
         Text(clear.words.button, style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-          modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = state.settingAside.isEmpty()) { bot.tafs.app.design.Haptics.tap(); confirmingClear = true }.padding(vertical = 10.dp))
+          modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = state.settingAside.isEmpty()) { bot.tafs.app.design.Haptics.tap(); confirmingClear = true }.padding(vertical = 10.dp))
       }
     }
     items(state.coachWaiting, key = { "cw|" + it.session }) { waiting -> CoachWaitingPanel(waiting, onOpenCoach, onSetAside?.takeIf { waiting.words.setAside.isNotBlank() }) }
