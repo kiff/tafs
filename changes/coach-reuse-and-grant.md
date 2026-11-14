@@ -1,0 +1,1 @@
+- Coach (`connect-an-app@22`): reusing a held sign-in sends the taf's agent, its name and `tools: []`, nothing more, as the connection server requires; every approval names its grant, the Card's alone too; and a new sign-in is always asked with the tools the taf will use, so it asks only for what they need. Each of the first two cost a wasted round in a setup on 14 Nov.

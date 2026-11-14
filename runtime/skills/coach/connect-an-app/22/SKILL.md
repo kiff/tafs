@@ -13,12 +13,11 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   after [tafs connections] in the conversation's first message are tafs'
   data, each with its vendor, the taf that uses it and its kind
   (vendor_sign_in, provider with its mode, key, browser). Without them, planque
-  grants with no agent lists the same, each with its agent (a taf's
-  kiff_agent in tafs_state). Offer only one a taf uses, or one made in this
+  grants with no agent lists the same, each with its agent. Offer only one a taf uses, or one made in this
   conversation; another agent's grant (a test's) is never offered or reused. For a vendor a taf already connects, the
-  first option is reusing its sign-in, named with the taf that uses it: "your
-  help desk's sign-in, like Refunds". Say a mode only as the grant gives it.
-  Request {reuse: that grant's id, name, taf_name, tools: []}: the owner then
+  first option is reusing its sign-in, named with the taf that uses it. Say a mode only as the grant gives it.
+  Request {reuse: that grant's id, name, taf_name, tools: []}, nothing more
+  (planque refuses entry or uses with it): the owner then
   approves the new taf's tools alone, with no new sign-in or key. Only if
   planque refuses the reuse, ask for the same kind: {server}, {entry} or {api}.
   Another kind comes only if the owner picks it: another sign-in.
@@ -28,7 +27,7 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   each with its app and state. Propose the apps
   in a questions card, the account's own first; an app that needs_setup can't be connected until an operator sets it up: say so and offer another. Connect the chosen app with request {entry, name, taf_name, uses}:
   uses are the slugs of the tools search found that the taf will use,
-  so only those are asked. Offer only what a connection can do: search {q} before connecting; before adding a tool to any grant, a reused
+  so only those are asked. Never connect without uses: its sign-in asks for all. Offer only what a connection can do: search {q} before connecting; before adding a tool to any grant, a reused
   one too, read its catalog {grant, q}: planque takes only tools it listed. Never offer one under unusable; say why in your words. When an app can't be connected (needs_setup, or its sign-in, request
   or describe failed), say why in one sentence of your own plain words, never planque's or the app's, and offer a way
   forward then: the same app's key entry, its key by its published API
@@ -36,7 +35,7 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   (before connecting) and events {grant} (after) list what can wake a taf:
   draft the one it needs into the taf's dial. A write answered later by an app event (a reply) needs the taf to wake on it, or it's refused as
   not_listening: draft that event into the dial with the write.
-- Ask before you connect a sign-in ("Is it OK if I connect to your help desk?").
+- Ask before you connect a sign-in.
   For a vendor's own MCP server, connect first, to look: planque request with
   its server, a name for the taf's agent (name, such as "reembolsos"), taf_name, and no tools but your own setup reads (name-the-tools); by entry, {entry, setup_reads: their names}. Prefer a vendor's sign-in to its key, even
   when search finds both. A vendor with a REST API and no MCP server is connected
@@ -56,7 +55,7 @@ Connects an app for a taf: finding the app and its tools (search, events), askin
   when you no
   longer have the taf's agent id or a grant's id, planque grants with no agent
   lists every connection you asked for: take the newest for this vendor and this taf. Never connect again, make a new taf, or ask the owner to sign in again
-  for an id you lost. Show an approval with the grant. You choose the name: the taf's name in lower case, words joined by hyphens
+  for an id you lost. Show an approval with the grant: every approval names it, the Card alone too. You choose the name: the taf's name in lower case, words joined by hyphens
   (introduction-drafts); never ask the owner for it, or for any id.
 A sign-in or key that went through only means the vendor took it. Before saying it's ready or fixed,
 check it: one read through it, yours (a setup read) or the taf's (taf_task,
@@ -86,8 +85,7 @@ take), change what was refused and show the approval of a new planque request: t
 request fails the same way.
 Otherwise read the grant's status: if it still waits, say the approval above
 still waits; never show a new one. Never tell the owner to install, open or set up another app.
-If planque answers that the owner's phone isn't set up yet, show a notice
-(warning) to start again from this screen; don't retry.
+If planque says the owner's phone isn't set up yet, show a warning to start again here; don't retry.
 
 ## Verification
 
