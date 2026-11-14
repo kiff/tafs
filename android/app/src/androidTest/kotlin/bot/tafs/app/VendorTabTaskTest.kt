@@ -66,4 +66,33 @@ class VendorTabTaskTest {
     }
     scope.cancel()
   }
+
+  // Back from the launcher's icon, tafs's screen closes the tab above it (singleTask): the sign-in is left, not dropped, and the
+  // same page opens again.
+  @Test fun backFromTheLauncherTheSignInIsLeftAndOpensAgain() {
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+    val launcher = app.packageManager.getLaunchIntentForPackage(app.packageName)!!
+      .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
+    app.startActivity(Intent(launcher))
+    Thread.sleep(4_000)
+    val signIn = scope.async { runCatching { app.vendorSignIn.signIn("https://example.com/") } }
+    repeat(40) { if (!mainResumed()) return@repeat; Thread.sleep(500) }
+    Thread.sleep(2_000)
+    assertTrue("the vendor's tab is in front: ${tasks()}", app.vendorSignIn.isWaiting && !mainResumed())
+    app.startActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    Thread.sleep(2_000)
+    app.startActivity(Intent(launcher))
+    Thread.sleep(4_000)
+    assertTrue("the sign-in still waits", app.vendorSignIn.isWaiting)
+    assertTrue("it's marked left, for the card to offer it again", app.vendorSignIn.left.value)
+    InstrumentationRegistry.getInstrumentation().runOnMainSync { app.vendorSignIn.reopen() }
+    repeat(40) { if (!mainResumed()) return@repeat; Thread.sleep(500) }
+    Thread.sleep(1_000)
+    assertFalse("the page is in front again: ${tasks()}", mainResumed())
+    assertFalse(app.vendorSignIn.left.value)
+    app.vendorSignIn.cancel()
+    Thread.sleep(500)
+    assertTrue(signIn.isCompleted)
+    scope.cancel()
+  }
 }

@@ -159,6 +159,8 @@
   "coach.sign_in.at_vendor": "Se connecter chez le fournisseur",
   "coach.sign_in.eyebrow": "Vous attend · connexion",
   "coach.sign_in.open": "Ouvrir {service}",
+  "coach.sign_in.open_again": "Rouvrir la connexion",
+  "coach.sign_in.open_again_app": "Rouvrir la connexion à {app}",
   "coach.sign_in.open_sign_in": "Ouvrir la connexion",
   "coach.sign_in.opens": "Ouvre {destination}",
   "coach.sign_in.opens_app": "Ouvre la connexion à {app}",

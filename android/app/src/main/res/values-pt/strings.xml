@@ -701,6 +701,8 @@
     <string name="coach_sign_in_at_vendor">Iniciar sessão no fornecedor</string>
     <string name="coach_sign_in_eyebrow">Precisa de si · iniciar sessão</string>
     <string name="coach_sign_in_open">Abrir %1$s</string>
+    <string name="coach_sign_in_open_again">Abrir de novo o início de sessão</string>
+    <string name="coach_sign_in_open_again_app">Abrir de novo o início de sessão em %1$s</string>
     <string name="coach_sign_in_open_sign_in">Abrir o início de sessão</string>
     <string name="coach_sign_in_opens">Abre %1$s</string>
     <string name="coach_sign_in_opens_app">Abre o início de sessão em %1$s</string>

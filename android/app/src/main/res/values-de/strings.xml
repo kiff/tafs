@@ -701,6 +701,8 @@
     <string name="coach_sign_in_at_vendor">Beim Anbieter anmelden</string>
     <string name="coach_sign_in_eyebrow">Braucht dich · anmelden</string>
     <string name="coach_sign_in_open">%1$s öffnen</string>
+    <string name="coach_sign_in_open_again">Anmeldung erneut öffnen</string>
+    <string name="coach_sign_in_open_again_app">Anmeldung bei %1$s erneut öffnen</string>
     <string name="coach_sign_in_open_sign_in">Anmeldung öffnen</string>
     <string name="coach_sign_in_opens">Öffnet %1$s</string>
     <string name="coach_sign_in_opens_app">Öffnet die Anmeldung bei %1$s</string>

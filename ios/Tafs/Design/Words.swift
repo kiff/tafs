@@ -1328,6 +1328,10 @@ enum Words {
             static var eyebrow: String { Words.line("coach.sign_in.eyebrow") }
             /// Open {service}
             static func `open`(service: String) -> String { Words.line("coach.sign_in.open", service) }
+            /// Open the sign-in again
+            static var openAgain: String { Words.line("coach.sign_in.open_again") }
+            /// Open {app}'s sign-in again
+            static func openAgainApp(app: String) -> String { Words.line("coach.sign_in.open_again_app", app) }
             /// Open the sign-in
             static var openSignIn: String { Words.line("coach.sign_in.open_sign_in") }
             /// Opens {destination}

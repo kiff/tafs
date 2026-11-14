@@ -701,6 +701,8 @@
     <string name="coach_sign_in_at_vendor">Sign in at the vendor</string>
     <string name="coach_sign_in_eyebrow">Needs you · sign in</string>
     <string name="coach_sign_in_open">Open %1$s</string>
+    <string name="coach_sign_in_open_again">Open the sign-in again</string>
+    <string name="coach_sign_in_open_again_app">Open %1$s\'s sign-in again</string>
     <string name="coach_sign_in_open_sign_in">Open the sign-in</string>
     <string name="coach_sign_in_opens">Opens %1$s</string>
     <string name="coach_sign_in_opens_app">Opens %1$s\'s sign-in</string>

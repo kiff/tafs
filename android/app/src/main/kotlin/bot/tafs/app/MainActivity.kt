@@ -594,6 +594,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         approve = model::startApproval,
         openKeySheet = model::openCardKeySheet,
         cancelSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.cancel() },
+        reopenSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.reopen() },
         signInAgain = model::startSignInAgain,
         improve = model::improveTaf,
         openTaf = { coachOpen = false; openTaf = it },

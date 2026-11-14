@@ -722,6 +722,8 @@ object Words {
       val atVendor: String get() = Res.s(R.string.coach_sign_in_at_vendor)
       val eyebrow: String get() = Res.s(R.string.coach_sign_in_eyebrow)
       fun open(service: String): String = Res.s(R.string.coach_sign_in_open, service)
+      val openAgain: String get() = Res.s(R.string.coach_sign_in_open_again)
+      fun openAgainApp(app: String): String = Res.s(R.string.coach_sign_in_open_again_app, app)
       val openSignIn: String get() = Res.s(R.string.coach_sign_in_open_sign_in)
       fun opens(destination: String): String = Res.s(R.string.coach_sign_in_opens, destination)
       fun opensApp(app: String): String = Res.s(R.string.coach_sign_in_opens_app, app)

@@ -159,6 +159,8 @@
   "coach.sign_in.at_vendor": "Inloggen bij de leverancier",
   "coach.sign_in.eyebrow": "Wacht op jou · inloggen",
   "coach.sign_in.open": "{service} openen",
+  "coach.sign_in.open_again": "Inloggen opnieuw openen",
+  "coach.sign_in.open_again_app": "Inloggen bij {app} opnieuw openen",
   "coach.sign_in.open_sign_in": "De login openen",
   "coach.sign_in.opens": "Opent {destination}",
   "coach.sign_in.opens_app": "Opent het inloggen bij {app}",

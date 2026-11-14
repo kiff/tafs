@@ -159,6 +159,8 @@
   "coach.sign_in.at_vendor": "Zaloguj się u dostawcy",
   "coach.sign_in.eyebrow": "Czeka na Ciebie · zaloguj się",
   "coach.sign_in.open": "Otwórz {service}",
+  "coach.sign_in.open_again": "Otwórz ponownie logowanie",
+  "coach.sign_in.open_again_app": "Otwórz ponownie logowanie do {app}",
   "coach.sign_in.open_sign_in": "Otwórz logowanie",
   "coach.sign_in.opens": "Otwiera {destination}",
   "coach.sign_in.opens_app": "Otwiera logowanie do {app}",

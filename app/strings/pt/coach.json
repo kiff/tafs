@@ -159,6 +159,8 @@
   "coach.sign_in.at_vendor": "Iniciar sessão no fornecedor",
   "coach.sign_in.eyebrow": "Precisa de si · iniciar sessão",
   "coach.sign_in.open": "Abrir {service}",
+  "coach.sign_in.open_again": "Abrir de novo o início de sessão",
+  "coach.sign_in.open_again_app": "Abrir de novo o início de sessão em {app}",
   "coach.sign_in.open_sign_in": "Abrir o início de sessão",
   "coach.sign_in.opens": "Abre {destination}",
   "coach.sign_in.opens_app": "Abre o início de sessão em {app}",

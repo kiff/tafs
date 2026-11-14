@@ -159,6 +159,8 @@
   "coach.sign_in.at_vendor": "Accedi presso il fornitore",
   "coach.sign_in.eyebrow": "Ti aspetta · accedi",
   "coach.sign_in.open": "Apri {service}",
+  "coach.sign_in.open_again": "Riapri l'accesso",
+  "coach.sign_in.open_again_app": "Riapri l'accesso a {app}",
   "coach.sign_in.open_sign_in": "Apri l'accesso",
   "coach.sign_in.opens": "Apre {destination}",
   "coach.sign_in.opens_app": "Apre l'accesso a {app}",

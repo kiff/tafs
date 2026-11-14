@@ -159,6 +159,8 @@
   "coach.sign_in.at_vendor": "Sign in at the vendor",
   "coach.sign_in.eyebrow": "Needs you · sign in",
   "coach.sign_in.open": "Open {service}",
+  "coach.sign_in.open_again": "Open the sign-in again",
+  "coach.sign_in.open_again_app": "Open {app}'s sign-in again",
   "coach.sign_in.open_sign_in": "Open the sign-in",
   "coach.sign_in.opens": "Opens {destination}",
   "coach.sign_in.opens_app": "Opens {app}'s sign-in",

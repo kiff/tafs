@@ -761,6 +761,8 @@
     <string name="coach_sign_in_at_vendor">Zaloguj się u dostawcy</string>
     <string name="coach_sign_in_eyebrow">Czeka na Ciebie · zaloguj się</string>
     <string name="coach_sign_in_open">Otwórz %1$s</string>
+    <string name="coach_sign_in_open_again">Otwórz ponownie logowanie</string>
+    <string name="coach_sign_in_open_again_app">Otwórz ponownie logowanie do %1$s</string>
     <string name="coach_sign_in_open_sign_in">Otwórz logowanie</string>
     <string name="coach_sign_in_opens">Otwiera %1$s</string>
     <string name="coach_sign_in_opens_app">Otwiera logowanie do %1$s</string>

@@ -159,6 +159,8 @@
   "coach.sign_in.at_vendor": "Beim Anbieter anmelden",
   "coach.sign_in.eyebrow": "Braucht dich · anmelden",
   "coach.sign_in.open": "{service} öffnen",
+  "coach.sign_in.open_again": "Anmeldung erneut öffnen",
+  "coach.sign_in.open_again_app": "Anmeldung bei {app} erneut öffnen",
   "coach.sign_in.open_sign_in": "Anmeldung öffnen",
   "coach.sign_in.opens": "Öffnet {destination}",
   "coach.sign_in.opens_app": "Öffnet die Anmeldung bei {app}",

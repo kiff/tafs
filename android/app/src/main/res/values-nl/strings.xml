@@ -701,6 +701,8 @@
     <string name="coach_sign_in_at_vendor">Inloggen bij de leverancier</string>
     <string name="coach_sign_in_eyebrow">Wacht op jou · inloggen</string>
     <string name="coach_sign_in_open">%1$s openen</string>
+    <string name="coach_sign_in_open_again">Inloggen opnieuw openen</string>
+    <string name="coach_sign_in_open_again_app">Inloggen bij %1$s opnieuw openen</string>
     <string name="coach_sign_in_open_sign_in">De login openen</string>
     <string name="coach_sign_in_opens">Opent %1$s</string>
     <string name="coach_sign_in_opens_app">Opent het inloggen bij %1$s</string>

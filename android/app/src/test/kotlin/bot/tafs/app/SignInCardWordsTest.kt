@@ -1,6 +1,7 @@
 package bot.tafs.app
 
 import bot.tafs.app.views.opensWords
+import bot.tafs.app.views.reopenWords
 import bot.tafs.app.views.signInWords
 import bot.tafs.app.views.waitingWords
 import org.junit.Assert.assertEquals
@@ -23,5 +24,7 @@ class SignInCardWordsTest {
     // A service the card names is shown as it is: a host the owner can check.
     assertEquals("Opens mcp.stripe.com", opensWords("mcp.stripe.com", "Stripe", "the vendor's page"))
     assertEquals("Opens the vendor's page", opensWords(null, null, "the vendor's page"))
+    assertEquals("Open Gmail's sign-in again", reopenWords("Gmail"))
+    assertEquals("Open the sign-in again", reopenWords(null))
   }
 }

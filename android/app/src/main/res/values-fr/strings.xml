@@ -701,6 +701,8 @@
     <string name="coach_sign_in_at_vendor">Se connecter chez le fournisseur</string>
     <string name="coach_sign_in_eyebrow">Vous attend · connexion</string>
     <string name="coach_sign_in_open">Ouvrir %1$s</string>
+    <string name="coach_sign_in_open_again">Rouvrir la connexion</string>
+    <string name="coach_sign_in_open_again_app">Rouvrir la connexion à %1$s</string>
     <string name="coach_sign_in_open_sign_in">Ouvrir la connexion</string>
     <string name="coach_sign_in_opens">Ouvre %1$s</string>
     <string name="coach_sign_in_opens_app">Ouvre la connexion à %1$s</string>
