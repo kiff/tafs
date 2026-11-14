@@ -487,10 +487,17 @@ export function stepFor(grant: ApprovalGrant, ask: { draft?: string; can?: strin
   return "connect";
 }
 
-/** What an approval card's fingerprint will sign, for the apps to draw before Approve: the Card, or the connection alone. */
-export function signsOf(step: SignStep, draft: string | undefined, lang: Lang = "en"): { card: boolean; words?: string } {
+/**
+ * What an approval card's fingerprint will sign, for the apps to draw before Approve: the Card, or the connection alone.
+ * The connection alone says the Card comes next (`words`) when the card carries the Card's draft, or when it's an app's
+ * first connection, before its tools: a Card always follows that one (its draft can only be made over the tools the
+ * sign-in brings), so the owner knows a second approval is coming. Never on a sign-in again (its Card is in force) or
+ * on tools added to a connected app with no draft.
+ */
+export function signsOf(step: SignStep, draft: string | undefined, lang: Lang = "en", grant?: Pick<ApprovalGrant, "status" | "connected">): { card: boolean; words?: string } {
   const card = step !== "connect";
-  return { card, ...(!card && draft ? { words: wordsIn(lang).approval_card_next } : {}) };
+  const first = !!grant && grant.status !== "needs_reconnect" && !(Array.isArray(grant.connected) && grant.connected.length > 0);
+  return { card, ...(!card && (draft || first) ? { words: wordsIn(lang).approval_card_next } : {}) };
 }
 
 /**
