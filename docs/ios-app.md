@@ -352,6 +352,12 @@ the app in sample mode.
   and no text field.
   **A later approval card whose connection is already connected** carries tafs cloud's mark (`connection: {done,
   words}`, `SetupComponent.Connection`): the card draws that line and the Card, never the connection's text again.
+  **A taf's own Connect again** (`connect_again: {grant, app, title, words, done_words}` on its Setup page,
+  `ConnectAgainPanel`, `AppModel.connectAgain`): when a connection's sign-in expired, the taf's Setup shows tafs
+  cloud's words and its button first, for whoever manages it. The button signs that same connection in again
+  (`reconnectApp`, planque's approve for `grant`), so the taf keeps its tools and Card, never a trip through every
+  app; the taf is read again, and once planque says it's connected the taf shows `done_words`. Read leniently: one
+  without its connection or words reads as none.
   **What the fingerprint covers** is tafs cloud's mark too (`signs: {card, words}`, `SetupComponent.Signs`), set from
   the same decision as the step it then asks, since the phone learns the step only after the tap. With `card: false`
   the Card is the one approved next: drawn under tafs cloud's words ("Its Card: you approve it next") with its lines

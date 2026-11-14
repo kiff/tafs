@@ -1,0 +1,1 @@
+- **iPhone and iPad: Connect again on the taf itself.** When a taf's connection sign-in has expired, its Setup says so in tafs cloud's words with **Connect again**, which signs that same connection in again, so the taf keeps its tools and Card, and then says it's connected again. No trip through every app (docs/ios-app.md).
