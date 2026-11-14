@@ -381,7 +381,9 @@ the app in sample mode.
   **What the fingerprint covers** is tafs cloud's mark too (`signs: {card, words}`, `SetupComponent.Signs`), set from
   the same decision as the step it then asks, since the phone learns the step only after the tap. With `card: false`
   the Card is the one approved next: drawn under tafs cloud's words ("Its Card: you approve it next") with its lines
-  dimmed, never under its own title as if signed now, and not drawn at all without words. With `card: true`, or no
+  dimmed, never under its own title as if signed now, and not drawn at all without words. An app's first sign-in has
+  no draft yet; its card still draws tafs cloud's words when it sends them (`SetupApproval.cardNextWords`), so the
+  owner knows a second approval follows, as on Android. With `card: true`, or no
   mark from an older tafs cloud, the card draws the Card as before. The mark comes on Setup's thread read with this
   phone's signed read of its connections (`Planque-Device-Signature`) and the steps it signs
   (`?can=tools_and_cards,key_and_cards,signs`, `AppModel.stepsSignedHere`); without the proof, the cards come unmarked.
