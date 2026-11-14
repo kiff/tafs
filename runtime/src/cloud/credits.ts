@@ -403,10 +403,10 @@ export function waitingWords(b: Pick<KIFFBalance, "kind" | "why" | "can_raise" |
       return w.cr_w_no_plan;
     case "limit_reached":
       if (b.can_raise && b.raise_to_cents > 0) return endSentence(w.cr_w_limit_raise(day));
-      if (b.can_raise) return w.cr_w_limit_ceiling(again);
+      if (b.can_raise) return endSentence(w.cr_w_limit_ceiling(again));
       return w.cr_w_limit_admin;
     default:
-      if (b.can_buy?.packs) return w.cr_w_used_pack(again);
+      if (b.can_buy?.packs) return endSentence(w.cr_w_used_pack(again));
       return endSentence(w.cr_w_used_wait(day));
   }
 }
