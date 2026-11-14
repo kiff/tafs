@@ -5122,9 +5122,13 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // kiff/agents keeps a run paused on a card PAUSED (409 paused_run); tafs cloud keeps it as ended, so the next sweep
     // doesn't end it again (it did every 5 minutes, logging "ended" each time) and Home no longer lists it.
     expect(stored.status).toBe("PAUSED");
+    // The next sweep asks kiff/agents once more (it may cancel it now); refused again, it's kept, and never asked a third time.
     const cancels = w.agents.calls.filter((c) => c.startsWith("cancelRun")).length;
     expect(await sweepStaleCoach(deps)).toEqual([]);
-    expect(w.agents.calls.filter((c) => c.startsWith("cancelRun")).length).toBe(cancels);
+    expect(w.agents.calls.filter((c) => c.startsWith("cancelRun")).length).toBe(cancels + 1);
+    expect(await sweepStaleCoach(deps)).toEqual([]);
+    expect(w.agents.calls.filter((c) => c.startsWith("cancelRun")).length).toBe(cancels + 1);
+    expect(stored.status).toBe("PAUSED");
     stored.requester = { kind: "member", id: "u_ana" };
     const home = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps)).body) as { coach_waiting?: unknown };
     expect(home.coach_waiting).toBeUndefined();
@@ -5136,6 +5140,38 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const result = await paused();
     result.w.agents.runs.find((r) => r.id === result.run)!.updated = new Date(result.w.now.getTime() - 72 * 3600_000).toISOString();
     expect(await sweepStaleCoach(result.deps)).toEqual([]);
+  });
+
+  // Runs kept as ended before kiff/agents could cancel a run paused on a card (agents#465) stay PAUSED there until asked again.
+  it("asks kiff/agents once more to cancel a run it refused before, and a run it now cancels is done", async () => {
+    const { w, run, deps } = await paused({ id: "q1", type: "questions" });
+    const stored = w.agents.runs.find((r) => r.id === run)!;
+    stored.updated = new Date(w.now.getTime() - 49 * 3600_000).toISOString();
+    // Ended by the sweep while kiff/agents refused: kept as ended here, still PAUSED there.
+    expect(await sweepStaleCoach(deps)).toEqual([{ run, why: "stale" }]);
+    expect(stored.status).toBe("PAUSED");
+    // kiff/agents now cancels a run paused only on cards: the next sweep asks once, and it ends. Nothing is answered.
+    w.agents.old.refusesCards = false;
+    expect(await sweepStaleCoach(deps)).toEqual([]);
+    expect(stored.status).toBe("CANCELLED");
+    expect(stored.requirements![0]!.answered).toBeUndefined();
+    expect(w.agents.calls.filter((c) => /answerCard|answerResult/.test(c))).toEqual([]);
+  });
+
+  it("doesn't retry a kept end once its run waits on a new card, answered in Coach after all", async () => {
+    const { w, run, deps } = await paused({ id: "q1", type: "questions" });
+    const stored = w.agents.runs.find((r) => r.id === run)!;
+    stored.updated = new Date(w.now.getTime() - 49 * 3600_000).toISOString();
+    expect(await sweepStaleCoach(deps)).toEqual([{ run, why: "stale" }]);
+    const first = stored.requirements![0]!;
+    first.answered = w.now.toISOString();
+    stored.requirements!.push({ ...first, call_id: `${first.call_id}-next`, answered: undefined, input: { ...(first.input as object), id: "q2" } });
+    stored.updated = w.now.toISOString();
+    w.agents.old.refusesCards = false;
+    const cancels = w.agents.calls.filter((c) => c.startsWith("cancelRun")).length;
+    expect(await sweepStaleCoach(deps)).toEqual([]);
+    expect(w.agents.calls.filter((c) => c.startsWith("cancelRun")).length).toBe(cancels);
+    expect(stored.status).toBe("PAUSED");
   });
 
   it("never counts another person's Coach chat, nor a setup's result card, as waiting on you", async () => {
