@@ -1,0 +1,47 @@
+name: Caches
+
+# The repository's Actions caches, kept to one current copy of each
+# (scripts/caches.py, with its tests): a cache goes when a newer one of the
+# same family on the same branch exists, or when its pull request is no longer
+# open. GitHub keeps 10 GB of caches, then evicts the least used; Gradle's,
+# saved on main by content, filled it (10.2 GB, 14 Nov 2026) and every run got
+# slower. Deleting a cache is safe: the next run that needs it saves it again.
+#
+# Weekly, and by hand. By hand it only says what would go unless dry_run is
+# off. Each run logs the caches' count and size before and after.
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only say what would go, and delete nothing
+        type: boolean
+        default: true
+
+permissions:
+  actions: write
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: caches
+  cancel-in-progress: false
+
+jobs:
+  clean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: false
+      - name: The rule's own tests
+        run: python3 -W error -m unittest discover -s scripts -p 'test_caches.py'
+      - name: Delete superseded caches, and closed pull requests'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '--dry-run' || '' }}
+        run: python3 scripts/caches.py $DRY_RUN
