@@ -3570,10 +3570,12 @@ enum Words {
             static var note: String { Words.line("settings.devices.note") }
             /// Signing a device out ends its sign-in on this account at once. To sign out this {device}, use Sign out of KIFF.
             static func noteDevice(device: String) -> String { Words.line("settings.devices.note_device", device) }
-            /// Add a computer
+            /// Add a device
             static var pair: String { Words.line("settings.devices.pair") }
             /// Does your computer show {code}?
             static func pairCheck(code: String) -> String { Words.line("settings.devices.pair_check", code) }
+            /// Does your new phone or tablet show {code}?
+            static func pairCheckPhone(code: String) -> String { Words.line("settings.devices.pair_check_phone", code) }
             /// KIFF paired {device} with the code {kiff}, not {shown} as checked. If that isn't your computer, sign it out here.
             static func pairCodeDiffers(device: String, kiff: String, shown: String) -> String { Words.line("settings.devices.pair_code_differs", device, kiff, shown) }
             /// {device} is paired. It showed {code}.
@@ -3586,6 +3588,8 @@ enum Words {
             static func pairGivesHello(device: String) -> String { Words.line("settings.devices.pair_gives_hello", device) }
             /// {device} will be able to approve your tafs' actions with a passkey.
             static func pairGivesPasskey(device: String) -> String { Words.line("settings.devices.pair_gives_passkey", device) }
+            /// {device} will be able to approve your tafs' actions.
+            static func pairGivesPhone(device: String) -> String { Words.line("settings.devices.pair_gives_phone", device) }
             /// KIFF couldn't read that code. Show a new one on your computer and scan it again.
             static var pairInvalid: String { Words.line("settings.devices.pair_invalid") }
             /// That computer is already paired.
@@ -3596,6 +3600,8 @@ enum Words {
             static var pairNotAPairing: String { Words.line("settings.devices.pair_not_a_pairing") }
             /// Only pair a computer you're using right now.
             static var pairOnlyNow: String { Words.line("settings.devices.pair_only_now") }
+            /// Only add a phone or tablet you're holding right now.
+            static var pairOnlyNowPhone: String { Words.line("settings.devices.pair_only_now_phone") }
             /// Pair {device}: it can approve actions
             static func pairPrompt(device: String) -> String { Words.line("settings.devices.pair_prompt", device) }
             /// Couldn't open the scanner. {why}
