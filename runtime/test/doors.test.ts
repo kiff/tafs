@@ -1395,6 +1395,20 @@ describe("a door's reply (kiff/agents#363)", () => {
     expect(replyText(taf, ran("Refunded the duplicate on order 4471."), { attachments: 1 }))
       .toBe("Written by an AI agent on behalf of Acme.\n\nRefunded the duplicate on order 4471.\n\nI read only the text of your message; I didn't open its attachment.");
   });
+
+  it("never says Done for a run cut off at its turn or cost cap with nothing written", () => {
+    const taf = { id: "taf-aaaa0000000000000000", name: "Refunds", job: "refunds", kiffAgent: "rae", nameClaim: "c", created: "2026-10-15T09:00:00Z" };
+    const ran = (stop?: string) => ({ id: "run1", agent: taf.id, session: "s1", trigger: "owner", status: "COMPLETED", ...(stop ? { stop } : {}), output: "", cost_micro_usd: 0, turns: 50, created: "", updated: "" }) as never;
+    for (const stop of ["turn_cap", "cost_cap"]) {
+      const text = replyText(taf, ran(stop), {});
+      // Negative: a capped run's reply has no "Done" in it.
+      expect(text, stop).not.toMatch(/\bDone\b/);
+      expect(text, stop).toContain("I couldn't finish this. My owner can see what happened in the tafs app.");
+    }
+    // An ordinary run that answered with nothing still says it's done.
+    expect(replyText(taf, ran("answered"), {})).toContain("Done. I have nothing to add.");
+    expect(replyText(taf, ran(), {})).toContain("Done. I have nothing to add.");
+  });
 });
 
 describe("while the account's tafs wait for credits", () => {
