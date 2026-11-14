@@ -8,6 +8,9 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- Dictating a message (docs/chat.md): recognised on the phone, asked at the first tap of the mic. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Haptics' touch effects where the view's feedback plays none (some phones keep it off and use their own touch slider);
+         a normal permission, granted at install, never asked. -->
+    <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Dictation is optional: a phone without a microphone still installs tafs, and its mic says it can't dictate. -->
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 

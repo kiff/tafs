@@ -1,0 +1,2 @@
+- A Coach chat you set aside no longer comes back as the open conversation, on any device.
+- Ask Coach in Connect apps always starts a new conversation.

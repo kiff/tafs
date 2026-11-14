@@ -73,11 +73,13 @@ export const LANGUAGE_LINE = "[tafs language]";
 
 /**
  * A Coach message with the person's language said, when it isn't English: Coach replies in it, and words
- * what they read in it. The line goes before the owner's words, after any of tafs' own opening lines, so
- * what reads a message's opening (entryOf, ownerWords) reads it as before.
+ * what they read in it. English is said too when the account's language was another before this chat
+ * (`before`): its notes and earlier chats are in that one, and 14 Nov an English app's plan came out in French.
+ * The line goes before the owner's words, after any of tafs' own opening lines, so what reads a message's
+ * opening (entryOf, ownerWords) reads it as before.
  */
-export function withLanguage(text: string, lang: Lang): string {
-  if (lang === "en") return text;
+export function withLanguage(text: string, lang: Lang, before: Lang = "en"): string {
+  if (lang === "en" && before === "en") return text;
   return withLine(text, `${LANGUAGE_LINE} The person writing reads ${LANGUAGE_NAMES[lang]} (${lang}), from their app: answer them in it, and write what they read in it (questions, cards, a version's note, a taf's summary). taf, Coach and Card stay as names. A message a taf sends a customer keeps the customer's language.`);
 }
 

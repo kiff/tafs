@@ -1,0 +1,3 @@
+- Un'app connessa si apre toccando un punto qualsiasi della sua riga.
+- Senza un taf, un'app offre «Chiedi a Coach», dove ne crei uno.
+- Dopo aver messo da parte una chat di Coach, Coach ne inizia una nuova.

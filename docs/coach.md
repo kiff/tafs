@@ -577,6 +577,13 @@ proposes that it adds and updates its own columns there (who it wrote to, replie
 tool that writes to the sheet on its Card. Coach asks only what only the owner knows, never how they
 track the work: the owner talks to Coach and never types into the sheet.
 
+A taf finds things by id, never by name (`set-up-a-taf@10`, `the-dial@5`). What it makes and uses
+again, such as a sheet, it keeps by the id the call gives back; an app's guide names those (its
+`returns`, such as `data.spreadsheetId`), and its instructions say so. For something that already
+exists, Coach asks the owner for its link, never its name: a search by name often needs more than the
+connection gives (a Sheets sign-in doesn't search Drive). When a place for results has no read on the
+taf's connection that lists places by name, Coach asks for the place's link and takes the id from it.
+
 ## A vendor the account already connects
 
 When a new Coach conversation starts, tafs cloud reads the account's connections from planque with the

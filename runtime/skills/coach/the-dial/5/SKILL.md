@@ -28,10 +28,13 @@ Changes where a taf's results go and what wakes it, as a version of its dial: th
      place; when the only write that fits moves money, say so and stop.
   2. Fix what never changes. The arguments that pick the place (the sheet,
      the channel, the repository, the page) come from the owner's words; never
-     ask for an id. When the vendor has a read that lists them by name, ask
-     the owner's OK to read that list, as for the accounts list, read it on
-     the taf's connection, and let the owner pick by name in a questions card.
-     The id goes in args, the name in name ("Google Sheets · Refunds 2026").
+     ask for an id. When the taf's connection has a read that lists them by
+     name, ask the owner's OK to read that list, as for the accounts list,
+     read it on the taf's connection, and let the owner pick by name in a
+     questions card. Without one (a Sheets sign-in lists no sheets: that's
+     Drive), ask for the place's link, and take the id from it. The id goes in
+     args, the name in name ("Google Sheets · Refunds 2026"); the taf never
+     looks the place up by name.
   3. Say what goes where. fill names each field the taf fills from its
      result, one line in words about the result ("the customer's name", "the
      amount refunded, in EUR"), from what the owner wants in the row, the

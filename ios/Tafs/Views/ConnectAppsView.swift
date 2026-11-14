@@ -34,6 +34,11 @@ struct ConnectAppsView: View {
                 }
                 if !parts.discover.isEmpty {
                     Section {
+                        // Connecting needs a taf: said over the apps to connect, never over Yours.
+                        if ConnectRow.saysMakeATaf(discover: parts.discover, forTaf: taf != nil, connectable: model.connectableTafs) {
+                            Text(Words.Connect.appsConnectTafMakeOne)
+                                .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+                        }
                         if table, parts.yours.isEmpty { columns }
                         ForEach(parts.discover) { app in row(app) }
                     } header: { Text(Words.Connect.Apps.discover) }
@@ -52,10 +57,6 @@ struct ConnectAppsView: View {
                 }
             } else {
                 ProgressView().frame(maxWidth: .infinity)
-            }
-            if model.connectApps != nil, taf == nil, model.connectableTafs.isEmpty {
-                Text(Words.Connect.appsConnectTafMakeOne)
-                    .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
             }
         }
         .navigationTitle(Self.title)
@@ -236,6 +237,12 @@ struct ConnectRow: Equatable {
     static func split(_ apps: [TafsCloud.ConnectApps.App]) -> (yours: [TafsCloud.ConnectApps.App], discover: [TafsCloud.ConnectApps.App]) {
         (apps.filter(\.yours), apps.filter { !$0.yours })
     }
+
+    /// "Make one first" shows over Discover only, where connecting needs a taf: there are apps to
+    /// connect, the list wasn't opened from a taf, and no taf can have them. Never over Yours.
+    static func saysMakeATaf(discover: [TafsCloud.ConnectApps.App], forTaf: Bool, connectable: [Taf]) -> Bool {
+        !discover.isEmpty && !forTaf && connectable.isEmpty
+    }
 }
 
 /// Disconnect's words, the same on every screen and in the Face ID prompt: it names the one taf
@@ -270,6 +277,11 @@ enum ConnectionFixWords {
 enum DisconnectWords {
     static let footer = Words.Connect.Apps.disconnectWhy
 
+    /// The footer speaks of "that taf": shown only to whoever manages Cards, and only when a
+    /// connection here is a taf's. With no taf, it applies to nothing.
+    static func showsFooter(manages: Bool, tafs: [AppModel.ConnectionGroup]) -> Bool {
+        manages && !tafs.isEmpty
+    }
 
     /// The question, naming the one taf it ends and `alsoStops`, the other tafs whose Card
     /// draws on its tools; the Face ID prompt asks the same.
@@ -412,7 +424,7 @@ struct AppConnectionsView: View {
                     Text(ConnectionGroupWords.others)
                 }
             }
-            if model.canManageCards {
+            if DisconnectWords.showsFooter(manages: model.canManageCards, tafs: groups.tafs) {
                 Section { } footer: { Text(DisconnectWords.footer) }
             }
             if model.lastErrorFrom == .disconnect, let error = model.lastError {

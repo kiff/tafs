@@ -81,6 +81,8 @@ final class TafsCloud {
         /// The next run in the person's language, with its weekday when it isn't today ("Next run
         /// Mon 08:00"): drawn as is, never a bare time that reads as tomorrow.
         var nextRunWords: String? = nil
+        /// When it last changed (a version, its Card or a setting), as Home says; not read from a taf's own record.
+        var lastChange: Date? = nil
 
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, unscheduled, results
@@ -292,6 +294,9 @@ final class TafsCloud {
         let status: String?
         let nextRun: Date?
         let lastRun: Date?
+        /// When it last changed (a version, its Card or a setting), an ISO time; read leniently (any shape, never
+        /// failing Home's read) into `CloudTaf.lastChange`.
+        var lastChange: JSONValue? = nil
         let color: Int
         /// working, paused, waiting, idle (an agent tafs doesn't run) or stopped (no active Card).
         let state: String
@@ -344,6 +349,7 @@ final class TafsCloud {
             case timeZoneWords = "time_zone_words", scheduleTimeZone = "schedule_time_zone"
             case scheduleTimeZoneWords = "schedule_time_zone_words"
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", jobSummary = "job_summary"
+            case lastChange = "last_change"
         }
 
         /// tafs cloud's record of it, for its chat, runs and schedule; nil for another agent.
@@ -352,7 +358,16 @@ final class TafsCloud {
             // its chat can't take (kiff/tafs#206 section 2).
             id.map { CloudTaf(id: $0, name: name, job: job ?? "", kiffAgent: kiffAgent, status: status ?? "active", nextRun: nextRun, lastRun: lastRun,
                               unscheduled: unscheduled, results: results, timeZoneWords: timeZoneWords, scheduleTimeZone: scheduleTimeZone, scheduleTimeZoneWords: scheduleTimeZoneWords,
-                              nextRunWords: nextRunWords) }
+                              nextRunWords: nextRunWords, lastChange: { if case .string(let s)? = lastChange { return Self.time(s) }; return nil }()) }
+        }
+
+        /// An ISO time as tafs cloud writes it, with or without fractions of a second; anything else is none.
+        static func time(_ s: String) -> Date? {
+            let f = ISO8601DateFormatter()
+            f.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let d = f.date(from: s) { return d }
+            f.formatOptions = [.withInternetDateTime]
+            return f.date(from: s)
         }
     }
 

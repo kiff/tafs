@@ -68,6 +68,18 @@ final class ConnectionSheetTests: XCTestCase {
         XCTAssertTrue(AppModel.connectionGroups([], taf: { _ in nil }, attention: { _ in false }).tafs.isEmpty)
     }
 
+    /// The sheet's note on removing access speaks of "that taf": it shows only when a connection
+    /// here is a taf's, never on an account with no taf, and only to whoever manages Cards.
+    func testTheRemoveAccessNoteNeedsATaf() throws {
+        let req = { (agent: String) in #"{"server":"https://mcp.stripe.com","agent":"\#(agent)","tools":[]}"# }
+        let grants = [try g("g1", req("refunds-1")), try g("g2", req("gone-1"))]
+        let named = AppModel.connectionGroups(grants, taf: { $0.request.agent == "refunds-1" ? "Refunds" : nil }, attention: { _ in false })
+        let noTaf = AppModel.connectionGroups(grants, taf: { _ in nil }, attention: { _ in false })
+        XCTAssertTrue(DisconnectWords.showsFooter(manages: true, tafs: named.tafs))
+        XCTAssertFalse(DisconnectWords.showsFooter(manages: true, tafs: noTaf.tafs), "no taf: the note applies to nothing")
+        XCTAssertFalse(DisconnectWords.showsFooter(manages: false, tafs: named.tafs), "nothing to remove for someone who can't")
+    }
+
     /// The last group's name, the same on Android: never "removed", which the app can't tell
     /// from a taf it doesn't see.
     func testTheLastGroupClaimsNothing() {

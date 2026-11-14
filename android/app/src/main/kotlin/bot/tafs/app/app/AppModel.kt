@@ -251,6 +251,10 @@ data class AppState(
   val yourSteps: List<bot.tafs.app.kiff.YourStep> = emptyList(),
   /** Coach's chats waiting on this person, as tafs cloud lists them on Home (docs/api.md › Coach waiting); Needs you draws them. */
   val coachWaiting: List<bot.tafs.app.kiff.CoachWaiting> = emptyList(),
+  /** tafs cloud's "Set all aside", when two or more Coach chats wait. */
+  val coachWaitingClear: bot.tafs.app.kiff.CoachWaitingClear? = null,
+  /** The Coach chats being set aside now, by session. */
+  val settingAside: Set<String> = emptySet(),
   /** The hand-offs whose answer is on its way to KIFF. */
   val answeringSteps: Set<String> = emptySet(),
   /** The hand-offs KIFF took an answer for: kept out of a Home read already on its way. */
@@ -463,6 +467,8 @@ data class AppState(
   /** Why a grant's words couldn't be read or didn't check out, by grant id. */
   val profileWordsErrors: Map<String, String> = emptyMap(),
   val planqueReady: Boolean = false,
+  /** Why the last read of planque's connections failed, in words; null once a read went through. */
+  val connectionsError: String? = null,
   /** The grant being connected now, so a second tap starts nothing. */
   val connecting: String? = null,
   /** The drafts Coach's approvals name, read from KIFF so the owner sees the Cards. */
@@ -1359,7 +1365,8 @@ class AppModel(
         held = held,
         cardUnitExceptions = read.home.cardUnitExceptions.orEmpty().filterNot { it.id in s.dismissedCardUnits },
         yourSteps = read.home.yourSteps.orEmpty().filterNot { it.handoff in s.answeredSteps },
-        coachWaiting = read.home.coachWaiting.orEmpty().filter { it.session.isNotBlank() && it.words.line.isNotBlank() },
+        coachWaiting = read.home.coachWaiting.orEmpty().filter { it.session.isNotBlank() && it.words.line.isNotBlank() && it.session !in s.settingAside },
+        coachWaitingClear = read.home.coachWaitingClear?.takeIf { it.words.button.isNotBlank() },
         needsYou = read.home.needsYou,
         // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given on this device.
         record = read.activity?.let { withDecisions(KiffMapping.record(it, holders)) } ?: s.record,
@@ -1854,6 +1861,41 @@ class AppModel(
     _state.update { it.copy(coachRequested = true) }
     openCoachChat(finish.session)
   }
+
+  /**
+   * Sets a waiting Coach chat aside, or all of them with null (docs/api.md, Coach waiting): tafs cloud answers "not now", never an
+   * approval. The row goes once tafs cloud says so, and Home is read again for its count. A failure says why and keeps the row.
+   */
+  suspend fun setAsideCoach(session: String?): Boolean {
+    if (_state.value.mode != Mode.kiff) return false
+    val sessions = session?.let { setOf(it) } ?: _state.value.coachWaiting.map { it.session }.toSet()
+    if (sessions.isEmpty()) return false
+    val gen = accountGeneration
+    // One call at a time per chat: a swipe asks more than once in one gesture (Android 86 sent 11 in 3 s).
+    var started = false
+    _state.update { s -> if (sessions.any { it in s.settingAside }) { started = false; s } else { started = true; s.copy(settingAside = s.settingAside + sessions) } }
+    if (!started) return false
+    return try {
+      val done = cloud.setAsideCoach(session, coachReadProof())
+      if (gen == accountGeneration) {
+        _state.update { s -> s.copy(coachWaiting = s.coachWaiting.filterNot { it.session in done.setAside }) }
+        // Coach no longer shows a chat that was set aside: its next message would go on in the ended session (an audit wrote a
+        // new job there, and Needs you named it after the old one). A new conversation instead.
+        if (_state.value.coachChat in done.setAside) newCoachChat()
+        bot.tafs.app.design.Haptics.success()
+      }
+      refresh()
+      true
+    } catch (e: CancellationException) { throw e
+    } catch (e: Exception) {
+      if (gen == accountGeneration) { bot.tafs.app.design.Haptics.warning(); fail(ErrorWords.of(e)) }
+      false
+    } finally {
+      _state.update { it.copy(settingAside = it.settingAside - sessions) }
+    }
+  }
+
+  fun startSetAsideCoach(session: String?) { scope.launch { setAsideCoach(session) } }
 
   /** A Coach chat waiting on its person, from Needs you (docs/api.md › Coach waiting): Coach opens on that chat. */
   suspend fun openWaitingCoach(waiting: bot.tafs.app.kiff.CoachWaiting) {
@@ -2446,7 +2488,14 @@ class AppModel(
       val chats = attempt { cloud.chats(cloudId) }
       if (!current()) return
       chats?.let { list -> _state.update { it.copy(coachChats = list) } }
-      chats?.maxByOrNull { it.updated }?.let { newest -> _state.update { if (it.coachChat == null && !it.coachFresh) it.copy(coachChat = newest.session) else it } }
+      // A chat set aside (tafs cloud's `set_aside`, from any device) is never the one opened: the newest of the rest, or, with
+      // every one set aside, a new conversation.
+      val open = chats?.filterNot { it.setAside }
+      open?.maxByOrNull { it.updated }?.let { newest -> _state.update { if (it.coachChat == null && !it.coachFresh) it.copy(coachChat = newest.session) else it } }
+      if (open != null && open.isEmpty() && chats.isNotEmpty()) {
+        _state.update { if (it.coachChat == null && !it.coachFresh) it.copy(coachFresh = true) else it }
+        return
+      }
     }
     val thread = try {
       if (isTrialChat(tafId)) cloud.trialConversation(cloudId)
@@ -2802,11 +2851,8 @@ class AppModel(
       }
       var handoff = pendingHandoff()
       if (handoff == null) {
-        try {
-          signer.sign("tafs.alerts.v1|$tenant".toByteArray(), Words.Alert.prompt)
-        } catch (_: SignerException) {
-          return false
-        }
+        // No fingerprint first: it signed a message nothing sent or checked. The alert target's registration is signed with this
+        // phone's device key (a setup call), as when alerts are kept, never the approval key. One prompt fewer before a first job.
         if (generation != accountGeneration) return false
         kiff.tenant = tenant
         val signer = signer
@@ -3360,12 +3406,19 @@ class AppModel(
       throw e
     } catch (e: PlanqueError.Server) {
       // planque has no account for this one, or doesn't know this device: nothing to approve from here.
-      if (generation == accountGeneration && e.status in setOf(401, 403, 404)) _state.update { it.copy(planqueReady = false) }
+      bot.tafs.app.drive.DriveDiagnostics.error("connections read: planque ${e.status}")
+      if (generation == accountGeneration) {
+        if (e.status in setOf(401, 403, 404)) _state.update { it.copy(planqueReady = false, connectionsError = null) }
+        else _state.update { it.copy(connectionsError = ErrorWords.of(e)) }
+      }
       return
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+      // Said where the connections are drawn, and kept for diagnostics: a read that failed silently left rows that opened nothing.
+      bot.tafs.app.drive.DriveDiagnostics.error("connections read: ${e::class.simpleName}")
+      if (generation == accountGeneration) _state.update { it.copy(connectionsError = ErrorWords.of(e)) }
       return
     }
-    if (generation == accountGeneration) _state.update { it.copy(grants = list, planqueReady = true) }
+    if (generation == accountGeneration) _state.update { it.copy(grants = list, planqueReady = true, connectionsError = null) }
   }
 
   /** What an approval needs to be shown: planque's grant and KIFF's draft, read when Coach's thread is. */

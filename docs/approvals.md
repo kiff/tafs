@@ -315,8 +315,10 @@ KIFF tells tafs cloud when a call is held, and tafs cloud tells the account's ph
 through Apple push for an iPhone and Firebase Cloud Messaging for an Android phone (`runtime/src/cloud/push.ts`, `apns.ts`, `fcm.ts`):
 
 1. The phone registers the account's **alert target** in KIFF, pointed at
-   `/v1/kiff/alerts`, with a signed setup call (one Face ID). KIFF shows the target's
-   signing secret once, to the phone.
+   `/v1/kiff/alerts`, with a signed setup call. The device key signs it, not the approval key:
+   it grants no authority. On iPhone and iPad there's no Face ID for it, so the offer of alerts
+   a new person sees asks only for notifications; Android still asks the person to
+   confirm it first. KIFF shows the target's signing secret once, to the phone.
 2. The phone hands tafs cloud its push token and that secret (`POST /v1/push`; an Android phone says `platform: "android"` and gives Firebase's token). The
    secret checks KIFF's deliveries; the token is where they go. An account gets alerts on
    50 phones at most. A phone can also hand over the target alone (`POST /v1/alerts`), so a

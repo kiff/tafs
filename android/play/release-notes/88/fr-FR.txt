@@ -1,0 +1,3 @@
+- Un léger retour sur la barre du bas, Coach, les onglets d'un taf et « Mettre de côté », comme sur chaque bouton.
+- Mettre une conversation de côté se termine par un signal : réussite, ou alerte si ça n'a pas marché.
+- Les vibrations suivent le retour tactile de votre téléphone ; Réglages › Vibrations les coupe.

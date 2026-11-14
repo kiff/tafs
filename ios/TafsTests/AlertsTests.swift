@@ -57,7 +57,7 @@ final class AlertsTests: XCTestCase {
         let target = try XCTUnwrap(sent("POST", "api.test", "/v1/me/alert-targets").first)
         XCTAssertEqual(body(target)["url"] as? String, "https://cloud.test/v1/kiff/alerts")
         XCTAssertNotNil(target.value(forHTTPHeaderField: "KIFF-Device-Signature"), "a phone's setup call is signed")
-        XCTAssertTrue(signer.signed.contains("tafs.alerts.v1|t1"), "Face ID first")
+        XCTAssertFalse(signer.signed.contains("tafs.alerts.v1|t1"), "no Face ID first: nothing checks that signature")
 
         let push = try XCTUnwrap(sent("POST", "cloud.test", "/v1/push").last)
         XCTAssertEqual(body(push)["device_token"] as? String, "ab01ff")
@@ -68,7 +68,7 @@ final class AlertsTests: XCTestCase {
         XCTAssertNil(model.kiff.setupSigner, "nothing signs afterwards")
     }
 
-    func testNothingIsSentWithoutNotificationsOrFaceID() async {
+    func testNothingIsSentWithoutNotificationsOrTheDeviceKey() async {
         let denied = model(allowed: false)
         await signedIn(denied)
         StubProtocol.sent = []
@@ -77,6 +77,7 @@ final class AlertsTests: XCTestCase {
         XCTAssertNotNil(denied.lastError)
         XCTAssertTrue(StubProtocol.sent.isEmpty)
 
+        // A device key that can't sign: KIFF never gets an unsigned target, and tafs cloud no secret.
         let refused = model(signer: RefusingSigner())
         await signedIn(refused)
         StubProtocol.sent = []
@@ -84,6 +85,31 @@ final class AlertsTests: XCTestCase {
         XCTAssertFalse(stillOff)
         XCTAssertTrue(sent("POST", "api.test", "/v1/me/alert-targets").isEmpty)
         XCTAssertTrue(sent("POST", "cloud.test", "/v1/push").filter { body($0)["alert_target"] != nil }.isEmpty)
+    }
+
+    /// The offer of alerts was the fifth prompt a new person met, before any job: a Face ID whose
+    /// signature nothing checked. The alert target grants no authority, so the device key signs it
+    /// with no prompt, and the approval key never does: a person who'd refuse Face ID still gets alerts.
+    func testTurningOnAsksForNoFaceID() async throws {
+        XCTAssertTrue(KIFFClient.signsSetup("/v1/me/alert-targets"), "KIFF takes it only signed")
+        XCTAssertFalse(KIFFClient.grantsAuthority("POST", "/v1/me/alert-targets"), "by the device key, never the approval key")
+
+        let signer = PromptCountingSigner()
+        let model = model(signer: signer)
+        await signedIn(model)
+        StubProtocol.responses["POST /v1/me/alert-targets"] = (201, #"{"id":"at_1","signing_secret":"whsec_abc"}"#)
+        StubProtocol.responses["POST /v1/push"] = (200, #"{"device":true,"answers":true,"alerts":true}"#)
+        model.kiff.approvalSigner = { [signer] _ in signer.approvalSigned += 1; return "approval" }
+        defer { model.kiff.approvalSigner = nil }
+
+        let on = await model.turnOnAlerts()
+        XCTAssertTrue(on)
+        XCTAssertEqual(signer.prompts, 0, "no Face ID")
+        XCTAssertEqual(signer.approvalSigned, 0, "the approval key never signs it")
+        let target = try XCTUnwrap(sent("POST", "api.test", "/v1/me/alert-targets").first)
+        XCTAssertNotNil(target.value(forHTTPHeaderField: "KIFF-Device-Signature"), "still signed, by the device key")
+        XCTAssertTrue(signer.confirmed.contains { $0.contains("\nPOST\n/v1/me/alert-targets\n") }, "the target, by the device key")
+        XCTAssertEqual(model.alertsReady, true)
     }
 
     func testANewTokenIsHandedOverAgainWithoutTheSecret() async throws {
@@ -286,5 +312,24 @@ final class AlertsTests: XCTestCase {
         model.requestedTab = nil
         model.open("somewhere-else")
         XCTAssertNil(model.requestedTab)
+    }
+}
+
+/// Signs with the device key at once; a prompt (Face ID) is counted and refused.
+@MainActor
+private final class PromptCountingSigner: ApprovalSigning {
+    var prompts = 0
+    var approvalSigned = 0
+    var confirmed: [String] = []
+    var publicKeyDER: Data { Data([0x30, 0x59]) }
+
+    func sign(_ message: Data, reason: String) async throws -> String {
+        prompts += 1
+        throw RefusingSigner.Cancelled()
+    }
+
+    func signConfirmed(_ message: Data) throws -> String {
+        confirmed.append(String(decoding: message, as: UTF8.self))
+        return "signature"
     }
 }

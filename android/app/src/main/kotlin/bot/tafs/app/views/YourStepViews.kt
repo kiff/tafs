@@ -2,9 +2,16 @@ package bot.tafs.app.views
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
@@ -60,9 +67,27 @@ fun YourStepPanel(step: YourStep, state: AppState) {
  * that chat. With no way in (sample mode), the line alone.
  */
 @Composable
-fun CoachWaitingPanel(waiting: bot.tafs.app.kiff.CoachWaiting, onOpen: ((bot.tafs.app.kiff.CoachWaiting) -> Unit)?) {
-  Panel(stroke = Theme.amber.copy(alpha = 0.5f)) {
-    Text(waiting.words.line, style = scaled(16, FontWeight.SemiBold, Theme.ink))
-    if (onOpen != null && waiting.words.open.isNotBlank()) PrimaryButton(waiting.words.open, { onOpen(waiting) }, Modifier.fillMaxWidth())
+fun CoachWaitingPanel(waiting: bot.tafs.app.kiff.CoachWaiting, onOpen: ((bot.tafs.app.kiff.CoachWaiting) -> Unit)?, onSetAside: ((String?) -> Unit)? = null) {
+  val panel = @Composable {
+    Panel(stroke = Theme.amber.copy(alpha = 0.5f)) {
+      Text(waiting.words.line, style = scaled(16, FontWeight.SemiBold, Theme.ink))
+      if (onOpen != null && waiting.words.open.isNotBlank()) PrimaryButton(waiting.words.open, { onOpen(waiting) }, Modifier.fillMaxWidth())
+      // The swipe's words, as a button too: a swipe isn't the only way (accessibility).
+      if (onSetAside != null) OutlineButton(waiting.words.setAside, { onSetAside(waiting.session) }, Modifier.fillMaxWidth())
+    }
   }
+  if (onSetAside == null) { panel(); return }
+  // Swiped either way, it's set aside: tafs cloud's "not now", and the row goes once tafs cloud says so.
+  // Once per gesture: confirmValueChange is asked more than once in one swipe, and the model also ignores a chat in flight.
+  var fired by remember(waiting.session) { mutableStateOf(false) }
+  val swipe = androidx.compose.material3.rememberSwipeToDismissBoxState(confirmValueChange = { v ->
+    if (v != androidx.compose.material3.SwipeToDismissBoxValue.Settled && !fired) { fired = true; bot.tafs.app.design.Haptics.tap(); onSetAside(waiting.session) }
+    false
+  })
+  LaunchedEffect(swipe.targetValue) { if (swipe.targetValue == androidx.compose.material3.SwipeToDismissBoxValue.Settled) fired = false }
+  androidx.compose.material3.SwipeToDismissBox(swipe, backgroundContent = {
+    androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().padding(horizontal = 16.dp), contentAlignment = androidx.compose.ui.Alignment.CenterEnd) {
+      Text(waiting.words.setAside, style = scaled(14, FontWeight.SemiBold, Theme.amberText))
+    }
+  }) { panel() }
 }

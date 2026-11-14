@@ -161,11 +161,11 @@ for v in FCM_PROJECT_ID FCM_SECRET_ID; do
   fi
   [ -n "${!v}" ] && FCM_ENV="$FCM_ENV,$v=${!v}"
 done
-# tafs cloud's feature flags (TAFS_KEY_AND_CARDS, TAFS_TOOLS_AND_CARDS, TAFS_SIGNED_REMOVE, TAFS_YOUR_STEP, TAFS_COACH_START_ONE: each "on" or unset), kept
+# tafs cloud's feature flags (TAFS_KEY_AND_CARDS, TAFS_TOOLS_AND_CARDS, TAFS_SIGNED_REMOVE, TAFS_YOUR_STEP, TAFS_COACH_START_ONE, TAFS_SWEEP_LEFTOVERS: each "on" or unset), kept
 # from tafs-cloud on a rerun like the doors' settings, so a rerun never turns one off. runtime/test checks every
 # TAFS_ flag the code reads is named here.
 FLAGS_ENV=""
-for v in TAFS_KEY_AND_CARDS TAFS_TOOLS_AND_CARDS TAFS_SIGNED_REMOVE TAFS_YOUR_STEP TAFS_COACH_START_ONE; do
+for v in TAFS_KEY_AND_CARDS TAFS_TOOLS_AND_CARDS TAFS_SIGNED_REMOVE TAFS_YOUR_STEP TAFS_COACH_START_ONE TAFS_SWEEP_LEFTOVERS; do
   if [ -z "${!v:-}" ]; then
     kept=$(aws lambda get-function-configuration --function-name "$FN" --query "Environment.Variables.$v" --output text 2>/dev/null || true)
     [ "$kept" = None ] && kept=""

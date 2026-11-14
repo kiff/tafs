@@ -88,6 +88,11 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
     expect(failedStep("grt_Abc123xyz")).toEqual({ failed: true });
   });
 
+  it("reads a step Coach wrote wrong and sent again as not made on every read, never failed", () => {
+    const whys = [{ call: "c1", tool: "planque", why: "Coach couldn't connect Gmail yet", not_made: true as const }];
+    expect(attachWhys([{ tool: "planque", error: true as const }], whys)).toEqual([{ tool: "planque", not_made: true }]);
+  });
+
   it("gives the thread's failed steps their reasons, each to the first failed step of its tool, in order", () => {
     const whys = [{ call: "c1", tool: "get_order", why: "Not found." }, { call: "c3", tool: "get_order", why: "Timed out." }];
     const steps = [{ tool: "get_order", error: true as const }, { tool: "get_order" }, { tool: "get_order", error: true as const }, { tool: "create_refund", error: true as const }];
@@ -237,6 +242,10 @@ describe("a refused connection's way forward (go-to-market job 3, 13 Nov)", () =
     // The request's own shape, as planque checks it: Coach wrote it, and Coach fixes it (job 3's pinned post tool).
     expect(coachGuard("fixed argument visibility.com.linkedin.ugc.MemberNetworkVisibility must be a dotted path with a JSON value")).toBe(true);
     expect(coachGuard("argument post_text is not a valid name")).toBe(true);
+    // How a request is written, as planque refuses it: Coach's to fix, never the person's app.
+    expect(coachGuard("reusing a managed app's sign-in takes agent, agent_name and tools: [] alone")).toBe(true);
+    expect(coachGuard("grant is planque's grant id")).toBe(true);
+    expect(coachGuard("Gmail's sign-in has expired (it answered 401), so nothing was done")).toBe(false);
     expect(s.connectionRefusal("c1", "fixed argument visibility.com.linkedin.ugc.MemberNetworkVisibility must be a dotted path with a JSON value")).toBeUndefined();
     expect(lacksAccess("Google Sheets refused the write: the sheet was renamed.")).toBe(false);
     // The person's reason line is tafs cloud's, by kind, never the server's words (the go-to-market bar, 13 Nov).

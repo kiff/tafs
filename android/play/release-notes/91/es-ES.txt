@@ -1,0 +1,2 @@
+- Un chat de Coach que dejaste de lado ya no vuelve como conversación abierta, en ningún dispositivo.
+- «Preguntar a Coach» en Conectar apps siempre empieza una conversación nueva.

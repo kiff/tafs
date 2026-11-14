@@ -156,7 +156,11 @@ steps have none.
 reads, kiff/agents refuses the act back, unmade, and tells the taf to read first. Nothing
 reached KIFF or the tool, so it isn't a failure. The step ends `not_made` and shows
 "not made · read first" with a ↩ mark; made again, it's one row with its tries; not made
-again, it stays in the list.
+again, it stays in the list. A connection call the connection server refused for how Coach
+wrote it (its order, "read the catalog before…", or its shape, "reusing … takes agent, agent_name and
+tools: [] alone", a missing grant id) ends `not_made` too, never "Coach couldn't connect …" in red:
+nothing was made, and Coach asks again. A reread of the thread says the same (the kept reason is marked
+`not_made`).
 
 **A run that paused on a held call** has its work in parts, one for each stretch between
 pauses. Each part's work goes on the first message written in it, and its time leaves out
@@ -356,7 +360,9 @@ step), and `signs: {card: false, words?}` when it signs the connection alone, wi
 approve it next", in the reader's language) when the card carries a draft. It comes from the same rule `decide`
 asks by (`stepFor`), read as the phone: the chat's read carries `Planque-Device-Signature` and what the phone can
 sign (`?can=tools_and_cards,key_and_cards`). Without the proof, or when the connections can't be read within
-1.5 s, the cards carry no `signs` and the apps draw them as before. With `card: false`, an app never draws the
+1.5 s, the cards carry no `signs` and the apps draw them as before. A phone that draws by the mark says so with
+`signs` in `can` (on the read and on the ask): only then is a held sign-in's first tools offered with the Card
+under one fingerprint ([secure-connection.md](secure-connection.md)). With `card: false`, an app never draws the
 Card's limits as being signed now: they go under `words`.
 
 ## Coming back to a run at work

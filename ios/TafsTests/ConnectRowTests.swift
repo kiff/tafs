@@ -77,5 +77,28 @@ final class ConnectRowTests: XCTestCase {
         XCTAssertTrue(source.contains("} header: { Text(Words.Connect.Apps.yours) }"))
         XCTAssertTrue(source.contains("} header: { Text(Words.Connect.Apps.discover) }"))
         XCTAssertTrue(source.contains("if app.needsSetup {\n            // Not set up for anyone to connect yet"), "no Connect for an app to set up")
+        // The whole connected row is the tap target: its ✓ is a picture inside the link, not a button of its own.
+        XCTAssertTrue(source.contains("} else if app.connected {\n            Image(systemName: \"checkmark\")"),
+                      "the ✓ is part of the row's link, not a tap of its own")
+    }
+
+    /// "Make one first" sits over Discover, where connecting needs a taf, and never over Yours: on an
+    /// account with no taf and only connected apps, it doesn't show at all.
+    func testMakeATafShowsOnlyOverAppsToConnect() throws {
+        let list = try [#"{"entry":"b","title":"B","state":"connected"}"#, #"{"entry":"a","title":"A"}"#].map(app)
+        let parts = ConnectRow.split(list)
+        let one = Taf(name: "Refunds", job: "Refunds", tools: [], colorIndex: 0, card: Card(rules: [], issuedBy: "You"))
+        XCTAssertTrue(ConnectRow.saysMakeATaf(discover: parts.discover, forTaf: false, connectable: []), "apps to connect, and no taf to have them")
+        XCTAssertFalse(ConnectRow.saysMakeATaf(discover: [], forTaf: false, connectable: []), "only Yours: nothing there needs a taf")
+        XCTAssertFalse(ConnectRow.saysMakeATaf(discover: parts.discover, forTaf: false, connectable: [one]), "a taf can have them")
+        XCTAssertFalse(ConnectRow.saysMakeATaf(discover: parts.discover, forTaf: true, connectable: []), "opened from a taf")
+
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let source = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
+        XCTAssertEqual(source.components(separatedBy: "Text(Words.Connect.appsConnectTafMakeOne)").count, 2, "said in one place")
+        let line = try XCTUnwrap(source.range(of: "Text(Words.Connect.appsConnectTafMakeOne)"))
+        let discover = try XCTUnwrap(source.range(of: "} header: { Text(Words.Connect.Apps.discover) }"))
+        let yours = try XCTUnwrap(source.range(of: "} header: { Text(Words.Connect.Apps.yours) }"))
+        XCTAssertTrue(yours.upperBound < line.lowerBound && line.upperBound < discover.lowerBound, "inside Discover's section, not Yours'")
     }
 }

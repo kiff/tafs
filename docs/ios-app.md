@@ -160,6 +160,7 @@ the app in sample mode.
 | `-tab account \| tafs \| needs-you \| record` | Opens that tab |
 | `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| buy-credits` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
 | `-landscape YES` | The iPad's window turned to landscape, for its screenshots |
+| `-signedIn YES` | The iPad's sidebar laid out as for a signed-in account, its screens and Coach above the account, over the sample's tafs: a layout shot, nothing read from KIFF |
 | `-pack <id>` | The Add credits screen with that pack alone |
 | `-narrow YES` | Laid out at Slide Over's width on an iPad |
 | `-sampleReplySeconds <s>` | The sample taf answers slowly enough for a UI test to see each part |
@@ -170,10 +171,27 @@ the app in sample mode.
 - **The bar** (`TafsBar`, in `TafsApp`'s `RootView`): **Account · Tafs · Needs you · Record**,
   then **Coach**, a filled ink button that opens Coach mode, shown only when
   `signedIn && mode == .kiff && mayUseCoach`. Along the foot on a compact width, below the
-  screens so a chat's field stays above it, and hidden while the keyboard is up; a rail down
-  the left on a regular width, Coach at its foot. Each tab is built the first time it's
-  opened and then kept. Account is `SettingsView`; ⌘1–3 open Tafs, Needs you and Record, ⌘,
-  Account, ⌘K Coach.
+  screens so a chat's field stays above it, and hidden while the keyboard is up. Each tab is
+  built the first time it's opened and then kept. Account is `SettingsView`; ⌘1–3 open Tafs,
+  Needs you and Record, ⌘, Account, ⌘K Coach.
+- **On an iPad's full width, one sidebar for the whole app** (`HomeSplitView(tab:coachAvailable:)`,
+  the owner's layout), in place of a rail beside the Tafs tab's own sidebar:
+  - **at the top,** the mascot and "tafs": the way to the tafs list (the Overview screen, every taf),
+    which is what opens first;
+  - **the app's screens as items:** Needs you (with its count), Record, Calendar, Usage (Plan &
+    usage) and Connect apps, then the held calls;
+  - **only the tafs relevant now** (`AppModel.relevantNow`): one with an item in Needs you (a held
+    call, a step it handed over, a knock at its door), or a run or a change in the last 24 hours
+    (`last_run`, `last_change`), and
+    those being set up. The rest are in the list behind the mascot;
+  - **at its foot, always in sight:** Coach, then the account button, which says who is signed in
+    and opens Account beside the sidebar.
+  
+  Each item opens its existing screen beside the sidebar (`HomeSelection`). The app's tab and the
+  selection follow each other, so a notification, a drive or a shortcut that opens a tab opens its
+  screen here; ⌘1 from a screen goes back to the tafs list. Each item is in the drive's
+  registry, as the rail's were. Account and Record are built again on each pick, not kept as the
+  phone's tabs are. The iPhone keeps the bar.
 - **Plan & usage** (`UsageView`, opened from Settings' Plan card and Home's plan line), with
   credits as the balance ([accounts.md](accounts.md#credits-and-plans)). Every line is tafs
   cloud's or KIFF's, as written; the app adds nothing but the order:
@@ -263,7 +281,9 @@ the app in sample mode.
 - **Account › Alerts** (`NotificationSettingsView`): two lock-screen examples, Alerts on this
   device (Turn on alerts while off), Sound (off and greyed while alerts are off, its choice
   kept), and What alerts you, read-only, drawn only with something in it; "A taf answered
-  someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).
+  someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`). Turn on alerts,
+  here and in the offer of alerts, asks for notifications and no Face ID: KIFF's alert target is
+  signed by the device key, which needs no prompt (`turnOnAlerts`, `AlertsTests`).
 - **The AI-data consent** (`AIConsentView`, `TafsCloud+AIConsent.swift`; docs/accounts.md, "Your data and the AI"): a
   full screen with tafs cloud's words as sent (`GET /v1/me/ai-consent`: title, lines, Allow, Not now), and no line of
   the app's own. It comes up after sign-in while the person hasn't allowed it, and whenever tafs cloud refuses a
@@ -513,7 +533,10 @@ language: the app has none of its own for it.
 When the account has no plan, tafs cloud makes the taf Coach handed over and starts no run. Its
 answer to the result carries `outcome.plan_needed.words` ("Choose a plan to start it.", in the
 person's language), and the hand-over card says them under its own words, above the button that
-opens the taf (`SetupThread.planNeeded`). No words, or none that are text, add nothing.
+opens the taf (`SetupThread.planNeeded`). Under them, **Choose a plan** (`usage.choose_plan`) opens
+Plan & usage on its own screen (`usageRequested`), where a plan is chosen, as on Android. tafs cloud
+sends only the words, no plan and no link, so the button names none. No words, or none that are
+text, add nothing: no line and no button.
 
 ## Connect apps
 
@@ -521,12 +544,17 @@ The same rows as Android, from the same tafs cloud fields (`GET /v1/connect/apps
 `connected`, `method` (else `how`), and `line`, `whose` and `used_by` when sent; `ConnectRow`):
 - **Yours first, then Discover:** connected apps (or ones to sign in again) under Yours, the rest under Discover,
   each in tafs cloud's order, with search.
+- **No taf to connect for:** opened from Settings on an account where no taf can have an app, "Apps connect for a taf.
+  Make one first…" heads Discover, where Connect needs a taf, and never Yours; with nothing under Discover it doesn't
+  show (`ConnectRow.saysMakeATaf`).
 - **On a phone, two lines:** the name, then tafs cloud's `line` as sent ("Sign in · Connected · Used by Refunds"). From a
   tafs cloud without it, the app says the same: how it connects ("Sign in" or "With a key"), whose it is (`whose`, as
   sent), where it stands, and which tafs use it ("Used by …", from `used_by`, or this phone's planque read). A ✓ for a connected app; else a compact Connect, as wide as its words.
 - **On an iPad's full width, a table:** App, How it connects, Whose, Status.
 - **A connected app opens its detail** (`AppConnectionsView`): what each connection can read and do, which taf it
-  serves, and Disconnect.
+  serves, and Disconnect. The whole row opens it, name, logo and second line included, not only its ✓.
+  Its footer ("Removing access takes its tools from that taf only…") shows only when a connection there is one of
+  the account's tafs' (`DisconnectWords.showsFooter`): with no taf, it applies to nothing.
 
 ## A taf whose setup stopped partway
 
@@ -820,11 +848,20 @@ One rule, as on Android (`Haptics`, `Design/Scaled.swift`):
 - **A light tap on every button press,** played once in `DriveButton`, the style under `PrimaryButtonStyle`,
   `OutlineButtonStyle` and `.drivablePlain`. Every new button taps without wiring. A press and the action it
   starts tap once: a second tap within 150 ms is the same one. A drive's activation doesn't tap.
+  The bar's tabs and the sidebar's foot are such buttons; Coach's own button, on the bar and in the
+  sidebar, taps too (`Haptics.tap()`), as on Android 88.
 - **A success tick** when an approval goes through (a held call approved, Coach's card approved) or a send
   does (to Coach or a taf).
 - **A warning tick** when something the person just did is refused or fails (`lastError`, within 15 s of their own press,
-  approval or send). A background read that fails never buzzes.
+  approval or send): also Coach's card when its approval fails (`AppModel.feel(approving:)`, a signature not given,
+  tafs cloud's refusal or no answer) and a send kept unsent (`Delivery.feel`). One failure warns once, within a
+  second. A background read that fails never buzzes.
+- **A selection tick** (`Haptics.select`) when the person changes a taf's tab (Chat, Activity, Card, Setup)
+  or picks another item in the iPad's sidebar; the same one again, or a change made for them, plays nothing.
 - **A step tick** on dial and selector stops.
+- The system's generators only (`UIImpactFeedbackGenerator`, `UINotificationFeedbackGenerator`,
+  `UISelectionFeedbackGenerator`), so the phone's own System Haptics setting is followed too.
+- **Set aside** and **Set all aside**, which tap and tick on Android, aren't in Needs you on iPhone and iPad yet.
 - **Settings › Haptics** turns all of it off on this device (`HapticsTests`).
 
 ## Conventions
