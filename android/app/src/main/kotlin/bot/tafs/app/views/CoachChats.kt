@@ -150,7 +150,7 @@ private fun ChatRow(chat: TafsCloud.Chat, action: String, onOpen: () -> Unit, on
   Box {
     // A long press asks about this chat by name (Archive, or Put back): no menu that could open over another row.
     Column(
-      Modifier.fillMaxWidth().heightIn(min = 52.dp).combinedClickable(onClick = onOpen, onLongClickLabel = action, onLongClick = onAction).padding(vertical = 8.dp),
+      Modifier.fillMaxWidth().heightIn(min = 52.dp).combinedClickable(onClick = { bot.tafs.app.design.Haptics.tap(); onOpen() }, onLongClickLabel = action, onLongClick = onAction).padding(vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
       Text(chat.title.ifBlank { Words.Coach.Chats.untitled }, style = scaled(15, FontWeight.SemiBold, Theme.ink), maxLines = 2)

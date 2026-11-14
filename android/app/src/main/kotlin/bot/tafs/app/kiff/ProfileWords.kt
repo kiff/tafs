@@ -54,7 +54,7 @@ data class ProfileWords(val profileSha256: String, val wordsSha256: String, val 
      */
     fun checked(profile: JsonObject, answer: JsonObject): ProfileWords {
       val words = answer["words"]?.jsonObject ?: throw Mismatch("no words")
-      if (words["v"]?.jsonPrimitive?.content !in setOf(WORDS_V1, WORDS_V2)) throw Mismatch("words aren't $WORDS_V1 or $WORDS_V2")
+      if (words["v"]?.jsonPrimitive?.content !in setOf(WORDS_V1, WORDS_V2)) throw Mismatch("words version")
       val profileSha = answer["profile_sha256"]?.jsonPrimitive?.content
       val wordsSha = answer["words_sha256"]?.jsonPrimitive?.content
       if (profileSha != digest(profile)) throw Mismatch("profile digest")

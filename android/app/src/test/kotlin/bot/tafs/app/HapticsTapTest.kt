@@ -29,5 +29,12 @@ class HapticsTapTest {
       .flatMap { f -> f.readLines().mapIndexedNotNull { i, line -> if (!line.startsWith("import ") && raw.containsMatchIn(line)) "${f.name}:${i + 1}" else null } }
       .toList()
     assertTrue("tappables with no touch effect: $silent", silent.isEmpty())
+    // A tap and a long press: its tap plays the touch effect, unless the tap does nothing (`onClick = {}`). Compose plays its own
+    // long-press feedback.
+    val combined = sources.walkTopDown().filter { it.extension == "kt" && it.parentFile.name != "design" }
+      .flatMap { f -> f.readLines().mapIndexedNotNull { i, line ->
+        if (line.contains("combinedClickable(") && !line.contains("Haptics.tap()") && !line.contains("onClick = {}")) "${f.name}:${i + 1}" else null
+      } }.toList()
+    assertTrue("a tap and long press whose tap plays nothing: $combined", combined.isEmpty())
   }
 }
