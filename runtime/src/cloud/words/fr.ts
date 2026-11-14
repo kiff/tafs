@@ -109,6 +109,8 @@ export const fr: Words = {
   approval_no_code: (vendor: string) => `La connexion à ${vendor} est revenue sans son code de confirmation. Rien n'a été connecté.`,
   approval_came_back: (vendor: string) => `Aucune page de connexion à ${vendor} ne s'est ouverte : rien n'a été connecté. Réessayez.`,
   approval_came_back_signed_in: (vendor: string) => `Votre connexion à ${vendor} existe déjà : aucune page de connexion ne s'est ouverte, et rien de nouveau n'est encore connecté. Ses actions viennent ensuite.`,
+  approval_listed_already: (vendor: string) => `Votre connexion à ${vendor} est déjà faite : il n'y a rien de plus à connecter ici.`,
+  approval_not_approvable: (vendor: string) => `Cette connexion à ${vendor} ne peut plus être approuvée : rien n'a été signé.`,
   apps_method_sign_in: "Connexion",
   apps_method_key: "Avec une clé",
   apps_connected: "Connecté",

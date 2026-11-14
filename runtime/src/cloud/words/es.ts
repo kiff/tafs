@@ -109,6 +109,8 @@ export const es: Words = {
   approval_no_code: (vendor: string) => `El inicio de sesión en ${vendor} volvió sin su código de confirmación. No se conectó nada.`,
   approval_came_back: (vendor: string) => `No se abrió ninguna página de inicio de sesión de ${vendor}, así que no se conectó nada. Puedes reintentarlo.`,
   approval_came_back_signed_in: (vendor: string) => `Ya has iniciado sesión en ${vendor}, así que no se abrió ninguna página de inicio de sesión y aún no hay nada nuevo conectado. Sus acciones vienen después.`,
+  approval_listed_already: (vendor: string) => `Ya has iniciado sesión en ${vendor} en esta conexión, así que aquí no hay nada que iniciar.`,
+  approval_not_approvable: (vendor: string) => `Esta conexión con ${vendor} ya no se puede aprobar, así que no se firmó nada.`,
   apps_method_sign_in: "Inicio de sesión",
   apps_method_key: "Con una clave",
   apps_connected: "Conectado",
