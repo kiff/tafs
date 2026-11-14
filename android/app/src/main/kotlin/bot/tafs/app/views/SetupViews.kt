@@ -72,6 +72,8 @@ fun SetupTab(
   onConnectApps: () -> Unit,
   onRemove: (() -> Unit)?,
   onActivity: (String) -> Unit = {},
+  /** Remove for good's confirmation is on its way: the button takes no second tap. */
+  removeOpening: Boolean = false,
 ) {
   val signedIn = state.mode == Mode.kiff && taf.cloudId != null
   val manages = state.manages(taf.id)
@@ -108,7 +110,7 @@ fun SetupTab(
   if (state.mode == Mode.sample && taf.state != bot.tafs.app.model.TafState.revoked) {
     OutlineButton(if (taf.state == bot.tafs.app.model.TafState.paused) Words.Taf.resume else Words.Taf.pause, { actions.togglePause(taf.id) }, Modifier.fillMaxWidth().confirms())
   }
-  onRemove?.let { OutlineButton(Words.Setup.removeForGood, it, Modifier.fillMaxWidth().confirms(), color = Theme.no) }
+  onRemove?.let { OutlineButton(Words.Setup.removeForGood, it, Modifier.fillMaxWidth().confirms(), color = Theme.no, enabled = !removeOpening) }
 
   if (startsOpen && knob != null) StartsWhenSheet(taf, knob, state, actions) { startsOpen = false }
   if (resultsOpen && knob != null) ResultsSheet(taf, knob, state, actions) { resultsOpen = false }

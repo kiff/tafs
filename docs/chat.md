@@ -158,7 +158,7 @@ reached KIFF or the tool, so it isn't a failure. The step ends `not_made` and sh
 "not made · read first" with a ↩ mark; made again, it's one row with its tries; not made
 again, it stays in the list. A connection call the connection server refused for how Coach
 wrote it (its order, "read the catalog before…", or its shape, "reusing … takes agent, agent_name and
-tools: [] alone", a missing grant id) ends `not_made` too, never "Coach couldn't connect …" in red:
+tools: [] alone", a missing grant id), or a tool Coach named that the catalog doesn't hold by that name ("has no tool named …", "lists no tool named …"), ends `not_made` too, never "Coach couldn't connect …" in red:
 nothing was made, and Coach asks again. A reread of the thread says the same (the kept reason is marked
 `not_made`).
 
@@ -442,7 +442,7 @@ the person's language: `words`, the failed step's own ("Coach couldn't connect S
 server's reason, scrubbed as any step's reason is (`whyOf`) and with any host name or phone number left out too (`shownWhy`: the server can quote a description a third party wrote), as a line ("Why: managed sign-in isn't set up
 for this app"), left out when nothing readable is left; and `next`, what to do ("Next: ask Coach to connect
 Shippo with its key instead, or to use another app."). It's taken before a retry folds the step away, so
-a later read that went through (the catalog, say) doesn't hide it; a later request for the same server, description or grant (or the same app by a known name)
+a later read that went through (the catalog, say) doesn't hide it; a later request for the same server, description, catalog entry or reused grant (or the same app by a known name), or tools set on the same grant (even while they wait for the owner's approval),
 that went through does, and so does any later connection call whose answer shows it `signed_in`, `listed` or
 `connected`, so "couldn't connect" never stands under "signed in" (`Steps.connectedBy`); one showing it failed
 clears nothing (`resolved`, `takeRefused` and `Steps.connectionRefusal` in

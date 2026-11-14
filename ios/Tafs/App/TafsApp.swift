@@ -18,6 +18,10 @@ struct TafsApp: App {
                 .modifier(NarrowForScreenshots())
                 .environmentObject(model)
                 .tint(Theme.amber)
+                // The screen locked: the approval window this phone holds closes at once.
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.protectedDataWillBecomeUnavailableNotification)) { _ in
+                    model.screenLocked()
+                }
                 .task {
                     // tafs cloud's "allow AI use first", from whatever route the person tried.
                     model.watchAIConsent()
@@ -48,6 +52,10 @@ struct TafsApp: App {
         }
         .onChange(of: scenePhase) { phase in
             if phase == .background { wasAway = true }
+            // The approval window this phone holds closes after 30 seconds away (kiff/tafs#494); back
+            // sooner, it stays, and KIFF's words for the next tap are read again.
+            if phase == .background { model.wentToBackground() }
+            if phase == .active { model.cameToForeground() }
             // Back from the browser: a re-link waiting there asks KIFF again at once.
             if phase == .active, model.relink != nil { model.nudgeSignIn() }
             if phase == .active, model.mode == .kiff { Task { await model.refresh(); model.settleListOrder() } }
