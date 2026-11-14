@@ -23,8 +23,8 @@ export interface GrantView {
 /** One line on who holds a connection's sign-in, for the apps to draw as it comes; none when planque doesn't say. */
 export function custodyWords(custody: GrantView["custody"]): string | undefined {
   switch (custody) {
-    // In the owner's words: who keeps it, never an internal service ("the connection service").
-    case "provider": return "The taf never sees your sign-in.";
+    // In the owner's words: who keeps it (a third party, said plainly), never an internal service ("the connection service").
+    case "provider": return "Your sign-in is kept by our sign-in partner; the taf never sees it.";
     case "planque": return "Your sign-in is kept sealed by tafs; the taf never sees it.";
     default: return undefined;
   }

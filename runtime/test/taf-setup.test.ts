@@ -78,7 +78,7 @@ describe("a taf's server-composed setup", () => {
     expect(reconnect.connections[0]).toMatchObject({ reconnect: true, status_words: "Signed out by the app" });
     // Who holds the sign-in, in one line as planque says it, and whether the app was set up on the owner's pick (kiff/planque#87).
     const managed = setupView({ ...args, grants: [{ ...grant, custody: "provider", on_demand: true }] });
-    expect(managed.connections[0]).toMatchObject({ custody_words: "The taf never sees your sign-in.", on_demand: true });
+    expect(managed.connections[0]).toMatchObject({ custody_words: "Your sign-in is kept by our sign-in partner; the taf never sees it.", on_demand: true });
     const own = setupView({ ...args, grants: [{ ...grant, custody: "planque" }] });
     expect(own.connections[0]).toMatchObject({ custody_words: "Your sign-in is kept sealed by tafs; the taf never sees it." });
     expect(own.connections[0]).not.toHaveProperty("on_demand");
