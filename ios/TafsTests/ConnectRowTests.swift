@@ -69,6 +69,10 @@ final class ConnectRowTests: XCTestCase {
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let source = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
         XCTAssertTrue(source.contains("NavigationLink { AppConnectionsView(app: app) } label: { cells(app, said) }"))
+        XCTAssertTrue(source.contains("if app.connected {\n            NavigationLink { AppConnectionsView(app: app) }"),
+                      "a connected app always opens, never a tap that does nothing")
+        XCTAssertTrue(source.contains("if !model.readsConnections {\n                Text(Words.Connect.startConnectedToolsFirst("),
+                      "a device that reads no connections says so, not an empty list")
         XCTAssertTrue(source.contains("private var table: Bool { sizeClass == .regular }"))
         XCTAssertTrue(source.contains("} header: { Text(Words.Connect.Apps.yours) }"))
         XCTAssertTrue(source.contains("} header: { Text(Words.Connect.Apps.discover) }"))

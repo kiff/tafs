@@ -6126,6 +6126,10 @@ final class AppModel: ObservableObject {
     /// The account's live connections to a Connect apps entry: by the app planque names for
     /// each (its `entry`, which planque gives every grant, a vendor's own sign-in included), or
     /// the grant tafs cloud named for it.
+    /// Whether this device reads the account's connections: set up with planque, with a session that
+    /// holds its key. Without, an app's connections can't be listed here, and the detail says so.
+    var readsConnections: Bool { planqueReady && sessionHasKey }
+
     func connections(of app: TafsCloud.ConnectApps.App) -> [PlanqueClient.Grant] {
         Self.connections(of: app, in: grants)
     }
