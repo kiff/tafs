@@ -2,6 +2,7 @@
 
     python3 -W error -m unittest discover -s app -p test_routes.py
 """
+import json
 import os
 import sys
 import unittest
@@ -30,6 +31,16 @@ class TheList(unittest.TestCase):
             with self.subTest(path=os.path.relpath(path, routes.REPO)):
                 with open(path, encoding="utf-8") as f:
                     self.assertEqual(f.read(), text, "run `python3 app/routes.py`")
+
+    def test_tafs_cloud_gets_each_route_with_its_english_title(self):
+        lines = routes.english()
+        text = routes.generated(routes.load(), lines)[routes.RUNTIME_TS]
+        for entry in routes.load():
+            with self.subTest(route=entry["route"]):
+                want = {"route": entry["route"], "title": entry["title"], "english": lines[entry["title"]]}
+                if entry.get("needs"):
+                    want["needs"] = entry["needs"]
+                self.assertIn(f"  {json.dumps(want, ensure_ascii=False)},\n", text)
 
     def test_every_route_reaches_both_apps(self):
         listed = routes.load()

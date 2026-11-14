@@ -1,7 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { type CoachCall, Rich } from "../src/cloud/coach.js";
-import { askApp, CONTINUE_SAID, currentDrive, DRIVE, driveArgs, DriveError, drivePaused, driveRecaps, DriveRefusal, driveSteps, driveStream, endDrive, END_SAID, END_WHY, END_WORDS, PAUSED_SAID, pauseDrive, putResult, resultOf, resumeDrive, startDrive } from "../src/cloud/drive.js";
+import { APP_ROUTES } from "../src/app-routes.js";
+import { askApp, CONTINUE_SAID, currentDrive, DRIVE, driveArgs, DriveError, drivePaused, driveRecaps, DriveRefusal, driveSteps, driveStream, endDrive, END_SAID, END_WHY, END_WORDS, PAUSED_SAID, pauseDrive, putResult, resultOf, resumeDrive, type RouteFacts, routeMap, startDrive } from "../src/cloud/drive.js";
 import { coachTool, type Deps, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -697,5 +698,204 @@ describe("a paused drive parks Coach's run (the gateway's coach-drive wait)", ()
     expect(w.stored.requirements!.find((q) => q.call_id === "call-look")!.answered).toBeFalsy();
     // No parked run of this drive: Continue starts Coach's next turn instead.
     expect(resume.body).toMatchObject({ resumed: true, coach: { session: w.session } });
+  });
+});
+
+describe("go: Coach opens a screen by its route (app/routes.json)", () => {
+  const REFUNDS: Taf = { id: "taf-refunds", name: "Refunds", job: "free", kiffAgent: "ag-refunds", nameClaim: "r", created: "2026-11-01T09:00:00Z" };
+  const CHARGEBACKS: Taf = { id: "taf-charge", name: "Chargebacks", job: "free", kiffAgent: "ag-charge", nameClaim: "c", created: "2026-11-01T09:00:00Z" };
+  const PAYROLL: Taf = { id: "taf-payroll", name: "Payroll", job: "free", kiffAgent: "ag-payroll", nameClaim: "p", created: "2026-11-01T09:00:00Z" };
+  const ELSEWHERE: Taf = { id: "taf-elsewhere", name: "Elsewhere", job: "free", kiffAgent: "ag-elsewhere", nameClaim: "e", created: "2026-11-01T09:00:00Z" };
+
+  /**
+   * A drive on, with three tafs: Ana manages Refunds, only uses Chargebacks, and Payroll isn't shared with her.
+   * Another account has a taf of its own. KIFF answers /v1/coach/act for the permit; the phone answers each request.
+   */
+  async function goWorld(capabilities: string[] = ["read", "cards.manage"], act: "answers" | "fails" = "answers") {
+    const w = await world();
+    for (const t of [REFUNDS, CHARGEBACKS, PAYROLL]) await w.deps.tafs.put(T, t);
+    await w.deps.tafs.put("t_other", ELSEWHERE);
+    const kiff = w.deps.fetch!;
+    const asked: string[] = [];
+    w.deps.fetch = (async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith("/v1/coach/act")) {
+        asked.push(String(init?.body));
+        if (act === "fails") return new Response("{}", { status: 503 });
+        return new Response(JSON.stringify({ agents: {
+          "ag-refunds": { use: true, oversee: true, manage: true },
+          "ag-charge": { use: true },
+          "ag-payroll": {},
+          "ag-elsewhere": { use: true, oversee: true, manage: true },
+        } }), { status: 200 });
+      }
+      return kiff(url, init);
+    }) as typeof fetch;
+    w.working();
+    const d = await startDrive(w.coach, T, ANA, w.session, "Show me Refunds' versions", NOW, capabilities);
+    const sent: Array<{ tool: string; args: Record<string, unknown> }> = [];
+    w.deps.sleep = async () => {
+      for (const req of (await w.coach.take(`${T}#drive-q#${d.id}`)) as Array<{ id: string; tool: string; args: Record<string, unknown> }>) {
+        sent.push(req);
+        await w.call("POST", `/v1/coach/drive/${d.id}/results/${req.id}`, { outcome: "done", line: req.tool === "app_look" ? "Home" : "Opened Versions", image: { media_type: "image/png", data: PNG } });
+      }
+    };
+    const go = (route: unknown) => coachTool("app_act", { action: "go", line: "Opening Versions", ...(route === undefined ? {} : { route }) }, w.coachCall, w.deps) as Promise<Rich>;
+    return { ...w, d, sent, go, asked };
+  }
+
+  it("sends an allowed route to the phone as a go with its route, and records the step", async () => {
+    const w = await goWorld();
+    const a = await w.go("taf/taf-refunds/setup/versions");
+    expect(a.isError).toBe(false);
+    expect(w.sent).toMatchObject([{ tool: "app_act", args: { action: "go", line: "Opening Versions", route: "taf/taf-refunds/setup/versions" } }]);
+    expect(w.sent[0]!.args).not.toHaveProperty("at");
+    expect(a.content[0]).toMatchObject({ type: "text", text: "Opened Versions" });
+    expect(await driveSteps(w.coach, T, w.d.id)).toMatchObject([{ line: "Opening Versions" }]);
+  });
+
+  it("opens a screen anyone may open without asking KIFF about tafs, and one the person's capability allows", async () => {
+    const w = await goWorld();
+    expect((await w.go("account/people")).isError).toBe(false);
+    expect((await w.go("halt-all")).isError).toBe(false);
+    expect(w.asked).toEqual([]);
+    expect(w.sent.map((r) => r.args.route)).toEqual(["account/people", "halt-all"]);
+    // A taf only used, not managed, opens on its screens that need nothing.
+    expect((await w.go("taf/taf-charge/card")).isError).toBe(false);
+  });
+
+  it("checks the route as a step's argument: go needs one, and takes nothing else", () => {
+    expect(driveArgs("app_act", { action: "go", line: "Opening People", route: "/account/people" })).toEqual({ action: "go", line: "Opening People", route: "account/people" });
+    expect(() => driveArgs("app_act", { action: "go", line: "Opening People" })).toThrow(DriveRefusal);
+    expect(() => driveArgs("app_act", { action: "go", line: "Opening People", route: "account/people", at: { x: 1, y: 2 } })).toThrow(DriveRefusal);
+    expect(() => driveArgs("app_act", { action: "go", line: "Opening People", route: "taf//card" })).toThrow(/no screen in the app is at/);
+    expect(() => driveArgs("app_act", { action: "go", route: "account/people" })).toThrow(/line is the caption/);
+  });
+
+  const refused = async (w: Awaited<ReturnType<typeof goWorld>>, route: unknown, words: RegExp) => {
+    const a = await w.go(route);
+    expect(a.isError, String(route)).toBe(true);
+    expect(a.content[0], String(route)).toMatchObject({ type: "text", text: expect.stringMatching(words) });
+    expect(String((a.content[0] as { text: string }).text)).toMatch(/^Refused by tafs: .*Nothing was sent\.$/);
+    expect(w.sent, String(route)).toEqual([]);
+  };
+
+  it("refuses a missing route, and nothing is sent", async () => {
+    const w = await goWorld();
+    await refused(w, undefined, /go takes route/);
+    await refused(w, "   ", /go takes route/);
+  });
+
+  it("refuses a route that isn't on the app's map", async () => {
+    const w = await goWorld();
+    await refused(w, "account/secrets", /no screen in the app is at account\/secrets/);
+    await refused(w, "taf/taf-refunds/setup/versions/3", /no screen in the app is at/);
+    await refused(w, "taf/taf-refunds/../account", /no screen in the app is at/);
+  });
+
+  it("refuses a taf this account doesn't have", async () => {
+    const w = await goWorld();
+    await refused(w, "taf/taf-nope/card", /there's no taf taf-nope on this account/);
+  });
+
+  it("refuses another account's taf, even one KIFF would say the person manages", async () => {
+    const w = await goWorld();
+    await refused(w, "taf/taf-elsewhere/setup/versions", /there's no taf taf-elsewhere on this account/);
+    // Coach's own Setup is no taf the app opens either.
+    await refused(w, `taf/${COACH}`, /there's no taf/);
+  });
+
+  it("refuses a taf that isn't shared with the person", async () => {
+    const w = await goWorld();
+    await refused(w, "taf/taf-payroll", /Payroll isn't shared with them/);
+  });
+
+  it("refuses a screen that needs managing the taf, to someone who only uses it", async () => {
+    const w = await goWorld();
+    await refused(w, "taf/taf-charge/setup/versions", /Versions of Chargebacks is for the people who manage that taf/);
+    await refused(w, "taf/taf-charge/share", /for the people who manage that taf/);
+  });
+
+  it("refuses a screen that needs an account capability the person lacks", async () => {
+    const w = await goWorld(["read"]);
+    await refused(w, "account/delete", /Delete account needs deleting the account, which their role on this account doesn't allow/);
+    await refused(w, "halt-all", /Halt all tafs needs managing the account's tafs and Cards/);
+  });
+
+  it("refuses every taf's screen while KIFF can't say what the person may open", async () => {
+    const w = await goWorld(["read", "cards.manage"], "fails");
+    await refused(w, "taf/taf-refunds/card", /KIFF couldn't say which tafs they may open/);
+    expect((await w.go("account/people")).isError).toBe(false);
+  });
+
+  it("keeps the person's capabilities from the approved start, and never shows them", async () => {
+    const w = await world();
+    const r = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks" }, SIGNED);
+    expect(r.status).toBe(200);
+    expect((await currentDrive(w.coach, T, ANA, NOW))?.capabilities).toEqual(["cards.manage"]);
+    expect((await w.call("GET", "/v1/coach/drive")).body.drive).not.toHaveProperty("capabilities");
+  });
+});
+
+describe("the app's map, on the first look in Coach's chat", () => {
+  const facts = (capabilities: string[], tafs?: Array<[string, { name: string; open: boolean; manages: boolean }]>): RouteFacts =>
+    ({ capabilities, ...(tafs ? { tafs: new Map(tafs) } : {}) });
+  const routesOf = (map: string) => map.split("\n").filter((l) => l.startsWith("- ")).map((l) => l.slice(2, l.indexOf(": ")));
+
+  it("lists only the routes the person may open, one line each, with its English title", () => {
+    const map = routeMap(facts(["read"], [["taf-charge", { name: "Chargebacks", open: true, manages: false }], ["taf-payroll", { name: "Payroll", open: false, manages: true }]]));
+    const listed = routesOf(map);
+    expect(listed).toContain("account/people");
+    expect(listed).toContain("taf/{taf}/card");
+    // Needs a capability they lack, or managing a taf, and they manage none they may open.
+    for (const not of ["halt-all", "account/delete", "taf/{taf}/setup/versions", "taf/{taf}/share", "taf/{taf}/halt"]) expect(listed).not.toContain(not);
+    expect(map).toContain("- account/people: People & groups");
+    expect(map).toContain("Chargebacks = taf-charge");
+    expect(map).not.toContain("Payroll");
+    for (const line of map.split("\n")) expect(line.length).toBeLessThan(400);
+  });
+
+  it("lists a capability's screens and a managed taf's screens to the person who has them", () => {
+    const map = routeMap(facts(["cards.manage", "account.delete"], [["taf-refunds", { name: "Refunds", open: true, manages: true }]]));
+    const listed = routesOf(map);
+    for (const r of ["halt-all", "account/delete", "taf/{taf}/setup/versions", "taf/{taf}/share"]) expect(listed).toContain(r);
+    expect(map).toContain("- taf/{taf}/setup/versions: Versions (only a taf they manage)");
+    expect(map).toContain("Refunds = taf-refunds (manages)");
+    expect(listed).toEqual(APP_ROUTES.map((r) => r.route));
+  });
+
+  it("lists no taf's screen when the person has no taf to open, or KIFF couldn't say", () => {
+    expect(routesOf(routeMap(facts(["cards.manage"], []))).some((r) => r.startsWith("taf/"))).toBe(false);
+    const unknown = routeMap(facts(["cards.manage"]));
+    expect(routesOf(unknown).some((r) => r.startsWith("taf/"))).toBe(false);
+    expect(unknown).toContain("KIFF couldn't say");
+  });
+
+  it("comes with the chat's first look only, and lists what this person may open", async () => {
+    const w = await world();
+    await w.deps.tafs.put(T, { id: "taf-charge", name: "Chargebacks", job: "free", kiffAgent: "ag-charge", nameClaim: "c", created: "2026-11-01T09:00:00Z" });
+    const kiff = w.deps.fetch!;
+    w.deps.fetch = (async (url: string, init?: RequestInit) => String(url).endsWith("/v1/coach/act")
+      ? new Response(JSON.stringify({ agents: { "ag-charge": { use: true } } }), { status: 200 })
+      : kiff(url, init)) as typeof fetch;
+    w.working();
+    const d = await startDrive(w.coach, T, ANA, w.session, "Show me Chargebacks", NOW, ["read"]);
+    w.deps.sleep = async () => {
+      for (const req of (await w.coach.take(`${T}#drive-q#${d.id}`)) as Array<{ id: string }>) {
+        await w.call("POST", `/v1/coach/drive/${d.id}/results/${req.id}`, { outcome: "done", line: "Home", image: { media_type: "image/png", data: PNG } });
+      }
+    };
+    const first = await coachTool("app_look", {}, w.coachCall, w.deps) as Rich;
+    expect(first.isError).toBe(false);
+    expect(first.content[0]).toEqual({ type: "text", text: "Home" });
+    expect(first.content[1]).toMatchObject({ type: "image" });
+    const map = String((first.content[2] as { text: string }).text);
+    expect(map).toContain("The app's map");
+    expect(routesOf(map)).toContain("taf/{taf}/card");
+    expect(routesOf(map)).not.toContain("taf/{taf}/setup/versions");
+    expect(routesOf(map)).not.toContain("halt-all");
+    expect(map).toContain("Chargebacks = taf-charge");
+    expect(first.kept).toContain("The app's map");
+    const second = await coachTool("app_look", {}, w.coachCall, w.deps) as Rich;
+    expect(second.content.map((c) => c.type)).toEqual(["text", "image"]);
   });
 });

@@ -189,7 +189,7 @@ export const TOOLS: ToolDef[] = [
   {
     name: "app_act", line: "Tap, type and scroll in the app on your device while it drives", session: true,
     properties: {
-      action: { type: "string", enum: ["tap", "long_press", "swipe", "scroll", "type", "back", "done"] },
+      action: { type: "string", enum: ["tap", "long_press", "swipe", "scroll", "type", "back", "go", "done"] },
       line: { type: "string", description: "The caption the person sees for this step, in their words, at most 60 characters: \"Tapping Run now\"." },
       at: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } }, description: "A point on the last screenshot (tap, long_press, swipe's start)." },
       element: { type: "string", description: "Or an element's id from the last tree, instead of at." },
@@ -197,9 +197,12 @@ export const TOOLS: ToolDef[] = [
       ms: { type: "integer", minimum: 50, maximum: 3000, description: "swipe: how long it takes." },
       direction: { type: "string", enum: ["up", "down", "left", "right"], description: "scroll." },
       text: { type: "string", description: "type: the text, into the focused field (any field, a taf's chat included)." },
+      route: { type: "string", description: "go: the screen's path from the app's map, a taf's id for {taf}: \"account/people\", \"taf/<taf id>/setup/versions\"." },
     },
     required: ["action", "line"],
     description: "While the person's drive is on: one step in the app on their phone, answered with the screen after it. done ends the drive when the task is done. " +
+      "To reach a screen, prefer go with its route from the app's map (your first look carries it), then look, then tap: go only opens the screen, " +
+      "and is refused for a screen the person can't open. " +
       "The app refuses a touch on anything that confirms (Approve, Disconnect, Remove, Halt, a purchase): those are the person's, so tell them where it is. " +
       "If they touch the app or leave it, the drive ends: tell them where you got to.",
   },

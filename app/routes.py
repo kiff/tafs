@@ -14,8 +14,10 @@ A `{taf}` value is the taf's id as tafs cloud names it (the id push alerts carry
 accepts its own id for the taf. `needs` gates opening the screen only: a screen anyone signed in may
 open, such as People & groups, has none, and what it lets each person do stays the screen's own rule.
 
-Generated here: ios/Tafs/Design/AppRoutes.swift and
-android/app/src/main/kotlin/bot/tafs/app/model/AppRoutes.kt. Nobody edits a generated file by hand.
+Generated here: ios/Tafs/Design/AppRoutes.swift,
+android/app/src/main/kotlin/bot/tafs/app/model/AppRoutes.kt, and runtime/src/app-routes.ts, which
+tafs cloud reads for Coach's `go` and its map of the app (docs/drive.md), each route with its title's
+English words. Nobody edits a generated file by hand.
 """
 import json
 import os
@@ -28,6 +30,7 @@ ROUTES = os.path.join(HERE, "routes.json")
 STRINGS = os.path.join(HERE, "strings")
 IOS_SWIFT = os.path.join(REPO, "ios", "Tafs", "Design", "AppRoutes.swift")
 ANDROID_KT = os.path.join(REPO, "android", "app", "src", "main", "kotlin", "bot", "tafs", "app", "model", "AppRoutes.kt")
+RUNTIME_TS = os.path.join(REPO, "runtime", "src", "app-routes.ts")
 
 # What a route may need. `manages`: the person manages the taf the route names. The others are KIFF's
 # account capabilities, as both apps read them.
@@ -210,19 +213,46 @@ def kotlin(routes):
     return "\n".join(out)
 
 
-def generated(routes):
-    return {IOS_SWIFT: swift(routes), ANDROID_KT: kotlin(routes)}
+def typescript(routes, lines):
+    """tafs cloud's copy: each route, its title's key and English words (what Coach's map shows), and its needs."""
+    out = [f"// {HEADER}", "",
+           "/** A screen both apps open by name (app/routes.json), as Coach's `go` and its map of the app read it (docs/drive.md). */",
+           "export interface AppRoute {",
+           "  /** Its path, with each value as `{name}`: `taf/{taf}/setup/versions`. */",
+           "  readonly route: string;",
+           "  /** The key of its title in app/strings. */",
+           "  readonly title: string;",
+           "  /** The title's English words, from app/strings/en. */",
+           "  readonly english: string;",
+           "  /** What the person needs to open it: none for anyone, `manages` for the taf it names, or an account capability. */",
+           "  readonly needs?: " + " | ".join(json.dumps(n) for n in NEEDS) + ";",
+           "}", "",
+           "export const APP_ROUTES: readonly AppRoute[] = ["]
+    for r in routes:
+        entry = {"route": r["route"], "title": r["title"], "english": lines[r["title"]]}
+        if r.get("needs"):
+            entry["needs"] = r["needs"]
+        out.append(f"  {json.dumps(entry, ensure_ascii=False)},")
+    out += ["];", ""]
+    return "\n".join(out)
+
+
+def generated(routes, lines=None):
+    if lines is None:
+        lines = english()
+    return {IOS_SWIFT: swift(routes), ANDROID_KT: kotlin(routes), RUNTIME_TS: typescript(routes, lines)}
 
 
 def main(argv):
     check = "--check" in argv
     routes = load()
-    wrong = problems(routes, english())
+    lines = english()
+    wrong = problems(routes, lines)
     if wrong:
         print("\n".join(f"app/routes.json: {w}" for w in wrong), file=sys.stderr)
         return 1
     stale = []
-    for path, text in generated(routes).items():
+    for path, text in generated(routes, lines).items():
         current = open(path, encoding="utf-8").read() if os.path.exists(path) else None
         if current == text:
             continue

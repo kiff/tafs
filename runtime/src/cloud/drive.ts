@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { APP_ROUTES, type AppRoute } from "../app-routes.js";
 import type { CoachStore } from "./coach.js";
 import { type Lang, wordsIn } from "./words/index.js";
 
@@ -101,13 +102,18 @@ export interface Drive {
   /** When it started; the last thing done is kept apart (driveKeys.last), so only a start or an end ever writes this record. */
   last: string;
   ended?: { why: EndWhy; at: string };
+  /**
+   * The person's account capabilities a route can need (ROUTE_CAPABILITIES), as KIFF answered them when they
+   * approved the drive: what `go` checks a route's `needs` against. A drive from before has none.
+   */
+  capabilities?: string[];
 }
 
 /** Coach's two tools: a look (read-only) and an action. */
 export const DRIVE_TOOLS = ["app_look", "app_act"] as const;
 export type DriveTool = typeof DRIVE_TOOLS[number];
 
-export const ACTIONS = ["tap", "long_press", "swipe", "scroll", "type", "back", "done"] as const;
+export const ACTIONS = ["tap", "long_press", "swipe", "scroll", "type", "back", "go", "done"] as const;
 export type Action = typeof ACTIONS[number];
 
 export const WAIT_EVENTS = ["screen_shown", "sheet_opened", "sheet_closed", "refreshed", "prompt_shown", "prompt_done", "notification_shown"] as const;
@@ -175,6 +181,8 @@ export const driveKeys = {
   recap: (tenant: string, drive: string) => `${tenant}#drive-recap#${drive}`,
   /** The drives a Coach chat had, by id, in the order they ended: where its thread finds their recaps. */
   recaps: (tenant: string, session: string) => `${tenant}#drive-recaps#${session}`,
+  /** Set once a Coach chat's first look in a drive carried the app's map (routeMap): the chat has it from then on. */
+  map: (tenant: string, session: string) => `${tenant}#drive-map#${session}`,
 };
 
 /**
@@ -222,12 +230,14 @@ async function touch(store: CoachStore, tenant: string, drive: string, now: Date
  * Starts the person's drive for the request they approved: the caller has checked the
  * approval key's signature. A drive already on for them ends as replaced.
  */
-export async function startDrive(store: CoachStore, tenant: string, person: string, session: unknown, task: unknown, now: Date): Promise<Drive> {
+export async function startDrive(store: CoachStore, tenant: string, person: string, session: unknown, task: unknown, now: Date,
+  capabilities: readonly string[] = []): Promise<Drive> {
   const s = words(session, "session", 200);
   const t = words(task, "task");
   const before = await currentDrive(store, tenant, person, now);
   if (before && !before.ended) await endDrive(store, tenant, person, "replaced", now, before.id);
-  const d: Drive = { id: randomBytes(12).toString("base64url"), person, session: s, task: t, started: now.toISOString(), last: now.toISOString() };
+  const d: Drive = { id: randomBytes(12).toString("base64url"), person, session: s, task: t, started: now.toISOString(), last: now.toISOString(),
+    capabilities: ROUTE_CAPABILITIES.filter((c) => capabilities.includes(c)) };
   await store.put(driveKeys.drive(tenant, person), d, kept(now));
   return d;
 }
@@ -375,11 +385,112 @@ export function driveArgs(tool: DriveTool, args: Record<string, unknown>): Recor
       out.text = text;
       break;
     }
+    case "go": {
+      if (element || args.at !== undefined) throw new DriveRefusal("go takes a route only, never at or element");
+      out.route = goRoute(args.route).path;
+      break;
+    }
     case "back":
     case "done":
       break;
   }
   return out;
+}
+
+/**
+ * The capabilities a route of the app can need (app/routes.json): what a drive keeps of the person's, as KIFF
+ * answered them at its start. `manages` isn't one: it's the taf's, asked of KIFF at each `go`.
+ */
+export const ROUTE_CAPABILITIES = [...new Set(APP_ROUTES.map((r) => r.needs).filter((n): n is Exclude<AppRoute["needs"], "manages" | undefined> => !!n && n !== "manages"))];
+
+/** A path one of the app's routes names, and its values: `taf/3f2a/setup/versions` is taf/{taf}/setup/versions, {taf: "3f2a"}. */
+export function matchRoute(path: string): { route: AppRoute; values: Record<string, string> } | undefined {
+  const parts = path.split("/");
+  for (const route of APP_ROUTES) {
+    const pattern = route.route.split("/");
+    if (pattern.length !== parts.length) continue;
+    const values: Record<string, string> = {};
+    if (pattern.every((want, i) => {
+      const got = parts[i]!;
+      if (!want.startsWith("{")) return want === got;
+      if (!/^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$/.test(got)) return false;
+      values[want.slice(1, -1)] = got;
+      return true;
+    })) return { route, values };
+  }
+  return undefined;
+}
+
+/** `go`'s route, checked against the app's map: the path as sent, its route and values. Whether this person may open it is mayOpen's. */
+export function goRoute(v: unknown): { path: string; route: AppRoute; values: Record<string, string> } {
+  const path = str(v)?.trim().replace(/^\/+/, "");
+  if (!path) throw new DriveRefusal("go takes route, a screen's path from the app's map, such as account/people or taf/<taf id>/setup/versions");
+  if (path.length > 300) throw new DriveRefusal("route is a screen's path from the app's map");
+  const m = matchRoute(path);
+  if (!m) throw new DriveRefusal(`no screen in the app is at ${path}: use a route from the app's map, with a taf's id for {taf}`);
+  return { path, ...m };
+}
+
+/** What `go` and the map know of the person: the account's tafs as they may see them, and their capabilities. */
+export interface RouteFacts {
+  /**
+   * Every taf of this account (Coach's own Setup aside), by its tafs cloud id: its name, whether they may open it
+   * (KIFF says they use, oversee or manage it), and whether they manage it. Undefined when KIFF couldn't say.
+   */
+  tafs?: Map<string, { name: string; open: boolean; manages: boolean }>;
+  /** Their account capabilities, as the drive keeps them (Drive.capabilities). */
+  capabilities: readonly string[];
+}
+
+/** What each capability a route needs means, in Coach's words. */
+const NEEDS_SAID: Record<string, string> = {
+  "cards.manage": "managing the account's tafs and Cards",
+  "billing.manage": "managing the account's plan and billing",
+  "members.manage": "managing the account's people",
+  "account.delete": "deleting the account",
+};
+
+/** Why this person may not open the route, in plain words; undefined when they may. Navigating only: it never confirms anything. */
+export function mayOpen(route: AppRoute, values: Record<string, string>, facts: RouteFacts): string | undefined {
+  const id = values.taf;
+  let taf: { name: string; open: boolean; manages: boolean } | undefined;
+  if (id !== undefined) {
+    if (!facts.tafs) return "KIFF couldn't say which tafs they may open just now: try again in a moment";
+    taf = facts.tafs.get(id);
+    if (!taf) return `there's no taf ${id} on this account: use a taf's id from the app's map`;
+    if (!taf.open) return `${taf.name} isn't shared with them, so the app won't open it`;
+  }
+  if (route.needs === "manages" && !taf?.manages) return `${route.english} of ${taf?.name ?? "a taf"} is for the people who manage that taf, and they don't`;
+  if (route.needs && route.needs !== "manages" && !facts.capabilities.includes(route.needs)) {
+    return `${route.english} needs ${NEEDS_SAID[route.needs] ?? route.needs}, which their role on this account doesn't allow`;
+  }
+  return undefined;
+}
+
+/** The most tafs the map names; past it, it says how many more. */
+const MAP_TAFS = 40;
+
+/**
+ * The app's map as Coach reads it on the drive's first look in its chat: one line per route this person may open,
+ * with its English title, then the tafs whose ids fill `{taf}`. A taf's route is listed when they may open it for
+ * at least one of their tafs.
+ */
+export function routeMap(facts: RouteFacts): string {
+  const tafs = [...(facts.tafs ?? new Map()).entries()].filter(([, t]) => t.open);
+  const lines = APP_ROUTES.filter((r) => {
+    if (r.route.includes("{taf}")) {
+      if (!tafs.length) return false;
+      return r.needs === "manages" ? tafs.some(([, t]) => t.manages) : !r.needs || facts.capabilities.includes(r.needs);
+    }
+    return !r.needs || (r.needs !== "manages" && facts.capabilities.includes(r.needs));
+  }).map((r) => `- ${r.route}: ${r.english}${r.needs === "manages" ? " (only a taf they manage)" : ""}`);
+  const out = ["The app's map: the screens they may open. To reach one, app_act {action: \"go\", route, line}, then look; go only opens a screen, never confirms.", ...lines];
+  if (!facts.tafs) out.push("Their tafs: KIFF couldn't say just now, so no taf's screen is listed.");
+  else if (tafs.length) {
+    const named = tafs.slice(0, MAP_TAFS).map(([id, t]) => `${t.name} = ${id}${t.manages ? " (manages)" : ""}`);
+    out.push(`Their tafs, by the id {taf} takes: ${named.join("; ")}${tafs.length > MAP_TAFS ? `; and ${tafs.length - MAP_TAFS} more` : ""}.`);
+  }
+  return out.join("\n");
 }
 
 /** The phone's answer, checked: nothing it may not send, and nothing too big for the store or the model. */

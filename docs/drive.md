@@ -132,7 +132,7 @@ a drive with `ended` is over.
   Add the app's version and build, platform, orientation, size class, dark mode and font
   scale.
 
-### `app_act {action, line, at? | element?, to?, ms?, direction?, text?}`
+### `app_act {action, line, at? | element?, to?, ms?, direction?, text?, route?}`
 
 - `line`: the caption to show for this step, at most 60 characters.
 - `at`: a point in the last screenshot's pixels. `element`: an id from the last tree.
@@ -148,13 +148,51 @@ a drive with `ended` is over.
   - `scroll` in `direction`, in `element` when named;
   - `type`: `text` into the focused field;
   - `back`;
+  - `go`: open the screen at `route`, a path from [app/routes.json](../app/routes.json)
+    with its values filled in (`taf/<taf id>/setup/versions`, `account/people`), the way
+    the app's own `open(route)` does. It only navigates: it never confirms, taps or changes
+    anything. `{taf}` is the taf's tafs cloud id. Answer the screen it opened. tafs cloud has
+    checked the route before sending it ([Going to a screen](#going-to-a-screen)); the app
+    still refuses one it can't open now, as for any step;
   - `done`: the task is done. Answer it. The drive ends whatever the app answers, or if it
     doesn't.
-- Before any touch, show the dot at the target for a moment.
+- Before any touch, show the dot at the target for a moment. `go` touches nothing.
 - **Hit-test every touch before dispatching it.** One that lands on a control with the
   confirm mark is refused, and nothing is dispatched: `outcome: refused`, `line: "That's
   yours to confirm"`. A `type` into a secret field is refused the same way: `"That's
   yours to fill"`.
+
+### Going to a screen
+
+Coach reaches a screen with `go` rather than tapping its way there: it reads the app's map,
+goes, looks, then acts on that screen.
+
+**The map.** The first `app_look` in a Coach chat that the app answers comes back with the
+app's map after the screenshot: one line per route this person may open, with its English
+title from `app/strings/en` (`- taf/{taf}/setup/versions: Versions (only a taf they
+manage)`), then their tafs by name and the id `{taf}` takes. Later looks in that chat don't
+repeat it. tafs cloud reads the routes from `runtime/src/app-routes.ts`, which
+`app/routes.py` writes from app/routes.json with each title's English words; its `--check`
+covers that file too.
+
+**What tafs cloud refuses**, before anything is sent, with "Refused by tafs: <why>. Nothing
+was sent.":
+
+- no `route`, or `at` or `element` with it;
+- a path that matches no route ("no screen in the app is at account/secrets");
+- a `{taf}` that isn't one of this account's tafs, another account's included (Coach's own
+  Setup isn't one either);
+- a taf KIFF doesn't say they use or oversee, as Home lists them;
+- a screen whose `needs` the person lacks: `manages` when KIFF doesn't say they manage that
+  taf (a taf with no KIFF agent goes by `cards.manage`, as for the screens), and an account
+  capability (`cards.manage`, `billing.manage`, `members.manage`, `account.delete`) they
+  lacked when they approved the drive.
+
+The facts are the ones tafs cloud already uses for the person: which tafs they may see and
+manage is KIFF's answer to `POST /v1/coach/act` with the call's permit, asked at each `go`
+to a taf's screen; their capabilities are KIFF's `GET /v1/me` at the drive's approved start,
+kept on the drive and never shown. KIFF not answering refuses every taf's screen, and the
+map then lists none.
 
 ## Results
 
@@ -429,6 +467,7 @@ The same words on both apps.
 | A swipe, a scroll | "Swiped", "Scrolled down" |
 | Typing | "Typed into Message" (the field's own words) |
 | Back, done | "Went back", "Done" |
+| Go | "Opened Versions" (the screen's title) |
 | Refused | "That's yours to confirm"; "That's yours to fill"; "Too late"; "Nothing Coach can use there"; "That isn't on screen now"; "No field is focused"; "Nothing to go back to"; "Can't scroll down there"; "This app can't do that step" |
 
 A scroll's `direction` is where the content comes from: `down` shows what's below.

@@ -12,15 +12,16 @@ A drive is the owner's, one request at a time. Show a drive card, `show {type: "
 
 ## Procedure
 
-1. **Look first.** `app_look` before every step: a screenshot of the app, plus the view tree when text matters (`tree: true`). Read what's on screen before deciding.
-2. **One step at a time.** `app_act {action, line, at | element}`:
+1. **Look first.** `app_look` before every step: a screenshot of the app, plus the view tree when text matters (`tree: true`). Read what's on screen before deciding. Your first look in this chat also carries the app's map: each screen the owner may open, by its route and title, and their tafs' ids.
+2. **Go straight to the screen.** When the screen you need is on the map, `app_act {action: "go", route, line}`, with a taf's id from the map for `{taf}`: `{action: "go", route: "taf/<id>/setup/versions", line: "Opening Versions"}`. Then look, then act on that screen. Go only opens a screen; it never confirms anything. tafs refuses a route that isn't on the map, a taf that isn't theirs, and a screen the owner can't open: say so in one line, and don't try to reach it by tapping either.
+3. **One step at a time.** `app_act {action, line, at | element}`:
    - `line` is the caption the owner sees, in their words, at most 60 characters: "Opening Refunds", "Tapping Run now".
    - `at` is a point on the last screenshot; `element` is an id from the last tree. Give one, not both.
    - Each answer carries the screen after the step. Check it did what you expected before the next step.
-3. **Wait when the app is busy.** `app_look {wait: "screen_shown"}` (or `sheet_opened`, `refreshed`) instead of looking again and again.
-4. **Stop at the owner's steps.** A fingerprint, Face ID, an approval, Approve, Disconnect, Remove, Halt and resume, a purchase, the answer to "Did this happen?": these are the owner's. The app refuses your touch on them. Stop there, and say where it is: "Approve it when you're ready: the Approve button at the bottom." A vendor's sign-in in the browser is theirs too.
-5. **When it doesn't work,** `app_look {diagnostics: true}` gives the app's recent errors in its own words. Say what failed and why, not only that it did.
-6. **End it.** When the task is done, `app_act {action: "done", line: "Done"}`. Then say in one or two lines what you did, and where you left the app: "I left it on Save Cancels' Versions." Never what's on screen now: once the drive ends the app is the owner's, and you no longer see it. The chat shows the steps from tafs's own record.
+4. **Wait when the app is busy.** `app_look {wait: "screen_shown"}` (or `sheet_opened`, `refreshed`) instead of looking again and again.
+5. **Stop at the owner's steps.** A fingerprint, Face ID, an approval, Approve, Disconnect, Remove, Halt and resume, a purchase, the answer to "Did this happen?": these are the owner's. The app refuses your touch on them. Stop there, and say where it is: "Approve it when you're ready: the Approve button at the bottom." A vendor's sign-in in the browser is theirs too.
+6. **When it doesn't work,** `app_look {diagnostics: true}` gives the app's recent errors in its own words. Say what failed and why, not only that it did.
+7. **End it.** When the task is done, `app_act {action: "done", line: "Done"}`. Then say in one or two lines what you did, and where you left the app: "I left it on Save Cancels' Versions." Never what's on screen now: once the drive ends the app is the owner's, and you no longer see it. The chat shows the steps from tafs's own record.
 
 ## When the owner touches the app
 

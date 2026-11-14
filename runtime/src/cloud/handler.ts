@@ -36,7 +36,7 @@ import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js"
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
 import { type AppGuide, accountConnections, connectionLines, endConnections, heldGuides, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
-import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
+import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE, type Drive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveArgs, driveKeys, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, goRoute, mayOpen, pauseDrive, putResult, resumeDrive, type RouteFacts, routeMap, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
@@ -3393,7 +3393,7 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
   if (parts.length === 3 && method === "GET") {
     const d = await currentDrive(store, me.tenantID, me.subject, now);
     if (!d) return { drive: null, steps: [] };
-    const { person: _p, ...shown } = d;
+    const { person: _p, capabilities: _c, ...shown } = d;
     const paused = d.ended ? undefined : await drivePaused(store, me.tenantID, d.id);
     return { drive: { ...shown, ...(paused ? { paused } : {}), ...(d.ended ? { ended: { ...d.ended, words: endSaid(d.ended.why, langOf(event)) } } : {}) }, steps: await driveSteps(store, me.tenantID, d.id) };
   }
@@ -3420,7 +3420,8 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
       await ownChat(me, setup, str(body.session).trim(), deps);
     }
     const replaced = await currentDrive(store, me.tenantID, me.subject, now);
-    const drive = await startDrive(store, me.tenantID, me.subject, body.session, body.task, now).catch(fail);
+    // The person's capabilities as KIFF answered them now, behind the approval: what Coach's go checks a screen's needs against.
+    const drive = await startDrive(store, me.tenantID, me.subject, body.session, body.task, now, me.capabilities).catch(fail);
     if (replaced && !replaced.ended) await releaseDrive(me.tenantID, replaced.id, { drive: "ended", why: "replaced", words: END_WORDS.replaced }, deps);
     await logEvent(deps.events, me.tenantID, { kind: "drive_started", title: "Coach started driving", detail: drive.task }, now);
     const told = shown ? await tellCoach(me, shown.setup, shown.card, component, "approved: the drive is on", deps) : undefined;
@@ -7362,12 +7363,37 @@ async function driveTool(name: DriveTool, args: Record<string, unknown>, call: C
       return refuse("This drive was approved in another chat with Coach, and only that chat drives. Nothing was sent.");
     }
   }
+  // go opens a screen by its route (app/routes.json): only one of the app's, a taf of this account's, and one
+  // this person may open, as KIFF says for the taf and as their capabilities stood at the drive's approval.
+  if (name === "app_act" && args.action === "go") {
+    try {
+      driveArgs(name, args);
+      // Without a drive on, askApp says so: nothing is asked of KIFF.
+      const live = await currentDrive(store, call.tenant, person, now());
+      if (live && !live.ended) {
+        const { route, values } = goRoute(args.route);
+        const why = mayOpen(route, values, await routeFacts(call, live, deps, route.route.includes("{taf}")));
+        if (why) throw new DriveRefusal(why);
+      }
+    } catch (err) {
+      if (err instanceof DriveRefusal) return refuse(`Refused by tafs: ${err.message}. Nothing was sent.`);
+      throw err;
+    }
+  }
   let a;
   try {
     a = await askApp(store, call.tenant, person, name, args, now, deps.sleep);
   } catch (err) {
     if (err instanceof DriveRefusal) return refuse(`Refused by tafs: ${err.message}. Nothing was sent.`);
     throw err;
+  }
+  // The chat's first look in a drive carries the app's map: the screens this person may open, one line each.
+  if (name === "app_look" && "result" in a && a.result.outcome === "done" && !(await store.get(driveKeys.map(call.tenant, a.drive.session)))) {
+    const map = routeMap(await routeFacts(call, a.drive, deps, true));
+    await store.put(driveKeys.map(call.tenant, a.drive.session), true, new Date(now().getTime() + DRIVE.keptMs));
+    const { content, isError } = answerContent(a);
+    const words = content.filter((c) => c.type === "text").map((c) => String(c.text)).join("\n");
+    return new Rich([...content, { type: "text", text: map }], isError, `${words}\n${map}\n(Answered earlier: look again before your next step.)`);
   }
   // A second call while the person still has the app: tafs cloud ends Coach's turn itself, so a
   // pause costs two turns at most, whatever the model does (docs/drive.md).
@@ -7392,6 +7418,27 @@ async function driveTool(name: DriveTool, args: Record<string, unknown>, call: C
   // KIFF's gateway keeps it. It's never kept as an answer for a retry, which looks again instead.
   if ("paused" in a && a.calls === 1) return new Rich(content, false, `${words}\n(Answered earlier: look again before your next step.)`, driveWait(call.tenant, a.drive));
   return new Rich(content, isError, `${words}\n(Answered earlier: look again before your next step.)`);
+}
+
+/**
+ * What `go` and the app's map know of the person driving: their capabilities as the drive keeps them (KIFF's answer
+ * when they approved it), and, when asked for, the account's tafs as KIFF says they may see them (POST /v1/coach/act,
+ * as tafs_state asks): open as home lists them (`listable`), managed as `managesTaf` decides. KIFF not answering
+ * leaves the tafs unknown, so no taf's screen opens.
+ */
+async function routeFacts(call: CoachCall, drive: Drive, deps: Deps, withTafs: boolean): Promise<RouteFacts> {
+  const capabilities = drive.capabilities ?? [];
+  if (!withTafs) return { capabilities };
+  const all = (await deps.tafs.list(call.tenant)).filter((t) => t.job !== SETUP_JOB && !t.removing);
+  const may = await coachAct(call, undefined, deps).then((m) => m.agents ?? {}, () => undefined);
+  if (!may) return { capabilities };
+  return {
+    capabilities,
+    tafs: new Map(all.map((t) => {
+      const a = t.kiffAgent ? may[t.kiffAgent] : undefined;
+      return [t.id, { name: t.name, open: !!a && (a.use || a.oversee), manages: t.kiffAgent ? a?.manage === true : capabilities.includes("cards.manage") }];
+    })),
+  };
 }
 
 async function coachToolOf(name: string, args: Record<string, unknown>, call: CoachCall, deps: Deps): Promise<ToolAnswer> {

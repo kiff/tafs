@@ -5,9 +5,9 @@ name: Routes
 on:
   push:
     branches: [main]
-    paths: ["app/routes.json", "app/routes.py", "app/test_routes.py", "app/strings/**", "ios/Tafs/Design/AppRoutes.swift", "android/app/src/main/kotlin/bot/tafs/app/model/AppRoutes.kt", ".github/workflows/routes.yml"]
+    paths: ["app/routes.json", "app/routes.py", "app/test_routes.py", "app/strings/**", "ios/Tafs/Design/AppRoutes.swift", "android/app/src/main/kotlin/bot/tafs/app/model/AppRoutes.kt", "runtime/src/app-routes.ts", ".github/workflows/routes.yml"]
   pull_request:
-    paths: ["app/routes.json", "app/routes.py", "app/test_routes.py", "app/strings/**", "ios/Tafs/Design/AppRoutes.swift", "android/app/src/main/kotlin/bot/tafs/app/model/AppRoutes.kt", ".github/workflows/routes.yml"]
+    paths: ["app/routes.json", "app/routes.py", "app/test_routes.py", "app/strings/**", "ios/Tafs/Design/AppRoutes.swift", "android/app/src/main/kotlin/bot/tafs/app/model/AppRoutes.kt", "runtime/src/app-routes.ts", ".github/workflows/routes.yml"]
 
 permissions:
   contents: read
