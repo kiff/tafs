@@ -57,6 +57,11 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
   if (issued(draft.status)) return { outcome: "answered", answer: `already approved: ${vendor} is connected and its Card is confirmed`, note: W.alreadyApproved };
   if (draft.status !== "draft") return { outcome: "answered", answer: `failed: the Card draft is ${draft.status}`, note: `The Card draft is ${draft.status}. Ask Coach for a new one.` };
   if (!draft.version || draft.version !== ask.shown_draft) return { outcome: "read_again", note: W.outOfDate };
+  // One fingerprint never pairs a connection asked under one agent with a Card for another (a removed taf's grant with
+  // a new taf's draft): the Card step is named by the draft's agent, the connect step by the grant's.
+  if (draft.agent !== grant.request.agent) {
+    return { outcome: "answered", answer: `failed: the Card's draft is for the agent ${draft.agent || "(none)"}, but this connection was asked under ${grant.request.agent || "(none)"}, so nothing is signed. Ask for a new grant under this taf's own agent, reusing only the sign-in, and draft its Card for that agent.`, note: W.otherAgent };
+  }
   // An app set up on demand asks for every change (kiff/planque#87): a draft that lets one of its
   // writes run outright isn't signed, and Coach hears why, so the default holds here, not only in its words.
   // The check needs the Cards as KIFF shows them: a draft read without them isn't signed on trust.
@@ -287,6 +292,7 @@ export function approvalWords(lang: Lang = "en") {
     cardsUnread: w.approval_cards_unread,
     uncovered: w.approval_uncovered,
     stray: w.approval_stray,
+    otherAgent: w.approval_other_agent,
     lifetimeCap: w.approval_lifetime_cap,
     onDemandLetsRun: w.approval_on_demand,
     criticalKey: w.approval_critical_key,
@@ -424,6 +430,8 @@ export interface DecideContext {
   lang?: Lang;
   /** A taf's name by its KIFF agent, as its owner reads it: what the phone's signing prompt names, never the agent id. */
   tafName?: (agent?: string) => Promise<string | undefined>;
+  /** Whether an agent was a removed taf's and is no live taf's (handler.ts, agentGone): nothing is signed onto it. */
+  agentGone?: (agent: string) => Promise<boolean>;
 }
 
 /** The steps a phone signs for an approval card. */
@@ -460,6 +468,12 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   const grants = await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
   const grant = grants.find((g) => g.id === ask.grant);
   if (!grant) return { outcome: "answered", answer: `failed: ${W.noGrant}`, note: W.noGrant };
+  // Never onto a removed taf's agent, before anything is noted or signed: a new taf starts its own agent and reuses only
+  // the sign-in. A Card a new taf asked for was issued onto a removed taf's agent this way (14 Nov).
+  const agent = grant.request.agent;
+  if (agent && ctx.agentGone && await ctx.agentGone(agent)) {
+    return { outcome: "answered", answer: `failed: ${agent} is the agent of a taf that was removed, not a live taf's or this new taf's own, so nothing is signed. Start a new agent for this taf, ask for its connection under that agent reusing only the sign-in, and draft its Card for that agent.`, note: W.otherAgent };
+  }
   const vendor = vendorOf(grant);
   // The same taf's other connections: a Card may cover their tools too (two apps, one Card).
   const sameTaf = grants.filter((g) => g.id !== grant.id && g.request.agent && g.request.agent === grant.request.agent && !["failed", "disconnected", "revoked"].includes(g.status));

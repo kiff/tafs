@@ -95,6 +95,7 @@ export const pl: Words = {
   approval_cards_unread: "Nie udało się jeszcze sprawdzić Card. Przeczytaj ponownie, a potem zatwierdź.",
   approval_uncovered: (tool: string) => `Ta Card nie obejmuje „${tool}”, które taf otrzymał, więc każde jego wywołanie zostałoby odrzucone. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
   approval_stray: (tool: string) => `Ta Card pozwoliłaby tafowi używać także „${tool}”, którego nie daje żadne jego połączenie. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
+  approval_other_agent: "To dotyczy agenta innego tafa, nie tego. Nic nie zostało zatwierdzone. Coach skonfiguruje to ponownie dla tego tafa.",
   approval_lifetime_cap: (tool: string) => `Ta Card pozwoliłaby „${tool}” działać tylko ustaloną liczbę razy łącznie, dla wszystkich pozycji, a nie dla każdej z osobna. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} skonfigurowano dziś, więc każda zmiana musi najpierw zapytać Ciebie; ta Card pozwoliłaby „${tool}” działać bez pytania. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
   approval_critical_key: "To poszerza, co taf może robić, więc potrzebny jest odcisk palca. Nic nie zostało zatwierdzone; zatwierdź ponownie odciskiem palca.",

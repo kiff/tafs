@@ -3647,6 +3647,7 @@ function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     toolsAndCards: process.env.TAFS_TOOLS_AND_CARDS === "on",
     // The prompt names the taf being set up, by its name: the card is Coach's, so not `taf`'s.
     tafName: async (agent) => (agent ? (await deps.tafs.list(me.tenantID)).find((t) => t.kiffAgent === agent)?.name : undefined),
+    agentGone: (agent) => agentGone(me.tenantID, agent, deps, bearer(event)),
   };
 }
 
@@ -8638,6 +8639,10 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
   // Made already, by an app from before this or an earlier try: the same taf, never a second.
   const made = tafs.find((t) => t.kiffAgent && t.kiffAgent === taf.agent && !t.removing);
   if (made) return { taf_id: made.id };
+  // Never made on a removed taf's agent (agentGone), whatever Card it holds: a new taf starts its own agent.
+  if (taf.agent && await agentGone(tenant, taf.agent, deps)) {
+    return { failed: `${taf.agent} is the agent of a taf that was removed, so no new taf is made on it. Start a new agent for this taf, ask for its connection under that agent reusing only the sign-in, and draft its Card for that agent.` };
+  }
   // A tool its connections say sends outside the company is named in disclose (gap 14), whatever Coach remembered.
   const undisclosed = await sendingCheck(tenant, taf.agent, taf.tools, Array.isArray(taf.disclose) ? taf.disclose : [], deps);
   if (undisclosed) return { failed: undisclosed };

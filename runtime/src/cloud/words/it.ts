@@ -95,6 +95,7 @@ export const it: Words = {
   approval_cards_unread: "La Card non è ancora stata verificata. Rileggila, poi approva.",
   approval_uncovered: (tool: string) => `Questa Card non copre «${tool}», che il taf ha ricevuto, quindi ogni sua chiamata verrebbe rifiutata. Non è stato approvato nulla. Coach la riscrive.`,
   approval_stray: (tool: string) => `Questa Card permetterebbe al taf di usare anche «${tool}», che nessun suo collegamento gli dà. Non è stato approvato nulla. Coach la riscrive.`,
+  approval_other_agent: "Questo è per l'agente di un altro taf, non di questo. Non è stato approvato nulla. Coach lo configura di nuovo per questo taf.",
   approval_lifetime_cap: (tool: string) => `Questa Card permetterebbe a «${tool}» di funzionare solo un numero fisso di volte in tutto, per tutti gli elementi e non per ciascuno. Non è stato approvato nulla. Coach la riscrive.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} è stato configurato oggi, quindi ogni modifica deve chiederti prima; questa Card lascerebbe eseguire «${tool}» senza chiedere. Non è stato approvato nulla. Coach la riscrive.`,
   approval_critical_key: "Questo amplia ciò che il taf può fare, quindi serve la tua impronta. Non è stato approvato nulla; approva di nuovo con la tua impronta.",

@@ -290,6 +290,11 @@ things (`runtime/src/cloud/approval.ts`):
   and its `resource_argument`: such a total stops the taf after its first item, so a limit for
   each item ("one invoice per order, ever") is a total `per` that argument, beside the day's
   total. A lifetime sum (a budget) and a lifetime count per item are signed.
+  A connection under a removed taf's agent (no live taf's, and archived in KIFF or marked gone
+  by tafs cloud when it ended that taf's connections under every form of its name) is answered
+  `failed: …` before anything is noted or signed, and so is a Card whose draft is for another
+  agent than the connection's: Coach starts a new agent for the new taf and reuses only the
+  sign-in, on a new grant for that agent. A new taf is never made on such an agent at hand-over.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.

@@ -95,6 +95,7 @@ export const fr: Words = {
   approval_cards_unread: "La Card n'a pas encore pu être vérifiée. Relisez-la, puis approuvez.",
   approval_uncovered: (tool: string) => `Cette Card ne couvre pas « ${tool} », que le taf a reçu : chacun de ses appels serait refusé. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_stray: (tool: string) => `Cette Card permettrait aussi au taf d'utiliser « ${tool} », qu'aucune de ses connexions ne lui donne. Rien n'a été approuvé. Coach la rédige à nouveau.`,
+  approval_other_agent: "Ceci concerne l'agent d'un autre taf, pas celui-ci. Rien n'a été approuvé. Coach le reconfigure pour ce taf.",
   approval_lifetime_cap: (tool: string) => `Cette Card ne laisserait « ${tool} » s'exécuter qu'un nombre fixe de fois au total, pour tous les éléments et non pour chacun. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} a été configuré aujourd'hui : chaque modification doit d'abord vous être demandée, et cette Card laisserait « ${tool} » s'exécuter sans demander. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_critical_key: "Cela élargit ce que le taf peut faire, il faut donc votre empreinte digitale. Rien n'a été approuvé ; approuvez à nouveau avec votre empreinte digitale.",

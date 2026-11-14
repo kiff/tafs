@@ -95,6 +95,7 @@ export const de: Words = {
   approval_cards_unread: "Die Card konnte noch nicht geprüft werden. Lies sie noch einmal, dann genehmige.",
   approval_uncovered: (tool: string) => `Diese Card deckt „${tool}“ nicht ab, obwohl der taf es bekommen hat, also würde jeder Aufruf davon abgelehnt. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_stray: (tool: string) => `Diese Card würde dem taf auch „${tool}“ erlauben, das keine seiner Verbindungen gibt. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
+  approval_other_agent: "Das ist für den Agenten eines anderen taf, nicht für diesen. Es wurde nichts genehmigt. Coach richtet es für diesen taf neu ein.",
   approval_lifetime_cap: (tool: string) => `Diese Card würde „${tool}“ insgesamt nur eine feste Zahl von Malen erlauben, über alle Einträge hinweg statt für jeden einzeln. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} wurde heute eingerichtet, also muss jede Änderung dich zuerst fragen; diese Card würde „${tool}“ ohne Nachfrage laufen lassen. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_critical_key: "Das erweitert, was der taf darf, also braucht es deinen Fingerabdruck. Es wurde nichts genehmigt; genehmige es erneut mit deinem Fingerabdruck.",

@@ -4246,6 +4246,18 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect((await read("fr")).components.find((c) => c.component.id === "done")?.answer?.outcome).toEqual({ taf_id: NEW, plan_needed: { words: "Choisissez un forfait pour le lancer." } });
   });
 
+  // 14 Nov: a new taf's Card was issued onto a removed taf's agent. A result naming an agent tafs cloud marked a removed
+  // taf's is answered failed, with words for Coach: nothing is claimed and no taf is made on it.
+  it("never makes a new taf on a removed taf's agent", async () => {
+    const { w, deps, note, answer } = await paused();
+    w.agents.access.set("u_ana", { cards_manage: true });
+    await deps.coach.put("t_acme#gone-agent#refunds-x", { gone: true }, new Date("2027-01-01T00:00:00Z"));
+    await note();
+    expect(answer()?.answer).toMatchObject({ failed: expect.stringMatching(/^refunds-x is the agent of a taf that was removed.*Start a new agent.*reusing only the sign-in/) });
+    expect(w.agents.calls.filter((c) => c.startsWith("claimTafDraft") || c.startsWith("putAgent"))).toEqual([]);
+    expect(w.tafs.held.has(`t_acme#${NEW}`)).toBe(false);
+  });
+
   it("makes the taf for the person whose run it is, once, and answers in its own name", async () => {
     const { w, run, note, answer } = await paused();
     w.agents.access.set("u_ana", { cards_manage: true });

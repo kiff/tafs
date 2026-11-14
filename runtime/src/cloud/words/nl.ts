@@ -95,6 +95,7 @@ export const nl: Words = {
   approval_cards_unread: "De Card kon nog niet worden gecontroleerd. Lees hem opnieuw en keur hem dan goed.",
   approval_uncovered: (tool: string) => `Deze Card dekt "${tool}" niet, terwijl het taf het heeft gekregen, dus elke aanroep ervan zou worden geweigerd. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_stray: (tool: string) => `Deze Card zou het taf ook "${tool}" laten gebruiken, wat geen van zijn koppelingen geeft. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
+  approval_other_agent: "Dit is voor de agent van een ander taf, niet van dit taf. Er is niets goedgekeurd. Coach stelt het opnieuw in voor dit taf.",
   approval_lifetime_cap: (tool: string) => `Deze Card zou "${tool}" in totaal maar een vast aantal keer laten draaien, voor alle items samen en niet per item. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} is vandaag ingesteld, dus elke wijziging moet het je eerst vragen; deze Card zou "${tool}" zonder vragen laten uitvoeren. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_critical_key: "Dit verruimt wat het taf mag, dus het vraagt je vingerafdruk. Er is niets goedgekeurd; keur het opnieuw goed met je vingerafdruk.",
