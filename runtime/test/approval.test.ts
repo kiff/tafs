@@ -619,7 +619,7 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     const cases: Array<[Record<string, unknown>, string]> = [
       [{ result: "sign_in_closed" }, PL.signInClosed],
       [{ result: "no_code" }, PL.noCode("Stripe")],
-      [{ result: "not_connected", status: "needs_reconnect" }, PL.cameBack("needs_reconnect")],
+      [{ result: "not_connected", status: "needs_reconnect" }, PL.cameBack("Stripe", "needs_reconnect")],
       [{ result: "failed" }, PL.failed()],
     ];
     for (const [body, why] of cases) {
@@ -630,7 +630,7 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
       expect(r.body).toMatchObject({ outcome: "answered", answer: `failed: ${why}`, note: why });
       expect(w.told()).toMatchObject({ answer: `failed: ${why}` });
     }
-    expect(PL.cameBack("needs_reconnect")).toBe("Połączenie wróciło bez linku do logowania (stan: czeka na ponowne zalogowanie). Nic nie zostało połączone.");
+    expect(PL.cameBack("Stripe", "needs_reconnect")).toBe("Nie otworzyła się strona logowania Stripe, więc nic nie zostało połączone. Spróbuj ponownie.");
     expect(PL.failed()).toBe("Nie połączono: nie powiodło się");
     // A note on a tap, and a refusal's words, the same.
     const w = await world(services());
@@ -645,14 +645,25 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     const ended = await w2.call("POST", `${ASK}/${id}`, { result: "connected" }, { ...SIG, "kiff-device-signature": "t=2026-10-16T12:00:30Z,v2=sig,w=win_abcdefghijklmnopqrstuvwxyz" });
     expect(ended.body).toEqual({ error: "Czas na zatwierdzenie minął. Nic nie zostało zatwierdzone; zatwierdź ponownie odciskiem palca.", code: "window_required" });
     // English is as it was: no Accept-Language, or an English one.
-    expect(WORDS.notConnected("Stripe", "needs_reconnect")).toBe("The sign-in at Stripe didn't connect: the connection is needs reconnect. Nothing was connected. Try signing in again.");
+    // Never planque's status ("the connection is needs reconnect"): what happened, and what to do.
+    expect(WORDS.notConnected("Stripe")).toBe("The sign-in at Stripe didn't finish, so nothing was connected. Try signing in again.");
+    // Already signed in: no page opened because none was needed, and the actions come next (agentgabo, 14 Nov: "came back signed in with no sign-in link").
+    expect(WORDS.cameBack("Gmail", "signed_in")).toBe("You're already signed in to Gmail, so no sign-in page opened, and nothing new is connected yet. Its actions come next.");
+    expect(WORDS.cameBack("Gmail", "listed")).toBe(WORDS.cameBack("Gmail", "signed_in"));
+    for (const lang of ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const) {
+      const L = approvalWords(lang);
+      for (const line of [L.cameBack("Gmail", "signed_in"), L.cameBack("Gmail", "approved"), L.notConnected("Gmail")]) {
+        expect(line).toContain("Gmail");
+        expect(line).not.toMatch(/signed_in|needs_reconnect|needs reconnect|approved|listed|\(/);
+      }
+    }
   });
 
   it("each failure the phone can report has tafs cloud's words, for Coach and for the card", async () => {
     const cases: Array<[Record<string, unknown>, string]> = [
       [{ result: "sign_in_closed" }, WORDS.signInClosed],
       [{ result: "no_code" }, WORDS.noCode("Stripe")],
-      [{ result: "not_connected", status: "approved" }, WORDS.cameBack("approved")],
+      [{ result: "not_connected", status: "approved" }, WORDS.cameBack("Stripe", "approved")],
       [{ result: "failed", why: "planque answered 502" }, WORDS.failed("planque answered 502")],
     ];
     for (const [body, why] of cases) {

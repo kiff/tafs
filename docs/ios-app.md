@@ -722,6 +722,40 @@ Home lists it ([api.md](api.md) › Coach waiting; `KIFF/TafsCloud+CoachWaiting.
 - **The way in** opens Coach on that chat (`openSetupChat(session)`), where its card waits. Someone who may not
   use Coach (`mayUseCoach`) sees the line alone, never a button that does nothing.
 
+**Set aside** is "not now", never an approval: nothing is signed, and no Face ID. Only signed in (not the
+sample), and only what tafs cloud offers: KIFF's holds, "Did this happen?" and steps never get it. As on
+Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideButton` in
+`Views/NeedsYouView.swift`):
+
+- **One chat:** a row whose `words.set_aside` tafs cloud sends can be swiped away either way (a mostly
+  sideways drag past 96 points, beside the scroll), and has an outline button with the same words, and
+  an accessibility action, so a swipe isn't the only way. Each calls
+  `POST /v1/home/coach-waiting/{session}/set-aside`, with this phone's signed read of its connections
+  (`Planque-Device-Signature`) when it has one, so tafs cloud can withdraw a connection that chat asked for.
+  tafs cloud answers `{set_aside: [session], withdrawn}`.
+- **Every chat:** with two or more rows and Home's `coach_waiting_clear`, its **Set all aside** sits above
+  them. It asks once, in tafs cloud's words (`words.title` names the count, "End 2 waiting Coach chats?",
+  then `text`, `yes` and `no`), then calls `POST /v1/home/coach-waiting/set-aside`, with no body.
+- **One call per gesture:** the swipe asks only as it ends, once. A chat already being set aside
+  (`settingAside`, marked before anything is awaited) sends nothing again until tafs cloud answers, nor does
+  Set all aside meanwhile. A Home read meanwhile doesn't draw it again.
+- **After:** the row goes once tafs cloud answers, with a success tick, and Home is read again: the badge is
+  tafs cloud's `needs_you` count as sent. A refusal keeps the row and says why in tafs cloud's words
+  (`lastError`), with a warning tick.
+- **Coach driving the app** can't set a chat aside: Set aside, Set all aside and its ask's yes carry the
+  confirm mark ([drive.md](drive.md)), so a driven touch on either button is refused and nothing is sent
+  (`DriveTests.testATouchOnSetAsideIsRefusedBeforeAnythingRuns`). The row that carries the swipe and its
+  accessibility action is marked too, though the drive registers neither; its Open Coach is marked as not
+  confirming.
+- **A new conversation:** a chat set aside is never the one Coach goes on in. When it's the chat shown (or
+  the latest one shown together), Coach starts a new conversation (`newSetupChat`), so a new job's first
+  message asks for a new chat (`new_chat`) and never names the ended session. When Coach next picks its
+  newest chat by itself and that's one set aside on this phone, it starts a new conversation instead. These
+  are kept in memory only, never written to the phone (docs/data.md). Reopened from Previous conversations by the
+  person, the chat opens as any other.
+
+Tests: `TafsTests/CoachWaitingTests.swift`.
+
 ## Your step
 
 A step a taf may never take itself, prepared and handed to its owner ([api.md](api.md) › Your
@@ -861,7 +895,8 @@ One rule, as on Android (`Haptics`, `Design/Scaled.swift`):
 - **A step tick** on dial and selector stops.
 - The system's generators only (`UIImpactFeedbackGenerator`, `UINotificationFeedbackGenerator`,
   `UISelectionFeedbackGenerator`), so the phone's own System Haptics setting is followed too.
-- **Set aside** and **Set all aside**, which tap and tick on Android, aren't in Needs you on iPhone and iPad yet.
+- **Set aside** and **Set all aside** tap as they're asked (a swipe too), then tick: success when tafs cloud
+  sets the chat aside, a warning when it refuses (`AppModel.setAsideCoach`).
 - **Settings › Haptics** turns all of it off on this device (`HapticsTests`).
 
 ## Conventions

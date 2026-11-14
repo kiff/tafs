@@ -33,6 +33,14 @@ final class AppModel: ObservableObject {
     @Published private(set) var yourSteps: [TafsCloud.YourStep] = []
     /// Coach's chats waiting on the owner, as Home lists them (docs/api.md › Coach waiting).
     @Published private(set) var coachWaiting: [TafsCloud.CoachWaiting] = []
+    /// Home's "Set all aside" (`coach_waiting_clear`), as tafs cloud sent it; nil when it sent none.
+    @Published private(set) var coachWaitingClear: TafsCloud.CoachWaitingClear?
+    /// The Coach chats being set aside now: one call per chat at a time, so a swipe that fires
+    /// again, or a second tap, sends nothing until tafs cloud answers (Android 86 sent 11 in 3 s).
+    @Published private(set) var settingAside: Set<String> = []
+    /// The Coach chats set aside on this phone: Coach never opens one by itself again, so a new
+    /// job never goes on in an ended session. Kept in memory only (docs/data.md).
+    private var setAsideChats: Set<String> = []
     /// Steps answered here and accepted by KIFF that Home may still list until the run hears the
     /// answer: kept out of Needs you and its count, and forgotten once Home stops listing them.
     private var answeredSteps: Set<String> = []
@@ -665,6 +673,7 @@ final class AppModel: ObservableObject {
             recordTyping?.cancel(); recordTyping = nil
             cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil
             yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaiting = []
+            coachWaitingClear = nil; settingAside = []; setAsideChats = []
             haltErrors = [:]
             alertsOffered = false
             remembered?.removeObject(forKey: Self.alertsOfferedKey)
@@ -1752,7 +1761,9 @@ final class AppModel: ObservableObject {
     func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
         cardUnitExceptions = home.cardUnitExceptions ?? []
         showSteps(home.yourSteps ?? [])
-        coachWaiting = (home.coachWaiting ?? []).filter(\.usable)
+        // A chat being set aside isn't drawn again by a read meanwhile, as on Android.
+        coachWaiting = (home.coachWaiting ?? []).filter { $0.usable && !settingAside.contains($0.session) }
+        coachWaitingClear = home.coachWaitingClear.flatMap { $0.usable ? $0 : nil }
         homeNeedsYou = home.needsYou
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
@@ -6824,6 +6835,60 @@ final class AppModel: ObservableObject {
         await openSetupChat(waiting.session)
     }
 
+    /// Set aside, on this row: only signed in (not the sample), and only when tafs cloud sent its
+    /// words (`words.set_aside`). The app decides nothing else about it.
+    func canSetAside(_ waiting: TafsCloud.CoachWaiting) -> Bool {
+        mode == .kiff && !waiting.session.isEmpty && !waiting.words.setAside.isEmpty
+    }
+
+    /// "Set all aside", above the rows: only with two or more, signed in, and when tafs cloud sent
+    /// `coach_waiting_clear`.
+    var setAllAside: TafsCloud.CoachWaitingClear? {
+        guard mode == .kiff, coachWaiting.count > 1 else { return nil }
+        return coachWaitingClear
+    }
+
+    /// Sets a waiting Coach chat aside, or every one with nil (docs/api.md › Coach waiting): tafs
+    /// cloud's "not now", never an approval, and nothing is signed. One call per chat at a time: a
+    /// chat already being set aside sends nothing until tafs cloud answers. The row goes once tafs
+    /// cloud says so, Coach no longer shows that chat, and Home is read again for its count. A
+    /// refusal keeps the row and says why, in tafs cloud's words. True once tafs cloud took it.
+    @discardableResult
+    func setAsideCoach(_ session: String?) async -> Bool {
+        guard mode == .kiff else { return false }
+        let sessions = session.map { Set([$0]) } ?? Set(coachWaiting.map(\.session))
+        // Checked and marked before anything is awaited, so on the main actor no second call slips in between.
+        guard !sessions.isEmpty, settingAside.isDisjoint(with: sessions) else { return false }
+        settingAside.formUnion(sessions)
+        let gen = accountGeneration
+        // This phone's signed read of its connections: tafs cloud withdraws a connection the chat asked for.
+        let signer = self.signer
+        planque.tenant = kiffTenant
+        var proof: String?
+        if planqueReady && sessionHasKey { proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) }) }
+        let done: TafsCloud.SetAside
+        do {
+            guard gen == accountGeneration else { return false }
+            done = try await cloud.setAsideCoach(session, proof: proof)
+        } catch {
+            guard gen == accountGeneration else { return false }
+            settingAside.subtract(sessions)
+            lastError = (error as? TafsCloud.CloudError).map { $0.words ?? $0.message } ?? error.localizedDescription
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        settingAside.subtract(sessions)
+        let ended = Set(done.setAside)
+        coachWaiting.removeAll { ended.contains($0.session) }
+        setAsideChats.formUnion(ended)
+        // Coach no longer shows a chat that was set aside: its next message would go on in the
+        // ended session. A new conversation instead, as Android 1.27.1 does.
+        if let shown = setupChat ?? (setupFresh ? nil : setupThread.session), ended.contains(shown) { newSetupChat() }
+        Haptics.success()
+        await refresh()
+        return true
+    }
+
     /// Reopens one of Setup's chats: it's shown alone, and messages go on in it.
     func openSetupChat(_ session: String) async {
         setupConversationGeneration += 1
@@ -7007,7 +7072,11 @@ final class AppModel: ObservableObject {
         if setupChat == nil, let chats = try? await cloud.chats(s.id) {
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
             setupChats = chats
-            if setupChat == nil, !setupFresh, let newest = chats.max(by: { $0.updated < $1.updated }) { setupChat = newest.session }
+            if setupChat == nil, !setupFresh, let newest = chats.max(by: { $0.updated < $1.updated }) {
+                // A chat set aside here is never the one Coach goes on in: a new conversation instead.
+                if setAsideChats.contains(newest.session) { newSetupChat(); return }
+                setupChat = newest.session
+            }
             if setupFresh { return }
         }
         // This phone's signed read of its connections, and the steps it signs: tafs cloud then marks each
