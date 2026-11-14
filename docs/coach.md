@@ -534,7 +534,11 @@ announces only to URLs it is set to allow (`AGENTS_NOTIFY_URLS`), so tafs cloud'
 `/v1/runs/ended` must be among them: when it isn't, kiff/agents refuses the run and
 `taf_task` fails with "notify.url is not one this server announces runs to". Moving tafs
 cloud to a new URL means updating that list too. The app shows
-these as lines in Coach's chat ("coach lines"). While the owner is away, what isn't
+these as lines in Coach's chat ("coach lines"). A run cut off at its turn or cost cap (its `stop`
+`turn_cap` or `cost_cap`), or stopped any other way short of an answer, never reads as finished:
+its line and its notification say it stopped before it finished, and at which limit ("It stopped
+before it finished: it reached its cost limit for one run"), and Coach hears what it last wrote as
+its last words, never as its answer. While the owner is away, what isn't
 urgent waits there as one "While you were away" message instead of a notification
 ([approvals.md](approvals.md#notifications)).
 
