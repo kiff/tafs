@@ -81,6 +81,7 @@ export const en = {
   approval_digest_mismatch: "This request doesn't match what it asks for. Nothing was approved.",
   approval_no_grant: "There's no connection with that id.",
   approval_cards_not_issued: (why: string) => `KIFF didn't issue the taf's Cards: ${why}`,
+  approval_connected_card_next: (vendor: string) => `${vendor} is connected. Next, its Card.`,
   approval_draft_is: (status: string) => `the draft is ${status}`,
   approval_no_draft: "KIFF has no such draft",
   /** On an approval card whose fingerprint signs the connection alone, above its Card (`signs.words`). */

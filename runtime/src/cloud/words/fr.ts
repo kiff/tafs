@@ -77,6 +77,7 @@ export const fr: Words = {
   approval_digest_mismatch: "Cette demande ne correspond pas à ce qu'elle demande. Rien n'a été approuvé.",
   approval_no_grant: "Aucune connexion ne porte cet identifiant.",
   approval_cards_not_issued: (why: string) => `KIFF n'a pas émis les Cards du taf : ${why}`,
+  approval_connected_card_next: (vendor: string) => `${vendor} est connecté. Ensuite, la Card.`,
   approval_draft_is: (status: string) => `état du brouillon : ${status}`,
   approval_no_draft: "KIFF n'a pas ce brouillon",
   approval_card_next: "Sa Card : vous l'approuvez ensuite",

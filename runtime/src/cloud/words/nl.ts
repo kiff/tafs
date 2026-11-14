@@ -77,6 +77,7 @@ export const nl: Words = {
   approval_digest_mismatch: "Dit verzoek klopt niet met wat het vraagt. Er is niets goedgekeurd.",
   approval_no_grant: "Er is geen koppeling met die id.",
   approval_cards_not_issued: (why: string) => `KIFF heeft de Cards van het taf niet uitgegeven: ${why}`,
+  approval_connected_card_next: (vendor: string) => `${vendor} is verbonden. Nu de Card.`,
   approval_draft_is: (status: string) => `het concept is ${status}`,
   approval_no_draft: "KIFF heeft zo'n concept niet",
   approval_card_next: "Zijn Card: die keur je hierna goed",

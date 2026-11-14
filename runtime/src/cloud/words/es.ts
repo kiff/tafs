@@ -77,6 +77,7 @@ export const es: Words = {
   approval_digest_mismatch: "Esta solicitud no coincide con lo que pide. No se aprobó nada.",
   approval_no_grant: "No hay ninguna conexión con ese id.",
   approval_cards_not_issued: (why: string) => `KIFF no emitió las Cards del taf: ${why}`,
+  approval_connected_card_next: (vendor: string) => `${vendor} está conectado. Ahora, la Card.`,
   approval_draft_is: (status: string) => `estado del borrador: ${status}`,
   approval_no_draft: "KIFF no tiene ese borrador",
   approval_card_next: "Su Card: la apruebas a continuación",

@@ -52,7 +52,7 @@ import { appCalls, type GrantView, runningTool, setupGrants, setupView } from ".
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor } from "./approval.js";
+import { CARD_NEXT, ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 
@@ -730,6 +730,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "setup") {
     // The account's Setup (kiff/agents#91): its chat uses the taf routes, by its id.
     if (parts.length === 2 && method === "GET") {
+      // The account's zone, kept for a taf Coach hands over with no session: its schedule runs in it, as Coach wrote it.
+      await rememberAccountZone(me, deps);
       const setup = await setupOf(me, deps);
       if (!setup) return { setup: null, tools: null, ...(await zoneFromPhone(event, me, deps)), ...(await coachFirstStart(event, me, deps)) };
       const [shown, tools] = await Promise.all([view(setup, me, deps), coachTools(event, setup, deps)]);
@@ -1966,6 +1968,32 @@ async function zoneFromPhone(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Pr
   }
 }
 
+/** Where tafs cloud keeps the account's zone, as KIFF last answered someone who manages its Cards. */
+const accountZoneKey = (tenant: string) => `${tenant}#account-zone`;
+
+/**
+ * Keeps the account's zone as KIFF answered a person who manages Cards (`me.timeZone`), for work done with no session: a
+ * taf Coach hands over is created with no person's KIFF read, and its schedule must run in the zone Coach wrote its rules
+ * in ("Fridays at 17:00, Paris time"), never UTC by default. Written only when it changed; anything failing changes nothing.
+ */
+async function rememberAccountZone(me: KIFFIdentity, deps: Deps): Promise<void> {
+  if (!deps.coach || !me.timeZone || !validZone(me.timeZone) || !me.capabilities.includes("cards.manage")) return;
+  try {
+    const kept = await deps.coach.get(accountZoneKey(me.tenantID)) as { zone?: unknown } | undefined;
+    if (kept?.zone === me.timeZone) return;
+    const now = deps.now?.() ?? new Date();
+    await deps.coach.put(accountZoneKey(me.tenantID), { zone: me.timeZone, at: now.toISOString() }, new Date(now.getTime() + 365 * 24 * 3600_000));
+  } catch (err) {
+    console.error(`account zone: ${(err as Error).message}`);
+  }
+}
+
+/** The account's zone tafs cloud kept (rememberAccountZone), or none. */
+async function keptAccountZone(tenant: string, deps: Deps): Promise<string | undefined> {
+  const kept = deps.coach ? await deps.coach.get(accountZoneKey(tenant)).catch(() => undefined) as { zone?: unknown } | undefined : undefined;
+  return typeof kept?.zone === "string" && validZone(kept.zone) ? kept.zone : undefined;
+}
+
 /** A named IANA zone this runtime knows. */
 function validZone(zone: string): boolean {
   if (!/^[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)+$/.test(zone)) return false;
@@ -2976,12 +3004,18 @@ function inputID(run: string): string {
  * ("Approve · it didn't go through: …"). The reason after it is tafs cloud's own, already in the language of the
  * request that approved (approval.ts). Undefined for any other card or answer: its words stay as recorded.
  */
-function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lang: Lang): string | undefined {
+export function approvalAnswerWords(b: { type?: unknown; answer?: unknown }, lang: Lang): string | undefined {
   if (b.type !== "approval" || typeof b.answer !== "string") return undefined;
   const w = wordsIn(lang);
   if (b.answer === "approved") return w.approval_answer_approved;
   if (b.answer === "declined") return w.approval_answer_declined;
-  if (b.answer.startsWith("failed: ")) return w.approval_answer_failed(b.answer.slice("failed: ".length));
+  if (b.answer.startsWith("failed: ")) {
+    const why = b.answer.slice("failed: ".length);
+    // A connect step that worked by design, its Card next: never "it didn't go through".
+    const next = why.endsWith(`; ${CARD_NEXT}`) ? / is connected$/.exec(why.slice(0, -`; ${CARD_NEXT}`.length)) : null;
+    if (next) return w.approval_connected_card_next(why.slice(0, next.index));
+    return w.approval_answer_failed(why);
+  }
   return undefined;
 }
 
@@ -6621,8 +6655,11 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   // knock at a door. A "Did this happen?" list KIFF can't give leaves the count out: the apps then
   // count what they have, rather than show a number that's short.
   const needsYou = unsure === undefined ? undefined : (() => {
-    const count = kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length + unsure + unitExceptions.length
-      + lights.filter((l) => l.some((d) => d.knocks > 0)).length + yourSteps.length + coachWaiting.length;
+    const parts = { held: kiff.held.filter((h) => (h.kind ?? "hold") !== "card_unit").length, unsure, unit: unitExceptions.length,
+      knocks: lights.filter((l) => l.some((d) => d.knocks > 0)).length, steps: yourSteps.length, coach: coachWaiting.length };
+    const count = parts.held + parts.unsure + parts.unit + parts.knocks + parts.steps + parts.coach;
+    // Its parts, counts only, so a count the list doesn't show names where it comes from.
+    if (count > 0) console.log(JSON.stringify({ event: "needs_you", tenant: me.tenantID, count, ...parts }));
     // In the person's language, as every line of tafs cloud's (docs/api.md, The person's language).
     const lang = langOf(event);
     const w = wordsIn(lang);
@@ -8388,8 +8425,10 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
   }
   if (access.cards_manage === undefined) return { failed: "KIFF didn't say whether you may manage Cards now; try again" };
   if (!access.cards_manage) return { failed: "your role on this KIFF account can't manage Cards now" };
-  // The person, as KIFF just answered for them: no session of theirs, and no right beyond that answer.
-  const me: KIFFIdentity = { tenantID: tenant, subject: access.requester.id, apiKey: false, agentID: "", capabilities: ["cards.manage"] };
+  // The person, as KIFF just answered for them: no session of theirs, and no right beyond that answer. Its schedule runs in the
+  // account's zone, as Coach wrote its rules, never UTC by default ("Fridays at 17:00, Paris time" ran at 18:00, 14 Nov).
+  const zone = await keptAccountZone(tenant, deps);
+  const me: KIFFIdentity = { tenantID: tenant, subject: access.requester.id, apiKey: false, agentID: "", capabilities: ["cards.manage"], ...(zone ? { timeZone: zone } : {}) };
   try {
     const out = await makeTaf({
       name: taf.name, from_setup: true, draft_id: taf.draft, ...(taf.unscheduled ? { unscheduled: true } : {}),
