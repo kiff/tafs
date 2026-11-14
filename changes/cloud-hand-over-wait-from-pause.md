@@ -1,0 +1,1 @@
+- A hand-over waiting on a Card that never comes is answered 15 minutes after the run paused on it, not after its first try, and the sweep tries it every 5 minutes for its first hour, so no one need open the app; every try is logged.

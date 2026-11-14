@@ -10,6 +10,11 @@ enum RequestsTogether {
     static let scheme = "kiff.requests.v1"
     /// The approval step tafs cloud asks it for: an app's key and its taf's Card.
     static let keyAndCards = "key_and_cards"
+    /// The approval step tafs cloud asks it for: tools added to a connected app and the taf's Card over them.
+    static let toolsAndCards = "tools_and_cards"
+    /// Not a step: the phone draws tafs cloud's mark of what a fingerprint signs (`signs`). Only then is a held
+    /// sign-in's first tools asked with their Card in one fingerprint; a phone without it keeps two steps.
+    static let signs = "signs"
 
     /// A request message's hash, as both services write it: lowercase hex SHA-256.
     static func hash(_ message: Data) -> String {

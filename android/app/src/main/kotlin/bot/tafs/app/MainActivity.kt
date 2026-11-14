@@ -558,6 +558,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       doors = doorActions,
       connections = ConnectionActions(refresh = model::refreshConnections, disconnect = model::disconnect, reconnect = model::startReconnect, reconnectId = model::startReconnectId, replaceKey = model::openReplaceKey, siteSignIn = model::openSiteSignIn),
       stopChat = model::stopChat,
+      connectAgain = model::startConnectAgain,
       retryUnsent = model::retryUnsent,
       editUnsent = model::editUnsent,
       deleteUnsent = model::deleteUnsent,
@@ -769,7 +770,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             (open ?: home)()
           }
         }
-        Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) })
+        Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null)
         Tab.Record -> RecordView(
           state,
           record = recordActions,

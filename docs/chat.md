@@ -349,6 +349,16 @@ grant carries `connection: {done: true, words}`: "Qonto is connected (read only)
 the card's Card alone, never the connection's text again, so the taf's Card after its key went in doesn't read
 as if the key still waited ([secure-connection.md](secure-connection.md)).
 
+**What the fingerprint signs is on the card.** The phone learns the step only from the ask after Approve, and
+the fingerprint follows at once, so each approval card still waiting says beforehand what it signs:
+`signs: {card: true}` when its fingerprint signs the Card (the `cards`, `key_and_cards` or `tools_and_cards`
+step), and `signs: {card: false, words?}` when it signs the connection alone, with `words` ("Its Card: you
+approve it next", in the reader's language) when the card carries a draft. It comes from the same rule `decide`
+asks by (`stepFor`), read as the phone: the chat's read carries `Planque-Device-Signature` and what the phone can
+sign (`?can=tools_and_cards,key_and_cards`). Without the proof, or when the connections can't be read within
+1.5 s, the cards carry no `signs` and the apps draw them as before. With `card: false`, an app never draws the
+Card's limits as being signed now: they go under `words`.
+
 ## Coming back to a run at work
 
 When the owner leaves the chat or the app and comes back while a run works, the app
@@ -372,6 +382,18 @@ held call was answered, then `end`.
   among that run's messages. The live answer has the key its words will have in the thread, so
   the answer lands in the live answer's own row. The thread follows its end on the last row's
   height as well as on the words arriving, at once and only while the owner is at the end.
+
+**A run Android follows to its end, never left as "…"** (Android 1.22):
+- With no stream open (one couldn't open, or a run went on with none, as Coach's does once tafs cloud
+  answers its result), the thread is read every 2.5 s for about 6 minutes, then every 15 s for about
+  25 more, while tafs cloud says a run is at work (`followChat`).
+- A run those reads find at work that this phone hasn't followed yet is picked back up by its stream,
+  which takes over from the reads.
+- While a stream is open, the thread is still read every 30 s (`STREAM_CHECK_MS`). A stream can stay
+  quiet for many minutes after its run ended without saying so. Once tafs cloud says nothing is at
+  work there, and the live answer has stood for more than 15 s, any read (that check, or coming back
+  to the chat) drops the live answer, so "…" and Stop go and the thread shows what the run wrote.
+  It also closes the quiet stream, so the next run is followed again.
 
 ## The thread and the chats list
 
@@ -404,7 +426,9 @@ server's reason, scrubbed as any step's reason is (`whyOf`) and with any host na
 for this app"), left out when nothing readable is left; and `next`, what to do ("Next: ask Coach to connect
 Shippo with its key instead, or to use another app."). It's taken before a retry folds the step away, so
 a later read that went through (the catalog, say) doesn't hide it; a later request for the same server, description or grant (or the same app by a known name)
-that went through does (`resolved`, `takeRefused` and `Steps.connectionRefusal` in
+that went through does, and so does any later connection call whose answer shows it `signed_in`, `listed` or
+`connected`, so "couldn't connect" never stands under "signed in" (`Steps.connectedBy`); one showing it failed
+clears nothing (`resolved`, `takeRefused` and `Steps.connectionRefusal` in
 `runtime/src/cloud/steps.ts`). Both apps draw the lines under the taf's words, never folded, the first in
 the failure colour, and add none of their own (`RefusedLines`). The live stream's `step` keeps only `why`.
 

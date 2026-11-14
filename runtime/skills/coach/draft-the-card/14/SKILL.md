@@ -35,8 +35,8 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   limit: put it in the rules as they said it, and never propose another in
   its place. Ask about each limit they didn't give; don't
   assume one. Then set the tools
-  on the grant (planque tools) and show a new approval with the grant; the owner
-  approves it, with no second sign-in. A limit over a day follows the account's
+  on the grant (planque tools). Declared: true? Draft the Card now: one approval
+  with grant and draft; else the grant's, then the Card's. A limit over a day follows the account's
   day: say so as a line of the rules notice ("a day ends at midnight in your
   account's time zone"), not in a message: messages stay short.
 - A grant whose status says on_demand: true is an app whose sign-in was set up
@@ -47,7 +47,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   you until you widen it").  Say who
   holds the sign-in as the grant's custody says, in the owner's words ("your
   sign-in stays with the connection service"), never a service's name.
-- Only when planque says connected (or, for a key, declared: true), give the taf its Card: submit its draft
+- Only when planque says connected or declared: true, give the taf its Card: submit its draft
   (kiff_draft) over the connected tools, with the limits you agreed, then show a
   new approval with the grant and the draft. The draft is the agreed rules,
   line for line, never merged ("1,000 reads a day each" stays a line per

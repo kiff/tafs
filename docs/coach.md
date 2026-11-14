@@ -208,11 +208,17 @@ then shows its plan. Then, each step behind the owner's yes:
    person KIFF names and answers the card itself (`answered_by: "tafs cloud"`): kiff/agents
    claims the key from Coach's draft, and the taf joins the account's list
    ([tafs.md](tafs.md#starting-a-taf)). The conversation carries the card's answer
-   (`answer.by`, `answer.outcome`: `{taf_id}`, with `check` when its first check couldn't read, or `{failed}`), and the card shows it:
+   (`answer.by`, `answer.outcome`: `{taf_id}`, with `check` when its first check couldn't read, or `{failed}`), and the card shows it.
+   A first check that finds the taf's key not stored yet (the hand-over has just claimed it) is tried again, up to
+   4 times over a few seconds; still not stored, `check` says so in plain words, never the secrets store's own:
    set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
    itself; and until the answer comes, "Setting up…". A result whose Card the owner hasn't
-   approved yet (KIFF's `draft_not_ready`) isn't answered: it waits, and the taf is made once they
-   approve, with the next note, chat read or sweep, never answered failed. The app starts nothing itself
+   approved yet (KIFF's `draft_not_ready`) isn't answered at first: it waits, and the taf is made once they
+   approve, with the next note, chat read or sweep: the sweep tries a waiting hand-over every 5 minutes for
+   its first hour, then on the deletions' backoff, so no one need open the app. Each try is logged. Still
+   unapproved 15 minutes after the run paused on it, nothing is asking for that Card, so the result is answered in plain words (`{failed: "The
+   Card for <taf> was never approved, so <taf> isn't set up yet: approve its Card to finish"}`), and Coach
+   asks for the Card. The app starts nothing itself
    (Android: `CoachWords.handOver`, `HandOverCard`; it reads the list again once for a taf
    set up that isn't listed yet). The iPhone app does the same.
    A taf's next version is still made by the app, from an improvement's result.
@@ -580,6 +586,14 @@ The account's connections, from planque (data, not the owner's words):
 The owner says: I want a taf that chases overdue invoices
 ```
 
+**The guides of the apps those tafs hold** follow the connections, under `[tafs app guides]`: each app's
+adapted guide as planque serves it (`GET /v1/accounts/{tenant}/catalog/{entry}/guide`, read with the same
+session), headed by its app and the day it was checked, as data, never instructions. They cover the apps the
+connections name by catalog entry, the most used first (by how many of those tafs use each), at most 5, each at
+most 9,000 characters and all of them at most 30,000. An app with no guide yet, or one planque can't answer, is
+left out. tafs cloud picks them, never the model; Coach's planque tool attaches an app's guide to a search and to
+a request by entry the same way (kiff/agents), so Coach has read it before it offers or connects the app.
+
 A message tafs opens with its own line (`[improve taf …]`, `[tafs coach lines]`, `[did this happen …]`)
 keeps that line first, and a message in the live chat (which the apps send with no session) goes on in it by name, with neither the lines nor the reads. The thread shows only the owner's words. What planque can't answer is left out,
 and Coach reads planque's grants itself. Coach offers only a connection one of the account's tafs uses, or
@@ -605,7 +619,7 @@ An OpenAPI description, in JSON or YAML, answers its servers and how its key is 
 
 **Checked first, with a way forward** (`set-up-a-taf@7`, `connect-an-app@11`). When the job needs an app, Coach searches for it before asking the owner anything else. If it can't be connected here, Coach says so first, before any choices card. When an app can't be connected (it needs setting up, or its sign-in, request or `describe` failed), Coach says why in one sentence from the connection server's answer, and offers a way forward in the same turn. That's the same app's key entry, its key by its published API description (the key's place may name a `prefix`, as `ShippoToken <key>`), or another app with the operation. It's never only "try again later". The failed step still shows tafs cloud's own words, but the server's reason is kept beside it, scrubbed. It's logged (`coach_connection_refused`) and goes before the person's next words to Coach, so Coach can still say it once the turn it failed in is over. The person sees it too: the message of the run that was refused carries `refused`, the step's words, the reason ("Why: …") and what to do next, which both apps draw under Coach's words, until a request for that app goes through in the same run ([chat.md](chat.md)). A vendor's sign-in comes before its key, even when
 search finds both; a key is given on a secure sheet on the phone, outside the chat, straight to planque,
-and never reaches Coach (`connect-an-app@7`). Before a key request, Coach asks planque to `describe` the API description: its operations as planque names them (name, title, read or write), with no grant and no key. A big description (over 200 operations) answers only its count, and Coach describes it again with words from the job (`q`), getting at most 50 matches, best first (`connect-an-app@15`). Each tool on the key request carries its full spec, as `name-the-tools` sets it on a connected grant (pins in `fixed_arguments`, `resource_argument`, the amount with its unit, `read_only`), from the operation's arguments as `describe` gives them, `{name, type, required, in}` (`connect-an-app@19`, `name-the-tools@8`). planque refuses a `resource_argument` that isn't one of the operation's string arguments before declaring. The request then names the job's operations as its tools, by those names, never none (`connect-an-app@14`): planque declares a key request's tools to KIFF before the key only when it names them, and only a declared request lets the owner sign the key and the taf's Card in one approval; without them, the key comes first and the Card after. A mode
+and never reaches Coach (`connect-an-app@7`). Before a key request, Coach asks planque to `describe` the API description: its operations as planque names them (name, title, read or write), with no grant and no key. A big description (over 200 operations) answers only its count, and Coach describes it again with words from the job (`q`), getting at most 50 matches, best first (`connect-an-app@15`). Each tool on the key request carries its full spec, as `name-the-tools` sets it on a connected grant (pins in `fixed_arguments`, `resource_argument`, the amount with its unit, `read_only`), from the operation's arguments as `describe` gives them, `{name, type, required, in}` (`connect-an-app@20`, `name-the-tools@9`). planque refuses a `resource_argument` that isn't one of the operation's string arguments before declaring. The request then names the job's operations as its tools, by those names, never none (`connect-an-app@14`): planque declares a key request's tools to KIFF before the key only when it names them, and only a declared request lets the owner sign the key and the taf's Card in one approval; without them, the key comes first and the Card after. A mode
 is said only as the connection gives it: a vendor's own sign-in has none planque knows. Once a connection
 connects, Coach checks it with one read through it before saying it's ready: a 401 or 403 there is the
 key or sign-in refused, caught at connect rather than at the taf's first run (gap 10).

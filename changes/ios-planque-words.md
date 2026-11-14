@@ -1,0 +1,1 @@
+- **iPhone and iPad: a refused sign-in says why.** When the connection service refuses with its own words, such as a sign-in to another account than the connection's, the app shows them as they are, instead of "It changed in the meantime", which read as "try again" (docs/ios-app.md).

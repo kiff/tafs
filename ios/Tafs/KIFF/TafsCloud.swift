@@ -367,6 +367,8 @@ final class TafsCloud {
         var cardUnitExceptions: [CardUnitException]? = nil
         /// The steps tafs handed the person, oldest first (docs/api.md › Your step); absent when none.
         var yourSteps: [YourStep]? = nil
+        /// Coach's chats waiting on their person (`coach_waiting`), oldest first.
+        var coachWaiting: [CoachWaiting]? = nil
         /// Everything that waits for the person, counted by tafs cloud with its words; absent
         /// when KIFF's "Did this happen?" can't be read, and the app counts what it has.
         var needsYou: NeedsYou? = nil
@@ -437,6 +439,7 @@ final class TafsCloud {
             case tafs, others, removing, doorsOffered = "doors_offered"
             case cardUnitExceptions = "card_unit_exceptions"
             case yourSteps = "your_steps"
+            case coachWaiting = "coach_waiting"
             case needsYou = "needs_you"
         }
     }
@@ -1384,7 +1387,7 @@ final class TafsCloud {
         var shownDraft: String? = nil
         var words: Words? = nil
         var session: String? = nil
-        /// The steps this phone can sign beyond connect and cards (`key_and_cards`): tafs cloud
+        /// The steps this phone can sign beyond connect and cards (`key_and_cards`, `tools_and_cards`): tafs cloud
         /// never answers an app a step it didn't say it can act on.
         var can: [String]? = nil
         enum CodingKeys: String, CodingKey { case grant, shownDigest = "shown_digest", draft, shownDraft = "shown_draft", words, session, can }
@@ -2425,7 +2428,10 @@ final class TafsCloud {
 
     /// Setup's thread: its messages and the components it showed. With `session`, that
     /// one chat only (kiff/tafs#73).
-    func setupThread(_ id: String, session: String? = nil) async throws -> SetupThread {
+    /// `proof` is this phone's signed read of its connections and `can` the steps it signs beyond connect
+    /// and cards: with both, tafs cloud marks each approval card still waiting with what its fingerprint
+    /// will sign (`signs`, docs/secure-connection.md). Without, the cards come as before.
+    func setupThread(_ id: String, session: String? = nil, proof: String? = nil, can: [String] = []) async throws -> SetupThread {
         struct Working: Decodable { let session: String }
         /// One the app can't read is left out, never the thread with it.
         struct LenientLine: Decodable {
@@ -2433,7 +2439,9 @@ final class TafsCloud {
             init(from decoder: Decoder) throws { line = try? CoachLine(from: decoder) }
         }
         let path = "/v1/tafs/\(escaped(id))/conversation" + (session.map { "/\(escaped($0))" } ?? "")
-        return try Self.setupThread(decoding: try await sendData("GET", path, body: Optional<[String: String]>.none))
+            + (proof != nil && !can.isEmpty ? "?can=" + can.joined(separator: ",") : "")
+        return try Self.setupThread(decoding: try await sendData("GET", path, body: Optional<[String: String]>.none,
+                                                                 headers: proof.map { ["Planque-Device-Signature": $0] } ?? [:]))
     }
 
     /// Setup's thread from tafs cloud's answer: its messages, its cards, and the drives that ended in it

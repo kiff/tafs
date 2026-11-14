@@ -365,6 +365,24 @@ the app in sample mode.
   and no text field.
   **A later approval card whose connection is already connected** carries tafs cloud's mark (`connection: {done,
   words}`, `SetupComponent.Connection`): the card draws that line and the Card, never the connection's text again.
+  **A taf's own Connect again** (`connect_again: {grant, app, title, words, done_words}` on its Setup page,
+  `ConnectAgainPanel`, `AppModel.connectAgain`): when a connection's sign-in expired, the taf's Setup shows tafs
+  cloud's words and its button first, for whoever manages it. The button signs that same connection in again
+  (`reconnectApp`, planque's approve for `grant`), so the taf keeps its tools and Card, never a trip through every
+  app; the taf is read again, and once planque says it's connected the taf shows `done_words`. Read leniently: one
+  without its connection or words reads as none.
+  **What the fingerprint covers** is tafs cloud's mark too (`signs: {card, words}`, `SetupComponent.Signs`), set from
+  the same decision as the step it then asks, since the phone learns the step only after the tap. With `card: false`
+  the Card is the one approved next: drawn under tafs cloud's words ("Its Card: you approve it next") with its lines
+  dimmed, never under its own title as if signed now, and not drawn at all without words. With `card: true`, or no
+  mark from an older tafs cloud, the card draws the Card as before. The mark comes on Setup's thread read with this
+  phone's signed read of its connections (`Planque-Device-Signature`) and the steps it signs
+  (`?can=tools_and_cards,key_and_cards,signs`, `AppModel.stepsSignedHere`); without the proof, the cards come unmarked.
+  `signs` says this phone draws the mark, on the read and on Approve: only then is a held sign-in's first tools asked
+  with their Card in one fingerprint; a phone without it keeps two steps.
+  At Approve, the step tafs cloud asks must sign the Card as the mark said (`AppModel.stepMatchesMark`): a Card drawn
+  as signed with only the connection asked, or drawn as next and asked now, is out of date. Nothing is signed, and the
+  card is read again, as for `read_again`.
   **The key and its Card under one Face ID** (`AppModel.approveKeyAndCard`, `RequestsTogether`), when the sheet is
   opened from Coach's card and that card carries the taf's Card as a draft:
   - The sheet draws **Its Card**: KIFF's own lines for the draft this phone read from KIFF.
@@ -380,6 +398,23 @@ the app in sample mode.
   - It reports what came of both, and tafs cloud checks them before Coach hears "approved". Closing the receipt then
     doesn't approve the card again.
   - If it doesn't finish, the card's note says why on the sheet, and the key is never given by itself after that.
+  **Tools added to a connected app and the Card over them under one Face ID** (`AppModel.approveToolsAndCard`), from
+  Approve on Coach's card when it carries the taf's Card as a draft:
+  - The phone tells tafs cloud it can sign the step (`can: ["tools_and_cards"]`) only for a Card the card drew
+    (`cardDrawn`): the draft read, with at least one of its Cards' lines (limits and all) on the card, at the version shown. tafs cloud
+    asks for it only when it's on there and the app is already connected; otherwise it answers as before, a step
+    at a time. Approve waits until a card's Card is read, so what's signed is on screen, and it stays there until
+    the fingerprint.
+  - The phone checks the ask is this card's (`toolsAndCardIsThisCards`): its grant, planque's approve body exactly as
+    this phone builds it for the digest shown (with KIFF's words for its profile), its draft and the version shown.
+    Anything else is refused and nothing is signed.
+  - It builds planque's approve and KIFF's confirm in full with one `signed_at` (`PlanqueClient.prepareApprove`,
+    `KIFFClient.prepareConfirmDraft`), and the approval key signs once, as for a key.
+  - It sends the approve first, then the Card's confirm, each with `v3=` and `with=sha256:`. The Card is confirmed
+    only once planque says the app is connected with the tools; a sign-in planque holds is confirmed first, as on
+    any approval.
+  - It reports what came of both, and tafs cloud answers "approved" only when the tools are in and the Card is
+    issued. Tools in with a Card that didn't follow leave the card asking for the Card alone.
 - **What a grant's digest covers** (`PlanqueClient.digestCovers`): the phone recomputes planque's
   digest before it shows or signs a grant, and refuses one that doesn't match. Without `digest_v`,
   it covers the request alone (v1). With `digest_v: 2`, it covers `{"lang", "request", "text"}`, so
@@ -436,7 +471,15 @@ the app in sample mode.
 
 A connected app (“Connected ✓”) opens its connections (`AppConnectionsView`, `AppModel.connectionGroups`), in four parts:
 
-- **One section per taf,** its name as the heading, holding each of the account's live grants for the app (not `disconnected` or `failed`). The tafs with a connection that needs the owner come first (a sign-in waiting, signed out, or a last call that failed), then the rest by name. A row shows the vendor's account when the connection service gives one, else the app's name, then the connection's status words, and “Also on Chargebacks' Card” when another taf's Card uses it.
+- **A connected app always opens** its connections, never a tap that does nothing. A device that doesn't read the
+  account's connections (connected tools not set up on it, or a session without its key: `readsConnections`) says so
+  there, in the shared words, instead of an empty list.
+- **One section per taf,** its name as the heading, holding each of the account's live grants for the app (not `disconnected` or `failed`). The tafs with a connection that needs the owner come first (a sign-in waiting, signed out, or a last call that failed), then the rest by name. A row shows the connection's name as the connection service gives it (`title`, such as “Gmail · Demo Shop”; `Grant.name`), else a direct sign-in's or a key's account, else the app's name. A managed app's `account` is the provider's id, kept only to be sent back with a door's trigger, and never drawn. Then the connection's status words, and “Also on Chargebacks' Card” when another taf's Card uses it. When the connection service draws its rows (`used_by`, `health`, `actions`; `Grant.rowFromPlanque`), each row is
+  its name, "Used by" its tafs, and its health in its words, as sent; a tap opens `ConnectionDetailView`: the health,
+  the tafs on it, and only the actions it offers that the app knows (`sign_in_again` by `approve` or `key`, `remove`,
+  `remove_unfinished`). Remove is there, never beside the row, and asks once more in its words with `stops` before
+  Face ID; a leftover gets only its own removal. Every request to the connection service sends `X-Time-Zone`, for
+  the times in its words. Without those fields, the row is the app's own, as before.
 - **On a row,** whoever manages the account's Cards has **Sign in again** and **Remove access**; or **Cancel** on a sign-in that never came back (“Cancel the sign-in to Stripe?”, “Keep waiting”); or **Cancel the request** on one nobody answered yet (`Grant.pendingRequest`: pending and holding no sign-in), since nothing was connected (`ConnectionFixWords.endWord`, the same rule on a taf's Connected apps). Remove access asks first, naming the one taf it ends (“Remove access to Stripe for Refunds?”, with Cancel). For a connection made with a key it says the key is deleted from tafs once no taf uses it (a key another taf's connection shares stays for that taf), never that anything is revoked at the vendor (`DisconnectWords.message(key:)`); for a sign-in it says where it's revoked. It also names any other taf whose Card draws on the connection's tools, which stops too (“Chargebacks stops too.”), and says other connections to the app stay. Face ID then asks the same words, and the device key signs the connection service's `DELETE` ([api.md](api.md#disconnecting-and-removed-tafs)). The list is read again after.
 - **From removed tafs** comes between the tafs and Other connections. It holds the connections whose `request.agent` tafs cloud names in `removed_tafs`, and only those, each with the removed taf's name (the grant's `agent_name`). The app sends its signed grants read with the read (`connectApps(proof:)`). A connection a live taf's Card still uses says so (“Kept: Chargebacks' Card uses it”). **Clear these connections** shows only when at least one listed connection has an empty `used_by`, and ends exactly those: it asks first (“Clear 2 connections from removed tafs?”), then one Face ID, and the device key signs each disconnect. The line under them says how it went (“Cleared 1. Kept 1 for Chargebacks, whose Card uses it.”). With no `grants`, the section shows with no Clear. Which to keep is tafs cloud's word, never the phone's (`clearPlan`, `clearRemovedConnections`; the words are `ConnectionGroupWords`, the same as Android's).
 - **Other connections** comes last: those whose taf the app can't name, each with the same row as the rest and nothing that acts on them all at once. A taf missing from this person's list may have been removed, but it may also be one they don't see, or an agent that isn't a taf, so nothing there says it was removed.
@@ -650,6 +693,20 @@ exports receipts ([api.md](api.md): `GET /v1/record`, `/v1/record/cases/{about}`
 
 Tests: `TafsTests/RecordSearchTests.swift`.
 
+## Coach waiting
+
+A Coach chat paused on a card its person answers (an approval, a sign-in, questions, a confirm), as
+Home lists it ([api.md](api.md) › Coach waiting; `KIFF/TafsCloud+CoachWaiting.swift`,
+`CoachWaitingCard` in `Views/NeedsYouView.swift`, `AppModel.openCoachWaiting`):
+
+- **Where:** Needs you lists Home's `coach_waiting` after the steps, oldest first, one per chat, in
+  tafs cloud's words only: `words.line` ("Coach is waiting for your approval.") and `words.open`
+  ("Open Coach"). Needs you never says nothing is waiting while one is listed, and Home's count is
+  tafs cloud's `needs_you`, which has each once.
+- **Read leniently:** one without its chat (`session`) or either line is left out, never Home with it.
+- **The way in** opens Coach on that chat (`openSetupChat(session)`), where its card waits. Someone who may not
+  use Coach (`mayUseCoach`) sees the line alone, never a button that does nothing.
+
 ## Your step
 
 A step a taf may never take itself, prepared and handed to its owner ([api.md](api.md) › Your
@@ -715,7 +772,9 @@ No raw reason reaches the person. tafs cloud's `words`, and its `error`, which i
 language, are shown as they are. KIFF's and planque's own reasons (an English line, a code, a vendor's words) never are:
 `KIFFError.server` and `PlanqueError.server` say a plain line of the app's own by what happened (`PlainError`): signed
 out (401), not allowed (403), changed meanwhile (409), busy (429), down (5xx), offline, or else "didn't understand each
-other". The raw reason stays in the error, for the code that acts on it (a refusal's code, a 409's reason) and for a
+other". planque's own `words` on a refusal (`PlanqueClient.refusal`), its line for the person in their language, come
+first and are shown as they are: a sign-in to another account says so, never "changed meanwhile", which read as "try
+again". The raw reason stays in the error, for the code that acts on it (a refusal's code, a 409's reason) and for a
 drive's diagnostics.
 
 ## Words and languages

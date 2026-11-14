@@ -20,7 +20,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   to find the work (list or search), to check one item (read it), and to act
   (the write). Choose each read by what the job asks of it:
   the operation whose fields answer the job's question, not the first one
-  named after the thing: for a refund, the read that says what was already refunded. Pin with fixed_arguments what must never
+  named after the thing. Pin with fixed_arguments what must never
   change: the account, and the mode, on every tool that takes them, reads
   included, as the vendor's own descriptions ask,
   and the operation that makes a tool the job's. A pin is a dotted path
@@ -33,9 +33,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   vendor tool runs many operations chosen by an argument (an operation id, a
   method, a path or an endpoint), connect it once for each operation the job
   needs, each under its own name with that argument pinned to that operation:
-  its Card then covers that operation alone. Never leave the operation to the taf:
-  a Card's limit on one write doesn't stop another write made through the
-  same tool. Such an operation's own fields aren't in the catalog, and their
+  its Card then covers that operation alone. Never leave the operation to the taf. Such an operation's own fields aren't in the catalog, and their
   names aren't the thing's (a read of one item can take it as id): never guess
   or rename them. When the vendor has a read-only tool that
   lists an operation's fields, given its id, ask for it
@@ -46,22 +44,23 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   look for it: search for it by its name in KIFF, as planque's status lists
   it (such as api_details_k3f9), then call it. When you must pin the account,
   the read-only tool that lists the accounts the sign-in covers goes in that
-  first request too, with setup_reads: true: search {q} finds both by name
+  first request too, with setup_reads: true (by entry: setup_reads): search {q} finds both by name
   before you connect. The connection's one approval and sign-in then cover
   them, with no question of their own and no second approval: the owner
   already agreed to connect, and its approval is enough. setup_reads goes on
   those two only, never on the taf's own reads: those read the owner's
   account. Never in a connection of its own:
   each new connection is one more approval and vendor sign-in for the owner. The job's own tools are then added to that same
-  connection (tools on a connected grant adds them), with one approval and
-  no sign-in. Once it's connected, read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments} (before a key: describe's arguments, by in and type), and place each argument you name (the amount, what the call
+  connection (tools on a connected grant adds them), declared: one approval with the Card, no
+  sign-in. Once it's connected, read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments} (before a key: describe's arguments, by in and type), and place each argument you name (the amount, what the call
   acts on, the read's argument in unit_lookup) at the path its fields give,
   such as parameters.id. Keep that tool as one of the taf's reads, so it
   looks up the fields you left open before its first call. Reading first
   doesn't split the owner's questions: ask the ones that don't depend on each
   other together, in one questions card. Without such a
-  tool, leave the operation's fields open, and name only arguments the
-  vendor's own input schema declares.
+  tool, leave the operation's fields open, and name only arguments the vendor's own input schema declares.
+  An argument is never an object: name its fields one by one, each at its
+  path (values.Status).
   Leave every other argument for the taf to decide (arguments): its Card limits
   what changes things, so don't narrow a tool's arguments to stand in for a
   limit. Name the argument that moves money, with its unit and scale,
@@ -75,14 +74,14 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   no money here. It has no amount argument, and its Card limits its calls a
   day. Name what each tool that changes things acts on
   (resource_argument): the item it takes (the ticket, the event, the
-  payment), as one of its string arguments, required. When it can take
-  several, keep the one the taf's read of it takes and leave the others out. For a tool that
+  payment), as one of its string arguments, required. When it takes several, keep the one
+  its read takes. For a tool that
   moves money, name the read that says its unit (unit_lookup: that read's
   name, the read's argument that takes the same id, and where the unit is in
   its answer, such as currency): KIFF refuses a call in another unit than the
-  Card's. Mark tools that
-  only read as read_only: reading in the owner's account is open, with no
-  limits.
+  Card's. Ask for a taf's tools once, complete (read_only, pins,
+  arguments): each change is one more approval. Mark tools that
+  only read as read_only: reading in the owner's account is open, with no limits.
 - Test or live is the owner's choice, never yours, when the vendor has both.
   Ask it before you propose tools that move money or change data, and before
   any rules or draft name a mode: "Test mode, recommended to start" or "Live

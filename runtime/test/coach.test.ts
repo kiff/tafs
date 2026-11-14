@@ -269,7 +269,7 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "every", every_minutes: 25 }] }))
       .toMatchObject({ isError: true, text: expect.stringContaining("the nearest is every 20 minutes") });
     const made = (await w.tool("taf_dial", { taf: RAE, wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], when: { busy: "latest" } })).json as { version: number; words: string[] };
-    expect(made.words).toEqual(["Weekdays at 09:00", "If busy, runs the latest once it's free", "Results go to door_reply"]);
+    expect(made.words).toEqual(["Weekdays at 09:00", "If busy, runs the latest once it's free", "Replies to whoever wrote"]);
     expect(w.tafs.held.get(`${T}#${RAE}`)!.knobs?.[String(made.version)]).toEqual({ wakes: [{ kind: "schedule", form: "weekdays", at: "09:00" }], busy: "latest", results: ["door_reply"] });
     expect(w.agents.calls.filter((c: string) => /(create|update)Schedule/.test(c))).toEqual([]);
     // Coach can draft any connected app's event too.

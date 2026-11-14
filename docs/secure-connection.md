@@ -161,10 +161,34 @@ server declares in KIFF at the request (`declared: true` on the grant) and which
 the key is in (`connect-an-app@10`, `draft-the-card@8`). Not declared, Coach asks for the key first,
 then the Card, as before.
 
+**A connection's added tools and its Card together (`tools_and_cards`).** The same shape, for an app already
+signed in: Coach adds the taf's tools to a connected grant (the addition waits as `pending`, with what it had in
+`connected`), drafts the Card over them, and shows one approval with the grant and the draft. With
+`TAFS_TOOLS_AND_CARDS=on` and `can: ["tools_and_cards"]`, tafs cloud answers `{step: "tools_and_cards", scheme:
+"kiff.requests.v1", message: "", key: "critical", planque: {grant, body: {digest, kiff_profile?}}, kiff: {draft,
+version}}`. The phone builds the two requests it already knows, with one `signed_at`: the connection server's approve
+(`POST …/grants/{grant}/approve`, as the connect step sends it) and KIFF's confirm (as the cards step does), signs
+their two hashes once, and sends `with=` on each, as for a key. The report answers `approved` only when the grant is
+connected with the tools and the Card is issued; tools in with a Card that didn't answers `failed: <app> is connected;
+…`, so the next card asks for the Card alone. It needs the connection server to take the paired approve and to
+declare an addition's tools in KIFF while they wait (and withdraw them if the addition ends unapproved); until then
+the flag stays off and the two steps work as before. A first connection (nothing connected yet) keeps its steps.
+That includes a reused sign-in's first tools: its card may carry the draft, but tafs cloud asks the `connect` step,
+which signs the connection alone. The draft isn't signed, so the report never answers `approved` while KIFF says it
+isn't issued (at the version the card showed). When the connection is connected and the Card is still the draft the
+card showed, that's by design (connect now, the Card next): it answers `failed: <app> is connected; its Card is next:
+show the approval again for its Card alone`, and the card reads tafs cloud's "Gmail is connected. Next, its Card.", in
+the person's language, never "it didn't go through". Any other case (no draft, another version, a draft that isn't
+one any more) answers `failed: <app> is connected; KIFF didn't issue the taf's Cards: …; show the approval again for
+its Card alone`. Either way Coach's next card asks the `cards` step, with the Card's limits on screen. Before Approve, the card already says which it is (`signs: {card, words?}`, [chat.md](chat.md)),
+so the apps never draw the Card as signed on a fingerprint that signs the connection alone.
+
 **Until this ships:** an approval card whose connection is already connected never repeats
 the connection's text. tafs cloud marks it on Coach's approval component in the conversation
 (`connection: {done: true, words: "Qonto is connected (read only)"}`), and the apps draw only
-that line and Its Card.
+that line and Its Card. Only a connection planque shows `connected` is marked: one signed in whose tools
+wait (`listed`), or one asking for more tools again (`pending`), isn't, and its mark goes, so its card
+shows what it asks, never "connected" twice for two asks (`noteConnected`).
 
 ## Lanes
 

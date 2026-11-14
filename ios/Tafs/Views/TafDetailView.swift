@@ -278,6 +278,15 @@ struct TafDetailView: View {
         let manages = model.manages(taf.id)
         let screenshot = Screenshots.enabled && model.mode == .sample
         ForEach(model.tafSetups[taf.id]?.card_unit_exceptions ?? []) { ask in CardUnitExceptionPanel(ask: ask) }
+        // Its own Connect again, first: that same connection signed in again here, never a trip through every app.
+        if let again = model.tafSetups[taf.id]?.connect_again, again.usable, manages {
+            ConnectAgainPanel(tafID: taf.id, again: again)
+        } else if let done = model.connectedAgain[taf.id] {
+            Label(done, systemImage: "checkmark.circle.fill")
+                .scaledFont(14, weight: .semibold).foregroundColor(Theme.ok)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("setup.connected-again")
+        }
         Panel {
             Eyebrow(text: Words.Setup.job)
             Text(taf.job).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
@@ -654,7 +663,7 @@ struct ConnectionsPanel: View {
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(KIFFMapping.vendorWords(grant.vendor)).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink)
-                            Text(grant.account.map { Words.Taf.keysKeptSealed + " · " + $0 } ?? Words.Taf.keysKeptSealed)
+                            Text(grant.name.map { Words.Taf.keysKeptSealed + " · " + $0 } ?? Words.Taf.keysKeptSealed)
                                 .scaledFont(12).foregroundColor(Theme.dim)
                             if grant.needsReconnect {
                                 // Its vendor signed it out: planque's words, and the owner signs in again.
@@ -1392,6 +1401,30 @@ private struct WalletLayout: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         for (index, view) in subviews.enumerated() {
             view.place(at: CGPoint(x: bounds.minX, y: bounds.minY + CGFloat(index) * 26), anchor: .topLeading, proposal: ProposedViewSize(width: bounds.width, height: nil))
+        }
+    }
+}
+
+/// A taf's own Connect again (docs/api.md): tafs cloud's words, and its button, which signs that same
+/// connection in again, behind one Face ID, then the vendor's own page.
+struct ConnectAgainPanel: View {
+    @EnvironmentObject private var model: AppModel
+    let tafID: UUID
+    let again: TafsCloud.ConnectAgain
+
+    var body: some View {
+        Panel(stroke: Theme.amber.opacity(0.5)) {
+            Text(again.words).scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
+                .fixedSize(horizontal: false, vertical: true)
+            Button(model.connecting == again.grant ? model.connectStep ?? Words.Connect.openingSignIn : again.title) {
+                Task { await model.connectAgain(tafID, again) }
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .disabled(model.connecting != nil)
+            .accessibilityIdentifier("setup.connect-again")
+            if let why = model.reconnectErrors[again.grant] {
+                Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 }

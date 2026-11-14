@@ -1,0 +1,1 @@
+- **iPhone and iPad: a connected app always opens.** In Connect apps, tapping a connected app opens its connections, even on a device that can't read them yet, where it now says to start from Connected apps on that device first, instead of the tap doing nothing (docs/ios-app.md).

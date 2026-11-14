@@ -49,6 +49,8 @@ const ARGS: Record<string, unknown[][]> = {
 function sample(v: unknown, key = ""): string[] {
   if (typeof v === "string") return [v];
   if (Array.isArray(v)) return v.flatMap((x) => sample(x, key));
+  // A group of lines (a Card's window words): each of its lines, in order.
+  if (v && typeof v === "object") return Object.values(v).flatMap((x) => sample(x, key));
   if (typeof v !== "function") return [];
   const f = v as (...a: unknown[]) => string;
   if (ARGS[key]) return ARGS[key].map((a) => f(...a));

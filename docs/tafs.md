@@ -86,7 +86,10 @@ A taf starts from a KIFF agent draft that holds its Cards:
    phone. A claim works once; the draft is kept on record (never the key), so a retry
    with the same draft resumes.
 4. It stores the definition in kiff/agents and, for a scheduled taf, its schedule, in
-   the time zone given. A scheduled taf runs once at once; an unscheduled one waits for
+   the time zone given, else the account's. A taf Coach hands over has no person's KIFF read,
+   so tafs cloud keeps the account's zone each time someone who manages Cards opens Coach
+   (`GET /v1/setup`), and the hand-over's schedule runs in it, as Coach wrote its rules
+   ("Fridays at 17:00, Paris time"). With none kept, it's UTC, as before. A scheduled taf runs once at once; an unscheduled one waits for
    the owner. A taf of its own on a schedule checks its work first (`check`): its schedule
    reads the work list without the model and wakes the AI only for what's new. Its first
    run is that schedule fired once, so the first check hands it the open queue; an empty
@@ -130,14 +133,17 @@ one that had none. Its `last_run` is its own
 latest run, scheduled or from its chat, never a trial's. The list reads each taf's recent
 runs once, for its last run and its work line.
 
-A Card's totals carry KIFF's own `window` and its words, `window_words: {each, now}`, which
-the app shows as they are:
+A Card's totals carry KIFF's own `window` and its words, `window_words: {each, now}`, in the
+person's language (`Accept-Language`, all eight: `window_words` in tafs cloud's words), which the
+app shows as they are. English below; never English inside another language's line. Setup's
+limit lines and Coach's prompt, still in English, read the English ones:
 
 | `window` | `each` ("€300 …") | `now` ("€40 used …") |
 |---|---|---|
 | `calendar_day` | a day | today |
 | `rolling_24h` | in any 24 hours | in the last 24 hours |
 | `rolling_1h` | in any hour | in the last hour |
+| `rolling_7d` | in any 7 days | in the last 7 days |
 | `lifetime` | in total | so far |
 
 A window KIFF adds later is shown as it is sent, never as a day.

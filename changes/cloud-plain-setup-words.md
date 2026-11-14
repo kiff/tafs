@@ -1,0 +1,1 @@
+- **Coach's setup says what's true, in plain words.** A dial names where results go and which days ("Replies to whoever wrote", "Monday at 09:00"), never a code. A connection signed in no longer shows "couldn't connect" under it. A card asking for more tools no longer reads "connected" (docs/chat.md, docs/secure-connection.md).

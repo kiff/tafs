@@ -104,7 +104,9 @@ struct ConnectAppsView: View {
     @ViewBuilder
     private func row(_ app: TafsCloud.ConnectApps.App) -> some View {
         let said = ConnectRow(app, usedHere: model.connectionGroups(of: app).tafs.map(\.taf))
-        if app.connected, !model.connections(of: app).isEmpty {
+        // A connected app always opens its detail, never a tap that does nothing: there, the connections this
+        // device reads, or why it reads none.
+        if app.connected {
             NavigationLink { AppConnectionsView(app: app) } label: { cells(app, said) }
                 .accessibilityIdentifier("connect.manage." + app.entry)
         } else {
@@ -369,9 +371,16 @@ struct AppConnectionsView: View {
         let listed = model.removedListed
         let clearable = groups.removed.filter { listed[$0.id]?.usedBy.isEmpty == true }.map(\.id)
         List {
+            // This device hasn't read its connections (connected tools not set up on it, or its session holds no
+            // key): it says so, rather than an empty list.
+            if !model.readsConnections {
+                Text(Words.Connect.startConnectedToolsFirst(device: "\(ThisDevice.kind)"))
+                    .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("connect.not-read")
+            }
             ForEach(groups.tafs) { group in
                 Section {
-                    ForEach(group.grants) { g in row(g) }
+                    ForEach(group.grants) { g in entry(g) }
                 } header: {
                     Text(group.taf)
                 }
@@ -398,7 +407,7 @@ struct AppConnectionsView: View {
             }
             if !groups.others.isEmpty {
                 Section {
-                    ForEach(groups.others) { g in row(g) }
+                    ForEach(groups.others) { g in entry(g) }
                 } header: {
                     Text(ConnectionGroupWords.others)
                 }
@@ -443,6 +452,29 @@ struct AppConnectionsView: View {
         }
     }
 
+    /// A connection's row: as planque draws it when it says (its name, the tafs on it, its health), opening
+    /// its detail, where its actions are; else the app's own row, as before.
+    @ViewBuilder private func entry(_ g: PlanqueClient.Grant) -> some View {
+        if g.rowFromPlanque {
+            NavigationLink { ConnectionDetailView(grantID: g.id, appTitle: app.title).environmentObject(model) } label: {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(g.name ?? app.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                    if let used = g.usedBy, !used.isEmpty {
+                        Text(Words.Connect.Apps.usedBy(tafs: used.joined(separator: ", "))).scaledFont(13).foregroundColor(Theme.soft)
+                    }
+                    if let health = g.health {
+                        Text(health.words).scaledFont(13).foregroundColor(health.ok ? Theme.dim : Theme.amberText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .frame(minHeight: 44, alignment: .leading)
+            }
+            .accessibilityIdentifier("connect.row." + g.id)
+        } else {
+            row(g)
+        }
+    }
+
     /// A connection: its lines, how to fix it, and Disconnect, or Cancel while its sign-in waits.
     private func row(_ g: PlanqueClient.Grant) -> some View {
         HStack(spacing: 12) {
@@ -480,10 +512,10 @@ struct AppConnectionsView: View {
         .frame(minHeight: 44)
     }
 
-    /// What a connection is: the vendor's account when planque gives one, else the app's
+    /// What a connection is: planque's name for it (`Grant.name`), else the app's
     /// name; planque's words for its status; the other tafs whose Card uses it; its last failure.
     @ViewBuilder private func lines(_ g: PlanqueClient.Grant) -> some View {
-        Text(g.account.flatMap { $0.isEmpty ? nil : $0 } ?? app.title)
+        Text(g.name ?? app.title)
             .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
         if let also = model.alsoOnCards(g) {
             Text(also).scaledFont(13).foregroundColor(Theme.soft)
@@ -503,7 +535,7 @@ struct AppConnectionsView: View {
     /// planque keeps, planque's status words, and the tafs whose Cards still use it.
     private func removedRow(_ g: PlanqueClient.Grant, usedBy: [TafsCloud.ConnectApps.UsedBy]?) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(g.account.flatMap { $0.isEmpty ? nil : $0 } ?? app.title)
+            Text(g.name ?? app.title)
                 .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
             if let name = g.agentName, !name.trimmingCharacters(in: .whitespaces).isEmpty {
                 Text(name).scaledFont(13).foregroundColor(Theme.soft)
@@ -920,4 +952,87 @@ struct ConnectApprovalSheet: View {
 
     /// Empties the clipboard after a key was pasted. A test puts its own in.
     @MainActor static var clearClipboard: @MainActor () -> Void = { UIPasteboard.general.items = [] }
+}
+
+/// A connection's detail (planque's rows): its health, the tafs on it, and only the actions planque says
+/// can work for it now. Remove is here, never beside the row, and asks once more, saying what stops.
+struct ConnectionDetailView: View {
+    @EnvironmentObject private var model: AppModel
+    @Environment(\.dismiss) private var dismiss
+    let grantID: String
+    let appTitle: String
+    /// The remove action waiting for the owner's yes.
+    @State private var asking: PlanqueClient.Grant.Action?
+    /// The key-based connection taking a new key, on the key sheet.
+    @State private var replacing: PlanqueClient.Grant?
+    @State private var busy = false
+
+    var body: some View {
+        let g = model.grants.first { $0.id == grantID }
+        List {
+            if let g {
+                Section {
+                    if let health = g.health {
+                        Text(health.words).scaledFont(15, weight: .semibold).foregroundColor(health.ok ? Theme.ink : Theme.amberText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    if let used = g.usedBy, !used.isEmpty {
+                        Text(Words.Connect.Apps.usedBy(tafs: used.joined(separator: ", "))).scaledFont(14).foregroundColor(Theme.soft)
+                    }
+                    if let failed = model.lastFailure(g) {
+                        Text(failed).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                let actions = (g.actions ?? []).filter(\.known)
+                if model.canManageCards, !actions.isEmpty {
+                    Section {
+                        ForEach(actions) { action in
+                            Button(role: action.removes ? .destructive : nil) { take(action, g) } label: {
+                                Text(model.connecting == g.id && !action.removes ? model.connectStep ?? Words.Connect.openingSignIn : action.words)
+                            }
+                            .disabled(model.connecting != nil || busy)
+                            .confirming()
+                            .accessibilityIdentifier("connect.action." + action.id)
+                        }
+                        if let why = model.reconnectErrors[g.id] {
+                            Text(why).scaledFont(13).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                if model.lastErrorFrom == .disconnect, let error = model.lastError {
+                    Text(error).foregroundColor(Theme.no)
+                }
+            }
+        }
+        .navigationTitle(g?.name ?? appTitle)
+        .navigationBarTitleDisplayMode(.inline)
+        .sheet(item: $replacing) { g in
+            ConnectApprovalSheet(start: .init(grant: g.id, needsKey: true)).environmentObject(model)
+        }
+        // One more ask, in planque's words, naming what stops; only then Face ID.
+        .confirmationDialog(asking?.words ?? "", isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } }),
+                            titleVisibility: .visible, presenting: asking) { action in
+            Button(action.words, role: .destructive) { remove() }
+            Button(Words.Common.cancel, role: .cancel) { asking = nil }
+        } message: { action in
+            if let stops = action.stops { Text(stops) }
+        }
+    }
+
+    private func take(_ action: PlanqueClient.Grant.Action, _ g: PlanqueClient.Grant) {
+        if action.removes { asking = action; return }
+        if action.how == "key" { replacing = g } else { Task { await model.reconnect(g) } }
+    }
+
+    private func remove() {
+        asking = nil
+        busy = true
+        Task {
+            if await model.disconnect(grantID: grantID) {
+                await model.loadConnectApps()
+                dismiss()
+            }
+            busy = false
+        }
+    }
 }

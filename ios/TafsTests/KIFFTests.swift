@@ -78,7 +78,12 @@ final class StubProtocol: URLProtocol, @unchecked Sendable {
         }
         Self.lock.withLock { Self._sent.append(request) }
         let path = request.url.map { $0.path + ($0.query.map { "?" + $0 } ?? "") } ?? ""
-        let key = "\(request.httpMethod ?? "GET") \(path)"
+        var key = "\(request.httpMethod ?? "GET") \(path)"
+        // What the phone can sign (`?can=`, on Setup's thread) doesn't pick the stub: the read is answered as
+        // the same read without it, unless a test stubs it with it.
+        if let url = request.url, url.query?.hasPrefix("can=") == true, Self.lock.withLock({ Self._responses[key] == nil }) {
+            key = "\(request.httpMethod ?? "GET") \(url.path)"
+        }
         if Self.holdOnce == key {
             Self.holdOnce = nil
             Self.arrived.signal()

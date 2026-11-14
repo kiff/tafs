@@ -5,6 +5,9 @@ export interface When { hm: string; day?: string }
 export interface Counted { sent: number; held: number; refused: number; failed: number; unknown: number }
 
 const bare = (t: When) => (t.day ? `${t.day} ${t.hm}` : t.hm);
+const list = (xs: string[]) => new Intl.ListFormat("en", { type: "conjunction" }).format(xs);
+const day = (d: number) => new Intl.DateTimeFormat("en", { weekday: "long", timeZone: "UTC" }).format(new Date(Date.UTC(2023, 0, 1 + d)));
+const code = (c: string) => Math.max(0, ["sun", "mon", "tue", "wed", "thu", "fri", "sat"].indexOf(c));
 
 /** English: the source of every line (docs/languages.md). Another language has these keys, each in its own words. */
 export const en = {
@@ -18,6 +21,17 @@ export const en = {
   your_step_open: (vendor: string) => `Open in ${vendor}`,
   your_step_reminder: (what: string) => `Your step is still waiting: ${what}`,
   your_step_line: (what: string) => `Your step: ${what}`,
+  // KIFF's spending windows: `each` ends a limit ("€300 a day"), `now` names its use so far ("€40 used today").
+  window_words: {
+    calendar_day: { each: "a day", now: "today" },
+    rolling_24h: { each: "in any 24 hours", now: "in the last 24 hours" },
+    rolling_1h: { each: "in any hour", now: "in the last hour" },
+    rolling_7d: { each: "in any 7 days", now: "in the last 7 days" },
+    lifetime: { each: "in total", now: "so far" },
+  },
+  coach_waiting_approval: "Coach is waiting for your approval.",
+  coach_waiting_answer: "Coach is waiting for your answer.",
+  coach_waiting_open: "Open Coach",
   // What Coach is doing, one line per tool, in the person's language (steps.ts); a tool KIFF titles keeps its title.
   doing_show: "Showing you a card…",
   doing_results: "Setting where its results go…",
@@ -67,10 +81,20 @@ export const en = {
   approval_digest_mismatch: "This request doesn't match what it asks for. Nothing was approved.",
   approval_no_grant: "There's no connection with that id.",
   approval_cards_not_issued: (why: string) => `KIFF didn't issue the taf's Cards: ${why}`,
+  approval_connected_card_next: (vendor: string) => `${vendor} is connected. Next, its Card.`,
   approval_draft_is: (status: string) => `the draft is ${status}`,
   approval_no_draft: "KIFF has no such draft",
+  /** On an approval card whose fingerprint signs the connection alone, above its Card (`signs.words`). */
+  approval_card_next: "Its Card: you approve it next",
+  /** A taf whose connection's sign-in expired: its own Connect again action, and what it says once done. */
+  connect_again_title: "Connect again",
+  connect_again_words: (app: string, taf: string) => `${app}'s sign-in has expired, so ${taf} can't use it. Connect again to sign in.`,
+  connect_again_done: (app: string, taf: string) => `${app} is connected again. ${taf} can use it.`,
+  /** A first check that ran before the taf's key was stored: said in place of the store's own words. */
+  check_key_not_ready: "its key wasn't ready yet; it checks again at its next time",
   approval_cards_unread: "The Card couldn't be checked yet. Read it again, then approve.",
   approval_uncovered: (tool: string) => `This Card doesn't cover "${tool}", which the taf was given, so every call of it would be refused. Nothing was approved. Coach drafts it again.`,
+  approval_stray: (tool: string) => `This Card would also let the taf use "${tool}", which no connection of it gives. Nothing was approved. Coach drafts it again.`,
   approval_lifetime_cap: (tool: string) => `This Card would let "${tool}" be used only a set number of times ever, across every item, not for each one. Nothing was approved. Coach drafts it again.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} was set up today, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
   approval_critical_key: "This widens what the taf may do, so it takes your fingerprint. Nothing was approved; approve it again with your fingerprint.",
@@ -495,7 +519,8 @@ export const en = {
   dial_last_day_at: (t: string) => `On the last day of each month at ${t}`,
   dial_times_a_day: (times: string[]) => `Every day at ${times.join(", ")}`,
   dial_n_a_day: (n: number) => `${n} a day`,
-  dial_weekly_at: (codes: string[], t: string) => `${codes.join(", ")} at ${t}`,
+  // The days by name ("Monday and Friday at 09:00"), as every other language says them, never their codes ("mon at 09:00").
+  dial_weekly_at: (codes: string[], t: string) => `${list(codes.map((c) => day(code(c))))} at ${t}`,
   // `every` is everyWords (words/index.ts): "Every 15 minutes", "Every 4 hours".
   dial_every_on: (every: string, between: { from: string; to: string } | undefined, codes: string[]) =>
     `${every}${between ? ` from ${between.from} to ${between.to}` : ""}${codes.length ? ` on ${codes.join(", ")}` : ""}`,

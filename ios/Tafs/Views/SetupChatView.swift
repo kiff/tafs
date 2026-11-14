@@ -1600,11 +1600,21 @@ struct SetupApproval: View {
             } else {
                 Text(Words.Connect.readingRequest).scaledFont(14).foregroundColor(Theme.dim)
             }
-            if let draft, draft.cards != nil {
+            // The taf's Card as this fingerprint signs it, or, by tafs cloud's mark (`signs`), as the one
+            // approved next: under its words and dimmed, never as if signed now. Marked next with no
+            // words, it isn't drawn.
+            if let draft, draft.cards != nil, !(component.signs?.cardNext == true && component.signs?.words == nil) {
+                let next = component.signs?.cardNext == true
                 VStack(alignment: .leading, spacing: 6) {
-                    Eyebrow(text: draft.cardTitle)
+                    if next, let words = component.signs?.words {
+                        Text(words).scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.soft)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityIdentifier("approval.card-next")
+                    } else {
+                        Eyebrow(text: draft.cardTitle)
+                    }
                     ForEach(Array(draft.lines.enumerated()), id: \.offset) { _, line in
-                        Text(line).scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(Theme.ink)
+                        Text(line).scaledFont(12, design: .monospaced, relativeTo: .caption).foregroundColor(next ? Theme.dim : Theme.ink)
                     }
                 }
                 .padding(12)
@@ -1640,7 +1650,8 @@ struct SetupApproval: View {
                             }
                         }
                         .buttonStyle(PrimaryButtonStyle())
-                        .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (connected && draft == nil)
+                        // A card with the taf's Card waits until that Card is read and drawn above: what's signed is seen first.
+                        .disabled(grant == nil || (!connected && !(grant?.digestMatches ?? false)) || (component.draft != nil && draft == nil) || (connected && draft == nil)
                                   || (!connected && grant.map { $0.profile != nil && model.shownWords(for: $0) == nil } ?? false))
                         .fullScreenCover(isPresented: $givingKey) {
                             if let grant {

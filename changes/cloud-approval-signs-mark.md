@@ -1,0 +1,1 @@
+- Each approval card still waiting says what its fingerprint will sign (`signs: {card, words}`), from the same rule tafs cloud then asks by: the apps draw the Card as being signed only when it is, and otherwise under "Its Card: you approve it next".

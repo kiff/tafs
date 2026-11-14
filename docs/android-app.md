@@ -588,6 +588,9 @@ like this one go on their own.
   (`AppState.offersAllow`, `HoldAllow.allowable`): someone who manages Cards, on a hold that isn't a
   currency mismatch (`card_unit`) or Coach's install, whose every breach is `per_action_exceeded`,
   `limit_reached` or `resource_not_on_card`.
+- **Coach's install** (`KiffMapping.install`, a held `version_install` of Coach's own agent) keeps KIFF's title
+  ("Install a version") but isn't drawn as a call: no Details (its `n` and `taf` arguments) and no reason badge,
+  since installing is asked every time by design, never something outside the Card. Its Install button says the rest.
 - **A tap** opens the sheet (`AllowSheet`) and posts tafs cloud's `…/holds/{exception}/allow`,
   which makes the draft. A `none` shows tafs cloud's words, with nothing to sign.
 - **The sheet** shows tafs cloud's change, before and after, and KIFF's own lines for each Card that
@@ -619,6 +622,30 @@ like this one go on their own.
 - **One signature:** the draft's confirm, behind the approval key, with the held call
   (`hold: {id, accounting_version}`) when the switch is on, so KIFF lets it go under the same
   signature. Then Needs you is read again.
+
+## Connect again on the taf
+
+When a connection's sign-in expired, tafs cloud puts the taf's own **Connect again** at the top of its
+Setup page (`connect_again: {grant, app, title, words, done_words}`, [api.md](api.md); read leniently: a
+shape this build doesn't know, or one with no connection or no button, is none). A panel
+(`ConnectAgainPanel`, `views/TafPresentationViews.kt`) shows tafs cloud's `words`, and, for someone who
+manages the taf, its `title` as the button. The tap signs that same connection in again
+(`AppModel.connectAgain`, the path of Connect apps' Sign in again: planque's approve, the provider's
+sign-in, planque's confirm), so the taf keeps its tools and its Card, with no list and no picking an app.
+Once planque says it's connected, tafs cloud's `done_words` ("Gmail is connected again. Mail can use
+it.") show on the taf, and its Setup page is read again. A sign-in that didn't go through says so under
+the button, and Connect again stays. The app decides nothing about whether it's needed. iPhone and iPad
+do the same.
+
+## Coach waiting
+
+A Coach chat paused on a card its person answers (an approval, a sign-in, questions) is in **Needs
+you** ([api.md](api.md#coach-waiting)): Home's `coach_waiting`, after the steps, each a panel
+(`CoachWaitingPanel`, `views/YourStepViews.kt`) with tafs cloud's line ("Coach is waiting for your
+approval.") and its **Open Coach** button, which opens Coach on that chat (`AppModel.openWaitingCoach`),
+where the card is answered; someone who can't use Coach reads the line alone. tafs cloud counts each in `needs_you`, so Home never says "Nothing needs
+you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
+iPhone and iPad follow.
 
 ## Your step
 
@@ -716,6 +743,26 @@ Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#conne
 - **The trailing button is compact:** **Connect**, **Sign in again**, or for one signed in, **Signed in · choose its actions**.
   A connected app opens its connections, each with Disconnect.
 
+**An app's connections, as planque describes them** (Android 1.25.0, planque's `title`, `used_by`,
+`health` and `actions` on each grant; `Grant.health`, `Grant.actions`, read leniently). A connected app
+opens its connections, under each taf's name:
+- **Each row** is planque's `title` ("Gmail · name@example.com"), then **Used by** its `used_by`, then its
+  `health.words` ("Gmail's sign-in expired on 14 Nov"), amber when not `ok`. No id, and no button beside
+  it (`DescribedConnectionRow`).
+- **A tap opens its detail first:** its health, the tafs that depend on it, then only the `actions`
+  planque sent, in its order: `approve` is Sign in again on itself (`reconnect`), `key` a new key, and
+  `delete` the signed removal. An action whose `how` this build doesn't know isn't drawn, so a leftover
+  shows only planque's **Remove unfinished connection**, never Sign in again.
+- **A removal asks once more,** with planque's `stops` ("Unanswered customer emails will stop using
+  Gmail."), and only then the fingerprint. Remove is never beside a row.
+- Every request to planque says the person's time zone (`X-Time-Zone`), so the times in its words are
+  theirs.
+- A planque from before it sends no `actions`, and the row is the app's own, as below, until it does.
+- **planque's refusals in its own words:** any refusal that carries planque's `words` (a sign-in again
+  to another account than the connection's, say) shows those words as sent (`PlanqueError.Server.words`,
+  `ErrorWords.of`), never a line of the app's over them. "It changed in the meantime" is kept for a
+  409 with no words. planque's `error` stays the reason, for the code.
+
 tafs cloud's list, searched as the owner types, and **Connect** opens the approval as a sheet
 over the list (`ConnectApprovalSheet`). With several tafs, **Which taf is this for?** is asked
 first, in a dialog over the list wherever Connect was tapped, as on iPhone and iPad. When a sign-in
@@ -766,6 +813,22 @@ the sheet's words (an older tafs cloud, an error), the sheet stays as above. The
 the keyboard and scrolls. An approval card that tafs cloud marks `connection: {done: true, words}`
 draws only those words and Its Card, never the connection's text again.
 
+**What a card's fingerprint signs** (`signs`, docs/secure-connection.md): Coach's thread is read with this
+phone's planque read proof (the device's key, no prompt) and `?can=tools_and_cards,key_and_cards,signs`, so tafs
+cloud marks each waiting approval card with `signs: {card, words?}` (read leniently: any other shape is no mark).
+- `card: true`: Its Card, KIFF's own lines, stays on screen until the fingerprint, connected or not, and
+  Approve waits until KIFF's draft is read.
+- `card: false`: the Card's lines, dimmed, under tafs cloud's `words` ("Its Card: you approve it next"), never
+  under its own title as if signed now; with no `words`, not drawn.
+- No mark (a tafs cloud from before it): as before, Its Card once the grant is connected.
+The approve flow asks with `signs` in `can` too, only from a card that carries the mark: a card read without
+it (no read proof, or tafs cloud's read timed out) never says it draws what it signs. Once the ask is back, and before any signature, a step
+that disagrees with the mark is never signed (`AppModel.stepMatchesMark`): `card: true` takes only
+`cards`, `key_and_cards` or `tools_and_cards`, and `card: false` only another step. On a mismatch the card says
+"What you're asked to approve changed since it was shown. Read it again, then approve." and the thread
+is read again. No mark: any step.
+iPhone and iPad draw it the same way.
+
 **One fingerprint for a key and its Card** (`kiff.requests.v1`, docs/secure-connection.md). From
 Coach's card with a Card's draft, on a phone with an approval key, the key sheet's button asks tafs
 cloud for the step with `can: ["key_and_cards"]` (`AppModel.approveCoachWithKey`). When tafs cloud
@@ -784,6 +847,17 @@ answers `key_and_cards`:
 
 Answered with the two steps instead (tafs cloud's step off, or a card it won't join), the phone signs
 nothing for that answer and gives the key, then approves the Card, as before.
+
+**One fingerprint for a connection's tools and its Card** (`tools_and_cards`, Android 1.22). The
+same, for an app signed in to, not given a key: from Coach's card with a Card's draft, on a phone with
+an approval key, Approve asks tafs cloud with `can: ["tools_and_cards"]`. When tafs cloud answers that
+step (only while the connection waits for its added tools, behind `TAFS_TOOLS_AND_CARDS`), the phone
+checks the ask as for `key_and_cards`, then builds planque's approve, with the body exactly as tafs
+cloud built it (`PlanqueClient.approveMessage`), and KIFF's draft confirm with one `signed_at`, signs
+both hashes once (`AppModel.toolsAndCards`) and sends the approve, then, only once planque says
+`connected`, the confirm. Any other answer is the steps as before. The phone doesn't check the draft's
+tools against the connection: a Card can span several of the agent's connections, and KIFF refuses a
+draft over tools that aren't declared.
 
 A browser connection's sheet (on a taf's Setup) offers tafs cloud's `site_sign_in` action, to
 whoever manages the taf: its `title` ("Sign in to a site") and its line. A tap asks planque, signed

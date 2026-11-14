@@ -169,6 +169,7 @@ fun NeedsYouView(
   modifier: Modifier = Modifier,
   onAnswerUnsure: (suspend (bot.tafs.app.kiff.UnsureCall, Boolean) -> Unit)? = null,
   onCheckUnsure: (suspend (bot.tafs.app.kiff.UnsureCall) -> Unit)? = null,
+  onOpenCoach: ((bot.tafs.app.kiff.CoachWaiting) -> Unit)? = null,
 ) {
   val unsureScope = rememberCoroutineScope()
   // Pulling reads KIFF again, as on iOS: a hold made while this screen was open shows without leaving it.
@@ -192,9 +193,11 @@ fun NeedsYouView(
     item { ScreenTitle(Words.NeedsYou.title) }
     // Steps a taf handed its owner, oldest first, as tafs cloud lists them: before the held calls, as each is the owner's to do.
     items(state.yourSteps, key = { "ys|" + it.handoff }) { step -> YourStepPanel(step, state) }
+    // Coach's chats waiting on this person, in tafs cloud's words: the button opens that chat, where the card is answered.
+    items(state.coachWaiting, key = { "cw|" + it.session }) { waiting -> CoachWaitingPanel(waiting, onOpenCoach) }
     // Cards asked to take another currency: tafs cloud's rows, apart from the held calls, with no Approve once.
     items(state.cardUnitExceptions, key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
-    if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty()) {
+    if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty() && state.coachWaiting.isEmpty()) {
       item {
         Panel {
           Text(Words.NeedsYou.nothingWaiting, style = scaled(15, FontWeight.SemiBold, Theme.ink))
@@ -272,7 +275,8 @@ fun HeldCallCard(call: HeldCall, state: AppState, onAnswer: suspend (HeldCall, A
       call.proposed.amount?.let { Text(it.formatted, style = scaled(44, FontWeight.Bold, Theme.ink, display = true)) }
       Text(call.proposed.summary, style = scaled(16, FontWeight.SemiBold, Theme.ink))
       if (call.proposed.context.isNotEmpty()) Text(call.proposed.context, style = scaled(14, color = Theme.soft))
-      Text(
+      // KIFF's reason, as a badge; none where there's none to say (Coach's install).
+      if (call.reason.isNotBlank()) Text(
         call.reason,
         style = scaled(12, FontWeight.Medium, Theme.amberText),
         modifier = Modifier.clip(CircleShape).background(Theme.amber.copy(alpha = 0.14f)).padding(horizontal = 8.dp, vertical = 5.dp),

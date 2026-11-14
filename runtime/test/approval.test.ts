@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
 import { connectedKey, approvalWords, ASK_KEPT_MS, WORDS } from "../src/cloud/approval.js";
-import { handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { approvalAnswerWords, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -220,6 +220,18 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
     expect(r.body).toMatchObject({ outcome: "answered", answer: "already approved: Stripe is signed in; its tools wait for approval", note: WORDS.alreadyApproved });
     expect(w.told()).toMatchObject({ answer: "already approved: Stripe is signed in; its tools wait for approval" });
+  });
+
+  it("a connection asking for more tools again loses its connected note, so its card shows what it asks", async () => {
+    const s = services();
+    s.grants = [grant({ status: "connected" })];
+    const w = await world(s);
+    await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    expect(await w.coach.get(connectedKey("t_acme", "g_1"))).toEqual({ vendor: "Stripe", read_only: false });
+    // Tools added once connected: planque shows it pending again, and the card is no longer marked connected.
+    s.grants = [grant({ status: "pending" })];
+    await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    expect(await w.coach.get(connectedKey("t_acme", "g_1"))).toBeUndefined();
   });
 
   it("a connection connected as the card showed it (its report lost) is already approved on a new tap, never failed", async () => {
@@ -728,6 +740,236 @@ describe("the approval window (kiff/tafs#494): which key an ask takes, and the r
     s2.grants = [grant({ status: "connected" })];
     expect((await w2.call("POST", `${ASK}/${(r2.body.ask as { id: string }).id}`, { result: "connected" }, SIG)).body).toMatchObject({ answer: "approved" });
   });
+});
+
+describe("one signature for a connection's added tools and its Card (tools_and_cards, docs/secure-connection.md)", () => {
+  const SIGNED = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" };
+  // A connected grant whose new tools wait for their approval: what it had before is in connected.
+  const adding = (over: Record<string, unknown> = {}) => grant({ status: "pending", connected: [{ tool: "list_charges" }], ...over });
+  afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; });
+
+  async function addWorld(on: boolean, can = ["tools_and_cards"]) {
+    if (on) process.env.TAFS_TOOLS_AND_CARDS = "on";
+    else delete process.env.TAFS_TOOLS_AND_CARDS;
+    const s = services();
+    s.grants = [adding()];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(adding().request), draft: "drf_1", shown_draft: "v3", can });
+    return { s, w, r };
+  }
+
+  it("asks the addition's approve and the Card's confirm as one signature, behind the fingerprint", async () => {
+    const { r, w } = await addWorld(true);
+    expect(r.body).toMatchObject({
+      outcome: "sign",
+      ask: { step: "tools_and_cards", scheme: "kiff.requests.v1", message: "", key: "critical", planque: { grant: "g_1", body: { digest: adding().digest } }, kiff: { draft: "drf_1", version: "v3" } },
+    });
+    expect(w.told()).toBeUndefined();
+  });
+
+  it("keeps the two steps for an app that can't sign it, a first connection, a card without a draft, or the flag off", async () => {
+    expect((await addWorld(true, [])).r.body).toMatchObject({ ask: { step: "connect" } });
+    expect((await addWorld(false)).r.body).toMatchObject({ ask: { step: "connect" } });
+    process.env.TAFS_TOOLS_AND_CARDS = "on";
+    const s = services();
+    // A first connection (nothing connected before): its tools come with the sign-in, so the two steps.
+    s.grants = [grant()];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request), draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards"] })).body).toMatchObject({ ask: { step: "connect" } });
+    // No draft on the card: the addition alone.
+    s.grants = [adding()];
+    expect((await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(adding().request), can: ["tools_and_cards"] })).body).toMatchObject({ ask: { step: "connect" } });
+  });
+
+  it("answers approved only when the tools are in and the Card is issued, and says which half didn't", async () => {
+    const both = await addWorld(true);
+    both.s.grants = [adding({ status: "connected" })];
+    both.s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
+    expect((await both.w.call("POST", `${ASK}/${(both.r.body.ask as { id: string }).id}`, { result: "confirmed" }, SIGNED)).body).toMatchObject({ answer: "approved" });
+    const half = await addWorld(true);
+    half.s.grants = [adding({ status: "connected" })];
+    const r = await half.w.call("POST", `${ASK}/${(half.r.body.ask as { id: string }).id}`, { result: "failed", why: "the confirm wasn't answered" }, SIGNED);
+    expect(r.body.answer).toMatch(/^failed: Stripe is connected; /);
+    const none = await addWorld(true);
+    const r2 = await none.w.call("POST", `${ASK}/${(none.r.body.ask as { id: string }).id}`, { result: "failed", why: "the approve was refused" }, SIGNED);
+    expect(r2.body.answer).toMatch(/^failed: /);
+    expect(r2.body.answer).not.toMatch(/is connected/);
+  });
+});
+
+// A reused sign-in's first tools have nothing connected yet, so the combined step isn't offered: the card's
+// connection is signed alone. Coach was told "approved" for the whole card, handed over a taf whose Card was
+// never signed, and the hand-over waited for a confirm nothing asked for (13 Nov).
+describe("a card with a grant and a draft, signed as the connection alone", () => {
+  const SIGNED = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" };
+  afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; });
+
+  async function reused(draft: Services["drafts"][string] = { status: "draft", version: "v3", agent_id: "refunds-x" }) {
+    process.env.TAFS_TOOLS_AND_CARDS = "on";
+    const s = services();
+    // Signed in from the start (the held sign-in), its first tools asked: nothing connected before them.
+    s.grants = [grant({ status: "pending" })];
+    s.drafts.drf_1 = draft;
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request), draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards"] });
+    return { s, w, r };
+  }
+
+  it("never reads as a failure when it worked by design: the card's words say it's connected and the Card is next, in the person's language", () => {
+    expect(approvalAnswerWords({ type: "approval", answer: "failed: Gmail is connected; its Card is next: show the approval again for its Card alone" }, "en")).toBe("Gmail is connected. Next, its Card.");
+    expect(approvalAnswerWords({ type: "approval", answer: "failed: Gmail is connected; its Card is next: show the approval again for its Card alone" }, "fr")).toBe("Gmail est connecté. Ensuite, la Card.");
+    // A real failure still says so.
+    expect(approvalAnswerWords({ type: "approval", answer: "failed: Gmail is connected; KIFF didn't issue the taf's Cards: the draft is revoked; show the approval again for its Card alone" }, "en"))
+      .toBe("Approve · it didn't go through: Gmail is connected; KIFF didn't issue the taf's Cards: the draft is revoked; show the approval again for its Card alone");
+  });
+
+  it("says it didn't go through when the Card isn't the draft the card showed, or isn't a draft any more", async () => {
+    for (const draft of [{ status: "draft", version: "v4", agent_id: "refunds-x" }, { status: "revoked", version: "v3", agent_id: "refunds-x" }]) {
+      const { s, w, r } = await reused(draft as Services["drafts"][string]);
+      s.grants = [grant({ status: "connected" })];
+      const rep = await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "connected" }, SIGNED);
+      expect(String(rep.body.answer), draft.status + draft.version).toMatch(/^failed: Stripe is connected; KIFF didn't issue the taf's Cards: /);
+    }
+  });
+
+  it("signs the connection alone, then tells Coach the Card isn't approved, and the next card asks the Card with its limits", async () => {
+    const { s, w, r } = await reused();
+    expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+    expect(r.body.ask).not.toHaveProperty("kiff");
+    // The phone's approve went through: Gmail is connected, the draft is still a draft.
+    s.grants = [grant({ status: "connected" })];
+    const rep = await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "connected" }, SIGNED);
+    // By design, the Card next: Coach shows it again alone, and the person never reads it as a failure.
+    expect(rep.body.answer).toBe("failed: Stripe is connected; its Card is next: show the approval again for its Card alone");
+    expect(rep.body.note).toBe("Stripe is connected. Next, its Card.");
+    expect(w.told()?.answer).toBe(rep.body.answer);
+    expect(w.stored.status).toBe("RUNNING");
+    // Coach shows the approval again: the connection is in, so the Card alone, under the fingerprint.
+    w.agents.ask(w.stored, { type: "approval", id: "a2", grant: "g_1", draft: "drf_1" });
+    const ASK2 = `/v1/tafs/${COACH}/components/a2/approval`;
+    const again = await w.call("POST", ASK2, { grant: "g_1", shown_digest: grant().digest, draft: "drf_1", shown_draft: "v3" });
+    expect(again.body).toMatchObject({ outcome: "sign", ask: { step: "cards", key: "critical", kiff: { draft: "drf_1", version: "v3" } } });
+    s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
+    const done = await w.call("POST", `${ASK2}/${(again.body.ask as { id: string }).id}`, { result: "confirmed" }, SIGNED);
+    expect(done.body.answer).toBe("approved");
+    const a2 = (w.stored.requirements ?? []).find((q) => (q.input as { id?: string }).id === "a2")?.result as { answer?: unknown };
+    expect(a2.answer).toBe("approved");
+  });
+
+  it("is approved when the draft is issued at the version shown, and never for another version or a draft that's gone", async () => {
+    const ok = await reused({ status: "confirmed", version: "v3", agent_id: "refunds-x" });
+    ok.s.grants = [grant({ status: "connected" })];
+    expect((await ok.w.call("POST", `${ASK}/${(ok.r.body.ask as { id: string }).id}`, { result: "connected" }, SIGNED)).body.answer).toBe("approved");
+    const other = await reused();
+    other.s.grants = [grant({ status: "connected" })];
+    other.s.drafts.drf_1 = { status: "confirmed", version: "v4", agent_id: "refunds-x" };
+    const r = await other.w.call("POST", `${ASK}/${(other.r.body.ask as { id: string }).id}`, { result: "connected" }, SIGNED);
+    expect(r.body.answer).toMatch(/^failed: Stripe is connected; KIFF didn't issue the taf's Cards: What you're asked to approve changed/);
+    const gone = await reused();
+    gone.s.grants = [grant({ status: "connected" })];
+    delete gone.s.drafts.drf_1;
+    const g = await gone.w.call("POST", `${ASK}/${(gone.r.body.ask as { id: string }).id}`, { result: "connected" }, SIGNED);
+    expect(g.body.answer).toMatch(/^failed: Stripe is connected; KIFF didn't issue the taf's Cards: KIFF has no such draft/);
+    // No code of KIFF's or kiff/agents' reaches Coach or the owner.
+    for (const said of [r.body, g.body]) expect(JSON.stringify(said)).not.toMatch(/draft_not_ready|_not_|drf_/);
+  });
+
+  it("a card with no draft is approved on its connection, as before", async () => {
+    const s = services();
+    s.grants = [grant()];
+    const w = await world(s);
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    s.grants = [grant({ status: "connected" })];
+    expect((await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "connected" }, SIGNED)).body.answer).toBe("approved");
+  });
+});
+
+// What the fingerprint signs is on the card before Approve (signs), from decide's own rule: the apps can't know the
+// step before the tap, and a card that signs the connection alone must never draw the Card as being signed.
+describe("each waiting approval card says what its fingerprint signs", () => {
+  afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; delete process.env.TAFS_KEY_AND_CARDS; });
+  const CHAT = `/v1/tafs/${COACH}/conversation`;
+  const signs = async (w: Awaited<ReturnType<typeof world>>, query?: string, headers: Record<string, string> = {}) => {
+    const r = await w.call("GET", CHAT, undefined, headers, query);
+    expect(r.status).toBe(200);
+    return ((r.body.components as Array<{ component: { id?: string; signs?: unknown } }>).find((c) => c.component.id === "a1"))?.component.signs;
+  };
+
+  it("marks the Card signed or next exactly as decide then asks, for each kind of grant", async () => {
+    process.env.TAFS_TOOLS_AND_CARDS = "on";
+    const s = services();
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    // A reused sign-in's first tools: the connection alone, the Card next.
+    s.grants = [grant({ status: "pending" })];
+    expect(await signs(w, "can=tools_and_cards")).toEqual({ card: false, words: "Its Card: you approve it next" });
+    const asked = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request), draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards"] });
+    expect(asked.body).toMatchObject({ ask: { step: "connect" } });
+    // Added tools on a connected app, with a phone that can sign both: the Card is signed now.
+    const adding = grant({ status: "pending", connected: [{ tool: "list_charges" }] });
+    s.grants = [adding];
+    expect(await signs(w, "can=tools_and_cards")).toEqual({ card: true });
+    // The same, from a phone that can't: the connection alone.
+    expect(await signs(w)).toEqual({ card: false, words: "Its Card: you approve it next" });
+    // Connected already: the card signs the Card.
+    s.grants = [grant({ status: "connected" })];
+    expect(await signs(w)).toEqual({ card: true });
+  });
+
+  it("says it in the reader's language, and a card with no draft carries no words", async () => {
+    const s = services();
+    s.grants = [grant({ status: "pending" })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const fr = await world(s, { draft: "drf_1" });
+    expect(await signs(fr, undefined, { "accept-language": "fr" })).toEqual({ card: false, words: "Sa Card : vous l'approuvez ensuite" });
+    const none = await world(s);
+    expect(await signs(none)).toEqual({ card: false });
+  });
+
+  it("leaves the card as it was without the phone's proof, when the connections can't be read, or once answered", async () => {
+    const s = services();
+    s.grants = [grant({ status: "pending" })];
+    const w = await world(s, { draft: "drf_1" });
+    expect(await signs(w, undefined, { "planque-device-signature": "" })).toBeUndefined();
+    s.grants = [];
+    expect(await signs(w)).toBeUndefined();
+    s.grants = [grant({ status: "connected" })];
+    s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
+    await w.agents.api.answerCard("t_acme", COACH, w.stored.id, "a1", "approved", ANA.requester);
+    expect(await signs(w)).toBeUndefined();
+  });
+});
+
+// qa-kiff's negative 1 on #919: a draft whose Cards also allow a tool this connection doesn't give is never signed under it,
+// whichever step signs the Card; a tool of the same taf's other connection is its own, so it may be on the same Card.
+describe("never signs a Card that allows more than the taf's connections give", () => {
+  const TOOLS = { tools: [{ tool: "refund", name: "refund_k3f9" }] };
+  const API = { kind: "api_key", api: { url: "https://example.com/desk/openapi.json", digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } }, ...TOOLS };
+  const cards = (extra: string[]) => [{ grants: [{ action: "refund_k3f9" }, { action: "list_charges_k3f9" }, ...extra.map((action) => ({ action }))], aggregates: [] }];
+  afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; delete process.env.TAFS_KEY_AND_CARDS; });
+
+  for (const [step, flag, made] of [
+    ["tools_and_cards", "TAFS_TOOLS_AND_CARDS", () => grant({ status: "pending", connected: [{ tool: "list_charges", name: "list_charges_k3f9" }] }, TOOLS)],
+    ["key_and_cards", "TAFS_KEY_AND_CARDS", () => grant({}, { ...API, tools: [{ tool: "refund", name: "refund_k3f9" }, { tool: "list_charges", name: "list_charges_k3f9" }] })],
+  ] as const) {
+    it(`refuses ${step} when the Card also allows a tool no connection of the taf gives, and signs it once another of its connections does`, async () => {
+      process.env[flag] = "on";
+      const s = services();
+      const g = made();
+      s.grants = [g];
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards(["send_email_everyone"]) };
+      const w = await world(s, { draft: "drf_1" });
+      const ask = { grant: "g_1", shown_digest: g.digest, draft: "drf_1", shown_draft: "v3", can: [step] };
+      const r = await w.call("POST", ASK, ask);
+      expect(r.body).toMatchObject({ outcome: "answered", answer: expect.stringMatching(/^failed: the Card covers "send_email_everyone"/) });
+      expect((r.body as { note: string }).note).toContain("send_email_everyone");
+      // The same taf's mailbox gives it: one Card over both apps is the taf's own, so it's asked.
+      s.grants = [g, grant({ id: "g_2", status: "connected", vendor: "Mail" }, { server: "mcp.mail.example", tools: [{ tool: "send", name: "send_email_everyone" }] })];
+      expect((await w.call("POST", ASK, ask)).body).toMatchObject({ outcome: "sign", ask: { step } });
+    });
+  }
 });
 
 describe("one signature for a key and its Card (key_and_cards, docs/secure-connection.md)", () => {

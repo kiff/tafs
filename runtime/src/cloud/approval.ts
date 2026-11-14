@@ -40,6 +40,8 @@ export interface ApprovalGrant {
   /** The app's sign-in was set up on the owner's pick, not by an operator (kiff/planque#87). */
   on_demand?: boolean;
   request: { agent?: string; server?: string; profile?: unknown; tools?: Array<{ tool?: string; name?: string; title?: string; read_only?: boolean; setup_reads?: boolean }> } & Record<string, unknown>;
+  /** The tools it had before the addition that waits now: a connected grant whose new tools wait for their approval. */
+  connected?: unknown[];
 }
 
 /**
@@ -47,7 +49,7 @@ export interface ApprovalGrant {
  * it's still a draft at the version the card showed, an app set up on demand lets none of its writes run outright,
  * and every tool the connection gives the taf is on a Card. Otherwise what answers instead.
  */
-async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGrant, vendor: string, ctx: DecideContext): Promise<Decision | { draft: NonNullable<Awaited<ReturnType<typeof draftInfo>>> & { version: string } }> {
+async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGrant, vendor: string, ctx: DecideContext, others: ApprovalGrant[] = []): Promise<Decision | { draft: NonNullable<Awaited<ReturnType<typeof draftInfo>>> & { version: string } }> {
   const W = approvalWords(ctx.lang);
   const draft = await draftInfo(ctx.token, draftID, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now);
   if (!draft) return { outcome: "answered", answer: `failed: KIFF has no Card draft ${draftID} on this account`, note: `KIFF has no Card draft for this. Ask Coach for a new one.` };
@@ -73,6 +75,13 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
       inForce = await actionsInForce(ctx.token, draft.agent, ctx.fetch, ctx.kiffBase ?? KIFF_API);
     } catch {
       return { outcome: "read_again", note: W.cardsUnread };
+    }
+    // And the other way (qa-kiff's negative 1 on #919): every action the draft's Cards allow is one of this connection's
+    // tools, one of the same taf's other connections', or allowed already. A Card signed under "Connect Stripe" never
+    // also lets the taf act on something no connection of its gives it here.
+    const stray = strayAction(grant, others, draft.cards, inForce);
+    if (stray) {
+      return { outcome: "answered", answer: `failed: the Card covers "${stray}", which no connection of this taf gives it, so it isn't signed. Draft it again over the taf's connected tools only.`, note: W.stray(stray) };
     }
     const left = uncoveredTool(grant, draft.cards, inForce);
     if (left) {
@@ -151,6 +160,30 @@ export function onDemandLetsRun(grant: ApprovalGrant, cards: unknown[]): string 
  * need (Eval 42781271564). Setup's own reads (setup_reads) are on its reader Card, never the taf's, and a
  * tool listed with no KIFF name is left out.
  */
+/**
+ * The first action a draft's Cards allow that neither this grant nor another grant of the same taf gives it (its tools,
+ * or what it had connected before an addition, by their names in KIFF), and that no Card in force allows already.
+ */
+export function strayAction(grant: ApprovalGrant, others: ApprovalGrant[], cards: unknown[], inForce: Set<string>): string | undefined {
+  const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+  const given = new Set(inForce);
+  for (const g of [grant, ...others]) {
+    for (const t of [...(g.request.tools ?? []), ...((g.connected ?? []) as Array<{ name?: unknown }>)]) {
+      const name = fold((t as { name?: unknown }).name);
+      if (name) given.add(name);
+    }
+  }
+  for (const raw of cards) {
+    const card = raw as { grants?: unknown };
+    if (!Array.isArray(card.grants)) continue;
+    for (const g of card.grants) {
+      const action = fold((g as { action?: unknown }).action);
+      if (action && !given.has(action)) return (g as { action: string }).action;
+    }
+  }
+  return undefined;
+}
+
 export function uncoveredTool(grant: ApprovalGrant, cards: unknown[], inForce: Set<string>): string | undefined {
   const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
   const covered = new Set(inForce);
@@ -191,7 +224,7 @@ export interface Signing {
    * under one fingerprint. The phone builds both requests itself, with one `signed_at`, and signs `kiff.requests.v1`
    * over their two messages' hashes; `message` is then empty, and `scheme` says so.
    */
-  step: "connect" | "cards" | "key_and_cards";
+  step: "connect" | "cards" | "key_and_cards" | "tools_and_cards";
   /** For `key_and_cards`: what the phone signs, built by it from the two requests it makes. */
   scheme?: "kiff.requests.v1";
   /** The exact bytes the device's key signs, under biometrics. */
@@ -218,7 +251,7 @@ export type Decision =
 
 /** What a pending ask keeps, so the report is checked against what was asked. */
 interface Pending {
-  step: "connect" | "cards" | "key_and_cards";
+  step: "connect" | "cards" | "key_and_cards" | "tools_and_cards";
   grant: string;
   vendor: string;
   draft?: string;
@@ -232,6 +265,12 @@ interface Pending {
 export const ASK_KEPT_MS = 20 * 60_000;
 
 /** The words the apps show, all from here: tafs cloud's catalog, in the approving request's language (words/*.ts). */
+/**
+ * The end of a connect step's answer when it worked by design and the taf's Card is next (approval.ts): Coach shows the
+ * approval again for the Card alone, and the person reads tafs cloud's "Gmail is connected. Next, its Card." instead of a failure.
+ */
+export const CARD_NEXT = "its Card is next: show the approval again for its Card alone";
+
 export function approvalWords(lang: Lang = "en") {
   const w = wordsIn(lang);
   return {
@@ -242,10 +281,12 @@ export function approvalWords(lang: Lang = "en") {
     digestMismatch: w.approval_digest_mismatch,
     noGrant: w.approval_no_grant,
     cardsNotIssued: w.approval_cards_not_issued,
+    connectedCardNext: w.approval_connected_card_next,
     draftIs: (status: string) => w.approval_draft_is(w.approval_status(status)),
     noDraft: w.approval_no_draft,
     cardsUnread: w.approval_cards_unread,
     uncovered: w.approval_uncovered,
+    stray: w.approval_stray,
     lifetimeCap: w.approval_lifetime_cap,
     onDemandLetsRun: w.approval_on_demand,
     criticalKey: w.approval_critical_key,
@@ -291,7 +332,12 @@ export interface Connected { vendor: string; read_only: boolean }
  * and never repeats the connection's text. Never fails what it rides on: a note not kept is a card as before.
  */
 async function noteConnected(store: CoachStore, tenant: string, grant: ApprovalGrant, now: Date): Promise<void> {
-  if (grant.status !== "connected" && grant.status !== "listed") return;
+  // Connected only: one signed in whose tools wait (`listed`), or one asking for more tools again (`pending`), still asks for
+  // something, so a card for it shows what it asks, never "connected". Such a grant's note goes.
+  if (grant.status !== "connected") {
+    await store.remove(connectedKey(tenant, grant.id)).catch(() => undefined);
+    return;
+  }
   const note: Connected = { vendor: vendorOf(grant), read_only: readsOnly(grant) };
   await store.put(connectedKey(tenant, grant.id), note, new Date(now.getTime() + CONNECTED_KEPT_MS)).catch(() => undefined);
 }
@@ -358,6 +404,11 @@ export interface DecideContext {
    * the Card are signed apart, as before.
    */
   keyAndCards?: boolean;
+  /**
+   * Whether a connected grant's added tools with the Card's draft over them are asked as one signature
+   * (`tools_and_cards`): on once planque takes the paired approve and declares an addition's tools to KIFF while they wait.
+   */
+  toolsAndCards?: boolean;
   tenant: string;
   taf: string;
   component: string;
@@ -375,6 +426,31 @@ export interface DecideContext {
   tafName?: (agent?: string) => Promise<string | undefined>;
 }
 
+/** The steps a phone signs for an approval card. */
+export type SignStep = "connect" | "cards" | "key_and_cards" | "tools_and_cards";
+
+/**
+ * The step an approval card asks the phone to sign, from the grant as planque says it and what the card and the
+ * phone bring: one rule, for `decide` and for the mark the card carries before Approve (`signs`), so the apps draw
+ * the Card as signed only on a fingerprint that signs it. Undefined when nothing is signed (answered without one).
+ */
+export function stepFor(grant: ApprovalGrant, ask: { draft?: string; can?: string[] }, flags: { toolsAndCards?: boolean; keyAndCards?: boolean }): SignStep | undefined {
+  if (grant.status === "connected") return ask.draft ? "cards" : undefined;
+  if (grant.status === "listed" && !ask.draft) return undefined;
+  if (!APPROVABLE.has(grant.status)) return undefined;
+  // A connected grant's added tools with the Card's draft over them: one fingerprint (docs/secure-connection.md).
+  if (flags.toolsAndCards && ask.can?.includes("tools_and_cards") && !takesKey(grant) && grant.status === "pending" && Array.isArray(grant.connected) && grant.connected.length > 0 && ask.draft) return "tools_and_cards";
+  // A key grant whose Card is drafted already: the key and the Card under one fingerprint.
+  if (flags.keyAndCards && ask.can?.includes("key_and_cards") && takesKey(grant) && ask.draft) return "key_and_cards";
+  return "connect";
+}
+
+/** What an approval card's fingerprint will sign, for the apps to draw before Approve: the Card, or the connection alone. */
+export function signsOf(step: SignStep, draft: string | undefined, lang: Lang = "en"): { card: boolean; words?: string } {
+  const card = step !== "connect";
+  return { card, ...(!card && draft ? { words: wordsIn(lang).approval_card_next } : {}) };
+}
+
 /**
  * Decides an approval: what the card needs signed, if anything. Reads planque's
  * grant as the phone, and KIFF's draft with the person's session.
@@ -385,6 +461,10 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   const grant = grants.find((g) => g.id === ask.grant);
   if (!grant) return { outcome: "answered", answer: `failed: ${W.noGrant}`, note: W.noGrant };
   const vendor = vendorOf(grant);
+  // The same taf's other connections: a Card may cover their tools too (two apps, one Card).
+  const sameTaf = grants.filter((g) => g.id !== grant.id && g.request.agent && g.request.agent === grant.request.agent && !["failed", "disconnected", "revoked"].includes(g.status));
+  // A grant asking for something again (tools added once connected) loses its "connected" note, so its card shows what it asks.
+  if (grant.status !== "connected") await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
   if (grant.status === "connected") {
     await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
     // The second approval: the vendor is connected, and the taf's Cards over its tools wait as a
@@ -393,7 +473,7 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     // report was lost. Approve again answers what holds, already approved, as the report would have.
     if (!ask.draft && ask.shown_digest && ask.shown_digest === grant.digest) return { outcome: "answered", answer: `already approved: ${vendor} is connected`, note: W.alreadyApproved };
     if (!ask.draft) return { outcome: "answered", answer: `failed: ${vendor} is already connected; nothing new to approve`, note: W.nothingToApprove(vendor) };
-    const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx);
+    const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx, sameTaf);
     if ("outcome" in checked) return checked;
     const { draft } = checked;
     const id = ctx.newID();
@@ -423,10 +503,30 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     if (!ask.words || ask.words.profile_sha256 !== sha256(grant.request.profile)) return { outcome: "read_again", note: W.wordsUnread };
     kiffProfile = { profile_sha256: ask.words.profile_sha256, words_sha256: ask.words.words_sha256 };
   }
+  // A connected grant's added tools, with the Card's draft over them: the addition's approve and the Card under one
+  // fingerprint (docs/secure-connection.md), as a key and its Card are, once planque takes the paired approve.
+  const step = stepFor(grant, ask, ctx);
+  if (step === "tools_and_cards" && ask.draft) {
+    const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx, sameTaf);
+    if ("outcome" in checked) return checked;
+    const id = ctx.newID();
+    const pending: Pending = { step: "tools_and_cards", grant: grant.id, vendor, draft: ask.draft, version: checked.draft.version, made: ctx.now.toISOString(), key: "critical" };
+    await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
+    await noteSending(grant, ctx);
+    return {
+      outcome: "sign",
+      ask: {
+        id, step: "tools_and_cards", scheme: "kiff.requests.v1", message: "",
+        reason: W.reasonConnect(appNameOf(grant) || vendor, await nameOf(ctx, grant.request.agent, grant.agent_name)), key: "critical",
+        planque: { grant: grant.id, body: { digest: grant.digest, ...(kiffProfile ? { kiff_profile: kiffProfile } : {}) } },
+        kiff: { draft: ask.draft, version: checked.draft.version },
+      },
+    };
+  }
   // A key grant whose Card is drafted already: the key and the Card under one fingerprint (docs/secure-connection.md),
   // once both services take kiff.requests.v1. The phone builds both requests and signs their two hashes.
-  if (ctx.keyAndCards && ask.can?.includes("key_and_cards") && takesKey(grant) && ask.draft) {
-    const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx);
+  if (step === "key_and_cards" && ask.draft) {
+    const checked = await cardsReady(ask, ask.draft, grant, vendor, ctx, sameTaf);
     if ("outcome" in checked) return checked;
     const id = ctx.newID();
     const pending: Pending = { step: "key_and_cards", grant: grant.id, vendor, draft: ask.draft, version: checked.draft.version, made: ctx.now.toISOString(), key: "critical" };
@@ -443,8 +543,10 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
     };
   }
   const id = ctx.newID();
-  // Connecting an app is routine (kiff/tafs#494): a tap inside an approval window.
-  const pending: Pending = { step: "connect", grant: grant.id, vendor, made: ctx.now.toISOString(), key: "window" };
+  // Connecting an app is routine (kiff/tafs#494): a tap inside an approval window. A card that also carries a
+  // draft keeps it here, unsigned: the connection alone is signed, and the report never answers it approved
+  // while that draft isn't issued, so Coach asks for its Card rather than hand over a taf no Card covers.
+  const pending: Pending = { step: "connect", grant: grant.id, vendor, made: ctx.now.toISOString(), key: "window", ...(ask.draft ? { draft: ask.draft, ...(ask.shown_draft ? { version: ask.shown_draft } : {}) } : {}) };
   await ctx.store.put(keyOf(ctx.tenant, ctx.taf, ctx.component, id), pending, new Date(ctx.now.getTime() + ASK_KEPT_MS));
   await noteSending(grant, ctx);
   return {
@@ -556,7 +658,7 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   // above spends nothing, so the phone can report again.
   if (!(await ctx.store.once(`${key}#taken`, new Date(ctx.now.getTime() + ASK_KEPT_MS)))) throw new ApprovalError(404, "no approval waits for that answer");
   await ctx.store.remove(key);
-  if (pending.step === "key_and_cards") {
+  if (pending.step === "key_and_cards" || pending.step === "tools_and_cards") {
     // One signature, two requests: approved only when the connection server says connected and KIFF says the
     // Card is issued. A key that went in with a Card that didn't says so, and the card's next tap asks the Card alone.
     const [grants, draft] = await Promise.all([
@@ -596,6 +698,25 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   }
   if (grant && (grant.status === "connected" || grant.status === "listed")) {
     await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
+    // The card carried a draft that this signature didn't confirm (the combined step wasn't offered): approved
+    // only once KIFF says it's issued. Otherwise the connection is said done and the Card not, as key_and_cards
+    // says its half, and Coach shows the approval again, which asks the Card alone.
+    if (pending.draft) {
+      const draft = await draftInfo(ctx.token, pending.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now);
+      // Issued at the version the card showed, when it showed one: another version isn't the Card the owner read.
+      const other = !!draft && !!pending.version && !!draft.version && draft.version !== pending.version;
+      // By design (connect now, the Card next, as the card said): the connection is connected and its Card is still the
+      // draft the card showed. That never reads as a failure: Coach hears to show the Card alone, and the person reads
+      // "Gmail is connected. Next, its Card." (CARD_NEXT, approvalAnswerWords).
+      if (grant.status === "connected" && draft && draft.status === "draft" && !other) {
+        return { answer: `failed: ${pending.vendor} is connected; ${CARD_NEXT}`, note: W.connectedCardNext(pending.vendor) };
+      }
+      if (!draft || !issued(draft.status) || other) {
+        const why = !draft ? W.noDraft : other ? W.outOfDate : W.draftIs(draft.status);
+        const done = grant.status === "connected" ? "is connected" : "is signed in";
+        return { answer: `failed: ${pending.vendor} ${done}; ${W.cardsNotIssued(why)}; show the approval again for its Card alone`, note: W.cardsNotIssued(why) };
+      }
+    }
     return { answer: "approved" };
   }
   const vendor = pending.vendor;

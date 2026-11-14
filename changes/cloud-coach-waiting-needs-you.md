@@ -1,0 +1,1 @@
+- **tafs cloud: a Coach card waiting on you counts in Needs you.** Home lists it as `coach_waiting`, with a line that opens that chat, and never says "Nothing needs you." while Coach waits for your approval or answer (docs/api.md).
