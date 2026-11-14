@@ -1,0 +1,4 @@
+- Un nuovo taf compare nella tua lista appena Coach lo configura, senza dover trascinare per aggiornare.
+- Quando Coach ti aspetta, «Ti aspettano» lo mostra mentre la chat è ancora aperta.
+- La Home conta un nuovo taf che lavora dalla sua chat come pronto, mai «0 tafs al lavoro».
+- Le Card di un nuovo taf compaiono come un'unica Card da leggere prima di approvare.

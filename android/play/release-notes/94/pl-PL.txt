@@ -1,0 +1,4 @@
+- Nowy taf pojawia się na liście, gdy tylko Coach go skonfiguruje, bez przeciągania w celu odświeżenia.
+- Gdy Coach czeka na Ciebie, „Czeka na Ciebie” pokazuje to, póki czat jest otwarty.
+- Strona główna liczy nowego tafa, który pracuje ze swojego czatu, jako gotowego, nigdy jako „0 tafs pracuje”.
+- Karty nowego tafa wyświetlają się jako jedna Karta do przeczytania przed zatwierdzeniem.

@@ -1,0 +1,4 @@
+- A new taf shows on your list as soon as Coach sets it up, with no need to pull to refresh.
+- When Coach waits for you, Needs you shows it while the chat is still open.
+- Home counts a new taf that works from its chat as ready, never "0 tafs working".
+- A new taf's Cards show as one Card to read before you approve.

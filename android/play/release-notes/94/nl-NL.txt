@@ -1,0 +1,4 @@
+- Een nieuwe taf staat in je lijst zodra Coach hem heeft ingesteld, zonder dat je hoeft te vernieuwen.
+- Als Coach op je wacht, laat ‘Wacht op jou’ dat zien terwijl de chat nog open is.
+- Home telt een nieuwe taf die vanuit zijn chat werkt als gereed, nooit als ‘0 tafs bezig’.
+- De Kaarten van een nieuwe taf verschijnen als één Kaart om te lezen voordat je goedkeurt.
