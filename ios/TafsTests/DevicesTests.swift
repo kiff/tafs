@@ -54,7 +54,10 @@ final class DevicesTests: XCTestCase {
         XCTAssertEqual(r.devices.map(\.name), ["tafs on iPad", "Ana's iPhone"])
     }
 
-    func testSigningAnotherDeviceOutAsksFaceIDThenRemovesIt() async throws {
+    /// Removing a device that holds an approval key or a passkey is an approval (desktop-client.md): the
+    /// approval key signs the DELETE itself, `kiff.request.v1` over its path and the empty body, behind
+    /// Face ID, and the request carries it.
+    func testSigningAnotherDeviceOutIsSignedByTheApprovalKey() async throws {
         let signer = FaceIDSigner()
         let model = await signedIn(signer: signer)
         await model.refreshDevices()
@@ -62,8 +65,13 @@ final class DevicesTests: XCTestCase {
         let phone = try XCTUnwrap(model.devices.first { $0.id == "dev_phone01" })
         let done = await model.removeDevice(phone)
         XCTAssertTrue(done)
-        XCTAssertEqual(signer.prompts, ["tafs.devices.v1|t_01|dev_phone01"])
+        XCTAssertEqual(signer.prompts.count, 1, "one Face ID")
+        let empty = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        let lines = try XCTUnwrap(signer.prompts.first).components(separatedBy: "\n")
+        XCTAssertEqual(Array(lines.prefix(5)), ["kiff.request.v1", "t_01", "DELETE", "/v1/me/devices/dev_phone01", empty])
         XCTAssertEqual(deletes(), ["/v1/me/devices/dev_phone01"])
+        let header = try XCTUnwrap(StubProtocol.sent.last { $0.httpMethod == "DELETE" }?.value(forHTTPHeaderField: "KIFF-Device-Signature"))
+        XCTAssertEqual(header, "t=\(lines[5]),v1=signature", "v1, never a window's v2")
     }
 
     func testThisDeviceAndARefusedFaceIDRemoveNothing() async throws {

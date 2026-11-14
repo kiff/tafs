@@ -426,8 +426,20 @@ final class KIFFClient {
     }
 
     /// Signs a device out of the account: it no longer approves, and its sessions are over.
-    func removeDevice(_ id: String) async throws {
-        let _: Empty = try await send("DELETE", "/v1/me/devices/\(id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id)")
+    static func devicePath(_ id: String) -> String {
+        "/v1/me/devices/\(id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id)"
+    }
+
+    /// Signing another device out, built to be signed by the approval key: removing a device that holds
+    /// an approval key or a passkey is an approval (desktop-client.md), `kiff.request.v1` over the
+    /// DELETE, its path and the empty body, never inside a window.
+    func prepareRemoveDevice(_ id: String, signedAt: String) throws -> Prepared {
+        try prepare(method: "DELETE", path: Self.devicePath(id), body: Data(), gateway: false, signedAt: signedAt)
+    }
+
+    /// Sends a device's removal, prepared and signed.
+    func removeDevice(_ prepared: Prepared, signatureHeader: String) async throws {
+        let _: Empty = try await send("DELETE", prepared.path, body: Optional<RawJSON>.none, presigned: signatureHeader)
     }
 
     // MARK: Held calls

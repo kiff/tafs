@@ -64,9 +64,11 @@ this one. Each is called what KIFF names it in the app's language (`display_name
 from what the device is (`kind`: iPhone, iPad, Android phone or tablet), never the name the
 app sent at sign-in in whatever language it had then; that name shows only for a device
 of another kind, or from a KIFF that sends no `display_name`. The apps send the `kind` when
-they sign in. **Sign out** on another device, behind Face ID, removes it
-(`DELETE /v1/me/devices/{id}`): it no longer approves, and its sign-ins on the account
-end at once. This device signs out with **Sign out of KIFF**.
+they sign in. **Sign out** on another device removes it (`DELETE /v1/me/devices/{id}`): it
+no longer approves, and its sign-ins on the account end at once. Removing a device that
+holds an approval key or a passkey is itself an approval, so the phone's approval key signs
+the request, behind Face ID or a fingerprint naming the device, and never inside an approval
+window (desktop-client.md). On iOS, the approval key signs it whatever the device is. This device signs out with **Sign out of KIFF**.
 
 ## Your data and the AI
 

@@ -1089,18 +1089,26 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Signs another device out of the account, behind Face ID. This device signs out with
-    /// Sign out instead. False when it didn't go through.
+    /// Signs another device out of the account: the approval key signs the DELETE itself, behind Face ID
+    /// or Touch ID naming the device, never inside a window, since removing a device that holds an
+    /// approval key or a passkey is an approval (desktop-client.md). This device signs out with Sign out
+    /// instead. False when it didn't go through.
     @discardableResult
     func removeDevice(_ device: KIFFClient.Device) async -> Bool {
         guard mode == .kiff, let tenant = kiffTenant, !device.thisDevice else { return false }
         let gen = accountGeneration
         let what = Words.Settings.Devices.signOutPrompt(device: device.name ?? Words.Settings.Devices.thisDevice)
-        do { _ = try await signer.sign(Data("tafs.devices.v1|\(tenant)|\(device.id)".utf8), reason: what) } catch { return false }
-        guard gen == accountGeneration else { return false }
         kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let signature: String
         do {
-            try await kiff.removeDevice(device.id)
+            prepared = try kiff.prepareRemoveDevice(device.id, signedAt: signedAt)
+            signature = try await signer.signApproval(prepared.message, reason: what)
+        } catch { return false }
+        guard gen == accountGeneration else { return false }
+        do {
+            try await kiff.removeDevice(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
         } catch {
             guard gen == accountGeneration else { return false }
             devicesError = Words.Common.didntGoThrough(what: "\(what)", why: "\(error.localizedDescription)")
