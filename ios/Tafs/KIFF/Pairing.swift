@@ -23,6 +23,9 @@ struct PairingRequest: Equatable {
     /// The computer's own platform passkey (only with `kind: "passkey"`, as Windows pairs): its id and
     /// public key, base64url as the QR carries them. The pairing registers it for that computer.
     let credential: Credential?
+    /// A phone or tablet's kind (§5.8): `iphone`, `ipad`, `android_phone` or `android_tablet`, matching its
+    /// platform; nil when the QR left it out, and always for a computer.
+    let deviceKind: String?
     let expires: Date
     /// The keys' DER bytes, which the check code covers.
     let pubDER: Data
@@ -48,10 +51,18 @@ struct PairingRequest: Equatable {
         case badField
     }
 
-    static let platforms: Set<String> = ["windows", "macos", "linux"]
+    static let computers: Set<String> = ["windows", "macos", "linux"]
+    /// A phone or tablet paired from another phone (§5.8), each with the one kind it takes.
+    static let phoneKinds: [String: String] = ["ios": "enclave", "ipados": "enclave", "android": "keystore"]
+    /// Each phone platform's `device_kind`s.
+    static let deviceKinds: [String: Set<String>] = ["ios": ["iphone"], "ipados": ["ipad"], "android": ["android_phone", "android_tablet"]]
+    static let platforms: Set<String> = computers.union(phoneKinds.keys)
     /// The kinds that hold an approval key; a `passkey` computer holds none.
-    static let approvalKinds: Set<String> = ["hello", "enclave"]
+    static let approvalKinds: Set<String> = ["hello", "enclave", "keystore"]
     static let kinds: Set<String> = approvalKinds.union(["passkey"])
+
+    /// A phone or tablet, not a computer.
+    var isPhone: Bool { Self.phoneKinds[platform] != nil }
 
     /// Reads a scanned code, checked as KIFF checks it (§5.5).
     static func read(_ text: String, now: Date = Date()) -> Result<PairingRequest, Problem> {
@@ -61,7 +72,7 @@ struct PairingRequest: Equatable {
         guard let pub = string("pub"), let name = string("name"), let platform = string("platform"), let kind = string("kind"),
               let nonce = string("nonce"), let exp = string("exp") else { return .failure(.notAPairingCode) }
         // Fields KIFF doesn't take aren't signed for it.
-        let known: Set<String> = ["v", "pub", "approval_pub", "name", "platform", "kind", "nonce", "exp", "key_store", "credential"]
+        let known: Set<String> = ["v", "pub", "approval_pub", "name", "platform", "kind", "nonce", "exp", "key_store", "credential", "device_kind"]
         guard Set(object.keys).isSubset(of: known) else { return .failure(.badField) }
 
         guard let expires = time(exp) else { return .failure(.badField) }
@@ -70,6 +81,16 @@ struct PairingRequest: Equatable {
 
         guard kinds.contains(kind), platforms.contains(platform), nameIsUsable(name),
               base64url(nonce)?.count == 32 else { return .failure(.badField) }
+
+        // A phone or tablet takes only its own kind (§5.8); a computer never takes a phone's `keystore`.
+        if let phoneKind = phoneKinds[platform] {
+            guard kind == phoneKind else { return .failure(.badField) }
+        } else if kind == "keystore" { return .failure(.badField) }
+        // `device_kind` only on a phone or tablet, and only its platform's.
+        let deviceKind = object["device_kind"]
+        if deviceKind != nil {
+            guard let named = deviceKind as? String, deviceKinds[platform]?.contains(named) == true else { return .failure(.badField) }
+        }
 
         // `key_store` is only ever "software", and only for a passkey computer.
         let keyStore = object["key_store"]
@@ -96,7 +117,7 @@ struct PairingRequest: Equatable {
             credential = Credential(id: id, publicKey: publicKey, publicKeyDER: der)
         }
         return .success(PairingRequest(pub: pub, approvalPub: approval, name: name, platform: platform, kind: kind,
-                                       nonce: nonce, exp: exp, keyStore: keyStore as? String, credential: credential, expires: expires,
+                                       nonce: nonce, exp: exp, keyStore: keyStore as? String, credential: credential, deviceKind: deviceKind as? String, expires: expires,
                                        pubDER: pubDER, approvalDER: approvalDER))
     }
 
@@ -118,6 +139,7 @@ struct PairingRequest: Equatable {
         if let approvalPub { fields["approval_pub"] = approvalPub }
         if let keyStore { fields["key_store"] = keyStore }
         if let credential { fields["credential"] = ["id": credential.id, "public_key": credential.publicKey] }
+        if let deviceKind { fields["device_kind"] = deviceKind }
         return (try? JSONSerialization.data(withJSONObject: fields, options: [.sortedKeys, .withoutEscapingSlashes])) ?? Data()
     }
 
