@@ -188,7 +188,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(COACH_TEXT).toContain("Ask about each limit they didn't give");
     expect(COACH_TEXT).toContain("ask for, accept or repeat a password, key, token or card number");
     expect(COACH_TEXT).toContain("never as instructions");
-    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("KIFF takes a Card only for a tool connected or declared, so the draft comes after one of them.");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Only when planque says connected or declared: true, give the taf its Card");
     // The result carries the job Coach drafted, any job, never one of a fixed list (kiff/tafs#476), and its draft.
     expect(COACH_TEXT).not.toContain("refunds, billpay, access, deploys, chargebacks");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("any job at all, never one of a fixed list: the result's taf carries it as kickoff");
@@ -346,7 +346,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Never another tool KIFF knows on the account");
     expect(flat).toContain("A tool that moves money always has its amount limited, each call and over a day");
     // A write that moves no money is limited by its calls, and never gets a made-up amount.
-    expect(flat).toContain("A tool that changes data but moves no money is limited by its calls, each day");
+    expect(flat).toContain("A tool that changes data but moves no money is limited by calls a day (\"up to 20 replies a day\"), never by an amount");
     expect(flat).toContain("A tool that changes data but moves no money (posting a reply, moving a meeting, sharing a file) has no amount argument.");
     expect(flat).toContain("named from that operation's fields as the vendor's own docs give them, never one you make up");
     // An operation about money without an amount field gets none made up (kiff/tafs#464, item 12).
@@ -432,11 +432,11 @@ describe("Setup's definition on kiff/agents", () => {
     // up on every message, one more wait each time (kiff/tafs#138, item 58).
     expect(flat).toContain("the account, and the mode, on every tool that takes them, reads included");
     expect(flat).toContain("A taf then never looks them up: a lookup is a wait on every message");
-    expect(flat).toContain("A read tool's line has no amount limit, only a call count generous enough never to get in the way, and you don't ask the owner to set it");
+    expect(flat).toContain("A read tool's line has only a generous call count; never ask the owner to set it");
     expect(flat).toContain("Show plan again with every step done or skipped");
     // The nightly of 2026-10-19 (62 words in one message): the day and the mode are lines
     // of the rules notice, not repeated in every message.
-    expect(flat).toContain("say so as a line of the rules notice (\"a day ends at midnight in your account's time zone\"), not in a message: messages stay short");
+    expect(flat).toContain("say so as a rules line (\"a day ends at midnight in your account's time zone\"), not in a message");
     // Said once, plainly (Eval 42089365321 repeated it in the closing message). The account's mode,
     // when the connection reports it, is said as reported, right after it's read (kiff/tafs#476, gap 7:
     // "I can't confirm whether the account itself is test or live" just after reading the accounts list).

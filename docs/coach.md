@@ -678,7 +678,7 @@ such as a Gmail connected for another taf, is never reused for customer mail (th
 tool alone when it only sends (`uses`, narrowed by planque). An inbox of the taf's own, from a mail app
 made for agents, stays an option Coach offers (`draft-the-card@4`). The Card Coach drafts is the agreed rules,
 line for line: no limit merged with another or changed in number. A limit the Card can't hold as agreed is a
-changed rule, shown in a new rules notice and agreed again before the draft (`draft-the-card@7`). Each line of the rules notice says where its rule is kept when the Card doesn't hold it: "the connection keeps it" (an argument the connection fixes, such as one workspace), "KIFF adds it" (the disclosure line), or "in its instructions" (what KIFF can't count) (`draft-the-card@13`).
+changed rule, shown in a new rules notice and agreed again before the draft (`draft-the-card@7`). Each line of the rules notice says where its rule is kept when the Card doesn't hold it: "the connection keeps it" (an argument the connection fixes, such as one workspace), "KIFF adds it" (the disclosure line), or "in its instructions" (what KIFF can't count) (`draft-the-card@13`). The rules' confirm offers only Agree and Change something: another rule Coach would offer (a lower limit, held instead of refused) is its own question before the rules are shown, never a tap on the agreement, so the Card is drafted from the answer and never from an option the owner didn't choose. Each tool's `on_exceed` is its agreed line's: `owner` only where that line says the owner is asked, `refuse` otherwise (`draft-the-card@19`).
 
 A taf that writes to people names who they come from: Coach asks once, with its other questions,
 offering first "tafs, your AI assistant", so the taf speaks as itself (`writes_for` "tafs": a recipient
@@ -701,13 +701,15 @@ works (gap 20, `draft-the-card@3` and on).
 
 **Which tools carry the disclosure isn't left to Coach** (gap 14, `runtime/src/cloud/sends-outside.ts`). A
 connection's profile (KIFF's `kiff.profile.v1`, inside the grant's signed request) says what each write does:
-an operation that `sends`, with `resource.outside`, sends to people who may be outside the company. A reviewed
+an operation that `sends`, with `resource.outside`, sends to people who may be outside the company, and one whose
+effect is `none_until_approved` drafts what reaches them as written once the owner sends it (a draft email, a draft
+invoice), so it carries the disclosure too, whatever the job or recipe. A reviewed
 catalog entry's profile is the reviewed one, and one Coach drafted counts too when it says so, since that can
 only add a disclosure. tafs cloud reads grants only on the phone's Approve, so each Approve of a connection, or
 of its Card, notes its sending tools for the taf's KIFF agent, replacing that connection's earlier note. The write holds a claim on the note for at most 10 seconds, so two Approves of the same taf at once both keep their entries; one that finds the claim held waits and tries again, and past its tries the Approve fails, to be tapped again. A write gives its claim back only within those 10 seconds; one that took longer leaves it to expire, since another write may hold it by then. Coach's
 result is then checked against the note: a new taf, or an Improve, whose taf has a noted tool that neither its
 `disclose` nor the taf's existing disclosure names is refused, naming each tool ("disclose doesn't name
-send_email, which sends to people outside the company …"), and Coach sends it again with the tool named. A note
+send_email, which reaches people outside the company …"), and Coach sends it again with the tool named. A note
 that can't be read refuses with words Coach can retry on, never lets the result through. A taf whose
 connections were approved before this has no note until its next Approve, and is checked as before. A managed
 provider's tool counts only once its profile says it sends outside.
