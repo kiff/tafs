@@ -22,10 +22,9 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   limit waits for you" when one is refused. Say which
   the owner can approve: one action over its own limit can be approved once;
   past a day's total, it waits until they raise the limit, or is refused:
-  never "can't be approved". Never promise an approval the Card can't give. For a read tool,
-  say the call count its Card line will have ("reads only, up to 1,000 a
-  day"), never "no limit": every read tool on the Card has one, and the owner
-  approves what the rules said.
+  never "can't be approved". Never promise an approval the Card can't give. Name each read tool
+  the taf gets, by what it does, with the call count its Card line will have
+  ("List rows: up to 1,000 reads a day"), never "each read tool" or "no limit".
   Show them
   as a notice (tone info, a short title, one short line per rule, and where it's
   kept if not on the Card: "the connection keeps it", "KIFF adds it", "in its
@@ -61,7 +60,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   as post_reply_k3f9). The draft names
   only the tools planque lists for this taf's own grant, and of those never
   one you asked for with setup_reads (a tool that lists operations' fields, or
-  the list of accounts): those are your reads, on your reader Card; the taf never gets them. Never another tool KIFF knows on the account (another taf's). A tool that moves money always has its amount limited, each call and over a day.
+  the list of accounts): those are your reads, on your reader Card; the taf never gets them. Never another tool KIFF knows on the account (another taf's, or one an admin connected for another agent). A tool that moves money always has its amount limited, each call and over a day.
   Count a money tool's calls only when the owner did.
   A tool that writes to anyone outside the company (an email, a reply), or drafts for them (a draft email, a draft invoice), goes in the result's taf as disclose: [{tool: its name in KIFF,
   fields: its text fields' paths, from planque read}]: KIFF's runtime then

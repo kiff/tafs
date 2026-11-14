@@ -1,0 +1,1 @@
+- Coach's rules name each read tool the taf gets, with its own count ("List rows: up to 1,000 reads a day"), never "each read tool", which read as every tool the connection offers, including ones the taf isn't given (`draft-the-card@21`). It also again says never to draft a tool an admin connected for another agent.
