@@ -270,6 +270,13 @@ object CoachWords {
   fun isEmptyChat(state: bot.tafs.app.app.AppState): Boolean =
     state.coachFresh || (state.chatItems(bot.tafs.app.app.COACH_CHAT).isEmpty() && state.chatSent[bot.tafs.app.app.COACH_CHAT].isNullOrEmpty())
 
+  /**
+   * Whether New conversation stays where it is: on an empty plain conversation only. An empty one about a taf ("Improve
+   * Refunds") gives way to a plain new one, so the pencil always opens a plain chat.
+   */
+  fun newChatStays(state: bot.tafs.app.app.AppState): Boolean =
+    isEmptyChat(state) && state.coachImproving == null && state.coachContext == null
+
   val ANSWERING get() = Words.Coach.answering
 
   /**
