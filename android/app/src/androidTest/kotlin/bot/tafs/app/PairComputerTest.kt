@@ -1,5 +1,8 @@
 package bot.tafs.app
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -10,7 +13,7 @@ import bot.tafs.app.app.Mode
 import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.kiff.Account
 import bot.tafs.app.kiff.PairQr
-import bot.tafs.app.kiff.Pairing
+import bot.tafs.app.views.DEVICES_SHEET
 import bot.tafs.app.views.DevicesSheet
 import bot.tafs.app.views.PAIR_BUTTON
 import bot.tafs.app.views.PAIR_CHECK
@@ -24,16 +27,21 @@ import org.junit.Rule
 import org.junit.Test
 
 /**
- * Devices, Pair a computer (docs/android-app.md, Pairing a computer): the scanned QR's check code is asked about before anything
- * is signed; Yes pairs that computer and shows KIFF's answer; Cancel, or a QR that isn't a pairing, pairs nothing.
+ * Devices, Add a device (docs/android-app.md, Pairing a computer): the sheet draws what the model holds (the QR asked about, the
+ * line that says what came of it), so the sheet torn down and rebuilt as Google's scanner closes still shows them. It opens at full
+ * height. Yes and Cancel go to the model; the model's tests cover what they do.
  */
 class PairComputerTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
 
   @get:Rule(order = 1) val rule = createStableComposeRule()
 
-  private val state = AppState(mode = Mode.kiff, ready = true, kiffAccount = Account("t_01", "acme"))
-  private val paired = mutableListOf<PairQr>()
+  private val base = AppState(mode = Mode.kiff, ready = true, kiffAccount = Account("t_01", "acme"))
+  private var shown by mutableStateOf(base)
+  private var sheetUp by mutableStateOf(true)
+  private var added = 0
+  private var confirmed = 0
+  private var cancelled = 0
 
   private fun key(): String = Base64.getUrlEncoder().withoutPadding().encodeToString(
     KeyPairGenerator.getInstance("EC").apply { initialize(ECGenParameterSpec("secp256r1")) }.generateKeyPair().public.encoded,
@@ -42,56 +50,79 @@ class PairComputerTest {
   private val qr = """{"v":"kiff.pair.v1","pub":"${key()}","approval_pub":"${key()}","name":"tafs on this Windows PC","platform":"windows",""" +
     """"kind":"hello","nonce":"bm9uY2Vub25jZW5vbmNlbm9uY2Vub25jZW5vbmNlMQ","exp":"2026-11-14T18:05:00Z"}"""
 
-  private fun open(scanned: String?) {
+  private fun open() {
     rule.setShown {
       TafsTheme {
-        DevicesSheet(
-          state, refresh = {}, remove = { false }, onClose = {},
-          scan = { scanned },
-          pair = { paired += it; Pairing("pair_1", it.checkCode!!, "2026-11-14T18:05:00Z") },
-        )
+        if (sheetUp) {
+          DevicesSheet(
+            shown, refresh = {}, remove = { false }, onClose = {},
+            addDevice = { added += 1 }, confirmPair = { confirmed += 1 }, cancelPair = { cancelled += 1 },
+          )
+        }
       }
     }
-    rule.onNodeWithTag(PAIR_BUTTON).performScrollTo().performClick()
   }
 
-  @Test fun theCheckCodeIsAskedAboutThenYesPairsThatComputer() {
-    open(qr)
+  @Test fun addADeviceAsksTheModelToScan() {
+    open()
+    rule.onNodeWithTag(PAIR_BUTTON).performScrollTo().performClick()
+    rule.waitForIdle()
+    assertEquals(1, added)
+  }
+
+  @Test fun theQrHeldByTheModelIsAskedAboutAndYesGoesToTheModel() {
+    shown = base.copy(pairAsking = PairQr.read(qr))
+    open()
     val code = PairQr.read(qr)!!.checkCode!!
     rule.onNodeWithText("Pair tafs on this Windows PC?").assertIsDisplayed()
     rule.onNodeWithTag(PAIR_CHECK).assertIsDisplayed()
     rule.onNodeWithText("Does your computer show $code?").assertIsDisplayed()
     rule.onNodeWithText("tafs on this Windows PC will be able to approve your tafs' actions with Windows Hello.").assertIsDisplayed()
     rule.onNodeWithText("Only pair a computer you're using right now.").assertIsDisplayed()
-    assertTrue("nothing is signed before the yes", paired.isEmpty())
     rule.onNodeWithText("Yes, pair it").performClick()
     rule.waitForIdle()
-    assertEquals(listOf("tafs on this Windows PC"), paired.map { it.name })
-    rule.onNodeWithTag(PAIR_LINE).assertIsDisplayed()
-    rule.onNodeWithText("tafs on this Windows PC is paired. It showed $code.").assertIsDisplayed()
+    assertEquals(1, confirmed)
   }
 
   @Test fun aPhoneIsAskedAboutAsAPhone() {
     val phone = qr.replace("\"platform\":\"windows\",", "\"platform\":\"android\",").replace("\"kind\":\"hello\"", "\"kind\":\"keystore\"")
       .replace("tafs on this Windows PC", "Ana's tablet")
-    open(phone)
+    shown = base.copy(pairAsking = PairQr.read(phone))
+    open()
     val code = PairQr.read(phone)!!.checkCode!!
     rule.onNodeWithText("Does your new phone or tablet show $code?").assertIsDisplayed()
     rule.onNodeWithText("Only add a phone or tablet you're holding right now.").assertIsDisplayed()
     rule.onNodeWithText("Ana's tablet will be able to approve your tafs' actions.").assertIsDisplayed()
   }
 
-  @Test fun cancelPairsNothing() {
-    open(qr)
+  @Test fun cancelGoesToTheModel() {
+    shown = base.copy(pairAsking = PairQr.read(qr))
+    open()
     rule.onNodeWithText("Cancel").performClick()
     rule.waitForIdle()
-    assertTrue(paired.isEmpty())
-    rule.onNodeWithText("Pair tafs on this Windows PC?").assertDoesNotExist()
+    assertEquals(1, cancelled)
+    assertEquals(0, confirmed)
   }
 
-  @Test fun aQrThatIsntAPairingSaysSoAndAsksNothing() {
-    open("https://example.com/menu")
+  /** The owner's phone: the line was set as the scanner closed, then gone once the sheet was back. Now it comes from the model. */
+  @Test fun theLineSurvivesTheSheetGoingAndComingBack() {
+    open()
+    // The scanner is in front: the sheet goes, and the model sets the line meanwhile.
+    sheetUp = false
+    rule.waitForIdle()
+    shown = base.copy(pairLine = "That QR code isn't a computer asking to be paired.")
+    sheetUp = true
+    rule.waitForIdle()
+    rule.onNodeWithTag(PAIR_LINE).assertIsDisplayed()
     rule.onNodeWithText("That QR code isn't a computer asking to be paired.").assertIsDisplayed()
-    assertTrue(paired.isEmpty())
+  }
+
+  @Test fun devicesOpensAtFullHeight() {
+    open()
+    rule.waitForIdle()
+    // The sheet is its own window, so it's measured in it, against the screen, as Connect apps' test does.
+    val sheet = rule.onNodeWithTag(DEVICES_SHEET).fetchSemanticsNode().boundsInWindow
+    val screen = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext.resources.displayMetrics.heightPixels
+    assertTrue("the sheet is ${sheet.height} of $screen px tall", sheet.height > screen * 0.7f)
   }
 }
