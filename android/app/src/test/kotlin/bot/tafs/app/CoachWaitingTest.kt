@@ -91,6 +91,24 @@ class CoachWaitingTest {
     assertEquals(1, transport.requestsTo(route).size)
   }
 
+  // The owner, 14 Nov: "on the main actions it should have reactions". Set aside's outcome is felt: success, or a warning.
+  @Test fun settingAsideIsFeltAsItsOutcome() = runTest {
+    val felt = mutableListOf<bot.tafs.app.design.Haptics.Kind>()
+    bot.tafs.app.design.Haptics.performer = { felt += it }
+    try {
+      reads(approval.replace("\"open\":\"Open Coach\"", "\"open\":\"Open Coach\",\"set_aside\":\"Set aside\""))
+      val m = model()
+      m.refresh()
+      transport.answer("POST /v1/home/coach-waiting/sess_1/set-aside", 503, """{"error":"down"}""")
+      assertFalse(m.setAsideCoach("sess_1"))
+      transport.answer("POST /v1/home/coach-waiting/sess_1/set-aside", 200, """{"set_aside":["sess_1"],"withdrawn":0}""")
+      assertTrue(m.setAsideCoach("sess_1"))
+      assertEquals(listOf(bot.tafs.app.design.Haptics.Kind.Warning, bot.tafs.app.design.Haptics.Kind.Success), felt)
+    } finally {
+      bot.tafs.app.design.Haptics.performer = null
+    }
+  }
+
   @Test fun setAllAsideIsOneCallAndARefusalKeepsTheRows() = runTest {
     reads("$approval,${approval.replace("sess_1", "sess_2")}", count = 2,
       extra = ""","coach_waiting_clear":{"words":{"button":"Set all aside","title":"End 2 waiting Coach chats?","text":"Nothing is approved or sent.","yes":"Set all aside","no":"Keep them"}}""")

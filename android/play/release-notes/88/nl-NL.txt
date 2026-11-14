@@ -1,0 +1,3 @@
+- Een lichte tik op de onderste balk, Coach, de tabbladen van een taf en 'Opzijzetten', zoals op elke knop.
+- Een chat opzijzetten eindigt met een signaal: gelukt, of een waarschuwing als het niet lukte.
+- Trillingen volgen de aanraakfeedback van je telefoon; Instellingen › Trillingen zet ze uit.

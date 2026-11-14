@@ -1,0 +1,3 @@
+- You feel a light tap on the bottom bar, Coach, a taf's tabs and Set aside, as on every button.
+- Setting a chat aside ends with a tick: success, or a warning if it didn't go through.
+- Haptics follow your phone's touch feedback, and Settings › Haptics turns them off.

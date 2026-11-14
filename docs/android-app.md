@@ -728,13 +728,17 @@ wasn't sent, silent.
 The same rule as on iPhone and iPad (`design/Haptics.kt`):
 
 - **A light tap on every button press,** from the shared buttons (`PrimaryButton`, `OutlineButton`), so every new button
-  gets it.
-- **A success tick** when a send goes through (`deliverChat`), a held call's answer goes through (`answer`), or tafs cloud
-  approves Coach's approval card.
+  gets it. Also on the bottom bar and rail (Account and each tab), Coach's button, a segment changed in a segmented control
+  (a taf's Chat, Activity, Card and Setup), a Coach chat swiped aside, and Set all aside (Android 1.27.0).
+- **A success tick** when a send goes through (`deliverChat`), a held call's answer goes through (`answer`), tafs cloud
+  approves Coach's approval card, or a Coach chat is set aside (`setAsideCoach`).
 - **A warning tick** when one of those is refused or fails. Only the outcome of something the person did, never a background
   read.
 - **A step tick** on a selector's stops: the theme picker and the jobs' category chips.
 - **Settings › Haptics** turns all of it off, on this phone (`tafs.display`, `haptics`). It's on until turned off.
+- **The phone's own touch feedback setting** is followed: the platform's feedback (`performHapticFeedback`) plays nothing
+  when it's off. The first time a launch's feedback plays nothing (that setting, or a view that plays none), that's
+  written to the diagnostics, so "nothing vibrates" can be told apart from a tap the app never asked for.
 
 ## Dark
 

@@ -1,0 +1,3 @@
+- Lekkie stuknięcie na dolnym pasku, przy Coachu, kartach tafa i „Odłóż”, jak przy każdym przycisku.
+- Odłożenie czatu kończy się sygnałem: sukces albo ostrzeżenie, jeśli się nie udało.
+- Wibracje działają zgodnie z reakcją na dotyk w telefonie; Ustawienia › Wibracje je wyłączają.
