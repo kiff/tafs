@@ -1032,14 +1032,21 @@ describe("each waiting approval card says what its fingerprint signs", () => {
     expect(await signs(w)).toEqual({ card: true });
   });
 
-  it("says it in the reader's language, and a card with no draft carries no words", async () => {
+  it("says it in the reader's language, and an app's first connection says it before its draft exists", async () => {
     const s = services();
     s.grants = [grant({ status: "pending" })];
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
     const fr = await world(s, { draft: "drf_1" });
     expect(await signs(fr, undefined, { "accept-language": "fr" })).toEqual({ card: false, words: "Sa Card : vous l'approuvez ensuite" });
-    const none = await world(s);
-    expect(await signs(none)).toEqual({ card: false });
+    // The first sign-in's card, before its tools: no draft can exist yet, and a Card always follows.
+    const first = await world(s);
+    expect(await signs(first)).toEqual({ card: false, words: "Its Card: you approve it next" });
+    expect(await signs(first, undefined, { "accept-language": "de" })).toEqual({ card: false, words: "Seine Card: Du genehmigst sie als Nächstes" });
+    // A sign-in again keeps the Card in force, and tools added to a connected app with no draft name no Card: no words.
+    s.grants = [grant({ status: "needs_reconnect" })];
+    expect(await signs(first)).toEqual({ card: false });
+    s.grants = [grant({ status: "pending", connected: [{ tool: "list_charges" }] })];
+    expect(await signs(first)).toEqual({ card: false });
   });
 
   it("leaves the card as it was without the phone's proof, when the connections can't be read, or once answered", async () => {

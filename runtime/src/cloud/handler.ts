@@ -3207,7 +3207,8 @@ const SIGNS_READ_MS = 1500;
 /**
  * Each approval card still waiting says what its fingerprint will sign (`signs: {card, words?}`), from the same rule
  * `decide` asks by (stepFor), so the apps draw the Card as being signed only when it is: on a card that signs the
- * connection alone, the Card goes under `words` ("Its Card: you approve it next"). Read as the phone, with its
+ * connection alone, the Card goes under `words` ("Its Card: you approve it next"), an app's first connection's card too,
+ * before its draft can exist. Read as the phone, with its
  * Planque-Device-Signature and what it can sign (`?can=tools_and_cards,key_and_cards`); without the proof, or when
  * the connections can't be read in time, the cards are left as they were.
  */
@@ -3227,7 +3228,7 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, components: ThreadC
     const grant = grants.find((g) => g.id === card.grant);
     const draft = typeof card.draft === "string" && card.draft ? card.draft : undefined;
     const step = grant && stepFor(grant, { draft, can }, flags);
-    if (step) c.component = { ...card, signs: signsOf(step, draft, lang) };
+    if (step) c.component = { ...card, signs: signsOf(step, draft, lang, grant) };
   }
 }
 
