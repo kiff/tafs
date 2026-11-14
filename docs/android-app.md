@@ -121,8 +121,25 @@ and `versionName` is what the store shows: `1.x` for a release with new features
 one with fixes only. Every Android batch pull request says its `versionName`. The app went public
 at 1.0 (versionCode 40), and 1.1 (43) is its first feature release since.
 
-**Releases** are signed bundles for Google Play, built by `android.yml`'s release job on a
-manual dispatch, in the `android-release` environment, which the owner approves each time.
+**Releases** are signed bundles for Google Play, built by `android.yml`'s release job by hand,
+or on a merge to main that raises `versionCode` (the `version` job compares it with the commit
+before), once `test` and `ui` passed, in the `android-release` environment, which the owner
+approves each time.
+
+**To Play's internal track, with no upload by hand.** Once the repository variable
+`PLAY_UPLOAD` is `on`, the release job sends the signed bundle to Play's **internal** track
+(`android/play/play_internal.py`): one edit, the bundle, the internal track's release
+(`completed`, this bundle alone, with its notes), committed. It never touches production,
+closed or open testing, or a rollout: the track is fixed in the script, and its tests check
+it. It signs in with Google's workload identity federation (`google-github-actions/auth`,
+`PLAY_WIF_PROVIDER` and `PLAY_SERVICE_ACCOUNT`), a token for the Play Developer API that lasts
+the run: no key file, and no secret holds a key. A bundle Play reads as another `versionCode`
+than the build's commits nothing.
+- **Release notes** live in the repository, one folder per `versionCode`:
+  `android/play/release-notes/<versionCode>/<locale>.txt`, for en-US, de-DE, fr-FR, es-ES,
+  it-IT, pt-PT, nl-NL and pl-PL, each at most 500 characters. A pull request that raises
+  `versionCode` adds that folder; `test` checks it (`play_internal.py --check`), and the upload
+  refuses a version with none.
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
 it once into the secrets store, and `android/release.sh` builds with it. The app has no native
 code of its own. Its only native libraries are two small ones that AndroidX ships already
@@ -623,6 +640,43 @@ like this one go on their own.
   (`hold: {id, accounting_version}`) when the switch is on, so KIFF lets it go under the same
   signature. Then Needs you is read again.
 
+## Connect again on the taf
+
+When a connection's sign-in expired, tafs cloud puts the taf's own **Connect again** at the top of its
+Setup page (`connect_again: {grant, app, title, words, done_words}`, [api.md](api.md); read leniently: a
+shape this build doesn't know, or one with no connection or no button, is none). A panel
+(`ConnectAgainPanel`, `views/TafPresentationViews.kt`) shows tafs cloud's `words`, and, for someone who
+manages the taf, its `title` as the button. The tap signs that same connection in again
+(`AppModel.connectAgain`, the path of Connect apps' Sign in again: planque's approve, the provider's
+sign-in, planque's confirm), so the taf keeps its tools and its Card, with no list and no picking an app.
+Once planque says it's connected, tafs cloud's `done_words` ("Gmail is connected again. Mail can use
+it.") show on the taf, and its Setup page is read again. A sign-in that didn't go through says so under
+the button, and Connect again stays. The app decides nothing about whether it's needed. iPhone and iPad
+do the same.
+
+## Coach waiting
+
+A Coach chat paused on a card its person answers (an approval, a sign-in, questions) is in **Needs
+you** ([api.md](api.md#coach-waiting)): Home's `coach_waiting`, after the steps, each a panel
+(`CoachWaitingPanel`, `views/YourStepViews.kt`) with tafs cloud's line ("Coach is waiting for your
+approval.") and its **Open Coach** button, which opens Coach on that chat (`AppModel.openWaitingCoach`),
+where the card is answered; someone who can't use Coach reads the line alone. tafs cloud counts each in `needs_you`, so Home never says "Nothing needs
+you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
+
+**Set aside** is "not now", never an approval, and only signed in (not the sample).
+- **One chat:** a row whose `words.set_aside` tafs cloud sends can be swiped away either way, and has
+  a button with the same words, so a swipe isn't the only way. Either one calls
+  `POST /v1/home/coach-waiting/{session}/set-aside` (`AppModel.setAsideCoach`), with the signed read
+  of this phone's connections, so tafs cloud can withdraw a connection that chat asked for.
+- **Every chat:** with two or more rows and Home's `coach_waiting_clear`, its **Set all aside** sits
+  above them. It asks once, in tafs cloud's words (the title names the count), then calls
+  `POST /v1/home/coach-waiting/set-aside`.
+- **After:** the row goes once tafs cloud answers, and Home is read again for its count. A refusal
+  says why (`ErrorWords`) and keeps the rows. A row being set aside isn't drawn again by a Home read
+  meanwhile.
+
+iPhone and iPad follow.
+
 ## Your step
 
 A step a taf may never take itself, such as approving a bank transfer, is handed to its owner
@@ -719,6 +773,26 @@ Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#conne
 - **The trailing button is compact:** **Connect**, **Sign in again**, or for one signed in, **Signed in · choose its actions**.
   A connected app opens its connections, each with Disconnect.
 
+**An app's connections, as planque describes them** (Android 1.25.0, planque's `title`, `used_by`,
+`health` and `actions` on each grant; `Grant.health`, `Grant.actions`, read leniently). A connected app
+opens its connections, under each taf's name:
+- **Each row** is planque's `title` ("Gmail · name@example.com"), then **Used by** its `used_by`, then its
+  `health.words` ("Gmail's sign-in expired on 14 Nov"), amber when not `ok`. No id, and no button beside
+  it (`DescribedConnectionRow`).
+- **A tap opens its detail first:** its health, the tafs that depend on it, then only the `actions`
+  planque sent, in its order: `approve` is Sign in again on itself (`reconnect`), `key` a new key, and
+  `delete` the signed removal. An action whose `how` this build doesn't know isn't drawn, so a leftover
+  shows only planque's **Remove unfinished connection**, never Sign in again.
+- **A removal asks once more,** with planque's `stops` ("Unanswered customer emails will stop using
+  Gmail."), and only then the fingerprint. Remove is never beside a row.
+- Every request to planque says the person's time zone (`X-Time-Zone`), so the times in its words are
+  theirs.
+- A planque from before it sends no `actions`, and the row is the app's own, as below, until it does.
+- **planque's refusals in its own words:** any refusal that carries planque's `words` (a sign-in again
+  to another account than the connection's, say) shows those words as sent (`PlanqueError.Server.words`,
+  `ErrorWords.of`), never a line of the app's over them. "It changed in the meantime" is kept for a
+  409 with no words. planque's `error` stays the reason, for the code.
+
 tafs cloud's list, searched as the owner types, and **Connect** opens the approval as a sheet
 over the list (`ConnectApprovalSheet`). With several tafs, **Which taf is this for?** is asked
 first, in a dialog over the list wherever Connect was tapped, as on iPhone and iPad. When a sign-in
@@ -768,6 +842,22 @@ more, as on iOS) and **Remove access** (`AppState.keyReceipt`), until it closes;
 the sheet's words (an older tafs cloud, an error), the sheet stays as above. The sheet sits above
 the keyboard and scrolls. An approval card that tafs cloud marks `connection: {done: true, words}`
 draws only those words and Its Card, never the connection's text again.
+
+**What a card's fingerprint signs** (`signs`, docs/secure-connection.md): Coach's thread is read with this
+phone's planque read proof (the device's key, no prompt) and `?can=tools_and_cards,key_and_cards,signs`, so tafs
+cloud marks each waiting approval card with `signs: {card, words?}` (read leniently: any other shape is no mark).
+- `card: true`: Its Card, KIFF's own lines, stays on screen until the fingerprint, connected or not, and
+  Approve waits until KIFF's draft is read.
+- `card: false`: the Card's lines, dimmed, under tafs cloud's `words` ("Its Card: you approve it next"), never
+  under its own title as if signed now; with no `words`, not drawn.
+- No mark (a tafs cloud from before it): as before, Its Card once the grant is connected.
+The approve flow asks with `signs` in `can` too, only from a card that carries the mark: a card read without
+it (no read proof, or tafs cloud's read timed out) never says it draws what it signs. Once the ask is back, and before any signature, a step
+that disagrees with the mark is never signed (`AppModel.stepMatchesMark`): `card: true` takes only
+`cards`, `key_and_cards` or `tools_and_cards`, and `card: false` only another step. On a mismatch the card says
+"What you're asked to approve changed since it was shown. Read it again, then approve." and the thread
+is read again. No mark: any step.
+iPhone and iPad draw it the same way.
 
 **One fingerprint for a key and its Card** (`kiff.requests.v1`, docs/secure-connection.md). From
 Coach's card with a Card's draft, on a phone with an approval key, the key sheet's button asks tafs

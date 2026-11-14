@@ -364,8 +364,8 @@ function heldNotification(body: AlertBody, holdID: string, now: Date, lang: Lang
 const MAX_NAME = 60;
 
 /**
- * "Stripe signed Refunds out · sign in again": tapping it opens the taf, where its Card tab offers
- * Sign in again. Neither the reason nor the grant's tools are said: only who, and what to do.
+ * "Stripe signed Refunds out · sign in again": tapping it opens the taf, whose Connect again signs that
+ * connection in again. Neither the reason nor the grant's tools are said: only who, and what to do.
  * It sounds, but isn't Time Sensitive: nothing waits on a deadline, the taf just can't use that vendor.
  */
 function signedOutNotification(taf: { id: string; name: string }, vendor: string, grant: string, lang: Lang = "en"): Notification {

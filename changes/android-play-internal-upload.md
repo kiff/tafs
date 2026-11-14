@@ -1,0 +1,1 @@
+- **Android releases reach Play's internal track by themselves.** A merge to main that raises versionCode builds the signed bundle and, once the upload is switched on, sends it to Play's internal track with release notes in the eight languages. Internal only, signed in with Google's workload identity federation, no key file (docs/android-app.md).

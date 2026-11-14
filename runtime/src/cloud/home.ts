@@ -8,6 +8,7 @@
  * An amount carries the unit and decimal places KIFF declares for it, or none:
  * nothing here guesses a currency or a scale from a parameter's name.
  */
+import { type Lang, wordsIn } from "./words/index.js";
 import { amountWords } from "./activity.js";
 import { type Fetch, KIFF_API, KIFFError } from "./kiff.js";
 
@@ -53,17 +54,15 @@ export interface WindowWords {
   now: string;
 }
 
-const WINDOWS: Record<string, WindowWords> = {
-  calendar_day: { each: "a day", now: "today" },
-  rolling_24h: { each: "in any 24 hours", now: "in the last 24 hours" },
-  rolling_1h: { each: "in any hour", now: "in the last hour" },
-  rolling_7d: { each: "in any 7 days", now: "in the last 7 days" },
-  lifetime: { each: "in total", now: "so far" },
-};
+/** KIFF's windows tafs knows: their words are in each language (`window_words`, docs/languages.md). */
+const WINDOWS = ["calendar_day", "rolling_24h", "rolling_1h", "rolling_7d", "lifetime"] as const;
 
-/** A window's words: KIFF's own, or the window as sent when tafs doesn't know it. */
-export function windowWords(window: string): WindowWords {
-  return WINDOWS[window] ?? { each: window, now: window };
+/**
+ * A window's words, in the person's language: KIFF's own, or the window as sent when tafs doesn't know it. Never English
+ * inside another language's line ("llamadas restantes today").
+ */
+export function windowWords(window: string, lang: Lang = "en"): WindowWords {
+  return (WINDOWS as readonly string[]).includes(window) ? wordsIn(lang).window_words[window as (typeof WINDOWS)[number]] : { each: window, now: window };
 }
 
 /** What a holder's Cards allow and have used. */
@@ -125,6 +124,8 @@ export interface CardView {
    * own count, so none has a used or left here; absent without any.
    */
   each_item?: string[];
+  /** The KIFF Cards it shows as one, when it's a draft's several (grouped): what this Card is, all of it. */
+  ids?: string[];
 }
 
 /**
@@ -147,6 +148,8 @@ export function avatarRim(lights: Array<{ open: boolean; resting?: boolean; knoc
 export interface Mandate {
   id: string;
   subject: string;
+  /** The agent draft that issued it, once KIFF sends it: a draft's Cards show as one Card. */
+  draft_id?: string | null;
   /** The environment it is scoped to; empty for every environment. */
   environment?: string | null;
   /** Its title for people, when KIFF has one for it. */
@@ -291,10 +294,10 @@ function money(minor: number, unit: string | null | undefined, scale: number | n
 }
 
 /** A window as the app gets it: KIFF's name, as sent, and its words. */
-function window(raw: string | null | undefined): { window: string; window_words: WindowWords } {
+function window(raw: string | null | undefined, lang: Lang = "en"): { window: string; window_words: WindowWords } {
   // A line with no total has no window of its own: it reads as a day, the Card's default.
   const w = raw == null ? "calendar_day" : raw.trim();
-  return { window: w, window_words: windowWords(w) };
+  return { window: w, window_words: windowWords(w, lang) };
 }
 
 const label = (action: string, title?: string | null) => title?.trim() || action;
@@ -342,14 +345,14 @@ function room(line: NonNullable<Mandate["limits"]>[number] | undefined): { extra
  * cover all its grants, so the first line shows one of each: the first summed
  * total, at the ceiling it has now (extra room included), and the first count.
  */
-export function rules(m: Mandate): Rule[] {
+export function rules(m: Mandate, lang: Lang = "en"): Rule[] {
   const outside = m.on_exceed === "refuse" ? "refuse" : "hold";
   const out: Rule[] = (m.grants ?? []).map((g) => {
     const cap = g.per_action_max?.[0];
     return {
       action: g.action, label: label(g.action, g.title), outside,
       per_action: cap ? money(cap.max, cap.unit, cap.scale) : null,
-      per_window: null, count_per_window: null, ...window(null),
+      per_window: null, count_per_window: null, ...window(null, lang),
     };
   });
   const first = out[0];
@@ -368,9 +371,9 @@ export function rules(m: Mandate): Rule[] {
       first.base_limit = money(r.base, unit, scale);
       if (r.ends) first.room_window_end = r.ends;
     }
-    Object.assign(first, window(total.window));
+    Object.assign(first, window(total.window, lang));
   } else if (count) {
-    Object.assign(first, window(count.window));
+    Object.assign(first, window(count.window, lang));
   }
   return out;
 }
@@ -382,8 +385,8 @@ export function isLive(environment: string | null | undefined): boolean {
 }
 
 /** A Card on its own: its lines, and its money total and call count with their use. */
-export function cardView(m: Mandate): CardView {
-  const lines = distinct(rules(m));
+export function cardView(m: Mandate, lang: Lang = "en"): CardView {
+  const lines = distinct(rules(m, lang));
   let total: CardView["total"] = null;
   const shown = shownTotal(m);
   if (shown) {
@@ -394,7 +397,7 @@ export function cardView(m: Mandate): CardView {
     total = {
       limit: money(ok && line ? line.limit : agg.limit, unit, scale),
       used: ok && typeof line?.used === "number" ? money(line.used, unit, scale) : null,
-      ...window(agg.window),
+      ...window(agg.window, lang),
     };
     const r = room(line);
     if (r) {
@@ -415,7 +418,7 @@ export function cardView(m: Mandate): CardView {
   if (count) {
     const line = (m.limits ?? []).find((l) => l.status !== "per_item" && l.quantity === count.quantity && l.window === count.window);
     const ok = line?.status === "ok";
-    calls = { limit: ok && line ? line.limit : count.limit, used: ok && typeof line?.used === "number" ? line.used : null, ...window(count.window) };
+    calls = { limit: ok && line ? line.limit : count.limit, used: ok && typeof line?.used === "number" ? line.used : null, ...window(count.window, lang) };
     const r = room(line);
     if (r) {
       calls.extra_room = r.extra;
@@ -445,7 +448,8 @@ export function cardView(m: Mandate): CardView {
  * id", "€100.00 in total a day for each customer". A window tafs doesn't know is said as it was sent.
  */
 export function eachItemWords(a: NonNullable<Mandate["aggregates"]>[number]): string {
-  const window = WINDOWS[a.window]?.each ?? a.window;
+  // A whole line in English, as the rest of it is: its window too.
+  const window = windowWords(a.window).each;
   const item = (a.per ?? "").trim().toLowerCase().replaceAll("_", " ");
   if (!isSum(a.quantity)) return `${a.limit} ${a.limit === 1 ? "call" : "calls"} ${window} for each ${item}`;
   const scale = a.scale ?? 0;
@@ -473,8 +477,40 @@ export function usedShare(c: CardView): number {
 }
 
 /** What a holder's live Cards allow and have used. */
-export function summary(cards: Mandate[]): CardSummary {
-  const lines = distinct(cards.flatMap(rules));
+/**
+ * [lang] is the person's, for the lines they read (Home, the Card); Setup's limits and Coach's prompt are built in English
+ * around the window's words, so they read it in English, never one language inside another.
+ */
+/**
+ * A draft's Cards shown as one (the owner, 14 Nov: "2 Cards" for one approval): its lines together, the first total and count
+ * among them (each line keeps its own limits), the earliest end, and every KIFF Card it is in `ids`.
+ */
+export function oneCard(views: CardView[]): CardView {
+  if (views.length === 1) return views[0]!;
+  const [first] = [...views].sort(shownOrder);
+  const ends = views.map((v) => v.expires).filter((e): e is string => !!e).sort((a, b) => Date.parse(a) - Date.parse(b));
+  const counted = views.flatMap((v) => v.counted ?? []);
+  const eachItem = views.flatMap((v) => v.each_item ?? []);
+  return {
+    ...first!,
+    active: views.some((v) => v.active),
+    live: views.some((v) => v.live),
+    expires: ends[0] ?? null,
+    rules: distinct(views.flatMap((v) => v.rules)),
+    total: views.find((v) => v.total)?.total ?? null,
+    calls: views.find((v) => v.calls)?.calls ?? null,
+    ...(counted.length ? { counted } : {}),
+    ...(eachItem.length ? { each_item: eachItem } : {}),
+    ids: views.map((v) => v.id),
+  };
+}
+
+/**
+ * What a holder's live Cards allow and have used. `together` lists the Cards approved as one (the live version's, while KIFF
+ * doesn't say a mandate's draft); a mandate with its `draft_id` goes with the others of its draft.
+ */
+export function summary(cards: Mandate[], lang: Lang = "en", together: string[][] = []): CardSummary {
+  const lines = distinct(cards.flatMap((c) => rules(c, lang)));
   const tools: string[] = [];
   for (const r of lines) if (r.action && !tools.includes(r.label)) tools.push(r.label);
   const used: Record<string, Money> = {};
@@ -496,7 +532,7 @@ export function summary(cards: Mandate[]): CardSummary {
     rules: lines,
     used,
     usage_unknown: [...unknown],
-    cards: cards.map(cardView).sort(shownOrder),
+    cards: grouped(cards, together).map((g) => oneCard(g.map((c) => cardView(c, lang)))).sort(shownOrder),
   };
 }
 
@@ -530,4 +566,16 @@ export function byHolder(mandates: Mandate[], held: Held[]) {
   // limit, so it never makes the taf read "Waiting on you" (Needs you still lists it).
   for (const h of held) if ((h.kind ?? "hold") !== "card_unit") waiting.set(h.subject, (waiting.get(h.subject) ?? 0) + 1);
   return { cards, waiting };
+}
+
+/** A holder's Cards, a group for each draft: by KIFF's `draft_id`, else by the Cards approved together, else each alone. */
+function grouped(cards: Mandate[], together: string[][]): Mandate[][] {
+  const groupOf = new Map<string, string>();
+  together.forEach((ids, i) => { if (ids.length > 1) for (const id of ids) groupOf.set(id, `v${i}`); });
+  const out = new Map<string, Mandate[]>();
+  for (const c of cards) {
+    const key = c.draft_id ? `d:${c.draft_id}` : groupOf.get(c.id) ?? `m:${c.id}`;
+    out.set(key, [...(out.get(key) ?? []), c]);
+  }
+  return [...out.values()];
 }

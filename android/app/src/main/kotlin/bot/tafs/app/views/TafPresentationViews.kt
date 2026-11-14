@@ -53,6 +53,11 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
   var workflowOpen by rememberSaveable(taf.id) { mutableStateOf(false) }
   val scope = rememberCoroutineScope()
   val improve = LocalImproveInCoach.current
+  // The taf's own Connect again, in tafs cloud's words: one tap signs that connection in again, here on the taf.
+  source?.connectAgain?.let { ask -> ConnectAgainPanel(ask, taf, state, actions) }
+  state.connectedAgain[taf.id]?.takeIf { source?.connectAgain == null }?.let { done ->
+    Panel { Text(done, style = scaled(14, FontWeight.SemiBold, Theme.ok)) }
+  }
   Panel {
     Eyebrow(Words.Connect.connectedTools)
     (error ?: source?.connectionsError)?.let { Text(it, style = scaled(13, color = Theme.no)); TextButton({ scope.launch { actions.loadSetup(taf.id) } }) { Text(Words.Common.tryAgain, color = Theme.amberText) } }
@@ -343,4 +348,20 @@ private fun NextStepRow(next: bot.tafs.app.kiff.NextStep, source: TafActivityEnt
     Modifier.fillMaxWidth(),
     enabled = !busy,
   )
+}
+
+/**
+ * A taf's own Connect again (docs/api.md, `connect_again`): tafs cloud's line and button, for the connection it names. The tap signs
+ * that same connection in again, as Connect apps' Sign in again does, for someone who manages the taf; anyone else reads the line.
+ */
+@Composable
+internal fun ConnectAgainPanel(ask: ConnectAgain, taf: Taf, state: AppState, actions: TafActions) {
+  val busy = state.connecting != null
+  Panel(stroke = Theme.amber.copy(alpha = 0.5f)) {
+    if (ask.words.isNotBlank()) Text(ask.words, style = scaled(15, FontWeight.SemiBold, Theme.ink))
+    if (state.manages(taf.id) && !state.approvalKeyLost) {
+      PrimaryButton(if (state.connecting == ask.grant) state.connectStep ?: ask.title else ask.title, { actions.connectAgain(taf.id) }, Modifier.fillMaxWidth(), enabled = !busy)
+    }
+    state.coachNotes[ask.grant]?.let { Text(it, style = scaled(13, color = Theme.no)) }
+  }
 }

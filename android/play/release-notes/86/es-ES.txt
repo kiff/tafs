@@ -1,0 +1,3 @@
+- «Te necesita» nombra el taf para el que espera un chat de Coach, y desde cuándo.
+- ¿Ahora no? Desliza un chat de Coach en espera, o toca «Dejar de lado». No se aprueba ni se envía nada.
+- Si esperan dos o más: «Dejar todo de lado» los termina de una vez, tras una confirmación.

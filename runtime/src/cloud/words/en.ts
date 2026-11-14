@@ -21,6 +21,24 @@ export const en = {
   your_step_open: (vendor: string) => `Open in ${vendor}`,
   your_step_reminder: (what: string) => `Your step is still waiting: ${what}`,
   your_step_line: (what: string) => `Your step: ${what}`,
+  // KIFF's spending windows: `each` ends a limit ("€300 a day"), `now` names its use so far ("€40 used today").
+  window_words: {
+    calendar_day: { each: "a day", now: "today" },
+    rolling_24h: { each: "in any 24 hours", now: "in the last 24 hours" },
+    rolling_1h: { each: "in any hour", now: "in the last hour" },
+    rolling_7d: { each: "in any 7 days", now: "in the last 7 days" },
+    lifetime: { each: "in total", now: "so far" },
+  },
+  coach_waiting_approval: "Coach is waiting for your approval.",
+  coach_waiting_answer: "Coach is waiting for your answer.",
+  coach_waiting_open: "Open Coach",
+  coach_waiting_named_approval: (title: string, day: string) => `${title}: Coach is waiting for your approval since ${day}.`,
+  coach_waiting_named_answer: (title: string, day: string) => `${title}: Coach is waiting for your answer since ${day}.`,
+  coach_waiting_set_aside: "Set aside",
+  coach_waiting_clear: "Set all aside",
+  coach_waiting_clear_title: (n: number) => `End ${n} waiting Coach chats?`,
+  coach_waiting_clear_text: "Nothing is approved or sent. Each chat ends, and a connection it asked for that no taf uses is withdrawn.",
+  coach_waiting_clear_no: "Keep them",
   // What Coach is doing, one line per tool, in the person's language (steps.ts); a tool KIFF titles keeps its title.
   doing_show: "Showing you a card…",
   doing_results: "Setting where its results go…",
@@ -70,10 +88,17 @@ export const en = {
   approval_digest_mismatch: "This request doesn't match what it asks for. Nothing was approved.",
   approval_no_grant: "There's no connection with that id.",
   approval_cards_not_issued: (why: string) => `KIFF didn't issue the taf's Cards: ${why}`,
+  approval_connected_card_next: (vendor: string) => `${vendor} is connected. Next, its Card.`,
   approval_draft_is: (status: string) => `the draft is ${status}`,
   approval_no_draft: "KIFF has no such draft",
   /** On an approval card whose fingerprint signs the connection alone, above its Card (`signs.words`). */
   approval_card_next: "Its Card: you approve it next",
+  /** A taf whose connection's sign-in expired: its own Connect again action, and what it says once done. */
+  connect_again_title: "Connect again",
+  connect_again_words: (app: string, taf: string) => `${app}'s sign-in has expired, so ${taf} can't use it. Connect again to sign in.`,
+  connect_again_done: (app: string, taf: string) => `${app} is connected again. ${taf} can use it.`,
+  /** A first check that ran before the taf's key was stored: said in place of the store's own words. */
+  check_key_not_ready: "its key wasn't ready yet; it checks again at its next time",
   approval_cards_unread: "The Card couldn't be checked yet. Read it again, then approve.",
   approval_uncovered: (tool: string) => `This Card doesn't cover "${tool}", which the taf was given, so every call of it would be refused. Nothing was approved. Coach drafts it again.`,
   approval_stray: (tool: string) => `This Card would also let the taf use "${tool}", which no connection of it gives. Nothing was approved. Coach drafts it again.`,

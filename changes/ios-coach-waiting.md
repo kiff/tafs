@@ -1,0 +1,1 @@
+- **iPhone and iPad: Needs you shows when Coach is waiting for you.** A Coach chat paused on your approval or answer is listed in Needs you in tafs cloud's words ("Coach is waiting for your approval."), and "Open Coach" opens that chat, where its card waits (docs/ios-app.md).

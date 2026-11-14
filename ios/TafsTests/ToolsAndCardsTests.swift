@@ -104,7 +104,7 @@ final class ToolsAndCardsTests: XCTestCase {
         let approve = try XCTUnwrap(file.range(of: "func approve(_ component: SetupComponent, shown: String?, shownDraft: String?) async {"))
         let approveEnd = try XCTUnwrap(file.range(of: "nonisolated static let signInNotConfirmed", range: approve.upperBound..<file.endIndex))
         let card = String(file[approve.upperBound..<approveEnd.lowerBound])
-        XCTAssertTrue(card.contains("Self.cardDrawn(drawn, shownDraft: shownDraft) ? [RequestsTogether.toolsAndCards] : nil"), "it says it can, with the Card drawn")
+        XCTAssertTrue(card.contains("Self.cardDrawn(drawn, shownDraft: shownDraft) ? [RequestsTogether.toolsAndCards, RequestsTogether.signs] : nil"), "it says it can, with the Card drawn, and that it draws the mark")
         XCTAssertTrue(card.contains("can: can), proof: proof)"))
         let branch = try XCTUnwrap(card.range(of: "if ask.step == RequestsTogether.toolsAndCards {"))
         let older = try XCTUnwrap(card.range(of: "ask.message == Self.expectedApprovalMessage("))

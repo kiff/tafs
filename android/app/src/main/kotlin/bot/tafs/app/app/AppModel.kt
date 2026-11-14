@@ -249,6 +249,12 @@ data class AppState(
   val dismissedCardUnits: Set<String> = emptySet(),
   /** Steps a taf handed its owner, as tafs cloud lists them on Home (docs/api.md › Your step); Needs you draws them. */
   val yourSteps: List<bot.tafs.app.kiff.YourStep> = emptyList(),
+  /** Coach's chats waiting on this person, as tafs cloud lists them on Home (docs/api.md › Coach waiting); Needs you draws them. */
+  val coachWaiting: List<bot.tafs.app.kiff.CoachWaiting> = emptyList(),
+  /** tafs cloud's "Set all aside", when two or more Coach chats wait. */
+  val coachWaitingClear: bot.tafs.app.kiff.CoachWaitingClear? = null,
+  /** The Coach chats being set aside now, by session. */
+  val settingAside: Set<String> = emptySet(),
   /** The hand-offs whose answer is on its way to KIFF. */
   val answeringSteps: Set<String> = emptySet(),
   /** The hand-offs KIFF took an answer for: kept out of a Home read already on its way. */
@@ -518,6 +524,8 @@ data class AppState(
   val timeZones: List<bot.tafs.app.kiff.TimeZoneChoice> = emptyList(),
   val timeZoneQuery: String = "",
   val tafSetups: Map<String, bot.tafs.app.kiff.TafSetup> = emptyMap(),
+  /** tafs cloud's words for a taf whose Connect again went through ("Gmail is connected again. Rae can use it."), by taf. */
+  val connectedAgain: Map<String, String> = emptyMap(),
   val tafSetupErrors: Map<String, String> = emptyMap(),
   val activityPages: Map<String, SourcePages<bot.tafs.app.kiff.TafActivityPage>> = emptyMap(),
   val runPages: Map<String, SourcePages<bot.tafs.app.kiff.TafRunsPage>> = emptyMap(),
@@ -630,7 +638,7 @@ data class AppState(
    * What Needs you holds, as Home's headline and the bar's badge count it: tafs cloud's count, else (when it couldn't count all
    * of it) the app's own of what it has, held calls, currency requests and "Did this happen?".
    */
-  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size)
+  val needsYouCount: Int get() = needsYou?.count ?: (held.size + cardUnitExceptions.size + unsure.size + yourSteps.size + coachWaiting.size)
 
   /** Home's line for it: tafs cloud's words, else the app's for its own count. */
   val needsYouWords: String get() = needsYou?.words ?: needsYouCount.let { if (it == 0) Words.NeedsYou.nothing else Words.NeedsYou.count(count = it) }
@@ -1355,6 +1363,8 @@ class AppModel(
         held = held,
         cardUnitExceptions = read.home.cardUnitExceptions.orEmpty().filterNot { it.id in s.dismissedCardUnits },
         yourSteps = read.home.yourSteps.orEmpty().filterNot { it.handoff in s.answeredSteps },
+        coachWaiting = read.home.coachWaiting.orEmpty().filter { it.session.isNotBlank() && it.words.line.isNotBlank() && it.session !in s.settingAside },
+        coachWaitingClear = read.home.coachWaitingClear?.takeIf { it.words.button.isNotBlank() },
         needsYou = read.home.needsYou,
         // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given on this device.
         record = read.activity?.let { withDecisions(KiffMapping.record(it, holders)) } ?: s.record,
@@ -1848,6 +1858,39 @@ class AppModel(
     if (_state.value.mode != Mode.kiff || !_state.value.mayUseCoach || finish.session.isBlank()) return
     _state.update { it.copy(coachRequested = true) }
     openCoachChat(finish.session)
+  }
+
+  /**
+   * Sets a waiting Coach chat aside, or all of them with null (docs/api.md, Coach waiting): tafs cloud answers "not now", never an
+   * approval. The row goes once tafs cloud says so, and Home is read again for its count. A failure says why and keeps the row.
+   */
+  suspend fun setAsideCoach(session: String?): Boolean {
+    if (_state.value.mode != Mode.kiff) return false
+    val sessions = session?.let { setOf(it) } ?: _state.value.coachWaiting.map { it.session }.toSet()
+    if (sessions.isEmpty()) return false
+    val gen = accountGeneration
+    _state.update { it.copy(settingAside = it.settingAside + sessions) }
+    return try {
+      val done = cloud.setAsideCoach(session, coachReadProof())
+      if (gen == accountGeneration) _state.update { s -> s.copy(coachWaiting = s.coachWaiting.filterNot { it.session in done.setAside }) }
+      refresh()
+      true
+    } catch (e: CancellationException) { throw e
+    } catch (e: Exception) {
+      if (gen == accountGeneration) fail(ErrorWords.of(e))
+      false
+    } finally {
+      _state.update { it.copy(settingAside = it.settingAside - sessions) }
+    }
+  }
+
+  fun startSetAsideCoach(session: String?) { scope.launch { setAsideCoach(session) } }
+
+  /** A Coach chat waiting on its person, from Needs you (docs/api.md › Coach waiting): Coach opens on that chat. */
+  suspend fun openWaitingCoach(waiting: bot.tafs.app.kiff.CoachWaiting) {
+    if (_state.value.mode != Mode.kiff || !_state.value.mayUseCoach || waiting.session.isBlank()) return
+    _state.update { it.copy(coachRequested = true) }
+    openCoachChat(waiting.session)
   }
 
   /**
@@ -2347,6 +2390,16 @@ class AppModel(
     say(tafId, ChatMessage.From.taf, Chat.hello(taf))
   }
 
+  /** planque's read proof for Coach's thread, signed with the device's key and no prompt; none where planque isn't set up here. */
+  private suspend fun coachReadProof(): String? {
+    val tenant = kiffTenant ?: return null
+    if (!_state.value.sessionHasKey) return null
+    planque.tenant = tenant
+    planque.deviceLoader = { kiff.thisDeviceId() }
+    val signer = signer
+    return runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
+  }
+
   /** The threads being followed, by taf: one at a time each. */
   private val followers = mutableMapOf<String, kotlinx.coroutines.Job>()
 
@@ -2428,7 +2481,11 @@ class AppModel(
     }
     val thread = try {
       if (isTrialChat(tafId)) cloud.trialConversation(cloudId)
-      else cloud.conversation(cloudId, session = if (tafId == COACH_CHAT) _state.value.coachChat else null)
+      else if (tafId == COACH_CHAT) {
+        // With this phone's read proof and the steps it signs, so each approval card says whether it signs the Card (`signs`).
+        val proof = coachReadProof()
+        cloud.conversation(cloudId, session = _state.value.coachChat, proof = proof, can = if (proof != null && sessionHasApprovalKey) listOf("tools_and_cards", "key_and_cards", "signs") else emptyList())
+      } else cloud.conversation(cloudId)
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -2544,14 +2601,37 @@ class AppModel(
    * Signs in again to a connection its vendor signed out, from the taf's page: the same approval as Coach's card, behind one
    * fingerprint, then the vendor's own page. Signed in only once planque answers connected.
    */
-  suspend fun reconnect(grant: Grant) {
+  suspend fun reconnect(grant: Grant) { signInAgain(grant) }
+
+  /** Signs a connection in again on itself (planque's approve): what came of it, or null when nothing was asked. */
+  private suspend fun signInAgain(grant: Grant): Connected? {
     // A provider's connection is disconnected and connected again instead: planque would refuse, so nothing is asked.
-    if (grant.signsInThroughProvider) return note(grant.id, bot.tafs.app.model.ConnectionWords.throughProvider(grant))
+    if (grant.signsInThroughProvider) { note(grant.id, bot.tafs.app.model.ConnectionWords.throughProvider(grant)); return null }
     // KIFF's words for its profile, which the approval signs: read now, as the approval card reads them, wherever this starts.
     loadProfileWords(grant.id)
-    _state.value.profileWordsErrors[grant.id]?.let { return note(grant.id, it) }
+    _state.value.profileWordsErrors[grant.id]?.let { note(grant.id, it); return null }
     val result = connect(grant.id, grant.id, grant.digest, again = true)
     if (result is Connected.Failed) note(grant.id, result.why)
+    return result
+  }
+
+  /**
+   * The taf's own Connect again (docs/api.md, `connect_again`): the connection tafs cloud names is signed in again on itself, so
+   * the taf keeps its tools and its Card. Once planque says it's connected, tafs cloud's `done_words` show on the taf, and its
+   * setup is read again. Nothing here decides whether it's needed: tafs cloud sent it.
+   */
+  suspend fun connectAgain(tafId: String) {
+    val ask = _state.value.tafSetups[tafId]?.connectAgain ?: return
+    _state.update { it.copy(connectedAgain = it.connectedAgain - tafId, coachNotes = it.coachNotes - ask.grant) }
+    if (_state.value.grants.none { it.id == ask.grant }) refreshConnections()
+    val grant = _state.value.grants.firstOrNull { it.id == ask.grant }
+    if (grant == null) { note(ask.grant, Words.Common.notDoneUnconfirmed); loadTafSetup(tafId); return }
+    signInAgain(grant) ?: return
+    refreshConnections()
+    if (_state.value.grants.firstOrNull { it.id == ask.grant }?.connected == true && ask.doneWords.isNotBlank()) {
+      _state.update { it.copy(connectedAgain = it.connectedAgain + (tafId to ask.doneWords)) }
+    }
+    loadTafSetup(tafId)
   }
 
   /** Reads again what a live update names (see [changed]). */
@@ -4421,6 +4501,10 @@ class AppModel(
     scope.launch { reconnect(grant) }
   }
 
+  fun startConnectAgain(tafId: String) {
+    scope.launch { connectAgain(tafId) }
+  }
+
   /**
    * Approve on a Coach card (kiff/tafs#413): tafs cloud decides. The phone sends that Approve was tapped, with what the card
    * showed; tafs cloud reads planque's grant (as this phone) and KIFF's draft and says what needs signing, if anything. With
@@ -4463,12 +4547,16 @@ class AppModel(
         session?.let { put("session", it) }
         // This build signs the key and its Card under one fingerprint: tafs cloud offers that step only when it's asked for. Without
         // a key, a connection's tools and its Card the same way (`tools_and_cards`), where the session's approval key can sign.
+        // `signs` only from a card that carries tafs cloud's mark: then what it drew is what tafs cloud offers. A card read without
+        // it (no read proof, or tafs cloud's read timed out) never says it draws it, so a held sign-in's first tools and their
+        // Card are never offered under one fingerprint the card didn't show.
+        val drawsSigns = if (c.signs != null) listOf("signs") else emptyList()
         val can = when {
-          together != null -> "key_and_cards"
-          c.draft != null && sessionHasApprovalKey && !_state.value.approvalKeyLost -> "tools_and_cards"
-          else -> null
+          together != null -> listOf("key_and_cards") + drawsSigns
+          c.draft != null && sessionHasApprovalKey && !_state.value.approvalKeyLost -> listOf("tools_and_cards") + drawsSigns
+          else -> emptyList()
         }
-        can?.let { put("can", kotlinx.serialization.json.buildJsonArray { add(kotlinx.serialization.json.JsonPrimitive(it)) }) }
+        if (can.isNotEmpty()) put("can", kotlinx.serialization.json.buildJsonArray { can.forEach { add(kotlinx.serialization.json.JsonPrimitive(it)) } })
       }
       val decision = cloud.approval(cloudId, c.id, ask, proof)
       if (generation != accountGeneration) return true
@@ -4482,6 +4570,13 @@ class AppModel(
           // The phone is the last check, not a signing service: it signs only the message this card implies, rebuilt from
           // what it holds (its own account, the card's grant or draft, the ask's digest or version), and refuses any other.
           if (asked.message != expectedApprovalMessage(asked, c, tenant, shownDigest, shownDraft)) { note(c.id, CoachWords.ASK_NOT_THIS_CARDS); return true }
+          // What the card drew is what the fingerprint signs: tafs cloud's mark was its prediction when the thread was read, and the
+          // grant can change before the tap. A step that disagrees with it is never signed: the card is read again.
+          if (!stepMatchesMark(c.signs?.card, asked.step)) {
+            note(c.id, VersionWords.OUT_OF_DATE_CARD)
+            readThread(COACH_CHAT)
+            return true
+          }
           val came: Came
           if (asked.step == "key_and_cards") {
             // The key and its Card under one signature, built here from the two requests: never without the pasted key.
@@ -7604,6 +7699,13 @@ class AppModel(
     /** How often a thread is read again while a run is at work in it, and how many times at most. */
     const val CHAT_POLL_MS = 2_500L
     const val CHAT_POLL_BUDGET = 150
+
+    /**
+     * Whether an ask's step is what the card drew (`signs`): a card that showed its Card as signed takes only a step that signs
+     * it (`cards`, `key_and_cards`, `tools_and_cards`); one that showed it as next, any other step. No mark: any step, as before.
+     */
+    fun stepMatchesMark(signsCard: Boolean?, step: String): Boolean =
+      signsCard == null || signsCard == (step in setOf("cards", "key_and_cards", "tools_and_cards"))
     /** How long a live answer stands before a read saying nothing is at work clears it as ended. */
     const val STALE_LIVE_MS = 15_000L
     /** How often the thread is read while a stream is open, for a run that ended without the stream saying so. */

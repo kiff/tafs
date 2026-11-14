@@ -103,8 +103,30 @@ struct SetupComponent: Decodable, Equatable {
         }
     }
 
+    /// On an approval, tafs cloud's mark of what its fingerprint covers (docs/secure-connection.md),
+    /// set from the same decision as the step it then asks: the phone learns the step only after the
+    /// tap, so it can't tell by itself. None from a tafs cloud before it: the card draws as before.
+    var signs: Signs? = nil
+
+    struct Signs: Decodable, Hashable {
+        /// The taf's Card is in this fingerprint. None when tafs cloud didn't say.
+        var card: Bool?
+        /// The Card section's heading when it isn't: "Its Card: you approve it next".
+        var words: String?
+        enum CodingKeys: String, CodingKey { case card, words }
+        init(card: Bool?, words: String? = nil) { self.card = card; self.words = words }
+        /// Read leniently: a field of another shape is none, never the card unread.
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            card = try? c.decodeIfPresent(Bool.self, forKey: .card)
+            words = (try? c.decodeIfPresent(String.self, forKey: .words))?.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+        }
+        /// The Card isn't signed by this approval: it comes next.
+        var cardNext: Bool { card == false }
+    }
+
     enum CodingKeys: String, CodingKey {
-        case type, id, title, text, tone, steps, options, questions, grant, draft, service, taf, tools, yes, no, note, version, waits, connection
+        case type, id, title, text, tone, steps, options, questions, grant, draft, service, taf, tools, yes, no, note, version, waits, connection, signs
         case tafID = "taf_id"
     }
 

@@ -1,0 +1,3 @@
+- «Ti aspetta» indica il taf per cui una chat di Coach aspetta, e da quando.
+- Non ora? Scorri via una chat di Coach in attesa, o tocca «Metti da parte». Nulla viene approvato o inviato.
+- Se ne aspettano due o più: «Metti tutto da parte» le chiude in un passo, dopo una conferma.

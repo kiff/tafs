@@ -31,6 +31,8 @@ final class AppModel: ObservableObject {
     /// The steps tafs handed the person, oldest first, as tafs cloud lists them on Home (docs/api.md
     /// › Your step), less those this phone just answered.
     @Published private(set) var yourSteps: [TafsCloud.YourStep] = []
+    /// Coach's chats waiting on the owner, as Home lists them (docs/api.md › Coach waiting).
+    @Published private(set) var coachWaiting: [TafsCloud.CoachWaiting] = []
     /// Steps answered here and accepted by KIFF that Home may still list until the run hears the
     /// answer: kept out of Needs you and its count, and forgotten once Home stops listing them.
     private var answeredSteps: Set<String> = []
@@ -47,7 +49,7 @@ final class AppModel: ObservableObject {
     /// count of held calls, currency requests, steps and "Did this happen?" calls.
     var needsYouCount: Int {
         homeNeedsYou.map { max(0, $0.count - answeredStillCounted) }
-            ?? held.count + cardUnitExceptions.count + yourSteps.count + unproven.count
+            ?? held.count + cardUnitExceptions.count + yourSteps.count + unproven.count + coachWaiting.count
     }
 
     /// Home's line under the working count, in tafs cloud's words when it sent them.
@@ -535,6 +537,23 @@ final class AppModel: ObservableObject {
     /// The list in two (kiff/tafs#306): the tafs this person manages, and those shared with
     /// them to use, each in the list's order. Which is which is KIFF's answer; a taf whose
     /// answer isn't in yet counts as theirs, so nothing moves into "Shared with you" and back.
+    /// Whether a taf belongs in the iPad's sidebar now (the owner's layout): it has an item in Needs you (a held
+    /// call, a step it handed over, a knock at its door), or it ran or changed in the last 24 hours, as tafs cloud says. The
+    /// rest are in the tafs list behind the mascot.
+    func relevantNow(_ taf: Taf) -> Bool {
+        let cloud = cloudTaf(for: taf.id)
+        return Self.relevantNow(held: !heldCalls(for: taf.id).isEmpty,
+                                step: cloud.map { c in yourSteps.contains { $0.taf?.id == c.id } } ?? false,
+                                knock: (taf.doors ?? []).contains { $0.knocks > 0 },
+                                lastRun: cloud?.lastRun, lastChange: cloud?.lastChange, now: clock())
+    }
+
+    nonisolated static func relevantNow(held: Bool, step: Bool, knock: Bool, lastRun: Date?, lastChange: Date? = nil, now: Date) -> Bool {
+        if held || step || knock { return true }
+        // A run, or a change (a version, its Card, a setting: tafs cloud's `last_change`), in the last 24 hours.
+        return [lastRun, lastChange].contains { $0.map { now.timeIntervalSince($0) < 24 * 60 * 60 } ?? false }
+    }
+
     var tafSections: (own: [Taf], shared: [Taf]) {
         let listed = listedTafs
         return (listed.filter { !sharedWithMe($0.id) }, listed.filter { sharedWithMe($0.id) })
@@ -641,11 +660,11 @@ final class AppModel: ObservableObject {
     private(set) var accountGeneration = 0 {
         didSet {
             phoneAlerts = nil; phoneAlertsBusy = false; phoneAlertsError = nil
-            tafSetups = [:]; tafSetupErrors = [:]; activityPages = [:]; runPages = [:]; timeZones = []
+            tafSetups = [:]; tafSetupErrors = [:]; connectedAgain = [:]; activityPages = [:]; runPages = [:]; timeZones = []
             recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
             recordTyping?.cancel(); recordTyping = nil
             cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil
-            yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0
+            yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaiting = []
             haltErrors = [:]
             alertsOffered = false
             remembered?.removeObject(forKey: Self.alertsOfferedKey)
@@ -1732,6 +1751,7 @@ final class AppModel: ObservableObject {
     func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
         cardUnitExceptions = home.cardUnitExceptions ?? []
         showSteps(home.yourSteps ?? [])
+        coachWaiting = (home.coachWaiting ?? []).filter(\.usable)
         homeNeedsYou = home.needsYou
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
@@ -5829,6 +5849,19 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// A taf's own Connect again (tafs cloud's `connect_again`): signs that same connection in again, then
+    /// reads the taf's page. Once planque says it's connected, the taf shows tafs cloud's `done_words`.
+    func connectAgain(_ tafID: UUID, _ again: TafsCloud.ConnectAgain) async {
+        connectedAgain[tafID] = nil
+        await reconnectApp(again.grant)
+        let connected = grants.first { $0.id == again.grant }?.connected == true
+        await loadTafSetup(tafID)
+        if connected, !again.doneWords.isEmpty { connectedAgain[tafID] = again.doneWords }
+    }
+
+    /// tafs cloud's words for a taf whose connection was just connected again, by taf.
+    @Published private(set) var connectedAgain: [UUID: String] = [:]
+
     /// Why a sign-in again from a taf's page didn't connect, by grant id.
     @Published private(set) var reconnectErrors: [String: String] = [:]
     /// Where an approval in progress is, once back from the vendor's page: "Checking the sign-in…".
@@ -5915,7 +5948,7 @@ final class AppModel: ObservableObject {
         } catch KIFFClient.KIFFError.server(403, _, _) {
             lastError = Words.Coach.connectAdminOnly
             return false
-        } catch PlanqueClient.PlanqueError.server(409, _) {
+        } catch PlanqueClient.PlanqueError.server(409, _, _) {
             lastError = Words.Coach.connectOtherDevice
             return false
         } catch {
@@ -6110,6 +6143,10 @@ final class AppModel: ObservableObject {
     /// The account's live connections to a Connect apps entry: by the app planque names for
     /// each (its `entry`, which planque gives every grant, a vendor's own sign-in included), or
     /// the grant tafs cloud named for it.
+    /// Whether this device reads the account's connections: set up with planque, with a session that
+    /// holds its key. Without, an app's connections can't be listed here, and the detail says so.
+    var readsConnections: Bool { planqueReady && sessionHasKey }
+
     func connections(of app: TafsCloud.ConnectApps.App) -> [PlanqueClient.Grant] {
         Self.connections(of: app, in: grants)
     }
@@ -6779,6 +6816,13 @@ final class AppModel: ObservableObject {
         await openSetupChat(finish.session)
     }
 
+    /// A Coach chat waiting on the owner, from Needs you: Coach opens on that chat, where its card waits.
+    func openCoachWaiting(_ waiting: TafsCloud.CoachWaiting) async {
+        guard mode == .kiff, mayUseCoach, !waiting.session.isEmpty else { return }
+        coachOpen = true
+        await openSetupChat(waiting.session)
+    }
+
     /// Reopens one of Setup's chats: it's shown alone, and messages go on in it.
     func openSetupChat(_ session: String) async {
         setupConversationGeneration += 1
@@ -6965,8 +7009,16 @@ final class AppModel: ObservableObject {
             if setupChat == nil, !setupFresh, let newest = chats.max(by: { $0.updated < $1.updated }) { setupChat = newest.session }
             if setupFresh { return }
         }
+        // This phone's signed read of its connections, and the steps it signs: tafs cloud then marks each
+        // approval card still waiting with what its fingerprint will sign (`signs`), so the card draws the
+        // Card as being signed only when it is. Without them, the cards come as before.
+        let signer = self.signer
+        planque.tenant = kiffTenant
+        var proof: String?
+        if planqueReady && sessionHasKey { proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) }) }
+        guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         do {
-            let thread = try await cloud.setupThread(s.id, session: setupChat)
+            let thread = try await cloud.setupThread(s.id, session: setupChat, proof: proof, can: Self.stepsSignedHere)
             guard gen == accountGeneration, conversation == setupConversationGeneration, !setupFresh else { return }
             setupThread = withSent(thread)
             setupError = nil
@@ -7854,7 +7906,7 @@ final class AppModel: ObservableObject {
             // the tools added to a connected app and that Card together; tafs cloud asks for it only when that's on,
             // and otherwise answers as before. A Card the card didn't draw is never signed with the tools.
             let drawn = component.draft.flatMap { setupDrafts[$0] }
-            let can: [String]? = Self.cardDrawn(drawn, shownDraft: shownDraft) ? [RequestsTogether.toolsAndCards] : nil
+            let can: [String]? = Self.cardDrawn(drawn, shownDraft: shownDraft) ? [RequestsTogether.toolsAndCards, RequestsTogether.signs] : nil
             let decision = try await cloud.approval(s.id, component: component.id, body: .init(
                 grant: grantID, shownDigest: shown, draft: component.draft, shownDraft: shownDraft,
                 words: words.map { .init(profileSHA256: $0.profileSHA256, wordsSHA256: $0.wordsSHA256) }, session: session,
@@ -7870,6 +7922,15 @@ final class AppModel: ObservableObject {
                 if let id = component.draft, let draft = try? await kiff.draft(id: id), gen == accountGeneration { setupDrafts[id] = draft }
             case "sign":
                 guard let ask = decision.ask else { return }
+                // What the card said this fingerprint signs (tafs cloud's mark, read with the thread) must be what
+                // it signs now: the Card drawn as signed and only the connection asked, or the Card drawn as next
+                // and asked now, is out of date. Nothing is signed, and the card is read again.
+                guard Self.stepMatchesMark(component.signs, step: ask.step) else {
+                    cardNotes[component.id] = Words.Version.outOfDateCard
+                    await refreshConnections()
+                    await loadSetupThread()
+                    return
+                }
                 let came: Came
                 if ask.step == RequestsTogether.toolsAndCards {
                     // The tools added to a connected app and the Card over them, under one Face ID.
@@ -8118,6 +8179,18 @@ final class AppModel: ObservableObject {
         return draft.version == shownDraft
     }
 
+    /// Whether the step tafs cloud asks signs the Card as the card's mark said: `card: true` for a step that
+    /// signs it (`cards`, `key_and_cards`, `tools_and_cards`), `card: false` for one that doesn't. No mark: any.
+    nonisolated static func stepMatchesMark(_ signs: SetupComponent.Signs?, step: String) -> Bool {
+        guard let card = signs?.card else { return true }
+        return card == ["cards", RequestsTogether.keyAndCards, RequestsTogether.toolsAndCards].contains(step)
+    }
+
+    /// What this phone says it can do beyond connect and cards: sign a key and its Card from the key's sheet,
+    /// and an app's tools and its Card from Coach's card; and draw tafs cloud's mark of what a fingerprint
+    /// signs (`signs`), so a held sign-in's first tools may go with their Card in one fingerprint.
+    nonisolated static let stepsSignedHere = [RequestsTogether.toolsAndCards, RequestsTogether.keyAndCards, RequestsTogether.signs]
+
     /// Whether a `tools_and_cards` ask is this card's, for what the person was shown: its grant,
     /// planque's approve exactly as this phone builds it for the digest shown (and KIFF's words for
     /// its profile), its draft and the version shown. Anything else is refused, and nothing is signed.
@@ -8286,7 +8359,7 @@ final class AppModel: ObservableObject {
     /// name already in use, a field it won't take). Not a sign-in that lapsed (401, 403),
     /// a timeout or too many calls.
     static func refusesTheRequest(_ error: Error) -> Bool {
-        guard case PlanqueClient.PlanqueError.server(let status, _) = error else { return false }
+        guard case PlanqueClient.PlanqueError.server(let status, _, _) = error else { return false }
         return (400..<500).contains(status) && ![401, 403, 408, 429].contains(status)
     }
 
@@ -8407,6 +8480,10 @@ enum Screenshots {
     static var narrow: Bool { UserDefaults.standard.bool(forKey: "narrow") }
     /// `-landscape YES`: the iPad's window turned to landscape, for its screenshots.
     static var landscape: Bool { UserDefaults.standard.bool(forKey: "landscape") }
+    /// `-signedIn YES`: the iPad's sidebar laid out as for a signed-in account (its screens and
+    /// Coach above the account), over the sample's tafs. A screenshot of the layout only: nothing
+    /// is read from KIFF, and the screens it lists aren't opened.
+    static var signedIn: Bool { enabled && UserDefaults.standard.bool(forKey: "signedIn") }
 
     @MainActor static func turnToLandscape() {
         for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {

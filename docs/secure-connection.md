@@ -179,9 +179,12 @@ phone that also sends `can: ["signs"]`: one that draws the card by its `signs` m
 limits are on screen whatever the grant's status. A phone without it keeps the two steps here. A first
 connection that still needs its sign-in, or tools not declared, keeps its steps: its card may carry the draft, but
 tafs cloud asks the `connect` step, which signs the connection alone. The draft isn't signed, so the report never answers `approved` while KIFF says it
-isn't issued (at the version the card showed): it answers `failed: <app> is connected; KIFF didn't issue the taf's
-Cards: …; show the approval again for its Card alone`, and Coach's next card asks the `cards` step, with the Card's
-limits on screen. Before Approve, the card already says which it is (`signs: {card, words?}`, [chat.md](chat.md)),
+isn't issued (at the version the card showed). When the connection is connected and the Card is still the draft the
+card showed, that's by design (connect now, the Card next): it answers `failed: <app> is connected; its Card is next:
+show the approval again for its Card alone`, and the card reads tafs cloud's "Gmail is connected. Next, its Card.", in
+the person's language, never "it didn't go through". Any other case (no draft, another version, a draft that isn't
+one any more) answers `failed: <app> is connected; KIFF didn't issue the taf's Cards: …; show the approval again for
+its Card alone`. Either way Coach's next card asks the `cards` step, with the Card's limits on screen. Before Approve, the card already says which it is (`signs: {card, words?}`, [chat.md](chat.md)),
 so the apps never draw the Card as signed on a fingerprint that signs the connection alone.
 
 **Until this ships:** an approval card whose connection is already connected never repeats

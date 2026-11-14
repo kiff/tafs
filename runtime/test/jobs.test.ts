@@ -160,7 +160,9 @@ describe("jobs", () => {
   it("says where the owner signs in again when a vendor ended the sign-in", () => {
     for (const j of JOBS) {
       const flat = systemPrompt(j).replace(/\s+/g, " ");
-      expect(flat).toContain('say where: "Sign in again" on your Card tab, or ask Coach to reconnect that vendor');
+      expect(flat).toContain("say what to do: tap Connect again on this taf, which signs that vendor in again");
+      // Where the button is in both apps: never the taf's Card tab, which has none.
+      expect(flat).not.toContain("Card tab");
     }
   });
 
