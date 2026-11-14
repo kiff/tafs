@@ -24,13 +24,14 @@ The iOS deployment target, 16.0, is macOS 13 for a Mac Catalyst build. So the Ma
 
 - **`SUPPORTS_MACCATALYST: YES`** builds each target for the Mac as well.
 - **`DERIVE_MACCATALYST_PRODUCT_BUNDLE_IDENTIFIER: NO`** keeps the bundle ids (`bot.tafs.app`), with no `maccatalyst.` prefix.
+- **The `TafsMac` scheme** builds the app and its unit tests. The UI tests (`TafsUITests`) stay the iPhone's and iPad's: they press the Home button, which a Mac lacks.
 - **`TafsWidgets` is left out.** It draws the Live Activity for a held call on the lock screen and in the Dynamic Island, and a Mac has neither. The app's dependency on it is filtered to iPhone and iPad (`platformFilter: iOS`).
 
 To build it, on a Mac with Xcode:
 
 ```bash
 cd ios && xcodegen generate
-xcodebuild build -project Tafs.xcodeproj -scheme Tafs \
+xcodebuild build -project Tafs.xcodeproj -scheme TafsMac \
   -destination "platform=macOS,variant=Mac Catalyst" CODE_SIGNING_ALLOWED=NO
 ```
 

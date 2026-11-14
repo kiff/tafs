@@ -75,7 +75,7 @@ jobs:
           cd ios
           xcodebuild -version
           xcodebuild build-for-testing \
-            -project Tafs.xcodeproj -scheme Tafs \
+            -project Tafs.xcodeproj -scheme TafsMac \
             -destination "platform=macOS,variant=Mac Catalyst" \
             CODE_SIGNING_ALLOWED=NO
 
@@ -83,7 +83,6 @@ jobs:
         run: |
           cd ios
           xcodebuild test-without-building \
-            -project Tafs.xcodeproj -scheme Tafs \
+            -project Tafs.xcodeproj -scheme TafsMac \
             -destination "platform=macOS,variant=Mac Catalyst" \
-            -only-testing:TafsTests \
             CODE_SIGNING_ALLOWED=NO

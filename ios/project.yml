@@ -189,6 +189,8 @@ targets:
       base:
         GENERATE_INFOPLIST_FILE: YES
         TEST_TARGET_NAME: Tafs
+        # iPhone and iPad only: these tests press the Home button, which a Mac lacks.
+        SUPPORTS_MACCATALYST: NO
 schemes:
   Tafs:
     build:
@@ -203,4 +205,14 @@ schemes:
     test:
       targets: [TafsTests, TafsUITests]
       # StoreKit's local testing (StoreKitLocalTests): the test host's App Store is this file's.
+      storeKitConfiguration: Tafs.storekit
+  # The Mac build (docs/mac-app.md): the app and its unit tests, without the UI tests,
+  # which are the iPhone's and iPad's.
+  TafsMac:
+    build:
+      targets:
+        Tafs: all
+        TafsTests: [test]
+    test:
+      targets: [TafsTests]
       storeKitConfiguration: Tafs.storekit
