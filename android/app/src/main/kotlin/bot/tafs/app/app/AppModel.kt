@@ -41,6 +41,7 @@ import bot.tafs.app.model.ProposedAction
 import bot.tafs.app.model.RecordEntry
 import bot.tafs.app.model.Taf
 import bot.tafs.app.model.TafState
+import bot.tafs.app.model.AppRoute
 import bot.tafs.app.model.MemoryNote
 import bot.tafs.app.model.TafDraft
 import bot.tafs.app.model.TafTemplates
@@ -535,6 +536,11 @@ data class AppState(
   val recordCaseError: String? = null,
   /** Where a tapped alert asked to go ("needs-you", "usage"), until the screen has gone there. */
   val requestedOpen: String? = null,
+  /**
+   * A screen asked for by its route (app/routes.json) and its values, a taf by its id here, until the screens have gone there:
+   * the root view takes what it opens itself, a taf's page what's on it, and a sheet on that page its own.
+   */
+  val requestedRoute: Pair<AppRoute, Map<String, String>>? = null,
   /** The doors tafs cloud offers this account: none, and no taf shows Doors. */
   val doorsOffered: List<String> = emptyList(),
   /** Each taf's doors, once read. */
@@ -586,6 +592,10 @@ data class AppState(
    * it (not read yet, or failed), nothing is shown: an Editor manages only the tafs they made, which the role alone can't say.
    */
   fun manages(tafId: String): Boolean = access[tafId]?.manage ?: false
+
+  /** Whether [route] is the screen asked for, of the taf [tafId] when it names one. */
+  fun requested(route: AppRoute, tafId: String? = null): Boolean =
+    requestedRoute?.let { (r, values) -> r == route && (tafId == null || values["taf"] == tafId) } ?: false
 
   /** The taf's connected Slack bot connections, which a Slack door listens through. */
   fun slackBots(tafId: String): List<bot.tafs.app.kiff.Grant> = grants.filter { it.connected && it.isSlackBot && it.request.agent == tafId }
@@ -2627,6 +2637,53 @@ class AppModel(
   }
 
   fun openRequestTaken() = _state.update { it.copy(requestedOpen = null) }
+
+  /**
+   * Opens a screen by its route (app/routes.json): `taf/refunds-1/setup/versions`. False, and nothing changes, when no route
+   * matches, its taf is none the app holds, or the person may not use that screen here.
+   */
+  fun open(route: String): Boolean = AppRoute.match(route)?.let { (r, values) -> open(r, values) } ?: false
+
+  /** Opens [route] with its [values]; a taf by its id here or its id in tafs cloud. */
+  fun open(route: AppRoute, values: Map<String, String> = emptyMap()): Boolean {
+    val s = _state.value
+    if (!s.signedIn) return false
+    val taf = if ("taf" in route.parameters) values["taf"]?.let { v -> s.tafs.firstOrNull { it.id == v || it.cloudId == v } } ?: return false else null
+    val allowed = when (route.needs) {
+      null -> true
+      "manages" -> taf != null && s.manages(taf.id)
+      "cards.manage" -> s.canManageCards
+      "billing.manage" -> s.managesBilling
+      "members.manage" -> s.canManagePeople
+      "account.delete" -> s.canDeleteAccount
+      else -> false
+    }
+    if (!allowed) return false
+    val signedIn = s.mode == Mode.kiff
+    val tafSignedIn = signedIn && taf?.cloudId != null
+    // Only a screen this person would find here: what the sample, or a taf KIFF doesn't run, lacks isn't opened. Every route
+    // has its case, so a new one doesn't build until it has.
+    val here = when (route) {
+      AppRoute.Tafs, AppRoute.NeedsYou, AppRoute.Record, AppRoute.Account, AppRoute.AccountUsage,
+      AppRoute.AccountLanguage, AppRoute.AccountTheme, AppRoute.AccountDelete -> true
+      AppRoute.Calendar -> signedIn && s.tafs.isNotEmpty()
+      AppRoute.Coach -> s.mayUseCoach
+      AppRoute.HaltAll -> s.showsAccountHalt
+      AppRoute.AccountPeople, AppRoute.AccountDevices, AppRoute.AccountApps, AppRoute.AccountAlerts, AppRoute.AccountTimeZone -> signedIn
+      AppRoute.AccountUsageRequests -> signedIn && (s.usage?.let { bot.tafs.app.model.UsageWords.asks(it) != null } ?: true)
+      AppRoute.Taf, AppRoute.TafActivity, AppRoute.TafCard, AppRoute.TafSetup, AppRoute.TafMemory -> true
+      AppRoute.TafSetupStartsWhen, AppRoute.TafSetupResultsGoTo, AppRoute.TafShare -> tafSignedIn
+      AppRoute.TafSetupVersions -> taf != null && s.canHalt(taf.id)
+      AppRoute.TafHalt -> taf != null && s.canHalt(taf.id) && taf.state != TafState.revoked
+      AppRoute.TafWorkflow -> tafSignedIn
+    }
+    if (!here) return false
+    _state.update { it.copy(requestedRoute = route to (taf?.let { t -> mapOf("taf" to t.id) } ?: emptyMap())) }
+    return true
+  }
+
+  /** The screens have gone where [open] asked. */
+  fun routeTaken() = _state.update { it.copy(requestedRoute = null) }
 
   private fun savedAlertKinds(): Map<String, Boolean>? = secrets.load("$ALERT_KINDS|$kiffTenant")?.let { text ->
     runCatching { KiffClient.json.decodeFromString<Map<String, Boolean>>(text) }.getOrNull()
