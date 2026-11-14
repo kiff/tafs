@@ -2,3 +2,4 @@
 - « Connecter des apps » affiche chaque app par son nom, avec ce qu'elle fait en dessous.
 - Une nouvelle tâche demandée dans une conversation Coach terminée ouvre sa propre conversation.
 - Après avoir mis une conversation de côté, « Vous attend » indique où la retrouver.
+- La carte d'approbation d'une app montre ce que le taf peut faire, sans les notes internes de KIFF.

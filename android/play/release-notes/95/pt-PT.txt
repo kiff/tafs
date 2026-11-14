@@ -2,3 +2,4 @@
 - «Ligar apps» mostra cada app pelo nome, com o que faz por baixo.
 - Uma tarefa nova pedida numa conversa do Coach terminada abre a sua própria conversa.
 - Depois de pôr uma conversa de parte, «À sua espera» diz onde a encontrar.
+- O cartão de aprovação de uma app mostra o que o taf pode fazer, sem as notas internas da KIFF.

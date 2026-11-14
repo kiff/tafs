@@ -2,3 +2,4 @@
 - „Połącz aplikacje” pokazuje każdą aplikację z nazwą, a pod nią, co robi.
 - Nowe zadanie w zakończonym czacie z Coachem otwiera osobną rozmowę.
 - Po odłożeniu czatu „Czeka na Ciebie” mówi, gdzie go znaleźć.
+- Karta zatwierdzenia aplikacji pokazuje, co taf może zrobić, bez wewnętrznych uwag KIFF.

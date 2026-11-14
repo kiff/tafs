@@ -2,3 +2,4 @@
 - «Collega app» mostra ogni app con il suo nome e, sotto, cosa fa.
 - Un nuovo compito chiesto in una chat di Coach conclusa apre una conversazione sua.
 - Dopo aver messo da parte una chat, «Ti aspettano» dice dove trovarla.
+- La scheda di approvazione di un'app mostra cosa può fare il taf, senza le note interne di KIFF.
