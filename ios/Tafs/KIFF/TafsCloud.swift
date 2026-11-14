@@ -2861,3 +2861,7 @@ final class TafsCloud {
         return data
     }
 }
+
+/// Equal when its values are, as the file-level `LenientItem` is, so a type that holds one (an approval's
+/// `Ask`, with its key hint) keeps its own `Equatable`.
+extension TafsCloud.LenientItem: Equatable where T: Equatable {}
