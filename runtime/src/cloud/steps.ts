@@ -403,7 +403,11 @@ export function coachGuard(text: unknown): boolean {
     || /\bargument\b[^.]*\b(?:is not a valid|must be|needs)\b|\bdotted path\b/i.test(line)
     // What a request takes, as planque says it ("reusing a managed app's sign-in takes agent, agent_name and tools: [] alone",
     // "grant is planque's grant id"): Coach asked wrong and asks again, never the person's app (Android 85, 14 Nov).
-    || /\btakes\b[^.]*\balone\b/i.test(line) || /\bgrant is\b[^.]*\bgrant id\b/i.test(line);
+    || /\btakes\b[^.]*\balone\b/i.test(line) || /\bgrant is\b[^.]*\bgrant id\b/i.test(line)
+    // A tool Coach named that the catalog doesn't hold by that name ("the catalog has no tool named GMAIL_FETCH_EMAILS",
+    // "mcp.example.com lists no tool named …"): Coach looked it up wrong and looks again, never the person's app (14 Nov,
+    // Gmail: a red "Coach couldn't connect the app yet" over a sign-in that had worked).
+    || /\b(?:has|lists) no tool named\b/i.test(line);
 }
 
 /**
