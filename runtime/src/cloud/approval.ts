@@ -301,6 +301,8 @@ export function approvalWords(lang: Lang = "en") {
     signInClosed: w.approval_sign_in_closed,
     noCode: w.approval_no_code,
     // What came back, in the owner's words, never planque's status: already signed in (its actions come next), or nothing opened.
+    // A connection that takes no approval now, in the owner's words, never planque's status: signed in already, or past approving.
+    notApprovable: (vendor: string, status: string) => (status === "listed" || status === "signed_in" ? w.approval_listed_already(vendor) : w.approval_not_approvable(vendor)),
     cameBack: (vendor: string, status: string) => (status === "signed_in" || status === "listed" ? w.approval_came_back_signed_in(vendor) : w.approval_came_back(vendor)),
     confirmFirst: w.approval_confirm_first,
     notConnected: (vendor: string) => w.approval_not_connected(vendor),
@@ -546,8 +548,9 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   // Approve again answers what holds, as the report would have: approved, never failed.
   if (grant.status === "listed" && !ask.draft) return { outcome: "answered", answer: `already approved: ${vendor} is signed in; its tools wait for approval`, note: W.alreadyApproved };
   if (!APPROVABLE.has(grant.status)) {
+    // Coach hears planque's status and reason, to act on; the person reads plain words (14 Nov: "This connection is listed.").
     const why = `This connection is ${grant.status.replace(/_/g, " ")}${grant.reason ? `: ${grant.reason}` : "."}`;
-    return { outcome: "answered", answer: `failed: ${why}`, note: why };
+    return { outcome: "answered", answer: `failed: ${why}`, note: W.notApprovable(vendor, grant.status) };
   }
   // The digest planque signs is the request's: the phone shows Approve only when it matches, and so does tafs cloud.
   let digest = "";

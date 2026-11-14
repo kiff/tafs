@@ -630,6 +630,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   BackHandler(enabled = tab == Tab.Tafs && calendarOpen && openTaf == null && !coachOpen) { calendarOpen = false }
   BackHandler(enabled = tab == Tab.Tafs && trialTaf != null) { trialTaf = null }
   BackHandler(enabled = tab == Tab.Tafs && coachOpen) { coachOpen = false }
+  // Whether Coach is on screen, for the badge: its own chat waiting on the person isn't counted while it's open.
+  LaunchedEffect(coachOpen) { model.coachShown(coachOpen) }
   // Coach asked for from another screen (a hold's "Change the limit in Coach mode"): it opens here, on the Tafs tab.
   LaunchedEffect(state.coachRequested) {
     if (state.coachRequested) {
@@ -1009,7 +1011,7 @@ private fun FoldHandle(folded: Boolean, onToggle: () -> Unit) {
 @Composable
 private fun TabIcon(t: Tab, state: bot.tafs.app.app.AppState) {
   val icon = @Composable { Icon(painterResource(t.icon), contentDescription = null, modifier = Modifier.size(20.dp)) }
-  val waiting = state.needsYouCount
+  val waiting = state.needsYouBadge
   if (t == Tab.NeedsYou && waiting > 0) {
     BadgedBox(badge = { Badge(containerColor = Theme.no, contentColor = Theme.panel) { Text("$waiting") } }) { icon() }
   } else {

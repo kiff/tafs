@@ -721,7 +721,8 @@ final class AppModel: ObservableObject {
                 return try await kiff.startDeviceSignIn(publicKey: key.isEmpty ? nil : key,
                                                         approvalPublicKey: key.isEmpty || approvalKey.isEmpty ? nil : approvalKey,
                                                         deviceName: Words.Settings.Devices.thisDeviceName(device: "\(ThisDevice.kind)"),
-                                                        platform: key.isEmpty ? nil : ThisDevice.platform)
+                                                        platform: key.isEmpty ? nil : ThisDevice.platform,
+                                                        kind: ThisDevice.kiffKind)
             } catch where Self.transient(error) && tries < 2 {
                 tries += 1
                 try await Task.sleep(nanoseconds: 500_000_000)
@@ -2105,7 +2106,7 @@ final class AppModel: ObservableObject {
             connectStart = start
         } catch {
             guard gen == accountGeneration else { return }
-            lastError = Words.Connect.couldNotConnected(vendor: "\(app.vendor.isEmpty ? app.title : app.vendor)", why: "\(error.localizedDescription)")
+            lastError = Words.Connect.couldNotConnected(vendor: "\(app.name ?? (app.vendor.isEmpty ? app.title : app.vendor))", why: "\(error.localizedDescription)")
         }
     }
 

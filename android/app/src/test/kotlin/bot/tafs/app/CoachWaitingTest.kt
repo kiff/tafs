@@ -122,6 +122,20 @@ class CoachWaitingTest {
     assertTrue(m.state.value.settingAside.isEmpty())
   }
 
+  // The owner's swipe sprang back and looked untouched until tafs cloud answered, so they swiped again: a row being set aside
+  // isn't drawn meanwhile, and a refusal brings it back.
+  @Test fun aRowBeingSetAsideGoesAtOnceAndARefusalBringsItBack() = runTest {
+    reads(approval)
+    val m = model()
+    m.refresh()
+    val row = m.state.value.coachWaiting.single()
+    assertEquals(listOf(row), m.state.value.coachWaitingShown)
+    assertTrue("in flight: not drawn", m.state.value.copy(settingAside = setOf("sess_1")).coachWaitingShown.isEmpty())
+    transport.answer("POST /v1/home/coach-waiting/sess_1/set-aside", 503, """{"error":"down"}""")
+    assertFalse(m.setAsideCoach("sess_1"))
+    assertEquals("refused: it's back", listOf(row), m.state.value.coachWaitingShown)
+  }
+
   // An audit, 14 Nov: after Set aside, a new job written in Coach went on in the ended session.
   @Test fun aChatSetAsideIsNoLongerTheOneCoachShows() = runTest {
     reads(approval.replace("\"open\":\"Open Coach\"", "\"open\":\"Open Coach\",\"set_aside\":\"Set aside\""))
@@ -143,5 +157,33 @@ class CoachWaitingTest {
     m.openWaitingCoach(m.state.value.coachWaiting.single())
     assertEquals("sess_1", m.state.value.coachChat)
     assertTrue(m.state.value.coachRequested)
+  }
+
+  // The owner's row stayed after setup ended, and the first tap on it did nothing: opening it reads Home again, so a row whose
+  // chat was answered or ended goes once tafs cloud says so.
+  @Test fun openingAWaitingRowReadsHomeAgain() = runTest {
+    reads(approval)
+    val m = model()
+    m.refresh()
+    val homes = transport.requestsTo("GET /v1/home").size
+    reads("", count = 0)
+    m.openWaitingCoach(m.state.value.coachWaiting.single())
+    testScheduler.advanceUntilIdle()
+    assertTrue("Home read again", transport.requestsTo("GET /v1/home").size > homes)
+    assertTrue("the stale row goes", m.state.value.coachWaiting.isEmpty())
+  }
+
+  // The badge read 1 for the chat the owner was in, waiting on their own approval card there.
+  @Test fun theBadgeLeavesOutTheChatOnScreen() = runTest {
+    reads(approval)
+    val m = model()
+    m.refresh()
+    assertEquals(1, m.state.value.needsYouBadge)
+    m.openWaitingCoach(m.state.value.coachWaiting.single())
+    m.coachShown(true)
+    assertEquals("its own chat, open, isn't counted", 0, m.state.value.needsYouBadge)
+    assertEquals("the count stays tafs cloud's", 1, m.state.value.needsYouCount)
+    m.coachShown(false)
+    assertEquals(1, m.state.value.needsYouBadge)
   }
 }

@@ -9,8 +9,14 @@ import type { Fetch } from "./kiff.js";
 /** One catalog entry as the apps show it. */
 export interface CatalogApp {
   entry: string;
+  /** planque's key for the app: a reviewed entry's vendor ("Qonto"), a managed app's slug ("gmail"). Not for people. */
   vendor: string;
+  /** planque's title, as it gives it ("Qonto invoicing: reads, and invoice drafts from quotes"); kept for apps that draw it. */
   title: string;
+  /** The app's name for people, what a row reads as: "Qonto", "Gmail". */
+  name: string;
+  /** What this entry of the app is, under its name ("Invoicing: reads, and invoice drafts from quotes"); absent when the title is the name. */
+  subtitle?: string;
   icon?: string;
   how: "oauth" | "key";
   /** `needs_setup`: the app needs setting up by an operator before anyone can connect it; the apps say so and offer no Connect. */
@@ -89,8 +95,9 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
     const how = e.how === "key" ? "key" : e.how === "oauth" ? "oauth" : undefined;
     const state = e.state === "connected" || e.state === "needs_reconnect" || e.state === "needs_setup" ? e.state : "available";
     if (typeof e.entry !== "string" || !ENTRY.test(e.entry) || typeof e.title !== "string" || !how) continue;
+    const vendor = typeof e.vendor === "string" ? e.vendor : e.title;
     apps.push({
-      entry: e.entry, vendor: typeof e.vendor === "string" ? e.vendor : e.title, title: e.title,
+      entry: e.entry, vendor, title: e.title, ...displayName(e.entry, vendor, e.title),
       ...(typeof e.icon === "string" && e.icon.startsWith("https://") ? { icon: e.icon } : {}),
       how, state, ...(state === "needs_setup" ? { words: NEEDS_SETUP_WORDS } : {}), ...(typeof e.grant === "string" ? { grant: e.grant } : {}),
     });
@@ -102,6 +109,22 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
     ...(Number.isInteger(got.skipped) && (got.skipped as number) > 0 ? { skipped: got.skipped as number } : {}),
     ...(got.partial === true ? { partial: true as const } : {}),
   };
+}
+
+/**
+ * A row's name and subtitle. A reviewed entry's vendor is the app's name, as people write it ("Qonto"), and its
+ * title says what the entry does after that name ("Qonto invoicing: reads, …"): the row reads as the vendor, the
+ * rest of the title under it. A managed app's vendor is its slug ("gmail") and its title is its name ("Gmail"); a
+ * title that doesn't start with the vendor as written ("Use websites") is the name itself. Neither has a subtitle.
+ */
+export function displayName(entry: string, vendor: string, title: string): { name: string; subtitle?: string } {
+  const name = vendor.trim();
+  if (entry.startsWith("connector:") || !name || !title.startsWith(name)) return { name: title };
+  const after = title.slice(name.length);
+  // "Qonto invoicing", "Qonto: invoicing", "Qonto, read only", "Qonto – invoicing": never "Qontoapp".
+  if (!/^[\s:,;.\u2013\u2014-]/.test(after)) return { name: title };
+  const rest = after.replace(/^[\s:,;.\u2013\u2014-]+/, "").trim();
+  return rest ? { name, subtitle: rest.charAt(0).toLocaleUpperCase("en") + rest.slice(1) } : { name };
 }
 
 /**

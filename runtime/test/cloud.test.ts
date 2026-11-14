@@ -7,7 +7,7 @@ import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
 import { definition, digest, instructions, KIFF_GATEWAY, MODEL, ownerNotesIn } from "../src/cloud/tafdef.js";
 import type { Held, Mandate } from "../src/cloud/home.js";
-import { windowWords } from "../src/cloud/home.js";
+import { headlineOf, windowWords } from "../src/cloud/home.js";
 import { coachWaitingClear } from "../src/cloud/coachwaiting.js";
 import type { Device, Notification } from "../src/cloud/push.js";
 import { firings } from "../src/cloud/calendar.js";
@@ -785,6 +785,13 @@ describe("tafs cloud", () => {
     w.account.unsure = "down";
     const r = await call(w, "GET", "/v1/home", { token: "ana" });
     expect(r.status).toBe(200); expect(r.body.needs_you).toBeUndefined();
+  });
+
+  it("sends Home's first line, counted from the tafs it lists, so the apps count nothing", async () => {
+    const w = world();
+    const home = (await call(w, "GET", "/v1/home", { token: "ana" })).body;
+    expect(home.headline).toEqual(headlineOf(home.tafs));
+    expect(home.headline.words).toMatch(/^\d+ tafs? (working|ready)\.$/);
   });
 
   it("says a Card's windows in the person's language, in all 8: no Card line mixes languages", async () => {
@@ -5059,7 +5066,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(stored.status).toBe("PAUSED");
     const r = await call(`/v1/home/coach-waiting/${stored.session}/set-aside`);
     expect(r.statusCode).toBe(200);
-    expect(JSON.parse(r.body)).toEqual({ set_aside: [stored.session], withdrawn: 0 });
+    // Where to find it again, in tafs cloud's words: the owner went looking for the chat after setting it aside.
+    expect(JSON.parse(r.body)).toEqual({ set_aside: [stored.session], withdrawn: 0, words: { done: "Set aside. You'll find it in Previous conversations." } });
     // kiff/agents can't cancel a run paused on a card (409 paused_run): it stays PAUSED there, and tafs cloud keeps it as ended.
     expect(stored.status).toBe("PAUSED");
     // Nothing answered, so nothing approved: the card stays unanswered, and no approval, confirm or claim was made.
@@ -5069,7 +5077,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(home.coach_waiting).toBeUndefined();
     expect(home.needs_you.count).toBe(0);
     // The same set aside again (a resend): done, marked already.
-    expect(JSON.parse((await call(`/v1/home/coach-waiting/${stored.session}/set-aside`)).body)).toEqual({ set_aside: [stored.session], already: true });
+    expect(JSON.parse((await call(`/v1/home/coach-waiting/${stored.session}/set-aside`)).body)).toEqual({ set_aside: [stored.session], already: true, words: { done: "Set aside. You'll find it in Previous conversations." } });
 
     // Coach's chat list says it was set aside, so no app opens it as the newest, on any device or after a relaunch.
     w.agents.sessions.find((x) => x.id === stored.session)!.owner = "member:u_ana";
@@ -5104,7 +5112,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     }) as Deps["fetch"] };
     const r = await handle({ rawPath: "/v1/home/coach-waiting/set-aside", requestContext: { http: { method: "POST" } },
       headers: { Authorization: "Bearer ana", "planque-device-signature": "t=1,v1=s,d=dev" } }, planque);
-    expect(JSON.parse(r.body)).toEqual({ set_aside: [stored.session], withdrawn: 1 });
+    expect(JSON.parse(r.body)).toEqual({ set_aside: [stored.session], withdrawn: 1, words: { done: "Set aside. You'll find it in Previous conversations." } });
     expect(ended).toEqual(["inbox-new"]);
     expect(stored.status).toBe("PAUSED");
     // Set aside, it's gone from Home, though kiff/agents keeps the run PAUSED.
@@ -5353,6 +5361,32 @@ describe("Coach's result, handed over by tafs cloud", () => {
     }
   });
 
+  // The owner asked a new job in a finished Coach chat: it went on under the last plan ("Done · 4 of 4"), and Needs you named
+  // the old job. A chat that handed a taf over is finished: a message to it starts a new chat, for an app that follows it.
+  it("starts a new Coach chat for a message to one that already handed a taf over, for an app that follows it", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    const first = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "A weekly summary of my sent emails", new_chat: true } });
+    const done = first.body.session as string;
+    // Not handed over yet: the same chat goes on.
+    await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "on Fridays", session: done, new_chat_after_handover: true } });
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} ${done}`);
+    // tafs cloud answered its result with the taf it made.
+    const list = w.agents.events.get(done) ?? [];
+    list.push({ session: done, run: "r_x", seq: list.length + 1, time: w.now.toISOString(), kind: "answered", body: { id: "res1", type: "result", answer: { taf_id: "taf_9" }, answered_by: "tafs cloud" } });
+    w.agents.events.set(done, list);
+    // An app from before it: the same chat, as before.
+    await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Remind me each Monday", session: done } });
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} ${done}`);
+    // An app that follows: a new chat, and the answer says so.
+    const next = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Remind me each Monday", session: done, new_chat_after_handover: true } });
+    expect(next.status).toBe(200);
+    expect(next.body.new_session).toBe(true);
+    expect(next.body.session).not.toBe(done);
+    expect(w.agents.calls.at(-1)).toMatch(new RegExp(`^startRun ${COACH} new`));
+  });
+
   // The Coach skills design: tafs cloud names the skills a conversation loads, by its entry point before
   // the first turn (way 1) and by the tool when it is used (way 2); never the model, never a tool's answer.
   it("loads a new Coach conversation's skills by how it opened, and an existing session keeps its own", async () => {
@@ -5364,7 +5398,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.tafs.held.delete(`t_acme#${RAE}`);
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@24,draft-the-card@15,name-the-tools@10,set-up-a-taf@10,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@24,draft-the-card@16,name-the-tools@11,set-up-a-taf@11,usage-and-plans@3`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -5372,23 +5406,23 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is it stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@24,draft-the-card@15,name-the-tools@10,set-up-a-taf@10,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@24,draft-the-card@16,name-the-tools@11,set-up-a-taf@11,usage-and-plans@3`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "is everything stopped?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@24,draft-the-card@15,halting@1,name-the-tools@10,set-up-a-taf@10,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@24,draft-the-card@16,halting@1,name-the-tools@11,set-up-a-taf@11,usage-and-plans@3`);
     await w.agents.api.resume("t_acme");
     // An account with a taf of its own: every Coach start has the holds and the halting, whatever its state.
     // "Refunds hasn't done anything" and "stop everything" never name a skill, and the model left to read
     // one didn't (kiff/agents Eval 42788659962).
     w.tafs.held.set(`t_acme#${RAE}`, rae);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Rae hasn't done anything since this morning", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@24,draft-the-card@15,halting@1,name-the-tools@10,set-up-a-taf@10,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@24,draft-the-card@16,halting@1,name-the-tools@11,set-up-a-taf@11,usage-and-plans@3`);
     // An improvement opens on the taf: its skill.
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@24,draft-the-card@15,halting@1,improve-a-taf@1,name-the-tools@10`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@24,draft-the-card@16,halting@1,improve-a-taf@1,name-the-tools@11`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
@@ -5406,7 +5440,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@24,draft-the-card@15,halting@1,name-the-tools@10,set-up-a-taf@2,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@24,draft-the-card@16,halting@1,name-the-tools@11,set-up-a-taf@2,usage-and-plans@3`);
     // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
     w.agents.access.set("u_ana", { cards_manage: true });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
@@ -5419,7 +5453,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // Once the Upgrade names the lock's versions, a new chat asks for those.
     await w.agents.api.putAgent("t_acme", COACH, live);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Another one", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toContain("set-up-a-taf@10");
+    expect(w.agents.calls.at(-1)).toContain("set-up-a-taf@11");
   });
 
   // agentgabo on #574, the owner's call (11:32): with no one named, a taf writes for the account's company,
@@ -5529,17 +5563,17 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(w.agents.calls.slice(before).filter((c) => c.startsWith("addSessionSkills")).length).toBe(1);
     // A second skill joins in the definition's order; a tool with no procedure, or a vendor's, adds none.
     await coachTool("taf_dial", { taf: RAE }, callOf, deps).catch(() => undefined);
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@5"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6"]);
     await coachTool("stripe_refund_k3f9", {}, callOf, deps).catch(() => undefined);
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@5"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6"]);
     // kiff/agents failing the add leaves the tool's answer as it is, and the skill isn't marked loaded: the
     // next call adds it (qa-kiff).
     w.agents.fail.set("addSessionSkills", new AgentsError(503, "down"));
     const b = await coachTool("taf_pause", { taf: RAE, on: false }, callOf, deps).catch((e: Error) => ({ error: e.message }));
     expect(JSON.stringify(b)).not.toContain("Skill");
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@5"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6"]);
     await coachTool("taf_pause", { taf: RAE, on: false }, callOf, deps).catch(() => undefined);
-    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@5", "halting@1"]);
+    expect(w.agents.sessionSkills.get(`t_acme#${run.session}`)).toEqual(["the-tafs@2", "the-dial@6", "halting@1"]);
   });
 
   it("shows what a Coach conversation cost, summed from kiff/agents' usage events", async () => {

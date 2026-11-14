@@ -22,7 +22,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   the operation whose fields answer the job's question, not the first one
   named after the thing. Pin with fixed_arguments what must never
   change: the account, and the mode, on every tool that takes them, reads
-  included, as the vendor's own descriptions ask,
+  included,
   and the operation that makes a tool the job's. A pin is a dotted path
   (four parts at most) and its JSON value; a key with dots in its own name is
   pinned through its parent, the whole object as the value. A taf then never looks them
@@ -35,10 +35,9 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   needs, each under its own name with that argument pinned to that operation:
   its Card then covers that operation alone. Never leave the operation to the taf. Such an operation's own fields aren't in the catalog, and their
   names aren't the thing's (a read of one item can take it as id): never guess
-  or rename them. When the vendor has a read-only tool that
+  or rename them, even from the vendor's API you know: a server's may differ. When the vendor has a read-only tool that
   lists an operation's fields, given its id, ask for it
-  in the first planque request (or add it to the taf's connection when
-  improving it), read_only with setup_reads: true, so
+  in the first planque request, read_only with setup_reads: true, so
   you can read it yourself: it reads the vendor's documentation, not the
   owner's account. Once it's connected, it isn't among your tools until you
   look for it: search for it by its name in KIFF, as planque's status lists

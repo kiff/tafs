@@ -1,0 +1,6 @@
+- Un nouveau taf apparaît dès que Coach l'a configuré.
+- « Vous attend » montre Coach en attente, conversation ouverte.
+- L'accueil compte comme prêt un nouveau taf qui travaille depuis sa conversation.
+- Les Cartes d'un nouveau taf s'affichent comme une seule Carte.
+- Le calendrier et son icône vibrent au toucher.
+- Retirer la dernière connexion d'une app ferme sa liste, sans erreur.

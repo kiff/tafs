@@ -27,6 +27,42 @@ final class ConnectRowTests: XCTestCase {
         XCTAssertEqual(bare.state, "available", "the rest still reads")
     }
 
+    /// A row draws tafs cloud's `name`, else its `title`, and its `subtitle` under it when sent.
+    func testTheRowDrawsTheNameAndItsSubtitle() throws {
+        let qonto = try app(#"{"entry":"qonto@1","vendor":"Qonto","title":"Qonto invoicing: reads, and invoice drafts from quotes","name":"Qonto","subtitle":"Invoicing: reads, and invoice drafts from quotes"}"#)
+        XCTAssertEqual(qonto.displayName, "Qonto")
+        XCTAssertEqual(qonto.subtitle, "Invoicing: reads, and invoice drafts from quotes")
+        XCTAssertEqual(qonto.title, "Qonto invoicing: reads, and invoice drafts from quotes", "title kept as sent")
+
+        let gmail = try app(#"{"entry":"connector:gmail","vendor":"gmail","title":"Gmail","name":"Gmail"}"#)
+        XCTAssertEqual(gmail.displayName, "Gmail")
+        XCTAssertNil(gmail.subtitle, "a managed app keeps its name, with nothing under it")
+
+        let older = try app(#"{"entry":"stripe@3","vendor":"Stripe","title":"Stripe"}"#)
+        XCTAssertEqual(older.displayName, "Stripe", "no name sent: the title")
+        XCTAssertNil(older.name)
+        XCTAssertNil(older.subtitle)
+
+        let blank = try app(#"{"entry":"stripe@3","title":"Stripe payments","name":"  ","subtitle":" ","how":"key"}"#)
+        XCTAssertEqual(blank.displayName, "Stripe payments", "a blank name falls back to the title")
+        XCTAssertNil(blank.subtitle, "a blank subtitle reads as none")
+        let odd = try app(#"{"entry":"stripe@3","title":"Stripe","name":7,"subtitle":["x"]}"#)
+        XCTAssertEqual(odd.displayName, "Stripe", "a name that isn't words reads as none")
+        XCTAssertNil(odd.subtitle)
+        XCTAssertTrue(odd.takesKey == false && odd.state == "available", "the rest still reads")
+
+        // The list and the iPad table share `name(_:_:)`: it draws the name, and the subtitle under it.
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let source = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
+        let name = String(source[try XCTUnwrap(source.range(of: "private func name(_ app: TafsCloud.ConnectApps.App")).upperBound...].prefix(1600))
+        let drawn = try XCTUnwrap(name.range(of: "Text(app.displayName)"))
+        let under = try XCTUnwrap(name.range(of: "if let subtitle = app.subtitle {\n                    Text(subtitle)"))
+        XCTAssertTrue(drawn.upperBound < under.lowerBound, "the subtitle under the name")
+        XCTAssertFalse(name.contains("Text(app.title)"), "never the title where a name is sent")
+        XCTAssertEqual(source.components(separatedBy: "name(app, said)").count - 1, 2, "the table's App cell and the phone's row")
+        XCTAssertTrue(source.contains("yourConnections(app: \"\\(app.displayName)\")"), "the app's own screen by its name")
+    }
+
     /// Connected: how it connects, whose, Connected, and who uses it. To connect: how it connects
     /// alone. With no `used_by` yet, this phone's own read names the tafs.
     func testWhatEachRowSays() throws {
@@ -133,7 +169,7 @@ final class ConnectRowTests: XCTestCase {
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let source = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
         XCTAssertEqual(source.components(separatedBy: "ConnectColumns {").count, 3, "the header and the rows, the same layout")
-        XCTAssertTrue(source.contains(".lineLimit(1).truncationMode(.tail)\n                .accessibilityIdentifier(\"connect.title.\" + app.entry)"),
+        XCTAssertTrue(source.contains(".lineLimit(1).truncationMode(.tail)\n                    .accessibilityIdentifier(\"connect.title.\" + app.entry)"),
                       "a name on one line, never broken inside a word")
     }
 
