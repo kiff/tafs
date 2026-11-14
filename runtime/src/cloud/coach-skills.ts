@@ -69,7 +69,7 @@ const TOOL_SKILLS: Record<string, string[]> = {
   app_look: ["drive-the-app"], app_act: ["drive-the-app"],
   // A public page is read to connect an app by its published API description.
   web_read: ["connect-an-app"],
-  taf_labels: ["the-tafs"], business_context: ["the-tafs"], mission: ["the-tafs"],
+  taf_labels: ["the-tafs"], business_context: ["the-tafs"], mission: ["the-tafs"], mission_create: ["the-tafs"],
 };
 
 /** The state of the account the first turn starts from, as far as the skills care. */

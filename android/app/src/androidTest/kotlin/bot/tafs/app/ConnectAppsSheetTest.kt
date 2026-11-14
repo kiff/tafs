@@ -3,6 +3,7 @@ package bot.tafs.app
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import bot.tafs.app.app.AppState
@@ -297,5 +298,20 @@ class ConnectAppsSheetTest {
     rule.onNodeWithText(bot.tafs.app.model.ConnectWords.CHOOSE_ACTIONS).performClick()
     rule.waitForIdle()
     assertEquals(listOf("now g7"), chose)
+  }
+
+  // The owner on Android 97: the first time it opened, Connect apps was a small sheet with only its title and search, which grew
+  // once the list came. It opens at full height, saying it's loading, before the list is read.
+  @Test fun beforeTheListIsReadTheSheetOpensAtFullHeightAndSaysItsLoading() {
+    rule.setShown {
+      TafsTheme {
+        ConnectAppsSheet(AppState(mode = Mode.kiff, ready = true, connectApps = null), load = {}, onConnect = null, onAskCoach = {}, onClose = {})
+      }
+    }
+    rule.waitForIdle()
+    rule.onNodeWithText(Words.Common.loading).assertIsDisplayed()
+    val sheet = rule.onNodeWithTag(bot.tafs.app.views.CONNECT_APPS_SHEET).fetchSemanticsNode().boundsInWindow
+    val screen = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext.resources.displayMetrics.heightPixels
+    assertTrue("the sheet is ${sheet.height} of $screen px tall", sheet.height > screen * 0.7f)
   }
 }

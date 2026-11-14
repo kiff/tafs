@@ -279,7 +279,8 @@
                 "id": "coach-business",
                 "subject": "setup",
                 "domain": "gateway",
-                "on_exceed": "refuse",
+                "on_exceed": "owner",
+                "hold_expiry": "10m",
                 "grants": [
                   {
                     "action": "business_context"
@@ -307,6 +308,25 @@
                   {
                     "quantity": "count",
                     "limit": 50,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-mission-create",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "owner",
+                "hold_expiry": "10m",
+                "grants": [
+                  {
+                    "action": "mission_create"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 20,
                     "window": "calendar_day"
                   }
                 ]
@@ -410,6 +430,12 @@
               "lines": [
                 "KIFF's line for coach-missions"
               ]
+            },
+            {
+              "id": "coach-mission-create",
+              "lines": [
+                "KIFF's line for coach-mission-create"
+              ]
             }
           ]
         }
@@ -490,12 +516,17 @@
               },
               {
                 "name": "Gather tafs into a mission",
-                "does": "Gather tafs that work toward one goal into a mission, such as running the money side. Each taf keeps its own job, apps and Card. Up to 50 a day.",
+                "does": "Gather tafs that work toward one goal into a mission, such as running the money side. Each taf keeps its own job, apps and Card. Up to 20 a day; after that, each one waits for you.",
+                "why": "It changes nothing a taf may do."
+              },
+              {
+                "name": "Change a mission's tafs",
+                "does": "Add a taf to a mission or take one out, or end a mission. Each taf keeps its own job, apps and Card. Up to 50 a day.",
                 "why": "It changes nothing a taf may do."
               },
               {
                 "name": "Keep your business description",
-                "does": "Keep a short description of your business that you confirmed: what you sell, to whom, your tone and your contact rules. Up to 50 a day.",
+                "does": "Keep a short description of your business that you confirmed: what you sell, to whom, your tone and your contact rules. Up to 50 a day; after that, each one waits for you.",
                 "why": "It's words only, and you see it in Account."
               },
               {

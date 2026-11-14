@@ -94,7 +94,7 @@
   "coach.intro": "Indique uma app para o seu taf, como o seu fornecedor de pagamentos.",
   "coach.kiff_counts_way": "O KIFF conta desta forma",
   "coach.making_live": "A pôr em produção…",
-  "coach.name_tool_taf_should_work": "Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Nenhum taf vê o seu início de sessão. Aprova com {biometry}.",
+  "coach.name_tool_taf_should_work": "Indique uma app para o seu taf, como o seu fornecedor de pagamentos. Aprova com {biometry}.",
   "coach.needs_you_approve": "Precisa de si · aprovar",
   "coach.needs_you_question": "Precisa de si · uma pergunta",
   "coach.new_conversation": "Nova conversa",

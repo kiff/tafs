@@ -118,6 +118,8 @@ export function withLabelChanged(set: LabelSet, label: Label, change: { name?: u
     const name = checkName(typeof change.name === "string" ? change.name : "");
     if (set.labels.some((l) => l.id !== label.id && fold(l.name) === fold(name))) throw new LabelRefusal(`another label is named ${name}`);
     const key = keyOf(name);
+    const twin = key ? set.labels.find((l) => l.id !== label.id && l.key === key) : undefined;
+    if (twin) throw new LabelRefusal(`${name} is the same category as the label ${twin.name}: use that label`);
     next.name = name;
     if (key) next.key = key; else delete next.key;
   }

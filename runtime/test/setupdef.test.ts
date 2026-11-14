@@ -21,7 +21,7 @@ describe("Setup's definition on kiff/agents", () => {
       ["deferred_tools", "drafts", "effort", "gateway", "history", "history_tokens", "instructions", "keep", "key_ref", "max_cost_micro_usd", "max_tokens", "model", "planque", "defer_vendor_tools", "close_in_text", "price", "price_fast", "show", "skills", "speed", "thinking"].sort());
     expect(d.drafts).toBe(true);
     // Coach's tools load only when its conversation needs them (kiff/tafs#206).
-    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "taf_estimate", "web_read", "taf_labels", "mission", "business_context", "version_try", "version_install", "app_look", "app_act"]);
+    expect(d.deferred_tools).toEqual(["tafs_state", "taf_run", "taf_check", "taf_task", "run_stop", "taf_pause", "taf_results", "taf_dial", "taf_estimate", "web_read", "taf_labels", "mission_create", "mission", "business_context", "version_try", "version_install", "app_look", "app_act"]);
   });
 
   // The owner's first words came after every tool turn, about 22 s on 5 Nov: one short line first.
@@ -263,7 +263,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain('until they answer, nothing you write names one, and "as you chose" is only ever their answer');
     // Nothing is read from the owner's account before they approve its tools
     // (kiff/planque#23, describe removed): Setup asks the mode, always. planque's describe {api} since
-    // connect-an-app@26 reads only a public API description, never the account: that one wording is let through.
+    // connect-an-app@27 reads only a public API description, never the account: that one wording is let through.
     expect(flat.replace(/Describe \{api\}|by describe's names|request or describe failed|describe's arguments/g, "")).not.toContain("describe");
     expect(flat).toContain("so don't try to read what the sign-in covers first: ask");
     expect(flat).toContain("with your other questions (confirm if it's the only one). Pin their answer on every call that takes the mode");

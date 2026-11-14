@@ -7984,7 +7984,12 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   // Labels and the business description: words only, about no taf's authority (labels.ts, business.ts).
   if (name === "taf_labels") return labelsTool(args, call, deps);
   if (name === "business_context") return businessTool(args, call, deps);
-  if (name === "mission") return missionTool(args, call, deps);
+  // Making a mission is its own tool, held for the person's yes (coach-mission-create); the rest only moves tafs and labels.
+  if (name === "mission_create") return missionTool({ ...args, action: "create" }, call, deps);
+  if (name === "mission") {
+    if (args.action === "create") throw new ToolRefusal("a mission is made with mission_create, which waits for the person's yes");
+    return missionTool(args, call, deps);
+  }
   // A public page, read as anyone could (webread.ts): about no taf.
   if (name === "web_read") {
     try {

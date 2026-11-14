@@ -1,0 +1,2 @@
+- Remover definitivamente aceita um toque; um segundo não faz nada.
+- Ligar apps abre em tamanho completo e indica que está a carregar.

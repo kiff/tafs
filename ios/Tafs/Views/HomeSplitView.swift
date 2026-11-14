@@ -215,7 +215,9 @@ struct HomeSplitView: View {
             // `-screen calendar` and `calendar-week` select Calendar, the sidebar's item (Screenshots.calendar).
             if Screenshots.calendar != nil { opened = .calendar }
             chosen = false
-            selection = opened
+            // A tab asked for before the sidebar drew (an alert that opened the app on Needs you, a route, a
+            // screenshot's `-tab`) opens its screen: the tafs list only when none was.
+            selection = tab.flatMap { HomeSelection.of($0.wrappedValue) } ?? opened
         }
     }
 
