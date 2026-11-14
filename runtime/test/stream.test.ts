@@ -449,6 +449,20 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(kept.map((k) => [k.call, k.resolved ?? false])).toEqual([["c1", true]]);
   });
 
+  it("names a refused reuse by the reused grant's app, when this run's answers named it", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c0", tool: "planque", input: { action: "status", grant: "grt_Held123456" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c0", result: { text: "{\"id\":\"grt_Held123456\",\"vendor\":\"Gmail\",\"status\":\"connected\"}" } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", reuse: "grt_Held123456", name: "digest", taf_name: "Daily digest", tools: [] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "planque answered 409: managed sign-in isn't set up for this app", is_error: true } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "A daily digest of my inbox" } });
+    await new Promise((f) => setTimeout(f, 0));
+    const kept = await w.coach.get(stepWhyKey("t_acme", r.events[0]!.data.run as string)) as Array<{ call: string; why?: string; refused?: { vendor: string; key?: string } }>;
+    expect(kept.map((k) => [k.call, k.why, k.refused?.vendor, k.refused?.key])).toEqual([["c1", "Coach couldn't connect Gmail yet", "Gmail", "grt_Held123456"]]);
+  });
+
   it("keys a refused reuse to the grant it reuses, so a reuse of it that goes through clears it", async () => {
     const w = world();
     const refused = { text: "planque answered 409: managed sign-in isn't set up for this app", is_error: true };

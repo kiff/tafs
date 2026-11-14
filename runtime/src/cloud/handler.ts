@@ -1,3 +1,4 @@
+import { checkMisfitSeen } from "./checkseen.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
@@ -6194,7 +6195,12 @@ function whyKeeper(me: KIFFIdentity, deps: Deps): WhyKeeper | undefined {
       const whys = Array.isArray(kept) ? kept as StepWhys : [];
       if (whys.some((w) => w.call === call)) return undefined;
       await store.put(key, [...whys, { call, tool, why, ...(refusal ? { refusal } : {}), ...(refused ? { refused } : {}), ...(notMade ? { not_made: true as const } : {}) }].slice(-STEP_WHYS_KEPT), new Date(at.getTime() + STEP_WHY_KEPT_MS));
-      if (!refusal) return undefined;
+      // A refused connection whose server words scrubbed to nothing is still said in the log, so a red line on the phone
+      // is never without its trace (14 Nov, 13:13 UTC: a false red with no refusal logged).
+      if (!refusal) {
+        if (refused) console.log(JSON.stringify({ event: "coach_connection_refused", tenant: me.tenantID, run, call, refusal: "", vendor: refused.vendor }));
+        return undefined;
+      }
       // A connection the server refused: its reason, scrubbed, is kept where it can be read (the log), and goes
       // before the person's next words to Coach, so Coach can still say why once the turn it failed in is over.
       console.log(JSON.stringify({ event: "coach_connection_refused", tenant: me.tenantID, run, call, refusal }));
@@ -8197,6 +8203,14 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
     console.log(JSON.stringify({ event: "handover_try", run: r.id, card: card.id, draft: card.taf.draft ?? null }));
     // The result's tools, as KIFF names them: what a disclosure may name (kiff/tafs#476, agentgabo on #572).
     const tools = Array.isArray(card.tools) ? card.tools.filter((t): t is string => typeof t === "string") : undefined;
+    // A check whose list isn't where the reads Coach made found one is answered back with the paths they have, before
+    // anything is made: its first check would never read (14 Nov, every Gmail taf). Best effort: unread, it goes on.
+    const misfit = card.taf.check ? await deps.agents.session(tenant, r.session).then((s) => checkMisfitSeen(s.events, card.taf!.check), () => undefined) : undefined;
+    if (misfit) {
+      console.log(JSON.stringify({ event: "handover_check_misfit", run: r.id, card: card.id }));
+      await deps.agents.answerResult(tenant, coach.id, r.id, card.id, { failed: misfit }).catch((err: unknown) => console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`));
+      continue;
+    }
     const make = card.taf.improves ? improvedVersionFor(tenant, coach.id, r, card.id, { ...card.taf as ImprovedTaf, ...(tools ? { tools } : {}) }, tafs, deps) : newTafFor(tenant, coach.id, r, { ...card.taf, ...(tools ? { tools } : {}) }, tafs, deps);
     const outcome = await make.catch(async (err): Promise<ResultOutcome | undefined> => {
       // A Card the owner hasn't approved yet is no error: the card waits, and the taf is made once they approve.
