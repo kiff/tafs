@@ -1,0 +1,3 @@
+- Ein leichtes Tippen in der unteren Leiste, bei Coach, den Tabs eines tafs und „Beiseitelegen“, wie bei jeder Taste.
+- Beiseitelegen endet mit einem Signal: Erfolg, oder eine Warnung, wenn es nicht geklappt hat.
+- Haptik folgt dem Berührungsfeedback deines Telefons; Einstellungen › Haptik schaltet sie aus.

@@ -809,7 +809,7 @@ final class PlanqueTests: XCTestCase {
 
         let connected = await model.connect(grantID: "g_01", shown: Self.digest)
         XCTAssertNil(connected)
-        XCTAssertEqual(model.lastError, "The sign-in at Stripe didn't connect: the connection is needs reconnect. Nothing was connected. Try signing in again.")
+        XCTAssertEqual(model.lastError, "The sign-in at Stripe didn't finish, so nothing was connected. Try signing in again.")
         Keychain.delete(AppModel.planqueAccount)
     }
 }

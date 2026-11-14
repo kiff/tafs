@@ -1,0 +1,2 @@
+- Une conversation avec Coach mise de côté ne revient plus comme conversation ouverte, sur aucun appareil.
+- « Demander à Coach » dans Connecter des apps commence toujours une nouvelle conversation.

@@ -1,0 +1,1 @@
+- **tafs cloud: a connection Coach asked for wrong and asked again never reads as failed.** When the connection service refuses Coach's request for how it was written, the step ends "not made", never the red "Coach couldn't connect the app yet", and a reread of the chat says the same (docs/chat.md).

@@ -1,0 +1,3 @@
+- „Czeka na Ciebie” podaje, dla którego tafa czeka czat z Coachem, i od kiedy.
+- Nie teraz? Przesuń oczekujący czat z Coachem albo dotknij „Odłóż”. Nic nie zostaje zatwierdzone ani wysłane.
+- Gdy czekają dwa lub więcej: „Odłóż wszystkie” kończy je za jednym razem, po jednym pytaniu.

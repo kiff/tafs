@@ -1,0 +1,1 @@
+- Quando um início de sessão não liga, a mensagem diz isso em palavras simples, sem estados técnicos.

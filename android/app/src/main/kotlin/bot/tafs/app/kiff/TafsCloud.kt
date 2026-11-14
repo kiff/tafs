@@ -236,6 +236,8 @@ class TafsCloud(
     @kotlinx.serialization.Serializable(with = InstantAsString::class) val started: Instant,
     @kotlinx.serialization.Serializable(with = InstantAsString::class) val updated: Instant,
     val title: String = "",
+    /** A Coach chat its person set aside, as tafs cloud says: never opened as the newest. */
+    @kotlinx.serialization.SerialName("set_aside") val setAside: Boolean = false,
   )
 
   @kotlinx.serialization.Serializable
@@ -690,6 +692,14 @@ class TafsCloud(
     }
     return "t=$signedAt,v1=$signature"
   }
+
+  /**
+   * Sets one waiting Coach chat aside, or every one with no [session]: "not now", answered by tafs cloud, never an approval.
+   * The signed read of this phone's connections ([proof]) lets tafs cloud withdraw a connection the chat asked for.
+   */
+  suspend fun setAsideCoach(session: String?, proof: String?): SetAside = KiffClient.json.decodeFromString(String(send("POST",
+    "/v1/home/coach-waiting/" + (session?.let { "${escaped(it)}/" } ?: "") + "set-aside",
+    extra = proof?.let { mapOf("Planque-Device-Signature" to it) } ?: emptyMap())))
 
   /** Drops a taf being set up: tafs cloud ends the Coach chat that drafted it, and Home stops listing it. Its Cards are revoked first. */
   suspend fun discardSettingUp(agent: String, signature: String) {

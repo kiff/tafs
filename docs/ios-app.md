@@ -160,6 +160,7 @@ the app in sample mode.
 | `-tab account \| tafs \| needs-you \| record` | Opens that tab |
 | `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| buy-credits` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
 | `-landscape YES` | The iPad's window turned to landscape, for its screenshots |
+| `-signedIn YES` | The iPad's sidebar laid out as for a signed-in account, its screens and Coach above the account, over the sample's tafs: a layout shot, nothing read from KIFF |
 | `-pack <id>` | The Add credits screen with that pack alone |
 | `-narrow YES` | Laid out at Slide Over's width on an iPad |
 | `-sampleReplySeconds <s>` | The sample taf answers slowly enough for a UI test to see each part |
@@ -170,10 +171,27 @@ the app in sample mode.
 - **The bar** (`TafsBar`, in `TafsApp`'s `RootView`): **Account · Tafs · Needs you · Record**,
   then **Coach**, a filled ink button that opens Coach mode, shown only when
   `signedIn && mode == .kiff && mayUseCoach`. Along the foot on a compact width, below the
-  screens so a chat's field stays above it, and hidden while the keyboard is up; a rail down
-  the left on a regular width, Coach at its foot. Each tab is built the first time it's
-  opened and then kept. Account is `SettingsView`; ⌘1–3 open Tafs, Needs you and Record, ⌘,
-  Account, ⌘K Coach.
+  screens so a chat's field stays above it, and hidden while the keyboard is up. Each tab is
+  built the first time it's opened and then kept. Account is `SettingsView`; ⌘1–3 open Tafs,
+  Needs you and Record, ⌘, Account, ⌘K Coach.
+- **On an iPad's full width, one sidebar for the whole app** (`HomeSplitView(tab:coachAvailable:)`,
+  the owner's layout), in place of a rail beside the Tafs tab's own sidebar:
+  - **at the top,** the mascot and "tafs": the way to the tafs list (the Overview screen, every taf),
+    which is what opens first;
+  - **the app's screens as items:** Needs you (with its count), Record, Calendar, Usage (Plan &
+    usage) and Connect apps, then the held calls;
+  - **only the tafs relevant now** (`AppModel.relevantNow`): one with an item in Needs you (a held
+    call, a step it handed over, a knock at its door), or a run or a change in the last 24 hours
+    (`last_run`, `last_change`), and
+    those being set up. The rest are in the list behind the mascot;
+  - **at its foot, always in sight:** Coach, then the account button, which says who is signed in
+    and opens Account beside the sidebar.
+  
+  Each item opens its existing screen beside the sidebar (`HomeSelection`). The app's tab and the
+  selection follow each other, so a notification, a drive or a shortcut that opens a tab opens its
+  screen here; ⌘1 from a screen goes back to the tafs list. Each item is in the drive's
+  registry, as the rail's were. Account and Record are built again on each pick, not kept as the
+  phone's tabs are. The iPhone keeps the bar.
 - **Plan & usage** (`UsageView`, opened from Settings' Plan card and Home's plan line), with
   credits as the balance ([accounts.md](accounts.md#credits-and-plans)). Every line is tafs
   cloud's or KIFF's, as written; the app adds nothing but the order:
@@ -263,7 +281,9 @@ the app in sample mode.
 - **Account › Alerts** (`NotificationSettingsView`): two lock-screen examples, Alerts on this
   device (Turn on alerts while off), Sound (off and greyed while alerts are off, its choice
   kept), and What alerts you, read-only, drawn only with something in it; "A taf answered
-  someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`).
+  someone" lists the tafs whose results include `app` (`CloudTaf.alertsPhones`). Turn on alerts,
+  here and in the offer of alerts, asks for notifications and no Face ID: KIFF's alert target is
+  signed by the device key, which needs no prompt (`turnOnAlerts`, `AlertsTests`).
 - **The AI-data consent** (`AIConsentView`, `TafsCloud+AIConsent.swift`; docs/accounts.md, "Your data and the AI"): a
   full screen with tafs cloud's words as sent (`GET /v1/me/ai-consent`: title, lines, Allow, Not now), and no line of
   the app's own. It comes up after sign-in while the person hasn't allowed it, and whenever tafs cloud refuses a
@@ -361,7 +381,9 @@ the app in sample mode.
   **What the fingerprint covers** is tafs cloud's mark too (`signs: {card, words}`, `SetupComponent.Signs`), set from
   the same decision as the step it then asks, since the phone learns the step only after the tap. With `card: false`
   the Card is the one approved next: drawn under tafs cloud's words ("Its Card: you approve it next") with its lines
-  dimmed, never under its own title as if signed now, and not drawn at all without words. With `card: true`, or no
+  dimmed, never under its own title as if signed now, and not drawn at all without words. An app's first sign-in has
+  no draft yet; its card still draws tafs cloud's words when it sends them (`SetupApproval.cardNextWords`), so the
+  owner knows a second approval follows, as on Android. With `card: true`, or no
   mark from an older tafs cloud, the card draws the Card as before. The mark comes on Setup's thread read with this
   phone's signed read of its connections (`Planque-Device-Signature`) and the steps it signs
   (`?can=tools_and_cards,key_and_cards,signs`, `AppModel.stepsSignedHere`); without the proof, the cards come unmarked.
@@ -471,6 +493,21 @@ A connected app (“Connected ✓”) opens its connections (`AppConnectionsView
 - **From removed tafs** comes between the tafs and Other connections. It holds the connections whose `request.agent` tafs cloud names in `removed_tafs`, and only those, each with the removed taf's name (the grant's `agent_name`). The app sends its signed grants read with the read (`connectApps(proof:)`). A connection a live taf's Card still uses says so (“Kept: Chargebacks' Card uses it”). **Clear these connections** shows only when at least one listed connection has an empty `used_by`, and ends exactly those: it asks first (“Clear 2 connections from removed tafs?”), then one Face ID, and the device key signs each disconnect. The line under them says how it went (“Cleared 1. Kept 1 for Chargebacks, whose Card uses it.”). With no `grants`, the section shows with no Clear. Which to keep is tafs cloud's word, never the phone's (`clearPlan`, `clearRemovedConnections`; the words are `ConnectionGroupWords`, the same as Android's).
 - **Other connections** comes last: those whose taf the app can't name, each with the same row as the rest and nothing that acts on them all at once. A taf missing from this person's list may have been removed, but it may also be one they don't see, or an agent that isn't a taf, so nothing there says it was removed.
 
+## Home's line
+
+Home's big line ("2 tafs working.") is tafs cloud's, as Android draws it: `GET /v1/home` sends
+`headline: {words}` in the person's language, and the app draws `words` as sent
+(`TafsCloud.Home.headline`, `AppModel.workingWords`, `headline` in `Views/HomeView.swift`).
+tafs cloud counts the tafs at work; with none at work, the tafs ready to work from their chat
+("1 taf ready."); else "0 tafs working.". A taf waiting on an app's event, or with something gone
+wrong, counts as neither.
+- **Read leniently:** a `headline` that isn't an object, or whose `words` aren't a non-blank
+  string, is none, and Home still reads.
+- **With none** (a tafs cloud from before it, or the list remembered from the last launch before
+  Home is read), the app counts its own tafs working (`workingCount`, `home.working`), as before.
+- Before the first list it still says "Loading your tafs…", and with the recipes listed it shows no line
+  ([Home with no taf](#home-with-no-taf)).
+
 ## Home with no taf
 
 An account with no taf sees the jobs a taf can take on Home, where tafs cloud says so
@@ -513,20 +550,37 @@ language: the app has none of its own for it.
 When the account has no plan, tafs cloud makes the taf Coach handed over and starts no run. Its
 answer to the result carries `outcome.plan_needed.words` ("Choose a plan to start it.", in the
 person's language), and the hand-over card says them under its own words, above the button that
-opens the taf (`SetupThread.planNeeded`). No words, or none that are text, add nothing.
+opens the taf (`SetupThread.planNeeded`). Under them, **Choose a plan** (`usage.choose_plan`) opens
+Plan & usage on its own screen (`usageRequested`), where a plan is chosen, as on Android. tafs cloud
+sends only the words, no plan and no link, so the button names none. No words, or none that are
+text, add nothing: no line and no button.
 
 ## Connect apps
 
 The same rows as Android, from the same tafs cloud fields (`GET /v1/connect/apps`: `title`, `logo`, `state` or
 `connected`, `method` (else `how`), and `line`, `whose` and `used_by` when sent; `ConnectRow`):
 - **Yours first, then Discover:** connected apps (or ones to sign in again) under Yours, the rest under Discover,
-  each in tafs cloud's order, with search.
+  each in tafs cloud's order, with search. An app under Yours is never under Discover again in another catalog form
+  (`ConnectRow.split`): Stripe connected through a managed provider's entry (`connector:composio:stripe`) leaves out
+  its reviewed entry (`stripe@3`), matched by the entry's last part without its version, or by vendor, each folded
+  as tafs cloud folds them (lower case, no spaces, dots, dashes or underscores).
+- **No taf to connect for:** opened from Settings on an account where no taf can have an app, "Apps connect for a taf.
+  Make one first…" heads Discover, where Connect needs a taf, and never Yours; with nothing under Discover it doesn't
+  show (`ConnectRow.saysMakeATaf`).
 - **On a phone, two lines:** the name, then tafs cloud's `line` as sent ("Sign in · Connected · Used by Refunds"). From a
   tafs cloud without it, the app says the same: how it connects ("Sign in" or "With a key"), whose it is (`whose`, as
   sent), where it stands, and which tafs use it ("Used by …", from `used_by`, or this phone's planque read). A ✓ for a connected app; else a compact Connect, as wide as its words.
-- **On an iPad's full width, a table:** App, How it connects, Whose, Status.
+- **On an iPad's full width, a table:** App, How it connects, Whose, Status, laid out by `ConnectColumns`, the same
+  in the header and every row. The App column gets its room first (200 points at least), so names read whole in
+  portrait and landscape: the other three are 150, 130 and 230 points while there's room, then give way together
+  down to 96, 84 and 180. A name is one line, cut at its end only as a last resort, never broken inside a word.
+- **An app's name is tafs cloud's `title`**, as on Android. A reviewed entry whose title is a whole sentence ("Qonto
+  invoicing: reads, and invoice drafts from quotes") shows it as sent: tafs cloud sends no separate name and
+  description (`vendor` is planque's key, sometimes a slug such as `gmail`), and the app doesn't cut titles apart.
 - **A connected app opens its detail** (`AppConnectionsView`): what each connection can read and do, which taf it
-  serves, and Disconnect.
+  serves, and Disconnect. The whole row opens it, name, logo and second line included, not only its ✓.
+  Its footer ("Removing access takes its tools from that taf only…") shows only when a connection there is one of
+  the account's tafs' (`DisconnectWords.showsFooter`): with no taf, it applies to nothing.
 
 ## A taf whose setup stopped partway
 
@@ -693,6 +747,45 @@ Home lists it ([api.md](api.md) › Coach waiting; `KIFF/TafsCloud+CoachWaiting.
 - **Read leniently:** one without its chat (`session`) or either line is left out, never Home with it.
 - **The way in** opens Coach on that chat (`openSetupChat(session)`), where its card waits. Someone who may not
   use Coach (`mayUseCoach`) sees the line alone, never a button that does nothing.
+- **At once:** when Coach's run pauses on a card while its chat is open (its stream's live line ends on
+  `waiting_for_you`, or it ends `PAUSED`), the app reads Home once as that stream ends
+  (`AppModel.stillWaitsOnYou`), so the row and the badge come while Coach is still open, not after it closes.
+  A run that went on after the card, or ended, reads nothing more.
+- **The line's date** ("depuis le 14 nov.") is tafs cloud's, inside `words.line`; the app draws it as sent.
+
+**Set aside** is "not now", never an approval: nothing is signed, and no Face ID. Only signed in (not the
+sample), and only what tafs cloud offers: KIFF's holds, "Did this happen?" and steps never get it. As on
+Android since 86 (`AppModel.setAsideCoach`, `CoachWaitingCard` and `SetAllAsideButton` in
+`Views/NeedsYouView.swift`):
+
+- **One chat:** a row whose `words.set_aside` tafs cloud sends can be swiped away either way (a mostly
+  sideways drag past 96 points, beside the scroll), and has an outline button with the same words, and
+  an accessibility action, so a swipe isn't the only way. Each calls
+  `POST /v1/home/coach-waiting/{session}/set-aside`, with this phone's signed read of its connections
+  (`Planque-Device-Signature`) when it has one, so tafs cloud can withdraw a connection that chat asked for.
+  tafs cloud answers `{set_aside: [session], withdrawn}`.
+- **Every chat:** with two or more rows and Home's `coach_waiting_clear`, its **Set all aside** sits above
+  them. It asks once, in tafs cloud's words (`words.title` names the count, "End 2 waiting Coach chats?",
+  then `text`, `yes` and `no`), then calls `POST /v1/home/coach-waiting/set-aside`, with no body.
+- **One call per gesture:** the swipe asks only as it ends, once. A chat already being set aside
+  (`settingAside`, marked before anything is awaited) sends nothing again until tafs cloud answers, nor does
+  Set all aside meanwhile. A Home read meanwhile doesn't draw it again.
+- **After:** the row goes once tafs cloud answers, with a success tick, and Home is read again: the badge is
+  tafs cloud's `needs_you` count as sent. A refusal keeps the row and says why in tafs cloud's words
+  (`lastError`), with a warning tick.
+- **Coach driving the app** can't set a chat aside: Set aside, Set all aside and its ask's yes carry the
+  confirm mark ([drive.md](drive.md)), so a driven touch on either button is refused and nothing is sent
+  (`DriveTests.testATouchOnSetAsideIsRefusedBeforeAnythingRuns`). The row that carries the swipe and its
+  accessibility action is marked too, though the drive registers neither; its Open Coach is marked as not
+  confirming.
+- **A new conversation:** a chat set aside is never the one Coach goes on in. When it's the chat shown (or
+  the latest one shown together), Coach starts a new conversation (`newSetupChat`), so a new job's first
+  message asks for a new chat (`new_chat`) and never names the ended session. When Coach next picks its
+  newest chat by itself and that's one set aside on this phone, it starts a new conversation instead. These
+  are kept in memory only, never written to the phone (docs/data.md). Reopened from Previous conversations by the
+  person, the chat opens as any other.
+
+Tests: `TafsTests/CoachWaitingTests.swift`.
 
 ## Your step
 
@@ -729,6 +822,12 @@ Tests: `TafsTests/YourStepTests.swift`.
   that test found.
 - **UI tests** (`TafsUITests`): `ChatPinUITests` holds how a sent message, the work block
   and the answer sit in the chat ([chat.md](chat.md#the-sent-message-stays-on-top)).
+  Every UI test class is a `TafsUITestCase`: its `launch(_:)` puts one interruption monitor in
+  place that closes the simulator's own alerts, such as "Sign in to Apple Account", by their
+  own button (Not Now, Cancel, Later or Close, else the last one), since XCTest's default
+  handler can't and holds the test for minutes; then a tap on the status bar lets it run.
+  `typeInto(_:text:)` types once the field has the keyboard, tapping it once more if the
+  monitor took the first tap.
 - **CI** (`.github/workflows/ios.yml`) builds and tests, on a simulator, every pull request
   and push to main that changes what the app is built from (`ios/`, `app/strings/`, the
   workflow); a tafs cloud or Android change doesn't take a macOS runner. It builds once, then
@@ -820,11 +919,21 @@ One rule, as on Android (`Haptics`, `Design/Scaled.swift`):
 - **A light tap on every button press,** played once in `DriveButton`, the style under `PrimaryButtonStyle`,
   `OutlineButtonStyle` and `.drivablePlain`. Every new button taps without wiring. A press and the action it
   starts tap once: a second tap within 150 ms is the same one. A drive's activation doesn't tap.
+  The bar's tabs and the sidebar's foot are such buttons; Coach's own button, on the bar and in the
+  sidebar, taps too (`Haptics.tap()`), as on Android 88.
 - **A success tick** when an approval goes through (a held call approved, Coach's card approved) or a send
   does (to Coach or a taf).
 - **A warning tick** when something the person just did is refused or fails (`lastError`, within 15 s of their own press,
-  approval or send). A background read that fails never buzzes.
+  approval or send): also Coach's card when its approval fails (`AppModel.feel(approving:)`, a signature not given,
+  tafs cloud's refusal or no answer) and a send kept unsent (`Delivery.feel`). One failure warns once, within a
+  second. A background read that fails never buzzes.
+- **A selection tick** (`Haptics.select`) when the person changes a taf's tab (Chat, Activity, Card, Setup)
+  or picks another item in the iPad's sidebar; the same one again, or a change made for them, plays nothing.
 - **A step tick** on dial and selector stops.
+- The system's generators only (`UIImpactFeedbackGenerator`, `UINotificationFeedbackGenerator`,
+  `UISelectionFeedbackGenerator`), so the phone's own System Haptics setting is followed too.
+- **Set aside** and **Set all aside** tap as they're asked (a swipe too), then tick: success when tafs cloud
+  sets the chat aside, a warning when it refuses (`AppModel.setAsideCoach`).
 - **Settings › Haptics** turns all of it off on this device (`HapticsTests`).
 
 ## Conventions

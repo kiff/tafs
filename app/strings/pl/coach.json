@@ -104,7 +104,7 @@
   "coach.not_allowed": "Coach jest dla osób, którym KIFF na to pozwala, domyślnie dla administratorów konta.",
   "coach.not_archived_try_again": "Nie zarchiwizowano. Spróbuj ponownie.",
   "coach.not_connectable": "Łączenie aplikacji nie jest skonfigurowane dla tego konta z tego telefonu. Otwórz Coacha, aby to rozpocząć.",
-  "coach.not_connected": "Logowanie w {vendor} nie utworzyło połączenia: połączenie ma stan {status}. Nic nie zostało połączone. Spróbuj zalogować się ponownie.",
+  "coach.not_connected": "Logowanie w {vendor} nie zostało dokończone, więc nic nie zostało połączone. Zaloguj się ponownie.",
   "coach.not_improved": "Nowa wersja {owner} nie powstała: {why}.",
   "coach.not_no_sign": "Nie teraz: brak logowania w {vendor}",
   "coach.not_put_back_try_again": "Nie przywrócono. Spróbuj ponownie.",

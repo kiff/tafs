@@ -124,6 +124,8 @@ export interface CardView {
    * own count, so none has a used or left here; absent without any.
    */
   each_item?: string[];
+  /** The KIFF Cards it shows as one, when it's a draft's several (grouped): what this Card is, all of it. */
+  ids?: string[];
 }
 
 /**
@@ -146,6 +148,8 @@ export function avatarRim(lights: Array<{ open: boolean; resting?: boolean; knoc
 export interface Mandate {
   id: string;
   subject: string;
+  /** The agent draft that issued it, once KIFF sends it: a draft's Cards show as one Card. */
+  draft_id?: string | null;
   /** The environment it is scoped to; empty for every environment. */
   environment?: string | null;
   /** Its title for people, when KIFF has one for it. */
@@ -477,7 +481,35 @@ export function usedShare(c: CardView): number {
  * [lang] is the person's, for the lines they read (Home, the Card); Setup's limits and Coach's prompt are built in English
  * around the window's words, so they read it in English, never one language inside another.
  */
-export function summary(cards: Mandate[], lang: Lang = "en"): CardSummary {
+/**
+ * A draft's Cards shown as one (the owner, 14 Nov: "2 Cards" for one approval): its lines together, the first total and count
+ * among them (each line keeps its own limits), the earliest end, and every KIFF Card it is in `ids`.
+ */
+export function oneCard(views: CardView[]): CardView {
+  if (views.length === 1) return views[0]!;
+  const [first] = [...views].sort(shownOrder);
+  const ends = views.map((v) => v.expires).filter((e): e is string => !!e).sort((a, b) => Date.parse(a) - Date.parse(b));
+  const counted = views.flatMap((v) => v.counted ?? []);
+  const eachItem = views.flatMap((v) => v.each_item ?? []);
+  return {
+    ...first!,
+    active: views.some((v) => v.active),
+    live: views.some((v) => v.live),
+    expires: ends[0] ?? null,
+    rules: distinct(views.flatMap((v) => v.rules)),
+    total: views.find((v) => v.total)?.total ?? null,
+    calls: views.find((v) => v.calls)?.calls ?? null,
+    ...(counted.length ? { counted } : {}),
+    ...(eachItem.length ? { each_item: eachItem } : {}),
+    ids: views.map((v) => v.id),
+  };
+}
+
+/**
+ * What a holder's live Cards allow and have used. `together` lists the Cards approved as one (the live version's, while KIFF
+ * doesn't say a mandate's draft); a mandate with its `draft_id` goes with the others of its draft.
+ */
+export function summary(cards: Mandate[], lang: Lang = "en", together: string[][] = []): CardSummary {
   const lines = distinct(cards.flatMap((c) => rules(c, lang)));
   const tools: string[] = [];
   for (const r of lines) if (r.action && !tools.includes(r.label)) tools.push(r.label);
@@ -500,7 +532,7 @@ export function summary(cards: Mandate[], lang: Lang = "en"): CardSummary {
     rules: lines,
     used,
     usage_unknown: [...unknown],
-    cards: cards.map((c) => cardView(c, lang)).sort(shownOrder),
+    cards: grouped(cards, together).map((g) => oneCard(g.map((c) => cardView(c, lang)))).sort(shownOrder),
   };
 }
 
@@ -534,4 +566,16 @@ export function byHolder(mandates: Mandate[], held: Held[]) {
   // limit, so it never makes the taf read "Waiting on you" (Needs you still lists it).
   for (const h of held) if ((h.kind ?? "hold") !== "card_unit") waiting.set(h.subject, (waiting.get(h.subject) ?? 0) + 1);
   return { cards, waiting };
+}
+
+/** A holder's Cards, a group for each draft: by KIFF's `draft_id`, else by the Cards approved together, else each alone. */
+function grouped(cards: Mandate[], together: string[][]): Mandate[][] {
+  const groupOf = new Map<string, string>();
+  together.forEach((ids, i) => { if (ids.length > 1) for (const id of ids) groupOf.set(id, `v${i}`); });
+  const out = new Map<string, Mandate[]>();
+  for (const c of cards) {
+    const key = c.draft_id ? `d:${c.draft_id}` : groupOf.get(c.id) ?? `m:${c.id}`;
+    out.set(key, [...(out.get(key) ?? []), c]);
+  }
+  return [...out.values()];
 }

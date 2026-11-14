@@ -90,7 +90,8 @@ struct TafsBar: View {
 
     /// Coach: ink fill, the background's colour for its words, in both themes.
     private var coachButton: some View {
-        Button { model.openCoach() } label: {
+        // Its own style, so it taps here, as the tabs' buttons do (Haptics).
+        Button { Haptics.tap(); model.openCoach() } label: {
             Group {
                 if rail {
                     VStack(spacing: 3) {

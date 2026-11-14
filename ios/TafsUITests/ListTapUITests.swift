@@ -4,22 +4,17 @@ import XCTest
 /// the tafs list opens that taf. On the iPad only the row's empty end did, since the row's own
 /// tap gesture took the list's taps over its content. On the iPad, a tap on the taf already
 /// open is a pick too, so the list settling later doesn't take the owner away from it.
-final class ListTapUITests: XCTestCase {
-    override func setUp() {
-        continueAfterFailure = false
-    }
-
+final class ListTapUITests: TafsUITestCase {
     private var iPad: Bool { UIDevice.current.userInterfaceIdiom == .pad }
 
     @MainActor
     func testATapOnATafsIconOrNameOpensIt() throws {
-        let app = launch()
+        let app = launchList()
         let rows = tafRows(app)
         XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 30), "the tafs list")
         XCTAssertGreaterThanOrEqual(rows.count, 3, "the sample's tafs")
 
-        // Two tafs that aren't open yet, on screen: the second and third in the list (the iPad
-        // opens the first by itself).
+        // Two tafs on screen: the second and third in the list.
         let byIcon = name(rows.element(boundBy: 1).label), byName = name(rows.element(boundBy: 2).label)
 
         tap(row(app, byIcon), on: .icon)
@@ -29,19 +24,19 @@ final class ListTapUITests: XCTestCase {
         XCTAssertTrue(opened(app, byName), "a tap on \(byName)'s name opens it; open: \(openName(app))")
     }
 
-    /// iPad only: the iPhone's list pushes a taf, so nothing opens by itself to settle under.
+    /// iPad only: the iPhone's list pushes a taf. The iPad opens on the tafs list (the owner's layout), and a taf
+    /// the owner picks from the sidebar stays open when the list settles as the app comes back.
     @MainActor
     func testATapOnTheTafAlreadyOpenStaysOpenWhenTheListSettles() throws {
         guard iPad else { throw XCTSkip("the sidebar is the iPad's") }
-        let app = launch(["-listSettlesOnReturn", "YES"])
-        let page = app.staticTexts["taf-page-name"]
-        XCTAssertTrue(page.waitForExistence(timeout: 60), "the list opens on its first taf")
-        let open = page.label
+        let app = launchList(["-listSettlesOnReturn", "YES"])
         let rows = tafRows(app)
-        XCTAssertEqual(name(rows.firstMatch.label), open, "the open taf is the list's first, before it settles")
+        XCTAssertTrue(rows.firstMatch.waitForExistence(timeout: 60), "the sidebar's tafs")
+        XCTAssertEqual(openName(app), "nothing", "the tafs list opens first, no taf by itself")
+        let pick = name(rows.firstMatch.label)
+        tap(row(app, pick), on: .name)
+        XCTAssertTrue(opened(app, pick), "a tap on \(pick) opens it; open: \(openName(app))")
 
-        tap(row(app, open), on: .name)
-        RunLoop.current.run(until: Date().addingTimeInterval(1))
         // The list settles when the app comes back, as on a device: its last taf moves to the top.
         // No clock to race on a slow simulator: the app settles only after it was in the
         // background, so it's brought back once it got there, not after a fixed wait.
@@ -50,20 +45,21 @@ final class ListTapUITests: XCTestCase {
                       "the app went to the background; state: \(app.state.rawValue)")
         app.activate()
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 30), "the app came back")
-        XCTAssertTrue(within(60, every: 3) { name(rows.firstMatch.label) != open },
-                      "the list settled when the app came back: its last taf is at the top")
-        XCTAssertEqual(openName(app), open, "the taf picked by a tap stays open when the list settles")
+        // The sidebar shows only the tafs relevant now, so its order needn't move: the pick is checked to hold
+        // across the settle and the list's next reads.
+        RunLoop.current.run(until: Date().addingTimeInterval(5))
+        XCTAssertEqual(openName(app), pick, "the taf picked by a tap stays open when the list settles")
     }
 
     // MARK: Helpers
 
     @MainActor
-    private func launch(_ more: [String] = []) -> XCUIApplication {
+    private func launchList(_ more: [String] = []) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments = ["-screenshots", "YES", "-tab", "tafs"] + more
         // The sidebar shows beside the open taf in landscape.
         if iPad { XCUIDevice.shared.orientation = .landscapeLeft }
-        app.launch()
+        launch(app)
         return app
     }
 

@@ -104,7 +104,7 @@
   "coach.not_allowed": "Coach is for the people KIFF lets use it, by default the account's admins.",
   "coach.not_archived_try_again": "Not archived. Try again.",
   "coach.not_connectable": "Connecting apps isn't set up for this account from this phone. Open Coach to start it.",
-  "coach.not_connected": "The sign-in at {vendor} didn't connect: the connection is {status}. Nothing was connected. Try signing in again.",
+  "coach.not_connected": "The sign-in at {vendor} didn't finish, so nothing was connected. Try signing in again.",
   "coach.not_improved": "{owner|possessive} new version wasn't made: {why}.",
   "coach.not_no_sign": "Not now: no sign-in at {vendor}",
   "coach.not_put_back_try_again": "Not put back. Try again.",

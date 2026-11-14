@@ -120,7 +120,7 @@
   "connect.more_apps": "Więcej aplikacji",
   "connect.more_apps_could_not_listed": "Nie udało się wyświetlić więcej aplikacji: {why}",
   "connect.no_confirmation_code": "Logowanie w {vendor} wróciło bez kodu potwierdzenia. Nic nie zostało połączone.",
-  "connect.no_sign_in_link": "Połączenie wróciło ze stanem {status}, bez linku do logowania. Nic nie zostało połączone.",
+  "connect.no_sign_in_link": "Nie otworzyła się strona logowania {vendor}, więc nic nie zostało połączone. Spróbuj ponownie.",
   "connect.no_such_connection": "Nie ma połączenia o tym identyfikatorze.",
   "connect.no_taf": "Najpierw utwórz tafa: aplikację łączy się po to, by taf mógł jej używać.",
   "connect.not_connected": "Nie połączono. {why}",

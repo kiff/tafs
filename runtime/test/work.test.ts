@@ -122,6 +122,65 @@ describe("a run cut off, never read as done", () => {
   });
 });
 
+describe("a capped run never reads Done, on the work page, the request page or the list", () => {
+  const LANGS = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const;
+
+  it("never says Done for a run stopped at its turn or cost cap, in any language (negative)", async () => {
+    const { wordsIn } = await import("../src/cloud/words/index.js");
+    for (const lang of LANGS) {
+      const w = wordsIn(lang);
+      const done = w.work_done_at({ hm: "11:05" });
+      const lastDone = w.work_last_done({ hm: "11:05" });
+      for (const stop of ["turn_cap", "cost_cap"]) {
+        const r = run({ stop, turns: 50 });
+        const q = requestOf(r, "UTC", NOW, [], undefined, [], lang);
+        expect(q.state, `${lang} ${stop}`).not.toBe("done");
+        expect(q.line, `${lang} ${stop}`).not.toBe(done);
+        // The request page: no "Done" step, and its last step is the stopped line.
+        const steps = requestDetail(r, [], [], "UTC", NOW, undefined, undefined, [], lang).steps;
+        expect(steps.some((s) => s.state === "done" && s.label === w.step_done), `${lang} ${stop}`).toBe(false);
+        expect(steps.at(-1)!.line, `${lang} ${stop}`).toBe(stop === "turn_cap" ? w.work_capped_turns({ hm: "11:05" }) : w.work_capped_cost({ hm: "11:05" }));
+        // The list, with or without a next run: never "Last done".
+        for (const how of [false, { next: "2026-10-31T07:00:00Z" }, { unscheduled: true }]) {
+          expect(summaryOf([r], how, "UTC", NOW, lang).line, `${lang} ${stop}`).not.toBe(lastDone);
+        }
+        expect(workOf([r], "UTC", NOW, [], undefined, undefined, lang).counts.done, `${lang} ${stop}`).toBe(0);
+      }
+    }
+    // In English, the word itself is absent from every line said of a capped run.
+    for (const stop of ["turn_cap", "cost_cap"]) {
+      const r = run({ stop, turns: 50 });
+      expect(requestOf(r, "UTC", NOW).line).not.toMatch(/\bDone\b/i);
+      expect(summaryOf([r], false, "UTC", NOW).line).not.toMatch(/\bdone\b/i);
+      expect(JSON.stringify(requestDetail(r, [], [], "UTC", NOW).steps)).not.toMatch(/\bDone\b/);
+      expect(workOf([r], "UTC", NOW, []).requests[0]!.line).not.toMatch(/\bDone\b/);
+    }
+  });
+
+  it("says plainly which limit stopped it, and when", () => {
+    expect(requestOf(run({ stop: "turn_cap" }), "Europe/Tallinn", NOW).line).toBe("Stopped at 13:05: it reached its limit of steps for one run");
+    expect(requestOf(run({ stop: "cost_cap" }), "Europe/Tallinn", NOW).line).toBe("Stopped at 13:05: it reached its cost limit for one run");
+  });
+
+  it("still reads Done for an ordinary completed run, on its line, its request page and the list", () => {
+    for (const stop of ["answered", undefined]) {
+      const r = run(stop ? { stop } : {});
+      expect(requestOf(r, "UTC", NOW)).toMatchObject({ state: "done", line: "Done at 11:05" });
+      expect(requestDetail(r, [], [], "UTC", NOW).steps.at(-1)).toEqual({ label: "Done", line: "11:05", state: "done" });
+      expect(summaryOf([r], false, "UTC", NOW).line).toBe("Last done at 11:05");
+      expect(workOf([r], "UTC", NOW, []).counts).toMatchObject({ done: 1, stopped: 0 });
+    }
+  });
+
+  it("leaves a failed run as it was", () => {
+    const failed = run({ status: "ERROR", error: "the run failed" });
+    expect(requestOf(failed, "UTC", NOW)).toMatchObject({ state: "failed", line: "It stopped on an error. Nothing was done after it." });
+    expect(requestDetail(failed, [], [], "UTC", NOW).steps.at(-1)).toEqual({ label: "It failed", line: "It stopped on an error. Nothing was done after it.", state: "failed" });
+    expect(summaryOf([failed], false, "UTC", NOW)).toMatchObject({ status: "idle", line: "It stopped on an error. Nothing was done after it.", attention: true });
+    expect(workOf([failed], "UTC", NOW, []).counts).toMatchObject({ failed: 1, done: 0, stopped: 0 });
+  });
+});
+
 describe("a plan in one line", () => {
   it("names the step at work, or the first still to do, or says it's done", async () => {
     const { withLine } = await import("../src/cloud/handler.js");

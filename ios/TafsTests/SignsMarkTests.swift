@@ -79,4 +79,24 @@ final class SignsMarkTests: XCTestCase {
         XCTAssertTrue(chat.contains("if next, let words = component.signs?.words {"))
         XCTAssertTrue(chat.contains(".foregroundColor(next ? Theme.dim : Theme.ink)"))
     }
+
+    /// An app's first sign-in has no draft yet, and tafs cloud still says its Card comes next: its
+    /// words are drawn, as on Android.
+    func testAFirstSignInWithNoDraftStillSaysItsCardComesNext() throws {
+        let first = try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","signs":{"card":false,"words":"Its Card: you approve it next"}}"#)
+        XCTAssertNil(first.draft)
+        XCTAssertEqual(SetupApproval.cardNextWords(first), "Its Card: you approve it next")
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let chat = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(chat.contains("} else if grant != nil, let words = Self.cardNextWords(component) {"))
+    }
+
+    /// Without tafs cloud's words for a Card next, a first sign-in draws no line.
+    func testNoMarkOnAFirstSignInDrawsNoLine() throws {
+        XCTAssertNil(SetupApproval.cardNextWords(try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1"}"#)), "no signs: no line")
+        XCTAssertNil(SetupApproval.cardNextWords(try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","signs":{"card":false}}"#)), "no words: no line")
+        XCTAssertNil(SetupApproval.cardNextWords(try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","signs":{"card":true,"words":"Its Card: you approve it next"}}"#)), "signed now: not next")
+        XCTAssertNil(SetupApproval.cardNextWords(try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","draft":"dr_1","signs":{"card":false,"words":"Its Card: you approve it next"}}"#)), "with a draft: drawn over the Card instead")
+        XCTAssertNil(SetupApproval.cardNextWords(try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","connection":{"done":true,"words":"Connected"},"signs":{"card":false,"words":"Its Card: you approve it next"}}"#)), "already connected: its one line")
+    }
 }

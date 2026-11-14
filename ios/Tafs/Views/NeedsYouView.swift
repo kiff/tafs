@@ -14,6 +14,8 @@ struct NeedsYouView: View {
                 // A step a taf handed its owner comes first, oldest first (docs/api.md › Your step), as on Android.
                 ForEach(model.yourSteps) { step in YourStepCard(step: step).id(step.id) }
                 // Coach waits on the owner in a chat (an approval, a sign-in, an answer): tafs cloud's words, and its way in.
+                // "Set all aside", tafs cloud's, above them: only with two or more, and one ask that names the count.
+                if let clear = model.setAllAside { SetAllAsideButton(clear: clear) }
                 ForEach(model.coachWaiting) { waiting in CoachWaitingCard(waiting: waiting).id(waiting.id) }
                 // A knock at a taf's door waits for the owner too (kiff/tafs#236, item 17).
                 let knocked = model.tafs.filter { knocks($0) > 0 }
@@ -473,12 +475,51 @@ struct AlertsOfferSheet: View {
 }
 
 /// A Coach chat waiting on its person (docs/api.md › Coach waiting): tafs cloud's line, and its way in,
-/// which opens Coach on that chat.
+/// which opens Coach on that chat. When tafs cloud sends `words.set_aside`, the row can be swiped
+/// away either way to set it aside, its "not now", and has a button with the same words, so a swipe
+/// isn't the only way. One call per gesture: the row asks once, and the model sends nothing for a chat
+/// already being set aside.
 struct CoachWaitingCard: View {
     @EnvironmentObject private var model: AppModel
     let waiting: TafsCloud.CoachWaiting
+    /// How far the row is dragged sideways now.
+    @State private var dragged: CGFloat = 0
+    /// This row asked to be set aside, and tafs cloud hasn't answered yet.
+    @State private var asked = false
+    /// How far a swipe goes before it sets the chat aside.
+    static let swipeDistance: CGFloat = 96
 
     var body: some View {
+        if model.canSetAside(waiting) {
+            ZStack(alignment: dragged < 0 ? .trailing : .leading) {
+                // Behind the row as it moves: tafs cloud's words for what the swipe does.
+                Text(waiting.words.setAside).scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
+                    .padding(.horizontal, 16)
+                    .opacity(min(1, abs(dragged) / Self.swipeDistance))
+                    .accessibilityHidden(true)
+                panel.offset(x: dragged)
+            }
+            // Beside the scroll, never instead of it: only a mostly sideways drag moves the row.
+            .simultaneousGesture(DragGesture(minimumDistance: 20)
+                .onChanged { drag in
+                    guard !asked, abs(drag.translation.width) > abs(drag.translation.height) else { return }
+                    dragged = drag.translation.width
+                }
+                .onEnded { drag in
+                    let sideways = abs(drag.translation.width) > abs(drag.translation.height)
+                    if sideways, abs(drag.translation.width) >= Self.swipeDistance { setAside() }
+                    withMotion { dragged = 0 }
+                })
+            .accessibilityAction(named: Text(waiting.words.setAside)) { setAside() }
+            // The swipe and its accessibility action set the chat aside: the person's to confirm, never Coach's
+            // (docs/drive.md), whether or not a drive can reach them. Inside, only Set aside confirms.
+            .confirming()
+        } else {
+            panel
+        }
+    }
+
+    private var panel: some View {
         Panel(stroke: Theme.amber.opacity(0.4)) {
             HStack(alignment: .center, spacing: 10) {
                 Image(systemName: "sparkle").foregroundColor(Theme.amberText).accessibilityHidden(true)
@@ -490,8 +531,56 @@ struct CoachWaitingCard: View {
             if model.mayUseCoach {
                 Button(waiting.words.open) { Task { await model.openCoachWaiting(waiting) } }
                     .buttonStyle(PrimaryButtonStyle())
+                    // Opening the chat confirms nothing, inside a row whose swipe does.
+                    .environment(\.driveConfirm, false)
                     .accessibilityIdentifier("needs-you.coach-waiting." + waiting.session)
             }
+            // The swipe's words as a button too, only when tafs cloud sent them.
+            if model.canSetAside(waiting) {
+                Button(waiting.words.setAside) { setAside() }
+                    .buttonStyle(OutlineButtonStyle(color: Theme.soft))
+                    .disabled(asked || model.settingAside.contains(waiting.session))
+                    // Coach driving the app never sets a chat aside: it's the person's to confirm (docs/drive.md).
+                    .confirming()
+                    .driveID("needs-you.set-aside." + waiting.session)
+                    .driveWords(waiting.words.setAside)
+                    .accessibilityIdentifier("needs-you.coach-waiting.set-aside." + waiting.session)
+            }
         }
+    }
+
+    /// Asks once: a gesture, a tap or an accessibility action while it's on its way sends nothing more.
+    private func setAside() {
+        guard !asked, !model.settingAside.contains(waiting.session) else { return }
+        asked = true
+        Haptics.tap()
+        Task {
+            await model.setAsideCoach(waiting.session)
+            asked = false
+        }
+    }
+}
+
+/// "Set all aside" (`coach_waiting_clear`), above two or more waiting Coach chats: it asks once, in
+/// tafs cloud's words (the title names the count it ends), then sets every one aside in one call.
+struct SetAllAsideButton: View {
+    @EnvironmentObject private var model: AppModel
+    let clear: TafsCloud.CoachWaitingClear
+    @State private var confirming = false
+
+    var body: some View {
+        Button(clear.words.button) { confirming = true }
+            .buttonStyle(OutlineButtonStyle(color: Theme.amberText))
+            .disabled(!model.settingAside.isEmpty)
+            .confirming()
+            .driveID("needs-you.set-all-aside")
+            .driveWords(clear.words.button)
+            .accessibilityIdentifier("needs-you.coach-waiting.set-all-aside")
+            .confirmationDialog(clear.words.title, isPresented: $confirming, titleVisibility: .visible) {
+                Button(clear.words.yes, role: .destructive) { Task { await model.setAsideCoach(nil) } }.confirming()
+                Button(clear.words.no.isEmpty ? Words.Common.cancel : clear.words.no, role: .cancel) {}
+            } message: {
+                if !clear.words.text.isEmpty { Text(clear.words.text) }
+            }
     }
 }

@@ -1,0 +1,2 @@
+- „Beiseitelegen“ sendet eine Anfrage pro Chat, wie auch immer du wischst.
+- Eine verbundene App öffnet sich beim Tippen immer. Können ihre Verbindungen nicht gelesen werden, steht dort, warum.

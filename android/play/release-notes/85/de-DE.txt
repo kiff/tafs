@@ -1,0 +1,4 @@
+- Deine Verbindungen sind klar lesbar: was sie sind, wer sie nutzt und wie es ihnen geht. Tippe für Details; Entfernen fragt noch einmal nach.
+- Ein taf mit abgelaufener Anmeldung hat sein eigenes „Erneut verbinden“ und behält seine Card.
+- „Braucht dich“ zeigt, wenn Coach auf dich wartet.
+- Eine Anmeldung beim falschen Konto wird klar benannt.

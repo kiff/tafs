@@ -1,0 +1,2 @@
+- 'Opzijzetten' stuurt één verzoek per chat, hoe je ook veegt.
+- Een gekoppelde app opent altijd als je erop tikt. Kunnen de koppelingen niet worden gelezen, dan staat er waarom.
