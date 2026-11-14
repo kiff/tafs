@@ -6883,7 +6883,9 @@ final class AppModel: ObservableObject {
     @discardableResult
     func setAsideCoach(_ session: String?) async -> Bool {
         guard mode == .kiff else { return false }
-        let sessions = session.map { Set([$0]) } ?? Set(coachWaiting.map(\.session))
+        // Set all aside ends every chat tafs cloud listed, so it's guarded by all of them, rows
+        // hidden while being set aside included: no second call for a chat already on its way.
+        let sessions = session.map { Set([$0]) } ?? Set(coachWaitingListed.map(\.session))
         // Checked and marked before anything is awaited, so on the main actor no second call slips in between.
         guard !sessions.isEmpty, settingAside.isDisjoint(with: sessions) else { return false }
         settingAside.formUnion(sessions)
