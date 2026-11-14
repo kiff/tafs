@@ -62,8 +62,9 @@ class CoachUnstartedTest {
     val sent = mutableListOf<Pair<String, String>>()
     show(ApprovalReadiness.Ready, sent)
     rule.onNodeWithText(handed).assertExists()
-    // What Coach is, and that starting asks once, stay above the conversation; there's no Start to tap first.
-    rule.onNodeWithText(Words.Coach.startingAsks("your fingerprint")).assertExists()
+    // What Coach is stays above the conversation, with no line of the app's own about a fingerprint (tafs cloud's Start says what
+    // starting asks, when it does); there's no Start to tap first.
+    rule.onAllNodesWithText(Words.Coach.startingAsks("your fingerprint")).assertCountEquals(0)
     rule.onAllNodesWithText(Words.Coach.start).assertCountEquals(0)
     rule.onNodeWithContentDescription(Words.Common.send).performClick()
     rule.waitForIdle()

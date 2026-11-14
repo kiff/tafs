@@ -7,8 +7,8 @@ checked, the row says **unverified**.
 tafs makes no data-residency claim. What tafs keeps is in AWS `eu-west-1` (Ireland):
 **kiff/agents** (the runtime: definitions, runs, chats, notes, schedules, the tafs'
 KIFF keys) and, since 25 October 2026, **tafs cloud**'s table and push key. tafs
-cloud's functions (the phone's API, push) still run in `us-east-1`, reading and
-writing that data in `eu-west-1`; their logs stay in `us-east-1` until they move too.
+cloud's functions (the phone's API, push) run in `eu-west-1` too, with their logs;
+`us-east-1` holds no tafs function, table or log (checked live, 14 November 2026).
 Anthropic only serves the model.
 
 The move: until 25 October 2026, tafs cloud's table was in `us-east-1`. It was copied
@@ -27,7 +27,7 @@ the copy is checked, so nothing erased in `eu-west-1` stays behind in `us-east-1
 
 | What | Where | Region | What's in it | How long | Who deletes it |
 |---|---|---|---|---|---|
-| tafs cloud logs | AWS CloudWatch, `/aws/lambda/tafs-cloud` and `…-stream` (also two old test functions' logs, `tafs-cloud-smoke` and `tafs-live-test`, set to 30 days on 22 Oct) | `us-east-1` | Lambda start and end lines, and the error a failed request hit (`console.error` in `handler.ts`; push, alert and removal steps log a short reason). Bodies, keys, tokens and secrets are not logged on purpose. An error from kiff/agents or KIFF can include a taf's id or name. | 30 days (`infra/aws.sh`, checked live) | CloudWatch, on expiry |
+| tafs cloud logs | AWS CloudWatch, `/aws/lambda/tafs-cloud` and `…-stream` | `eu-west-1` (checked live, 14 Nov) | Lambda start and end lines, and the error a failed request hit (`console.error` in `handler.ts`; push, alert and removal steps log a short reason). Bodies, keys, tokens and secrets are not logged on purpose. An error from kiff/agents or KIFF can include a taf's id or name. | 30 days (`infra/aws.sh`, checked live) | CloudWatch, on expiry |
 | Tafs | DynamoDB `tafs-cloud-names`, item `tafs#tenant` | `eu-west-1` | Per taf: its id, name, job, KIFF agent id, the claim on its name, when it started; its run budget, the owner's start notes and a digest of its definition, so a new definition can be built for it (#69); its colour in the app (#91); the recipe it was built from, by id, and its first week's credits as KIFF counted them, once its week-one note is posted on a read of its conversation ([api.md](api.md#a-tafs-estimate)) | Until the taf is removed | tafs cloud on remove |
 | Taf names | Same table, `tenant#name` | `eu-west-1` | The KIFF account id and the taf's name | Until the taf is removed (#34) | tafs cloud when a taf is removed or fails to start |
 | Chat flood slots | Same table, `rate#tenant#taf#window#n` | `eu-west-1` | Account id, taf id, a 10-minute window number | About 10 minutes; DynamoDB's ttl deletes it, usually within 48 hours | DynamoDB ttl |
@@ -63,7 +63,7 @@ the copy is checked, so nothing erased in `eu-west-1` stays behind in `us-east-1
 | Schedules | EventBridge Scheduler, group `agents` | `eu-west-1` | When each taf runs: cron, time zone, the job's instruction | Until the taf is paused (off) or removed | kiff/agents |
 | A taf draft's claim | AWS Secrets Manager `agents-drafts/<tenant>/<draft>` | `eu-west-1` | Per draft Setup submits: its claim secret until the taf's key is claimed, then what the claim did (the agent, where its key went, when). The key itself only for the moment between KIFF minting it and its storing | Until a person deletes it; deleting the account will delete it once kiff/agents#180 is live | A person |
 | kiff/agents logs | AWS CloudWatch, `/aws/lambda/agents*` | `eu-west-1` | Start and end lines, and errors: ids (the account, a run, a schedule), a status, and the error's text, which can quote what an upstream service answered (Anthropic, KIFF), never a request's body. Checked in code (every log call) and in the last 3 days of logs (22 Oct) | 30 days (kiff/agents `infra/aws.sh`, checked live); the Eval's Stripe stand-in, 7 | CloudWatch, on expiry |
-| Backups | none | | tafs cloud's table (`tafs-cloud-names`) and kiff/agents' (`agents`) have point-in-time recovery off and no backups, so a deleted record is gone at once (checked live, 22 Oct) | | |
+| Backups | DynamoDB point-in-time recovery | `eu-west-1` | tafs cloud's table (`tafs-cloud-names`) and kiff/agents' (`agents`) have point-in-time recovery on, and no other backups, copies or replicas. A deleted record stays in those copies until they age out (checked live, 14 Nov) | 35 days | AWS, as the copies age out |
 | What the model sees | Anthropic, Messages API | Inference may run elsewhere (above) | Each model turn: the instructions, the session's recent history (with the summary of a long chat's earlier part), where its connections and drafts stand now, what the chat read earlier (up to 4 hours), tool calls and results, and the files attached to the chat's messages, sent inline with the request (newest first, up to 20 MB), never into Anthropic's file storage | 30 days by default (Anthropic's terms, above) | Anthropic |
 | Cards, held calls, answers, receipts | KIFF (`api.kiff.dev`) | KIFF's | Who may do what, what was held, the phone's signed answers, receipts | KIFF's terms | KIFF: [kiff.dev/privacy](https://kiff.dev/privacy) |
 | Push alerts (with #32) | Apple Push Notification service | Apple's | "A taf needs you", the tool name, the held call's id. No amounts or request details: KIFF never sends them | Until delivered, or until the hold expires | Apple |

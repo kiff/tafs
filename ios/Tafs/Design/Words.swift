@@ -1163,8 +1163,6 @@ enum Words {
         }
         /// Driving
         static var driving: String { Words.line("coach.driving") }
-        /// Each connection and each Card waits for {biometry}.
-        static func eachWaits(biometry: String) -> String { Words.line("coach.each_waits", biometry) }
         /// Earlier request
         static var earlierRequest: String { Words.line("coach.earlier_request") }
         /// Folds the plan
@@ -1183,7 +1181,7 @@ enum Words {
         static func improveLine(name: String) -> String { Words.line("coach.improve_line", name) }
         /// Improve {taf}
         static func improveTaf(taf: String) -> String { Words.line("coach.improve_taf", taf) }
-        /// Name an app for your taf, like your payment provider. No taf sees your sign-in.
+        /// Name an app for your taf, like your payment provider.
         static var intro: String { Words.line("coach.intro") }
         /// KIFF counts it this way
         static var kiffCountsWay: String { Words.line("coach.kiff_counts_way") }
@@ -1207,8 +1205,8 @@ enum Words {
         static var notArchivedTryAgain: String { Words.line("coach.not_archived_try_again") }
         /// Connecting apps isn't set up for this account from this phone. Open Coach to start it.
         static var notConnectable: String { Words.line("coach.not_connectable") }
-        /// The sign-in at {vendor} didn't connect: the connection is {status}. Nothing was connected. Try signing in again.
-        static func notConnected(vendor: String, status: String) -> String { Words.line("coach.not_connected", vendor, status) }
+        /// The sign-in at {vendor} didn't finish, so nothing was connected. Try signing in again.
+        static func notConnected(vendor: String) -> String { Words.line("coach.not_connected", vendor) }
         /// {owner|possessive} new version wasn't made: {why}.
         static func notImproved(owner: String, why: String) -> String { Words.line("coach.not_improved", owner, why, Words.possessive(owner)) }
         /// Not now: no sign-in at {vendor}
@@ -1328,10 +1326,16 @@ enum Words {
             static var eyebrow: String { Words.line("coach.sign_in.eyebrow") }
             /// Open {service}
             static func `open`(service: String) -> String { Words.line("coach.sign_in.open", service) }
+            /// Open the sign-in again
+            static var openAgain: String { Words.line("coach.sign_in.open_again") }
+            /// Open {app}'s sign-in again
+            static func openAgainApp(app: String) -> String { Words.line("coach.sign_in.open_again_app", app) }
             /// Open the sign-in
             static var openSignIn: String { Words.line("coach.sign_in.open_sign_in") }
             /// Opens {destination}
             static func opens(destination: String) -> String { Words.line("coach.sign_in.opens", destination) }
+            /// Opens {app}'s sign-in
+            static func opensApp(app: String) -> String { Words.line("coach.sign_in.opens_app", app) }
         }
         /// The vendor's own page opens. No taf sees your sign-in.
         static var signInNote: String { Words.line("coach.sign_in_note") }
@@ -1373,6 +1377,8 @@ enum Words {
         static var toolsUnknown: String { Words.line("coach.tools_unknown") }
         /// Setup answered something this app doesn't read. Update the app.
         static var unknownAnswer: String { Words.line("coach.unknown_answer") }
+        /// If {app}'s sign-in page opened, finish it there and come back.
+        static func waitingForApp(app: String) -> String { Words.line("coach.waiting_for_app", app) }
         /// If the vendor's sign-in page opened, finish it there and come back.
         static var waitingForVendor: String { Words.line("coach.waiting_for_vendor") }
         /// What this conversation is about
@@ -1637,8 +1643,8 @@ enum Words {
         static func moreAppsCouldNotListed(why: String) -> String { Words.line("connect.more_apps_could_not_listed", why) }
         /// The sign-in at {vendor} came back without its confirmation code. Nothing was connected.
         static func noConfirmationCode(vendor: String) -> String { Words.line("connect.no_confirmation_code", vendor) }
-        /// The connection came back {status} with no sign-in link. Nothing was connected.
-        static func noSignInLink(status: String) -> String { Words.line("connect.no_sign_in_link", status) }
+        /// {vendor} didn't open a sign-in page, so nothing was connected. Try again.
+        static func noSignInLink(vendor: String) -> String { Words.line("connect.no_sign_in_link", vendor) }
         /// There's no connection with that id.
         static var noSuchConnection: String { Words.line("connect.no_such_connection") }
         /// Make a taf first: an app is connected for a taf to use.
@@ -2196,7 +2202,7 @@ enum Words {
         enum Explain {
             /// Halted. Resuming starts only new work.
             static var halted: String { Words.line("halt.explain.halted") }
-            /// Halted since {time}. Resuming starts only new work.
+            /// Since {time}. Resuming starts only new work.
             static func haltedSince(time: String) -> String { Words.line("halt.explain.halted_since", time) }
             /// Nothing new starts. Halted shows once KIFF and the connection both confirm.
             static var halting: String { Words.line("halt.explain.halting") }
@@ -2205,8 +2211,6 @@ enum Words {
             /// Halting stops it until you resume. A call already sent may still arrive.
             static var runningOne: String { Words.line("halt.explain.running_one") }
         }
-        /// Halted{since}. Resuming starts only new work.
-        static func haltedNothingReachesYourTools(since: String) -> String { Words.line("halt.halted_nothing_reaches_your_tools", since) }
         /// Halting stops {who} until you resume. A call already sent may still arrive.
         static func haltingStopsNoRunStarts(who: String) -> String { Words.line("halt.halting_stops_no_run_starts", who) }
         /// Halt now
@@ -2309,8 +2313,6 @@ enum Words {
         static var seeAllJobs: String { Words.line("home.see_all_jobs") }
         /// Shared with you
         static var sharedYou: String { Words.line("home.shared_you") }
-        /// You sign in and approve each step
-        static var signApproveEachStep: String { Words.line("home.sign_approve_each_step") }
         /// Start a new taf
         static var startNewTaf: String { Words.line("home.start_new_taf") }
         /// Status
@@ -3563,6 +3565,8 @@ enum Words {
         static var languageTitle: String { Words.line("settings.language_title") }
         /// Legal
         static var legal: String { Words.line("settings.legal") }
+        /// {label} (in English)
+        static func legalInEnglish(label: String) -> String { Words.line("settings.legal_in_english", label) }
         /// The light taps when you send or answer.
         static var lightTapsWhenYouSend: String { Words.line("settings.light_taps_when_you_send") }
         /// Mode

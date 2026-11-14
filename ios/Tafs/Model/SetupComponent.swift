@@ -113,16 +113,30 @@ struct SetupComponent: Decodable, Equatable {
         var card: Bool?
         /// The Card section's heading when it isn't: "Its Card: you approve it next".
         var words: String?
-        enum CodingKeys: String, CodingKey { case card, words }
-        init(card: Bool?, words: String? = nil) { self.card = card; self.words = words }
+        /// Whether Approve is a tap inside an open approval window (`"tap"`) or always the
+        /// fingerprint (`"fingerprint"`), as tafs cloud decides it (`signs.takes`, docs/chat.md).
+        /// None when tafs cloud didn't say: the card then promises no tap.
+        var takes: String?
+        enum CodingKeys: String, CodingKey { case card, words, takes }
+        init(card: Bool?, words: String? = nil, takes: String? = nil) { self.card = card; self.words = words; self.takes = takes }
         /// Read leniently: a field of another shape is none, never the card unread.
         init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             card = try? c.decodeIfPresent(Bool.self, forKey: .card)
             words = (try? c.decodeIfPresent(String.self, forKey: .words))?.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+            takes = try? c.decodeIfPresent(String.self, forKey: .takes)
         }
         /// The Card isn't signed by this approval: it comes next.
         var cardNext: Bool { card == false }
+        /// Approve is a tap inside an open approval window: only then may a card say the window holds.
+        var tap: Bool { takes == "tap" }
+    }
+
+    /// KIFF's approval-window words ("No fingerprint for the next 4 minutes") for this card: only
+    /// when tafs cloud marks its Approve a tap (`signs.takes: "tap"`), never over one that takes the
+    /// fingerprint or says nothing of it (as Android's `windowWordsFor`, Android 1.27.9).
+    func windowWords(_ held: String?) -> String? {
+        signs?.tap == true ? held : nil
     }
 
     enum CodingKeys: String, CodingKey {

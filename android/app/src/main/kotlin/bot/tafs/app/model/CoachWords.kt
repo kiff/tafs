@@ -163,8 +163,8 @@ object CoachWords {
   val CHECKING_SIGN_IN get() = Words.Coach.checkingSignIn
 
   /** The vendor's page came back, but planque doesn't hold the connection as connected. */
-  fun notConnected(vendor: String, status: String) =
-    Words.Coach.notConnected(vendor, status.replace('_', ' '))
+  /** A sign-in that didn't connect, never by the connection's status: tafs cloud's words for it (approval_not_connected). */
+  fun notConnected(vendor: String) = Words.Coach.notConnected(vendor)
 
   /** An approval with nothing to sign: the connection is connected and it brings no Card. Nothing is approved. */
   fun nothingToApprove(vendor: String) = Words.Coach.nothingToApprove(vendor)
@@ -269,6 +269,13 @@ object CoachWords {
   /** Coach's conversation has nothing in it yet: new, or with no message, card or one on its way. New conversation keeps it. */
   fun isEmptyChat(state: bot.tafs.app.app.AppState): Boolean =
     state.coachFresh || (state.chatItems(bot.tafs.app.app.COACH_CHAT).isEmpty() && state.chatSent[bot.tafs.app.app.COACH_CHAT].isNullOrEmpty())
+
+  /**
+   * Whether New conversation stays where it is: on an empty plain conversation only. An empty one about a taf ("Improve
+   * Refunds") gives way to a plain new one, so the pencil always opens a plain chat.
+   */
+  fun newChatStays(state: bot.tafs.app.app.AppState): Boolean =
+    isEmptyChat(state) && state.coachImproving == null && state.coachContext == null
 
   val ANSWERING get() = Words.Coach.answering
 

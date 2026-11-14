@@ -9,8 +9,14 @@ import type { Fetch } from "./kiff.js";
 /** One catalog entry as the apps show it. */
 export interface CatalogApp {
   entry: string;
+  /** planque's key for the app: a reviewed entry's vendor ("Qonto"), a managed app's slug ("gmail"). Not for people. */
   vendor: string;
+  /** planque's title, as it gives it ("Qonto invoicing: reads, and invoice drafts from quotes"); kept for apps that draw it. */
   title: string;
+  /** The app's name for people, what a row reads as: "Qonto", "Gmail". */
+  name: string;
+  /** What this entry of the app is, under its name ("Invoicing: reads, and invoice drafts from quotes"); absent when the title is the name. */
+  subtitle?: string;
   icon?: string;
   how: "oauth" | "key";
   /** `needs_setup`: the app needs setting up by an operator before anyone can connect it; the apps say so and offer no Connect. */
@@ -89,8 +95,9 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
     const how = e.how === "key" ? "key" : e.how === "oauth" ? "oauth" : undefined;
     const state = e.state === "connected" || e.state === "needs_reconnect" || e.state === "needs_setup" ? e.state : "available";
     if (typeof e.entry !== "string" || !ENTRY.test(e.entry) || typeof e.title !== "string" || !how) continue;
+    const vendor = typeof e.vendor === "string" ? e.vendor : e.title;
     apps.push({
-      entry: e.entry, vendor: typeof e.vendor === "string" ? e.vendor : e.title, title: e.title,
+      entry: e.entry, vendor, title: e.title, ...displayName(e.entry, vendor, e.title),
       ...(typeof e.icon === "string" && e.icon.startsWith("https://") ? { icon: e.icon } : {}),
       how, state, ...(state === "needs_setup" ? { words: NEEDS_SETUP_WORDS } : {}), ...(typeof e.grant === "string" ? { grant: e.grant } : {}),
     });
@@ -105,9 +112,41 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
 }
 
 /**
+ * A row's name and subtitle. A reviewed entry's vendor is the app's name, as people write it ("Qonto"), and its
+ * title says what the entry does after that name ("Qonto invoicing: reads, …"): the row reads as the vendor, the
+ * rest of the title under it. A managed app's vendor is its slug ("gmail") and its title is its name ("Gmail"); a
+ * title that doesn't start with the vendor as written ("Use websites") is the name itself. Neither has a subtitle.
+ */
+export function displayName(entry: string, vendor: string, title: string): { name: string; subtitle?: string } {
+  const name = vendor.trim();
+  if (entry.startsWith("connector:") || !name || !title.startsWith(name)) return { name: title };
+  const after = title.slice(name.length);
+  // "Qonto invoicing", "Qonto: invoicing", "Qonto, read only", "Qonto – invoicing": never "Qontoapp".
+  if (!/^[\s:,;.\u2013\u2014-]/.test(after)) return { name: title };
+  const rest = after.replace(/^[\s:,;.\u2013\u2014-]+/, "").trim();
+  return rest ? { name, subtitle: rest.charAt(0).toLocaleUpperCase("en") + rest.slice(1) } : { name };
+}
+
+/**
+ * The apps people connect first, in order: what Discover opens on. A copy of planque's `guidesFirst`
+ * (kiff/planque cmd/planque/guides.go), the order deploy/guides/apps.md lists them in. A stopgap until planque's
+ * catalog says this order itself: keep the two the same.
+ */
+const FIRST_APPS = ["gmail", "googlesheets", "stripe", "github", "linkedin", "qonto",
+  "googlecalendar", "googledrive", "googledocs", "outlook", "slack", "notion", "hubspot", "shopify", "calendly", "trello", "asana", "airtable"];
+
+/** Where an app comes among the first apps, by its slug (a managed provider's entry's last part) or its vendor; else past them all. */
+function firstRank(a: CatalogApp): number {
+  const slug = (a.entry.split(":").pop() ?? "").replace(/@\d+$/, "").toLowerCase();
+  const at = [slug, a.vendor.toLowerCase()].map((k) => FIRST_APPS.indexOf(k)).filter((i) => i >= 0);
+  return at.length ? Math.min(...at) : FIRST_APPS.length;
+}
+
+/**
  * A page in the order a person looks for an app: the account's own connections first (one to sign in again
  * before one connected), then, for a search, apps whose name starts with it, then whose name has it, then the
- * rest; planque's order otherwise. Only within the page: planque pages its catalog.
+ * rest, each in planque's order; with no search, the first apps people connect (FIRST_APPS), then the rest
+ * by name. Only within the page: planque pages its catalog.
  */
 function ordered(apps: CatalogApp[], q: string): CatalogApp[] {
   const want = q.trim().toLowerCase();
@@ -118,7 +157,9 @@ function ordered(apps: CatalogApp[], q: string): CatalogApp[] {
     const name = `${a.title} ${a.vendor}`.toLowerCase();
     return a.title.toLowerCase().startsWith(want) || a.vendor.toLowerCase().startsWith(want) ? 2 : name.includes(want) ? 3 : 4;
   };
-  return apps.map((a, i) => ({ a, i, r: rank(a) })).sort((x, y) => x.r - y.r || x.i - y.i).map((x) => x.a);
+  const discover = (x: CatalogApp, y: CatalogApp): number =>
+    want ? 0 : firstRank(x) - firstRank(y) || x.title.localeCompare(y.title, "en", { sensitivity: "base" });
+  return apps.map((a, i) => ({ a, i, r: rank(a) })).sort((x, y) => x.r - y.r || (x.r === 2 ? discover(x.a, y.a) : 0) || x.i - y.i).map((x) => x.a);
 }
 
 /** Starts a connection of entry for agent, the taf's KIFF agent: the grant to approve, nothing signed. */

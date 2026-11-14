@@ -131,10 +131,15 @@ class DriveContractTest {
     assertTrue("These confirm, so they carry .confirms() (docs/drive.md): $unmarked", unmarked.isEmpty())
     // Controls that aren't buttons carry it on the modifier that takes the touch.
     val onModifiers = listOf(
-      "views/DeleteAccountView.kt" to "heightIn(min = 48.dp).confirms()\n            .clickable(enabled = !busy) { scope.launch { if (delete()) onClose() } }",
-      "views/UsageViews.kt" to "Modifier.confirms().clickable(enabled = state.buying == null) { scope.launch { actions.buy(id) } }",
+      "views/DeleteAccountView.kt" to "heightIn(min = 48.dp).confirms()\n            .tapping(enabled = !busy) { scope.launch { if (delete()) onClose() } }",
+      "views/UsageViews.kt" to "Modifier.confirms().tapping(enabled = state.buying == null) { scope.launch { actions.buy(id) } }",
       "views/DevicesView.kt" to "scope.launch { remove(device) } }, modifier = Modifier.confirms())",
-      "views/ConnectAppsViews.kt" to "Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = state.connecting == null) { act(g) }",
+      "views/ConnectAppsViews.kt" to "Modifier.heightIn(min = 44.dp).confirms().tapping(enabled = state.connecting == null) { act(g) }",
+      // Setting a waiting Coach chat aside ends it: the button, the swipe, Set all aside and its ask's yes.
+      "views/YourStepViews.kt" to "OutlineButton(waiting.words.setAside, { onSetAside(waiting.session) }, Modifier.fillMaxWidth().confirms())",
+      "views/YourStepViews.kt" to "SwipeToDismissBox(swipe, modifier = Modifier.confirms(),",
+      "views/NeedsYouView.kt" to ".confirms().tapping(enabled = state.settingAside.isEmpty()) {",
+      "views/NeedsYouView.kt" to "onSetAside?.invoke(null) }, modifier = Modifier.confirms())",
     ).filter { (file, marked) -> marked !in File(sources, file).text() }
     assertTrue("Delete account, a pack's price, signing out another device and a connection's fix confirm: $onModifiers", onModifiers.isEmpty())
     // And everything ApprovalGate holds is inside it: the approvals, extra room, "Did this happen?", install, resume.
@@ -150,9 +155,9 @@ class DriveContractTest {
   @Test
   fun everyControlWhoseWordsConfirmCarriesTheMark() {
     val label = Regex(""""[^"]*\b(Delete|Remove|Disconnect|Halt|Revoke|Sign out|Buy|Resume|Approve|Install|Refuse|Pair|Unpair|Forget|Go back)\b[^"]*"""")
-    val touch = Regex("""TextButton|DropdownMenuItem|OutlineButton|PrimaryButton|\bButton\(|clickable""")
+    val touch = Regex("""TextButton|DropdownMenuItem|OutlineButton|PrimaryButton|\bButton\(|clickable|tapping""")
     val notConfirming = setOf(
-      "Modifier.clickable(onClickLabel = \"Open Halt\"", // the halt chip opens the halt screen, whose buttons carry the mark
+      "Modifier.tapping(onClickLabel = \"Open Halt\"", // the halt chip opens the halt screen, whose buttons carry the mark
       "contentDescription = \"Remove {name}\"(file.name)", // takes a file off a message not sent yet
       "Text(\"Delete account\", style = scaled(28", // the screen's title
       "Text(if (tafId == null) \"Halt all\" else \"Halt\", style = scaled(", // the halt screen's title, and the row that opens it

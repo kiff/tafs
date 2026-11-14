@@ -29,7 +29,8 @@ extension View {
 /// The app's haptics, one rule on both apps: a light tap on every button press (the shared
 /// button styles, `DriveButton`), a success tick when an approval or a send goes through, a
 /// warning tick when something the person just did is refused or fails, and a step tick on dial
-/// and selector stops.
+/// and selector stops, and when the person changes a selection (a taf's tabs, the iPad's sidebar).
+/// The system's generators, so the phone's own System Haptics setting is followed too.
 /// None when Haptics is off in Settings (the 901 test).
 @MainActor
 enum Haptics {
@@ -39,6 +40,30 @@ enum Haptics {
     static var played: ((String) -> Void)?
     /// A press and the action it starts tap once, not twice: a second tap this soon is the same one.
     private static var lastTap = Date.distantPast
+    /// One failure warns once: a refusal said in two places (its card's note and the thread read
+    /// again) is one buzz.
+    private static var lastWarning = Date.distantPast
+
+    /// Each feel, for an outcome that picks one (`AppModel.Delivery.feel`, `AppModel.feel(approving:)`).
+    enum Kind: String { case tap, success, warning, step }
+
+    /// Plays `kind`; nil plays nothing.
+    static func play(_ kind: Kind?) {
+        switch kind {
+        case .tap?: tap()
+        case .success?: success()
+        case .warning?: warning()
+        case .step?: step()
+        case nil: break
+        }
+    }
+
+    /// The person changed a selection with no button under it (a segmented control, a list's
+    /// row): a selection tick, only when it truly changed. Call it before setting the new value.
+    static func select<Value: Equatable>(_ from: Value, _ to: Value) {
+        if from != to { step() }
+    }
+
     /// A failure warns only when the person just acted (a press, an approval or a send, whose
     /// answer can take a few seconds): a background read that fails never buzzes.
     static let warnsWithin: TimeInterval = 15
@@ -50,13 +75,15 @@ enum Haptics {
     static func success() { if enabled { play("success") { UINotificationFeedbackGenerator().notificationOccurred(.success) } } }
     static func warning() {
         guard enabled, Date().timeIntervalSince(lastTap) < warnsWithin else { return }
+        guard Date().timeIntervalSince(lastWarning) > 1 else { return }
+        lastWarning = Date()
         play("warning") { UINotificationFeedbackGenerator().notificationOccurred(.warning) }
     }
     /// A click as a dial or a selector reaches each stop.
     static func step() { if enabled { play("step") { UISelectionFeedbackGenerator().selectionChanged() } } }
 
     /// For the tests: no press yet, so each starts from the same place.
-    static func forgetPresses() { lastTap = .distantPast }
+    static func forgetPresses() { lastTap = .distantPast; lastWarning = .distantPast }
 
     private static func play(_ kind: String, _ feel: () -> Void) {
         if let played { played(kind) } else { feel() }

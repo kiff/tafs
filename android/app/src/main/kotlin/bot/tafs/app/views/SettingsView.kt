@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveSheet
@@ -7,7 +8,6 @@ import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
@@ -199,7 +199,7 @@ fun SettingsSheet(
             Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
               ThemePreference.entries.forEach { choice ->
                 Row(Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(if (Theme.preference == choice) Theme.ink else Theme.raised)
-                  .clickable { if (Theme.preference != choice) bot.tafs.app.design.Haptics.step(); Theme.choose(context, choice) }.padding(horizontal = 8.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
+                  .tapping { if (Theme.preference != choice) bot.tafs.app.design.Haptics.step(); Theme.choose(context, choice) }.padding(horizontal = 8.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
                   val color = if (Theme.preference == choice) Theme.background else Theme.ink
                   if (choice != ThemePreference.System) Icon(painterResource(if (choice == ThemePreference.Light) R.drawable.ic_sun else R.drawable.ic_moon), null, tint = color, modifier = Modifier.size(16.dp))
                   Text(choice.title, style = scaled(14, FontWeight.Medium, color))
@@ -228,8 +228,8 @@ fun SettingsSheet(
           }
           if (state.mode == Mode.kiff) Section(Words.Settings.yourChats) { ExportChatsRow(onExport) }
           Section(Words.Settings.legal) {
-            Action(Words.Settings.terms, Theme.amberText) { uri.openUri(bot.tafs.app.model.Legal.terms()) }
-            Action(Words.Settings.privacyPolicy, Theme.amberText) { uri.openUri(bot.tafs.app.model.Legal.privacy()) }
+            Action(bot.tafs.app.model.Legal.label(Words.Settings.terms), Theme.amberText) { uri.openUri(bot.tafs.app.model.Legal.terms()) }
+            Action(bot.tafs.app.model.Legal.label(Words.Settings.privacyPolicy), Theme.amberText) { uri.openUri(bot.tafs.app.model.Legal.privacy()) }
           }
           Section(Words.Settings.about) { Value(Words.Settings.version, version); Text(Words.Home.tagline, style = scaled(15, color = Theme.dim), modifier = Modifier.padding(12.dp)) }
           if (state.canDeleteAccount) Section(Words.Settings.DeleteAccount.title) { Action(Words.Settings.DeleteAccount.row, Theme.no, onDeleteAccount) }
@@ -312,7 +312,7 @@ private fun Section(title: String, modifier: Modifier = Modifier, content: @Comp
 private fun PlanRow(state: AppState, onUsage: () -> Unit) {
   val balance = state.balance
   Column(
-    Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(onClick = onUsage).padding(horizontal = 12.dp, vertical = 10.dp),
+    Modifier.fillMaxWidth().heightIn(min = 56.dp).tapping(onClick = onUsage).padding(horizontal = 12.dp, vertical = 10.dp),
     verticalArrangement = Arrangement.spacedBy(2.dp),
   ) {
     if (balance != null) {
@@ -348,7 +348,7 @@ private fun Action(label: String, color: Color, onClick: () -> Unit) {
   Text(
     label,
     style = scaled(16, color = color),
-    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp),
+    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).tapping(onClick = onClick).padding(horizontal = 12.dp, vertical = 8.dp),
   )
   HorizontalDivider(color = Theme.line, modifier = Modifier.padding(start = 12.dp))
 }

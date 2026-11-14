@@ -1,0 +1,4 @@
+- Je koppelingen lees je meteen: wat ze zijn, wie ze gebruikt en hoe het ermee staat. Tik voor details; verwijderen vraagt nog één keer.
+- Een taf waarvan de aanmelding verliep, heeft zijn eigen 'Opnieuw verbinden' en houdt zijn Card.
+- 'Wacht op jou' toont wanneer Coach op je wacht.
+- Aanmelden bij het verkeerde account wordt duidelijk gezegd.

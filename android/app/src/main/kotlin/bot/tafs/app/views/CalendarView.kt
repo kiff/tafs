@@ -4,7 +4,7 @@ import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveDatePicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
+import bot.tafs.app.design.tapping
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -106,7 +106,7 @@ fun CalendarView(
       verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
       if (onBack != null) {
-        Row(Modifier.clickable(onClick = onBack).semantics { contentDescription = Words.Common.back }, verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.tapping(onClick = onBack).semantics { contentDescription = Words.Common.back }, verticalAlignment = Alignment.CenterVertically) {
           Icon(painterResource(R.drawable.ic_chevron_left), contentDescription = null, tint = Theme.amber, modifier = Modifier.size(20.dp))
           Text(Words.Home.title, style = scaled(16, color = Theme.amber))
         }
@@ -188,7 +188,7 @@ private fun Header(c: Ctx, compact: Boolean) {
         maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).testTag("calendar.title"),
       )
       Box(
-        Modifier.size(40.dp).clip(CircleShape).background(Theme.raised).clickable { picking = true }.semantics { contentDescription = Words.Calendar.chooseDate },
+        Modifier.size(40.dp).clip(CircleShape).background(Theme.raised).tapping { picking = true }.semantics { contentDescription = Words.Calendar.chooseDate },
         contentAlignment = Alignment.Center,
       ) { Icon(painterResource(R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(20.dp)) }
     }
@@ -204,6 +204,7 @@ private fun Header(c: Ctx, compact: Boolean) {
       onDismissRequest = { picking = false },
       confirmButton = {
         TextButton(onClick = {
+          bot.tafs.app.design.Haptics.tap()
           picker.selectedDateMillis?.let { c.select(CalendarMath.today(ZoneOffset.UTC, Instant.ofEpochMilli(it))) }
           picking = false
         }) { Text(Words.Common.choose, style = scaled(15, FontWeight.SemiBold, Theme.amberText)) }
@@ -215,7 +216,7 @@ private fun Header(c: Ctx, compact: Boolean) {
 
 @Composable
 private fun Chevron(icon: Int, label: String, onClick: () -> Unit) {
-  Box(Modifier.size(36.dp).clip(CircleShape).clickable(onClick = onClick).semantics { contentDescription = label }, contentAlignment = Alignment.Center) {
+  Box(Modifier.size(36.dp).clip(CircleShape).tapping(onClick = onClick).semantics { contentDescription = label }, contentAlignment = Alignment.Center) {
     Icon(painterResource(icon), contentDescription = null, tint = Theme.amberText, modifier = Modifier.size(20.dp))
   }
 }
@@ -260,7 +261,7 @@ private fun DayCell(c: Ctx, day: String, large: Boolean, modifier: Modifier) {
       .clip(RoundedCornerShape(8.dp))
       .background(if (selected) Theme.amber.copy(alpha = 0.18f) else Color.Transparent)
       .border(1.5.dp, if (day == c.today) Theme.amber else Color.Transparent, RoundedCornerShape(8.dp))
-      .clickable { c.select(day) }
+      .tapping { c.select(day) }
       .semantics(mergeDescendants = true) {
         contentDescription = if (count > 0) Words.Calendar.dayScheduled(count = count, day = CalendarMath.dayHeading(day)) else CalendarMath.dayHeading(day)
         this.selected = selected
@@ -290,7 +291,7 @@ private fun WeekStrip(c: Ctx) {
           .clip(RoundedCornerShape(12.dp))
           .background(if (selected) Theme.amber else Theme.panel)
           .border(1.5.dp, if (day == c.today && !selected) Theme.amber else Color.Transparent, RoundedCornerShape(12.dp))
-          .clickable { c.select(day) }
+          .tapping { c.select(day) }
           .semantics(mergeDescendants = true) { contentDescription = CalendarMath.dayHeading(day); this.selected = selected },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
@@ -319,7 +320,7 @@ private fun TimeGrid(c: Ctx, days: List<String>) {
         Spacer(Modifier.width(48.dp))
         days.forEach { day ->
           Column(
-            Modifier.weight(1f).clickable { c.show(CalendarState(CalendarMode.Day, day)) }.semantics(mergeDescendants = true) { contentDescription = CalendarMath.dayHeading(day) },
+            Modifier.weight(1f).tapping { c.show(CalendarState(CalendarMode.Day, day)) }.semantics(mergeDescendants = true) { contentDescription = CalendarMath.dayHeading(day) },
             horizontalAlignment = Alignment.CenterHorizontally,
           ) {
             Text(CalendarMath.weekdayNames[CalendarMath.weekdayIndex(day)], style = scaled(11, FontWeight.Bold, Theme.dim))
@@ -350,7 +351,7 @@ private fun SlotChip(c: Ctx, slot: CalendarMath.Slot, compact: Boolean) {
   val opens = c.known(slot.taf) != null
   Row(
     Modifier.fillMaxWidth().clip(RoundedCornerShape(6.dp)).background(Theme.tafColor(slot.color).copy(alpha = 0.16f))
-      .then(if (opens) Modifier.clickable { c.open(slot.taf) } else Modifier)
+      .then(if (opens) Modifier.tapping { c.open(slot.taf) } else Modifier)
       .semantics(mergeDescendants = true) { contentDescription = if (slot.count > 1) Words.Calendar.slotTimes(count = slot.count, name = slot.name, first = slot.first) else Words.Calendar.slotAt(name = slot.name, first = slot.first) }
       .padding(horizontal = 6.dp, vertical = 3.dp),
     horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -395,7 +396,7 @@ private fun EventRow(c: Ctx, e: CalendarEvent) {
   val opens = c.known(e.taf) != null
   Row(
     Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).background(Theme.panel)
-      .then(if (opens) Modifier.clickable { c.open(e.taf) } else Modifier)
+      .then(if (opens) Modifier.tapping { c.open(e.taf) } else Modifier)
       .semantics(mergeDescendants = true) {}
       .padding(10.dp),
     horizontalArrangement = Arrangement.spacedBy(10.dp),

@@ -1,0 +1,1 @@
+- Wenn eine Anmeldung nicht verbindet, sagt die Meldung das in klaren Worten, ohne technischen Status.

@@ -74,6 +74,23 @@ class CoachConversationsTest {
     assertEquals(listOf("Invoicing day test"), m.state.value.chats[COACH_CHAT].orEmpty().map { it.text })
   }
 
+  // A new job asked in a finished Coach chat went on under the last one's plan: tafs cloud starts a new chat for it, and the app
+  // follows it, with the message on its way and nothing of the finished chat.
+  @Test fun aNewChatTafsCloudStartsAfterAHandOverIsTheOneShown() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/conversation/s4", 200, """{"messages":[{"at":"2026-10-27T09:00:00Z","from":"owner","text":"A weekly summary","session":"s4"}]}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation/s10", 200, """{"messages":[]}""")
+    transport.answer(send, 200, """{"session":"s10","new_session":true}""")
+    val m = model()
+    m.openCoachChat("s4")
+    assertTrue(m.deliverChat("Remind me each Monday", COACH_CHAT))
+    // This app says it follows a new chat.
+    assertEquals("s4", body(send).getValue("session").jsonPrimitive.content)
+    assertEquals("true", body(send).getValue("new_chat_after_handover").jsonPrimitive.content)
+    assertEquals("s10", m.state.value.coachChat)
+    assertFalse("nothing of the finished chat", m.state.value.chats[COACH_CHAT].orEmpty().any { it.text == "A weekly summary" })
+  }
+
   @Test fun aReopenedConversationIsReadAloneAndMessagesGoOnInIt() = runTest {
     reads()
     transport.answer("GET /v1/tafs/setup_1/conversation/s4", 200, """{"messages":[{"at":"2026-10-27T09:00:00Z","from":"owner","text":"Hi","session":"s4"}]}""")
@@ -99,6 +116,19 @@ class CoachConversationsTest {
     assertTrue(transport.requestsTo(send).isEmpty())
     assertEquals("s7", m.state.value.coachChat)
     assertNull(m.state.value.coachImproving)
+  }
+
+  // The owner tapped Coach on a taf's page, then the pencil, and stayed on "Improve Client email drafts".
+  @Test fun thePencilOnAnEmptyChatAboutATafOpensAPlainOne() = runTest {
+    reads()
+    val m = model()
+    m.newCoachChat()
+    assertTrue("an empty plain chat stays", bot.tafs.app.model.CoachWords.newChatStays(m.state.value))
+    m.improveTaf("refunds-1")
+    assertFalse("an empty chat about a taf gives way", bot.tafs.app.model.CoachWords.newChatStays(m.state.value))
+    m.newCoachChat()
+    assertNull(m.state.value.coachImproving)
+    assertNull(m.state.value.coachContext)
   }
 
   @Test fun coachFromATafsPageIsThatTafsConversationAndElsewhereTheOneOpen() = runTest {
@@ -180,6 +210,26 @@ class CoachConversationsTest {
     // Never the latest conversations together; the earlier one is under Previous conversations.
     assertTrue(transport.requestsTo("GET /v1/tafs/setup_1/conversation").isEmpty())
     assertEquals(listOf("s3", "s4"), m.state.value.coachChats.map { it.session })
+  }
+
+  // An audit, 14 Nov: a chat set aside on another install came back as the open conversation.
+  @Test fun aChatSetAsideIsNeverOpenedAsTheNewest() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, """{"chats":[{"session":"s3","started":"2026-10-26T09:00:00Z","updated":"2026-10-26T10:00:00Z","title":"Refunds"},{"session":"s4","started":"2026-10-27T09:00:00Z","updated":"2026-10-27T10:00:00Z","title":"Chargebacks","set_aside":true}]}""")
+    transport.answer("GET /v1/tafs/setup_1/conversation/s3", 200, """{"messages":[{"at":"2026-10-26T09:00:00Z","from":"owner","text":"Set up Refunds","session":"s3"}]}""")
+    val m = model()
+    m.loadChat(COACH_CHAT)
+    assertEquals("s3", m.state.value.coachChat)
+  }
+
+  @Test fun withEveryChatSetAsideCoachOpensANewConversation() = runTest {
+    reads()
+    transport.answer("GET /v1/tafs/setup_1/chats", 200, """{"chats":[{"session":"s4","started":"2026-10-27T09:00:00Z","updated":"2026-10-27T10:00:00Z","title":"Chargebacks","set_aside":true}]}""")
+    val m = model()
+    m.loadChat(COACH_CHAT)
+    assertNull(m.state.value.coachChat)
+    assertTrue(m.state.value.coachFresh)
+    assertTrue(transport.requestsTo("GET /v1/tafs/setup_1/conversation/s4").isEmpty())
   }
 
   @Test fun withNoConversationYetCoachsThreadReadsAsBefore() = runTest {

@@ -62,9 +62,13 @@ data class SetupConnection(val done: Boolean = false, val words: String = "")
 /**
  * What an approval card's one fingerprint covers, as tafs cloud decides it (`signs`, docs/secure-connection.md): [card] when
  * it signs the Card too; else [words] say the Card comes next ("Its Card: you approve it next"), and its limits aren't drawn.
+ * [takes] is "tap" when Approve is a tap inside an open approval window, "fingerprint" when it always takes the fingerprint
+ * (docs/chat.md): only a "tap" card says the window holds.
  */
 @Serializable
-data class SetupSigns(val card: Boolean = false, val words: String? = null)
+data class SetupSigns(val card: Boolean = false, val words: String? = null, val takes: String? = null) {
+  val tap: Boolean get() = takes == "tap"
+}
 
 /**
  * One thing Coach shows in its chat: its plan, a notice, a question, an approval, a vendor sign-in or the hand-over. A card

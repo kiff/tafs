@@ -1,12 +1,12 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.shownName
 import androidx.compose.ui.text.style.TextOverflow
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -60,7 +60,7 @@ fun ShareLine(tafId: String, state: AppState, actions: PeopleActions, routeTaken
     Text(
       Words.People.Share.action,
       style = scaled(15, FontWeight.SemiBold, Theme.ink),
-      modifier = Modifier.clip(shape).border(BorderStroke(1.dp, Theme.line), shape).clickable { sharing = true }.padding(horizontal = 10.dp, vertical = 6.dp),
+      modifier = Modifier.clip(shape).border(BorderStroke(1.dp, Theme.line), shape).tapping { sharing = true }.padding(horizontal = 10.dp, vertical = 6.dp),
     )
     // The rest of the row, on up to two lines, so a longer language's words ("Compartido con") still leave room for the names.
     Text(
@@ -95,17 +95,17 @@ fun ShareTafSheet(agent: String, name: String, state: AppState, actions: PeopleA
         Text(
           if (step == 1) Words.Common.cancel else Words.Common.back,
           style = scaled(17, FontWeight.SemiBold, Theme.amber),
-          modifier = Modifier.heightIn(min = 44.dp).clickable { if (step == 1) onClose() else step = 1 }.padding(top = 8.dp),
+          modifier = Modifier.heightIn(min = 44.dp).tapping { if (step == 1) onClose() else step = 1 }.padding(top = 8.dp),
         )
         Text(Words.People.Share.title(name), style = scaled(17, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f).padding(top = 8.dp))
         if (step == 1) {
           val ready = loaded && chosen != had
-          Text(Words.Common.next, style = scaled(17, FontWeight.SemiBold, if (ready) Theme.amber else Theme.dim), modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = ready) { step = 2 }.padding(top = 8.dp))
+          Text(Words.Common.next, style = scaled(17, FontWeight.SemiBold, if (ready) Theme.amber else Theme.dim), modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = ready) { step = 2 }.padding(top = 8.dp))
         } else {
           Text(
             Words.People.Share.action,
             style = scaled(17, FontWeight.SemiBold, if (saving) Theme.dim else Theme.amber),
-            modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !saving) {
+            modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = !saving) {
               saving = true
               scope.launch {
                 val done = actions.setShares(agent, name, chosen - had, had - chosen)
@@ -168,7 +168,7 @@ fun ShareTafSheet(agent: String, name: String, state: AppState, actions: PeopleA
 private fun Pick(share: Share, chosen: Set<Share>, onChosen: (Set<Share>) -> Unit, label: @Composable () -> Unit) {
   val on = share in chosen
   Row(
-    Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { onChosen(if (on) chosen - share else chosen + share) }.padding(vertical = 6.dp),
+    Modifier.fillMaxWidth().heightIn(min = 48.dp).tapping { onChosen(if (on) chosen - share else chosen + share) }.padding(vertical = 6.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Column(Modifier.weight(1f)) { label() }

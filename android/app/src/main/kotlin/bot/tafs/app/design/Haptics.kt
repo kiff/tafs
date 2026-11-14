@@ -1,6 +1,13 @@
 package bot.tafs.app.design
 
+import androidx.compose.foundation.clickable
+
 import android.content.Context
+import android.os.Build
+import android.os.VibrationAttributes
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.view.HapticFeedbackConstants
 import android.view.View
 
@@ -44,10 +51,36 @@ object Haptics {
     runCatching { performer?.invoke(kind) }
   }
 
-  /** The platform's own feedback for each kind, on [view] (Android 11+: confirm and reject exist). */
+  /** Whether the phone already said once that it played no feedback: said in the diagnostics once per launch. */
+  @Volatile private var saidNone = false
+
+  /** [kind] as a predefined effect marked as touch, on Android 13+: true when the phone has a vibrator and it was asked. */
+  private fun touchEffect(context: Context, kind: Kind): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
+    val vibrator: Vibrator = context.getSystemService(VibratorManager::class.java)?.defaultVibrator ?: return false
+    if (!vibrator.hasVibrator()) return false
+    val effect = VibrationEffect.createPredefined(
+      when (kind) {
+        Kind.Tap, Kind.Step -> VibrationEffect.EFFECT_TICK
+        Kind.Success -> VibrationEffect.EFFECT_CLICK
+        Kind.Warning -> VibrationEffect.EFFECT_DOUBLE_CLICK
+      },
+    )
+    return runCatching { vibrator.vibrate(effect, VibrationAttributes.createForUsage(VibrationAttributes.USAGE_TOUCH)); true }.getOrDefault(false)
+  }
+
+  /**
+   * Each kind on Android 13+ as a predefined effect marked as touch (`USAGE_TOUCH`), so the phone's own touch intensity
+   * decides, and off there is still off (some phones keep the standard touch feedback switch off and use their own slider:
+   * ColorOS); before 13, or with no vibrator, the platform's own feedback on [view] (Android 11+: confirm and reject exist). Nothing played at all is said once in the diagnostics, so a "nothing vibrates" report can be told
+   * apart from a tap the app never asked for.
+   */
   fun on(view: View): (Kind) -> Unit = { kind ->
     view.post {
-      view.performHapticFeedback(
+      // Android 13+: the touch effect first. performHapticFeedback can't be trusted there: Android 15 answers true once the
+      // window manager has the request, even when the phone's standard switch drops it (the owner's ColorOS phone played
+      // nothing on 1.27.2). The phone's touch intensity decides the effect, so off there is still off.
+      val played = touchEffect(view.context, kind) || view.performHapticFeedback(
         when (kind) {
           Kind.Tap -> HapticFeedbackConstants.VIRTUAL_KEY
           Kind.Success -> HapticFeedbackConstants.CONFIRM
@@ -55,6 +88,21 @@ object Haptics {
           Kind.Step -> HapticFeedbackConstants.CLOCK_TICK
         },
       )
+      if (!played && !saidNone) {
+        saidNone = true
+        // The only log Coach and a tester can read (docs/drive.md, diagnostics). false also comes from a view not attached
+        // yet, or one with feedback off, so the line names both.
+        bot.tafs.app.drive.DriveDiagnostics.error("haptics: no feedback played (view or phone setting, ${kind.name})")
+      }
     }
   }
 }
+
+/** A tappable that plays the touch effect, as the app's buttons do (`Haptics.tap`). */
+fun androidx.compose.ui.Modifier.tapping(
+  enabled: Boolean = true,
+  onClickLabel: String? = null,
+  role: androidx.compose.ui.semantics.Role? = null,
+  onClick: () -> Unit,
+): androidx.compose.ui.Modifier =
+  this.then(androidx.compose.ui.Modifier.clickable(enabled = enabled, onClickLabel = onClickLabel, role = role) { Haptics.tap(); onClick() })

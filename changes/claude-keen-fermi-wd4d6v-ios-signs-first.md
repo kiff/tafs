@@ -1,0 +1,1 @@
+- **iPhone and iPad: an app's first sign-in says its Card comes next.** An app's first sign-in card has no Card drafted yet; when tafs cloud says one follows, the card now shows its words ("Its Card: you approve it next"), as Android does, so the owner knows a second approval comes (docs/ios-app.md).

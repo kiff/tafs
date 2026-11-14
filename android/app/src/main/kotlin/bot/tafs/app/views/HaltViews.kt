@@ -1,9 +1,9 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -115,7 +115,7 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(if (tafId == null) Words.Taf.Halt.titleAll else Words.Taf.Halt.title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
       }
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -190,7 +190,7 @@ private fun HoldRow(text: String, held: Boolean) {
 /** The row that opens a taf's halt, or every taf's, with where it stands. */
 @Composable
 fun HaltRow(tafId: String?, h: Halt, onClick: () -> Unit, modifier: Modifier = Modifier) {
-  Panel(modifier.clickable(onClick = onClick)) {
+  Panel(modifier.tapping(onClick = onClick)) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(if (tafId == null) Words.Taf.Halt.titleAll else Words.Taf.Halt.title, style = scaled(15, FontWeight.SemiBold, Theme.ink))

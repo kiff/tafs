@@ -188,7 +188,11 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`; iOS fol
   approval card opens a new window, one fingerprint, and the call is made once more.
 - **Words.** While a window is held, Approve on an approval card reads "Approve" and KIFF's
   words go under it ("No fingerprint for the next 4 minutes", `GET /v1/me/window`), read
-  again after each approval and on coming back to the app.
+  again after each approval and on coming back to the app. tafs cloud marks each waiting card
+  with `signs.takes` ([chat.md](chat.md)): the words go only under a `"tap"` card, never under one
+  whose Approve takes the fingerprint (a Card signed with its tools or key). Android 97 draws
+  by it; iOS reads the mark and gates the words on it (`SetupComponent.windowWords`), and holds
+  no window yet.
 - **Closing.** After 30 seconds in the background, and at once when the screen turns off, the
   app closes it (`POST /v1/me/window/{id}/close`, device-signed). KIFF ends it itself at sign-out,
   at its cap (15 minutes from the fingerprint), on a halt or a new approval key. Whether a window
@@ -315,8 +319,10 @@ KIFF tells tafs cloud when a call is held, and tafs cloud tells the account's ph
 through Apple push for an iPhone and Firebase Cloud Messaging for an Android phone (`runtime/src/cloud/push.ts`, `apns.ts`, `fcm.ts`):
 
 1. The phone registers the account's **alert target** in KIFF, pointed at
-   `/v1/kiff/alerts`, with a signed setup call (one Face ID). KIFF shows the target's
-   signing secret once, to the phone.
+   `/v1/kiff/alerts`, with a signed setup call. The device key signs it, not the approval key:
+   it grants no authority. On iPhone and iPad there's no Face ID for it, so the offer of alerts
+   a new person sees asks only for notifications; Android still asks the person to
+   confirm it first. KIFF shows the target's signing secret once, to the phone.
 2. The phone hands tafs cloud its push token and that secret (`POST /v1/push`; an Android phone says `platform: "android"` and gives Firebase's token). The
    secret checks KIFF's deliveries; the token is where they go. An account gets alerts on
    50 phones at most. A phone can also hand over the target alone (`POST /v1/alerts`), so a

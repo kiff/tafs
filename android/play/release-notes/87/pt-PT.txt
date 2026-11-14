@@ -1,0 +1,2 @@
+- «Pôr de parte» envia um só pedido por conversa, seja qual for o deslize.
+- Uma app ligada abre sempre ao tocar. Se as suas ligações não puderem ser lidas, diz porquê.

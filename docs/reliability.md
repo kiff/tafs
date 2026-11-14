@@ -280,10 +280,13 @@ tafs cloud returns one view of a taf for both apps. The apps show it as it is.
 - **A run is done only when it answered.** kiff/agents ends a run that hit its turn cap or its
   cost cap as COMPLETED, with its `stop` (`turn_cap`, `cost_cap`): it was cut off, so its state is
   `stopped`, and its line says which limit stopped it ("Stopped at 14:20: it reached its limit
-  of turns for one run"), on the request page too. Any other stop that isn't `answered`, one
-  tafs doesn't know included, reads "Stopped at 14:20", never "Done". Where the list's line
-  for the taf shows its last run (a taf with no next run and a schedule), it says the same; a
-  taf with a next run shows that, and one that works from its chat says so, as before.
+  of steps for one run", "Stopped at 14:20: it reached its cost limit for one run"), on the
+  request page too, whose last step is "Stopped" with that line. Any other stop that isn't
+  `answered`, one tafs doesn't know included, reads "Stopped at 14:20", never "Done". The list's
+  line for a scheduled taf whose last run stopped so says the same, with `attention`, before its
+  next run; one that works from its chat says so, as before. The push for a run Coach handed a
+  taf says it stopped before it finished, and at which limit, never "It finished"
+  ([coach.md](coach.md#coachs-own-tools)); so does Coach's line for it.
 - **A scheduled time that didn't end in finished work** is in `skipped` on the same view: up to
   5 from the last 7 days, newest first, each `{due, why, words}`. `why` is one of:
   - `missed` or `busy`: the schedule skipped it, because it came more than an hour late or

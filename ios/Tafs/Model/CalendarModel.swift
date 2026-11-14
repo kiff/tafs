@@ -138,6 +138,12 @@ enum CalendarMath {
         }
     }
 
+    /// The days the compact layout's strip draws, whatever its width: in Week, exactly the seven
+    /// its heading names; in Day, the month's weeks, which scroll. Month draws no strip.
+    static func stripDays(_ state: CalendarState) -> [String] {
+        state.mode == .week ? week(state.selected) : monthGrid(state.selected)
+    }
+
     /// The previous or next day, week or month.
     static func step(_ state: CalendarState, by n: Int) -> CalendarState {
         var s = state

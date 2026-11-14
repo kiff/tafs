@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.model.ErrorWords
@@ -8,7 +9,6 @@ import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -107,7 +107,7 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Dot(entry.kind.color, 10.dp)
         Text(ReceiptWords.state(entry), style = scaled(14, FontWeight.SemiBold, entry.kind.color), modifier = Modifier.padding(start = 8.dp).weight(1f))
-        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 10.dp))
       }
       Text(entry.titleWithAmount, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
       Panel {
@@ -219,7 +219,7 @@ private fun FullReceipt(entry: RecordEntry, raw: ByteArray?, steps: List<bot.taf
   Text(
     if (open) Words.Receipt.hideFull else Words.Receipt.showFull,
     style = scaled(13, FontWeight.SemiBold, Theme.amberText),
-    modifier = Modifier.heightIn(min = 44.dp).clickable { open = !open }.padding(top = 12.dp),
+    modifier = Modifier.heightIn(min = 44.dp).tapping { open = !open }.padding(top = 12.dp),
   )
   if (!open) return
   val style = scaled(11, color = Theme.dim, mono = true)

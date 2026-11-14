@@ -604,7 +604,7 @@ struct SetupChatView: View {
         let onScreen = model.tafOnScreen.flatMap { id in model.cloudTaf(for: id).map { (id, $0) } }
         if let name = improving?.name ?? onScreen?.1.name {
             HStack(spacing: 0) {
-                startChoice(Words.Home.newTaf, selected: improving == nil) { model.newSetupChat() }
+                startChoice(Words.Home.newTaf, selected: improving == nil) { model.newCoachConversation() }
                 startChoice(Words.Coach.improveTaf(taf: "\(name)"), selected: improving != nil) {
                     if let id = onScreen?.0 { model.improveTaf(id) }
                 }
@@ -1276,7 +1276,10 @@ struct SetupComponentView: View {
 
     @ViewBuilder private func signIn(_ c: SetupComponent) -> some View {
         let state = model.setupCardState(c)
-        let vendor = c.service ?? Words.Coach.theVendor
+        // The app by name ("Sign in at Gmail"): the card's service, else the connection's app as Connect apps
+        // and planque name it; "the vendor" only when neither is known (Android 1.27.8).
+        let app = AppModel.signInApp(service: c.service, app: model.grants.first { $0.id == c.grant }.map { model.appName($0) })
+        let vendor = app ?? Words.Coach.theVendor
         switch state {
         case .done:
             OutcomeLine(text: Words.Coach.Answer.signedInAt(vendor: "\(vendor)"), tone: Theme.ok)
@@ -1290,7 +1293,7 @@ struct SetupComponentView: View {
                 Eyebrow(text: state.isFailure ? Words.Coach.didNotGoThroughSign : Words.Coach.SignIn.eyebrow,
                         color: state.isFailure ? Theme.no : Theme.amber)
                 // A connection its vendor signed out reads planque's words for it (needs_reconnect).
-                Text(signedOut?.signedOutWords ?? Words.Coach.SignIn.at(vendor: "\(vendor)")).scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                Text(signedOut?.signedOutWords ?? AppModel.signInWords(app: app)).scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 if case .failed(let why) = state {
                     Text(why.map { Words.Coach.Answer.failedWhy(value: "\($0)") } ?? Words.Coach.Answer.failed)
                         .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
@@ -1387,6 +1390,13 @@ struct SetupComponentView: View {
                     // Made with no plan, so nothing runs yet: tafs cloud's words say so.
                     Text(words).scaledFont(14, weight: .semibold).foregroundColor(Theme.amberText)
                         .fixedSize(horizontal: false, vertical: true)
+                    // Where to do it, one tap away, as on Android: Plan & usage, where a plan is chosen.
+                    // Drawn only with tafs cloud's `plan_needed`; it names no plan and no link, so none is made up here.
+                    Button { model.usageRequested = true } label: {
+                        Text(Words.Usage.choosePlan).frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(OutlineButtonStyle())
+                    .accessibilityIdentifier("coach.plan-needed")
                 }
                 if let agent = c.taf?.agent, let tafID = model.taf(forAgent: agent), model.cloudTaf(for: tafID) != nil {
                     if sizeClass == .regular {
@@ -1473,12 +1483,11 @@ struct SetupApproval: View {
             }
         }
         .onChange(of: state) { now in
+            // An approval made here ticks as it goes through, and warns as it fails.
+            if approvingHere { Haptics.play(AppModel.feel(approving: now)) }
             switch now {
             case .working: approvingHere = true
-            case .done:
-                if approvingHere { Haptics.success() }
-                approvingHere = false
-            case .declined, .failed: approvingHere = false
+            case .done, .declined, .failed: approvingHere = false
             case .needsYou: break // between the approval and the grant's refresh
             }
         }
@@ -1490,6 +1499,14 @@ struct SetupApproval: View {
     static func takesKeyHere(_ grant: PlanqueClient.Grant?) -> Bool {
         guard let grant else { return false }
         return grant.takesKey && !grant.connected
+    }
+
+    /// tafs cloud's words for a Card approved next, on a card with no draft (an app's first
+    /// sign-in): only what tafs cloud sends, and none when its mark says the Card is signed now or
+    /// the connection is already done. As Android's.
+    static func cardNextWords(_ component: SetupComponent) -> String? {
+        guard component.draft == nil, component.signs?.card != true, component.connection?.doneWords == nil else { return nil }
+        return component.signs?.words
     }
 
     /// The Card an approved card signed, as KIFF's own lines for the draft this phone read: what
@@ -1621,6 +1638,13 @@ struct SetupApproval: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Theme.raised)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            } else if grant != nil, let words = Self.cardNextWords(component) {
+                // An app's first sign-in has no draft yet (a Card is drafted over the tools it brings):
+                // tafs cloud's words still say a Card comes next, so the owner knows a second approval
+                // follows. As on Android.
+                Text(words).scaledFont(13, weight: .semibold, relativeTo: .footnote).foregroundColor(Theme.soft)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("approval.card-next")
             }
             if replaced {
                 // Opened to read again: its words only. The newer request below is the one to act on.

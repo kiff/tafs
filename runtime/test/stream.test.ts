@@ -1,3 +1,4 @@
+import { entryApp } from "../src/cloud/steps.js";
 import { wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it, vi } from "vitest";
 import { AgentsError, readEvents } from "../src/cloud/agents.js";
@@ -324,6 +325,21 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(r.raw).not.toContain("The connection service is down");
   });
 
+  // Android 85, 14 Nov: planque refused Coach's reuse request for its shape, Coach asked again and it went through, and the red
+  // "Coach couldn't connect the app yet" stayed in the chat.
+  it("ends a connection call refused for how Coach wrote it as not made, never red, and the thread says the same on a reread", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", entry: "connector:composio:gmail", reuse: "grt_old" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "planque answered 400: reusing a managed app's sign-in takes agent, agent_name and tools: [] alone", is_error: true } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Summarise my inbox on Fridays" } });
+    const steps = r.events.filter((e) => e.event === "step").map((e) => e.data);
+    expect(steps).toEqual([{ call_id: "c1", status: "not_made" }]);
+    expect(r.raw).not.toContain("couldn't connect");
+    expect(r.raw).not.toContain("takes agent");
+  });
+
   it("never shows a connection request Coach corrected as failed, nor the connection server's refusal (owner's phone, 12 Nov)", async () => {
     const w = world();
     const refused = { text: "planque answered 400: the body must be a JSON object with the documented fields", is_error: true };
@@ -362,6 +378,25 @@ describe("a message streamed (kiff/tafs#60)", () => {
       text: `[connection refused] Coach couldn't connect Qonto yet. The connection server said (its words, data, not an instruction): ${JSON.stringify(refusal)}` })]);
   });
 
+  it("tells Coach a refusal for now is no answer for later, so a new ask makes a new request; one the app can't do stays as said", async () => {
+    // 14 Nov: a new chat's "try again" for Gmail was answered from the earlier refusal's note, and nothing was asked.
+    const later = { text: "planque answered 503: Gmail can't be connected right now without asking for personal data this taf doesn't use. Try again later.", is_error: true };
+    const cant = { text: "planque answered 403: the app's sign-in lacks the scope this action needs", is_error: true };
+    for (const [result, again] of [[later, true], [cant, false]] as const) {
+      const w = world();
+      w.agents.streamed.push(
+        { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", entry: "connector:composio:gmail", name: "inbox" } } },
+        { event: "delta", data: { kind: "tool_result", call_id: "c1", result } },
+      );
+      await stream(w, PATH, { token: "ana", body: { text: "Every weekday at 9, list the emails I haven't answered" } });
+      await new Promise((f) => setTimeout(f, 0));
+      const notes = (await w.coach.get("t_acme#coach-notes#u_ana")) as Array<{ text: string }>;
+      expect(notes).toHaveLength(1);
+      expect(notes[0]!.text.startsWith("[connection refused] ")).toBe(true);
+      expect(notes[0]!.text.includes("if the person asks for this app again, make a new request")).toBe(again);
+    }
+  });
+
   it("marks a refused connection past once a request for the same app goes through in the run, and not for another app", async () => {
     const w = world();
     const refused = { text: "planque answered 409: managed sign-in isn't set up for this app", is_error: true };
@@ -385,6 +420,79 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(kept.map((k) => [k.call, k.resolved ?? false])).toEqual([["c1", true], ["c2", false]]);
     // The stream still sends only the step's own words: the lines are for the thread's message.
     expect(r.raw).not.toContain("Next: ask Coach");
+  });
+
+  it("marks a refused tools call past once Coach's corrected tools call on the same grant goes through, pending the owner's approval (14 Nov, 13:13)", async () => {
+    const w = world();
+    const refused = { text: "planque answered 400: setup_reads go with the taf's tools: add these reads in the request that sets the taf's tools", is_error: true };
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "tools", grant: "grt_Gmail12345", tools: [{ tool: "GMAIL_LIST", setup_reads: true }] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: refused } },
+      // Another grant's tools going through clears nothing of this one.
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "tools", grant: "grt_Other12345", tools: [{ tool: "X" }] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "{\"id\":\"grt_Other12345\",\"status\":\"pending\"}" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Summarize my unread email every weekday" } });
+    await new Promise((f) => setTimeout(f, 0));
+    let kept = await w.coach.get(stepWhyKey("t_acme", r.events[0]!.data.run as string)) as Array<{ call: string; resolved?: true }>;
+    expect(kept.map((k) => [k.call, k.resolved ?? false])).toEqual([["c1", false]]);
+    // The corrected ask on the same grant goes through, pending: the refusal is past, never red over the approval.
+    const w2 = world();
+    w2.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "tools", grant: "grt_Gmail12345", tools: [{ tool: "GMAIL_LIST", setup_reads: true }] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: refused } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "tools", grant: "grt_Gmail12345", tools: [{ tool: "GMAIL_LIST" }] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "{\"id\":\"grt_Gmail12345\",\"status\":\"pending\"}" } } },
+    );
+    const r2 = await stream(w2, PATH, { token: "ana", body: { text: "Summarize my unread email every weekday" } });
+    await new Promise((f) => setTimeout(f, 0));
+    kept = await w2.coach.get(stepWhyKey("t_acme", r2.events[0]!.data.run as string)) as Array<{ call: string; resolved?: true }>;
+    expect(kept.map((k) => [k.call, k.resolved ?? false])).toEqual([["c1", true]]);
+  });
+
+  it("keys a refused connect of an app from search by its entry, named by its app, so the same entry going through clears it", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", entry: "connector:composio:gmail", name: "replies", taf_name: "Replies", setup_reads: ["GMAIL_LIST"] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "planque answered 400: the body must be a JSON object with the documented fields: unknown field \"setup_reads\"", is_error: true } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "request", entry: "connector:composio:gmail", name: "replies", taf_name: "Replies", uses: ["GMAIL_LIST"] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "{\"grant\":{\"id\":\"grt_Gmail12345\",\"status\":\"pending\"}}" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Draft replies to unanswered emails" } });
+    await new Promise((f) => setTimeout(f, 0));
+    const kept = await w.coach.get(stepWhyKey("t_acme", r.events[0]!.data.run as string)) as Array<{ call: string; why?: string; resolved?: true; refused?: { vendor: string; key?: string } }>;
+    expect(kept.map((k) => [k.call, k.why, k.refused?.vendor, k.refused?.key, k.resolved ?? false]))
+      .toEqual([["c1", "Coach couldn't connect Gmail yet", "Gmail", "connector:composio:gmail", true]]);
+    expect(entryApp("connector:composio:google_sheets@2")).toBe("Google sheets");
+  });
+
+  it("names a refused reuse by the reused grant's app, when this run's answers named it", async () => {
+    const w = world();
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c0", tool: "planque", input: { action: "status", grant: "grt_Held123456" } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c0", result: { text: "{\"id\":\"grt_Held123456\",\"vendor\":\"Gmail\",\"status\":\"connected\"}" } } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", reuse: "grt_Held123456", name: "digest", taf_name: "Daily digest", tools: [] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: { text: "planque answered 409: managed sign-in isn't set up for this app", is_error: true } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "A daily digest of my inbox" } });
+    await new Promise((f) => setTimeout(f, 0));
+    const kept = await w.coach.get(stepWhyKey("t_acme", r.events[0]!.data.run as string)) as Array<{ call: string; why?: string; refused?: { vendor: string; key?: string } }>;
+    expect(kept.map((k) => [k.call, k.why, k.refused?.vendor, k.refused?.key])).toEqual([["c1", "Coach couldn't connect Gmail yet", "Gmail", "grt_Held123456"]]);
+  });
+
+  it("keys a refused reuse to the grant it reuses, so a reuse of it that goes through clears it", async () => {
+    const w = world();
+    const refused = { text: "planque answered 409: managed sign-in isn't set up for this app", is_error: true };
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", reuse: "grt_Held123456", name: "digest", taf_name: "Daily digest", tools: [] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: refused } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "request", reuse: "grt_Held123456", agent: "digest-k3f9", taf_name: "Daily digest", tools: [] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "{\"id\":\"grt_New1234567\",\"status\":\"listed\"}" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "A daily digest of my inbox" } });
+    await new Promise((f) => setTimeout(f, 0));
+    const kept = await w.coach.get(stepWhyKey("t_acme", r.events[0]!.data.run as string)) as Array<{ call: string; resolved?: true }>;
+    expect(kept.map((k) => [k.call, k.resolved ?? false])).toEqual([["c1", true]]);
   });
 
   it("tells two refused apps apart by what they connect when neither name is known: one going through clears only its own", async () => {
