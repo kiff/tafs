@@ -61,6 +61,20 @@ final class PairingTests: XCTestCase {
         XCTAssertEqual(read(code { $0["approval_pub"] = 7 }), .failure(.badKeys))
     }
 
+    /// `key_store` (desktop-client.md §5.1): only "software", only on a passkey computer, and sent on as read.
+    func testASoftwareKeyedComputerIsReadAsOne() throws {
+        let software = try read(code { $0["kind"] = "passkey"; $0["approval_pub"] = nil; $0["key_store"] = "software" }).get()
+        XCTAssertTrue(software.softwareKey)
+        XCTAssertEqual((try JSONSerialization.jsonObject(with: software.body) as? [String: String])?["key_store"], "software")
+        XCTAssertEqual(software.checkCode, "F2ULUM", "the check code covers the keys only")
+        XCTAssertFalse(try read(code()).get().softwareKey)
+        XCTAssertNil((try JSONSerialization.jsonObject(with: try read(code()).get().body) as? [String: String])?["key_store"], "omitted otherwise")
+
+        XCTAssertEqual(read(code { $0["key_store"] = "software" }), .failure(.badField), "a hello computer's key is in hardware")
+        XCTAssertEqual(read(code { $0["kind"] = "passkey"; $0["approval_pub"] = nil; $0["key_store"] = "hardware" }), .failure(.badField))
+        XCTAssertEqual(read(code { $0["kind"] = "passkey"; $0["approval_pub"] = nil; $0["key_store"] = true }), .failure(.badField))
+    }
+
     func testTheEncodings() {
         XCTAssertEqual(PairingRequest.base32(Data("foobar".utf8)), "MZXW6YTBOI", "RFC 4648's own example, unpadded")
         XCTAssertEqual(PairingRequest.base64url("-_8"), Data([0xFB, 0xFF]))

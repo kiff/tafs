@@ -17,6 +17,9 @@ struct PairingRequest: Equatable {
     let kind: String
     let nonce: String
     let exp: String
+    /// `"software"` when the computer's device key isn't in hardware (only with `kind: "passkey"`): it
+    /// approves only through the phone or a passkey, and the phone says so.
+    let keyStore: String?
     let expires: Date
     /// The keys' DER bytes, which the check code covers.
     let pubDER: Data
@@ -47,7 +50,7 @@ struct PairingRequest: Equatable {
         guard let pub = string("pub"), let name = string("name"), let platform = string("platform"), let kind = string("kind"),
               let nonce = string("nonce"), let exp = string("exp") else { return .failure(.notAPairingCode) }
         // Fields KIFF doesn't take aren't signed for it.
-        let known: Set<String> = ["v", "pub", "approval_pub", "name", "platform", "kind", "nonce", "exp"]
+        let known: Set<String> = ["v", "pub", "approval_pub", "name", "platform", "kind", "nonce", "exp", "key_store"]
         guard Set(object.keys).isSubset(of: known) else { return .failure(.badField) }
 
         guard let expires = time(exp) else { return .failure(.badField) }
@@ -56,6 +59,10 @@ struct PairingRequest: Equatable {
 
         guard kinds.contains(kind), platforms.contains(platform), nameIsUsable(name),
               base64url(nonce)?.count == 32 else { return .failure(.badField) }
+
+        // `key_store` is only ever "software", and only for a passkey computer.
+        let keyStore = object["key_store"]
+        if keyStore != nil, !(keyStore as? String == "software" && kind == "passkey") { return .failure(.badField) }
 
         let approvalPub = object["approval_pub"]
         if approvalPub != nil, !(approvalPub is String) { return .failure(.badKeys) }
@@ -68,8 +75,11 @@ struct PairingRequest: Equatable {
             approvalDER = der
         }
         return .success(PairingRequest(pub: pub, approvalPub: approval, name: name, platform: platform, kind: kind,
-                                       nonce: nonce, exp: exp, expires: expires, pubDER: pubDER, approvalDER: approvalDER))
+                                       nonce: nonce, exp: exp, keyStore: keyStore as? String, expires: expires, pubDER: pubDER, approvalDER: approvalDER))
     }
+
+    /// Its device key is in software: it never approves by itself.
+    var softwareKey: Bool { keyStore == "software" }
 
     /// The 6 characters both screens show before the fingerprint (§5.2): base32 of sha256 over the device
     /// key's DER, then the approval key's when there is one.
@@ -83,6 +93,7 @@ struct PairingRequest: Equatable {
         var fields: [String: String] = ["v": Self.version, "pub": pub, "name": name, "platform": platform,
                                         "kind": kind, "nonce": nonce, "exp": exp]
         if let approvalPub { fields["approval_pub"] = approvalPub }
+        if let keyStore { fields["key_store"] = keyStore }
         return (try? JSONSerialization.data(withJSONObject: fields, options: [.sortedKeys, .withoutEscapingSlashes])) ?? Data()
     }
 
