@@ -147,8 +147,8 @@ private fun BuyPanel(usage: Usage, state: AppState, actions: AccountActions) {
           // What Coach's help includes, in tafs cloud's words: the same sentence kiff.dev says.
           offer.coachIncluded?.let { Text(it, style = scaled(13, color = Theme.soft)) }
           Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(Words.Settings.terms, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.tapping { uri.openUri(bot.tafs.app.model.Legal.terms()) }.padding(vertical = 6.dp))
-            Text(Words.Settings.privacyPolicy, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.tapping { uri.openUri(bot.tafs.app.model.Legal.privacy()) }.padding(vertical = 6.dp))
+            Text(bot.tafs.app.model.Legal.label(Words.Settings.terms), style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.tapping { uri.openUri(bot.tafs.app.model.Legal.terms()) }.padding(vertical = 6.dp))
+            Text(bot.tafs.app.model.Legal.label(Words.Settings.privacyPolicy), style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.tapping { uri.openUri(bot.tafs.app.model.Legal.privacy()) }.padding(vertical = 6.dp))
           }
           PrimaryButton(if (state.buying == id) Words.Usage.buying else Words.Usage.startSolo, { scope.launch { actions.buy(id) } }, enabled = state.buying == null, modifier = Modifier.confirms())
           PurchaseNoteLine(state, id, actions)

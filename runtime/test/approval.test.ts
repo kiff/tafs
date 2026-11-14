@@ -217,6 +217,30 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(w2.told()).toMatchObject({ answer: `failed: ${WORDS.noGrant}` });
   });
 
+  // The owner's sign-in card read "it didn't go through: This connection is listed.": the phone worded planque's status itself.
+  // A sign-in card asks tafs cloud too when its connection takes no approval now, and draws tafs cloud's words.
+  it("a sign-in card whose connection takes no approval now is answered in the person's words; anything to sign stays the phone's", async () => {
+    const s = services();
+    s.grants = [grant({ status: "failed", reason: "the tool name is taken" })];
+    const w = await world(s, { type: "sign_in" });
+    const failed = await w.call("POST", ASK, { grant: "g_1" });
+    expect(failed.body).toMatchObject({ outcome: "answered", note: "This Stripe connection can't be approved any more, so nothing was signed." });
+    expect(w.told()).toMatchObject({ answer: "failed: This connection is failed: the tool name is taken" });
+    // Signed in already, with nothing to confirm: Coach hears "signed in", the card's own answer.
+    const s2 = services();
+    s2.grants = [grant({ status: "listed" })];
+    const w2 = await world(s2, { type: "sign_in" });
+    const listed = await w2.call("POST", ASK, { grant: "g_1" });
+    expect(listed.body).toMatchObject({ outcome: "answered", answer: "signed in" });
+    expect(String(listed.body.note)).not.toMatch(/connection is|listed/);
+    expect(w2.told()).toMatchObject({ answer: "signed in" });
+    // A connection still to sign in: tafs cloud decides nothing here, and Coach hears nothing; the phone signs in as before.
+    const w3 = await world(services(), { type: "sign_in" });
+    const pending = await w3.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    expect(pending.body).toEqual({ outcome: "sign_in" });
+    expect(w3.told()).toBeUndefined();
+  });
+
   it("a connection already connected with no Card to confirm signs nothing: Coach hears why, never approved", async () => {
     const s = services();
     s.grants = [grant({ status: "connected" })];

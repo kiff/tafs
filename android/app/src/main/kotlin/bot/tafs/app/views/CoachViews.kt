@@ -460,7 +460,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           // While this phone holds an approval window, KIFF's words for the next tap (kiff/tafs#494).
           state.windowWords?.takeIf { state.connecting == null }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
           if (state.connecting == grant.id) {
-            Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
+            if (state.vendorPageOpen) Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
             Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).tapping { actions.cancelSignIn() })
           }
         }
@@ -582,14 +582,20 @@ private fun OwnAnswer(value: String, onValue: (String) -> Unit) {
   )
 }
 
+/** A sign-in card's line: the card's service, else the connection's app name, else "the vendor". */
+internal fun signInWords(service: String?, app: String?): String =
+  (service?.takeIf { it.isNotBlank() } ?: app?.takeIf { it.isNotBlank() })?.let { Words.Coach.SignIn.at(it) } ?: Words.Coach.SignIn.atVendor
+
 /**
  * The vendor's sign-in, for a connection the owner approved and whose sign-in was left: one confirmation opens the vendor's own
  * page. Where it goes is always the app's own words (the card's service), whatever Coach's button says.
  */
 @Composable
 private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, error: String?, actions: CoachActions) {
-  val signInAt = c.service?.let { Words.Coach.SignIn.at(it) } ?: Words.Coach.SignIn.atVendor
   val grant = state.grants.firstOrNull { it.id == c.grant }
+  // The app by name ("Sign in to Gmail"): the card's service, else the connection's app as planque and Connect apps name it;
+  // "the vendor" only when neither is known (the owner's card read "Sign in at the vendor" for Gmail).
+  val signInAt = signInWords(c.service, grant?.let { bot.tafs.app.model.ConnectionWords.appName(it, state.connectApps) })
   val again = grant?.needsReconnect == true
   when {
     answered != null -> Text("$signInAt · $answered", style = scaled(14, FontWeight.Medium, Theme.dim))
@@ -616,7 +622,7 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, er
         )
         Text(Words.Coach.SignIn.opens(c.destination.toString()), style = scaled(12, color = Theme.dim, mono = true))
         if (waiting) {
-          Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
+          if (state.vendorPageOpen) Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
           Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).tapping { actions.cancelSignIn() })
         } else {
           Text(
