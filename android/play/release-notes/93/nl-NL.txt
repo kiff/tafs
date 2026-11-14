@@ -1,0 +1,1 @@
+- Als een aanmelding niet koppelt, zegt de melding dat in gewone woorden, zonder technische status.
