@@ -9036,14 +9036,15 @@ function foldVendor(name: string): string {
  * The fields both apps draw a Connect-apps row from (the owner's reference, 13 Nov): whether it's connected, how it
  * connects, whose it is (the account's own connections: a company's are shared by its people, a personal account's
  * are the person's), which tafs use it, and `line`, the row's second line in the person's language ("Sign in ·
- * Connected · Used by Refunds").
+ * Connected · Used by Refunds"; an app to connect, its method alone: "Sign in").
  */
 function appRow(app: { entry: string; vendor: string; title: string; how: "oauth" | "key"; state: string }, me: KIFFIdentity, uses: Map<string, AppUser[]> | undefined, lang: Lang) {
   const w = wordsIn(lang);
   const own = app.state === "connected" || app.state === "needs_reconnect";
   const used = own && uses ? [...new Map([...(uses.get(app.entry) ?? []), ...(uses.get(foldVendor(app.vendor)) ?? []), ...(uses.get(foldVendor(app.title)) ?? [])].map((u) => [u.taf, u])).values()] : undefined;
-  const status = app.state === "connected" ? w.apps_connected : app.state === "needs_reconnect" ? w.apps_reconnect : app.state === "needs_setup" ? w.apps_needs_setup : w.apps_not_connected;
-  const line = [app.how === "key" ? w.apps_method_key : w.apps_method_sign_in, status, ...(used?.length ? [w.apps_used_by(used.map((u) => u.name).join(", "))] : [])].join(" · ");
+  // An app to connect says no status: under Discover, "Not connected" on every row says nothing.
+  const status = app.state === "connected" ? w.apps_connected : app.state === "needs_reconnect" ? w.apps_reconnect : app.state === "needs_setup" ? w.apps_needs_setup : undefined;
+  const line = [app.how === "key" ? w.apps_method_key : w.apps_method_sign_in, ...(status ? [status] : []), ...(used?.length ? [w.apps_used_by(used.map((u) => u.name).join(", "))] : [])].join(" · ");
   return {
     connected: app.state === "connected",
     method: app.how === "key" ? "key" as const : "sign_in" as const,

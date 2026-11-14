@@ -105,9 +105,25 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
 }
 
 /**
+ * The apps people connect first, in order: what Discover opens on. A copy of planque's `guidesFirst`
+ * (kiff/planque cmd/planque/guides.go), the order deploy/guides/apps.md lists them in. A stopgap until planque's
+ * catalog says this order itself: keep the two the same.
+ */
+const FIRST_APPS = ["gmail", "googlesheets", "stripe", "github", "linkedin", "qonto",
+  "googlecalendar", "googledrive", "googledocs", "outlook", "slack", "notion", "hubspot", "shopify", "calendly", "trello", "asana", "airtable"];
+
+/** Where an app comes among the first apps, by its slug (a managed provider's entry's last part) or its vendor; else past them all. */
+function firstRank(a: CatalogApp): number {
+  const slug = (a.entry.split(":").pop() ?? "").replace(/@\d+$/, "").toLowerCase();
+  const at = [slug, a.vendor.toLowerCase()].map((k) => FIRST_APPS.indexOf(k)).filter((i) => i >= 0);
+  return at.length ? Math.min(...at) : FIRST_APPS.length;
+}
+
+/**
  * A page in the order a person looks for an app: the account's own connections first (one to sign in again
  * before one connected), then, for a search, apps whose name starts with it, then whose name has it, then the
- * rest; planque's order otherwise. Only within the page: planque pages its catalog.
+ * rest, each in planque's order; with no search, the first apps people connect (FIRST_APPS), then the rest
+ * by name. Only within the page: planque pages its catalog.
  */
 function ordered(apps: CatalogApp[], q: string): CatalogApp[] {
   const want = q.trim().toLowerCase();
@@ -118,7 +134,9 @@ function ordered(apps: CatalogApp[], q: string): CatalogApp[] {
     const name = `${a.title} ${a.vendor}`.toLowerCase();
     return a.title.toLowerCase().startsWith(want) || a.vendor.toLowerCase().startsWith(want) ? 2 : name.includes(want) ? 3 : 4;
   };
-  return apps.map((a, i) => ({ a, i, r: rank(a) })).sort((x, y) => x.r - y.r || x.i - y.i).map((x) => x.a);
+  const discover = (x: CatalogApp, y: CatalogApp): number =>
+    want ? 0 : firstRank(x) - firstRank(y) || x.title.localeCompare(y.title, "en", { sensitivity: "base" });
+  return apps.map((a, i) => ({ a, i, r: rank(a) })).sort((x, y) => x.r - y.r || (x.r === 2 ? discover(x.a, y.a) : 0) || x.i - y.i).map((x) => x.a);
 }
 
 /** Starts a connection of entry for agent, the taf's KIFF agent: the grant to approve, nothing signed. */

@@ -45,6 +45,40 @@ describe("Connect apps", () => {
     expect(plain.apps.map((a) => a.title)).toEqual(["Notion", "0CodeKit", "44API"]);
   });
 
+  it("opens Discover on the first apps people connect, in apps.md's order, then the rest by name", async () => {
+    // planque answers by entry id: alphabetical, its own Stripe and Qonto after every managed app.
+    const entries = [
+      { entry: "browser", vendor: "Browser", title: "Use websites", how: "oauth" },
+      { entry: "connector:composio:agent_mail", vendor: "agent_mail", title: "Agent Mail", how: "oauth" },
+      { entry: "connector:composio:airtable", vendor: "airtable", title: "Airtable", how: "oauth" },
+      { entry: "connector:composio:ashby", vendor: "ashby", title: "Ashby", how: "oauth" },
+      { entry: "connector:composio:bexio", vendor: "bexio", title: "bexio", how: "oauth" },
+      { entry: "connector:composio:github", vendor: "github", title: "GitHub", how: "oauth" },
+      { entry: "connector:composio:gmail", vendor: "gmail", title: "Gmail", how: "oauth" },
+      { entry: "connector:composio:googlesheets", vendor: "googlesheets", title: "Google Sheets", how: "oauth" },
+      { entry: "connector:composio:slack", vendor: "slack", title: "Slack", how: "oauth", state: "connected", grant: "g1" },
+      { entry: "connector:composio:zendesk", vendor: "zendesk", title: "Zendesk", how: "oauth" },
+      { entry: "qonto", vendor: "Qonto", title: "Qonto", how: "oauth" },
+      { entry: "stripe", vendor: "Stripe", title: "Stripe", how: "oauth" },
+    ];
+    const got = await listApps(fake(200, { entries, provider: "composio" }), BASE, "t1", "s", "");
+    // The account's own first (Slack, though it's a first app too), then Gmail, Google Sheets, Stripe, GitHub, Qonto, Airtable
+    // as apps.md lists them, then the rest by name, whatever its case.
+    expect(got.apps.map((a) => a.title)).toEqual(["Slack", "Gmail", "Google Sheets", "Stripe", "GitHub", "Qonto", "Airtable",
+      "Agent Mail", "Ashby", "bexio", "Use websites", "Zendesk"]);
+    // Negative: planque's alphabetical order is gone; Agent Mail no longer opens Discover.
+    expect(got.apps.map((a) => a.title).slice(1, 4)).not.toEqual(["Agent Mail", "Airtable", "Ashby"]);
+    expect(got.apps.findIndex((a) => a.title === "Gmail")).toBeLessThan(got.apps.findIndex((a) => a.title === "Agent Mail"));
+    // Negative: a search keeps its relevance order, never moved by the first apps nor by name.
+    const searched = await listApps(fake(200, { entries: [
+      { entry: "connector:composio:zmail", vendor: "zmail", title: "Zmail", how: "oauth" },
+      { entry: "connector:composio:agent_mail", vendor: "agent_mail", title: "Agent Mail", how: "oauth" },
+      { entry: "connector:composio:gmail", vendor: "gmail", title: "Gmail", how: "oauth" },
+      { entry: "connector:composio:mailchimp", vendor: "mailchimp", title: "Mailchimp", how: "oauth" },
+    ] }), BASE, "t1", "s", "mail");
+    expect(searched.apps.map((a) => a.title)).toEqual(["Mailchimp", "Zmail", "Agent Mail", "Gmail"]);
+  });
+
   it("lists a managed provider's apps a page at a time, its entries as planque names them", async () => {
     const seen: { url?: string; init?: RequestInit }[] = [];
     const got = await listApps(fake(200, { entries: [

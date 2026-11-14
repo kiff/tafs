@@ -1530,14 +1530,16 @@ describe("Connect apps' rows", () => {
     const w = world();
     const { status, body } = await read(w, "ana_co");
     expect(status).toBe(200);
-    expect(body.apps.map((a) => a.title)).toEqual(["Gmail", "Stripe", "Typeform", "Qonto"]);
+    // Connected first, then Discover: Qonto, one of the first apps people connect, before Typeform.
+    expect(body.apps.map((a) => a.title)).toEqual(["Gmail", "Stripe", "Qonto", "Typeform"]);
     const by = (t: string) => body.apps.find((a) => a.title === t)!;
     expect(by("Stripe")).toMatchObject({ connected: true, method: "sign_in", whose: "Company", used_by: [{ taf: RAE, name: expect.any(String) }], line: expect.stringMatching(/^Sign in · Connected · Used by /) });
     // Signed in once, to sign in again: the account's own, used by the taf whose agent holds it, and never an agent that's no taf.
     expect(by("Gmail")).toMatchObject({ connected: false, method: "sign_in", whose: "Company", line: expect.stringMatching(/^Sign in · Sign in again · Used by /) });
     expect(by("Gmail").used_by).toHaveLength(1);
-    // Not connected: no owner and no tafs, only how it would connect.
-    expect(by("Qonto")).toEqual(expect.objectContaining({ connected: false, method: "key", line: "With a key · Not connected" }));
+    // Not connected: no owner, no tafs and no status, only how it would connect (not "Not connected" on every Discover row).
+    expect(by("Qonto")).toEqual(expect.objectContaining({ connected: false, method: "key", line: "With a key" }));
+    expect(by("Typeform").line).toBe("Sign in");
     expect(by("Qonto")).not.toHaveProperty("whose");
     expect(by("Qonto")).not.toHaveProperty("used_by");
     // A personal account's connections are the person's own, in their language.
