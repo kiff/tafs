@@ -60,7 +60,11 @@ and registered again at once if KIFF didn't end it: a phone still signed in keep
 
 **Devices**, in Settings (`DevicesView`): the devices signed in as this person on the
 account (`GET /v1/me/devices`), each with when it was last used, and "This device" on
-this one. **Sign out** on another device, behind Face ID, removes it
+this one. Each is called what KIFF names it in the app's language (`display_name`), drawn
+from what the device is (`kind`: iPhone, iPad, Android phone or tablet), never the name the
+app sent at sign-in in whatever language it had then; that name shows only for a device
+of another kind, or from a KIFF that sends no `display_name`. The apps send the `kind` when
+they sign in. **Sign out** on another device, behind Face ID, removes it
 (`DELETE /v1/me/devices/{id}`): it no longer approves, and its sign-ins on the account
 end at once. This device signs out with **Sign out of KIFF**.
 
