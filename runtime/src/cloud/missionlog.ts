@@ -53,11 +53,14 @@ export async function logDelivered(store: CoachStore, tenant: string, mission: s
   const tally = Object.values(run.tally ?? {});
   const sum = (k: "sent" | "held" | "refused") => tally.reduce((n, t) => n + (t[k] ?? 0), 0);
   const items = [...new Set((run.done ?? []).flatMap((d) => (typeof d.resource === "string" && d.resource ? [d.resource] : [])))].slice(0, LOG_LIMITS.items);
-  return appendLog(store, tenant, mission, {
+  // Claimed first, so two sweeps log a run once; an append that loses every try frees the claim for the next sweep.
+  const added = await appendLog(store, tenant, mission, {
     id: `log_${run.id}`, at: run.updated ?? now.toISOString(), by: { kind: "taf", id: taf }, kind: "delivered",
     counts: { done: sum("sent"), held: sum("held"), refused: sum("refused") },
     evidence: [{ kind: "run", id: run.id }, ...items.map((id) => ({ kind: "item" as const, id }))],
-  }, now);
+  }, now).catch((err) => { void store.remove(runKey(tenant, run.id)).catch(() => undefined); throw err; });
+  if (!added) await store.remove(runKey(tenant, run.id));
+  return added;
 }
 
 /** An entry's words in the reader's language: an authored one's as written, a delivered one's from its counts. */

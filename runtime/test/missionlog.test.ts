@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Run } from "../src/cloud/agents.js";
-import { type Deps, sweepMissionLog, type Taf } from "../src/cloud/handler.js";
+import { type Deps, handle, sweepMissionLog, type Taf } from "../src/cloud/handler.js";
 import { appendLog, type LogEntry, logForRuns, logPage, readLog } from "../src/cloud/missionlog.js";
 import { saveMissions } from "../src/cloud/missions.js";
 import { memoryCoach, memoryTafs } from "./fakes.js";
@@ -56,5 +56,45 @@ describe("a mission's log", () => {
     const lines = logForRuns(entries, new Map(), "en");
     expect(lines.length).toBe(26);
     expect(lines.at(-1)).toContain("lead");
+  });
+
+  // Sharing: a person who may not see a taf learns nothing from a mission's log of what it did, or when.
+  it("leaves out of the person's page every entry by a taf they may not see, with no removed marker in its place", async () => {
+    const coach = memoryCoach(() => NOW);
+    const tafs = memoryTafs();
+    for (const [id, name, agent] of [["taf-bills", "Bills", "agent_bills"], ["taf-pay", "Payouts", "agent_pay"]]) {
+      tafs.held.set(`${T}#${id}`, { id, name, job: "custom", kiffAgent: agent, nameClaim: "c", created: "" } as Taf);
+    }
+    const note = (id: string, taf: string): LogEntry => ({ id, at: "2026-10-16T10:00:00Z", by: { kind: "taf", id: taf }, kind: "note", words: `${taf} did something.`, evidence: [] });
+    await appendLog(coach, T, "msn_1", note("a", "taf-bills"), NOW);
+    await appendLog(coach, T, "msn_1", note("b", "taf-pay"), NOW);
+    const deps = { coach, tafs, now: () => NOW, kiffBase: "https://kiff.test", fetch: (async (url: string) => {
+      if (url.endsWith("/v1/me")) return new Response(JSON.stringify({ tenant_id: T, subject: "u_bo", api_key: false, capabilities: ["read"] }));
+      // KIFF says this person may use Bills only.
+      if (url.endsWith("/v1/me/access")) return new Response(JSON.stringify({ agents: { agent_bills: { use: true } } }));
+      return new Response("{}", { status: 404 });
+    }) as unknown as typeof fetch } as unknown as Deps;
+    const r = await handle({ rawPath: "/v1/missions/msn_1/log", requestContext: { http: { method: "GET" } }, headers: { host: "tafs.test", Authorization: "Bearer tok" } }, deps);
+    expect(r.statusCode).toBe(200);
+    const page = JSON.parse(r.body) as { items: Array<{ id: string; removed?: boolean; words: string }> };
+    expect(page.items.map((i) => i.id)).toEqual(["a"]);
+    expect(page.items.some((i) => i.removed)).toBe(false);
+    expect(r.body).not.toContain("Payouts");
+  });
+
+  it("frees a run's claim when its entry couldn't be added, so the next sweep logs it", async () => {
+    const coach = memoryCoach(() => NOW);
+    const once = coach.once.bind(coach);
+    let lose = true;
+    // Every append loses its version claim while `lose` is on (another write took it each time).
+    coach.once = async (key, until) => (lose && key.includes("#mission-log#") ? false : once(key, until));
+    const tafs = memoryTafs();
+    tafs.held.set(`${T}#taf-bills`, { id: "taf-bills", name: "Bills", job: "custom", kiffAgent: "agent_bills", nameClaim: "c", created: "" } as Taf);
+    await saveMissions(coach, T, { missions: [], version: 0 }, [{ id: "msn_1", name: "Money", goal: "Run the money side.", label: "lbl_1", tafs: ["taf-bills"], created: "2026-10-16T08:00:00Z", by: "u_ana" }], NOW);
+    const deps = { coach, tafs, agents: { runs: async () => [run("r1")] }, now: () => NOW } as unknown as Deps;
+    expect(await sweepMissionLog(deps)).toBe(0);
+    lose = false;
+    expect(await sweepMissionLog(deps)).toBe(1);
+    expect((await readLog(coach, T, "msn_1"))!.entries.map((e) => e.id)).toEqual(["log_r1"]);
   });
 });
