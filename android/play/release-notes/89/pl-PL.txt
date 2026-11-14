@@ -1,0 +1,3 @@
+- Połączona aplikacja otwiera się po dotknięciu w dowolnym miejscu jej wiersza.
+- Bez tafa aplikacja proponuje „Zapytaj Coacha”, gdzie go utworzysz.
+- Po odłożeniu czatu z Coachem Coach zaczyna nową rozmowę.

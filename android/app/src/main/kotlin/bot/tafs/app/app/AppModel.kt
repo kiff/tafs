@@ -1879,6 +1879,9 @@ class AppModel(
       val done = cloud.setAsideCoach(session, coachReadProof())
       if (gen == accountGeneration) {
         _state.update { s -> s.copy(coachWaiting = s.coachWaiting.filterNot { it.session in done.setAside }) }
+        // Coach no longer shows a chat that was set aside: its next message would go on in the ended session (an audit wrote a
+        // new job there, and Needs you named it after the old one). A new conversation instead.
+        if (_state.value.coachChat in done.setAside) newCoachChat()
         bot.tafs.app.design.Haptics.success()
       }
       refresh()

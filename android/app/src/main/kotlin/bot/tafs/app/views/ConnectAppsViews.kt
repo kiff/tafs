@@ -226,7 +226,7 @@ fun ConnectAppsSheet(
               Text(state.connectionsError?.let { Words.Connect.appsNotRead(why = it) }
                 ?: if (!state.planqueReady) bot.tafs.app.model.CoachWords.NOT_CONNECTABLE else Words.Connect.appsNotRead(why = ""),
                 style = scaled(14, color = Theme.amberText))
-            } else if (onDisconnect != null) Text(ConnectAppsWords.DISCONNECT_WHY, style = scaled(13, color = Theme.soft))
+            } else if (onDisconnect != null && sections.isNotEmpty()) Text(ConnectAppsWords.DISCONNECT_WHY, style = scaled(13, color = Theme.soft))
             // Each taf's name over its connections, so no row repeats it; then those whose taf the app can't name, under words that
             // claim nothing about it, with the same row.
             val groups = sections.map { it.taf to it.grants } + listOfNotNull(others.takeIf { it.isNotEmpty() }?.let { bot.tafs.app.model.ConnectionWords.OTHER_CONNECTIONS to it })
@@ -416,7 +416,6 @@ fun ConnectAppsSheet(
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         OutlinedTextField(query, driveTyped({ query = it }), Modifier.fillMaxWidth(), placeholder = { Text(ConnectAppsWords.SEARCH) }, singleLine = true)
-        if (onConnect != null && tafs.isEmpty()) Text(bot.tafs.app.model.ConnectWords.NO_TAF, style = scaled(14, color = Theme.soft))
         state.connectAppsError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         val apps = state.connectApps
         // Yours first (connected, signed in, or to sign in again), then Discover: tafs cloud's order within each.
@@ -426,7 +425,7 @@ fun ConnectAppsSheet(
           // 2239 left the row dead when the read had failed), and the sheet then says why when there are still none.
           AppRow(app, connect, onChooseActions, onManage = { a: ConnectApps.App ->
             if (connectionsOf(state, a).isNotEmpty()) managing = a else readScope.launch { onReadConnections(); managing = a }
-          }, usedBy = usedBy(state, app))
+          }, usedBy = usedBy(state, app), onAskCoach = onAskCoach.takeIf { onConnect != null && tafs.isEmpty() })
         }
         if (yours.isNotEmpty()) {
           bot.tafs.app.design.Eyebrow(Words.Connect.Apps.yours)
@@ -434,6 +433,9 @@ fun ConnectAppsSheet(
         }
         if (discover.isNotEmpty()) {
           if (yours.isNotEmpty()) bot.tafs.app.design.Eyebrow(Words.Connect.Apps.discover)
+          // Above the apps to connect, where it holds: an app is connected for a taf, so with none they can't be yet. Never above
+          // Yours, whose apps are already connected (an audit read it above "Stripe · Connected").
+          if (onConnect != null && tafs.isEmpty()) Text(bot.tafs.app.model.ConnectWords.NO_TAF, style = scaled(14, color = Theme.soft))
           discover.forEach { row(it) }
         }
         if (apps != null && apps.apps.isEmpty() && query.isNotBlank()) Text(ConnectAppsWords.NONE, style = scaled(14, color = Theme.soft))
@@ -462,8 +464,19 @@ fun ConnectAppsSheet(
 }
 
 @Composable
-private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?, onChooseActions: (ConnectApps.App) -> Unit = {}, onManage: ((ConnectApps.App) -> Unit)? = null, usedBy: List<String> = emptyList()) {
-  Panel {
+private fun AppRow(
+  app: ConnectApps.App,
+  onConnect: ((ConnectApps.App) -> Unit)?,
+  onChooseActions: (ConnectApps.App) -> Unit = {},
+  onManage: ((ConnectApps.App) -> Unit)? = null,
+  usedBy: List<String> = emptyList(),
+  /** With no taf to connect it for, the way to make one: Coach. */
+  onAskCoach: (() -> Unit)? = null,
+) {
+  // A connected app's whole row opens its connections, not only its "Connected" label (an audit: "I tapped the whole Gmail
+  // row and nothing happened").
+  val opens = if (app.connected && onManage != null) Modifier.clickable(onClickLabel = Words.Connect.Apps.manage) { bot.tafs.app.design.Haptics.tap(); onManage(app) } else Modifier
+  Panel(opens) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
       // The app's logo from tafs cloud, small and as it is; without one, its initial on a tile, which is only a marker.
       val logo = bot.tafs.app.design.rememberLogo(app.logo)
@@ -488,7 +501,7 @@ private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?
         app.connected -> Text(
           ConnectAppsWords.CONNECTED,
           style = scaled(14, FontWeight.SemiBold, Theme.ok),
-          modifier = if (onManage != null) Modifier.heightIn(min = 44.dp).clickable(onClickLabel = Words.Connect.Apps.manage) { onManage(app) }.padding(top = 12.dp) else Modifier,
+          modifier = Modifier.heightIn(min = 44.dp).padding(top = 12.dp),
         )
         // Not set up yet: nothing to tap, only tafs cloud's line under the name.
         app.needsSetup -> Unit
@@ -504,6 +517,12 @@ private fun AppRow(app: ConnectApps.App, onConnect: ((ConnectApps.App) -> Unit)?
           modifier = Modifier.heightIn(min = 44.dp).clickable { onConnect(app) }.padding(top = 10.dp),
         )
         app.needsReconnect -> Text(ConnectAppsWords.SIGN_IN_AGAIN, style = scaled(14, color = Theme.amberText))
+        // No taf to connect it for: the way to make one, in Coach (an audit found every such row dead).
+        onAskCoach != null -> Text(
+          Words.Coach.ask,
+          style = scaled(15, FontWeight.SemiBold, Theme.amber),
+          modifier = Modifier.heightIn(min = 44.dp).clickable { bot.tafs.app.design.Haptics.tap(); onAskCoach() }.padding(top = 10.dp),
+        )
       }
     }
   }
