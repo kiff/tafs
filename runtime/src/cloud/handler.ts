@@ -6986,6 +6986,27 @@ async function endCoachRun(deps: Deps, tenant: string, coach: string, r: Run, no
 /** The cards a run waits on, unanswered, by their call ids: what an end kept here covers. */
 const cardsWaitedOn = (r: Run): string[] => (r.requirements ?? []).filter((q) => q.kind === "card" && !q.answered).map((q) => q.call_id);
 
+/**
+ * Asks kiff/agents once more to cancel each run kept as ended here because it refused (`kept`, 409 `paused_run`): kiff/agents
+ * cancels a run paused only on cards since agents#465, and the runs kept before it stay PAUSED until their cards expire. Once
+ * per run: a 200, or a run that had ended, marks it done; anything else stays kept, and isn't asked again. Nothing is answered.
+ */
+async function retryKeptEnds(deps: Deps, tenant: string, coach: string, runs: Run[], now: Date): Promise<void> {
+  if (!deps.coach) return;
+  for (const r of runs) {
+    if (r.agent !== coach || r.status !== "PAUSED") continue;
+    const kept = await deps.coach.get(coachEndedKey(tenant, r.id)).catch(() => undefined) as { how?: string; waits?: unknown; retried?: boolean } | undefined;
+    if (kept?.how !== "kept" || kept.retried || !Array.isArray(kept.waits)) continue;
+    const waits = kept.waits;
+    // Answered in Coach and paused on a new card since: not the end it kept, so not this one's to retry.
+    if (!cardsWaitedOn(r).every((id) => waits.includes(id))) continue;
+    const how = await deps.agents.cancelRun(tenant, coach, r.id).then(() => "cancelled", (err) =>
+      err instanceof AgentsError && (err.status === 404 || (err.status === 409 && err.code !== "paused_run")) ? "over" : "kept");
+    await deps.coach.put(coachEndedKey(tenant, r.id), { how, waits, retried: true }, new Date(now.getTime() + COACH_ENDED_KEPT_MS)).catch(() => undefined);
+    console.log(JSON.stringify({ event: "coach_kept_retry", tenant, run: r.id, ended: how !== "kept" }));
+  }
+}
+
 /** Coach's paused runs, less those tafs cloud already ended (endCoachRun) that still wait on the same cards. */
 async function notEndedHere(deps: Deps, tenant: string, runs: Run[]): Promise<Run[]> {
   if (!deps.coach || !runs.length) return runs;
@@ -7013,8 +7034,11 @@ export async function sweepStaleCoach(deps: Deps): Promise<Array<{ run: string; 
     const coach = records.find((t) => t.job === SETUP_JOB && !t.removing);
     if (!coach) continue;
     const removing = new Set(records.filter((t) => t.removing).flatMap((t) => t.kiffAgent ? [t.kiffAgent] : []));
-    // A run already ended here (kept PAUSED by kiff/agents) isn't ended again.
-    const paused = await notEndedHere(deps, tenant, await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]));
+    // A run kept as ended here because kiff/agents refused it is asked once more (retryKeptEnds); then a run already ended
+    // here isn't ended again.
+    const all = await deps.agents.pausedRuns(tenant).catch(() => [] as Run[]);
+    await retryKeptEnds(deps, tenant, coach.id, all, now);
+    const paused = await notEndedHere(deps, tenant, all);
     for (const r of paused) {
       if (r.agent !== coach.id || r.status !== "PAUSED") continue;
       const cards = waitingCards(r, now);
