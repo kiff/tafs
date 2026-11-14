@@ -210,7 +210,16 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
         expect(line).not.toMatch(/listed|failed|disconnected|signed_in|connection is/);
       }
     }
-    expect(WORDS.notApprovable("Gmail", "listed")).toBe("You're already signed in to Gmail on this connection, so there's nothing to sign in to here.");
+    // Signed in already: the line says so, and the way forward to another account of the same app.
+    expect(WORDS.notApprovable("Gmail", "listed")).toBe("You're already signed in to Gmail on this connection, so there's nothing to sign in to here. To use another Gmail account, ask Coach to connect it.");
+    expect(approvalWords("es").notApprovable("Gmail", "signed_in")).toBe("Ya has iniciado sesión en Gmail en esta conexión, así que aquí no hace falta iniciar sesión. Para usar otra cuenta de Gmail, pide a Coach que la conecte.");
+    expect(approvalWords("pt").notApprovable("Gmail", "listed")).toBe("Já tem sessão iniciada em Gmail nesta ligação, por isso não é preciso iniciar sessão aqui. Para usar outra conta Gmail, peça ao Coach para a ligar.");
+    for (const lang of ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const) {
+      const line = approvalWords(lang).notApprovable("Outlook", "listed");
+      expect(line.split("Outlook").length - 1).toBe(2); // the app's name, never a hard-coded one, in both halves
+      expect(line).toContain("Coach");
+      expect(line).not.toMatch(/nada que iniciar|nada para iniciar/);
+    }
     const w2 = await world(services());
     const none = await w2.call("POST", ASK, { grant: "g_9" });
     expect(none.body).toMatchObject({ outcome: "answered", answer: `failed: ${WORDS.noGrant}`, note: WORDS.noGrant });

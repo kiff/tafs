@@ -110,7 +110,7 @@ export const nl: Words = {
   approval_no_code: (vendor: string) => `Het inloggen bij ${vendor} kwam terug zonder bevestigingscode. Er is niets gekoppeld.`,
   approval_came_back: (vendor: string) => `Er opende geen inlogpagina van ${vendor}, dus er is niets gekoppeld. Je kunt het opnieuw proberen.`,
   approval_came_back_signed_in: (vendor: string) => `Je bent al ingelogd bij ${vendor}, dus er opende geen inlogpagina en er is nog niets nieuws gekoppeld. De acties ervan komen hierna.`,
-  approval_listed_already: (vendor: string) => `Je bent al ingelogd bij ${vendor} op deze koppeling, dus hier valt niets in te loggen.`,
+  approval_listed_already: (vendor: string) => `Je bent al ingelogd bij ${vendor} op deze koppeling, dus hier valt niets in te loggen. Wil je een ander ${vendor}-account gebruiken, vraag Coach dan om het te koppelen.`,
   approval_not_approvable: (vendor: string) => `Deze koppeling met ${vendor} kan niet meer worden goedgekeurd, dus er is niets ondertekend.`,
   apps_method_sign_in: "Inloggen",
   apps_method_key: "Met een sleutel",
