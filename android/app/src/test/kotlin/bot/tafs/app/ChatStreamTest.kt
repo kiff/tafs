@@ -211,6 +211,26 @@ class ChatStreamTest {
     assertEquals("Refunds stopped: the AI declined to continue. Try asking another way.", AppModel.capWords("refused", "Refunds"))
   }
 
+  // A run paused on a card its person answers: Needs you (Home) is read when the stream closes, even with no end line, so the
+  // waiting row and the badge come while the chat is open. A run that went on past the card asks no extra read.
+  @Test fun aStreamThatClosesWaitingOnYouReadsNeedsYou() = runTest {
+    reads()
+    transport.answer(stream, 200, sse("session" to """{"session":"s1","run":"run_1"}""", "state" to """{"state":"waiting_for_you","words":"Waiting for you"}"""))
+    val m = model()
+    settle()
+    val before = transport.requestsTo("GET /v1/home").size
+    m.deliverChat("Remind me every Friday", "refunds-1")
+    settle()
+    assertTrue("Home was read for Needs you", transport.requestsTo("GET /v1/home").size > before)
+  }
+
+  @Test fun whetherARunStillWaitsOnItsPersonFollowsItsLastLine() {
+    assertTrue(AppModel.stillWaitsOnYou(false, "waiting_for_you"))
+    assertTrue("done keeps the pause before it", AppModel.stillWaitsOnYou(true, "done"))
+    assertEquals(false, AppModel.stillWaitsOnYou(false, "done"))
+    assertEquals("a line after the card: it went on", false, AppModel.stillWaitsOnYou(true, "working"))
+  }
+
   @Test fun withoutTheStreamRouteTheMessageGoesPlainlyAsBefore() = runTest {
     reads()
     transport.answer(stream, 404, """{"error":"not_found"}""")

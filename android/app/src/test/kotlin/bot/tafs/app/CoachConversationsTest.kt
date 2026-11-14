@@ -101,6 +101,19 @@ class CoachConversationsTest {
     assertNull(m.state.value.coachImproving)
   }
 
+  // The owner tapped Coach on a taf's page, then the pencil, and stayed on "Improve Client email drafts".
+  @Test fun thePencilOnAnEmptyChatAboutATafOpensAPlainOne() = runTest {
+    reads()
+    val m = model()
+    m.newCoachChat()
+    assertTrue("an empty plain chat stays", bot.tafs.app.model.CoachWords.newChatStays(m.state.value))
+    m.improveTaf("refunds-1")
+    assertFalse("an empty chat about a taf gives way", bot.tafs.app.model.CoachWords.newChatStays(m.state.value))
+    m.newCoachChat()
+    assertNull(m.state.value.coachImproving)
+    assertNull(m.state.value.coachContext)
+  }
+
   @Test fun coachFromATafsPageIsThatTafsConversationAndElsewhereTheOneOpen() = runTest {
     reads()
     transport.answer("POST /v1/tafs/taf_1/improve", 200, """{"session":"s7","new_session":true}""")

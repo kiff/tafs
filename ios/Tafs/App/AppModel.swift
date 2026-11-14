@@ -2089,7 +2089,7 @@ final class AppModel: ObservableObject {
             connectStart = start
         } catch {
             guard gen == accountGeneration else { return }
-            lastError = Words.Connect.couldNotConnected(vendor: "\(app.vendor.isEmpty ? app.title : app.vendor)", why: "\(error.localizedDescription)")
+            lastError = Words.Connect.couldNotConnected(vendor: "\(app.name ?? (app.vendor.isEmpty ? app.title : app.vendor))", why: "\(error.localizedDescription)")
         }
     }
 

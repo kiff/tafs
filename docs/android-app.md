@@ -208,6 +208,10 @@ includes, tafs cloud's sentence as kiff.dev says it; none sent, no line.
   purchases), read out by TalkBack (`PurchaseNote`). A purchase KIFF hasn't recorded yet offers
   Restore purchases right there.
 
+**Home's first line** is tafs cloud's `headline` ("2 tafs working.", or "1 taf ready." for a new taf with no
+schedule, [api.md](api.md)); the app counts nothing for it (Android 1.27.6). A tafs cloud from before `headline`
+leaves the app's own count of the tafs at work.
+
 **Needs you's count** (Home's line and the tab's badge) is tafs cloud's (`needs_you`: its count and
 words, covering held calls, "Did this happen?" calls, currency requests and tafs with a knock). When
 tafs cloud leaves it out (it couldn't read all of it), the app counts what it has (`needsYouCount`).
@@ -559,6 +563,11 @@ A change to the dial's setting (a size, Skip it / Run after, a place in an app) 
 next version: "DRAFT · Vn · NOT LIVE" and **Make N changes live** show in the sheet while it waits
 (tafs cloud's `pending`), the usual version switch.
 
+**A draft's Cards** (`DraftCardsView`, in Coach's approval card and in Versions): its new Cards show as one
+panel, **A new Card**, with each of their lines once (KIFF's draft has one Card per tool, which read as five Cards to
+approve). A Card the draft changes keeps its own panel, now then after, and one it removes its own (Android 1.27.6;
+iPhone and iPad follow).
+
 **An app's event** (`kind: app_event`) waits for the owner while its `approval` is `needed`:
 Approve opens its filters, as tafs cloud gives them, and **Approve with your fingerprint**
 approves exactly those (`AppModel.approveKnobEvent`, `EventApprovalSheet`). The live dial is read
@@ -664,6 +673,11 @@ you** ([api.md](api.md#coach-waiting)): Home's `coach_waiting`, after the steps,
 approval.") and its **Open Coach** button, which opens Coach on that chat (`AppModel.openWaitingCoach`),
 where the card is answered; someone who can't use Coach reads the line alone. tafs cloud counts each in `needs_you`, so Home never says "Nothing needs
 you." while Coach waits. The app decides nothing about it; a row with no chat or no line isn't drawn.
+Home is read when a chat's stream ends, and when it closes with no end line after its last live line said
+`waiting_for_you` (`AppModel.stillWaitsOnYou`), so the row and the badge come while Coach's chat is still open
+(Android 1.27.6, as iPhone and iPad). Home is read again too when a Coach card is answered and when a row is opened, so
+a row whose chat was answered or ended goes once tafs cloud says so. The tab's badge leaves out the chat that's on
+screen (`needsYouBadge`): only the app knows what's on screen, so that's the app's; the count is tafs cloud's.
 
 **Set aside** is "not now", never an approval, and only signed in (not the sample). A chat set aside is no longer the one
 Coach shows: Coach starts a new conversation, so a new job never goes on in the ended session (Android 1.27.1). Opening
@@ -681,8 +695,8 @@ tafs cloud answers.
   above them. It asks once, in tafs cloud's words (the title names the count), then calls
   `POST /v1/home/coach-waiting/set-aside`.
 - **After:** the row goes once tafs cloud answers, and Home is read again for its count. A refusal
-  says why (`ErrorWords`) and keeps the rows. A row being set aside isn't drawn again by a Home read
-  meanwhile.
+  says why (`ErrorWords`) and keeps the rows. A row being set aside isn't drawn while tafs cloud is asked
+  (`coachWaitingShown`), so one full swipe takes on the first try; a refusal brings it back (Android 1.27.6).
 
 iPhone and iPad do the same ([ios-app.md](ios-app.md#coach-waiting)).
 
@@ -740,7 +754,9 @@ The same rule as on iPhone and iPad (`design/Haptics.kt`):
 
 - **A light tap on every button press,** from the shared buttons (`PrimaryButton`, `OutlineButton`), so every new button
   gets it. Also on the bottom bar and rail (Account and each tab), Coach's button, a segment changed in a segmented control
-  (a taf's Chat, Activity, Card and Setup), a Coach chat swiped aside, and Set all aside (Android 1.27.0).
+  (a taf's Chat, Activity, Card and Setup), a Coach chat swiped aside, and Set all aside (Android 1.27.0). Home's calendar
+  icon and everything tapped in the calendar (days, weeks, the chevrons, Choose a date, a taf's slot) tap too, through
+  `Modifier.tapping`, the shared tappable for anything that isn't a button (Android 1.27.6).
 - **A success tick** when a send goes through (`deliverChat`), a held call's answer goes through (`answer`), tafs cloud
   approves Coach's approval card, or a Coach chat is set aside (`setAsideCoach`).
 - **A warning tick** when one of those is refused or fails. Only the outcome of something the person did, never a background
@@ -797,7 +813,8 @@ Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#conne
   "Connected" label). The note on what removing access takes shows only when a taf uses one of them. Its tap always answers (Android 1.26.1): with none of its
   connections on this phone, planque's connections are read again first (`refreshConnections`), and if there are still
   none, the sheet says why: the read's failure (`connectionsError`, kept in words and written to the diagnostics), or
-  that connecting isn't set up from this phone.
+  that connecting isn't set up from this phone. A sheet emptied by removing its app's last connection closes instead,
+  never "The apps couldn't be read." over a list that's simply empty now; a failed read still says why (Android 1.27.6).
 
 **An app's connections, as planque describes them** (Android 1.25.0, planque's `title`, `used_by`,
 `health` and `actions` on each grant; `Grant.health`, `Grant.actions`, read leniently). A connected app

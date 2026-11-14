@@ -44,9 +44,12 @@ export function languageFrom(header: string | undefined): Lang {
   return best?.lang ?? "en";
 }
 
-/** The plural form of n in a language, for words that count: Intl's categories (Polish has few and many). */
+/**
+ * The plural form of n in a language, for words that count: Intl's categories (Polish has few and many). Our Portuguese is
+ * European, where 0 is plural ("0 tafs"); CLDR's plain `pt` is Brazilian, where 0 is singular.
+ */
 export function plural(lang: Lang, n: number): Intl.LDMLPluralRule {
-  return new Intl.PluralRules(lang).select(n);
+  return new Intl.PluralRules(lang === "pt" ? "pt-PT" : lang).select(n);
 }
 
 /**

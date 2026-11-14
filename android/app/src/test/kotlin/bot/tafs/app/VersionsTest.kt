@@ -454,6 +454,27 @@ class VersionsTest {
     assertEquals(listOf("20 calls a day"), card.current!!.lines)
   }
 
+  // KIFF's draft has one Card per tool: five "A new Card" panels read as five Cards to approve. They show as one, each line once;
+  // a Card the draft changes keeps its own panel and place.
+  @Test fun aDraftsNewCardsShowAsOneAndAChangedCardAlone() {
+    val d = KiffClient.json.decodeFromString<AgentDraft>(
+      """{"id":"d","status":"draft","version":"v2","cards":[
+          {"lines":["Read your emails"]},
+          {"revises":"c1","current":{"lines":["Read Stripe payments"]},"lines":["Read and refund Stripe payments"]},
+          {"lines":["Draft replies"]},
+          {"lines":["Read your emails"]}]}""",
+    )
+    val shown = bot.tafs.app.views.draftCardsShown(d)
+    assertEquals(2, shown.size)
+    assertEquals(bot.tafs.app.views.DraftCardShown.New(listOf("Read your emails", "Draft replies")), shown[0])
+    val changed = shown[1] as bot.tafs.app.views.DraftCardShown.One
+    assertEquals("c1", changed.card.revises)
+    assertEquals(listOf("Read and refund Stripe payments"), changed.lines)
+    // A draft with no new Card shows each as it was.
+    val revision = KiffClient.json.decodeFromString<AgentDraft>("""{"id":"d","status":"draft","version":"v3","cards":[{"revises":"c1","current":{"lines":["a"]},"lines":["b"]}]}""")
+    assertTrue(bot.tafs.app.views.draftCardsShown(revision).single() is bot.tafs.app.views.DraftCardShown.One)
+  }
+
   @Test fun twoGrantsThatReadAlikeEachAddTheirActionInWords() {
     val d = KiffClient.json.decodeFromString<AgentDraft>(
       """{"id":"d","status":"draft","version":"v1","cards":[

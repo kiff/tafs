@@ -11,7 +11,7 @@ import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
 import { apsFor, levelOf, presenceKey, presentUntil } from "./levels.js";
 import { definition, digest, keyRef, ownerNotesIn, yourStepOn } from "./tafdef.js";
-import { avatarRim, byHolder, freeColor, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
+import { avatarRim, byHolder, freeColor, headlineOf, listable, type Mandate, readAccess, readArchived, readDidThisHappen, readMandates, readExceptions, readKIFF, readUnsure, stateOf, summary } from "./home.js";
 import { heldCards, improveContext, ownerWords, recentCalls } from "./improve.js";
 import { runFailure, skippedOf, summaryOf, whenIn, workOf } from "./work.js";
 import { vendorReach, YOUR_STEP_TOOL, yourStepsOf } from "./yourstep.js";
@@ -67,7 +67,7 @@ import { RECIPES } from "../recipes.js";
  * added or changed here changes it too.
  *
  *   GET  /v1/jobs
- *   GET  /v1/home                       the app's list: each taf's state, colour, Card summary, doors and open trial, and the account's other agents with Cards
+ *   GET  /v1/home                       the app's list: each taf's state, colour, Card summary, doors and open trial, Home's first line (`headline`), and the account's other agents with Cards
  *   POST /v1/home/coach-waiting/{session}/set-aside   the person's own waiting Coach chat set aside ("not now"): its run ends, nothing approved
  *   POST /v1/home/coach-waiting/set-aside             every one of them at once ("Set all aside")
  *   GET  /v1/events                     halts, resumes, door events and Coach's drives, newest first, for Activity (kiff/tafs#236)
@@ -6871,7 +6871,9 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const w = wordsIn(lang);
     return { count, words: count === 0 ? w.home_needs_you_none : w.home_needs_you(count, plural(lang, count)) };
   })();
-  return { tafs: listed, setting_up: settingUp, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
+  // Home's first line, in tafs cloud's words: the apps draw it and count nothing themselves.
+  const headline = headlineOf(listed, langOf(event));
+  return { tafs: listed, headline, setting_up: settingUp, others, removing, limits, ...(doors.length ? { doors_offered: doors } : {}),
     ...(unitExceptions.length ? { card_unit_exceptions: unitExceptions } : {}), ...(yourSteps.length ? { your_steps: yourSteps } : {}), ...(coachWaiting.length ? { coach_waiting: coachWaiting } : {}), ...(coachWaitingAll ? { coach_waiting_clear: coachWaitingAll } : {}), ...(needsYou ? { needs_you: needsYou } : {}) };
 }
 

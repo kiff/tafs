@@ -407,6 +407,28 @@ class CoachStartTest {
     nothingStartedHere()
   }
 
+  // tafs cloud may answer the card before Home lists the taf: the list is read again a few seconds apart until it does, so the
+  // card never stays on "Setting up…" and the Tafs tab empty until a pull.
+  @Test fun aHandOverAnsweredBeforeHomeListsTheTafReadsTheListAgainUntilItDoes() = runTest {
+    reads()
+    coachThread(handOver, answer = """{"state":"answered","words":"","by":"tafs cloud","outcome":{"taf_id":"c_9"}}""")
+    val m = model(scope = backgroundScope)
+    m.refresh()
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    assertTrue("Home doesn't list it yet", m.state.value.tafs.none { it.id == "refunds-2" })
+    transport.answer("GET /v1/home", 200, refunds)
+    testScheduler.advanceTimeBy(AppModel.SET_UP_READ_MS + 100)
+    testScheduler.runCurrent()
+    assertTrue("listed once Home has it", m.state.value.tafs.any { it.id == "refunds-2" })
+    // Listed: no more reads for it.
+    val homes = transport.requestsTo("GET /v1/home").size
+    testScheduler.advanceTimeBy(AppModel.SET_UP_READ_MS * AppModel.SET_UP_READS)
+    testScheduler.runCurrent()
+    assertEquals(homes, transport.requestsTo("GET /v1/home").size)
+    nothingStartedHere()
+  }
+
   @Test fun aHandOverTafsCloudCouldNotSetUpSaysWhyWithNoTryAgain() = runTest {
     reads()
     coachThread(handOver, answer = """{"state":"answered","words":"","by":"tafs cloud","outcome":{"failed":"the account already has a taf named Refunds"}}""")

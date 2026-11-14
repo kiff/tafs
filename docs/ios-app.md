@@ -557,7 +557,7 @@ text, add nothing: no line and no button.
 
 ## Connect apps
 
-The same rows as Android, from the same tafs cloud fields (`GET /v1/connect/apps`: `title`, `logo`, `state` or
+The same rows as Android, from the same tafs cloud fields (`GET /v1/connect/apps`: `title`, `name` and `subtitle` when sent, `logo`, `state` or
 `connected`, `method` (else `how`), and `line`, `whose` and `used_by` when sent; `ConnectRow`):
 - **Yours first, then Discover:** connected apps (or ones to sign in again) under Yours, the rest under Discover,
   each in tafs cloud's order, with search. An app under Yours is never under Discover again in another catalog form
@@ -574,9 +574,13 @@ The same rows as Android, from the same tafs cloud fields (`GET /v1/connect/apps
   in the header and every row. The App column gets its room first (200 points at least), so names read whole in
   portrait and landscape: the other three are 150, 130 and 230 points while there's room, then give way together
   down to 96, 84 and 180. A name is one line, cut at its end only as a last resort, never broken inside a word.
-- **An app's name is tafs cloud's `title`**, as on Android. A reviewed entry whose title is a whole sentence ("Qonto
-  invoicing: reads, and invoice drafts from quotes") shows it as sent: tafs cloud sends no separate name and
-  description (`vendor` is planque's key, sometimes a slug such as `gmail`), and the app doesn't cut titles apart.
+- **An app's name is tafs cloud's `name`, else its `title`** (`App.displayName`), with `subtitle` under it when sent,
+  in a smaller, softer style on up to two lines: a reviewed entry reads as "Qonto", with "Invoicing: reads, and
+  invoice drafts from quotes" under it; a managed app keeps its name ("Gmail") with nothing under it. Both are read
+  leniently: blank or not words reads as none, so a tafs cloud before them, or a blank `name`, draws the `title` as
+  sent. The app never cuts titles apart itself (`vendor` is planque's key, sometimes a slug such as `gmail`), and
+  `title` and `vendor` still match an app across its catalog forms. The same name heads the app's own screen and
+  stands in for a connection that has no name of its own.
 - **A connected app opens its detail** (`AppConnectionsView`): what each connection can read and do, which taf it
   serves, and Disconnect. The whole row opens it, name, logo and second line included, not only its ✓.
   Its footer ("Removing access takes its tools from that taf only…") shows only when a connection there is one of

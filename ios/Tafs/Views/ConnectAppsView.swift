@@ -73,7 +73,7 @@ struct ConnectAppsView: View {
                 Button(t.name) { start(app, for: t.id) }
             }
         } message: { app in
-            Text(Words.Connect.oneTaf(app: "\(app.vendor.isEmpty ? app.title : app.vendor)"))
+            Text(Words.Connect.oneTaf(app: "\(app.name ?? (app.vendor.isEmpty ? app.title : app.vendor))"))
         }
         .sheet(item: Binding(get: { model.connectStart.map(StartSheet.init) }, set: { if $0 == nil { model.connectStart = nil } })) { sheet in
             ConnectApprovalSheet(start: sheet.start).environmentObject(model)
@@ -161,11 +161,19 @@ struct ConnectAppsView: View {
                 .frame(width: 24, height: 24)
                 .accessibilityHidden(true)
             }
-            // One line, never broken inside a word ("G m ail"): the table gives the name its room
-            // first, and a name longer than that is cut at its end, the last resort.
-            Text(app.title).scaledFont(16, weight: .semibold).foregroundColor(app.needsSetup ? Theme.soft : Theme.ink)
-                .lineLimit(1).truncationMode(.tail)
-                .accessibilityIdentifier("connect.title." + app.entry)
+            // tafs cloud's name for it (`name`, else `title`), and what this entry is under it, in a
+            // line or two. The name on one line, never broken inside a word ("G m ail"): the table gives
+            // the name its room first, and a name longer than that is cut at its end, the last resort.
+            VStack(alignment: .leading, spacing: 1) {
+                Text(app.displayName).scaledFont(16, weight: .semibold).foregroundColor(app.needsSetup ? Theme.soft : Theme.ink)
+                    .lineLimit(1).truncationMode(.tail)
+                    .accessibilityIdentifier("connect.title." + app.entry)
+                if let subtitle = app.subtitle {
+                    Text(subtitle).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft)
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                        .accessibilityIdentifier("connect.subtitle." + app.entry)
+                }
+            }
         }
     }
 
@@ -492,7 +500,7 @@ struct AppConnectionsView: View {
                 Text(error).foregroundColor(Theme.no)
             }
         }
-        .navigationTitle(Words.Connect.Apps.yourConnections(app: "\(app.title)"))
+        .navigationTitle(Words.Connect.Apps.yourConnections(app: "\(app.displayName)"))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $replacing) { g in
             ConnectApprovalSheet(start: .init(grant: g.id, needsKey: true)).environmentObject(model)
@@ -529,9 +537,9 @@ struct AppConnectionsView: View {
     /// its detail, where its actions are; else the app's own row, as before.
     @ViewBuilder private func entry(_ g: PlanqueClient.Grant) -> some View {
         if g.rowFromPlanque {
-            NavigationLink { ConnectionDetailView(grantID: g.id, appTitle: app.title).environmentObject(model) } label: {
+            NavigationLink { ConnectionDetailView(grantID: g.id, appTitle: app.displayName).environmentObject(model) } label: {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(g.name ?? app.title).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
+                    Text(g.name ?? app.displayName).scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
                     if let used = g.usedBy, !used.isEmpty {
                         Text(Words.Connect.Apps.usedBy(tafs: used.joined(separator: ", "))).scaledFont(13).foregroundColor(Theme.soft)
                     }
@@ -588,7 +596,7 @@ struct AppConnectionsView: View {
     /// What a connection is: planque's name for it (`Grant.name`), else the app's
     /// name; planque's words for its status; the other tafs whose Card uses it; its last failure.
     @ViewBuilder private func lines(_ g: PlanqueClient.Grant) -> some View {
-        Text(g.name ?? app.title)
+        Text(g.name ?? app.displayName)
             .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
         if let also = model.alsoOnCards(g) {
             Text(also).scaledFont(13).foregroundColor(Theme.soft)
@@ -608,7 +616,7 @@ struct AppConnectionsView: View {
     /// planque keeps, planque's status words, and the tafs whose Cards still use it.
     private func removedRow(_ g: PlanqueClient.Grant, usedBy: [TafsCloud.ConnectApps.UsedBy]?) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(g.name ?? app.title)
+            Text(g.name ?? app.displayName)
                 .scaledFont(16, weight: .semibold).foregroundColor(Theme.ink)
             if let name = g.agentName, !name.trimmingCharacters(in: .whitespaces).isEmpty {
                 Text(name).scaledFont(13).foregroundColor(Theme.soft)
