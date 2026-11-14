@@ -89,6 +89,7 @@ export const de: Words = {
   approval_other_tafs_connection: (app: string) => `Diese Karte ist für einen anderen taf als diese ${app}-Verbindung. Coach zeigt die Genehmigung mit der eigenen Verbindung dieses tafs erneut.`,
   approval_cards_not_issued: (why: string) => `KIFF hat die Cards des tafs nicht ausgestellt: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} ist verbunden. Als Nächstes die Card.`,
+  approval_other_app_first: (vendor: string) => `${vendor} wartet noch auf seine eigene Genehmigung. Zuerst ${vendor} genehmigen; diese Card kommt mit der letzten App.`,
   approval_draft_is: (status: string) => `der Entwurf ist ${status}`,
   approval_no_draft: "KIFF hat keinen solchen Entwurf",
   approval_card_next: "Seine Card: Du genehmigst sie als Nächstes",

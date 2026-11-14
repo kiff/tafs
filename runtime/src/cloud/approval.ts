@@ -87,6 +87,14 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
     if (stray) {
       return { outcome: "answered", answer: `failed: the Card covers "${stray}", which no connection of this taf gives it, so it isn't signed. Draft it again over the taf's connected tools only.`, note: W.stray(stray) };
     }
+    // A Card over two apps waits for the other app's tools (P0, 14 Nov): one signature carries one connection's approve,
+    // so a Card signed while another app it covers is still waiting would be "approved" with that app's tools never
+    // approved. That app's own approval goes first; the Card comes with the last one.
+    const waiting = appsWaiting(grant, others, draft.cards);
+    if (waiting.length) {
+      const first = waiting[0]!;
+      return { outcome: "answered", answer: `failed: the Card also covers ${first}'s tools, which still wait for their own approval: show ${first}'s approval first, then this one carries the Card`, note: W.otherAppFirst(first) };
+    }
     const left = uncoveredTool(grant, draft.cards, inForce);
     if (left) {
       return { outcome: "answered", answer: `failed: no Card covers "${left}", which the taf's connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${left}" on a Card (a read gets a call count only, generous enough never to get in the way).`, note: W.uncovered(left) };
@@ -168,6 +176,21 @@ export function onDemandLetsRun(grant: ApprovalGrant, cards: unknown[]): string 
  * The first action a draft's Cards allow that neither this grant nor another grant of the same taf gives it (its tools,
  * or what it had connected before an addition, by their names in KIFF), and that no Card in force allows already.
  */
+/**
+ * The apps of the same taf, other than `grant`'s, that a draft's Cards cover and that aren't connected yet: their tools
+ * still wait for their own approval. By vendor, in the order the grants come.
+ */
+export function appsWaiting(grant: ApprovalGrant, others: ApprovalGrant[], cards: unknown[]): string[] {
+  const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+  const covered = new Set<string>();
+  for (const raw of cards) {
+    const card = raw as { grants?: unknown };
+    if (Array.isArray(card.grants)) for (const g of card.grants) covered.add(fold((g as { action?: unknown }).action));
+  }
+  return others.filter((g) => g.id !== grant.id && g.status !== "connected" && (g.request.tools ?? []).some((t) => covered.has(fold(t.name))))
+    .map((g) => vendorOf(g));
+}
+
 export function strayAction(grant: ApprovalGrant, others: ApprovalGrant[], cards: unknown[], inForce: Set<string>): string | undefined {
   const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
   const given = new Set(inForce);
@@ -288,6 +311,7 @@ export function approvalWords(lang: Lang = "en") {
     otherTafsConnection: w.approval_other_tafs_connection,
     cardsNotIssued: w.approval_cards_not_issued,
     connectedCardNext: w.approval_connected_card_next,
+    otherAppFirst: w.approval_other_app_first,
     draftIs: (status: string) => w.approval_draft_is(w.approval_status(status)),
     noDraft: w.approval_no_draft,
     cardsUnread: w.approval_cards_unread,
@@ -367,6 +391,11 @@ export async function readGrants(base: string, tenant: string, proof: string, ne
 }
 
 /** The vendor as the owner knows it: planque's name for it, else its server. */
+/** The same taf's other live connections: a Card may cover their tools too (two apps, one Card). */
+function sameTafOf(grant: ApprovalGrant, grants: ApprovalGrant[]): ApprovalGrant[] {
+  return grants.filter((g) => g.id !== grant.id && g.request.agent && g.request.agent === grant.request.agent && !["failed", "disconnected", "revoked"].includes(g.status));
+}
+
 function vendorOf(g: ApprovalGrant): string {
   return g.vendor || g.request.server || "the vendor";
 }
@@ -533,7 +562,7 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   const refused = await agentRefusal(ask, grant, vendor, ctx);
   if (refused) return refused;
   // The same taf's other connections: a Card may cover their tools too (two apps, one Card).
-  const sameTaf = grants.filter((g) => g.id !== grant.id && g.request.agent && g.request.agent === grant.request.agent && !["failed", "disconnected", "revoked"].includes(g.status));
+  const sameTaf = sameTafOf(grant, grants);
   // A grant asking for something again (tools added once connected) loses its "connected" note, so its card shows what it asks.
   if (grant.status !== "connected") await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
   if (grant.status === "connected") {
@@ -741,6 +770,9 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
     // A key grant has no sign-in to list its tools after: it's connected, or the key didn't go in.
     const connected = grant?.status === "connected";
     if (connected) await noteConnected(ctx.store, ctx.tenant, grant!, ctx.now);
+    // Approved only when every app the Card covers is connected: never while another app's tools still wait.
+    const waiting = grant && draft?.cards ? appsWaiting(grant, sameTafOf(grant, grants), draft.cards) : [];
+    if (connected && draft && issued(draft.status) && waiting.length) return { answer: `failed: ${pending.vendor} is connected and its Card is issued, but ${waiting[0]}'s tools still wait for their own approval: show ${waiting[0]}'s approval`, note: W.otherAppFirst(waiting[0]!) };
     if (connected && draft && issued(draft.status)) return { answer: "approved" };
     if (!connected) {
       const why = report.result === "failed" && report.why ? W.failed(report.why) : W.notConnected(pending.vendor);
@@ -751,6 +783,12 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   }
   if (pending.step === "cards") {
     const draft = pending.draft ? await draftInfo(ctx.token, pending.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now) : undefined;
+    if (draft && issued(draft.status) && draft.cards) {
+      const grants = await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
+      const own = grants.find((g) => g.id === pending.grant);
+      const waiting = own ? appsWaiting(own, sameTafOf(own, grants), draft.cards) : [];
+      if (waiting.length) return { answer: `failed: the Card is issued, but ${waiting[0]}'s tools still wait for their own approval: show ${waiting[0]}'s approval`, note: W.otherAppFirst(waiting[0]!) };
+    }
     if (draft && issued(draft.status)) return { answer: "approved" };
     const why = report.result === "failed" && report.why ? report.why : draft ? W.draftIs(draft.status) : W.noDraft;
     return { answer: `failed: ${W.cardsNotIssued(why)}`, note: W.cardsNotIssued(why) };

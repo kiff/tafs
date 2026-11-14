@@ -89,6 +89,7 @@ export const nl: Words = {
   approval_other_tafs_connection: (app: string) => `Deze kaart is voor een andere taf dan deze ${app}-koppeling. Coach toont de goedkeuring opnieuw met de eigen koppeling van deze taf.`,
   approval_cards_not_issued: (why: string) => `KIFF heeft de Cards van het taf niet uitgegeven: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} is verbonden. Nu de Card.`,
+  approval_other_app_first: (vendor: string) => `${vendor} wacht nog op een eigen goedkeuring. Eerst ${vendor} goedkeuren; deze Card komt met de laatste app.`,
   approval_draft_is: (status: string) => `het concept is ${status}`,
   approval_no_draft: "KIFF heeft zo'n concept niet",
   approval_card_next: "Zijn Card: die keur je hierna goed",

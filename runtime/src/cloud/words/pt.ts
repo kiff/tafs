@@ -89,6 +89,7 @@ export const pt: Words = {
   approval_other_tafs_connection: (app: string) => `Este cartão é para outro taf que não o desta ligação a ${app}. O Coach mostra de novo a aprovação com a ligação própria deste taf.`,
   approval_cards_not_issued: (why: string) => `O KIFF não emitiu os Cards do taf: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} está ligado. A seguir, o Card.`,
+  approval_other_app_first: (vendor: string) => `${vendor} ainda aguarda a sua própria aprovação. Aprove primeiro ${vendor}; este Card vem com a última app.`,
   approval_draft_is: (status: string) => `estado do rascunho: ${status}`,
   approval_no_draft: "O KIFF não tem esse rascunho",
   approval_card_next: "O seu Card: aprova-o a seguir",
