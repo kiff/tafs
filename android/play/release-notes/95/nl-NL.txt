@@ -1,0 +1,4 @@
+- Elke tik trilt, volgens de aanraakinstelling van je telefoon.
+- ‘Apps koppelen’ toont elke app met zijn naam, met eronder wat hij doet.
+- Een nieuwe taak in een afgeronde Coach-chat start een eigen gesprek.
+- Na het opzijzetten van een chat zegt ‘Wacht op jou’ waar je hem vindt.

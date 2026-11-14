@@ -122,6 +122,19 @@ class CoachWaitingTest {
     assertTrue(m.state.value.settingAside.isEmpty())
   }
 
+  // After Set aside, Coach opened blank and the owner went looking for the chat: tafs cloud's line says where it went, until
+  // Coach opens.
+  @Test fun aSetAsideSaysWhereTheChatWentUntilCoachOpens() = runTest {
+    reads(approval)
+    val m = model()
+    m.refresh()
+    transport.answer("POST /v1/home/coach-waiting/sess_1/set-aside", 200, """{"set_aside":["sess_1"],"withdrawn":0,"words":{"done":"Set aside. You'll find it in Previous conversations."}}""")
+    assertTrue(m.setAsideCoach("sess_1"))
+    assertEquals("Set aside. You'll find it in Previous conversations.", m.state.value.setAsideNote)
+    m.coachShown(true)
+    assertNull(m.state.value.setAsideNote)
+  }
+
   // The owner's swipe sprang back and looked untouched until tafs cloud answered, so they swiped again: a row being set aside
   // isn't drawn meanwhile, and a refusal brings it back.
   @Test fun aRowBeingSetAsideGoesAtOnceAndARefusalBringsItBack() = runTest {

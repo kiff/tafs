@@ -1,11 +1,11 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -378,7 +378,7 @@ fun VersionCardSheet(
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(Words.Card.itsCard, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
         // Not now: the switch it began is dropped, and the taf runs as it was.
-        Text(Words.Common.cancel, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onCancel).padding(top = 8.dp))
+        Text(Words.Common.cancel, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onCancel).padding(top = 8.dp))
       }
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -489,7 +489,7 @@ private fun VersionsFrame(title: String, onClose: () -> Unit, content: @Composab
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
-        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
       }
       Column(
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -502,7 +502,7 @@ private fun VersionsFrame(title: String, onClose: () -> Unit, content: @Composab
 /** The row on a taf's page that opens its versions. */
 @Composable
 fun VersionsRow(onClick: () -> Unit, title: String = Words.Version.changesRow, summary: String? = null) {
-  Panel(Modifier.clickable(onClick = onClick)) {
+  Panel(Modifier.tapping(onClick = onClick)) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
       Column(Modifier.weight(1f)) { Text(title, style = scaled(15, FontWeight.SemiBold, Theme.amberText)); summary?.let { Text(it, style = scaled(13, color = Theme.soft)) } }
       Text("›", style = scaled(20, color = Theme.dim))

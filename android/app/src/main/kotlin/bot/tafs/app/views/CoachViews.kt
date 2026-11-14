@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveMenu
@@ -11,7 +12,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -131,7 +131,7 @@ private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () 
     Text(
       "‹",
       style = scaled(26, color = Theme.amber),
-      modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = Words.Common.back, onClick = onBack).padding(start = 10.dp, top = 4.dp),
+      modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).tapping(onClickLabel = Words.Common.back, onClick = onBack).padding(start = 10.dp, top = 4.dp),
     )
     Text(Words.Coach.title, style = scaled(18, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
     androidx.compose.material3.IconButton(onClick = onNewChat) {
@@ -142,7 +142,7 @@ private fun CoachHeader(state: AppState, chats: CoachChatActions, onNewChat: () 
       Text(
         "⋯",
         style = scaled(22, FontWeight.Bold, Theme.amberText),
-        modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).clickable(onClickLabel = Words.Coach.conversations) { menu = true }.padding(top = 6.dp, start = 12.dp),
+        modifier = Modifier.heightIn(min = 44.dp).widthIn(min = 44.dp).tapping(onClickLabel = Words.Coach.conversations) { menu = true }.padding(top = 6.dp, start = 12.dp),
       )
       DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
         androidx.compose.material3.DropdownMenuItem(
@@ -207,7 +207,7 @@ private fun StartScreen(state: AppState, start: bot.tafs.app.kiff.CoachStart, ch
       Text(
         step.details + if (folded) " ⌄" else " ⌃",
         style = scaled(13, FontWeight.SemiBold, Theme.amberText),
-        modifier = Modifier.heightIn(min = 44.dp).clickable { folded = !folded }.padding(vertical = 10.dp),
+        modifier = Modifier.heightIn(min = 44.dp).tapping { folded = !folded }.padding(vertical = 10.dp),
       )
       if (!folded) step.groups.forEach { g ->
         Text(g.name, style = scaled(13, FontWeight.SemiBold, Theme.ink))
@@ -254,7 +254,7 @@ fun PlanPanel(plan: SetupComponent, modifier: Modifier = Modifier) {
   val steps = plan.steps.orEmpty()
   Column(modifier.fillMaxWidth()) {
     Row(
-      Modifier.fillMaxWidth().heightIn(min = 36.dp).clickable(onClickLabel = if (open) Words.Coach.Plan.fold else Words.Coach.Plan.show) { open = !open },
+      Modifier.fillMaxWidth().heightIn(min = 36.dp).tapping(onClickLabel = if (open) Words.Coach.Plan.fold else Words.Coach.Plan.show) { open = !open },
       horizontalArrangement = Arrangement.spacedBy(8.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -368,7 +368,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
       return
     }
     var open by remember(c.id) { mutableStateOf(false) }
-    Column(Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { open = !open }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+    Column(Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping { open = !open }, verticalArrangement = Arrangement.spacedBy(6.dp)) {
       Text((if (open) "▾ " else "▸ ") + line, style = scaled(14, FontWeight.Medium, Theme.dim), maxLines = if (open) Int.MAX_VALUE else 1, overflow = TextOverflow.Ellipsis)
       if (open) DraftCardsView(draft) else if (signed) draft.cardLines.flatten().forEach { Text(it, style = scaled(13, color = Theme.soft)) }
     }
@@ -405,7 +405,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           }
         }
         grant.terms?.takeIf { it.isNotEmpty() && done == null }?.let { terms ->
-          Text(if (details) Words.Coach.detailsOpen else Words.Coach.detailsClosed, style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).clickable { details = !details })
+          Text(if (details) Words.Coach.detailsOpen else Words.Coach.detailsClosed, style = scaled(13, FontWeight.Medium, Theme.dim), modifier = Modifier.heightIn(min = 36.dp).tapping { details = !details })
           if (details) Column(Modifier.approvalTerms(grant.vendor)) { terms.forEach { Text(it, style = scaled(12, color = Theme.soft, mono = true)) } }
         }
         // What this fingerprint covers is tafs cloud's to say (`signs`): the app learns the step only after the tap.
@@ -461,7 +461,7 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           state.windowWords?.takeIf { state.connecting == null }?.let { Text(it, style = scaled(12, color = Theme.dim)) }
           if (state.connecting == grant.id) {
             Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
-            Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable { actions.cancelSignIn() })
+            Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).tapping { actions.cancelSignIn() })
           }
         }
       }
@@ -513,7 +513,7 @@ private fun QuestionsCard(c: SetupComponent, answered: String?, error: String?, 
   if (answered == null && chatting) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
       Text(Words.Coach.Questions.talking, style = scaled(13, color = Theme.soft), modifier = Modifier.weight(1f, fill = false))
-      Text(Words.Coach.Questions.showAgain, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).clickable { chatting = false }.padding(top = 12.dp))
+      Text(Words.Coach.Questions.showAgain, style = scaled(13, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).tapping { chatting = false }.padding(top = 12.dp))
     }
     return
   }
@@ -543,7 +543,7 @@ private fun QuestionsCard(c: SetupComponent, answered: String?, error: String?, 
     Text(
       Words.Coach.Questions.chatAbout,
       style = scaled(15, FontWeight.SemiBold, Theme.amberText),
-      modifier = Modifier.heightIn(min = 44.dp).clickable { chatting = true }.padding(top = 12.dp),
+      modifier = Modifier.heightIn(min = 44.dp).tapping { chatting = true }.padding(top = 12.dp),
     )
   }
 }
@@ -559,7 +559,7 @@ private fun Choice(label: String, selected: Boolean, onClick: () -> Unit) {
       .clip(shape)
       .background(if (selected) Theme.amber.copy(alpha = 0.18f) else Color.Transparent)
       .border(BorderStroke(1.dp, if (selected) Theme.amber else Theme.line), shape)
-      .clickable(onClick = onClick)
+      .tapping(onClick = onClick)
       .padding(horizontal = 10.dp, vertical = 8.dp),
   )
 }
@@ -617,12 +617,12 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, er
         Text(Words.Coach.SignIn.opens(c.destination.toString()), style = scaled(12, color = Theme.dim, mono = true))
         if (waiting) {
           Text(CoachWords.WAITING_FOR_VENDOR, style = scaled(12, color = Theme.dim))
-          Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).clickable { actions.cancelSignIn() })
+          Text(Words.Common.cancel, style = scaled(13, FontWeight.Medium, Theme.soft), modifier = Modifier.heightIn(min = 36.dp).tapping { actions.cancelSignIn() })
         } else {
           Text(
             c.no ?: Words.Common.notNow,
             style = scaled(14, color = Theme.dim),
-            modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy) { actions.answer("sign_in", c.id, "not now") },
+            modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = !busy) { actions.answer("sign_in", c.id, "not now") },
           )
         }
         state.coachNotes[c.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
@@ -679,7 +679,7 @@ private fun AlertsOffer(actions: CoachActions) {
     Text(
       Words.Common.notNow,
       style = scaled(14, color = Theme.dim),
-      modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = actions.notNowAlerts),
+      modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = actions.notNowAlerts),
     )
   }
 }

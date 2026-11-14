@@ -35,7 +35,10 @@ On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
   **Previous conversations** (`CoachHeader`). New conversation is never greyed out: on a plain
   conversation with nothing in it yet, it keeps that one and shows its top; otherwise, an empty one
   about a taf ("Improve Refunds") included, it opens a plain new one (Android `CoachWords.newChatStays`,
-  1.27.6; iOS's New conversation button keeps an empty one, `coachChatIsEmpty`, and follows). Under it, the plan in tafs cloud's one line
+  1.27.6; iOS's New conversation button keeps an empty one, `coachChatIsEmpty`, and follows). A message to a chat that
+  already handed a taf over goes to a new chat tafs cloud starts (`new_chat_after_handover`, [api.md](api.md)): Android
+  sends the flag and shows that chat from then on, with the message on its way (`AppModel.coachSession`, 1.27.7); iOS
+  follows. Under it, the plan in tafs cloud's one line
   (`line`, [The plan in one line](#the-plan-in-one-line)); tapped, it opens to the steps. The
   plan line folds away while the thread scrolls down and comes back on the way up, so a card
   has the screen. The phone never counts the plan's steps.

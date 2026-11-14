@@ -1,0 +1,4 @@
+- Chaque touche vibre, selon le réglage tactile de votre téléphone.
+- « Connecter des apps » affiche chaque app par son nom, avec ce qu'elle fait en dessous.
+- Une nouvelle tâche demandée dans une conversation Coach terminée ouvre sa propre conversation.
+- Après avoir mis une conversation de côté, « Vous attend » indique où la retrouver.
