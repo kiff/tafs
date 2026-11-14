@@ -48,6 +48,7 @@ import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.kiff.KnobWire
 import bot.tafs.app.model.KnobWords
+import bot.tafs.app.model.AppRoute
 import bot.tafs.app.model.RecordEntry
 import bot.tafs.app.model.SetupWords
 import bot.tafs.app.model.Taf
@@ -79,6 +80,13 @@ fun SetupTab(
   val knob = state.knobs[taf.id]
   var startsOpen by rememberSaveable(taf.id) { mutableStateOf(false) }
   var resultsOpen by rememberSaveable(taf.id) { mutableStateOf(false) }
+  // Asked for by its route (AppModel.open).
+  LaunchedEffect(state.requestedRoute) {
+    when {
+      state.requested(AppRoute.TafSetupStartsWhen, taf.id) -> { startsOpen = true; actions.routeTaken() }
+      state.requested(AppRoute.TafSetupResultsGoTo, taf.id) -> { resultsOpen = true; actions.routeTaken() }
+    }
+  }
 
   // Its Card asked to take another currency: first, since every call in it is refused until the Card changes.
   state.tafSetups[taf.id]?.cardUnitExceptions?.forEach { ask -> CardUnitExceptionPanel(ask, state) }

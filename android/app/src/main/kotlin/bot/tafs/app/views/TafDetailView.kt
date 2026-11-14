@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.runtime.getValue
@@ -55,6 +56,7 @@ import bot.tafs.app.design.TafAvatar
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.model.Answer
+import bot.tafs.app.model.AppRoute
 import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.MemoryNote
 import bot.tafs.app.model.RunReport
@@ -142,6 +144,10 @@ class TafActions(
   val loadAllMemory: (String) -> Unit = {},
   /** Answers a card in the taf's own chat, the loop card's Read on or Stop here (taf, type, card, answer). */
   val answerCard: (String, String, String, String) -> Unit = { _, _, _, _ -> },
+  /** The screen a route asked for (AppModel.open) is on screen: the request is taken. */
+  val routeTaken: () -> Unit = {},
+  /** The taf's page has left: a request for it that nothing took is dropped. */
+  val routeLeft: (String) -> Unit = {},
 )
 
 @Composable
@@ -166,6 +172,7 @@ fun TafDetailView(
   modifier: Modifier = Modifier,
 ) {
   val taf = state.taf(tafId)
+  DisposableEffect(tafId) { onDispose { actions.routeLeft(tafId) } }
   // What removing it did, with the taf's name: shown once it's done, even when the taf is gone from Home by then.
   var removal by rememberSaveable { mutableStateOf<String?>(null) }
   var removedName by rememberSaveable { mutableStateOf("") }
@@ -195,6 +202,27 @@ fun TafDetailView(
         onActivityOpened()
       }
     }
+    // A screen asked for by its route (AppModel.open): its section here; a sheet on it (Starts when, Results go to, the workflow,
+    // the memory signed in, Share) opens itself and takes the request.
+    LaunchedEffect(state.requestedRoute) {
+      val (route, values) = state.requestedRoute ?: return@LaunchedEffect
+      if (values["taf"] != taf.id) return@LaunchedEffect
+      val signedIn = state.mode == Mode.kiff && taf.cloudId != null
+      when (route) {
+        AppRoute.Taf -> { section = sections.first(); actions.routeTaken() }
+        AppRoute.TafActivity -> { section = Section.Activity; actions.routeTaken() }
+        AppRoute.TafCard, AppRoute.TafHalt -> { section = Section.Card; actions.routeTaken() }
+        AppRoute.TafSetup, AppRoute.TafSetupVersions -> { section = Section.Setup; actions.routeTaken() }
+        AppRoute.TafMemory -> { section = Section.Setup; if (!signedIn) actions.routeTaken() }
+        AppRoute.TafSetupStartsWhen, AppRoute.TafSetupResultsGoTo, AppRoute.TafWorkflow -> section = Section.Setup
+        // Share is on the page only where ShareLine is drawn; elsewhere nothing would take it.
+        AppRoute.TafShare -> { folded = false; if (people == null || taf.cloudId == null) actions.routeTaken() }
+        // The account's screens and the tabs, which the root opens.
+        AppRoute.Tafs, AppRoute.NeedsYou, AppRoute.Record, AppRoute.Calendar, AppRoute.Coach, AppRoute.HaltAll, AppRoute.Account,
+        AppRoute.AccountPeople, AppRoute.AccountDevices, AppRoute.AccountApps, AppRoute.AccountUsage, AppRoute.AccountUsageRequests,
+        AppRoute.AccountAlerts, AppRoute.AccountTimeZone, AppRoute.AccountLanguage, AppRoute.AccountTheme, AppRoute.AccountDelete -> Unit
+      }
+    }
     var activitySelection by rememberSaveable(taf.id) { mutableStateOf("") }
     // tafs cloud's setup words a connection's state ("Connected"); planque's state is read on its own. Read the setup again
     // whenever planque's state for one of the taf's connections changes, so the two never disagree on screen.
@@ -219,7 +247,7 @@ fun TafDetailView(
     Column(Modifier.padding(start = 12.dp, end = 12.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
       // Who it's shared with, and Share: the taf's manager's to see. It folds with the page.
       if (people != null && taf.cloudId != null) {
-        androidx.compose.animation.AnimatedVisibility(visible = !folded) { ShareLine(taf.id, state, people) }
+        androidx.compose.animation.AnimatedVisibility(visible = !folded) { ShareLine(taf.id, state, people, routeTaken = actions.routeTaken) }
       }
       Segmented(sections, section, { it.title }) { section = it }
       // The Cards are one line above the chat and the activity; it opens the Card tab (kiff/tafs#211), and folds with the page.

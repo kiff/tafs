@@ -42,6 +42,7 @@ import bot.tafs.app.model.ProposedAction
 import bot.tafs.app.model.RecordEntry
 import bot.tafs.app.model.Taf
 import bot.tafs.app.model.TafState
+import bot.tafs.app.model.AppRoute
 import bot.tafs.app.model.MemoryNote
 import bot.tafs.app.model.TafDraft
 import bot.tafs.app.model.TafTemplates
@@ -185,6 +186,12 @@ internal fun allows(capabilities: List<String>?, capability: String): Boolean = 
 
 /** An Approve again waiting for the browser: the code the phone shows, which KIFF's page shows too, and the page's link. */
 data class Relink(val userCode: String, val link: String)
+
+/**
+ * A screen asked for by its route, with its values (a taf by its id here). [n] tells one request from the next, so asking for
+ * the same screen again is a new request the screens see.
+ */
+data class RouteRequest(val route: AppRoute, val values: Map<String, String>, val n: Long)
 
 /** What the screens draw. */
 /** A search of the Record: what was asked, the pages read so far, and whether one is on its way or failed. */
@@ -552,6 +559,11 @@ data class AppState(
   val recordCaseError: String? = null,
   /** Where a tapped alert asked to go ("needs-you", "usage"), until the screen has gone there. */
   val requestedOpen: String? = null,
+  /**
+   * A screen asked for by its route (app/routes.json) and its values, a taf by its id here, until the screens have gone there:
+   * the root view takes what it opens itself, a taf's page what's on it, and a sheet on that page its own.
+   */
+  val requestedRoute: RouteRequest? = null,
   /** The doors tafs cloud offers this account: none, and no taf shows Doors. */
   val doorsOffered: List<String> = emptyList(),
   /** Each taf's doors, once read. */
@@ -603,6 +615,10 @@ data class AppState(
    * it (not read yet, or failed), nothing is shown: an Editor manages only the tafs they made, which the role alone can't say.
    */
   fun manages(tafId: String): Boolean = access[tafId]?.manage ?: false
+
+  /** Whether [route] is the screen asked for, of the taf [tafId] when it names one. */
+  fun requested(route: AppRoute, tafId: String? = null): Boolean =
+    requestedRoute?.let { (r, values) -> r == route && (tafId == null || values["taf"] == tafId) } ?: false
 
   /** The taf's connected Slack bot connections, which a Slack door listens through. */
   fun slackBots(tafId: String): List<bot.tafs.app.kiff.Grant> = grants.filter { it.connected && it.isSlackBot && it.request.agent == tafId }
@@ -2728,6 +2744,59 @@ class AppModel(
   }
 
   fun openRequestTaken() = _state.update { it.copy(requestedOpen = null) }
+
+  /**
+   * Opens a screen by its route (app/routes.json): `taf/refunds-1/setup/versions`. False, and nothing changes, when no route
+   * matches, its taf is none the app holds, or the person may not use that screen here.
+   */
+  fun open(route: String): Boolean = AppRoute.match(route)?.let { (r, values) -> open(r, values) } ?: false
+
+  /** Opens [route] with its [values]; a taf by its id here or its id in tafs cloud. */
+  fun open(route: AppRoute, values: Map<String, String> = emptyMap()): Boolean {
+    val s = _state.value
+    if (!s.signedIn) return false
+    val taf = if ("taf" in route.parameters) values["taf"]?.let { v -> s.tafs.firstOrNull { it.id == v || it.cloudId == v } } ?: return false else null
+    val allowed = when (route.needs) {
+      null -> true
+      "manages" -> taf != null && s.manages(taf.id)
+      "cards.manage" -> s.canManageCards
+      "billing.manage" -> s.managesBilling
+      "members.manage" -> s.canManagePeople
+      "account.delete" -> s.canDeleteAccount
+      else -> false
+    }
+    if (!allowed) return false
+    val signedIn = s.mode == Mode.kiff
+    val tafSignedIn = signedIn && taf?.cloudId != null
+    // Only a screen this person would find here: what the sample, or a taf KIFF doesn't run, lacks isn't opened. Every route
+    // has its case, so a new one doesn't build until it has.
+    val here = when (route) {
+      AppRoute.Tafs, AppRoute.NeedsYou, AppRoute.Record, AppRoute.Account, AppRoute.AccountUsage,
+      AppRoute.AccountLanguage, AppRoute.AccountTheme, AppRoute.AccountDelete -> true
+      AppRoute.Calendar -> signedIn && s.tafs.isNotEmpty()
+      AppRoute.Coach -> s.mayUseCoach
+      AppRoute.HaltAll -> s.showsAccountHalt
+      AppRoute.AccountPeople, AppRoute.AccountDevices, AppRoute.AccountApps, AppRoute.AccountAlerts, AppRoute.AccountTimeZone -> signedIn
+      AppRoute.AccountUsageRequests -> signedIn && (s.usage?.let { bot.tafs.app.model.UsageWords.asks(it) != null } ?: true)
+      AppRoute.Taf, AppRoute.TafActivity, AppRoute.TafCard, AppRoute.TafSetup, AppRoute.TafMemory -> true
+      AppRoute.TafSetupStartsWhen, AppRoute.TafSetupResultsGoTo, AppRoute.TafShare -> tafSignedIn
+      AppRoute.TafSetupVersions -> taf != null && s.canHalt(taf.id)
+      AppRoute.TafHalt -> taf != null && s.canHalt(taf.id) && taf.state != TafState.revoked
+      AppRoute.TafWorkflow -> tafSignedIn
+    }
+    if (!here) return false
+    routeRequests += 1
+    _state.update { it.copy(requestedRoute = RouteRequest(route, taf?.let { t -> mapOf("taf" to t.id) } ?: emptyMap(), routeRequests)) }
+    return true
+  }
+
+  private var routeRequests = 0L
+
+  /** The screens have gone where [open] asked. */
+  fun routeTaken() = _state.update { it.copy(requestedRoute = null) }
+
+  /** The taf's page has left: a request for it that nothing took is dropped, so it never opens a sheet later on its own. */
+  fun routeLeft(tafId: String) = _state.update { s -> if (s.requestedRoute?.values?.get("taf") == tafId) s.copy(requestedRoute = null) else s }
 
   private fun savedAlertKinds(): Map<String, Boolean>? = secrets.load("$ALERT_KINDS|$kiffTenant")?.let { text ->
     runCatching { KiffClient.json.decodeFromString<Map<String, Boolean>>(text) }.getOrNull()

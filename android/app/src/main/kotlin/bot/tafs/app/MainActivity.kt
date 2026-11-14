@@ -15,6 +15,7 @@ import kotlinx.coroutines.CompletableDeferred
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import bot.tafs.app.model.ThemePreference
+import bot.tafs.app.model.AppRoute
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -571,6 +572,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       resumeHalt = model::resumeHalt,
       files = FileActions(attach = model::attach, refuse = model::refuseFile, remove = model::removeFile, open = model::openFile),
       runNow = { model.runNow(it) },
+      routeTaken = model::routeTaken,
+      routeLeft = model::routeLeft,
       loadReport = model::loadReport,
       loadWork = model::loadWork,
       setDraft = model::setDraft,
@@ -625,6 +628,36 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       }
     }
     model.openRequestTaken()
+  }
+  // A screen asked for by its route (AppModel.open): the root opens its own; a taf's page goes to its section, and a sheet on
+  // it opens itself and takes the request.
+  var settingsFocus by rememberSaveable { mutableStateOf<AppRoute?>(null) }
+  LaunchedEffect(state.requestedRoute) {
+    val (route, values) = state.requestedRoute ?: return@LaunchedEffect
+    val tafId = values["taf"]
+    val toTaf = { tab = Tab.Tafs; showingSettings = false; coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = false; openTaf = tafId }
+    when (route) {
+      AppRoute.Tafs -> { tab = Tab.Tafs; showingSettings = false; openTaf = null; trialTaf = null; calendarOpen = false; overviewOpen = false; coachOpen = false }
+      AppRoute.NeedsYou -> { tab = Tab.NeedsYou; showingSettings = false }
+      AppRoute.Record -> { tab = Tab.Record; showingSettings = false }
+      AppRoute.Calendar -> { tab = Tab.Tafs; showingSettings = false; openTaf = null; trialTaf = null; coachOpen = false; overviewOpen = false; calendarOpen = true }
+      AppRoute.Coach -> { tab = Tab.Tafs; showingSettings = false; trialTaf = null; coachOpen = true }
+      AppRoute.HaltAll -> { haltTaf = null; haltOpen = true }
+      AppRoute.Account -> showingSettings = true
+      AppRoute.AccountPeople -> { showingSettings = false; showingPeople = true }
+      AppRoute.AccountDevices -> { showingSettings = false; showingDevices = true }
+      AppRoute.AccountApps -> { showingSettings = false; showingConnectApps = true }
+      // Requests are a part of Plan & usage, for the account whose plan asks.
+      AppRoute.AccountUsage, AppRoute.AccountUsageRequests -> { showingSettings = false; usageOpen = true }
+      AppRoute.AccountAlerts, AppRoute.AccountTimeZone, AppRoute.AccountLanguage, AppRoute.AccountTheme -> { settingsFocus = route; showingSettings = true }
+      AppRoute.AccountDelete -> { showingSettings = false; deletingAccount = true }
+      AppRoute.Taf, AppRoute.TafActivity, AppRoute.TafCard, AppRoute.TafSetup, AppRoute.TafSetupStartsWhen, AppRoute.TafSetupResultsGoTo,
+      AppRoute.TafWorkflow, AppRoute.TafMemory, AppRoute.TafShare -> toTaf()
+      AppRoute.TafSetupVersions -> { toTaf(); versionsTaf = tafId }
+      AppRoute.TafHalt -> { toTaf(); haltTaf = tafId; haltOpen = true }
+    }
+    // A taf's page takes its own, unless the taf is gone by now.
+    if (tafId == null || state.taf(tafId) == null) model.routeTaken()
   }
   // Back in the app, KIFF is read again: a hold made meanwhile shows, and a failed refresh's tries start over. The first
   // resume is the launch, which reads already.
@@ -819,6 +852,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onDeleteAccount = { showingSettings = false; deletingAccount = true },
         onExport = model::exportChats,
         onClose = { showingSettings = false },
+        focus = settingsFocus,
+        onFocused = { settingsFocus = null },
       )
     }
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
