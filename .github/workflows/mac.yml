@@ -101,9 +101,14 @@ jobs:
           shoot() {
             name=$1; shift
             frame="$RUNNER_TEMP/frame.png"
-            "$app/Contents/MacOS/Tafs" "$@" >/dev/null 2>&1 &
-            pid=$!
+            # Opened as a person opens it, so it's the front app and the menu
+            # bar is its own.
+            open -n "$app" --args "$@"
             sleep 5
+            # A runner has no Apple Account, so the App Store asks for one over
+            # the window. Esc is its Cancel.
+            osascript -e 'tell application "System Events" to key code 53' || echo "::warning::$name: couldn't press Esc"
+            sleep 2
             prev=0
             ready=""
             for _ in $(seq 30); do
@@ -116,10 +121,10 @@ jobs:
               sleep 1
             done
             [ -n "$ready" ] || echo "::warning::$name: the screen hadn't settled after 30 s"
-            kill -0 "$pid" 2>/dev/null || echo "::warning::$name: the app wasn't running when the shot was taken"
+            pgrep -x Tafs >/dev/null || echo "::warning::$name: the app wasn't running when the shot was taken"
             mv "$frame" "$RUNNER_TEMP/mac-shots/$name.png"
-            kill "$pid" 2>/dev/null || true
-            wait "$pid" 2>/dev/null || true
+            pkill -x Tafs || true
+            while pgrep -x Tafs >/dev/null; do sleep 0.5; done
           }
           for lang in en fr pt; do
             region=$(echo "$lang" | tr a-z A-Z); [ "$lang" = en ] && region=US
