@@ -1,0 +1,4 @@
+- Twoje połączenia czyta się jasno: czym są, kto ich używa i w jakim są stanie. Dotknij, by zobaczyć szczegóły; usunięcie prosi o potwierdzenie.
+- Taf, którego logowanie wygasło, ma własne „Połącz ponownie” i zachowuje swoją Card.
+- „Czeka na Ciebie” pokazuje, kiedy Coach na Ciebie czeka.
+- Logowanie na niewłaściwe konto jest jasno opisane.
