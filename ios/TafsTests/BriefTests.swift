@@ -92,7 +92,7 @@ final class BriefTests: XCTestCase {
         XCTAssertEqual(model.listLabel, TafsCloud.Brief.sampleMoney)
         model.filterList(nil)
         XCTAssertNil(model.listLabel)
-        XCTAssertEqual(TafsCloud.Brief.sampleLabels.map(\.label.id), [TafsCloud.Brief.sampleMoney, TafsCloud.Brief.sampleClients, "ops"])
+        XCTAssertEqual(TafsCloud.Brief.sampleLabels.map { $0.label.id }, [TafsCloud.Brief.sampleMoney, TafsCloud.Brief.sampleClients, "ops"])
 
         let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
         let app = try String(contentsOf: root.appendingPathComponent("App/AppModel.swift"), encoding: .utf8)

@@ -225,8 +225,7 @@ extension TafsCloud {
 
         /// A list whose items are read one by one: one the app can't read is left out, never the list.
         fileprivate static func list<K: CodingKey, T: Decodable>(_ c: KeyedDecodingContainer<K>, _ key: K) -> [T] {
-            struct Lenient: Decodable { let value: T?; init(from decoder: Decoder) throws { value = try? T(from: decoder) } }
-            return (((try? c.decodeIfPresent([Lenient].self, forKey: key)) ?? nil) ?? []).compactMap(\.value)
+            (((try? c.decodeIfPresent([LenientItem<T>].self, forKey: key)) ?? nil) ?? []).compactMap(\.value)
         }
     }
 
@@ -236,8 +235,7 @@ extension TafsCloud {
         var items: [Brief.Label] = []
         init(_ items: [Brief.Label] = []) { self.items = items }
         init(from decoder: Decoder) throws {
-            struct Lenient: Decodable { let value: Brief.Label?; init(from decoder: Decoder) throws { value = try? Brief.Label(from: decoder) } }
-            items = ((try? [Lenient](from: decoder)) ?? []).compactMap(\.value).filter(\.usable)
+            items = ((try? [LenientItem<Brief.Label>](from: decoder)) ?? []).compactMap(\.value).filter(\.usable)
         }
     }
 
@@ -245,7 +243,10 @@ extension TafsCloud {
     struct LabelIDs: Decodable, Equatable {
         var ids: [String] = []
         init(from decoder: Decoder) throws {
-            ids = ((try? [JSONValue](from: decoder)) ?? []).compactMap { if case .string(let s) = $0, !s.isEmpty { return s }; return nil }
+            ids = ((try? [JSONValue](from: decoder)) ?? []).compactMap { value -> String? in
+                if case .string(let s) = value, !s.isEmpty { return s }
+                return nil
+            }
         }
     }
 

@@ -2006,7 +2006,7 @@ final class AppModel: ObservableObject {
     func labels(of taf: Taf) -> [TafsCloud.Brief.Label] {
         if sampleLabelled {
             guard let key = templateOf[taf.id] else { return [] }
-            return TafsCloud.Brief.sampleLabels.filter { $0.tafs.contains(key) }.map(\.label)
+            return TafsCloud.Brief.sampleLabels.filter { $0.tafs.contains(key) }.map { $0.label }
         }
         guard let ids = cloudTaf(for: taf.id)?.labels, !ids.isEmpty else { return [] }
         return homeLabels.filter { ids.contains($0.id) }
@@ -2017,7 +2017,7 @@ final class AppModel: ObservableObject {
     var listLabels: [TafsCloud.Brief.Label] {
         guard sampleLabelled else { return homeLabels }
         return TafsCloud.Brief.sampleLabels.map { entry in
-            let tafs = listedTafs.filter { templateOf[$0.id].map(entry.tafs.contains) ?? false }
+            let tafs = listedTafs.filter { taf in templateOf[taf.id].map { entry.tafs.contains($0) } ?? false }
             var label = entry.label
             label.count = tafs.count
             label.waiting = tafs.filter { !heldCalls(for: $0.id).isEmpty }.count
