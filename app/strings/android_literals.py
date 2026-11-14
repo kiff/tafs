@@ -21,6 +21,7 @@ KEPT = os.path.join(HERE, "android_kept.json")
 # Whole files that stay in code, and why.
 KEPT_FILES = {
     "model/Words.kt": "the generated accessors",
+    "model/AppRoutes.kt": "the generated routes (app/routes.py): paths and line keys, not words",
 }
 
 # Just before a literal: it is data. A comparison, a pattern, a key, a path, a tag, a header.

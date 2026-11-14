@@ -1,0 +1,32 @@
+{
+  "routes": [
+    {"route": "tafs", "title": "home.title"},
+    {"route": "needs-you", "title": "needs_you.title"},
+    {"route": "record", "title": "record.title"},
+    {"route": "calendar", "title": "calendar.heading"},
+    {"route": "coach", "title": "coach.title"},
+    {"route": "halt-all", "title": "halt_all.title", "needs": "cards.manage"},
+    {"route": "account", "title": "settings.title"},
+    {"route": "account/people", "title": "people.title", "needs": "members.manage"},
+    {"route": "account/devices", "title": "settings.devices.title"},
+    {"route": "account/apps", "title": "connect.apps.title"},
+    {"route": "account/usage", "title": "usage.title"},
+    {"route": "account/usage/requests", "title": "usage.requests.title"},
+    {"route": "account/alerts", "title": "settings.alerts"},
+    {"route": "account/time-zone", "title": "settings.time_zone_title"},
+    {"route": "account/language", "title": "settings.language_title"},
+    {"route": "account/theme", "title": "settings.theme_title"},
+    {"route": "account/delete", "title": "settings.delete_account.title", "needs": "account.delete"},
+    {"route": "taf/{taf}", "title": "taf.section.chat"},
+    {"route": "taf/{taf}/activity", "title": "taf.section.activity"},
+    {"route": "taf/{taf}/card", "title": "taf.section.card"},
+    {"route": "taf/{taf}/setup", "title": "taf.section.setup"},
+    {"route": "taf/{taf}/setup/starts-when", "title": "setup.starts_when", "needs": "manages"},
+    {"route": "taf/{taf}/setup/results-go-to", "title": "setup.results_go_to", "needs": "manages"},
+    {"route": "taf/{taf}/setup/versions", "title": "version.title", "needs": "manages"},
+    {"route": "taf/{taf}/workflow", "title": "taf.workflow.title"},
+    {"route": "taf/{taf}/memory", "title": "taf.memory.title"},
+    {"route": "taf/{taf}/halt", "title": "taf.halt.title", "needs": "manages"},
+    {"route": "taf/{taf}/share", "title": "people.share.title", "needs": "manages"}
+  ]
+}
