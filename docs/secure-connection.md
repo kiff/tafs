@@ -172,9 +172,13 @@ their two hashes once, and sends `with=` on each, as for a key. The report answe
 connected with the tools and the Card is issued; tools in with a Card that didn't answers `failed: <app> is connected;
 …`, so the next card asks for the Card alone. It needs the connection server to take the paired approve and to
 declare an addition's tools in KIFF while they wait (and withdraw them if the addition ends unapproved); until then
-the flag stays off and the two steps work as before. A first connection (nothing connected yet) keeps its steps.
-That includes a reused sign-in's first tools: its card may carry the draft, but tafs cloud asks the `connect` step,
-which signs the connection alone. The draft isn't signed, so the report never answers `approved` while KIFF says it
+the flag stays off and the two steps work as before. A sign-in planque already holds (one reused for another taf)
+counts too: its first tools wait as `pending` with `signed_in: true` and, declared in KIFF meanwhile, `declared: true`,
+and approving them connects at once, with no sign-in between, so they go with the Card under one fingerprint, for a
+phone that also sends `can: ["signs"]`: one that draws the card by its `signs` mark ([chat.md](chat.md)), so the Card's
+limits are on screen whatever the grant's status. A phone without it keeps the two steps here. A first
+connection that still needs its sign-in, or tools not declared, keeps its steps: its card may carry the draft, but
+tafs cloud asks the `connect` step, which signs the connection alone. The draft isn't signed, so the report never answers `approved` while KIFF says it
 isn't issued (at the version the card showed). When the connection is connected and the Card is still the draft the
 card showed, that's by design (connect now, the Card next): it answers `failed: <app> is connected; its Card is next:
 show the approval again for its Card alone`, and the card reads tafs cloud's "Gmail is connected. Next, its Card.", in

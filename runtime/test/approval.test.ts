@@ -799,8 +799,8 @@ describe("one signature for a connection's added tools and its Card (tools_and_c
   });
 });
 
-// A reused sign-in's first tools have nothing connected yet, so the combined step isn't offered: the card's
-// connection is signed alone. Coach was told "approved" for the whole card, handed over a taf whose Card was
+// First tools whose sign-in planque doesn't hold yet (or that aren't declared in KIFF) can't go with the Card, so
+// the combined step isn't offered: the card's connection is signed alone. Coach was told "approved" for the whole card, handed over a taf whose Card was
 // never signed, and the hand-over waited for a confirm nothing asked for (13 Nov).
 describe("a card with a grant and a draft, signed as the connection alone", () => {
   const SIGNED = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" };
@@ -809,7 +809,7 @@ describe("a card with a grant and a draft, signed as the connection alone", () =
   async function reused(draft: Services["drafts"][string] = { status: "draft", version: "v3", agent_id: "refunds-x" }) {
     process.env.TAFS_TOOLS_AND_CARDS = "on";
     const s = services();
-    // Signed in from the start (the held sign-in), its first tools asked: nothing connected before them.
+    // Its first tools asked, nothing connected before them, and no sign-in held to approve them on.
     s.grants = [grant({ status: "pending" })];
     s.drafts.drf_1 = draft;
     const w = await world(s, { draft: "drf_1" });
@@ -886,6 +886,62 @@ describe("a card with a grant and a draft, signed as the connection alone", () =
   });
 });
 
+// A sign-in planque already holds, reused for another taf: its first tools are declared in KIFF while they wait, and
+// approving them connects at once, with no sign-in between. So they go with the Card under one fingerprint.
+describe("a held sign-in's first tools and the Card, under one fingerprint", () => {
+  const SIGNED = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" };
+  afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; });
+  const held = (over: Record<string, unknown> = {}) => grant({ status: "pending", signed_in: true, declared: true, ...over });
+
+  async function heldWorld(g = held(), can = ["tools_and_cards", "signs"]) {
+    process.env.TAFS_TOOLS_AND_CARDS = "on";
+    const s = services();
+    s.grants = [g];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: g.digest, draft: "drf_1", shown_draft: "v3", can });
+    return { s, w, r };
+  }
+
+  it("asks the tools and the Card as one signature, marks the card so, and is approved once both hold", async () => {
+    const { s, w, r } = await heldWorld();
+    expect(r.body).toMatchObject({ outcome: "sign", ask: { step: "tools_and_cards", scheme: "kiff.requests.v1", key: "critical", kiff: { draft: "drf_1", version: "v3" } } });
+    const chat = await w.call("GET", `/v1/tafs/${COACH}/conversation`, undefined, {}, "can=tools_and_cards,signs");
+    expect((chat.body.components as Array<{ component: { id?: string; signs?: unknown } }>).find((c) => c.component.id === "a1")?.component.signs).toEqual({ card: true });
+    s.grants = [held({ status: "connected" })];
+    s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x" };
+    const rep = await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "confirmed" }, SIGNED);
+    expect(rep.body.answer).toBe("approved");
+    expect(w.told()?.answer).toBe("approved");
+  });
+
+  it("says which half didn't hold, so nothing is approved unsigned", async () => {
+    const { s, w, r } = await heldWorld();
+    s.grants = [held({ status: "connected" })];
+    const rep = await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "failed", why: "the confirm wasn't answered" }, SIGNED);
+    expect(rep.body.answer).toMatch(/^failed: Stripe is connected; /);
+  });
+
+  it("keeps the two steps when the tools aren't declared, the sign-in isn't held, or the phone can't", async () => {
+    expect((await heldWorld(held({ declared: false }))).r.body).toMatchObject({ ask: { step: "connect" } });
+    expect((await heldWorld(held({ signed_in: false }))).r.body).toMatchObject({ ask: { step: "connect" } });
+    expect((await heldWorld(held(), [])).r.body).toMatchObject({ ask: { step: "connect" } });
+  });
+
+  // A phone that signs both but draws the Card only for a connected grant (builds already in people's hands) would
+  // sign this Card without its limits on screen: the new path is only for one that draws by the mark (can: signs).
+  it("is offered only to a phone that draws the card by its mark", async () => {
+    const old = await heldWorld(held(), ["tools_and_cards"]);
+    expect(old.r.body).toMatchObject({ ask: { step: "connect" } });
+    const chat = await old.w.call("GET", `/v1/tafs/${COACH}/conversation`, undefined, {}, "can=tools_and_cards");
+    expect((chat.body.components as Array<{ component: { id?: string; signs?: unknown } }>).find((c) => c.component.id === "a1")?.component.signs)
+      .toEqual({ card: false, words: "Its Card: you approve it next" });
+    // Added tools on a connected app are as before: a phone that signs both takes them with the Card.
+    const added = await heldWorld(grant({ status: "pending", connected: [{ tool: "list_charges" }] }), ["tools_and_cards"]);
+    expect(added.r.body).toMatchObject({ ask: { step: "tools_and_cards" } });
+  });
+});
+
 // What the fingerprint signs is on the card before Approve (signs), from decide's own rule: the apps can't know the
 // step before the tap, and a card that signs the connection alone must never draw the Card as being signed.
 describe("each waiting approval card says what its fingerprint signs", () => {
@@ -902,7 +958,7 @@ describe("each waiting approval card says what its fingerprint signs", () => {
     const s = services();
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
     const w = await world(s, { draft: "drf_1" });
-    // A reused sign-in's first tools: the connection alone, the Card next.
+    // First tools with no held sign-in: the connection alone, the Card next.
     s.grants = [grant({ status: "pending" })];
     expect(await signs(w, "can=tools_and_cards")).toEqual({ card: false, words: "Its Card: you approve it next" });
     const asked = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request), draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards"] });

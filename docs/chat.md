@@ -360,7 +360,9 @@ step), and `signs: {card: false, words?}` when it signs the connection alone, wi
 approve it next", in the reader's language) when the card carries a draft. It comes from the same rule `decide`
 asks by (`stepFor`), read as the phone: the chat's read carries `Planque-Device-Signature` and what the phone can
 sign (`?can=tools_and_cards,key_and_cards`). Without the proof, or when the connections can't be read within
-1.5 s, the cards carry no `signs` and the apps draw them as before. With `card: false`, an app never draws the
+1.5 s, the cards carry no `signs` and the apps draw them as before. A phone that draws by the mark says so with
+`signs` in `can` (on the read and on the ask): only then is a held sign-in's first tools offered with the Card
+under one fingerprint ([secure-connection.md](secure-connection.md)). With `card: false`, an app never draws the
 Card's limits as being signed now: they go under `words`.
 
 ## Coming back to a run at work
