@@ -760,8 +760,11 @@
     <string name="coach_sign_in_at_vendor">Zaloguj się u dostawcy</string>
     <string name="coach_sign_in_eyebrow">Czeka na Ciebie · zaloguj się</string>
     <string name="coach_sign_in_open">Otwórz %1$s</string>
+    <string name="coach_sign_in_open_again">Otwórz ponownie logowanie</string>
+    <string name="coach_sign_in_open_again_app">Otwórz ponownie logowanie do %1$s</string>
     <string name="coach_sign_in_open_sign_in">Otwórz logowanie</string>
     <string name="coach_sign_in_opens">Otwiera %1$s</string>
+    <string name="coach_sign_in_opens_app">Otwiera logowanie do %1$s</string>
     <string name="coach_sign_in_note">Otworzy się strona samego dostawcy. Żaden taf nie widzi Twojego logowania.</string>
     <string name="coach_signed_reading_what_offers">Zalogowano w %1$s · odczytywanie, co oferuje</string>
     <string name="coach_start">Start</string>
@@ -780,6 +783,7 @@
     <string name="coach_tools_not_read">Nie udało się odczytać narzędzi Coacha. %1$s</string>
     <string name="coach_tools_unknown">KIFF nie odpowiedział w sprawie narzędzi Coacha. Spróbuj ponownie za chwilę.</string>
     <string name="coach_unknown_answer">Konfiguracja odpowiedziała czymś, czego ta aplikacja nie odczytuje. Zaktualizuj aplikację.</string>
+    <string name="coach_waiting_for_app">Jeśli otworzyła się strona logowania do %1$s, dokończ tam i wróć.</string>
     <string name="coach_waiting_for_vendor">Jeśli otworzyła się strona logowania dostawcy, dokończ tam i wróć.</string>
     <string name="coach_what_conversation_about">O czym jest ta rozmowa</string>
     <string name="coach_will_work_like">" będzie działać tak"</string>

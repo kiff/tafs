@@ -700,8 +700,11 @@
     <string name="coach_sign_in_at_vendor">Iniciar sesión en el proveedor</string>
     <string name="coach_sign_in_eyebrow">Te necesita · iniciar sesión</string>
     <string name="coach_sign_in_open">Abrir %1$s</string>
+    <string name="coach_sign_in_open_again">Abrir de nuevo el inicio de sesión</string>
+    <string name="coach_sign_in_open_again_app">Abrir de nuevo el inicio de sesión de %1$s</string>
     <string name="coach_sign_in_open_sign_in">Abrir el inicio de sesión</string>
     <string name="coach_sign_in_opens">Abre %1$s</string>
+    <string name="coach_sign_in_opens_app">Abre el inicio de sesión de %1$s</string>
     <string name="coach_sign_in_note">Se abre la propia página del proveedor. Ningún taf ve tu inicio de sesión.</string>
     <string name="coach_signed_reading_what_offers">Sesión iniciada en %1$s · leyendo lo que ofrece</string>
     <string name="coach_start">Empezar</string>
@@ -720,6 +723,7 @@
     <string name="coach_tools_not_read">No se pudieron leer las herramientas de Coach. %1$s</string>
     <string name="coach_tools_unknown">KIFF no respondió sobre las herramientas de Coach. Vuelve a intentarlo en un momento.</string>
     <string name="coach_unknown_answer">Configuración respondió algo que esta app no sabe leer. Actualiza la app.</string>
+    <string name="coach_waiting_for_app">Si se abrió la página de inicio de sesión de %1$s, termina allí y vuelve.</string>
     <string name="coach_waiting_for_vendor">Si se abrió la página de inicio de sesión del proveedor, termina allí y vuelve.</string>
     <string name="coach_what_conversation_about">De qué trata esta conversación</string>
     <string name="coach_will_work_like">" funcionará así"</string>

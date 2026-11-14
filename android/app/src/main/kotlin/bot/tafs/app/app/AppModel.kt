@@ -377,6 +377,8 @@ data class AppState(
   val connectStep: String? = null,
   /** The vendor's sign-in page is open for an approval in progress. Only then does the card say to finish it there: a reuse opens none. */
   val vendorPageOpen: Boolean = false,
+  /** The owner came back to tafs with no link from that page: the card offers it again, and Cancel. */
+  val vendorPageLeft: Boolean = false,
   val cardsAnswering: Set<String> = emptySet(),
   /**
    * What the owner wrote in each chat and hasn't sent, Coach's included, by chat: kept while they go elsewhere in the app, and
@@ -5005,8 +5007,12 @@ class AppModel(
    */
   /** The card says "finish it there" only while the vendor's page is actually open: an approval that reuses a sign-in opens none. */
   private suspend fun <T> vendorPageOpen(open: suspend () -> T): T {
-    _state.update { it.copy(vendorPageOpen = true) }
-    try { return open() } finally { _state.update { it.copy(vendorPageOpen = false) } }
+    _state.update { it.copy(vendorPageOpen = true, vendorPageLeft = false) }
+    val left = scope.launch { vendorSignIn.left.collect { l -> _state.update { it.copy(vendorPageLeft = l) } } }
+    try { return open() } finally {
+      left.cancel()
+      _state.update { it.copy(vendorPageOpen = false, vendorPageLeft = false) }
+    }
   }
 
   suspend fun signInAgain(c: SetupComponent) {

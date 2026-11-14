@@ -700,8 +700,11 @@
     <string name="coach_sign_in_at_vendor">Beim Anbieter anmelden</string>
     <string name="coach_sign_in_eyebrow">Braucht dich · anmelden</string>
     <string name="coach_sign_in_open">%1$s öffnen</string>
+    <string name="coach_sign_in_open_again">Anmeldung erneut öffnen</string>
+    <string name="coach_sign_in_open_again_app">Anmeldung bei %1$s erneut öffnen</string>
     <string name="coach_sign_in_open_sign_in">Anmeldung öffnen</string>
     <string name="coach_sign_in_opens">Öffnet %1$s</string>
+    <string name="coach_sign_in_opens_app">Öffnet die Anmeldung bei %1$s</string>
     <string name="coach_sign_in_note">Die eigene Seite des Anbieters öffnet sich. Kein taf sieht deine Anmeldung.</string>
     <string name="coach_signed_reading_what_offers">Bei %1$s angemeldet · liest, was es anbietet</string>
     <string name="coach_start">Starten</string>
@@ -720,6 +723,7 @@
     <string name="coach_tools_not_read">Die Tools von Coach konnten nicht gelesen werden. %1$s</string>
     <string name="coach_tools_unknown">KIFF hat zu den Tools von Coach nicht geantwortet. Versuch es gleich noch einmal.</string>
     <string name="coach_unknown_answer">Setup hat etwas geantwortet, das diese App nicht lesen kann. Aktualisiere die App.</string>
+    <string name="coach_waiting_for_app">Wenn sich die Anmeldeseite von %1$s geöffnet hat, schließ die Anmeldung dort ab und komm zurück.</string>
     <string name="coach_waiting_for_vendor">Wenn sich die Anmeldeseite des Anbieters geöffnet hat, schließ die Anmeldung dort ab und komm zurück.</string>
     <string name="coach_what_conversation_about">Worum es in diesem Gespräch geht</string>
     <string name="coach_will_work_like">" wird so arbeiten"</string>

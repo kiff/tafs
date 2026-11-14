@@ -796,4 +796,37 @@ class CoachStartTest {
     runCurrent()
     assertTrue(m.state.value.grants.any { it.id == "g1" })
   }
+
+  // The owner on Android 97: back in tafs with no link from Google's page, the card offers the page again rather than drop it.
+  @Test fun aSignInTheOwnerCameBackFromWithNoLinkIsOfferedAgain() = runTest {
+    reads()
+    coachThread(signInCard)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth"}""")
+    val left = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val back = kotlinx.coroutines.CompletableDeferred<String>()
+    var reopened = 0
+    val signIn = object : VendorSignIn {
+      override suspend fun signIn(url: String): String = back.await()
+      override val left = left
+      override fun reopen() { reopened++; left.value = false }
+    }
+    val m = model(signIn, scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    val going = backgroundScope.launch { m.signInAgain(KiffClient.json.decodeFromString(signInCard)) }
+    runCurrent()
+    assertTrue(m.state.value.vendorPageOpen)
+    assertFalse(m.state.value.vendorPageLeft)
+    left.value = true
+    runCurrent()
+    assertTrue("the card offers the page again", m.state.value.vendorPageLeft)
+    signIn.reopen()
+    runCurrent()
+    assertFalse(m.state.value.vendorPageLeft)
+    assertEquals(1, reopened)
+    back.completeExceptionally(VendorSignInCancelled())
+    going.join()
+    assertFalse(m.state.value.vendorPageOpen || m.state.value.vendorPageLeft)
+  }
 }

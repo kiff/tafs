@@ -700,8 +700,11 @@
     <string name="coach_sign_in_at_vendor">Inloggen bij de leverancier</string>
     <string name="coach_sign_in_eyebrow">Wacht op jou · inloggen</string>
     <string name="coach_sign_in_open">%1$s openen</string>
+    <string name="coach_sign_in_open_again">Inloggen opnieuw openen</string>
+    <string name="coach_sign_in_open_again_app">Inloggen bij %1$s opnieuw openen</string>
     <string name="coach_sign_in_open_sign_in">De login openen</string>
     <string name="coach_sign_in_opens">Opent %1$s</string>
+    <string name="coach_sign_in_opens_app">Opent het inloggen bij %1$s</string>
     <string name="coach_sign_in_note">De eigen pagina van de leverancier opent. Geen enkel taf ziet je login.</string>
     <string name="coach_signed_reading_what_offers">Ingelogd bij %1$s · lezen wat het biedt</string>
     <string name="coach_start">Starten</string>
@@ -720,6 +723,7 @@
     <string name="coach_tools_not_read">Kon de tools van Coach niet lezen. %1$s</string>
     <string name="coach_tools_unknown">KIFF gaf geen antwoord over de tools van Coach. Probeer het zo opnieuw.</string>
     <string name="coach_unknown_answer">Setup gaf een antwoord dat deze app niet kan lezen. Werk de app bij.</string>
+    <string name="coach_waiting_for_app">Als de inlogpagina van %1$s is geopend, rond het daar af en kom terug.</string>
     <string name="coach_waiting_for_vendor">Als de inlogpagina van de leverancier is geopend, rond het daar af en kom terug.</string>
     <string name="coach_what_conversation_about">Waar dit gesprek over gaat</string>
     <string name="coach_will_work_like">" gaat zo werken"</string>

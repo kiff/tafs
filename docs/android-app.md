@@ -1042,7 +1042,9 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   ("Sign in at Gmail"); "Sign in at the vendor" only when neither is known (`signInWords`, Android 1.27.8).
 - **"If the vendor's sign-in page opened, finish it there"** shows under an approval or sign-in in progress only while the
   vendor's page is actually open (`AppState.vendorPageOpen`): an approval that reuses a sign-in opens none, and says nothing
-  of it (Android 1.27.8).
+  of it (Android 1.27.8). It names the app ("If Gmail's sign-in page opened…", `waitingWords`), and Sign in says where it
+  goes ("Opens Gmail's sign-in", `opensWords`; a service the card names is shown as it is). "The vendor" only when no app is
+  known (Android 1.27.10).
 - **An approval card whose grant planque doesn't list yet** ("Reading what it asks for…") reads the grants again, three
   times, three seconds apart, until planque lists it: tafs cloud can write the card as the grant is made (`readApprovals`,
   Android 1.27.8). Before, it waited for another tab to read them.
@@ -1129,5 +1131,5 @@ The API contracts and recent-run history bound are in [api.md](api.md).
 
 ### A vendor sign-in left in its tab
 
-The vendor's sign-in opens in a Custom Tab, and the app waits for planque to send the owner back (`tafs://planque/signed-in`). If the owner closes the tab without finishing, the app comes back to the front with no link. After a short grace (`VendorWait.RETURN_GRACE_MS`, for a link that arrives just after the resume), the wait ends as a closed sign-in, the card offers the sign-in again, and other approvals aren't held behind it. Only a resume after the tab took the screen counts: the fingerprint dialog before the tab opens doesn't.
+The vendor's sign-in opens in a Custom Tab, from tafs's own screen and in tafs's task (`BrowserVendorSignIn.attach`), and the app waits for planque to send the owner back (`tafs://planque/signed-in`), which also closes the tab. An owner who leaves for another app mid-way (an authenticator, for a code) and comes back to tafs from Recents comes back to the vendor's page. Coming back from the launcher's icon, or after closing the tab, the app is in front with no link: Android closes a tab above tafs's screen there, since that screen is `singleTask`. After a short grace (`VendorWait.RETURN_GRACE_MS`, for a link that arrives just after the resume), the sign-in is marked left (`VendorSignIn.left`, `AppState.vendorPageLeft`), never dropped: the card offers **Open Gmail's sign-in again** (the same link, which planque takes until its approve expires, 15 minutes) and **Cancel**. While it's left, other approvals wait behind it, as they do while any sign-in is open, until the owner reopens the page, taps Cancel, or 15 minutes end the wait as a closed sign-in; the card then offers the sign-in again. Only a resume after the tab took the screen counts: the fingerprint dialog before the tab opens doesn't (Android 1.27.10; before it, a resume with no link closed the sign-in, with Google's page still waiting).
 Coming back to tafs before finishing also ends that sign-in, and a link the tab sends later is dropped, with nothing connected: start it again from the card. With tafs and the tab side by side, tafs may never pause, and the wait keeps its 15 minutes.

@@ -248,6 +248,11 @@ class MainActivity : FragmentActivity() {
   }
 
   // A vendor's sign-in waits while its tab is in front; the app back with no link from it means the tab was closed.
+  override fun onStart() {
+    super.onStart()
+    app.vendorSignIn.attach(this)
+  }
+
   override fun onPause() {
     super.onPause()
     app.vendorSignIn.paused()
@@ -277,6 +282,7 @@ class MainActivity : FragmentActivity() {
     driveEntry?.let { bot.tafs.app.drive.DriveInput.windows.remove(it) }
     bot.tafs.app.drive.DriveInput.unguard(window)
     app.authenticator.detach(this)
+    app.vendorSignIn.detach(this)
     app.push.askPermission = null
     runCatching { updates?.close() }
     super.onDestroy()
@@ -588,6 +594,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         approve = model::startApproval,
         openKeySheet = model::openCardKeySheet,
         cancelSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.cancel() },
+        reopenSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.reopen() },
         signInAgain = model::startSignInAgain,
         improve = model::improveTaf,
         openTaf = { coachOpen = false; openTaf = it },

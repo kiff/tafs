@@ -1326,10 +1326,16 @@ enum Words {
             static var eyebrow: String { Words.line("coach.sign_in.eyebrow") }
             /// Open {service}
             static func `open`(service: String) -> String { Words.line("coach.sign_in.open", service) }
+            /// Open the sign-in again
+            static var openAgain: String { Words.line("coach.sign_in.open_again") }
+            /// Open {app}'s sign-in again
+            static func openAgainApp(app: String) -> String { Words.line("coach.sign_in.open_again_app", app) }
             /// Open the sign-in
             static var openSignIn: String { Words.line("coach.sign_in.open_sign_in") }
             /// Opens {destination}
             static func opens(destination: String) -> String { Words.line("coach.sign_in.opens", destination) }
+            /// Opens {app}'s sign-in
+            static func opensApp(app: String) -> String { Words.line("coach.sign_in.opens_app", app) }
         }
         /// The vendor's own page opens. No taf sees your sign-in.
         static var signInNote: String { Words.line("coach.sign_in_note") }
@@ -1371,6 +1377,8 @@ enum Words {
         static var toolsUnknown: String { Words.line("coach.tools_unknown") }
         /// Setup answered something this app doesn't read. Update the app.
         static var unknownAnswer: String { Words.line("coach.unknown_answer") }
+        /// If {app}'s sign-in page opened, finish it there and come back.
+        static func waitingForApp(app: String) -> String { Words.line("coach.waiting_for_app", app) }
         /// If the vendor's sign-in page opened, finish it there and come back.
         static var waitingForVendor: String { Words.line("coach.waiting_for_vendor") }
         /// What this conversation is about
