@@ -35,6 +35,7 @@ export const en = {
   coach_waiting_named_approval: (title: string, day: string) => `${title}: Coach is waiting for your approval since ${day}.`,
   coach_waiting_named_answer: (title: string, day: string) => `${title}: Coach is waiting for your answer since ${day}.`,
   coach_waiting_set_aside: "Set aside",
+  coach_waiting_set_aside_done: (n: number, _form: Intl.LDMLPluralRule) => (n === 1 ? "Set aside. You'll find it in Previous conversations." : `${n} chats set aside. You'll find them in Previous conversations.`),
   coach_waiting_clear: "Set all aside",
   coach_waiting_clear_title: (n: number) => `End ${n} waiting Coach chats?`,
   coach_waiting_clear_text: "Nothing is approved or sent. Each chat ends, and a connection it asked for that no taf uses is withdrawn.",

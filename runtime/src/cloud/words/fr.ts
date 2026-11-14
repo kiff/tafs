@@ -33,6 +33,7 @@ export const fr: Words = {
   coach_waiting_named_approval: (title: string, day: string) => `${title} : Coach attend votre approbation depuis le ${day}.`,
   coach_waiting_named_answer: (title: string, day: string) => `${title} : Coach attend votre réponse depuis le ${day}.`,
   coach_waiting_set_aside: "Mettre de côté",
+  coach_waiting_set_aside_done: (n, form) => (form === "one" ? "Mise de côté. Vous la retrouverez dans « Conversations précédentes »." : `${n} conversations mises de côté. Vous les retrouverez dans « Conversations précédentes ».`),
   coach_waiting_clear: "Tout mettre de côté",
   coach_waiting_clear_title: (n: number) => `Terminer ${n} conversations avec Coach en attente ?`,
   coach_waiting_clear_text: "Rien n'est approuvé ni envoyé. Chaque conversation se termine, et une connexion qu'elle a demandée et qu'aucun taf n'utilise est retirée.",

@@ -33,6 +33,7 @@ export const it: Words = {
   coach_waiting_named_approval: (title: string, day: string) => `${title}: Coach aspetta la tua approvazione dal ${day}.`,
   coach_waiting_named_answer: (title: string, day: string) => `${title}: Coach aspetta la tua risposta dal ${day}.`,
   coach_waiting_set_aside: "Metti da parte",
+  coach_waiting_set_aside_done: (n, form) => (form === "one" ? "Messa da parte. La trovi in «Conversazioni precedenti»." : `${n} chat messe da parte. Le trovi in «Conversazioni precedenti».`),
   coach_waiting_clear: "Metti tutto da parte",
   coach_waiting_clear_title: (n: number) => `Chiudere ${n} chat di Coach in attesa?`,
   coach_waiting_clear_text: "Nulla viene approvato o inviato. Ogni chat si chiude, e un collegamento che ha chiesto e che nessun taf usa viene ritirato.",

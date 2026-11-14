@@ -33,6 +33,7 @@ export const pt: Words = {
   coach_waiting_named_approval: (title: string, day: string) => `${title}: o Coach está à espera da sua aprovação desde ${day}.`,
   coach_waiting_named_answer: (title: string, day: string) => `${title}: o Coach está à espera da sua resposta desde ${day}.`,
   coach_waiting_set_aside: "Pôr de parte",
+  coach_waiting_set_aside_done: (n, form) => (form === "one" ? "Posta de parte. Encontra-a em «Conversas anteriores»." : `${n} conversas postas de parte. Encontra-as em «Conversas anteriores».`),
   coach_waiting_clear: "Pôr tudo de parte",
   coach_waiting_clear_title: (n: number) => `Terminar ${n} conversas do Coach em espera?`,
   coach_waiting_clear_text: "Nada é aprovado nem enviado. Cada conversa termina, e uma ligação que pediu e que nenhum taf usa é retirada.",

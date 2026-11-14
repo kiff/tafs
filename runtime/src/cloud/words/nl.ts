@@ -33,6 +33,7 @@ export const nl: Words = {
   coach_waiting_named_approval: (title: string, day: string) => `${title}: Coach wacht sinds ${day} op je goedkeuring.`,
   coach_waiting_named_answer: (title: string, day: string) => `${title}: Coach wacht sinds ${day} op je antwoord.`,
   coach_waiting_set_aside: "Opzijzetten",
+  coach_waiting_set_aside_done: (n, form) => (form === "one" ? "Opzijgezet. Je vindt het in ‘Eerdere gesprekken’." : `${n} chats opzijgezet. Je vindt ze in ‘Eerdere gesprekken’.`),
   coach_waiting_clear: "Alles opzijzetten",
   coach_waiting_clear_title: (n: number) => `${n} wachtende Coach-chats beëindigen?`,
   coach_waiting_clear_text: "Er wordt niets goedgekeurd of verstuurd. Elke chat stopt, en een koppeling die hij vroeg en die geen taf gebruikt, wordt ingetrokken.",
