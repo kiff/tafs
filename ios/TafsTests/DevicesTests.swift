@@ -55,7 +55,7 @@ final class DevicesTests: XCTestCase {
         XCTAssertEqual(r.devices.map(\.name), ["tafs on iPad", "Ana's iPhone"])
     }
 
-    /// Removing a device that holds an approval key or a passkey is an approval (desktop-client.md): the
+    /// Removing a device that holds an approval key or a passkey is an approval (KIFF's pairing contract): the
     /// approval key signs the DELETE itself, `kiff.request.v1` over its path and the empty body, behind
     /// Face ID, and the request carries it.
     func testSigningAnotherDeviceOutIsSignedByTheApprovalKey() async throws {
@@ -89,7 +89,7 @@ final class DevicesTests: XCTestCase {
         XCTAssertTrue(deletes().isEmpty)
     }
 
-    // MARK: Pairing a computer (desktop-client.md §5.3)
+    // MARK: Pairing a computer (KIFF's pairing contract §5.3)
 
     private func pairingCode() throws -> PairingRequest {
         let exp = ISO8601DateFormatter().string(from: Date().addingTimeInterval(120))

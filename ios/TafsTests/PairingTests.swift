@@ -1,7 +1,7 @@
 import XCTest
 @testable import Tafs
 
-/// A computer's pairing code (docs/desktop-client.md §5.1 and §5.2), read strictly before anything is
+/// A computer's pairing code (KIFF's pairing contract §5.1 and §5.2), read strictly before anything is
 /// shown or signed. The keys and check codes are fixed values worked out apart from the app.
 final class PairingTests: XCTestCase {
     static let pub = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE6op8SeGpe6FWBj-IKF78IfKz3rZ3i4DBGW-7dTNpAlJVKt2--h_QoKnPerk5HxF2kXOn_nOsp1RrtwSVQqTtIg"
@@ -70,7 +70,7 @@ final class PairingTests: XCTestCase {
         XCTAssertEqual(read(code { $0["approval_pub"] = 7 }), .failure(.badKeys))
     }
 
-    /// `key_store` (desktop-client.md §5.1): only "software", only on a passkey computer, and sent on as read.
+    /// `key_store` (KIFF's pairing contract §5.1): only "software", only on a passkey computer, and sent on as read.
     func testASoftwareKeyedComputerIsReadAsOne() throws {
         let software = try read(code { $0["kind"] = "passkey"; $0["approval_pub"] = nil; $0["key_store"] = "software" }).get()
         XCTAssertTrue(software.softwareKey)

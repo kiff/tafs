@@ -1091,7 +1091,7 @@ final class AppModel: ObservableObject {
 
     /// Signs another device out of the account: the approval key signs the DELETE itself, behind Face ID
     /// or Touch ID naming the device, never inside a window, since removing a device that holds an
-    /// approval key or a passkey is an approval (desktop-client.md). This device signs out with Sign out
+    /// approval key or a passkey is an approval (KIFF's pairing contract). This device signs out with Sign out
     /// instead. False when it didn't go through.
     @discardableResult
     func removeDevice(_ device: KIFFClient.Device) async -> Bool {
@@ -1125,7 +1125,7 @@ final class AppModel: ObservableObject {
         case cancelled
     }
 
-    /// Pairs a computer (desktop-client.md §5.3): the approval key signs `POST /v1/me/pairings` with the
+    /// Pairs a computer (KIFF's pairing contract §5.3): the approval key signs `POST /v1/me/pairings` with the
     /// QR's fields, behind Face ID or Touch ID naming the computer, never inside a window. Then KIFF's code
     /// is shown beside the one the person checked, and Devices is read again.
     func pairComputer(_ request: PairingRequest) async -> PairingOutcome {

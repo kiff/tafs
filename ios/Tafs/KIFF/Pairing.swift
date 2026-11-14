@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
 
-/// A computer's pairing code, as its QR shows it (docs/desktop-client.md §5.1), read before anything is
+/// A computer's pairing code, as its QR shows it (KIFF's pairing contract §5.1), read before anything is
 /// shown or signed. Pairing gives the computer approval authority, so the code is read strictly: one
 /// field out of bounds and the phone shows why, never the request.
 struct PairingRequest: Equatable {

@@ -68,7 +68,7 @@ they sign in. **Sign out** on another device removes it (`DELETE /v1/me/devices/
 no longer approves, and its sign-ins on the account end at once. Removing a device that
 holds an approval key or a passkey is itself an approval, so the phone's approval key signs
 the request, behind Face ID or a fingerprint naming the device, and never inside an approval
-window (desktop-client.md). On iOS, the approval key signs it whatever the device is. This device signs out with **Sign out of KIFF**.
+window (KIFF's pairing contract). On iOS, the approval key signs it whatever the device is. This device signs out with **Sign out of KIFF**.
 
 ## Your data and the AI
 

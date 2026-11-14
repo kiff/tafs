@@ -35,7 +35,7 @@ struct DevicesView: View {
             } footer: {
                 Text(Words.Settings.Devices.noteDevice(device: "\(ThisDevice.kind)"))
             }
-            // A computer pairs from here (desktop-client.md §5): the phone approves it, never the computer itself.
+            // A computer pairs from here (KIFF's pairing contract §5): the phone approves it, never the computer itself.
             if model.mode == .kiff {
                 Section {
                     Button { pairing = true } label: { Label(Words.Settings.Devices.pair, systemImage: "desktopcomputer") }

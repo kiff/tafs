@@ -896,7 +896,7 @@ Tests: `TafsTests/YourStepTests.swift`.
 ## Pairing a computer
 
 Account → Devices → **Add a computer** pairs one of the person's computers from this phone
-(KIFF's docs/desktop-client.md §5; `KIFF/Pairing.swift`, `PairComputerView`,
+(KIFF's pairing contract §5; `KIFF/Pairing.swift`, `PairComputerView`,
 `AppModel.pairComputer`). The phone holds the approving half; the computer never pairs itself.
 
 - **The scan:** the camera reads the computer's QR. `PairingRequest.read` checks it strictly before

@@ -431,7 +431,7 @@ final class KIFFClient {
     }
 
     /// Signing another device out, built to be signed by the approval key: removing a device that holds
-    /// an approval key or a passkey is an approval (desktop-client.md), `kiff.request.v1` over the
+    /// an approval key or a passkey is an approval (KIFF's pairing contract), `kiff.request.v1` over the
     /// DELETE, its path and the empty body, never inside a window.
     func prepareRemoveDevice(_ id: String, signedAt: String) throws -> Prepared {
         try prepare(method: "DELETE", path: Self.devicePath(id), body: Data(), gateway: false, signedAt: signedAt)
@@ -439,7 +439,7 @@ final class KIFFClient {
 
     static let pairingsPath = "/v1/me/pairings"
 
-    /// KIFF's answer to the phone's pairing approval (desktop-client.md §5.3): the code KIFF worked out,
+    /// KIFF's answer to the phone's pairing approval (KIFF's pairing contract §5.3): the code KIFF worked out,
     /// which the phone shows once more beside the one the person checked.
     struct Pairing: Decodable, Equatable {
         let id: String

@@ -1,7 +1,7 @@
 import AVFoundation
 import SwiftUI
 
-/// Account → Devices → Add a computer (desktop-client.md §5): the camera reads the computer's QR, the
+/// Account → Devices → Add a computer (KIFF's pairing contract §5): the camera reads the computer's QR, the
 /// phone says what pairing gives and asks whether the computer shows the same check code, and only then
 /// does the approval key sign the pairing, behind Face ID naming the computer. Nothing is signed from
 /// the scan itself.
