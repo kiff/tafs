@@ -68,10 +68,17 @@ export class Steps {
       case "planque": {
         if (callID) this.planqueCalls.add(callID);
         if (callID && i.action === "request" && i.api) this.keyRequests.add(callID);
-        const grant = typeof i.grant === "string" ? this.vendors.get(i.grant) ?? "" : "";
+        // A reuse names the grant whose sign-in it uses: that's what it connects, and its app is that grant's.
+        const reuse = i.action === "request" && typeof i.reuse === "string" && i.reuse ? i.reuse : undefined;
+        const ofGrant = (g: unknown): string => typeof g === "string" ? this.vendors.get(g) ?? this.apps.get(g) ?? "" : "";
+        const grant = ofGrant(i.grant);
         const api = i.api && typeof i.api === "object" ? (i.api as { url?: unknown }).url : undefined;
-        if (callID) this.connections.set(callID, i.action === "request" ? vendorName(i.server ?? api) : grant);
-        const target = i.action === "request" ? i.server ?? api : i.grant;
+        if (callID) this.connections.set(callID, i.action === "request" ? (reuse ? ofGrant(reuse) : vendorName(i.server ?? api)) : grant);
+        const target = i.action === "request" ? i.server ?? api ?? reuse : i.grant;
+        // Setting a grant's tools that went through is Coach's corrected ask for that grant, whatever planque answers
+        // (pending: the owner's approval comes next): an earlier refused tools call on it is past (14 Nov, 13:13 UTC:
+        // "Coach couldn't connect the app yet" in red over a grant the owner had just approved).
+        if (callID && i.action === "tools" && typeof i.grant === "string") this.requests.add(callID);
         if (callID && typeof target === "string" && target) this.targets.set(callID, target);
         switch (i.action) {
           case "request": {

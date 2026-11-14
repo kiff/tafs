@@ -402,6 +402,49 @@ describe("a message streamed (kiff/tafs#60)", () => {
     expect(r.raw).not.toContain("Next: ask Coach");
   });
 
+  it("marks a refused tools call past once Coach's corrected tools call on the same grant goes through, pending the owner's approval (14 Nov, 13:13)", async () => {
+    const w = world();
+    const refused = { text: "planque answered 400: setup_reads go with the taf's tools: add these reads in the request that sets the taf's tools", is_error: true };
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "tools", grant: "grt_Gmail12345", tools: [{ tool: "GMAIL_LIST", setup_reads: true }] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: refused } },
+      // Another grant's tools going through clears nothing of this one.
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "tools", grant: "grt_Other12345", tools: [{ tool: "X" }] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "{\"id\":\"grt_Other12345\",\"status\":\"pending\"}" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "Summarize my unread email every weekday" } });
+    await new Promise((f) => setTimeout(f, 0));
+    let kept = await w.coach.get(stepWhyKey("t_acme", r.events[0]!.data.run as string)) as Array<{ call: string; resolved?: true }>;
+    expect(kept.map((k) => [k.call, k.resolved ?? false])).toEqual([["c1", false]]);
+    // The corrected ask on the same grant goes through, pending: the refusal is past, never red over the approval.
+    const w2 = world();
+    w2.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "tools", grant: "grt_Gmail12345", tools: [{ tool: "GMAIL_LIST", setup_reads: true }] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: refused } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "tools", grant: "grt_Gmail12345", tools: [{ tool: "GMAIL_LIST" }] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "{\"id\":\"grt_Gmail12345\",\"status\":\"pending\"}" } } },
+    );
+    const r2 = await stream(w2, PATH, { token: "ana", body: { text: "Summarize my unread email every weekday" } });
+    await new Promise((f) => setTimeout(f, 0));
+    kept = await w2.coach.get(stepWhyKey("t_acme", r2.events[0]!.data.run as string)) as Array<{ call: string; resolved?: true }>;
+    expect(kept.map((k) => [k.call, k.resolved ?? false])).toEqual([["c1", true]]);
+  });
+
+  it("keys a refused reuse to the grant it reuses, so a reuse of it that goes through clears it", async () => {
+    const w = world();
+    const refused = { text: "planque answered 409: managed sign-in isn't set up for this app", is_error: true };
+    w.agents.streamed.push(
+      { event: "delta", data: { kind: "tool_call", call_id: "c1", tool: "planque", input: { action: "request", reuse: "grt_Held123456", name: "digest", taf_name: "Daily digest", tools: [] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c1", result: refused } },
+      { event: "delta", data: { kind: "tool_call", call_id: "c2", tool: "planque", input: { action: "request", reuse: "grt_Held123456", agent: "digest-k3f9", taf_name: "Daily digest", tools: [] } } },
+      { event: "delta", data: { kind: "tool_result", call_id: "c2", result: { text: "{\"id\":\"grt_New1234567\",\"status\":\"listed\"}" } } },
+    );
+    const r = await stream(w, PATH, { token: "ana", body: { text: "A daily digest of my inbox" } });
+    await new Promise((f) => setTimeout(f, 0));
+    const kept = await w.coach.get(stepWhyKey("t_acme", r.events[0]!.data.run as string)) as Array<{ call: string; resolved?: true }>;
+    expect(kept.map((k) => [k.call, k.resolved ?? false])).toEqual([["c1", true]]);
+  });
+
   it("tells two refused apps apart by what they connect when neither name is known: one going through clears only its own", async () => {
     const w = world();
     const refused = { text: "planque answered 409: managed sign-in isn't set up for this app", is_error: true };
