@@ -109,6 +109,8 @@ class PairingTest {
     val approvalPub = hex("3059301306072a8648ce3d020106082a8648ce3d030107034200047cf27b188d034f7e8a52380304b51ac3c08969e277f21b35a60b48fc4766997807775510db8ed040293d9ac69f7430dbba7dade63ce982299e04b79d227873d1")
     assertEquals("H6SJNU", PairQr.read(qrText(pub = url(pub), approvalPub = url(approvalPub)))!!.checkCode)
     assertEquals("LTJFF6", PairQr.read(qrText(pub = url(pub), approvalPub = null))!!.checkCode)
+    // A software-keyed computer's code is over pub alone, whatever else its QR carries.
+    assertEquals("LTJFF6", PairQr.read(qrText(pub = url(pub), approvalPub = url(approvalPub)).replace("\"exp\":", "\"key_store\":\"software\",\"exp\":"))!!.checkCode)
     // A computer's own passkey (Windows Hello) takes approval_pub's place: the same keys, the same code.
     val windows = PairQr.read(windowsQr(url(pub), url(approvalPub)))!!
     assertEquals("H6SJNU", windows.checkCode)
@@ -137,6 +139,13 @@ class PairingTest {
     val hello = PairQr.read(qrText())!!
     assertEquals("tafs on this Windows PC will be able to approve your tafs' actions with Windows Hello.", bot.tafs.app.views.pairGives(hello))
     assertTrue(bot.tafs.app.views.pairGives(PairQr.read(qrText().replace("\"kind\":\"hello\"", "\"kind\":\"enclave\""))!!).endsWith("with Touch ID."))
+    assertTrue(bot.tafs.app.views.pairGives(PairQr.read(qrText(approvalPub = null))!!).endsWith("with a passkey."))
+  }
+
+  @Test fun aComputerWithASoftwareKeyIsSaidToSendItsApprovalsToThisPhone() {
+    val mac = PairQr.read(qrText(approvalPub = null).replace("\"platform\":\"windows\"", "\"platform\":\"macos\"").replace("\"exp\":", "\"key_store\":\"software\",\"exp\":").replace("tafs on this Windows PC", "tafs on this Mac"))!!
+    assertEquals("tafs on this Mac will show your tafs and send approvals to this phone.", bot.tafs.app.views.pairGives(mac))
+    // A passkey computer without a software key still approves with a passkey.
     assertTrue(bot.tafs.app.views.pairGives(PairQr.read(qrText(approvalPub = null))!!).endsWith("with a passkey."))
   }
 

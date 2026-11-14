@@ -1020,11 +1020,13 @@ pair one; without it, Devices says approving needs a new sign-in and sends nothi
 3. **The check code** is the first 6 characters of base32(sha256(device key ‖ approval key)),
    RFC 4648 with no padding. A computer's own platform passkey (Windows Hello, §2.6), which a
    `kind: "passkey"` QR carries as `credential {id, public_key}`, takes the approval key's place,
-   so the code covers the passkey the pairing registers; with neither, the device key alone. The alert asks
+   so the code covers the passkey the pairing registers; with neither, or for a computer whose device
+   key is in software (`key_store: "software"`), the device key alone. The alert asks
    "Pair {name}?", says first what yes gives ("{name} will be able to approve your tafs' actions
    with Windows Hello" for `hello` or a Windows computer's own passkey, Touch ID for `enclave`, a
    passkey for any other `passkey`), for a computer whose QR
-   says `key_store: "software"` "This computer approves only through your phone or a passkey.",
+   says `key_store: "software"`, which never approves, "{name} will show your tafs and send approvals
+   to this phone." in place of what it would approve with,
    and "Only pair a computer you're using right now.", then "Does your computer show {code}?", with **Yes, pair it** or
    Cancel. A page showing its own QR shows another code; the code protects only if the person
    knows what yes gives.

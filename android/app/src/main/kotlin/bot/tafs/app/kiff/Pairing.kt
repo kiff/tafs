@@ -58,7 +58,8 @@ data class PairQr(
   val checkCode: String?
     get() {
       val device = decode(pub) ?: return null
-      val second = credential?.publicKey ?: approvalPub
+      // A computer whose device key is in software never approves, so it has no second key to cover: pub alone.
+      val second = if (keyStore == "software") null else credential?.publicKey ?: approvalPub
       val approval = second?.let { decode(it) ?: return null } ?: ByteArray(0)
       return base32(MessageDigest.getInstance("SHA-256").digest(device + approval)).take(6)
     }

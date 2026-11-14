@@ -1817,6 +1817,7 @@
     <string name="settings_devices_pair_gives_hello">%1$s potrà approvare le azioni dei tuoi tafs con Windows Hello.</string>
     <string name="settings_devices_pair_gives_passkey">%1$s potrà approvare le azioni dei tuoi tafs con una passkey.</string>
     <string name="settings_devices_pair_gives_phone">%1$s potrà approvare le azioni dei tuoi tafs.</string>
+    <string name="settings_devices_pair_gives_view">%1$s mostrerà i tuoi tafs e invierà le approvazioni a questo telefono.</string>
     <string name="settings_devices_pair_invalid">KIFF non è riuscito a leggere quel codice. Mostrane uno nuovo sul tuo computer e scansionalo di nuovo.</string>
     <string name="settings_devices_pair_key_registered">Quel computer è già associato.</string>
     <string name="settings_devices_pair_named">Associare %1$s?</string>

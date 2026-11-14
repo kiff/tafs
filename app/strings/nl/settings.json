@@ -44,6 +44,7 @@
   "settings.devices.pair_gives_hello": "{device} kan dan de acties van je tafs goedkeuren met Windows Hello.",
   "settings.devices.pair_gives_passkey": "{device} kan dan de acties van je tafs goedkeuren met een passkey.",
   "settings.devices.pair_gives_phone": "{device} kan dan de acties van je tafs goedkeuren.",
+  "settings.devices.pair_gives_view": "{device} toont je tafs en stuurt goedkeuringen naar deze telefoon.",
   "settings.devices.pair_invalid": "KIFF kon die code niet lezen. Toon een nieuwe op je computer en scan die opnieuw.",
   "settings.devices.pair_key_registered": "Die computer is al gekoppeld.",
   "settings.devices.pair_named": "{device} koppelen?",

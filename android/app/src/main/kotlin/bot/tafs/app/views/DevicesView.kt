@@ -145,7 +145,6 @@ fun DevicesSheet(
         // knows why it matters.
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
           Text(pairGives(qr))
-          if (qr.keyStore == "software") Text(Words.Settings.Devices.pairSoftwareKey)
           Text(if (qr.isPhone) Words.Settings.Devices.pairOnlyNowPhone else Words.Settings.Devices.pairOnlyNow)
           val check = if (qr.isPhone) Words.Settings.Devices.pairCheckPhone(code = qr.checkCode.orEmpty()) else Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty())
           Text(check, fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag(PAIR_CHECK))
@@ -162,6 +161,8 @@ fun DevicesSheet(
 /** What pairing gives the computer, by what approves on it (§5.1's `kind`). */
 internal fun pairGives(qr: PairQr): String = when {
   qr.isPhone -> Words.Settings.Devices.pairGivesPhone(device = qr.name)
+  // A computer whose device key is in software never approves: it shows the tafs and sends each approval to this phone.
+  qr.keyStore == "software" -> Words.Settings.Devices.pairGivesView(device = qr.name)
   // A Windows computer approves with Windows Hello as its own platform passkey (§2.6).
   qr.kind == "hello" || (qr.kind == "passkey" && qr.credential != null && qr.platform == "windows") -> Words.Settings.Devices.pairGivesHello(device = qr.name)
   qr.kind == "enclave" -> Words.Settings.Devices.pairGivesEnclave(device = qr.name)
