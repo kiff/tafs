@@ -4939,6 +4939,15 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(home.needs_you.count).toBe(0);
     // The same set aside again (a resend): done, marked already.
     expect(JSON.parse((await call(`/v1/home/coach-waiting/${stored.session}/set-aside`)).body)).toEqual({ set_aside: [stored.session], already: true });
+
+    // Opened in Coach after all and answered there, the run goes on and pauses on a new card: that one shows, it isn't hidden.
+    const first = stored.requirements![0]!;
+    first.answered = w.now.toISOString();
+    stored.requirements!.push({ ...first, call_id: `${first.call_id}-next`, answered: undefined,
+      input: { ...(first.input as object), id: "approve-card-3" } });
+    const after = JSON.parse((await handle({ rawPath: "/v1/home", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps)).body) as { coach_waiting?: Array<{ session: string }>; needs_you: { count: number } };
+    expect(after.coach_waiting?.map((x) => x.session)).toEqual([stored.session]);
+    expect(after.needs_you.count).toBe(1);
   });
 
   it("withdraws a connection the chat asked for a taf that isn't live, through planque's end, never a live taf's", async () => {

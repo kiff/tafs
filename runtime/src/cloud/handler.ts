@@ -6780,7 +6780,7 @@ async function discardHalfMade(event: HTTPEvent, me: KIFFIdentity, agent: string
   }
   // A run that already moved on is a chat that no longer waits: that's done too. One kiff/agents can't cancel (paused on its
   // result card) is kept as ended here (endCoachRun).
-  await endCoachRun(deps, me.tenantID, coach.id, found.id, deps.now?.() ?? new Date(), member(me)).catch((err) => agentsCall(() => Promise.reject(err)));
+  await endCoachRun(deps, me.tenantID, coach.id, found, deps.now?.() ?? new Date(), member(me)).catch((err) => agentsCall(() => Promise.reject(err)));
   await deps.coach?.remove(halfMadeKey(me.tenantID, agent)).catch(() => undefined);
   await deps.coach?.put(discardedKey(me.tenantID, agent), { by: me.subject }, new Date((deps.now?.() ?? new Date()).getTime() + DISCARDED_KEPT_MS)).catch(() => undefined);
   console.log(JSON.stringify({ event: "half_made_discard", tenant: me.tenantID, agent, run: found.id }));
@@ -6823,7 +6823,7 @@ async function setAsideCoach(event: HTTPEvent, me: KIFFIdentity, session: string
       return agent && !live.has(agent) ? [agent] : [];
     }));
     // The chat ends first. kiff/agents can't cancel a run paused on a card; tafs cloud then keeps it as ended (endCoachRun).
-    await endCoachRun(deps, me.tenantID, coach!.id, r.id, now, member(me)).catch((err) => agentsCall(() => Promise.reject(err)));
+    await endCoachRun(deps, me.tenantID, coach!.id, r, now, member(me)).catch((err) => agentsCall(() => Promise.reject(err)));
     ended.push(r.session);
     await deps.coach?.put(setAsideKey(me.tenantID, r.session), { by: me.subject }, new Date(now.getTime() + DISCARDED_KEPT_MS)).catch(() => undefined);
     for (const agent of agents) {
@@ -6841,9 +6841,10 @@ async function setAsideCoach(event: HTTPEvent, me: KIFFIdentity, session: string
 const setAsideKey = (tenant: string, session: string) => `${tenant}#set-aside#${session}`;
 
 /**
- * A Coach run tafs cloud ended (set aside, or stale), by its id. kiff/agents refuses to cancel a run paused on a card (409
- * `paused_run`: a card has no KIFF exception to withdraw), so the run stays PAUSED until its card expires. Home, set aside and
- * the sweep skip it from then on. Kept past kiff/agents' card wait (7 days).
+ * A Coach run tafs cloud ended (set aside, or stale), by its id, with the cards it waited on then. kiff/agents refuses to cancel
+ * a run paused on a card (409 `paused_run`: a card has no KIFF exception to withdraw), so the run stays PAUSED until its card
+ * expires. Home, set aside, Discard and the sweep skip it while it waits on those same cards; answered in Coach after all, the
+ * run goes on, and a new card it pauses on shows. Kept past kiff/agents' card wait (7 days).
  */
 const coachEndedKey = (tenant: string, run: string) => `${tenant}#coach-ended#${run}`;
 const COACH_ENDED_KEPT_MS = 8 * 24 * 3600_000;
@@ -6852,20 +6853,29 @@ const COACH_ENDED_KEPT_MS = 8 * 24 * 3600_000;
  * Ends a Coach run: kiff/agents cancels it ("cancelled"), it had already ended ("over"), or it's paused on a card kiff/agents
  * can't cancel ("kept"). Each of those leaves it no longer waiting, and is kept as ended here. Any other failure throws.
  */
-async function endCoachRun(deps: Deps, tenant: string, coach: string, run: string, now: Date, requester?: Requester): Promise<"cancelled" | "over" | "kept"> {
+async function endCoachRun(deps: Deps, tenant: string, coach: string, r: Run, now: Date, requester?: Requester): Promise<"cancelled" | "over" | "kept"> {
+  const run = r.id;
   const how = await deps.agents.cancelRun(tenant, coach, run, requester).then(() => "cancelled" as const, (err) => {
     if (err instanceof AgentsError && err.status === 409 && err.code === "paused_run") return "kept" as const;
     if (err instanceof AgentsError && (err.status === 404 || err.status === 409)) return "over" as const;
     throw err;
   });
-  await deps.coach?.put(coachEndedKey(tenant, run), { how }, new Date(now.getTime() + COACH_ENDED_KEPT_MS)).catch(() => undefined);
+  await deps.coach?.put(coachEndedKey(tenant, run), { how, waits: cardsWaitedOn(r) }, new Date(now.getTime() + COACH_ENDED_KEPT_MS)).catch(() => undefined);
   return how;
 }
 
-/** Coach's paused runs, less those tafs cloud already ended (endCoachRun). */
+/** The cards a run waits on, unanswered, by their call ids: what an end kept here covers. */
+const cardsWaitedOn = (r: Run): string[] => (r.requirements ?? []).filter((q) => q.kind === "card" && !q.answered).map((q) => q.call_id);
+
+/** Coach's paused runs, less those tafs cloud already ended (endCoachRun) that still wait on the same cards. */
 async function notEndedHere(deps: Deps, tenant: string, runs: Run[]): Promise<Run[]> {
   if (!deps.coach || !runs.length) return runs;
-  const ended = await Promise.all(runs.map((r) => deps.coach!.get(coachEndedKey(tenant, r.id)).then((v) => v !== undefined && v !== null, () => false)));
+  const ended = await Promise.all(runs.map((r) => deps.coach!.get(coachEndedKey(tenant, r.id)).then((v) => {
+    const waits = (v as { waits?: unknown } | undefined)?.waits;
+    if (!Array.isArray(waits)) return false;
+    // Ended here while waiting on these cards: still those, still ended. A card it waits on now that it didn't then shows.
+    return cardsWaitedOn(r).every((id) => waits.includes(id));
+  }, () => false)));
   return runs.filter((_, i) => !ended[i]);
 }
 
@@ -6899,7 +6909,7 @@ export async function sweepStaleCoach(deps: Deps): Promise<Array<{ run: string; 
       }
       if (!why) continue;
       // ended: kiff/agents cancelled it, or it had ended; kept: paused on a card kiff/agents can't cancel, kept as ended here.
-      const how = await endCoachRun(deps, tenant, coach.id, r.id, now).catch(() => undefined);
+      const how = await endCoachRun(deps, tenant, coach.id, r, now).catch(() => undefined);
       console.log(JSON.stringify({ event: "coach_stale", tenant, run: r.id, why, ended: how === "cancelled" || how === "over", ...(how === "kept" ? { code: "paused_run" } : {}) }));
       if (how) out.push({ run: r.id, why });
     }
