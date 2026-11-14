@@ -188,6 +188,7 @@ object KiffMapping {
     val finish = h.finish?.takeIf { it.session.isNotBlank() && it.words.isNotBlank() }
     if (finish != null) taf = taf.copy(now = finish.words, finish = finish)
     return taf.copy(
+      labels = h.labels.orEmpty().filter { it.isNotBlank() },
       cloudId = h.id,
       paused = h.status == "paused",
       nextRun = h.nextRun,

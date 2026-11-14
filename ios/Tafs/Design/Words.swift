@@ -2267,6 +2267,8 @@ enum Words {
         static var footer: String { Words.line("home.footer") }
         /// Halted. Open Halt
         static var haltedOpenHalt: String { Words.line("home.halted_open_halt") }
+        /// All
+        static var labelsAll: String { Words.line("home.labels_all") }
         /// Loading your tafs…
         static var loading: String { Words.line("home.loading") }
         /// New taf

@@ -1179,6 +1179,7 @@
     <string name="home_explore_jobs">Explorar tarefas</string>
     <string name="home_footer">Sessão iniciada com o KIFF.</string>
     <string name="home_halted_open_halt">Bloqueado. Abrir Bloquear</string>
+    <string name="home_labels_all">Todos</string>
     <string name="home_loading">A carregar os seus tafs…</string>
     <string name="home_new_taf">Novo taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Já não funciona. O tafs elimina o que resta sempre que atualiza.</string>

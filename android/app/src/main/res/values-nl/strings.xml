@@ -1179,6 +1179,7 @@
     <string name="home_explore_jobs">Taken verkennen</string>
     <string name="home_footer">Ingelogd met KIFF.</string>
     <string name="home_halted_open_halt">Stilgezet. Open Stilzetten</string>
+    <string name="home_labels_all">Alle</string>
     <string name="home_loading">Je tafs laden…</string>
     <string name="home_new_taf">Nieuw taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Het draait niet meer. tafs verwijdert wat er over is bij elke vernieuwing.</string>

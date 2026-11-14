@@ -244,6 +244,9 @@ data class AppState(
   val needsYou: bot.tafs.app.kiff.NeedsYouCount? = null,
   /** Home's first line, in tafs cloud's words; null from a tafs cloud that sends none, where the app's own count stands in. */
   val headline: String? = null,
+  /** The account's labels and the filter row's words, from Home: the list filters by them, and nothing else does. */
+  val labels: List<bot.tafs.app.kiff.HomeLabel> = emptyList(),
+  val labelsAll: String? = null,
   /** Coach is on screen (its chat `coachChat`): set by the screen, for the badge. */
   val coachShown: Boolean = false,
   /** After a set-aside, where the chats went, in tafs cloud's words (`words.done`); gone once Coach opens. */
@@ -1394,6 +1397,8 @@ class AppModel(
         coachWaitingClear = read.home.coachWaitingClear?.takeIf { it.words.button.isNotBlank() },
         needsYou = read.home.needsYou,
         headline = read.home.headline?.words?.takeIf { it.isNotBlank() },
+        labels = read.home.labels.orEmpty().filter { it.id.isNotBlank() && it.name.isNotBlank() },
+        labelsAll = read.home.labelsWords?.all?.takeIf { it.isNotBlank() },
         // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given on this device.
         record = read.activity?.let { withDecisions(KiffMapping.record(it, holders)) } ?: s.record,
         // What this person may do with each agent, as KIFF says: a read that failed leaves what was known.

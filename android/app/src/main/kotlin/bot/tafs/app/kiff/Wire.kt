@@ -132,7 +132,28 @@ data class HomeTaf(
   val health: bot.tafs.app.kiff.TafHealth? = null,
   /** Another agent whose setup stopped partway: Coach's chat where it stopped, and tafs cloud's words for the row (docs/tafs.md). */
   val finish: HomeFinish? = null,
+  /** Its labels, by id (0 to 3): Coach-managed chips the list filters by (docs/android-app.md, Labels). */
+  val labels: List<String>? = null,
 )
+
+/**
+ * One of the account's labels, as tafs cloud lists it on Home: a name and a colour, how many tafs carry it, whether one of them
+ * waits for the person, and the list's headline filtered to it ("Money · 5 tafs · 2 wait for you"). A label holds no Card,
+ * permission or context: the app only filters by it.
+ */
+@Serializable
+data class HomeLabel(
+  val id: String = "",
+  val name: String = "",
+  val color: String? = null,
+  val count: Int = 0,
+  val waiting: Boolean = false,
+  val headline: String? = null,
+)
+
+/** The label row's own words from tafs cloud: "All". */
+@Serializable
+data class HomeLabelsWords(val all: String? = null)
 
 /**
  * The way back to a taf whose setup stopped partway (Coach drafted it, its Card is signed, and no taf was made): Coach's taf, the
@@ -160,6 +181,9 @@ data class Home(
   @SerialName("needs_you") val needsYou: NeedsYouCount? = null,
   /** Home's first line, in tafs cloud's words ("1 taf ready."); absent from a tafs cloud from before it. */
   val headline: HomeHeadline? = null,
+  /** The account's labels, for the list's filter row; none, and no row is drawn (docs/android-app.md, Labels). */
+  val labels: List<HomeLabel>? = null,
+  @SerialName("labels_words") val labelsWords: HomeLabelsWords? = null,
   /** Cards asked to take a currency they have no limit for, for the tafs this person sees: Needs you draws them. */
   @SerialName("card_unit_exceptions") val cardUnitExceptions: List<CardUnitException>? = null,
   /** Steps a taf handed its owner, oldest first (docs/api.md › Your step): Needs you draws them. */

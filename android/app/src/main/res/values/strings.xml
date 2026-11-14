@@ -1179,6 +1179,7 @@
     <string name="home_explore_jobs">Explore jobs</string>
     <string name="home_footer">Signed in with KIFF.</string>
     <string name="home_halted_open_halt">Halted. Open Halt</string>
+    <string name="home_labels_all">All</string>
     <string name="home_loading">Loading your tafs…</string>
     <string name="home_new_taf">New taf</string>
     <string name="home_no_longer_runs_tafs_deletes">It no longer runs. tafs deletes what\'s left each time it refreshes.</string>

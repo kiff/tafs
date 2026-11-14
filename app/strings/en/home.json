@@ -11,6 +11,7 @@
   "home.explore_jobs": "Explore jobs",
   "home.footer": "Signed in with KIFF.",
   "home.halted_open_halt": "Halted. Open Halt",
+  "home.labels_all": "All",
   "home.loading": "Loading your tafs…",
   "home.new_taf": "New taf",
   "home.no_longer_runs_tafs_deletes": "It no longer runs. tafs deletes what's left each time it refreshes.",
