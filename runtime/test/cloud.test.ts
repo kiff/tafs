@@ -1740,6 +1740,7 @@ describe("removing a taf", () => {
     let down = true;
     const deps = (absent = false) => ({ ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
       if (url.startsWith("https://planque.test/")) {
+        if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: [] }), { status: 200 });
         ended.push({ url, auth: String((init?.headers as Record<string, string>)?.authorization ?? ""), method: init?.method ?? "GET" });
         if (absent) return new Response("no route", { status: 404 });
         if (down) return new Response("down", { status: 503 });
@@ -1772,7 +1773,7 @@ describe("removing a taf", () => {
     const w = world();
     const asked: string[] = [];
     const d = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
-      if (url.startsWith("https://planque.test/")) { asked.push(url); return new Response("no route", { status: 404 }); }
+      if (url.startsWith("https://planque.test/")) { if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: [] }), { status: 200 }); asked.push(url); return new Response("no route", { status: 404 }); }
       return depsOf(w).fetch!(url, init);
     }) as Deps["fetch"] };
     const r = await handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana" } }, d);
@@ -1790,7 +1791,7 @@ describe("removing a taf", () => {
     const w = world();
     const asked: string[] = [];
     const d = (answer: () => Response) => ({ ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
-      if (url.startsWith("https://planque.test/")) { asked.push(url); return answer(); }
+      if (url.startsWith("https://planque.test/")) { if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: [] }), { status: 200 }); asked.push(url); return answer(); }
       return depsOf(w).fetch!(url, init);
     }) as Deps["fetch"] });
     const get = async (dd: Deps, lang = "en") => JSON.parse((await handle({ rawPath: `/v1/tafs/${RAE}/removal`, requestContext: { http: { method: "GET" } },
@@ -1805,6 +1806,98 @@ describe("removing a taf", () => {
     expect(await get(d(() => new Response("down", { status: 503 })))).toEqual({ taf: RAE, goes: [], stays: [], words: null });
     expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
     expect((await handle({ rawPath: `/v1/tafs/${RAE}/removal`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer viewer" } }, d(both))).statusCode).toBe(403);
+  });
+
+  // 13 Nov: a taf on KIFF agent `rae` was removed, but its connection had been asked under `rae-k3f9x2ab`, so the
+  // end found nothing and the Gmail connection lived on. The removal and its words read every form of the name,
+  // and never another live taf's own agent.
+  it("ends the connections asked under the other form of the taf's agent for the same taf, never a live taf's, a word or another taf's", async () => {
+    const w = world();
+    const asked: string[] = [];
+    const conns = [
+      { agent: "rae-k3f9x2ab", agent_name: "Rae", vendor: "Gmail", kind: "provider", status: "connected" },
+      { agent: "max", vendor: "Stripe", kind: "provider", status: "connected" },
+      { agent: "rae-live0001", agent_name: "Rae", vendor: "Gmail", kind: "provider", status: "connected" },
+      // An ordinary word, not a generated suffix: another agent's, kept.
+      { agent: "rae-contacts", agent_name: "Rae", vendor: "Gmail", kind: "provider", status: "connected" },
+      // A generated suffix, but asked for another taf: kept.
+      { agent: "rae-x9y8z7w6", agent_name: "Rae's invoices", vendor: "Qonto", kind: "key", status: "connected" },
+    ];
+    w.tafs.held.set("t_acme#taf-live", { id: "taf-live", name: "Live", job: "j", kiffAgent: "rae-live0001", created: "2026-11-13T00:00:00Z" } as never);
+    const d = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: conns }), { status: 200 });
+      if (url.startsWith("https://planque.test/")) {
+        asked.push(url);
+        return new Response(JSON.stringify({ ended: url.includes("rae-k3f9x2ab") ? [{ vendor: "Gmail" }] : [], kept: [] }), { status: 200 });
+      }
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] };
+    const words = JSON.parse((await handle({ rawPath: `/v1/tafs/${RAE}/removal`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, d)).body);
+    expect(words.goes).toEqual(["Gmail"]);
+    asked.length = 0;
+    const r = JSON.parse((await handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana" } }, d)).body);
+    expect(r).toMatchObject({ done: true });
+    expect(asked).toEqual(["https://planque.test/v1/accounts/t_acme/agents/rae/end", "https://planque.test/v1/accounts/t_acme/agents/rae-k3f9x2ab/end"]);
+  });
+
+  // A removal that can't read which connections are the taf's fails its connections step, never reads as done.
+  it("fails the removal's connections step when the account's connections can't be read", async () => {
+    const w = world();
+    const d = { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/connections")) return new Response("down", { status: 503 });
+      if (url.startsWith("https://planque.test/")) return new Response(JSON.stringify({ ended: [], kept: [] }), { status: 200 });
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] };
+    const r = JSON.parse((await handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana" } }, d)).body);
+    expect(r).toMatchObject({ done: false, failed: ["connections"] });
+  });
+
+  // The leftovers from before: on a person's read of the list, at most hourly, connections no live taf uses, asked
+  // before yesterday, end. A live taf's (or the other form of its name), and one asked today, stay.
+  it("sweeps only removed tafs' connections, hourly: archived agents and their other form, never another agent's or yesterday's", async () => {
+    const w = world();
+    const asked: string[] = [];
+    w.now = new Date("2026-11-14T01:00:00Z");
+    const conns = [
+      // The other form of an archived agent's name, asked two days ago: ended.
+      { agent: "gone-p4q8r2s7", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-12" },
+      // Archived in KIFF itself: ended.
+      { agent: "old-taf", vendor: "Stripe", kind: "provider", status: "connected", since: "2026-11-10" },
+      { agent: "rae", vendor: "Qonto", kind: "key", status: "connected", since: "2026-11-01" },
+      { agent: "rae-k3f9x2ab", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-01" },
+      // Archived, but asked yesterday: kept for now.
+      { agent: "fresh-gone", vendor: "Slack", kind: "provider", status: "listed", since: "2026-11-13" },
+      // Not archived in KIFF, and no taf of this account: an agent tafs cloud can't show was a taf, never swept.
+      { agent: "stripe-refunds", vendor: "Stripe", kind: "provider", status: "connected", since: "2026-11-01" },
+      { agent: "my-own-agent", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-01" },
+      { agent: "news-digest-k3f9x2ab", vendor: "Gmail", kind: "provider", status: "connected", since: "2026-11-01" },
+    ];
+    const archived = [{ id: "gone", archived_at: "2026-11-12T20:00:00Z" }, { id: "old-taf", archived_at: "2026-11-11T20:00:00Z" },
+      { id: "fresh-gone", archived_at: "2026-11-13T20:00:00Z" }, { id: "my-own-agent" }];
+    const claimed = new Set<string>();
+    const coach = { once: async (k: string) => (claimed.has(k) ? false : (claimed.add(k), true)), get: async (k: string) => (claimed.has(k) ? true : undefined), put: async () => {}, append: async () => {}, take: async () => [] } as unknown as Deps["coach"];
+    const d = { ...depsOf(w), coach, planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.endsWith("/connections")) return new Response(JSON.stringify({ connections: conns }), { status: 200 });
+      if (url.endsWith("/v1/me/agents")) return new Response(JSON.stringify({ agents: archived }), { status: 200 });
+      if (url.startsWith("https://planque.test/")) { asked.push(url); return new Response(JSON.stringify({ ended: [{ vendor: "Gmail" }], kept: [] }), { status: 200 }); }
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] };
+    const list = () => handle({ rawPath: "/v1/tafs", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, d);
+    // Until it's turned on, the sweep ends nothing: a dry run, counted in the log.
+    expect((await list()).statusCode).toBe(200);
+    expect(asked).toEqual([]);
+    claimed.clear();
+    process.env.TAFS_SWEEP_LEFTOVERS = "on";
+    try {
+      expect((await list()).statusCode).toBe(200);
+    } finally {
+      delete process.env.TAFS_SWEEP_LEFTOVERS;
+    }
+    expect(asked.sort()).toEqual(["https://planque.test/v1/accounts/t_acme/agents/gone-p4q8r2s7/end", "https://planque.test/v1/accounts/t_acme/agents/old-taf/end"]);
+    // Within the hour, it doesn't look again.
+    process.env.TAFS_SWEEP_LEFTOVERS = "on";
+    try { await list(); } finally { delete process.env.TAFS_SWEEP_LEFTOVERS; }
+    expect(asked).toHaveLength(2);
   });
 
   it("deletes nothing else while kiff/agents may still run it, and a second remove finishes", async () => {

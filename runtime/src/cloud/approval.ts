@@ -284,6 +284,8 @@ export function approvalWords(lang: Lang = "en") {
     nothingToApprove: w.approval_nothing_new,
     digestMismatch: w.approval_digest_mismatch,
     noGrant: w.approval_no_grant,
+    removedTafsConnection: w.approval_removed_tafs_connection,
+    otherTafsConnection: w.approval_other_tafs_connection,
     cardsNotIssued: w.approval_cards_not_issued,
     connectedCardNext: w.approval_connected_card_next,
     draftIs: (status: string) => w.approval_draft_is(w.approval_status(status)),
@@ -428,6 +430,36 @@ export interface DecideContext {
   lang?: Lang;
   /** A taf's name by its KIFF agent, as its owner reads it: what the phone's signing prompt names, never the agent id. */
   tafName?: (agent?: string) => Promise<string | undefined>;
+  /**
+   * Whether an agent is a removed taf's (connections.ts `removedAgent`): archived in KIFF, or the other form of an
+   * archived agent's name, and no live taf runs as it. Unset, or unable to read, it says no: nothing is refused on a
+   * read that failed.
+   */
+  removedAgent?: (agent: string, askedOn?: string) => Promise<boolean>;
+}
+
+/**
+ * An approval that would sign over the wrong agent is refused before anything is signed: a grant asked for a taf
+ * that was removed (its connection still held), or a Card drafted for another agent than the grant's. 14 Nov: one
+ * fingerprint signed a removed taf's Gmail connection with a new taf's Card, and the new taf ran as the removed one.
+ * Coach hears what to do instead: connect the app for this taf, reusing the sign-in on a new request.
+ */
+async function agentRefusal(ask: ApprovalAsk, grant: ApprovalGrant, vendor: string, ctx: DecideContext): Promise<Decision | undefined> {
+  const W = approvalWords(ctx.lang);
+  const agent = typeof grant.request.agent === "string" ? grant.request.agent : "";
+  const askedOn = typeof (grant.request as { created_at?: unknown }).created_at === "string" ? (grant.request as { created_at: string }).created_at : undefined;
+  if (agent && ctx.removedAgent && await ctx.removedAgent(agent, askedOn).catch(() => false)) {
+    return { outcome: "answered", note: W.removedTafsConnection(vendor),
+      answer: `failed: this ${vendor} connection was asked for a taf that was removed, so it can't be approved for another; request ${vendor} again for this taf (reuse its sign-in with a new request), never this grant` };
+  }
+  if (ask.draft && agent) {
+    const draft = await draftInfo(ctx.token, ask.draft, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now).catch(() => undefined);
+    if (draft?.agent && draft.agent !== agent) {
+      return { outcome: "answered", note: W.otherTafsConnection(vendor),
+        answer: `failed: the Card draft is for another taf than this ${vendor} connection's; show an approval with this taf's own grant and its draft` };
+    }
+  }
+  return undefined;
 }
 
 /** The steps a phone signs for an approval card. */
@@ -471,6 +503,8 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   const grant = grants.find((g) => g.id === ask.grant);
   if (!grant) return { outcome: "answered", answer: `failed: ${W.noGrant}`, note: W.noGrant };
   const vendor = vendorOf(grant);
+  const refused = await agentRefusal(ask, grant, vendor, ctx);
+  if (refused) return refused;
   // The same taf's other connections: a Card may cover their tools too (two apps, one Card).
   const sameTaf = grants.filter((g) => g.id !== grant.id && g.request.agent && g.request.agent === grant.request.agent && !["failed", "disconnected", "revoked"].includes(g.status));
   // A grant asking for something again (tools added once connected) loses its "connected" note, so its card shows what it asks.

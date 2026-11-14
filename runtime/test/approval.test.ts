@@ -1,3 +1,4 @@
+import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it } from "vitest";
 import { connectedKey, approvalWords, ASK_KEPT_MS, WORDS } from "../src/cloud/approval.js";
@@ -39,6 +40,8 @@ interface Services {
   proofs: string[];
   /** The account's Cards, as KIFF lists them (GET /v1/me/mandates); a status when the list fails. */
   mandates: unknown[] | number;
+  /** The account's agents, as KIFF lists them (GET /v1/me/agents); none, as a test that doesn't say. */
+  agents?: Array<{ id: string; archived_at?: string }>;
 }
 
 function services(): Services {
@@ -62,6 +65,7 @@ function net(s: Services) {
       s.checks.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
       return s.signed === true ? new Response(JSON.stringify({ signed: true, grant: "dg_1", grant_until: "2026-10-16T12:01:30Z", ...(s.signedKey ? { key: s.signedKey } : {}), ...(s.signedWindow ? { window: s.signedWindow } : {}) }), { status: 200 }) : new Response(JSON.stringify({ error: "no" }), { status: s.signed });
     }
+    if (url.endsWith("/v1/me/agents") && s.agents) return new Response(JSON.stringify({ agents: s.agents }), { status: 200 });
     if (url.endsWith("/v1/me/mandates")) {
       return typeof s.mandates === "number" ? new Response("{}", { status: s.mandates }) : new Response(JSON.stringify({ mandates: s.mandates }), { status: 200 });
     }
@@ -285,6 +289,49 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const unlabelled = await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
     expect((unlabelled.body.ask as { reason: string }).reason).toBe("Give Remboursements du lundi its Card");
     expect(JSON.stringify([fr.body, card.body, unlabelled.body])).not.toContain("remb-x2\"");
+  });
+
+  // 14 Nov: one fingerprint signed a removed taf's Gmail connection with a new taf's Card, and the new taf ran as the
+  // removed taf's agent. A grant asked for a removed taf (its agent archived in KIFF, or the other form of an archived
+  // agent's name) is never approved again, and a Card drafted for another agent than the grant's is never signed.
+  it("refuses to approve over a removed taf's connection, or a Card for another taf than the grant's, signing nothing", async () => {
+    const s = services();
+    s.agents = [{ id: "news-digest", archived_at: "2026-11-13T20:26:00Z" }, { id: "refunds-x" }];
+    s.grants = [grant({ status: "connected" }, { agent: "news-digest-k3f9x2ab", created_at: "2026-11-13T20:10:00Z" })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "news-digest-k3f9x2ab" };
+    const removed = await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect(removed.body).toMatchObject({ outcome: "answered", note: wordsIn("en").approval_removed_tafs_connection("Stripe") });
+    expect(String(removed.body.answer)).toContain("asked for a taf that was removed");
+    expect(removed.body).not.toHaveProperty("ask");
+
+    // The Card is for another agent than the grant's: refused before anything is signed.
+    const t = services();
+    t.grants = [grant({ status: "connected" })];
+    t.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "another-taf-a1b2c3d4" };
+    const other = await (await world(t, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" });
+    expect(other.body).toMatchObject({ outcome: "answered", note: wordsIn("en").approval_other_tafs_connection("Stripe") });
+    expect(other.body).not.toHaveProperty("ask");
+
+    // A taf re-made under the removed one's name: its new agent's connection, asked after the archive day, is its own.
+    const r = services();
+    r.agents = [{ id: "news-digest", archived_at: "2026-11-13T20:26:00Z" }];
+    r.grants = [grant({ status: "connected" }, { agent: "news-digest-a1b2c3d4", created_at: "2026-11-14T09:00:00Z" })];
+    r.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "news-digest-a1b2c3d4" };
+    expect((await (await world(r, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "sign", ask: { step: "cards" } });
+
+    // The same day: a taf removed at 20:26 and made again at 22:00 is its own, by the full times.
+    const d = services();
+    d.agents = [{ id: "news-digest", archived_at: "2026-11-13T20:26:00Z" }];
+    d.grants = [grant({ status: "connected" }, { agent: "news-digest-a1b2c3d4", created_at: "2026-11-13T22:00:00Z" })];
+    d.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "news-digest-a1b2c3d4" };
+    expect((await (await world(d, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "sign", ask: { step: "cards" } });
+
+    // A live taf on the other form of an archived name is its own: approved as before.
+    const u = services();
+    u.agents = [{ id: "refunds", archived_at: "2026-11-13T20:26:00Z" }];
+    u.grants = [grant({ status: "connected" })];
+    u.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    expect((await (await world(u, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "sign", ask: { step: "cards" } });
   });
 
   it("the Cards over a connected vendor: KIFF's draft at the version shown, one message to sign", async () => {
