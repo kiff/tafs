@@ -191,6 +191,13 @@ the app in sample mode.
     those being set up. The rest are in the list behind the mascot;
   - **at its foot, always in sight:** Coach, then the account button, which says who is signed in
     and opens Account beside the sidebar.
+  - **the detail pane is the app's cream, edge to edge,** at every width and in split view: the
+    Overview's 980-point column stretches to the pane, and every list in it (Connect apps, an app's
+    connections, a connection, what a Card counted) hides its grey for `screenBackground`;
+  - **the Overview's Needs you** lists the held calls, then, when Needs you counts more (a Coach chat,
+    a step, "Did this happen?", Card units, as tafs cloud's `needs_you.count` does), one line in its
+    words that opens Needs you (`OverviewView.showsRest`). So "Needs you · 3" beside "No tafs yet"
+    still shows what waits.
   
   Each item opens its existing screen beside the sidebar (`HomeSelection`). The app's tab and the
   selection follow each other, so a notification, a drive or a shortcut that opens a tab opens its
