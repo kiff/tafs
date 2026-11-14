@@ -2493,6 +2493,13 @@ final class AppModel: ObservableObject {
     /// day, week and month and the navigator's marks. Another account's read never lands here.
     func loadCalendar(_ state: CalendarState) async {
         let range = CalendarMath.range(state.selected)
+        // A screenshot over the sample (`-screen calendar`): no KIFF account to read, so an empty
+        // range rather than an error under the header.
+        if Screenshots.calendar != nil, mode != .kiff {
+            calendarRead = TafsCloud.CalendarRead(from: range.from, to: range.to)
+            calendarError = nil
+            return
+        }
         let gen = accountGeneration
         calendarError = nil
         do {
@@ -8723,6 +8730,18 @@ enum Screenshots {
     /// `-screen taf` opens a taf's page, `-screen card` its Cards; `-screen new` the new-taf flow; `-screen solo` and
     /// `-screen add-tasks` the purchase screens, for the products in App Store Connect.
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
+    /// `-screen calendar` opens Calendar on today in Day mode, `-screen calendar-week` in Week mode on
+    /// today's week: today is in what's shown, so the Today pill is in its "already today" state. An
+    /// iPad's whole-app sidebar selects its Calendar item; the phone opens it as Home's button does.
+    static var calendar: CalendarState? {
+        guard enabled else { return nil }
+        let today = CalendarMath.today(in: AccountTime.zone)
+        switch screen {
+        case "calendar": return CalendarState(mode: .day, selected: today)
+        case "calendar-week": return CalendarState(mode: .week, selected: today)
+        default: return nil
+        }
+    }
     /// `-pack rayo`: the add-tasks screen with that pack alone, one screenshot a product.
     static var pack: String? { UserDefaults.standard.string(forKey: "pack") }
     /// `-narrow YES`: tafs laid out at Slide Over's width on an iPad, compact (kiff/tafs#210).
