@@ -1,0 +1,2 @@
+- «Metti da parte» invia una sola richiesta per chat, comunque tu scorra.
+- Un'app connessa si apre sempre quando la tocchi. Se i suoi collegamenti non si possono leggere, dice perché.

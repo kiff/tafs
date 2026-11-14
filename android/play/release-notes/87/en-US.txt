@@ -1,0 +1,2 @@
+- Set aside sends one request per chat, however the swipe goes.
+- A connected app always opens when tapped. If its connections can't be read, it says why.

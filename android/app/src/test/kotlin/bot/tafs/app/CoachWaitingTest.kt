@@ -3,6 +3,7 @@ package bot.tafs.app
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.kiff.InMemorySecretStore
 import java.time.Instant
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -70,6 +71,24 @@ class CoachWaitingTest {
     assertEquals(1, transport.requestsTo("POST /v1/home/coach-waiting/sess_1/set-aside").size)
     assertTrue(m.state.value.coachWaiting.isEmpty())
     assertEquals(0, m.state.value.needsYouCount)
+  }
+
+  // Android 86: one swipe sent 11 set-asides in 3 s. A chat already being set aside isn't asked again.
+  @Test fun aChatBeingSetAsideIsntAskedAgainUntilTheFirstAnswers() = runTest {
+    reads(approval.replace("\"open\":\"Open Coach\"", "\"open\":\"Open Coach\",\"set_aside\":\"Set aside\""))
+    val m = model()
+    m.refresh()
+    val route = "POST /v1/home/coach-waiting/sess_1/set-aside"
+    transport.answer(route, 200, """{"set_aside":["sess_1"],"withdrawn":0}""")
+    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[],"needs_you":{"count":0,"words":"Nothing needs you."}}""")
+    transport.hold(route)
+    val first = async { m.setAsideCoach("sess_1") }
+    testScheduler.runCurrent()
+    assertTrue(m.state.value.settingAside.contains("sess_1"))
+    assertFalse("asked again while the first is in flight: nothing sent", m.setAsideCoach("sess_1"))
+    transport.release(route)
+    assertTrue(first.await())
+    assertEquals(1, transport.requestsTo(route).size)
   }
 
   @Test fun setAllAsideIsOneCallAndARefusalKeepsTheRows() = runTest {

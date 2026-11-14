@@ -15,6 +15,7 @@ import bot.tafs.app.views.connectionsOf
 import java.time.Instant
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -131,6 +132,20 @@ class ConnectAppsByTafTest {
     secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
     return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { Instant.parse("2026-11-07T09:00:00Z") }, start = false)
       .also { it.restore(); it.refreshConnections(); it.loadConnectApps() }
+  }
+
+  // Android 85: a connected row opened nothing once the read of planque's connections had failed, silently.
+  @Test fun aFailedConnectionsReadIsSaidAndAReadThatWorksClearsIt() = runTest {
+    val m = model()
+    assertNull(m.state.value.connectionsError)
+    transport.answer(grants, 500, """{"error":"down"}""")
+    m.refreshConnections()
+    assertNotNull("the failure is kept in words, for the sheet to say", m.state.value.connectionsError)
+    assertEquals("the connections already read stay", 2, m.state.value.grants.size)
+    transport.answer(grants, 200, """{"grants":[${planqueGrant("g1", "gone-1")}]}""")
+    m.refreshConnections()
+    assertNull(m.state.value.connectionsError)
+    assertEquals(1, m.state.value.grants.size)
   }
 
   @Test fun clearingAsksOneFingerprintThenDisconnectsEachSigned() = runTest {

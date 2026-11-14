@@ -1,0 +1,2 @@
+- « Mettre de côté » envoie une seule demande par conversation, quel que soit le balayage.
+- Une app connectée s'ouvre toujours quand on la touche. Si ses connexions ne peuvent pas être lues, elle dit pourquoi.
