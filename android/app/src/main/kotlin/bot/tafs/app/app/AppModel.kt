@@ -4961,12 +4961,13 @@ class AppModel(
 
   /**
    * Coach's results, each tafs cloud's to hand over: it sets up a new taf, or makes an improved taf's next version, and answers
-   * the card itself; the phone only shows the answer. It reads the list again once for a taf it set up, and a taf's Versions
-   * once for a version it made, so it's there to try.
+   * the card itself; the phone only shows the answer. It reads the list again for a taf it set up until the list has it (a few
+   * times, a few seconds apart: tafs cloud may answer the card before Home lists the taf, and the card would say "Setting up…"
+   * and the Tafs tab stay empty until a pull), and a taf's Versions once for a version it made, so it's there to try.
    */
   private suspend fun followHandOvers() {
     if (_state.value.mode != Mode.kiff) return
-    var readList = false
+    val unlisted = mutableListOf<Pair<String, String>>()
     for (shown in _state.value.coachComponents.filter { it.component.type == "result" }) {
       val c = shown.component
       val taf = c.taf ?: continue
@@ -4977,10 +4978,24 @@ class AppModel(
         continue
       }
       val id = shown.answer?.outcome?.tafId ?: continue
-      if (_state.value.tafs.none { it.cloudId == id || it.id == taf.agent } && setUpTafs.add(id)) readList = true
+      if (!listed(id, taf.agent) && setUpTafs.add(id)) unlisted += id to taf.agent
     }
-    if (readList) refresh()
+    if (unlisted.isEmpty()) return
+    val generation = accountGeneration
+    refresh()
+    if (unlisted.all { (id, agent) -> listed(id, agent) }) return
+    // Not listed yet: read again a few seconds apart, in the background, until it is.
+    scope.launch {
+      repeat(SET_UP_READS) {
+        delay(SET_UP_READ_MS)
+        if (generation != accountGeneration) return@launch
+        refresh()
+        if (unlisted.all { (id, agent) -> listed(id, agent) }) return@launch
+      }
+    }
   }
+
+  private fun listed(tafId: String, agent: String) = _state.value.tafs.any { it.cloudId == tafId || it.id == agent }
 
   /** The taf an improvement result improves, as this phone lists it: by its tafs id, else by its agent's. */
   private fun improvedTaf(c: SetupComponent): Taf? = c.taf?.let { t -> _state.value.tafs.firstOrNull { it.cloudId == t.improves || it.id == t.improves || it.id == t.agent } }
@@ -5680,6 +5695,9 @@ class AppModel(
         }
       }
       var ended: StreamEvent.End? = null
+      // Paused on a card its person answers: Needs you is read at the end even when the stream closes with no end line, so
+      // Coach's waiting row and the badge come while the chat is open (as iOS's does).
+      var waitsOnYou = false
       fun live(change: (LiveAnswer) -> LiveAnswer) = _state.update { s ->
         s.chatLive[tafId]?.let { s.copy(chatLive = s.chatLive + (tafId to change(it))) } ?: s
       }
@@ -5697,7 +5715,10 @@ class AppModel(
             }
             is StreamEvent.Text -> live { it.copy(text = it.text + e.text, activity = null, thinking = "") }
             is StreamEvent.Thinking -> live { it.copy(thinking = it.thinking + e.text) }
-            is StreamEvent.State -> live { it.copy(state = bot.tafs.app.model.LiveState(e.state, e.words)) }
+            is StreamEvent.State -> {
+              live { it.copy(state = bot.tafs.app.model.LiveState(e.state, e.words)) }
+              waitsOnYou = stillWaitsOnYou(waitsOnYou, e.state)
+            }
             is StreamEvent.Activity -> live { a ->
               // The words written so far stay, and the answer goes on below them.
               val kept = if (a.text.isNotEmpty() && !a.text.endsWith("\n\n")) a.copy(text = a.text + "\n\n") else a
@@ -5742,8 +5763,9 @@ class AppModel(
         }
         s.copy(chatEnded = if (how != null) s.chatEnded + (tafId to how) else s.chatEnded - tafId)
       }
-      // Over, or paused on a held call: KIFF is read at once, so the hold shows and the Card's amounts are today's.
-      if (end != null) refresh()
+      // Over, or paused on a held call or a card: KIFF and Home are read at once, so the hold and Coach's waiting row show and
+      // the Card's amounts are today's.
+      if (end != null || waitsOnYou) refresh()
       // The live answer goes in the update that brings the answer into the thread: one row takes the other's place.
       val settle: (AppState) -> AppState = { s -> s.copy(chatLive = s.chatLive - tafId, chatAwaiting = if (end != null) s.chatAwaiting - tafId else s.chatAwaiting) }
       readThread(tafId, settle)
@@ -7735,6 +7757,20 @@ class AppModel(
     /** After the fast reads, one every [CHAT_SLOW_POLL_MS] while the run still works: about 25 minutes more. */
     const val CHAT_SLOW_POLL_MS = 15_000L
     const val CHAT_SLOW_POLL_BUDGET = 100
+
+    /**
+     * Whether the run still waits on its person after this live line: `waiting_for_you` (a card that waits on them, or a held
+     * call) says it does; `done`, the last line, keeps what came before; any other says it went on.
+     */
+    fun stillWaitsOnYou(before: Boolean, state: String): Boolean = when (state) {
+      "waiting_for_you" -> true
+      "done" -> before
+      else -> false
+    }
+
+    /** How many times, and how far apart, the list is read for a taf tafs cloud said it set up, until the list has it. */
+    const val SET_UP_READS = 3
+    const val SET_UP_READ_MS = 3_000L
 
     /** The stops of the run's own: it ends with no words for it. */
     val CAP_STOPS = setOf("cost_cap", "turn_cap", "max_token", "refused")
