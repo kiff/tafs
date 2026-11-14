@@ -6612,7 +6612,9 @@ final class AppModel: ObservableObject {
     }
 
     /// Coach's conversation has nothing in it yet: no message, card or answer, sent or on its
-    /// way, and no taf it improves. New conversation keeps it, with what's typed.
+    /// way, and no taf it improves. New conversation keeps it, with what's typed. An empty one
+    /// about a taf ("Improve Refunds") isn't: the pencil opens a plain new one, so it always
+    /// opens a plain chat.
     var coachChatIsEmpty: Bool {
         setupImproving == nil && setupThread.items.isEmpty && setupSent.isEmpty && setupUnsent.isEmpty
             && setupQueued == nil && setupLive == nil && !setupThinking
