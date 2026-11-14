@@ -782,14 +782,16 @@ final class AppModel: ObservableObject {
 
     /// This device holds no key (no Secure Enclave): it can't be paired, and signs in with KIFF instead.
     struct CannotPair: LocalizedError {
-        var errorDescription: String? { Words.SignIn.pairNoKey(device: "\(ThisDevice.kind)") }
+        /// Worked out where it's thrown, on the main actor, where the device's kind is read.
+        let message: String
+        var errorDescription: String? { message }
     }
 
     /// Makes the QR this device shows, from the keys it already holds, and signs the claim's proof once,
     /// behind Face ID or the passcode: the person is here, with this device in their hands.
     func startPairingSignIn() async throws -> PairingStart {
         let key = signer.publicKeyDER, approvalKey = signer.approvalPublicKeyDER
-        guard !key.isEmpty, !approvalKey.isEmpty else { throw CannotPair() }
+        guard !key.isEmpty, !approvalKey.isEmpty else { throw CannotPair(message: Words.SignIn.pairNoKey(device: "\(ThisDevice.kind)")) }
         let offer = PairingOffer.make(publicKey: key, approvalKey: approvalKey,
                                       name: Words.Settings.Devices.thisDeviceName(device: "\(ThisDevice.kind)"),
                                       platform: ThisDevice.platform,
