@@ -1044,6 +1044,7 @@ class AppModel(
           deviceName = deviceName,
           // KIFF's device list names the platform; it takes one only with a key.
           platform = if (key.isEmpty()) null else PLATFORM,
+          kind = bot.tafs.app.model.ThisDevice.kiffKind,
         ).also { keepSignIn(it) }
       } catch (e: Exception) {
         if (e is CancellationException || !transient(e) || tries >= 2) throw e
@@ -7140,7 +7141,7 @@ class AppModel(
     val tenant = kiffTenant
     if (_state.value.mode != Mode.kiff || tenant == null || device.thisDevice) return false
     val generation = accountGeneration
-    val what = Words.Settings.Devices.signOutPrompt(device = device.name ?: Words.Settings.Devices.thisDevice)
+    val what = Words.Settings.Devices.signOutPrompt(device = device.shown ?: Words.Settings.Devices.thisDevice)
     try {
       signer.sign("tafs.devices.v1|$tenant|${device.id}".toByteArray(), what)
     } catch (_: SignerException) {

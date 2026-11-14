@@ -119,10 +119,15 @@ data class WindowRead(val window: ApprovalWindow? = null, val words: String? = n
 data class Device(
   val id: String,
   val name: String? = null,
+  /** KIFF's name for it in the app's language (from its kind); left out by a KIFF without one. */
+  @SerialName("display_name") val displayName: String? = null,
   @SerialName("last_used_at") val lastUsedAt: String? = null,
   @SerialName("last_seen_at") val lastSeenAt: String? = null,
   @SerialName("this_device") val thisDevice: Boolean = false,
-)
+) {
+  /** What the list calls it: KIFF's name in the app's language, else the name it gave at sign-in. */
+  val shown: String? get() = displayName ?: name
+}
 
 /**
  * A group of the account's people: its manager sees the group's work on the tafs it uses; its members use them. Everyone is
@@ -262,12 +267,15 @@ class KiffClient(
     approvalPublicKey: ByteArray? = null,
     deviceName: String? = null,
     platform: String? = null,
+    kind: String? = null,
   ): DeviceStart {
     val body = buildMap {
       publicKey?.let { put("public_key", base64(it)) }
       approvalPublicKey?.let { put("approval_public_key", base64(it)) }
       deviceName?.let { put("device_name", it) }
       platform?.let { put("platform", it) }
+      // What the device is (android_phone, android_tablet): KIFF draws its name in the list from it, in the reader's language.
+      kind?.let { put("kind", it) }
     }
     return call<DeviceStart>("POST", "/v1/auth/device/start", body, authorized = false).inAppLanguage()
   }
