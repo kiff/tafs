@@ -669,7 +669,8 @@ you." while Coach waits. The app decides nothing about it; a row with no chat or
 Coach shows: Coach starts a new conversation, so a new job never goes on in the ended session (Android 1.27.1). Opening
 Coach with no chat chosen skips a chat tafs cloud marks `set_aside` (set aside on any device, or before a relaunch): the
 newest of the rest, or a new conversation when every one was set aside. **Ask Coach** in Connect apps always starts a new
-conversation (Android 1.27.3). One request goes per chat at a
+conversation (Android 1.27.3). Set aside, its swipe and Set all aside carry the confirm mark: Coach driving the app never
+sets a chat aside (docs/drive.md, Android 1.27.4). One request goes per chat at a
 time (Android 1.26.1): a swipe fires once per gesture, and a chat already being set aside isn't asked again until
 tafs cloud answers.
 - **One chat:** a row whose `words.set_aside` tafs cloud sends can be swiped away either way, and has
@@ -746,12 +747,12 @@ The same rule as on iPhone and iPad (`design/Haptics.kt`):
   read.
 - **A step tick** on a selector's stops: the theme picker and the jobs' category chips.
 - **Settings › Haptics** turns all of it off, on this phone (`tafs.display`, `haptics`). It's on until turned off.
-- **The phone's own touch feedback setting** is followed: the platform's feedback (`performHapticFeedback`) plays nothing
-  when it's off. Some phones keep that switch off and use a touch slider of their own (ColorOS), so where the view plays
-  none, Android 13+ plays the same kind as a predefined effect marked as touch (`USAGE_TOUCH`, `VIBRATE`, a normal
-  permission): the phone's touch intensity decides, and off there is still off (Android 1.27.2). The first time a launch's
-  feedback plays nothing at all, that's written to the diagnostics, so "nothing vibrates" can be told apart from a tap the
-  app never asked for.
+- **The phone's own touch setting decides.** On Android 13+, each kind plays as a predefined effect marked as touch
+  (`USAGE_TOUCH`, `VIBRATE`, a normal permission): the phone's touch intensity decides, and off there is still off. Some
+  phones keep the standard touch feedback switch off and use a slider of their own (ColorOS), and Android 15 reports the
+  platform's feedback (`performHapticFeedback`) as played even when that switch drops it, so it's used only before 13 or
+  with no vibrator (Android 1.27.4). The first time a launch's feedback plays nothing at all, that's written to the
+  diagnostics, so "nothing vibrates" can be told apart from a tap the app never asked for.
 
 ## Dark
 

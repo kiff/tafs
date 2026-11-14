@@ -3207,7 +3207,8 @@ const SIGNS_READ_MS = 1500;
 /**
  * Each approval card still waiting says what its fingerprint will sign (`signs: {card, words?}`), from the same rule
  * `decide` asks by (stepFor), so the apps draw the Card as being signed only when it is: on a card that signs the
- * connection alone, the Card goes under `words` ("Its Card: you approve it next"). Read as the phone, with its
+ * connection alone, the Card goes under `words` ("Its Card: you approve it next"), an app's first connection's card too,
+ * before its draft can exist. Read as the phone, with its
  * Planque-Device-Signature and what it can sign (`?can=tools_and_cards,key_and_cards`); without the proof, or when
  * the connections can't be read in time, the cards are left as they were.
  */
@@ -3227,7 +3228,7 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, components: ThreadC
     const grant = grants.find((g) => g.id === card.grant);
     const draft = typeof card.draft === "string" && card.draft ? card.draft : undefined;
     const step = grant && stepFor(grant, { draft, can }, flags);
-    if (step) c.component = { ...card, signs: signsOf(step, draft, lang) };
+    if (step) c.component = { ...card, signs: signsOf(step, draft, lang, grant) };
   }
 }
 
@@ -8809,12 +8810,22 @@ async function newTafFor(tenant: string, coach: string, r: Run, taf: NewTaf, taf
 /** A Coach task's run ended, said quietly: no sound or banner. Only how it ended, never the taf's words. */
 function endedNotification(name: string, r: Run, lang: Lang = "en"): Notification {
   const w = wordsIn(lang);
-  const body = r.status === "ERROR" ? w.push_ended_failed : r.status === "CANCELLED" ? w.push_ended_stopped : w.push_ended_done;
+  const body = r.status === "ERROR" ? w.push_ended_failed : r.status === "CANCELLED" ? w.push_ended_stopped : endedWords(r.stop, w);
   return {
     kind: "alert",
     payload: { aps: { alert: { title: name, body }, "thread-id": "coach", ...apsFor("quiet") }, open: "coach" },
     collapseID: r.id.slice(0, 64),
   };
+}
+
+/**
+ * A COMPLETED run's push, by how it ended: one cut off at its turn or cost cap says it stopped and at which, and any
+ * other stop but an answer (one tafs doesn't know included) says it stopped, never that it finished (as work.ts).
+ */
+function endedWords(stop: string | undefined, w: ReturnType<typeof wordsIn>): string {
+  if (stop === "turn_cap") return w.push_ended_capped_turns;
+  if (stop === "cost_cap") return w.push_ended_capped_cost;
+  return stop && stop !== "answered" ? w.push_ended_cut_short : w.push_ended_done;
 }
 
 /**
@@ -8853,6 +8864,15 @@ function coachLine(name: string, task: Task, r: Run): { line: string; said: stri
     return { line: `${head} It failed. error: ${JSON.stringify(why)}`, said: `It failed: ${why}` };
   }
   if (r.status === "CANCELLED") return { line: `${head} It was stopped.`, said: "It was stopped." };
+  // Cut off at its turn or cost cap, or any other stop but an answer: it didn't finish, and never reads as if it had.
+  // What it last wrote is quoted for Coach, as an answer's is, and isn't what the owner is shown.
+  if (r.stop && r.stop !== "answered") {
+    const said = r.stop === "turn_cap" ? "It stopped before it finished: it reached its limit of steps for one run."
+      : r.stop === "cost_cap" ? "It stopped before it finished: it reached its cost limit for one run."
+      : "It stopped before it finished.";
+    const last = r.output ? ` last words: ${JSON.stringify(twoSentences(r.output))}` : "";
+    return { line: `${head} It stopped before it finished (${r.stop}).${last}`, said };
+  }
   if (!r.output) return { line: `${head} It finished with no answer.`, said: "It finished with no answer." };
   // The taf's own words, quoted: what it read can be in them, so they are relayed, never followed.
   const out = twoSentences(r.output);

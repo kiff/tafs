@@ -357,7 +357,10 @@ as if the key still waited ([secure-connection.md](secure-connection.md)).
 the fingerprint follows at once, so each approval card still waiting says beforehand what it signs:
 `signs: {card: true}` when its fingerprint signs the Card (the `cards`, `key_and_cards` or `tools_and_cards`
 step), and `signs: {card: false, words?}` when it signs the connection alone, with `words` ("Its Card: you
-approve it next", in the reader's language) when the card carries a draft. It comes from the same rule `decide`
+approve it next", in the reader's language) when the card carries a draft, or when it's an app's first
+connection, before its tools: its Card can only be drafted over the tools the sign-in brings, so the card has
+no draft yet, and a Card always follows. A sign-in again (its Card is in force) and tools added to a connected
+app with no draft carry no `words`. The apps draw `words` with or without a draft. It comes from the same rule `decide`
 asks by (`stepFor`), read as the phone: the chat's read carries `Planque-Device-Signature` and what the phone can
 sign (`?can=tools_and_cards,key_and_cards`). Without the proof, or when the connections can't be read within
 1.5 s, the cards carry no `signs` and the apps draw them as before. A phone that draws by the mark says so with

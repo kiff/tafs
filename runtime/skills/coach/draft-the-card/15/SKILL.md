@@ -46,7 +46,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   it as one line of the rules notice ("{app} was set up today: every change asks
   you until you widen it").  Say who
   holds the sign-in as the grant's custody says, in the owner's words ("your
-  sign-in stays with the connection service"), never a service's name.
+  sign-in is kept by our sign-in partner"), never a service's name.
 - Only when planque says connected or declared: true, give the taf its Card: submit its draft
   (kiff_draft) over the connected tools, with the limits you agreed, then show a
   new approval with the grant and the draft. The draft is the agreed rules,

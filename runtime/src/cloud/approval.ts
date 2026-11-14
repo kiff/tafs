@@ -378,8 +378,13 @@ async function nameOf(ctx: DecideContext, agent: string | undefined, ...given: A
   return [name, ...given].map((n) => (typeof n === "string" ? n.trim() : "")).find((n) => n !== "") || undefined;
 }
 
-/** The app as the owner knows it ("Stripe" for mcp.stripe.com), for the phone's signing prompt: its server's name, else the grant's vendor. */
+/**
+ * The app as the owner knows it ("Stripe" for mcp.stripe.com), for the phone's signing prompt: its server's name, else
+ * the grant's vendor. A managed app's server is the sign-in partner's, never the app: its name is the grant's vendor
+ * ("Gmail"), as planque keeps it, so the partner's name never reaches the prompt.
+ */
 function appNameOf(g: ApprovalGrant): string {
+  if (g.request.kind === "connector") return typeof g.vendor === "string" ? g.vendor.trim() : "";
   const server = typeof g.request.server === "string" ? g.request.server.trim() : "";
   return vendorName(server) || (server && !server.includes("://") ? vendorName(`https://${server}/`) : "") || g.vendor || "";
 }
@@ -488,10 +493,17 @@ export function stepFor(grant: ApprovalGrant, ask: { draft?: string; can?: strin
   return "connect";
 }
 
-/** What an approval card's fingerprint will sign, for the apps to draw before Approve: the Card, or the connection alone. */
-export function signsOf(step: SignStep, draft: string | undefined, lang: Lang = "en"): { card: boolean; words?: string } {
+/**
+ * What an approval card's fingerprint will sign, for the apps to draw before Approve: the Card, or the connection alone.
+ * The connection alone says the Card comes next (`words`) when the card carries the Card's draft, or when it's an app's
+ * first connection, before its tools: a Card always follows that one (its draft can only be made over the tools the
+ * sign-in brings), so the owner knows a second approval is coming. Never on a sign-in again (its Card is in force) or
+ * on tools added to a connected app with no draft.
+ */
+export function signsOf(step: SignStep, draft: string | undefined, lang: Lang = "en", grant?: Pick<ApprovalGrant, "status" | "connected">): { card: boolean; words?: string } {
   const card = step !== "connect";
-  return { card, ...(!card && draft ? { words: wordsIn(lang).approval_card_next } : {}) };
+  const first = !!grant && grant.status !== "needs_reconnect" && !(Array.isArray(grant.connected) && grant.connected.length > 0);
+  return { card, ...(!card && (draft || first) ? { words: wordsIn(lang).approval_card_next } : {}) };
 }
 
 /**

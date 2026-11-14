@@ -68,22 +68,24 @@ object Haptics {
   }
 
   /**
-   * The platform's own feedback for each kind, on [view] (Android 11+: confirm and reject exist). Where the view plays none
-   * (some phones keep the standard touch feedback switch off and use their own touch slider: ColorOS), Android 13+ plays the
-   * same kind as a predefined effect marked as touch (`USAGE_TOUCH`), so the phone's own touch intensity decides, and off
-   * there is still off. Nothing played at all is said once in the diagnostics, so a "nothing vibrates" report can be told
+   * Each kind on Android 13+ as a predefined effect marked as touch (`USAGE_TOUCH`), so the phone's own touch intensity
+   * decides, and off there is still off (some phones keep the standard touch feedback switch off and use their own slider:
+   * ColorOS); before 13, or with no vibrator, the platform's own feedback on [view] (Android 11+: confirm and reject exist). Nothing played at all is said once in the diagnostics, so a "nothing vibrates" report can be told
    * apart from a tap the app never asked for.
    */
   fun on(view: View): (Kind) -> Unit = { kind ->
     view.post {
-      val played = view.performHapticFeedback(
+      // Android 13+: the touch effect first. performHapticFeedback can't be trusted there: Android 15 answers true once the
+      // window manager has the request, even when the phone's standard switch drops it (the owner's ColorOS phone played
+      // nothing on 1.27.2). The phone's touch intensity decides the effect, so off there is still off.
+      val played = touchEffect(view.context, kind) || view.performHapticFeedback(
         when (kind) {
           Kind.Tap -> HapticFeedbackConstants.VIRTUAL_KEY
           Kind.Success -> HapticFeedbackConstants.CONFIRM
           Kind.Warning -> HapticFeedbackConstants.REJECT
           Kind.Step -> HapticFeedbackConstants.CLOCK_TICK
         },
-      ) || touchEffect(view.context, kind)
+      )
       if (!played && !saidNone) {
         saidNone = true
         // The only log Coach and a tester can read (docs/drive.md, diagnostics). false also comes from a view not attached

@@ -491,6 +491,39 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     expect(sent.text).toContain(`ended: Refund order 42] It failed (ai_unavailable). error: ${JSON.stringify(wordsIn("en").code_ai_unavailable)}`);
   });
 
+  it("never says a run cut off at its turn or cost cap finished: not on the phone, not in Coach's chat, not to Coach", async () => {
+    const said = { turn_cap: "It stopped before it finished: it reached its limit of steps for one run.", cost_cap: "It stopped before it finished: it reached its cost limit for one run." };
+    for (const stop of ["turn_cap", "cost_cap"] as const) {
+      const w = world();
+      const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+      const ref = w.agents.notified.get(task.json.run)!.ref;
+      Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", stop, output: "Now let me check order 43." });
+      (w.deps.slots as ReturnType<typeof memorySlots>).taken.add(`present#${T}`);
+      await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref });
+      const body = (w.pushed[0]!.payload as { aps: { alert: { body: string } } }).aps.alert.body;
+      expect(body).toBe(said[stop]);
+      // Negative: neither the push nor Coach's chat says it finished or was done.
+      expect(body).not.toMatch(/finished\.|\bDone\b/);
+      const lines = (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines;
+      expect(lines).toEqual([{ at: "2026-10-16T12:00:00.000Z", taf: "Refunds", said: said[stop] }]);
+      await w.send("POST", `/v1/tafs/${SETUP}/messages`, { text: "How did it go?" }, "ana");
+      const sent = w.agents.events.get(w.agents.runs[0]!.session)!.at(-1)!.body as { text: string };
+      expect(sent.text).toContain(`ended: Refund order 42] It stopped before it finished (${stop}). last words: "Now let me check order 43."`);
+      expect(sent.text).not.toContain("It finished");
+    }
+  });
+
+  it("still says an ordinary run that answered finished, on the phone and in Coach's chat", async () => {
+    const w = world();
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", stop: "answered", output: "Refunded order 42." });
+    (w.deps.slots as ReturnType<typeof memorySlots>).taken.add(`present#${T}`);
+    await w.send("POST", "/v1/runs/ended", { run: task.json.run, agent: RAE, status: "COMPLETED", ref });
+    expect((w.pushed[0]!.payload as { aps: { alert: { body: string } } }).aps.alert.body).toBe("It finished. Open Coach mode to read how it went.");
+    expect((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines).toMatchObject([{ said: "Refunded order 42." }]);
+  });
+
   it("with Coach's run over, the line waits for its next turn, shown in its chat meanwhile and never in the owner's words", async () => {
     const w = world();
     const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
