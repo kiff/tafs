@@ -12,6 +12,15 @@ describe("tools that send outside the company (gap 14)", () => {
     for (const none of [undefined, null, "x", {}, { operations: "x" }, { operations: [null, { effect: "sends", resource: { outside: true } }] }]) expect(sendingOutside(none)).toEqual([]);
   });
 
+  // A draft reaches the people it's for once the owner sends it, as written: its tool carries the line too, from what
+  // the tool does (its profile), whatever the job or recipe.
+  it("include every tool that drafts (none_until_approved), a draft email or a draft invoice, outside or not", () => {
+    const profile = { v: "kiff.profile.v1", operations: [op("drafts_create", "none_until_approved"), op("draft_invoice", "none_until_approved", false), op("update_record", "writes"), op("send_email", "sends", true)] };
+    expect(sendingOutside(profile)).toEqual(["draft_invoice", "drafts_create", "send_email"]);
+    expect(undisclosedSending(sendingOutside(profile), ["drafts_create", "send_email"], ["send_email"])).toContain("disclose doesn't name drafts_create, which reaches people outside the company, a draft once it's sent included");
+    expect(undisclosedSending(sendingOutside(profile), ["drafts_create", "send_email"], ["send_email", "drafts_create"])).toBeUndefined();
+  });
+
   it("are noted per grant for the taf's agent, each Approve replacing its own grant's, never another's", async () => {
     const store = memoryCoach(() => NOW);
     await noteSendingOutside(store, "t1", "rae", "g_mail", { operations: [op("send_email", "sends", true)] }, NOW);
@@ -73,10 +82,10 @@ describe("tools that send outside the company (gap 14)", () => {
     // Not among the taf's tools: not the taf's to disclose.
     expect(undisclosedSending(["send_email"], ["list"], [])).toBeUndefined();
     const one = undisclosedSending(["send_email"], ["send_email"], []);
-    expect(one).toContain("disclose doesn't name send_email, which sends to people outside the company");
+    expect(one).toContain("disclose doesn't name send_email, which reaches people outside the company");
     expect(one).toContain("add it to disclose");
     // No tools named: every noted one counts.
     expect(undisclosedSending(["post", "send_email"], undefined, ["post"])).toContain("disclose doesn't name send_email,");
-    expect(undisclosedSending(["post", "send_email"], [], [])).toContain("disclose doesn't name post, send_email, which send to people");
+    expect(undisclosedSending(["post", "send_email"], [], [])).toContain("disclose doesn't name post, send_email, which reach people");
   });
 });

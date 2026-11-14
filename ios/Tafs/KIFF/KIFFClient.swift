@@ -426,8 +426,42 @@ final class KIFFClient {
     }
 
     /// Signs a device out of the account: it no longer approves, and its sessions are over.
-    func removeDevice(_ id: String) async throws {
-        let _: Empty = try await send("DELETE", "/v1/me/devices/\(id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id)")
+    static func devicePath(_ id: String) -> String {
+        "/v1/me/devices/\(id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? id)"
+    }
+
+    /// Signing another device out, built to be signed by the approval key: removing a device that holds
+    /// an approval key or a passkey is an approval (KIFF's pairing contract), `kiff.request.v1` over the
+    /// DELETE, its path and the empty body, never inside a window.
+    func prepareRemoveDevice(_ id: String, signedAt: String) throws -> Prepared {
+        try prepare(method: "DELETE", path: Self.devicePath(id), body: Data(), gateway: false, signedAt: signedAt)
+    }
+
+    static let pairingsPath = "/v1/me/pairings"
+
+    /// KIFF's answer to the phone's pairing approval (KIFF's pairing contract §5.3): the code KIFF worked out,
+    /// which the phone shows once more beside the one the person checked.
+    struct Pairing: Decodable, Equatable {
+        let id: String
+        let code: String
+    }
+
+    /// A computer's pairing, built to be signed by the approval key: `kiff.request.v1` over
+    /// `POST /v1/me/pairings` and the QR's fields, which the body carries as read.
+    func preparePairing(_ request: PairingRequest, signedAt: String) throws -> Prepared {
+        try prepare(method: "POST", path: Self.pairingsPath, body: request.body, gateway: false, signedAt: signedAt)
+    }
+
+    /// Sends the pairing, prepared and signed. Never inside an approval window: it's presigned.
+    func approvePairing(_ prepared: Prepared, signatureHeader: String) async throws -> Pairing {
+        struct Answer: Decodable { let pairing: Pairing }
+        let answer: Answer = try await send(prepared.method, prepared.path, body: RawJSON(data: prepared.body), presigned: signatureHeader)
+        return answer.pairing
+    }
+
+    /// Sends a device's removal, prepared and signed.
+    func removeDevice(_ prepared: Prepared, signatureHeader: String) async throws {
+        let _: Empty = try await send("DELETE", prepared.path, body: Optional<RawJSON>.none, presigned: signatureHeader)
     }
 
     // MARK: Held calls
@@ -1552,6 +1586,10 @@ final class KIFFClient {
             }
             if status == 409, base == nil, path == "/v1/me/device/approval-key" {
                 throw KIFFError.approvalKeyExists(fingerprint: fields?["fingerprint"])
+            }
+            // A pairing's refusal: KIFF's own words for the person, with its code as the reason.
+            if path == Self.pairingsPath, let code = fields?["error"] {
+                throw KIFFError.server(status: status, message: fields?["words"] ?? code, reason: code)
             }
             throw KIFFError.server(status: status, message: fields?["error"] ?? Words.Error.kiffAnswered(status: "\(status)"), reason: fields?["reason"])
         }

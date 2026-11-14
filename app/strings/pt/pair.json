@@ -1,0 +1,16 @@
+{
+  "pair.added": "Este {device} está adicionado.",
+  "pair.added_passkey": "Este {device} não pode assinar aprovações sozinho. Aprove no telemóvel ou com uma chave de acesso.",
+  "pair.check_code_lead": "O seu telemóvel pergunta se o seu {device} mostra este código:",
+  "pair.code_expired": "Este código expirou.",
+  "pair.device_name": "tafs neste {device}",
+  "pair.failed": "Este {device} não foi adicionado: {why}. Mostre um código novo e tente outra vez.",
+  "pair.from_sign_in": "Já usa o tafs no telemóvel? Adicione este {device} com ele.",
+  "pair.new_code": "Mostrar um código novo",
+  "pair.steps": "No telemóvel, abra o tafs e depois {account}, {devices}, {pair}. Leia este código.",
+  "pair.title": "Adicione este {device} com o seu telemóvel",
+  "pair.view_only.add": "Adicionar este {device}",
+  "pair.view_only.lead": "Este {device} mostra os seus tafs, Precisa de si e o Registo. Não pode aprovar até o adicionar com o seu telemóvel.",
+  "pair.view_only.title": "Só ver",
+  "pair.waiting": "À espera do seu telemóvel…"
+}
