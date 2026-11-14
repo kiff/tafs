@@ -50,6 +50,8 @@ final class AppModel: ObservableObject {
     @Published var requestedStep: String?
     /// Home's count of what waits for the person, from tafs cloud (kiff/tafs#469 item 1).
     @Published private(set) var homeNeedsYou: TafsCloud.NeedsYou?
+    /// Home's line as tafs cloud counted it, in its words; nil when it sent none.
+    @Published private(set) var homeHeadline: String?
     /// Of tafs cloud's count, the steps answered here that it still counts.
     private var answeredStillCounted = 0
 
@@ -614,6 +616,10 @@ final class AppModel: ObservableObject {
 
     var workingCount: Int { tafs.filter { $0.state == .working }.count }
 
+    /// Home's line: tafs cloud's words as sent, or, when it sent none, the app's own count of
+    /// the tafs working.
+    var workingWords: String { homeHeadline ?? Words.Home.working(count: workingCount) }
+
     /// Whether KIFF still holds this Record entry's call for an answer: a held call with its
     /// proposal is in Needs you. Before KIFF's list is read, a held entry counts as waiting.
     func isWaiting(_ entry: RecordEntry) -> Bool {
@@ -671,7 +677,7 @@ final class AppModel: ObservableObject {
             tafSetups = [:]; tafSetupErrors = [:]; connectedAgain = [:]; activityPages = [:]; runPages = [:]; timeZones = []
             recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
             recordTyping?.cancel(); recordTyping = nil
-            cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil
+            cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil; homeHeadline = nil
             yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaiting = []
             coachWaitingClear = nil; settingAside = []; setAsideChats = []
             haltErrors = [:]
@@ -1765,6 +1771,7 @@ final class AppModel: ObservableObject {
         coachWaiting = (home.coachWaiting ?? []).filter { $0.usable && !settingAside.contains($0.session) }
         coachWaitingClear = home.coachWaitingClear.flatMap { $0.usable ? $0 : nil }
         homeNeedsYou = home.needsYou
+        homeHeadline = home.headlineWords
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
         cloudTafs = running

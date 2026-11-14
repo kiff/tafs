@@ -160,6 +160,40 @@ final class LaunchListTests: XCTestCase {
         XCTAssertNil(defaults.data(forKey: AppModel.listKey))
     }
 
+    /// Home's line as tafs cloud counts it: one taf ready to work from its chat, and none at
+    /// work, reads "1 taf ready." as sent, though the app's own count says 0.
+    func testHomesLineIsTafsCloudsWordsAsSent() async throws {
+        let ready = HomeJSON.entry(agent: "rae-k3f9", name: "Rae", state: "idle")
+        serve(tafs: [ready], others: [])
+        StubProtocol.responses["GET /v1/home"] = (200, String(HomeJSON.list([ready]).dropLast()) + #","headline":{"words":"1 taf ready."}}"#)
+        let model = model()
+        await model.useSession("kiff_dev_x", tenant: "tenant-a")
+        XCTAssertEqual(model.workingCount, 0, "the app's own count would say 0")
+        XCTAssertEqual(model.workingWords, "1 taf ready.")
+    }
+
+    /// With no headline from tafs cloud, Home's line is the app's own count, as before.
+    func testHomesLineFallsBackToTheAppsCountWithNoHeadline() async throws {
+        serve()
+        let model = model()
+        await model.useSession("kiff_dev_x", tenant: "tenant-a")
+        XCTAssertNil(model.homeHeadline)
+        XCTAssertEqual(model.workingWords, Words.Home.working(count: model.workingCount))
+    }
+
+    /// A headline the app can't read is none, and Home still reads.
+    func testAMalformedHeadlineReadsAsNone() throws {
+        for bad in [#"42"#, #""words""#, #"[]"#, #"{}"#, #"{"words":7}"#, #"{"words":"  "}"#, "null"] {
+            let sent = String(HomeJSON.list([HomeJSON.rae]).dropLast()) + #","headline":"# + bad + "}"
+            let home = try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(sent.utf8))
+            XCTAssertNil(home.headlineWords, bad)
+            XCTAssertEqual(home.tafs.map(\.name), ["Rae"], bad)
+        }
+        let good = String(HomeJSON.empty.dropLast()) + #","headline":{"words":"0 tafs working."}}"#
+        XCTAssertEqual(try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(good.utf8)).headlineWords, "0 tafs working.")
+        XCTAssertNil(try KIFFClient.decoder.decode(TafsCloud.Home.self, from: Data(HomeJSON.empty.utf8)).headline)
+    }
+
     /// Until the first list, the headline doesn't say "0 tafs working".
     func testLoadingUntilTheFirstList() async throws {
         serve()

@@ -281,8 +281,7 @@ struct HomeView: View {
     }
 
     private var headline: some View {
-        let working = model.workingCount
-        return VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             if model.loadingList {
                 // Never "0 tafs working" before the tafs are read (#91).
                 Text(Words.Home.loading)
@@ -293,7 +292,8 @@ struct HomeView: View {
             } else if !model.homeListsRecipes {
                 // With no taf and the recipes listed, tafs cloud's line leads: no "0 tafs
                 // working" above them (as on Android).
-                Text(Words.Home.working(count: working))
+                // tafs cloud's line as sent; the app's own count only when it sent none.
+                Text(model.workingWords)
                     .foregroundColor(Theme.ink)
                 Text(model.needsYouWords)
                     .foregroundColor(Theme.dim)
