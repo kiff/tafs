@@ -24,10 +24,12 @@ struct HaltScreen: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 // Siri's own tip, so turning it on isn't a question asked in an emergency
-                // (kiff/tafs#236, item 28).
+                // (kiff/tafs#236, item 28). Not on the Mac, which has no such tip (docs/mac-app.md).
+                #if !targetEnvironment(macCatalyst)
                 if tafID == nil, h.state == .running {
                     SiriTipView(intent: HaltAllTafsIntent())
                 }
+                #endif
                 if h.state != .running {
                     Panel {
                         Eyebrow(text: Words.Taf.Halt.whoHolds)
