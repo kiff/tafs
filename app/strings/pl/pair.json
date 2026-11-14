@@ -1,0 +1,16 @@
+{
+  "pair.added": "Ten {device} został dodany.",
+  "pair.added_passkey": "Ten {device} nie może sam podpisywać zatwierdzeń. Zatwierdzaj na telefonie albo kluczem dostępu.",
+  "pair.check_code_lead": "Telefon zapyta, czy Twój {device} pokazuje ten kod:",
+  "pair.code_expired": "Ten kod wygasł.",
+  "pair.device_name": "tafs – {device}",
+  "pair.failed": "Ten {device} nie został dodany: {why}. Pokaż nowy kod i spróbuj ponownie.",
+  "pair.from_sign_in": "Używasz już tafs na telefonie? Dodaj ten {device} za jego pomocą.",
+  "pair.new_code": "Pokaż nowy kod",
+  "pair.steps": "Na telefonie otwórz tafs, potem {account}, {devices}, {pair}. Zeskanuj ten kod.",
+  "pair.title": "Dodaj ten {device} za pomocą telefonu",
+  "pair.view_only.add": "Dodaj ten {device}",
+  "pair.view_only.lead": "Ten {device} pokazuje Twoje tafs, Czeka na Ciebie i Rejestr. Nie może zatwierdzać, dopóki nie dodasz go za pomocą telefonu.",
+  "pair.view_only.title": "Tylko podgląd",
+  "pair.waiting": "Czekam na telefon…"
+}

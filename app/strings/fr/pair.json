@@ -1,0 +1,16 @@
+{
+  "pair.added": "Ce {device} est ajouté.",
+  "pair.added_passkey": "Ce {device} ne peut pas signer les approbations lui-même. Approuvez sur votre téléphone, ou avec une clé d'identification.",
+  "pair.check_code_lead": "Votre téléphone vous demande si votre {device} affiche ce code :",
+  "pair.code_expired": "Ce code a expiré.",
+  "pair.device_name": "tafs sur ce {device}",
+  "pair.failed": "Ce {device} n'a pas été ajouté : {why}. Affichez un nouveau code et réessayez.",
+  "pair.from_sign_in": "Vous utilisez déjà tafs sur votre téléphone ? Ajoutez ce {device} avec lui.",
+  "pair.new_code": "Afficher un nouveau code",
+  "pair.steps": "Sur votre téléphone, ouvrez tafs, puis {account}, {devices}, {pair}. Scannez ce code.",
+  "pair.title": "Ajouter ce {device} avec votre téléphone",
+  "pair.view_only.add": "Ajouter ce {device}",
+  "pair.view_only.lead": "Ce {device} affiche vos tafs, Vous attend et le Registre. Il ne peut pas approuver tant que vous ne l'avez pas ajouté avec votre téléphone.",
+  "pair.view_only.title": "Consultation seule",
+  "pair.waiting": "En attente de votre téléphone…"
+}

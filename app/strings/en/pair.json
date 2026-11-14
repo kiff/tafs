@@ -1,0 +1,16 @@
+{
+  "pair.added": "This {device} is added.",
+  "pair.added_passkey": "This {device} can't sign approvals itself. Approve on your phone, or with a passkey.",
+  "pair.check_code_lead": "Your phone asks if your {device} shows this code:",
+  "pair.code_expired": "This code expired.",
+  "pair.device_name": "tafs on this {device}",
+  "pair.failed": "This {device} wasn't added: {why}. Show a new code and try again.",
+  "pair.from_sign_in": "Already use tafs on your phone? Add this {device} with it.",
+  "pair.new_code": "Show a new code",
+  "pair.steps": "On your phone, open tafs, then {account}, {devices}, {pair}. Scan this code.",
+  "pair.title": "Add this {device} with your phone",
+  "pair.view_only.add": "Add this {device}",
+  "pair.view_only.lead": "This {device} shows your tafs, Needs you and the Record. It can't approve until you add it with your phone.",
+  "pair.view_only.title": "View only",
+  "pair.waiting": "Waiting for your phone…"
+}

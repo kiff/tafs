@@ -1,0 +1,16 @@
+{
+  "pair.added": "Questo {device} è aggiunto.",
+  "pair.added_passkey": "Questo {device} non può firmare le approvazioni da solo. Approva sul telefono o con una passkey.",
+  "pair.check_code_lead": "Il telefono ti chiede se il tuo {device} mostra questo codice:",
+  "pair.code_expired": "Questo codice è scaduto.",
+  "pair.device_name": "tafs su questo {device}",
+  "pair.failed": "Questo {device} non è stato aggiunto: {why}. Mostra un nuovo codice e riprova.",
+  "pair.from_sign_in": "Usi già tafs sul telefono? Aggiungi questo {device} con il telefono.",
+  "pair.new_code": "Mostra un nuovo codice",
+  "pair.steps": "Sul telefono, apri tafs, poi {account}, {devices}, {pair}. Scansiona questo codice.",
+  "pair.title": "Aggiungi questo {device} con il telefono",
+  "pair.view_only.add": "Aggiungi questo {device}",
+  "pair.view_only.lead": "Questo {device} mostra i tuoi tafs, Ti aspetta e il Registro. Non può approvare finché non lo aggiungi con il telefono.",
+  "pair.view_only.title": "Solo lettura",
+  "pair.waiting": "In attesa del telefono…"
+}

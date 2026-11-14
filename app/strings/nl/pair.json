@@ -1,0 +1,16 @@
+{
+  "pair.added": "Deze {device} is toegevoegd.",
+  "pair.added_passkey": "Deze {device} kan goedkeuringen niet zelf ondertekenen. Keur goed op je telefoon, of met een toegangssleutel.",
+  "pair.check_code_lead": "Je telefoon vraagt of je {device} deze code toont:",
+  "pair.code_expired": "Deze code is verlopen.",
+  "pair.device_name": "tafs op deze {device}",
+  "pair.failed": "Deze {device} is niet toegevoegd: {why}. Toon een nieuwe code en probeer het opnieuw.",
+  "pair.from_sign_in": "Gebruik je tafs al op je telefoon? Voeg deze {device} ermee toe.",
+  "pair.new_code": "Toon een nieuwe code",
+  "pair.steps": "Open tafs op je telefoon, dan {account}, {devices}, {pair}. Scan deze code.",
+  "pair.title": "Voeg deze {device} toe met je telefoon",
+  "pair.view_only.add": "Deze {device} toevoegen",
+  "pair.view_only.lead": "Deze {device} toont je tafs, Wacht op jou en het Logboek. Hij kan niets goedkeuren tot je hem toevoegt met je telefoon.",
+  "pair.view_only.title": "Alleen bekijken",
+  "pair.waiting": "Wachten op je telefoon…"
+}
