@@ -52,17 +52,15 @@ struct PairingRequest: Equatable {
     }
 
     static let computers: Set<String> = ["windows", "macos", "linux"]
-    /// A phone or tablet paired from another phone (§5.8), each with the one kind it takes.
-    static let phoneKinds: [String: String] = ["ios": "enclave", "ipados": "enclave", "android": "keystore"]
-    /// Each phone platform's `device_kind`s.
-    static let deviceKinds: [String: Set<String>] = ["ios": ["iphone"], "ipados": ["ipad"], "android": ["android_phone", "android_tablet"]]
-    static let platforms: Set<String> = computers.union(phoneKinds.keys)
+    /// A phone or tablet paired from another phone (§5.8).
+    static let phones: Set<String> = ["ios", "ipados", "android"]
+    static let platforms: Set<String> = computers.union(phones)
     /// The kinds that hold an approval key; a `passkey` computer holds none.
     static let approvalKinds: Set<String> = ["hello", "enclave", "keystore"]
     static let kinds: Set<String> = approvalKinds.union(["passkey"])
 
     /// A phone or tablet, not a computer.
-    var isPhone: Bool { Self.phoneKinds[platform] != nil }
+    var isPhone: Bool { Self.phones.contains(platform) }
 
     /// Reads a scanned code, checked as KIFF checks it (§5.5).
     static func read(_ text: String, now: Date = Date()) -> Result<PairingRequest, Problem> {
@@ -82,15 +80,10 @@ struct PairingRequest: Equatable {
         guard kinds.contains(kind), platforms.contains(platform), nameIsUsable(name),
               base64url(nonce)?.count == 32 else { return .failure(.badField) }
 
-        // A phone or tablet takes only its own kind (§5.8); a computer never takes a phone's `keystore`.
-        if let phoneKind = phoneKinds[platform] {
-            guard kind == phoneKind else { return .failure(.badField) }
-        } else if kind == "keystore" { return .failure(.badField) }
-        // `device_kind` only on a phone or tablet, and only its platform's.
+        // `device_kind` (§5.8) is sent on as it came. Whether a kind or a device kind matches its platform
+        // is KIFF's check (`400 invalid_pairing`), as on Android.
         let deviceKind = object["device_kind"]
-        if deviceKind != nil {
-            guard let named = deviceKind as? String, deviceKinds[platform]?.contains(named) == true else { return .failure(.badField) }
-        }
+        if deviceKind != nil, !(deviceKind is String) { return .failure(.badField) }
 
         // `key_store` is only ever "software", and only for a passkey computer.
         let keyStore = object["key_store"]

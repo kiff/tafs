@@ -110,8 +110,8 @@ final class PairingTests: XCTestCase {
         XCTAssertEqual(read(passkey(["id": "AQID", "public_key": Self.nonce])), .failure(.badKeys), "a P-256 key")
     }
 
-    /// A phone or tablet paired from another phone (§5.8): each platform with its own kind, an approval key
-    /// always, and `device_kind` only its platform's. A computer never takes a phone's kind.
+    /// A phone or tablet paired from another phone (§5.8): `keystore` is a kind, an approval key always,
+    /// and `device_kind` sent on as it came. Whether a kind matches its platform is KIFF's check.
     func testAPhoneOrTabletIsReadAsOne() throws {
         let iphone = try read(code { $0["platform"] = "ios"; $0["kind"] = "enclave"; $0["device_kind"] = "iphone" }).get()
         XCTAssertTrue(iphone.isPhone)
@@ -119,17 +119,11 @@ final class PairingTests: XCTestCase {
         XCTAssertEqual(iphone.checkCode, "XFI4MD", "the check code is unchanged: the two keys")
         XCTAssertEqual((try JSONSerialization.jsonObject(with: iphone.body) as? [String: String])?["device_kind"], "iphone", "sent on as read")
         XCTAssertNil(try read(code { $0["platform"] = "ipados"; $0["kind"] = "enclave" }).get().deviceKind, "optional")
-        XCTAssertNoThrow(try read(code { $0["platform"] = "android"; $0["kind"] = "keystore"; $0["device_kind"] = "android_tablet" }).get())
+        XCTAssertTrue(try read(code { $0["platform"] = "android"; $0["kind"] = "keystore"; $0["device_kind"] = "android_tablet" }).get().isPhone)
         XCTAssertFalse(try read(code()).get().isPhone)
 
-        XCTAssertEqual(read(code { $0["platform"] = "ios"; $0["kind"] = "hello" }), .failure(.badField), "an iPhone takes only enclave")
-        XCTAssertEqual(read(code { $0["platform"] = "android"; $0["kind"] = "enclave" }), .failure(.badField))
-        XCTAssertEqual(read(code { $0["platform"] = "ios"; $0["kind"] = "passkey"; $0["approval_pub"] = nil }), .failure(.badField), "never a passkey")
         XCTAssertEqual(read(code { $0["platform"] = "ios"; $0["kind"] = "enclave"; $0["approval_pub"] = nil }), .failure(.badKeys), "an approval key always")
-        XCTAssertEqual(read(code { $0["kind"] = "keystore" }), .failure(.badField), "a computer never takes keystore")
-        XCTAssertEqual(read(code { $0["platform"] = "ipados"; $0["kind"] = "enclave"; $0["device_kind"] = "iphone" }), .failure(.badField), "an iPad called an iPhone")
-        XCTAssertEqual(read(code { $0["platform"] = "android"; $0["kind"] = "keystore"; $0["device_kind"] = "ipad" }), .failure(.badField))
-        XCTAssertEqual(read(code { $0["device_kind"] = "iphone" }), .failure(.badField), "never on a computer")
+        XCTAssertEqual(read(code { $0["platform"] = "android"; $0["kind"] = "keystore"; $0["approval_pub"] = nil }), .failure(.badKeys))
         XCTAssertEqual(read(code { $0["platform"] = "ios"; $0["kind"] = "enclave"; $0["device_kind"] = 1 }), .failure(.badField))
     }
 
