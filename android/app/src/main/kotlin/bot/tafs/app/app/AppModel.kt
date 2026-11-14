@@ -7216,26 +7216,38 @@ class AppModel(
     }
   }
 
-  /** Signs another device out of the account, behind one confirmation. This device signs out with Sign out instead. False when it didn't go through. */
+  /**
+   * Signs another device out of the account, behind one fingerprint that names it. This device signs out with Sign out instead.
+   * Removing a device that holds an approval key takes an approval at KIFF (desktop-client.md §6), so the approval key signs it,
+   * its fingerprint the confirmation; a session KIFF holds no approval key for confirms here, and KIFF decides. False when it
+   * didn't go through.
+   */
   suspend fun removeDevice(device: Device): Boolean {
     val tenant = kiffTenant
-    if (_state.value.mode != Mode.kiff || tenant == null || device.thisDevice) return false
+    if (_state.value.mode != Mode.kiff || tenant == null || device.thisDevice || !_state.value.sessionHasKey) return false
     val generation = accountGeneration
     val what = Words.Settings.Devices.signOutPrompt(device = device.shown ?: Words.Settings.Devices.thisDevice)
+    kiff.tenant = tenant
+    val signer = signer
     try {
-      signer.sign("tafs.devices.v1|$tenant|${device.id}".toByteArray(), what)
+      if (!sessionHasApprovalKey) signer.sign("tafs.devices.v1|$tenant|${device.id}".toByteArray(), what)
+      if (generation != accountGeneration) return false
+      approvalReason = what
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      kiff.removeDevice(device.id)
     } catch (_: SignerException) {
       return false
-    }
-    if (generation != accountGeneration) return false
-    kiff.tenant = tenant
-    try {
-      kiff.removeDevice(device.id)
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = KiffClient.APPROVAL_KEY_LOST) }
+      return false
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
       if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))) }
       return false
+    } finally {
+      kiff.setupSigner = null
+      approvalReason = Words.Approval.Prompt.approveOnKiff
     }
     refreshDevices()
     return true

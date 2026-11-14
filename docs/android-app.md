@@ -1037,6 +1037,14 @@ pair one; without it, Devices says approving needs a new sign-in and sends nothi
    `key_registered` and `invalid_pairing` each say to show a new code or that the computer is
    paired already, and `approval_key_required` that approving needs a new sign-in.
 
+**Signing a device out** (Devices → Sign out on another device) is signed too. Removing a
+device that holds an approval key or a passkey takes an approval at KIFF (`desktop-client.md`
+§6), and the phone can't tell which devices do, so `DELETE /v1/me/devices/{id}` is always
+signed by the approval key, behind one fingerprint that names the device ("Sign {device} out of
+your account"), never inside an approval window. A session KIFF holds no approval key for confirms
+on the phone and signs with the device key; KIFF decides, and its `approval_key_required` says
+approving needs a new sign-in. This phone signs itself out with Sign out, unchanged.
+
 Both controls carry the confirm mark: Coach never pairs a computer ([drive.md](drive.md)).
 Tests: `PairingTest` (a fixed check-code vector worked out outside the app, which every
 implementation of §5.2 must give literally: the P-256 keys of private keys 1 and 2 give `H6SJNU`,
