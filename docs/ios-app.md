@@ -893,6 +893,30 @@ step; `KIFF/TafsCloud+YourStep.swift`, `Views/YourStepCard.swift`, `AppModel.ans
 
 Tests: `TafsTests/YourStepTests.swift`.
 
+## Pairing a computer
+
+Account → Devices → **Add a computer** pairs one of the person's computers from this phone
+(KIFF's pairing contract §5; `KIFF/Pairing.swift`, `PairComputerView`,
+`AppModel.pairComputer`). The phone holds the approving half; the computer never pairs itself.
+
+- **The scan:** the camera reads the computer's QR. `PairingRequest.read` checks it strictly before
+  anything is shown or signed: `kiff.pair.v1`, no field KIFF doesn't take, `exp` not passed and at
+  most 5 minutes ahead, a known `kind` and `platform`, a usable `name`, a 32-byte nonce, P-256 keys
+  that differ, `approval_pub` exactly for `hello` and `enclave`, and `key_store` only `software` and
+  only for `passkey`. A code it won't pair is said in words, and the camera keeps reading.
+- **Before the fingerprint:** what pairing gives by kind ("… will be able to approve your tafs'
+  actions with Windows Hello"), the software-key line when it applies, "Only pair a computer you're
+  using right now", and "Does your computer show XFI4MD?" with the check code (§5.2, base32 of
+  sha256 over the keys' DER; the shared vector `H6SJNU` and `LTJFF6` is asserted literally).
+- **Yes:** the approval key signs `POST /v1/me/pairings` (`kiff.request.v1` over the QR's fields),
+  behind Face ID or Touch ID naming the computer, never inside a window. KIFF's code is said beside
+  the one checked; if they differ, the person is told to sign the computer out if it isn't theirs.
+  A refusal is KIFF's `words`, or the app's own line for its code where KIFF sent none.
+- **Signing a device out:** the approval key signs `DELETE /v1/me/devices/{id}` too, since removing a
+  device that holds an approval key or a passkey is an approval.
+- **Coach** can't start or confirm a pairing: both controls carry the confirm mark.
+- Its lines are tafs#1033's `settings.devices.pair*` keys, shared with Android.
+
 ## Tests and CI
 
 - **Unit tests** (`TafsTests`) sit by feature: `ChatTests`, `WorkLogTests`,

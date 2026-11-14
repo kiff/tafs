@@ -1089,18 +1089,26 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Signs another device out of the account, behind Face ID. This device signs out with
-    /// Sign out instead. False when it didn't go through.
+    /// Signs another device out of the account: the approval key signs the DELETE itself, behind Face ID
+    /// or Touch ID naming the device, never inside a window, since removing a device that holds an
+    /// approval key or a passkey is an approval (KIFF's pairing contract). This device signs out with Sign out
+    /// instead. False when it didn't go through.
     @discardableResult
     func removeDevice(_ device: KIFFClient.Device) async -> Bool {
         guard mode == .kiff, let tenant = kiffTenant, !device.thisDevice else { return false }
         let gen = accountGeneration
         let what = Words.Settings.Devices.signOutPrompt(device: device.name ?? Words.Settings.Devices.thisDevice)
-        do { _ = try await signer.sign(Data("tafs.devices.v1|\(tenant)|\(device.id)".utf8), reason: what) } catch { return false }
-        guard gen == accountGeneration else { return false }
         kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let signature: String
         do {
-            try await kiff.removeDevice(device.id)
+            prepared = try kiff.prepareRemoveDevice(device.id, signedAt: signedAt)
+            signature = try await signer.signApproval(prepared.message, reason: what)
+        } catch { return false }
+        guard gen == accountGeneration else { return false }
+        do {
+            try await kiff.removeDevice(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
         } catch {
             guard gen == accountGeneration else { return false }
             devicesError = Words.Common.didntGoThrough(what: "\(what)", why: "\(error.localizedDescription)")
@@ -1108,6 +1116,60 @@ final class AppModel: ObservableObject {
         }
         await refreshDevices()
         return true
+    }
+
+    /// How a computer's pairing ended: paired (what to say), refused (why), or not sent (Face ID cancelled).
+    enum PairingOutcome: Equatable {
+        case paired(String)
+        case failed(String)
+        case cancelled
+    }
+
+    /// Pairs a computer (KIFF's pairing contract §5.3): the approval key signs `POST /v1/me/pairings` with the
+    /// QR's fields, behind Face ID or Touch ID naming the computer, never inside a window. Then KIFF's code
+    /// is shown beside the one the person checked, and Devices is read again.
+    func pairComputer(_ request: PairingRequest) async -> PairingOutcome {
+        guard mode == .kiff, let tenant = kiffTenant else { return .failed(Words.Error.signInFirstOnDevice(device: "\(ThisDevice.kind)")) }
+        let gen = accountGeneration
+        kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let signature: String
+        do {
+            prepared = try kiff.preparePairing(request, signedAt: signedAt)
+            signature = try await signer.signApproval(prepared.message, reason: Words.Settings.Devices.pairPrompt(device: request.name))
+        } catch { return .cancelled }
+        guard gen == accountGeneration else { return .cancelled }
+        do {
+            let pairing = try await kiff.approvePairing(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
+            guard gen == accountGeneration else { return .cancelled }
+            await refreshDevices()
+            return .paired(Self.pairedWords(request, kiffCode: pairing.code))
+        } catch KIFFClient.KIFFError.server(_, let message, let reason) {
+            return .failed(Self.pairingRefusal(message: message, reason: reason))
+        } catch {
+            return .failed(Words.Common.didntGoThrough(what: "\(Words.Settings.Devices.pairNamed(device: request.name))", why: "\(error.localizedDescription)"))
+        }
+    }
+
+    /// Paired: the code KIFF worked out is the one checked, or the person is told it isn't, and to sign
+    /// the computer out if it isn't theirs.
+    static func pairedWords(_ request: PairingRequest, kiffCode: String) -> String {
+        let shown = request.checkCode
+        return kiffCode == shown ? Words.Settings.Devices.pairDone(device: request.name, code: shown)
+            : Words.Settings.Devices.pairCodeDiffers(device: request.name, kiff: kiffCode, shown: shown)
+    }
+
+    /// A refused pairing in KIFF's words when it sent them; the app's own only where it sent none.
+    static func pairingRefusal(message: String, reason: String?) -> String {
+        if let reason, message != reason { return message }
+        switch reason {
+        case "pairing_expired": return Words.Settings.Devices.pairExpired
+        case "pairing_used": return Words.Settings.Devices.pairUsed
+        case "key_registered": return Words.Settings.Devices.pairKeyRegistered
+        case "invalid_pairing": return Words.Settings.Devices.pairInvalid
+        default: return message
+        }
     }
 
     /// Makes one change to groups or sharing, behind Face ID as KIFF asks of a phone, then

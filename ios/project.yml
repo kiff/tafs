@@ -55,7 +55,7 @@ targets:
         NSMicrophoneUsageDescription: tafs turns your voice into text on this device. Your voice isn't sent anywhere.
         NSSpeechRecognitionUsageDescription: tafs turns your voice into text on this device. Your voice isn't sent anywhere.
         # Attachments (kiff/tafs#209): a photo taken for a message goes only with that message.
-        NSCameraUsageDescription: tafs takes a photo to attach to your message. It goes only with that message, to your own chat.
+        NSCameraUsageDescription: tafs takes a photo to attach to your message, or reads the code your computer shows to pair it. A photo goes only with that message, to your own chat.
         ITSAppUsesNonExemptEncryption: false
         NSSupportsLiveActivities: true
         # A silent push says a held call was answered elsewhere, so its alert goes.
