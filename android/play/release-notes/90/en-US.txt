@@ -1,2 +1,3 @@
 - Turning alerts on no longer asks for your fingerprint: one prompt fewer before your first taf.
 - Connecting an app for the first time says its Card comes next, so you know a second approval follows.
+- Taps now vibrate on phones that set touch feedback their own way.

@@ -742,8 +742,11 @@ The same rule as on iPhone and iPad (`design/Haptics.kt`):
 - **A step tick** on a selector's stops: the theme picker and the jobs' category chips.
 - **Settings › Haptics** turns all of it off, on this phone (`tafs.display`, `haptics`). It's on until turned off.
 - **The phone's own touch feedback setting** is followed: the platform's feedback (`performHapticFeedback`) plays nothing
-  when it's off. The first time a launch's feedback plays nothing (that setting, or a view that plays none), that's
-  written to the diagnostics, so "nothing vibrates" can be told apart from a tap the app never asked for.
+  when it's off. Some phones keep that switch off and use a touch slider of their own (ColorOS), so where the view plays
+  none, Android 13+ plays the same kind as a predefined effect marked as touch (`USAGE_TOUCH`, `VIBRATE`, a normal
+  permission): the phone's touch intensity decides, and off there is still off (Android 1.27.2). The first time a launch's
+  feedback plays nothing at all, that's written to the diagnostics, so "nothing vibrates" can be told apart from a tap the
+  app never asked for.
 
 ## Dark
 
