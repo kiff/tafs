@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
 import bot.tafs.app.design.Panel
+import bot.tafs.app.design.tapping
 import bot.tafs.app.design.Dot
 import bot.tafs.app.design.Eyebrow
 import bot.tafs.app.design.Mascot
@@ -304,7 +305,7 @@ private fun Header(accountLabel: String?, onCalendar: (() -> Unit)? = null) {
     // The calendar of the tafs' scheduled work (kiff/tafs#534): the phone has no Overview, so it opens from here.
     if (onCalendar != null) {
       Box(
-        Modifier.size(36.dp).clip(CircleShape).clickable(onClick = onCalendar).semantics { contentDescription = Words.Calendar.heading },
+        Modifier.size(36.dp).clip(CircleShape).tapping(onClick = onCalendar).semantics { contentDescription = Words.Calendar.heading },
         contentAlignment = Alignment.Center,
       ) {
         Icon(painterResource(R.drawable.ic_calendar), contentDescription = null, tint = Theme.ink, modifier = Modifier.size(22.dp))

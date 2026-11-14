@@ -750,7 +750,9 @@ The same rule as on iPhone and iPad (`design/Haptics.kt`):
 
 - **A light tap on every button press,** from the shared buttons (`PrimaryButton`, `OutlineButton`), so every new button
   gets it. Also on the bottom bar and rail (Account and each tab), Coach's button, a segment changed in a segmented control
-  (a taf's Chat, Activity, Card and Setup), a Coach chat swiped aside, and Set all aside (Android 1.27.0).
+  (a taf's Chat, Activity, Card and Setup), a Coach chat swiped aside, and Set all aside (Android 1.27.0). Home's calendar
+  icon and everything tapped in the calendar (days, weeks, the chevrons, Choose a date, a taf's slot) tap too, through
+  `Modifier.tapping`, the shared tappable for anything that isn't a button (Android 1.27.6).
 - **A success tick** when a send goes through (`deliverChat`), a held call's answer goes through (`answer`), tafs cloud
   approves Coach's approval card, or a Coach chat is set aside (`setAsideCoach`).
 - **A warning tick** when one of those is refused or fails. Only the outcome of something the person did, never a background
@@ -807,7 +809,8 @@ Settings › **Connect apps** (`ConnectAppsSheet`), as [coach.md](coach.md#conne
   "Connected" label). The note on what removing access takes shows only when a taf uses one of them. Its tap always answers (Android 1.26.1): with none of its
   connections on this phone, planque's connections are read again first (`refreshConnections`), and if there are still
   none, the sheet says why: the read's failure (`connectionsError`, kept in words and written to the diagnostics), or
-  that connecting isn't set up from this phone.
+  that connecting isn't set up from this phone. A sheet emptied by removing its app's last connection closes instead,
+  never "The apps couldn't be read." over a list that's simply empty now; a failed read still says why (Android 1.27.6).
 
 **An app's connections, as planque describes them** (Android 1.25.0, planque's `title`, `used_by`,
 `health` and `actions` on each grant; `Grant.health`, `Grant.actions`, read leniently). A connected app

@@ -1,4 +1,6 @@
-- Un nuovo taf compare nella tua lista appena Coach lo configura, senza dover trascinare per aggiornare.
-- Quando Coach ti aspetta, «Ti aspettano» lo mostra mentre la chat è ancora aperta.
-- La Home conta un nuovo taf che lavora dalla sua chat come pronto, mai «0 tafs al lavoro».
-- Le Card di un nuovo taf compaiono come un'unica Card da leggere prima di approvare.
+- Un nuovo taf compare appena Coach lo configura.
+- «Ti aspettano» mostra Coach in attesa a chat aperta.
+- La Home conta come pronto un nuovo taf che lavora dalla sua chat.
+- Le Card di un nuovo taf compaiono come un'unica Card.
+- Il calendario e la sua icona vibrano al tocco.
+- Rimuovere l'ultima connessione di un'app chiude il suo elenco, senza errori.

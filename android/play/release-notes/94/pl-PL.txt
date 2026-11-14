@@ -1,4 +1,6 @@
-- Nowy taf pojawia się na liście, gdy tylko Coach go skonfiguruje, bez przeciągania w celu odświeżenia.
-- Gdy Coach czeka na Ciebie, „Czeka na Ciebie” pokazuje to, póki czat jest otwarty.
-- Strona główna liczy nowego tafa, który pracuje ze swojego czatu, jako gotowego, nigdy jako „0 tafs pracuje”.
-- Karty nowego tafa wyświetlają się jako jedna Karta do przeczytania przed zatwierdzeniem.
+- Nowy taf pojawia się, gdy Coach go skonfiguruje.
+- „Czeka na Ciebie” pokazuje czekającego Coacha przy otwartym czacie.
+- Strona główna liczy nowego tafa pracującego z czatu jako gotowego.
+- Karty nowego tafa wyświetlają się jako jedna Karta.
+- Kalendarz i jego ikona wibrują po dotknięciu.
+- Usunięcie ostatniego połączenia aplikacji zamyka listę, bez błędu.

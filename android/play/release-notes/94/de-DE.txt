@@ -1,4 +1,6 @@
-- Ein neuer taf steht in deiner Liste, sobald Coach ihn eingerichtet hat, ohne dass du zum Aktualisieren ziehen musst.
-- Wartet Coach auf dich, zeigt „Wartet auf dich“ das, solange der Chat noch offen ist.
-- Die Startseite zählt einen neuen taf, der aus seinem Chat arbeitet, als bereit, nie als „0 tafs arbeiten“.
-- Die Karten eines neuen tafs erscheinen als eine Karte, die du vor dem Genehmigen liest.
+- Ein neuer taf erscheint, sobald Coach ihn eingerichtet hat.
+- „Wartet auf dich“ zeigt Coachs Warten, solange der Chat offen ist.
+- Die Startseite zählt einen neuen taf, der aus seinem Chat arbeitet, als bereit.
+- Die Karten eines neuen tafs erscheinen als eine Karte.
+- Kalender und Kalendersymbol vibrieren beim Tippen.
+- Die letzte Verbindung einer App zu entfernen schließt ihre Liste, ohne Fehler.

@@ -1,4 +1,6 @@
-- Een nieuwe taf staat in je lijst zodra Coach hem heeft ingesteld, zonder dat je hoeft te vernieuwen.
-- Als Coach op je wacht, laat ‘Wacht op jou’ dat zien terwijl de chat nog open is.
-- Home telt een nieuwe taf die vanuit zijn chat werkt als gereed, nooit als ‘0 tafs bezig’.
-- De Kaarten van een nieuwe taf verschijnen als één Kaart om te lezen voordat je goedkeurt.
+- Een nieuwe taf verschijnt zodra Coach hem heeft ingesteld.
+- ‘Wacht op jou’ toont Coach die wacht, met de chat nog open.
+- Home telt een nieuwe taf die vanuit zijn chat werkt als gereed.
+- De Kaarten van een nieuwe taf verschijnen als één Kaart.
+- De agenda en het pictogram trillen bij een tik.
+- De laatste verbinding van een app verwijderen sluit de lijst, zonder fout.

@@ -1,4 +1,6 @@
-- Un nouveau taf apparaît dans votre liste dès que Coach l'a configuré, sans avoir à tirer pour actualiser.
-- Quand Coach attend votre réponse, « Vous attend » l'affiche pendant que la conversation est encore ouverte.
-- L'accueil compte un nouveau taf qui travaille depuis sa conversation comme prêt, jamais « 0 tafs en cours ».
-- Les Cartes d'un nouveau taf s'affichent comme une seule Carte à lire avant d'approuver.
+- Un nouveau taf apparaît dès que Coach l'a configuré.
+- « Vous attend » montre Coach en attente, conversation ouverte.
+- L'accueil compte comme prêt un nouveau taf qui travaille depuis sa conversation.
+- Les Cartes d'un nouveau taf s'affichent comme une seule Carte.
+- Le calendrier et son icône vibrent au toucher.
+- Retirer la dernière connexion d'une app ferme sa liste, sans erreur.
