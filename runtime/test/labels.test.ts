@@ -18,6 +18,9 @@ describe("labels", () => {
     expect(() => withTafLabels(set, [], "t1", ["a\u0007b"], ids)).toThrow("1 to 24 characters");
     expect(() => withTafLabels(set, [], "t1", "Money", ids)).toThrow("whole list of labels");
     expect(() => withLabelChanged(next as unknown as LabelSet, next.labels[1]!, { name: "vip" })).toThrow("another label is named vip");
+    // A name that means a category another label already is: never a second "Money".
+    const money: LabelSet = { labels: [{ id: "a", name: "Money", color: "money", key: "money" }, { id: "b", name: "Payroll", color: "errands" }], version: 1 };
+    expect(() => withLabelChanged(money, money.labels[1]!, { name: "Geld" })).toThrow("Geld is the same category as the label Money");
   });
 
   it("show on Home only where a listed taf carries them, with how many tafs, how many wait, and the filtered headline", () => {

@@ -183,6 +183,15 @@ describe("labels", () => {
       : fetchOf(url, init)) as unknown as typeof fetch;
     const theirs = await w.tool("taf_labels", { action: "set", taf: RAE, labels: ["Money"] }, { act: "u_bo" });
     expect(theirs.text).toContain("Refunds's labels are for the people who manage it");
+    // Nor rename or remove a label on a taf they don't manage.
+    w.deps.fetch = fetchOf;
+    await w.tool("taf_labels", { action: "set", taf: RAE, labels: ["Shop"] });
+    w.deps.fetch = (async (url: string, init?: RequestInit) => url.endsWith("/v1/coach/act")
+      ? new Response(JSON.stringify({ agents: { agent_rae: { use: true, oversee: false, manage: false } } }))
+      : fetchOf(url, init)) as unknown as typeof fetch;
+    expect((await w.tool("taf_labels", { action: "rename", label: "Shop", name: "Store" }, { act: "u_bo" })).text).toContain("Shop is on tafs they don't manage");
+    expect((await w.tool("taf_labels", { action: "remove", label: "Shop" }, { act: "u_bo" })).text).toContain("Shop is on tafs they don't manage");
+    expect((await readLabels(w.coach, T)).labels.map((l) => l.name)).toEqual(["Shop"]);
   });
 
 });
