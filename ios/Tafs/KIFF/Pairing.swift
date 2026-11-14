@@ -20,10 +20,21 @@ struct PairingRequest: Equatable {
     /// `"software"` when the computer's device key isn't in hardware (only with `kind: "passkey"`): it
     /// approves only through the phone or a passkey, and the phone says so.
     let keyStore: String?
+    /// The computer's own platform passkey (only with `kind: "passkey"`, as Windows pairs): its id and
+    /// public key, base64url as the QR carries them. The pairing registers it for that computer.
+    let credential: Credential?
     let expires: Date
     /// The keys' DER bytes, which the check code covers.
     let pubDER: Data
     let approvalDER: Data?
+
+    struct Credential: Equatable {
+        let id: String
+        let publicKey: String
+        let publicKeyDER: Data
+        /// A credential id is at most 1023 bytes (WebAuthn's own bound).
+        static let longestID = 1023
+    }
 
     /// Why a code can't be paired; each is said to the person in their words.
     enum Problem: Error, Equatable {
@@ -31,7 +42,7 @@ struct PairingRequest: Equatable {
         case notAPairingCode
         /// `exp` has passed: the computer shows a new code.
         case expired
-        /// A key isn't P-256, the two are the same, or one is missing or extra for its kind.
+        /// A key isn't P-256, two are the same, or one is missing or extra for its kind.
         case badKeys
         /// A name, platform, kind or nonce out of its bounds.
         case badField
@@ -50,7 +61,7 @@ struct PairingRequest: Equatable {
         guard let pub = string("pub"), let name = string("name"), let platform = string("platform"), let kind = string("kind"),
               let nonce = string("nonce"), let exp = string("exp") else { return .failure(.notAPairingCode) }
         // Fields KIFF doesn't take aren't signed for it.
-        let known: Set<String> = ["v", "pub", "approval_pub", "name", "platform", "kind", "nonce", "exp", "key_store"]
+        let known: Set<String> = ["v", "pub", "approval_pub", "name", "platform", "kind", "nonce", "exp", "key_store", "credential"]
         guard Set(object.keys).isSubset(of: known) else { return .failure(.badField) }
 
         guard let expires = time(exp) else { return .failure(.badField) }
@@ -74,26 +85,39 @@ struct PairingRequest: Equatable {
             guard let der = p256(approval), der != pubDER else { return .failure(.badKeys) }
             approvalDER = der
         }
+
+        // `credential`: only for a passkey computer, exactly `{id, public_key}`, its key P-256 and not the device key.
+        var credential: Credential?
+        if let field = object["credential"] {
+            guard kind == "passkey", let fields = field as? [String: Any], Set(fields.keys) == ["id", "public_key"],
+                  let id = fields["id"] as? String, let idBytes = base64url(id), (1...Credential.longestID).contains(idBytes.count),
+                  let publicKey = fields["public_key"] as? String else { return .failure(.badField) }
+            guard let der = p256(publicKey), der != pubDER else { return .failure(.badKeys) }
+            credential = Credential(id: id, publicKey: publicKey, publicKeyDER: der)
+        }
         return .success(PairingRequest(pub: pub, approvalPub: approval, name: name, platform: platform, kind: kind,
-                                       nonce: nonce, exp: exp, keyStore: keyStore as? String, expires: expires, pubDER: pubDER, approvalDER: approvalDER))
+                                       nonce: nonce, exp: exp, keyStore: keyStore as? String, credential: credential, expires: expires,
+                                       pubDER: pubDER, approvalDER: approvalDER))
     }
 
     /// Its device key is in software: it never approves by itself.
     var softwareKey: Bool { keyStore == "software" }
 
     /// The 6 characters both screens show before the fingerprint (§5.2): base32 of sha256 over the device
-    /// key's DER, then the approval key's when there is one.
+    /// key's DER, then the approval key's when there is one, or the passkey's in its place, so the code
+    /// covers the passkey the phone registers.
     var checkCode: String {
-        String(Self.base32(Data(SHA256.hash(data: pubDER + (approvalDER ?? Data())))).prefix(6))
+        String(Self.base32(Data(SHA256.hash(data: pubDER + (approvalDER ?? credential?.publicKeyDER ?? Data())))).prefix(6))
     }
 
     /// `POST /v1/me/pairings`'s body (§5.3): the QR's fields as it sent them. These exact bytes are what
     /// the approval key's `kiff.request.v1` covers.
     var body: Data {
-        var fields: [String: String] = ["v": Self.version, "pub": pub, "name": name, "platform": platform,
-                                        "kind": kind, "nonce": nonce, "exp": exp]
+        var fields: [String: Any] = ["v": Self.version, "pub": pub, "name": name, "platform": platform,
+                                     "kind": kind, "nonce": nonce, "exp": exp]
         if let approvalPub { fields["approval_pub"] = approvalPub }
         if let keyStore { fields["key_store"] = keyStore }
+        if let credential { fields["credential"] = ["id": credential.id, "public_key": credential.publicKey] }
         return (try? JSONSerialization.data(withJSONObject: fields, options: [.sortedKeys, .withoutEscapingSlashes])) ?? Data()
     }
 

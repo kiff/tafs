@@ -84,6 +84,32 @@ final class PairingTests: XCTestCase {
         XCTAssertEqual(read(code { $0["kind"] = "passkey"; $0["approval_pub"] = nil; $0["key_store"] = true }), .failure(.badField))
     }
 
+    /// A computer's own platform passkey (§5.1, as Windows pairs): only with `kind: "passkey"`, exactly
+    /// `{id, public_key}`, and the check code covers its key in the approval key's place (§5.2).
+    func testAPasskeyComputersCredentialIsReadAndCovered() throws {
+        let g = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEaxfR8uEsQkf4vOblY6RA8ncDfYEt6zOg9KE5RdiYwpZP40Li_hp_m47n60p8D54WK84zV2sxXs7LtkBoN79R9Q"
+        let twoG = "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEfPJ7GI0DT36KUjgDBLUaw8CJaeJ38hs1pgtI_EdmmXgHd1UQ247QQCk9msafdDDbun2t5jzpgimeBLedInhz0Q"
+        let passkey = { (credential: Any) in
+            self.code { $0["pub"] = g; $0["approval_pub"] = nil; $0["kind"] = "passkey"; $0["credential"] = credential }
+        }
+        let request = try read(passkey(["id": "AQID", "public_key": twoG])).get()
+        XCTAssertEqual(request.credential?.id, "AQID")
+        XCTAssertEqual(request.checkCode, "H6SJNU", "the passkey's key in the approval key's place: the shared vector's code")
+        let body = try XCTUnwrap(JSONSerialization.jsonObject(with: request.body) as? [String: Any])
+        XCTAssertEqual(body["credential"] as? [String: String], ["id": "AQID", "public_key": twoG], "sent on as read")
+
+        XCTAssertNil(try read(code { $0["pub"] = g; $0["approval_pub"] = nil; $0["kind"] = "passkey" }).get().credential,
+                     "optional in the QR; KIFF says if it needs one")
+        XCTAssertEqual(read(code { $0["credential"] = ["id": "AQID", "public_key": twoG] }), .failure(.badField), "only for a passkey computer")
+        XCTAssertEqual(read(passkey(["id": "AQID"])), .failure(.badField), "both fields")
+        XCTAssertEqual(read(passkey(["id": "AQID", "public_key": twoG, "rp": "x"])), .failure(.badField), "nothing else")
+        XCTAssertEqual(read(passkey(["id": "", "public_key": twoG])), .failure(.badField))
+        XCTAssertEqual(read(passkey(["id": String(repeating: "A", count: 1368), "public_key": twoG])), .failure(.badField), "at most 1023 bytes")
+        XCTAssertEqual(read(passkey("AQID")), .failure(.badField))
+        XCTAssertEqual(read(passkey(["id": "AQID", "public_key": g])), .failure(.badKeys), "not the device key")
+        XCTAssertEqual(read(passkey(["id": "AQID", "public_key": Self.nonce])), .failure(.badKeys), "a P-256 key")
+    }
+
     func testTheEncodings() {
         XCTAssertEqual(PairingRequest.base32(Data("foobar".utf8)), "MZXW6YTBOI", "RFC 4648's own example, unpadded")
         XCTAssertEqual(PairingRequest.base64url("-_8"), Data([0xFB, 0xFF]))
