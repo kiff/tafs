@@ -769,6 +769,61 @@ final class AppModel: ObservableObject {
         throw KIFFClient.KIFFError.expired
     }
 
+    // MARK: Signing in from another phone (KIFF's pairing contract §5.8)
+
+    /// How long between two claims: at least 3 s (§5.4), longer when KIFF says to slow down.
+    var pairClaimInterval: UInt64 = 3_000_000_000
+
+    /// A pairing offer shown on this device, with the claim's proof its device key signed once.
+    struct PairingStart: Equatable {
+        let offer: PairingOffer
+        let proof: String
+    }
+
+    /// This device holds no key (no Secure Enclave): it can't be paired, and signs in with KIFF instead.
+    struct CannotPair: LocalizedError {
+        var errorDescription: String? { Words.SignIn.pairNoKey(device: "\(ThisDevice.kind)") }
+    }
+
+    /// Makes the QR this device shows, from the keys it already holds, and signs the claim's proof once,
+    /// behind Face ID or the passcode: the person is here, with this device in their hands.
+    func startPairingSignIn() async throws -> PairingStart {
+        let key = signer.publicKeyDER, approvalKey = signer.approvalPublicKeyDER
+        guard !key.isEmpty, !approvalKey.isEmpty else { throw CannotPair() }
+        let offer = PairingOffer.make(publicKey: key, approvalKey: approvalKey,
+                                      name: Words.Settings.Devices.thisDeviceName(device: "\(ThisDevice.kind)"),
+                                      platform: ThisDevice.platform,
+                                      deviceKind: PairingOffer.deviceKind(platform: ThisDevice.platform, kiffKind: ThisDevice.kiffKind),
+                                      nonce: PairingOffer.freshNonce(), now: clock())
+        let proof = try await signer.sign(offer.claimMessage, reason: Words.SignIn.pairPrompt(device: "\(ThisDevice.kind)"))
+        return PairingStart(offer: offer, proof: proof)
+    }
+
+    /// Claims until the other phone approves (at least 3 s apart, slower when KIFF asks), then uses the
+    /// session, bound to this device's two keys. Throws `expired` when the code runs out first.
+    func finishPairingSignIn(_ start: PairingStart) async throws {
+        var interval = pairClaimInterval
+        while clock() < start.offer.expires {
+            var waited: UInt64 = 0
+            while waited < interval {
+                try await Task.sleep(nanoseconds: min(signInSlice, interval - waited))
+                waited += signInSlice
+            }
+            do {
+                let token = try await kiff.claimPairing(nonce: start.offer.nonce, pub: start.offer.pub, proof: start.proof)
+                await useSession(token.accessToken, tenant: token.tenant)
+                return
+            } catch KIFFClient.KIFFError.authorizationPending {
+                continue
+            } catch KIFFClient.KIFFError.slowDown {
+                interval += 2_000_000_000
+            } catch where Self.transient(error) {
+                continue
+            }
+        }
+        throw KIFFClient.KIFFError.expired
+    }
+
     /// A failure worth trying again: the network, or KIFF briefly not answering.
     static func transient(_ error: Error) -> Bool {
         if let e = error as? URLError {

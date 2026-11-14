@@ -98808,6 +98808,377 @@
         }
       }
     },
+    "sign_in.pair_check": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es fragt, ob dieses %1$@ %2$@ zeigt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It will ask whether this %1$@ shows %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te preguntará si este %1$@ muestra %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il vous demandera si cet %1$@ affiche %2$@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ti chiederà se questo %1$@ mostra %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die vraagt of deze %1$@ %2$@ toont."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zapyta, czy to urządzenie (%1$@) pokazuje %2$@."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vai perguntar se este %1$@ mostra %2$@."
+          }
+        }
+      }
+    },
+    "sign_in.pair_how": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne auf dem Telefon, das du schon mit tafs nutzt, %1$@ → %2$@ → %3$@ und scanne diesen Code."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the phone you already use with tafs, open %1$@ → %2$@ → %3$@, and scan this code."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En el teléfono que ya usas con tafs, abre %1$@ → %2$@ → %3$@ y escanea este código."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur le téléphone que vous utilisez déjà avec tafs, ouvrez %1$@ → %2$@ → %3$@, puis scannez ce code."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sul telefono che usi già con tafs, apri %1$@ → %2$@ → %3$@ e scansiona questo codice."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open op de telefoon die je al met tafs gebruikt %1$@ → %2$@ → %3$@ en scan deze code."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na telefonie, którego już używasz z tafs, otwórz %1$@ → %2$@ → %3$@ i zeskanuj ten kod."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No telefone que já usa com o tafs, abra %1$@ → %2$@ → %3$@ e leia este código."
+          }
+        }
+      }
+    },
+    "sign_in.pair_new_code": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Code ist abgelaufen, hier ist ein neuer."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That code expired, so here's a new one."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese código caducó, así que aquí tienes uno nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce code a expiré, en voici un nouveau."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quel codice è scaduto, eccone uno nuovo."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die code is verlopen, dus hier is een nieuwe."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten kod wygasł, więc oto nowy."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esse código expirou, por isso aqui está um novo."
+          }
+        }
+      }
+    },
+    "sign_in.pair_no_key": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses %1$@ kann keinen Schlüssel halten und lässt sich daher nicht koppeln. Melde dich stattdessen mit KIFF an."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This %1$@ can't hold a key, so it can't be paired. Sign in with KIFF instead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ no puede guardar una clave, así que no se puede vincular. Inicia sesión con KIFF."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet %1$@ ne peut pas conserver de clé, il ne peut donc pas être associé. Connectez-vous plutôt avec KIFF."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo %1$@ non può conservare una chiave, quindi non si può associare. Accedi invece con KIFF."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze %1$@ kan geen sleutel bewaren en kan dus niet gekoppeld worden. Log in plaats daarvan in met KIFF."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To urządzenie (%1$@) nie może przechowywać klucza, więc nie da się go sparować. Zaloguj się przez KIFF."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ não consegue guardar uma chave, por isso não pode ser associado. Inicie sessão com o KIFF."
+          }
+        }
+      }
+    },
+    "sign_in.pair_prompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses %1$@ mit deinem anderen Telefon koppeln"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pair this %1$@ with your other phone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular este %1$@ con tu otro teléfono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Associer cet %1$@ à votre autre téléphone"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Associa questo %1$@ al tuo altro telefono"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze %1$@ koppelen aan je andere telefoon"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sparuj to urządzenie (%1$@) z drugim telefonem"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Associar este %1$@ ao seu outro telefone"
+          }
+        }
+      }
+    },
+    "sign_in.pair_start": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit deinem anderen Telefon anmelden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in with your other phone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión con tu otro teléfono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter avec votre autre téléphone"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accedi con il tuo altro telefono"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggen met je andere telefoon"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaloguj się drugim telefonem"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sessão com o seu outro telefone"
+          }
+        }
+      }
+    },
+    "sign_in.pair_waiting": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wartet auf dein anderes Telefon…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for your other phone…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando a tu otro teléfono…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente de votre autre téléphone…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In attesa del tuo altro telefono…"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wacht op je andere telefoon…"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Czeka na Twój drugi telefon…"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À espera do seu outro telefone…"
+          }
+        }
+      }
+    },
     "sign_in.relink.code_expired": {
       "extractionState": "manual",
       "localizations": {

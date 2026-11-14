@@ -1951,6 +1951,13 @@
     <string name="sign_in_not_signed_out_device">Pas encore déconnecté de KIFF : %1$s. Réessayez, ou déconnectez cet %2$s depuis Appareils sur un autre appareil.</string>
     <string name="sign_in_open_kiff">Ouvrir KIFF pour approuver</string>
     <string name="sign_in_other_browser">Ou ouvrez ce lien dans un autre navigateur :</string>
+    <string name="sign_in_pair_check">Il vous demandera si cet %1$s affiche %2$s.</string>
+    <string name="sign_in_pair_how">Sur le téléphone que vous utilisez déjà avec tafs, ouvrez %1$s → %2$s → %3$s, puis scannez ce code.</string>
+    <string name="sign_in_pair_new_code">Ce code a expiré, en voici un nouveau.</string>
+    <string name="sign_in_pair_no_key">Cet %1$s ne peut pas conserver de clé, il ne peut donc pas être associé. Connectez-vous plutôt avec KIFF.</string>
+    <string name="sign_in_pair_prompt">Associer cet %1$s à votre autre téléphone</string>
+    <string name="sign_in_pair_start">Se connecter avec votre autre téléphone</string>
+    <string name="sign_in_pair_waiting">En attente de votre autre téléphone…</string>
     <string name="sign_in_relink_code_expired">Le code a expiré avant d\'être approuvé dans votre navigateur. Réessayez.</string>
     <string name="sign_in_relink_didnt_take">Ce téléphone ne peut toujours pas approuver. Réessayez, ou reconnectez-vous dans Réglages.</string>
     <string name="sign_in_relink_failed">La nouvelle approbation n\'a pas fonctionné. Réessayez, ou reconnectez-vous dans Réglages.</string>
