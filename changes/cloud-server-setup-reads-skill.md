@@ -1,0 +1,1 @@
+- **Coach asks for its own reads with a server's sign-in.** Coach's connect-an-app (version 26) connects a vendor's own server with no tools and its setup reads named, so the owner approves them with the sign-in, and the taf's tools and Card come next: two approvals ([Coach](../docs/coach.md)).
