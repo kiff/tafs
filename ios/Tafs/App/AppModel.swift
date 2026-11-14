@@ -6784,7 +6784,7 @@ final class AppModel: ObservableObject {
 
     /// A Coach chat waiting on the owner, from Needs you: Coach opens on that chat, where its card waits.
     func openCoachWaiting(_ waiting: TafsCloud.CoachWaiting) async {
-        guard mode == .kiff, !waiting.session.isEmpty else { return }
+        guard mode == .kiff, mayUseCoach, !waiting.session.isEmpty else { return }
         coachOpen = true
         await openSetupChat(waiting.session)
     }

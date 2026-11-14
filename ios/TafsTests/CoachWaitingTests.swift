@@ -39,9 +39,11 @@ final class CoachWaitingTests: XCTestCase {
         XCTAssertTrue(view.contains("ForEach(model.coachWaiting) { waiting in CoachWaitingCard(waiting: waiting).id(waiting.id) }"))
         XCTAssertTrue(view.contains("&& model.coachWaiting.isEmpty {"), "not 'nothing waiting' while Coach waits")
         XCTAssertTrue(view.contains("Button(waiting.words.open) { Task { await model.openCoachWaiting(waiting) } }"))
+        XCTAssertTrue(view.contains("if model.mayUseCoach {\n                Button(waiting.words.open)"), "no way in for someone who may not use Coach: the line alone")
         let app = try String(contentsOf: root.appendingPathComponent("App/AppModel.swift"), encoding: .utf8)
         let start = try XCTUnwrap(app.range(of: "func openCoachWaiting(_ waiting: TafsCloud.CoachWaiting) async {"))
         let body = String(app[start.upperBound...].prefix(250))
+        XCTAssertTrue(body.contains("guard mode == .kiff, mayUseCoach, !waiting.session.isEmpty else { return }"))
         XCTAssertTrue(body.contains("coachOpen = true"))
         XCTAssertTrue(body.contains("await openSetupChat(waiting.session)"))
     }

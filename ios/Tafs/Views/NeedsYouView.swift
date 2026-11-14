@@ -486,9 +486,12 @@ struct CoachWaitingCard: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
             }
-            Button(waiting.words.open) { Task { await model.openCoachWaiting(waiting) } }
-                .buttonStyle(PrimaryButtonStyle())
-                .accessibilityIdentifier("needs-you.coach-waiting." + waiting.session)
+            // Its way in only for someone who may use Coach: else the line alone, never a button that does nothing.
+            if model.mayUseCoach {
+                Button(waiting.words.open) { Task { await model.openCoachWaiting(waiting) } }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .accessibilityIdentifier("needs-you.coach-waiting." + waiting.session)
+            }
         }
     }
 }

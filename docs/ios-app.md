@@ -677,7 +677,8 @@ Home lists it ([api.md](api.md) › Coach waiting; `KIFF/TafsCloud+CoachWaiting.
   ("Open Coach"). Needs you never says nothing is waiting while one is listed, and Home's count is
   tafs cloud's `needs_you`, which has each once.
 - **Read leniently:** one without its chat (`session`) or either line is left out, never Home with it.
-- **The way in** opens Coach on that chat (`openSetupChat(session)`), where its card waits.
+- **The way in** opens Coach on that chat (`openSetupChat(session)`), where its card waits. Someone who may not
+  use Coach (`mayUseCoach`) sees the line alone, never a button that does nothing.
 
 ## Your step
 
