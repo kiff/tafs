@@ -1179,6 +1179,7 @@
     <string name="home_explore_jobs">Explorer les tâches</string>
     <string name="home_footer">Connecté avec KIFF.</string>
     <string name="home_halted_open_halt">Bloqué. Ouvrir Bloquer</string>
+    <string name="home_labels_all">Tous</string>
     <string name="home_loading">Chargement de vos tafs…</string>
     <string name="home_new_taf">Nouveau taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Il ne tourne plus. tafs supprime ce qui reste à chaque actualisation.</string>

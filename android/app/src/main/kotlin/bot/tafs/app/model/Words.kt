@@ -1228,6 +1228,7 @@ object Words {
     val exploreJobs: String get() = Res.s(R.string.home_explore_jobs)
     val footer: String get() = Res.s(R.string.home_footer)
     val haltedOpenHalt: String get() = Res.s(R.string.home_halted_open_halt)
+    val labelsAll: String get() = Res.s(R.string.home_labels_all)
     val loading: String get() = Res.s(R.string.home_loading)
     val newTaf: String get() = Res.s(R.string.home_new_taf)
     val noLongerRunsTafsDeletes: String get() = Res.s(R.string.home_no_longer_runs_tafs_deletes)

@@ -1179,6 +1179,7 @@
     <string name="home_explore_jobs">Aufgaben entdecken</string>
     <string name="home_footer">Mit KIFF angemeldet.</string>
     <string name="home_halted_open_halt">Angehalten. „Anhalten“ öffnen</string>
+    <string name="home_labels_all">Alle</string>
     <string name="home_loading">Deine tafs werden geladen…</string>
     <string name="home_new_taf">Neuer taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Er läuft nicht mehr. tafs löscht bei jeder Aktualisierung, was noch übrig ist.</string>

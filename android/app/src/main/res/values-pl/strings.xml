@@ -1269,6 +1269,7 @@
     <string name="home_explore_jobs">Przeglądaj zadania</string>
     <string name="home_footer">Zalogowano przez KIFF.</string>
     <string name="home_halted_open_halt">Zablokowane. Otwórz sekcję Zablokuj</string>
+    <string name="home_labels_all">Wszystkie</string>
     <string name="home_loading">Wczytywanie Twoich tafs…</string>
     <string name="home_new_taf">Nowy taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Już nie działa. tafs usuwa to, co zostało, przy każdym odświeżeniu.</string>

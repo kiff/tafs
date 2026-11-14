@@ -1179,6 +1179,7 @@
     <string name="home_explore_jobs">Esplora i lavori</string>
     <string name="home_footer">Accesso effettuato con KIFF.</string>
     <string name="home_halted_open_halt">Bloccato. Apri Blocca</string>
+    <string name="home_labels_all">Tutti</string>
     <string name="home_loading">Caricamento dei tuoi tafs…</string>
     <string name="home_new_taf">Nuovo taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Non viene più eseguito. tafs elimina ciò che resta a ogni aggiornamento.</string>
