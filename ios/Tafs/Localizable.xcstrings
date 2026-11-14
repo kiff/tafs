@@ -45761,6 +45761,112 @@
         }
       }
     },
+    "device.linux": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Computer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "computer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ordenador"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PC"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "computer"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "computer"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "komputer"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "computador"
+          }
+        }
+      }
+    },
+    "device.mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac"
+          }
+        }
+      }
+    },
     "device.phone": {
       "extractionState": "manual",
       "localizations": {
@@ -45863,6 +45969,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "tablet"
+          }
+        }
+      }
+    },
+    "device.windows": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Windows-PC"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Windows PC"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PC con Windows"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PC Windows"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PC Windows"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Windows-pc"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "komputer z Windows"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PC Windows"
           }
         }
       }
@@ -67614,6 +67773,748 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ainda nada"
+          }
+        }
+      }
+    },
+    "pair.added": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser %1$@ ist hinzugefügt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This %1$@ is added."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ está añadido."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce %1$@ est ajouté."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo %1$@ è aggiunto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze %1$@ is toegevoegd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten %1$@ został dodany."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ está adicionado."
+          }
+        }
+      }
+    },
+    "pair.added_passkey": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser %1$@ kann Genehmigungen nicht selbst signieren. Genehmige auf deinem Handy oder mit einem Passkey."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This %1$@ can't sign approvals itself. Approve on your phone, or with a passkey."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ no puede firmar aprobaciones por sí mismo. Aprueba en tu teléfono o con una llave de acceso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce %1$@ ne peut pas signer les approbations lui-même. Approuvez sur votre téléphone, ou avec une clé d'identification."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo %1$@ non può firmare le approvazioni da solo. Approva sul telefono o con una passkey."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze %1$@ kan goedkeuringen niet zelf ondertekenen. Keur goed op je telefoon, of met een toegangssleutel."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten %1$@ nie może sam podpisywać zatwierdzeń. Zatwierdzaj na telefonie albo kluczem dostępu."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ não pode assinar aprovações sozinho. Aprove no telemóvel ou com uma chave de acesso."
+          }
+        }
+      }
+    },
+    "pair.check_code_lead": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Handy fragt, ob dein %1$@ diesen Code zeigt:"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your phone asks if your %1$@ shows this code:"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu teléfono te pregunta si tu %1$@ muestra este código:"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre téléphone vous demande si votre %1$@ affiche ce code :"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il telefono ti chiede se il tuo %1$@ mostra questo codice:"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je telefoon vraagt of je %1$@ deze code toont:"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon zapyta, czy Twój %1$@ pokazuje ten kod:"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O seu telemóvel pergunta se o seu %1$@ mostra este código:"
+          }
+        }
+      }
+    },
+    "pair.code_expired": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Code ist abgelaufen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This code expired."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este código ha caducado."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce code a expiré."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo codice è scaduto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze code is verlopen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten kod wygasł."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este código expirou."
+          }
+        }
+      }
+    },
+    "pair.device_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs auf diesem %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs on this %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs en este %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs sur ce %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs su questo %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs op deze %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs – %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tafs neste %1$@"
+          }
+        }
+      }
+    },
+    "pair.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser %1$@ wurde nicht hinzugefügt: %2$@. Zeig einen neuen Code und versuch es noch einmal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This %1$@ wasn't added: %2$@. Show a new code and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ no se añadió: %2$@. Muestra un código nuevo y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce %1$@ n'a pas été ajouté : %2$@. Affichez un nouveau code et réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo %1$@ non è stato aggiunto: %2$@. Mostra un nuovo codice e riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze %1$@ is niet toegevoegd: %2$@. Toon een nieuwe code en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten %1$@ nie został dodany: %2$@. Pokaż nowy kod i spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ não foi adicionado: %2$@. Mostre um código novo e tente outra vez."
+          }
+        }
+      }
+    },
+    "pair.from_sign_in": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutzt du tafs schon auf deinem Handy? Füge diesen %1$@ damit hinzu."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already use tafs on your phone? Add this %1$@ with it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Ya usas tafs en tu teléfono? Añade este %1$@ con él."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vous utilisez déjà tafs sur votre téléphone ? Ajoutez ce %1$@ avec lui."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usi già tafs sul telefono? Aggiungi questo %1$@ con il telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik je tafs al op je telefoon? Voeg deze %1$@ ermee toe."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Używasz już tafs na telefonie? Dodaj ten %1$@ za jego pomocą."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já usa o tafs no telemóvel? Adicione este %1$@ com ele."
+          }
+        }
+      }
+    },
+    "pair.new_code": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuen Code zeigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show a new code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar un código nuevo"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afficher un nouveau code"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostra un nuovo codice"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toon een nieuwe code"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pokaż nowy kod"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar um código novo"
+          }
+        }
+      }
+    },
+    "pair.steps": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffne auf deinem Handy tafs, dann %1$@, %2$@, %3$@. Scanne diesen Code."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On your phone, open tafs, then %1$@, %2$@, %3$@. Scan this code."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tu teléfono, abre tafs y luego %1$@, %2$@, %3$@. Escanea este código."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur votre téléphone, ouvrez tafs, puis %1$@, %2$@, %3$@. Scannez ce code."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sul telefono, apri tafs, poi %1$@, %2$@, %3$@. Scansiona questo codice."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open tafs op je telefoon, dan %1$@, %2$@, %3$@. Scan deze code."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na telefonie otwórz tafs, potem %1$@, %2$@, %3$@. Zeskanuj ten kod."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No telemóvel, abra o tafs e depois %1$@, %2$@, %3$@. Leia este código."
+          }
+        }
+      }
+    },
+    "pair.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen %1$@ mit deinem Handy hinzufügen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add this %1$@ with your phone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añade este %1$@ con tu teléfono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter ce %1$@ avec votre téléphone"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi questo %1$@ con il telefono"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voeg deze %1$@ toe met je telefoon"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj ten %1$@ za pomocą telefonu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicione este %1$@ com o seu telemóvel"
+          }
+        }
+      }
+    },
+    "pair.view_only.add": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diesen %1$@ hinzufügen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add this %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir este %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter ce %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi questo %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze %1$@ toevoegen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj ten %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicionar este %1$@"
+          }
+        }
+      }
+    },
+    "pair.view_only.lead": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser %1$@ zeigt deine tafs, Braucht dich und das Protokoll. Genehmigen kann er erst, wenn du ihn mit deinem Handy hinzufügst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This %1$@ shows your tafs, Needs you and the Record. It can't approve until you add it with your phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ muestra tus tafs, Te necesita y el Registro. No puede aprobar hasta que lo añadas con tu teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce %1$@ affiche vos tafs, Vous attend et le Registre. Il ne peut pas approuver tant que vous ne l'avez pas ajouté avec votre téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo %1$@ mostra i tuoi tafs, Ti aspetta e il Registro. Non può approvare finché non lo aggiungi con il telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze %1$@ toont je tafs, Wacht op jou en het Logboek. Hij kan niets goedkeuren tot je hem toevoegt met je telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten %1$@ pokazuje Twoje tafs, Czeka na Ciebie i Rejestr. Nie może zatwierdzać, dopóki nie dodasz go za pomocą telefonu."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este %1$@ mostra os seus tafs, Precisa de si e o Registo. Não pode aprovar até o adicionar com o seu telemóvel."
+          }
+        }
+      }
+    },
+    "pair.view_only.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur ansehen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View only"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo ver"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consultation seule"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo lettura"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alleen bekijken"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tylko podgląd"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Só ver"
+          }
+        }
+      }
+    },
+    "pair.waiting": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warten auf dein Handy…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waiting for your phone…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando a tu teléfono…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En attente de votre téléphone…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In attesa del telefono…"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wachten op je telefoon…"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Czekam na telefon…"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À espera do seu telemóvel…"
           }
         }
       }
