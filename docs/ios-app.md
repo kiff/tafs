@@ -807,6 +807,12 @@ Tests: `TafsTests/YourStepTests.swift`.
   that test found.
 - **UI tests** (`TafsUITests`): `ChatPinUITests` holds how a sent message, the work block
   and the answer sit in the chat ([chat.md](chat.md#the-sent-message-stays-on-top)).
+  Every UI test class is a `TafsUITestCase`: its `launch(_:)` puts one interruption monitor in
+  place that closes the simulator's own alerts, such as "Sign in to Apple Account", by their
+  own button (Not Now, Cancel, Later or Close, else the last one), since XCTest's default
+  handler can't and holds the test for minutes; then a tap on the status bar lets it run.
+  `typeInto(_:text:)` types once the field has the keyboard, tapping it once more if the
+  monitor took the first tap.
 - **CI** (`.github/workflows/ios.yml`) builds and tests, on a simulator, every pull request
   and push to main that changes what the app is built from (`ios/`, `app/strings/`, the
   workflow); a tafs cloud or Android change doesn't take a macOS runner. It builds once, then

@@ -1,23 +1,19 @@
 import XCTest
 
 /// The taf layout: the bar's tabs, and Setup's screens drawn from the sample's dial.
-final class SetupUITests: XCTestCase {
-    override func setUp() {
-        continueAfterFailure = false
-    }
-
+final class SetupUITests: TafsUITestCase {
     @MainActor
     func testThemeChoiceAppliesAndSurvivesRelaunch() {
         let app = XCUIApplication()
         app.launchArguments = ["-screenshots", "YES", "-tab", "account"]
-        app.launch()
+        launch(app)
         XCTAssertTrue(app.navigationBars["Account"].waitForExistence(timeout: 30))
         let dark = app.segmentedControls.buttons["Dark"]
         for _ in 0..<4 where !dark.isHittable { app.swipeUp() }
         XCTAssertTrue(dark.waitForExistence(timeout: 10))
         dark.tap()
         XCTAssertTrue(dark.isSelected)
-        app.terminate(); app.launch()
+        app.terminate(); app.launch(); letTheMonitorRun(app)
         for _ in 0..<4 where !dark.isHittable { app.swipeUp() }
         XCTAssertTrue(dark.isSelected, "the explicit appearance is kept")
         app.segmentedControls.buttons["System"].tap()
@@ -27,7 +23,7 @@ final class SetupUITests: XCTestCase {
     func testTheBarOpensEachTab() {
         let app = XCUIApplication()
         app.launchArguments = ["-screenshots", "YES", "-tab", "tafs"]
-        app.launch()
+        launch(app)
         for title in ["Account", "Tafs", "Needs you", "Record"] {
             XCTAssertTrue(app.buttons["bar." + title].waitForExistence(timeout: 30), "the bar has \(title)")
         }
@@ -43,7 +39,7 @@ final class SetupUITests: XCTestCase {
     func testStartsWhenShowsAnEventsFiltersBeforeItsApproval() {
         let app = XCUIApplication()
         app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-screen", "starts"]
-        app.launch()
+        launch(app)
         XCTAssertTrue(app.staticTexts["Every 4 hours, 9:00–17:00"].waitForExistence(timeout: 30), "its schedule")
         XCTAssertTrue(app.staticTexts["Approve signs on this phone; the app starts telling the taf only after that."].exists)
         app.buttons["Approve"].firstMatch.tap()
@@ -59,7 +55,7 @@ final class SetupUITests: XCTestCase {
     func testResultsGoToKeepsOnePlaceOn() {
         let app = XCUIApplication()
         app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-screen", "results"]
-        app.launch()
+        launch(app)
         XCTAssertTrue(app.staticTexts["At least one place stays on."].waitForExistence(timeout: 30))
         for place in ["Reply to the sender", "Alert our phones", "Email me", "Notion · Support log"] {
             XCTAssertTrue(app.switches.containing(.staticText, identifier: place).firstMatch.exists

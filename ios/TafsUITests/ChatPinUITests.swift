@@ -6,29 +6,19 @@ import XCTest
 /// when the thread's stored copy then replaces the message shown, nothing moves (the 859 test).
 /// The sample taf streams its answer as a real one does, so this runs with no server; it is
 /// slowed so each part lasts longer than a slow simulator takes to look.
-final class ChatPinUITests: XCTestCase {
-    override func setUp() {
-        continueAfterFailure = false
-    }
-
+final class ChatPinUITests: TafsUITestCase {
     @MainActor
     func testASentMessageGoesToTheTopAndTheWorkSitsUnderIt() throws {
         let app = XCUIApplication()
         app.launchArguments = ["-screenshots", "YES", "-tab", "tafs", "-screen", "chat", "-sampleReplySeconds", "20"]
-        app.launch()
+        launch(app)
 
         let field = app.descendants(matching: .any)["chat-field"]
         XCTAssertTrue(field.waitForExistence(timeout: 30), "the chat's field")
         let words = "Which refunds went out this morning?"
-        // The field takes the keyboard a moment after the tap on a slow simulator: wait for it,
-        // tapping again if it didn't, so typing never starts before it can.
-        XCTAssertTrue(within(10) {
-            if (field.value(forKey: "hasKeyboardFocus") as? Bool) == true { return true }
-            field.tap()
-            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
-            return (field.value(forKey: "hasKeyboardFocus") as? Bool) == true
-        }, "the chat's field has the keyboard")
-        field.typeText(words)
+        // The field takes the keyboard a moment after the tap on a slow simulator, and an alert
+        // the monitor closes can take the tap: typing waits for the keyboard, tapping once more.
+        typeInto(field, text: words)
         app.buttons["chat-send"].tap()
 
         let thread = app.descendants(matching: .any)["chat-thread"]
