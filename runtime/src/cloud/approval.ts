@@ -476,6 +476,29 @@ export interface DecideContext {
    * read that failed.
    */
   removedAgent?: (agent: string, askedOn?: string) => Promise<boolean>;
+  /**
+   * The Coach conversation the approval card is in. Once a connection's Card is approved in a conversation, no other
+   * draft over it is approved in that conversation (approvedDraftKey): Coach never re-drafts after the owner signed.
+   */
+  session?: string;
+}
+
+/** Where the Card a conversation approved for a connection is noted: one draft per connection, per conversation. */
+export const approvedDraftKey = (tenant: string, taf: string, session: string, grant: string) => `${tenant}#approved-draft#${taf}#${session}#${grant}`;
+
+/**
+ * A draft over a connection whose Card this conversation approved already, as another draft: refused, never signed.
+ * Coach found something wrong after the owner signed (a rule pointed at the wrong tool): it says what and stops, and
+ * the Card changes later, as a version, never as a second draft in the same set-up (doubled Cards, another approval,
+ * and a taf that never starts). The same draft again is the approval it was.
+ */
+async function redraftRefusal(ask: ApprovalAsk, vendor: string, ctx: DecideContext): Promise<Decision | undefined> {
+  if (!ask.draft || !ctx.session) return undefined;
+  const noted = (await ctx.store.get(approvedDraftKey(ctx.tenant, ctx.taf, ctx.session, ask.grant))) as { draft?: string } | undefined;
+  if (!noted?.draft || noted.draft === ask.draft) return undefined;
+  const W = approvalWords(ctx.lang);
+  return { outcome: "answered", note: W.alreadyApproved,
+    answer: `failed: ${vendor}'s Card was approved earlier in this conversation (draft ${noted.draft}), so no second draft over it is approved here. If something in it is wrong, tell the owner what, plainly, and stop: it changes later as a new version. Otherwise hand the taf over with the draft they approved.` };
 }
 
 /**
@@ -566,6 +589,8 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   if (refused) return refused;
   // The same taf's other connections: a Card may cover their tools too (two apps, one Card).
   const sameTaf = sameTafOf(grant, grants);
+  const redraft = await redraftRefusal(ask, vendor, ctx);
+  if (redraft) return redraft;
   // A grant asking for something again (tools added once connected) loses its "connected" note, so its card shows what it asks.
   if (grant.status !== "connected") await noteConnected(ctx.store, ctx.tenant, grant, ctx.now);
   if (grant.status === "connected") {
@@ -753,6 +778,21 @@ export interface Outcome {
  * holds it; else `failed: <why>`, in tafs cloud's words.
  */
 export async function settle(askID: string, report: Report, ctx: ReportContext): Promise<Outcome> {
+  const key = keyOf(ctx.tenant, ctx.taf, ctx.component, askID);
+  const pending = ID.test(askID) ? ((await ctx.store.get(key)) as Pending | undefined) : undefined;
+  const outcome = await settleAsk(askID, report, ctx);
+  // The Card this conversation approved for the connection: no other draft over it is approved here (redraftRefusal).
+  if (outcome.answer === "approved" && pending?.draft && ctx.session) {
+    await ctx.store.put(approvedDraftKey(ctx.tenant, ctx.taf, ctx.session, pending.grant), { draft: pending.draft, at: ctx.now.toISOString() },
+      new Date(ctx.now.getTime() + APPROVED_DRAFT_KEPT_MS));
+  }
+  return outcome;
+}
+
+/** How long a conversation's approved Card is remembered: past any set-up's end. */
+export const APPROVED_DRAFT_KEPT_MS = 7 * 24 * 3600_000;
+
+async function settleAsk(askID: string, report: Report, ctx: ReportContext): Promise<Outcome> {
   const W = approvalWords(ctx.lang);
   if (!ID.test(askID)) throw new ApprovalError(404, "no approval waits for that answer");
   const key = keyOf(ctx.tenant, ctx.taf, ctx.component, askID);

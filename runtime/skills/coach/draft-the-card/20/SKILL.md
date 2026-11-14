@@ -56,17 +56,12 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   says the owner is asked, else refuse. Every tool the taf gets goes on
   its Card, the read tools too: KIFF refuses any call no Card covers. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
-  read as the taf, so its Card covers it like any other. A draft leaving a
-  connection's tool uncovered isn't signed. A read tool's line has only a generous call count; never ask the owner to set it.  Name the
+  read as the taf, so its Card covers it like any other. A draft leaving a connection's tool uncovered isn't signed. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. A read tool's line has only a generous call count; never ask the owner to set it.  Name the
   tools in the draft as planque's status lists them (their names in KIFF, such
   as post_reply_k3f9). The draft names
   only the tools planque lists for this taf's own grant, and of those never
   one you asked for with setup_reads (a tool that lists operations' fields, or
-  the list of accounts): those are your reads, on your reader Card; the taf never gets them. Never another tool
-  KIFF knows on the account (another taf's, or one an admin connected for
-  another agent). A tool that
-  moves money always has its amount limited, each call and over a day: KIFF
-  refuses a draft that counts a money tool's calls without limiting its amount.
+  the list of accounts): those are your reads, on your reader Card; the taf never gets them. Never another tool KIFF knows on the account (another taf's). A tool that moves money always has its amount limited, each call and over a day.
   Count a money tool's calls only when the owner did.
   A tool that writes to anyone outside the company (an email, a reply), or drafts for them (a draft email, a draft invoice), goes in the result's taf as disclose: [{tool: its name in KIFF,
   fields: its text fields' paths, from planque read}]: KIFF's runtime then
