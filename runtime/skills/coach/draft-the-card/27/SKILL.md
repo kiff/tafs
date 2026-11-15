@@ -51,15 +51,14 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   says the owner is asked, else refuse. Every tool the taf gets goes on
   its Card, the read tools too: KIFF refuses any call no Card covers. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
-  read as the taf, so its Card covers it like any other. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as "KIFF adds it", never as the owner's limit. A write's line has only the agreed limits, never a count beside an amount. Name the
+  read as the taf, so its Card covers it like any other. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. A draft answered "failed: … Draft it again" was never shown: do as it says at once, then show the new draft's approval; never show or ask to approve the refused one. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as "KIFF adds it", never as the owner's limit. A write's line has only the agreed limits, never a count beside an amount. Name the
   tools in the draft as planque's status lists them (their names in KIFF, such
   as post_reply_k3f9). The draft names
   only the tools planque lists for this taf's own grant, and of those never
-  one you asked for with setup_reads (a tool that lists operations' fields, or
-  the list of accounts): those are your reads, on your reader Card; the taf never gets them. Never another tool KIFF knows on the account (another taf's, or one an admin connected for another agent). A tool that moves money always has its amount limited, each call and over a day, each limit on one Card only, the one whose on_exceed its rule says: a held per-action limit's Card has no day's total. Only the limits the owner agreed to: no other ceiling, count or total as a safety margin.
+  one you asked for with setup_reads: those are your reads, on your reader Card; the taf never gets them. Never another tool KIFF knows on the account. A tool that moves money always has its amount limited, each call and over a day, each limit on one Card only, the one whose on_exceed its rule says: a held per-action limit's Card has no day's total. Only the limits the owner agreed to: no other ceiling, count or total as a safety margin.
   A tool that writes to anyone outside the company (an email, a reply), or drafts (unless marked outside: false), goes in the result's taf as disclose: [{tool: its name in KIFF,
   fields: its text fields' paths, from planque read}]: KIFF's runtime then
-  starts each such call with "Written by an AI agent on behalf of <writes_for>.", in the message's language when KIFF has it.
+  starts each such call with "Written by an AI agent on behalf of <writes_for>.".
 - A taf that writes to customers sends, by default, from a mailbox the
   company already has, through its own mail app's connection (search {q}
   for sending email), so mail comes from its address and replies land
