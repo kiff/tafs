@@ -98,6 +98,37 @@ describe("a taf's server-composed setup", () => {
     const pl = (n: number) => eachItemWords({ quantity: "count", limit: n, window: "calendar_day", per: "order" }, "pl");
     expect([pl(1), pl(2), pl(5)]).toEqual(["1 wywołanie dziennie na każdy order", "2 wywołania dziennie na każdy order", "5 wywołań dziennie na każdy order"]);
   });
+  // A Spanish owner's Setup read "Workflow · Ask Coach to set its workflow" and "0 notes": the page's own lines, its
+  // workflow, notes, actions, connection status, seven days and versions, are in the person's language too.
+  it("says the Setup page's own lines in the person's language", () => {
+    const none = knobOf({ name: "Example", does: { label: "Read", line: "Read cases" }, unscheduled: true, doors: [], places: ["app"], tools: new Map([["read_case", "Read a case"]]), zone: "UTC", now, today: { done: 0, working: 0, retrying: 0, needs_you: 0 } });
+    const lines = (lang: (typeof LANGS)[number]) => {
+      const set = setupView({ agent: "agent-example", grants: [grant], knob, rules: [], versions: { versions: [{ n: 1 }, { n: 2, live: true }] } as VersionState,
+        notes: [{ content: "A note" }, { content: "Another" }], now, calls: [], statsComplete: true, lang });
+      const unset = setupView({ agent: "agent-example", grants: [grant, { ...grant, id: "held", status: "pending", signed_in: true }], knob: none, rules: [],
+        versions: { versions: [] }, notes: [], now, calls: [], statsComplete: false, lang });
+      return [set.workflow.title, set.workflow.summary, set.memory.title, set.connections[0]!.action_words, set.connections[0]!.status_words,
+        set.connections[0]!.stats.words, set.versions.title, set.versions.summary,
+        unset.workflow.summary, unset.connections[0]!.workflow_words!, unset.memory.title, unset.connections[1]!.action_words,
+        unset.connections[1]!.status_words, unset.connections[0]!.stats.words, unset.versions.summary];
+    };
+    const en = lines("en");
+    expect(en).toEqual(["Workflow", "1 step · Example", "2 notes", "1 action", "Connected", "0 calls · 0 done · 0 held in the last 7 days",
+      "Changes to how it runs", "v2 live · 1 earlier", "Ask Coach to set its workflow", "Ask Coach to set its workflow", "0 notes",
+      "Choose actions", "Signed in · actions waiting for approval", "The last 7 days could not be read in full; try again", "Runs its original definition"]);
+    for (const lang of LANGS.filter((l) => l !== "en")) {
+      const said = lines(lang);
+      expect(said, lang).toHaveLength(en.length);
+      // "note", "notes" and "action" are French words too (as in words.test.ts).
+      said.forEach((line, i) => lang === "fr" && [2, 3, 10].includes(i) ? undefined : expect(line, `${lang}: ${en[i]}`).not.toBe(en[i]));
+    }
+    const es = lines("es");
+    expect([es[0], es[8], es[10]]).toEqual(["Flujo de trabajo", "Preguntar a Coach para que defina su flujo de trabajo", "0 notas"]);
+    // Polish counts in three forms.
+    const notes = (n: number) => setupView({ agent: "agent-example", grants: [], knob, rules: [], versions: { versions: [] },
+      notes: Array.from({ length: n }, () => ({ content: "x" })), now, calls: [], statsComplete: true, lang: "pl" }).memory.title;
+    expect([notes(1), notes(2), notes(5)]).toEqual(["1 notatka", "2 notatki", "5 notatek"]);
+  });
   it("keeps vendor-supplied display names and removes a server-id suffix only at the source", () => {
     expect(appDisplayName({ ...grant, vendor: "Example Suite" })).toBe("Example Suite");
     expect(appDisplayName(grant)).toBe("Example");

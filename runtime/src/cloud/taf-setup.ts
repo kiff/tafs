@@ -168,25 +168,26 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
     const done = ownCalls.filter((c) => activityMatches(c, "done")).length;
     const held = ownCalls.filter((c) => activityMatches(c, "held")).length;
     return { id: g.id, name: names.get(g.id)!, status: g.status,
-      status_words: g.status_words || ({ connected: "Connected", listed: "Signed in · choose its actions", signed_in: "Signed in", needs_reconnect: "Sign in again", pending: "Signed in · actions waiting for approval" } as Record<string, string>)[g.status] || "Read its connection",
-      reconnect: g.status === "needs_reconnect", action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: "Ask Coach to set its workflow" } : {}),
+      status_words: g.status_words || ({ connected: w.setup_status_connected, listed: w.setup_status_listed, signed_in: w.setup_status_signed_in, needs_reconnect: w.setup_status_needs_reconnect, pending: w.setup_status_pending } as Record<string, string>)[g.status] || w.setup_status_unknown,
+      reconnect: g.status === "needs_reconnect", action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: w.setup_workflow_none } : {}),
       ...(custodyWords(g.custody) ? { custody_words: custodyWords(g.custody) } : {}), ...(g.on_demand === true ? { on_demand: true } : {}),
       ...(accountWords(g) ? { account_words: accountWords(g) } : {}),
       ...(g.provider === "browser" && g.status === "connected" ? { site_sign_in: { ...SITE_SIGN_IN } } : {}),
-      action_words: actions.length ? `${actions.length} action${actions.length === 1 ? "" : "s"}` : "Choose actions",
+      action_words: actions.length ? w.setup_actions(actions.length, plural(lang, actions.length)) : w.setup_choose_actions,
       actions, steps: steps.filter((s) => s.grant === g.id).map((s) => s.number), workflow_steps: steps.filter((s) => s.grant === g.id),
       running: Boolean(input.running && tools.has(input.running)),
       stats: { calls: ownCalls.length, done, held, complete: input.statsComplete,
         activity_query: new URLSearchParams({ tools: [...tools].join(","), from: new Date(cutoff).toISOString() }).toString(),
-        words: input.statsComplete ? `${ownCalls.length} calls · ${done} done · ${held} held in the last 7 days` : "The last 7 days could not be read in full; try again" } };
+        words: input.statsComplete ? w.setup_stats(ownCalls.length, plural(lang, ownCalls.length), done, held) : w.setup_stats_incomplete } };
   });
   const live = input.versions.versions.find((v) => v.live)?.n;
   const earlier = input.versions.versions.filter((v) => live !== undefined && v.n < live).length;
   const apps = steps.map((s) => s.app).filter((s): s is string => Boolean(s));
   const order = apps.filter((app, i) => app !== apps[i - 1]);
   const running = steps.find((s) => s.running)?.number;
-  return { connections, workflow: { title: "Workflow", summary: steps.length ? `${steps.length} step${steps.length === 1 ? "" : "s"}${order.length ? ` · ${order.join(" → ")}` : ""}` : "Ask Coach to set its workflow",
+  // Every line in the app's language (docs/languages.md): the app shows them as they come.
+  return { connections, workflow: { title: w.setup_workflow_title, summary: steps.length ? `${w.setup_workflow_steps(steps.length, plural(lang, steps.length))}${order.length ? ` · ${order.join(" → ")}` : ""}` : w.setup_workflow_none,
     steps, ...(running ? { running_step: running } : {}) },
-    memory: { count: input.notes.length, title: `${input.notes.length} note${input.notes.length === 1 ? "" : "s"}`, ...(input.notes[0] ? { latest: input.notes[0].content } : {}) },
-    versions: { title: "Changes to how it runs", summary: live !== undefined ? `v${live} live · ${earlier} earlier` : "Runs its original definition", ...(live !== undefined ? { live } : {}), earlier } };
+    memory: { count: input.notes.length, title: w.setup_notes(input.notes.length, plural(lang, input.notes.length)), ...(input.notes[0] ? { latest: input.notes[0].content } : {}) },
+    versions: { title: w.setup_versions_title, summary: live !== undefined ? w.setup_versions_live(live, earlier) : w.setup_versions_original, ...(live !== undefined ? { live } : {}), earlier } };
 }

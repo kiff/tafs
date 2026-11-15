@@ -1,0 +1,1 @@
+- **tafs cloud: a taf's Setup page reads in the person's language.** Its Workflow line ("Ask Coach to set its workflow", "3 steps · …"), notes count, actions count, connection status, last-7-days line and versions lines came in English whatever the app's language; they now come in all 8, with Polish's three plural forms (docs/languages.md).
