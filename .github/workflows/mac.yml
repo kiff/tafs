@@ -97,6 +97,24 @@ jobs:
       # launch outside it (the welcome screen) starts listening for purchases,
       # and on a runner, which has no Apple Account, the App Store's sign-in
       # then covers the window for the launches after it.
+      # TEMPORARY, removed before review: who raises the App Store's sign-in.
+      - name: Diagnose the App Store sign-in
+        continue-on-error: true
+        run: |
+          app="$PWD/ios/build/Build/Products/Debug-maccatalyst/Tafs.app"
+          start=$(date "+%Y-%m-%d %H:%M:%S")
+          open -n "$app" --args -screenshots YES -signedIn YES -tab tafs
+          sleep 12
+          echo "--- windows by process"
+          osascript -e 'tell application "System Events" to get {name, (count windows)} of (every process whose background only is false)' || true
+          osascript -e 'tell application "System Events" to get name of every process whose (count windows) > 0' || true
+          echo "--- store and account processes"
+          ps axo pid,ppid,comm | grep -iE "store|ams|akd|account|appleid" | grep -v grep || true
+          echo "--- log"
+          log show --start "$start" --style compact --predicate 'subsystem BEGINSWITH "com.apple.AppleMediaServices" OR subsystem BEGINSWITH "com.apple.storekit" OR subsystem BEGINSWITH "com.apple.commerce" OR process == "storeaccountd" OR process == "storekitagent" OR process == "appstoreagent" OR process == "Tafs"' 2>/dev/null | grep -iE "auth|sign|account|bundle|client|request|receipt|tafs" | head -150 || true
+          pkill -x Tafs || true
+          sleep 2
+
       - name: Run the Mac app and take screenshots
         run: |
           cd ios
