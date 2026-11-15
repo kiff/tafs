@@ -15,6 +15,8 @@ read it: in CI, in seconds, never first on a phone or in an Eval.
 | `taf-setup-connected.json`, `taf-setup-reconnect.json` | `runtime/test/cloud.test.ts` (a taf's Setup tab with Gmail connected, then with its sign-in expired and Connect again) | the same |
 | `taf-runs.json` | `runtime/test/cloud.test.ts` (a taf's runs: one stopped on an error, one with none) | the desktop apps (their Overview's last result) |
 | `taf-run-report.json`, `taf-run-report-running.json`, `taf-run-report-terminated.json` | `runtime/test/cloud.test.ts` (one run's report: ended with its count from the record, still working, stopped on an error) | the same |
+| `tafs.json`, `tafs-paused.json` | `runtime/test/cloud.test.ts` (the tafs list: one live taf with its next run and clock, then paused) | the desktop apps (their Overview, Your tafs and a taf's page) |
+| `home.json`, `home-paused.json` | `runtime/test/cloud.test.ts` (Home's list: the same taf with its refund Card, its state, work line and health, then paused) | the same; the phones once they read it |
 
 Write a file again only through its writer: `UPDATE_CONTRACTS=1 npx vitest run` in `runtime/` (one file of `{about, answer}` per answer through `runtime/test/contract.ts`). Never
 by hand: a hand edit is a contract no code keeps.

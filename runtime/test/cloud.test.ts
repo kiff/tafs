@@ -1228,6 +1228,40 @@ describe("tafs cloud", () => {
     expect(stopped.body.report.status).toBe("terminated");
     contract("taf-run-report-terminated", "GET /v1/tafs/{id}/runs/{session} for a run that stopped on an error: terminated, with no answer.", stopped.body);
   });
+
+  // What the desktops' Overview, Your tafs and a taf's page read for the list: GET /v1/tafs (each taf's schedule and
+  // clock) and GET /v1/home (its state, Card, last change and health), live with its schedule's checks skipped, then
+  // paused.
+  it("keeps the tafs list and Home's list as contracts, live with its health and then paused", async () => {
+    const w = world();
+    // Its refund Card: €100 a call, €1,000 a day with €200 used, 20 calls a day.
+    w.account.mandates = [{
+      id: "card_rae", subject: "rae", active: true, on_exceed: "hold", valid_until: "2026-12-31T00:00:00Z",
+      grants: [{ action: "stripe_refund", title: "Create refund", per_action_max: [{ quantity: "sum(amount)", max: 10000, unit: "EUR", scale: 2 }] }],
+      aggregates: [{ quantity: "sum(amount)", limit: 100000, window: "calendar_day", unit: "EUR", scale: 2 }, { quantity: "count", limit: 20, window: "calendar_day" }],
+      limits: [{ quantity: "sum(amount)", window: "calendar_day", limit: 100000, used: 20000, status: "ok", unit: "EUR", scale: 2 }],
+    }];
+    const at = (iso: string) => ({ due: iso, at: iso });
+    w.agents.firings.set(`t_acme|${RAE}`, [
+      { ...at("2026-10-29T09:45:00.000Z"), outcome: "skipped_too_large" },
+      { ...at("2026-10-29T09:30:00.000Z"), outcome: "skipped_too_large" },
+      { ...at("2026-10-29T09:15:00.000Z"), outcome: "run", run: "r1" },
+    ]);
+    const list = await call(w, "GET", "/v1/tafs", { token: "ana" });
+    expect(list.body.tafs.map((t: { id: string; status: string }) => [t.id, t.status])).toEqual([[RAE, "active"]]);
+    contract("tafs", "GET /v1/tafs for someone who manages the tafs: one live taf, with its next run in the person's words and its clock.", list.body);
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(home.body.tafs.find((t: { id: string }) => t.id === RAE).health.level).toBe("failing");
+    expect(home.body.tafs[0].card.ids).toEqual(["card_rae"]);
+    contract("home", "GET /v1/home for someone who manages the tafs: one live taf with its refund Card, whose last two checks were skipped (its health failing), with its state, Card and work line.", home.body);
+
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" })).status).toBe(200);
+    const paused = await call(w, "GET", "/v1/tafs", { token: "ana" });
+    expect(paused.body.tafs[0].status).toBe("paused");
+    contract("tafs-paused", "GET /v1/tafs for someone who manages the tafs: the same taf, paused.", paused.body);
+    const homePaused = await call(w, "GET", "/v1/home", { token: "ana" });
+    contract("home-paused", "GET /v1/home for someone who manages the tafs: the same taf, paused.", homePaused.body);
+  });
 });
 
 describe("countedLine", () => {
