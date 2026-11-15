@@ -98,6 +98,7 @@
     <string name="approval_set_a_screen_lock">Defina um bloqueio de ecrã neste telefone para aprovar</string>
     <string name="approval_settings_face_id_passcode_touch">Definições → Face ID e código (Touch ID e código num dispositivo com Touch ID)</string>
     <string name="approval_settings_path_face_id">Definições → Face ID e código</string>
+    <string name="approval_settings_path_mac_touch_id">Definições do Sistema → Touch ID e palavra-passe</string>
     <string name="approval_settings_path_touch_id">Definições → Touch ID e código</string>
     <string name="approval_state_none_enrolled">Não há nenhuma impressão digital configurada neste telefone. Adicione uma nas definições e depois volte.</string>
     <string name="approval_state_ready">As aprovações estão configuradas neste telefone.</string>

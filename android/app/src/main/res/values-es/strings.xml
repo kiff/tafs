@@ -98,6 +98,7 @@
     <string name="approval_set_a_screen_lock">Establece un bloqueo de pantalla en este teléfono para aprobar</string>
     <string name="approval_settings_face_id_passcode_touch">Ajustes → Face ID y código (Touch ID y código en un dispositivo con Touch ID)</string>
     <string name="approval_settings_path_face_id">Ajustes → Face ID y código</string>
+    <string name="approval_settings_path_mac_touch_id">Ajustes del Sistema → Touch ID y contraseña</string>
     <string name="approval_settings_path_touch_id">Ajustes → Touch ID y código</string>
     <string name="approval_state_none_enrolled">No hay ninguna huella configurada en este teléfono. Añade una en sus ajustes y vuelve.</string>
     <string name="approval_state_ready">Las aprobaciones están configuradas en este teléfono.</string>

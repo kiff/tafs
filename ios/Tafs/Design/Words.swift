@@ -206,6 +206,8 @@ enum Words {
         enum SettingsPath {
             /// Settings → Face ID & Passcode
             static var faceId: String { Words.line("approval.settings_path.face_id") }
+            /// System Settings → Touch ID & Password
+            static var macTouchId: String { Words.line("approval.settings_path.mac_touch_id") }
             /// Settings → Touch ID & Passcode
             static var touchId: String { Words.line("approval.settings_path.touch_id") }
         }

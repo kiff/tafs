@@ -98,6 +98,7 @@
     <string name="approval_set_a_screen_lock">Imposta un blocco schermo su questo telefono per approvare</string>
     <string name="approval_settings_face_id_passcode_touch">Impostazioni → Face ID e codice (Touch ID e codice su un dispositivo con Touch ID)</string>
     <string name="approval_settings_path_face_id">Impostazioni → Face ID e codice</string>
+    <string name="approval_settings_path_mac_touch_id">Impostazioni di Sistema → Touch ID e password</string>
     <string name="approval_settings_path_touch_id">Impostazioni → Touch ID e codice</string>
     <string name="approval_state_none_enrolled">Nessuna impronta è configurata su questo telefono. Aggiungine una nelle sue impostazioni, poi torna qui.</string>
     <string name="approval_state_ready">Le approvazioni sono configurate su questo telefono.</string>
