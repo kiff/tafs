@@ -443,6 +443,34 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(await ask()).toEqual({ outcome: "read_again", note: WORDS.cardsUnread });
   });
 
+  // Eval 43657637947: the taf held a read from a connection the draft didn't touch, which no Card covered; KIFF refused
+  // it, and the session's latch then stopped the refund KIFF would have allowed. Every connected app of the taf is checked.
+  it("a draft that leaves a tool of the taf's other connected app uncovered, with no Card in force covering it, isn't signed", async () => {
+    const s = services();
+    const refunds = grant({ status: "connected" }, { tools: [{ tool: "create_refund", name: "refund_k3", title: "Refund a payment" }] });
+    const reads = (over: Record<string, unknown> = {}, request: Record<string, unknown> = {}) => grant({ id: "g_2", status: "connected", vendor: "Stripe reads", ...over },
+      { tools: [{ tool: "stripe_api_read", name: "get_charge", title: "Read a charge", read_only: true }, { tool: "stripe_api_details", name: "fields_ab", read_only: true, setup_reads: true }], ...request });
+    s.grants = [refunds, reads()];
+    const card = { id: "c1", subject: "refunds-x", grants: [{ action: "refund_k3" }], on_exceed: "owner", aggregates: [{ quantity: "count", limit: 20, window: "calendar_day" }] };
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [card] };
+    const ask = async () => (await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+    const r = await ask();
+    expect(r).toMatchObject({ outcome: "answered", note: WORDS.uncovered("Read a charge") });
+    expect(String(r.answer)).toMatch(/^failed: no Card covers "Read a charge", which the taf's Stripe reads connection gives it.*no_mandate_issued/);
+    // The draft covering it, or a Card of the agent's in force: signed. Setup's own read (fields_ab) is never asked for.
+    s.drafts.drf_1.cards = [{ ...card, grants: [...card.grants, { action: " GET_CHARGE " }] }];
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    s.drafts.drf_1.cards = [card];
+    s.mandates = [{ id: "c0", subject: "refunds-x", active: true, grants: [{ action: "get_charge" }] }];
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    s.mandates = [];
+    // Another taf's connection, a removed one, or one whose tools still wait for their own approval: not this check's.
+    for (const other of [reads({}, { agent: "chargebacks-y" }), reads({ status: "disconnected" }), reads({ status: "pending" })]) {
+      s.grants = [refunds, other];
+      expect((await ask()).note).not.toBe(WORDS.uncovered("Read a charge"));
+    }
+  });
+
   // Eval 43402441612: "one invoice per order, ever" and "up to 10 drafts a day" signed as 1 create_invoice in the Card's
   // whole life, across every order, though the tool named its order (resource_argument). The skill's words alone didn't hold.
   it("a draft that counts a write once in its whole life, across every item, isn't signed: a limit for each item is per its argument", async () => {

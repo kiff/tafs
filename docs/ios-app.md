@@ -161,6 +161,7 @@ the app in sample mode.
 | `-screenshots YES` | Sample mode with the screenshots' data |
 | `-tab account \| tafs \| needs-you \| record` | Opens that tab |
 | `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| buy-credits` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
+| `-screen usage \| connect-apps \| devices \| new-taf \| coach` | The iPad reference set's screens over the sample (`ReferenceScreensTests`): `usage` and `connect-apps` select their sidebar item (`Screenshots.sidebarScreen`); `devices`, with `-tab account`, pushes Devices in Account, with Add a device; `new-taf` opens + New's job gallery; `coach` opens Coach mode, empty. Connect apps and the gallery read tafs cloud's answers kept in `Samples/` (`SampleScreens`), and Devices three sample devices, only with `-screenshots YES` over the sample |
 | `-screen calendar \| calendar-week` | Opens Calendar on today, in Day mode, or in Week mode on today's week (the Today pill already today): an iPad's whole-app sidebar selects its Calendar item, the phone opens it as Home's button does; over the sample it reads nothing from tafs cloud. CI's `languages` set shoots both, and the Overview (`-tab tafs`), on the 13-inch iPad in French and Portuguese with `-signedIn YES` (`fr-ipad-calendar-week.png`…) |
 | `-landscape YES` | The iPad's window turned to landscape, for its screenshots |
 | `-signedIn YES` | The iPad's sidebar laid out as for a signed-in account, its screens and Coach above the account, over the sample's tafs: a layout shot, nothing read from KIFF |
@@ -980,6 +981,13 @@ On the sign-in screen, **Sign in with your other phone**:
   already passed at an earlier commit with nothing changed since that it tests (the app for
   the unit tests, the screens for the UI tests, the iPad's layout for the iPad's), so an
   upload can go straight to the archive; a tag runs everything.
+- **The upload's profiles** (`ios/scripts/asc-profiles.rb`, through the App Store Connect API):
+  `bot.tafs.app` with Push, Time Sensitive Notifications (turned on once in the developer
+  portal, since the API can't) and Associated Domains, turned on by the script the first time,
+  for `webcredentials:kiff.dev`. kiff.dev's `apple-app-site-association` lists
+  `R54YWFRK4B.bot.tafs.app`, so the app's passkeys are kiff.dev's, at the origin KIFF accepts.
+  A profile made before a capability was on is replaced. Only the upload signs: tests,
+  screenshots and the Mac build don't.
 - **Screenshot runs** are manual runs with `upload` off and `screenshots` set (`full`, `key`
   or `languages`; it's `none` by default). They wait for an empty queue: one stops at once,
   before it takes a macOS runner, while another manual or tag run is queued or running, so

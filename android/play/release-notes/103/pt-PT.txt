@@ -1,0 +1,1 @@
+- Um telefone que não pode aprovar di-lo assim que a sua conta carrega: “Inicie sessão novamente neste telefone para aprovar, ou aprove a partir do seu outro telefone.”
