@@ -260,9 +260,16 @@ final class KIFFClient {
         let expiresIn: Int
         let tenant: String
         let subject: String
+        /// What the session may do: "key" approves with its approval key, "view" approves nothing
+        /// (a computer signed in through the browser on an account that already has a device that
+        /// approves: it approves only once paired from a phone).
+        /// Absent from an older KIFF.
+        var approvalMode: String? = nil
+
+        var viewOnly: Bool { approvalMode == "view" }
 
         enum CodingKeys: String, CodingKey {
-            case accessToken = "access_token", expiresIn = "expires_in", tenant, subject
+            case accessToken = "access_token", expiresIn = "expires_in", tenant, subject, approvalMode = "approval_mode"
         }
     }
 

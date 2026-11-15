@@ -765,7 +765,7 @@ final class AppModel: ObservableObject {
             signInNudged = false
             do {
                 let token = try await kiff.pollDeviceToken(deviceCode: start.deviceCode)
-                await useSession(token.accessToken, tenant: token.tenant)
+                await useSession(token.accessToken, tenant: token.tenant, viewOnly: token.viewOnly)
                 return
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue
@@ -822,7 +822,7 @@ final class AppModel: ObservableObject {
             }
             do {
                 let token = try await kiff.claimPairing(nonce: start.offer.nonce, pub: start.offer.pub, proof: start.proof)
-                await useSession(token.accessToken, tenant: token.tenant)
+                await useSession(token.accessToken, tenant: token.tenant, viewOnly: token.viewOnly)
                 return
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue
@@ -848,7 +848,9 @@ final class AppModel: ObservableObject {
     /// Starts using a KIFF session: keeps it in the Keychain, clears what belonged to any
     /// earlier session, and loads this one's Cards and tafs. A session from the device-flow
     /// sign-in names its account (`tenant`) and holds this phone's signing key.
-    func useSession(_ token: String, tenant: String? = nil) async {
+    /// `viewOnly`: KIFF said at sign-in that this session approves nothing (`approval_mode: view`), so
+    /// the app says so from the start and never asks for Face ID or Touch ID for an approval KIFF would refuse.
+    func useSession(_ token: String, tenant: String? = nil, viewOnly: Bool = false) async {
         Keychain.save(token, for: Self.tokenAccount)
         if let tenant {
             Keychain.save(tenant, for: Self.tenantAccount)
@@ -861,6 +863,11 @@ final class AppModel: ObservableObject {
         sessionHasKey = tenant != nil
         Keychain.delete(Self.approvalKeyedAccount)
         forgetApprovalKey()
+        if viewOnly {
+            // As KIFF's `403 view_only` to the approval key does: say so, and ask nothing more of it.
+            approvalKeyLost = true
+            approvalViewOnly = true
+        }
         // An approval window is the last session's: a new sign-in opens its own.
         forgetWindow()
         kiff.token = token
@@ -8449,6 +8456,8 @@ final class AppModel: ObservableObject {
 
     private func approveAsked(_ component: SetupComponent, shown: String?, shownDraft: String?) async {
         guard let grantID = component.grant, let s = setupTaf else { return }
+        // A view-only session approves nothing: say why on the card, before any Face ID or Touch ID.
+        if mode == .kiff && approvalViewOnly { cardNotes[component.id] = approvalKeyLostWords; return }
         lastError = nil
         shownTermsChanged = false
         cardNotes[component.id] = nil
@@ -8614,6 +8623,7 @@ final class AppModel: ObservableObject {
     func approveKeyAndCard(_ component: SetupComponent, shown: String?, shownDraft: String?, key: String) async -> KeyAndCard {
         guard let grantID = component.grant, let draftID = component.draft, let shown, let shownDraft, let s = setupTaf,
               planqueReady, sessionHasKey, let tenant = kiffTenant, connecting == nil else { return .notOffered }
+        if approvalViewOnly { cardNotes[component.id] = approvalKeyLostWords; return .failed }
         cardNotes[component.id] = nil
         lastError = nil
         connecting = grantID
