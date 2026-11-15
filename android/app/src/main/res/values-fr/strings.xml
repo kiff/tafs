@@ -1848,7 +1848,7 @@
     <string name="settings_devices_passkey_remove_named">Supprimer %1$s ?</string>
     <string name="settings_devices_passkey_remove_prompt">Supprimer la clé d\'accès %1$s de votre compte</string>
     <string name="settings_devices_passkey_too_slow">Cela a pris trop de temps. Réessayez.</string>
-    <string name="settings_devices_passkey_with_computer">Va avec son ordinateur</string>
+    <string name="settings_devices_passkey_with_computer">Liée à son ordinateur</string>
     <string name="settings_devices_passkeys_not_loaded">Impossible de charger vos clés d\'accès. %1$s</string>
     <string name="settings_devices_passkeys_title">Clés d\'accès</string>
     <string name="settings_devices_sign_out">Déconnecter</string>

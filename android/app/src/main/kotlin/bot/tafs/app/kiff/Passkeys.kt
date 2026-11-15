@@ -93,9 +93,16 @@ object PasskeyRegistration {
    * refuses (empty, longer, or with a control character inside: below U+0020, or U+007F): never cut to fit, since a cut name
    * isn't the one the person gave.
    */
-  fun validName(name: String): String? = name.trim().takeIf { kept ->
+  fun validName(name: String): String? = name.trim { it.isWhitespace() || it == '\u0085' }.takeIf { kept ->
     kept.isNotEmpty() && kept.codePointCount(0, kept.length) <= NAME_MAX && kept.none { it < ' ' || it == '\u007f' }
   }
+
+  /**
+   * Whether KIFF takes a passkey from this person: an account's owners and admins only (KIFF answers a member `403
+   * admins_only`). Read before Android is asked to make one, so a member's tap leaves no passkey on the phone that KIFF
+   * then refuses. KIFF still decides.
+   */
+  fun mayAdd(role: String?): Boolean = role == "owner" || role == "admin"
 
   /** The passkey's name: the phone's model as KIFF takes it, or "Android phone" for a model it would refuse. */
   fun name(model: String?): String = model?.let(::validName) ?: "Android phone"

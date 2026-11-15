@@ -77,6 +77,8 @@ class PasskeyRegistrationTest {
     for (given in rule.getValue("refused").jsonArray.map { it.jsonPrimitive.content }) assertNull(given, PasskeyRegistration.validName(given))
     // The phone's model, or a name KIFF takes when the model is one it would refuse: never a cut one.
     assertEquals("Pixel 8", PasskeyRegistration.name("  Pixel 8 "))
+    // Trimmed as KIFF trims (Go's strings.TrimSpace): a no-break space and U+0085 at an end too.
+    assertEquals("Pixel 8", PasskeyRegistration.name("\u00a0Pixel 8\u0085"))
     assertEquals("Android phone", PasskeyRegistration.name(""))
     assertEquals("Android phone", PasskeyRegistration.name("x".repeat(65)))
   }

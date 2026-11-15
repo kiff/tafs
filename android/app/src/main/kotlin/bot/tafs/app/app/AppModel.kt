@@ -622,6 +622,8 @@ data class AppState(
   val passkeyLine: String? = null,
   val passkeysError: String? = null,
   val passkeyBusy: Boolean = false,
+  /** Whether KIFF takes a passkey from this person (owners and admins), as its members say; null until read. */
+  val passkeyMayAdd: Boolean? = null,
   /** The account is being deleted, and why deleting it stopped, for its sheet; null when nothing went wrong. */
   val deletingAccount: Boolean = false,
   val deleteAccountError: String? = null,
@@ -7493,6 +7495,9 @@ class AppModel(
     try {
       val list = kiff.passkeys()
       if (generation == accountGeneration) _state.update { it.copy(passkeys = list, passkeysError = null) }
+      // Whether to offer Add a passkey: KIFF takes one from owners and admins only.
+      val role = runCatching { kiff.people().firstOrNull { it.you == true }?.role }.getOrNull()
+      if (generation == accountGeneration && role != null) _state.update { it.copy(passkeyMayAdd = PasskeyRegistration.mayAdd(role)) }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -7524,8 +7529,9 @@ class AppModel(
       // The person, as KIFF lists them: the subject the challenge names and the email the passkey is shown with.
       val me = kiff.people().firstOrNull { it.you == true }
       val email = me?.email ?: _state.value.kiffAccount?.email
-      if (me == null || email.isNullOrEmpty()) {
-        _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyAdminsOnly) }
+      // Before Android is asked for anything: a member's passkey would be made on the phone and then refused by KIFF.
+      if (me == null || email.isNullOrEmpty() || !PasskeyRegistration.mayAdd(me.role)) {
+        _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyAdminsOnly, passkeyMayAdd = me?.let { p -> PasskeyRegistration.mayAdd(p.role) }) }
         return false
       }
       val issuedAt = PasskeyRegistration.issuedAt(clock())

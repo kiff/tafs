@@ -68,7 +68,7 @@
   "settings.devices.passkey_remove_named": "Usunąć {name}?",
   "settings.devices.passkey_remove_prompt": "Usuń klucz dostępu {name} z konta",
   "settings.devices.passkey_too_slow": "Trwało to zbyt długo. Spróbuj ponownie.",
-  "settings.devices.passkey_with_computer": "Należy do swojego komputera",
+  "settings.devices.passkey_with_computer": "Powiązany z komputerem",
   "settings.devices.passkeys_not_loaded": "Nie udało się wczytać Twoich kluczy dostępu. {why}",
   "settings.devices.passkeys_title": "Klucze dostępu",
   "settings.devices.sign_out": "Wyloguj",

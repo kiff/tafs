@@ -144,7 +144,8 @@ fun DevicesSheet(
               }
             }
           }
-          if (addPasskey != null) {
+          // KIFF takes a passkey from owners and admins only: a member isn't offered one.
+          if (addPasskey != null && state.passkeyMayAdd != false) {
             Text(
               Words.Settings.Devices.passkeyAdd,
               style = scaled(15, FontWeight.SemiBold, if (state.passkeyBusy) Theme.dim else Theme.amber),

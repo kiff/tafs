@@ -1042,12 +1042,17 @@ answers it. That part is Android's own, with nothing in the app.
   - The challenge is base64url(SHA-256) of `kiff.passkey.register.v1\n<tenant>\n<subject>\n<issued_at>`, with
     `issued_at` to the second in UTC (`PasskeyRegistration.issuedAt`), which KIFF takes within 10 minutes.
   - Android draws its own sheet and asks for the screen lock. Putting it away sends nothing.
+  - **Owners and admins only, read first:** KIFF takes a passkey only from an account's owners and admins. The person's
+    role, from the same members list, is read before Android is asked for anything, so a member's tap leaves no passkey on
+    the phone for KIFF to refuse, and a member isn't offered Add (`PasskeyRegistration.mayAdd`, `AppState.passkeyMayAdd`).
+    KIFF still decides.
 - **Registering it** (`KiffClient.registerPasskey`): `POST /v1/me/passkeys` with `{name, issued_at, client_data_json,
   attestation_object}`, the creation's response as it came (`PasskeyRegistration.registerBody`). KIFF reads the
   credential from it; the phone parses nothing.
   - **The earlier body's fields** (`credential_id`, `public_key`) are never sent too: KIFF refuses both kinds at once.
-  - **The name** is the phone's model, trimmed, 1 to 64 code points with no control character inside, or "Android phone"
-    for one KIFF would refuse. It's never cut (`PasskeyRegistration.validName`).
+  - **The name** is the phone's model, trimmed as KIFF trims (a no-break space and U+0085 too), 1 to 64 code points with
+    no control character inside, or "Android phone" for one KIFF would refuse. It's never cut
+    (`PasskeyRegistration.validName`).
   - **The signature:** the approval key, behind a fingerprint that says "Add a passkey on this phone to your account",
     never inside an approval window. A session KIFF holds no approval key for adds none, and Android isn't asked: a
     stolen session would add its own.

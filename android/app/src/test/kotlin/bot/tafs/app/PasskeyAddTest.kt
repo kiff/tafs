@@ -27,18 +27,18 @@ class PasskeyAddTest {
   private val signer = softwareSigner(auth)
   private val t0 = Instant.parse("2026-11-15T18:30:00.250Z")
 
-  private val people = """{"members":[{"subject":"usr_other","role":"member"},{"subject":"usr_me","role":"owner","email":"owner@example.com","you":true}]}"""
+  private fun people(role: String = "owner") = """{"members":[{"subject":"usr_other","role":"member"},{"subject":"usr_me","role":"$role","email":"owner@example.com","you":true}]}"""
 
   /** Credential Manager's answer, as WebAuthn's JSON: the proof KIFF reads the credential from. */
   private val made = """{"id":"cred","rawId":"cred","type":"public-key","response":{"clientDataJSON":"Y2xpZW50","attestationObject":"YXR0ZXN0"}}"""
 
-  private suspend fun model(approvalKey: Boolean = true): AppModel {
+  private suspend fun model(approvalKey: Boolean = true, role: String = "owner"): AppModel {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":[]}""")
     transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
     transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
     transport.answer("GET /v1/me/access", 200, """{"agents":{}}""")
-    transport.answer("GET /v1/tenant/members", 200, people)
+    transport.answer("GET /v1/tenant/members", 200, people(role))
     transport.answer("GET /v1/me/passkeys", 200, """{"passkeys":[]}""")
     secrets.save("at_1", AppModel.TOKEN)
     secrets.save("t_01", AppModel.TENANT)
@@ -99,6 +99,30 @@ class PasskeyAddTest {
     assertFalse("Android isn't even asked", made)
     assertTrue(transport.requestsTo("POST /v1/me/passkeys").isEmpty())
     assertEquals(Words.Settings.Devices.passkeyNeedsApprover, m.state.value.passkeyLine)
+  }
+
+  /** KIFF takes a passkey from owners and admins only: a member's tap never asks Android, so nothing is left on the phone. */
+  @Test fun aMembersTapNeverAsksAndroid() = runTest {
+    val m = model(role = "member")
+    var asked = false
+    assertFalse(m.addPasskey("Pixel 8") { asked = true; made })
+    assertFalse("Android isn't asked", asked)
+    assertTrue(auth.fingerprints.isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/me/passkeys").isEmpty())
+    assertEquals(Words.Settings.Devices.passkeyAdminsOnly, m.state.value.passkeyLine)
+    assertEquals(false, m.state.value.passkeyMayAdd)
+  }
+
+  @Test fun addIsOfferedToOwnersAndAdminsAsKiffSays() = runTest {
+    val m = model()
+    m.refreshPasskeys()
+    assertEquals(true, m.state.value.passkeyMayAdd)
+    transport.reset()
+    val member = model(role = "member")
+    member.refreshPasskeys()
+    assertEquals(false, member.state.value.passkeyMayAdd)
+    assertTrue(PasskeyRegistration.mayAdd("admin"))
+    assertFalse(PasskeyRegistration.mayAdd(null))
   }
 
   @Test fun kiffsRefusalsAreItsOwn() = runTest {
