@@ -1012,6 +1012,16 @@ Connect apps title for that connection, else planque's vendor name, and the taf'
 name planque keeps (`agent_name`). It never shows an agent id or a server's slug. With no name for
 the taf, it names the app alone ("Connect Stripe").
 
+**kiff.dev's passkeys.** kiff.dev vouches for the app: `https://kiff.dev/.well-known/assetlinks.json`
+names `dev.kiff.tafs` (the applicationId, not the Kotlin namespace) with Play App Signing's
+certificate SHA-256, for `delegate_permission/common.get_login_creds` only (Google's Digital Asset
+Links API answers `linked: true`, 15 Nov). So a passkey the app makes or uses through Android's
+Credential Manager has kiff.dev as its relying party, and KIFF takes its origin
+(`android:apk-key-hash:…`). Unlike iOS's `webcredentials:kiff.dev`, Android needs nothing in the
+manifest: the Credential Manager reads the file. Only a build Play signed matches; a debug build,
+or one signed with the upload key, isn't linked and can't use kiff.dev's passkeys. Nothing in the
+app makes a passkey yet: that comes with the passkey work.
+
 ## Pairing a computer
 
 Account → Devices → **Add a device** gives a computer, or a new phone or tablet, approval authority on the account, as
