@@ -386,9 +386,9 @@ class CoachStartTest {
     assertEquals(listOf("Start Coach"), auth.fingerprints)
   }
 
-  /** No key stands (`needs_key`), or a planque from before that takes no keyless enrolment: one key is minted and handed over. */
+  /** No key stands (`needs_key`), and only then: one key is minted and handed over. */
   @Test fun withNoStandingKeyOneIsMintedAndHandedOver() = runTest {
-    for (refusal in listOf(409 to """{"error":"no connector key stands for this account","code":"needs_key"}""", 400 to """{"error":"KIFF did not accept the connector key"}""")) {
+    for (refusal in listOf(409 to """{"error":"no connector key stands for this account","code":"needs_key"}""")) {
       transport.reset()
       auth.fingerprints.clear()
       reads()
@@ -406,7 +406,8 @@ class CoachStartTest {
   }
 
   /**
-   * Any other answer to the keyless ask mints nothing: planque not reached, a 5xx, a replayed signature. A key minted then,
+   * Any other answer to the keyless ask mints nothing: planque not reached, a 5xx, a replayed signature, a 400 (a body planque
+   * couldn't read, which an enrolment with a key would fail the same way). A key minted then,
    * its enrolment failing too, would be left live in KIFF, held by no device. Start says why, and the next Start asks again.
    */
   @Test fun aKeylessAskPlanqueDidntAnswerMintsNoKey() = runTest {
@@ -414,6 +415,7 @@ class CoachStartTest {
       null,
       503 to """{"error":"planque is unavailable"}""",
       409 to """{"error":"this signature was already used","code":"signature_replayed"}""",
+      400 to """{"error":"the body can't be read"}""",
     )
     for (keyless in answers) {
       transport.reset()

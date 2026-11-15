@@ -3274,16 +3274,19 @@ class AppModel(
    * stands (`kept`), a connector key minted with a signed setup call, never kept here. False, with why said through [failed],
    * when it didn't go. [kiff]'s and [planque]'s signers are the caller's, under the confirmation it took.
    */
-  /** planque's answer to a keyless enrolment that asks for a key: `409 needs_key`, or a planque from before that refuses it (400). */
-  internal fun needsConnectorKey(e: PlanqueError.Server): Boolean = (e.status == 409 && e.code == "needs_key") || e.status == 400
+  /**
+   * planque's answer to a keyless enrolment that asks for a key: `409 needs_key`, and only that. Every planque takes a keyless
+   * enrolment now (planque#248), so a 400 is a body it couldn't read, and an enrolment with a key would fail the same way.
+   */
+  internal fun needsConnectorKey(e: PlanqueError.Server): Boolean = e.status == 409 && e.code == "needs_key"
 
   private suspend fun enrolForCoach(failed: (String) -> Unit): Boolean {
     if (_state.value.planqueReady) return true
     try {
       // Asked first with no key: while the account's enrolled connector key still stands, planque answers `kept` and nothing
       // is minted, since a phone can't revoke a connector key and a new one would be left live in KIFF. Only planque saying it
-      // needs one (`409 needs_key`, or a planque from before, which refuses a keyless enrolment with 400) mints one and hands
-      // it over. Anything else (not reached, a 5xx, a replayed signature, a window that ended) goes to the caller as it did,
+      // needs one (`409 needs_key`) mints one and hands it over. Anything else (not reached, a 5xx, a replayed signature, a 400,
+      // which planque sends only for a body it can't read, a window that ended) goes to the caller as it did,
       // with nothing minted: a key minted then, its enrolment failing too, would be left live and held by no device. The next
       // Start asks again.
       val kept = try {
