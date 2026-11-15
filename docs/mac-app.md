@@ -124,6 +124,16 @@ A new global shortcut is added to `KeyCommand.global` and to one of `MacMenu`'s 
 
 - **The calendar's date** (`CalendarView.datePicker`): the Mac draws the iPad's compact date picker as numbers in a field ("11/15/2026"). On the Mac it's the iPad's look instead, the date in words ("Nov 15, 2026"), which opens the month to choose a day from.
 
+## The pointer
+
+On the Mac, buttons answer the pointer, each a little less than a press, so a press still shows (`Hover`, `Design/Components.swift`):
+
+- **the main button's** fill lightens;
+- **the outlined button** takes a light wash of ink;
+- **a plain button**, which is what a row or a link is (`DrivablePlainButtonStyle`), fades a little, as it fades more when pressed.
+
+The iPad keeps its own pointer effects, so this shows on the Mac build only. The sidebar is the system's list: its screens and tafs show the selection as the system draws it, and its plain buttons fade as above. The sidebar's Coach button is a plain SwiftUI button and doesn't answer the pointer yet.
+
 ## The window
 
 The window never goes smaller than 820 × 600 points (`MacWindow.minimumSize`): the width of an iPad held upright, so the sidebar and a screen beside it always fit. It has no default size of its own: macOS chooses the first one and remembers the person's. The window shows no title, as the iPad shows none; the sidebar says "tafs" under its icon.
@@ -176,7 +186,7 @@ After the unit tests, the Mac workflow runs the app in sample mode and takes the
 
 | What | State |
 |---|---|
-| Pointer hover on rows and buttons | next |
+| Pointer hover | buttons and rows ("The pointer"); **owed:** seen by a person, since a screenshot can't show it |
 | **The menu bar and the window, seen by a person** | the menu bar is in CI's screenshots (`menu-bar.png`); **owed:** its menus opened, and the smallest window size, on a Mac. |
 | Approvals with Touch ID on a Mac | the iPad's key and prompt; a Mac never says Touch ID is off for tafs, and says where in System Settings it's set up |
 | Adding a Mac from a phone (the QR code and the check code) | built: the iPad's "sign in from another phone" (`AppModel.startPairingSignIn`, `PairingOffer`), with the Mac shown as a computer (`macos`, no `device_kind`). Not yet tried on a real Mac |
