@@ -16,18 +16,18 @@ These computers have no key store the app can keep an approval key in, and their
 use the phone's passkey across devices (macOS 12 has no cross-device passkeys; macOS 13 added
 them). So they approve in one of two ways:
 
-- **A USB security key** (a FIDO2 key with a PIN), which the person plugs in and unlocks with its
+- **A USB security key** (a FIDO2 key with a PIN), registered with the computer, which the person plugs in and unlocks with its
   PIN for each approval. The app talks to the key over CTAP2, as Windows' own WebAuthn stack does,
   and builds the WebAuthn client data itself (below).
 - **The person's phone:** the computer says to approve on the phone, and follows the phone's
   answer, as for any device that can't approve.
 
-**A security key belongs to the person's account.** It's registered when the computer is paired
-(a `kind: "passkey"` pairing whose QR names the key's credential, approved on the phone as any
-pairing is, with the key's `credential_proof`). Once registered it's one of the person's passkeys:
-listed in Devices → Passkeys, and removable there, as a phone's passkey is. It isn't bound to one
-computer: anyone with the key and its PIN can use it, so the PIN is asked for each approval, and
-the key is removed in Devices when it's lost.
+**A security key goes with its computer.** It's registered when the computer is paired (a
+`kind: "passkey"` pairing whose QR names the key's credential, approved on the phone as any
+pairing is, with the key's `credential_proof`). KIFF lists it with that computer, as "Goes with its
+computer", with no Remove of its own: signing that computer out in Devices removes it. The key
+itself can be plugged into another computer, so its PIN is asked for each approval, and a lost key
+is removed by signing its computer out.
 
 ## What a passkey approval carries
 
