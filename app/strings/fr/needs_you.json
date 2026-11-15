@@ -51,6 +51,7 @@
   "needs_you.over_total": "Cela dépasse un total de la Card, par exemple sur une journée. Une personne qui gère les Cards peut lui donner une marge supplémentaire, ou vous pouvez le refuser.",
   "needs_you.over_total_manager": "Cela dépasse un total de la Card, par exemple sur une journée. La marge supplémentaire ne laisse passer que cet appel.",
   "needs_you.prompt.answer": "Répondre à {summary}",
+  "needs_you.prompt.answer_mac": "répondre à {summary}",
   "needs_you.prompt.did_not_happen": "Indiquer que ce n'est pas arrivé : {title}",
   "needs_you.prompt.happened": "Indiquer que c'est arrivé : {title}",
   "needs_you.refuse": "Refuser",

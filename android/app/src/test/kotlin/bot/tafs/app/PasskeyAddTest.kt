@@ -61,7 +61,8 @@ class PasskeyAddTest {
     val sent = transport.requestsTo("POST /v1/me/passkeys").single()
     val body = KiffClient.json.parseToJsonElement(String(sent.body!!)).jsonObject
     assertEquals(PasskeyRegistration.registerBody("Pixel 8", "2026-11-15T18:30:00Z", made), body)
-    assertFalse(sent.headers.getValue("KIFF-Device-Signature").contains("w="))
+    // Never inside a window: no `w=` field (a base64 signature may itself end in "w=").
+    assertFalse(sent.headers.getValue("KIFF-Device-Signature").split(",").any { it.startsWith("w=") })
     assertEquals(Words.Settings.Devices.passkeyAdded, m.state.value.passkeyLine)
     assertFalse(m.state.value.passkeyBusy)
     assertTrue("the list is read again", transport.requestsTo("GET /v1/me/passkeys").isNotEmpty())

@@ -74,6 +74,7 @@
   "settings.devices.sign_out": "Wyloguj",
   "settings.devices.sign_out_named": "Wylogować {device}?",
   "settings.devices.sign_out_prompt": "Wyloguj {device} z Twojego konta",
+  "settings.devices.sign_out_prompt_mac": "wylogować {device} z Twojego konta",
   "settings.devices.sign_out_this": "Wylogować to urządzenie?",
   "settings.devices.signout_needs_approver": "Aby wylogować inne urządzenie, użyj urządzenia, które może zatwierdzać.",
   "settings.devices.this_device": "to urządzenie",

@@ -51,6 +51,7 @@
   "needs_you.over_total": "Het gaat boven een totaal van de Card, zoals dat van een dag. Iemand die de Cards beheert, kan het extra ruimte geven, of je kunt het weigeren.",
   "needs_you.over_total_manager": "Het gaat boven een totaal van de Card, zoals dat van een dag. Extra ruimte laat alleen deze aanroep door.",
   "needs_you.prompt.answer": "{summary} beantwoorden",
+  "needs_you.prompt.answer_mac": "{summary} te beantwoorden",
   "needs_you.prompt.did_not_happen": "Zeggen dat het niet is gebeurd: {title}",
   "needs_you.prompt.happened": "Zeggen dat het is gebeurd: {title}",
   "needs_you.refuse": "Weigeren",

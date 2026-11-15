@@ -124,6 +124,8 @@
   "connect.profile_words_unread": "Le parole di KIFF per questo collegamento non sono ancora state lette. Non è stato approvato nulla.",
   "connect.prompt.connect": "Collega {vendor} a {agent}",
   "connect.prompt.connect_app": "Collega {vendor}",
+  "connect.prompt.connect_app_mac": "collegare {vendor}",
+  "connect.prompt.connect_mac": "collegare {vendor} a {agent}",
   "connect.prompt.give_card": "Dai a {agent} la sua Card",
   "connect.prompt.give_key": "Dai a {vendor} la sua chiave per {agent}",
   "connect.prompt.give_key_app": "Dai a {vendor} la sua chiave",

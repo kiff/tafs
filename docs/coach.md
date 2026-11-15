@@ -80,9 +80,9 @@ Before the first message, one Face ID (`AppModel.startSetup`):
 1. The phone enrolls with planque: planque gets the phone's key, and a KIFF key that
    connects tools and does nothing else, minted with a signed setup call and never kept
    on the phone. The phone asks first with no key: while the key planque holds still stands
-   (another device enrolled it), planque answers `kept` and no key is minted, since a phone
+   (another device enrolled it), planque answers `kept: true` and no key is minted, since a phone
    can't revoke a connector key and a new one would only be left live in KIFF. Only when
-   planque says it needs one (`409 needs_key`) does it mint one and hand it over. Any other
+   planque says it needs one (`409 needs_key`) does it mint one and hand it over. A 2xx without `kept: true` mints nothing and stops with "Connecting your apps didn't work. Tap Start to try again.", on every app until planque says what it means. Any other
    answer (planque not reached, a 5xx, a refused signature, a 400 for a body it couldn't read) mints
    nothing, since a second enrolment would likely fail too and leave the key live: the app
    says why, and the next Start asks again. Only a 409 with no code, an older planque's, says

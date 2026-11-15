@@ -208,10 +208,13 @@ struct ConnectAppsView: View {
         }
     }
 
-    /// The taf first: the one this was opened from, the only one there is, or the owner's pick.
+    /// The taf first: the one this was opened from, else the person's pick (`ConnectRow.connectFor`).
     private func connect(_ app: TafsCloud.ConnectApps.App) {
-        let tafs = model.connectableTafs
-        if let taf { start(app, for: taf) } else if tafs.count == 1, let only = tafs.first { start(app, for: only.id) } else { choosing = app }
+        switch ConnectRow.connectFor(openedFrom: taf, connectable: model.connectableTafs) {
+        case .taf(let id): start(app, for: id)
+        case .ask: choosing = app
+        case .noTaf: break
+        }
     }
 
     private func start(_ app: TafsCloud.ConnectApps.App, for tafID: UUID) {
@@ -328,6 +331,24 @@ struct ConnectRow: Equatable {
     /// connect, the list wasn't opened from a taf, and no taf can have them. Never over Yours.
     static func saysMakeATaf(discover: [TafsCloud.ConnectApps.App], forTaf: Bool, connectable: [Taf]) -> Bool {
         !discover.isEmpty && !forTaf && connectable.isEmpty
+    }
+
+    /// Whom a Connect is for.
+    enum ConnectFor: Equatable {
+        /// The taf the list was opened from.
+        case taf(UUID)
+        /// The person picks, in "Which taf is this for?".
+        case ask
+        /// No taf can have it: Connect is off, and "Make one first" says why.
+        case noTaf
+    }
+
+    /// A connection goes only to a taf the person named: the one Connect apps was opened from, else
+    /// their pick, asked even when one taf is all there is. Never a guess: a guessed taf takes an app
+    /// its Card never asked for (Stripe under a Gmail taf).
+    static func connectFor(openedFrom taf: UUID?, connectable: [Taf]) -> ConnectFor {
+        if let taf { return .taf(taf) }
+        return connectable.isEmpty ? .noTaf : .ask
     }
 }
 

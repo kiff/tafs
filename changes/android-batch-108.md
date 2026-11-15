@@ -1,3 +1,4 @@
 - **Android: Connect apps asks which taf a connection is for, even when you have only one.** It used to connect the app for your only taf without asking.
-- **Android: Connect apps' sheet no longer sticks on "Approving…".** While the app's sign-in page is open, tafs checks whether it finished there; back on the sheet, Open again opens the same page, and Not now ends the wait so the next Connect isn't refused.
+- **Android: Connect apps' sheet no longer sticks on "Approving…".** While the app's sign-in page is open, tafs checks whether it finished there; back on the sheet, Open again opens the same page, and Not now ends the wait so the next Connect isn't refused. Once the sign-in page is closed, Coach's card and the sheet offer Open again and Cancel.
 - **Android: a connection request nobody answered can be cancelled from its row.**
+- **Android: a key is no longer minted when planque answers an enrolment with success but no `kept: true`.** Start stops and says connecting didn't work, and the next Start asks again. Only planque saying it needs a key mints one.

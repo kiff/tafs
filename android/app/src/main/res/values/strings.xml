@@ -667,6 +667,7 @@
     <string name="coach_plan_step_skipped">Skipped</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Connect your apps</string>
+    <string name="coach_prompt_connect_tools_mac">connect your apps</string>
     <string name="coach_prompt_give_card">Give Coach its Card</string>
     <string name="coach_prompt_start">Start Coach</string>
     <string name="coach_puts_words_message_box">Puts its words in the message box</string>
@@ -893,6 +894,8 @@
     <string name="connect_profile_words_unread">KIFF\'s words for this connection aren\'t read yet. Nothing was approved.</string>
     <string name="connect_prompt_connect">Connect %1$s to %2$s</string>
     <string name="connect_prompt_connect_app">Connect %1$s</string>
+    <string name="connect_prompt_connect_app_mac">connect %1$s</string>
+    <string name="connect_prompt_connect_mac">connect %1$s to %2$s</string>
     <string name="connect_prompt_give_card">Give %1$s its Card</string>
     <string name="connect_prompt_give_key">Give %1$s its key for %2$s</string>
     <string name="connect_prompt_give_key_app">Give %1$s its key</string>
@@ -1334,6 +1337,7 @@
     <string name="needs_you_over_total">It\'s over a Card total, such as a day\'s. Someone who manages the Cards can give it extra room, or you can refuse it.</string>
     <string name="needs_you_over_total_manager">It\'s over a Card total, such as a day\'s. Extra room lets only this call through.</string>
     <string name="needs_you_prompt_answer">Answer %1$s</string>
+    <string name="needs_you_prompt_answer_mac">answer %1$s</string>
     <string name="needs_you_prompt_did_not_happen">Say it didn\'t happen: %1$s</string>
     <string name="needs_you_prompt_happened">Say it happened: %1$s</string>
     <string name="needs_you_refuse">Refuse</string>
@@ -1855,6 +1859,7 @@
     <string name="settings_devices_sign_out">Sign out</string>
     <string name="settings_devices_sign_out_named">Sign %1$s out?</string>
     <string name="settings_devices_sign_out_prompt">Sign %1$s out of your account</string>
+    <string name="settings_devices_sign_out_prompt_mac">sign %1$s out of your account</string>
     <string name="settings_devices_sign_out_this">Sign this device out?</string>
     <string name="settings_devices_signout_needs_approver">To sign another device out, use a device that can approve.</string>
     <string name="settings_devices_this_device">this device</string>

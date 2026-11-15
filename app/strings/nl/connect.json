@@ -124,6 +124,8 @@
   "connect.profile_words_unread": "De woorden van KIFF voor deze koppeling zijn nog niet gelezen. Er is niets goedgekeurd.",
   "connect.prompt.connect": "{vendor} koppelen aan {agent}",
   "connect.prompt.connect_app": "{vendor} koppelen",
+  "connect.prompt.connect_app_mac": "{vendor} te koppelen",
+  "connect.prompt.connect_mac": "{vendor} aan {agent} te koppelen",
   "connect.prompt.give_card": "{agent} zijn Card geven",
   "connect.prompt.give_key": "{vendor} zijn sleutel voor {agent} geven",
   "connect.prompt.give_key_app": "{vendor} zijn sleutel geven",

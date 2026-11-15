@@ -51,6 +51,7 @@
   "needs_you.over_total": "It's over a Card total, such as a day's. Someone who manages the Cards can give it extra room, or you can refuse it.",
   "needs_you.over_total_manager": "It's over a Card total, such as a day's. Extra room lets only this call through.",
   "needs_you.prompt.answer": "Answer {summary}",
+  "needs_you.prompt.answer_mac": "answer {summary}",
   "needs_you.prompt.did_not_happen": "Say it didn't happen: {title}",
   "needs_you.prompt.happened": "Say it happened: {title}",
   "needs_you.refuse": "Refuse",

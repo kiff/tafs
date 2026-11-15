@@ -51,6 +51,7 @@
   "needs_you.over_total": "Excede um total do Card, como o de um dia. Alguém que gere os Cards pode dar-lhe margem extra, ou pode recusar.",
   "needs_you.over_total_manager": "Excede um total do Card, como o de um dia. A margem extra deixa passar só esta chamada.",
   "needs_you.prompt.answer": "Responder {summary}",
+  "needs_you.prompt.answer_mac": "responder {summary}",
   "needs_you.prompt.did_not_happen": "Dizer que não aconteceu: {title}",
   "needs_you.prompt.happened": "Dizer que aconteceu: {title}",
   "needs_you.refuse": "Recusar",

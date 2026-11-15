@@ -667,6 +667,7 @@
     <string name="coach_plan_step_skipped">Übersprungen</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Deine Apps verbinden</string>
+    <string name="coach_prompt_connect_tools_mac">deine Apps zu verbinden</string>
     <string name="coach_prompt_give_card">Coach seine Card geben</string>
     <string name="coach_prompt_start">Coach starten</string>
     <string name="coach_puts_words_message_box">Setzt seine Worte ins Nachrichtenfeld</string>
@@ -893,6 +894,8 @@
     <string name="connect_profile_words_unread">KIFFs Worte zu dieser Verbindung sind noch nicht gelesen. Es wurde nichts genehmigt.</string>
     <string name="connect_prompt_connect">%1$s mit %2$s verbinden</string>
     <string name="connect_prompt_connect_app">%1$s verbinden</string>
+    <string name="connect_prompt_connect_app_mac">%1$s zu verbinden</string>
+    <string name="connect_prompt_connect_mac">%1$s mit %2$s zu verbinden</string>
     <string name="connect_prompt_give_card">%1$s seine Card geben</string>
     <string name="connect_prompt_give_key">%1$s seinen Schlüssel für %2$s geben</string>
     <string name="connect_prompt_give_key_app">%1$s seinen Schlüssel geben</string>
@@ -1334,6 +1337,7 @@
     <string name="needs_you_over_total">Es liegt über einer Summe der Card, etwa einer Tagessumme. Jemand, der die Cards verwaltet, kann ihm Zusatzspielraum geben, oder du lehnst es ab.</string>
     <string name="needs_you_over_total_manager">Es liegt über einer Summe der Card, etwa einer Tagessumme. Zusatzspielraum lässt nur diesen Aufruf durch.</string>
     <string name="needs_you_prompt_answer">%1$s beantworten</string>
+    <string name="needs_you_prompt_answer_mac">%1$s zu beantworten</string>
     <string name="needs_you_prompt_did_not_happen">Angeben, dass es nicht passiert ist: %1$s</string>
     <string name="needs_you_prompt_happened">Angeben, dass es passiert ist: %1$s</string>
     <string name="needs_you_refuse">Ablehnen</string>
@@ -1855,6 +1859,7 @@
     <string name="settings_devices_sign_out">Abmelden</string>
     <string name="settings_devices_sign_out_named">%1$s abmelden?</string>
     <string name="settings_devices_sign_out_prompt">%1$s von deinem Konto abmelden</string>
+    <string name="settings_devices_sign_out_prompt_mac">%1$s von deinem Konto abzumelden</string>
     <string name="settings_devices_sign_out_this">Dieses Gerät abmelden?</string>
     <string name="settings_devices_signout_needs_approver">Um ein anderes Gerät abzumelden, nutze ein Gerät, das genehmigen kann.</string>
     <string name="settings_devices_this_device">dieses Gerät</string>

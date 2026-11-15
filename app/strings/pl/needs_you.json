@@ -55,6 +55,7 @@
   "needs_you.over_total": "Przekracza sumę Card, np. dzienną. Osoba zarządzająca Card może dać dodatkowy zapas albo możesz to odrzucić.",
   "needs_you.over_total_manager": "Przekracza sumę Card, np. dzienną. Dodatkowy zapas przepuszcza tylko to wywołanie.",
   "needs_you.prompt.answer": "Odpowiedz: {summary}",
+  "needs_you.prompt.answer_mac": "odpowiedzieć: {summary}",
   "needs_you.prompt.did_not_happen": "Zgłoś, że się nie wydarzyło: {title}",
   "needs_you.prompt.happened": "Zgłoś, że się wydarzyło: {title}",
   "needs_you.refuse": "Odrzuć",
