@@ -1,0 +1,3 @@
+- Conectar apps pregunta para qué taf es la conexión, aunque solo tengas una.
+- Conectar una app ya no se queda en «Aprobando…»: «Abrir de nuevo el inicio de sesión» vuelve a abrir la página, y «Ahora no» termina la espera.
+- Una solicitud de conexión sin respuesta se puede cancelar desde su fila.

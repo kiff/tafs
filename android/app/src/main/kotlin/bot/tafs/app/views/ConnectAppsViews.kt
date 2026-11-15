@@ -54,6 +54,23 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** Connect apps' own words; every app's name and state comes from tafs cloud. */
+/** Whom a Connect is for. */
+sealed interface ConnectFor {
+  /** The taf the list was opened from. */
+  data class Taf(val id: String) : ConnectFor
+  /** The person picks, in "Which taf is this for?". */
+  data object Ask : ConnectFor
+  /** No taf can have it: Connect is off, and "Make one first" says why. */
+  data object NoTaf : ConnectFor
+}
+
+/**
+ * A connection goes only to a taf the person named: the one Connect apps was opened from, else their pick, asked even when
+ * one taf is all there is (as iOS does). Never a guess: a guessed taf takes an app its Card never asked for.
+ */
+fun connectFor(openedFrom: String?, connectable: List<String>): ConnectFor =
+  if (openedFrom != null) ConnectFor.Taf(openedFrom) else if (connectable.isEmpty()) ConnectFor.NoTaf else ConnectFor.Ask
+
 object ConnectAppsWords {
   val TITLE get() = Words.Connect.Apps.title
 
@@ -178,7 +195,15 @@ fun ConnectAppsSheet(
   var confirmingRemove by androidx.compose.runtime.remember { mutableStateOf<Pair<bot.tafs.app.kiff.Grant, bot.tafs.app.kiff.GrantAction>?>(null) }
   val tafs = state.connectableTafs
   val connect: ((ConnectApps.App) -> Unit)? = onConnect?.takeIf { tafs.isNotEmpty() }?.let { start ->
-    { app -> if (tafs.size > 1 && !app.needsReconnect) picking = app else start(app, tafs.singleOrNull()?.id) }
+    { app ->
+      // Signing in again keeps its grant's taf; a new connection goes to the taf the person picks, asked even with one.
+      if (app.needsReconnect) start(app, null)
+      else when (val to = connectFor(openedFrom = null, connectable = tafs.map { it.id })) {
+        is ConnectFor.Taf -> start(app, to.id)
+        ConnectFor.Ask -> picking = app
+        ConnectFor.NoTaf -> {}
+      }
+    }
   }
   // Read again as the search changes, once typing pauses.
   LaunchedEffect(query) {
@@ -243,7 +268,7 @@ fun ConnectAppsSheet(
             Text(heading, style = scaled(13, FontWeight.SemiBold, Theme.dim), modifier = Modifier.padding(top = 4.dp).semantics { heading() })
             grants.forEach { g ->
               // planque describes it: its title, who uses it and its health; the row opens its detail, where its actions are.
-              if (g.actions != null) { DescribedConnectionRow(g, app.displayName, state) { detail = g }; return@forEach }
+              if (g.rowFromPlanque) { DescribedConnectionRow(g, app.displayName, state) { detail = g }; return@forEach }
               Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Column(Modifier.weight(1f)) {
                   Text(ConnectAppsWords.rowTitle(app.displayName, g), style = scaled(16, FontWeight.SemiBold, Theme.ink))
@@ -574,6 +599,8 @@ fun ConnectApprovalSheet(
   /** The secure sheet's words for a key grant, from tafs cloud (docs/secure-connection.md); and Disconnect from its receipt. */
   loadSecure: suspend (String) -> Unit = {},
   onDisconnect: (String) -> Unit = {},
+  /** Back on the sheet with no link from the vendor's page: the same page again, as Coach's card offers. */
+  onReopen: () -> Unit = {},
 ) {
   // Kept only while the sheet is open, never saved: it goes to planque once.
   var key by androidx.compose.runtime.remember(grant?.id) { mutableStateOf("") }
@@ -667,6 +694,12 @@ fun ConnectApprovalSheet(
               enabled = !busy && (!profiled || words != null) && (!needsKey || key.isNotBlank()),
             )
           }
+          // The vendor's page was left before it sent tafs back: open it again, or Not now below ends the wait.
+          if (busy && state.vendorPageLeft) Text(
+            reopenWords(grant.vendor),
+            style = scaled(15, FontWeight.SemiBold, Theme.amberText),
+            modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onReopen).padding(top = 6.dp),
+          )
         }
         Text(
           bot.tafs.app.model.ConnectWords.CANCEL,

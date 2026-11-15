@@ -51,6 +51,7 @@
   "needs_you.over_total": "Supera un totale della Card, come quello di un giorno. Chi gestisce le Card può darle un margine extra, oppure puoi rifiutarla.",
   "needs_you.over_total_manager": "Supera un totale della Card, come quello di un giorno. Il margine extra fa passare solo questa chiamata.",
   "needs_you.prompt.answer": "Rispondi a {summary}",
+  "needs_you.prompt.answer_mac": "rispondere a {summary}",
   "needs_you.prompt.did_not_happen": "Di' che non è successo: {title}",
   "needs_you.prompt.happened": "Di' che è successo: {title}",
   "needs_you.refuse": "Rifiuta",

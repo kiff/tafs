@@ -47,10 +47,10 @@ class ConnectAppsTest {
     val m = model()
     // planque's grant comes back as its view, an object.
     transport.answer("POST /v1/connect/apps/notion@1", 200, """{"grant":{"id":"g7","status":"pending"}}""")
-    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("notion@1", "Notion", "Notion"))
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("notion@1", "Notion", "Notion"), m.state.value.connectableTafs.single().id)
     val sent = transport.requestsTo("POST /v1/connect/apps/notion@1").single()
     assertEquals("Bearer at_1", sent.headers["Authorization"])
-    assertEquals("for the only taf this person manages, by its tafs cloud id", """{"taf":"taf_1"}""", String(sent.body!!))
+    assertEquals("for the taf the person picked, by its tafs cloud id", """{"taf":"taf_1"}""", String(sent.body!!))
     assertEquals("g7", m.state.value.listApproval)
     assertNull(m.state.value.startingApp)
     m.closeListApproval()
@@ -60,12 +60,27 @@ class ConnectAppsTest {
   @Test fun aVendorThatTakesAKeyOpensItsApprovalToTakeTheKeyThere() = runTest {
     val m = model()
     transport.answer("POST /v1/connect/apps/holded", 200, """{"grant":"g8","needs_key":true}""")
-    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("holded", "Holded", "Holded", how = "key"))
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("holded", "Holded", "Holded", how = "key"), m.state.value.connectableTafs.single().id)
     assertEquals("g8", m.state.value.listApproval)
     assertTrue("the key is typed on the sheet", m.state.value.listApprovalNeedsKey)
     assertNull(m.state.value.connectAppsError)
     m.closeListApproval()
     assertFalse(m.state.value.listApprovalNeedsKey)
+  }
+
+  @Test fun aConnectForNoNamedTafStartsNothingEvenWithOneTaf() = runTest {
+    val m = model()
+    assertEquals(1, m.state.value.connectableTafs.size)
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("notion@1", "Notion", "Notion"))
+    assertTrue("never the only taf, guessed", transport.requests.none { it.method == "POST" && it.url.contains("/connect/apps") })
+    assertNull(m.state.value.listApproval)
+  }
+
+  @Test fun connectAsksWhichTafEvenWithOne() {
+    assertEquals("one taf is still asked, never taken", bot.tafs.app.views.ConnectFor.Ask, bot.tafs.app.views.connectFor(null, listOf("a")))
+    assertEquals(bot.tafs.app.views.ConnectFor.Ask, bot.tafs.app.views.connectFor(null, listOf("a", "b")))
+    assertEquals("opened from a taf: that one", bot.tafs.app.views.ConnectFor.Taf("b"), bot.tafs.app.views.connectFor("b", listOf("a", "b")))
+    assertEquals(bot.tafs.app.views.ConnectFor.NoTaf, bot.tafs.app.views.connectFor(null, emptyList()))
   }
 
   @Test fun signingInAgainOpensTheGrantItHasWithNoNewOne() = runTest {

@@ -1254,6 +1254,8 @@ enum Words {
         enum Prompt {
             /// Connect your apps
             static var connectTools: String { Words.line("coach.prompt.connect_tools") }
+            /// connect your apps
+            static var connectToolsMac: String { Words.line("coach.prompt.connect_tools_mac") }
             /// Give Coach its Card
             static var giveCard: String { Words.line("coach.prompt.give_card") }
             /// Start Coach
@@ -1694,6 +1696,10 @@ enum Words {
             static func connect(vendor: String, agent: String) -> String { Words.line("connect.prompt.connect", vendor, agent) }
             /// Connect {vendor}
             static func connectApp(vendor: String) -> String { Words.line("connect.prompt.connect_app", vendor) }
+            /// connect {vendor}
+            static func connectAppMac(vendor: String) -> String { Words.line("connect.prompt.connect_app_mac", vendor) }
+            /// connect {vendor} to {agent}
+            static func connectMac(vendor: String, agent: String) -> String { Words.line("connect.prompt.connect_mac", vendor, agent) }
             /// Give {agent} its Card
             static func giveCard(agent: String) -> String { Words.line("connect.prompt.give_card", agent) }
             /// Give {vendor} its key for {agent}
@@ -2560,6 +2566,8 @@ enum Words {
         enum Prompt {
             /// Answer {summary}
             static func answer(summary: String) -> String { Words.line("needs_you.prompt.answer", summary) }
+            /// answer {summary}
+            static func answerMac(summary: String) -> String { Words.line("needs_you.prompt.answer_mac", summary) }
             /// Say it didn't happen: {title}
             static func didNotHappen(title: String) -> String { Words.line("needs_you.prompt.did_not_happen", title) }
             /// Say it happened: {title}
@@ -3668,6 +3676,8 @@ enum Words {
             static func signOutNamed(device: String) -> String { Words.line("settings.devices.sign_out_named", device) }
             /// Sign {device} out of your account
             static func signOutPrompt(device: String) -> String { Words.line("settings.devices.sign_out_prompt", device) }
+            /// sign {device} out of your account
+            static func signOutPromptMac(device: String) -> String { Words.line("settings.devices.sign_out_prompt_mac", device) }
             /// Sign this device out?
             static var signOutThis: String { Words.line("settings.devices.sign_out_this") }
             /// To sign another device out, use a device that can approve.

@@ -250,7 +250,12 @@ class MainActivity : FragmentActivity() {
   // A vendor's sign-in waits while its tab is in front; the app back with no link from it means the tab was closed.
   override fun onStart() {
     super.onStart()
-    app.vendorSignIn.attach(this)
+    app.vendorSignIn.attach(this) { tab -> vendorTab.launch(tab) }
+  }
+
+  /** The vendor's tab, opened for a result: it answers once the tab is gone, which marks the sign-in left (Open again, Cancel). */
+  private val vendorTab = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) {
+    app.vendorSignIn.closed(lifecycleScope)
   }
 
   override fun onPause() {
@@ -878,6 +883,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onGiveKey = { grant, key -> model.startGiveKey(grant.id, grant.digest, key) },
         loadSecure = model::loadSecureSheet,
         onDisconnect = model::disconnectFromReceipt,
+        onReopen = model::reopenSignIn,
       )
     }
     // Your data and the AI: after sign-in until answered, and when tafs cloud refuses a model turn for it (docs/accounts.md).

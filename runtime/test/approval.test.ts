@@ -1444,6 +1444,45 @@ describe("never signs a Card that allows more than the taf's connections give", 
   }
 });
 
+// Eval 18, intros replay: two key apps on one host (a sheet and a mailbox). The Card over both was refused with "show
+// desk.example.com's approval first", the same name as the app asked, so Coach couldn't tell which went first: it asked
+// the mailbox's key alone, then put the Card on the mailbox again (one grant approved twice). The waiting app is named
+// so it differs from this one, by its tools, with its grant id for Coach.
+describe("the app that waits is named so it differs from this one (other_app_first, Eval 18)", () => {
+  const base = (name: string, tool: string, title: string) => ({ kind: "api_key", server: "desk.example.com",
+    api: { url: `https://desk.example.com/${name}/openapi.json`, digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } },
+    tools: [{ tool, name: `${tool}_k3`, title }] });
+  const sheet = (over: Record<string, unknown> = {}) => grant({ id: "g_1", vendor: "desk.example.com", title: "desk.example.com", ...over }, base("sheet", "append_row", "Append a row"));
+  const mailbox = (over: Record<string, unknown> = {}) => grant({ id: "g_2", vendor: "desk.example.com", title: "desk.example.com", ...over }, base("mail", "send_mail", "Send an email"));
+  const both = [{ id: "c1", subject: "refunds-x", grants: [{ action: "append_row_k3" }, { action: "send_mail_k3" }], aggregates: [] }];
+
+  it("names the waiting app by its tools and grant, and this one too, when both are one host", async () => {
+    const s = services();
+    s.grants = [sheet({ status: "connected" }), mailbox()];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: both };
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sheet({ status: "connected" }).digest, draft: "drf_1", shown_draft: "v3" });
+    expect(r.body).toMatchObject({ outcome: "answered" });
+    const answer = String(r.body.answer);
+    expect(answer).toContain("desk.example.com (Send an email)'s tools (grant g_2)");
+    expect(answer).toContain("this one (desk.example.com (Append a row), grant g_1)");
+    expect(answer).not.toMatch(/show desk\.example\.com's approval/);
+    // The person reads the waiting app's name with its tools, never two apps called the same.
+    expect(String(r.body.note)).toContain("desk.example.com (Send an email)");
+  });
+
+  it("names an app on another host by its name alone", async () => {
+    const s = services();
+    s.grants = [sheet({ status: "connected" }), grant({ id: "g_2", vendor: "Mail", title: "Mail · Demo Shop" }, { server: "mcp.mail.example", tools: [{ tool: "send_mail", name: "send_mail_k3" }] })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: both };
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sheet({ status: "connected" }).digest, draft: "drf_1", shown_draft: "v3" });
+    expect(r.body).toMatchObject({ outcome: "answered" });
+    expect(String(r.body.answer)).toContain("show Mail · Demo Shop's approval first");
+    expect(String(r.body.note)).not.toContain("(");
+  });
+});
+
 describe("one signature for a key and its Card (key_and_cards, docs/secure-connection.md)", () => {
   const API = { kind: "api_key", api: { url: "https://example.com/desk/openapi.json", digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } } };
   const keyGrant = (over: Record<string, unknown> = {}) => grant(over, API);
@@ -1606,7 +1645,7 @@ describe("a Card over two apps approves every app's tools, or says which waits (
     s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x", cards: [both] };
     const rep = await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "confirmed" }, SIGNED);
     expect(rep.body.answer).not.toBe("approved");
-    expect(String(rep.body.answer)).toMatch(/Stripe's tools still wait/);
+    expect(String(rep.body.answer)).toMatch(/Stripe's tools \(grant g_2\) still wait/);
   });
 
   // Both apps waiting (Win-back: Gmail a held sign-in, Stripe added tools): each card moves forward, never sending the

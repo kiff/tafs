@@ -668,6 +668,7 @@
     <string name="coach_plan_step_skipped">Ignoré</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Connecter vos apps</string>
+    <string name="coach_prompt_connect_tools_mac">connecter vos apps</string>
     <string name="coach_prompt_give_card">Donner sa Card à Coach</string>
     <string name="coach_prompt_start">Démarrer Coach</string>
     <string name="coach_puts_words_message_box">Place ses mots dans le champ de message</string>
@@ -893,6 +894,8 @@
     <string name="connect_profile_words_unread">Les textes de KIFF pour cette connexion ne sont pas encore lus. Rien n\'a été approuvé.</string>
     <string name="connect_prompt_connect">Connecter %1$s à %2$s</string>
     <string name="connect_prompt_connect_app">Connecter %1$s</string>
+    <string name="connect_prompt_connect_app_mac">connecter %1$s</string>
+    <string name="connect_prompt_connect_mac">connecter %1$s à %2$s</string>
     <string name="connect_prompt_give_card">Donner sa Card à %1$s</string>
     <string name="connect_prompt_give_key">Donner à %1$s sa clé pour %2$s</string>
     <string name="connect_prompt_give_key_app">Donner à %1$s sa clé</string>
@@ -1334,6 +1337,7 @@
     <string name="needs_you_over_total">Cela dépasse un total de la Card, par exemple sur une journée. Une personne qui gère les Cards peut lui donner une marge supplémentaire, ou vous pouvez le refuser.</string>
     <string name="needs_you_over_total_manager">Cela dépasse un total de la Card, par exemple sur une journée. La marge supplémentaire ne laisse passer que cet appel.</string>
     <string name="needs_you_prompt_answer">Répondre à %1$s</string>
+    <string name="needs_you_prompt_answer_mac">répondre à %1$s</string>
     <string name="needs_you_prompt_did_not_happen">Indiquer que ce n\'est pas arrivé : %1$s</string>
     <string name="needs_you_prompt_happened">Indiquer que c\'est arrivé : %1$s</string>
     <string name="needs_you_refuse">Refuser</string>
@@ -1855,6 +1859,7 @@
     <string name="settings_devices_sign_out">Déconnecter</string>
     <string name="settings_devices_sign_out_named">Déconnecter %1$s ?</string>
     <string name="settings_devices_sign_out_prompt">Déconnecter %1$s de votre compte</string>
+    <string name="settings_devices_sign_out_prompt_mac">déconnecter %1$s de votre compte</string>
     <string name="settings_devices_sign_out_this">Déconnecter cet appareil ?</string>
     <string name="settings_devices_signout_needs_approver">Pour déconnecter un autre appareil, utilisez un appareil qui peut approuver.</string>
     <string name="settings_devices_this_device">cet appareil</string>

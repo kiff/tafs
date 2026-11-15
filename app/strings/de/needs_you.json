@@ -51,6 +51,7 @@
   "needs_you.over_total": "Es liegt über einer Summe der Card, etwa einer Tagessumme. Jemand, der die Cards verwaltet, kann ihm Zusatzspielraum geben, oder du lehnst es ab.",
   "needs_you.over_total_manager": "Es liegt über einer Summe der Card, etwa einer Tagessumme. Zusatzspielraum lässt nur diesen Aufruf durch.",
   "needs_you.prompt.answer": "{summary} beantworten",
+  "needs_you.prompt.answer_mac": "{summary} zu beantworten",
   "needs_you.prompt.did_not_happen": "Angeben, dass es nicht passiert ist: {title}",
   "needs_you.prompt.happened": "Angeben, dass es passiert ist: {title}",
   "needs_you.refuse": "Ablehnen",

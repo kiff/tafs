@@ -138,3 +138,10 @@ enum ApprovalReadiness: Equatable {
         }
     }
 }
+
+/// The reason Face ID or Touch ID shows. A Mac's Touch ID prompt puts it after its own "‹app› is trying
+/// to" ("tafs is trying to connect your apps"), so a Mac takes its own line (a `*_mac` key, a verb phrase
+/// that continues that sentence); an iPhone or iPad shows the reason alone, as a sentence.
+enum PromptReason {
+    static func pick(_ phone: String, mac: String, isMac: Bool = ThisDevice.isMac) -> String { isMac ? mac : phone }
+}

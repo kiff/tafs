@@ -681,6 +681,7 @@ object Words {
     val planTitle: String get() = Res.s(R.string.coach_plan_title)
     object Prompt {
       val connectTools: String get() = Res.s(R.string.coach_prompt_connect_tools)
+      val connectToolsMac: String get() = Res.s(R.string.coach_prompt_connect_tools_mac)
       val giveCard: String get() = Res.s(R.string.coach_prompt_give_card)
       val start: String get() = Res.s(R.string.coach_prompt_start)
     }
@@ -917,6 +918,8 @@ object Words {
     object Prompt {
       fun connect(vendor: String, agent: String): String = Res.s(R.string.connect_prompt_connect, vendor, agent)
       fun connectApp(vendor: String): String = Res.s(R.string.connect_prompt_connect_app, vendor)
+      fun connectAppMac(vendor: String): String = Res.s(R.string.connect_prompt_connect_app_mac, vendor)
+      fun connectMac(vendor: String, agent: String): String = Res.s(R.string.connect_prompt_connect_mac, vendor, agent)
       fun giveCard(agent: String): String = Res.s(R.string.connect_prompt_give_card, agent)
       fun giveKey(vendor: String, agent: String): String = Res.s(R.string.connect_prompt_give_key, vendor, agent)
       fun giveKeyApp(vendor: String): String = Res.s(R.string.connect_prompt_give_key_app, vendor)
@@ -1381,6 +1384,7 @@ object Words {
     val overTotalManager: String get() = Res.s(R.string.needs_you_over_total_manager)
     object Prompt {
       fun answer(summary: String): String = Res.s(R.string.needs_you_prompt_answer, summary)
+      fun answerMac(summary: String): String = Res.s(R.string.needs_you_prompt_answer_mac, summary)
       fun didNotHappen(title: String): String = Res.s(R.string.needs_you_prompt_did_not_happen, title)
       fun happened(title: String): String = Res.s(R.string.needs_you_prompt_happened, title)
     }
@@ -1986,6 +1990,7 @@ object Words {
       val signOut: String get() = Res.s(R.string.settings_devices_sign_out)
       fun signOutNamed(device: String): String = Res.s(R.string.settings_devices_sign_out_named, device)
       fun signOutPrompt(device: String): String = Res.s(R.string.settings_devices_sign_out_prompt, device)
+      fun signOutPromptMac(device: String): String = Res.s(R.string.settings_devices_sign_out_prompt_mac, device)
       val signOutThis: String get() = Res.s(R.string.settings_devices_sign_out_this)
       val signoutNeedsApprover: String get() = Res.s(R.string.settings_devices_signout_needs_approver)
       val thisDevice: String get() = Res.s(R.string.settings_devices_this_device)

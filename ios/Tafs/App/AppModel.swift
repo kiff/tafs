@@ -1180,7 +1180,8 @@ final class AppModel: ObservableObject {
         let signature: String
         do {
             prepared = try kiff.prepareRemoveDevice(device.id, signedAt: signedAt)
-            signature = try await signer.signApproval(prepared.message, reason: what)
+            let named = device.name ?? Words.Settings.Devices.thisDevice
+            signature = try await signer.signApproval(prepared.message, reason: PromptReason.pick(what, mac: Words.Settings.Devices.signOutPromptMac(device: named)))
         } catch { return false }
         guard gen == accountGeneration else { return false }
         do {
@@ -1215,7 +1216,7 @@ final class AppModel: ObservableObject {
             passkeysError = nil
         } catch {
             guard gen == accountGeneration else { return }
-            passkeysError = "\(error.localizedDescription)"
+            passkeysError = Words.Settings.Devices.passkeysNotLoaded(why: "\(error.localizedDescription)")
         }
     }
 
@@ -1308,7 +1309,9 @@ final class AppModel: ObservableObject {
             signature = try await signer.signApproval(prepared.message, reason: reason)
         } catch {
             // The person's own cancel says nothing; a key that couldn't sign says why.
-            if gen == accountGeneration, ApprovalReadiness.cancelled(error) == nil { passkeysError = "\(error.localizedDescription)" }
+            if gen == accountGeneration, ApprovalReadiness.cancelled(error) == nil {
+                passkeysError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+            }
             return false
         }
         guard gen == accountGeneration else { return false }
@@ -1316,7 +1319,7 @@ final class AppModel: ObservableObject {
             try await kiff.removePasskey(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
         } catch {
             guard gen == accountGeneration else { return false }
-            passkeysError = "\(error.localizedDescription)"
+            passkeysError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
             return false
         }
         await refreshPasskeys()
@@ -3075,7 +3078,8 @@ final class AppModel: ObservableObject {
             lastError = approvalKeyLostWords
             return
         }
-        let reason = Words.NeedsYou.Prompt.answer(summary: call.proposed.summary)
+        let reason = PromptReason.pick(Words.NeedsYou.Prompt.answer(summary: call.proposed.summary),
+                                       mac: Words.NeedsYou.Prompt.answerMac(summary: call.proposed.summary))
         let signature: String
         var signed: KIFFClient.AnswerSignature?
         do {
@@ -7101,8 +7105,11 @@ final class AppModel: ObservableObject {
     /// when no taf is named yet, never "to a taf" (as Android's `connectPrompt`).
     func connectPrompt(_ grant: PlanqueClient.Grant) -> String {
         let app = Self.promptApp(grant)
-        guard let taf = namedTaf(grant.request.agent, grant: grant) else { return Words.Connect.Prompt.connectApp(vendor: "\(app)") }
-        return Words.Connect.Prompt.connect(vendor: "\(app)", agent: "\(taf)")
+        guard let taf = namedTaf(grant.request.agent, grant: grant) else {
+            return PromptReason.pick(Words.Connect.Prompt.connectApp(vendor: "\(app)"), mac: Words.Connect.Prompt.connectAppMac(vendor: "\(app)"))
+        }
+        return PromptReason.pick(Words.Connect.Prompt.connect(vendor: "\(app)", agent: "\(taf)"),
+                                 mac: Words.Connect.Prompt.connectMac(vendor: "\(app)", agent: "\(taf)"))
     }
 
     /// The same, for a connection by key: "Give Stripe its key for Disputes", or "Give Stripe its key".
@@ -7564,7 +7571,7 @@ final class AppModel: ObservableObject {
         defer { startingSetup = false }
         let gen = accountGeneration
         do {
-            _ = try await signer.sign(Data("tafs.setup.v1|\(tenant)".utf8), reason: Words.Coach.Prompt.connectTools, grants: true)
+            _ = try await signer.sign(Data("tafs.setup.v1|\(tenant)".utf8), reason: PromptReason.pick(Words.Coach.Prompt.connectTools, mac: Words.Coach.Prompt.connectToolsMac), grants: true)
         } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer

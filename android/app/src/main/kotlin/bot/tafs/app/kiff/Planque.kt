@@ -210,6 +210,13 @@ data class Grant(
   val cancellable: Boolean get() = waitingSignIn || pendingRequest
 
   /**
+   * planque draws this connection's row (its health and its actions): the list shows it as sent, and a tap opens its detail,
+   * where its actions are. Without health words, the row is the app's own, with Cancel or Disconnect (as iOS reads it), so a
+   * request nobody answered is never a row with nothing to end it.
+   */
+  val rowFromPlanque: Boolean get() = !health?.words.isNullOrEmpty() && actions != null
+
+  /**
    * A managed provider's connection, connected: planque can't sign it in again in place (it can't tell which account a new
    * sign-in at the provider is), so it's disconnected and connected again instead.
    */

@@ -80,9 +80,9 @@ Before the first message, one Face ID (`AppModel.startSetup`):
 1. The phone enrolls with planque: planque gets the phone's key, and a KIFF key that
    connects tools and does nothing else, minted with a signed setup call and never kept
    on the phone. The phone asks first with no key: while the key planque holds still stands
-   (another device enrolled it), planque answers `kept` and no key is minted, since a phone
+   (another device enrolled it), planque answers `kept: true` and no key is minted, since a phone
    can't revoke a connector key and a new one would only be left live in KIFF. Only when
-   planque says it needs one (`409 needs_key`) does it mint one and hand it over. Any other
+   planque says it needs one (`409 needs_key`) does it mint one and hand it over. A 2xx without `kept: true` mints nothing and stops with "Connecting your apps didn't work. Tap Start to try again.", on every app until planque says what it means. Any other
    answer (planque not reached, a 5xx, a refused signature, a 400 for a body it couldn't read) mints
    nothing, since a second enrolment would likely fail too and leave the key live: the app
    says why, and the next Start asks again. Only a 409 with no code, an older planque's, says
@@ -472,7 +472,8 @@ Ask Coach** opens Coach, which can connect an app that isn't listed from its own
 
 **Connect** (for whoever manages the account's Cards) starts the app's grant for one taf
 (`POST /v1/connect/apps/{entry}` with `{taf}`, which answers only the grant). With several
-tafs the person manages, it asks "Which taf is this for?" first; with one, it's that one; with
+tafs the person manages, it asks "Which taf is this for?" first, even with one: a connection
+goes only to a taf the person named, never a guess (iPhone and iPad from tafs#1135, Android 1.30.1). With
 none, Connect is off and it says to make a taf first. Then it opens the approval as a
 sheet over the list. It's the same as Coach's card: planque's words, KIFF's words for the
 profile, then the signature, and only then the vendor's sign-in page from planque's approve

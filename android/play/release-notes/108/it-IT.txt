@@ -1,0 +1,3 @@
+- Collega app chiede per quale taf è la connessione, anche se ne hai solo uno.
+- Collegare un'app non resta più fermo su «Approvazione…»: «Riapri l'accesso» riapre la pagina, e «Non ora» chiude l'attesa.
+- Una richiesta di connessione senza risposta si può annullare dalla sua riga.
