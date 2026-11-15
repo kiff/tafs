@@ -69,6 +69,19 @@ A new global shortcut is added to `KeyCommand.global` and to one of `MacMenu`'s 
 
 The window never goes smaller than 820 × 600 points (`MacWindow.minimumSize`): the width of an iPad held upright, so the sidebar and a screen beside it always fit. It has no default size of its own: macOS chooses the first one and remembers the person's.
 
+## Approvals with Touch ID
+
+A Mac with Touch ID approves as an iPad does: the same approval key, made in the Secure Enclave under the fingerprints enrolled now (`ApprovalSigner`), and the same Touch ID prompt. Nothing about the key is Mac-specific.
+
+What differs is how the Mac reports Touch ID:
+
+- **A Mac has no Touch ID switch for one app.** On an iPhone or iPad, "not available" with Face ID or Touch ID present means it's turned off for tafs, and Open Settings turns it on. On a Mac it means Touch ID is out of reach: the lid is closed on another display, or the Touch ID keyboard isn't connected. So the Mac says Touch ID can't be used right now, with no Open Settings (`ApprovalReadiness.from`, `mac:`).
+- **A Mac with no Touch ID can't approve** with this app. It approves on another device, as an iPad without Face ID or Touch ID does. The macOS 12 app is the one made for those Macs.
+
+The Mac's own words for where Touch ID is set up ("System Settings → Touch ID & Password") and for unlocking it with a password come with the app's words, not yet.
+
+The approval key needs the app signed. The CI build is unsigned, so the Mac's tests use a stub signer, and the first real approval with Touch ID on a Mac is **owed**, on a signed build (signing is done on another computer, at release).
+
 ## How the code asks whether it's the Mac
 
 `ThisDevice.isMac` and `#if targetEnvironment(macCatalyst)` are the only two ways the code asks whether it's the Mac build. The Mac workflow finds Mac-specific files by those names.
@@ -98,7 +111,7 @@ A draft pull request runs it too. The Mac build can only be checked on a machine
 |---|---|
 | Pointer hover on rows and buttons | next, with screenshots of the Mac app from CI |
 | **The menu bar and the window, seen by a person** | **owed.** The menu bar and the smallest window size are built and unit-tested, but nobody has seen them on a Mac. |
-| Approvals with Touch ID on a Mac, and a Mac without Touch ID | next; today the Mac build uses the iPad's approval code as it is |
+| Approvals with Touch ID on a Mac | the iPad's key and prompt; a Mac never says Touch ID is off for tafs. Its words for System Settings and a password come with the app's words |
 | Adding a Mac from a phone (the QR code and the check code) | after KIFF's pairing routes |
 | Signing, notarizing and the disk image | at release |
 | **A check on a real Mac with Touch ID** | **owed.** The Mac build has only run in CI, where there is no Touch ID. A person must approve a Card with Touch ID on a real Mac before the first release. |
