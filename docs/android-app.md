@@ -1023,8 +1023,45 @@ Links API answers `linked: true`, 15 Nov). So a passkey the app makes or uses th
 Credential Manager has kiff.dev as its relying party, and KIFF takes its origin
 (`android:apk-key-hash:…`). Unlike iOS's `webcredentials:kiff.dev`, Android needs nothing in the
 manifest: the Credential Manager reads the file. Only a build Play signed matches; a debug build,
-or one signed with the upload key, isn't linked and can't use kiff.dev's passkeys. Nothing in the
-app makes a passkey yet: that comes with the passkey work.
+or one signed with the upload key, isn't linked and can't use kiff.dev's passkeys.
+
+## Passkeys on this phone
+
+Account → Devices → **Passkeys** lists the account's passkeys as KIFF lists them (`GET /v1/me/passkeys`), and
+**Add a passkey on this phone** makes one (Android 1.30.0). With a passkey on this phone, a computer that approves with
+a passkey (Linux, macOS 12) approves through it: the computer shows a QR code, and the phone's passkey provider
+answers it. That part is Android's own, with nothing in the app.
+
+- **Making it** (`AppModel.addPasskey`, `makePasskey`): Android's Credential Manager (`androidx.credentials`, with
+  `credentials-play-services-auth` for Android 11 to 13) makes it from WebAuthn's creation options
+  (`PasskeyRegistration.createOptions`):
+  - rp `kiff.dev`;
+  - the person's subject as `user.id` (base64url of its UTF-8) and their email as `user.name`, both read from the
+    account's members, where KIFF marks the person `you`;
+  - ES256 only, user verification required, `residentKey: preferred`, attestation `none`.
+  - The challenge is base64url(SHA-256) of `kiff.passkey.register.v1\n<tenant>\n<subject>\n<issued_at>`, with
+    `issued_at` to the second in UTC (`PasskeyRegistration.issuedAt`), which KIFF takes within 10 minutes.
+  - Android draws its own sheet and asks for the screen lock. Putting it away sends nothing.
+- **Registering it** (`KiffClient.registerPasskey`): `POST /v1/me/passkeys` with `{name, issued_at, client_data_json,
+  attestation_object}`, the creation's response as it came (`PasskeyRegistration.registerBody`). KIFF reads the
+  credential from it; the phone parses nothing.
+  - **The earlier body's fields** (`credential_id`, `public_key`) are never sent too: KIFF refuses both kinds at once.
+  - **The name** is the phone's model, trimmed, 1 to 64 code points, or "Android phone" for one KIFF would refuse. It's
+    never cut (`PasskeyRegistration.validName`).
+  - **The signature:** the approval key, behind a fingerprint that says "Add a passkey on this phone to your account",
+    never inside an approval window. A session KIFF holds no approval key for adds none, and Android isn't asked: a
+    stolen session would add its own.
+  - **KIFF's answers:** KIFF decides, and `403 admins_only` says only owners and admins can add one.
+    `409 passkey_registered` (the same passkey again) reads as added. Any other refusal is said with KIFF's own why.
+  - **A debug build is refused:** Credential Manager names the app by its signing certificate
+    (`android:apk-key-hash:…`), and KIFF takes only Play App Signing's (`400 registration_invalid`, reason `origin`).
+    So adding one is tested from a build Play installed (the internal track).
+- **Removing one** (`KiffClient.removePasskey`): `DELETE /v1/me/passkeys/{id}`, signed by the approval key behind a
+  fingerprint that names it, as a device's removal is. A computer's own passkey has no id (it goes with its device,
+  `device_id`), so it says "Goes with its computer", with no Remove.
+- **Tests:** `PasskeyRegistrationTest` reads `vectors/passkey-registration.json`, the vector the iPhone and iPad's
+  tests read too, so the apps can't drift. `PasskeyAddTest` covers the model: the fingerprint, the body, the 409, the
+  sheet put away, no approval key, KIFF's refusals, and a computer's own passkey.
 
 ## Pairing a computer
 

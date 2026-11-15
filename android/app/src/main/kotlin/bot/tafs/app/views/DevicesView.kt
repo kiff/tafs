@@ -40,6 +40,7 @@ import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.kiff.Device
 import bot.tafs.app.kiff.PairQr
+import bot.tafs.app.kiff.Passkey
 import bot.tafs.app.kiff.Pairing
 import bot.tafs.app.model.ErrorWords
 import java.time.Instant
@@ -68,9 +69,12 @@ fun DevicesSheet(
   addDevice: (() -> Unit)? = null,
   confirmPair: () -> Unit = {},
   cancelPair: () -> Unit = {},
+  addPasskey: (() -> Unit)? = null,
+  removePasskey: suspend (Passkey) -> Boolean = { false },
 ) {
   val scope = rememberCoroutineScope()
   var removing by remember { mutableStateOf<Device?>(null) }
+  var removingPasskey by remember { mutableStateOf<Passkey?>(null) }
   // The device whose QR was read, while the person compares its code, and what came of it: the model's, so the sheet rebuilt
   // after Google's scanner or the fingerprint still shows them.
   val asking = state.pairAsking
@@ -122,6 +126,34 @@ fun DevicesSheet(
           style = scaled(13, color = Theme.dim),
           modifier = Modifier.padding(horizontal = 4.dp),
         )
+        // The account's passkeys, as KIFF lists them: one on this phone lets a computer approve through it, by the computer's QR.
+        if (addPasskey != null || state.passkeys.isNotEmpty()) {
+          Text(Words.Settings.Devices.passkeysTitle, style = scaled(20, FontWeight.Bold, Theme.ink), modifier = Modifier.padding(start = 4.dp, top = 16.dp))
+          state.passkeysError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
+          state.passkeyLine?.let { Panel(Modifier.testTag(PASSKEY_LINE)) { Text(it, style = scaled(14, color = Theme.ink)) } }
+          state.passkeys.forEach { passkey ->
+            Panel {
+              Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(passkey.name.ifEmpty { Words.Settings.Devices.unnamed }, style = scaled(15, FontWeight.SemiBold, Theme.ink), modifier = Modifier.weight(1f))
+                if (passkey.removable) {
+                  Text(Words.Settings.Devices.passkeyRemove, style = scaled(15, FontWeight.SemiBold, Theme.no), modifier = Modifier.heightIn(min = 44.dp).confirms().tapping { removingPasskey = passkey }.padding(top = 8.dp))
+                } else {
+                  // A computer's own passkey goes with its computer: signing the computer out removes it.
+                  Text(Words.Settings.Devices.passkeyWithComputer, style = scaled(13, color = Theme.dim))
+                }
+              }
+            }
+          }
+          if (addPasskey != null) {
+            Text(
+              Words.Settings.Devices.passkeyAdd,
+              style = scaled(15, FontWeight.SemiBold, if (state.passkeyBusy) Theme.dim else Theme.amber),
+              modifier = Modifier.heightIn(min = 44.dp).testTag(PASSKEY_BUTTON).confirms().tapping(enabled = !state.passkeyBusy, onClick = addPasskey)
+                .padding(horizontal = 4.dp, vertical = 10.dp),
+            )
+          }
+          Text(Words.Settings.Devices.passkeyNote, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 4.dp))
+        }
       }
     }
   }
@@ -133,6 +165,16 @@ fun DevicesSheet(
         TextButton(onClick = { removing = null; scope.launch { remove(device) } }, modifier = Modifier.confirms()) { Text(Words.Settings.Devices.signOut, color = Theme.no) }
       },
       dismissButton = { TextButton(onClick = { removing = null }) { Text(Words.Common.cancel) } },
+    )
+  }
+  removingPasskey?.let { passkey ->
+    DriveAlert(
+      onDismissRequest = { removingPasskey = null },
+      title = { Text(Words.Settings.Devices.passkeyRemoveNamed(name = passkey.name)) },
+      confirmButton = {
+        TextButton(onClick = { removingPasskey = null; scope.launch { removePasskey(passkey) } }, modifier = Modifier.confirms()) { Text(Words.Settings.Devices.passkeyRemove, color = Theme.no) }
+      },
+      dismissButton = { TextButton(onClick = { removingPasskey = null }) { Text(Words.Common.cancel) } },
     )
   }
   asking?.let { qr ->
@@ -173,3 +215,5 @@ internal const val DEVICES_SHEET = "devices-sheet"
 internal const val PAIR_BUTTON = "devices.pair"
 internal const val PAIR_CHECK = "devices.pair.check"
 internal const val PAIR_LINE = "devices.pair.line"
+internal const val PASSKEY_BUTTON = "devices.passkey.add"
+internal const val PASSKEY_LINE = "devices.passkey.line"

@@ -3630,6 +3630,32 @@ enum Words {
             static var pairUsed: String { Words.line("settings.devices.pair_used") }
             /// Yes, pair it
             static var pairYes: String { Words.line("settings.devices.pair_yes") }
+            /// Add a passkey on this phone
+            static var passkeyAdd: String { Words.line("settings.devices.passkey_add") }
+            /// This phone's passkey is added.
+            static var passkeyAdded: String { Words.line("settings.devices.passkey_added") }
+            /// Only the account's owners and admins can add a passkey.
+            static var passkeyAdminsOnly: String { Words.line("settings.devices.passkey_admins_only") }
+            /// To add a passkey, use a device that can approve.
+            static var passkeyNeedsApprover: String { Words.line("settings.devices.passkey_needs_approver") }
+            /// This phone couldn't make a passkey. {why}
+            static func passkeyNotMade(why: String) -> String { Words.line("settings.devices.passkey_not_made", why) }
+            /// With a passkey on this phone, a computer can approve through it: the computer shows a QR code, and you scan it with this phone.
+            static var passkeyNote: String { Words.line("settings.devices.passkey_note") }
+            /// Add a passkey on this phone to your account
+            static var passkeyPrompt: String { Words.line("settings.devices.passkey_prompt") }
+            /// Remove
+            static var passkeyRemove: String { Words.line("settings.devices.passkey_remove") }
+            /// Remove {name}?
+            static func passkeyRemoveNamed(name: String) -> String { Words.line("settings.devices.passkey_remove_named", name) }
+            /// Remove the passkey {name} from your account
+            static func passkeyRemovePrompt(name: String) -> String { Words.line("settings.devices.passkey_remove_prompt", name) }
+            /// Goes with its computer
+            static var passkeyWithComputer: String { Words.line("settings.devices.passkey_with_computer") }
+            /// Couldn't load your passkeys. {why}
+            static func passkeysNotLoaded(why: String) -> String { Words.line("settings.devices.passkeys_not_loaded", why) }
+            /// Passkeys
+            static var passkeysTitle: String { Words.line("settings.devices.passkeys_title") }
             /// Sign out
             static var signOut: String { Words.line("settings.devices.sign_out") }
             /// Sign {device} out?

@@ -1,5 +1,6 @@
 package bot.tafs.app.app
 
+import bot.tafs.app.kiff.PasskeyRegistration
 import bot.tafs.app.kiff.activityPage
 import bot.tafs.app.kiff.runsPage
 import bot.tafs.app.kiff.setupView
@@ -613,6 +614,14 @@ data class AppState(
   val pairLine: String? = null,
   val pairBusy: Boolean = false,
   val devicesError: String? = null,
+  /**
+   * The account's passkeys, as KIFF lists them (Settings, Devices), a computer's own among them; the line that says what came of
+   * adding or removing one, why they couldn't be read, and whether a passkey is being made or registered.
+   */
+  val passkeys: List<bot.tafs.app.kiff.Passkey> = emptyList(),
+  val passkeyLine: String? = null,
+  val passkeysError: String? = null,
+  val passkeyBusy: Boolean = false,
   /** The account is being deleted, and why deleting it stopped, for its sheet; null when nothing went wrong. */
   val deletingAccount: Boolean = false,
   val deleteAccountError: String? = null,
@@ -7470,9 +7479,136 @@ class AppModel(
     _state.update { it.copy(pairAsking = null) }
   }
 
-  /** Devices closed: what came of the last pairing goes with it. */
+  /** Devices closed: what came of the last pairing, or the last passkey, goes with it. */
   fun clearPairLine() {
-    _state.update { it.copy(pairLine = null, pairAsking = null) }
+    _state.update { it.copy(pairLine = null, pairAsking = null, passkeyLine = null) }
+  }
+
+  /** Reads the account's passkeys for Devices, a computer's own among them. KIFF lists them; the phone decides nothing of them. */
+  suspend fun refreshPasskeys() {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null) return
+    val generation = accountGeneration
+    kiff.tenant = tenant
+    try {
+      val list = kiff.passkeys()
+      if (generation == accountGeneration) _state.update { it.copy(passkeys = list, passkeysError = null) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(passkeysError = Words.Settings.Devices.passkeysNotLoaded(why = ErrorWords.of(e))) }
+    }
+  }
+
+  /**
+   * Adds a kiff.dev passkey on this phone to the account (KIFF's passkey registration, with proof of possession): [make] has
+   * Android make it from the creation's options ([PasskeyRegistration.createOptions], null when the person put Android's sheet
+   * away), then the approval key, behind its fingerprint, signs the registration, never inside an approval window. A session
+   * that holds no approval key can't add one: a stolen session would add its own. Whether it's registered is KIFF's, which
+   * takes it only from an owner or an admin, and only from a build Play signed. False when it didn't go through, why in
+   * [AppState.passkeyLine].
+   */
+  suspend fun addPasskey(model: String?, make: suspend (String) -> String?): Boolean {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null || _state.value.passkeyBusy) return false
+    if (!_state.value.sessionHasKey || !sessionHasApprovalKey || _state.value.approvalKeyLost) {
+      _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyNeedsApprover) }
+      return false
+    }
+    val generation = accountGeneration
+    kiff.tenant = tenant
+    _state.update { it.copy(passkeyBusy = true, passkeyLine = null) }
+    val signer = signer
+    try {
+      // The person, as KIFF lists them: the subject the challenge names and the email the passkey is shown with.
+      val me = kiff.people().firstOrNull { it.you == true }
+      val email = me?.email ?: _state.value.kiffAccount?.email
+      if (me == null || email.isNullOrEmpty()) {
+        _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyAdminsOnly) }
+        return false
+      }
+      val issuedAt = PasskeyRegistration.issuedAt(clock())
+      val options = PasskeyRegistration.createOptions(tenant, me.subject, email, issuedAt)
+      val response = try {
+        make(options.toString())
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        if (generation == accountGeneration) _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyNotMade(why = ErrorWords.of(e))) }
+        return false
+      } ?: return false
+      if (generation != accountGeneration) return false
+      val body = PasskeyRegistration.registerBody(PasskeyRegistration.name(model), issuedAt, response)
+      approvalReason = Words.Settings.Devices.passkeyPrompt
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      try {
+        kiff.registerPasskey(body)
+      } catch (e: KiffError.Server) {
+        // The same passkey registered already (an answer lost on the way, then tried again): it's there, so it's done.
+        if (e.status != 409 || !e.refused("passkey_registered")) throw e
+      }
+    } catch (_: SignerException) {
+      return false
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(passkeyLine = KiffClient.APPROVAL_KEY_LOST) }
+      return false
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      val said = when {
+        e is KiffError.Server && e.refused("admins_only") -> Words.Settings.Devices.passkeyAdminsOnly
+        e is KiffError.Server && e.refused("view_only") -> Words.Settings.Devices.passkeyNeedsApprover
+        else -> Words.Common.didntGoThrough(what = Words.Settings.Devices.passkeyAdd, why = ErrorWords.of(e))
+      }
+      if (generation == accountGeneration) _state.update { it.copy(passkeyLine = said) }
+      return false
+    } finally {
+      kiff.setupSigner = null
+      approvalReason = Words.Approval.Prompt.approveOnKiff
+      _state.update { it.copy(passkeyBusy = false) }
+    }
+    if (generation != accountGeneration) return false
+    _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyAdded) }
+    refreshPasskeys()
+    return true
+  }
+
+  /**
+   * Removes one of the account's passkeys, behind one fingerprint that names it, signed by the approval key as a device's
+   * removal is. A computer's own passkey has no id and goes with its computer: it's never removed here. False when it didn't go.
+   */
+  suspend fun removePasskey(passkey: bot.tafs.app.kiff.Passkey): Boolean {
+    val tenant = kiffTenant
+    val id = passkey.id
+    if (_state.value.mode != Mode.kiff || tenant == null || id == null || !passkey.removable) return false
+    if (!_state.value.sessionHasKey || !sessionHasApprovalKey || _state.value.approvalKeyLost) {
+      _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyNeedsApprover) }
+      return false
+    }
+    val generation = accountGeneration
+    kiff.tenant = tenant
+    val signer = signer
+    try {
+      approvalReason = Words.Settings.Devices.passkeyRemovePrompt(name = passkey.name)
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      kiff.removePasskey(id)
+    } catch (_: SignerException) {
+      return false
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(passkeyLine = KiffClient.APPROVAL_KEY_LOST) }
+      return false
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      val what = Words.Settings.Devices.passkeyRemovePrompt(name = passkey.name)
+      if (generation == accountGeneration) _state.update { it.copy(passkeyLine = Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))) }
+      return false
+    } finally {
+      kiff.setupSigner = null
+      approvalReason = Words.Approval.Prompt.approveOnKiff
+    }
+    refreshPasskeys()
+    return true
   }
 
   /**
