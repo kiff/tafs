@@ -166,6 +166,23 @@ final class DevicesTests: XCTestCase {
         XCTAssertEqual(PairComputerView.check(try pairingCode()), Words.Settings.Devices.pairCheck(code: "XFI4MD"))
     }
 
+    /// A computer with its device key in software (`key_store: "software"`) pairs view-only: the alert says
+    /// it shows the tafs and sends approvals to this phone, never that it approves with a passkey.
+    func testAViewOnlyComputersAlertSaysItSendsApprovalsToThePhone() throws {
+        let exp = ISO8601DateFormatter().string(from: Date().addingTimeInterval(120))
+        let fields: [String: Any] = ["v": "kiff.pair.v1", "pub": PairingTests.pub, "name": "tafs on this Mac", "platform": "macos",
+                                     "kind": "passkey", "key_store": "software", "nonce": PairingTests.nonce, "exp": exp]
+        let mac = try PairingRequest.read(String(decoding: try JSONSerialization.data(withJSONObject: fields), as: UTF8.self)).get()
+        XCTAssertEqual(PairComputerView.lines(mac), [Words.Settings.Devices.pairGivesView(device: "tafs on this Mac"), Words.Settings.Devices.pairOnlyNow])
+        XCTAssertFalse(PairComputerView.lines(mac).contains(Words.Settings.Devices.pairGivesPasskey(device: "tafs on this Mac")))
+        XCTAssertEqual(Words.Settings.Devices.pairGivesView(device: "tafs on this Mac"), "tafs on this Mac will show your tafs and send approvals to this phone.")
+        // A passkey computer with a hardware key keeps today's lines.
+        var hardware = fields
+        hardware["key_store"] = nil
+        let passkey = try PairingRequest.read(String(decoding: try JSONSerialization.data(withJSONObject: hardware), as: UTF8.self)).get()
+        XCTAssertEqual(PairComputerView.lines(passkey), [Words.Settings.Devices.pairGivesPasskey(device: "tafs on this Mac"), Words.Settings.Devices.pairOnlyNow])
+    }
+
     /// A phone or tablet (§5.8): what it gets whatever its biometric, only one in hand now, and the
     /// question names the new phone or tablet, not a computer.
     func testThePhoneAlertSaysWhatAPhoneGets() throws {

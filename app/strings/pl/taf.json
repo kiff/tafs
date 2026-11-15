@@ -102,6 +102,7 @@
   "taf.revoke": "Unieważnij",
   "taf.revoke_and_stop": "Unieważnij i zatrzymaj",
   "taf.revoke_body": "Żadna nowa akcja nie przejdzie. To, co już zostało zrobione, pozostaje zrobione.",
+  "taf.revoke_needs_approver": "Aby unieważnić tę Card, użyj urządzenia, które może zatwierdzać.",
   "taf.revoke_title": "Unieważnić Card {taf}?",
   "taf.run_not_started": "Uruchomienie się nie rozpoczęło. {why}",
   "taf.run_now": "Uruchom teraz",

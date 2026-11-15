@@ -1817,6 +1817,7 @@
     <string name="settings_devices_pair_gives_hello">%1$s kan dan de acties van je tafs goedkeuren met Windows Hello.</string>
     <string name="settings_devices_pair_gives_passkey">%1$s kan dan de acties van je tafs goedkeuren met een passkey.</string>
     <string name="settings_devices_pair_gives_phone">%1$s kan dan de acties van je tafs goedkeuren.</string>
+    <string name="settings_devices_pair_gives_view">%1$s toont je tafs en stuurt goedkeuringen naar deze telefoon.</string>
     <string name="settings_devices_pair_invalid">KIFF kon die code niet lezen. Toon een nieuwe op je computer en scan die opnieuw.</string>
     <string name="settings_devices_pair_key_registered">Die computer is al gekoppeld.</string>
     <string name="settings_devices_pair_named">%1$s koppelen?</string>
@@ -1832,6 +1833,7 @@
     <string name="settings_devices_sign_out_named">%1$s uitloggen?</string>
     <string name="settings_devices_sign_out_prompt">%1$s uitloggen van je account</string>
     <string name="settings_devices_sign_out_this">Dit apparaat uitloggen?</string>
+    <string name="settings_devices_signout_needs_approver">Gebruik een apparaat dat kan goedkeuren om een ander apparaat uit te loggen.</string>
     <string name="settings_devices_this_device">dit apparaat</string>
     <string name="settings_devices_this_device_name">tafs op %1$s</string>
     <string name="settings_devices_this_device_title">Dit apparaat</string>
@@ -1955,6 +1957,13 @@
     <string name="sign_in_not_signed_out_device">Nog niet uitgelogd bij KIFF: %1$s. Probeer het opnieuw, of log deze %2$s uit via Apparaten op een ander apparaat.</string>
     <string name="sign_in_open_kiff">KIFF openen om goed te keuren</string>
     <string name="sign_in_other_browser">Of open deze link in een andere browser:</string>
+    <string name="sign_in_pair_check">Die vraagt of deze %1$s %2$s toont.</string>
+    <string name="sign_in_pair_how">Open op de telefoon die je al met tafs gebruikt %1$s → %2$s → %3$s en scan deze code.</string>
+    <string name="sign_in_pair_new_code">Die code is verlopen, dus hier is een nieuwe.</string>
+    <string name="sign_in_pair_no_key">Deze %1$s kan geen sleutel bewaren en kan dus niet gekoppeld worden. Log in plaats daarvan in met KIFF.</string>
+    <string name="sign_in_pair_prompt">Deze %1$s koppelen aan je andere telefoon</string>
+    <string name="sign_in_pair_start">Inloggen met je andere telefoon</string>
+    <string name="sign_in_pair_waiting">Wacht op je andere telefoon…</string>
     <string name="sign_in_relink_code_expired">De code is verlopen voordat hij in je browser werd goedgekeurd. Probeer het opnieuw.</string>
     <string name="sign_in_relink_didnt_take">Deze telefoon kan nog steeds niet goedkeuren. Probeer het opnieuw, of log opnieuw in via Instellingen.</string>
     <string name="sign_in_relink_failed">Opnieuw goedkeuren is niet gelukt. Probeer het opnieuw, of log opnieuw in via Instellingen.</string>
@@ -2076,6 +2085,7 @@
     <string name="taf_revoke">Intrekken</string>
     <string name="taf_revoke_and_stop">Intrekken en stoppen</string>
     <string name="taf_revoke_body">Er gaat geen nieuwe actie meer door. Wat al is gedaan, blijft gedaan.</string>
+    <string name="taf_revoke_needs_approver">Gebruik een apparaat dat kan goedkeuren om deze Card in te trekken.</string>
     <string name="taf_revoke_title">De Card van %1$s intrekken?</string>
     <string name="taf_run_not_started">De run is niet gestart. %1$s</string>
     <string name="taf_run_now">Nu uitvoeren</string>

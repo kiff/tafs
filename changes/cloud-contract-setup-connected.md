@@ -1,0 +1,1 @@
+- Two more Setup contracts for the apps: a taf with one app connected, and the same app's sign-in expired with the taf's Connect again (`contracts/taf-setup-connected.json`, `contracts/taf-setup-reconnect.json`).

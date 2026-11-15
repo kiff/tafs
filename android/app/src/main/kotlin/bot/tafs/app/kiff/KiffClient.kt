@@ -86,7 +86,15 @@ data class Account(
   @SerialName("time_zone") val timeZone: String? = null,
   /** What this person may do on the account ("cards.manage", …); null from a KIFF that doesn't say. */
   val capabilities: List<String>? = null,
+  /**
+   * How this device's session approves, in KIFF's word: "view" (nothing it signs approves), "key" (its approval key),
+   * "passkey", or "device_key" (a session from before approval modes). Null from a KIFF that doesn't say.
+   */
+  @SerialName("approval_mode") val approvalMode: String? = null,
 ) {
+  /** KIFF keeps this session view-only: nothing this phone signs approves. */
+  val viewOnly: Boolean get() = approvalMode == "view"
+
   /** The account as the owner knows it: its name, else its slug. */
   val name: String get() = displayName?.takeIf { it.isNotEmpty() } ?: slug
 
@@ -330,6 +338,25 @@ class KiffClient(
 
   @Serializable
   private data class Relinked(val status: String = "", val fingerprint: String? = null)
+
+  /**
+   * The new device's side of pairing (KIFF's pairing contract): with no session, it claims the session the other phone approved,
+   * proving with [proof] (the device key's signature over [PairOffer.claimMessage], base64 DER) that it holds the key. Until the
+   * approval KIFF answers as the device sign-in does: pending, slow down, or expired.
+   */
+  suspend fun claimPairing(nonce: String, pub: String, proof: String): DeviceToken {
+    try {
+      return call("POST", "/v1/pair/claim", mapOf("nonce" to nonce, "pub" to pub, "proof" to proof), authorized = false)
+    } catch (e: KiffError.Server) {
+      if (e.status != 400) throw e
+      throw when (e.message) {
+        "authorization_pending" -> KiffError.AuthorizationPending
+        "slow_down" -> KiffError.SlowDown
+        "expired_token" -> KiffError.Expired
+        else -> e
+      }
+    }
+  }
 
   private suspend inline fun <reified T> pollToken(deviceCode: String): T {
     try {

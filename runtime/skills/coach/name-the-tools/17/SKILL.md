@@ -14,7 +14,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   in. Nothing is read from the owner's account before they approve the tools
   that read it, so don't try to read what the sign-in covers first: ask.
   A long catalog is never a reason to stop: catalog {grant, q} searches it by
-  words from the job across its pages answering the matches in full;
+  words from the job across its pages;
   catalog {grant, cursor} reads on. Never say a list was too long to read.
   Choose, from the vendor's own catalog, the tools the whole job needs:
   to find the work (list or search), to check one item (read it), and to act
@@ -24,8 +24,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   and the operation that makes a tool the job's. A pin is a dotted path
   (four parts at most) and its JSON value; a key with dots in its own name is
   pinned through its parent, the whole object as the value. A taf then never looks them
-  up: a lookup is a wait on every message. Pin too what makes a write final
-  (draft or issued) to the value that can be
+  up: a lookup is a wait on every message. Pin too what makes a write final to the value that can be
   undone: the default may be final. A final step the job needs is
   its own tool, under its own name. When one
   vendor tool runs many operations chosen by an argument (an operation id, a
@@ -33,13 +32,11 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   needs, each under its own name with that argument pinned to that operation:
   Never leave the operation to the taf. Such an operation's own fields aren't in the catalog, and their
   names aren't the thing's (a read of one item can take it as id): never guess
-  or rename them, even from the vendor's API you know: a server's may differ. When the vendor has a read-only tool that
+  or rename them, even from an API you know. When the vendor has a read-only tool that
   lists an operation's fields, given its id, ask for it
   in the first planque request's setup_reads field (never a tool), so
-  you can read it yourself: it reads the vendor's documentation, not the
-  owner's account. Once it's connected, it isn't among your tools until you
-  look for it: search for it by its name in KIFF, as planque's status lists
-  it (such as api_details_k3f9), then call it. A vendor's own server, whose
+  you can read it yourself. Once it's connected, it isn't among your tools until you
+  look for it: search for it by its name in KIFF, as planque's status lists it, then call it. A vendor's own server, whose
   tools you can't name before its sign-in, gets its describing tool connected
   by planque with the sign-in when it has one: never ask for it, or any read,
   alone. When you must pin the account, pin the grant's own account, as
@@ -51,24 +48,26 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   sign-in. Once it's connected, read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments} (before a key: describe's arguments, by in and type), and place each argument you name (the amount, what the call
   acts on, the read's argument in unit_lookup) at the path its fields give,
   such as parameters.id. Keep it among the taf's reads, to look up open fields before its first call. Reading first
-  doesn't split the owner's questions: ask the ones that don't depend on each
-  other together, in one questions card. Without such a
-  tool, leave the operation's fields open, and name only arguments the vendor's own input schema declares.
-  An argument is never an object: name its fields one by one, each at its
-  path (values.Status).
-  Leave every other argument for the taf to decide (arguments): its Card limits
-  what changes things, so don't narrow a tool's arguments to stand in for a
-  limit. Name the argument that moves money, with its unit and scale,
+  never splits the owner's questions: ask independent ones together, in one
+  questions card. Without such a
+  tool, leave the operation's fields open, and name only arguments the vendor's input schema declares.
+  Type each argument as its schema does: plain, array (`type: "array",
+  schema: {type: "array", items: {type: "string"}}`) or object, naming the fields the taf writes, by the job's or owner's names (ask one
+  you don't know), never none (`type: "object", schema: {type: "object",
+  properties: {"Status": {type: "string"}}}`). A field is plain or an array; a
+  nested one's fields are arguments at their paths.
+  Leave every other argument to the taf (arguments): its Card limits what
+  changes things; never narrow an argument to stand in for a limit. Name the argument that moves money, with its unit and scale,
   and make it required: only an argument the vendor's operation takes for the
   money it moves, in its own units, named from that operation's fields as
-  the vendor's own docs give them, never one you make up. A tool that changes
+  the vendor's docs give them, never one you make up. A tool that changes
   data but moves no money (posting a reply, moving a meeting, sharing a file)
   has no amount argument. The operation's fields say whether it moves money,
   not what it is about: one about money that takes no amount field
   (contesting a claim on a payment, reminding a customer of an invoice) moves
   no money here. It has no amount argument, and its Card limits its calls a
   day. Name what each tool that changes things acts on
-  (resource_argument): the item it takes (a ticket, a payment), as one of its string arguments, required. When it takes several, keep the one its read takes. A sheet's `values` is rows of plain values: `{type: array, items: {type: array, items: {type: string}}}`. A row number is never `resource_argument`: limit a sheet write by calls a day. For a tool that
+  (resource_argument): the item it takes (a ticket, a payment), as one of its string arguments, required. When it takes several, keep the one its read takes. A row number is never `resource_argument`: limit a sheet write by calls a day. For a tool that
   moves money, name the read that says its unit (unit_lookup: that read's
   name, the read's argument that takes the same id, and where its answer gives it, such as currency): KIFF refuses a call in another unit. Ask for a taf's tools once, complete (read_only, pins,
   arguments): each change is one more approval. Mark tools that

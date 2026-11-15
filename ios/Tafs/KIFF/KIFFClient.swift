@@ -375,6 +375,22 @@ final class KIFFClient {
         }
     }
 
+    /// The new device's side of pairing (KIFF's pairing contract §5.4): with no session, it claims the
+    /// session the other phone approved, proving it holds the device key. Until the approval, KIFF
+    /// answers as the device sign-in does: pending, slow down, or expired.
+    func claimPairing(nonce: String, pub: String, proof: String) async throws -> DeviceToken {
+        do {
+            return try await send("POST", "/v1/pair/claim", body: ["nonce": nonce, "pub": pub, "proof": proof], authorized: false)
+        } catch KIFFError.server(400, let message, _) {
+            switch message {
+            case "authorization_pending": throw KIFFError.authorizationPending
+            case "slow_down": throw KIFFError.slowDown
+            case "expired_token": throw KIFFError.expired
+            default: throw KIFFError.server(status: 400, message: message)
+            }
+        }
+    }
+
     func signOut() async throws {
         let _: Empty = try await send("POST", "/v1/auth/device/logout", body: [String: String]())
     }

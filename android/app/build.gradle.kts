@@ -12,8 +12,8 @@ android {
     applicationId = "dev.kiff.tafs"
     minSdk = 30
     targetSdk = 37
-    versionCode = 100
-    versionName = "1.28.0"
+    versionCode = 104
+    versionName = "1.29.3"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
@@ -125,6 +125,8 @@ dependencies {
   implementation(libs.play.app.update.ktx)
   // Pairing a computer: Google's code scanner reads its QR in its own screen, so the app asks for no camera permission.
   implementation(libs.play.services.code.scanner)
+  // Signing in with your other phone: this phone draws its own pairing QR. The encoder alone, pure Java.
+  implementation(libs.zxing.core)
 
   // Navigation
   implementation(libs.androidx.navigation3.ui)

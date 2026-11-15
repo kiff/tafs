@@ -111,6 +111,32 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertTrue(signer.currentPrompted.isEmpty && signer.approvalPrompted.isEmpty, "registering asks for no Face ID")
     }
 
+    /// KIFF keeps this session view-only (`view_only`): the phone says to sign in again on it or approve
+    /// from the other phone, offers no Approve again, and asks KIFF nothing more until a new sign-in (as
+    /// Android 100 does).
+    func testAViewOnlySessionSaysToSignInAgainOrUseTheOtherPhoneAndAsksNoMore() async throws {
+        let model = await signedIn(TwoKeySigner(), registration: (403, #"{"error":"view_only","message":"this device can't approve"}"#))
+        XCTAssertTrue(model.approvalKeyLost)
+        XCTAssertTrue(model.approvalViewOnly)
+        XCTAssertFalse(model.sessionHasApprovalKey)
+        XCTAssertEqual(model.approvalKeyLostWords, Words.Approval.viewOnly)
+        XCTAssertEqual(Words.Approval.viewOnly, "Sign in again on this phone to approve, or approve from your other phone.")
+        let asked = sent("POST", "/v1/me/device/approval-key").count
+        XCTAssertEqual(asked, 1)
+        await model.refresh()
+        await model.registerApprovalKey()
+        XCTAssertEqual(sent("POST", "/v1/me/device/approval-key").count, asked, "no retry loop")
+        let relink = await model.startRelink()
+        XCTAssertNil(relink, "a view-only session isn't re-linked: only a new sign-in, or the other phone")
+    }
+
+    /// Another refusal leaves the session as before: no view-only words.
+    func testAnotherRefusalIsntViewOnly() async throws {
+        let model = await signedIn(TwoKeySigner(), registration: (404, #"{"error":"not_found"}"#))
+        XCTAssertFalse(model.approvalViewOnly)
+        XCTAssertEqual(model.approvalKeyLostWords, KIFFClient.approvalKeyLost)
+    }
+
     /// Whether this test host keeps Keychain items: an unsigned test bundle on CI's
     /// Simulator can't, and the app's Keychain reads come back empty there.
     private var keychainKeeps: Bool {

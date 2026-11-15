@@ -98,6 +98,7 @@
   "taf.revoke": "Intrekken",
   "taf.revoke_and_stop": "Intrekken en stoppen",
   "taf.revoke_body": "Er gaat geen nieuwe actie meer door. Wat al is gedaan, blijft gedaan.",
+  "taf.revoke_needs_approver": "Gebruik een apparaat dat kan goedkeuren om deze Card in te trekken.",
   "taf.revoke_title": "De Card van {taf} intrekken?",
   "taf.run_not_started": "De run is niet gestart. {why}",
   "taf.run_now": "Nu uitvoeren",

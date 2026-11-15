@@ -1,0 +1,2 @@
+- Mit deinem anderen Telefon anmelden: den Code dieses Telefons anzeigen, ihn auf dem Telefon, das du schon nutzt, unter Konto, Geräte, Gerät hinzufügen scannen, und du bist angemeldet.
+- Geräte öffnet sich in voller Höhe, Erledigt führt zurück zu Konto, und ein gescannter Code, der kein Gerät ist, sagt das jetzt und bleibt stehen.

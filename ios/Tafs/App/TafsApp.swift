@@ -184,7 +184,8 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { if Self.ownKeyboard($0) { keyboardUp = false } }
         // Both sizes keep the underlying taf and tab mounted while Coach opens.
         .overlay {
-            if coachAvailable {
+            // `-screen coach` draws Coach over the sample too, for the reference set.
+            if coachAvailable || Screenshots.coach {
                 if sizeClass == .regular { CoachPanel() }
                 else { PhoneCoachPanel() }
             }

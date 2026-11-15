@@ -3592,6 +3592,8 @@ enum Words {
             static func pairGivesPasskey(device: String) -> String { Words.line("settings.devices.pair_gives_passkey", device) }
             /// {device} will be able to approve your tafs' actions.
             static func pairGivesPhone(device: String) -> String { Words.line("settings.devices.pair_gives_phone", device) }
+            /// {device} will show your tafs and send approvals to this phone.
+            static func pairGivesView(device: String) -> String { Words.line("settings.devices.pair_gives_view", device) }
             /// KIFF couldn't read that code. Show a new one on your computer and scan it again.
             static var pairInvalid: String { Words.line("settings.devices.pair_invalid") }
             /// That computer is already paired.
@@ -3622,6 +3624,8 @@ enum Words {
             static func signOutPrompt(device: String) -> String { Words.line("settings.devices.sign_out_prompt", device) }
             /// Sign this device out?
             static var signOutThis: String { Words.line("settings.devices.sign_out_this") }
+            /// To sign another device out, use a device that can approve.
+            static var signoutNeedsApprover: String { Words.line("settings.devices.signout_needs_approver") }
             /// this device
             static var thisDevice: String { Words.line("settings.devices.this_device") }
             /// tafs on {device}
@@ -3887,6 +3891,20 @@ enum Words {
         static var openKiff: String { Words.line("sign_in.open_kiff") }
         /// Or open this link in another browser:
         static var otherBrowser: String { Words.line("sign_in.other_browser") }
+        /// It will ask whether this {device} shows {code}.
+        static func pairCheck(device: String, code: String) -> String { Words.line("sign_in.pair_check", device, code) }
+        /// On the phone you already use with tafs, open {account} → {devices} → {add}, and scan this code.
+        static func pairHow(account: String, devices: String, add: String) -> String { Words.line("sign_in.pair_how", account, devices, add) }
+        /// That code expired, so here's a new one.
+        static var pairNewCode: String { Words.line("sign_in.pair_new_code") }
+        /// This {device} can't hold a key, so it can't be paired. Sign in with KIFF instead.
+        static func pairNoKey(device: String) -> String { Words.line("sign_in.pair_no_key", device) }
+        /// Pair this {device} with your other phone
+        static func pairPrompt(device: String) -> String { Words.line("sign_in.pair_prompt", device) }
+        /// Sign in with your other phone
+        static var pairStart: String { Words.line("sign_in.pair_start") }
+        /// Waiting for your other phone…
+        static var pairWaiting: String { Words.line("sign_in.pair_waiting") }
         enum Relink {
             /// The code expired before it was approved in your browser. Try again.
             static var codeExpired: String { Words.line("sign_in.relink.code_expired") }
@@ -4137,6 +4155,8 @@ enum Words {
         static var revokeAndStop: String { Words.line("taf.revoke_and_stop") }
         /// No new action goes through. Anything already done stays done.
         static var revokeBody: String { Words.line("taf.revoke_body") }
+        /// To revoke this Card, use a device that can approve.
+        static var revokeNeedsApprover: String { Words.line("taf.revoke_needs_approver") }
         /// Revoke {taf|possessive} Card?
         static func revokeTitle(taf: String) -> String { Words.line("taf.revoke_title", taf, Words.possessive(taf)) }
         /// The run didn't start. {why}

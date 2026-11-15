@@ -1,0 +1,1 @@
+- Su un telefono che non può approvare, la scheda della Card non offre più Revoca. Dice: “Per revocare questa Card, usa un dispositivo che può approvare.”

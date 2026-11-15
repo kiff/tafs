@@ -50,6 +50,7 @@ import bot.tafs.app.model.threeMonthsOn
 import bot.tafs.app.kiff.Account
 import bot.tafs.app.kiff.AlertTarget
 import bot.tafs.app.kiff.Grant
+import bot.tafs.app.kiff.PairOffer
 import bot.tafs.app.kiff.PairQr
 import bot.tafs.app.kiff.Pairing
 import bot.tafs.app.kiff.CloudSetup
@@ -596,6 +597,14 @@ data class AppState(
   val peopleError: String? = null,
   /** The devices signed in as this person on the account (Settings, Devices), and why they couldn't be read or one signed out. */
   val devices: List<Device> = emptyList(),
+  /**
+   * Adding a device (docs/android-app.md, Pairing a computer): the QR read, while the person compares its code; the line that says
+   * what came of it; and whether a scan or a pairing is under way. Kept here, not in the sheet, so the sheet coming back from
+   * Google's scanner, or from the fingerprint, loses none of it.
+   */
+  val pairAsking: PairQr? = null,
+  val pairLine: String? = null,
+  val pairBusy: Boolean = false,
   val devicesError: String? = null,
   /** The account is being deleted, and why deleting it stopped, for its sheet; null when nothing went wrong. */
   val deletingAccount: Boolean = false,
@@ -1138,8 +1147,13 @@ class AppModel(
    * Asks KIFF with [poll] until the person approves [start]'s code in their browser. It keeps asking through a dropped
    * connection or a KIFF error until the code expires.
    */
-  private suspend fun <T> untilApproved(start: DeviceStart, deadline: Instant = clock().plusSeconds(start.expiresIn.toLong()), poll: suspend () -> T): T {
-    var intervalMs = maxOf(start.interval, signInMinimumIntervalSeconds) * 1000L
+  private suspend fun <T> untilApproved(
+    start: DeviceStart,
+    deadline: Instant = clock().plusSeconds(start.expiresIn.toLong()),
+    minimumSeconds: Int = signInMinimumIntervalSeconds,
+    poll: suspend () -> T,
+  ): T {
+    var intervalMs = maxOf(start.interval, minimumSeconds) * 1000L
     while (clock() < deadline) {
       var waited = 0L
       while (waited < intervalMs && !signInNudged) {
@@ -1159,6 +1173,39 @@ class AppModel(
       }
     }
     throw KiffError.Expired
+  }
+
+  // MARK: Signing in with your other phone
+
+  /**
+   * Starts being added from the person's other phone (KIFF's pairing contract for phones): this phone's two keys in a
+   * `kiff.pair.v1` QR the other phone scans, with the code both screens show. The approval key is required, so a phone with no
+   * strong biometric can't be paired: it says so, and signs in with KIFF instead. Nothing is sent until [finishPairSignIn].
+   */
+  fun startPairSignIn(): PairOffer {
+    val key = signer.publicKeyDER
+    val approvalKey = signer.approvalPublicKeyDER
+    if (key.isEmpty() || approvalKey.isEmpty()) throw bot.tafs.app.model.OwnWords(Words.SignIn.pairNoKey(device = bot.tafs.app.model.ThisDevice.word))
+    return PairOffer.make(key, approvalKey, deviceName, bot.tafs.app.model.ThisDevice.kiffKind, PairOffer.freshNonce(), clock())
+  }
+
+  /** The least time between two claims, in seconds: KIFF asks for 3 or more. */
+  var pairClaimIntervalSeconds = 3
+
+  /**
+   * Claims, until the other phone approves [offer], the session KIFF minted for this phone, proving with its device key that it
+   * holds the key; then uses it as any sign-in does. Throws [KiffError.Expired] once the offer's time is up: the screen shows a
+   * new one. KIFF decides everything else: whether the claim's proof holds, and what the session may do.
+   */
+  suspend fun finishPairSignIn(offer: PairOffer) {
+    // One signature, by the device key and without a prompt: it names only the nonce and the key, so every poll sends it.
+    val proof = signer.signConfirmed(offer.claimMessage)
+    val start = DeviceStart(
+      deviceCode = offer.nonce, userCode = offer.checkCode, verificationUri = "", verificationUriComplete = "",
+      expiresIn = maxOf(0L, java.time.Duration.between(clock(), offer.expires).seconds).toInt(), interval = pairClaimIntervalSeconds,
+    )
+    val token = untilApproved(start, offer.expires, minimumSeconds = pairClaimIntervalSeconds) { kiff.claimPairing(offer.nonce, offer.pub, proof) }
+    withContext(NonCancellable) { useSession(token.accessToken, token.tenant) }
   }
 
   /** A failure worth trying again: the network, or KIFF briefly not answering. */
@@ -7049,7 +7096,15 @@ class AppModel(
     AccountTime.use(account.timeZone ?: "UTC")
     val device = java.time.ZoneId.systemDefault().id
     val offer = device.takeIf { it != (account.timeZone ?: "UTC") && secrets.load(declinedZoneKey()) != it }
-    _state.update { it.copy(kiffAccount = account, timeZoneOffer = offer) }
+    // KIFF says how this session approves (`approval_mode`): a view-only one is shown as such from the start, not only once
+    // registering the approval key is refused. Only KIFF's word sets it; a new sign-in that approves clears it.
+    val viewOnly = account.viewOnly
+    _state.update {
+      it.copy(
+        kiffAccount = account, timeZoneOffer = offer,
+        approvalViewOnly = it.approvalViewOnly || viewOnly, approvalKeyLost = it.approvalKeyLost || viewOnly,
+      )
+    }
   }
 
   private fun declinedZoneKey(): String = "tafs.timeZone.declined|${kiffTenant.orEmpty()}"
@@ -7252,7 +7307,14 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))) }
+      // A view-only session approves nothing, signing another device out included: the line every app shares, which says which
+      // device can do it. KIFF's refusal carries only a developer's message, in English.
+      val said = if (e is KiffError.Server && e.refused("view_only")) {
+        Words.Settings.Devices.signoutNeedsApprover
+      } else {
+        Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))
+      }
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = said) }
       return false
     } finally {
       kiff.setupSigner = null
@@ -7302,6 +7364,55 @@ class AppModel(
     if (generation != accountGeneration) return null
     refreshDevices()
     return pairing
+  }
+
+  /**
+   * Add a device: [scan] reads a QR (Google's scanner, in its own screen), then the QR is asked about ([AppState.pairAsking]), or
+   * the line says it isn't a pairing. In the model's scope, so the sheet torn down and rebuilt while the scanner is in front
+   * changes nothing. A scan already under way, or a pairing, starts nothing more.
+   */
+  fun addDevice(scan: suspend () -> String?) {
+    if (_state.value.pairBusy) return
+    _state.update { it.copy(pairLine = null, pairAsking = null, pairBusy = true) }
+    scope.launch {
+      try {
+        val text = try {
+          scan()
+        } catch (e: CancellationException) {
+          throw e
+        } catch (e: Exception) {
+          _state.update { it.copy(pairLine = Words.Settings.Devices.pairScannerFailed(why = ErrorWords.of(e))) }
+          return@launch
+        } ?: return@launch
+        val qr = PairQr.read(text)
+        _state.update { it.copy(pairAsking = qr, pairLine = if (qr == null) Words.Settings.Devices.pairNotAPairing else null) }
+      } finally {
+        _state.update { it.copy(pairBusy = false) }
+      }
+    }
+  }
+
+  /** Yes to the device being asked about: it's paired ([pairComputer]), and the line says what came of it. */
+  fun confirmPairing() {
+    val qr = _state.value.pairAsking ?: return
+    _state.update { it.copy(pairAsking = null, pairBusy = true) }
+    scope.launch {
+      try {
+        pairComputer(qr)?.let { p -> _state.update { it.copy(pairLine = bot.tafs.app.kiff.pairedLine(qr, p)) } }
+      } finally {
+        _state.update { it.copy(pairBusy = false) }
+      }
+    }
+  }
+
+  /** Cancel on the device being asked about: nothing is signed. */
+  fun cancelPairing() {
+    _state.update { it.copy(pairAsking = null) }
+  }
+
+  /** Devices closed: what came of the last pairing goes with it. */
+  fun clearPairLine() {
+    _state.update { it.copy(pairLine = null, pairAsking = null) }
   }
 
   /**

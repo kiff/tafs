@@ -1817,6 +1817,7 @@
     <string name="settings_devices_pair_gives_hello">%1$s will be able to approve your tafs\' actions with Windows Hello.</string>
     <string name="settings_devices_pair_gives_passkey">%1$s will be able to approve your tafs\' actions with a passkey.</string>
     <string name="settings_devices_pair_gives_phone">%1$s will be able to approve your tafs\' actions.</string>
+    <string name="settings_devices_pair_gives_view">%1$s will show your tafs and send approvals to this phone.</string>
     <string name="settings_devices_pair_invalid">KIFF couldn\'t read that code. Show a new one on your computer and scan it again.</string>
     <string name="settings_devices_pair_key_registered">That computer is already paired.</string>
     <string name="settings_devices_pair_named">Pair %1$s?</string>
@@ -1832,6 +1833,7 @@
     <string name="settings_devices_sign_out_named">Sign %1$s out?</string>
     <string name="settings_devices_sign_out_prompt">Sign %1$s out of your account</string>
     <string name="settings_devices_sign_out_this">Sign this device out?</string>
+    <string name="settings_devices_signout_needs_approver">To sign another device out, use a device that can approve.</string>
     <string name="settings_devices_this_device">this device</string>
     <string name="settings_devices_this_device_name">tafs on %1$s</string>
     <string name="settings_devices_this_device_title">This device</string>
@@ -1955,6 +1957,13 @@
     <string name="sign_in_not_signed_out_device">Not signed out at KIFF yet: %1$s. Try again, or sign this %2$s out from another device\'s Devices.</string>
     <string name="sign_in_open_kiff">Open KIFF to approve</string>
     <string name="sign_in_other_browser">Or open this link in another browser:</string>
+    <string name="sign_in_pair_check">It will ask whether this %1$s shows %2$s.</string>
+    <string name="sign_in_pair_how">On the phone you already use with tafs, open %1$s → %2$s → %3$s, and scan this code.</string>
+    <string name="sign_in_pair_new_code">That code expired, so here\'s a new one.</string>
+    <string name="sign_in_pair_no_key">This %1$s can\'t hold a key, so it can\'t be paired. Sign in with KIFF instead.</string>
+    <string name="sign_in_pair_prompt">Pair this %1$s with your other phone</string>
+    <string name="sign_in_pair_start">Sign in with your other phone</string>
+    <string name="sign_in_pair_waiting">Waiting for your other phone…</string>
     <string name="sign_in_relink_code_expired">The code expired before it was approved in your browser. Try again.</string>
     <string name="sign_in_relink_didnt_take">This phone still can\'t approve. Try again, or sign in again in Settings.</string>
     <string name="sign_in_relink_failed">Approving again didn\'t work. Try again, or sign in again in Settings.</string>
@@ -2076,6 +2085,7 @@
     <string name="taf_revoke">Revoke</string>
     <string name="taf_revoke_and_stop">Revoke and stop</string>
     <string name="taf_revoke_body">No new action goes through. Anything already done stays done.</string>
+    <string name="taf_revoke_needs_approver">To revoke this Card, use a device that can approve.</string>
     <string name="taf_revoke_title">Revoke %2$s Card?</string>
     <string name="taf_run_not_started">The run didn\'t start. %1$s</string>
     <string name="taf_run_now">Run now</string>

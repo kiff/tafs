@@ -1817,6 +1817,7 @@
     <string name="settings_devices_pair_gives_hello">%1$s pourra approuver les actions de vos tafs avec Windows Hello.</string>
     <string name="settings_devices_pair_gives_passkey">%1$s pourra approuver les actions de vos tafs avec une clé d\'accès.</string>
     <string name="settings_devices_pair_gives_phone">%1$s pourra approuver les actions de vos tafs.</string>
+    <string name="settings_devices_pair_gives_view">%1$s affichera vos tafs et enverra les approbations à ce téléphone.</string>
     <string name="settings_devices_pair_invalid">KIFF n\'a pas pu lire ce code. Affichez-en un nouveau sur votre ordinateur et scannez-le à nouveau.</string>
     <string name="settings_devices_pair_key_registered">Cet ordinateur est déjà associé.</string>
     <string name="settings_devices_pair_named">Associer %1$s ?</string>
@@ -1832,6 +1833,7 @@
     <string name="settings_devices_sign_out_named">Déconnecter %1$s ?</string>
     <string name="settings_devices_sign_out_prompt">Déconnecter %1$s de votre compte</string>
     <string name="settings_devices_sign_out_this">Déconnecter cet appareil ?</string>
+    <string name="settings_devices_signout_needs_approver">Pour déconnecter un autre appareil, utilisez un appareil qui peut approuver.</string>
     <string name="settings_devices_this_device">cet appareil</string>
     <string name="settings_devices_this_device_name">tafs sur %1$s</string>
     <string name="settings_devices_this_device_title">Cet appareil</string>
@@ -1955,6 +1957,13 @@
     <string name="sign_in_not_signed_out_device">Pas encore déconnecté de KIFF : %1$s. Réessayez, ou déconnectez cet %2$s depuis Appareils sur un autre appareil.</string>
     <string name="sign_in_open_kiff">Ouvrir KIFF pour approuver</string>
     <string name="sign_in_other_browser">Ou ouvrez ce lien dans un autre navigateur :</string>
+    <string name="sign_in_pair_check">Il vous demandera si cet %1$s affiche %2$s.</string>
+    <string name="sign_in_pair_how">Sur le téléphone que vous utilisez déjà avec tafs, ouvrez %1$s → %2$s → %3$s, puis scannez ce code.</string>
+    <string name="sign_in_pair_new_code">Ce code a expiré, en voici un nouveau.</string>
+    <string name="sign_in_pair_no_key">Cet %1$s ne peut pas conserver de clé, il ne peut donc pas être associé. Connectez-vous plutôt avec KIFF.</string>
+    <string name="sign_in_pair_prompt">Associer cet %1$s à votre autre téléphone</string>
+    <string name="sign_in_pair_start">Se connecter avec votre autre téléphone</string>
+    <string name="sign_in_pair_waiting">En attente de votre autre téléphone…</string>
     <string name="sign_in_relink_code_expired">Le code a expiré avant d\'être approuvé dans votre navigateur. Réessayez.</string>
     <string name="sign_in_relink_didnt_take">Ce téléphone ne peut toujours pas approuver. Réessayez, ou reconnectez-vous dans Réglages.</string>
     <string name="sign_in_relink_failed">La nouvelle approbation n\'a pas fonctionné. Réessayez, ou reconnectez-vous dans Réglages.</string>
@@ -2076,6 +2085,7 @@
     <string name="taf_revoke">Révoquer</string>
     <string name="taf_revoke_and_stop">Révoquer et arrêter</string>
     <string name="taf_revoke_body">Aucune nouvelle action ne passe. Ce qui est déjà fait le reste.</string>
+    <string name="taf_revoke_needs_approver">Pour révoquer cette Card, utilisez un appareil qui peut approuver.</string>
     <string name="taf_revoke_title">Révoquer la Card de %1$s ?</string>
     <string name="taf_run_not_started">L\'exécution n\'a pas démarré. %1$s</string>
     <string name="taf_run_now">Lancer maintenant</string>

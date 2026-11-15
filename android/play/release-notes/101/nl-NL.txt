@@ -1,0 +1,2 @@
+- Inloggen met je andere telefoon: toon de code van deze telefoon, scan hem met de telefoon die je al gebruikt via Account, Apparaten, Apparaat toevoegen, en je bent ingelogd.
+- Apparaten opent op volle hoogte, Klaar gaat terug naar Account, en een gescande code die geen apparaat is zegt dat nu en blijft staan.
