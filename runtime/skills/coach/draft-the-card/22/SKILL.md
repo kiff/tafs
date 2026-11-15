@@ -54,7 +54,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   says the owner is asked, else refuse. Every tool the taf gets goes on
   its Card, the read tools too: KIFF refuses any call no Card covers. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
-  read as the taf, so its Card covers it like any other. A draft leaving a connection's tool uncovered isn't signed. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. A read tool's line has only a generous call count; never ask the owner to set it.  Name the
+  read as the taf, so its Card covers it like any other. A draft leaving a connection's tool uncovered isn't signed. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. A read tool's line has only a generous call count; never ask the owner to set it. A write's line has only the agreed limits.  Name the
   tools in the draft as planque's status lists them (their names in KIFF, such
   as post_reply_k3f9). The draft names
   only the tools planque lists for this taf's own grant, and of those never
@@ -63,9 +63,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   Count a money tool's calls only when the owner did.
   A tool that writes to anyone outside the company (an email, a reply), or drafts for them (a draft email, a draft invoice), goes in the result's taf as disclose: [{tool: its name in KIFF,
   fields: its text fields' paths, from planque read}]: KIFF's runtime then
-  starts each such call with "Written by an AI agent on behalf of <writes_for>.", in
-  the message's language when it's Spanish, French, German, Portuguese or
-  Italian.
+  starts each such call with "Written by an AI agent on behalf of <writes_for>.", in the message's language when KIFF has it.
 - A taf that writes to customers sends, by default, from a mailbox the
   company already has, through its own mail app's connection (search {q}
   for sending email), so mail comes from its address and replies land
