@@ -35,7 +35,43 @@ xcodebuild build -project Tafs.xcodeproj -scheme TafsMac \
   -destination "platform=macOS,variant=Mac Catalyst" CODE_SIGNING_ALLOWED=NO
 ```
 
-The build is unsigned for now. Signing, and the disk image, are set up at release.
+That build is unsigned. The signed one goes to TestFlight (below).
+
+## Signing and TestFlight
+
+**Mac TestFlight** (`.github/workflows/mac-testflight.yml`, by hand only) uploads a signed Mac build for the team's testers: no review submission and no external group.
+
+- **The app and its notification extension** are signed with the same Apple Distribution certificate as the iOS upload (`DIST_P12`). They use the iPhone's and iPad's bundle IDs, so it's universal purchase: the same products, and restore across devices.
+- **Their profiles** are Mac Catalyst App Store profiles (`MAC_CATALYST_APP_STORE`), made and installed through the App Store Connect API: `asc-profiles.rb --mac`, "tafs Mac App Store CI" and "tafs notify Mac App Store CI". On a Mac, push is named `com.apple.developer.aps-environment`, and the script checks the profile carries it.
+- **The package** is signed with the Mac Installer Distribution certificate (`MAC_INSTALLER_P12`, `MAC_INSTALLER_P12_PASSWORD`). The run stops with a clear error while it isn't stored.
+- **Which is which:** only the certificate's own workflow (below) runs in the `mac-signing` environment, so its reviewer approves once per certificate, when it's made and at renewal. The two certificate secrets are **repository** secrets, not the environment's, so Mac TestFlight reads them with no approval, and an upload never waits on anyone.
+
+**The installer certificate is made once** (`.github/workflows/mac-installer-cert.yml`). Its private key is made inside that run and leaves it only encrypted to an admin's public key. This repository is public, so its logs and artifacts are too. An admin does each step, on their own machine:
+
+0. **The `mac-signing` environment comes first** (Settings → Environments), with a required reviewer and deployment branches limited to `main`. Without it, GitHub makes the environment unprotected on the first run, and a run from another branch, which runs that branch's copy of the workflow, isn't held to `main`.
+1. **Make an RSA key pair** and keep its private half there:
+
+   ```bash
+   openssl genrsa -out mac-signing.pem 4096
+   openssl rsa -in mac-signing.pem -pubout | base64 | tr -d '\n'
+   ```
+
+2. **Run "Mac installer certificate"** from main, with that line as `public_key`. It runs in the `mac-signing` environment, so its reviewer approves it. The run prints the certificate's id and expiry only.
+3. **Decrypt the artifact and store the two secrets,** as repository secrets (`gh secret set -R kiff/tafs`), not the environment's:
+
+   ```bash
+   gh run download <run id> -R kiff/tafs -n mac-installer-sealed -D sealed
+   openssl pkeyutl -decrypt -inkey mac-signing.pem -in sealed/mac-installer.key.enc -out aes.key \
+     -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256
+   openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in sealed/mac-installer.tar.enc -out bundle.tar -pass file:aes.key
+   mkdir out && tar -C out -xf bundle.tar
+   base64 < out/installer.p12 | tr -d '\n' | gh secret set MAC_INSTALLER_P12 -R kiff/tafs
+   tr -d '\n' < out/password.txt | gh secret set MAC_INSTALLER_P12_PASSWORD -R kiff/tafs
+   ```
+
+4. **Delete the run's artifact** (Actions → the run → Artifacts), and the local files: `sealed`, `aes.key`, `bundle.tar`, `out` and, once the secrets are stored, `mac-signing.pem`.
+
+If anything readable ever reaches a log, revoke the certificate in App Store Connect at once and make a new one.
 
 ## Signing and the sandbox
 
@@ -52,7 +88,7 @@ The Mac build has its own entitlements, `Tafs/TafsMac.entitlements` and `Notify/
 
 Keychain, `webcredentials:kiff.dev` (passkeys) and time-sensitive notifications are the iPhone's keys, unchanged. The Mac workflow checks that each Mac file holds every key of its iPhone file and has the sandbox and the network on, so a key added for the iPhone and missed for the Mac fails CI.
 
-CI builds the Mac app unsigned, so the sandbox is only ever on in a signed build. Signing is done on another computer, with the Mac's App Store profile; its first signed build is where the sandbox is first tried.
+The Mac workflow builds the app unsigned, so the sandbox is only ever on in a signed build: Mac TestFlight's ("Signing and TestFlight", above). Its first build is where the sandbox is first tried.
 
 ## What differs from the iPad
 
@@ -97,7 +133,7 @@ What differs is how the Mac reports Touch ID:
 
 Where Touch ID is set up, the Mac says its own path, "System Settings → Touch ID & Password", in the person's language (`approval.settings_path.mac_touch_id`), never the iPhone's "Settings → Touch ID & Passcode".
 
-The approval key needs the app signed. The CI build is unsigned, so the Mac's tests use a stub signer, and the first real approval with Touch ID on a Mac is **owed**, on a signed build (signing is done on another computer, at release). That check also tells two cases apart that look the same from the code: a build without its signing or entitlements reports Touch ID as not available too, so it would read "can't be used right now" though it never will be.
+The approval key needs the app signed. The CI build is unsigned, so the Mac's tests use a stub signer, and the first real approval with Touch ID on a Mac is **owed**, on a signed build: Mac TestFlight's, installed on a Mac with Touch ID. That check also tells two cases apart that look the same from the code: a build without its signing or entitlements reports Touch ID as not available too, so it would read "can't be used right now" though it never will be.
 
 ## How the code asks whether it's the Mac
 
@@ -122,13 +158,21 @@ A draft pull request runs it too. The Mac build can only be checked on a machine
 - **Approvals are always ready on the Simulator.** On a Mac they depend on its Touch ID, and a runner has none. A test that needs an approval sets its model ready (`model.readApprovalReadiness = { .ready }`), with a stub signer.
 - **`testTheSimulatorIsReady` is skipped** off the Simulator.
 
+## Screenshots
+
+After the unit tests, the Mac workflow runs the app in sample mode and takes the iPad's reference set (`docs/screenshots/ipad/`, `ios.yml`'s `ref` list): the same 18 screens with the same launch arguments, light and dark, so each Mac screen can be laid beside its iPad one. Then the Overview in French and Portuguese, and the whole screen once, for the menu bar. They're the run's `mac-screenshots` artifact.
+
+- **The window alone**, found by the app's process in the window server's list, not the whole screen. A runner has no Apple Account, so the App Store's sign-in (its own process, `storeuid`) shows over the app, as it would on a Mac signed out of the App Store. A person's Mac is signed in. The menu bar shot is the whole screen, sign-in included.
+- **Dark** is the runner's own appearance, switched for the dark half, as a person's Mac switches it.
+- **A shot is taken** once two frames a second apart are within 0.5% of each other's size, or after 30 s with a warning. A launch with no window stops the step at once, with the windows on screen in the log.
+
 ## Not done yet
 
 | What | State |
 |---|---|
-| Pointer hover on rows and buttons | next, with screenshots of the Mac app from CI |
-| **The menu bar and the window, seen by a person** | **owed.** The menu bar and the smallest window size are built and unit-tested, but nobody has seen them on a Mac. |
+| Pointer hover on rows and buttons | next |
+| **The menu bar and the window, seen by a person** | the menu bar is in CI's screenshots (`menu-bar.png`); **owed:** its menus opened, and the smallest window size, on a Mac. |
 | Approvals with Touch ID on a Mac | the iPad's key and prompt; a Mac never says Touch ID is off for tafs, and says where in System Settings it's set up |
-| Adding a Mac from a phone (the QR code and the check code) | after KIFF's pairing routes |
-| Signing, notarizing and the disk image | at release |
+| Adding a Mac from a phone (the QR code and the check code) | built: the iPad's "sign in from another phone" (`AppModel.startPairingSignIn`, `PairingOffer`), with the Mac shown as a computer (`macos`, no `device_kind`). Not yet tried on a real Mac |
+| Notarizing and a disk image, outside the Mac App Store | at release |
 | **A check on a real Mac with Touch ID** | **owed.** The Mac build has only run in CI, where there is no Touch ID. A person must approve a Card with Touch ID on a real, signed Mac build before the first release. If it says Touch ID "can't be used right now" with the lid open and Touch ID set up, the build's signing or entitlements are wrong. |

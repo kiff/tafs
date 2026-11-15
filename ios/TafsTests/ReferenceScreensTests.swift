@@ -9,7 +9,25 @@ final class ReferenceScreensTests: XCTestCase {
     override func tearDown() {
         UserDefaults.standard.removeObject(forKey: "screenshots")
         UserDefaults.standard.removeObject(forKey: "screen")
+        UserDefaults.standard.removeObject(forKey: "reduceMotion")
         super.tearDown()
+    }
+
+    /// `-reduceMotion YES` moves the app as Reduce Motion does, only with `-screenshots YES`, and the UI tests pass
+    /// it: an endless animation kept the app from going idle, and XCTest waited a minute before each step.
+    func testReduceMotionIsForScreenshotsAndTheUITestsPassIt() throws {
+        let defaults = UserDefaults.standard
+        defaults.set(true, forKey: "reduceMotion")
+        defaults.set(false, forKey: "screenshots")
+        XCTAssertFalse(Screenshots.reduceMotion, "only for a screenshot or a UI test")
+        defaults.set(true, forKey: "screenshots")
+        XCTAssertTrue(Screenshots.reduceMotion)
+        XCTAssertTrue(Motion.reduced)
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+        let uiTests = try String(contentsOf: root.appendingPathComponent("TafsUITests/TafsUITestCase.swift"), encoding: .utf8)
+        XCTAssertTrue(uiTests.contains(#"app.launchArguments += ["-reduceMotion", "YES"]"#))
+        let app = try String(contentsOf: root.appendingPathComponent("Tafs/App/TafsApp.swift"), encoding: .utf8)
+        XCTAssertTrue(app.contains("if Screenshots.reduceMotion { UIView.setAnimationsEnabled(false) }"))
     }
 
     /// The samples ship in the app and read as tafs cloud's own answers would.
