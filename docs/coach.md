@@ -773,9 +773,11 @@ works (gap 20, `draft-the-card@3` and on).
 
 **Which tools carry the disclosure isn't left to Coach** (gap 14, `runtime/src/cloud/sends-outside.ts`). A
 connection's profile (KIFF's `kiff.profile.v1`, inside the grant's signed request) says what each write does:
-an operation that `sends`, with `resource.outside`, sends to people who may be outside the company, and one whose
-effect is `none_until_approved` drafts what reaches them as written once the owner sends it (a draft email, a draft
-invoice), so it carries the disclosure too, whatever the job or recipe. A reviewed
+an operation that `sends`, with `resource.outside`, sends to people who may be outside the company, and a draft
+(`none_until_approved`) drafts a message that reaches them as written once the owner sends it (a draft email or
+reply), so it carries the disclosure too, whatever the job or recipe. A draft counts **by default**, so a forgotten
+mark still discloses; one that stays out of it says `resource.outside: false`, as a draft invoice does (the
+disclosure is about who wrote a message, and an invoice has its own legal rules). A reviewed
 catalog entry's profile is the reviewed one, and one Coach drafted counts too when it says so, since that can
 only add a disclosure. tafs cloud reads grants only on the phone's Approve, so each Approve of a connection, or
 of its Card, notes its sending tools for the taf's KIFF agent, replacing that connection's earlier note. The write holds a claim on the note for at most 10 seconds, so two Approves of the same taf at once both keep their entries; one that finds the claim held waits and tries again, and past its tries the Approve fails, to be tapped again. A write gives its claim back only within those 10 seconds; one that took longer leaves it to expire, since another write may hold it by then. Coach's
