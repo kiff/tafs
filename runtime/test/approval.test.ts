@@ -1,7 +1,7 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { connectedKey, approvalWords, ASK_KEPT_MS, REDRAFT_CODES, WORDS } from "../src/cloud/approval.js";
+import { connectedKey, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, REDRAFT_CODES, REFUSAL_CLOSED, WORDS } from "../src/cloud/approval.js";
 import { approvalAnswerWords, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -532,6 +532,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const r = await ask();
     expect(r).toMatchObject({ outcome: "answered", note: WORDS.countOnAmount("Refund a charge") });
     expect(String(r.answer)).toContain(`failed: the draft counts "Refund a charge"'s calls (1000 per calendar_day) beside its amount limits`);
+    expect(String(r.answer)).toContain(`${REFUSAL_CLOSED} ${COUNT_NEVER_A_RULE} ${DRAW_AGAIN} ${KEEP_THE_REST}`);
     expect(REDRAFT_CODES.has("count_on_amount")).toBe(true);
     // 3. The count on the day's Card, or with only a per-call cap and no day's total: not signed either.
     draft([each([]), daily([day(20_000), count(30)]), others]);
@@ -629,7 +630,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const ask = async () => (await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
     const r = await ask();
     expect(r).toMatchObject({ outcome: "answered", note: WORDS.registeredName("list_charges", "list_charges_noyy") });
-    expect(String(r.answer)).toBe(`failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy": "list_charges" is another connection's name in KIFF, so it isn't signed. Draft it again with "list_charges_noyy" in its place. Change only what this names; every other line stays exactly as agreed.`);
+    expect(String(r.answer)).toBe(`failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy": "list_charges" is another connection's name in KIFF, so it isn't signed. Draft it again with "list_charges_noyy" in its place. ${REFUSAL_CLOSED} ${DRAW_AGAIN} ${KEEP_THE_REST}`);
     // The list tool marked as Setup's own read (setup_reads): the coverage check leaves it out, and the earlier connection's
     // "list_charges" passes the stray check, so before this check the draft was signed with the taf's list tool on no Card.
     const setupList = tools.map((t) => (t.tool === "list_charges" ? { ...t, setup_reads: true } : t));
@@ -1726,6 +1727,9 @@ describe("a Card draft is checked as the phone reads the chat, before its card i
     expect(first.status).toBe(200);
     // Coach heard the refusal as the card's answer, with the line that keeps the rest of the draft as agreed.
     expect(String(w.told()?.answer)).toMatch(/^failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy".* Change only what this names; every other line stays exactly as agreed\.$/);
+    // Eval 43705726781: "failed: …" read as an approval still waiting. Told on the read, it says the card is closed.
+    expect(String(w.told()?.answer)).toContain(`${REFUSAL_CLOSED} ${DRAW_AGAIN} ${KEEP_THE_REST}`);
+    expect(String(w.told()?.answer)).not.toContain("approved either");
     // The card is answered on this read already: no signs, so no Approve.
     const c = a1(first);
     expect(c?.answer?.state).toBe("answered");
@@ -1851,6 +1855,9 @@ describe("the chat's read checks a Card signed with its tools or key too, before
         spy.mockRestore();
       }
       expect(String(w.told()?.answer)).toMatch(/^failed: the Card covers "send_email_everyone".* Change only what this names; every other line stays exactly as agreed\.$/);
+      // The tools or the key it would have carried weren't approved either: the new approval carries them.
+      const carried = step === "key_and_cards" ? "Its key wasn't approved either: the new approval carries it with the Card." : "Its tools weren't approved either: the new approval carries them with the Card.";
+      expect(String(w.told()?.answer)).toContain(`${REFUSAL_CLOSED} ${carried} ${DRAW_AGAIN} ${KEEP_THE_REST}`);
       expect(a1(first)?.answer?.state).toBe("answered");
       expect(a1(first)?.component.signs).toBeUndefined();
       expect(a1(again)?.answer?.state).toBe("answered");
