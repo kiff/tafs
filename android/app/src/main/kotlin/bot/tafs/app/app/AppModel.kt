@@ -3263,14 +3263,19 @@ class AppModel(
   }
 
   /**
-   * Enrols this phone with planque for Coach, once: planque gets the phone's key and a connector key minted with a signed setup
-   * call, never kept here. False, with why said through [failed], when it didn't go. [kiff]'s and [planque]'s signers are the
-   * caller's, under the confirmation it took.
+   * Enrols this phone with planque for Coach, once: planque gets the phone's key and, unless the account's enrolled one still
+   * stands (`kept`), a connector key minted with a signed setup call, never kept here. False, with why said through [failed],
+   * when it didn't go. [kiff]'s and [planque]'s signers are the caller's, under the confirmation it took.
    */
   private suspend fun enrolForCoach(failed: (String) -> Unit): Boolean {
     if (_state.value.planqueReady) return true
     try {
-      planque.enrol(signer.publicKeyDER, kiff.mintConnectorKey())
+      // Asked first with no key: while the account's enrolled connector key still stands, planque answers `kept` and nothing
+      // is minted, since a phone can't revoke a connector key and a new one would be left live in KIFF. Any other refusal
+      // (`needs_key`, or a planque from before, which takes no keyless enrolment) mints one and hands it over, as before. A
+      // window that ended, or no signature at all, isn't planque's answer: it goes to the caller as it did.
+      val kept = try { planque.enrol(signer.publicKeyDER).kept } catch (e: PlanqueError.Server) { false }
+      if (!kept) planque.enrol(signer.publicKeyDER, kiff.mintConnectorKey())
     } catch (e: CancellationException) {
       throw e
     } catch (e: KiffError.Server) {

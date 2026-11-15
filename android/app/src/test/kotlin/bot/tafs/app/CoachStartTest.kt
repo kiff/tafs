@@ -68,7 +68,7 @@ class CoachStartTest {
         "card":{"body":$cardBody,"card_title":"Coach","cards":[{"title":"Install a version","lines":["Always asks you"]},{"id":7}]}}"""
   private val coach = """{"id":"setup_1","name":"Coach","kiff_agent":"setup-acme"}"""
 
-  private fun startAnswers(keys: Pair<Int, String> = 200 to """{"plaintext":"kk_connector"}""", enrol: Pair<Int, String> = 200 to """{"tenant":"t_01","device":"ab12"}""") {
+  private fun startAnswers(keys: Pair<Int, String> = 200 to """{"plaintext":"kk_connector"}""", enrol: Pair<Int, String> = 200 to """{"tenant":"t_01","device":"ab12"}""", keyless: Pair<Int, String> = 409 to """{"error":"no connector key stands for this account","code":"needs_key"}""") {
     // Before the start, no Coach; once started, its tools still to give, read by the start and by the tools panel; once given, given.
     transport.answer("GET /v1/setup", 200, """{"setup":null}""")
     transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$toGive}""")
@@ -77,6 +77,8 @@ class CoachStartTest {
     transport.answer("GET /v1/accounts/t_01/grants", 403, """{"error":"this device is not enrolled"}""")
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
     transport.answer("POST /v1/keys", keys.first, keys.second)
+    // Asked first with no key: nothing enrolled yet, so planque needs one; then the minted key goes in.
+    transport.answer("POST /v1/accounts/t_01/enrolment", keyless.first, keyless.second)
     transport.answer("POST /v1/accounts/t_01/enrolment", enrol.first, enrol.second)
     transport.answer("POST /v1/me/agent-drafts", 200, """{"id":"dr_setup","status":"confirmed","claim_secret":"cs_1"}""")
     transport.answer("POST /v1/setup", 200, """{"setup":$coach}""")
@@ -122,7 +124,9 @@ class CoachStartTest {
     assertTrue(m.state.value.planqueReady)
     assertNull(m.state.value.coachStartError)
     // planque keeps the connector key; the phone keeps nothing of it.
-    val enrol = body("POST /v1/accounts/t_01/enrolment")
+    // Asked first with no key, then the minted one: the phone keeps nothing of it.
+    assertNull(body("POST /v1/accounts/t_01/enrolment").get("connector_key"))
+    val enrol = body("POST /v1/accounts/t_01/enrolment", 1)
     assertEquals("kk_connector", enrol.getValue("connector_key").jsonPrimitive.content)
     assertEquals(java.util.Base64.getEncoder().encodeToString(signer.publicKeyDER), enrol.getValue("device_key").jsonPrimitive.content)
     assertEquals("connector", body("POST /v1/keys").getValue("roles").jsonArray.single().jsonPrimitive.content)
@@ -135,7 +139,7 @@ class CoachStartTest {
     assertEquals("cs_1", setup.getValue("claim_secret").jsonPrimitive.content)
     // Each setup call is signed, under the one confirmation.
     for (key in listOf("POST /v1/keys", "POST /v1/me/agent-drafts")) assertNotNull(key, transport.requestsTo(key).first().headers["KIFF-Device-Signature"])
-    assertNotNull(transport.requestsTo("POST /v1/accounts/t_01/enrolment").single().headers["Planque-Device-Signature"])
+    assertEquals(2, transport.requestsTo("POST /v1/accounts/t_01/enrolment").count { it.headers["Planque-Device-Signature"] != null })
   }
 
   @Test fun coachsToolsAndCardGoToKiffExactlyAsTafsCloudGivesThemOnce() = runTest {
@@ -361,6 +365,42 @@ class CoachStartTest {
     assertEquals(CoachWords.CONNECTING_FAILED, m.state.value.coachStartError)
     assertEquals(bot.tafs.app.app.Mode.kiff, m.state.value.mode)
     assertEquals("at_1", secrets.load(AppModel.TOKEN))
+  }
+
+  /**
+   * The account's enrolled connector key still stands (another device enrolled it): asked first with no key, planque answers
+   * `kept`, and no key is minted, since a phone can't revoke one and a new one would only be left live in KIFF.
+   */
+  @Test fun aKeptEnrolmentMintsNoConnectorKey() = runTest {
+    reads()
+    startAnswers(keyless = 200 to """{"kept":true}""")
+    val m = model()
+    assertTrue(m.startCoach())
+    assertTrue(transport.requestsTo("POST /v1/keys").isEmpty())
+    val enrolment = transport.requestsTo("POST /v1/accounts/t_01/enrolment").single()
+    assertNotNull(enrolment.headers["Planque-Device-Signature"])
+    assertNull(body("POST /v1/accounts/t_01/enrolment").get("connector_key"))
+    assertTrue(m.state.value.planqueReady)
+    assertEquals(listOf("Start Coach"), auth.fingerprints)
+  }
+
+  /** No key stands (`needs_key`), or a planque from before that takes no keyless enrolment: one key is minted and handed over. */
+  @Test fun withNoStandingKeyOneIsMintedAndHandedOver() = runTest {
+    for (refusal in listOf(409 to """{"error":"no connector key stands for this account","code":"needs_key"}""", 400 to """{"error":"KIFF did not accept the connector key"}""")) {
+      transport.reset()
+      auth.fingerprints.clear()
+      reads()
+      startAnswers(keyless = refusal)
+      val m = model()
+      assertTrue(m.startCoach())
+      assertEquals(1, transport.requestsTo("POST /v1/keys").size)
+      val keys = transport.requestsTo("POST /v1/accounts/t_01/enrolment").map {
+        KiffClient.json.parseToJsonElement(String(it.body!!)).jsonObject["connector_key"]?.jsonPrimitive?.content
+      }
+      assertEquals(listOf(null, "kk_connector"), keys)
+      assertTrue(m.state.value.planqueReady)
+      assertEquals(listOf("Start Coach"), auth.fingerprints)
+    }
   }
 
   // MARK: Hand-overs

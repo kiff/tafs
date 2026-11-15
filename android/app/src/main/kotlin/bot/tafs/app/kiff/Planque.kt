@@ -247,7 +247,8 @@ data class Approved(
 
 /** planque's answer to an enrolment: the account, and the phone key's fingerprint as planque shows it in its record. */
 @Serializable
-data class Enrolment(val tenant: String = "", val device: String = "")
+/** planque's enrolment. [kept]: asked with no connector key, the account's enrolled one still stands, so nothing was written. */
+data class Enrolment(val tenant: String = "", val device: String = "", val kept: Boolean = false)
 
 /** What a finished vendor sign-in hands back: `tafs://planque/signed-in?tenant&grant&confirm`. */
 data class SignedIn(val tenant: String, val grant: String, val code: String)
@@ -282,10 +283,13 @@ class PlanqueClient(
 
   /**
    * Hands planque the KIFF connector key it keeps to register tools. Signed with [deviceId], any of the owner's devices may. The
-   * device's key goes too, for a planque from before that, which enrols one phone by its key.
+   * device's key goes too, for a planque from before that, which enrols one phone by its key. With no [connectorKey], it only
+   * asks whether the enrolled key still stands: planque answers [Enrolment.kept], or refuses (`needs_key`) and writes nothing.
    */
-  suspend fun enrol(deviceKey: ByteArray, connectorKey: String): Enrolment =
-    decode(raw("POST", "enrolment", body("device_key" to java.util.Base64.getEncoder().encodeToString(deviceKey), "connector_key" to connectorKey)))
+  suspend fun enrol(deviceKey: ByteArray, connectorKey: String? = null): Enrolment {
+    val key = "device_key" to java.util.Base64.getEncoder().encodeToString(deviceKey)
+    return decode(raw("POST", "enrolment", if (connectorKey == null) body(key) else body(key, "connector_key" to connectorKey)))
+  }
 
   /**
    * What a grant's digest covers, as its `digest_v` says (docs/android-app.md › Connect apps). Without one, the request alone (v1).

@@ -1,0 +1,1 @@
+- **Android: setting up Coach on a second device no longer leaves an unused KIFF key behind.** The app asks planque first whether the account's connector key still stands, and mints a new one only when planque needs it (docs/coach.md).
