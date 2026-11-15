@@ -43223,49 +43223,49 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ nutzt diese Verbindung nicht. Entferne den Zugriff, wenn du sie dort nicht verbinden wolltest."
+            "value": "Für %1$@ angelegt, das %2$@ nicht nutzt."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ doesn't use this connection. Remove access if you didn't mean to connect it there."
+            "value": "Made for %1$@, which doesn't use %2$@."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ no usa esta conexión. Quita el acceso si no querías conectarla ahí."
+            "value": "Hecha para %1$@, que no usa %2$@."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ n'utilise pas cette connexion. Retirez l'accès si vous ne vouliez pas la connecter là."
+            "value": "Faite pour %1$@, qui n'utilise pas %2$@."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ non usa questo collegamento. Rimuovi l'accesso se non volevi collegarlo lì."
+            "value": "Fatta per %1$@, che non usa %2$@."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ gebruikt deze koppeling niet. Trek de toegang in als je hem daar niet wilde koppelen."
+            "value": "Gemaakt voor %1$@, dat %2$@ niet gebruikt."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ nie używa tego połączenia. Usuń dostęp, jeśli nie chcesz go tam mieć."
+            "value": "Utworzone dla %1$@, który nie używa %2$@."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ não usa esta ligação. Remova o acesso se não a queria ligar aí."
+            "value": "Feita para %1$@, que não usa %2$@."
           }
         }
       }

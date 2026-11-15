@@ -616,7 +616,7 @@ struct AppConnectionsView: View {
     /// removed (Remove access, here or in its detail), never kept without a word.
     @ViewBuilder private func misplacedNote(_ g: PlanqueClient.Grant) -> some View {
         if let wrong = app.misplaced.first(where: { $0.grant == g.id }) {
-            Text(Words.Connect.misplaced(taf: wrong.name)).scaledFont(13).foregroundColor(Theme.amberText)
+            Text(Words.Connect.misplaced(taf: wrong.name, app: app.displayName)).scaledFont(13).foregroundColor(Theme.amberText)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("connect.misplaced." + g.id)
         }

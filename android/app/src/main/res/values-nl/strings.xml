@@ -872,7 +872,7 @@
     <string name="connect_key_not_given">De sleutel is niet gegeven. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">De woorden van KIFF voor deze koppeling konden niet worden gelezen. Er is niets goedgekeurd.</string>
     <string name="connect_last_failed">Laatst mislukt: %1$s · %2$s</string>
-    <string name="connect_misplaced">%1$s gebruikt deze koppeling niet. Trek de toegang in als je hem daar niet wilde koppelen.</string>
+    <string name="connect_misplaced">Gemaakt voor %1$s, dat %2$s niet gebruikt.</string>
     <string name="connect_more_apps">Meer apps</string>
     <string name="connect_more_apps_could_not_listed">Meer apps konden niet worden getoond: %1$s</string>
     <string name="connect_no_confirmation_code">De login bij %1$s kwam terug zonder bevestigingscode. Er is niets gekoppeld.</string>
