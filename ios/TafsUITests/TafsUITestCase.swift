@@ -47,13 +47,19 @@ class TafsUITestCase: XCTestCase {
         app.coordinate(withNormalizedOffset: CGVector(dx: 0.95, dy: 0.005)).tap()
     }
 
-    /// Types `text` into `field` once it has the keyboard. The tap that gives it focus can be
-    /// taken by the monitor closing an alert: then the field is tapped once more.
+    /// Types `text` into `field` once it has the keyboard, with no alert up. Springboard's "Sign in to
+    /// Apple Account" can come up at any moment: closing it, at the test's next interaction, takes the
+    /// keyboard from the field. When it came between the focus check and the typing, `typeText` found no
+    /// focus and the test failed after minutes of waiting (ReportAnswerUITests, ChatPinUITests in CI).
+    /// So an alert already up is closed first, and the field is tapped again until it has the keyboard
+    /// with none up, three times at most.
     @MainActor
     func typeInto(_ field: XCUIElement, text: String) {
-        field.tap()
-        if !hasFocus(field) {
+        let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        for _ in 0..<3 {
+            if springboard.alerts.firstMatch.exists { letTheMonitorRun(XCUIApplication()) }
             field.tap()
+            if hasFocus(field), !springboard.alerts.firstMatch.exists { break }
         }
         XCTAssertTrue(hasFocus(field), "the field has the keyboard")
         field.typeText(text)

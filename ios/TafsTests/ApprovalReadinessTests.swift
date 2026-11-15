@@ -30,6 +30,14 @@ final class ApprovalReadinessTests: XCTestCase {
         XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .touchID, mac: false), .offForTafs)
     }
 
+    /// A Mac's Touch ID is set up in System Settings, whatever the device reports.
+    func testAMacSaysWhereItsTouchIDIsSetUp() {
+        XCTAssertEqual(ApprovalReadiness.path("Touch ID", mac: true), Words.Approval.SettingsPath.macTouchId)
+        XCTAssertEqual(ApprovalReadiness.path(nil, mac: true), Words.Approval.SettingsPath.macTouchId)
+        XCTAssertEqual(ApprovalReadiness.path("Touch ID", mac: false), Words.Approval.SettingsPath.touchId)
+        XCTAssertEqual(ApprovalReadiness.path("Face ID", mac: false), Words.Approval.SettingsPath.faceId)
+    }
+
     func testEachStateHasItsOwnWords() {
         let states: [ApprovalReadiness] = [.ready, .noneEnrolled, .noPasscode, .offForTafs, .unavailable(lockedOut: true), .unavailable(lockedOut: false), .unsupported]
         let words = states.map { $0.words(device: "iPhone", kind: "Face ID") }
@@ -40,9 +48,11 @@ final class ApprovalReadinessTests: XCTestCase {
             XCTAssertFalse(line.localizedCaseInsensitiveContains("not set up"), line)
         }
         // None enrolled: where to set it up, in words, as Open Settings opens tafs' own.
-        XCTAssertTrue(ApprovalReadiness.noneEnrolled.words(device: "iPhone", kind: "Face ID").contains("Settings → Face ID & Passcode"))
-        XCTAssertTrue(ApprovalReadiness.noneEnrolled.words(device: "iPad", kind: "Touch ID").contains("Settings → Touch ID & Passcode"))
-        XCTAssertTrue(ApprovalReadiness.path(nil).contains("Touch ID & Passcode"))
+        // On the Mac build, where these tests also run, it's the Mac's own path.
+        let mac = Words.Approval.SettingsPath.macTouchId
+        XCTAssertTrue(ApprovalReadiness.noneEnrolled.words(device: "iPhone", kind: "Face ID").contains(ThisDevice.isMac ? mac : "Settings → Face ID & Passcode"))
+        XCTAssertTrue(ApprovalReadiness.noneEnrolled.words(device: "iPad", kind: "Touch ID").contains(ThisDevice.isMac ? mac : "Settings → Touch ID & Passcode"))
+        XCTAssertTrue(ApprovalReadiness.path(nil, mac: false).contains("Touch ID & Passcode"))
         // Locked out: retry guidance. Unsupported: another device.
         XCTAssertTrue(ApprovalReadiness.unavailable(lockedOut: true).words(device: "iPhone", kind: "Face ID").contains("passcode"))
         XCTAssertTrue(ApprovalReadiness.unsupported.words(device: "iPad", kind: nil).contains("another"))

@@ -51,6 +51,7 @@
   "approval.set_a_screen_lock": "Richte eine Displaysperre auf diesem Telefon ein, um zu genehmigen",
   "approval.settings_face_id_passcode_touch": "Einstellungen → Face ID & Code (Touch ID & Code auf einem Gerät mit Touch ID)",
   "approval.settings_path.face_id": "Einstellungen → Face ID & Code",
+  "approval.settings_path.mac_touch_id": "Systemeinstellungen → Touch ID & Passwort",
   "approval.settings_path.touch_id": "Einstellungen → Touch ID & Code",
   "approval.state.none_enrolled": "Auf diesem Telefon ist kein Fingerabdruck eingerichtet. Füge in seinen Einstellungen einen hinzu und komm dann zurück.",
   "approval.state.ready": "Genehmigungen sind auf diesem Telefon eingerichtet.",

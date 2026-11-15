@@ -3,9 +3,9 @@ import type { CoachStore } from "./coach.js";
 /**
  * The AI disclosure, closed structurally (kiff/tafs#476, gap 14). A connection's profile (KIFF's
  * `kiff.profile.v1`, inside the grant's signed request) says what each write does: an operation whose
- * `effect` is `sends` with `resource.outside` sends to people who may be outside the company, and one
- * whose `effect` is `none_until_approved` drafts what reaches them once the owner sends it (a draft
- * email, a draft invoice). Such a tool's every call must carry the disclosure, so a taf that has one
+ * `effect` is `sends` with `resource.outside` sends to people who may be outside the company, and a draft
+ * (`none_until_approved`) drafts a message that reaches them once the owner sends it (a draft email or reply),
+ * unless it says `resource.outside: false` (a draft invoice). Such a tool's every call must carry the disclosure, so a taf that has one
  * names it in `disclose`, and Coach can't leave it out by forgetting.
  *
  * tafs cloud reads grants only on the phone's Approve, with its signed read, while a taf's `disclose`
@@ -23,8 +23,10 @@ interface Note { grants: Record<string, string[]>; at: string }
 
 /**
  * The tools a grant's profile says reach people outside the company: each operation's tool that `sends` with
- * `resource.outside`, or that drafts (`none_until_approved`), since a draft reaches them as written once the owner
- * sends it.
+ * `resource.outside: true`, or that drafts (`none_until_approved`) unless it says `resource.outside: false`. A draft
+ * reaches people outside by default (a draft email or reply), so a forgotten mark still discloses; one that stays out
+ * of it opts out explicitly, as a draft invoice does: the disclosure is about who wrote a message, and an invoice has
+ * its own legal rules.
  */
 export function sendingOutside(profile: unknown): string[] {
   const ops = profile && typeof profile === "object" ? (profile as { operations?: unknown }).operations : undefined;
@@ -32,7 +34,7 @@ export function sendingOutside(profile: unknown): string[] {
   const out = new Set<string>();
   for (const op of ops as Array<Record<string, unknown>>) {
     const resource = op?.resource as { outside?: unknown } | undefined;
-    const reaches = (op?.effect === "sends" && resource?.outside === true) || op?.effect === "none_until_approved";
+    const reaches = (op?.effect === "sends" && resource?.outside === true) || (op?.effect === "none_until_approved" && resource?.outside !== false);
     if (op && reaches && typeof op.tool === "string" && op.tool) out.add(op.tool);
   }
   return [...out].sort();

@@ -1,0 +1,37 @@
+{
+  "about": "GET /v1/connect/apps?provider=p&cursor=…: the provider's next page, its last. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "apps": [
+      {
+        "entry": "connector:p:slack",
+        "vendor": "slack",
+        "title": "Slack",
+        "name": "Slack",
+        "how": "oauth",
+        "state": "available",
+        "connected": false,
+        "method": "sign_in",
+        "line": "Sign in"
+      },
+      {
+        "entry": "connector:p:notion",
+        "vendor": "notion",
+        "title": "Notion",
+        "name": "Notion",
+        "how": "oauth",
+        "state": "available",
+        "connected": false,
+        "method": "sign_in",
+        "line": "Sign in"
+      }
+    ],
+    "by_key": true,
+    "provider": "p",
+    "removed_tafs": [
+      {
+        "agent": "old-refunds",
+        "removed_at": "2026-11-07T20:00:00Z"
+      }
+    ]
+  }
+}

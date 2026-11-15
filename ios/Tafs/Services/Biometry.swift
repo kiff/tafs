@@ -94,7 +94,9 @@ enum ApprovalReadiness: Equatable {
 
     /// Where the person sets it up, in words: Open Settings opens tafs' own settings, never
     /// this page, so the path is said instead.
-    static func path(_ kind: String?) -> String {
+    static func path(_ kind: String?, mac: Bool = ThisDevice.isMac) -> String {
+        // A Mac's Touch ID is set up in System Settings, and a Mac has no Face ID.
+        if mac { return Words.Approval.SettingsPath.macTouchId }
         switch kind {
         case "Touch ID": return Words.Approval.SettingsPath.touchId
         case "Face ID": return Words.Approval.SettingsPath.faceId

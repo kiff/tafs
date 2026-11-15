@@ -5219,6 +5219,59 @@
         }
       }
     },
+    "approval.settings_path.mac_touch_id": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemeinstellungen → Touch ID & Passwort"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System Settings → Touch ID & Password"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes del Sistema → Touch ID y contraseña"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages Système → Touch ID et mot de passe"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impostazioni di Sistema → Touch ID e password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systeeminstellingen → Touch ID en wachtwoord"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ustawienia systemowe → Touch ID i hasło"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Definições do Sistema → Touch ID e palavra-passe"
+          }
+        }
+      }
+    },
     "approval.settings_path.touch_id": {
       "extractionState": "manual",
       "localizations": {
