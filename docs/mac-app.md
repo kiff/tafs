@@ -118,9 +118,13 @@ Both come from one list, `KeyCommand`. `MacMenu` says where each sits:
 
 A new global shortcut is added to `KeyCommand.global` and to one of `MacMenu`'s lists. `MacMenuTests` fails until it's in both.
 
+## Where the Mac draws a control differently
+
+- **The calendar's date** (`CalendarView.datePicker`): the Mac draws the iPad's compact date picker as numbers in a field ("11/15/2026"). On the Mac it's the iPad's look instead, the date in words ("Nov 15, 2026"), which opens the month to choose a day from.
+
 ## The window
 
-The window never goes smaller than 820 × 600 points (`MacWindow.minimumSize`): the width of an iPad held upright, so the sidebar and a screen beside it always fit. It has no default size of its own: macOS chooses the first one and remembers the person's.
+The window never goes smaller than 820 × 600 points (`MacWindow.minimumSize`): the width of an iPad held upright, so the sidebar and a screen beside it always fit. It has no default size of its own: macOS chooses the first one and remembers the person's. The window shows no title, as the iPad shows none; the sidebar says "tafs" under its icon.
 
 ## Approvals with Touch ID
 
