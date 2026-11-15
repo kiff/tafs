@@ -90,9 +90,12 @@ object PasskeyRegistration {
 
   /**
    * A name KIFF takes: trimmed of spaces and newlines at both ends, then 1 to 64 Unicode code points. Null for one it
-   * refuses (empty, or longer): never cut to fit, since a cut name isn't the one the person gave.
+   * refuses (empty, longer, or with a control character inside: below U+0020, or U+007F): never cut to fit, since a cut name
+   * isn't the one the person gave.
    */
-  fun validName(name: String): String? = name.trim().takeIf { it.isNotEmpty() && it.codePointCount(0, it.length) <= NAME_MAX }
+  fun validName(name: String): String? = name.trim().takeIf { kept ->
+    kept.isNotEmpty() && kept.codePointCount(0, kept.length) <= NAME_MAX && kept.none { it < ' ' || it == '\u007f' }
+  }
 
   /** The passkey's name: the phone's model as KIFF takes it, or "Android phone" for a model it would refuse. */
   fun name(model: String?): String = model?.let(::validName) ?: "Android phone"
