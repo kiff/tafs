@@ -42,7 +42,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are twelve, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@27", "did-this-happen@1", "draft-the-card@21", "drive-the-app@3", "halting@1", "improve-a-taf@1", "name-the-tools@17", "set-up-a-taf@11", "the-dial@6", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@27", "did-this-happen@1", "draft-the-card@22", "drive-the-app@3", "halting@1", "improve-a-taf@1", "name-the-tools@17", "set-up-a-taf@11", "the-dial@6", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -125,6 +125,8 @@ describe("Coach's core", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
     expect(body).toContain('never "each read tool" or "no limit"');
     expect(body).toContain("Count a money tool's calls only when the owner did.");
+    // Eval 43686790277: a 1,000-a-day count on the refund tool's Card, which the owner never agreed or saw.
+    expect(body).toContain("A read tool's line has only a generous call count; never ask the owner to set it. A write's line has only the agreed limits.");
     // Eval 43666453786: a held per-refund Card also got a day's total, so past it the refund waited where the rules said refuse.
     expect(body).toContain("each limit on one Card only, the one whose on_exceed its rule says: a held per-action limit's Card has no day's total. Never add a limit the owner didn't agree.");
     // Each line's tool is checked before the approval, and a Card the owner approved is never drafted again.
@@ -388,15 +390,15 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   }
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@21", "halting@1", "name-the-tools@17", "set-up-a-taf@11", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@21", "improve-a-taf@1", "name-the-tools@17"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@22", "halting@1", "name-the-tools@17", "set-up-a-taf@11", "usage-and-plans@3"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@22", "improve-a-taf@1", "name-the-tools@17"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@21", "halting@1", "name-the-tools@17", "set-up-a-taf@11", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@21", "halting@1", "improve-a-taf@1", "name-the-tools@17"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@22", "halting@1", "name-the-tools@17", "set-up-a-taf@11", "usage-and-plans@3"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@22", "halting@1", "improve-a-taf@1", "name-the-tools@17"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });
