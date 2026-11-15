@@ -212,9 +212,17 @@ class ConnectAppsSheetTest {
     rule.onNodeWithText("Stripe").assertIsDisplayed()
     rule.onNodeWithText(ConnectAppsWords.CONNECTED).assertIsDisplayed()
     rule.onNodeWithText(ConnectAppsWords.CONNECT).performClick()
+    rule.waitForIdle()
+    // One taf is still asked, never taken: nothing starts before the pick.
+    assertEquals(emptyList<String>(), started)
+    rule.onNodeWithText(bot.tafs.app.model.ConnectWords.WHICH_TAF).assertIsDisplayed()
+    rule.onNodeWithText("Refunds").performClick()
+    rule.waitForIdle()
+    assertEquals("the picked taf", listOf("notion@1>refunds-1"), started)
+    // Sign in again keeps its grant's taf, with no question.
     rule.onNodeWithText(ConnectAppsWords.SIGN_IN_AGAIN).performClick()
     rule.waitForIdle()
-    assertEquals("one taf: it's for that one", listOf("notion@1>refunds-1", "google>refunds-1"), started)
+    assertEquals(listOf("notion@1>refunds-1", "google>null"), started)
   }
 
   @Test fun theAccountsOwnAppsComeFirstUnderYoursThenDiscover() {

@@ -35,8 +35,8 @@ class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
   @Volatile private var launch: ((Intent) -> Unit)? = null
 
   /**
-   * The screen the vendor's tab opens from, so it stays in tafs's task; [forResult] opens it for a result, which comes back only
-   * when the tab itself is closed ([closed]), never when the owner goes to another app and back.
+   * The screen the vendor's tab opens from, so it stays in tafs's task; [forResult] opens it for a result, which comes back once
+   * the tab is gone ([closed]), never while it's still there behind another app.
    */
   fun attach(activity: Activity, forResult: ((Intent) -> Unit)? = null) { screen = WeakReference(activity); launch = forResult }
 
@@ -93,7 +93,7 @@ class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
   /** The app is back in front: with no link from the vendor by then, the sign-in was left, and it lets go. */
   fun resumed(scope: CoroutineScope) = wait.resumed(scope)
 
-  /** The vendor's tab was closed (its result came back): with no link by then, the wait ends, as closing the sheet does on iOS. */
+  /** The vendor's tab is gone (its result came back): with no link by then, the sign-in is [left], with Open again and Cancel. */
   fun closed(scope: CoroutineScope) = wait.closed(scope)
 
   /** Whether a sign-in is waiting on the vendor's page. */
@@ -155,14 +155,17 @@ class VendorWait {
   }
 
   /**
-   * The vendor's tab itself was closed (back, or its ✕): the link may still arrive within [RETURN_GRACE_MS]; with none, the wait
-   * ends as Cancel ends it ([VendorSignInCancelled]), so the card or sheet is never left on "Approving…".
+   * The vendor's tab is gone: closed with back or its ✕, or above tafs's `singleTask` screen when the owner came back from the
+   * launcher. The link may still arrive within [RETURN_GRACE_MS]; with none, the sign-in is marked [left] whether or not a resume
+   * was seen, so the card or sheet offers Open again and Cancel and is never left on "Approving…" with no way back. Nothing is
+   * dropped: the launcher's case is one where Google's page was still waiting (the owner on Android 97).
    */
   fun closed(scope: CoroutineScope) {
     val of = waiting ?: return
+    away = false
     scope.launch {
       delay(RETURN_GRACE_MS)
-      if (waiting === of && !of.isCompleted) of.completeExceptionally(VendorSignInCancelled())
+      if (waiting === of && !of.isCompleted) _left.value = true
     }
   }
 

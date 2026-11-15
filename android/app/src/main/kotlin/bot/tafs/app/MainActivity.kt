@@ -253,7 +253,7 @@ class MainActivity : FragmentActivity() {
     app.vendorSignIn.attach(this) { tab -> vendorTab.launch(tab) }
   }
 
-  /** The vendor's tab, opened for a result: it answers only once the tab is closed, which ends the wait as on iOS. */
+  /** The vendor's tab, opened for a result: it answers once the tab is gone, which marks the sign-in left (Open again, Cancel). */
   private val vendorTab = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) {
     app.vendorSignIn.closed(lifecycleScope)
   }
