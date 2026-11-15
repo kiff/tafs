@@ -219,7 +219,9 @@ describe("a section of the kiff skill", () => {
   // it. Every call the run can make is made before it reports; only what KIFF held or refused, or it couldn't do, is left.
   it("tells the taf to make every call this run needs before it reports", () => {
     expect(CALL_INSTRUCTIONS).toContain("Do every call this run's work needs before you report. A call you can make\n  now never waits for the next run");
-    expect(CALL_INSTRUCTIONS).toContain("report as left only what KIFF held or\n  refused, or what you couldn't do.");
+    // A note that says not to do it still wins (NOTES_INSTRUCTIONS): what it stopped is reported as left too.
+    expect(CALL_INSTRUCTIONS).toContain("report as left only what KIFF held or\n  refused, what a note stopped, or what you couldn't do.");
+    expect(NOTES_INSTRUCTIONS).toContain("When a\nnote says not to do it, the note wins: don't make the call, and say in your report\nwhich note stopped you.");
     expect(CALL_INSTRUCTIONS).not.toMatch(/T-20\d\d|dispute/);
     expect(definition(ID, jobById("chargebacks")).instructions).toContain("A call you can make\n  now never waits for the next run");
   });
