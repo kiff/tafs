@@ -1,8 +1,8 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -88,7 +88,7 @@ fun SecureKeyContent(
       Text(
         words,
         style = scaled(15, FontWeight.SemiBold, Theme.no),
-        modifier = Modifier.heightIn(min = 44.dp).clickable { confirming = true }.padding(top = 10.dp),
+        modifier = Modifier.heightIn(min = 44.dp).tapping { confirming = true }.padding(top = 10.dp),
       )
       // Asked first, naming the one taf it ends, as from Connect apps' list; only then the connection goes.
       if (confirming) {
@@ -109,7 +109,7 @@ fun SecureKeyContent(
     Text(
       bot.tafs.app.model.Words.Common.done,
       style = scaled(15, FontWeight.SemiBold, Theme.dim),
-      modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = actions.close).padding(top = 10.dp),
+      modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = actions.close).padding(top = 10.dp),
     )
     return
   }
@@ -162,7 +162,7 @@ fun SecureKeyContent(
     Text(
       (if (detailsOpen) "▾ " else "▸ ") + details.title,
       style = scaled(14, FontWeight.SemiBold, Theme.soft),
-      modifier = Modifier.heightIn(min = 44.dp).clickable { detailsOpen = !detailsOpen }.padding(top = 10.dp),
+      modifier = Modifier.heightIn(min = 44.dp).tapping { detailsOpen = !detailsOpen }.padding(top = 10.dp),
     )
     if (detailsOpen) {
       Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -181,7 +181,7 @@ fun SecureKeyContent(
   Text(
     bot.tafs.app.model.ConnectWords.CANCEL,
     style = scaled(15, FontWeight.SemiBold, Theme.dim),
-    modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = actions.close).padding(top = 10.dp),
+    modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = actions.close).padding(top = 10.dp),
   )
 }
 

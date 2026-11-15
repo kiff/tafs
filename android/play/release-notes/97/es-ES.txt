@@ -1,0 +1,1 @@
+- Una tarjeta de aprobación ya no dice «sin huella» cuando su aprobación la pide.

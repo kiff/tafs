@@ -1316,6 +1316,10 @@ final class TafsCloud {
     struct ChatTarget: Equatable {
         var session: String?
         var newChat = false
+        /// The app follows a new chat (docs/api.md, `POST /v1/tafs/{id}/messages`): a message to a
+        /// Coach chat that already handed a taf over starts a new one, and the answer and the
+        /// stream's `session` event say `new_session: true` with its session. Coach's sends say so.
+        var newChatAfterHandover = false
         static let live = ChatTarget()
         static let new = ChatTarget(newChat: true)
     }
@@ -1325,14 +1329,18 @@ final class TafsCloud {
         let text: String
         let session: String?
         let newChat: Bool?
+        let newChatAfterHandover: Bool?
         /// The files attached to it, by the ids their uploads gave (kiff/tafs#209).
         let attachments: [String]?
-        enum CodingKeys: String, CodingKey { case text, session, attachments, newChat = "new_chat" }
+        enum CodingKeys: String, CodingKey {
+            case text, session, attachments, newChat = "new_chat", newChatAfterHandover = "new_chat_after_handover"
+        }
 
         init(_ text: String, _ target: ChatTarget, files: [AttachmentRef] = []) {
             self.text = text
             session = target.session
             newChat = target.newChat ? true : nil
+            newChatAfterHandover = target.newChatAfterHandover ? true : nil
             attachments = files.isEmpty ? nil : files.map(\.id)
         }
     }
@@ -1401,6 +1409,12 @@ final class TafsCloud {
             let reason: String
             let planque: Planque?
             let kiff: KIFF?
+            /// Which key the call takes, as tafs cloud hints it (kiff/tafs#494): `window`, the device key
+            /// inside an open approval window, a tap; `critical`, the approval key behind Face ID. A
+            /// hint: the service the call goes to decides. Read leniently: another shape is none.
+            private let keyHint: LenientItem<String>?
+            var key: String? { keyHint?.value }
+            enum CodingKeys: String, CodingKey { case id, step, message, reason, planque, kiff, keyHint = "key" }
         }
         let outcome: String
         let answer: String?
@@ -2847,3 +2861,7 @@ final class TafsCloud {
         return data
     }
 }
+
+/// Equal when its values are, as the file-level `LenientItem` is, so a type that holds one (an approval's
+/// `Ask`, with its key hint) keeps its own `Equatable`.
+extension TafsCloud.LenientItem: Equatable where T: Equatable {}

@@ -1,10 +1,10 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -163,7 +163,7 @@ fun CardStack(
     val ordered = behind + listOfNotNull(shown)
     Box(Modifier.fillMaxWidth().then(Modifier.height(maxWidth / CardRatio + 26.dp * (ordered.size - 1).coerceAtLeast(0)))) {
       ordered.forEachIndexed { index, card ->
-        Box(Modifier.then(Modifier.offset(y = 26.dp * index)).clickable { onFront(card.id) }) {
+        Box(Modifier.then(Modifier.offset(y = 26.dp * index)).tapping { onFront(card.id) }) {
           TafCardFace(card, issuedBy, color, revoked)
           // Each Card behind a shade darker, so Cards of the same colour read as separate.
           val shade = behindShade(ordered.size - 1 - index)
@@ -190,7 +190,7 @@ fun CardBar(card: TafCard, count: Int, color: Color, revoked: Boolean = false, o
       .clip(shape)
       .background(Theme.panel)
       .border(BorderStroke(1.dp, Theme.line), shape)
-      .clickable(onClick = onOpen)
+      .tapping(onClick = onOpen)
       .padding(horizontal = 10.dp, vertical = 9.dp),
     horizontalArrangement = Arrangement.spacedBy(8.dp),
     verticalAlignment = Alignment.CenterVertically,

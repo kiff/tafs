@@ -1,0 +1,2 @@
+- Un accesso non si chiude più se esci per un codice e torni.
+- La scheda di accesso nomina l'app che apre.

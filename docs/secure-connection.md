@@ -12,9 +12,9 @@ sheet**) or from Connect apps:
 1. **The title:** the app's logo and name, with a lock: "Secure connection to Qonto".
 2. **Three plain lines**, worked out from the grant by tafs cloud:
    - **what it may do:** "Read only: it can't pay, send or change anything in Qonto" when
-     every one of the grant's tools is a read. Otherwise "It can change things in Qonto. Its
-     Card decides each action". The phone never works this out;
-   - **the key:** "Your key is sealed: it's never shown again, and the taf never sees it";
+     every one of the grant's tools is a read. Otherwise "It can change things in Qonto, as its
+     Card allows". The phone never works this out;
+   - **the key:** "Your key is never shown again, and no taf sees it";
    - **leaving:** "You can disconnect it any time, in Connect apps".
 3. **Paste the key**, a button, never a typing field. Once pasted, the sheet shows only the
    key's last 4 characters ("Key …ab12"), and the clipboard is cleared ("Clipboard cleared").
@@ -48,7 +48,7 @@ entry it came from, and answers in the request's `Accept-Language`:
   "title": "Secure connection to Qonto",
   "lines": [
     { "kind": "reads_only", "text": "Read only: it can't pay, send or change anything in Qonto" },
-    { "kind": "sealed", "text": "Your key is sealed: it's never shown again, and the taf never sees it" },
+    { "kind": "sealed", "text": "Your key is never shown again, and no taf sees it" },
     { "kind": "disconnect", "text": "You can disconnect it any time, in Connect apps" } ],
   "paste": { "button": "Paste the key", "what": "Copy it in Qonto, then paste it here",
              "pasted": "Key …{last4}", "cleared": "Clipboard cleared" },
@@ -160,6 +160,8 @@ signed without being shown. One test in each app pins it.
 server declares in KIFF at the request (`declared: true` on the grant) and which can't be used until
 the key is in (`connect-an-app@10`, `draft-the-card@8`). Not declared, Coach asks for the key first,
 then the Card, as before.
+
+**A Card over two apps (14 Nov).** One signature carries one connection's approve. So while a Card's draft also covers another app of the same taf that isn't connected yet, the Card isn't signed. A card that would carry this app's tools with the Card (`tools_and_cards` or `key_and_cards`) becomes this app's own `connect`, so whichever card the person taps first moves forward, and the last app carries the Card. A Card alone (`cards`) for a connected app is refused, naming the app that waits ("Approve Stripe first; this Card comes with the last app"). A report is "approved" only when every app the Card covers is connected, never while another app's tools still wait. Signing every app's approve in one signature, with N+1 hashes, is the follow-up, and it needs the phones.
 
 **A connection's added tools and its Card together (`tools_and_cards`).** The same shape, for an app already
 signed in: Coach adds the taf's tools to a connected grant (the addition waits as `pending`, with what it had in

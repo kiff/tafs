@@ -46,6 +46,36 @@ export function waitingCards(r: Run, now: Date): Array<{ id: string; type: strin
   });
 }
 
+/** The longest name a waiting row gives what it waits on, cut at a word with "…". */
+const NAMED_MAX = 80;
+
+/**
+ * What a run's waiting card is about, in Coach's own words on the card: its title, else its first question, else its
+ * text. A row then names what waits now ("Which day should it remind you?"), never only the chat's first message, which
+ * may be another job's (a new job asked in a finished chat). Undefined when the card says nothing.
+ */
+export function waitingOn(r: Run, now: Date): string | undefined {
+  for (const q of r.requirements ?? []) {
+    if (q.kind !== "card" || q.answered) continue;
+    const card = (q.input ?? {}) as { type?: unknown; title?: unknown; text?: unknown; questions?: unknown };
+    if (typeof card.type !== "string" || !WAITS_ON_YOU.has(card.type)) continue;
+    const expires = Date.parse(q.expires);
+    if (!Number.isNaN(expires) && expires <= now.getTime()) continue;
+    const first = Array.isArray(card.questions) ? (card.questions[0] as { text?: unknown } | undefined)?.text : undefined;
+    const said = [card.title, first, card.text].find((x): x is string => typeof x === "string" && x.trim() !== "");
+    // The row adds its own ": Coach is waiting…", so the name keeps no end punctuation of its own ("Which day?").
+    if (said) return shortened(said.trim().replace(/\s+/g, " ").replace(/[\s?!.:;,]+$/, ""));
+  }
+  return undefined;
+}
+
+function shortened(line: string): string {
+  if (line.length <= NAMED_MAX) return line;
+  const cut = line.slice(0, NAMED_MAX);
+  const at = cut.lastIndexOf(" ");
+  return `${(at > NAMED_MAX / 2 ? cut.slice(0, at) : cut).replace(/[\s,;:.]+$/, "")}…`;
+}
+
 /** The person's Coach runs that wait on them, one per chat. */
 export function waitingRuns(paused: Run[], coach: string, subject: string, now: Date): Run[] {
   const out = new Map<string, Run>();
@@ -60,8 +90,9 @@ export function waitingRuns(paused: Run[], coach: string, subject: string, now: 
 
 /**
  * The chats of `coach` paused on a card `subject` answers, oldest first, one per chat. A card past its `expires` no
- * longer waits: kiff/agents ends it. `titles` names each chat as Coach's history does, by session; a chat with no title
- * says what it waits for alone.
+ * longer waits: kiff/agents ends it. Each row names what waits, in the card's own words (`waitingOn`); a card that says
+ * nothing is named by its chat, as Coach's history does (`titles`, by session); with neither, the row says what it
+ * waits for alone.
  */
 export function coachWaitingOf(paused: Run[], coach: string, subject: string, now: Date, lang: Lang = "en", zone = "UTC",
   titles: Map<string, string> = new Map()): CoachWaiting[] {
@@ -69,7 +100,7 @@ export function coachWaitingOf(paused: Run[], coach: string, subject: string, no
   return waitingRuns(paused, coach, subject, now).map((r) => {
     const approves = waitingCards(r, now).some((c) => APPROVES.has(c.type));
     const since = r.updated || r.created;
-    const title = titles.get(r.session)?.trim();
+    const title = waitingOn(r, now) ?? titles.get(r.session)?.trim();
     const day = new Intl.DateTimeFormat(lang === "en" ? "en-GB" : lang, { timeZone: zone, day: "numeric", month: "short" }).format(new Date(since));
     const line = title
       ? endSentence(approves ? w.coach_waiting_named_approval(title, day) : w.coach_waiting_named_answer(title, day))

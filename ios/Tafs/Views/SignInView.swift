@@ -12,6 +12,8 @@ struct SignInView: View {
     @State private var problem: String?
     @State private var task: Task<Void, Never>?
     @State private var copied = false
+    /// Signing in from the person's other phone instead (KIFF's pairing contract §5.8).
+    @State private var pairing = false
 
     var body: some View {
         NavigationStack {
@@ -65,6 +67,10 @@ struct SignInView: View {
                     Text(problem).scaledFont(14).foregroundColor(Theme.no)
                     Button(Words.Common.tryAgain) { begin() }.buttonStyle(OutlineButtonStyle())
                 }
+                // A person who already uses tafs on another phone pairs this device from it instead.
+                Button(Words.SignIn.pairStart) { pairing = true }
+                    .buttonStyle(OutlineButtonStyle())
+                    .accessibilityIdentifier("signIn.pair")
                 Spacer()
                 Text(Legal.agreement())
                     .scaledFont(12).foregroundColor(Theme.dim).tint(Theme.amber)
@@ -75,6 +81,9 @@ struct SignInView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(Words.Common.cancel) { task?.cancel(); dismiss() }
                 }
+            }
+            .navigationDestination(isPresented: $pairing) {
+                PairSignInView { task?.cancel(); dismiss() }
             }
         }
         .onAppear(perform: begin)
@@ -113,6 +122,8 @@ struct SettingsView: View {
     @State private var confirming: SignOutWay?
     /// `-screen alerts`: the screenshots open Alerts by themselves.
     @State private var openAlerts = Screenshots.enabled && Screenshots.screen == "alerts"
+    /// `-tab account -screen devices`: Devices pushed in Account, over the sample, for the reference set.
+    @State private var openDevices = Screenshots.enabled && Screenshots.screen == "devices"
 
     var body: some View {
         NavigationStack {
@@ -178,9 +189,10 @@ struct SettingsView: View {
                     Text(Words.SignIn.everyActionTafTakesGoes(device: "\(ThisDevice.kind)"))
                         .scaledFont(14).foregroundColor(Theme.soft)
                 }
+                // tafs's own pages, in English only for now: outside English the rows say so (Android 1.27.8).
                 Section(Words.Settings.legal) {
-                    Link(Words.Settings.terms, destination: Legal.terms)
-                    Link(Words.Settings.privacyPolicy, destination: Legal.privacy)
+                    Link(Legal.label(Words.Settings.terms), destination: Legal.terms)
+                    Link(Legal.label(Words.Settings.privacyPolicy), destination: Legal.privacy)
                 }
                 Section(Words.Settings.about) {
                     LabeledContent(Words.Settings.version, value: Self.versionLabel())
@@ -205,6 +217,7 @@ struct SettingsView: View {
             .navigationTitle(Words.Settings.title)
             .task(id: model.mode) { await model.loadSuggestions() }
             .navigationDestination(isPresented: $openAlerts) { NotificationSettingsView().environmentObject(model) }
+            .navigationDestination(isPresented: $openDevices) { DevicesView().environmentObject(model) }
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
             .confirmingSignOut($confirming) { _ in
                 Task { if await model.signOut() { dismiss() } }

@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import bot.tafs.app.design.tapping
 import androidx.lifecycle.lifecycleScope
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveAlert
@@ -15,7 +16,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import bot.tafs.app.model.ThemePreference
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -248,6 +248,11 @@ class MainActivity : FragmentActivity() {
   }
 
   // A vendor's sign-in waits while its tab is in front; the app back with no link from it means the tab was closed.
+  override fun onStart() {
+    super.onStart()
+    app.vendorSignIn.attach(this)
+  }
+
   override fun onPause() {
     super.onPause()
     app.vendorSignIn.paused()
@@ -277,6 +282,7 @@ class MainActivity : FragmentActivity() {
     driveEntry?.let { bot.tafs.app.drive.DriveInput.windows.remove(it) }
     bot.tafs.app.drive.DriveInput.unguard(window)
     app.authenticator.detach(this)
+    app.vendorSignIn.detach(this)
     app.push.askPermission = null
     runCatching { updates?.close() }
     super.onDestroy()
@@ -321,9 +327,11 @@ fun RootView(model: AppModel) {
         LocalAnswerPage provides model::answerPage,
         LocalImproveInCoach provides (if (state.mayUseCoach) model::improveInCoach else null),
         LocalSignInAgain provides { confirmingSignInAgain = true },
+        bot.tafs.app.views.LocalViewOnly provides state.approvalViewOnly,
         // Approve again in the browser, signed in to a KIFF that can re-link the phone; else the line offers Sign in again.
         LocalApproveAgain provides (
-          if (state.mode == Mode.kiff && !state.relinkUnavailable) {
+          // A view-only session can't be re-linked either: KIFF refuses it, so the line offers Sign in again alone.
+          if (state.mode == Mode.kiff && !state.relinkUnavailable && !state.approvalViewOnly) {
             ApproveAgain(state.relink, state.relinkProblem, model::startRelink, model::cancelRelink, model::nudgeSignIn)
           } else {
             null
@@ -588,6 +596,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         approve = model::startApproval,
         openKeySheet = model::openCardKeySheet,
         cancelSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.cancel() },
+        reopenSignIn = { (context.applicationContext as TafsApplication).vendorSignIn.reopen() },
         signInAgain = model::startSignInAgain,
         improve = model::improveTaf,
         openTaf = { coachOpen = false; openTaf = it },
@@ -753,7 +762,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
                 androidx.compose.material3.Text(
                   Words.Home.Overview.title,
                   style = scaled(15, androidx.compose.ui.text.font.FontWeight.SemiBold, if (overviewOpen) Theme.amber else Theme.amberText),
-                  modifier = Modifier.fillMaxWidth().clickable { coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = true }
+                  modifier = Modifier.fillMaxWidth().tapping { coachOpen = false; trialTaf = null; calendarOpen = false; overviewOpen = true }
                     .padding(horizontal = 16.dp, vertical = 14.dp),
                 )
               }
@@ -816,7 +825,15 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     }
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
     if (showingDevices) {
-      DevicesSheet(state, refresh = model::refreshDevices, remove = model::removeDevice, onClose = { showingDevices = false })
+      DevicesSheet(
+        state, refresh = model::refreshDevices, remove = model::removeDevice, onClose = { model.clearPairLine(); showingDevices = false; showingSettings = true },
+        // Adding a device gives it approval authority: offered only on a KIFF account. The scan and what follows run in the model.
+        addDevice = drivingActivity?.takeIf { state.mode == bot.tafs.app.app.Mode.kiff }?.let { activity ->
+          { model.addDevice { bot.tafs.app.app.scanPairingQr(activity) } }
+        },
+        confirmPair = model::confirmPairing,
+        cancelPair = model::cancelPairing,
+      )
     }
     if (showingConnectApps) {
       // Connect is for whoever manages the account's Cards; anyone else sees what's connected.
@@ -1000,7 +1017,7 @@ private fun FoldHandle(folded: Boolean, onToggle: () -> Unit) {
       style = scaled(18, androidx.compose.ui.text.font.FontWeight.SemiBold, Theme.dim),
       modifier = Modifier.align(Alignment.TopCenter).padding(top = 12.dp).size(24.dp, 44.dp)
         .clip(androidx.compose.foundation.shape.RoundedCornerShape(6.dp)).background(Theme.panel)
-        .clickable(onClickLabel = if (folded) Words.Common.showTheList else Words.Common.hideTheList, onClick = onToggle)
+        .tapping(onClickLabel = if (folded) Words.Common.showTheList else Words.Common.hideTheList, onClick = onToggle)
         .semantics { role = androidx.compose.ui.semantics.Role.Button; contentDescription = if (folded) Words.Common.showTheList else Words.Common.hideTheList }
         .wrapContentSize(Alignment.Center),
     )
@@ -1031,7 +1048,7 @@ private fun CoachButton(onClick: () -> Unit, modifier: Modifier = Modifier, comp
     softWrap = false,
     modifier = modifier.heightIn(min = 40.dp).then(Modifier.driveStopZone()).clip(androidx.compose.foundation.shape.CircleShape)
       .background(if (acting) Theme.amber else Theme.ink)
-      .clickable { bot.tafs.app.design.Haptics.tap(); onClick() }.semantics { role = androidx.compose.ui.semantics.Role.Button }
+      .tapping { onClick() }.semantics { role = androidx.compose.ui.semantics.Role.Button }
       .padding(horizontal = if (compact) 8.dp else 14.dp, vertical = 10.dp),
   )
 }

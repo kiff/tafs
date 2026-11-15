@@ -3,6 +3,7 @@ import type { Knob } from "./knob.js";
 import type { Rule } from "./home.js";
 import { amountWords, type ActivityCall, activityMatches } from "./activity.js";
 import { vendorName } from "./steps.js";
+import { type Lang, plural, wordsIn } from "./words/index.js";
 import { type Fetch } from "./kiff.js";
 
 export interface GrantView {
@@ -91,13 +92,16 @@ export async function appCalls(token: string, agent: string, now: Date, net: Fet
   return { calls, complete: false };
 }
 
-function limitsOf(rules: Rule[]): string[] {
+/** Each rule's limits as whole lines in the person's language; its window words come with the rule (summary, by lang). */
+function limitsOf(rules: Rule[], lang: Lang): string[] {
+  const w = wordsIn(lang);
   return rules.flatMap((r) => {
-    if (r.count_per_window === 0) return [r.outside === "hold" ? "Needs your approval for every call" : "Not allowed by this Card"];
-    const money = (m: NonNullable<Rule["per_action"]>) => amountWords({ value: String(m.minor / 10 ** m.scale), unit: m.unit });
-    return [r.per_action ? `${money(r.per_action)} per action` : undefined,
+    if (r.count_per_window === 0) return [r.outside === "hold" ? w.setup_every_call_asks : w.setup_not_allowed];
+    const money = (m: NonNullable<Rule["per_action"]>) => amountWords({ value: String(m.minor / 10 ** m.scale), unit: m.unit }) ?? "";
+    return [r.per_action ? w.setup_per_action(money(r.per_action)) : undefined,
+      // An amount then its window ("€50.00 a day"), in every language: the window's words are the language's.
       r.per_window ? `${money(r.per_window)} ${r.window_words.each}` : undefined,
-      r.count_per_window !== null ? `${r.count_per_window} calls ${r.window_words.each}` : undefined].filter((s): s is string => Boolean(s));
+      r.count_per_window !== null ? w.setup_calls_window(r.count_per_window, plural(lang, r.count_per_window), r.window_words.each) : undefined].filter((s): s is string => Boolean(s));
   });
 }
 
@@ -136,7 +140,9 @@ function repeats(words: string, label: string): boolean {
 }
 
 export function setupView(input: { agent: string; grants: GrantView[]; knob: Knob; rules: Rule[];
-  notes: Array<{ content: string }>; versions: VersionState; calls: ActivityCall[]; now: Date; running?: string; statsComplete: boolean }): SetupView {
+  notes: Array<{ content: string }>; versions: VersionState; calls: ActivityCall[]; now: Date; running?: string; statsComplete: boolean; lang?: Lang }): SetupView {
+  const lang = input.lang ?? "en";
+  const w = wordsIn(lang);
   const grants = input.grants.filter((g) => g.request.agent === input.agent && (["connected", "listed", "signed_in", "needs_reconnect"].includes(g.status) || (g.status === "pending" && g.signed_in === true)));
   const names = new Map(grants.map((g) => [g.id, appDisplayName(g)]));
   const owners = new Map<string, string>();
@@ -151,11 +157,11 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
     const actions = (["connected", "needs_reconnect"].includes(g.status) ? g.request.tools ?? [] : []).filter((t) => !t.setup_reads).map((t) => {
       const name = t.name || t.tool;
       const used = input.knob.what.filter((s) => s.tool === name);
-      const limits = limitsOf(input.rules.filter((r) => r.action === name));
-      return { name, title: t.title || input.rules.find((r) => r.action === name)?.label || "App action",
-        limits: limits.length ? limits : ["See its Card"], steps: used.map((s) => s.step),
+      const limits = limitsOf(input.rules.filter((r) => r.action === name), lang);
+      return { name, title: t.title || input.rules.find((r) => r.action === name)?.label || w.setup_app_action,
+        limits: limits.length ? limits : [w.setup_see_card], steps: used.map((s) => s.step),
         // With no workflow, no action says anything: the app's own Workflow line does (kiff/tafs#469 item 2).
-        step_words: !steps.length ? "" : used.length ? used.map((s) => `Step ${s.step}`).join(" · ") : "Not used by the current workflow" };
+        step_words: !steps.length ? "" : used.length ? used.map((s) => w.setup_step(s.step)).join(" · ") : w.setup_not_used };
     });
     const tools = new Set(actions.map((a) => a.name));
     const ownCalls = calls.filter((c) => tools.has(c.action_name));

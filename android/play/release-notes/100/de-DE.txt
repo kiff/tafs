@@ -1,0 +1,1 @@
+- Gerät hinzufügen: unter Konto, Geräte den Code deines Computers scannen, prüfen, dass er dieselben 6 Zeichen zeigt, und mit dem Fingerabdruck genehmigen.

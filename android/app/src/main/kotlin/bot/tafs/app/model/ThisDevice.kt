@@ -9,4 +9,7 @@ object ThisDevice {
 
   /** The device's word in the lines' language, for their `{device}`. */
   val word: String get() = if (tablet) Words.Device.tablet else Words.Device.phone
+
+  /** What KIFF records the device as: its list draws the name from it, in the reader's language. */
+  val kiffKind: String get() = if (tablet) "android_tablet" else "android_phone"
 }

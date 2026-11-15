@@ -1,9 +1,9 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -115,7 +115,7 @@ private fun AskAdminSheet(usage: Usage, kind: String, state: AppState, actions: 
       if (forPack) Panel {
         Eyebrow(Words.Usage.Requests.whichPack)
         usage.store?.packs.orEmpty().forEach { p ->
-          Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { pack = p.id }, verticalAlignment = Alignment.CenterVertically) {
+          Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).tapping { pack = p.id }, verticalAlignment = Alignment.CenterVertically) {
             Text(p.line.ifEmpty { p.name }, style = scaled(15, color = Theme.ink), modifier = Modifier.weight(1f))
             Text(if (pack == p.id) "●" else "○", style = scaled(18, color = if (pack == p.id) Theme.amber else Theme.dim))
           }
@@ -171,6 +171,6 @@ private fun DeclineRequestSheet(request: PackRequest, usage: Usage, state: AppSt
 private fun SheetTitle(title: String, onClose: () -> Unit) {
   Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
     Text(title, style = scaled(22, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
-    Text(Words.Common.cancel, style = scaled(17, color = Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+    Text(Words.Common.cancel, style = scaled(17, color = Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 10.dp))
   }
 }

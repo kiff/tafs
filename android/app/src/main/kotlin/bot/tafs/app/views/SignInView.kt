@@ -1,11 +1,11 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
 import android.content.ClipData
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalUriHandler
@@ -69,6 +70,12 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
   var copied by remember { mutableStateOf(false) }
   // Bumped by "Try again": the sign-in begins over with a new code.
   var attempt by remember { mutableIntStateOf(0) }
+  // Signing in with your other phone instead: its QR, whether the last one expired, and why it stopped.
+  var pairing by remember { mutableStateOf(false) }
+  var offer by remember { mutableStateOf<bot.tafs.app.kiff.PairOffer?>(null) }
+  var renewed by remember { mutableStateOf(false) }
+  var pairProblem by remember { mutableStateOf<String?>(null) }
+  var pairAttempt by remember { mutableIntStateOf(0) }
   val uri = LocalUriHandler.current
   val clipboard = LocalClipboard.current
   val scope = rememberCoroutineScope()
@@ -76,7 +83,9 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
   // Back from approving in the browser: ask KIFF at once.
   LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.nudgeSignIn() }
 
-  LaunchedEffect(attempt) {
+  LaunchedEffect(attempt, pairing) {
+    // While the other phone adds this one, the KIFF sign-in waits: its code isn't asked about.
+    if (pairing) return@LaunchedEffect
     problem = null
     start = null
     copied = false
@@ -94,6 +103,36 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
     }
   }
 
+  LaunchedEffect(pairing, pairAttempt) {
+    if (!pairing) return@LaunchedEffect
+    pairProblem = null
+    offer = null
+    // A new offer each time the last one runs out, until the other phone approves one or the person leaves.
+    while (true) {
+      val o = try {
+        model.startPairSignIn()
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        pairProblem = bot.tafs.app.model.ErrorWords.of(e).ifBlank { Words.SignIn.didntWork }
+        return@LaunchedEffect
+      }
+      offer = o
+      try {
+        model.finishPairSignIn(o)
+        close()
+        return@LaunchedEffect
+      } catch (e: CancellationException) {
+        throw e
+      } catch (_: bot.tafs.app.kiff.KiffError.Expired) {
+        renewed = true
+      } catch (e: Exception) {
+        pairProblem = bot.tafs.app.model.ErrorWords.of(e).ifBlank { Words.SignIn.didntWork }
+        return@LaunchedEffect
+      }
+    }
+  }
+
   DriveSheet(
     onDismissRequest = close,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -103,12 +142,16 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
       Text(
         Words.Common.cancel,
         style = scaled(17, color = Theme.amber),
-        modifier = Modifier.padding(horizontal = 24.dp).heightIn(min = 44.dp).clickable(onClick = close).padding(top = 8.dp),
+        modifier = Modifier.padding(horizontal = 24.dp).heightIn(min = 44.dp).tapping(onClick = close).padding(top = 8.dp),
       )
       Column(
         Modifier.verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
       ) {
+        if (pairing) {
+          PairSignInContent(offer, renewed, pairProblem, onTryAgain = { renewed = false; pairAttempt += 1 }, onKiff = { pairing = false })
+          return@Column
+        }
         Text(Words.SignIn.withKiff, style = scaled(34, FontWeight.Bold, Theme.ink, display = true))
         Text(
           Words.SignIn.lead(bot.tafs.app.model.ThisDevice.word),
@@ -139,7 +182,7 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
               Text(
                 if (copied) Words.Common.copied else Words.Common.copy,
                 style = scaled(13, FontWeight.SemiBold, Theme.amber),
-                modifier = Modifier.heightIn(min = 44.dp).clickable {
+                modifier = Modifier.heightIn(min = 44.dp).tapping {
                   scope.launch { clipboard.setClipEntry(ClipEntry(ClipData.newPlainText("KIFF sign-in link", s.verificationUriComplete))) }
                   copied = true
                 }.padding(horizontal = 4.dp),
@@ -158,6 +201,8 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
           Text(it, style = scaled(14, color = Theme.no))
           OutlineButton(Words.Common.tryAgain, { attempt += 1 }, Modifier.fillMaxWidth())
         }
+        // Already signed in on another phone: that phone adds this one, with no browser.
+        OutlineButton(Words.SignIn.pairStart, { model.endSignIn(); renewed = false; pairing = true }, Modifier.fillMaxWidth().testTag(PAIR_START))
 
         Text(
           buildAnnotatedString {
@@ -176,6 +221,8 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
     }
   }
 }
+
+internal const val PAIR_START = "sign_in.pair.start"
 
 private fun androidx.compose.ui.text.AnnotatedString.Builder.link(text: String, url: String) {
   withLink(LinkAnnotation.Url(url, TextLinkStyles(SpanStyle(color = Theme.amberText)))) { append(text) }

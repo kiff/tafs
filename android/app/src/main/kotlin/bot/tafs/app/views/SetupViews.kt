@@ -1,12 +1,12 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -72,6 +72,8 @@ fun SetupTab(
   onConnectApps: () -> Unit,
   onRemove: (() -> Unit)?,
   onActivity: (String) -> Unit = {},
+  /** Remove for good's confirmation is on its way: the button takes no second tap. */
+  removeOpening: Boolean = false,
 ) {
   val signedIn = state.mode == Mode.kiff && taf.cloudId != null
   val manages = state.manages(taf.id)
@@ -108,7 +110,7 @@ fun SetupTab(
   if (state.mode == Mode.sample && taf.state != bot.tafs.app.model.TafState.revoked) {
     OutlineButton(if (taf.state == bot.tafs.app.model.TafState.paused) Words.Taf.resume else Words.Taf.pause, { actions.togglePause(taf.id) }, Modifier.fillMaxWidth().confirms())
   }
-  onRemove?.let { OutlineButton(Words.Setup.removeForGood, it, Modifier.fillMaxWidth().confirms(), color = Theme.no) }
+  onRemove?.let { OutlineButton(Words.Setup.removeForGood, it, Modifier.fillMaxWidth().confirms(), color = Theme.no, enabled = !removeOpening) }
 
   if (startsOpen && knob != null) StartsWhenSheet(taf, knob, state, actions) { startsOpen = false }
   if (resultsOpen && knob != null) ResultsSheet(taf, knob, state, actions) { resultsOpen = false }
@@ -117,7 +119,7 @@ fun SetupTab(
 /** A section of Setup in one panel: its title, what it is now in a line or two, and Open ›. */
 @Composable
 private fun SectionRow(title: String, lines: List<String>, onOpen: () -> Unit) {
-  Panel(Modifier.clickable(onClick = onOpen).semantics { contentDescription = Words.Setup.sectionDescription(title, lines.joinToString(". ")) }) {
+  Panel(Modifier.tapping(onClick = onOpen).semantics { contentDescription = Words.Setup.sectionDescription(title, lines.joinToString(". ")) }) {
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
       Eyebrow(title)
       androidx.compose.foundation.layout.Spacer(Modifier.weight(1f))
@@ -152,7 +154,7 @@ private fun ConnectedApps(taf: Taf, state: AppState, actions: TafActions, onConn
         Text(
           SetupWords.CHOOSE_ACTIONS,
           style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-          modifier = Modifier.heightIn(min = 44.dp).clickable { it(taf.id) }.padding(vertical = 12.dp),
+          modifier = Modifier.heightIn(min = 44.dp).tapping { it(taf.id) }.padding(vertical = 12.dp),
         )
       }
     }
@@ -160,7 +162,7 @@ private fun ConnectedApps(taf: Taf, state: AppState, actions: TafActions, onConn
   Text(
     SetupWords.CONNECT_APP,
     style = scaled(15, FontWeight.SemiBold, Theme.amberText),
-    modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onConnectApps).padding(vertical = 12.dp),
+    modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(onClick = onConnectApps).padding(vertical = 12.dp),
   )
 }
 
@@ -226,7 +228,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
               Text(
                 SetupWords.APPROVE,
                 style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-                modifier = Modifier.heightIn(min = 44.dp).confirms().clickable { approving = e.id }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
+                modifier = Modifier.heightIn(min = 44.dp).confirms().tapping { approving = e.id }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
               )
             } else if (e.approval?.state == "approved" || e.on) {
               Text(SetupWords.LISTENING, style = scaled(13, FontWeight.SemiBold, Theme.ok))
@@ -237,7 +239,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
                 Text(
                   SetupWords.STOP,
                   style = scaled(14, FontWeight.SemiBold, Theme.no),
-                  modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy) {
+                  modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = !busy) {
                     work { actions.doors.changeKnobSize(taf.id, withoutTrigger(setting, trigger)) }
                   }.padding(start = 10.dp, top = 12.dp, bottom = 12.dp),
                 )
@@ -265,7 +267,7 @@ private fun StartsWhenSheet(taf: Taf, knob: KnobWire, state: AppState, actions: 
               Text(
                 SetupWords.REMOVE,
                 style = scaled(14, FontWeight.SemiBold, Theme.no),
-                modifier = Modifier.heightIn(min = 44.dp).confirms().clickable(enabled = !busy) { work { actions.doors.removeFollowUp(taf.id, fid) } }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
+                modifier = Modifier.heightIn(min = 44.dp).confirms().tapping(enabled = !busy) { work { actions.doors.removeFollowUp(taf.id, fid) } }.padding(start = 8.dp, top = 12.dp, bottom = 12.dp),
               )
             }
           }
@@ -348,7 +350,7 @@ private fun ResultsSheet(taf: Taf, knob: KnobWire, state: AppState, actions: Taf
         Text(
           SetupWords.ADD_PLACE,
           style = scaled(15, FontWeight.SemiBold, Theme.amberText),
-          modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable { onClose(); improve(taf.id) }.padding(vertical = 12.dp),
+          modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping { onClose(); improve(taf.id) }.padding(vertical = 12.dp),
         )
       }
 
@@ -411,14 +413,14 @@ private fun SizeRow(size: KnobWire.Size, enabled: Boolean, onChoose: (JsonObject
     Text(
       "−",
       style = scaled(20, FontWeight.Bold, if (enabled && lower != null) Theme.ink else Theme.dim),
-      modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = enabled && lower != null) { lower?.let { onChoose(it.setting) } }
+      modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = enabled && lower != null) { lower?.let { onChoose(it.setting) } }
         .semantics { contentDescription = KnobWords.LOWER }.padding(horizontal = 12.dp, vertical = 8.dp),
     )
     Text(size.now?.label ?: "", style = scaled(15, FontWeight.SemiBold, Theme.ink, mono = true))
     Text(
       "+",
       style = scaled(20, FontWeight.Bold, if (enabled && raise != null) Theme.ink else Theme.dim),
-      modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = enabled && raise != null) { raise?.let { onChoose(it.setting) } }
+      modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = enabled && raise != null) { raise?.let { onChoose(it.setting) } }
         .semantics { contentDescription = KnobWords.RAISE }.padding(horizontal = 12.dp, vertical = 8.dp),
     )
   }
@@ -432,7 +434,7 @@ private fun Choice(words: String, selected: Boolean, enabled: Boolean, onClick: 
     style = scaled(14, FontWeight.SemiBold, if (selected) Theme.background else Theme.soft),
     modifier = Modifier.heightIn(min = 40.dp).clip(CircleShape).background(if (selected) Theme.ink else Theme.panel)
       .border(BorderStroke(1.dp, if (selected) Theme.ink else Theme.line), CircleShape)
-      .clickable(enabled = enabled, onClick = onClick).semantics { this.selected = selected }
+      .tapping(enabled = enabled, onClick = onClick).semantics { this.selected = selected }
       .padding(horizontal = 14.dp, vertical = 10.dp),
   )
 }

@@ -1,10 +1,10 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -69,14 +69,14 @@ fun ExportChatsRow(onExport: suspend () -> ExportResult, share: ((ChatExport) ->
     Text(
       if (preparing) ExportWords.PREPARING else ExportWords.ROW,
       style = scaled(16, color = if (preparing) Theme.dim else Theme.ink),
-      modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(enabled = !preparing) { export() }.padding(horizontal = 12.dp, vertical = 12.dp),
+      modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).tapping(enabled = !preparing) { export() }.padding(horizontal = 12.dp, vertical = 12.dp),
     )
     error?.let {
       Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(horizontal = 12.dp))
       Text(
         ExportWords.TRY_AGAIN,
         style = scaled(15, color = Theme.amberText),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(enabled = !preparing) { export() }.padding(horizontal = 12.dp, vertical = 10.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(enabled = !preparing) { export() }.padding(horizontal = 12.dp, vertical = 10.dp),
       )
     }
     HorizontalDivider(color = Theme.line, modifier = Modifier.padding(start = 12.dp))

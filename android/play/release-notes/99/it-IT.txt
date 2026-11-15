@@ -1,0 +1,2 @@
+- Rimuovi definitivamente richiede un tocco; un secondo non fa nulla.
+- Collega app si apre a schermo intero e mostra il caricamento.

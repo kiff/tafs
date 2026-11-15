@@ -1,0 +1,5 @@
+- Jedes Tippen vibriert, je nach Toucheinstellung deines Telefons.
+- „Apps verbinden“ zeigt jede App mit ihrem Namen und darunter, was sie tut.
+- Eine neue Aufgabe in einem abgeschlossenen Coach-Chat startet ein eigenes Gespräch.
+- Nach dem Beiseitelegen sagt „Wartet auf dich“, wo du den Chat findest.
+- Die Genehmigungskarte einer App zeigt, was der taf tun kann, ohne KIFFs interne Hinweise.

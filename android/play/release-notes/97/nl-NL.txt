@@ -1,0 +1,1 @@
+- Een goedkeuringskaart zegt niet meer "geen vingerafdruk" als goedkeuren er een vraagt.

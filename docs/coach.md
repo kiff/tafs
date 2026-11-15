@@ -35,7 +35,10 @@ On Android, Coach opens from ✦ Coach on the home list, as a screen of its own
   **Previous conversations** (`CoachHeader`). New conversation is never greyed out: on a plain
   conversation with nothing in it yet, it keeps that one and shows its top; otherwise, an empty one
   about a taf ("Improve Refunds") included, it opens a plain new one (Android `CoachWords.newChatStays`,
-  1.27.6; iOS's New conversation button keeps an empty one, `coachChatIsEmpty`, and follows). Under it, the plan in tafs cloud's one line
+  1.27.6; iOS's New conversation button keeps an empty one, `coachChatIsEmpty`, and follows). A message to a chat that
+  already handed a taf over goes to a new chat tafs cloud starts (`new_chat_after_handover`, [api.md](api.md)): Android
+  sends the flag and shows that chat from then on, with the message on its way (`AppModel.coachSession`, 1.27.7); iOS
+  follows. Under it, the plan in tafs cloud's one line
   (`line`, [The plan in one line](#the-plan-in-one-line)); tapped, it opens to the steps. The
   plan line folds away while the thread scrolls down and comes back on the way up, so a card
   has the screen. The phone never counts the plan's steps.
@@ -146,7 +149,8 @@ iOS follows.
 
 Coach writes messages and shows cards (`SetupComponent.Kind`). A card grants nothing by
 itself: an approval names planque's grant and KIFF's draft, which the app reads from
-those services, and the phone signs there.
+those services, and the phone signs there. A card speaks for itself: Coach doesn't restate it before or after ("I'm waiting for…", "Next, approve…") and says
+only what the card doesn't (`connect-an-app@24`).
 
 | Card | What it is |
 |---|---|
@@ -205,7 +209,7 @@ then shows its plan. Then, each step behind the owner's yes:
    arguments, `limit 1` and the total where the vendor gives one, and never hands over a
    check it hasn't seen read; with more than 50 items waiting, or no total, it bounds the
    kickoff and instructions (the 20 most recent, and the total) and tells the owner how many
-   wait. A result with `cron` and no `check` is answered failed, in words Coach acts on. tafs cloud starts it as the
+   wait. A result with `cron` and no `check` is answered failed, in words Coach acts on. A check whose list (`items`) isn't a list in what the reads Coach made in that conversation answered is answered failed too, with the lists those reads do have, and nothing is made; with no read that answered JSON, or one cut short, the hand-over goes on. tafs cloud starts it as the
    person KIFF names and answers the card itself (`answered_by: "tafs cloud"`): kiff/agents
    claims the key from Coach's draft, and the taf joins the account's list
    ([tafs.md](tafs.md#starting-a-taf)). The conversation carries the card's answer
@@ -213,8 +217,12 @@ then shows its plan. Then, each step behind the owner's yes:
    A first check that finds the taf's key not stored yet (the hand-over has just claimed it) is tried again, up to
    4 times over a few seconds; still not stored, `check` says so in plain words, never the secrets store's own:
    set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
-   itself; and until the answer comes, "Setting up…". A result whose Card the owner hasn't
-   approved yet (KIFF's `draft_not_ready`) isn't answered at first: it waits, and the taf is made once they
+   itself; and until the answer comes, "Setting up…". A first check that read but didn't find what it named leaves the taf
+   on plain timing, at most once an hour, and `check` says so: Coach fixes the check with `taf_dial`. A result whose Card the owner hasn't
+   approved yet (KIFF's `draft_not_ready`) with no approval or sign-in card waiting beside it in the same run is answered at
+   once, in the words below: nothing asks the owner for that Card (a redraft shown with no approval of its own), so
+   Coach shows its approval, and the result once the owner approved it. With one waiting beside it, the
+   result isn't answered at first: it waits, and the taf is made once they
    approve, with the next note, chat read or sweep: the sweep tries a waiting hand-over every 5 minutes for
    its first hour, then on the deletions' backoff, so no one need open the app. Each try is logged. Still
    unapproved 15 minutes after the run paused on it, nothing is asking for that Card, so the result is answered in plain words (`{failed: "The
@@ -287,11 +295,48 @@ things (`runtime/src/cloud/approval.ts`):
   `GET /v1/me/mandates`): KIFF refuses every call no Card covers (`no_mandate_issued`), reads
   included, so the taf couldn't use it. Setup's own reads (planque's `setup_reads`) are left
   out. When the Cards in force can't be read, the answer is **read_again**, never a signature.
+  So is a draft read without its Cards, on every grant: each check here reads them, so none is
+  skipped, and nothing is signed. A draft with no Card at all (KIFF's `null`, or an empty list)
+  is answered `failed: …` instead, so Coach drafts one rather than the card asking it again.
+  `POST /v1/connect/grants/{grant}/check` runs the same checks with nothing signed, for a caller
+  that confirms the draft itself (the e2e), and answers with each refusal's reason code, and
+  `redraft: true` on a refusal a new draft mends (below).
+  The same checks run as the phone reads the chat, before an approval card over a draft is
+  drawn (a connected app's Card alone, or the Card signed with added tools or a key, `tools_and_cards` and
+  `key_and_cards`), with the grants that read has, read with the phone's proof. A refusal a new draft mends (no Card, a vendor name, a tool on no Card or a stray one,
+  an on-demand app's write let run, a lifetime count or total, a day's total twice, a count on a
+  write with an amount limit) goes to Coach
+  then, as the card's answer, and the card is drawn answered, never with Approve: the owner
+  approves the redraft, one Card, not a refused one and then another. It's told once per draft
+  version, across phones (a claim, then the answer kept a day). Anything else, or a read past
+  its time, or a person whose role can't manage Cards or who hasn't agreed to AI use, draws the
+  card as before, and the tap checks it again. Every refusal a new draft mends, at the tap too,
+  goes on after its reason: "Refused by tafs cloud's check, not by the owner: this approval is
+  closed and nothing waits for them." On a grant not yet connected, it adds that its tools (or its
+  key) weren't approved either and come with the new approval. A `count_on_amount` adds that such
+  a count is never one of the owner's rules, to drop without asking them. Then "Draft it again now
+  and show a new approval." and, last, "Change only what this names; every other line stays
+  exactly as agreed." (Coach read a bare `failed: …` as an approval still waiting.)
+  A Card covers a tool by the name planque registered for this taf (`request.tools[].name`),
+  never the vendor's own (`tool`). When the vendor's name was taken in KIFF, planque gives the
+  tool a free one (`list_charges_noyy`). A draft whose Card names the vendor's name
+  (`list_charges`) while the registered name is on no Card is answered `failed: …` too. The
+  answer names both, so Coach drafts it again over the registered name. That vendor name is
+  another connection's tool in KIFF, whatever else holds it.
   A draft that counts one of the taf's write tools over its whole life with no `per` (count,
   `lifetime`, one total on the tool for every item) is answered `failed: …` too, naming the tool
   and its `resource_argument`: such a total stops the taf after its first item, so a limit for
   each item ("one invoice per order, ever") is a total `per` that argument, beside the day's
-  total. A lifetime sum (a budget) and a lifetime count per item are signed.
+  total. A draft that caps one of the taf's write tools' amount over its whole life with no `per`
+  (`sum(…)`, `lifetime`) is answered `failed: …` too, naming the tool and the total: the owner
+  agrees a limit for each call and a day's total, never a lifetime one. A sum per item and a
+  lifetime count per item are signed.
+  A draft that limits one of the taf's write tools by its amount (a per-call cap or a total)
+  and also counts its calls (`count`, no `per`, a limit above 0), on the same Card or another,
+  is answered `failed: …` too (`count_on_amount`), naming the tool and the count: the owner
+  agreed the amounts, and a count beside them holds calls those amounts allow (1,001 one-cent
+  refunds under a €50 cap). A count of 0 held (each call asks the owner), a count per item, and
+  a count on a read or on a write with no amount limit are signed.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.
@@ -377,7 +422,9 @@ A connection can carry a **profile**: KIFF's facts about how each of its tools i
 what its outcomes mean. planque puts it in the grant's `request.profile`, so the grant's digest
 the phone already checks covers it. Before the owner approves:
 - the phone asks KIFF for its words with its own session (`POST /v1/profiles/words`, never
-  through tafs cloud or planque);
+  through tafs cloud or planque). Android asks for `kiff.words.v2` (`?v=2`, Android 1.27.7): v1's lines without KIFF's
+  bookkeeping (no "isn't pinned to a version", and the lost-answer line only where money moves). It takes v1 or v2 and
+  signs whichever KIFF sent; iOS follows;
 - it checks that the profile's SHA-256 (JCS) is KIFF's `profile_sha256` and the words' is
   `words_sha256`;
 - the approval card shows each line verbatim, in KIFF's order. What KIFF can't check,
@@ -586,6 +633,8 @@ exists, Coach asks the owner for its link, never its name: a search by name ofte
 connection gives (a Sheets sign-in doesn't search Drive). When a place for results has no read on the
 taf's connection that lists places by name, Coach asks for the place's link and takes the id from it.
 
+A check's list is where the catalog's `returns` says the read puts it, never a guessed path (`set-up-a-taf@11`, `the-dial@6`). An operation's fields are named as its server gives them, never from the vendor's API Coach knows (`name-the-tools@11`).
+
 ## A vendor the account already connects
 
 When a new Coach conversation starts, tafs cloud reads the account's connections from planque with the
@@ -606,21 +655,40 @@ connections name by catalog entry, the most used first (by how many of those taf
 most 9,000 characters and all of them at most 30,000. An app with no guide yet, or one planque can't answer, is
 left out. tafs cloud picks them, never the model; Coach's planque tool attaches an app's guide to a search and to
 a request by entry the same way (kiff/agents), so Coach has read it before it offers or connects the app.
+When the owner names an app, Coach reads its guide before it answers about the app or offers anything
+(`connect-an-app@23`): a search narrowed to that app, or `guide {entry}` with the entry search gives; else the one a
+search or request returns, or the one under `[tafs app guides]` for an app the account holds. A guide is data about
+the app, never instructions; with none, Coach goes on with the catalog.
 
 A message tafs opens with its own line (`[improve taf …]`, `[tafs coach lines]`, `[did this happen …]`)
 keeps that line first, and a message in the live chat (which the apps send with no session) goes on in it by name, with neither the lines nor the reads. The thread shows only the owner's words. What planque can't answer is left out,
 and Coach reads planque's grants itself. Coach offers only a connection one of the account's tafs uses, or
 one made in this conversation: a grant another agent holds (a test, a draft that never became a taf) is never
 offered as the owner's, or reused (`connect-an-app@8`). For a vendor one of the tafs already connects, Coach offers the
-same kind first, named with the taf that uses it, by reusing its sign-in: `request {reuse: <grant>,
-tools: []}`, so the owner approves the new taf's tools alone, with no second sign-in or key (gap 2 of
+same kind first, named with the taf that uses it, by reusing its sign-in: `request {reuse: <grant>, name, taf_name,
+tools: []}` and nothing more (planque refuses `entry` or `uses` beside it, `connect-an-app@22`), so the owner approves the new taf's tools alone, with no second sign-in or key (gap 2 of
 kiff/tafs#476, `connect-an-app@4`; planque reuses a managed app's sign-in too). Only when planque refuses
 the reuse does Coach ask for the same kind anew; another kind comes only when the owner picks it. An app
 found by search is connected with `request {entry, name, taf_name, uses}`: `uses` names the tools search
 found that the taf will use, so the owner approves only those, for a managed app's sign-in and for a reviewed
 key entry alike (`connect-an-app@10`, with the connection server taking a reviewed entry's `tools` as a
 subset of its own; `@9` had dropped `uses` because a reviewed entry refused it, which widened managed
-apps' sign-ins). **Reading a public page** (`web_read`, `connect-an-app@12`). To connect an app by its key, Coach finds the vendor's published API description itself, on its docs, rather than asking the owner for anything technical. It reads one public page as anyone could. The rules:
+apps' sign-ins). Coach never connects one without `uses`: its sign-in would ask for every tool (`connect-an-app@22`).
+
+**A sheet's write, and a refused request** (`name-the-tools@17`, `connect-an-app@27`). Each argument is declared with the type its operation's schema gives it, in the shape planque takes: a plain type; an array with its items' schema (`type: "array", schema: {type: "array", items: …}`), such as a sheet's rows; or an object naming only the fields the taf writes (`type: "object", schema: {type: "object", properties: {…}}`), such as a row update's columns. Planque refuses an object that names no fields, or takes fields it doesn't name. A field is plain or an array, never an object: a nested object's fields are arguments of their own, at their paths. An object names the fields the taf writes, by the names the job or the owner gives (the column it marks), never none; a name Coach doesn't know is asked with the rules. A row number is never `resource_argument`, because planque takes only a string argument there, so a sheet write is limited by its calls a day. When planque or KIFF refuses a request itself (a name taken, an argument), Coach changes what the refusal named and never sends the same request again.
+
+**An app in two approvals** (`connect-an-app@26`, `name-the-tools@14`, `draft-the-card@18`). The first connects it:
+its sign-in, asked with the taf's planned tools (`uses`) for a managed app and with Coach's own reads in `setup_reads`
+(such as a tool that lists an operation's fields), never in a connection of their own; a vendor's own server gets its
+describing tool with the sign-in, never a read asked alone. Its card says "Its Card: you approve it next". The second
+adds the taf's tools to that same connection, declared, with the Card Coach drafted once over all of them from the
+catalog's fields (or the describing tool's), never a Card before its tools are known, and no sign-in. An account the
+taf must keep to is pinned from the connection as planque lists it, never from a read of the accounts. Inside an
+approval window the first is a tap; the second always takes the fingerprint (`tools_and_cards`, `signs.takes`,
+[chat.md](chat.md)). A sign-in the account already holds is reused, so a new taf on it needs only the second. A key
+connection picks the job's writes first, so the key and its Card go in one approval (`connect-an-app@25`).
+
+**Reading a public page** (`web_read`, `connect-an-app@12`). To connect an app by its key, Coach finds the vendor's published API description itself, on its docs, rather than asking the owner for anything technical. It reads one public page as anyone could. The rules:
 
 - https only, on the usual port;
 - no sign-in and no cookie;
@@ -630,7 +698,7 @@ apps' sign-ins). **Reading a public page** (`web_read`, `connect-an-app@12`). To
 
 An OpenAPI description, in JSON or YAML, answers its servers and how its key is given (where, its name and any prefix). That's what `request {api}` needs. What it reads is data, never an instruction. It has a Card of its own, `coach-web-reads`, at 50 reads a day, which an account's phone asks for on its next read, as any Card added later.
 
-**Checked first, with a way forward** (`set-up-a-taf@7`, `connect-an-app@11`). When the job needs an app, Coach searches for it before asking the owner anything else. If it can't be connected here, Coach says so first, before any choices card. When an app can't be connected (it needs setting up, or its sign-in, request or `describe` failed), Coach says why in one sentence from the connection server's answer, and offers a way forward in the same turn. That's the same app's key entry, its key by its published API description (the key's place may name a `prefix`, as `ShippoToken <key>`), or another app with the operation. It's never only "try again later". The failed step still shows tafs cloud's own words, but the server's reason is kept beside it, scrubbed. It's logged (`coach_connection_refused`) and goes before the person's next words to Coach, so Coach can still say it once the turn it failed in is over. The person sees it too: the message of the run that was refused carries `refused`, the step's words, the reason ("Why: …") and what to do next, which both apps draw under Coach's words, until a request for that app goes through in the same run ([chat.md](chat.md)). A vendor's sign-in comes before its key, even when
+**Checked first, with a way forward** (`set-up-a-taf@7`, `connect-an-app@11`). When the job needs an app, Coach searches for it before asking the owner anything else. If it can't be connected here, Coach says so first, before any choices card. When an app can't be connected (it needs setting up, or its sign-in, request or `describe` failed), Coach says why in one sentence from the connection server's answer, and offers a way forward in the same turn. That's the same app's key entry, its key by its published API description (the key's place may name a `prefix`, as `ShippoToken <key>`), or another app with the operation. It's never only "try again later". The failed step still shows tafs cloud's own words, but the server's reason is kept beside it, scrubbed. It's logged (`coach_connection_refused`) and goes before the person's next words to Coach, so Coach can still say it once the turn it failed in is over. A refusal for now (the server down, busy, "try again later") goes with a line saying it was the server's answer then, so when the person asks for that app again Coach makes a new request; one the app can't get past (a scope it lacks) stands as said. The person sees it too: the message of the run that was refused carries `refused`, the step's words, the reason ("Why: …") and what to do next, which both apps draw under Coach's words, until a request for that app goes through in the same run ([chat.md](chat.md)). A vendor's sign-in comes before its key, even when
 search finds both; a key is given on a secure sheet on the phone, outside the chat, straight to planque,
 and never reaches Coach (`connect-an-app@7`). Before a key request, Coach asks planque to `describe` the API description: its operations as planque names them (name, title, read or write), with no grant and no key. A big description (over 200 operations) answers only its count, and Coach describes it again with words from the job (`q`), getting at most 50 matches, best first (`connect-an-app@15`). Each tool on the key request carries its full spec, as `name-the-tools` sets it on a connected grant (pins in `fixed_arguments`, `resource_argument`, the amount with its unit, `read_only`), from the operation's arguments as `describe` gives them, `{name, type, required, in}` (`connect-an-app@20`, `name-the-tools@9`). planque refuses a `resource_argument` that isn't one of the operation's string arguments before declaring. The request then names the job's operations as its tools, by those names, never none (`connect-an-app@14`): planque declares a key request's tools to KIFF before the key only when it names them, and only a declared request lets the owner sign the key and the taf's Card in one approval; without them, the key comes first and the Card after. A mode
 is said only as the connection gives it: a vendor's own sign-in has none planque knows. Once a connection
@@ -650,7 +718,7 @@ such as a Gmail connected for another taf, is never reused for customer mail (th
 tool alone when it only sends (`uses`, narrowed by planque). An inbox of the taf's own, from a mail app
 made for agents, stays an option Coach offers (`draft-the-card@4`). The Card Coach drafts is the agreed rules,
 line for line: no limit merged with another or changed in number. A limit the Card can't hold as agreed is a
-changed rule, shown in a new rules notice and agreed again before the draft (`draft-the-card@7`). Each line of the rules notice says where its rule is kept when the Card doesn't hold it: "the connection keeps it" (an argument the connection fixes, such as one workspace), "KIFF adds it" (the disclosure line), or "in its instructions" (what KIFF can't count) (`draft-the-card@13`).
+changed rule, shown in a new rules notice and agreed again before the draft (`draft-the-card@7`). Each line of the rules notice says where its rule is kept when the Card doesn't hold it: "the connection keeps it" (an argument the connection fixes, such as one workspace), "KIFF adds it" (the disclosure line), or "in its instructions" (what KIFF can't count) (`draft-the-card@13`). The rules' confirm offers only Agree and Change something: another rule Coach would offer (a lower limit, held instead of refused) is its own question before the rules are shown, never a tap on the agreement, so the Card is drafted from the answer and never from an option the owner didn't choose. Each tool's `on_exceed` is its agreed line's: `owner` only where that line says the owner is asked, `refuse` otherwise (`draft-the-card@19`). Before the approval, Coach checks each line's tool is the one planque lists for what the rule says, and once the owner approved a connection's Card it never drafts it again: if it finds something wrong, it says what and stops (`draft-the-card@20`). tafs cloud holds it to that: once a conversation approved a connection's Card, another draft over that connection in the same conversation is answered `failed` and never signed (`approval.ts`, `approvedDraftKey`, kept 7 days); the same draft again is the approval it was, and another conversation, such as a later Improve, drafts as its own. At the approval, every tool the taf will hold must be on a Card, the draft's or one in force: this connection's, and those of each of the same taf's other connected apps (`approval.ts`, `uncoveredElsewhere`), since a tool KIFF refuses stops the taf's session at its first read. The rules name each read tool the taf gets, by what it does ("List rows"), never "each read tool": that read as every tool the connection offers, ones the taf isn't given included (`draft-the-card@21`). A tool's amount over a day is counted once across the draft's Cards, on the Card whose on_exceed is the agreed answer; a held per-action limit's Card has no day's total, and no limit the owner didn't agree to is added. tafs cloud holds it to that: a draft that counts a tool's amount over a day twice isn't signed, and Coach hears both totals (`approval.ts`, `dayTotalTwice`). Reads go on a Card of their own, whose one count, 10,000 reads a day (`READS_A_DAY`, the same in the skill and in Approve's `uncovered` hint), is KIFF's (KIFF refuses a Card with no total: "a mandate with no aggregate bounds nothing"), shown as "KIFF adds it", never as the owner's limit, and with no number in the skill's example for Coach to copy (Evals 10 to 14 drafted "1,000 a day" on the refund). A write's line holds only the limits the owner agreed (`draft-the-card@24`), since a count nobody agreed can stop the taf at its limit and was never in the rules the owner saw. No other ceiling, count or total goes on as a safety margin either: when the count was refused, Coach put a lifetime total on the refund instead. Approve refuses both shapes (`lifetime_sum`, `count_on_amount`), and Coach redrafts.
 
 A taf that writes to people names who they come from: Coach asks once, with its other questions,
 offering first "tafs, your AI assistant", so the taf speaks as itself (`writes_for` "tafs": a recipient
@@ -673,13 +741,15 @@ works (gap 20, `draft-the-card@3` and on).
 
 **Which tools carry the disclosure isn't left to Coach** (gap 14, `runtime/src/cloud/sends-outside.ts`). A
 connection's profile (KIFF's `kiff.profile.v1`, inside the grant's signed request) says what each write does:
-an operation that `sends`, with `resource.outside`, sends to people who may be outside the company. A reviewed
+an operation that `sends`, with `resource.outside`, sends to people who may be outside the company, and one whose
+effect is `none_until_approved` drafts what reaches them as written once the owner sends it (a draft email, a draft
+invoice), so it carries the disclosure too, whatever the job or recipe. A reviewed
 catalog entry's profile is the reviewed one, and one Coach drafted counts too when it says so, since that can
 only add a disclosure. tafs cloud reads grants only on the phone's Approve, so each Approve of a connection, or
 of its Card, notes its sending tools for the taf's KIFF agent, replacing that connection's earlier note. The write holds a claim on the note for at most 10 seconds, so two Approves of the same taf at once both keep their entries; one that finds the claim held waits and tries again, and past its tries the Approve fails, to be tapped again. A write gives its claim back only within those 10 seconds; one that took longer leaves it to expire, since another write may hold it by then. Coach's
 result is then checked against the note: a new taf, or an Improve, whose taf has a noted tool that neither its
 `disclose` nor the taf's existing disclosure names is refused, naming each tool ("disclose doesn't name
-send_email, which sends to people outside the company …"), and Coach sends it again with the tool named. A note
+send_email, which reaches people outside the company …"), and Coach sends it again with the tool named. A note
 that can't be read refuses with words Coach can retry on, never lets the result through. A taf whose
 connections were approved before this has no note until its next Approve, and is checked as before. A managed
 provider's tool counts only once its profile says it sends outside.

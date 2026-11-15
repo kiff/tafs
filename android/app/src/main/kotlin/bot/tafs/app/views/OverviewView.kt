@@ -1,8 +1,8 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -57,7 +57,7 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
       }
       // The tafs' scheduled work to come (kiff/tafs#534), as iOS's Overview has it.
       androidx.compose.foundation.layout.Box(
-        Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Theme.raised).clickable(onClick = onOpenCalendar)
+        Modifier.size(44.dp).clip(androidx.compose.foundation.shape.CircleShape).background(Theme.raised).tapping(onClick = onOpenCalendar)
           .semantics { contentDescription = Words.Calendar.heading }.testTag("overview.calendar"),
         contentAlignment = Alignment.Center,
       ) {
@@ -70,7 +70,7 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
         state.held.forEach { call ->
           val taf = state.taf(call.tafId) ?: return@forEach
           Row(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Theme.panel).clickable { onOpenTaf(taf.id) }.padding(12.dp),
+            Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Theme.panel).tapping { onOpenTaf(taf.id) }.padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically,
           ) {
@@ -93,7 +93,7 @@ fun OverviewView(state: AppState, loadReport: suspend (String) -> Unit, onOpenCa
         val card = OverviewWords.cardLine(taf)
         val last = if (taf.cloudId != null) OverviewWords.lastResult(state.reports[taf.id]) else "–"
         Row(
-          Modifier.fillMaxWidth().clickable { onOpenTaf(taf.id) }.semantics(mergeDescendants = true) {
+          Modifier.fillMaxWidth().tapping { onOpenTaf(taf.id) }.semantics(mergeDescendants = true) {
             contentDescription = listOfNotNull(taf.name, taf.now, card, last).joinToString(", ")
           },
           horizontalArrangement = Arrangement.spacedBy(16.dp),

@@ -99,4 +99,33 @@ final class SignsMarkTests: XCTestCase {
         XCTAssertNil(SetupApproval.cardNextWords(try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","draft":"dr_1","signs":{"card":false,"words":"Its Card: you approve it next"}}"#)), "with a draft: drawn over the Card instead")
         XCTAssertNil(SetupApproval.cardNextWords(try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","connection":{"done":true,"words":"Connected"},"signs":{"card":false,"words":"Its Card: you approve it next"}}"#)), "already connected: its one line")
     }
+
+    /// Whether Approve is a tap is tafs cloud's mark too (`signs.takes`, docs/chat.md): read as sent,
+    /// and anything else is nothing said.
+    func testTakesReadsAsSent() throws {
+        let tap = try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","signs":{"card":false,"takes":"tap"}}"#)
+        XCTAssertEqual(tap.signs?.takes, "tap")
+        XCTAssertTrue(tap.signs?.tap ?? false)
+        let fingerprint = try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","signs":{"card":true,"takes":"fingerprint"}}"#)
+        XCTAssertEqual(fingerprint.signs?.takes, "fingerprint")
+        XCTAssertFalse(fingerprint.signs?.tap ?? true)
+        let odd = try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","signs":{"card":true,"takes":1}}"#)
+        XCTAssertNil(odd.signs?.takes, "another shape: nothing said, never the card unread")
+        XCTAssertEqual(odd.signs?.card, true)
+    }
+
+    /// "No fingerprint for the next 4 minutes" goes only on a card tafs cloud marks a tap: never on one
+    /// whose Approve takes the fingerprint (tools or a key signed with their Card), nor one with no mark
+    /// (as Android 1.27.9's `windowWordsFor`).
+    func testTheWindowsWordsShowOnlyOnACardMarkedATap() throws {
+        let words = "No fingerprint for the next 4 minutes"
+        let tap = try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","signs":{"card":false,"takes":"tap"}}"#)
+        XCTAssertEqual(tap.windowWords(words), words)
+        XCTAssertNil(tap.windowWords(nil), "no window held, no words")
+        let fingerprint = try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","signs":{"card":true,"takes":"fingerprint"}}"#)
+        XCTAssertNil(fingerprint.windowWords(words))
+        XCTAssertNil(try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1","signs":{"card":true}}"#).windowWords(words),
+                     "a Card whose key tafs cloud couldn't read: no tap promised")
+        XCTAssertNil(try SetupTests.component(#"{"type":"approval","id":"c","grant":"g_1"}"#).windowWords(words), "no mark: no tap promised")
+    }
 }

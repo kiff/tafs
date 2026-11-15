@@ -1,0 +1,26 @@
+{
+  "about": "GET /v1/recipes for someone who manages the tafs, with no live taf: Home's part of the answer (the recipes themselves are left out). Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "shown": true,
+    "filtered": false,
+    "suggestions": {
+      "show": true,
+      "reason": "on",
+      "words": "Suggestions show in a new conversation with Coach until the account's first taf is live."
+    },
+    "home": {
+      "shown": true,
+      "words": "Pick a job for your first taf.",
+      "own_words": {
+        "title": "Say it in your own words",
+        "line": "Coach builds the taf with you."
+      }
+    },
+    "labels": {
+      "allows": "Does on its own",
+      "holds": "Asks you first",
+      "never": "Never does",
+      "hand": "Hand it to Coach"
+    }
+  }
+}

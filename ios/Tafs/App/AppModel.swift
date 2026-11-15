@@ -32,7 +32,22 @@ final class AppModel: ObservableObject {
     /// › Your step), less those this phone just answered.
     @Published private(set) var yourSteps: [TafsCloud.YourStep] = []
     /// Coach's chats waiting on the owner, as Home lists them (docs/api.md › Coach waiting).
-    @Published private(set) var coachWaiting: [TafsCloud.CoachWaiting] = []
+    @Published private(set) var coachWaitingListed: [TafsCloud.CoachWaiting] = []
+    /// Coach's waiting chats as Needs you draws them: Home's, less the chat open in Coach now (the
+    /// person is in it), and less those being set aside, so a swipe that took never springs back
+    /// while tafs cloud answers (as Android 94 does). Neither shows as a row nor counts; a refusal
+    /// brings the row back.
+    var coachWaiting: [TafsCloud.CoachWaiting] {
+        let open = coachChatOnScreen
+        return coachWaitingListed.filter { $0.session != open && !settingAside.contains($0.session) }
+    }
+    /// The Coach chat open on screen: Coach is open, on a chat that has a session; nil otherwise.
+    var coachChatOnScreen: String? {
+        guard coachOpen else { return nil }
+        return setupChat ?? (setupFresh ? nil : setupThread.session)
+    }
+    /// Of Home's waiting chats, those Needs you leaves out: open on screen, or being set aside.
+    private var coachWaitingHidden: Int { coachWaitingListed.count - coachWaiting.count }
     /// Home's "Set all aside" (`coach_waiting_clear`), as tafs cloud sent it; nil when it sent none.
     @Published private(set) var coachWaitingClear: TafsCloud.CoachWaitingClear?
     /// The Coach chats being set aside now: one call per chat at a time, so a swipe that fires
@@ -58,13 +73,13 @@ final class AppModel: ObservableObject {
     /// What waits for the person: tafs cloud's count, or, when it sent none, the app's own
     /// count of held calls, currency requests, steps and "Did this happen?" calls.
     var needsYouCount: Int {
-        homeNeedsYou.map { max(0, $0.count - answeredStillCounted) }
+        homeNeedsYou.map { max(0, $0.count - answeredStillCounted - coachWaitingHidden) }
             ?? held.count + cardUnitExceptions.count + yourSteps.count + unproven.count + coachWaiting.count
     }
 
     /// Home's line under the working count, in tafs cloud's words when it sent them.
     var needsYouWords: String {
-        if answeredStillCounted == 0, let words = homeNeedsYou?.words { return words }
+        if answeredStillCounted == 0, coachWaitingHidden == 0, let words = homeNeedsYou?.words { return words }
         let n = needsYouCount
         return n == 0 ? Words.NeedsYou.nothing : Words.NeedsYou.count(count: n)
     }
@@ -378,6 +393,12 @@ final class AppModel: ObservableObject {
     /// KIFF holds an approval key for the session that isn't this phone's (it changed after
     /// registering, or another was registered): approving waits for a new sign-in.
     @Published private(set) var approvalKeyLost = false
+    /// KIFF keeps this session view-only (`view_only`): the phone signed in with no approval key while the
+    /// person has another device that approves, so it gains none here. Approving takes a new sign-in on
+    /// this phone, or the other phone; KIFF is asked nothing more of it until then.
+    @Published private(set) var approvalViewOnly = false
+    /// What the person reads while this phone can't approve: the view-only words, or the lost key's.
+    var approvalKeyLostWords: String { approvalViewOnly ? Words.Approval.viewOnly : KIFFClient.approvalKeyLost }
     /// A re-link waiting for the person's browser: the code to check there, and the page.
     struct Relink: Equatable { let userCode: String; let url: URL }
     @Published private(set) var relink: Relink?
@@ -678,7 +699,7 @@ final class AppModel: ObservableObject {
             recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
             recordTyping?.cancel(); recordTyping = nil
             cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil; homeHeadline = nil
-            yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaiting = []
+            yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaitingListed = []
             coachWaitingClear = nil; settingAside = []; setAsideChats = []
             haltErrors = [:]
             alertsOffered = false
@@ -706,7 +727,8 @@ final class AppModel: ObservableObject {
                 return try await kiff.startDeviceSignIn(publicKey: key.isEmpty ? nil : key,
                                                         approvalPublicKey: key.isEmpty || approvalKey.isEmpty ? nil : approvalKey,
                                                         deviceName: Words.Settings.Devices.thisDeviceName(device: "\(ThisDevice.kind)"),
-                                                        platform: key.isEmpty ? nil : ThisDevice.platform)
+                                                        platform: key.isEmpty ? nil : ThisDevice.platform,
+                                                        kind: ThisDevice.kiffKind)
             } catch where Self.transient(error) && tries < 2 {
                 tries += 1
                 try await Task.sleep(nanoseconds: 500_000_000)
@@ -753,6 +775,63 @@ final class AppModel: ObservableObject {
         throw KIFFClient.KIFFError.expired
     }
 
+    // MARK: Signing in from another phone (KIFF's pairing contract §5.8)
+
+    /// How long between two claims: at least 3 s (§5.4), longer when KIFF says to slow down.
+    var pairClaimInterval: UInt64 = 3_000_000_000
+
+    /// A pairing offer shown on this device, with the claim's proof its device key signed once.
+    struct PairingStart: Equatable {
+        let offer: PairingOffer
+        let proof: String
+    }
+
+    /// This device holds no key (no Secure Enclave): it can't be paired, and signs in with KIFF instead.
+    struct CannotPair: LocalizedError {
+        /// Worked out where it's thrown, on the main actor, where the device's kind is read.
+        let message: String
+        var errorDescription: String? { message }
+    }
+
+    /// Makes the QR this device shows, from the keys it already holds, and signs the claim's proof once,
+    /// behind Face ID or the passcode: the person is here, with this device in their hands.
+    func startPairingSignIn() async throws -> PairingStart {
+        let key = signer.publicKeyDER, approvalKey = signer.approvalPublicKeyDER
+        guard !key.isEmpty, !approvalKey.isEmpty else { throw CannotPair(message: Words.SignIn.pairNoKey(device: "\(ThisDevice.kind)")) }
+        let offer = PairingOffer.make(publicKey: key, approvalKey: approvalKey,
+                                      name: Words.Settings.Devices.thisDeviceName(device: "\(ThisDevice.kind)"),
+                                      platform: ThisDevice.platform,
+                                      deviceKind: PairingOffer.deviceKind(platform: ThisDevice.platform, kiffKind: ThisDevice.kiffKind),
+                                      nonce: PairingOffer.freshNonce(), now: clock())
+        let proof = try await signer.sign(offer.claimMessage, reason: Words.SignIn.pairPrompt(device: "\(ThisDevice.kind)"))
+        return PairingStart(offer: offer, proof: proof)
+    }
+
+    /// Claims until the other phone approves (at least 3 s apart, slower when KIFF asks), then uses the
+    /// session, bound to this device's two keys. Throws `expired` when the code runs out first.
+    func finishPairingSignIn(_ start: PairingStart) async throws {
+        var interval = pairClaimInterval
+        while clock() < start.offer.expires {
+            var waited: UInt64 = 0
+            while waited < interval {
+                try await Task.sleep(nanoseconds: min(signInSlice, interval - waited))
+                waited += signInSlice
+            }
+            do {
+                let token = try await kiff.claimPairing(nonce: start.offer.nonce, pub: start.offer.pub, proof: start.proof)
+                await useSession(token.accessToken, tenant: token.tenant)
+                return
+            } catch KIFFClient.KIFFError.authorizationPending {
+                continue
+            } catch KIFFClient.KIFFError.slowDown {
+                interval += 2_000_000_000
+            } catch where Self.transient(error) {
+                continue
+            }
+        }
+        throw KIFFClient.KIFFError.expired
+    }
+
     /// A failure worth trying again: the network, or KIFF briefly not answering.
     static func transient(_ error: Error) -> Bool {
         if let e = error as? URLError {
@@ -779,6 +858,8 @@ final class AppModel: ObservableObject {
         sessionHasKey = tenant != nil
         Keychain.delete(Self.approvalKeyedAccount)
         forgetApprovalKey()
+        // An approval window is the last session's: a new sign-in opens its own.
+        forgetWindow()
         kiff.token = token
         cloud.token = token
         doorModels = [:]; chatKnocks = [:]; works = [:]; workErrors = [:]; sendingAgain = []; knobs = [:]; knobChanges = [:]; eventSubscriptionReceipts = [:]; eventApprovals = []; runNowWords = [:]
@@ -833,6 +914,12 @@ final class AppModel: ObservableObject {
             held = try await kiff.registerApprovalKey(key, signer: { try signer.signConfirmed($0) })
         } catch KIFFClient.KIFFError.approvalKeyExists(let fingerprint) {
             held = fingerprint // the key sent at sign-in, or another
+        } catch KIFFClient.KIFFError.server(403, "view_only", _) {
+            // KIFF keeps this session view-only: say so, once, and ask nothing more of it until a new sign-in.
+            guard gen == accountGeneration else { return }
+            approvalKeyLost = true
+            approvalViewOnly = true
+            return
         } catch {
             return
         }
@@ -855,7 +942,7 @@ final class AppModel: ObservableObject {
     /// the second refusal in a row, where to write too. A key KIFF holds another of keeps the lost
     /// key's words.
     private func approvalKeyRefused() -> String {
-        if approvalKeyLost { return KIFFClient.approvalKeyLost }
+        if approvalKeyLost { return approvalKeyLostWords }
         approvalKeyRefusals += 1
         return approvalKeyRefusals >= 2 ? Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport : Words.Approval.keyNotAccepted
     }
@@ -868,6 +955,7 @@ final class AppModel: ObservableObject {
         approvalKeyRefusals = 0
         sessionHasApprovalKey = true
         approvalKeyLost = false
+        approvalViewOnly = false
         let signer = self.signer
         kiff.approvalSigner = { try signer.signApprovalConfirmed($0) }
     }
@@ -877,6 +965,7 @@ final class AppModel: ObservableObject {
         cancelRelink()
         sessionHasApprovalKey = false
         approvalKeyLost = false
+        approvalViewOnly = false
         kiff.approvalSigner = nil
     }
 
@@ -896,7 +985,8 @@ final class AppModel: ObservableObject {
     /// page to open, or nil when it couldn't start (`lastError` says why).
     @discardableResult
     func startRelink() async -> URL? {
-        guard mode == .kiff, approvalKeyLost, sessionHasKey, relink == nil, let tenant = kiffTenant else { return nil }
+        // A view-only session can't be re-linked: KIFF refuses it, so only a new sign-in, or the other phone, approves.
+        guard mode == .kiff, approvalKeyLost, !approvalViewOnly, sessionHasKey, relink == nil, let tenant = kiffTenant else { return nil }
         let key = signer.approvalPublicKeyDER
         guard !key.isEmpty else {
             lastError = Words.Approval.addFaceIdFirst(device: "\(ThisDevice.kind)")
@@ -950,7 +1040,7 @@ final class AppModel: ObservableObject {
                 guard gen == accountGeneration else { return }
                 // KIFF's fingerprint says which key it holds now: only ours lets this phone approve.
                 guard KIFFClient.sameKey(held, key) else {
-                    lastError = KIFFClient.approvalKeyLost
+                    lastError = approvalKeyLostWords
                     return
                 }
                 Keychain.save(KIFFClient.fingerprint(key), for: Self.approvalKeyedAccount)
@@ -1057,7 +1147,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var devicesError: String?
 
     func refreshDevices() async {
-        guard mode == .kiff, let tenant = kiffTenant else { devices = []; return }
+        // The reference set's Devices over the sample (`-screenshots YES`); none otherwise without a session.
+        guard mode == .kiff, let tenant = kiffTenant else { devices = mode == .sample && Screenshots.enabled ? SampleScreens.devices() : []; return }
         let gen = accountGeneration
         kiff.tenant = tenant
         do {
@@ -1071,18 +1162,26 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Signs another device out of the account, behind Face ID. This device signs out with
-    /// Sign out instead. False when it didn't go through.
+    /// Signs another device out of the account: the approval key signs the DELETE itself, behind Face ID
+    /// or Touch ID naming the device, never inside a window, since removing a device that holds an
+    /// approval key or a passkey is an approval (KIFF's pairing contract). This device signs out with Sign out
+    /// instead. False when it didn't go through.
     @discardableResult
     func removeDevice(_ device: KIFFClient.Device) async -> Bool {
         guard mode == .kiff, let tenant = kiffTenant, !device.thisDevice else { return false }
         let gen = accountGeneration
         let what = Words.Settings.Devices.signOutPrompt(device: device.name ?? Words.Settings.Devices.thisDevice)
-        do { _ = try await signer.sign(Data("tafs.devices.v1|\(tenant)|\(device.id)".utf8), reason: what) } catch { return false }
-        guard gen == accountGeneration else { return false }
         kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let signature: String
         do {
-            try await kiff.removeDevice(device.id)
+            prepared = try kiff.prepareRemoveDevice(device.id, signedAt: signedAt)
+            signature = try await signer.signApproval(prepared.message, reason: what)
+        } catch { return false }
+        guard gen == accountGeneration else { return false }
+        do {
+            try await kiff.removeDevice(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
         } catch {
             guard gen == accountGeneration else { return false }
             devicesError = Words.Common.didntGoThrough(what: "\(what)", why: "\(error.localizedDescription)")
@@ -1090,6 +1189,60 @@ final class AppModel: ObservableObject {
         }
         await refreshDevices()
         return true
+    }
+
+    /// How a computer's pairing ended: paired (what to say), refused (why), or not sent (Face ID cancelled).
+    enum PairingOutcome: Equatable {
+        case paired(String)
+        case failed(String)
+        case cancelled
+    }
+
+    /// Pairs a computer (KIFF's pairing contract §5.3): the approval key signs `POST /v1/me/pairings` with the
+    /// QR's fields, behind Face ID or Touch ID naming the computer, never inside a window. Then KIFF's code
+    /// is shown beside the one the person checked, and Devices is read again.
+    func pairComputer(_ request: PairingRequest) async -> PairingOutcome {
+        guard mode == .kiff, let tenant = kiffTenant else { return .failed(Words.Error.signInFirstOnDevice(device: "\(ThisDevice.kind)")) }
+        let gen = accountGeneration
+        kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let signature: String
+        do {
+            prepared = try kiff.preparePairing(request, signedAt: signedAt)
+            signature = try await signer.signApproval(prepared.message, reason: Words.Settings.Devices.pairPrompt(device: request.name))
+        } catch { return .cancelled }
+        guard gen == accountGeneration else { return .cancelled }
+        do {
+            let pairing = try await kiff.approvePairing(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
+            guard gen == accountGeneration else { return .cancelled }
+            await refreshDevices()
+            return .paired(Self.pairedWords(request, kiffCode: pairing.code))
+        } catch KIFFClient.KIFFError.server(_, let message, let reason) {
+            return .failed(Self.pairingRefusal(message: message, reason: reason))
+        } catch {
+            return .failed(Words.Common.didntGoThrough(what: "\(Words.Settings.Devices.pairNamed(device: request.name))", why: "\(error.localizedDescription)"))
+        }
+    }
+
+    /// Paired: the code KIFF worked out is the one checked, or the person is told it isn't, and to sign
+    /// the computer out if it isn't theirs.
+    static func pairedWords(_ request: PairingRequest, kiffCode: String) -> String {
+        let shown = request.checkCode
+        return kiffCode == shown ? Words.Settings.Devices.pairDone(device: request.name, code: shown)
+            : Words.Settings.Devices.pairCodeDiffers(device: request.name, kiff: kiffCode, shown: shown)
+    }
+
+    /// A refused pairing in KIFF's words when it sent them; the app's own only where it sent none.
+    static func pairingRefusal(message: String, reason: String?) -> String {
+        if let reason, message != reason { return message }
+        switch reason {
+        case "pairing_expired": return Words.Settings.Devices.pairExpired
+        case "pairing_used": return Words.Settings.Devices.pairUsed
+        case "key_registered": return Words.Settings.Devices.pairKeyRegistered
+        case "invalid_pairing": return Words.Settings.Devices.pairInvalid
+        default: return message
+        }
     }
 
     /// Makes one change to groups or sharing, behind Face ID as KIFF asks of a phone, then
@@ -1159,6 +1312,8 @@ final class AppModel: ObservableObject {
         Keychain.delete(Self.approvalKeyedAccount)
         forgetApprovalKey()
         kiff.token = nil
+        // KIFF ends this session's approval window at sign-out.
+        forgetWindow()
         cloud.token = nil
         cloudTafs = [:]; halts = [:]
         chats = [:]; chatErrors = [:]; memories = [:]; memoryErrors = [:]; versions = [:]; versionErrors = [:]; openTrials = [:]; trialChats = [:]; trialErrors = [:]; switches = [:]; changedVersionCards = [:]; staleVersionCards = [:]; versionsRead = []
@@ -1767,8 +1922,9 @@ final class AppModel: ObservableObject {
     func show(_ home: TafsCloud.Home, _ exceptions: [KIFFClient.CardException]) {
         cardUnitExceptions = home.cardUnitExceptions ?? []
         showSteps(home.yourSteps ?? [])
-        // A chat being set aside isn't drawn again by a read meanwhile, as on Android.
-        coachWaiting = (home.coachWaiting ?? []).filter { $0.usable && !settingAside.contains($0.session) }
+        // A chat being set aside isn't drawn again by a read meanwhile, as on Android: `coachWaiting`
+        // leaves it out until tafs cloud answers, and a refusal brings it back.
+        coachWaitingListed = (home.coachWaiting ?? []).filter { $0.usable }
         coachWaitingClear = home.coachWaitingClear.flatMap { $0.usable ? $0 : nil }
         homeNeedsYou = home.needsYou
         homeHeadline = home.headlineWords
@@ -1917,6 +2073,8 @@ final class AppModel: ObservableObject {
             purchases.showSample(Screenshots.products)
             await refreshUsage()
         }
+        // `-screen coach`: Coach open over the sample, empty, for the reference set.
+        if Screenshots.coach { coachOpen = true }
     }
 
     // MARK: Starting a taf
@@ -2020,7 +2178,11 @@ final class AppModel: ObservableObject {
 
     /// Reads Connect apps' first page, filtered by what the owner typed.
     func loadConnectApps(_ q: String = "") async {
-        guard mode == .kiff else { return }
+        guard mode == .kiff else {
+            // The reference set's Connect apps over the sample (`-screenshots YES`).
+            if mode == .sample, Screenshots.enabled, q.isEmpty { connectApps = SampleScreens.connectApps }
+            return
+        }
         // The account's connections too, so a connected app lists each one, with its taf and
         // Disconnect.
         if q.isEmpty { await refreshConnections() }
@@ -2476,6 +2638,13 @@ final class AppModel: ObservableObject {
     /// day, week and month and the navigator's marks. Another account's read never lands here.
     func loadCalendar(_ state: CalendarState) async {
         let range = CalendarMath.range(state.selected)
+        // A screenshot over the sample (`-screen calendar`): no KIFF account to read, so an empty
+        // range rather than an error under the header.
+        if Screenshots.calendar != nil, mode != .kiff {
+            calendarRead = TafsCloud.CalendarRead(from: range.from, to: range.to)
+            calendarError = nil
+            return
+        }
         let gen = accountGeneration
         calendarError = nil
         do {
@@ -2767,7 +2936,7 @@ final class AppModel: ObservableObject {
         // Approving, or raising a Card, needs the approval key KIFF holds: without it, only a
         // new sign-in lets this phone approve (kiff/tafs#233).
         if approvalKeyLost, call.kiffID != nil, answer == .approveOnce || answer == .extraRoom {
-            lastError = KIFFClient.approvalKeyLost
+            lastError = approvalKeyLostWords
             return
         }
         let reason = Words.NeedsYou.Prompt.answer(summary: call.proposed.summary)
@@ -2815,7 +2984,7 @@ final class AppModel: ObservableObject {
                 case .extraRoom: try await kiff.changeCard(kiffID, signature: signed)
                 }
             } catch KIFFClient.KIFFError.approvalKeyRequired {
-                lastError = KIFFClient.approvalKeyLost
+                lastError = approvalKeyLostWords
                 return
             } catch {
                 lastError = Self.answerRefusedWords(error)
@@ -5997,6 +6166,7 @@ final class AppModel: ObservableObject {
             return nil
         }
         quietStop = nil
+        notApprovable = false
         guard connecting == nil else {
             quietStop = Words.Connect.anotherApproval
             return nil
@@ -6063,6 +6233,7 @@ final class AppModel: ObservableObject {
         // this phone confirms the new one.
         guard ["pending", "approved", "signed_in", "needs_reconnect"].contains(grant.status) || (again && grant.connected) else {
             failureIsTheRequests = grant.status == "failed"
+            notApprovable = true
             lastError = grant.reason.map { Words.Connect.connectionIsBecause(status: grant.status.replacingOccurrences(of: "_", with: " "), reason: $0) }
                 ?? Words.Connect.connectionIs(status: grant.status.replacingOccurrences(of: "_", with: " "))
             return nil
@@ -6547,9 +6718,12 @@ final class AppModel: ObservableObject {
     /// The same for each taf's chat (kiff/tafs#138, item 48): one rule for both chats.
     private var chatSent: [UUID: [TafsCloud.ChatMessage]] = [:]
 
-    /// Where Setup's next message goes.
+    /// Where Setup's next message goes. Every one says the app follows a new chat: tafs cloud
+    /// starts one for a message to a chat that already handed a taf over (`followNewSetupChat`).
     private var setupTarget: TafsCloud.ChatTarget {
-        setupFresh ? .new : setupChat.map { TafsCloud.ChatTarget(session: $0) } ?? .live
+        var target = setupFresh ? TafsCloud.ChatTarget.new : setupChat.map { TafsCloud.ChatTarget(session: $0) } ?? .live
+        target.newChatAfterHandover = true
+        return target
     }
 
     /// The taf a new Setup conversation improves (kiff/tafs#107), by its id in tafs cloud:
@@ -6582,13 +6756,19 @@ final class AppModel: ObservableObject {
 
     /// A new conversation in Coach mode is on no taf (kiff/tafs#138, item 36): the owner
     /// asked for a new taf in one opened on a taf's page, and got that taf's next version.
-    /// The taf on screen is offered in it, to improve with one tap.
+    /// The taf on screen is offered in it, to improve with one tap. The pencil is a plain chat
+    /// for good: Coach reopened on the same taf's page stays on it, never back in that taf's mode,
+    /// so the taf on screen is marked as already chosen against.
     func newCoachConversation() {
+        let onScreen = tafOnScreen.flatMap { cloudTaf(for: $0)?.id }
         newSetupChat()
+        setupContextTafID = onScreen
     }
 
     /// Coach's conversation has nothing in it yet: no message, card or answer, sent or on its
-    /// way, and no taf it improves. New conversation keeps it, with what's typed.
+    /// way, and no taf it improves. New conversation keeps it, with what's typed. An empty one
+    /// about a taf ("Improve Refunds") isn't: the pencil opens a plain new one, so it always
+    /// opens a plain chat.
     var coachChatIsEmpty: Bool {
         setupImproving == nil && setupThread.items.isEmpty && setupSent.isEmpty && setupUnsent.isEmpty
             && setupQueued == nil && setupLive == nil && !setupThinking
@@ -6728,6 +6908,26 @@ final class AppModel: ObservableObject {
         KIFFMapping.vendorWords(grant.vendor)
     }
 
+    /// A connection's app as Connect apps names it ("Gmail"), by its grant or its catalog entry,
+    /// else planque's vendor in people's words (as Android's `ConnectionWords.appName`).
+    func appName(_ grant: PlanqueClient.Grant) -> String {
+        let listed = connectApps?.apps.first { $0.grant == grant.id || (grant.entry != nil && $0.entry == grant.entry) }
+        if let name = listed?.displayName.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty { return name }
+        return Self.promptApp(grant)
+    }
+
+    /// A sign-in card's app: the card's service, else the connection's app; nil when neither is
+    /// known (as Android's `signInWords`, Android 1.27.8).
+    nonisolated static func signInApp(service: String?, app: String?) -> String? {
+        [service, app].compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }.first { !$0.isEmpty }
+    }
+
+    /// A sign-in card's title: "Sign in at Gmail", and "Sign in at the vendor" only when no app is
+    /// known. Never a connection's status.
+    nonisolated static func signInWords(app: String?) -> String {
+        app.map { Words.Coach.SignIn.at(vendor: "\($0)") } ?? Words.Coach.SignIn.atVendor
+    }
+
     /// The prompt read last before connecting: "Connect Stripe to Disputes", or "Connect Stripe"
     /// when no taf is named yet, never "to a taf" (as Android's `connectPrompt`).
     func connectPrompt(_ grant: PlanqueClient.Grant) -> String {
@@ -6863,7 +7063,9 @@ final class AppModel: ObservableObject {
     @discardableResult
     func setAsideCoach(_ session: String?) async -> Bool {
         guard mode == .kiff else { return false }
-        let sessions = session.map { Set([$0]) } ?? Set(coachWaiting.map(\.session))
+        // Set all aside ends every chat tafs cloud listed, so it's guarded by all of them, rows
+        // hidden while being set aside included: no second call for a chat already on its way.
+        let sessions = session.map { Set([$0]) } ?? Set(coachWaitingListed.map(\.session))
         // Checked and marked before anything is awaited, so on the main actor no second call slips in between.
         guard !sessions.isEmpty, settingAside.isDisjoint(with: sessions) else { return false }
         settingAside.formUnion(sessions)
@@ -6886,7 +7088,7 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration else { return false }
         settingAside.subtract(sessions)
         let ended = Set(done.setAside)
-        coachWaiting.removeAll { ended.contains($0.session) }
+        coachWaitingListed.removeAll { ended.contains($0.session) }
         setAsideChats.formUnion(ended)
         // Coach no longer shows a chat that was set aside: its next message would go on in the
         // ended session. A new conversation instead, as Android 1.27.1 does.
@@ -6972,6 +7174,26 @@ final class AppModel: ObservableObject {
         setupFresh = false
     }
 
+    /// tafs cloud started a new chat for the message just sent to the chat shown, which had
+    /// already handed a taf over (docs/api.md, `new_chat_after_handover`): the answer or the
+    /// stream's `session` event says `new_session: true` with another session. Coach follows it:
+    /// the new chat is the one shown, with the message just sent (`sent`, the local copy) and the
+    /// answer streaming into it; the old chat stays under Previous conversations, as tafs cloud
+    /// lists it. What else was on its way belonged to the old chat, which tafs cloud has. True
+    /// once it moved: the conversation is a new one then, and the caller goes on in it.
+    @discardableResult
+    private func followNewSetupChat(_ session: String, newSession: Bool, sent: String?) -> Bool {
+        guard newSession, !session.isEmpty, let open = setupChat, open != session else { return false }
+        setupConversationGeneration += 1
+        setupChat = session
+        setupFresh = false
+        setupSent = setupSent.filter { $0.id == sent }
+        setupThread = SetupThread(messages: setupSent)
+        setupAnsweredCard = nil
+        setupLiveBefore = Set(setupThread.items.map(\.id))
+        return true
+    }
+
     /// Setup's KIFF agent: one per account.
     static let setupAgent = "setup"
 
@@ -7002,7 +7224,11 @@ final class AppModel: ObservableObject {
     /// Reads the gallery of ready-made jobs. A read that fails keeps what was read; a tafs
     /// cloud without the route leaves none, so + New opens Coach as before.
     func loadGallery() async {
-        guard mode == .kiff else { return }
+        guard mode == .kiff else {
+            // The reference set's job gallery over the sample (`-screenshots YES`).
+            if mode == .sample, Screenshots.enabled { gallery = SampleScreens.gallery }
+            return
+        }
         let gen = accountGeneration
         do {
             let g = try await cloud.recipesGallery()
@@ -7094,9 +7320,13 @@ final class AppModel: ObservableObject {
         var proof: String?
         if planqueReady && sessionHasKey { proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) }) }
         guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
+        // Coach's run ended since the last read, seen here rather than on a stream: Home is read again.
+        var runEnded = false
         do {
             let thread = try await cloud.setupThread(s.id, session: setupChat, proof: proof, can: Self.stepsSignedHere)
             guard gen == accountGeneration, conversation == setupConversationGeneration, !setupFresh else { return }
+            // At work at the last read, idle now, and no stream to say so at its end.
+            runEnded = setupThread.working != nil && thread.working == nil && setupLive == nil
             setupThread = withSent(thread)
             setupError = nil
             settleSetupAwaiting()
@@ -7107,11 +7337,17 @@ final class AppModel: ObservableObject {
             if setupLive != nil, thread.working == nil, !setupSending, setupSent.isEmpty, thread.handedOver(session: setupLive?.session) {
                 setupLive = nil
                 setupAwaiting = nil
+                runEnded = true
             }
         } catch {
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
             setupError = Words.Coach.conversationNotLoaded(why: "\(error.localizedDescription)")
             return
+        }
+        // Setup ended or was handed over: Needs you's row for this chat, and its badge, go now.
+        if runEnded {
+            await refresh()
+            guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         }
         // What an approval needs to be shown: planque's grant and KIFF's draft.
         let approvals = setupThread.components.map(\.component).filter { $0.type == .approval || $0.type == .signIn }
@@ -7294,7 +7530,8 @@ final class AppModel: ObservableObject {
         guard !text.isEmpty || !files.isEmpty, text.count <= Self.chatLimit, let s = setupTaf, !setupSending else { return .notTried }
         // An improvement's first message carries no files: tafs cloud adds the taf's context to it.
         if !files.isEmpty, setupImproving != nil { return .notTried }
-        let conversation = setupConversationGeneration
+        // A var: a new chat tafs cloud started for this message is still this send's (`followNewSetupChat`).
+        var conversation = setupConversationGeneration
         setupSending = true
         defer { if conversation == setupConversationGeneration { setupSending = false } }
         let gen = accountGeneration
@@ -7343,6 +7580,7 @@ final class AppModel: ObservableObject {
             let sent = try await cloud.sendMessage(s.id, text: text, to: setupTarget, files: files)
             guard gen == accountGeneration, conversation == setupConversationGeneration else { return .notTried }
             settleSetupChat(sent.session)
+            if followNewSetupChat(sent.session, newSession: sent.newSession, sent: mine.id) { conversation = setupConversationGeneration }
             if let id = sent.message?.id { markSetupSent(mine.id, serverID: id) }
             setupAwaiting = clock()
             await loadSetupThread()
@@ -7670,6 +7908,8 @@ final class AppModel: ObservableObject {
     /// A stream that drops leaves the conversation to show the rest, as it does without one.
     private func followSetupStream(_ events: AsyncThrowingStream<TafsCloud.StreamEvent, Error>, text: String, gen: Int,
                                    conversation: Int, sent: String? = nil) async {
+        // The answer follows the new chat tafs cloud started for the message (`followNewSetupChat`).
+        var conversation = conversation
         var ended: String?
         // Coach paused on a card its person answers: Needs you is read once then, so its row
         // and badge come while the chat is still open, not after it closes.
@@ -7678,7 +7918,8 @@ final class AppModel: ObservableObject {
             for try await e in events {
                 guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
                 switch e {
-                case .session(let session, _, let run, let message):
+                case .session(let session, let newSession, let run, let message):
+                    if followNewSetupChat(session, newSession: newSession, sent: sent) { conversation = setupConversationGeneration }
                     setupLive?.session = session
                     if let run { setupLive?.run = run }
                     settleSetupChat(session)
@@ -7732,7 +7973,15 @@ final class AppModel: ObservableObject {
         guard gen == accountGeneration, conversation == setupConversationGeneration else { return }
         setupLive = nil
         // Paused on a card: Home, and its Needs you, read once now, as a taf's chat does at its end.
-        if waitsOnYou { await refresh() }
+        // Any other end (done, stopped, failed) reads it too: a row of this chat that waited on the
+        // person goes, with its badge, rather than wait for the next read.
+        if Self.readsHomeAtEnd(ended: ended, waitsOnYou: waitsOnYou) { await refresh() }
+    }
+
+    /// Whether a Coach run's stream, at its end, reads Home again: when the run ended, however it
+    /// ended, or paused on a card. A stream that dropped with no end leaves it to the next read.
+    nonisolated static func readsHomeAtEnd(ended: String?, waitsOnYou: Bool) -> Bool {
+        waitsOnYou || ended != nil
     }
 
     /// Whether Coach's run still waits on its person after this live line: `waiting_for_you`
@@ -7994,6 +8243,13 @@ final class AppModel: ObservableObject {
     /// what came of it, signed as a setup call. tafs cloud checks the report with KIFF and the
     /// service before Coach hears "approved". The phone never builds an approval's answer.
     func approve(_ component: SetupComponent, shown: String?, shownDraft: String?) async {
+        let gen = accountGeneration
+        await approveAsked(component, shown: shown, shownDraft: shownDraft)
+        // KIFF's words for the next tap, read again after each approval (as Android's `readWindowWords`).
+        if gen == accountGeneration { await readWindowWords() }
+    }
+
+    private func approveAsked(_ component: SetupComponent, shown: String?, shownDraft: String?) async {
         guard let grantID = component.grant, let s = setupTaf else { return }
         lastError = nil
         shownTermsChanged = false
@@ -8013,7 +8269,7 @@ final class AppModel: ObservableObject {
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
         kiff.tenant = tenant
-        defer { planque.signer = nil; kiff.setupSigner = nil }
+        defer { planque.signer = nil; kiff.setupSigner = nil; planque.window = nil; kiff.signsInWindow = false; kiff.windowReconfirm = nil }
         let ref = cardRef(component.id)
         let session = setupThread.components.last { $0.ref == ref }?.session
         do {
@@ -8063,8 +8319,15 @@ final class AppModel: ObservableObject {
                         cardNotes[component.id] = Self.askNotThisCards
                         return
                     }
+                    // tafs cloud's hint that the call takes an approval window (kiff/tafs#494): one Face ID opens it,
+                    // unless this phone holds one, and the call goes as a tap. The service decides; a KIFF without
+                    // windows leaves the step as it was. As Android's `holdWindow`.
+                    let takesWindow = ask.key == "window" && windowAvailable
+                    let confirm: @MainActor () async throws -> Void = { _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true) }
+                    var windowed = takesWindow && kiff.window != nil
                     do {
-                        _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true)
+                        // Held already: no Face ID, a tap. Otherwise Face ID, over exactly this message, as before.
+                        if !windowed { try await confirm() }
                     } catch {
                         cardNotes[component.id] = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
                         Haptics.warning()
@@ -8072,7 +8335,31 @@ final class AppModel: ObservableObject {
                     }
                     guard gen == accountGeneration else { return }
                     kiff.setupSigner = { try signer.signConfirmed($0) }
-                    came = await makeAskedCall(ask, tenant: tenant, gen: gen)
+                    // The approval key opens the window under that one Face ID.
+                    if takesWindow && !windowed { windowed = try await openWindow() }
+                    guard gen == accountGeneration else { return }
+                    useWindow(windowed, reconfirm: confirm)
+                    var made = await makeAskedCall(ask, tenant: tenant, gen: gen)
+                    // planque says the window ended before anything was done: a new one, behind Face ID, and the call once more.
+                    if windowed && made.windowEnded {
+                        kiff.window = nil
+                        useWindow(false, reconfirm: confirm)
+                        do {
+                            try await confirm()
+                        } catch {
+                            cardNotes[component.id] = ApprovalReadiness.notApproved(error, kind: Biometry.kind)
+                            Haptics.warning()
+                            return
+                        }
+                        guard gen == accountGeneration else { return }
+                        var reopened = false
+                        if windowAvailable { reopened = try await openWindow() }
+                        guard gen == accountGeneration else { return }
+                        useWindow(reopened, reconfirm: confirm)
+                        made = await makeAskedCall(ask, tenant: tenant, gen: gen)
+                    }
+                    useWindow(false, reconfirm: confirm)
+                    came = made
                 }
                 guard gen == accountGeneration else { return }
                 await refreshConnections()
@@ -8339,6 +8626,10 @@ final class AppModel: ObservableObject {
         let signedAt = SigningTime.next()
         let message = KIFFClient.requestMessage(tenant: tenant, method: "POST", uri: TafsCloud.drivePath, body: body, signedAt: signedAt)
         let gen = accountGeneration
+        // tafs cloud starts a drive only for the approval key, outside any window: the window this phone
+        // holds is closed first, as on Android.
+        if kiff.window != nil { await closeWindow() }
+        guard gen == accountGeneration else { return }
         let signature: String
         do {
             signature = try await signer.signApproval(message, reason: Words.Drive.approval(task: "\(task)"))
@@ -8405,6 +8696,8 @@ final class AppModel: ObservableObject {
         let result: String
         var status: String? = nil
         var why: String? = nil
+        /// planque refused it: signed in an approval window that had ended, so nothing was done.
+        var windowEnded = false
     }
 
     /// Makes the one call tafs cloud asked for, as given, and says what came of it.
@@ -8421,9 +8714,130 @@ final class AppModel: ObservableObject {
             return try await connectedAfter(approved, grantID: p.grant, tenant: tenant, gen: gen)
         } catch VendorSignIn.SignInError.cancelled {
             return Came(result: "sign_in_closed")
+        } catch PlanqueClient.PlanqueError.windowRequired {
+            return Came(result: "failed", windowEnded: true)
         } catch {
             return Came(result: "failed", why: error.localizedDescription)
         }
+    }
+
+    // MARK: The approval window
+
+    /// KIFF's words for the next approval while this phone holds an approval window ("No fingerprint
+    /// for the next 4 minutes"), as KIFF sends them; none without a window. A card draws them only
+    /// where tafs cloud marks its Approve a tap (`SetupComponent.windowWords`).
+    @Published private(set) var windowWords: String?
+
+    /// How long an approval window is asked for: KIFF takes five minutes at most, and restarts it with
+    /// each approval in it.
+    nonisolated static let windowSeconds: TimeInterval = 300
+    /// How long the app may be away before the window it holds is closed (kiff/tafs#494).
+    nonisolated static let windowAwaySeconds: TimeInterval = 30
+    /// The wait before that close, as a task's sleep: shorter in tests.
+    var windowAwayNanoseconds: UInt64 = 30_000_000_000
+
+    /// Whether an approval may take a window at all: not while Coach drives the app (every confirming
+    /// signature asks for Face ID then, docs/drive.md), and only with the approval key KIFF holds for
+    /// this session. Otherwise the step signs as it did.
+    private var windowAvailable: Bool { !DriveRule.on && sessionHasApprovalKey && kiff.approvalSigner != nil }
+
+    /// Opens an approval window at KIFF for five minutes, signed by the approval key under the Face ID
+    /// this step just took, and shows KIFF's words for it. False for a KIFF without windows (404, 405):
+    /// the step then goes on as before.
+    private func openWindow() async throws -> Bool {
+        let expires = ISO8601DateFormatter().string(from: clock().addingTimeInterval(Self.windowSeconds))
+        let nonce = (0..<16).map { _ in String(format: "%02x", UInt8.random(in: 0...255)) }.joined()
+        do {
+            let opened = try await kiff.openWindow(expires: expires, nonce: nonce)
+            windowWords = opened.words
+            return true
+        } catch KIFFClient.KIFFError.server(let status, _, _) where status == 404 || status == 405 {
+            return false
+        }
+    }
+
+    /// Puts the step's calls in the window this phone holds, or takes them out: planque's and KIFF's
+    /// are then signed by the device key with the window's id, and a refusal KIFF sends asks Face ID
+    /// again (`reconfirm`) for the approval key.
+    private func useWindow(_ on: Bool, reconfirm: @escaping @MainActor () async throws -> Void) {
+        let id = on ? kiff.window?.id : nil
+        planque.window = id
+        kiff.signsInWindow = id != nil
+        kiff.windowReconfirm = id != nil ? reconfirm : nil
+    }
+
+    /// KIFF's words for the next approval, while a window is held; none once it's gone. A window KIFF
+    /// says isn't open is forgotten: the next approval asks for Face ID.
+    func readWindowWords() async {
+        guard kiff.window != nil else {
+            windowWords = nil
+            return
+        }
+        let gen = accountGeneration
+        // Closed or dropped meanwhile: it stays gone.
+        guard let read = try? await kiff.readWindow(), gen == accountGeneration, kiff.window != nil else { return }
+        if read.window?.open != true { kiff.window = nil }
+        windowWords = read.window?.open == true ? read.window?.words : nil
+    }
+
+    private var windowClosing: Task<Void, Never>?
+    /// When the app went away while holding a window.
+    private var awaySince: Date?
+
+    /// The app went to the background: after 30 seconds away, the window this phone holds is closed at
+    /// KIFF. Back sooner, it stays.
+    func wentToBackground() {
+        guard kiff.window != nil else { return }
+        windowClosing?.cancel()
+        awaySince = clock()
+        let gen = accountGeneration
+        let wait = windowAwayNanoseconds
+        windowClosing = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: wait)
+            guard !Task.isCancelled, let self, gen == self.accountGeneration else { return }
+            await self.closeWindow()
+        }
+    }
+
+    /// Back on screen: a close waiting on the background is called off, and KIFF's words read again.
+    /// iOS may have suspended the app before its 30 seconds were up: away that long, it closes now.
+    func cameToForeground() {
+        windowClosing?.cancel()
+        windowClosing = nil
+        let away = awaySince
+        awaySince = nil
+        guard kiff.window != nil else { return }
+        if let away, clock().timeIntervalSince(away) >= Self.windowAwaySeconds {
+            windowClosing = Task { [weak self] in await self?.closeWindow() }
+        } else {
+            Task { [weak self] in await self?.readWindowWords() }
+        }
+    }
+
+    /// The screen locked: the window this phone holds is closed at once.
+    func screenLocked() {
+        windowClosing?.cancel()
+        windowClosing = nil
+        guard kiff.window != nil else { return }
+        windowClosing = Task { [weak self] in await self?.closeWindow() }
+    }
+
+    /// Closes the held window at KIFF, signed by the device key. Forgotten here whether or not KIFF
+    /// heard: a window it still holds ends at its own time, and the next approval asks again.
+    func closeWindow() async {
+        let signer = self.signer
+        try? await kiff.closeWindow(signedBy: { try signer.signConfirmed($0) })
+        windowWords = nil
+    }
+
+    /// The window is the session's: a new sign-in opens its own, and KIFF ends it at sign-out.
+    private func forgetWindow() {
+        kiff.window = nil
+        windowClosing?.cancel()
+        windowClosing = nil
+        awaySince = nil
+        windowWords = nil
+        useWindow(false, reconfirm: {})
     }
 
     /// planque's answer to an approve, followed to where it ends: a sign-in it holds confirmed with
@@ -8498,6 +8912,16 @@ final class AppModel: ObservableObject {
             lastError = nil
             return
         }
+        // A connection that takes no approval now (signed in already, or past approving): tafs cloud
+        // answers the card in the person's words, never planque's status ("This connection is listed.").
+        // Where it can't be asked, the app's line stands (Android 1.27.8).
+        if done == nil, notApprovable {
+            let answeredByCloud = await notApprovableAnswered(component, grantID: grant)
+            if answeredByCloud {
+                lastError = nil
+                return
+            }
+        }
         if let done, done.connected || done.listed {
             await answer(component, Words.Coach.Answer.signedInLower)
         } else if let e = lastError {
@@ -8505,6 +8929,30 @@ final class AppModel: ObservableObject {
         } else if done == nil {
             cardNotes[component.id] = quietStop ?? Words.Connect.nothingSignedIn
         }
+    }
+
+    /// Set by `connect` when the grant's status takes no approval (anything but pending, approved,
+    /// signed in or signed out by its vendor): a sign-in card then asks tafs cloud for its words.
+    private var notApprovable = false
+
+    /// Asks tafs cloud about a sign-in card whose connection takes no approval now: its approval
+    /// route takes a sign-in card too (docs/api.md). True once it answered Coach, with its note on
+    /// the card; anything else (something to sign, no answer) leaves the card to the app.
+    private func notApprovableAnswered(_ component: SetupComponent, grantID: String) async -> Bool {
+        guard let s = setupTaf, let tenant = kiffTenant else { return false }
+        let gen = accountGeneration
+        let signer = self.signer
+        let ref = cardRef(component.id)
+        let session = setupThread.components.last { $0.ref == ref }?.session
+        planque.tenant = tenant
+        // The read proof: planque shows the grant to tafs cloud only as this phone; it signs and grants nothing there.
+        let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+        guard gen == accountGeneration else { return false }
+        let decision = try? await cloud.approval(s.id, component: component.id, body: .init(grant: grantID, session: session), proof: proof)
+        guard gen == accountGeneration, let decision, decision.outcome == "answered" else { return false }
+        cardNotes[component.id] = decision.note.flatMap { $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : $0 }
+        await setupAnswered(s.id, ref: ref, decision: decision, gen: gen)
+        return true
     }
 
     /// The taf a result hands over to, when this phone shows it.
@@ -8596,6 +9044,18 @@ enum Screenshots {
     /// `-screen taf` opens a taf's page, `-screen card` its Cards; `-screen new` the new-taf flow; `-screen solo` and
     /// `-screen add-tasks` the purchase screens, for the products in App Store Connect.
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
+    /// `-screen calendar` opens Calendar on today in Day mode, `-screen calendar-week` in Week mode on
+    /// today's week: today is in what's shown, so the Today pill is in its "already today" state. An
+    /// iPad's whole-app sidebar selects its Calendar item; the phone opens it as Home's button does.
+    static var calendar: CalendarState? {
+        guard enabled else { return nil }
+        let today = CalendarMath.today(in: AccountTime.zone)
+        switch screen {
+        case "calendar": return CalendarState(mode: .day, selected: today)
+        case "calendar-week": return CalendarState(mode: .week, selected: today)
+        default: return nil
+        }
+    }
     /// `-pack rayo`: the add-tasks screen with that pack alone, one screenshot a product.
     static var pack: String? { UserDefaults.standard.string(forKey: "pack") }
     /// `-narrow YES`: tafs laid out at Slide Over's width on an iPad, compact (kiff/tafs#210).
@@ -8606,6 +9066,17 @@ enum Screenshots {
     /// Coach above the account), over the sample's tafs. A screenshot of the layout only: nothing
     /// is read from KIFF, and the screens it lists aren't opened.
     static var signedIn: Bool { enabled && UserDefaults.standard.bool(forKey: "signedIn") }
+    /// `-screen coach`: Coach mode open over the sample, as the reference set shows it.
+    static var coach: Bool { enabled && screen == "coach" }
+    /// The iPad sidebar's screen a `-screen` opens beside it: `usage` (Plan & usage), `connect-apps`.
+    static var sidebarScreen: HomeSelection? {
+        guard enabled else { return nil }
+        switch screen {
+        case "usage": return .usage
+        case "connect-apps": return .connectApps
+        default: return nil
+        }
+    }
 
     @MainActor static func turnToLandscape() {
         for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {

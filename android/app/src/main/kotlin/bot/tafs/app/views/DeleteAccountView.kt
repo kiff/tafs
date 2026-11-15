@@ -1,9 +1,9 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -62,7 +62,7 @@ fun DeleteAccountSheet(state: AppState, delete: suspend () -> Boolean, clearErro
         Text(
           Words.Common.cancel,
           style = scaled(17, FontWeight.SemiBold, if (busy) Theme.dim else Theme.amber),
-          modifier = Modifier.heightIn(min = 44.dp).clickable(enabled = !busy, onClick = onClose).padding(top = 8.dp),
+          modifier = Modifier.heightIn(min = 44.dp).tapping(enabled = !busy, onClick = onClose).padding(top = 8.dp),
         )
       }
       Column(
@@ -85,7 +85,7 @@ fun DeleteAccountSheet(state: AppState, delete: suspend () -> Boolean, clearErro
           },
           style = scaled(17, FontWeight.SemiBold, if (busy) Theme.dim else Theme.no),
           modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).confirms()
-            .clickable(enabled = !busy) { scope.launch { if (delete()) onClose() } }
+            .tapping(enabled = !busy) { scope.launch { if (delete()) onClose() } }
             .padding(horizontal = 12.dp, vertical = 8.dp),
         )
         Text(Words.Settings.DeleteAccount.confirmWith(biometry), style = scaled(13, color = Theme.dim), modifier = Modifier.padding(horizontal = 12.dp))

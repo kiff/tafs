@@ -61,6 +61,7 @@
   "approval.touch_id": "Touch ID",
   "approval.turned_off_tafs_open_settings": "{either} staat uit voor tafs. Open Instellingen en zet {either_2} aan voor tafs.",
   "approval.turned_off_tafs_turn_tafs": "{either} staat uit voor tafs. Zet het aan in de instellingen van tafs om goed te keuren.",
+  "approval.view_only": "Log opnieuw in op deze telefoon om goed te keuren, of keur goed vanaf je andere telefoon.",
   "approval.why": "Elke goedkeuring die je in tafs geeft, een Card, een koppeling of een betaling boven een limiet, wordt op deze telefoon ondertekend met een sleutel die alleen je vingerafdruk ontgrendelt. Je pincode of patroon kan niet goedkeuren.",
   "approval.without_allows": "Zonder goedkeuringen kun je nog steeds inloggen, bekijken, weigeren en stilzetten.",
   "approval.your_passcode": "je toegangscode"

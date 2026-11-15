@@ -72,7 +72,7 @@ fun StateChip(state: TafState, onClick: (() -> Unit)? = null) {
     style = scaled(12, FontWeight.Medium, color),
     modifier = Modifier
       .clip(CircleShape)
-      .then(if (onClick != null) Modifier.clickable(onClickLabel = Words.Home.openHalt, onClick = onClick) else Modifier)
+      .then(if (onClick != null) Modifier.tapping(onClickLabel = Words.Home.openHalt, onClick = onClick) else Modifier)
       .background(color.copy(alpha = 0.15f))
       .padding(horizontal = 8.dp, vertical = 4.dp),
   )

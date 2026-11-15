@@ -196,7 +196,11 @@ data class CoachWaitingClearWords(val button: String = "", val title: String = "
 
 /** What setting Coach chats aside did: the chats it ended, and the connections it withdrew. */
 @Serializable
-data class SetAside(@SerialName("set_aside") val setAside: List<String> = emptyList(), val withdrawn: Int = 0, val already: Boolean = false)
+data class SetAside(@SerialName("set_aside") val setAside: List<String> = emptyList(), val withdrawn: Int = 0, val already: Boolean = false, val words: SetAsideWords? = null)
+
+/** What the app says once chats are set aside, tafs cloud's: where to find them ("Set aside. You'll find it in Previous conversations."). */
+@Serializable
+data class SetAsideWords(val done: String = "")
 
 /**
  * A step a taf may never take itself, handed to its owner, as tafs cloud shows it: KIFF's hand-off id, what to do and why, in

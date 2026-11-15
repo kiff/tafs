@@ -1,3 +1,5 @@
+// Not on the Mac: Live Activities are unavailable to a Mac Catalyst build (docs/mac-app.md).
+#if !targetEnvironment(macCatalyst)
 import ActivityKit
 import Foundation
 
@@ -16,3 +18,4 @@ struct HeldActivityAttributes: ActivityAttributes {
         var waiting: Int
     }
 }
+#endif

@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
 import bot.tafs.app.drive.DriveSheet
@@ -8,7 +9,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -79,10 +79,10 @@ internal fun PreviousConversations(state: AppState, actions: CoachChatActions, o
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp)) {
       Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         if (archived) {
-          Text(Words.Coach.Chats.back, style = scaled(17, color = Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable { archived = false }.padding(top = 10.dp, end = 12.dp))
+          Text(Words.Coach.Chats.back, style = scaled(17, color = Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping { archived = false }.padding(top = 10.dp, end = 12.dp))
         }
         Text(if (archived) Words.Coach.Chats.archived else Words.Coach.Chats.previous, style = scaled(22, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
-        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 10.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 10.dp))
       }
       val chats = if (archived) state.coachArchived else state.coachChats
       if (chats.isEmpty()) {
@@ -102,7 +102,7 @@ internal fun PreviousConversations(state: AppState, actions: CoachChatActions, o
         )
       }
       if (!archived) {
-        Text(Words.Coach.Chats.archived, style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).clickable { archived = true }.padding(top = 12.dp))
+        Text(Words.Coach.Chats.archived, style = scaled(15, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.heightIn(min = 44.dp).tapping { archived = true }.padding(top = 12.dp))
       }
     }
   }
@@ -150,7 +150,7 @@ private fun ChatRow(chat: TafsCloud.Chat, action: String, onOpen: () -> Unit, on
   Box {
     // A long press asks about this chat by name (Archive, or Put back): no menu that could open over another row.
     Column(
-      Modifier.fillMaxWidth().heightIn(min = 52.dp).combinedClickable(onClick = onOpen, onLongClickLabel = action, onLongClick = onAction).padding(vertical = 8.dp),
+      Modifier.fillMaxWidth().heightIn(min = 52.dp).combinedClickable(onClick = { bot.tafs.app.design.Haptics.tap(); onOpen() }, onLongClickLabel = action, onLongClick = onAction).padding(vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
       Text(chat.title.ifBlank { Words.Coach.Chats.untitled }, style = scaled(15, FontWeight.SemiBold, Theme.ink), maxLines = 2)
@@ -177,7 +177,7 @@ fun CoachStarts(state: AppState, improve: (String) -> Unit = {}, fill: (String) 
         Text(
           Words.Coach.improveTaf(taf.name),
           style = scaled(15, FontWeight.SemiBold, Theme.amberText),
-          modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(enabled = !sending) { improve(taf.id) }.padding(vertical = 10.dp),
+          modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(enabled = !sending) { improve(taf.id) }.padding(vertical = 10.dp),
         )
       }
     }
@@ -198,7 +198,7 @@ fun CoachStarts(state: AppState, improve: (String) -> Unit = {}, fill: (String) 
           .clip(shape)
           .background(Theme.panel)
           .border(BorderStroke(1.dp, Theme.line), shape)
-          .clickable(enabled = !sending) { send(example) }
+          .tapping(enabled = !sending) { send(example) }
           .padding(horizontal = 14.dp, vertical = 12.dp),
       )
     }
@@ -215,7 +215,7 @@ private fun RecipeRow(recipe: bot.tafs.app.kiff.Recipe, enabled: Boolean, onTap:
       .clip(shape)
       .background(Theme.panel)
       .border(BorderStroke(1.dp, Theme.line), shape)
-      .clickable(enabled = enabled, onClick = onTap)
+      .tapping(enabled = enabled, onClick = onTap)
       .padding(horizontal = 14.dp, vertical = 12.dp),
     verticalArrangement = Arrangement.spacedBy(2.dp),
   ) {
@@ -254,7 +254,7 @@ fun CoachToolsRow(state: AppState, onOpen: () -> Unit) {
   if (tools.state == "given") return
   // One line above the conversation, never the step itself: the box keeps its room, keyboard open or not.
   Row(
-    Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClickLabel = Words.Coach.Tools.title, onClick = onOpen).padding(horizontal = 16.dp),
+    Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(onClickLabel = Words.Coach.Tools.title, onClick = onOpen).padding(horizontal = 16.dp),
     verticalAlignment = Alignment.CenterVertically,
   ) {
     Text(tools.step?.row?.ifBlank { null } ?: Words.Coach.Tools.title, style = scaled(14, FontWeight.SemiBold, Theme.amberText), maxLines = 1, modifier = Modifier.weight(1f))
@@ -304,7 +304,7 @@ fun CoachToolsSheet(state: AppState, actions: CoachChatActions, onClose: () -> U
           if (step.details.isNotBlank()) Text(
             step.details + if (folded) " ⌄" else " ⌃",
             style = scaled(14, FontWeight.SemiBold, Theme.amberText),
-            modifier = Modifier.heightIn(min = 44.dp).clickable { folded = !folded }.padding(vertical = 10.dp),
+            modifier = Modifier.heightIn(min = 44.dp).tapping { folded = !folded }.padding(vertical = 10.dp),
           )
         }
         // What's signed: the connections in tafs cloud's words and the Card in KIFF's, under the fold where the step has one.

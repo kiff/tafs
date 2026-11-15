@@ -1,0 +1,5 @@
+- Every tap vibrates, following your phone's touch setting.
+- Connect apps shows each app by its name, with what it does under it.
+- A new job asked in a finished Coach chat starts its own conversation.
+- After setting a Coach chat aside, Needs you says where to find it.
+- An app's approval card shows what the taf can do, without KIFF's internal notes.

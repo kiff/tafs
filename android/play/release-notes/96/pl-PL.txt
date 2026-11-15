@@ -1,0 +1,4 @@
+- Warunki i Prywatność otwierają własne strony tafs.
+- Karta logowania podaje nazwę aplikacji, do której się logujesz.
+- Niepotrzebne logowanie mówi o tym prostymi słowami.
+- Karta zatwierdzenia od razu pokazuje, o co prosi.

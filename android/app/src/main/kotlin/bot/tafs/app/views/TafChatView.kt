@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.driveTyped
 import bot.tafs.app.drive.DriveMenu
@@ -14,7 +15,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -303,7 +303,7 @@ fun TafChatView(tafId: String, state: AppState, actions: TafActions, modifier: M
               .clip(CircleShape)
               .background(Theme.panel)
               .border(BorderStroke(1.dp, Theme.line), CircleShape)
-              .clickable {
+              .tapping {
                 following = true
                 scope.launch { listState.animateScrollToItem(max(0, total - 1)) }
               }
@@ -399,7 +399,7 @@ private fun Composer(
       if (onStop != null && empty) {
         // While the taf works and the box is empty, Send is Stop: its run is cancelled.
         Box(
-          Modifier.requiredSize(40.dp).clip(CircleShape).background(Theme.ink).clickable(onClick = onStop).semantics { contentDescription = Words.Chat.stop },
+          Modifier.requiredSize(40.dp).clip(CircleShape).background(Theme.ink).tapping(onClick = onStop).semantics { contentDescription = Words.Chat.stop },
           contentAlignment = Alignment.Center,
         ) {
           Box(Modifier.size(12.dp).clip(RoundedCornerShape(2.dp)).background(Theme.background))
@@ -411,7 +411,7 @@ private fun Composer(
           .alpha(if (empty || sending || holdsSend) 0.4f else 1f)
           .clip(CircleShape)
           .brandBackground()
-          .clickable(enabled = !empty && !sending && !holdsSend) {
+          .tapping(enabled = !empty && !sending && !holdsSend) {
             dictation?.stop()
             focus.clearFocus()
             onSend()
@@ -567,7 +567,7 @@ private fun WorkSummary(work: Work) {
     Text(
       (if (steps.isEmpty()) "" else if (open) "▾ " else "▸ ") + Chat.workLine(work),
       style = scaled(12, FontWeight.Medium, Theme.dim),
-      modifier = Modifier.heightIn(min = 28.dp).clickable(enabled = steps.isNotEmpty()) { open = !open }.padding(vertical = 4.dp),
+      modifier = Modifier.heightIn(min = 28.dp).tapping(enabled = steps.isNotEmpty()) { open = !open }.padding(vertical = 4.dp),
     )
     // A failed step in the failure colour, with tafs cloud's reason under it when it sent one; nothing of the app's own.
     if (open) steps.forEach { step ->
@@ -610,7 +610,7 @@ private fun EndedLine(end: ChatEnd, taf: String, onRetry: (String) -> Unit) {
   Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
     Text(words, style = scaled(14, color = Theme.ink))
     if (end is ChatEnd.Failed) {
-      Text(Words.Chat.retry, style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.clickable { onRetry(end.retry) }.padding(vertical = 6.dp))
+      Text(Words.Chat.retry, style = scaled(14, FontWeight.SemiBold, Theme.amberText), modifier = Modifier.tapping { onRetry(end.retry) }.padding(vertical = 6.dp))
     }
   }
 }
@@ -673,7 +673,7 @@ private fun NeedsYouPill(text: String, onClick: () -> Unit) {
       .clip(CircleShape)
       .background(Theme.panel)
       .border(BorderStroke(1.dp, Theme.amber.copy(alpha = 0.6f)), CircleShape)
-      .clickable(onClick = onClick)
+      .tapping(onClick = onClick)
       .padding(horizontal = 10.dp, vertical = 8.dp),
     horizontalArrangement = Arrangement.spacedBy(8.dp),
     verticalAlignment = Alignment.CenterVertically,

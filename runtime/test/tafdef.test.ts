@@ -196,5 +196,20 @@ describe("a section of the kiff skill", () => {
     expect(CALL_INSTRUCTIONS).toContain("Never split it into smaller calls to stay under a\n  limit");
     expect(CALL_INSTRUCTIONS).toContain("put who it's for in a field the customer doesn't see");
     expect(CALL_INSTRUCTIONS).toContain("never an internal id or why");
+    expect(CALL_INSTRUCTIONS).toContain('A held call isn\'t done: it "waits for your approval", never "submitted",\n  "sent" or "done"');
+    expect(CALL_INSTRUCTIONS).toContain("Name a date or a day only when you\n  read it");
+  });
+
+  // Chargebacks: a taf typed a dispute's id wrong, the app said there was no such dispute, and the taf left that dispute
+  // undone. A not-found on an id it typed is checked against what it read, and made once more with the id as read.
+  it("tells the taf to check an id the app doesn't know against what it read, and make the call once more", () => {
+    expect(CALL_INSTRUCTIONS).toContain('When the app says an id you typed doesn\'t exist ("no such", "not found"),\n  check it against what you read');
+    expect(CALL_INSTRUCTIONS).toContain("make the call once more with the id as you read it, and a new\n  kiff_operation_id: that's a new call, not a retry.");
+    // Once, and only for a slip: never a loop, and never a different item.
+    expect(CALL_INSTRUCTIONS).toContain("Once only: if it still\n  isn't found, or the id was right, report it.");
+    // No Eval case's own example in every taf's instructions.
+    expect(CALL_INSTRUCTIONS).not.toMatch(/T-20\d\d|dispute id/);
+    // Every job's definition carries it.
+    expect(definition(ID, jobById("chargebacks")).instructions).toContain("that's a new call, not a retry");
   });
 });

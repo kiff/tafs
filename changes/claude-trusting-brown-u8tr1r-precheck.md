@@ -1,0 +1,1 @@
+- **tafs cloud: a Card draft is checked as the phone reads the chat, before its approval card is drawn.** A refusal a new draft mends goes to Coach then, so the owner approves one Card, not a refused one and its redraft. Every such refusal now asks Coach to change only what it names (docs/coach.md).

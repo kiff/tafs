@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.shownName
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.confirms
@@ -7,7 +8,6 @@ import bot.tafs.app.drive.DriveSheet
 import bot.tafs.app.drive.DriveMenu
 import bot.tafs.app.drive.DriveAlert
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -101,9 +101,9 @@ fun PeopleGroupsSheet(state: AppState, actions: PeopleActions, onClose: () -> Un
         Text(Words.People.title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
         // Words, not "+": it makes a group.
         if (state.canManagePeople) {
-          Text(Words.People.addGroup, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable { namingNew = true }.padding(top = 8.dp))
+          Text(Words.People.addGroup, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping { namingNew = true }.padding(top = 8.dp))
         }
-        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
       }
       Column(
         Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
@@ -178,7 +178,7 @@ private fun GroupPanel(
       }
       if (state.canManagePeople && group.everyone != true) {
         Box {
-          Text("•••", style = scaled(16, FontWeight.SemiBold, Theme.soft), modifier = Modifier.heightIn(min = 44.dp).clickable { menu = true }.padding(horizontal = 6.dp, vertical = 8.dp))
+          Text("•••", style = scaled(16, FontWeight.SemiBold, Theme.soft), modifier = Modifier.heightIn(min = 44.dp).tapping { menu = true }.padding(horizontal = 6.dp, vertical = 8.dp))
           DriveMenu(expanded = menu, onDismissRequest = { menu = false }, containerColor = Theme.panel) {
             DropdownMenuItem(text = { Text(Words.People.rename) }, onClick = { menu = false; onRename() })
             DropdownMenuItem(text = { Text(Words.People.delete, color = Theme.no) }, onClick = { menu = false; onDelete() }, modifier = Modifier.confirms())
@@ -188,7 +188,7 @@ private fun GroupPanel(
     }
     PeopleWords.managersFirst(group.members, state.people).forEach { member -> MemberRow(member, group, state, setMember, removeMember) }
     if (mayAddTo(group, state)) {
-      Text(Words.People.addSomeone(group.shownName), style = scaled(15, color = Theme.amberText), modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clickable(onClick = onAdd).padding(top = 8.dp))
+      Text(Words.People.addSomeone(group.shownName), style = scaled(15, color = Theme.amberText), modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).tapping(onClick = onAdd).padding(top = 8.dp))
     }
   }
 }
@@ -203,7 +203,7 @@ private fun MemberRow(member: GroupMember, group: Group, state: AppState, setMem
   val mayRemove = mayRemoveFrom(group, member, state)
   Box {
     Row(
-      Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(enabled = mayRole || mayRemove) { menu = true }.padding(vertical = 6.dp),
+      Modifier.fillMaxWidth().heightIn(min = 48.dp).tapping(enabled = mayRole || mayRemove) { menu = true }.padding(vertical = 6.dp),
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -264,7 +264,7 @@ private fun AddToGroupSheet(group: Group, state: AppState, actions: PeopleAction
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(Words.People.addTo(group.shownName), style = scaled(24, FontWeight.Bold, Theme.ink, display = true), modifier = Modifier.weight(1f))
-        Text(Words.Common.cancel, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).clickable(onClick = onClose).padding(top = 8.dp))
+        Text(Words.Common.cancel, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
       }
       Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         // Naming a manager is for whoever manages people (KIFF's members.manage).
@@ -281,7 +281,7 @@ private fun AddToGroupSheet(group: Group, state: AppState, actions: PeopleAction
           Text(Words.People.accountPeople, style = scaled(12, color = Theme.dim, mono = true))
           outside.forEach { person ->
             Row(
-              Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable {
+              Modifier.fillMaxWidth().heightIn(min = 48.dp).tapping {
                 scope.launch {
                   val role = if (asManager && state.canManagePeople) "manager" else "member"
                   if (actions.setMember(group, person.subject, role)) onClose()

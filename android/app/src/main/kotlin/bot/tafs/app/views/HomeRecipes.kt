@@ -1,9 +1,9 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -44,7 +44,7 @@ import bot.tafs.app.kiff.Recipes
 @Composable
 internal fun OwnWordsRow(home: bot.tafs.app.kiff.RecipesHome?, onOwnWords: () -> Unit) {
   val own = home?.ownWords?.takeIf { it.title.isNotBlank() } ?: return
-  Panel(modifier = Modifier.fillMaxWidth().clickable(onClick = onOwnWords)) {
+  Panel(modifier = Modifier.fillMaxWidth().tapping(onClick = onOwnWords)) {
     Text(own.title, style = scaled(16, FontWeight.SemiBold, Theme.amberText))
     if (own.line.isNotBlank()) Text(own.line, style = scaled(14, color = Theme.soft))
   }
@@ -95,7 +95,7 @@ private fun CategoryChip(title: String, selected: Boolean, color: androidx.compo
       .background(if (selected) tint else Theme.panel)
       .border(BorderStroke(1.dp, if (selected || color != null) tint else Theme.line), CircleShape)
       // A selector's stop: the step tick (docs/android-app.md, "Haptics").
-      .clickable { bot.tafs.app.design.Haptics.step(); onClick() }
+      .tapping { bot.tafs.app.design.Haptics.step(); onClick() }
       .semantics { this.selected = selected }
       .heightIn(min = 32.dp)
       .padding(horizontal = 12.dp, vertical = 6.dp),
@@ -110,7 +110,7 @@ private fun CategoryChip(title: String, selected: Boolean, color: androidx.compo
 @Composable
 internal fun JobRow(recipe: Recipe, color: androidx.compose.ui.graphics.Color?, onClick: () -> Unit) {
   val edge = Modifier.drawBehind { if (color != null) drawRect(color, size = androidx.compose.ui.geometry.Size(4.dp.toPx(), size.height)) }
-  Panel(modifier = Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)).then(edge).clickable(onClick = onClick)) {
+  Panel(modifier = Modifier.fillMaxWidth().clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)).then(edge).tapping(onClick = onClick)) {
     Text(recipe.headline.ifBlank { recipe.title }, style = scaled(16, FontWeight.SemiBold, Theme.ink))
     if (recipe.line.isNotBlank()) Text(recipe.line, style = scaled(14, color = Theme.soft))
     if (recipe.apps.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -146,7 +146,7 @@ internal fun GallerySheet(
       // In the person's own words: Coach, empty, to build the taf with them. Not while browsing: that starts something.
       val words = gallery.words
       if (!browsing && canUseCoach && words != null && words.ownWords.isNotBlank()) {
-        Panel(modifier = Modifier.fillMaxWidth().clickable(onClick = onOwnWords)) {
+        Panel(modifier = Modifier.fillMaxWidth().tapping(onClick = onOwnWords)) {
           Text(words.ownWords, style = scaled(16, FontWeight.SemiBold, Theme.amberText))
           if (words.ownWordsLine.isNotBlank()) Text(words.ownWordsLine, style = scaled(14, color = Theme.soft))
         }

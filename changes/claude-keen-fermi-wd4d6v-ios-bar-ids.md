@@ -1,0 +1,1 @@
+- **iPhone and iPad: the bar stays when another keyboard comes up.** The bar hid whenever iOS said a keyboard was showing, including a system alert's ("Sign in to Apple Account") or another app's beside tafs on an iPad, so it was gone with nothing of the app's to type in. It now hides only for the app's own keyboard (docs/ios-app.md).

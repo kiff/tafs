@@ -71,6 +71,8 @@ class SignInTest {
     assertTrue(body, body.contains(encoder.encodeToString(signer.approvalPublicKeyDER)))
     assertTrue(body, body.contains(""""platform":"android""""))
     assertTrue(body, body.contains(""""device_name":"tafs on Android""""))
+    // What it is, so KIFF draws its name in the reader's language, not the app's at sign-in.
+    assertTrue(body, body.contains(""""kind":"android_phone""""))
   }
 
   @Test fun aDroppedConnectionIsTriedAgainBeforeItCountsAsAFailure() = runTest {

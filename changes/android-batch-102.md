@@ -1,0 +1,1 @@
+- **Android 1.29.1 (102): a view-only phone is told which device can sign another out.** When KIFF refuses signing another device out because this session approves nothing (`view_only`), Devices says "To sign another device out, use a device that can approve." in place of "didn't go through" (docs/android-app.md, Pairing a computer).

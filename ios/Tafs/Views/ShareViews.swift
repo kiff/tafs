@@ -217,6 +217,9 @@ struct ShareTafSheet: View {
 /// Each line opens the taf.
 struct OverviewView: View {
     @EnvironmentObject private var model: AppModel
+    /// The calendar's button at the top right: off where the whole app's sidebar already has
+    /// Calendar as an item, so the iPad doesn't show it twice.
+    var showsCalendar = true
     /// Opens a taf, or a held call on its taf's page, beside the sidebar.
     let open: (HomeSelection) -> Void
     @State private var shares: [String: [KIFFClient.Share]] = [:]
@@ -230,22 +233,29 @@ struct OverviewView: View {
                         Text(Words.Home.Overview.subtitle).scaledFont(14).foregroundColor(Theme.dim)
                     }
                     Spacer()
-                    // The tafs' scheduled work to come (kiff/tafs#534).
-                    Button { open(.calendar) } label: {
-                        Image(systemName: "calendar").scaledFont(20, weight: .semibold).foregroundColor(Theme.ink)
-                            .frame(width: 44, height: 44)
-                            .background(Circle().fill(Theme.raised))
+                    // The tafs' scheduled work to come (kiff/tafs#534), unless the sidebar beside has it.
+                    if showsCalendar {
+                        Button { open(.calendar) } label: {
+                            Image(systemName: "calendar").scaledFont(20, weight: .semibold).foregroundColor(Theme.ink)
+                                .frame(width: 44, height: 44)
+                                .background(Circle().fill(Theme.raised))
+                        }
+                        .buttonStyle(.drivablePlain)
+                        .accessibilityLabel(Words.Calendar.heading)
+                        .accessibilityIdentifier("overview.calendar")
                     }
-                    .buttonStyle(.drivablePlain)
-                    .accessibilityLabel(Words.Calendar.heading)
-                    .accessibilityIdentifier("overview.calendar")
                 }
-                if !model.held.isEmpty { needsYou }
+                // Everything Needs you counts, not only the held calls: with no taf, a Coach chat or a step
+                // still waits (the owner's iPad: "Needs you · 3" beside "No tafs yet").
+                if model.needsYouCount > 0 { needsYou }
                 tafsTable
                 Text(Words.Home.Overview.eachLineOpens).scaledFont(12).foregroundColor(Theme.dim)
             }
             .padding(24)
             .frame(maxWidth: 980, alignment: .leading)
+            // The column stretches to the pane's width, so the cream reaches both edges (the owner's iPad:
+            // white strips beside a 980-point column), as the recipes' pane does.
+            .frame(maxWidth: .infinity)
         }
         .screenBackground()
         .task {
@@ -276,8 +286,28 @@ struct OverviewView: View {
                     .buttonStyle(.drivablePlain)
                 }
             }
+            // What else waits (Coach's chats, steps, "Did this happen?", Card units): tafs cloud's count,
+            // in its words, opening Needs you, where each is answered.
+            if Self.showsRest(count: model.needsYouCount, held: model.held.count) {
+                Button { open(.needsYou) } label: {
+                    HStack(spacing: 10) {
+                        Circle().fill(Theme.amber).frame(width: 8, height: 8)
+                        Text(model.needsYouWords).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
+                        Spacer()
+                        Image(systemName: "chevron.right").scaledFont(12, weight: .semibold).foregroundColor(Theme.soft)
+                    }
+                    .padding(12)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised))
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.drivablePlain)
+                .accessibilityIdentifier("overview.needsYou")
+            }
         }
     }
+
+    /// Needs you counts more than the held calls listed here: a line opens the rest.
+    static func showsRest(count: Int, held: Int) -> Bool { count > held }
 
     /// One grid, so each heading sits over its column (the 870 test: the headings drifted
     /// apart from the rows, and only one showed over its column).

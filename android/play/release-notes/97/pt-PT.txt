@@ -1,0 +1,1 @@
+- Um cartão de aprovação já não diz «sem impressão digital» quando a aprovação a pede.

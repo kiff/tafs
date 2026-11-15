@@ -39,6 +39,8 @@ data class ProfileWords(val profileSha256: String, val wordsSha256: String, val 
 
   companion object {
     const val WORDS_V1 = "kiff.words.v1"
+    /** v1's lines less KIFF's bookkeeping; asked for with `?v=2`. Either is shown and signed as KIFF sent it. */
+    const val WORDS_V2 = "kiff.words.v2"
 
     fun sha256Hex(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
 
@@ -47,12 +49,12 @@ data class ProfileWords(val profileSha256: String, val wordsSha256: String, val 
 
     /**
      * Reads KIFF's answer to `POST /v1/profiles/words` for [profile], and checks it before anything is shown: the words are
-     * `kiff.words.v1`, their hash is [words_sha256], and [profile_sha256] is the hash of the profile the phone sent. Otherwise
+     * `kiff.words.v1` or `kiff.words.v2`, their hash is [words_sha256], and [profile_sha256] is the hash of the profile the phone sent. Otherwise
      * nothing is shown and nothing can be approved.
      */
     fun checked(profile: JsonObject, answer: JsonObject): ProfileWords {
       val words = answer["words"]?.jsonObject ?: throw Mismatch("no words")
-      if (words["v"]?.jsonPrimitive?.content != WORDS_V1) throw Mismatch("words aren't $WORDS_V1")
+      if (words["v"]?.jsonPrimitive?.content !in setOf(WORDS_V1, WORDS_V2)) throw Mismatch("words version")
       val profileSha = answer["profile_sha256"]?.jsonPrimitive?.content
       val wordsSha = answer["words_sha256"]?.jsonPrimitive?.content
       if (profileSha != digest(profile)) throw Mismatch("profile digest")

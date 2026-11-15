@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.model.shortTime
 import bot.tafs.app.model.dayTitle
@@ -7,7 +8,6 @@ import bot.tafs.app.model.localDate
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -177,7 +177,7 @@ fun RecordView(
           Text(
             "· " + Words.Record.reads(count = n) + " · " + (if (open) Words.Record.hide else Words.Record.show),
             style = scaled(13, color = Theme.ok),
-            modifier = Modifier.clickable { openReads = if (open) openReads - key else openReads + key }.padding(horizontal = 4.dp),
+            modifier = Modifier.tapping { openReads = if (open) openReads - key else openReads + key }.padding(horizontal = 4.dp),
           )
         }
       }
@@ -195,7 +195,7 @@ private fun Chip(title: String, selected: Boolean, dot: Color? = null, onClick: 
       .clip(CircleShape)
       .background(if (selected) Theme.ink else Theme.panel)
       .border(BorderStroke(1.dp, if (selected) Theme.ink else Theme.line), CircleShape)
-      .clickable(onClick = onClick)
+      .tapping(onClick = onClick)
       .semantics { this.selected = selected }
       .padding(horizontal = 11.dp, vertical = 5.dp),
     horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -222,7 +222,7 @@ fun RecordRow(entry: RecordEntry, state: AppState, showTaf: Boolean = true) {
       .clip(shape)
       .background(Theme.panel)
       .border(BorderStroke(1.dp, Theme.line), shape)
-      .clickable(enabled = entry.kind != Kind.inTafs) { showing = true }
+      .tapping(enabled = entry.kind != Kind.inTafs) { showing = true }
       .padding(10.dp),
     horizontalArrangement = Arrangement.spacedBy(8.dp),
   ) {

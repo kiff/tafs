@@ -53,6 +53,17 @@ class Check(unittest.TestCase):
         self.assertTrue(changelog.check([("M", own)], mine))
         self.assertTrue(changelog.check([("M", "runtime/x.ts")], mine))
 
+    def test_a_name_that_comes_back_keeps_an_earlier_entry_as_it_is(self):
+        # The branch's pull request merged with an entry, and the name came back before a fold (kiff/tafs#859).
+        mine = "claude/trusting-brown-u8tr1r"
+        own = changelog.fragment_name(mine)
+        self.assertEqual(changelog.check([("M", "runtime/x.ts")], mine, filled_on_base=True), [])  # left as it is
+        # Still refused: rewriting or removing that entry, or another fragment as well or instead.
+        self.assertTrue(changelog.check([("M", own), ("M", "runtime/x.ts")], mine, filled_on_base=True))
+        self.assertTrue(changelog.check([("D", own)], mine, filled_on_base=True))
+        self.assertTrue(changelog.check([("A", "changes/other.md")], mine, filled_on_base=True))
+        self.assertTrue(changelog.check([("M", "CHANGELOG.md")], mine, filled_on_base=True))
+
     def test_dependabot_is_exempt(self):
         self.assertEqual(changelog.check([("M", "android/build.gradle.kts")], "dependabot/gradle/x"), [])
 
@@ -96,6 +107,9 @@ class Fold(unittest.TestCase):
         self.assertTrue(changelog.own_fragment_empty("HEAD", "a/b", self.dir))
         self.assertFalse(changelog.own_fragment_empty("HEAD", "c/d", self.dir))  # an entry, not the empty file
         self.assertFalse(changelog.own_fragment_empty("HEAD", "e/f", self.dir))  # none
+        self.assertTrue(changelog.own_fragment_filled("HEAD", "c/d", self.dir))  # an earlier entry
+        self.assertFalse(changelog.own_fragment_filled("HEAD", "a/b", self.dir))
+        self.assertFalse(changelog.own_fragment_filled("HEAD", "e/f", self.dir))
 
     def test_a_release_takes_everything_and_unreleased_starts_empty(self):
         self.write("changes/a.md", "- **New.** It.\n"); self.commit("a", 1_700_000_100)

@@ -239,6 +239,10 @@ data class ConnectApps(
     val entry: String,
     val vendor: String = "",
     val title: String = "",
+    /** The app's name for people ("Qonto", "Gmail"), tafs cloud's; null from a tafs cloud before it. */
+    val name: String? = null,
+    /** What this entry of the app is, drawn under its name ("Invoicing: reads, and invoice drafts from quotes"). */
+    val subtitle: String? = null,
     val icon: String? = null,
     /** The app's logo, a path on tafs cloud (`/v1/logos/{key}`), never a URL: loaded from tafs cloud alone. */
     val logo: String? = null,
@@ -286,3 +290,6 @@ data class ConnectStart(
     get() = (grantValue as? kotlinx.serialization.json.JsonObject)?.get("id")?.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content }
       ?: (grantValue as? kotlinx.serialization.json.JsonPrimitive)?.content ?: ""
 }
+
+/** What a Connect apps row reads as: tafs cloud's `name`, else its `title` (a tafs cloud before `name`). */
+val ConnectApps.App.displayName: String get() = name?.takeIf { it.isNotBlank() } ?: title

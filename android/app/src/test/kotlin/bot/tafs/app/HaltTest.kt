@@ -288,7 +288,7 @@ class HaltTest {
     assertTrue(HaltWords.explanation(Halt.Running, all = false).startsWith("Halting stops it until you resume."))
     assertEquals("Nothing new starts. Halted shows once KIFF and the connection both confirm.", HaltWords.explanation(Halt(state = "halting"), all = false))
     val halted = HaltWords.explanation(Halt(state = "halted", haltedAt = Instant.parse("2026-10-28T09:00:00Z")), all = false)
-    assertTrue(halted, halted.startsWith("Halted since "))
+    assertTrue(halted, halted.startsWith("Since "))
     assertTrue(halted, halted.endsWith("Resuming starts only new work."))
     assertTrue(HaltWords.explanation(Halt(state = "halted"), all = false).startsWith("Halted. Resuming starts only new work."))
   }
