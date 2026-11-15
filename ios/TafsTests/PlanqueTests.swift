@@ -419,6 +419,25 @@ final class PlanqueTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A 2xx that doesn't say `kept` is planque taking this phone's enrolment: set up, and nothing minted. Only
+    /// `409 needs_key` mints (the rule since 17:20, as Windows and the Mac).
+    func testATwoHundredWithoutKeptMintsNothing() async throws {
+        for answer in [(201, #"{"tenant":"t_01","device":"ab12"}"#), (200, #"{"tenant":"t_01","device":"ab12","kept":false}"#)] {
+            let signer = FaceIDSigner()
+            let model = await model(signer: signer, vendor: StubVendor())
+            StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+            StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = answer
+            StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+
+            let ready = await model.setUpPlanque()
+            XCTAssertTrue(ready, "\(answer.1): \(model.lastError ?? "")")
+            XCTAssertTrue(model.planqueReady, answer.1)
+            XCTAssertTrue(sent("POST", "api.test", "/v1/keys").isEmpty, "\(answer.1): nothing minted")
+            XCTAssertEqual(sent("POST", "planque.test", "/v1/accounts/t_01/enrolment").count, 1, answer.1)
+            Keychain.delete(AppModel.planqueAccount)
+        }
+    }
+
     /// No standing key (`409 needs_key`): a key is minted once and handed over, under the one Face ID.
     func testWithNoStandingKeyOneIsMintedAndHandedOver() async throws {
         let signer = FaceIDSigner()
@@ -438,7 +457,7 @@ final class PlanqueTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
-    /// Only planque saying it needs a key (`needs_key`, or an older planque's 400) mints one. Planque not
+    /// Only planque saying it needs a key (`needs_key`) mints one. Planque not
     /// reached, or a 5xx, mints nothing: a second enrolment would likely fail too and leave a key live in KIFF
     /// that no device can revoke. It says why, and the next Start asks again.
     func testPlanqueNotReachedOrFailingMintsNoConnectorKey() async throws {
@@ -483,13 +502,14 @@ final class PlanqueTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
-    /// Setting up planque is its own Face ID, once: planque gets the phone's key and a
-    /// connector key minted with a signed setup call.
+    /// Setting up planque is its own Face ID, once: planque gets the phone's key and, as it needs one
+    /// (`needs_key`), a connector key minted with a signed setup call.
     func testSetUpPlanqueOnce() async throws {
         let signer = FaceIDSigner()
         let model = await model(signer: signer, vendor: StubVendor())
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (409, #"{"error":"no connector key stands for this account","code":"needs_key"}"#)
+        StubProtocol.thenRespond["POST /v1/accounts/t_01/enrolment"] = ["POST /v1/accounts/t_01/enrolment": (201, #"{"tenant":"t_01","device":"ab12"}"#)]
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
         XCTAssertFalse(model.planqueReady)
 

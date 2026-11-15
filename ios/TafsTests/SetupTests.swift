@@ -147,13 +147,14 @@ final class SetupTests: XCTestCase {
         StubProtocol.sent.filter { $0.httpMethod == method && $0.url?.host == host && $0.url?.path == path }
     }
 
-    /// One Face ID starts it all, once: planque gets the phone's key and a connector key,
-    /// and Setup starts from a no-tools draft whose key tafs cloud claims.
+    /// One Face ID starts it all, once: planque gets the phone's key and, as it needs one (`needs_key`), a
+    /// connector key, and Setup starts from a no-tools draft whose key tafs cloud claims.
     func testStartSetupOnce() async throws {
         let signer = FaceIDSigner()
         let model = await model(signer: signer)
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (409, #"{"error":"no connector key stands for this account","code":"needs_key"}"#)
+        StubProtocol.thenRespond["POST /v1/accounts/t_01/enrolment"] = ["POST /v1/accounts/t_01/enrolment": (201, #"{"tenant":"t_01","device":"ab12"}"#)]
         StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","no_tools":true,"cards":[]}"#)
         StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
 
