@@ -393,7 +393,14 @@ things (`runtime/src/cloud/approval.ts`):
   calendar_day` and no `per` (a total for each customer is another total). Missing, or another
   figure for the same quantity and window on any Card covering it, looser or stricter, is
   answered `failed: …` with the agreed figure and the shape that holds it (`rules_figures`), and
-  Coach drafts it again. A rule with no figures is checked as before. Two things are logged, never
+  Coach drafts it again. A rule with no figures is checked as before. A figure may say what happens
+  past it, `over: "ask" | "refuse"`, when that isn't the tool's: "ask past €5 a refund, refuse past
+  €50 a day" is one rule, `over: refuse`, whose call figure says `over: ask` (Eval 16: with one `over`
+  per tool, the notice couldn't say it, and kiff/agents refused it three times). The rule's `over` is
+  the default for a figure that says none. Each Card covering the tool then has the `on_exceed` of
+  the agreed figures it carries (the tool's when it carries none), so two figures with different
+  answers on one Card are refused: one Card has one `on_exceed` (`rules_on_exceed`, naming the
+  split). The same notice shown again with another figure's `over` is other rules. Two things are logged, never
   refused: a figure a Card adds on a tool whose rule has figures, for a quantity and window the
   rule doesn't name ("approval rules: a figure the rules don't name: …"; refused behind a flag
   after an Eval), and an agreed figure whose number, in the Card's units or in hundredths, the
