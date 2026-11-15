@@ -301,7 +301,8 @@ things (`runtime/src/cloud/approval.ts`):
   The same checks run as the phone reads the chat, before an approval card over a draft is
   drawn (a connected app's Card alone), with the grants that read has, read with the phone's
   proof. A refusal a new draft mends (no Card, a vendor name, a tool on no Card or a stray one,
-  an on-demand app's write let run, a lifetime count or total, a day's total twice) goes to Coach
+  an on-demand app's write let run, a lifetime count or total, a day's total twice, a count on a
+  write with an amount limit) goes to Coach
   then, as the card's answer, and the card is drawn answered, never with Approve: the owner
   approves the redraft, one Card, not a refused one and then another. It's told once per draft
   version, across phones (a claim, then the answer kept a day). Anything else, or a read past
@@ -322,6 +323,12 @@ things (`runtime/src/cloud/approval.ts`):
   (`sum(…)`, `lifetime`) is answered `failed: …` too, naming the tool and the total: the owner
   agrees a limit for each call and a day's total, never a lifetime one. A sum per item and a
   lifetime count per item are signed.
+  A draft that limits one of the taf's write tools by its amount (a per-call cap or a total)
+  and also counts its calls (`count`, no `per`, a limit above 0), on the same Card or another,
+  is answered `failed: …` too (`count_on_amount`), naming the tool and the count: the owner
+  agreed the amounts, and a count beside them holds calls those amounts allow (1,001 one-cent
+  refunds under a €50 cap). A count of 0 held (each call asks the owner), a count per item, and
+  a count on a read or on a write with no amount limit are signed.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.

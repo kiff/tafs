@@ -1,7 +1,7 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { connectedKey, approvalWords, ASK_KEPT_MS, WORDS } from "../src/cloud/approval.js";
+import { connectedKey, approvalWords, ASK_KEPT_MS, REDRAFT_CODES, WORDS } from "../src/cloud/approval.js";
 import { approvalAnswerWords, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -489,7 +489,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const ask = async () => (await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
     const draft = (cards: unknown[]) => { s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards }; };
     // 1. Held per refund, refused past the day's total: signed.
-    draft([each([{ quantity: "count", limit: 100, window: "calendar_day" }]), daily([day(20_000)])]);
+    draft([each([]), daily([day(20_000)])]);
     expect(await ask()).toMatchObject({ outcome: "sign" });
     // 2. The same, plus a day's total on the held Card: not signed, and Coach hears both totals and what each does.
     draft([each([day(5000)]), daily([day(20_000)])]);
@@ -499,11 +499,49 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     // 3. Two day totals on the same amount, both refused, even on one Card: not signed.
     draft([daily([day(20_000), day(30_000)])]);
     expect((await ask()).note).toBe(WORDS.dayTotalTwice("Refund a charge"));
-    // 4. An amount over a day beside a count over a day: different totals, signed.
+    // 4. An amount over a day beside a count over a day: not twice, but a count on a write with an amount limit isn't
+    // signed either (count_on_amount, below).
     draft([daily([day(20_000), { quantity: "count", limit: 10, window: "calendar_day" }])]);
-    expect(await ask()).toMatchObject({ outcome: "sign" });
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
     // 5. An amount over a day beside an hour's, or a total for each item: different totals, signed.
     draft([daily([day(20_000), { ...day(5000), window: "rolling_1h" }, day(1000, { per: "charge" })])]);
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+  });
+
+  // Evals 10 to 12: the refund Card also counted refunds, 1,000 a day held for the owner, though the rules set only each
+  // refund's cap and the day's total, so 1,001 one-cent refunds under the cap would wait for the owner. Coach's words
+  // alone didn't hold. A write with an amount limit carries no count of its calls.
+  it("a draft that counts a write's calls beside its amount limits isn't signed; a count of 0, per item, or on a read is", async () => {
+    const s = services();
+    const tools = [{ tool: "refund_charge", name: "refund_charge_k3", title: "Refund a charge", amount_argument: "amount" },
+      { tool: "send_reply", name: "send_reply_k3", title: "Send a reply" },
+      { tool: "get_charge", name: "get_charge_k3", title: "Read a charge", read_only: true }];
+    s.grants = [grant({ status: "connected" }, { tools })];
+    const day = (limit: number) => ({ quantity: "sum(amount)", limit, window: "calendar_day" });
+    const count = (limit: number, extra: Record<string, unknown> = {}) => ({ quantity: "count", limit, window: "calendar_day", ...extra });
+    const each = (aggregates: unknown[]) => ({ id: "each", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 5000 }] }], aggregates });
+    const daily = (aggregates: unknown[]) => ({ id: "daily", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates });
+    const others = { id: "others", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "send_reply_k3" }, { action: "get_charge_k3" }], aggregates: [count(500)] };
+    const ask = async () => (await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+    const draft = (cards: unknown[]) => { s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards }; };
+    // 1. As agreed: €50 a refund, held; €200 a day, refused. A reply and a read keep their count: signed.
+    draft([each([]), daily([day(20_000)]), others]);
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // 2. The Eval's draft: 1,000 refunds a day on the held Card too. Not signed, and Coach hears the count and why.
+    draft([each([count(1000)]), daily([day(20_000)]), others]);
+    const r = await ask();
+    expect(r).toMatchObject({ outcome: "answered", note: WORDS.countOnAmount("Refund a charge") });
+    expect(String(r.answer)).toContain(`failed: the draft counts "Refund a charge"'s calls (1000 per calendar_day) beside its amount limits`);
+    expect(REDRAFT_CODES.has("count_on_amount")).toBe(true);
+    // 3. The count on the day's Card, or with only a per-call cap and no day's total: not signed either.
+    draft([each([]), daily([day(20_000), count(30)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    draft([each([count(30)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    // 4. A count of 0 held (each refund asks the owner), or a count per item (one refund per charge): signed.
+    draft([each([count(0)]), daily([day(20_000)]), others]);
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    draft([each([count(1, { per: "charge", window: "lifetime" })]), daily([day(20_000)]), others]);
     expect(await ask()).toMatchObject({ outcome: "sign" });
   });
 

@@ -1,0 +1,1 @@
+- **Approve refuses a count on a money write:** a draft whose write tool has an amount limit (a per-call cap or a total) and also a count of its calls isn't signed. It's answered `count_on_amount`, a refusal a redraft mends, so Coach hears it before the card is drawn (docs/coach.md). A count of 0 held, a count per item, and counts on reads stay signed.

@@ -114,6 +114,7 @@ export const en = {
   approval_lifetime_cap: (tool: string) => `This Card would let "${tool}" be used only a set number of times ever, across every item, not for each one. Nothing was approved. Coach drafts it again.`,
   approval_lifetime_sum: (tool: string) => `This Card would cap "${tool}" at a total amount over its whole life, across every item, which wasn't agreed. Nothing was approved. Coach drafts it again.`,
   approval_day_total_twice: (tool: string) => `This Card would set two daily totals for "${tool}", so one could decide past the limit differently from what was agreed. Nothing was approved. Coach drafts it again.`,
+  approval_count_on_amount: (tool: string) => `This Card would also count calls of "${tool}", beside its amount limits: a count nobody agreed to, which could hold calls the limits allow. Nothing was approved. Coach drafts it again.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} was set up today, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
   approval_critical_key: "This widens what the taf may do, so it takes your fingerprint. Nothing was approved; approve it again with your fingerprint.",
   approval_drive_key: "Letting Coach drive the app takes your fingerprint. Nothing started; approve it again with your fingerprint.",

@@ -107,6 +107,7 @@ export const it: Words = {
   approval_lifetime_cap: (tool: string) => `Questa Card permetterebbe a «${tool}» di funzionare solo un numero fisso di volte in tutto, per tutti gli elementi e non per ciascuno. Non è stato approvato nulla. Coach la riscrive.`,
   approval_lifetime_sum: (tool: string) => `Questa Card limiterebbe «${tool}» a un importo totale per sempre, per tutti gli elementi, cosa che non era stata concordata. Non è stato approvato nulla. Coach la riscrive.`,
   approval_day_total_twice: (tool: string) => `Questa Card fisserebbe due totali giornalieri per «${tool}», e uno potrebbe decidere oltre il limite diversamente da quanto concordato. Non è stato approvato nulla. Coach la riscrive.`,
+  approval_count_on_amount: (tool: string) => `Questa Card conterebbe anche le chiamate a «${tool}», oltre ai suoi limiti di importo: un numero che nessuno ha concordato, che potrebbe trattenere chiamate consentite dai limiti. Non è stato approvato nulla. Coach la riscrive.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} è stato configurato oggi, quindi ogni modifica deve chiederti prima; questa Card lascerebbe eseguire «${tool}» senza chiedere. Non è stato approvato nulla. Coach la riscrive.`,
   approval_critical_key: "Questo amplia ciò che il taf può fare, quindi serve la tua impronta. Non è stato approvato nulla; approva di nuovo con la tua impronta.",
   approval_drive_key: "Per lasciare che Coach usi l'app serve la tua impronta. Non è partito nulla; approva di nuovo con la tua impronta.",

@@ -59,7 +59,7 @@ export interface ApprovalGrant {
  * refused one and then its redraft (Eval 43690861487's Refunds). The rest (no draft, a removed taf, another app first,
  * a read that didn't come back) wait for the owner's tap, as before.
  */
-export const REDRAFT_CODES: ReadonlySet<string> = new Set(["no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice"]);
+export const REDRAFT_CODES: ReadonlySet<string> = new Set(["no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice", "count_on_amount"]);
 
 /**
  * What a refusal Coach redrafts on adds, so the redraft mends only what was named: the redraft under Eval 43690861487's
@@ -165,8 +165,49 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
     if (twice) {
       return { outcome: "answered", answer: `failed: the draft counts "${twice.tool}"'s ${twice.quantity} over a day on two Cards: ${twice.first.limit} on one whose on_exceed is "${twice.first.onExceed}", and ${twice.second.limit} on one whose on_exceed is "${twice.second.onExceed}". A day's total appears once, at the agreed amount, on the Card whose on_exceed is the agreed answer; a held per-action limit's Card has no day's total. Draft it again.`, note: W.dayTotalTwice(twice.tool), code: "day_total_twice" };
     }
+    // A write with an amount limit is limited by its amounts, as agreed: a count of its calls beside them is a limit
+    // nobody set (Evals 10 to 12: a refund Card also held past 1,000 refunds a day, so 1,001 one-cent refunds under the
+    // agreed cap would wait for the owner). Never signed. A count of 0 held (asking each time) and a count per item are kept.
+    const counted = countOnAmountWrite(grant, draft.cards);
+    if (counted) {
+      return { outcome: "answered", answer: `failed: the draft counts "${counted.tool}"'s calls (${counted.limit} per ${counted.window}) beside its amount limits. A write with an amount limit has only the agreed amounts, each call's and the day's total: no count of its calls. Draft it again without the count.`, note: W.countOnAmount(counted.tool), code: "count_on_amount" };
+    }
   }
   return { draft: draft as NonNullable<typeof draft> & { version: string } };
+}
+
+/**
+ * The first write tool of the connection that the draft's Cards limit by its amount (a per-call cap on a sum, or a
+ * sum over any window) and also count by its calls (count, with no per and a limit above 0), on the same Card or
+ * another. A count of 0 (each call asks the owner, as on demand) and a count per item (per its argument) are kept, as
+ * is a count on a read. The tool is named as the connection titles it, with the count's limit and window.
+ */
+export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { tool: string; limit: number; window: string } | undefined {
+  const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+  const writes = (grant.request.tools ?? []).filter((t) => !t.read_only && !t.setup_reads);
+  type Aggregate = { quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown };
+  type Grant = { action?: unknown; per_action_max?: unknown };
+  for (const t of writes) {
+    const name = fold(t.name || t.tool);
+    if (!name) continue;
+    let amount = false;
+    let count: { limit: number; window: string } | undefined;
+    for (const raw of cards) {
+      const card = raw as { grants?: unknown; aggregates?: unknown };
+      const grants = (Array.isArray(card.grants) ? card.grants : []) as Grant[];
+      const mine = grants.filter((g) => fold(g.action) === name);
+      if (!mine.length) continue;
+      const aggregates = (Array.isArray(card.aggregates) ? card.aggregates : []) as Aggregate[];
+      if (mine.some((g) => Array.isArray(g.per_action_max) && (g.per_action_max as Aggregate[]).some((m) => fold(m.quantity).startsWith("sum(")))) amount = true;
+      for (const a of aggregates) {
+        if (fold(a.quantity).startsWith("sum(")) amount = true;
+        const limit = typeof a.limit === "number" ? a.limit : 0;
+        if (!count && fold(a.quantity) === "count" && !fold(a.per) && limit > 0) count = { limit, window: fold(a.window) || "window" };
+      }
+    }
+    if (amount && count) return { tool: t.title || t.name || t.tool || name, ...count };
+  }
+  return undefined;
 }
 
 /**
@@ -486,6 +527,7 @@ export function approvalWords(lang: Lang = "en") {
     lifetimeCap: w.approval_lifetime_cap,
     lifetimeSum: w.approval_lifetime_sum,
     dayTotalTwice: w.approval_day_total_twice,
+    countOnAmount: w.approval_count_on_amount,
     onDemandLetsRun: w.approval_on_demand,
     criticalKey: w.approval_critical_key,
     driveKey: w.approval_drive_key,
