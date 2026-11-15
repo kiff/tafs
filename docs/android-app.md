@@ -538,7 +538,8 @@ answered:
   Pair them, Ignore), then its runs, where its work stands (each request opens step by step) and
   its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`).
 - **Card:** only what's on its Card: the Card, its limits and how they're counted, its usage,
-  Halt and Revoke.
+  Halt and Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
+  that can approve." in Revoke's place ([approvals.md](approvals.md)); the sample keeps its own Revoke.
 
 Who it's shared with (`PeopleWords.sharedWith`) leaves out the person reading: the one KIFF marks
 `you` in its people list, or the one whose email is the account read's, as on iOS. Their own share is
@@ -1049,7 +1050,8 @@ contract), and the phone can't tell which devices do, so `DELETE /v1/me/devices/
 signed by the approval key, behind one fingerprint that names the device ("Sign {device} out of
 your account"), never inside an approval window. A session KIFF holds no approval key for confirms
 on the phone and signs with the device key; KIFF decides, and its `approval_key_required` says
-approving needs a new sign-in. This phone signs itself out with Sign out, unchanged.
+approving needs a new sign-in. A view-only session (`view_only`) is told "To sign another device out, use a device
+that can approve.", the line every app shares (`settings.devices.signout_needs_approver`). This phone signs itself out with Sign out, unchanged.
 
 **Where it's held.** The QR being asked about, the line that says what came of it, and whether a
 scan or a pairing is under way are the model's (`AppState.pairAsking`, `pairLine`, `pairBusy`), and

@@ -98,6 +98,7 @@
   "taf.revoke": "Revocar",
   "taf.revoke_and_stop": "Revocar y detener",
   "taf.revoke_body": "No se completa ninguna acción nueva. Lo que ya se hizo se mantiene.",
+  "taf.revoke_needs_approver": "Para revocar esta Card, usa un dispositivo que pueda aprobar.",
   "taf.revoke_title": "¿Revocar la Card de {taf}?",
   "taf.run_not_started": "La ejecución no empezó. {why}",
   "taf.run_now": "Ejecutar ahora",

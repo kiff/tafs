@@ -33,6 +33,16 @@ describe("Setup's definition on kiff/agents", () => {
     expect(core).not.toContain("write none, or write it in their language");
   });
 
+  // An English owner's first working line came out in French (Eval 43695849959's desk: "Je regarde l'API du help
+  // desk…") and in Spanish (Eval 43652011201's invoices: "Miro la API de facturación…"): the rule's one example of
+  // that line was Spanish, and the line is written before anything else is read. The owner's last message sets it.
+  it("writes even its first working line in the owner's language, never an example's", () => {
+    const core = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    expect(core).toContain("If they write in Spanish, everything you show is in Spanish. Their last message sets it, never an example here.");
+    expect(core).toContain(`saying what you're doing now ("I'm looking at Refunds' last runs…")`);
+    expect(core).not.toContain("Miro las últimas ejecuciones de Reembolsos");
+  });
+
   it("runs as a taf runs, with its own cost cap and effort", () => {
     const d = setupDefinition(ID);
     const taf = definition(ID, jobById("refunds"));
@@ -275,8 +285,8 @@ describe("Setup's definition on kiff/agents", () => {
     // A hand-off refused by the tool showed as done in the plan (the 870 test).
     expect(flat).toContain("A step whose call came back refused or failed is failed, never done, even when you go on");
     // The rules said reads had no limit; the Card it drafted counted them (the 870 test).
-    expect(flat).toContain("For a read tool, say the call count its Card line will have");
-    expect(flat).toContain("never \"no limit\"");
+    expect(flat).toContain("Name each read tool the taf gets, by what it does, with the call count its Card line will have");
+    expect(flat).toContain("never \"each read tool\" or \"no limit\"");
     // The owner's iPad test (#95): no device's biometry or screen position, a taf that
     // can find its work, the plan finished, and a day that is the account's day.
     // Face ID is named only to say not to name it.

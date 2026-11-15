@@ -1,3 +1,4 @@
+import { contract } from "./contract.js";
 import { describe, expect, it } from "vitest";
 import { activityPage, activityEntry, activityMatches, representationTag, type ActivityCall } from "../src/cloud/activity.js";
 import { handle, type Deps, type HTTPEvent } from "../src/cloud/handler.js";
@@ -181,6 +182,7 @@ describe("Activity's HTTP contract", () => {
     } as unknown as Deps;
     const event: HTTPEvent = { rawPath: `/v1/tafs/${id}/activity`, headers: { authorization: "Bearer synthetic-session" }, requestContext: { http: { method: "GET" } } };
     const first = await handle(event, deps); expect(first.statusCode).toBe(200); expect(first.headers.etag).toBeTruthy();
+    contract("taf-activity", "GET /v1/tafs/{id}/activity for someone who may use the taf: one call, its words and amounts, the Card-unit exceptions (none), and the revision the app sends back as If-None-Match.", JSON.parse(first.body));
     const unchanged = await handle({ ...event, headers: { ...event.headers, "if-none-match": first.headers.etag } }, deps);
     expect(unchanged.statusCode).toBe(304); expect(unchanged.body).toBe("");
     exceptionUnavailable = true;

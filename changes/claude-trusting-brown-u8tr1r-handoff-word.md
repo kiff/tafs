@@ -1,0 +1,1 @@
+- **A hand-off's task tells the receiving taf to say what it didn't read itself as the sending taf's word,** never as what it found (docs/reliability.md).

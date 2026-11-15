@@ -1,0 +1,17 @@
+{
+  "about": "GET /v1/tafs/{id}/runs for someone who may use the taf: two runs, one that stopped on an error and one with none. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "runs": [
+      {
+        "session": "sess3",
+        "at": "2026-10-16T12:00:00.000Z",
+        "error": null
+      },
+      {
+        "session": "sess1",
+        "at": "2026-10-16T12:00:00.000Z",
+        "error": "The taf stopped before it finished: the app didn't answer."
+      }
+    ]
+  }
+}

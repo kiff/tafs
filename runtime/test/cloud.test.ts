@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
-import { atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { approvalWaits, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -17,6 +17,7 @@ import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, 
 import type { AccountEvent } from "../src/cloud/events.js";
 import { RECIPES } from "../src/recipes.js";
 import { contract } from "./contract.js";
+import { stepWhyKey } from "../src/cloud/steps.js";
 import { connectsToday } from "../src/cloud/recipes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -928,6 +929,7 @@ describe("tafs cloud", () => {
     expect(home.body.card_unit_exceptions[0]).toMatchObject({ id: "exc-example", taf: RAE, name: "Rae", can_approve_once: false });
     const setup = await call(w, "GET", `/v1/tafs/${RAE}/setup`, { token: "ana" });
     expect(setup.status).toBe(200); expect(setup.body.card_unit_exceptions).toEqual(home.body.card_unit_exceptions);
+    contract("taf-setup", "GET /v1/tafs/{id}/setup for someone who manages the taf: its connections and Cards as the Setup tab draws them, with one Card-unit exception waiting.", setup.body);
     w.account.access = {};
     expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.card_unit_exceptions).toBeUndefined();
     expect((await call(w, "GET", `/v1/tafs/${MAX}/setup`, { token: "ana" })).status).toBe(404);
@@ -955,6 +957,8 @@ describe("tafs cloud", () => {
       words: "Gmail's sign-in has expired, so Rae can't use it. Connect again to sign in.", done_words: "Gmail is connected again. Rae can use it." });
     expect((await setup("needs_reconnect", "fr")).connect_again?.title).toBe("Se reconnecter");
     expect((await setup("connected")).connect_again).toBeUndefined();
+    contract("taf-setup-connected", "GET /v1/tafs/{id}/setup for someone who manages the taf, with one app connected (Gmail): its connection as the Setup tab draws it.", await setup("connected"));
+    contract("taf-setup-reconnect", "GET /v1/tafs/{id}/setup when the taf's own connection's sign-in has expired: the connection and the taf's Connect again.", await setup("needs_reconnect"));
   });
 
   it("does not claim no currency exceptions wait when KIFF could not be read", async () => {
@@ -1193,6 +1197,71 @@ describe("tafs cloud", () => {
     expect((await read("fr")).body.report.counted).toBe("D'après le registre — fait : 5 · vous attend : 1 · refusé : 2");
     Object.assign(run, { tally: {} });
     expect((await read()).body.report).not.toHaveProperty("counted");
+  });
+
+  // What the desktops' Overview reads for a taf's last result: its runs, in kiff/agents' order, and one run's report as
+  // it ran, as it ended with a count, and as it stopped on an error.
+  it("keeps the runs list and a run's report as contracts, for the Overview's last result", async () => {
+    const w = world();
+    const first = await call(w, "POST", `/v1/tafs/${RAE}/run`, { token: "ana" });
+    const second = await call(w, "POST", `/v1/tafs/${RAE}/run`, { token: "ana" });
+    const runOf = (session: string) => w.agents.runs.find((r) => r.session === session)!;
+    const failed = runOf(first.body.session);
+    const done = runOf(second.body.session);
+    Object.assign(failed, { status: "ERROR", error: "The taf stopped before it finished: the app didn't answer." });
+    const runs = await call(w, "GET", `/v1/tafs/${RAE}/runs`, { token: "ana" });
+    expect(runs.body.runs).toHaveLength(2);
+    expect(runs.body.runs.find((r: { session: string }) => r.session === first.body.session).error).toBe("The taf stopped before it finished: the app didn't answer.");
+    expect(runs.body.runs.find((r: { session: string }) => r.session === second.body.session).error).toBeNull();
+    contract("taf-runs", "GET /v1/tafs/{id}/runs for someone who may use the taf: two runs, one that stopped on an error and one with none.", runs.body);
+
+    const read = (session: string) => call(w, "GET", `/v1/tafs/${RAE}/runs/${session}`, { token: "ana" });
+    const running = await read(second.body.session);
+    expect(running.body.report).toEqual({ status: "running", text: "" });
+    contract("taf-run-report-running", "GET /v1/tafs/{id}/runs/{session} for a run still working (waiting on the owner reads the same).", running.body);
+
+    Object.assign(done, { status: "COMPLETED", output: "Evidence went on the disputes; one waits for you.", tally: { submit_evidence: { sent: 5, held: 1 }, shop_get_order: { refused: 2 } } });
+    const ended = await read(second.body.session);
+    expect(ended.body.report.counted).toBe("From the Record — done: 5 · waiting for you: 1 · refused: 2");
+    contract("taf-run-report", "GET /v1/tafs/{id}/runs/{session} for a run that ended: its last answer, and its count from the record in the owner's words.", ended.body);
+
+    const stopped = await read(first.body.session);
+    expect(stopped.body.report.status).toBe("terminated");
+    contract("taf-run-report-terminated", "GET /v1/tafs/{id}/runs/{session} for a run that stopped on an error: terminated, with no answer.", stopped.body);
+  });
+
+  // What the desktops' Overview, Your tafs and a taf's page read for the list: GET /v1/tafs (each taf's schedule and
+  // clock) and GET /v1/home (its state, Card, last change and health), live with its schedule's checks skipped, then
+  // paused.
+  it("keeps the tafs list and Home's list as contracts, live with its health and then paused", async () => {
+    const w = world();
+    // Its refund Card: €100 a call, €1,000 a day with €200 used, 20 calls a day.
+    w.account.mandates = [{
+      id: "card_rae", subject: "rae", active: true, on_exceed: "hold", valid_until: "2026-12-31T00:00:00Z",
+      grants: [{ action: "stripe_refund", title: "Create refund", per_action_max: [{ quantity: "sum(amount)", max: 10000, unit: "EUR", scale: 2 }] }],
+      aggregates: [{ quantity: "sum(amount)", limit: 100000, window: "calendar_day", unit: "EUR", scale: 2 }, { quantity: "count", limit: 20, window: "calendar_day" }],
+      limits: [{ quantity: "sum(amount)", window: "calendar_day", limit: 100000, used: 20000, status: "ok", unit: "EUR", scale: 2 }],
+    }];
+    const at = (iso: string) => ({ due: iso, at: iso });
+    w.agents.firings.set(`t_acme|${RAE}`, [
+      { ...at("2026-10-29T09:45:00.000Z"), outcome: "skipped_too_large" },
+      { ...at("2026-10-29T09:30:00.000Z"), outcome: "skipped_too_large" },
+      { ...at("2026-10-29T09:15:00.000Z"), outcome: "run", run: "r1" },
+    ]);
+    const list = await call(w, "GET", "/v1/tafs", { token: "ana" });
+    expect(list.body.tafs.map((t: { id: string; status: string }) => [t.id, t.status])).toEqual([[RAE, "active"]]);
+    contract("tafs", "GET /v1/tafs for someone who manages the tafs: one live taf, with its next run in the person's words and its clock.", list.body);
+    const home = await call(w, "GET", "/v1/home", { token: "ana" });
+    expect(home.body.tafs.find((t: { id: string }) => t.id === RAE).health.level).toBe("failing");
+    expect(home.body.tafs[0].card.ids).toEqual(["card_rae"]);
+    contract("home", "GET /v1/home for someone who manages the tafs: one live taf with its refund Card, whose last two checks were skipped (its health failing), with its state, Card and work line.", home.body);
+
+    expect((await call(w, "POST", `/v1/tafs/${RAE}/pause`, { token: "ana" })).status).toBe(200);
+    const paused = await call(w, "GET", "/v1/tafs", { token: "ana" });
+    expect(paused.body.tafs[0].status).toBe("paused");
+    contract("tafs-paused", "GET /v1/tafs for someone who manages the tafs: the same taf, paused.", paused.body);
+    const homePaused = await call(w, "GET", "/v1/home", { token: "ana" });
+    contract("home-paused", "GET /v1/home for someone who manages the tafs: the same taf, paused.", homePaused.body);
   });
 });
 
@@ -4279,7 +4348,12 @@ describe("Coach's result, handed over by tafs cloud", () => {
       body: JSON.stringify({ run: run.id, agent: COACH, status: "PAUSED", ref: `${Buffer.from("t_acme").toString("base64url")}.abcdefghijklmnopqrstuvwx`, cards }),
     }, deps);
     const answer = () => w.agents.runs.find((r) => r.id === run.id)!.requirements![0]!.result as { answer?: unknown; answered_by?: string } | undefined;
-    return { w, run: run.id, note, answer, deps };
+    // An approval card waiting beside the result: the owner may be approving its Card on it now.
+    const approvalBeside = (answered = false, type = "approval") => w.agents.runs.find((r) => r.id === run.id)!.requirements!.push({
+      call_id: "s0", tool: "show", input: { type, id: "connect", grant: "grt_Desk123456", draft: "drf_s1" }, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card",
+      ...(answered ? { answered: true } : {}),
+    });
+    return { w, run: run.id, note, answer, deps, approvalBeside };
   }
 
   // The first run's item 7 (dev-android on #860): the hand-over card reads this answer, so a taf made with no plan says so.
@@ -4449,7 +4523,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
   // A Card the owner hasn't approved yet isn't a failure: answering "failed" showed "not set up: waiting for
   // your confirmation", in English, under "Set up", while the owner was still reading the Card.
   it("claims only a draft KIFF says is confirmed: one waiting isn't answered, and is made once the owner approves", async () => {
-    const { w, note, answer, deps } = await paused();
+    const { w, note, answer, deps, approvalBeside } = await paused();
+    approvalBeside();
     w.agents.access.set("u_ana", { cards_manage: true });
     w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
     await note();
@@ -4464,19 +4539,24 @@ describe("Coach's result, handed over by tafs cloud", () => {
   });
 
   it("a result still waiting on its Card is tried again with the next note, never answered failed", async () => {
-    const { w, note, answer } = await paused();
-    w.agents.access.set("u_ana", { cards_manage: true });
-    w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
-    await note();
-    expect(answer()).toBeUndefined();
-    await note();
-    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    // Beside an approval card, or a sign-in card carrying the draft (the owner signs in, then the Card).
+    for (const beside of ["approval", "sign_in"]) {
+      const { w, note, answer, approvalBeside } = await paused();
+      approvalBeside(false, beside);
+      w.agents.access.set("u_ana", { cards_manage: true });
+      w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+      await note();
+      expect([beside, answer()]).toEqual([beside, undefined]);
+      await note();
+      expect([beside, answer()]).toEqual([beside, { answer: { taf_id: NEW }, answered_by: "tafs cloud" }]);
+    }
   });
 
   // 13 Nov: Coach was told its approval went through, but only the connection was signed, so no card
   // ever asked for the Card. The result waited, unlogged, for a confirm nothing would ask for.
   it("a result whose Card never comes is answered in plain words after 15 minutes, once, so Coach asks for the Card", async () => {
-    const { w, note, answer, deps } = await paused();
+    const { w, note, answer, deps, approvalBeside } = await paused();
+    approvalBeside();
     w.agents.access.set("u_ana", { cards_manage: true });
     const notReady = () => w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
     const start = w.now;
@@ -4509,6 +4589,48 @@ describe("Coach's result, handed over by tafs cloud", () => {
     } finally {
       console.warn = warn;
     }
+  });
+
+  // Eval 13's Refunds: its draft was refused, and Coach redrafted and showed the result with no approval between. Nothing
+  // asks the owner for that Card, so the result goes back to Coach at once, never 15 minutes on, and Coach shows it.
+  it("answers at once a result whose Card isn't confirmed when no approval card waits beside it, once, and makes nothing", async () => {
+    for (const before of ["none", "answered"] as const) {
+      const { w, note, answer, deps, approvalBeside } = await paused();
+      if (before === "answered") approvalBeside(true);
+      w.agents.access.set("u_ana", { cards_manage: true });
+      w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+      const logged: string[] = [];
+      const log = console.log;
+      console.log = (...a: unknown[]) => { logged.push(a.join(" ")); };
+      try {
+        await note();
+      } finally {
+        console.log = log;
+      }
+      expect([before, answer()]).toEqual([before, { answer: { failed: "The Card for Refunds was never approved, so Refunds isn't set up yet: approve its Card to finish" }, answered_by: "tafs cloud" }]);
+      expect(JSON.stringify(answer())).not.toMatch(/draft_not_ready|drf_/);
+      expect([...w.tafs.held.values()].some((t) => t.kiffAgent === "refunds-x")).toBe(false);
+      expect(logged.some((l) => l.includes('"event":"handover_unconfirmed"'))).toBe(true);
+      // Once: the card no longer waits, so later notes and the sweep do nothing more.
+      const answered = w.agents.calls.filter((c) => c.startsWith("answerResult")).length;
+      expect(answered).toBe(1);
+      await note();
+      await sweepHandOvers(deps);
+      expect(w.agents.calls.filter((c) => c.startsWith("answerResult")).length).toBe(answered);
+    }
+  });
+
+  it("counts only an approval card still waiting as one the owner may be approving on", () => {
+    const card = (input: unknown, more: Record<string, unknown> = {}) => ({ call_id: "c", tool: "show", input, operation: "", expires: "", kind: "card", ...more });
+    expect(approvalWaits({ requirements: [card({ type: "approval", grant: "g" })] })).toBe(true);
+    expect(approvalWaits({ requirements: [card({ type: "result", id: "done" }), card({ type: "approval", grant: "g", draft: "d" })] })).toBe(true);
+    expect(approvalWaits({ requirements: [card({ type: "approval", grant: "g" }, { answered: true })] })).toBe(false);
+    // A sign-in card is decided with its draft as an approval is: the owner may be signing in for the Card now.
+    expect(approvalWaits({ requirements: [card({ type: "result", id: "done" }), card({ type: "sign_in", grant: "g", draft: "d" })] })).toBe(true);
+    expect(approvalWaits({ requirements: [card({ type: "sign_in", grant: "g" }, { answered: true })] })).toBe(false);
+    expect(approvalWaits({ requirements: [card({ type: "result", id: "done" }), card({ type: "question" })] })).toBe(false);
+    expect(approvalWaits({ requirements: [{ ...card({ type: "approval" }), kind: "approval" }] })).toBe(false);
+    expect(approvalWaits({})).toBe(false);
   });
 
   // 14 Nov: every Gmail taf's first check named data.messages, a skill's example, where the read Coach made had its
@@ -4568,7 +4690,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
 
   // The owner's run waited 40 minutes before the first try after a deploy: the 15 minutes count from the pause.
   it("a result already waiting past 15 minutes is answered at its first try", async () => {
-    const { w, note, answer } = await paused();
+    const { w, note, answer, approvalBeside } = await paused();
+    approvalBeside();
     w.agents.access.set("u_ana", { cards_manage: true });
     w.now = new Date(w.now.getTime() + 20 * 60_000);
     w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
@@ -4578,7 +4701,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
 
   // No one need open the app to be told: the sweep tries a waiting hand-over every 5 minutes in its first hour.
   it("the sweep tries a waiting hand-over every 5 minutes in its first hour, and says each try", async () => {
-    const { w, note, answer, deps } = await paused();
+    const { w, note, answer, deps, approvalBeside } = await paused();
+    approvalBeside();
     w.agents.access.set("u_ana", { cards_manage: true });
     const start = w.now;
     const notReady = () => w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
@@ -4610,7 +4734,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
   });
 
   it("a result whose Card is approved within the 15 minutes is made, as before", async () => {
-    const { w, note, answer } = await paused();
+    const { w, note, answer, approvalBeside } = await paused();
+    approvalBeside();
     w.agents.access.set("u_ana", { cards_manage: true });
     const start = w.now;
     w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
@@ -5007,6 +5132,59 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const again = JSON.parse((await handle({ rawPath: `/v1/tafs/${COACH}/conversation`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
       { ...depsOf(w), coach: memoryCoach(() => w.now) })).body) as { components: Array<{ component: { id: string }; answer?: unknown }> };
     expect(again.components.find((c) => c.component.id === "done")?.answer).toMatchObject({ state: "answered", words: "Refunds is set up", by: "tafs cloud", outcome: { taf_id: NEW } });
+  });
+
+  // What the desktops' Coach conversation reads (kiff/work#2): Coach in GET /v1/setup, its chats, and one chat with a
+  // message that has work, one refused, the owner's words answering a card, the three card kinds, and Coach's lines.
+  it("keeps Coach's setup, its chats and one chat as contracts, for the desktops' Coach conversation", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const read = async (path: string) => {
+      const r = await handle({ rawPath: path, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps);
+      expect(r.statusCode, path).toBe(200);
+      return JSON.parse(r.body);
+    };
+    const setup = await read("/v1/setup");
+    expect(setup.setup).toMatchObject({ id: COACH });
+    contract("setup-coach", "GET /v1/setup once the account has its Coach: Coach's id and name, and its tools as KIFF has them.", setup);
+
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds for my shop", { requester: { kind: "member", id: "u_ana" } });
+    const stored = w.agents.runs.find((r) => r.id === run.id)!;
+    const list = () => w.agents.events.get(stored.session)!;
+    // Each event so many seconds after the owner's first message.
+    const start = Date.parse(list()[0]!.time);
+    const at = (s: number) => new Date(start + s * 1000).toISOString();
+    const push = (s: number, kind: string, body: object) => list().push({ session: stored.session, run: stored.id, seq: list().length + 1, time: at(s), kind, body } as SessionEvent);
+    // Its work: two reads, the first one refused (the connection), then a reply with that work, said once.
+    push(5, "usage", { cost_micro_usd: 1, timing: { ms: 900, waited: [{ tool: "planque", ms: 300, is_error: true, input_hash: "a" }, { tool: "planque", ms: 400, input_hash: "b" }] } });
+    await deps.coach.put(stepWhyKey("t_acme", stored.id), [{ call: "c1", tool: "planque", why: "Coach couldn't connect Shippo yet", refusal: "managed sign-in isn't set up for this app",
+      refused: { vendor: "Shippo", reason: "Why: managed sign-in isn't set up for this app", next: "Next: ask Coach to connect Shippo with its key instead, or to use another app." } }], new Date(w.now.getTime() + 3600_000));
+    w.agents.say(stored, "Shippo's sign-in isn't set up here, so I'll connect Stripe first. A few questions:", at(10));
+    // The three card kinds: questions answered in the owner's own words, an approval answered, and a result tafs cloud answered.
+    w.agents.show(stored, { type: "questions", id: "limits", title: "Refunds' limits", questions: [{ id: "per_refund", text: "Most for one refund?", options: [{ value: "50", label: "€50" }] }] }, at(12));
+    push(20, "answered", { id: "limits", type: "questions", wrote: "Up to €5 each, €50 a day" });
+    w.agents.show(stored, { type: "approval", id: "connect-stripe", grant: "grt_1", title: "Connect Stripe", text: "Approve to connect Stripe for Refunds." }, at(25));
+    push(40, "answered", { id: "connect-stripe", type: "approval", answer: "approve", words: "Approved" });
+    w.agents.show(stored, RESULT, at(50));
+    push(60, "answered", { id: "done", type: "result", answer: { taf_id: RAE }, answered_by: "tafs cloud" });
+    w.agents.say(stored, "Refunds is set up.", at(61));
+    // A line about a taf queued for Coach, read on this chat.
+    await deps.coach.put(coachKeys.notes("t_acme", "u_ana"), [{ at: at(70), taf: "Rae", taf_id: RAE, said: "Refunded $20 to order 42.", text: "Rae: Refunded $20 to order 42." }], new Date(w.now.getTime() + 3600_000));
+
+    const chats = await read(`/v1/tafs/${COACH}/chats`);
+    expect(chats.chats.map((c: { session: string }) => c.session)).toContain(stored.session);
+    contract("coach-chats", "GET /v1/tafs/{id}/chats for Coach: its chats, newest first, each by what the owner asked.", chats);
+    const chat = await read(`/v1/tafs/${COACH}/conversation/${stored.session}`);
+    const messages = chat.messages as Array<{ from: string; work?: unknown; refused?: unknown; answers?: string }>;
+    expect(messages.some((m) => m.work)).toBe(true);
+    expect(messages.some((m) => m.refused)).toBe(true);
+    expect(messages.find((m) => m.answers)?.answers).toBe("limits");
+    expect((chat.components as Array<{ component: { type: string } }>).map((c) => c.component.type)).toEqual(["questions", "approval", "result"]);
+    expect(chat.coach_lines).toEqual([{ at: at(70), taf: "Rae", said: "Refunded $20 to order 42." }]);
+    contract("coach-conversation", "GET /v1/tafs/{id}/conversation/{session} for one Coach chat: a reply with its work, a refused connection, the owner's own words answering a questions card, an approval and a result answered, and a line Coach hasn't read about a taf.", chat);
   });
 
   // Finding 3 of the Android 76 check: a Coach chat left before the hand-over left an agent with a signed Card and no
@@ -5460,7 +5638,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.tafs.held.delete(`t_acme#${RAE}`);
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@27,draft-the-card@20,name-the-tools@16,set-up-a-taf@11,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@27,draft-the-card@23,name-the-tools@17,set-up-a-taf@11,usage-and-plans@3`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -5468,23 +5646,23 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is it stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@20,name-the-tools@16,set-up-a-taf@11,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@23,name-the-tools@17,set-up-a-taf@11,usage-and-plans@3`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "is everything stopped?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@27,draft-the-card@20,halting@1,name-the-tools@16,set-up-a-taf@11,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@27,draft-the-card@23,halting@1,name-the-tools@17,set-up-a-taf@11,usage-and-plans@3`);
     await w.agents.api.resume("t_acme");
     // An account with a taf of its own: every Coach start has the holds and the halting, whatever its state.
     // "Refunds hasn't done anything" and "stop everything" never name a skill, and the model left to read
     // one didn't (kiff/agents Eval 42788659962).
     w.tafs.held.set(`t_acme#${RAE}`, rae);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Rae hasn't done anything since this morning", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@20,halting@1,name-the-tools@16,set-up-a-taf@11,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@23,halting@1,name-the-tools@17,set-up-a-taf@11,usage-and-plans@3`);
     // An improvement opens on the taf: its skill.
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@20,halting@1,improve-a-taf@1,name-the-tools@16`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@23,halting@1,improve-a-taf@1,name-the-tools@17`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
@@ -5502,7 +5680,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@20,halting@1,name-the-tools@16,set-up-a-taf@2,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@23,halting@1,name-the-tools@17,set-up-a-taf@2,usage-and-plans@3`);
     // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
     w.agents.access.set("u_ana", { cards_manage: true });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });

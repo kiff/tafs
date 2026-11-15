@@ -1,0 +1,1 @@
+- A phone that can't approve says so as soon as your account loads: “Sign in again on this phone to approve, or approve from your other phone.”

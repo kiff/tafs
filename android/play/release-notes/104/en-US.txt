@@ -1,0 +1,1 @@
+- A Card's tab on a phone that can't approve no longer offers Revoke. It says: “To revoke this Card, use a device that can approve.”
