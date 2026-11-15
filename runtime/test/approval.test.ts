@@ -2,7 +2,7 @@ import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { connectedKey, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, WORDS } from "../src/cloud/approval.js";
-import { approvalAnswerWords, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { approvalAnswerWords, checkedOnReadFor, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -1641,11 +1641,11 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     try {
       const r = await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" });
       expect(r.status).toBe(200);
-      expect(r.body).toEqual({ outcome: "answered", code: "vendor_name", redraft: true, note: WORDS.registeredName("list_charges", "list_charges_noyy"),
+      expect(r.body).toEqual({ outcome: "answered", code: "vendor_name", redraft: true, checked_on_read: true, note: WORDS.registeredName("list_charges", "list_charges_noyy"),
         answer: expect.stringMatching(/^failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy"/) });
       // The draft over the registered name passes: ok, with the version it was checked at.
       s.drafts.drf_1.cards = card(["refund_charge", "list_charges_noyy"]);
-      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "ok", version: "v3" });
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "ok", version: "v3", checked_on_read: true });
       // The log has the reason code only: never the draft, its Cards or the tools.
       expect(logged.filter((l) => l.startsWith("approval check:"))).toEqual(["approval check: vendor_name", "approval check: ok"]);
       expect(logged.join("\n")).not.toMatch(/drf_1|list_charges|refund_charge/);
@@ -1667,7 +1667,7 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     const check = async (body: Record<string, unknown>, path = CHECK, headers: Record<string, string> = {}) => w.call("POST", path, body, headers);
     expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "read_again", code: "out_of_date" });
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
-    expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "read_again", code: "cards_unread", note: WORDS.cardsUnread });
+    expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "read_again", code: "cards_unread", note: WORDS.cardsUnread, checked_on_read: true });
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: null as unknown as unknown[] };
     expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "no_card", note: WORDS.noCard });
     // A draft for another taf than the grant's, and a grant planque doesn't list for this account.
@@ -1679,6 +1679,65 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     expect((await check({ draft: "drf_1", shown_draft: "v3" }, "/v1/connect/grants/g_9/check")).body).toMatchObject({ outcome: "answered", code: "no_grant" });
     // KIFF has no such draft for this person.
     expect((await check({ draft: "drf_9", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "no_draft" });
+  });
+
+  // An e2e harness kept its own copy of which cards the chat's read checks, and it differed from tafs cloud's in two steps,
+  // so a refusal the owner would meet at the tap didn't show in the Eval. The route says it, by the chat read's own rule.
+  describe("says whether the chat's read checks the card (checked_on_read), by the chat read's rule", () => {
+    afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; delete process.env.TAFS_KEY_AND_CARDS; });
+    const g = (over: Record<string, unknown>, request: Record<string, unknown> = {}) => grant(over, { tools, ...request }) as unknown as Parameters<typeof checkedOnReadFor>[0];
+    const all = ["tools_and_cards", "key_and_cards", "signs"];
+
+    it("for each step: a Card alone, the tools or key with their Card, and never a connection alone", () => {
+      process.env.TAFS_TOOLS_AND_CARDS = "on";
+      process.env.TAFS_KEY_AND_CARDS = "on";
+      // A connected grant's Card alone (cards): checked.
+      expect(checkedOnReadFor(g({ status: "connected" }), "drf_1", [])).toBe(true);
+      // A first connection (connect): never, even with a draft and every step the phone can sign.
+      expect(checkedOnReadFor(g({ status: "pending" }), "drf_1", all)).toBe(false);
+      // A pending grant signed in elsewhere but not declared yet: connect, not checked (where a copy took any signed-in grant).
+      expect(checkedOnReadFor(g({ status: "pending", signed_in: true }), "drf_1", all)).toBe(false);
+      // Tools added to a connected grant, or a held, declared sign-in, with their Card (tools_and_cards): checked.
+      expect(checkedOnReadFor(g({ status: "pending", connected: [{ tool: "list_charges" }] }), "drf_1", all)).toBe(true);
+      expect(checkedOnReadFor(g({ status: "pending", signed_in: true, declared: true }), "drf_1", all)).toBe(true);
+      // A key grant with its Card (key_and_cards), in any approvable status, not only pending (where a copy took pending only).
+      for (const status of ["pending", "approved", "needs_reconnect"]) {
+        expect(checkedOnReadFor(g({ status }, { kind: "api_key" }), "drf_1", all), status).toBe(true);
+      }
+      // No draft, no grant: nothing to check.
+      expect(checkedOnReadFor(g({ status: "connected" }), undefined, all)).toBe(false);
+      expect(checkedOnReadFor(undefined, "drf_1", all)).toBe(false);
+    });
+
+    it("by what the phone can sign and the deploy's flags, as the chat's read does", () => {
+      const added = g({ status: "pending", connected: [{ tool: "list_charges" }] });
+      const key = g({ status: "pending" }, { kind: "api_key" });
+      // Flags off: both combined steps sign the connection alone.
+      expect(checkedOnReadFor(added, "drf_1", all)).toBe(false);
+      expect(checkedOnReadFor(key, "drf_1", all)).toBe(false);
+      process.env.TAFS_TOOLS_AND_CARDS = "on";
+      process.env.TAFS_KEY_AND_CARDS = "on";
+      // A phone that can't sign the combined step: the connection alone.
+      expect(checkedOnReadFor(added, "drf_1", ["key_and_cards"])).toBe(false);
+      expect(checkedOnReadFor(key, "drf_1", ["tools_and_cards"])).toBe(false);
+      // A held sign-in's first tools need the phone that draws the card by its mark (`signs`).
+      expect(checkedOnReadFor(g({ status: "pending", signed_in: true, declared: true }), "drf_1", ["tools_and_cards"])).toBe(false);
+    });
+
+    it("on the route, with the caller's `can`, on an ok and on a refusal alike", async () => {
+      process.env.TAFS_TOOLS_AND_CARDS = "on";
+      const s = services();
+      s.grants = [grant({ status: "pending", connected: [{ tool: "list_charges_noyy" }] }, { tools })];
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: card(["refund_charge", "list_charges_noyy"]) };
+      const w = await world(s);
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ checked_on_read: false });
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards"] })).body).toMatchObject({ checked_on_read: true });
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3", can: "tools_and_cards,signs" })).body).toMatchObject({ checked_on_read: true });
+      // A grant planque doesn't list: refused, and not checked on the read.
+      expect((await w.call("POST", "/v1/connect/grants/g_9/check", { draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards"] })).body)
+        .toMatchObject({ code: "no_grant", checked_on_read: false });
+      expect(s.checks).toEqual([]);
+    });
   });
 
   it("refuses a request it can't check: no phone proof, no session, a body without the draft or the version read", async () => {
