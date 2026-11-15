@@ -1,7 +1,7 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { connectedKey, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, WORDS } from "../src/cloud/approval.js";
+import { AGREE_FIRST, connectedKey, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, WORDS } from "../src/cloud/approval.js";
 import { approvalAnswerWords, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -1902,4 +1902,103 @@ describe("the chat's read checks a Card signed with its tools or key too, before
       expect(w.told()).toBeUndefined();
     });
   }
+});
+
+describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () => {
+  const CHAT = `/v1/tafs/${COACH}/conversation`;
+  const tools = [{ tool: "refund_charge", name: "refund_charge_k3", title: "Refund a charge" },
+    { tool: "list_charges", name: "list_charges_k3", title: "List charges", read_only: true }];
+  const cards = (refund: string) => [
+    { id: "c1", subject: "refunds-x", on_exceed: refund, grants: [{ action: "refund_charge_k3" }], aggregates: [] },
+    { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }];
+  const RULES = [{ tool: "refund_charge", over: "refuse" }, { tool: "list_charges", over: "refuse" }];
+  async function setUp(refund: string) {
+    const s = services();
+    s.grants = [grant({ status: "connected" }, { tools })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards(refund) };
+    const w = await world(s, { draft: "drf_1" });
+    /** Coach shows a rules notice, and the confirm that agrees to it; `agree` records the person's tap. */
+    const rules = (id: string, list: unknown, agree = true) => {
+      w.agents.show(w.stored, { type: "notice", id, tone: "info", text: "Refunds are refused past €50 a day.", rules: list });
+      w.agents.show(w.stored, { type: "confirm", id: `ok-${id}`, text: "Agree?", agrees: id, options: [{ value: "agree", label: "Agree" }, { value: "change", label: "Change something" }] });
+      if (!agree) return;
+      const list2 = w.agents.events.get(w.stored.session)!;
+      list2.push({ session: w.stored.session, run: w.stored.id, seq: list2.length + 1, time: NOW.toISOString(), kind: "answered", body: { id: `ok-${id}`, type: "confirm", answer: "agree", words: "Agree" } });
+    };
+    const tap = async () => (await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+    return { s, w, rules, tap };
+  }
+  afterEach(() => { delete process.env.TAFS_RULES_REQUIRED; });
+
+  it("a Card whose on_exceed is the agreed rule's is signed; one that isn't is refused, and Coach hears the fix", async () => {
+    const ok = await setUp("refuse");
+    ok.rules("rules-1", RULES);
+    expect(await ok.tap()).toMatchObject({ outcome: "sign" });
+    const off = await setUp("owner");
+    off.rules("rules-1", RULES);
+    const r = await off.tap();
+    expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesOnExceed("Refund a charge") });
+    expect(String(r.answer)).toContain(`failed: the rules the owner agreed say "Refund a charge" refuses past its limit, and the draft's Card for it has on_exceed "owner". Draft it again with on_exceed "refuse" on that Card.`);
+    expect(String(r.answer)).toContain(`${REFUSAL_CLOSED}`);
+    expect(String(r.answer)).toContain(DRAW_AGAIN);
+    expect(off.s.checks).toEqual([]);
+  });
+
+  it("the chat's read refuses it before the card is drawn, so the owner never approves it", async () => {
+    const { w, rules } = await setUp("owner");
+    rules("rules-1", RULES);
+    const read = await w.call("GET", CHAT, undefined);
+    const a1 = (read.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: { state: string } }>).find((c) => c.component.id === "a1");
+    expect(a1?.answer?.state).toBe("answered");
+    expect(a1?.component.signs).toBeUndefined();
+    expect(String(w.told()?.answer)).toMatch(/^failed: the rules the owner agreed say "Refund a charge" refuses past its limit/);
+  });
+
+  it("a write the agreed rules say nothing of isn't signed", async () => {
+    const { rules, tap } = await setUp("refuse");
+    rules("rules-1", [{ tool: "list_charges", over: "refuse" }]);
+    expect(await tap()).toMatchObject({ outcome: "answered", note: WORDS.rulesMissing("Refund a charge") });
+  });
+
+  it("rules shown and not agreed yet, or newer than the agreement, block the draft until agreed", async () => {
+    const shown = await setUp("refuse");
+    shown.rules("rules-1", RULES, false);
+    const r = await shown.tap();
+    expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesUnagreed });
+    expect(String(r.answer)).toContain(AGREE_FIRST);
+    expect(String(r.answer)).not.toContain(DRAW_AGAIN);
+    const newer = await setUp("refuse");
+    newer.rules("rules-1", RULES);
+    newer.rules("rules-2", [{ tool: "refund_charge", over: "ask" }, { tool: "list_charges", over: "refuse" }], false);
+    expect((await newer.tap()).note).toBe(WORDS.rulesUnagreed);
+  });
+
+  it("with no rules shown, a draft is signed as before, unless the rules are required (TAFS_RULES_REQUIRED=on)", async () => {
+    const before = await setUp("owner");
+    const logged: string[] = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { logged.push(a.join(" ")); });
+    try {
+      expect(await before.tap()).toMatchObject({ outcome: "sign" });
+    } finally {
+      spy.mockRestore();
+    }
+    expect(logged).toContain("approval rules: none agreed in the conversation");
+    process.env.TAFS_RULES_REQUIRED = "on";
+    const required = await setUp("refuse");
+    const r = await required.tap();
+    expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesRequired });
+    expect(String(r.answer)).toContain(AGREE_FIRST);
+  });
+
+  it("the owner's notes are in each language", () => {
+    for (const lang of ["es", "fr", "de", "it", "nl", "pl", "pt"] as const) {
+      const w = approvalWords(lang);
+      expect(w.rulesOnExceed("X")).toContain("X");
+      expect(w.rulesOnExceed("X")).not.toBe(WORDS.rulesOnExceed("X"));
+      expect(w.rulesUnagreed).not.toBe(WORDS.rulesUnagreed);
+      expect(w.rulesRequired).not.toBe(WORDS.rulesRequired);
+      expect(w.rulesMissing("X")).not.toBe(WORDS.rulesMissing("X"));
+    }
+    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
+  });
 });

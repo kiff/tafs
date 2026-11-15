@@ -342,6 +342,31 @@ things (`runtime/src/cloud/approval.ts`):
   with no `resource_argument`. A count of 0 held (each call asks the owner), and a count on a
   read or on a write with no amount limit, are signed. The draft doesn't mark which limits the
   owner gave, so a made-up count in the owner's shape still passes.
+  **The rules the owner agreed, as data** (`rules.ts`). A rules `notice` may carry, beside its
+  lines, `rules: [{tool, over: "ask" | "refuse"}]`: one entry per tool the draft will cover, at
+  most 64, `tool` as planque names it before KIFF's suffix (`send_reply`, not `send_reply_k3f9`),
+  since the rules are agreed before the tools are declared. The `confirm` that agrees to them
+  names it (`agrees: "<notice id>"`), and the owner agrees by tapping its option `agree`. The
+  apps draw both cards as before and ignore the fields. At the check, tafs cloud reads the card's
+  conversation with the person's access and takes the newest agreement: only the person's own
+  tap counts (an answer tafs cloud gave itself, words written while the card waited, or a card
+  that stopped waiting doesn't), and `agrees` must name a rules notice shown in that
+  conversation. Then each Card covering a tool of the taf's connections has `on_exceed: "owner"`
+  where its rule says ask and `"refuse"` where it says refuse, matched through
+  `request.tools[].tool` → `name` (a Card that says nothing holds, as KIFF does); otherwise it's
+  answered `failed: …` naming the tool, the rule and the Card's `on_exceed` (`rules_on_exceed`).
+  A write with no rule is refused too (`rules_missing`); a read with none, and a rule for a tool
+  no connection has, change nothing. A rules notice shown after the agreed one (or never agreed),
+  or the agreed one shown again with other rules, blocks the draft until the owner agrees to it
+  (`rules_unagreed`). These go to Coach on the chat's read like the refusals above; the two that
+  need the owner's agreement end "Show the rules for the owner to agree first, then draft it
+  again and show a new approval." in place of "Draft it again now…". With no rules notice in the
+  conversation, the draft is approved as before and one line is logged ("approval rules: none
+  agreed in the conversation"); with `TAFS_RULES_REQUIRED=on` it's refused (`rules_required`),
+  once every Coach run sends them. A conversation that can't be read is read again, never trusted.
+  The check route (`…/check`), which has no conversation, doesn't check the rules. Coach starts
+  sending the fields once kiff/agents' component schema takes them; until then nothing carries
+  them, and every draft is approved as before. Figures (each call's, the day's) are a later step.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.
