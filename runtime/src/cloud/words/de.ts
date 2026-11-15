@@ -102,6 +102,7 @@ export const de: Words = {
   approval_cards_unread: "Die Card konnte noch nicht geprüft werden. Lies sie noch einmal, dann genehmige.",
   approval_uncovered: (tool: string) => `Diese Card deckt „${tool}“ nicht ab, obwohl der taf es bekommen hat, also würde jeder Aufruf davon abgelehnt. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_stray: (tool: string) => `Diese Card würde dem taf auch „${tool}“ erlauben, das keine seiner Verbindungen gibt. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
+  approval_no_card: `Dieser Entwurf enthält keine Card und deckt damit kein Werkzeug des tafs ab. Es wurde nichts genehmigt. Coach entwirft ihn neu.`,
   approval_registered_name: (asked: string, given: string) => `Diese Card nennt „${asked}“, aber die Verbindung gibt dem taf dieses Werkzeug als „${given}“. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_lifetime_cap: (tool: string) => `Diese Card würde „${tool}“ insgesamt nur eine feste Zahl von Malen erlauben, über alle Einträge hinweg statt für jeden einzeln. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_lifetime_sum: (tool: string) => `Diese Card würde „${tool}“ auf einen Gesamtbetrag über die ganze Laufzeit begrenzen, über alle Einträge hinweg, was nicht vereinbart war. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
