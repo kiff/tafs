@@ -1,0 +1,324 @@
+{
+  "about": "GET /v1/tafs/{id}/conversation/{session} for one Coach chat: a reply with its work, a refused connection, the owner's own words answering a questions card, an approval and a result answered, and a line Coach hasn't read about a taf. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "messages": [
+      {
+        "id": "run2.in",
+        "at": "2026-10-16T12:00:00.000Z",
+        "from": "owner",
+        "kind": "message",
+        "text": "Set up refunds for my shop",
+        "session": "sess1"
+      },
+      {
+        "id": "run2.3",
+        "at": "2026-10-16T12:00:10.000Z",
+        "from": "taf",
+        "kind": "message",
+        "text": "Shippo's sign-in isn't set up here, so I'll connect Stripe first. A few questions:",
+        "session": "sess1",
+        "work": {
+          "ms": 61000,
+          "steps": [
+            {
+              "tool": "planque",
+              "words": "Working on the connection"
+            }
+          ]
+        },
+        "refused": {
+          "words": "Coach couldn't connect Shippo yet",
+          "why": "Why: managed sign-in isn't set up for this app",
+          "next": "Next: ask Coach to connect Shippo with its key instead, or to use another app."
+        }
+      },
+      {
+        "id": "run2.5",
+        "at": "2026-10-16T12:00:20.000Z",
+        "from": "owner",
+        "kind": "message",
+        "text": "Up to €5 each, €50 a day",
+        "session": "sess1",
+        "answers": "limits"
+      },
+      {
+        "id": "run2.10",
+        "at": "2026-10-16T12:01:01.000Z",
+        "from": "taf",
+        "kind": "message",
+        "text": "Refunds is set up.",
+        "session": "sess1"
+      }
+    ],
+    "components": [
+      {
+        "at": "2026-10-16T12:00:12.000Z",
+        "session": "sess1",
+        "run": "run2",
+        "seq": 4,
+        "component": {
+          "type": "questions",
+          "id": "limits",
+          "title": "Refunds' limits",
+          "questions": [
+            {
+              "id": "per_refund",
+              "text": "Most for one refund?",
+              "options": [
+                {
+                  "value": "50",
+                  "label": "€50"
+                }
+              ]
+            }
+          ],
+          "waits": "owner"
+        },
+        "answer": {
+          "state": "wrote",
+          "words": "Up to €5 each, €50 a day",
+          "at": "2026-10-16T12:00:20.000Z"
+        },
+        "key": "sess1#limits"
+      },
+      {
+        "at": "2026-10-16T12:00:25.000Z",
+        "session": "sess1",
+        "run": "run2",
+        "seq": 6,
+        "component": {
+          "type": "approval",
+          "id": "connect-stripe",
+          "grant": "grt_1",
+          "title": "Connect Stripe",
+          "text": "Approve to connect Stripe for Refunds.",
+          "waits": "owner"
+        },
+        "answer": {
+          "state": "answered",
+          "words": "Approved",
+          "at": "2026-10-16T12:00:40.000Z"
+        },
+        "key": "sess1#connect-stripe"
+      },
+      {
+        "at": "2026-10-16T12:00:50.000Z",
+        "session": "sess1",
+        "run": "run2",
+        "seq": 8,
+        "component": {
+          "type": "result",
+          "id": "done",
+          "text": "Refunds is ready.",
+          "tools": [
+            "list_requests_k3f9"
+          ],
+          "taf": {
+            "agent": "refunds-x",
+            "name": "Refunds",
+            "draft": "drf_s1",
+            "kickoff": "Work the refund queue: every open refund request since your last run.",
+            "cron": "*/30 * * * *",
+            "check": {
+              "tool": "list_requests_k3f9",
+              "arguments": {
+                "status": "open"
+              },
+              "items": "data",
+              "cursor": "created"
+            }
+          },
+          "waits": "service"
+        },
+        "answer": {
+          "state": "answered",
+          "words": "",
+          "at": "2026-10-16T12:01:00.000Z",
+          "by": "tafs cloud",
+          "outcome": {
+            "taf_id": "taf-aaaa0000000000000000"
+          }
+        },
+        "key": "sess1#done"
+      }
+    ],
+    "items": [
+      {
+        "type": "message",
+        "message": {
+          "id": "run2.in",
+          "at": "2026-10-16T12:00:00.000Z",
+          "from": "owner",
+          "kind": "message",
+          "text": "Set up refunds for my shop",
+          "session": "sess1"
+        }
+      },
+      {
+        "type": "message",
+        "message": {
+          "id": "run2.3",
+          "at": "2026-10-16T12:00:10.000Z",
+          "from": "taf",
+          "kind": "message",
+          "text": "Shippo's sign-in isn't set up here, so I'll connect Stripe first. A few questions:",
+          "session": "sess1",
+          "work": {
+            "ms": 61000,
+            "steps": [
+              {
+                "tool": "planque",
+                "words": "Working on the connection"
+              }
+            ]
+          },
+          "refused": {
+            "words": "Coach couldn't connect Shippo yet",
+            "why": "Why: managed sign-in isn't set up for this app",
+            "next": "Next: ask Coach to connect Shippo with its key instead, or to use another app."
+          }
+        }
+      },
+      {
+        "type": "card",
+        "card": {
+          "at": "2026-10-16T12:00:12.000Z",
+          "session": "sess1",
+          "run": "run2",
+          "seq": 4,
+          "component": {
+            "type": "questions",
+            "id": "limits",
+            "title": "Refunds' limits",
+            "questions": [
+              {
+                "id": "per_refund",
+                "text": "Most for one refund?",
+                "options": [
+                  {
+                    "value": "50",
+                    "label": "€50"
+                  }
+                ]
+              }
+            ],
+            "waits": "owner"
+          },
+          "answer": {
+            "state": "wrote",
+            "words": "Up to €5 each, €50 a day",
+            "at": "2026-10-16T12:00:20.000Z"
+          },
+          "key": "sess1#limits"
+        }
+      },
+      {
+        "type": "message",
+        "message": {
+          "id": "run2.5",
+          "at": "2026-10-16T12:00:20.000Z",
+          "from": "owner",
+          "kind": "message",
+          "text": "Up to €5 each, €50 a day",
+          "session": "sess1",
+          "answers": "limits"
+        }
+      },
+      {
+        "type": "card",
+        "card": {
+          "at": "2026-10-16T12:00:25.000Z",
+          "session": "sess1",
+          "run": "run2",
+          "seq": 6,
+          "component": {
+            "type": "approval",
+            "id": "connect-stripe",
+            "grant": "grt_1",
+            "title": "Connect Stripe",
+            "text": "Approve to connect Stripe for Refunds.",
+            "waits": "owner"
+          },
+          "answer": {
+            "state": "answered",
+            "words": "Approved",
+            "at": "2026-10-16T12:00:40.000Z"
+          },
+          "key": "sess1#connect-stripe"
+        }
+      },
+      {
+        "type": "card",
+        "card": {
+          "at": "2026-10-16T12:00:50.000Z",
+          "session": "sess1",
+          "run": "run2",
+          "seq": 8,
+          "component": {
+            "type": "result",
+            "id": "done",
+            "text": "Refunds is ready.",
+            "tools": [
+              "list_requests_k3f9"
+            ],
+            "taf": {
+              "agent": "refunds-x",
+              "name": "Refunds",
+              "draft": "drf_s1",
+              "kickoff": "Work the refund queue: every open refund request since your last run.",
+              "cron": "*/30 * * * *",
+              "check": {
+                "tool": "list_requests_k3f9",
+                "arguments": {
+                  "status": "open"
+                },
+                "items": "data",
+                "cursor": "created"
+              }
+            },
+            "waits": "service"
+          },
+          "answer": {
+            "state": "answered",
+            "words": "",
+            "at": "2026-10-16T12:01:00.000Z",
+            "by": "tafs cloud",
+            "outcome": {
+              "taf_id": "taf-aaaa0000000000000000"
+            }
+          },
+          "key": "sess1#done"
+        }
+      },
+      {
+        "type": "message",
+        "message": {
+          "id": "run2.10",
+          "at": "2026-10-16T12:01:01.000Z",
+          "from": "taf",
+          "kind": "message",
+          "text": "Refunds is set up.",
+          "session": "sess1"
+        }
+      }
+    ],
+    "working": {
+      "session": "sess1",
+      "run": "run2"
+    },
+    "steering": null,
+    "usage": {
+      "turns": 1,
+      "tokens_in": 0,
+      "cache_read_tokens": 0,
+      "cost_micro_usd": 1
+    },
+    "coach_lines": [
+      {
+        "at": "2026-10-16T12:01:10.000Z",
+        "taf": "Rae",
+        "said": "Refunded $20 to order 42."
+      }
+    ]
+  }
+}
