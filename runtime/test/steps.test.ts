@@ -78,6 +78,12 @@ describe("why a step failed, in the owner's words (kiff/tafs#476, gap 9)", () =>
       ["planque answered 502: the vendor behind planque timed out", "the vendor behind timed out"],
       ["The charge ch_1AbCdEfGhIjKlMnOp is already refunded", "The charge it is already refunded"],
       ["Rate limited: try again in 30 seconds", "Rate limited: try again in 30 seconds"],
+      // The thing an id named stays, in words; the id goes, quoted or not (the step list read "No such: 'it'").
+      ["No such payment_intent: 'pi_3QabcDEF1234567890xyz'", "No such payment intent"],
+      ["No such customer: 'cus_Qabc123def456'", "No such customer"],
+      ["No such payment_method: pm_1AbCdEfGhIjKlMnOp; a similar object exists in live mode", "No such payment method; a similar object exists in live mode"],
+      ["Invalid payment_method: \"pm_1AbCdEfGhIjKlMnOp\"", "Invalid payment method: it"],
+      ["The card was declined (code card_declined, decline_code insufficient_funds)", "The card was declined"],
       ["sk_live_0123456789abcdefXYZ", undefined],
     ];
     for (const [text, want] of cases) expect(whyOf(text), text).toBe(want);
