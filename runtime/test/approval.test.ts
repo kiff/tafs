@@ -2115,7 +2115,63 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(w.rulesUnagreed).not.toBe(WORDS.rulesUnagreed);
       expect(w.rulesRequired).not.toBe(WORDS.rulesRequired);
       expect(w.rulesMissing("X")).not.toBe(WORDS.rulesMissing("X"));
+      expect(w.rulesFigures("X")).toContain("X");
+      expect(w.rulesFigures("X")).not.toBe(WORDS.rulesFigures("X"));
     }
-    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
+    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_figures") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
+  });
+
+  describe("the figures the owner agreed", () => {
+    const EACH = { quantity: "sum(amount)", window: "call", limit: 500 };
+    const DAY = { quantity: "sum(amount)", window: "calendar_day", limit: 5000 };
+    const FIGURED = [{ tool: "refund_charge", over: "refuse", limits: [EACH, DAY] }, { tool: "list_charges", over: "refuse" }];
+    /** The refund Card with a cap on each refund and the day's total, and what else it carries. */
+    function setFigures(s: ReturnType<typeof services>, max: number, aggregates: unknown[]) {
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
+        { id: "c1", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max }] }], aggregates },
+        { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }] };
+    }
+    const dayTotal = (limit: number) => ({ quantity: "sum(amount)", window: "calendar_day", limit });
+
+    it("the agreed figures on the Card are signed; a Card at 50000 a refund against an agreed 500 is refused, and Coach hears the fix", async () => {
+      const ok = await setUp("refuse");
+      setFigures(ok.s, 500, [dayTotal(5000)]);
+      ok.rules("rules-1", FIGURED);
+      expect(await ok.tap()).toMatchObject({ outcome: "sign" });
+      const off = await setUp("refuse");
+      setFigures(off.s, 50000, [dayTotal(5000)]);
+      off.rules("rules-1", FIGURED);
+      const r = await off.tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
+      expect(String(r.answer)).toContain(`failed: the rules the owner agreed give "Refund a charge" 500 as each call on sum(amount), and a Card covering it has 50000. Draft it again with per_action_max {quantity: "sum(amount)", max: 500} on its grant, and no other figure for it on any Card.`);
+      expect(String(r.answer)).toContain(DRAW_AGAIN);
+      expect(off.s.checks).toEqual([]);
+    });
+
+    it("a stricter day's total is refused too, and the chat's read refuses it before the card is drawn", async () => {
+      const { s, w, rules } = await setUp("refuse");
+      setFigures(s, 500, [dayTotal(2000)]);
+      rules("rules-1", FIGURED);
+      await w.call("GET", CHAT, undefined);
+      expect(String(w.told()?.answer)).toMatch(/^failed: the rules the owner agreed give "Refund a charge" 5000 as a day's total on sum\(amount\), and a Card covering it has 2000\. Draft it again with an aggregate \{quantity: "sum\(amount\)", window: "calendar_day", limit: 5000\} with no per/);
+    });
+
+    it("a figure the rules don't name, and one the notice's words don't say, are logged and signed", async () => {
+      const { s, rules, tap } = await setUp("refuse");
+      // A count beside the amounts is refused on its own (count_on_amount): the unnamed figure here is a total of another argument.
+      setFigures(s, 500, [dayTotal(5000), { quantity: "sum(fee)", window: "calendar_day", limit: 100 }]);
+      // The test notice says "€50 a day", so the €5 a refund is the figure its words don't say.
+      rules("rules-1", FIGURED);
+      const logged: string[] = [];
+      const spy = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { logged.push(a.join(" ")); });
+      try {
+        expect(await tap()).toMatchObject({ outcome: "sign" });
+      } finally {
+        spy.mockRestore();
+      }
+      expect(logged).toContain("approval rules: a figure the rules don't name: refund_charge_k3 sum(fee) calendar_day 100");
+      expect(logged).toContain("approval rules: a figure the notice's words don't say: refund_charge sum(amount) call 500");
+      expect(logged.filter((l) => l.includes("calendar_day 5000"))).toEqual([]);
+    });
   });
 });

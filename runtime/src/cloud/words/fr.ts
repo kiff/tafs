@@ -114,6 +114,7 @@ export const fr: Words = {
   approval_count_on_amount: (tool: string) => `Cette Card compterait aussi les appels à « ${tool} », en plus de ses limites de montant : un nombre que personne n'a convenu, qui pourrait retenir des appels que les limites permettent. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_rules_on_exceed: (tool: string) => `Cette Card déciderait au-delà de la limite de « ${tool} » autrement que les règles que vous avez acceptées. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_rules_missing: (tool: string) => `Les règles que vous avez acceptées ne disent pas ce que fait « ${tool} » au-delà de sa limite. Rien n'a été approuvé. Coach vous montre à nouveau les règles.`,
+  approval_rules_figures: (tool: string) => `Cette Card a pour « ${tool} » une limite qui n'est pas celle des règles que vous avez acceptées. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_rules_unagreed: "Coach a rédigé ceci avant que vous acceptiez les règles qu'il a montrées. Rien n'a été approuvé. Acceptez d'abord les règles, et Coach le rédige à nouveau.",
   approval_rules_required: "Coach a rédigé ceci sans vous montrer les règles à accepter. Rien n'a été approuvé. Coach vous montre d'abord les règles.",
   setup_every_call_asks: "Chaque appel demande votre approbation",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ApprovalGrant } from "../src/cloud/approval.js";
-import { RULES_MAX, rulesAgreement, rulesMismatch } from "../src/cloud/rules.js";
+import { LIMITS_MAX, RULES_MAX, rulesAgreement, rulesMismatch, rulesUnnamedFigures, rulesUnsaid } from "../src/cloud/rules.js";
 
 /** A conversation's events, as kiff/agents records them, in order. */
 const notice = (id: string, rules: unknown, run = "r1") => ({ kind: "component", run, body: { type: "notice", id, tone: "info", text: "The rules", rules } });
@@ -12,7 +12,7 @@ const RULES = [{ tool: "refund_charge", over: "refuse" }, { tool: "send_reply", 
 describe("the rules the owner agreed, from the conversation (rules.ts)", () => {
   it("the person's agree to a confirm naming the notice agrees to its rules", () => {
     expect(rulesAgreement([notice("n1", RULES), confirm("c1", "n1"), answered("c1", "agree")]))
-      .toEqual({ state: "agreed", notice: "n1", rules: RULES });
+      .toEqual({ state: "agreed", notice: "n1", rules: RULES, text: "The rules" });
   });
 
   it("no rules notice: none, whatever else the conversation shows", () => {
@@ -43,9 +43,9 @@ describe("the rules the owner agreed, from the conversation (rules.ts)", () => {
     expect(rulesAgreement([...agreed, notice("n2", changed)])).toEqual({ state: "unagreed", notice: "n2" });
     // The same notice shown again with other rules: also unagreed; with the same rules, still agreed.
     expect(rulesAgreement([...agreed, notice("n1", changed)])).toEqual({ state: "unagreed", notice: "n1" });
-    expect(rulesAgreement([...agreed, notice("n1", RULES)])).toEqual({ state: "agreed", notice: "n1", rules: RULES });
+    expect(rulesAgreement([...agreed, notice("n1", RULES)])).toEqual({ state: "agreed", notice: "n1", rules: RULES, text: "The rules" });
     // Agreed in turn: the newest agreement counts.
-    expect(rulesAgreement([...agreed, notice("n2", changed), confirm("c2", "n2"), answered("c2", "agree")])).toEqual({ state: "agreed", notice: "n2", rules: changed });
+    expect(rulesAgreement([...agreed, notice("n2", changed), confirm("c2", "n2"), answered("c2", "agree")])).toEqual({ state: "agreed", notice: "n2", rules: changed, text: "The rules" });
   });
 
   it("a notice whose rules can't be read whole carries none", () => {
@@ -99,5 +99,106 @@ describe("a draft's Cards against the agreed rules", () => {
 
   it("a tool no Card in the draft covers is the coverage checks', not this one's", () => {
     expect(rulesMismatch([stripe], [card("something_else", "owner")], [])).toBeUndefined();
+  });
+});
+
+describe("the figures the owner agreed (each call's, the day's total)", () => {
+  const stripe = grantOf("g1", [tool("refund_charge", "k3"), tool("list_charges", "k3", { read_only: true })]);
+  const EACH = { quantity: "sum(amount)", window: "call" as const, limit: 500 };
+  const DAY = { quantity: "sum(amount)", window: "calendar_day" as const, limit: 5000 };
+  const rule = (limits = [EACH, DAY]) => [{ tool: "refund_charge", over: "refuse" as const, limits }];
+  /** A refund Card with a per-call cap and aggregates. */
+  const refund = (max: number | undefined, aggregates: unknown[], on_exceed = "refuse", action = "refund_charge_k3") => ({ id: "c", subject: "refunds-x", on_exceed,
+    grants: [{ action, ...(max === undefined ? {} : { per_action_max: [{ quantity: "sum(amount)", max }] }) }], aggregates });
+  const day = (limit: number, extra: Record<string, unknown> = {}) => ({ quantity: "sum(amount)", window: "calendar_day", limit, ...extra });
+
+  it("read with the rules: agreed, and the same notice shown with another figure is other rules", () => {
+    const withFigures = rule();
+    expect(rulesAgreement([notice("n1", withFigures), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "agreed", notice: "n1", rules: withFigures, text: "The rules" });
+    const agreed = [notice("n1", withFigures), confirm("c1", "n1"), answered("c1", "agree")];
+    expect(rulesAgreement([...agreed, notice("n1", rule([EACH, { ...DAY, limit: 50000 }]))])).toEqual({ state: "unagreed", notice: "n1" });
+    // The same figures in another order are the same rules.
+    expect(rulesAgreement([...agreed, notice("n1", rule([DAY, EACH]))]).state).toBe("agreed");
+  });
+
+  // kiff-qa's 3 to 6: a rule's figures are read whole or not at all, so a notice with one it can't read carries no rules.
+  it("figures that can't be read whole leave the notice with no rules", () => {
+    const bad: unknown[] = [
+      [], // given but empty: never "figures agreed"
+      Array.from({ length: LIMITS_MAX + 1 }, (_, i) => ({ quantity: `sum(a${i})`, window: "call", limit: 1 })),
+      [EACH, { ...EACH, limit: 600 }], // the same quantity and window twice
+      [{ ...EACH, limit: -1 }], [{ ...EACH, limit: 1.5 }], [{ ...EACH, limit: 2 ** 53 }], [{ ...EACH, limit: "500" }], [{ quantity: "sum(amount)", window: "call" }],
+      [{ ...EACH, window: "lifetime" }], [{ ...EACH, quantity: "sum( amount )" }], [{ ...EACH, quantity: "SUM(amount)" }], [{ ...EACH, quantity: "amount" }], [{ ...EACH, quantity: "sum()" }], [{ ...EACH, quantity: `sum(${"a".repeat(65)})` }],
+      "500",
+    ];
+    for (const limits of bad) {
+      expect(rulesAgreement([notice("n1", [{ tool: "refund_charge", over: "refuse", limits }]), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "none" });
+    }
+    // An argument as kiff/agents' schema takes it (letters, digits, _ and .) is read.
+    expect(rulesAgreement([notice("n1", rule([{ ...EACH, quantity: "sum(amount.total_Cents)" }])), confirm("c1", "n1"), answered("c1", "agree")]).state).toBe("agreed");
+    // 0 is a figure (never), and 2^53−1 the largest one read exactly.
+    for (const limit of [0, Number.MAX_SAFE_INTEGER]) {
+      expect(rulesAgreement([notice("n1", rule([{ ...EACH, limit }])), confirm("c1", "n1"), answered("c1", "agree")]).state).toBe("agreed");
+    }
+  });
+
+  it("each agreed figure is on the Card exactly: missing, looser or stricter is refused", () => {
+    expect(rulesMismatch([stripe], [refund(500, [day(5000)])], rule())).toBeUndefined();
+    // The Card at 50000 a call against an agreed 500.
+    expect(rulesMismatch([stripe], [refund(50000, [day(5000)])], rule())).toEqual({ kind: "figure", tool: "refund charge", quantity: "sum(amount)", window: "call", agreed: 500, drafted: 50000 });
+    // A stricter day's total: the owner didn't agree to it either.
+    expect(rulesMismatch([stripe], [refund(500, [day(2000)])], rule())).toEqual({ kind: "figure", tool: "refund charge", quantity: "sum(amount)", window: "calendar_day", agreed: 5000, drafted: 2000 });
+    // No day's total at all, or no per-call cap.
+    expect(rulesMismatch([stripe], [refund(500, [])], rule())).toEqual({ kind: "figure", tool: "refund charge", quantity: "sum(amount)", window: "calendar_day", agreed: 5000 });
+    expect(rulesMismatch([stripe], [refund(undefined, [day(5000)])], rule())?.kind).toBe("figure");
+    // 0 agreed is 0 drafted, not a missing figure.
+    expect(rulesMismatch([stripe], [refund(0, [day(5000)])], rule([{ ...EACH, limit: 0 }, DAY]))).toBeUndefined();
+  });
+
+  // kiff-qa's 1: a total for each customer at the agreed figure isn't the day's total.
+  it("an aggregate with per set doesn't stand for the day's total", () => {
+    expect(rulesMismatch([stripe], [refund(500, [day(5000, { per: "customer" })])], rule())).toEqual({ kind: "figure", tool: "refund charge", quantity: "sum(amount)", window: "calendar_day", agreed: 5000 });
+  });
+
+  // kiff-qa's 2: one matching Card doesn't excuse a looser one beside it.
+  it("two Cards over the tool, one matching and one looser, is refused", () => {
+    expect(rulesMismatch([stripe], [refund(500, [day(5000)]), refund(500, [day(9000)])], rule())?.kind).toBe("figure");
+    // The figure on one Card and the day's total on another is the agreed rules, kept as two Cards.
+    expect(rulesMismatch([stripe], [refund(500, []), refund(undefined, [day(5000)])], rule())).toBeUndefined();
+  });
+
+  // kiff-qa's 6: the quantity matches as written.
+  it("a quantity spelled another way on the Card isn't the agreed figure", () => {
+    const spaced = { id: "c", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum( amount )", max: 500 }] }], aggregates: [day(5000)] };
+    expect(rulesMismatch([stripe], [spaced], rule())).toEqual({ kind: "figure", tool: "refund charge", quantity: "sum(amount)", window: "call", agreed: 500 });
+  });
+
+  it("a rule with no figures is checked as before; on_exceed is checked first", () => {
+    expect(rulesMismatch([stripe], [refund(50000, [])], [{ tool: "refund_charge", over: "refuse" }])).toBeUndefined();
+    expect(rulesMismatch([stripe], [refund(500, [day(5000)], "owner")], rule())?.kind).toBe("on_exceed");
+  });
+
+  it("another connection's tool of the same taf is held to its figures too", () => {
+    const shop = grantOf("g2", [tool("refund_order", "s9")]);
+    const rules = [...rule(), { tool: "refund_order", over: "refuse" as const, limits: [{ ...EACH, limit: 1000 }] }];
+    expect(rulesMismatch([stripe, shop], [refund(500, [day(5000)]), refund(1000, [], "refuse", "refund_order_s9")], rules)).toBeUndefined();
+    expect(rulesMismatch([stripe, shop], [refund(500, [day(5000)]), refund(9999, [], "refuse", "refund_order_s9")], rules)).toMatchObject({ kind: "figure", tool: "refund order", agreed: 1000, drafted: 9999 });
+  });
+
+  it("figures the rules don't name are listed for the log, never refused", () => {
+    const count = { quantity: "count", window: "calendar_day", limit: 100 };
+    const cards = [refund(500, [day(5000), count, day(9, { per: "customer" })])];
+    expect(rulesMismatch([stripe], cards, rule())).toBeUndefined();
+    expect(rulesUnnamedFigures([stripe], cards, rule())).toEqual(["refund_charge_k3 count calendar_day 100"]);
+    // A rule with no figures names none to compare: nothing is listed.
+    expect(rulesUnnamedFigures([stripe], cards, [{ tool: "refund_charge", over: "refuse" }])).toEqual([]);
+  });
+
+  it("figures the notice's words don't say are listed for the log, in the Card's units or major units", () => {
+    expect(rulesUnsaid(rule(), "Refunds up to €5 each, and €50 a day, are refused past that.")).toEqual([]);
+    expect(rulesUnsaid(rule(), "Remboursements jusqu'à 5,00 € chacun et 50 € par jour.")).toEqual([]);
+    expect(rulesUnsaid(rule([{ ...DAY, limit: 100000 }]), "Bis 1.000,00 € am Tag.")).toEqual([]);
+    expect(rulesUnsaid(rule([{ quantity: "count", window: "calendar_day", limit: 1000 }]), "At most 1,000 a day.")).toEqual([]);
+    expect(rulesUnsaid(rule(), "Refunds up to €5 each.")).toEqual(["refund_charge sum(amount) calendar_day 5000"]);
   });
 });
