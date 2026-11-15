@@ -946,6 +946,7 @@
     <string name="connect_key_not_given">Klucz nie został przekazany. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">Nie udało się odczytać opisu KIFF dla tego połączenia. Nic nie zostało zatwierdzone.</string>
     <string name="connect_last_failed">Ostatnio nie powiodło się: %1$s · %2$s</string>
+    <string name="connect_misplaced">Utworzone dla %1$s, który nie używa %2$s.</string>
     <string name="connect_more_apps">Więcej aplikacji</string>
     <string name="connect_more_apps_could_not_listed">Nie udało się wyświetlić więcej aplikacji: %1$s</string>
     <string name="connect_no_confirmation_code">Logowanie w %1$s wróciło bez kodu potwierdzenia. Nic nie zostało połączone.</string>

@@ -872,6 +872,7 @@
     <string name="connect_key_not_given">La chiave non è stata data. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">Non è stato possibile leggere le parole di KIFF per questo collegamento. Non è stato approvato nulla.</string>
     <string name="connect_last_failed">Ultimo non riuscito: %1$s · %2$s</string>
+    <string name="connect_misplaced">Fatta per %1$s, che non usa %2$s.</string>
     <string name="connect_more_apps">Altre app</string>
     <string name="connect_more_apps_could_not_listed">Impossibile elencare altre app: %1$s</string>
     <string name="connect_no_confirmation_code">L\'accesso su %1$s è tornato senza il codice di conferma. Non è stato collegato nulla.</string>

@@ -3606,16 +3606,23 @@ class AppModel(
     val asked = ++connectAppsAsked
     val generation = accountGeneration
     try {
-      // This phone's signed grants read, as Setup sends it: tafs cloud then says which removed taf's connections Clear may end.
-      planque.tenant = kiffTenant; planque.deviceLoader = { kiff.thisDeviceId() }
-      val proof = runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
-      val apps = cloud.connectApps(q, proof = proof)
+      val apps = cloud.connectApps(q, proof = connectAppsProof())
       if (generation == accountGeneration && asked == connectAppsAsked) _state.update { it.copy(connectApps = apps, connectAppsError = null) }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
       if (generation == accountGeneration) _state.update { it.copy(connectAppsError = Words.Connect.appsNotRead(why = ErrorWords.of(e))) }
     }
+  }
+
+  /**
+   * This phone's signed grants read, as Setup sends it: with it tafs cloud says which removed taf's connections Clear may end, which
+   * tafs need an app by their Card (`needed_by`) and which connections were made under a taf that doesn't (`misplaced`). Null when
+   * it can't be signed; tafs cloud then decides from recipes alone.
+   */
+  private suspend fun connectAppsProof(): String? {
+    planque.tenant = kiffTenant; planque.deviceLoader = { kiff.thisDeviceId() }
+    return runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
   }
 
   /** The search the shown list is for, sent again with the next page's cursor. */
@@ -3630,7 +3637,7 @@ class AppModel(
     val cursor = now.nextCursor ?: return
     val generation = accountGeneration
     try {
-      val page = cloud.connectApps(connectAppsQuery, now.provider, cursor)
+      val page = cloud.connectApps(connectAppsQuery, now.provider, cursor, proof = connectAppsProof())
       if (generation == accountGeneration) _state.update { s ->
         val shown = s.connectApps ?: return@update s
         // The removed tafs stay as the first page read them, with its proof: a further page only adds apps.
@@ -4182,7 +4189,7 @@ class AppModel(
     val generation = accountGeneration
     _state.update { it.copy(startingApp = app.entry, connectAppsError = null) }
     try {
-      val started = cloud.startConnect(app.entry, cloudId)
+      val started = cloud.startConnect(app.entry, cloudId, proof = connectAppsProof())
       if (generation != accountGeneration) return
       refreshConnections()
       if (generation == accountGeneration) _state.update { it.copy(listApproval = started.grant, listApprovalNeedsKey = started.needsKey) }

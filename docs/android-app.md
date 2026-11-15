@@ -857,6 +857,12 @@ tafs cloud's list, searched as the owner types, and **Connect** opens the approv
 over the list (`ConnectApprovalSheet`). **Which taf is this for?** is asked first, even with one taf
 (`connectFor`, Android 1.30.1; before, the only taf was taken without asking), in a dialog over the list wherever
 Connect was tapped, as on iPhone and iPad. `AppModel.startConnectApp` starts nothing without a taf named.
+It lists only the tafs tafs cloud's `needed_by` names for that app (`tafsFor`, matched by tafs cloud id, Android 1.31.0), still
+asked with one; an app no taf needs reads **Ask Coach** in place of Connect. A tafs cloud before `needed_by` lists every taf the
+person manages. The start sends a fresh `Planque-Device-Signature`, as the list's read does, so tafs cloud decides `needed_by`
+the same way; its `409 not_needed` shows tafs cloud's words (`ErrorWords.CLOUD_WORDED`), never "It changed". A connection tafs
+cloud lists as `misplaced` (made under a taf that doesn't use the app) is drawn as the app's own row, saying "Made for ‹taf›,
+which doesn't use ‹app›.", with its Cancel or Disconnect.
 While the vendor's page is open, planque is read again on Coach's card schedule, so a sign-in finished there ends the
 wait; back on the sheet with no link, **Open … again** opens the same page, and **Not now** ends the wait at once, so
 the next Connect isn't refused as another approval in progress (Android 1.30.1). When a sign-in

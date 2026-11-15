@@ -1,0 +1,2 @@
+- «Para que taf é isto?» mostra só os tafs que usam a app. Uma app que nenhum dos teus tafs usa oferece Perguntar ao Coach.
+- Uma ligação feita para um taf que não usa a app di-lo, e pode ser terminada a partir da sua linha.
