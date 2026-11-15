@@ -177,9 +177,15 @@ jobs:
             while pgrep -x Tafs >/dev/null; do sleep 0.5; done
           }
           en=(-AppleLanguages "(en)" -AppleLocale en_US)
+          # The runner's own appearance, light then dark: a Mac app follows the system's.
+          appearance() {
+            osascript -e "tell application \"System Events\" to tell appearance preferences to set dark mode to $1" \
+              || { echo "::error::couldn't set the runner's appearance"; exit 1; }
+          }
           for look in Light Dark; do
             suffix=""; [ "$look" = Dark ] && suffix="-dark"
-            ref() { local screen=$1; shift; shoot "$screen$suffix" window "$@" -AppleInterfaceStyle "$look" "${en[@]}"; }
+            if [ "$look" = Dark ]; then appearance true; else appearance false; fi
+            ref() { local screen=$1; shift; shoot "$screen$suffix" window "$@" "${en[@]}"; }
             ref overview -tab tafs
             ref needs-you -tab needs-you
             ref record -tab record
@@ -199,6 +205,7 @@ jobs:
             ref coach -tab tafs -screen coach
             ref coach-chat -tab tafs -screen coach-chat
           done
+          appearance false
           shoot menu-bar whole -tab tafs "${en[@]}"
           for lang in fr pt; do
             region=$(echo "$lang" | tr a-z A-Z)
