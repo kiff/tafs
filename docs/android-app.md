@@ -139,8 +139,8 @@ than the build's commits nothing.
 - **Release notes** live in the repository, one folder per `versionCode`:
   `android/play/release-notes/<versionCode>/<locale>.txt`, for en-US, de-DE, fr-FR, es-ES,
   it-IT, pt-PT, nl-NL and pl-PL, each at most 500 characters. A pull request that raises
-  `versionCode` adds that folder; `test` checks it (`play_internal.py --check`), and the upload
-  refuses a version with none.
+  `versionCode` adds that folder; `test` checks it (`play_internal.py --check`) and fails a
+  version with none, as the upload refuses one (Android 1.29.5; before, `test` passed without them).
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
 it once into the secrets store, and `android/release.sh` builds with it. The app has no native
 code of its own. Its only native libraries are two small ones that AndroidX ships already
