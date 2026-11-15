@@ -103,6 +103,7 @@
   "connect.key_not_given": "No se dio la clave. {why}",
   "connect.kiff_words_connection_could_not": "No se pudieron leer las palabras de KIFF para esta conexión. No se aprobó nada.",
   "connect.last_failed": "Último fallo: {title} · {detail}",
+  "connect.misplaced": "{taf} no usa esta conexión. Quita el acceso si no querías conectarla ahí.",
   "connect.more_apps": "Más apps",
   "connect.more_apps_could_not_listed": "No se pudieron listar más apps: {why}",
   "connect.no_confirmation_code": "El inicio de sesión en {vendor} volvió sin su código de confirmación. No se conectó nada.",

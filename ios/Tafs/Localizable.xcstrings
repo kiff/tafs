@@ -43217,6 +43217,59 @@
         }
       }
     },
+    "connect.misplaced": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nutzt diese Verbindung nicht. Entferne den Zugriff, wenn du sie dort nicht verbinden wolltest."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ doesn't use this connection. Remove access if you didn't mean to connect it there."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ no usa esta conexión. Quita el acceso si no querías conectarla ahí."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ n'utilise pas cette connexion. Retirez l'accès si vous ne vouliez pas la connecter là."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ non usa questo collegamento. Rimuovi l'accesso se non volevi collegarlo lì."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ gebruikt deze koppeling niet. Trek de toegang in als je hem daar niet wilde koppelen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ nie używa tego połączenia. Usuń dostęp, jeśli nie chcesz go tam mieć."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ não usa esta ligação. Remova o acesso se não a queria ligar aí."
+          }
+        }
+      }
+    },
     "connect.more_apps": {
       "extractionState": "manual",
       "localizations": {

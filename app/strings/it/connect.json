@@ -103,6 +103,7 @@
   "connect.key_not_given": "La chiave non è stata data. {why}",
   "connect.kiff_words_connection_could_not": "Non è stato possibile leggere le parole di KIFF per questo collegamento. Non è stato approvato nulla.",
   "connect.last_failed": "Ultimo non riuscito: {title} · {detail}",
+  "connect.misplaced": "{taf} non usa questo collegamento. Rimuovi l'accesso se non volevi collegarlo lì.",
   "connect.more_apps": "Altre app",
   "connect.more_apps_could_not_listed": "Impossibile elencare altre app: {why}",
   "connect.no_confirmation_code": "L'accesso su {vendor} è tornato senza il codice di conferma. Non è stato collegato nulla.",

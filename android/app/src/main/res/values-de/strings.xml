@@ -872,6 +872,7 @@
     <string name="connect_key_not_given">Der Schlüssel wurde nicht übergeben. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">KIFFs Worte zu dieser Verbindung konnten nicht gelesen werden. Es wurde nichts genehmigt.</string>
     <string name="connect_last_failed">Zuletzt fehlgeschlagen: %1$s · %2$s</string>
+    <string name="connect_misplaced">%1$s nutzt diese Verbindung nicht. Entferne den Zugriff, wenn du sie dort nicht verbinden wolltest.</string>
     <string name="connect_more_apps">Mehr Apps</string>
     <string name="connect_more_apps_could_not_listed">Weitere Apps konnten nicht aufgelistet werden: %1$s</string>
     <string name="connect_no_confirmation_code">Die Anmeldung bei %1$s kam ohne Bestätigungscode zurück. Es wurde nichts verbunden.</string>

@@ -103,6 +103,7 @@
   "connect.key_not_given": "Der Schlüssel wurde nicht übergeben. {why}",
   "connect.kiff_words_connection_could_not": "KIFFs Worte zu dieser Verbindung konnten nicht gelesen werden. Es wurde nichts genehmigt.",
   "connect.last_failed": "Zuletzt fehlgeschlagen: {title} · {detail}",
+  "connect.misplaced": "{taf} nutzt diese Verbindung nicht. Entferne den Zugriff, wenn du sie dort nicht verbinden wolltest.",
   "connect.more_apps": "Mehr Apps",
   "connect.more_apps_could_not_listed": "Weitere Apps konnten nicht aufgelistet werden: {why}",
   "connect.no_confirmation_code": "Die Anmeldung bei {vendor} kam ohne Bestätigungscode zurück. Es wurde nichts verbunden.",

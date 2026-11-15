@@ -1651,6 +1651,8 @@ enum Words {
         static var kiffWordsConnectionCouldNot: String { Words.line("connect.kiff_words_connection_could_not") }
         /// Last failed: {title} · {detail}
         static func lastFailed(title: String, detail: String) -> String { Words.line("connect.last_failed", title, detail) }
+        /// {taf} doesn't use this connection. Remove access if you didn't mean to connect it there.
+        static func misplaced(taf: String) -> String { Words.line("connect.misplaced", taf) }
         /// More apps
         static var moreApps: String { Words.line("connect.more_apps") }
         /// More apps couldn't be listed: {why}

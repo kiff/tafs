@@ -79,7 +79,7 @@ struct ConnectAppsView: View {
         }
         .confirmationDialog(Words.Connect.whichTaf, isPresented: Binding(get: { choosing != nil }, set: { if !$0 { choosing = nil } }),
                             titleVisibility: .visible, presenting: choosing) { app in
-            ForEach(model.connectableTafs) { t in
+            ForEach(model.connectableTafs(for: app)) { t in
                 Button(t.name) { start(app, for: t.id) }
             }
         } message: { app in
@@ -200,21 +200,28 @@ struct ConnectAppsView: View {
                 .accessibilityLabel(Words.Connect.Status.connected)
         } else {
             Button { connect(app) } label: {
-                Text(app.needsReconnect ? Words.Connect.signInAgain : Words.Connect.Apps.connect).padding(.horizontal, 16)
+                // No taf needs it: Coach sets one up, never a guess.
+                Text(route(app) == .askCoach ? Words.Coach.ask : app.needsReconnect ? Words.Connect.signInAgain : Words.Connect.Apps.connect)
+                    .padding(.horizontal, 16)
             }
                 .buttonStyle(OutlineButtonStyle())
                 .fixedSize(horizontal: true, vertical: false)
-                .disabled(starting != nil || (taf == nil && model.connectableTafs.isEmpty))
+                .disabled(starting != nil || route(app) == .noTaf)
         }
     }
 
     /// The taf first: the one this was opened from, else the person's pick (`ConnectRow.connectFor`).
     private func connect(_ app: TafsCloud.ConnectApps.App) {
-        switch ConnectRow.connectFor(openedFrom: taf, connectable: model.connectableTafs) {
+        switch route(app) {
         case .taf(let id): start(app, for: id)
         case .ask: choosing = app
+        case .askCoach: model.openCoach()
         case .noTaf: break
         }
+    }
+
+    private func route(_ app: TafsCloud.ConnectApps.App) -> ConnectRow.ConnectFor {
+        ConnectRow.connectFor(openedFrom: taf, connectable: model.connectableTafs(for: app), needed: app.neededBy != nil)
     }
 
     private func start(_ app: TafsCloud.ConnectApps.App, for tafID: UUID) {
@@ -335,20 +342,29 @@ struct ConnectRow: Equatable {
 
     /// Whom a Connect is for.
     enum ConnectFor: Equatable {
-        /// The taf the list was opened from.
+        /// The taf the list was opened from, or the one taf that needs the app.
         case taf(UUID)
         /// The person picks, in "Which taf is this for?".
         case ask
+        /// No taf needs it: Coach sets one up.
+        case askCoach
         /// No taf can have it: Connect is off, and "Make one first" says why.
         case noTaf
     }
 
-    /// A connection goes only to a taf the person named: the one Connect apps was opened from, else
-    /// their pick, asked even when one taf is all there is. Never a guess: a guessed taf takes an app
-    /// its Card never asked for (Stripe under a Gmail taf).
-    static func connectFor(openedFrom taf: UUID?, connectable: [Taf]) -> ConnectFor {
-        if let taf { return .taf(taf) }
-        return connectable.isEmpty ? .noTaf : .ask
+    /// A connection goes only to a taf that needs the app (tafs cloud's `needed_by`, so `needed`) or one the
+    /// person named. With `needed_by`: the taf the list was opened from when it needs the app, the one taf that
+    /// does, else the person's pick among them; none, or the taf opened from isn't one, is Ask Coach. Without
+    /// it (a tafs cloud before), every taf you manage, and the pick is asked even with one. Never a guess: a
+    /// guessed taf takes an app its Card never asked for (Stripe under a Gmail taf).
+    static func connectFor(openedFrom taf: UUID?, connectable: [Taf], needed: Bool = false) -> ConnectFor {
+        guard needed else {
+            if let taf { return .taf(taf) }
+            return connectable.isEmpty ? .noTaf : .ask
+        }
+        if let taf { return connectable.contains { $0.id == taf } ? .taf(taf) : .askCoach }
+        if connectable.count == 1, let only = connectable.first { return .taf(only.id) }
+        return connectable.isEmpty ? .askCoach : .ask
     }
 }
 
@@ -588,6 +604,7 @@ struct AppConnectionsView: View {
                         Text(health.words).scaledFont(13).foregroundColor(health.ok ? Theme.dim : Theme.amberText)
                             .fixedSize(horizontal: false, vertical: true)
                     }
+                    misplacedNote(g)
                 }
                 .frame(minHeight: 44, alignment: .leading)
             }
@@ -597,11 +614,22 @@ struct AppConnectionsView: View {
         }
     }
 
+    /// A connection made under a taf that doesn't need the app (tafs cloud's `misplaced`): said, so it can be
+    /// removed (Remove access, here or in its detail), never kept without a word.
+    @ViewBuilder private func misplacedNote(_ g: PlanqueClient.Grant) -> some View {
+        if let wrong = app.misplaced.first(where: { $0.grant == g.id }) {
+            Text(Words.Connect.misplaced(taf: wrong.name)).scaledFont(13).foregroundColor(Theme.amberText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("connect.misplaced." + g.id)
+        }
+    }
+
     /// A connection: its lines, how to fix it, and Disconnect, or Cancel while its sign-in waits.
     private func row(_ g: PlanqueClient.Grant) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 lines(g)
+                misplacedNote(g)
                 if model.canManageCards, g.signsInThroughProvider {
                     // A provider's connection isn't signed in again in place: said before any Face ID.
                     Text(ConnectionFixWords.throughProvider(g.vendor)).scaledFont(13).foregroundColor(Theme.soft)

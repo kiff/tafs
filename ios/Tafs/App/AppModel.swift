@@ -2350,7 +2350,12 @@ final class AppModel: ObservableObject {
         let request = connectAppsRequest
         let q = connectAppsQuery
         do {
-            let page = try await cloud.connectApps(q, provider: shown.provider, cursor: cursor)
+            // A fresh signed grants read: planque takes each once, and with it the next page's apps say which
+            // tafs need them by their Cards too, and which connections were made under a taf that doesn't.
+            let signer = self.signer
+            planque.tenant = kiffTenant
+            let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let page = try await cloud.connectApps(q, provider: shown.provider, cursor: cursor, proof: proof)
             guard gen == accountGeneration, request == connectAppsRequest,
                   q == connectAppsQuery, connectApps?.nextCursor == cursor else { return }
             var merged = page
@@ -2371,6 +2376,17 @@ final class AppModel: ObservableObject {
         tafs.filter { cloudTaf(for: $0.id) != nil && manages($0.id) }
     }
 
+    /// The tafs one app can be connected for: of those, the ones tafs cloud says need it (`needed_by`), in its
+    /// order. A tafs cloud that doesn't say leaves every one, and "Which taf?" asks among them all.
+    func connectableTafs(for app: TafsCloud.ConnectApps.App) -> [Taf] {
+        Self.connectableTafs(connectableTafs, needed: app.neededBy, cloudID: { self.cloudTaf(for: $0)?.id })
+    }
+
+    static func connectableTafs(_ tafs: [Taf], needed: [TafsCloud.ConnectApps.UsedBy]?, cloudID: (UUID) -> String?) -> [Taf] {
+        guard let needed else { return tafs }
+        return needed.compactMap { n in tafs.first { cloudID($0.id) == n.taf } }
+    }
+
     /// Starts connecting an app from the list for one taf; its approval opens as a sheet over
     /// the list.
     func startConnect(_ app: TafsCloud.ConnectApps.App, for tafID: UUID) async {
@@ -2380,11 +2396,20 @@ final class AppModel: ObservableObject {
         }
         let gen = accountGeneration
         do {
-            let start = try await cloud.startConnect(app.entry, taf: c.id)
+            // A fresh signed grants read, never the list's resent: planque takes each once. With it, tafs cloud
+            // decides this taf needs the app by its Card, as the list did.
+            let signer = self.signer
+            planque.tenant = kiffTenant
+            let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let start = try await cloud.startConnect(app.entry, taf: c.id, proof: proof)
             guard gen == accountGeneration else { return }
             await refreshConnections()
             guard gen == accountGeneration else { return }
             connectStart = start
+        } catch let refused as TafsCloud.CloudError where refused.code == "not_needed" {
+            // This taf doesn't use the app: tafs cloud's words, which send the person to Coach. Nothing started.
+            guard gen == accountGeneration else { return }
+            lastError = refused.words ?? refused.message
         } catch {
             guard gen == accountGeneration else { return }
             lastError = Words.Connect.couldNotConnected(vendor: "\(app.name ?? (app.vendor.isEmpty ? app.title : app.vendor))", why: "\(error.localizedDescription)")
