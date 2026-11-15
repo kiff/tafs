@@ -1,0 +1,3 @@
+- Connecter des apps demande pour quel taf est la connexion, même si vous n'en avez qu'un.
+- Connecter une app ne reste plus bloqué sur « Approbation… » : « Rouvrir la connexion » rouvre la page, et « Pas maintenant » arrête l'attente.
+- Une demande de connexion restée sans réponse peut être annulée depuis sa ligne.

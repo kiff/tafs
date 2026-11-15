@@ -105,7 +105,8 @@ class PasskeyRegistrationTest {
     assertNull(made.synced)
     assertEquals(listOf("approval:kiff.request.v1"), signed)
     val sent = transport.requestsTo("POST /v1/me/passkeys").single()
-    assertFalse(sent.headers.getValue("KIFF-Device-Signature").contains("w="))
+    // Never inside a window: no `w=` field (a base64 signature may itself end in "w=").
+    assertFalse(sent.headers.getValue("KIFF-Device-Signature").split(",").any { it.startsWith("w=") })
     assertEquals(vector.getValue("register_body"), KiffClient.json.parseToJsonElement(String(sent.body!!)))
     assertTrue(KiffClient.grantsAuthority("POST", KiffClient.PASSKEYS))
   }

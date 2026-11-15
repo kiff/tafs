@@ -355,6 +355,53 @@ class PlanqueTest {
     assertNull(m.state.value.connectedNow)
   }
 
+  /** A vendor page that never sends tafs back: the wait goes on until something ends it. */
+  private class NeverBack : VendorSignIn {
+    var opened = 0
+    override suspend fun signIn(url: String): String { opened++; kotlinx.coroutines.awaitCancellation() }
+  }
+
+  /** "Not now" on the sheet ends the wait: the next Connect isn't refused as "another approval in progress". */
+  @Test fun notNowOnTheListSheetEndsTheWaitAndFreesTheNextApproval() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, twoTafs)
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    val vendor = NeverBack()
+    val m = model(vendor, scope = backgroundScope)
+    m.refresh()
+    m.refreshConnections()
+    m.startListApproval("g1", digest)
+    testScheduler.runCurrent()
+    assertEquals(1, vendor.opened)
+    assertEquals("waiting on the vendor's page", "g1", m.state.value.connecting)
+    m.closeListApproval()
+    testScheduler.runCurrent()
+    assertNull("Not now cleared the in-progress guard", m.state.value.connecting)
+    assertNull(m.state.value.listApproval)
+    m.startListApproval("g1", digest)
+    testScheduler.runCurrent()
+    assertEquals("the next approval runs", 2, vendor.opened)
+    m.closeListApproval()
+  }
+
+  /** While the vendor's page is open, planque is read again: a sign-in that finished elsewhere ends the wait. */
+  @Test fun whileTheVendorPageIsOpenPlanqueIsReadAgain() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, twoTafs)
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    val m = model(NeverBack(), scope = backgroundScope)
+    m.refresh()
+    m.refreshConnections()
+    val before = transport.requestsTo(grants).size
+    m.startListApproval("g1", digest)
+    testScheduler.advanceTimeBy(3_100)
+    testScheduler.runCurrent()
+    assertTrue("planque read while the page is open", transport.requestsTo(grants).size > before)
+    m.closeListApproval()
+  }
+
   // MARK: A connection with a profile (KIFF's profile contract): KIFF's words, read by the phone and signed with the approval
 
   private fun resource(name: String) = javaClass.classLoader!!.getResource("profile/$name.json")!!.readText()
