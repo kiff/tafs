@@ -26,6 +26,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import kotlinx.coroutines.async
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -863,6 +864,38 @@ class PlanqueTest {
     assertTrue("the phone never answers the card itself", transport.requestsTo(answerRoute).isEmpty())
     assertNull(m.state.value.coachNotes["a1"])
     assertNull("the signer a confirmed step set is gone", m.state.value.connecting)
+  }
+
+  // Open again on an approval card (tafs cloud's asked call): the page given up is reported to no one, and the card's approval
+  // runs again, asking tafs cloud once more; planque, holding the sign-in, answers signed_in, and that is what's reported.
+  @Test fun openAgainOnAnApprovalCardReportsOnlyTheApprovalThatRanAgain() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnect())
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    transport.answer(approve, 200, """{"status":"signed_in","confirm":"c0de"}""")
+    transport.answer(confirm, 200, grant("g1", "connected"))
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    var waiting = kotlinx.coroutines.CompletableDeferred<String>()
+    val signIn = object : bot.tafs.app.kiff.VendorSignIn {
+      override suspend fun signIn(url: String): String { waiting = kotlinx.coroutines.CompletableDeferred(); return waiting.await() }
+      override fun replace() { waiting.completeExceptionally(bot.tafs.app.kiff.VendorSignInReplaced()) }
+    }
+    val m = model(signIn, scope = backgroundScope)
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.startApproval(approvalComponent(), digest, null)
+    runCurrent()
+    assertEquals(1, transport.requestsTo(approve).size)
+    assertTrue(transport.requestsTo(reportRoute).isEmpty())
+    m.reopenSignIn()
+    repeat(20) { advanceTimeBy(100); runCurrent() }
+    assertEquals(2, transport.requestsTo(askRoute).size)
+    assertEquals(2, transport.requestsTo(approve).size)
+    assertEquals("c0de", bodyOf(transport.requestsTo(confirm).single()).getValue("confirm").jsonPrimitive.content)
+    assertEquals("connected", bodyOf(transport.requestsTo(reportRoute).single()).getValue("result").jsonPrimitive.content)
+    assertNull(m.state.value.coachNotes["a1"])
+    assertNull(m.state.value.connecting)
   }
 
   @Test fun whatTafsCloudAnsweredItselfIsOnlyShownAndNothingIsSigned() = runTest {

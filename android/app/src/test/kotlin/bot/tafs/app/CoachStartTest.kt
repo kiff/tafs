@@ -849,6 +849,60 @@ class CoachStartTest {
     assertTrue(m.state.value.grants.any { it.id == "g1" })
   }
 
+  // A live test: the owner came back to tafs with no link after Stripe's sign-in had reached planque, and Open again opened the
+  // same link, which planque takes once, so the page said it was used. Open again now ends that wait quietly and runs the card's
+  // approval again: planque, holding the sign-in, answers signed_in with its confirm code, and the card is signed in, no page.
+  @Test fun openAgainRunsTheApprovalAgainAndTakesTheSignedInPath() = runTest {
+    reads()
+    coachThread(signInCard)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth"}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"signed_in","confirm":"c0de"}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/confirm", 200, grant("connected"))
+    val left = kotlinx.coroutines.flow.MutableStateFlow(false)
+    var waiting = kotlinx.coroutines.CompletableDeferred<String>()
+    val opened = mutableListOf<String>()
+    var reopened = 0
+    val signIn = object : VendorSignIn {
+      override suspend fun signIn(url: String): String { opened += url; waiting = kotlinx.coroutines.CompletableDeferred(); return waiting.await() }
+      override val left = left
+      override fun reopen() { reopened++ }
+      override fun replace() { waiting.completeExceptionally(bot.tafs.app.kiff.VendorSignInReplaced()) }
+    }
+    val m = model(signIn, scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    m.startSignInAgain(KiffClient.json.decodeFromString(signInCard))
+    runCurrent()
+    assertEquals(listOf("https://mcp.stripe.com/oauth"), opened)
+    left.value = true
+    runCurrent()
+    m.reopenSignIn()
+    repeat(20) { advanceTimeBy(100); runCurrent() }
+    // The same link was never opened again; the approval ran once more, and planque's signed-in answer was confirmed.
+    assertEquals(0, reopened)
+    assertEquals(listOf("https://mcp.stripe.com/oauth"), opened)
+    assertEquals(2, transport.requestsTo("POST /v1/accounts/t_01/grants/g1/approve").size)
+    assertEquals(1, transport.requestsTo("POST /v1/accounts/t_01/grants/g1/confirm").size)
+    // Coach heard one answer, the second approval's: never "failed" for the page given up.
+    assertEquals(1, transport.requestsTo("POST /v1/tafs/setup_1/components/s1/answer").size)
+    assertEquals("signed in", answered("s1"))
+    assertNull(m.state.value.connecting)
+  }
+
+  // With no approval waiting on the page (none this model started), Open again opens the same page, as before.
+  @Test fun openAgainWithNoApprovalToRunOpensTheSamePage() = runTest {
+    reads()
+    var reopened = 0
+    val signIn = object : VendorSignIn {
+      override suspend fun signIn(url: String): String = kotlinx.coroutines.awaitCancellation()
+      override fun reopen() { reopened++ }
+    }
+    val m = model(signIn, scope = backgroundScope)
+    m.reopenSignIn()
+    assertEquals(1, reopened)
+  }
+
   // The owner on Android 97: back in tafs with no link from Google's page, the card offers the page again rather than drop it.
   @Test fun aSignInTheOwnerCameBackFromWithNoLinkIsOfferedAgain() = runTest {
     reads()
