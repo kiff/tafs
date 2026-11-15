@@ -250,7 +250,12 @@ class MainActivity : FragmentActivity() {
   // A vendor's sign-in waits while its tab is in front; the app back with no link from it means the tab was closed.
   override fun onStart() {
     super.onStart()
-    app.vendorSignIn.attach(this)
+    app.vendorSignIn.attach(this) { tab -> vendorTab.launch(tab) }
+  }
+
+  /** The vendor's tab, opened for a result: it answers only once the tab is closed, which ends the wait as on iOS. */
+  private val vendorTab = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) {
+    app.vendorSignIn.closed(lifecycleScope)
   }
 
   override fun onPause() {

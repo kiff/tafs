@@ -38,6 +38,31 @@ class VendorWaitTest {
     assertEquals("tafs://planque/signed-in?code=c", waiting.await())
   }
 
+  /** The tab itself closed (its result came back) with no link: the wait ends as Cancel ends it, as closing the sheet does on iOS. */
+  @Test fun theTabClosedWithNoLinkEndsTheWait() = runTest {
+    val wait = VendorWait()
+    val waiting = wait.start()
+    val result = async { runCatching { waiting.await() } }
+    wait.closed(this)
+    advanceTimeBy(VendorWait.RETURN_GRACE_MS - 1)
+    runCurrent()
+    assertFalse("a link may still arrive within the grace", waiting.isCompleted)
+    advanceTimeBy(2)
+    runCurrent()
+    assertTrue(result.await().exceptionOrNull() is VendorSignInCancelled)
+  }
+
+  /** A link that came back as the tab closed wins: the sign-in goes on. */
+  @Test fun theTabClosedAfterItsLinkKeepsTheLink() = runTest {
+    val wait = VendorWait()
+    val waiting = wait.start()
+    wait.deliver("tafs://planque/signed-in?code=c")
+    wait.closed(this)
+    advanceTimeBy(VendorWait.RETURN_GRACE_MS + 1)
+    runCurrent()
+    assertEquals("tafs://planque/signed-in?code=c", waiting.await())
+  }
+
   @Test fun cancelEndsALeftSignIn() = runTest {
     val wait = VendorWait()
     val waiting = wait.start()

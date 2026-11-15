@@ -32,11 +32,15 @@ class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
   private val wait = VendorWait()
   @Volatile private var url: String? = null
   @Volatile private var screen: WeakReference<Activity>? = null
+  @Volatile private var launch: ((Intent) -> Unit)? = null
 
-  /** The screen the vendor's tab opens from, so it stays in tafs's task. */
-  fun attach(activity: Activity) { screen = WeakReference(activity) }
+  /**
+   * The screen the vendor's tab opens from, so it stays in tafs's task; [forResult] opens it for a result, which comes back only
+   * when the tab itself is closed ([closed]), never when the owner goes to another app and back.
+   */
+  fun attach(activity: Activity, forResult: ((Intent) -> Unit)? = null) { screen = WeakReference(activity); launch = forResult }
 
-  fun detach(activity: Activity) { if (screen?.get() === activity) screen = null }
+  fun detach(activity: Activity) { if (screen?.get() === activity) { screen = null; launch = null } }
 
   override suspend fun signIn(url: String): String {
     // Only a vendor's secure page is opened.
@@ -68,7 +72,9 @@ class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
   private fun open(url: String) {
     val tab = CustomTabsIntent.Builder().build()
     val from = screen?.get()?.takeIf { !it.isFinishing && !it.isDestroyed }
-    if (from != null) tab.launchUrl(from, Uri.parse(url))
+    val forResult = launch
+    if (from != null && forResult != null) forResult(tab.intent.setData(Uri.parse(url)))
+    else if (from != null) tab.launchUrl(from, Uri.parse(url))
     else {
       tab.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
       tab.launchUrl(context, Uri.parse(url))
@@ -86,6 +92,9 @@ class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
 
   /** The app is back in front: with no link from the vendor by then, the sign-in was left, and it lets go. */
   fun resumed(scope: CoroutineScope) = wait.resumed(scope)
+
+  /** The vendor's tab was closed (its result came back): with no link by then, the wait ends, as closing the sheet does on iOS. */
+  fun closed(scope: CoroutineScope) = wait.closed(scope)
 
   /** Whether a sign-in is waiting on the vendor's page. */
   val isWaiting: Boolean get() = wait.isWaiting
@@ -142,6 +151,18 @@ class VendorWait {
     scope.launch {
       delay(RETURN_GRACE_MS)
       if (waiting === of && !of.isCompleted) _left.value = true
+    }
+  }
+
+  /**
+   * The vendor's tab itself was closed (back, or its ✕): the link may still arrive within [RETURN_GRACE_MS]; with none, the wait
+   * ends as Cancel ends it ([VendorSignInCancelled]), so the card or sheet is never left on "Approving…".
+   */
+  fun closed(scope: CoroutineScope) {
+    val of = waiting ?: return
+    scope.launch {
+      delay(RETURN_GRACE_MS)
+      if (waiting === of && !of.isCompleted) of.completeExceptionally(VendorSignInCancelled())
     }
   }
 
