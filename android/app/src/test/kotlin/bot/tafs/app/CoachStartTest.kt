@@ -22,6 +22,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -68,7 +69,7 @@ class CoachStartTest {
         "card":{"body":$cardBody,"card_title":"Coach","cards":[{"title":"Install a version","lines":["Always asks you"]},{"id":7}]}}"""
   private val coach = """{"id":"setup_1","name":"Coach","kiff_agent":"setup-acme"}"""
 
-  private fun startAnswers(keys: Pair<Int, String> = 200 to """{"plaintext":"kk_connector"}""", enrol: Pair<Int, String> = 200 to """{"tenant":"t_01","device":"ab12"}""", keyless: Pair<Int, String> = 409 to """{"error":"no connector key stands for this account","code":"needs_key"}""") {
+  private fun startAnswers(keys: Pair<Int, String> = 200 to """{"plaintext":"kk_connector"}""", enrol: Pair<Int, String> = 200 to """{"tenant":"t_01","device":"ab12"}""", keyless: Pair<Int, String>? = 409 to """{"error":"no connector key stands for this account","code":"needs_key"}""") {
     // Before the start, no Coach; once started, its tools still to give, read by the start and by the tools panel; once given, given.
     transport.answer("GET /v1/setup", 200, """{"setup":null}""")
     transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$toGive}""")
@@ -78,7 +79,8 @@ class CoachStartTest {
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
     transport.answer("POST /v1/keys", keys.first, keys.second)
     // Asked first with no key: nothing enrolled yet, so planque needs one; then the minted key goes in.
-    transport.answer("POST /v1/accounts/t_01/enrolment", keyless.first, keyless.second)
+    // No keyless answer: the network dropped it.
+    if (keyless == null) transport.drop("POST /v1/accounts/t_01/enrolment") else transport.answer("POST /v1/accounts/t_01/enrolment", keyless.first, keyless.second)
     transport.answer("POST /v1/accounts/t_01/enrolment", enrol.first, enrol.second)
     transport.answer("POST /v1/me/agent-drafts", 200, """{"id":"dr_setup","status":"confirmed","claim_secret":"cs_1"}""")
     transport.answer("POST /v1/setup", 200, """{"setup":$coach}""")
@@ -400,6 +402,32 @@ class CoachStartTest {
       assertEquals(listOf(null, "kk_connector"), keys)
       assertTrue(m.state.value.planqueReady)
       assertEquals(listOf("Start Coach"), auth.fingerprints)
+    }
+  }
+
+  /**
+   * Any other answer to the keyless ask mints nothing: planque not reached, a 5xx, a replayed signature. A key minted then,
+   * its enrolment failing too, would be left live in KIFF, held by no device. Start says why, and the next Start asks again.
+   */
+  @Test fun aKeylessAskPlanqueDidntAnswerMintsNoKey() = runTest {
+    val answers: List<Pair<Int, String>?> = listOf(
+      null,
+      503 to """{"error":"planque is unavailable"}""",
+      409 to """{"error":"this signature was already used","code":"signature_replayed"}""",
+    )
+    for (keyless in answers) {
+      transport.reset()
+      reads()
+      startAnswers(keyless = keyless)
+      val m = model()
+      assertFalse("$keyless", m.startCoach())
+      assertTrue("$keyless", transport.requestsTo("POST /v1/keys").isEmpty())
+      val enrolment = transport.requestsTo("POST /v1/accounts/t_01/enrolment").single()
+      assertFalse("$keyless", String(enrolment.body!!).contains("connector_key"))
+      assertFalse(m.state.value.planqueReady)
+      assertNotNull("$keyless", m.state.value.coachStartError)
+      // A coded 409 is planque's why, never "another device", which only a planque that enrolled one phone said (no code).
+      assertNotEquals("$keyless", "Another device connects this account's apps for now. Connect them from that one.", m.state.value.coachStartError)
     }
   }
 
