@@ -1,0 +1,2 @@
+- Démarrer Coach sur un autre téléphone du même compte ne laisse plus de clé inutilisée dans votre compte KIFF.
+- Quand la connexion de vos apps échoue, l'app dit pourquoi, et Démarrer réessaie. Elle ne dit plus qu'un autre appareil les connecte quand ce n'est pas le cas.
