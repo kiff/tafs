@@ -342,7 +342,7 @@ struct ConnectRow: Equatable {
 
     /// Whom a Connect is for.
     enum ConnectFor: Equatable {
-        /// The taf the list was opened from, or the one taf that needs the app.
+        /// The taf the list was opened from.
         case taf(UUID)
         /// The person picks, in "Which taf is this for?".
         case ask
@@ -352,18 +352,17 @@ struct ConnectRow: Equatable {
         case noTaf
     }
 
-    /// A connection goes only to a taf that needs the app (tafs cloud's `needed_by`, so `needed`) or one the
-    /// person named. With `needed_by`: the taf the list was opened from when it needs the app, the one taf that
-    /// does, else the person's pick among them; none, or the taf opened from isn't one, is Ask Coach. Without
-    /// it (a tafs cloud before), every taf you manage, and the pick is asked even with one. Never a guess: a
-    /// guessed taf takes an app its Card never asked for (Stripe under a Gmail taf).
+    /// A connection goes only to a taf the person named, among those that need the app when tafs cloud says
+    /// (`needed_by`, so `needed`): the taf the list was opened from, else their pick, asked even when one taf
+    /// is all there is. With `needed_by`, none, or a taf opened from that doesn't need it, is Ask Coach. Without
+    /// it (a tafs cloud before), every taf you manage. Never a guess: a guessed taf takes an app its Card never
+    /// asked for (Stripe under a Gmail taf).
     static func connectFor(openedFrom taf: UUID?, connectable: [Taf], needed: Bool = false) -> ConnectFor {
         guard needed else {
             if let taf { return .taf(taf) }
             return connectable.isEmpty ? .noTaf : .ask
         }
         if let taf { return connectable.contains { $0.id == taf } ? .taf(taf) : .askCoach }
-        if connectable.count == 1, let only = connectable.first { return .taf(only.id) }
         return connectable.isEmpty ? .askCoach : .ask
     }
 }
