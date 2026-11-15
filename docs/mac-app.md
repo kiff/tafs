@@ -65,7 +65,7 @@ That build is unsigned. The signed one goes to TestFlight (below).
    openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in sealed/mac-installer.tar.enc -out bundle.tar -pass file:aes.key
    mkdir out && tar -C out -xf bundle.tar
    base64 < out/installer.p12 | tr -d '\n' | gh secret set MAC_INSTALLER_P12 -R kiff/tafs
-   gh secret set MAC_INSTALLER_P12_PASSWORD -R kiff/tafs < out/password.txt
+   tr -d '\n' < out/password.txt | gh secret set MAC_INSTALLER_P12_PASSWORD -R kiff/tafs
    ```
 
 4. **Delete the run's artifact** (Actions → the run → Artifacts), and the local files: `sealed`, `aes.key`, `bundle.tar`, `out` and, once the secrets are stored, `mac-signing.pem`.

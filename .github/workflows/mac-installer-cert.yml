@@ -100,7 +100,8 @@ jobs:
             -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1 \
             -passout file:out/password.txt -out out/installer.p12
           tar -C out -cf bundle.tar installer.p12 password.txt
-          openssl rand 32 > aes.key
+          # Hex, one line: -pass file: reads the first line only, so binary would be cut at a newline or NUL.
+          openssl rand -hex 32 > aes.key
           openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in bundle.tar -out mac-installer.tar.enc -pass file:aes.key
           openssl pkeyutl -encrypt -pubin -inkey admin.pub.pem -in aes.key -out mac-installer.key.enc \
             -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256
