@@ -16,9 +16,9 @@ These computers have no key store the app can keep an approval key in, and their
 use the phone's passkey across devices (macOS 12 has no cross-device passkeys; macOS 13 added
 them). So they approve in one of two ways:
 
-- **A USB security key** (a FIDO2 key with a PIN), registered with the computer, which the person plugs in and unlocks with its
-  PIN for each approval. The app talks to the key over CTAP2, as Windows' own WebAuthn stack does,
-  and builds the WebAuthn client data itself (below).
+- **A USB security key** (a FIDO2 key with a PIN), registered with the computer, which the person
+  plugs in and unlocks with its PIN for each approval. The app talks to the key over CTAP2, as
+  Windows' own WebAuthn stack does, and builds the WebAuthn client data itself (below).
 - **The person's phone:** the computer says to approve on the phone, and follows the phone's
   answer, as for any device that can't approve.
 
