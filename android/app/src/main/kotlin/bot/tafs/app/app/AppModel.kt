@@ -3294,14 +3294,17 @@ class AppModel(
   private suspend fun enrolForCoach(failed: (String) -> Unit): Boolean {
     if (_state.value.planqueReady) return true
     try {
-      // Asked first with no key: any 2xx is set up and mints nothing (`kept` true, false or left out), since a phone can't
-      // revoke a connector key and a new one would be left live in KIFF. Only planque saying it needs one (`409 needs_key`)
-      // mints one and hands it over. Anything else (not reached, a 5xx, a replayed signature, a 400,
+      // Asked first with no key: `kept: true` is set up, and nothing is minted, since a phone can't revoke a connector key and a
+      // new one would be left live in KIFF. Only planque saying it needs one (`409 needs_key`) mints one and hands it over. A 2xx
+      // without `kept: true` mints nothing and stops, as on every app until planque says what it means: the next Start asks again. Anything else (not reached, a 5xx, a replayed signature, a 400,
       // which planque sends only for a body it can't read, a window that ended) goes to the caller as it did,
       // with nothing minted: a key minted then, its enrolment failing too, would be left live and held by no device. The next
       // Start asks again.
       val needsKey = try {
-        planque.enrol(signer.publicKeyDER)
+        if (!planque.enrol(signer.publicKeyDER).kept) {
+          failed(CoachWords.CONNECTING_FAILED)
+          return false
+        }
         false
       } catch (e: PlanqueError.Server) {
         if (!needsConnectorKey(e)) throw e

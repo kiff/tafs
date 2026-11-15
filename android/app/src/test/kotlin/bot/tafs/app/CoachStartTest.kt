@@ -311,7 +311,7 @@ class CoachStartTest {
     transport.answer("GET /v1/accounts/t_01/grants", 403, """{"error":"this device is not enrolled"}""")
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
     transport.answer("POST /v1/keys", 200, """{"plaintext":"kk_connector"}""")
-    transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12"}""")
+    transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12","kept":true}""")
     transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
     val m = model()
     m.loadCoach()
@@ -330,7 +330,7 @@ class CoachStartTest {
     transport.answer("GET /v1/accounts/t_01/grants", 403, """{"error":"this device is not enrolled"}""")
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
     transport.answer("POST /v1/keys", 200, """{"plaintext":"kk_connector"}""")
-    transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12"}""")
+    transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12","kept":true}""")
     transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[]}""")
     val m = model()
     m.loadCoach()
@@ -386,18 +386,22 @@ class CoachStartTest {
     assertEquals(listOf("Start Coach"), auth.fingerprints)
   }
 
-  /** Any 2xx to the keyless ask is set up and mints nothing, `kept` false or left out included: only `409 needs_key` mints. */
-  @Test fun aKeylessTwoHundredWithoutKeptMintsNothing() = runTest {
+  /**
+   * A 2xx to the keyless ask without `kept: true` mints nothing and stops, saying so; the next Start asks again. Only `kept: true`
+   * is set up, and only `409 needs_key` mints.
+   */
+  @Test fun aKeylessTwoHundredWithoutKeptMintsNothingAndStops() = runTest {
     for (answer in listOf(201 to """{"tenant":"t_01","device":"ab12"}""", 200 to """{"kept":false}""")) {
       transport.reset()
       auth.fingerprints.clear()
       reads()
       startAnswers(keyless = answer)
       val m = model()
-      assertTrue("$answer", m.startCoach())
+      assertFalse("$answer", m.startCoach())
       assertTrue("$answer", transport.requestsTo("POST /v1/keys").isEmpty())
       assertEquals("$answer", 1, transport.requestsTo("POST /v1/accounts/t_01/enrolment").size)
-      assertTrue("$answer", m.state.value.planqueReady)
+      assertFalse("$answer", m.state.value.planqueReady)
+      assertEquals("$answer", "Connecting your apps didn't work. Tap Start to try again.", m.state.value.coachStartError)
     }
   }
 
