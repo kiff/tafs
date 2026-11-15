@@ -164,6 +164,10 @@ against the phone's key (`ApprovalSigner`). A server never vouches for an owner'
   **Sign in again** alone (no Approve again, which KIFF would refuse), keep Refuse, and ask KIFF
   nothing more until a new sign-in (`approvalViewOnly`). Pairing the phone from the other one is the
   way to approve on it (KIFF's pairing contract §5.8).
+  A view-only session isn't offered **Revoke** either, on any device: where it would be, a taf's
+  Card tab says "To revoke this Card, use a device that can approve." (`taf.revoke_needs_approver`).
+  Revoking only takes authority away, but a session that can stop every Card shouldn't be one that
+  approves nothing. Android does this; iOS follows. KIFF's revoke route itself is unchanged.
 - A held call is answered on the phone only when KIFF checks the phone's signature on it:
   the session holds the phone's key, and the hold says which version the owner saw
   (`canAnswer`). Otherwise the card links to answering it in KIFF.

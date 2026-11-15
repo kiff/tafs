@@ -2249,6 +2249,7 @@ object Words {
     val revoke: String get() = Res.s(R.string.taf_revoke)
     val revokeAndStop: String get() = Res.s(R.string.taf_revoke_and_stop)
     val revokeBody: String get() = Res.s(R.string.taf_revoke_body)
+    val revokeNeedsApprover: String get() = Res.s(R.string.taf_revoke_needs_approver)
     fun revokeTitle(taf: String): String = Res.s(R.string.taf_revoke_title, taf, Words.possessive(taf))
     fun runNotStarted(why: String): String = Res.s(R.string.taf_run_not_started, why)
     val runNow: String get() = Res.s(R.string.taf_run_now)

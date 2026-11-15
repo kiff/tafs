@@ -2085,6 +2085,7 @@
     <string name="taf_revoke">Intrekken</string>
     <string name="taf_revoke_and_stop">Intrekken en stoppen</string>
     <string name="taf_revoke_body">Er gaat geen nieuwe actie meer door. Wat al is gedaan, blijft gedaan.</string>
+    <string name="taf_revoke_needs_approver">Gebruik een apparaat dat kan goedkeuren om deze Card in te trekken.</string>
     <string name="taf_revoke_title">De Card van %1$s intrekken?</string>
     <string name="taf_run_not_started">De run is niet gestart. %1$s</string>
     <string name="taf_run_now">Nu uitvoeren</string>

@@ -105742,6 +105742,59 @@
         }
       }
     },
+    "taf.revoke_needs_approver": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um diese Card zu widerrufen, nutze ein Gerät, das genehmigen kann."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To revoke this Card, use a device that can approve."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para revocar esta Card, usa un dispositivo que pueda aprobar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour révoquer cette Card, utilisez un appareil qui peut approuver."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per revocare questa Card, usa un dispositivo che può approvare."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik een apparaat dat kan goedkeuren om deze Card in te trekken."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aby unieważnić tę Card, użyj urządzenia, które może zatwierdzać."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para revogar este Card, use um dispositivo que possa aprovar."
+          }
+        }
+      }
+    },
     "taf.revoke_title": {
       "extractionState": "manual",
       "localizations": {

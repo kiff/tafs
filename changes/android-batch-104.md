@@ -1,0 +1,1 @@
+- **Android 1.29.3 (104): a view-only phone isn't offered Revoke.** Where it would be, a taf's Card tab says "To revoke this Card, use a device that can approve." (`taf.revoke_needs_approver`, shared with iOS, which follows; docs/approvals.md).

@@ -2085,6 +2085,7 @@
     <string name="taf_revoke">Revogar</string>
     <string name="taf_revoke_and_stop">Revogar e parar</string>
     <string name="taf_revoke_body">Nenhuma ação nova é concluída. O que já foi feito mantém-se.</string>
+    <string name="taf_revoke_needs_approver">Para revogar este Card, use um dispositivo que possa aprovar.</string>
     <string name="taf_revoke_title">Revogar o Card de %1$s?</string>
     <string name="taf_run_not_started">A execução não começou. %1$s</string>
     <string name="taf_run_now">Executar agora</string>

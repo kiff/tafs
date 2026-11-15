@@ -4155,6 +4155,8 @@ enum Words {
         static var revokeAndStop: String { Words.line("taf.revoke_and_stop") }
         /// No new action goes through. Anything already done stays done.
         static var revokeBody: String { Words.line("taf.revoke_body") }
+        /// To revoke this Card, use a device that can approve.
+        static var revokeNeedsApprover: String { Words.line("taf.revoke_needs_approver") }
         /// Revoke {taf|possessive} Card?
         static func revokeTitle(taf: String) -> String { Words.line("taf.revoke_title", taf, Words.possessive(taf)) }
         /// The run didn't start. {why}

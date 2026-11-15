@@ -2085,6 +2085,7 @@
     <string name="taf_revoke">Widerrufen</string>
     <string name="taf_revoke_and_stop">Widerrufen und stoppen</string>
     <string name="taf_revoke_body">Keine neue Aktion geht durch. Was schon erledigt ist, bleibt erledigt.</string>
+    <string name="taf_revoke_needs_approver">Um diese Card zu widerrufen, nutze ein Gerät, das genehmigen kann.</string>
     <string name="taf_revoke_title">%2$s Card widerrufen?</string>
     <string name="taf_run_not_started">Der Lauf ist nicht gestartet. %1$s</string>
     <string name="taf_run_now">Jetzt ausführen</string>
