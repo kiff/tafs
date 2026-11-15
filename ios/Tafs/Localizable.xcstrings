@@ -5855,6 +5855,59 @@
         }
       }
     },
+    "approval.view_only_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Mac kann nur ansehen. Um hier zu genehmigen, füge ihn auf deinem Telefon hinzu: Konto › Geräte › Gerät hinzufügen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Mac can only view. To approve here, add it from your phone: Account › Devices › Add a device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este Mac solo puede ver. Para aprobar aquí, añádelo desde tu teléfono: Cuenta › Dispositivos › Añadir un dispositivo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce Mac peut seulement consulter. Pour approuver ici, ajoutez-le depuis votre téléphone : Compte › Appareils › Ajouter un appareil."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo Mac può solo visualizzare. Per approvare qui, aggiungilo dal tuo telefono: Account › Dispositivi › Aggiungi un dispositivo."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze Mac kan alleen bekijken. Om hier goed te keuren, voeg je hem toe vanaf je telefoon: Account › Apparaten › Apparaat toevoegen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten Mac może tylko wyświetlać. Aby zatwierdzać tutaj, dodaj go na telefonie: Konto › Urządzenia › Dodaj urządzenie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este Mac só pode ver. Para aprovar aqui, adicione-o a partir do seu telefone: Conta › Dispositivos › Adicionar um dispositivo."
+          }
+        }
+      }
+    },
     "approval.why": {
       "extractionState": "manual",
       "localizations": {
@@ -118117,6 +118170,59 @@
         }
       }
     },
+    "voice.dictation_not_add_keyboard_dictation_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diktieren ist auf diesem Mac noch nicht aktiviert. Aktiviere es unter Systemeinstellungen › Tastatur › Diktieren (unter macOS 12: Systemeinstellungen › Tastatur › Diktieren), warte, bis die Sprache geladen ist, und versuch es dann erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictation isn't on for this Mac yet. Turn it on in System Settings › Keyboard › Dictation (on macOS 12: System Preferences › Keyboard › Dictation), wait for its language to download, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dictado aún no está activado en este Mac. Actívalo en Ajustes del Sistema › Teclado › Dictado (en macOS 12: Preferencias del Sistema › Teclado › Dictado), espera a que se descargue su idioma y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La dictée n'est pas encore activée sur ce Mac. Activez-la dans Réglages Système › Clavier › Dictée (sous macOS 12 : Préférences Système › Clavier › Dictée), attendez le téléchargement de sa langue, puis réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La dettatura non è ancora attiva su questo Mac. Attivala in Impostazioni di Sistema › Tastiera › Dettatura (su macOS 12: Preferenze di Sistema › Tastiera › Dettatura), attendi che la sua lingua venga scaricata, poi riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dicteren staat nog niet aan op deze Mac. Zet het aan in Systeeminstellingen › Toetsenbord › Dicteren (op macOS 12: Systeemvoorkeuren › Toetsenbord › Dicteren), wacht tot de taal is gedownload en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dyktowanie nie jest jeszcze włączone na tym Macu. Włącz je w Ustawienia systemowe › Klawiatura › Dyktowanie (w macOS 12: Preferencje systemowe › Klawiatura › Dyktowanie), poczekaj na pobranie jego języka, a potem spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O ditado ainda não está ativado neste Mac. Ative-o em Definições do Sistema › Teclado › Ditado (no macOS 12: Preferências do Sistema › Teclado › Ditado), aguarde que o idioma seja descarregado e tente novamente."
+          }
+        }
+      }
+    },
     "voice.dictation_not_available_right_try": {
       "extractionState": "manual",
       "localizations": {
@@ -118378,6 +118484,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "O microfone está desativado para o tafs. Ative-o em Definições › tafs › Microfone."
+          }
+        }
+      }
+    },
+    "voice.microphone_off_tafs_turn_settings_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Mikrofon ist für tafs ausgeschaltet. Schalte es unter Systemeinstellungen › Datenschutz & Sicherheit › Mikrofon ein (unter macOS 12: Systemeinstellungen › Sicherheit › Datenschutz › Mikrofon)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The microphone is off for tafs. Turn it on in System Settings › Privacy & Security › Microphone (on macOS 12: System Preferences › Security & Privacy › Privacy › Microphone)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El micrófono está desactivado para tafs. Actívalo en Ajustes del Sistema › Privacidad y seguridad › Micrófono (en macOS 12: Preferencias del Sistema › Seguridad y privacidad › Privacidad › Micrófono)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le micro est désactivé pour tafs. Activez-le dans Réglages Système › Confidentialité et sécurité › Micro (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Micro)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il microfono è disattivato per tafs. Attivalo in Impostazioni di Sistema › Privacy e sicurezza › Microfono (su macOS 12: Preferenze di Sistema › Sicurezza e privacy › Privacy › Microfono)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De microfoon staat uit voor tafs. Zet hem aan in Systeeminstellingen › Privacy en beveiliging › Microfoon (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Microfoon)."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon jest wyłączony dla tafs. Włącz go w Ustawienia systemowe › Prywatność i ochrona › Mikrofon (w macOS 12: Preferencje systemowe › Ochrona i prywatność › Prywatność › Mikrofon)."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O microfone está desativado para o tafs. Ative-o em Definições do Sistema › Privacidade e segurança › Microfone (no macOS 12: Preferências do Sistema › Segurança e privacidade › Privacidade › Microfone)."
           }
         }
       }
@@ -118696,6 +118855,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "O reconhecimento de fala está desativado para o tafs. Ative-o em Definições › Privacidade e segurança › Reconhecimento de fala."
+          }
+        }
+      }
+    },
+    "voice.speech_recognition_off_tafs_turn_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Spracherkennung ist für tafs ausgeschaltet. Schalte sie unter Systemeinstellungen › Datenschutz & Sicherheit › Spracherkennung ein (unter macOS 12: Systemeinstellungen › Sicherheit › Datenschutz › Spracherkennung)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech recognition is off for tafs. Turn it on in System Settings › Privacy & Security › Speech Recognition (on macOS 12: System Preferences › Security & Privacy › Privacy › Speech Recognition)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reconocimiento de voz está desactivado para tafs. Actívalo en Ajustes del Sistema › Privacidad y seguridad › Reconocimiento de voz (en macOS 12: Preferencias del Sistema › Seguridad y privacidad › Privacidad › Reconocimiento de voz)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La reconnaissance vocale est désactivée pour tafs. Activez-la dans Réglages Système › Confidentialité et sécurité › Reconnaissance vocale (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Reconnaissance vocale)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il riconoscimento vocale è disattivato per tafs. Attivalo in Impostazioni di Sistema › Privacy e sicurezza › Riconoscimento vocale (su macOS 12: Preferenze di Sistema › Sicurezza e privacy › Privacy › Riconoscimento vocale)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spraakherkenning staat uit voor tafs. Zet het aan in Systeeminstellingen › Privacy en beveiliging › Spraakherkenning (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Spraakherkenning)."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rozpoznawanie mowy jest wyłączone dla tafs. Włącz je w Ustawienia systemowe › Prywatność i ochrona › Rozpoznawanie mowy (w macOS 12: Preferencje systemowe › Ochrona i prywatność › Prywatność › Rozpoznawanie mowy)."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O reconhecimento de fala está desativado para o tafs. Ative-o em Definições do Sistema › Privacidade e segurança › Reconhecimento de fala (no macOS 12: Preferências do Sistema › Segurança e privacidade › Privacidade › Reconhecimento de fala)."
           }
         }
       }

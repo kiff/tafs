@@ -148,6 +148,25 @@ class SharedWords(unittest.TestCase):
                     if lang not in generate.POSSESSIVE:
                         self.assertNotIn("|possessive}", text, f"{lang} {key}: {lang} has no possessive rule; word the line around the name")
 
+    def test_a_macs_own_sentence_sits_beside_the_phones_and_names_the_macs_settings(self):
+        # A `*_mac` line that isn't a Touch ID prompt (no "prompt" in its key) is a whole sentence for
+        # the Mac: its phone line is beside it, it opens with a capital and ends with a stop, and a
+        # line that sends the person to settings names macOS's own, for macOS 13 on and for macOS 12,
+        # never the iPhone's Settings path.
+        for lang, lines in self.lines.items():
+            for key, line in lines.items():
+                if not key.endswith("_mac") or "prompt" in key:
+                    continue
+                self.assertIn(key[:-len("_mac")], self.source, f"{key}: the phone's line beside it")
+                for text in generate.forms_of(line):
+                    bare = generate.PLACEHOLDER.sub("", text).strip()
+                    self.assertTrue(bare[:1].isupper(), f"{lang} {key} doesn't open a sentence: {text!r}")
+                    self.assertTrue(bare.endswith((".", "!", "?")), f"{lang} {key} doesn't end a sentence: {text!r}")
+                    phone = self.lines[lang][key[:-len("_mac")]]
+                    if "›" in (phone if isinstance(phone, str) else "") and key.startswith("voice."):
+                        self.assertIn("macOS 12", text, f"{lang} {key}: macOS 12's path too")
+                        self.assertNotEqual(text.split("›")[0], phone.split("›")[0], f"{lang} {key} sends the person to the iPhone's Settings")
+
     def test_a_shipped_language_isnt_left_in_english(self):
         for lang in self.langs["shipped"]:
             if lang == "en":
