@@ -1224,13 +1224,21 @@ final class AppModel: ObservableObject {
         case added
         /// The same passkey is registered already (`409 passkey_registered`): done, not a failure.
         case alreadyThere
-        /// The person closed the platform's sheet, or cancelled Face ID: nothing was sent.
+        /// The person closed the platform's sheet: nothing was made or sent.
         case cancelled
-        /// A name KIFF wouldn't take: 1 to 64 characters.
+        /// A name KIFF wouldn't take: 1 to 64 characters, no control character.
         case badName
         /// Not an owner or admin, or a session that doesn't approve.
         case notAllowed
+        /// The platform couldn't make one: nothing was sent.
         case failed(String)
+        /// The platform made a passkey, but KIFF didn't register it: why, nil when the person cancelled the
+        /// approval's Face ID. The passkey stays in their Passwords for kiff.dev, where KIFF never trusts it,
+        /// so the view says they can remove it there. It can't be ordered away: the body needs its bytes.
+        case notRegistered(String?)
+        /// KIFF took longer than its ten minutes from `issued_at` (`400 registration_invalid`, `issued_at`):
+        /// the platform's sheet stayed open too long. Try again; the one made is left as `notRegistered` says.
+        case tooSlow
     }
 
     /// Adds a passkey for the account at kiff.dev (KIFF's pairing contract, "Registering one"). The platform
@@ -1260,20 +1268,27 @@ final class AppModel: ObservableObject {
         let signature: String
         do {
             prepared = try kiff.preparePasskeyRegistration(body, signedAt: signedAt)
+        } catch {
+            return .notRegistered("\(error.localizedDescription)")
+        }
+        do {
             signature = try await signer.signApproval(prepared.message, reason: reason)
         } catch {
-            return .cancelled
+            // Only the person's own cancel reads as one; a key that couldn't sign says why.
+            return .notRegistered(ApprovalReadiness.cancelled(error) == nil ? "\(error.localizedDescription)" : nil)
         }
         guard gen == accountGeneration else { return .cancelled }
         do {
             _ = try await kiff.registerPasskey(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
-        } catch KIFFClient.KIFFError.server(409, _, "passkey_registered") {
+        } catch KIFFClient.KIFFError.server(409, "passkey_registered", _) {
             await refreshPasskeys()
             return .alreadyThere
         } catch KIFFClient.KIFFError.server(403, _, _) {
             return .notAllowed
+        } catch KIFFClient.KIFFError.server(400, "registration_invalid", "issued_at") {
+            return .tooSlow
         } catch {
-            return .failed("\(error.localizedDescription)")
+            return .notRegistered("\(error.localizedDescription)")
         }
         await refreshPasskeys()
         return .added
@@ -1291,7 +1306,11 @@ final class AppModel: ObservableObject {
         do {
             prepared = try kiff.preparePasskeyRemoval(id, signedAt: signedAt)
             signature = try await signer.signApproval(prepared.message, reason: reason)
-        } catch { return false }
+        } catch {
+            // The person's own cancel says nothing; a key that couldn't sign says why.
+            if gen == accountGeneration, ApprovalReadiness.cancelled(error) == nil { passkeysError = "\(error.localizedDescription)" }
+            return false
+        }
         guard gen == accountGeneration else { return false }
         do {
             try await kiff.removePasskey(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
