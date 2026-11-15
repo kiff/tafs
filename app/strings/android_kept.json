@@ -126,5 +126,14 @@
     "a digest_v the app doesn't know": "diagnostics, for logcat only: never shown to a person",
     "the hash differs": "diagnostics, for logcat only: never shown to a person",
     "an id repeated in the list": "diagnostics, for logcat only: never shown to a person"
+  },
+  "kiff/Passkeys.kt": {
+    "Android phone": "a passkey's name, stored at KIFF and read in every language, as the phone's model is when it has one",
+    "the passkey's response has no response": "diagnostics: Credential Manager's answer without its proof, never shown to a person",
+    "the passkey's response has no $key": "diagnostics: Credential Manager's answer without its proof, never shown to a person",
+    "clientDataJSON": "WebAuthn's field name in Credential Manager's answer, protocol"
+  },
+  "app/PasskeyMake.kt": {
+    "not a passkey: ${made.type}": "diagnostics: Credential Manager answering a passkey request with another kind of credential, which it doesn't; the line says why under the app's own words"
   }
 }
