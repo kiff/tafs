@@ -102,6 +102,7 @@ export const pl: Words = {
   approval_cards_unread: "Nie udało się jeszcze sprawdzić Card. Przeczytaj ponownie, a potem zatwierdź.",
   approval_uncovered: (tool: string) => `Ta Card nie obejmuje „${tool}”, które taf otrzymał, więc każde jego wywołanie zostałoby odrzucone. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
   approval_stray: (tool: string) => `Ta Card pozwoliłaby tafowi używać także „${tool}”, którego nie daje żadne jego połączenie. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
+  approval_no_card: `Ten szkic nie ma żadnej Card, więc nie obejmuje żadnego narzędzia tafa. Nic nie zostało zatwierdzone. Coach przygotuje go ponownie.`,
   approval_registered_name: (asked: string, given: string) => `Ta Card wymienia „${asked}”, ale połączenie daje tafowi to narzędzie jako „${given}”. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
   approval_lifetime_cap: (tool: string) => `Ta Card pozwoliłaby „${tool}” działać tylko ustaloną liczbę razy łącznie, dla wszystkich pozycji, a nie dla każdej z osobna. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,
   approval_lifetime_sum: (tool: string) => `Ta Card ograniczyłaby „${tool}” do łącznej kwoty na zawsze, dla wszystkich pozycji, czego nie ustalono. Nic nie zostało zatwierdzone. Coach przygotuje ją ponownie.`,

@@ -102,6 +102,7 @@ export const es: Words = {
   approval_cards_unread: "La Card aún no se pudo comprobar. Vuelve a leerla y luego apruébala.",
   approval_uncovered: (tool: string) => `Esta Card no cubre «${tool}», que el taf recibió, así que cada llamada se rechazaría. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_stray: (tool: string) => `Esta Card también dejaría al taf usar «${tool}», que ninguna conexión suya le da. No se aprobó nada. Coach la redacta de nuevo.`,
+  approval_no_card: `Este borrador no tiene ninguna Card, así que no cubre ninguna herramienta del taf. No se aprobó nada. Coach lo redacta de nuevo.`,
   approval_registered_name: (asked: string, given: string) => `Esta Card nombra «${asked}», pero la conexión le da esa herramienta al taf como «${given}». No se aprobó nada. Coach la redacta de nuevo.`,
   approval_lifetime_cap: (tool: string) => `Esta Card dejaría que «${tool}» se ejecute solo un número fijo de veces en total, para todos los elementos y no para cada uno. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_lifetime_sum: (tool: string) => `Esta Card limitaría «${tool}» a un importe total para siempre, para todos los elementos, algo que no se acordó. No se aprobó nada. Coach la redacta de nuevo.`,

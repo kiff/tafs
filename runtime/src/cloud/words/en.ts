@@ -109,6 +109,7 @@ export const en = {
   approval_cards_unread: "The Card couldn't be checked yet. Read it again, then approve.",
   approval_uncovered: (tool: string) => `This Card doesn't cover "${tool}", which the taf was given, so every call of it would be refused. Nothing was approved. Coach drafts it again.`,
   approval_stray: (tool: string) => `This Card would also let the taf use "${tool}", which no connection of it gives. Nothing was approved. Coach drafts it again.`,
+  approval_no_card: `This Card draft has no Card, so it covers none of the taf's tools. Nothing was approved. Coach drafts it again.`,
   approval_registered_name: (asked: string, given: string) => `This Card names "${asked}", but the connection gives the taf that tool as "${given}". Nothing was approved. Coach drafts it again.`,
   approval_lifetime_cap: (tool: string) => `This Card would let "${tool}" be used only a set number of times ever, across every item, not for each one. Nothing was approved. Coach drafts it again.`,
   approval_lifetime_sum: (tool: string) => `This Card would cap "${tool}" at a total amount over its whole life, across every item, which wasn't agreed. Nothing was approved. Coach drafts it again.`,

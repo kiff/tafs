@@ -53,7 +53,7 @@ import { appCalls, type GrantView, runningTool, setupGrants, setupView } from ".
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor, takesOf } from "./approval.js";
+import { CARD_NEXT, ApprovalError, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor, takesOf } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 import { findLabel, LabelRefusal, labelsView, readLabels, saveLabels, withLabelChanged, withTafLabels } from "./labels.js";
@@ -109,6 +109,7 @@ import { findLabel, LabelRefusal, labelsView, readLabels, saveLabels, withLabelC
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
  *   GET  /v1/connect/grants/{grant}/sheet  the secure connection sheet's words for a grant that takes a key, with the phone's read proof (docs/secure-connection.md)
+ *   POST /v1/connect/grants/{grant}/check  Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code (docs/api.md)
  *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
@@ -697,6 +698,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "usage" && parts.length === 3 && parts[2] === "balance" && method === "GET") return usageBalance(event, await person(event, deps), deps);
   if (parts[1] === "usage" && parts[2] === "credits" && method === "GET" && parts.length === 5 && parts[3] === "tafs") {
     return tafCredits(event, await person(event, deps), parts[4] ?? "", deps);
+  }
+  if (parts[1] === "connect" && parts[2] === "grants" && parts.length === 5 && parts[4] === "check" && method === "POST") {
+    return draftCheckRoute(event, decodeURIComponent(parts[3] ?? ""), await person(event, deps), deps);
   }
   if (parts[1] === "connect" && parts[2] === "grants" && parts.length === 5 && parts[4] === "sheet" && method === "GET") {
     return grantSheet(event, decodeURIComponent(parts[3] ?? ""), await person(event, deps), deps);
@@ -3701,6 +3705,36 @@ function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
       return removedAgent(agent, archived, new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent)), askedOn);
     },
   };
+}
+
+/**
+ * POST /v1/connect/grants/{grant}/check {draft, shown_draft}: the checks Approve makes on a Card draft before it asks
+ * for a signature (approval.ts checkDraft), for a caller that confirms the draft itself: the e2e (Eval 43681227913).
+ * It only checks: nothing is signed, confirmed, kept or told to Coach. The grant is read from planque with the
+ * caller's own phone proof (planque-device-signature), so only this account's grants; the draft with the caller's
+ * KIFF session, so only a draft KIFF shows them. The log has the outcome's reason code, never the draft or its Cards.
+ */
+async function draftCheckRoute(event: HTTPEvent, grant: string, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  need(me, "cards.manage");
+  if (!deps.planqueBase) throw new HTTPError(503, "Connect apps isn't set up here");
+  const body = parseBody(event);
+  const draft = str(body.draft).trim();
+  const shown = str(body.shown_draft).trim();
+  if (!/^[A-Za-z0-9_.:-]{1,128}$/.test(grant) || !/^[A-Za-z0-9_.:-]{1,128}$/.test(draft) || !shown || shown.length > 256) {
+    throw new HTTPError(400, "send the grant, its Card draft and the draft's version you read");
+  }
+  const ctx: import("./approval.js").DecideContext = {
+    tenant: me.tenantID, taf: "", component: "", token: bearer(event), proof: event.headers?.["planque-device-signature"] ?? "",
+    store: deps.coach!, planqueBase: deps.planqueBase, kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, now: deps.now?.() ?? new Date(),
+    newID: () => "", lang: langOf(event),
+    removedAgent: async (agent, askedOn) => {
+      const [archived, tafs] = await Promise.all([readArchived(bearer(event), deps.fetch, deps.kiffBase), deps.tafs.list(me.tenantID)]);
+      return removedAgent(agent, archived, new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent)), askedOn);
+    },
+  };
+  const out = await checkDraft({ grant, draft, shown_draft: shown }, ctx).catch(approvalFailure);
+  console.log(`approval check: ${out.outcome === "ok" ? "ok" : out.code}`);
+  return out;
 }
 
 /** Coach hears an approval's outcome from tafs cloud, as the person's answer to the card. */

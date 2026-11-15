@@ -102,6 +102,7 @@ export const fr: Words = {
   approval_cards_unread: "La Card n'a pas encore pu être vérifiée. Relisez-la, puis approuvez.",
   approval_uncovered: (tool: string) => `Cette Card ne couvre pas « ${tool} », que le taf a reçu : chacun de ses appels serait refusé. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_stray: (tool: string) => `Cette Card permettrait aussi au taf d'utiliser « ${tool} », qu'aucune de ses connexions ne lui donne. Rien n'a été approuvé. Coach la rédige à nouveau.`,
+  approval_no_card: `Ce brouillon ne contient aucune Card : il ne couvre aucun outil du taf. Rien n'a été approuvé. Coach le rédige à nouveau.`,
   approval_registered_name: (asked: string, given: string) => `Cette Card nomme « ${asked} », mais la connexion donne cet outil au taf sous le nom « ${given} ». Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_lifetime_cap: (tool: string) => `Cette Card ne laisserait « ${tool} » s'exécuter qu'un nombre fixe de fois au total, pour tous les éléments et non pour chacun. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_lifetime_sum: (tool: string) => `Cette Card plafonnerait « ${tool} » à un montant total pour toujours, pour tous les éléments, ce qui n'a pas été convenu. Rien n'a été approuvé. Coach la rédige à nouveau.`,

@@ -1,6 +1,6 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { connectedKey, approvalWords, ASK_KEPT_MS, WORDS } from "../src/cloud/approval.js";
 import { approvalAnswerWords, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
@@ -14,6 +14,8 @@ import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, 
  */
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
+/** Ana's colleague, who may read but not manage Cards. */
+const CY = { tenant_id: "t_acme", subject: "u_cy", api_key: false, capabilities: ["read"] };
 const BO = { tenant_id: "t_other", subject: "u_bo", api_key: false, capabilities: ["read", "cards.manage"] };
 const NOW = new Date("2026-10-16T12:00:00Z");
 const COACH = "taf-cccc0000000000000000";
@@ -60,7 +62,7 @@ function net(s: Services) {
       return new Response(JSON.stringify({ grants: s.grants }), { status: 200 });
     }
     const token = String(headers.authorization ?? "").replace("Bearer ", "");
-    const me = token === "ana" ? ME : token === "bo" ? BO : undefined;
+    const me = token === "ana" ? ME : token === "bo" ? BO : token === "cy" ? CY : undefined;
     if (!me) return new Response("{}", { status: 401 });
     if (url.endsWith("/v1/me/access")) return new Response(JSON.stringify({ agents: { "setup-acme": { use: true, oversee: false, manage: true } } }), { status: 200 });
     if (url.endsWith("/v1/me")) return new Response(JSON.stringify(me), { status: 200 });
@@ -629,10 +631,15 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     s.grants = [grant({ status: "connected" }, { tools: [{ tool: "create_refund", name: "refund_charge", title: "Refund a charge" }] })];
     const covered = [{ id: "c1", subject: "refunds-x", grants: [{ action: "refund_charge" }], on_exceed: "owner", aggregates: [] }];
     const ask = async () => (await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
-    // No cards field, KIFF's null, and an empty list: each read again, nothing to sign, Coach told nothing.
-    for (const cards of [undefined, null, []]) {
-      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", ...(cards === undefined ? {} : { cards: cards as unknown[] }) };
-      expect(await ask()).toEqual({ outcome: "read_again", note: WORDS.cardsUnread });
+    // A read that didn't bring the Cards: read again, nothing to sign, Coach told nothing.
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    expect(await ask()).toEqual({ outcome: "read_again", note: WORDS.cardsUnread });
+    // A draft with no Card (KIFF's null, or an empty list): answered, so Coach drafts one, never the same draft read
+    // again (dev-android on #1067). The app's answer carries no reason code.
+    for (const cards of [null, []]) {
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards as unknown[] };
+      const r = await ask();
+      expect(r).toEqual({ outcome: "answered", answer: expect.stringMatching(/^failed: the Card draft drf_1 has no Card, so nothing in it covers the taf's tools/), note: WORDS.noCard, session: expect.anything(), run: expect.anything(), status: expect.anything() });
     }
     // With its Cards, the checks run: one covering the tool is asked; one leaving it out is refused, as before.
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: covered };
@@ -1571,5 +1578,77 @@ describe("a Card over two apps approves every app's tools, or says which waits (
     s.grants = [gmail({ status: "connected" }), stripe({ status: "connected", connected: undefined })];
     s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x", cards: [both] };
     expect((await w2.call("POST", `${ASK}/${(r2.body.ask as { id: string }).id}`, { result: "confirmed" }, SIGNED)).body.answer).toBe("approved");
+  });
+});
+
+// Eval 43681227913: the e2e confirmed the draft in KIFF itself, so none of Approve's checks ran on it. The check route runs
+// the same checks for such a caller, and only checks: nothing signed, confirmed, kept, or told to Coach.
+describe("the check route: Approve's checks on a draft, with nothing signed (POST /v1/connect/grants/{grant}/check)", () => {
+  const CHECK = "/v1/connect/grants/g_1/check";
+  const tools = [{ tool: "list_charges", name: "list_charges_noyy", title: "List charges", read_only: true },
+    { tool: "create_refund", name: "refund_charge", title: "Refund a charge" }];
+  const card = (actions: string[]) => [{ id: "c1", subject: "refunds-x", grants: actions.map((action) => ({ action })), on_exceed: "owner", aggregates: [] }];
+
+  it("answers the refusal Approve would, with its reason code, and ok with the version once the draft passes", async () => {
+    const s = services();
+    s.grants = [grant({ status: "connected" }, { tools })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: card(["refund_charge", "list_charges"]) };
+    const w = await world(s);
+    const logged: string[] = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { logged.push(a.join(" ")); });
+    try {
+      const r = await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" });
+      expect(r.status).toBe(200);
+      expect(r.body).toEqual({ outcome: "answered", code: "vendor_name", note: WORDS.registeredName("list_charges", "list_charges_noyy"),
+        answer: expect.stringMatching(/^failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy"/) });
+      // The draft over the registered name passes: ok, with the version it was checked at.
+      s.drafts.drf_1.cards = card(["refund_charge", "list_charges_noyy"]);
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "ok", version: "v3" });
+      // The log has the reason code only: never the draft, its Cards or the tools.
+      expect(logged.filter((l) => l.startsWith("approval check:"))).toEqual(["approval check: vendor_name", "approval check: ok"]);
+      expect(logged.join("\n")).not.toMatch(/drf_1|list_charges|refund_charge/);
+    } finally {
+      spy.mockRestore();
+    }
+    // Nothing was signed or asked of KIFF's signature check, nothing kept, and Coach heard nothing.
+    expect(s.checks).toEqual([]);
+    expect(w.told()).toBeUndefined();
+    // The grant was read with the caller's own phone proof.
+    expect(s.proofs.every((p) => p === PROOF)).toBe(true);
+  });
+
+  it("answers each of Approve's answers: a draft another version than read, a read without Cards, a draft with none, a grant not this account's", async () => {
+    const s = services();
+    s.grants = [grant({ status: "connected" }, { tools })];
+    s.drafts.drf_1 = { status: "draft", version: "v4", agent_id: "refunds-x", cards: card(["refund_charge", "list_charges_noyy"]) };
+    const w = await world(s);
+    const check = async (body: Record<string, unknown>, path = CHECK, headers: Record<string, string> = {}) => w.call("POST", path, body, headers);
+    expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "read_again", code: "out_of_date" });
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
+    expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "read_again", code: "cards_unread", note: WORDS.cardsUnread });
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: null as unknown as unknown[] };
+    expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "no_card", note: WORDS.noCard });
+    // A draft for another taf than the grant's, and a grant planque doesn't list for this account.
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "someone-else", cards: card(["refund_charge", "list_charges_noyy"]) };
+    expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "other_taf" });
+    expect((await check({ draft: "drf_1", shown_draft: "v3" }, "/v1/connect/grants/g_9/check")).body).toMatchObject({ outcome: "answered", code: "no_grant" });
+    // KIFF has no such draft for this person.
+    expect((await check({ draft: "drf_9", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "no_draft" });
+  });
+
+  it("refuses a request it can't check: no phone proof, no session, a body without the draft or the version read", async () => {
+    const s = services();
+    s.grants = [grant({ status: "connected" }, { tools })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: card(["refund_charge", "list_charges_noyy"]) };
+    const w = await world(s);
+    expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" }, { "planque-device-signature": "" })).status).toBe(503);
+    expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" }, {}, undefined, "nobody")).status).toBe(401);
+    // Only someone who may manage the account's Cards, as for the secure connection sheet.
+    expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" }, {}, undefined, "cy")).status).toBe(403);
+    for (const body of [{ shown_draft: "v3" }, { draft: "drf_1" }, { draft: "../x", shown_draft: "v3" }, { draft: "drf_1", shown_draft: "v".repeat(300) }]) {
+      expect((await w.call("POST", CHECK, body)).status).toBe(400);
+    }
+    expect((await w.call("POST", "/v1/connect/grants/g%2F1/check", { draft: "drf_1", shown_draft: "v3" })).status).toBe(400);
+    expect(s.checks).toEqual([]);
   });
 });
