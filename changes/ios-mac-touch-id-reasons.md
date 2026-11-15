@@ -1,0 +1,1 @@
+- **Mac: Touch ID's prompt reads as one sentence.** macOS writes "tafs is trying to" before the reason, so the Mac gets its own words for connecting your apps, connecting an app, answering a request and signing a device out ("tafs is trying to connect your apps"), not a title after it. iPhone and iPad are unchanged.

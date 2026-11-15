@@ -123,6 +123,8 @@
   "connect.profile_words_unread": "As palavras do KIFF para esta ligação ainda não foram lidas. Nada foi aprovado.",
   "connect.prompt.connect": "Ligar {vendor} a {agent}",
   "connect.prompt.connect_app": "Ligar {vendor}",
+  "connect.prompt.connect_app_mac": "ligar {vendor}",
+  "connect.prompt.connect_mac": "ligar {vendor} a {agent}",
   "connect.prompt.give_card": "Dar a {agent} o seu Card",
   "connect.prompt.give_key": "Dar a {vendor} a sua chave para {agent}",
   "connect.prompt.give_key_app": "Dar a {vendor} a sua chave",

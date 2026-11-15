@@ -129,4 +129,13 @@ final class ApprovalReadinessTests: XCTestCase {
         model.checkApprovalReadiness()
         XCTAssertFalse(model.approvalBlocked)
     }
+
+    /// A Mac's Touch ID prompt says "tafs is trying to …" itself, so it takes the Mac's line, which continues
+    /// that sentence; an iPhone or iPad shows the reason alone, as a sentence.
+    func testAMacsTouchIDReasonContinuesTheSystemsSentence() {
+        XCTAssertEqual(PromptReason.pick(Words.Coach.Prompt.connectTools, mac: Words.Coach.Prompt.connectToolsMac, isMac: true), "connect your apps")
+        XCTAssertEqual(PromptReason.pick(Words.Coach.Prompt.connectTools, mac: Words.Coach.Prompt.connectToolsMac, isMac: false), "Connect your apps")
+        XCTAssertEqual(Words.Connect.Prompt.connectMac(vendor: "Stripe", agent: "Refunds"), "connect Stripe to Refunds")
+        XCTAssertEqual(Words.Settings.Devices.signOutPromptMac(device: "Ana's Mac"), "sign Ana's Mac out of your account")
+    }
 }

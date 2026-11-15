@@ -137,6 +137,8 @@
   "connect.profile_words_unread": "Opis KIFF dla tego połączenia nie został jeszcze odczytany. Nic nie zostało zatwierdzone.",
   "connect.prompt.connect": "Połącz {vendor} z {agent}",
   "connect.prompt.connect_app": "Połącz {vendor}",
+  "connect.prompt.connect_app_mac": "połączyć {vendor}",
+  "connect.prompt.connect_mac": "połączyć {vendor} z {agent}",
   "connect.prompt.give_card": "Daj {agent} jego Card",
   "connect.prompt.give_key": "Przekaż {vendor} klucz dla {agent}",
   "connect.prompt.give_key_app": "Przekaż {vendor} klucz",

@@ -667,6 +667,7 @@
     <string name="coach_plan_step_skipped">Omitido</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Conecta tus apps</string>
+    <string name="coach_prompt_connect_tools_mac">conectar tus apps</string>
     <string name="coach_prompt_give_card">Da a Coach su Card</string>
     <string name="coach_prompt_start">Iniciar Coach</string>
     <string name="coach_puts_words_message_box">Pone sus palabras en el cuadro de mensaje</string>
@@ -892,6 +893,8 @@
     <string name="connect_profile_words_unread">Las palabras de KIFF para esta conexión aún no se han leído. No se aprobó nada.</string>
     <string name="connect_prompt_connect">Conectar %1$s a %2$s</string>
     <string name="connect_prompt_connect_app">Conectar %1$s</string>
+    <string name="connect_prompt_connect_app_mac">conectar %1$s</string>
+    <string name="connect_prompt_connect_mac">conectar %1$s a %2$s</string>
     <string name="connect_prompt_give_card">Dar a %1$s su Card</string>
     <string name="connect_prompt_give_key">Dar a %1$s su clave para %2$s</string>
     <string name="connect_prompt_give_key_app">Dar a %1$s su clave</string>
@@ -1333,6 +1336,7 @@
     <string name="needs_you_over_total">Supera un total de la Card, como el de un día. Alguien que gestione las Cards puede darle margen extra, o puedes rechazarla.</string>
     <string name="needs_you_over_total_manager">Supera un total de la Card, como el de un día. El margen extra deja pasar solo esta llamada.</string>
     <string name="needs_you_prompt_answer">Responder %1$s</string>
+    <string name="needs_you_prompt_answer_mac">responder %1$s</string>
     <string name="needs_you_prompt_did_not_happen">Decir que no ocurrió: %1$s</string>
     <string name="needs_you_prompt_happened">Decir que ocurrió: %1$s</string>
     <string name="needs_you_refuse">Rechazar</string>
@@ -1854,6 +1858,7 @@
     <string name="settings_devices_sign_out">Cerrar sesión</string>
     <string name="settings_devices_sign_out_named">¿Cerrar la sesión de %1$s?</string>
     <string name="settings_devices_sign_out_prompt">Cerrar la sesión de %1$s en tu cuenta</string>
+    <string name="settings_devices_sign_out_prompt_mac">cerrar la sesión de %1$s en tu cuenta</string>
     <string name="settings_devices_sign_out_this">¿Cerrar la sesión de este dispositivo?</string>
     <string name="settings_devices_signout_needs_approver">Para cerrar la sesión de otro dispositivo, usa un dispositivo que pueda aprobar.</string>
     <string name="settings_devices_this_device">este dispositivo</string>
