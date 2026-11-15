@@ -386,6 +386,21 @@ class CoachStartTest {
     assertEquals(listOf("Start Coach"), auth.fingerprints)
   }
 
+  /** Any 2xx to the keyless ask is set up and mints nothing, `kept` false or left out included: only `409 needs_key` mints. */
+  @Test fun aKeylessTwoHundredWithoutKeptMintsNothing() = runTest {
+    for (answer in listOf(201 to """{"tenant":"t_01","device":"ab12"}""", 200 to """{"kept":false}""")) {
+      transport.reset()
+      auth.fingerprints.clear()
+      reads()
+      startAnswers(keyless = answer)
+      val m = model()
+      assertTrue("$answer", m.startCoach())
+      assertTrue("$answer", transport.requestsTo("POST /v1/keys").isEmpty())
+      assertEquals("$answer", 1, transport.requestsTo("POST /v1/accounts/t_01/enrolment").size)
+      assertTrue("$answer", m.state.value.planqueReady)
+    }
+  }
+
   /** No key stands (`needs_key`), and only then: one key is minted and handed over. */
   @Test fun withNoStandingKeyOneIsMintedAndHandedOver() = runTest {
     for (refusal in listOf(409 to """{"error":"no connector key stands for this account","code":"needs_key"}""")) {
