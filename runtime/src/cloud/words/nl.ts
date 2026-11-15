@@ -59,6 +59,10 @@ export const nl: Words = {
   step_connection_next_sign_in: (vendor: string) => vendor ? `Volgende stap: vraag Coach om opnieuw in te loggen bij ${vendor}, of een andere app te gebruiken.` : "Volgende stap: vraag Coach om opnieuw in te loggen, of een andere app te gebruiken.",
   step_connection_next_again: (vendor: string) => vendor ? `Volgende stap: vraag Coach om ${vendor} opnieuw te koppelen, of een andere app te gebruiken.` : "Volgende stap: vraag Coach om hem opnieuw te koppelen, of een andere app te gebruiken.",
   step_connection_next_cant: (vendor: string) => vendor ? `Volgende stap: vraag Coach wat ${vendor} in plaats daarvan kan, of een andere app te gebruiken.` : "Volgende stap: vraag Coach wat de app in plaats daarvan kan, of een andere app te gebruiken.",
+  // A read of Coach's own while it sets up, refused because KIFF has no Card for those reads: the connection worked.
+  step_reads_not_set_up: (vendor: string) => vendor ? `Coachs leesrechten voor ${vendor} konden niet worden ingesteld` : "Coachs leesrechten voor de app konden niet worden ingesteld",
+  step_reads_why: (vendor: string) => vendor ? `${vendor} is gekoppeld: alleen wat Coach leest tijdens het instellen werd niet toegestaan.` : "De app is gekoppeld: alleen wat Coach leest tijdens het instellen werd niet toegestaan.",
+  step_reads_next: (vendor: string) => vendor ? `Volgende stap: vraag Coach om verder te gaan zonder eerst ${vendor} te lezen.` : "Volgende stap: vraag Coach om verder te gaan zonder eerst de app te lezen.",
   removal_goes: (apps: string[]) => `${list(apps)} ${apps.length > 1 ? "gaan" : "gaat"} mee.`,
   removal_stays: (app: string, tafs: string[]) => `${app} blijft: ${list(tafs)} ${tafs.length > 1 ? "gebruiken" : "gebruikt"} het.`,
   doing_draft: "Ik stel de Card op…",

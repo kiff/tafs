@@ -6423,7 +6423,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     if (status !== "error") return sse("step", { call_id: id, status });
     // A connection call's refusal is about Coach's request: its reason is tafs cloud's words, never the server's.
     // The server's own reason is kept beside it, for Coach and the log (keepWhy), never shown as the step's.
-    const plain = steps.connectionWhy(callID);
+    const plain = steps.connectionWhy(callID, r.text);
     // A connection call refused for how Coach wrote it (its order or its shape) isn't a failure of the person's app: nothing
     // was made, and Coach asks again. It ends not made, never "Coach couldn't connect" in red (Android 85, 14 Nov).
     if (plain && coachGuard(r.text)) {

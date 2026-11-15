@@ -44,6 +44,7 @@ export class Steps {
   private vendors = new Map<string, string>();
   private asked = new Map<string, string>(); // call id → vendor, for a request whose grant id comes in its result
   private connections = new Map<string, string>(); // call id → its vendor ("" unknown), for each connection call
+  private reads = new Set<string>(); // connection calls that read an app as Coach, while it sets up (setup_reads)
   private requests = new Set<string>(); // call ids of connection requests, to tell a connected app from a read
   private targets = new Map<string, string>(); // call id → what it connects (the request's server or description, or the grant)
   private planqueCalls = new Set<string>(); // call ids of connection calls whose answer may name a grant's app
@@ -78,6 +79,7 @@ export class Steps {
         const entry = i.action === "request" && typeof i.entry === "string" && i.entry ? i.entry : undefined;
         const asked = reuse ? ofGrant(reuse) : entry ? entryApp(entry) : vendorName(i.server ?? api);
         if (callID) this.connections.set(callID, i.action === "request" ? asked : grant);
+        if (callID && i.action === "read") this.reads.add(callID);
         const target = i.action === "request" ? i.server ?? api ?? entry ?? reuse : i.grant;
         // Setting a grant's tools that went through is Coach's corrected ask for that grant, whatever planque answers
         // (pending: the owner's approval comes next): an earlier refused tools call on it is past (14 Nov, 13:13 UTC:
@@ -124,9 +126,22 @@ export class Steps {
    * Why a connection call failed, in tafs cloud's own words, never the connection server's: its refusal is
    * about Coach's request, not the person's app. Undefined for a call that isn't a connection call.
    */
-  connectionWhy(callID: unknown): string | undefined {
+  connectionWhy(callID: unknown, text?: unknown): string | undefined {
     if (typeof callID !== "string" || !this.connections.has(callID)) return undefined;
-    return wordsIn(this.lang).step_connection_not_yet(this.connections.get(callID) ?? "");
+    const w = wordsIn(this.lang), vendor = this.connections.get(callID) ?? "";
+    return this.readsNotSetUp(callID, text) ? w.step_reads_not_set_up(vendor) : w.step_connection_not_yet(vendor);
+  }
+
+  /**
+   * Whether a read Coach makes as itself while it sets up (planque read, a setup_reads tool) was refused because KIFF holds no
+   * Card for those reads: planque issues that Card when the owner approves the connection, and a slow sign-in can leave it
+   * unissued while the connection itself works. That's no sign-in to do again, so the person is never told to (15 Nov,
+   * Stripe: "Coach couldn't connect Stripe" and "sign in again" over a connection that had worked).
+   */
+  private readsNotSetUp(callID: string, text: unknown): boolean {
+    if (!this.reads.has(callID)) return false;
+    const said = typeof text === "string" ? text : JSON.stringify(text ?? "");
+    return /\b(?:no_mandate_issued|mandate_not_covered)\b/.test(said);
   }
 
   /**
@@ -144,6 +159,8 @@ export class Steps {
     const vendor = this.connections.get(callID) ?? "";
     const key = this.targets.get(callID);
     const w = wordsIn(this.lang);
+    // Coach's own reads weren't set up in KIFF: the app is connected, and Coach goes on without reading it first.
+    if (this.readsNotSetUp(callID, text)) return { vendor, ...(key ? { key } : {}), reason: w.step_reads_why(vendor), next: w.step_reads_next(vendor) };
     // The person's two lines are tafs cloud's, by the refusal's kind, never the server's words (go-to-market bar, 13 Nov:
     // no raw error from planque, KIFF or a vendor reaches the person). Those stay for Coach and the log (keepWhy).
     const kind = refusalKind(text);

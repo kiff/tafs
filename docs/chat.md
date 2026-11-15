@@ -445,7 +445,12 @@ same app went through later in the run, the message says so in three lines, all 
 the person's language: `words`, the failed step's own ("Coach couldn't connect Shippo yet"); `why`, the
 server's reason, scrubbed as any step's reason is (`whyOf`) and with any host name or phone number left out too (`shownWhy`: the server can quote a description a third party wrote), as a line ("Why: managed sign-in isn't set up
 for this app"), left out when nothing readable is left; and `next`, what to do ("Next: ask Coach to connect
-Shippo with its key instead, or to use another app."). It's taken before a retry folds the step away, so
+Shippo with its key instead, or to use another app."). A read Coach makes as itself while it sets up (`planque read` of a
+`setup_reads` tool) that KIFF refuses for want of a Card (`no_mandate_issued`, `mandate_not_covered`) isn't the
+connection failing: planque issues that Card when the owner approves, and a slow sign-in can leave it unissued while the
+connection works. Its lines say so and never ask for a sign-in: "Coach's reads of Stripe couldn't be set up", "Stripe
+is connected: only the reads Coach makes while it sets up weren't allowed.", "Next: ask Coach to go on without reading
+Stripe first." (`step_reads_*`). It's taken before a retry folds the step away, so
 a later read that went through (the catalog, say) doesn't hide it; a later request for the same server, description, catalog entry or reused grant (or the same app by a known name), or tools set on the same grant (even while they wait for the owner's approval),
 that went through does, and so does any later connection call whose answer shows it `signed_in`, `listed` or
 `connected`, so "couldn't connect" never stands under "signed in" (`Steps.connectedBy`); one showing it failed

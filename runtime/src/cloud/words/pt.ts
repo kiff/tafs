@@ -59,6 +59,10 @@ export const pt: Words = {
   step_connection_next_sign_in: (vendor: string) => vendor ? `A seguir: peça ao Coach para iniciar sessão novamente em ${vendor}, ou para usar outra app.` : "A seguir: peça ao Coach para iniciar sessão novamente, ou para usar outra app.",
   step_connection_next_again: (vendor: string) => vendor ? `A seguir: peça ao Coach para ligar ${vendor} novamente, ou para usar outra app.` : "A seguir: peça ao Coach para a ligar novamente, ou para usar outra app.",
   step_connection_next_cant: (vendor: string) => vendor ? `A seguir: pergunte ao Coach o que ${vendor} pode fazer em vez disso, ou peça para usar outra app.` : "A seguir: pergunte ao Coach o que a app pode fazer em vez disso, ou peça para usar outra app.",
+  // A read of Coach's own while it sets up, refused because KIFF has no Card for those reads: the connection worked.
+  step_reads_not_set_up: (vendor: string) => vendor ? `Não foi possível preparar as leituras do Coach em ${vendor}` : "Não foi possível preparar as leituras do Coach na app",
+  step_reads_why: (vendor: string) => vendor ? `${vendor} está ligado: só as leituras que o Coach faz durante a configuração não foram permitidas.` : "A app está ligada: só as leituras que o Coach faz durante a configuração não foram permitidas.",
+  step_reads_next: (vendor: string) => vendor ? `A seguir: peça ao Coach para continuar sem ler ${vendor} primeiro.` : "A seguir: peça ao Coach para continuar sem ler a app primeiro.",
   removal_goes: (apps: string[]) => `${list(apps)} ${apps.length > 1 ? "saem" : "sai"} com ele.`,
   removal_stays: (app: string, tafs: string[]) => `${app} fica: ${tafs.length > 1 ? "usam-no" : "usa-o"} ${list(tafs)}.`,
   doing_draft: "A redigir o Card…",
