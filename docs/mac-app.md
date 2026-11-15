@@ -113,6 +113,8 @@ Both come from one list, `KeyCommand`. `MacMenu` says where each sits:
 | View | Record | ⌘3 |
 | View | Coach mode | ⌘K |
 
+- **The View menu's group is given last first** (`MacMenu.viewInPlacementOrder`): placed before the sidebar's item, macOS shows a group's items reversed, as TestFlight build 2 showed on a Mac.
+- **The app's name in the menu bar is "tafs"** (`CFBundleName`), as in "About tafs" and "Quit tafs"; it was the target's, "Tafs".
 - **The items sit in the system's own menus**, so no menu has a name of its own to translate. Each item's title is the shortcut's title, from the app's words.
 - **An item does what its shortcut does** (`AppModel.run`): a tab's item asks for the tab, and New taf and Coach mode open Coach mode.
 - **An item is off when its shortcut is** (`AppModel.allows`): signed out, while Coach drives the app, and for Coach's two items where Coach isn't offered.

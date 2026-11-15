@@ -59,8 +59,11 @@ enum MacMenu {
     static let file: [KeyCommand] = [.newTaf]
     /// The app's menu, in place of "Settings…".
     static let app: [KeyCommand] = [.account]
-    /// The View menu.
+    /// The View menu, as it reads top to bottom.
     static let view: [KeyCommand] = [.tafs, .needsYou, .record, .coach]
+    /// `view` in the order the View menu's group is given (`MacCommands`): macOS shows a group
+    /// placed before the sidebar's item last first.
+    static var viewInPlacementOrder: [KeyCommand] { view.reversed() }
 }
 
 extension AppModel {
