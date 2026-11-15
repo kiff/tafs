@@ -38,7 +38,18 @@ class DescribedConnectionTest {
     val odd = grant(""","health":"fine","actions":{"a":1}""")
     assertNull(odd.health)
     assertNull(odd.actions)
-    // An empty list is planque saying nothing can be done: drawn as no action, not as the app's own row.
+    // An empty list is planque saying nothing can be done.
     assertTrue(grant(""","actions":[]""").actions!!.isEmpty())
+  }
+
+  /** planque's row needs its health words and its actions, as iOS reads it; else the app's own row, with Cancel or Disconnect. */
+  @Test fun aRequestNobodyAnsweredWithNoHealthIsTheAppsRowWithItsCancel() {
+    val health = ""","health":{"state":"signed_out","ok":false,"words":"Gmail's sign-in expired"}"""
+    assertTrue(grant(health + ""","actions":[]""").rowFromPlanque)
+    val waiting = KiffClient.json.decodeFromString<Grant>("""{"id":"g2","status":"pending","request":{"server":"s"},"actions":[]}""")
+    assertFalse("no health words: the app's own row", waiting.rowFromPlanque)
+    assertTrue("and it ends with Cancel", waiting.cancellable)
+    assertFalse(grant(""","health":{"state":"ok","ok":true,"words":""},"actions":[]""").rowFromPlanque)
+    assertFalse(grant(health).rowFromPlanque)
   }
 }

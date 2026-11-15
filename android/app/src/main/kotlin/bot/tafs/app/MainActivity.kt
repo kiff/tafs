@@ -873,6 +873,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         onGiveKey = { grant, key -> model.startGiveKey(grant.id, grant.digest, key) },
         loadSecure = model::loadSecureSheet,
         onDisconnect = model::disconnectFromReceipt,
+        onReopen = model::reopenSignIn,
       )
     }
     // Your data and the AI: after sign-in until answered, and when tafs cloud refuses a model turn for it (docs/accounts.md).

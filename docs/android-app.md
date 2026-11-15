@@ -845,15 +845,21 @@ opens its connections, under each taf's name:
   Gmail."), and only then the fingerprint. Remove is never beside a row.
 - Every request to planque says the person's time zone (`X-Time-Zone`), so the times in its words are
   theirs.
-- A planque from before it sends no `actions`, and the row is the app's own, as below, until it does.
+- A planque from before it sends no `actions`, and the row is the app's own, as below, until it does. A row needs
+  both `health.words` and `actions` to be planque's (`Grant.rowFromPlanque`, as iPhone and iPad read it, Android
+  1.30.1): a request nobody answered, sent with no health, is the app's own row with its **Cancel**.
 - **planque's refusals in its own words:** any refusal that carries planque's `words` (a sign-in again
   to another account than the connection's, say) shows those words as sent (`PlanqueError.Server.words`,
   `ErrorWords.of`), never a line of the app's over them. "It changed in the meantime" is kept for a
   409 with no words. planque's `error` stays the reason, for the code.
 
 tafs cloud's list, searched as the owner types, and **Connect** opens the approval as a sheet
-over the list (`ConnectApprovalSheet`). With several tafs, **Which taf is this for?** is asked
-first, in a dialog over the list wherever Connect was tapped, as on iPhone and iPad. When a sign-in
+over the list (`ConnectApprovalSheet`). **Which taf is this for?** is asked first, even with one taf
+(`connectFor`, Android 1.30.1; before, the only taf was taken without asking), in a dialog over the list wherever
+Connect was tapped, as on iPhone and iPad. `AppModel.startConnectApp` starts nothing without a taf named.
+While the vendor's page is open, planque is read again on Coach's card schedule, so a sign-in finished there ends the
+wait; back on the sheet with no link, **Open … again** opens the same page, and **Not now** ends the wait at once, so
+the next Connect isn't refused as another approval in progress (Android 1.30.1). When a sign-in
 comes back, what happened is said at once, over the list: "Notion is signed in for Refunds. Next,
 Coach chooses its actions and you approve them.", with **Choose its actions**, which opens the
 taf's Coach (or "… is connected" when it's done). A row tafs cloud sends as signed in

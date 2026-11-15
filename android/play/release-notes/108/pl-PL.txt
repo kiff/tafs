@@ -1,0 +1,3 @@
+- Łączenie aplikacji pyta, dla którego tafa jest połączenie, nawet gdy masz tylko jeden.
+- Łączenie aplikacji nie zatrzymuje się już na „Zatwierdzanie…”: „Otwórz ponownie logowanie” otwiera stronę znowu, a „Nie teraz” kończy czekanie.
+- Prośbę o połączenie bez odpowiedzi można anulować z jej wiersza.

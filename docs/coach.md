@@ -472,7 +472,8 @@ Ask Coach** opens Coach, which can connect an app that isn't listed from its own
 
 **Connect** (for whoever manages the account's Cards) starts the app's grant for one taf
 (`POST /v1/connect/apps/{entry}` with `{taf}`, which answers only the grant). With several
-tafs the person manages, it asks "Which taf is this for?" first; with one, it's that one; with
+tafs the person manages, it asks "Which taf is this for?" first, even with one: a connection
+goes only to a taf the person named, never a guess (iPhone and iPad from tafs#1135, Android 1.30.1). With
 none, Connect is off and it says to make a taf first. Then it opens the approval as a
 sheet over the list. It's the same as Coach's card: planque's words, KIFF's words for the
 profile, then the signature, and only then the vendor's sign-in page from planque's approve

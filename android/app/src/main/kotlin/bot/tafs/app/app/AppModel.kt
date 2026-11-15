@@ -4176,8 +4176,8 @@ class AppModel(
       _state.update { it.copy(listApproval = app.grant, listApprovalNeedsKey = false) }
       return
     }
-    // The taf it's for, by its tafs cloud id: the one chosen, or the only one this person manages.
-    val taf = tafId?.let { id -> _state.value.taf(id) } ?: _state.value.connectableTafs.singleOrNull()
+    // The taf it's for, by its tafs cloud id: the one the person named, never a guess (not even the only one they manage).
+    val taf = tafId?.let { id -> _state.value.taf(id) }
     val cloudId = taf?.cloudId ?: return
     val generation = accountGeneration
     _state.update { it.copy(startingApp = app.entry, connectAppsError = null) }
@@ -4197,11 +4197,43 @@ class AppModel(
 
   /** Approve on the sheet over Connect apps: the same as Coach's card (KIFF's words, the signature, the vendor's sign-in), then the list again. */
   fun startListApproval(grantId: String, shownDigest: String) {
-    scope.launch { approveFromList(grantId, shownDigest) }
+    listApprovalJob?.cancel()
+    listApprovalJob = scope.launch { restartable({ startListApproval(grantId, shownDigest) }) { approveFromList(grantId, shownDigest) } }
+  }
+
+  /** The approval the sheet over Connect apps started, while it runs: "Not now" ends it, and with it the vendor's wait. */
+  private var listApprovalJob: Job? = null
+
+  /**
+   * While the sheet's approval waits on the vendor's page, planque's grants are read again (3 s apart for a minute, then 10 s, as
+   * for a card). A sign-in that finished with no link back to tafs (the person backed out, then signed in) shows there: planque
+   * says it holds the sign-in, and the approval runs again ([reopenSignIn]), which planque answers with its confirm code, no page.
+   * Before, nothing on the sheet read planque again, and it stayed on "Approving…".
+   */
+  private suspend fun watchListSignIn(grantId: String) {
+    for (wait in CARD_GRANT_READ_DELAYS) {
+      delay(wait)
+      if (!_state.value.vendorPageOpen) continue
+      refreshConnections()
+      val g = _state.value.grants.firstOrNull { it.id == grantId } ?: continue
+      if (g.signedIn == true || g.connected || g.listed) {
+        reopenSignIn()
+        return
+      }
+    }
   }
 
   /** The approval from Connect apps, run to its end: then what came of it is said at once, and the list read again. */
   suspend fun approveFromList(grantId: String, shownDigest: String) {
+    val watch = scope.launch { watchListSignIn(grantId) }
+    try {
+      approveFromListOnce(grantId, shownDigest)
+    } finally {
+      watch.cancel()
+    }
+  }
+
+  private suspend fun approveFromListOnce(grantId: String, shownDigest: String) {
     run {
       when (val result = connect(ConnectWords.cardKey(grantId), grantId, shownDigest)) {
         is Connected.Done, is Connected.AlreadyApproved -> {
@@ -4219,7 +4251,16 @@ class AppModel(
 
   fun dismissConnectedNow() = _state.update { it.copy(connectedNow = null) }
 
-  fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, keyForCard = null, keyReceipt = null) }
+  /**
+   * The sheet closed ("Not now", or Cancel): the approval it started ends with it, so its vendor's wait ends and the one-approval
+   * lock is free. Before, the approval kept waiting in the model, and the next Connect said another approval was going through
+   * until tafs was stopped.
+   */
+  fun closeListApproval() {
+    listApprovalJob?.cancel()
+    listApprovalJob = null
+    _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, keyForCard = null, keyReceipt = null) }
+  }
 
   /** The secure sheet's words for [grantId], read from tafs cloud when the key sheet opens, once per grant. */
   suspend fun loadSecureSheet(grantId: String) {
