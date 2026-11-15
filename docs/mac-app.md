@@ -88,7 +88,7 @@ The Mac build has its own entitlements, `Tafs/TafsMac.entitlements` and `Notify/
 
 Keychain, `webcredentials:kiff.dev` (passkeys) and time-sensitive notifications are the iPhone's keys, unchanged. The Mac workflow checks that each Mac file holds every key of its iPhone file and has the sandbox and the network on, so a key added for the iPhone and missed for the Mac fails CI.
 
-CI builds the Mac app unsigned, so the sandbox is only ever on in a signed build. Signing is done on another computer, with the Mac's App Store profile; its first signed build is where the sandbox is first tried.
+The Mac workflow builds the app unsigned, so the sandbox is only ever on in a signed build: Mac TestFlight's ("Signing and TestFlight", above). Its first build is where the sandbox is first tried.
 
 ## What differs from the iPad
 
@@ -133,7 +133,7 @@ What differs is how the Mac reports Touch ID:
 
 Where Touch ID is set up, the Mac says its own path, "System Settings → Touch ID & Password", in the person's language (`approval.settings_path.mac_touch_id`), never the iPhone's "Settings → Touch ID & Passcode".
 
-The approval key needs the app signed. The CI build is unsigned, so the Mac's tests use a stub signer, and the first real approval with Touch ID on a Mac is **owed**, on a signed build (signing is done on another computer, at release). That check also tells two cases apart that look the same from the code: a build without its signing or entitlements reports Touch ID as not available too, so it would read "can't be used right now" though it never will be.
+The approval key needs the app signed. The CI build is unsigned, so the Mac's tests use a stub signer, and the first real approval with Touch ID on a Mac is **owed**, on a signed build: Mac TestFlight's, installed on a Mac with Touch ID. That check also tells two cases apart that look the same from the code: a build without its signing or entitlements reports Touch ID as not available too, so it would read "can't be used right now" though it never will be.
 
 ## How the code asks whether it's the Mac
 
@@ -165,6 +165,6 @@ A draft pull request runs it too. The Mac build can only be checked on a machine
 | Pointer hover on rows and buttons | next, with screenshots of the Mac app from CI |
 | **The menu bar and the window, seen by a person** | **owed.** The menu bar and the smallest window size are built and unit-tested, but nobody has seen them on a Mac. |
 | Approvals with Touch ID on a Mac | the iPad's key and prompt; a Mac never says Touch ID is off for tafs, and says where in System Settings it's set up |
-| Adding a Mac from a phone (the QR code and the check code) | after KIFF's pairing routes |
+| Adding a Mac from a phone (the QR code and the check code) | built: the iPad's "sign in from another phone" (`AppModel.startPairingSignIn`, `PairingOffer`), with the Mac shown as a computer (`macos`, no `device_kind`). Not yet tried on a real Mac |
 | Notarizing and a disk image, outside the Mac App Store | at release |
 | **A check on a real Mac with Touch ID** | **owed.** The Mac build has only run in CI, where there is no Touch ID. A person must approve a Card with Touch ID on a real, signed Mac build before the first release. If it says Touch ID "can't be used right now" with the lid open and Touch ID set up, the build's signing or entitlements are wrong. |
