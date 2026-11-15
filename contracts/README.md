@@ -26,15 +26,6 @@ The iPhone and iPad read every file their own reads decode (`ios/TafsTests/Contr
 their reports, the tafs list, Home, `/v1/setup`, Coach's chats and conversation, and Connect apps, each as the type its
 read decodes, with the same decoder.
 
-**`vectors/`** holds what KIFF decides rather than what tafs cloud answers, written by hand from KIFF's contract and read
-by both apps' tests, so they can't drift:
-
-| File | Written from | Read by |
-|---|---|---|
-| `vectors/passkey-register.json` | KIFF's pairing contract, "Registering one": the challenge, the platform's create request, the body of `POST /v1/me/passkeys`, a name's rules and `issued_at` | `ios/TafsTests/PasskeyRegistrationTests.swift`, Android's `PasskeyRegistrationTest` |
-
-Change a vector only with the contract it's written from. Being under `contracts/`, a change runs both apps' tests.
-
 Write a file again only through its writer: `UPDATE_CONTRACTS=1 npx vitest run` in `runtime/` (one file of `{about, answer}` per answer through `runtime/test/contract.ts`). Never
 by hand: a hand edit is a contract no code keeps.
 

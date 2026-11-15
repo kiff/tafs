@@ -2,11 +2,11 @@ import XCTest
 @testable import Tafs
 
 /// Registering a passkey at kiff.dev, checked against the vector both apps read
-/// (`contracts/vectors/passkey-register.json`), so the iPhone and iPad and Android can't drift.
+/// (`vectors/passkey-registration.json`), so the iPhone and iPad and Android can't drift.
 final class PasskeyRegistrationTests: XCTestCase {
     private func vector() throws -> [String: Any] {
         let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-            .deletingLastPathComponent().appendingPathComponent("contracts/vectors/passkey-register.json")
+            .deletingLastPathComponent().appendingPathComponent("vectors/passkey-registration.json")
         return try XCTUnwrap(try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
     }
 
@@ -23,33 +23,38 @@ final class PasskeyRegistrationTests: XCTestCase {
 
     /// The challenge is sha256 of `kiff.passkey.register.v1`, the account, the person and the moment.
     func testTheChallengeIsTheVectors() throws {
-        let c = try XCTUnwrap(try vector()["challenge"] as? [String: String])
-        let tenant = try XCTUnwrap(c["tenant"]), subject = try XCTUnwrap(c["subject"]), issued = try XCTUnwrap(c["issued_at"])
-        XCTAssertEqual(PasskeyRegistration.message(tenant: tenant, subject: subject, issuedAt: issued), c["message"])
+        let v = try vector()
+        let inputs = try XCTUnwrap(v["inputs"] as? [String: String])
+        let expected = try XCTUnwrap(v["expected"] as? [String: Any])
+        let tenant = try XCTUnwrap(inputs["tenant"]), subject = try XCTUnwrap(inputs["subject"]), issued = try XCTUnwrap(inputs["issued_at"])
+        XCTAssertEqual(PasskeyRegistration.message(tenant: tenant, subject: subject, issuedAt: issued), expected["message"] as? String)
         let challenge = PasskeyRegistration.challenge(tenant: tenant, subject: subject, issuedAt: issued)
-        XCTAssertEqual(challenge, hex(try XCTUnwrap(c["message_sha256_hex"])))
-        XCTAssertEqual(PasskeyRegistration.base64url(challenge), c["challenge_base64url"], "as clientDataJSON carries it")
+        XCTAssertEqual(challenge, hex(try XCTUnwrap(expected["challenge_sha256_hex"] as? String)))
+        XCTAssertEqual(PasskeyRegistration.base64url(challenge), expected["challenge"] as? String, "as clientDataJSON carries it")
     }
 
-    /// What the platform is asked for: kiff.dev, the subject's bytes as the user, ES256 only.
+    /// What the platform is asked for: kiff.dev, the subject's UTF-8 bytes as the user, ES256 only.
     func testTheCreateRequestIsTheVectors() throws {
-        let create = try XCTUnwrap(try vector()["create"] as? [String: Any])
-        let subject = try XCTUnwrap((try vector()["challenge"] as? [String: String])?["subject"])
+        let v = try vector()
+        let inputs = try XCTUnwrap(v["inputs"] as? [String: String])
+        let create = try XCTUnwrap((v["expected"] as? [String: Any])?["create"] as? [String: Any])
         XCTAssertEqual(PasskeyRegistration.relyingParty, create["rp_id"] as? String)
-        XCTAssertEqual(PasskeyRegistration.base64url(PasskeyRegistration.userID(subject: subject)), create["user_id_base64url"] as? String)
+        XCTAssertEqual(PasskeyRegistration.base64url(PasskeyRegistration.userID(subject: try XCTUnwrap(inputs["subject"]))), create["user_id"] as? String)
+        XCTAssertEqual(inputs["email"], create["user_name"] as? String, "the person's email names the passkey's user")
         XCTAssertEqual(PasskeyRegistration.algorithm, create["algorithm"] as? Int)
     }
 
     /// The body is the creation's answer as the platform gave it, base64url, and never the old fields.
     func testTheBodyIsTheVectors() throws {
-        let b = try XCTUnwrap(try vector()["body"] as? [String: Any])
-        let body = try XCTUnwrap(PasskeyRegistration.body(name: try XCTUnwrap(b["name"] as? String),
-                                                          issuedAt: try XCTUnwrap(b["issued_at"] as? String),
-                                                          clientDataJSON: hex(try XCTUnwrap(b["client_data_json_hex"] as? String)),
-                                                          attestationObject: hex(try XCTUnwrap(b["attestation_object_hex"] as? String))))
+        let v = try vector()
+        let inputs = try XCTUnwrap(v["inputs"] as? [String: String])
+        let response = try XCTUnwrap(v["creation_response"] as? [String: String])
+        let body = try XCTUnwrap(PasskeyRegistration.body(name: try XCTUnwrap(inputs["name"]), issuedAt: try XCTUnwrap(inputs["issued_at"]),
+                                                          clientDataJSON: hex(try XCTUnwrap(response["client_data_json_hex"])),
+                                                          attestationObject: hex(try XCTUnwrap(response["attestation_object_hex"]))))
         let sent = try XCTUnwrap(try JSONSerialization.jsonObject(with: JSONEncoder().encode(body)) as? [String: String])
-        XCTAssertEqual(sent, try XCTUnwrap(b["expected"] as? [String: String]))
-        for field in try XCTUnwrap(b["never_sent"] as? [String]) {
+        XCTAssertEqual(sent, try XCTUnwrap(v["register_body"] as? [String: String]))
+        for field in try XCTUnwrap(v["never_in_body"] as? [String]) {
             XCTAssertNil(sent[field], "\(field): KIFF refuses a body with the old fields too")
         }
     }

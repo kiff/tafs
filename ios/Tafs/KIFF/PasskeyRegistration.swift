@@ -3,7 +3,7 @@ import Foundation
 
 /// Registering a passkey for the account at kiff.dev (KIFF's pairing contract, "Registering one"): what the
 /// app asks the platform for, and the body it sends KIFF with the platform's answer. The same rules as
-/// Android's, checked by both apps' tests against one vector (`contracts/vectors/passkey-register.json`).
+/// Android's, checked by both apps' tests against one vector (`vectors/passkey-registration.json`).
 ///
 /// The body proves the key (proof of possession): it's the creation's own `clientDataJSON` and
 /// `attestationObject`, never a credential id or public key the app read out. KIFF reads both from the
