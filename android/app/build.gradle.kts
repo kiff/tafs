@@ -127,6 +127,9 @@ dependencies {
   implementation(libs.play.services.code.scanner)
   // Signing in with your other phone: this phone draws its own pairing QR. The encoder alone, pure Java.
   implementation(libs.zxing.core)
+  // A kiff.dev passkey made on the phone, through Android's Credential Manager; Play services carries it on Android 11 to 13.
+  implementation(libs.androidx.credentials)
+  implementation(libs.androidx.credentials.play.services.auth)
 
   // Navigation
   implementation(libs.androidx.navigation3.ui)

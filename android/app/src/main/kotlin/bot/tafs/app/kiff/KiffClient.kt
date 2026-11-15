@@ -690,6 +690,21 @@ class KiffClient(
     sendJson("DELETE", DEVICES + escaped(id), null, inWindow = false)
   }
 
+  /** The account's passkeys, a computer's own among them (it has no id: it goes with its device). */
+  suspend fun passkeys(): List<Passkey> = json.decodeFromString(PasskeyList.serializer(), String(send("GET", PASSKEYS, null))).passkeys
+
+  /**
+   * Registers a passkey made on this phone, with proof of possession ([PasskeyRegistration.registerBody]). Only the approval
+   * key behind its fingerprint registers one, never inside an approval window: otherwise a stolen session could add its own.
+   */
+  suspend fun registerPasskey(body: JsonObject): Passkey =
+    json.decodeFromString(PasskeyBody.serializer(), String(sendJson("POST", PASSKEYS, body, inWindow = false))).passkey
+
+  /** Removes one of the account's passkeys: signed by the approval key behind its fingerprint, as a device's removal is. */
+  suspend fun removePasskey(id: String) {
+    sendJson("DELETE", "$PASSKEYS/" + escaped(id), null, inWindow = false)
+  }
+
   /**
    * Pairs the computer whose QR the person scanned (KIFF's pairing contract): its fields as the QR gave them, signed by the
    * approval key behind the fingerprint, and never inside an approval window, which never covers a pairing.
@@ -914,6 +929,9 @@ class KiffClient(
      */
     val SIGNED_SETUP_PATHS = setOf("/v1/me/agent-drafts", "/v1/me/alert-targets", "/v1/keys", "/v1/me/time-zone", "/v1/me/delete", USAGE_LIMIT, PAIRINGS)
 
+    /** The account's passkeys: registering one, or removing one by id after it, is signed by the approval key. */
+    const val PASSKEYS = "/v1/me/passkeys"
+
     /** A device of the account, by id after it: removing one is signed by the approval key (KIFF's pairing contract). */
     const val DEVICES = "/v1/me/devices/"
 
@@ -934,6 +952,8 @@ class KiffClient(
     fun signsSetup(path: String): Boolean {
       if (path in SIGNED_SETUP_PATHS) return true
       if (isDevice(path)) return true
+      // Registering one of the account's passkeys, or removing one.
+      if (path == PASSKEYS || isPasskey(path)) return true
       // Opening an approval window, and closing it (kiff/tafs#494).
       if (path == WINDOW || (path.startsWith("$WINDOW/") && path.endsWith("/close"))) return true
       if (path.startsWith("$DID_THIS_HAPPEN/")) return true
@@ -960,7 +980,8 @@ class KiffClient(
      */
     fun grantsAuthority(method: String, path: String): Boolean {
       // Removing a device: one that holds an approval key or a passkey goes only with an approval (§6).
-      if (method == "DELETE") return isDevice(path)
+      // A passkey of the account: removing one takes an approval, as a device's does.
+      if (method == "DELETE") return isDevice(path) || isPasskey(path)
       if (method != "POST") return false
       // Opening an approval window stands for a fingerprint: only the approval key opens one (kiff/tafs#494).
       if (path == WINDOW) return true
@@ -970,12 +991,17 @@ class KiffClient(
       if (path == "/v1/me/agent-drafts") return true
       // Pairing a computer gives it approval authority: only the approval key grants it.
       if (path == PAIRINGS) return true
+      // A passkey approves for the person: only the approval key registers one (a stolen session would add its own).
+      if (path == PASSKEYS) return true
       val parts = path.split("/")
       // Sharing a taf gives people its use. Taking it away is the current key.
       if (parts.size == 5 && path.startsWith("/v1/agents/") && parts[4] == "grants" && parts[3].isNotEmpty()) return true
       if (path == "/v1/resume" || (parts.size == 5 && path.startsWith("/v1/agents/") && parts[4] == "resume" && parts[3].isNotEmpty())) return true
       return parts.size == 6 && path.startsWith("/v1/me/agent-drafts/") && parts[5] == "confirm" && parts[4].isNotEmpty()
     }
+
+    /** `/v1/me/passkeys/{id}`: one passkey, never the list. */
+    private fun isPasskey(path: String): Boolean = path.startsWith("$PASSKEYS/") && path.length > PASSKEYS.length + 1 && '/' !in path.substring(PASSKEYS.length + 1)
 
     /** `/v1/me/devices/{id}`: one device, never the list. */
     private fun isDevice(path: String): Boolean = path.startsWith(DEVICES) && path.length > DEVICES.length && '/' !in path.substring(DEVICES.length)

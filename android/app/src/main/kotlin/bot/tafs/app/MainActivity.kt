@@ -826,13 +826,18 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
     if (showingDevices) {
       DevicesSheet(
-        state, refresh = model::refreshDevices, remove = model::removeDevice, onClose = { model.clearPairLine(); showingDevices = false; showingSettings = true },
+        state, refresh = { model.refreshDevices(); model.refreshPasskeys() }, remove = model::removeDevice, onClose = { model.clearPairLine(); showingDevices = false; showingSettings = true },
         // Adding a device gives it approval authority: offered only on a KIFF account. The scan and what follows run in the model.
         addDevice = drivingActivity?.takeIf { state.mode == bot.tafs.app.app.Mode.kiff }?.let { activity ->
           { model.addDevice { bot.tafs.app.app.scanPairingQr(activity) } }
         },
         confirmPair = model::confirmPairing,
         cancelPair = model::cancelPairing,
+        // A passkey on this phone, made by Android's Credential Manager and registered by the approval key: KIFF accounts only.
+        addPasskey = drivingActivity?.takeIf { state.mode == bot.tafs.app.app.Mode.kiff }?.let { activity ->
+          { scope.launch { model.addPasskey(android.os.Build.MODEL) { json -> bot.tafs.app.app.makePasskey(activity, json) } } }
+        },
+        removePasskey = model::removePasskey,
       )
     }
     if (showingConnectApps) {
