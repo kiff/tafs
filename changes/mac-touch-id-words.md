@@ -1,0 +1,1 @@
+- **Mac: where Touch ID is set up.** The Mac build says "System Settings → Touch ID & Password", in the person's language, where the iPhone and iPad say "Settings → Touch ID & Passcode" (docs/mac-app.md).
