@@ -21,8 +21,9 @@ the two streams, and `lambda.ts` wires the stores.
 **The person's language:** the apps send their own resolved languages as `Accept-Language`, as
 they do to KIFF. tafs cloud writes the lines it words for people in the best of its eight languages,
 else English ([languages.md](languages.md)): so far a taf's work lines and requests (`…/work`, the request
-page, the home list's line), the skipped firings, and a run code's `words` (`ai_unavailable`) on a chat's
-`end`. The rest of its lines follow. An `error` stays in English; `words` beside it are the person's.
+page, the home list's line), the skipped firings, a run code's `words` (`ai_unavailable`) on a chat's
+`end`, a taf's Setup lines (each action's limits and steps, "See its Card", "App action") and a Card's
+each-item totals (`each_item`). The rest of its lines follow. An `error` stays in English; `words` beside it are the person's.
 
 Capabilities are KIFF's: `cards.manage`, `holds.answer`, `members.manage`,
 `billing.manage`, `account.delete` ([accounts.md](accounts.md#roles-and-what-a-person-may-do)).
@@ -408,7 +409,8 @@ body when unchanged. Apps keep previously read pages per account, taf and filter
 `GET /v1/tafs/{id}/setup` returns:
 
 - `connections`: each app's display `name`, `action_count`, `action_words`,
-  `actions` (each with its title, Card-limit lines and workflow-step numbers),
+  `actions` (each with its title, Card-limit lines, workflow-step numbers and `step_words`, its lines in the
+  person's language: "20 calls a day", "Step 2", "Not used by the current workflow"),
   the app's `steps`, `running`, and `stats` for the last seven days. Stats include
   `calls`, `done`, `held`, ready-to-draw `words`, `complete`, and an `activity_query`.
   Incomplete source reads are explicitly marked; they are never shown as a complete total.
