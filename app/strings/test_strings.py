@@ -150,11 +150,12 @@ class SharedWords(unittest.TestCase):
 
     def test_a_macs_touch_id_reason_continues_the_systems_sentence(self):
         # A Mac's Touch ID prompt puts the reason after its own "<app> is trying to" ("tafs está intentando"),
-        # so a `*_mac` line is a verb phrase that continues it: no capital to open it, no final stop. Each has
-        # the phone's line beside it, which shows the reason alone, as a sentence.
+        # so a prompt's `*_mac` line (a key with "prompt" in it) is a verb phrase that continues it: no capital to
+        # open it, no final stop. Each has the phone's line beside it, which shows the reason alone, as a
+        # sentence. Other `*_mac` lines (a Mac's own sentence) are sentences.
         for lang, lines in self.lines.items():
             for key, line in lines.items():
-                if not key.endswith("_mac"):
+                if not (key.endswith("_mac") and "prompt" in key):
                     continue
                 self.assertIn(key[:-len("_mac")], self.source, f"{key}: the phone's line beside it")
                 for text in generate.forms_of(line):
