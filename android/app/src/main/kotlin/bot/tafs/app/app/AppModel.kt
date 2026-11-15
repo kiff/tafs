@@ -7096,7 +7096,15 @@ class AppModel(
     AccountTime.use(account.timeZone ?: "UTC")
     val device = java.time.ZoneId.systemDefault().id
     val offer = device.takeIf { it != (account.timeZone ?: "UTC") && secrets.load(declinedZoneKey()) != it }
-    _state.update { it.copy(kiffAccount = account, timeZoneOffer = offer) }
+    // KIFF says how this session approves (`approval_mode`): a view-only one is shown as such from the start, not only once
+    // registering the approval key is refused. Only KIFF's word sets it; a new sign-in that approves clears it.
+    val viewOnly = account.viewOnly
+    _state.update {
+      it.copy(
+        kiffAccount = account, timeZoneOffer = offer,
+        approvalViewOnly = it.approvalViewOnly || viewOnly, approvalKeyLost = it.approvalKeyLost || viewOnly,
+      )
+    }
   }
 
   private fun declinedZoneKey(): String = "tafs.timeZone.declined|${kiffTenant.orEmpty()}"

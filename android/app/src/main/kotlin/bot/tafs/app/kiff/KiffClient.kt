@@ -86,7 +86,15 @@ data class Account(
   @SerialName("time_zone") val timeZone: String? = null,
   /** What this person may do on the account ("cards.manage", …); null from a KIFF that doesn't say. */
   val capabilities: List<String>? = null,
+  /**
+   * How this device's session approves, in KIFF's word: "view" (nothing it signs approves), "key" (its approval key),
+   * "passkey", or "device_key" (a session from before approval modes). Null from a KIFF that doesn't say.
+   */
+  @SerialName("approval_mode") val approvalMode: String? = null,
 ) {
+  /** KIFF keeps this session view-only: nothing this phone signs approves. */
+  val viewOnly: Boolean get() = approvalMode == "view"
+
   /** The account as the owner knows it: its name, else its slug. */
   val name: String get() = displayName?.takeIf { it.isNotEmpty() } ?: slug
 
