@@ -7,12 +7,14 @@ enum MacWindow {
     /// screen beside it always fit.
     static let minimumSize = CGSize(width: 820, height: 600)
 
-    /// Sets the smallest size on every window. Nothing to do on iPhone and iPad.
+    /// Sets the smallest size on every window, and hides the window's title: the iPad shows
+    /// none, and the sidebar already says "tafs" under its icon. Nothing to do on iPhone and iPad.
     @MainActor
     static func apply() {
         #if targetEnvironment(macCatalyst)
         for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
             scene.sizeRestrictions?.minimumSize = minimumSize
+            scene.titlebar?.titleVisibility = .hidden
         }
         #endif
     }
