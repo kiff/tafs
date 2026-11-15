@@ -262,7 +262,7 @@ final class KIFFClient {
         let subject: String
         /// What the session may do: "key" approves with its approval key, "view" approves nothing
         /// (a computer signed in through the browser on an account that already has a device that
-        /// approves: it approves only once paired from a phone, desktop-client.md §1.1 and §5).
+        /// approves: it approves only once paired from a phone).
         /// Absent from an older KIFF.
         var approvalMode: String? = nil
 

@@ -149,7 +149,7 @@ final class ApprovalKeyTests: XCTestCase {
     }
 
     /// KIFF says at sign-in that the session is view-only (`approval_mode: view`), as for a computer
-    /// signed in through the browser on an account with a device that approves (desktop-client.md §1.1):
+    /// signed in through the browser on an account with a device that approves:
     /// the app knows from the start, asks KIFF for no approval key, and says why.
     func testASessionKIFFSignsInViewOnlyIsViewOnlyFromTheStart() async throws {
         StubProtocol.responses = [:]
