@@ -64,21 +64,27 @@ size (2064 × 2752). They're in [screenshots/ipad/](screenshots/ipad/) as `<scre
 | A taf's Card | [taf-card](screenshots/ipad/taf-card.png) | [dark](screenshots/ipad/taf-card-dark.png) |
 | A taf's chat | [taf-chat](screenshots/ipad/taf-chat.png) | [dark](screenshots/ipad/taf-chat-dark.png) |
 | A taf's Setup | [taf-setup](screenshots/ipad/taf-setup.png) | [dark](screenshots/ipad/taf-setup-dark.png) |
+| Plan & usage | [usage](screenshots/ipad/usage.png) | [dark](screenshots/ipad/usage-dark.png) |
+| Connect apps | [connect-apps](screenshots/ipad/connect-apps.png) | [dark](screenshots/ipad/connect-apps-dark.png) |
+| Account › Devices | [devices](screenshots/ipad/devices.png) | [dark](screenshots/ipad/devices-dark.png) |
+| New taf (the job gallery) | [new-taf](screenshots/ipad/new-taf.png) | [dark](screenshots/ipad/new-taf-dark.png) |
+| Coach, empty | [coach](screenshots/ipad/coach.png) | [dark](screenshots/ipad/coach-dark.png) |
 
 <p>
   <img src="screenshots/ipad/overview.png" width="340" alt="iPad Overview: the sidebar, then what needs you and each taf's line">
   <img src="screenshots/ipad/overview-dark.png" width="340" alt="iPad Overview in dark">
 </p>
 
-- **Where they come from:** the full set's iPad reference pass in iOS CI (`ref-<screen>[-dark]`
-  in the `screenshots` artifact of a run with `screenshots: full`), never made by hand. To
-  refresh them, run that and replace these files.
-- **Portrait for now.** The pass asks for landscape, but the CI simulator keeps the window
-  upright, so they're portrait. The sidebar, rows, type and colours are the same either way.
-- **Not drawn by focus.** On the Overview, the orange box around "tafs" is the simulator's
-  keyboard focus, not part of the design.
-- **Not here yet:** Plan & usage, Connect apps, Account › Devices, Coach and the New taf sheet.
-  The app can't open them by launch argument yet.
+- **Where they come from:** iOS CI's iPad reference pass (`ref-<screen>[-dark]` in the
+  `screenshots` artifact of a run with `screenshots: reference`, or the end of `full`), never
+  made by hand. To refresh them, run that and replace these files.
+- **Portrait for now.** The CI simulator doesn't turn the device, so they're portrait. The
+  sidebar, rows, type and colours are the same either way.
+- **No keyboard focus.** The iPad runs with no hardware keyboard, so no focus box is drawn.
+- **The chosen row's fill:** a screen opened by launch argument doesn't select its sidebar row
+  the way a tap does, so these show none. The iPad's code draws a grey fill on the chosen row.
+- **Not here yet:** one app's connections and Coach mid-conversation. The app can't open them
+  by launch argument yet.
 
 ## Android
 
