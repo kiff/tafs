@@ -63,6 +63,9 @@ targets:
         # Attachments (kiff/tafs#209): a photo taken for a message goes only with that message.
         NSCameraUsageDescription: tafs takes a photo to attach to your message, or reads the code your computer shows to pair it. A photo goes only with that message, to your own chat.
         ITSAppUsesNonExemptEncryption: false
+        # The Mac App Store requires a Mac app's category in its Info.plist; iOS ignores it.
+        # It should match the App Store listing's primary category (docs/mac-app.md).
+        LSApplicationCategoryType: public.app-category.business
         NSSupportsLiveActivities: true
         # A silent push says a held call was answered elsewhere, so its alert goes.
         UIBackgroundModes: [remote-notification]
