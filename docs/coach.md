@@ -296,7 +296,10 @@ things (`runtime/src/cloud/approval.ts`):
   `lifetime`, one total on the tool for every item) is answered `failed: …` too, naming the tool
   and its `resource_argument`: such a total stops the taf after its first item, so a limit for
   each item ("one invoice per order, ever") is a total `per` that argument, beside the day's
-  total. A lifetime sum (a budget) and a lifetime count per item are signed.
+  total. A draft that caps one of the taf's write tools' amount over its whole life with no `per`
+  (`sum(…)`, `lifetime`) is answered `failed: …` too, naming the tool and the total: the owner
+  agrees a limit for each call and a day's total, never a lifetime one. A sum per item and a
+  lifetime count per item are signed.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.

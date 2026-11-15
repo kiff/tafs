@@ -518,16 +518,49 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(String(r.answer)).toMatch(/^failed: the draft counts "Create a draft invoice" 1 in its whole life, across every item/);
     expect(String(r.answer)).toContain('per: "order" (its resource_argument)');
     expect(String(r.answer)).toContain("With no resource_argument, it goes in the taf's instructions");
-    // Counted for each order: signed. So is a lifetime budget on an amount, and a lifetime count on a read.
+    // Counted for each order: signed. So is a lifetime count on a read. (A lifetime sum on a write isn't: see below.)
     s.drafts.drf_1.cards = [card([daily, { quantity: "count", limit: 1, window: "lifetime", per: "order" }])];
-    expect(await ask()).toMatchObject({ outcome: "sign" });
-    s.drafts.drf_1.cards = [card([daily, { quantity: "sum(amount)", limit: 20_000, window: "lifetime" }])];
     expect(await ask()).toMatchObject({ outcome: "sign" });
     s.drafts.drf_1.cards = [card([daily]), { id: "c2", subject: "refunds-x", grants: [{ action: "list_orders_k3" }], aggregates: [{ quantity: "count", limit: 1000, window: "lifetime" }] }];
     expect(await ask()).toMatchObject({ outcome: "sign" });
     // KIFF folds case and spaces: so does the check.
     s.drafts.drf_1.cards = [card([daily, { quantity: " Count ", limit: 1, window: "LIFETIME", per: " " }])];
     expect(await ask()).toMatchObject({ outcome: "answered", note: WORDS.lifetimeCap("Create a draft invoice") });
+  });
+
+  // Eval 43674391351: the owner agreed €5 a refund and €50 a day, and Coach also drafted a lifetime sum(amount) of
+  // 1,000,000 on refund_charge, a total nobody agreed to. The skill's words ("never a lifetime total on the tool",
+  // "never add a limit the owner didn't agree") didn't hold, so the code refuses it.
+  it("a draft that caps a write's amount over its whole life, across every item, isn't signed: no total the owner didn't agree", async () => {
+    const s = services();
+    const tools = [{ tool: "refund_charge", name: "refund_charge_r7", title: "Refund a charge", resource_argument: "charge" },
+      { tool: "read_charge", name: "read_charge_r7", title: "Read a charge", read_only: true }];
+    s.grants = [grant({ status: "connected" }, { tools })];
+    const each = { id: "c1", subject: "refunds-x", grants: [{ action: "refund_charge_r7", limits: { amount: 500 } }], on_exceed: "owner", aggregates: [] as unknown[] };
+    const day = { id: "c2", subject: "refunds-x", grants: [{ action: "refund_charge_r7" }], on_exceed: "refuse", aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day" }] as unknown[] };
+    const reads = { id: "c3", subject: "refunds-x", grants: [{ action: "read_charge_r7" }], aggregates: [{ quantity: "count", limit: 1000, window: "calendar_day" }] };
+    const lifetime = { quantity: "sum(amount)", limit: 1_000_000, window: "lifetime" };
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [each, { ...day, aggregates: [...day.aggregates, lifetime] }, reads] };
+    const ask = async () => (await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+    const r = await ask();
+    expect(r).toMatchObject({ outcome: "answered", note: WORDS.lifetimeSum("Refund a charge") });
+    // Coach hears what's wrong and what to draft instead; nothing is signed.
+    expect(String(r.answer)).toMatch(/^failed: the draft caps "Refund a charge"'s sum\(amount\) at 1000000 over its whole life, across every item/);
+    expect(String(r.answer)).toContain("no lifetime total on an amount");
+    // On the per-call Card instead: still refused.
+    s.drafts.drf_1.cards = [{ ...each, aggregates: [lifetime] }, day, reads];
+    expect((await ask()).note).toBe(WORDS.lifetimeSum("Refund a charge"));
+    // KIFF folds case and spaces: so does the check.
+    s.drafts.drf_1.cards = [each, { ...day, aggregates: [...day.aggregates, { quantity: " SUM(amount) ", limit: 1, window: " Lifetime ", per: " " }] }, reads];
+    expect((await ask()).note).toBe(WORDS.lifetimeSum("Refund a charge"));
+    // The agreed limits alone: signed. A sum for each charge (per its argument) is a limit for each item: signed.
+    s.drafts.drf_1.cards = [each, day, reads];
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    s.drafts.drf_1.cards = [each, { ...day, aggregates: [...day.aggregates, { ...lifetime, limit: 500, per: "charge" }] }, reads];
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // A lifetime count on a read is a read's call count: signed.
+    s.drafts.drf_1.cards = [each, day, { ...reads, aggregates: [{ quantity: "count", limit: 100_000, window: "lifetime" }] }];
+    expect(await ask()).toMatchObject({ outcome: "sign" });
   });
 
   it("an app set up on demand asks for every change: a draft that lets one of its writes run outright isn't signed (kiff/planque#87)", async () => {

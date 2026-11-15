@@ -103,6 +103,7 @@ export const fr: Words = {
   approval_uncovered: (tool: string) => `Cette Card ne couvre pas « ${tool} », que le taf a reçu : chacun de ses appels serait refusé. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_stray: (tool: string) => `Cette Card permettrait aussi au taf d'utiliser « ${tool} », qu'aucune de ses connexions ne lui donne. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_lifetime_cap: (tool: string) => `Cette Card ne laisserait « ${tool} » s'exécuter qu'un nombre fixe de fois au total, pour tous les éléments et non pour chacun. Rien n'a été approuvé. Coach la rédige à nouveau.`,
+  approval_lifetime_sum: (tool: string) => `Cette Card plafonnerait « ${tool} » à un montant total pour toujours, pour tous les éléments, ce qui n'a pas été convenu. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_day_total_twice: (tool: string) => `Cette Card fixerait deux totaux par jour pour « ${tool} », et l'un pourrait décider au-delà de la limite autrement que convenu. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} a été configuré aujourd'hui : chaque modification doit d'abord vous être demandée, et cette Card laisserait « ${tool} » s'exécuter sans demander. Rien n'a été approuvé. Coach la rédige à nouveau.`,
   approval_critical_key: "Cela élargit ce que le taf peut faire, il faut donc votre empreinte digitale. Rien n'a été approuvé ; approuvez à nouveau avec votre empreinte digitale.",

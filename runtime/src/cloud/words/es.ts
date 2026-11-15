@@ -103,6 +103,7 @@ export const es: Words = {
   approval_uncovered: (tool: string) => `Esta Card no cubre «${tool}», que el taf recibió, así que cada llamada se rechazaría. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_stray: (tool: string) => `Esta Card también dejaría al taf usar «${tool}», que ninguna conexión suya le da. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_lifetime_cap: (tool: string) => `Esta Card dejaría que «${tool}» se ejecute solo un número fijo de veces en total, para todos los elementos y no para cada uno. No se aprobó nada. Coach la redacta de nuevo.`,
+  approval_lifetime_sum: (tool: string) => `Esta Card limitaría «${tool}» a un importe total para siempre, para todos los elementos, algo que no se acordó. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_day_total_twice: (tool: string) => `Esta Card fijaría dos totales diarios para «${tool}», y uno podría decidir pasado el límite distinto de lo acordado. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} se configuró hoy, así que cada cambio debe preguntarte primero; esta Card dejaría que «${tool}» se ejecute sin preguntar. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_critical_key: "Esto amplía lo que el taf puede hacer, así que necesita tu huella digital. No se aprobó nada; vuelve a aprobarlo con tu huella digital.",
