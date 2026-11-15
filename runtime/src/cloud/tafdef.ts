@@ -108,7 +108,7 @@ export const CALL_INSTRUCTIONS = `How you make a call under your Card:
   isn't found, or the id was right, report it.
 - Do every call this run's work needs before you report. A call you can make
   now never waits for the next run; report as left only what KIFF held or
-  refused, or what you couldn't do.`;
+  refused, what a note stopped, or what you couldn't do.`;
 
 /**
  * What every run is told about the items its check hands it (kiff/agents schedule/check.go, itemsHead): its work
