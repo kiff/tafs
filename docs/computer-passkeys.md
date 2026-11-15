@@ -26,8 +26,9 @@ them). So they approve in one of two ways:
 `kind: "passkey"` pairing whose QR names the key's credential, approved on the phone as any
 pairing is, with the key's `credential_proof`). KIFF lists it with that computer, as "Goes with its
 computer", with no Remove of its own: signing that computer out in Devices removes it. The key
-itself can be plugged into another computer, so its PIN is asked for each approval, and a lost key
-is removed by signing its computer out.
+itself can be plugged into another computer, but it approves nothing there unless that computer is
+paired with it. Its PIN is asked for each approval, and a lost key is removed by signing its
+computer out.
 
 ## What a passkey approval carries
 
@@ -45,8 +46,8 @@ A passkey approves one exact request, or two requests signed together, never any
    - a relying-party hash that isn't `sha256("kiff.dev")`;
    - no user presence, or no user verification;
    - a credential other than the one asked for;
-   - for a computer's own platform passkey, one that is backup eligible or backed up (a synced
-     passkey isn't that computer's own).
+   - for a computer's own passkey, platform or security key, one that is backup eligible or
+     backed up (a synced passkey isn't that computer's own).
 5. **The header:**
    `KIFF-Passkey-Assertion: t=<signed_at>,a=<base64url of {credential_id, client_data_json, authenticator_data, signature}>`,
    each field base64url with no padding. For two requests signed together, each header adds
