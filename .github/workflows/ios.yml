@@ -535,8 +535,10 @@ jobs:
           shoot ipad-dark-land-signed-in -screenshots YES -tab tafs -signedIn YES -landscape YES
           xcrun simctl ui "$DEVICE_ID" appearance light
           # The desktop apps' reference (docs/screenshots.md, iPad reference): each screen the
-          # app opens by launch argument, landscape, with the sidebar as a signed-in account
-          # has it, in light then dark. Sample mode: no real account, name or address.
+          # app opens by launch argument, with the sidebar as a signed-in account has it, in
+          # light then dark. Sample mode: no real account, name or address. -landscape asks
+          # for landscape, but the simulator here keeps the window upright, so they come out
+          # portrait, as every ipad-land-* shot does.
           # ref-<screen>.png and ref-<screen>-dark.png go to docs/screenshots/ipad/ as
           # <screen>.png and <screen>-dark.png.
           for look in light dark; do
@@ -554,7 +556,6 @@ jobs:
             ref taf-card -tab tafs -screen card
             ref taf-chat -tab tafs -screen chat
             ref taf-setup -tab tafs -screen setup
-            ref buy-credits -screen buy-credits -pack vonk
           done
           xcrun simctl ui "$DEVICE_ID" appearance light
           ls -la "$RUNNER_TEMP/shots"

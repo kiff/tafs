@@ -44,6 +44,42 @@ On iPad:
   <img src="screenshots/ios/ipad-setup-dark.png" width="340" alt="Setup on iPad in dark">
 </p>
 
+## iPad reference
+
+**The look every desktop app follows** (macOS, Windows, Linux, the Mac): the iPad with the
+sidebar a signed-in account has, in sample mode, light and dark, at the 13-inch iPad's full
+size (2064 × 2752). They're in [screenshots/ipad/](screenshots/ipad/) as `<screen>.png` and
+`<screen>-dark.png`:
+
+| Screen | Light | Dark |
+|---|---|---|
+| Overview | [overview](screenshots/ipad/overview.png) | [dark](screenshots/ipad/overview-dark.png) |
+| Needs you | [needs-you](screenshots/ipad/needs-you.png) | [dark](screenshots/ipad/needs-you-dark.png) |
+| Record | [record](screenshots/ipad/record.png) | [dark](screenshots/ipad/record-dark.png) |
+| Calendar, day | [calendar](screenshots/ipad/calendar.png) | [dark](screenshots/ipad/calendar-dark.png) |
+| Calendar, week | [calendar-week](screenshots/ipad/calendar-week.png) | [dark](screenshots/ipad/calendar-week-dark.png) |
+| Account | [account](screenshots/ipad/account.png) | [dark](screenshots/ipad/account-dark.png) |
+| Account › Alerts | [alerts](screenshots/ipad/alerts.png) | [dark](screenshots/ipad/alerts-dark.png) |
+| A taf's page (Activity) | [taf](screenshots/ipad/taf.png) | [dark](screenshots/ipad/taf-dark.png) |
+| A taf's Card | [taf-card](screenshots/ipad/taf-card.png) | [dark](screenshots/ipad/taf-card-dark.png) |
+| A taf's chat | [taf-chat](screenshots/ipad/taf-chat.png) | [dark](screenshots/ipad/taf-chat-dark.png) |
+| A taf's Setup | [taf-setup](screenshots/ipad/taf-setup.png) | [dark](screenshots/ipad/taf-setup-dark.png) |
+
+<p>
+  <img src="screenshots/ipad/overview.png" width="340" alt="iPad Overview: the sidebar, then what needs you and each taf's line">
+  <img src="screenshots/ipad/overview-dark.png" width="340" alt="iPad Overview in dark">
+</p>
+
+- **Where they come from:** the full set's iPad reference pass in iOS CI (`ref-<screen>[-dark]`
+  in the `screenshots` artifact of a run with `screenshots: full`), never made by hand. To
+  refresh them, run that and replace these files.
+- **Portrait for now.** The pass asks for landscape, but the CI simulator keeps the window
+  upright, so they're portrait. The sidebar, rows, type and colours are the same either way.
+- **Not drawn by focus.** On the Overview, the orange box around "tafs" is the simulator's
+  keyboard focus, not part of the design.
+- **Not here yet:** Plan & usage, Connect apps, Account › Devices, Coach and the New taf sheet.
+  The app can't open them by launch argument yet.
+
 ## Android
 
 The sample on a phone, except Coach: the sample has none, so Coach is a signed-in account's,
