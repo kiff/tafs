@@ -132,7 +132,7 @@ On the Mac, buttons answer the pointer, each a little less than a press, so a pr
 - **the outlined button** takes a light wash of ink;
 - **a plain button**, which is what a row or a link is (`DrivablePlainButtonStyle`), fades a little, as it fades more when pressed.
 
-The iPad keeps its own pointer effects, so this shows on the Mac build only. The sidebar is the system's list: its screens and tafs show the selection as the system draws it, and its plain buttons fade as above. The sidebar's Coach button is a plain SwiftUI button and doesn't answer the pointer yet.
+The iPad keeps its own pointer effects, so this shows on the Mac build only. The sidebar is the system's list: its screens and tafs show the selection as the system draws it, and its plain buttons fade as above. The sidebar's Coach button lightens under the pointer as the main button does.
 
 ## The window
 
