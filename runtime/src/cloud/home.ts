@@ -435,7 +435,7 @@ export function cardView(m: Mandate, lang: Lang = "en"): CardView {
     const title = (m.grants ?? []).find((g) => g.action === c.tool)?.title?.trim() || c.tool;
     return [{ tool: c.tool, title, lines }];
   });
-  const each_item = (m.aggregates ?? []).filter((a) => a.per).map(eachItemWords);
+  const each_item = (m.aggregates ?? []).filter((a) => a.per).map((a) => eachItemWords(a, lang));
   return {
     id: m.id, title: m.title?.trim() || lines[0]?.label || "No actions yet", environment, live: isLive(environment),
     active: m.active, expires: m.valid_until ?? null, rules: lines, total, calls, ...(counted.length ? { counted } : {}),
@@ -447,16 +447,17 @@ export function cardView(m: Mandate, lang: Lang = "en"): CardView {
  * A total for each item apart, in the owner's words, as KIFF says it on a draft: "1 call in any 7 days for each invoice
  * id", "€100.00 in total a day for each customer". A window tafs doesn't know is said as it was sent.
  */
-export function eachItemWords(a: NonNullable<Mandate["aggregates"]>[number]): string {
-  // A whole line in English, as the rest of it is: its window too.
-  const window = windowWords(a.window).each;
+export function eachItemWords(a: NonNullable<Mandate["aggregates"]>[number], lang: Lang = "en"): string {
+  // A whole line in the person's language, its window too. The item is the argument KIFF counts by, as named.
+  const w = wordsIn(lang);
+  const window = windowWords(a.window, lang).each;
   const item = (a.per ?? "").trim().toLowerCase().replaceAll("_", " ");
-  if (!isSum(a.quantity)) return `${a.limit} ${a.limit === 1 ? "call" : "calls"} ${window} for each ${item}`;
+  if (!isSum(a.quantity)) return w.each_item_calls(a.limit, plural(lang, a.limit), window, item);
   const scale = a.scale ?? 0;
   const amount = amountWords({ value: (a.limit / 10 ** scale).toFixed(scale), unit: a.unit ?? "" }) ?? String(a.limit);
   // An amount says it's a total where its window doesn't: "€100.00 in total a day", "€100.00 in any 7 days".
-  const over = a.window === "calendar_day" ? "in total a day" : window;
-  return `${amount} ${over} for each ${item}`;
+  const over = a.window === "calendar_day" ? w.each_item_total_day : window;
+  return w.each_item_amount(amount, over, item);
 }
 
 /**

@@ -4738,10 +4738,10 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   ]);
   const active = runs.find((r) => r.status === "RUNNING");
   const events = active ? await deps.agents.session(me.tenantID, active.session, ownerKey(me)).then((s) => s.events, () => []) : [];
-  const rules = summary(cards.mandates.filter((m) => m.subject === taf.kiffAgent)).rules;
+  const rules = summary(cards.mandates.filter((m) => m.subject === taf.kiffAgent), langOf(event)).rules;
   const unitExceptions = cardUnitExceptions(taf, cards.held, rules, me.timeZone ?? "UTC", now, langOf(event));
   const setup = setupView({ agent: taf.kiffAgent, grants: grants.grants, knob: knob as import("./knob.js").Knob, rules, notes: memory,
-    versions, calls: stats.calls, now, running: runningTool(events, active), statsComplete: stats.complete });
+    versions, calls: stats.calls, now, running: runningTool(events, active), statsComplete: stats.complete, lang: langOf(event) });
   // A connection whose sign-in the vendor no longer takes: the taf's own Connect again, naming its grant, so the app
   // signs that same connection in again (planque's approve) and the taf keeps its tools and Card. One job per view:
   // never "go to Connect apps".
