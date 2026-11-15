@@ -59,6 +59,7 @@
   "settings.devices.sign_out": "Déconnecter",
   "settings.devices.sign_out_named": "Déconnecter {device} ?",
   "settings.devices.sign_out_prompt": "Déconnecter {device} de votre compte",
+  "settings.devices.sign_out_prompt_mac": "déconnecter {device} de votre compte",
   "settings.devices.sign_out_this": "Déconnecter cet appareil ?",
   "settings.devices.signout_needs_approver": "Pour déconnecter un autre appareil, utilisez un appareil qui peut approuver.",
   "settings.devices.this_device": "cet appareil",

@@ -727,6 +727,7 @@
     <string name="coach_plan_step_skipped">Pominięte</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Połącz swoje aplikacje</string>
+    <string name="coach_prompt_connect_tools_mac">połączyć Twoje aplikacje</string>
     <string name="coach_prompt_give_card">Daj Coachowi jego Card</string>
     <string name="coach_prompt_start">Uruchom Coacha</string>
     <string name="coach_puts_words_message_box">Wstawia swoje słowa do pola wiadomości</string>
@@ -966,6 +967,8 @@
     <string name="connect_profile_words_unread">Opis KIFF dla tego połączenia nie został jeszcze odczytany. Nic nie zostało zatwierdzone.</string>
     <string name="connect_prompt_connect">Połącz %1$s z %2$s</string>
     <string name="connect_prompt_connect_app">Połącz %1$s</string>
+    <string name="connect_prompt_connect_app_mac">połączyć %1$s</string>
+    <string name="connect_prompt_connect_mac">połączyć %1$s z %2$s</string>
     <string name="connect_prompt_give_card">Daj %1$s jego Card</string>
     <string name="connect_prompt_give_key">Przekaż %1$s klucz dla %2$s</string>
     <string name="connect_prompt_give_key_app">Przekaż %1$s klucz</string>
@@ -1433,6 +1436,7 @@
     <string name="needs_you_over_total">Przekracza sumę Card, np. dzienną. Osoba zarządzająca Card może dać dodatkowy zapas albo możesz to odrzucić.</string>
     <string name="needs_you_over_total_manager">Przekracza sumę Card, np. dzienną. Dodatkowy zapas przepuszcza tylko to wywołanie.</string>
     <string name="needs_you_prompt_answer">Odpowiedz: %1$s</string>
+    <string name="needs_you_prompt_answer_mac">odpowiedzieć: %1$s</string>
     <string name="needs_you_prompt_did_not_happen">Zgłoś, że się nie wydarzyło: %1$s</string>
     <string name="needs_you_prompt_happened">Zgłoś, że się wydarzyło: %1$s</string>
     <string name="needs_you_refuse">Odrzuć</string>
@@ -1951,6 +1955,7 @@
     <string name="settings_devices_sign_out">Wyloguj</string>
     <string name="settings_devices_sign_out_named">Wylogować %1$s?</string>
     <string name="settings_devices_sign_out_prompt">Wyloguj %1$s z Twojego konta</string>
+    <string name="settings_devices_sign_out_prompt_mac">wylogować %1$s z Twojego konta</string>
     <string name="settings_devices_sign_out_this">Wylogować to urządzenie?</string>
     <string name="settings_devices_signout_needs_approver">Aby wylogować inne urządzenie, użyj urządzenia, które może zatwierdzać.</string>
     <string name="settings_devices_this_device">to urządzenie</string>

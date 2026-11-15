@@ -59,6 +59,7 @@
   "settings.devices.sign_out": "Abmelden",
   "settings.devices.sign_out_named": "{device} abmelden?",
   "settings.devices.sign_out_prompt": "{device} von deinem Konto abmelden",
+  "settings.devices.sign_out_prompt_mac": "{device} von deinem Konto abzumelden",
   "settings.devices.sign_out_this": "Dieses Gerät abmelden?",
   "settings.devices.signout_needs_approver": "Um ein anderes Gerät abzumelden, nutze ein Gerät, das genehmigen kann.",
   "settings.devices.this_device": "dieses Gerät",

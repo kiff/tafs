@@ -667,6 +667,7 @@
     <string name="coach_plan_step_skipped">Overgeslagen</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Je apps koppelen</string>
+    <string name="coach_prompt_connect_tools_mac">je apps te koppelen</string>
     <string name="coach_prompt_give_card">Coach zijn Card geven</string>
     <string name="coach_prompt_start">Coach starten</string>
     <string name="coach_puts_words_message_box">Zet de tekst in het berichtvak</string>
@@ -892,6 +893,8 @@
     <string name="connect_profile_words_unread">De woorden van KIFF voor deze koppeling zijn nog niet gelezen. Er is niets goedgekeurd.</string>
     <string name="connect_prompt_connect">%1$s koppelen aan %2$s</string>
     <string name="connect_prompt_connect_app">%1$s koppelen</string>
+    <string name="connect_prompt_connect_app_mac">%1$s te koppelen</string>
+    <string name="connect_prompt_connect_mac">%1$s aan %2$s te koppelen</string>
     <string name="connect_prompt_give_card">%1$s zijn Card geven</string>
     <string name="connect_prompt_give_key">%1$s zijn sleutel voor %2$s geven</string>
     <string name="connect_prompt_give_key_app">%1$s zijn sleutel geven</string>
@@ -1333,6 +1336,7 @@
     <string name="needs_you_over_total">Het gaat boven een totaal van de Card, zoals dat van een dag. Iemand die de Cards beheert, kan het extra ruimte geven, of je kunt het weigeren.</string>
     <string name="needs_you_over_total_manager">Het gaat boven een totaal van de Card, zoals dat van een dag. Extra ruimte laat alleen deze aanroep door.</string>
     <string name="needs_you_prompt_answer">%1$s beantwoorden</string>
+    <string name="needs_you_prompt_answer_mac">%1$s te beantwoorden</string>
     <string name="needs_you_prompt_did_not_happen">Zeggen dat het niet is gebeurd: %1$s</string>
     <string name="needs_you_prompt_happened">Zeggen dat het is gebeurd: %1$s</string>
     <string name="needs_you_refuse">Weigeren</string>
@@ -1839,6 +1843,7 @@
     <string name="settings_devices_sign_out">Uitloggen</string>
     <string name="settings_devices_sign_out_named">%1$s uitloggen?</string>
     <string name="settings_devices_sign_out_prompt">%1$s uitloggen van je account</string>
+    <string name="settings_devices_sign_out_prompt_mac">%1$s uit te loggen van je account</string>
     <string name="settings_devices_sign_out_this">Dit apparaat uitloggen?</string>
     <string name="settings_devices_signout_needs_approver">Gebruik een apparaat dat kan goedkeuren om een ander apparaat uit te loggen.</string>
     <string name="settings_devices_this_device">dit apparaat</string>

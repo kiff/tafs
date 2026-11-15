@@ -148,6 +148,20 @@ class SharedWords(unittest.TestCase):
                     if lang not in generate.POSSESSIVE:
                         self.assertNotIn("|possessive}", text, f"{lang} {key}: {lang} has no possessive rule; word the line around the name")
 
+    def test_a_macs_touch_id_reason_continues_the_systems_sentence(self):
+        # A Mac's Touch ID prompt puts the reason after its own "<app> is trying to" ("tafs está intentando"),
+        # so a `*_mac` line is a verb phrase that continues it: no capital to open it, no final stop. Each has
+        # the phone's line beside it, which shows the reason alone, as a sentence.
+        for lang, lines in self.lines.items():
+            for key, line in lines.items():
+                if not key.endswith("_mac"):
+                    continue
+                self.assertIn(key[:-len("_mac")], self.source, f"{key}: the phone's line beside it")
+                for text in generate.forms_of(line):
+                    bare = generate.PLACEHOLDER.sub("", text).lstrip()
+                    self.assertFalse(bare[:1].isupper(), f"{lang} {key} opens with a capital: {text!r}")
+                    self.assertFalse(text.rstrip().endswith((".", "!", "?", "。")), f"{lang} {key} ends a sentence: {text!r}")
+
     def test_a_shipped_language_isnt_left_in_english(self):
         for lang in self.langs["shipped"]:
             if lang == "en":

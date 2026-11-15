@@ -59,6 +59,7 @@
   "settings.devices.sign_out": "Cerrar sesión",
   "settings.devices.sign_out_named": "¿Cerrar la sesión de {device}?",
   "settings.devices.sign_out_prompt": "Cerrar la sesión de {device} en tu cuenta",
+  "settings.devices.sign_out_prompt_mac": "cerrar la sesión de {device} en tu cuenta",
   "settings.devices.sign_out_this": "¿Cerrar la sesión de este dispositivo?",
   "settings.devices.signout_needs_approver": "Para cerrar la sesión de otro dispositivo, usa un dispositivo que pueda aprobar.",
   "settings.devices.this_device": "este dispositivo",
