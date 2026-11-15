@@ -114,6 +114,7 @@ export const nl: Words = {
   approval_count_on_amount: (tool: string) => `Deze Card zou naast de bedraglimieten ook de aanroepen van "${tool}" tellen: een aantal dat niemand heeft afgesproken, dat aanroepen kan tegenhouden die de limieten toestaan. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_rules_on_exceed: (tool: string) => `Deze Card zou boven de limiet van "${tool}" anders beslissen dan de regels waarmee je akkoord ging. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_rules_missing: (tool: string) => `De regels waarmee je akkoord ging, zeggen niet wat "${tool}" boven zijn limiet doet. Er is niets goedgekeurd. Coach laat je de regels opnieuw zien.`,
+  approval_rules_figures: (tool: string) => `Deze Card heeft voor "${tool}" een andere limiet dan de regels waarmee je akkoord ging. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_rules_unagreed: "Coach stelde dit op voordat je akkoord ging met de regels die hij liet zien. Er is niets goedgekeurd. Ga eerst akkoord met de regels, dan stelt Coach het opnieuw op.",
   approval_rules_required: "Coach stelde dit op zonder je de regels te laten zien om mee akkoord te gaan. Er is niets goedgekeurd. Coach laat je eerst de regels zien.",
   setup_every_call_asks: "Elke aanroep heeft je goedkeuring nodig",
