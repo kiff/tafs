@@ -17,6 +17,7 @@ import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, 
 import type { AccountEvent } from "../src/cloud/events.js";
 import { RECIPES } from "../src/recipes.js";
 import { contract } from "./contract.js";
+import { stepWhyKey } from "../src/cloud/steps.js";
 import { connectsToday } from "../src/cloud/recipes.js";
 
 const ME = { tenant_id: "t_acme", subject: "u_ana", api_key: false, capabilities: ["read", "cards.manage"] };
@@ -5131,6 +5132,59 @@ describe("Coach's result, handed over by tafs cloud", () => {
     const again = JSON.parse((await handle({ rawPath: `/v1/tafs/${COACH}/conversation`, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } },
       { ...depsOf(w), coach: memoryCoach(() => w.now) })).body) as { components: Array<{ component: { id: string }; answer?: unknown }> };
     expect(again.components.find((c) => c.component.id === "done")?.answer).toMatchObject({ state: "answered", words: "Refunds is set up", by: "tafs cloud", outcome: { taf_id: NEW } });
+  });
+
+  // What the desktops' Coach conversation reads (kiff/work#2): Coach in GET /v1/setup, its chats, and one chat with a
+  // message that has work, one refused, the owner's words answering a card, the three card kinds, and Coach's lines.
+  it("keeps Coach's setup, its chats and one chat as contracts, for the desktops' Coach conversation", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.access.set("u_ana", { cards_manage: true });
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const read = async (path: string) => {
+      const r = await handle({ rawPath: path, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana" } }, deps);
+      expect(r.statusCode, path).toBe(200);
+      return JSON.parse(r.body);
+    };
+    const setup = await read("/v1/setup");
+    expect(setup.setup).toMatchObject({ id: COACH });
+    contract("setup-coach", "GET /v1/setup once the account has its Coach: Coach's id and name, and its tools as KIFF has them.", setup);
+
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds for my shop", { requester: { kind: "member", id: "u_ana" } });
+    const stored = w.agents.runs.find((r) => r.id === run.id)!;
+    const list = () => w.agents.events.get(stored.session)!;
+    // Each event so many seconds after the owner's first message.
+    const start = Date.parse(list()[0]!.time);
+    const at = (s: number) => new Date(start + s * 1000).toISOString();
+    const push = (s: number, kind: string, body: object) => list().push({ session: stored.session, run: stored.id, seq: list().length + 1, time: at(s), kind, body } as SessionEvent);
+    // Its work: two reads, the first one refused (the connection), then a reply with that work, said once.
+    push(5, "usage", { cost_micro_usd: 1, timing: { ms: 900, waited: [{ tool: "planque", ms: 300, is_error: true, input_hash: "a" }, { tool: "planque", ms: 400, input_hash: "b" }] } });
+    await deps.coach.put(stepWhyKey("t_acme", stored.id), [{ call: "c1", tool: "planque", why: "Coach couldn't connect Shippo yet", refusal: "managed sign-in isn't set up for this app",
+      refused: { vendor: "Shippo", reason: "Why: managed sign-in isn't set up for this app", next: "Next: ask Coach to connect Shippo with its key instead, or to use another app." } }], new Date(w.now.getTime() + 3600_000));
+    w.agents.say(stored, "Shippo's sign-in isn't set up here, so I'll connect Stripe first. A few questions:", at(10));
+    // The three card kinds: questions answered in the owner's own words, an approval answered, and a result tafs cloud answered.
+    w.agents.show(stored, { type: "questions", id: "limits", title: "Refunds' limits", questions: [{ id: "per_refund", text: "Most for one refund?", options: [{ value: "50", label: "€50" }] }] }, at(12));
+    push(20, "answered", { id: "limits", type: "questions", wrote: "Up to €5 each, €50 a day" });
+    w.agents.show(stored, { type: "approval", id: "connect-stripe", grant: "grt_1", title: "Connect Stripe", text: "Approve to connect Stripe for Refunds." }, at(25));
+    push(40, "answered", { id: "connect-stripe", type: "approval", answer: "approve", words: "Approved" });
+    w.agents.show(stored, RESULT, at(50));
+    push(60, "answered", { id: "done", type: "result", answer: { taf_id: RAE }, answered_by: "tafs cloud" });
+    w.agents.say(stored, "Refunds is set up.", at(61));
+    // A line about a taf queued for Coach, read on this chat.
+    await deps.coach.put(coachKeys.notes("t_acme", "u_ana"), [{ at: at(70), taf: "Rae", taf_id: RAE, said: "Refunded $20 to order 42.", text: "Rae: Refunded $20 to order 42." }], new Date(w.now.getTime() + 3600_000));
+
+    const chats = await read(`/v1/tafs/${COACH}/chats`);
+    expect(chats.chats.map((c: { session: string }) => c.session)).toContain(stored.session);
+    contract("coach-chats", "GET /v1/tafs/{id}/chats for Coach: its chats, newest first, each by what the owner asked.", chats);
+    const chat = await read(`/v1/tafs/${COACH}/conversation/${stored.session}`);
+    const messages = chat.messages as Array<{ from: string; work?: unknown; refused?: unknown; answers?: string }>;
+    expect(messages.some((m) => m.work)).toBe(true);
+    expect(messages.some((m) => m.refused)).toBe(true);
+    expect(messages.find((m) => m.answers)?.answers).toBe("limits");
+    expect((chat.components as Array<{ component: { type: string } }>).map((c) => c.component.type)).toEqual(["questions", "approval", "result"]);
+    expect(chat.coach_lines).toEqual([{ at: at(70), taf: "Rae", said: "Refunded $20 to order 42." }]);
+    contract("coach-conversation", "GET /v1/tafs/{id}/conversation/{session} for one Coach chat: a reply with its work, a refused connection, the owner's own words answering a questions card, an approval and a result answered, and a line Coach hasn't read about a taf.", chat);
   });
 
   // Finding 3 of the Android 76 check: a Coach chat left before the hand-over left an agent with a signed Card and no
