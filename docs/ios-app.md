@@ -980,6 +980,13 @@ On the sign-in screen, **Sign in with your other phone**:
   already passed at an earlier commit with nothing changed since that it tests (the app for
   the unit tests, the screens for the UI tests, the iPad's layout for the iPad's), so an
   upload can go straight to the archive; a tag runs everything.
+- **The upload's profiles** (`ios/scripts/asc-profiles.rb`, through the App Store Connect API):
+  `bot.tafs.app` with Push, Time Sensitive Notifications (turned on once in the developer
+  portal, since the API can't) and Associated Domains, turned on by the script the first time,
+  for `webcredentials:kiff.dev`. kiff.dev's `apple-app-site-association` lists
+  `R54YWFRK4B.bot.tafs.app`, so the app's passkeys are kiff.dev's, at the origin KIFF accepts.
+  A profile made before a capability was on is replaced. Only the upload signs: tests,
+  screenshots and the Mac build don't.
 - **Screenshot runs** are manual runs with `upload` off and `screenshots` set (`full`, `key`
   or `languages`; it's `none` by default). They wait for an empty queue: one stops at once,
   before it takes a macOS runner, while another manual or tag run is queued or running, so
