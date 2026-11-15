@@ -19,7 +19,13 @@
             "name": "Rae"
           }
         ],
-        "line": "Sign in · Sign in again · Used by Rae"
+        "line": "Sign in · Sign in again · Used by Rae",
+        "needed_by": [
+          {
+            "taf": "taf-aaaa0000000000000000",
+            "name": "Rae"
+          }
+        ]
       },
       {
         "entry": "stripe@3",
@@ -39,7 +45,13 @@
             "name": "Rae"
           }
         ],
-        "line": "Sign in · Connected · Used by Rae"
+        "line": "Sign in · Connected · Used by Rae",
+        "needed_by": [
+          {
+            "taf": "taf-aaaa0000000000000000",
+            "name": "Rae"
+          }
+        ]
       },
       {
         "entry": "qonto@2",
@@ -51,7 +63,8 @@
         "state": "available",
         "connected": false,
         "method": "key",
-        "line": "With a key"
+        "line": "With a key",
+        "needed_by": []
       },
       {
         "entry": "connector:p:crm",
@@ -63,7 +76,8 @@
         "words": "Needs setting up first. Ask tafs to enable it.",
         "connected": false,
         "method": "sign_in",
-        "line": "Sign in · Needs setting up"
+        "line": "Sign in · Needs setting up",
+        "needed_by": []
       },
       {
         "entry": "connector:p:typeform",
@@ -74,7 +88,8 @@
         "state": "available",
         "connected": false,
         "method": "sign_in",
-        "line": "Sign in"
+        "line": "Sign in",
+        "needed_by": []
       }
     ],
     "by_key": true,

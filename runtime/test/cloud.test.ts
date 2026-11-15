@@ -6808,3 +6808,79 @@ describe("the first run", () => {
     expect(w.agents.calls.filter((c) => c.startsWith("trigger"))).toEqual([]);
   });
 });
+
+// The owner's 105 retest: Stripe connected under "Unanswered emails", a Gmail taf, because the phone took the only
+// taf there was. Starting a connection from Connect apps now goes only to a taf that needs the app (needed.ts).
+describe("Connect apps: which taf a connection goes to", () => {
+  const DESK = "taf-dddd0000000000000000";
+  async function post(w: ReturnType<typeof world>, entry: string, taf: string, opts: { proof?: string; grants?: unknown[]; mandates?: unknown[]; token?: string } = {}) {
+    const started: string[] = [];
+    const ok = (v: unknown) => new Response(JSON.stringify(v), { status: 200 });
+    const r = await handle({ rawPath: `/v1/connect/apps/${encodeURIComponent(entry)}`, requestContext: { http: { method: "POST" } },
+      headers: { Authorization: `Bearer ${opts.token ?? "ana_co"}`, "content-type": "application/json", ...(opts.proof ? { "planque-device-signature": opts.proof } : {}) },
+      body: JSON.stringify({ taf }) },
+    { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.startsWith("https://planque.test/v1/accounts/t_acme/catalog?") || url === "https://planque.test/v1/accounts/t_acme/catalog") return ok({ entries: [
+        { entry: "stripe@3", vendor: "Stripe", title: "Stripe", how: "oauth", state: "available" },
+        { entry: "connector:p:gmail", vendor: "gmail", title: "Gmail", how: "oauth", state: "available" },
+        { entry: "typeform@1", vendor: "Typeform", title: "Typeform", how: "oauth", state: "available" },
+      ] });
+      if (url.includes("/catalog/") && url.endsWith("/grants") && init?.method === "POST") {
+        started.push(`${decodeURIComponent(url.split("/catalog/")[1]!.replace(/\/grants$/, ""))} for ${JSON.parse(String(init.body)).agent}`);
+        return ok({ grant: { id: "g-new" } });
+      }
+      if (url === "https://planque.test/v1/accounts/t_acme/connections") return ok({ connections: [
+        { agent: "desk", vendor: "Stripe", kind: "vendor_sign_in", entry: "stripe@3", status: "connected" },
+      ] });
+      if (url === "https://planque.test/v1/accounts/t_acme/grants") return ok({ grants: opts.grants ?? [] });
+      if (url.startsWith("https://planque.test/")) return new Response("{}", { status: 500 });
+      if (url.endsWith("/v1/me/mandates")) return ok({ mandates: opts.mandates ?? [] });
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] });
+    return { status: r.statusCode, body: JSON.parse(r.body) as Record<string, unknown>, started };
+  }
+  function tafs() {
+    const w = world();
+    w.tafs.held.set(`t_acme#${NEW}`, { id: NEW, name: "Refunds", job: "refunds", kiffAgent: "chargebacks", nameClaim: "c", created: "2026-10-14T09:00:00Z", recipe: "refunds-within-a-limit" });
+    w.tafs.held.set(`t_acme#${DESK}`, { id: DESK, name: "Unanswered emails", job: "custom", kiffAgent: "desk", nameClaim: "d", created: "2026-10-14T09:00:00Z" });
+    return w;
+  }
+
+  // kiff-qa's 1: an app no taf needs (here, Stripe for a taf with no recipe or Card using it) is refused.
+  it("refuses a taf that doesn't use the app (not_needed), and starts nothing", async () => {
+    const w = tafs();
+    const r = await post(w, "typeform@1", NEW);
+    expect(r).toMatchObject({ status: 409, body: { code: "not_needed" } });
+    expect(String(r.body.error ?? r.body.message)).toContain("Refunds doesn't use this app: ask Coach to set it up");
+    expect(r.started).toEqual([]);
+  });
+
+  // kiff-qa's 4: an app two tafs need is accepted for each.
+  it("starts it for a taf whose recipe needs the app, and for one whose Card uses it", async () => {
+    const w = tafs();
+    expect((await post(w, "stripe@3", NEW)).started).toEqual(["stripe@3 for chargebacks"]);
+    const card = await post(w, "stripe@3", DESK, { proof: "proof-1",
+      grants: [{ id: "g-stripe", status: "connected", entry: "stripe@3", tools: ["refund_charge_k3"], request: { agent: "chargebacks" } }],
+      mandates: [{ id: "m1", subject: "desk", active: true, grants: [{ action: "refund_charge_k3" }] }] });
+    expect(card.started).toEqual(["stripe@3 for desk"]);
+  });
+
+  // kiff-qa's 5, at the start: with the grants and Cards read, holding the wrong connection doesn't make it needed.
+  it("with the phone's grants read, a taf that only holds a connection its Card doesn't use is refused; without them, its reconnect goes", async () => {
+    const w = tafs();
+    const read = await post(w, "stripe@3", DESK, { proof: "proof-1",
+      grants: [{ id: "g-wrong", status: "connected", entry: "stripe@3", tools: ["refund_charge_k3"], request: { agent: "desk" } }], mandates: [] });
+    expect(read).toMatchObject({ status: 409, body: { code: "not_needed" } });
+    expect((await post(w, "stripe@3", DESK)).started).toEqual(["stripe@3 for desk"]);
+  });
+
+  // kiff-qa's 2 and 3: another account's taf, or one this person can't manage, is refused before need is asked.
+  it("refuses another account's taf, and a taf for someone who can't manage Cards", async () => {
+    const w = tafs();
+    w.tafs.held.set(`t_other#taf-oooo0000000000000000`, { id: "taf-oooo0000000000000000", name: "Theirs", job: "refunds", kiffAgent: "theirs", nameClaim: "o", created: "2026-10-14T09:00:00Z", recipe: "refunds-within-a-limit" });
+    expect((await post(w, "stripe@3", "taf-oooo0000000000000000")).status).toBe(404);
+    const viewer = await post(w, "stripe@3", NEW, { token: "viewer" });
+    expect(viewer.status).toBe(403);
+    expect(viewer.started).toEqual([]);
+  });
+});
