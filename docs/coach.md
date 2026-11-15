@@ -296,7 +296,18 @@ things (`runtime/src/cloud/approval.ts`):
   skipped, and nothing is signed. A draft with no Card at all (KIFF's `null`, or an empty list)
   is answered `failed: …` instead, so Coach drafts one rather than the card asking it again.
   `POST /v1/connect/grants/{grant}/check` runs the same checks with nothing signed, for a caller
-  that confirms the draft itself (the e2e), and answers with each refusal's reason code.
+  that confirms the draft itself (the e2e), and answers with each refusal's reason code, and
+  `redraft: true` on a refusal a new draft mends (below).
+  The same checks run as the phone reads the chat, before an approval card over a draft is
+  drawn (a connected app's Card alone), with the grants that read has, read with the phone's
+  proof. A refusal a new draft mends (no Card, a vendor name, a tool on no Card or a stray one,
+  an on-demand app's write let run, a lifetime count or total, a day's total twice) goes to Coach
+  then, as the card's answer, and the card is drawn answered, never with Approve: the owner
+  approves the redraft, one Card, not a refused one and then another. It's told once per draft
+  version, across phones (a claim, then the answer kept a day). Anything else, or a read past
+  its time, or a person whose role can't manage Cards or who hasn't agreed to AI use, draws the
+  card as before, and the tap checks it again. Every refusal a new draft mends ends "Change only
+  what this names; every other line stays exactly as agreed.", at the tap too.
   A Card covers a tool by the name planque registered for this taf (`request.tools[].name`),
   never the vendor's own (`tool`). When the vendor's name was taken in KIFF, planque gives the
   tool a free one (`list_charges_noyy`). A draft whose Card names the vendor's name

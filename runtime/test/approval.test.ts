@@ -62,7 +62,8 @@ function net(s: Services) {
       return new Response(JSON.stringify({ grants: s.grants }), { status: 200 });
     }
     const token = String(headers.authorization ?? "").replace("Bearer ", "");
-    const me = token === "ana" ? ME : token === "bo" ? BO : token === "cy" ? CY : undefined;
+    // ana-ro: Ana on a session whose role can't manage Cards (view only).
+    const me = token === "ana" ? ME : token === "ana-ro" ? { ...ME, capabilities: ["read"] } : token === "bo" ? BO : token === "cy" ? CY : undefined;
     if (!me) return new Response("{}", { status: 401 });
     if (url.endsWith("/v1/me/access")) return new Response(JSON.stringify({ agents: { "setup-acme": { use: true, oversee: false, manage: true } } }), { status: 200 });
     if (url.endsWith("/v1/me")) return new Response(JSON.stringify(me), { status: 200 });
@@ -590,7 +591,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const ask = async () => (await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
     const r = await ask();
     expect(r).toMatchObject({ outcome: "answered", note: WORDS.registeredName("list_charges", "list_charges_noyy") });
-    expect(String(r.answer)).toBe(`failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy": "list_charges" is another connection's name in KIFF, so it isn't signed. Draft it again with "list_charges_noyy" in its place.`);
+    expect(String(r.answer)).toBe(`failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy": "list_charges" is another connection's name in KIFF, so it isn't signed. Draft it again with "list_charges_noyy" in its place. Change only what this names; every other line stays exactly as agreed.`);
     // The list tool marked as Setup's own read (setup_reads): the coverage check leaves it out, and the earlier connection's
     // "list_charges" passes the stray check, so before this check the draft was signed with the taf's list tool on no Card.
     const setupList = tools.map((t) => (t.tool === "list_charges" ? { ...t, setup_reads: true } : t));
@@ -1599,7 +1600,7 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     try {
       const r = await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" });
       expect(r.status).toBe(200);
-      expect(r.body).toEqual({ outcome: "answered", code: "vendor_name", note: WORDS.registeredName("list_charges", "list_charges_noyy"),
+      expect(r.body).toEqual({ outcome: "answered", code: "vendor_name", redraft: true, note: WORDS.registeredName("list_charges", "list_charges_noyy"),
         answer: expect.stringMatching(/^failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy"/) });
       // The draft over the registered name passes: ok, with the version it was checked at.
       s.drafts.drf_1.cards = card(["refund_charge", "list_charges_noyy"]);
@@ -1630,7 +1631,10 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "no_card", note: WORDS.noCard });
     // A draft for another taf than the grant's, and a grant planque doesn't list for this account.
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "someone-else", cards: card(["refund_charge", "list_charges_noyy"]) };
-    expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "other_taf" });
+    const otherTaf = (await check({ draft: "drf_1", shown_draft: "v3" })).body;
+    expect(otherTaf).toMatchObject({ outcome: "answered", code: "other_taf" });
+    // Not one a new draft mends: no redraft mark, so a caller leaves it to the tap.
+    expect(otherTaf.redraft).toBeUndefined();
     expect((await check({ draft: "drf_1", shown_draft: "v3" }, "/v1/connect/grants/g_9/check")).body).toMatchObject({ outcome: "answered", code: "no_grant" });
     // KIFF has no such draft for this person.
     expect((await check({ draft: "drf_9", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "no_draft" });
@@ -1649,6 +1653,131 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
       expect((await w.call("POST", CHECK, body)).status).toBe(400);
     }
     expect((await w.call("POST", "/v1/connect/grants/g%2F1/check", { draft: "drf_1", shown_draft: "v3" })).status).toBe(400);
+    expect(s.checks).toEqual([]);
+  });
+});
+
+// Eval 43690861487's Refunds: the owner approved a Card that Approve then refused (a renamed tool's vendor name), and
+// approved the redraft: two Card approvals for one app. The same check runs as the phone reads the chat, before the card
+// is drawn: a refusal a redraft mends goes to Coach then, and the card is never drawn with Approve.
+describe("a Card draft is checked as the phone reads the chat, before its card is drawn", () => {
+  const CHAT = `/v1/tafs/${COACH}/conversation`;
+  const tools = [{ tool: "list_charges", name: "list_charges_noyy", title: "List charges", read_only: true },
+    { tool: "create_refund", name: "refund_charge", title: "Refund a charge" }];
+  const card = (actions: string[]) => [{ id: "c1", subject: "refunds-x", grants: actions.map((action) => ({ action })), on_exceed: "owner", aggregates: [] }];
+  const a1 = (r: { body: Record<string, unknown> }) =>
+    (r.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: { state: string; words: string } }>).find((c) => c.component.id === "a1");
+  async function refused() {
+    const s = services();
+    s.grants = [grant({ status: "connected" }, { tools })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: card(["refund_charge", "list_charges"]) };
+    return { s, w: await world(s, { draft: "drf_1" }) };
+  }
+
+  it("tells Coach Approve's refusal once, draws the card answered with no Approve, and logs the code only", async () => {
+    const { s, w } = await refused();
+    const logged: string[] = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { logged.push(a.join(" ")); });
+    let first, again;
+    try {
+      first = await w.call("GET", CHAT, undefined);
+      again = await w.call("GET", CHAT, undefined);
+    } finally {
+      spy.mockRestore();
+    }
+    expect(first.status).toBe(200);
+    // Coach heard the refusal as the card's answer, with the line that keeps the rest of the draft as agreed.
+    expect(String(w.told()?.answer)).toMatch(/^failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy".* Change only what this names; every other line stays exactly as agreed\.$/);
+    // The card is answered on this read already: no signs, so no Approve.
+    const c = a1(first);
+    expect(c?.answer?.state).toBe("answered");
+    expect(c?.component.signs).toBeUndefined();
+    // A second read tells Coach nothing more and checks nothing again.
+    expect(a1(again)?.answer?.state).toBe("answered");
+    expect(logged.filter((l) => l.startsWith("approval precheck:"))).toEqual(["approval precheck: vendor_name"]);
+    expect(logged.join("\n")).not.toMatch(/drf_1|list_charges|refund_charge/);
+    // Nothing was signed or asked of KIFF's signature check; the grants were read with the phone's own proof.
+    expect(s.checks).toEqual([]);
+    expect(s.proofs.every((p) => p === PROOF)).toBe(true);
+    // The tap on the card it answered finds it waits no more.
+    expect((await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).status).toBe(409);
+  });
+
+  it("a draft that passes is drawn as before, its Card to sign", async () => {
+    const { s, w } = await refused();
+    s.drafts.drf_1.cards = card(["refund_charge", "list_charges_noyy"]);
+    const c = a1(await w.call("GET", CHAT, undefined));
+    expect(c?.answer).toBeUndefined();
+    expect(c?.component.signs).toEqual({ card: true, takes: "fingerprint" });
+    expect(w.told()).toBeUndefined();
+  });
+
+  it("another phone's read, once Coach was told and before its answer is in the chat, draws the card answered and tells nothing", async () => {
+    const { w } = await refused();
+    const kept = new Date(NOW.getTime() + 60_000);
+    await w.coach.once("t_acme#draft-precheck#drf_1#v3", kept);
+    await w.coach.put("t_acme#draft-precheck-told#drf_1#v3", { answer: "failed: the Card covers \"list_charges\"", at: NOW.toISOString() }, kept);
+    const c = a1(await w.call("GET", CHAT, undefined));
+    expect(c?.answer?.state).toBe("answered");
+    expect(c?.component.signs).toBeUndefined();
+    expect(w.told()).toBeUndefined();
+    // Claimed and not yet told (the other phone's check in flight): drawn as before.
+    const { w: w2 } = await refused();
+    await w2.coach.once("t_acme#draft-precheck#drf_1#v3", kept);
+    expect(a1(await w2.call("GET", CHAT, undefined))?.answer).toBeUndefined();
+    expect(w2.told()).toBeUndefined();
+  });
+
+  it("leaves to the tap what a redraft doesn't mend, a draft read at another version, and a read that couldn't check", async () => {
+    // A draft for another taf than the grant's: Approve's answer at the tap, as before.
+    const other = await refused();
+    other.s.drafts.drf_1.agent_id = "someone-else";
+    expect(a1(await other.w.call("GET", CHAT, undefined))?.answer).toBeUndefined();
+    expect(other.w.told()).toBeUndefined();
+    // KIFF's read without the Cards: not read whole, so the next read checks again, and then tells Coach.
+    const unread = await refused();
+    const cards = unread.s.drafts.drf_1.cards;
+    delete unread.s.drafts.drf_1.cards;
+    expect(a1(await unread.w.call("GET", CHAT, undefined))?.answer).toBeUndefined();
+    expect(unread.w.told()).toBeUndefined();
+    unread.s.drafts.drf_1.cards = cards;
+    expect(a1(await unread.w.call("GET", CHAT, undefined))?.answer?.state).toBe("answered");
+    expect(unread.w.told()?.answer).toMatch(/^failed: /);
+  });
+
+  it("tells Coach on the next read when kiff/agents couldn't take the answer", async () => {
+    const { w } = await refused();
+    const answerCard = w.agents.api.answerCard;
+    w.agents.api.answerCard = async () => { throw new Error("kiff/agents is down"); };
+    const down = await w.call("GET", CHAT, undefined);
+    expect(down.status).toBe(200);
+    expect(a1(down)?.answer).toBeUndefined();
+    w.agents.api.answerCard = answerCard;
+    expect(a1(await w.call("GET", CHAT, undefined))?.answer?.state).toBe("answered");
+    expect(w.told()?.answer).toMatch(/^failed: /);
+  });
+
+  it("checks nothing for a reader whose role can't manage Cards, or a phone that sent no proof", async () => {
+    const { w } = await refused();
+    expect(a1(await w.call("GET", CHAT, undefined, { "planque-device-signature": "" }))?.answer).toBeUndefined();
+    expect(w.told()).toBeUndefined();
+    const viewOnly = await w.call("GET", CHAT, undefined, {}, undefined, "ana-ro");
+    expect(viewOnly.status).toBe(200);
+    expect(a1(viewOnly)?.answer).toBeUndefined();
+    expect(w.told()).toBeUndefined();
+    // The same draft, read by a manager afterwards: checked then.
+    expect(a1(await w.call("GET", CHAT, undefined))?.answer?.state).toBe("answered");
+  });
+
+  it("checks each draft version once, across phones: a redraft at a new version is checked anew", async () => {
+    const { s, w } = await refused();
+    await w.call("GET", CHAT, undefined);
+    expect(w.told()?.answer).toMatch(/^failed: /);
+    // What Coach was told is kept for the version, so another phone draws the card answered too.
+    expect(await w.coach.get("t_acme#draft-precheck-told#drf_1#v3")).toEqual({ answer: w.told()?.answer, at: NOW.toISOString() });
+    // The claim is kept per draft and version: the same version, read again, is drawn answered without a check.
+    expect(await w.coach.once("t_acme#draft-precheck#drf_1#v3", new Date(NOW.getTime() + 60_000))).toBe(false);
+    expect(await w.coach.once("t_acme#draft-precheck#drf_1#v4", new Date(NOW.getTime() + 60_000))).toBe(true);
     expect(s.checks).toEqual([]);
   });
 });
