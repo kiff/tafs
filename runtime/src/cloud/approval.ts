@@ -116,8 +116,48 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
       const per = capped.resource ? `per: "${capped.resource}" (its resource_argument)` : "per its resource_argument";
       return { outcome: "answered", answer: `failed: the draft counts "${capped.tool}" ${capped.limit} in its whole life, across every item, so the taf would stop after its first. A limit for each item is a total with ${per}: count, lifetime, limit ${capped.limit}, per that argument, beside the day's total. With no resource_argument, it goes in the taf's instructions, and the rules say KIFF can't count it. Draft it again.`, note: W.lifetimeCap(capped.tool) };
     }
+    // A tool's amount over a day is counted once across the draft's Cards (Eval 43666453786: a held per-refund Card also
+    // got a day's total, so past it the refund waited for the owner where the rules said refuse). Two day totals of the
+    // same amount on one tool make the stricter one decide past the limit, whatever was agreed. Never signed.
+    const twice = dayTotalTwice(grant, draft.cards);
+    if (twice) {
+      return { outcome: "answered", answer: `failed: the draft counts "${twice.tool}"'s ${twice.quantity} over a day on two Cards: ${twice.first.limit} on one whose on_exceed is "${twice.first.onExceed}", and ${twice.second.limit} on one whose on_exceed is "${twice.second.onExceed}". A day's total appears once, at the agreed amount, on the Card whose on_exceed is the agreed answer; a held per-action limit's Card has no day's total. Draft it again.`, note: W.dayTotalTwice(twice.tool) };
+    }
   }
   return { draft: draft as NonNullable<typeof draft> & { version: string } };
+}
+
+/**
+ * The first tool whose amount the draft's Cards count over a calendar day more than once (the same sum(...) quantity,
+ * with no per), across its Cards or on one, with both limits and what each Card does past them. A day's total on the
+ * amount beside a count a day, or beside an hour's or a lifetime total, is a different total and is kept. The tool is
+ * named as the connection titles it when it does.
+ */
+export function dayTotalTwice(grant: ApprovalGrant, cards: unknown[]): { tool: string; quantity: string; first: { limit: number; onExceed: string }; second: { limit: number; onExceed: string } } | undefined {
+  const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+  const seen = new Map<string, { limit: number; onExceed: string }>();
+  for (const raw of cards) {
+    const card = raw as { grants?: unknown; aggregates?: unknown; on_exceed?: unknown };
+    if (!Array.isArray(card.grants) || !Array.isArray(card.aggregates)) continue;
+    const onExceed = card.on_exceed === "refuse" ? "refuse" : "owner";
+    for (const a of card.aggregates as Array<{ quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown }>) {
+      const quantity = fold(a.quantity);
+      if (!quantity.startsWith("sum(") || fold(a.window) !== "calendar_day" || fold(a.per)) continue;
+      const limit = typeof a.limit === "number" ? a.limit : 0;
+      for (const g of card.grants as Array<{ action?: unknown }>) {
+        const action = fold(g.action);
+        if (!action) continue;
+        const key = `${action}|${quantity}`;
+        const first = seen.get(key);
+        if (first) {
+          const t = (grant.request.tools ?? []).find((x) => fold(x.name) === action);
+          return { tool: t?.title || (g.action as string).trim(), quantity: quantity.slice(4, -1) || quantity, first, second: { limit, onExceed } };
+        }
+        seen.set(key, { limit, onExceed });
+      }
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -342,6 +382,7 @@ export function approvalWords(lang: Lang = "en") {
     uncovered: w.approval_uncovered,
     stray: w.approval_stray,
     lifetimeCap: w.approval_lifetime_cap,
+    dayTotalTwice: w.approval_day_total_twice,
     onDemandLetsRun: w.approval_on_demand,
     criticalKey: w.approval_critical_key,
     driveKey: w.approval_drive_key,
