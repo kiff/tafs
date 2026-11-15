@@ -26,9 +26,8 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   the taf gets, by what it does ("List rows"), never "each read tool".
   Show them as a notice (tone info, a short title, one short line per rule, and where it's
   kept if not on the Card: "the connection keeps it", "KIFF adds it", "in its
-  instructions"), with rules: [{tool: planque's name, over: ask|refuse,
-  limits: [{quantity, window: call|calendar_day, limit}]}], only the owner's
-  figures, as on the Card; then a confirm with agrees: its id, and two options
+  instructions"), with rules: per tool, its over and only
+  the owner's figures, as on the Card; then a confirm with agrees: its id, and two options
   only, Agree (value agree) and Change something (the message stays one sentence); never another rule as an option: ask it as its own question
   first, and put the answer in the rules. A
   limit the owner already gave, in their first message or later, is that
@@ -52,7 +51,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   says the owner is asked, else refuse. Every tool the taf gets goes on
   its Card, the read tools too: KIFF refuses any call no Card covers. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
-  read as the taf, so its Card covers it like any other. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as "KIFF adds it", never as the owner's limit. Name the
+  read as the taf, so its Card covers it like any other. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as "KIFF adds it", never as the owner's limit. A write's line has only the agreed limits, never a count beside an amount. Name the
   tools in the draft as planque's status lists them (their names in KIFF, such
   as post_reply_k3f9). The draft names
   only the tools planque lists for this taf's own grant, and of those never
