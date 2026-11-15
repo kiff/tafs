@@ -88,7 +88,7 @@ describe("a taf's server-composed setup", () => {
     const en = lines("en");
     expect(en).toEqual(["€5.00 per action", "€50.00 a day", "1 call a day", "Needs your approval for every call", "See its Card",
       "Step 1", "Not used by the current workflow", "Not used by the current workflow", "App action",
-      "1 call in any 7 days for each invoice id", "€100.00 in total a day for each order"]);
+      "1 call in any 7 days for each invoice", "€100.00 in total a day for each order"]);
     for (const lang of LANGS.filter((l) => l !== "en")) {
       const said = lines(lang);
       expect(said, lang).toHaveLength(en.length);
@@ -96,7 +96,14 @@ describe("a taf's server-composed setup", () => {
     }
     // Polish counts in three forms.
     const pl = (n: number) => eachItemWords({ quantity: "count", limit: n, window: "calendar_day", per: "order" }, "pl");
-    expect([pl(1), pl(2), pl(5)]).toEqual(["1 wywołanie dziennie na każdy order", "2 wywołania dziennie na każdy order", "5 wywołań dziennie na każdy order"]);
+    expect([pl(1), pl(2), pl(5)]).toEqual(["1 wywołanie dziennie na każde zamówienie", "2 wywołania dziennie na każde zamówienie", "5 wywołań dziennie na każde zamówienie"]);
+    // The item in each language from tafs cloud's words, never the vendor's argument in English; a plain word for any other.
+    const day = (per: string) => (lang: (typeof LANGS)[number]) => eachItemWords({ quantity: "count", limit: 1, window: "calendar_day", per }, lang);
+    expect(day("payment_intent")("es")).toBe("1 llamada al día por cada pago");
+    expect(day("Payment_Intent_ID")("en")).toBe("1 call a day for each payment");
+    expect(day("ticket_ref")("en")).toBe("1 call a day for each item");
+    expect(day("paid")("en")).toBe("1 call a day for each item");
+    for (const lang of LANGS) expect(day("payment_intent")(lang), lang).not.toMatch(/payment.intent|_/i);
   });
   it("keeps vendor-supplied display names and removes a server-id suffix only at the source", () => {
     expect(appDisplayName({ ...grant, vendor: "Example Suite" })).toBe("Example Suite");

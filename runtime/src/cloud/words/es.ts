@@ -119,6 +119,7 @@ export const es: Words = {
   each_item_calls: (n, form, window, item) => `${n} ${form === "one" ? "llamada" : "llamadas"} ${window} por cada ${item}`,
   each_item_amount: (amount, over, item) => `${amount} ${over} por cada ${item}`,
   each_item_total_day: "en total al día",
+  each_item_name: (key) => ({ payment_intent: "pago", payment: "pago", charge: "cargo", invoice: "factura", customer: "cliente", order: "pedido", subscription: "suscripción", refund: "reembolso" } as Record<string, string>)[key] ?? "elemento",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} se configuró hoy, así que cada cambio debe preguntarte primero; esta Card dejaría que «${tool}» se ejecute sin preguntar. No se aprobó nada. Coach la redacta de nuevo.`,
   approval_critical_key: "Esto amplía lo que el taf puede hacer, así que necesita tu huella digital. No se aprobó nada; vuelve a aprobarlo con tu huella digital.",
   approval_drive_key: "Dejar que Coach maneje la app necesita tu huella digital. No se inició nada; vuelve a aprobarlo con tu huella digital.",

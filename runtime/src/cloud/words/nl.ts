@@ -119,6 +119,7 @@ export const nl: Words = {
   each_item_calls: (n, form, window, item) => `${n} ${form === "one" ? "aanroep" : "aanroepen"} ${window} per ${item}`,
   each_item_amount: (amount, over, item) => `${amount} ${over} per ${item}`,
   each_item_total_day: "in totaal per dag",
+  each_item_name: (key) => ({ payment_intent: "betaling", payment: "betaling", charge: "afschrijving", invoice: "factuur", customer: "klant", order: "bestelling", subscription: "abonnement", refund: "terugbetaling" } as Record<string, string>)[key] ?? "onderdeel",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} is vandaag ingesteld, dus elke wijziging moet het je eerst vragen; deze Card zou "${tool}" zonder vragen laten uitvoeren. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_critical_key: "Dit verruimt wat het taf mag, dus het vraagt je vingerafdruk. Er is niets goedgekeurd; keur het opnieuw goed met je vingerafdruk.",
   approval_drive_key: "Coach de app laten bedienen vraagt je vingerafdruk. Er is niets gestart; keur het opnieuw goed met je vingerafdruk.",

@@ -119,6 +119,7 @@ export const it: Words = {
   each_item_calls: (n, form, window, item) => `${n} ${form === "one" ? "chiamata" : "chiamate"} ${window} per ogni ${item}`,
   each_item_amount: (amount, over, item) => `${amount} ${over} per ogni ${item}`,
   each_item_total_day: "in totale al giorno",
+  each_item_name: (key) => ({ payment_intent: "pagamento", payment: "pagamento", charge: "addebito", invoice: "fattura", customer: "cliente", order: "ordine", subscription: "abbonamento", refund: "rimborso" } as Record<string, string>)[key] ?? "elemento",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} è stato configurato oggi, quindi ogni modifica deve chiederti prima; questa Card lascerebbe eseguire «${tool}» senza chiedere. Non è stato approvato nulla. Coach la riscrive.`,
   approval_critical_key: "Questo amplia ciò che il taf può fare, quindi serve la tua impronta. Non è stato approvato nulla; approva di nuovo con la tua impronta.",
   approval_drive_key: "Per lasciare che Coach usi l'app serve la tua impronta. Non è partito nulla; approva di nuovo con la tua impronta.",

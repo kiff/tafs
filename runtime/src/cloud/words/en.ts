@@ -126,6 +126,8 @@ export const en = {
   each_item_calls: (n: number, form: Intl.LDMLPluralRule, window: string, item: string) => `${n} ${form === "one" ? "call" : "calls"} ${window} for each ${item}`,
   each_item_amount: (amount: string, over: string, item: string) => `${amount} ${over} for each ${item}`,
   each_item_total_day: "in total a day",
+  /** The item a limit for each item counts by, from the argument KIFF names (payment_intent), and a plain word for any other. */
+  each_item_name: (key: string) => ({ payment_intent: "payment", payment: "payment", charge: "charge", invoice: "invoice", customer: "customer", order: "order", subscription: "subscription", refund: "refund" } as Record<string, string>)[key] ?? "item",
   approval_on_demand: (vendor: string, tool: string) => `${vendor} was set up today, so every change must ask you first; this Card would let "${tool}" run without asking. Nothing was approved. Coach drafts it again.`,
   approval_critical_key: "This widens what the taf may do, so it takes your fingerprint. Nothing was approved; approve it again with your fingerprint.",
   approval_drive_key: "Letting Coach drive the app takes your fingerprint. Nothing started; approve it again with your fingerprint.",
