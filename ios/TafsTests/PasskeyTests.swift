@@ -188,4 +188,26 @@ final class PasskeyTests: XCTestCase {
         XCTAssertNotNil(model.passkeysError)
         XCTAssertTrue(sent("DELETE", "/v1/me/passkeys/pk_1").isEmpty)
     }
+
+    /// What Devices says once Add is over: added (also when it was there already), nothing for a cancel, try
+    /// again for a sheet left open, and a passkey made but not added says it's left in this phone's passwords.
+    func testDevicesSaysHowAddingEnded() {
+        XCTAssertEqual(DevicesView.words(for: .added, role: "owner"), Words.Settings.Devices.passkeyAdded)
+        XCTAssertEqual(DevicesView.words(for: .alreadyThere, role: "owner"), Words.Settings.Devices.passkeyAdded)
+        XCTAssertNil(DevicesView.words(for: .cancelled, role: "owner"))
+        XCTAssertEqual(DevicesView.words(for: .tooSlow, role: "owner"), Words.Settings.Devices.passkeyTooSlow)
+        XCTAssertEqual(DevicesView.words(for: .notRegistered(nil), role: "owner"), Words.Settings.Devices.passkeyNotRegistered)
+        XCTAssertEqual(DevicesView.words(for: .notRegistered("KIFF said no"), role: "owner"), Words.Settings.Devices.passkeyNotRegistered + "\nKIFF said no")
+        XCTAssertEqual(DevicesView.words(for: .failed("no Face ID"), role: "owner"), Words.Settings.Devices.passkeyNotMade(why: "no Face ID"))
+        XCTAssertEqual(DevicesView.words(for: .notAllowed, role: "editor"), Words.Settings.Devices.passkeyAdminsOnly, "only owners and admins")
+        XCTAssertEqual(DevicesView.words(for: .notAllowed, role: "admin"), Words.Settings.Devices.passkeyNeedsApprover, "an admin on a session that doesn't approve")
+    }
+
+    /// Removing one that didn't go through says what and why; a failed list says it couldn't be loaded.
+    func testAFailedListSaysItCouldntBeLoaded() async {
+        let model = await signedIn(TwoKeySigner(), maker: StubPasskeyMaker())
+        StubProtocol.responses["GET /v1/me/passkeys"] = (500, #"{"error":"down"}"#)
+        await model.refreshPasskeys()
+        XCTAssertTrue(model.passkeysError?.hasPrefix("Couldn't load your passkeys.") == true, model.passkeysError ?? "nil")
+    }
 }

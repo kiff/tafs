@@ -1215,7 +1215,7 @@ final class AppModel: ObservableObject {
             passkeysError = nil
         } catch {
             guard gen == accountGeneration else { return }
-            passkeysError = "\(error.localizedDescription)"
+            passkeysError = Words.Settings.Devices.passkeysNotLoaded(why: "\(error.localizedDescription)")
         }
     }
 
@@ -1308,7 +1308,9 @@ final class AppModel: ObservableObject {
             signature = try await signer.signApproval(prepared.message, reason: reason)
         } catch {
             // The person's own cancel says nothing; a key that couldn't sign says why.
-            if gen == accountGeneration, ApprovalReadiness.cancelled(error) == nil { passkeysError = "\(error.localizedDescription)" }
+            if gen == accountGeneration, ApprovalReadiness.cancelled(error) == nil {
+                passkeysError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+            }
             return false
         }
         guard gen == accountGeneration else { return false }
@@ -1316,7 +1318,7 @@ final class AppModel: ObservableObject {
             try await kiff.removePasskey(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
         } catch {
             guard gen == accountGeneration else { return false }
-            passkeysError = "\(error.localizedDescription)"
+            passkeysError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
             return false
         }
         await refreshPasskeys()
