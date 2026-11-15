@@ -11,9 +11,23 @@ final class ApprovalReadinessTests: XCTestCase {
         XCTAssertEqual(ApprovalReadiness.from(.passcodeNotSet, biometry: .touchID), .noPasscode)
         // The same code for no Face ID at all and for Face ID turned off for tafs.
         XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .none), .unsupported)
-        XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .faceID), .offForTafs)
+        XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .faceID, mac: false), .offForTafs)
         XCTAssertEqual(ApprovalReadiness.from(.biometryLockout, biometry: .faceID), .unavailable(lockedOut: true))
         XCTAssertEqual(ApprovalReadiness.from(.invalidContext, biometry: .touchID), .unavailable(lockedOut: false))
+    }
+
+    /// A Mac has no Touch ID switch for one app, so it never sends the person to turn it on
+    /// for tafs: Touch ID out of reach (the lid closed, the keyboard away) is "can't be used
+    /// right now". The other states are the iPad's.
+    func testAMacNeverSaysTouchIDIsOffForTafs() {
+        XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .touchID, mac: true), .unavailable(lockedOut: false))
+        XCTAssertFalse(ApprovalReadiness.from(.biometryNotAvailable, biometry: .touchID, mac: true).opensSettings)
+        XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .none, mac: true), .unsupported)
+        XCTAssertEqual(ApprovalReadiness.from(nil, biometry: .touchID, mac: true), .ready)
+        XCTAssertEqual(ApprovalReadiness.from(.biometryNotEnrolled, biometry: .touchID, mac: true), .noneEnrolled)
+        XCTAssertEqual(ApprovalReadiness.from(.biometryLockout, biometry: .touchID, mac: true), .unavailable(lockedOut: true))
+        // The iPhone and iPad keep theirs.
+        XCTAssertEqual(ApprovalReadiness.from(.biometryNotAvailable, biometry: .touchID, mac: false), .offForTafs)
     }
 
     func testEachStateHasItsOwnWords() {

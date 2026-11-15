@@ -1737,6 +1737,77 @@ describe("Connect apps' removed tafs", () => {
   });
 });
 
+describe("Connect apps' contracts", () => {
+  // What the desktops pin Connect apps by (contracts/README.md), as Coach's are: a first page with a provider's next one,
+  // a search, that next page, and an answer with a removed taf whose connections may be cleared. Sample data only.
+  it("writes the first page, a search, a provider's next page and removed tafs as contracts", async () => {
+    const w = world();
+    const coach = memoryCoach(() => w.now);
+    w.tafs.held.set(`t_acme#${NEW}`, { id: NEW, name: "Chargebacks", job: "refunds", kiffAgent: "chargebacks", nameClaim: "c", created: "2026-10-14T09:00:00Z" });
+    const ok = (v: unknown) => new Response(JSON.stringify(v), { status: 200 });
+    const first = { entries: [
+      { entry: "stripe@3", vendor: "Stripe", title: "Stripe", how: "oauth", state: "connected", grant: "g-stripe", icon: "https://logos.example.com/stripe.png" },
+      { entry: "connector:p:gmail", vendor: "gmail", title: "Gmail", how: "oauth", state: "needs_reconnect", grant: "g-gmail" },
+      { entry: "qonto@2", vendor: "Qonto", title: "Qonto invoicing: reads and drafts", how: "key", state: "available" },
+      { entry: "connector:p:typeform", vendor: "typeform", title: "Typeform", how: "oauth", state: "available" },
+      { entry: "connector:p:crm", vendor: "crm", title: "Example CRM", how: "oauth", state: "needs_setup" },
+    ], by_key: true, provider: "p", next_cursor: "cur_2" };
+    const search = { entries: [first.entries[1]], by_key: true };
+    const next = { entries: [
+      { entry: "connector:p:notion", vendor: "notion", title: "Notion", how: "oauth", state: "available" },
+      { entry: "connector:p:slack", vendor: "slack", title: "Slack", how: "oauth", state: "available" },
+    ], by_key: true, provider: "p" };
+    const get = async (query: string, proof?: string) => {
+      const r = await handle({ rawPath: "/v1/connect/apps", rawQueryString: query, requestContext: { http: { method: "GET" } },
+        headers: { Authorization: "Bearer ana_co", "accept-language": "en", ...(proof ? { "planque-device-signature": proof } : {}) } },
+        { ...depsOf(w), coach, planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+          if (url.startsWith("https://planque.test/v1/accounts/t_acme/catalog")) {
+            const asked = new URL(url).searchParams;
+            return ok(asked.get("q") === "mail" ? search : asked.get("cursor") === "cur_2" && asked.get("provider") === "p" ? next : first);
+          }
+          if (url === "https://planque.test/v1/accounts/t_acme/connections") return ok({ connections: [
+            { agent: "rae", vendor: "Stripe", kind: "vendor_sign_in", server: "https://mcp.stripe.com", status: "connected" },
+            { agent: "rae", vendor: "gmail", kind: "provider", entry: "connector:p:gmail", status: "needs_reconnect" },
+          ] });
+          if (url === "https://planque.test/v1/accounts/t_acme/grants") return ok({ grants: [
+            { id: "g-old-stripe", status: "connected", tools: ["stripe.refund"], request: { agent: "old-refunds" } },
+            { id: "g-old-sheets", status: "connected", tools: ["sheets.append"], request: { agent: "old-refunds" } },
+          ] });
+          if (url.startsWith("https://planque.test/")) return new Response("{}", { status: 500 });
+          if (url.endsWith("/v1/me/agents")) return ok({ agents: [{ id: "old-refunds", recorded: true, archived_at: "2026-11-07T20:00:00Z", sources: ["record"] }] });
+          if (url.endsWith("/v1/me/mandates")) return ok({ mandates: [{ id: "m1", subject: "chargebacks", active: true, grants: [{ action: "stripe.refund" }] }] });
+          return depsOf(w).fetch!(url, init);
+        }) as Deps["fetch"] });
+      expect(r.statusCode).toBe(200);
+      return JSON.parse(r.body) as { apps: Array<Record<string, unknown>>; next_cursor?: string; provider?: string; removed_tafs: Array<Record<string, unknown>> };
+    };
+
+    const page = await get("");
+    expect(page.apps.map((a) => a.name)).toEqual(["Gmail", "Stripe", "Qonto", "Example CRM", "Typeform"]);
+    expect(page).toMatchObject({ by_key: true, provider: "p", next_cursor: "cur_2" });
+    expect(page.apps.find((a) => a.name === "Stripe")!.logo).toMatch(/^\/v1\/logos\/[0-9a-f]{32}$/);
+    expect(page.apps.find((a) => a.name === "Qonto")!.subtitle).toBe("Invoicing: reads and drafts");
+    contract("connect-apps", "GET /v1/connect/apps for someone who manages the account's Cards: the first page, with two of the account's own apps (one to sign in again), three to connect (one not set up for anyone yet), and the provider's next page to ask for.", page);
+
+    const found = await get("q=mail");
+    expect(found.apps.map((a) => a.name)).toEqual(["Gmail"]);
+    expect(found).not.toHaveProperty("next_cursor");
+    contract("connect-apps-search", "GET /v1/connect/apps?q=mail: a search, one app found, with no next page.", found);
+
+    const more = await get("provider=p&cursor=cur_2");
+    expect(more.apps.map((a) => a.name)).toEqual(["Slack", "Notion"]);
+    expect(more).not.toHaveProperty("next_cursor");
+    contract("connect-apps-next", "GET /v1/connect/apps?provider=p&cursor=…: the provider's next page, its last.", more);
+
+    const removed = await get("", "proof-1");
+    expect(removed.removed_tafs).toEqual([{ agent: "old-refunds", removed_at: "2026-11-07T20:00:00Z", grants: [
+      { grant: "g-old-stripe", used_by: [{ taf: NEW, name: "Chargebacks" }] },
+      { grant: "g-old-sheets", used_by: [] },
+    ] }]);
+    contract("connect-apps-removed", "GET /v1/connect/apps with the phone's signed grants read: a removed taf's connections, one still used by a live taf's Card (kept) and one used by none (Clear ends it).", removed);
+  });
+});
+
 describe("removing a taf", () => {
   it("removes it from kiff/agents, then its key, then frees its name", async () => {
     const w = world();

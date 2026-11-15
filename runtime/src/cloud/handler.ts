@@ -54,7 +54,7 @@ import { appCalls, type GrantView, runningTool, setupGrants, setupView } from ".
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor, takesOf } from "./approval.js";
+import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor, takesOf } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 import { findLabel, LabelRefusal, labelsView, readLabels, saveLabels, withLabelChanged, withTafLabels } from "./labels.js";
@@ -110,7 +110,7 @@ import { findLabel, LabelRefusal, labelsView, readLabels, saveLabels, withLabelC
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
  *   GET  /v1/connect/grants/{grant}/sheet  the secure connection sheet's words for a grant that takes a key, with the phone's read proof (docs/secure-connection.md)
- *   POST /v1/connect/grants/{grant}/check  Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code (docs/api.md)
+ *   POST /v1/connect/grants/{grant}/check  {draft, shown_draft, can?}: Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code, and whether the chat's read checks the card (checked_on_read) (docs/api.md)
  *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
@@ -3241,7 +3241,7 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
   const grants = await within(readGrants(deps.planqueBase, me.tenantID, proof, deps.fetch ?? fetch), SIGNS_READ_MS).catch(() => undefined);
   if (!grants) return;
   const can = (new URLSearchParams(event.rawQueryString ?? "").get("can") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
-  const flags = { keyAndCards: process.env.TAFS_KEY_AND_CARDS === "on", toolsAndCards: process.env.TAFS_TOOLS_AND_CARDS === "on" };
+  const flags = readFlags();
   const lang = langOf(event);
   for (const c of waiting) {
     const card = c.component as { grant: string; draft?: unknown };
@@ -3251,7 +3251,7 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     if (!step) continue;
     // A step that signs the Card (alone, or with the tools or key it covers) reads its draft, in the same time: a Card
     // alone takes the key KIFF names for it, or nothing is said of the key.
-    const signsCard = step !== "connect" && !!draft;
+    const signsCard = checkedOnReadFor(grant, draft, can);
     const info = signsCard
       ? await within(draftInfo(bearer(event), draft!, deps.fetch, deps.kiffBase), SIGNS_READ_MS).catch(() => undefined)
       : undefined;
@@ -3810,11 +3810,39 @@ async function draftCheckRoute(event: HTTPEvent, grant: string, me: KIFFIdentity
   if (!/^[A-Za-z0-9_.:-]{1,128}$/.test(grant) || !/^[A-Za-z0-9_.:-]{1,128}$/.test(draft) || !shown || shown.length > 256) {
     throw new HTTPError(400, "send the grant, its Card draft and the draft's version you read");
   }
-  const out = await checkDraft({ grant, draft, shown_draft: shown }, checkContext(event, me, deps)).catch(approvalFailure);
+  // What the phone can sign, as it says on the chat's read (`can`), so the step is the one its card would take.
+  const can = (Array.isArray(body.can) ? body.can : str(body.can).split(",")).map((x) => str(x).trim()).filter(Boolean);
+  const ctx = checkContext(event, me, deps);
+  // One read of the grants, with the caller's proof (planque takes each signed read once), for the check and the step.
+  let read: Awaited<ReturnType<typeof readGrants>> | undefined;
+  const out = await (async () => {
+    read = await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
+    return checkDraft({ grant, draft, shown_draft: shown }, ctx, read);
+  })().catch(approvalFailure);
+  const checkedOnRead = checkedOnReadFor(read?.find((g) => g.id === grant), draft, can);
   console.log(`approval check: ${out.outcome === "ok" ? "ok" : out.code}`);
   // A refusal a new draft mends says so (`redraft`): the one Coach hears on the chat's read, before the card is drawn
   // (precheck), so a caller that draws no card (the e2e) hands Coach the same refusals at the same moment, from this list.
-  return out.outcome === "answered" && REDRAFT_CODES.has(out.code) ? { ...out, redraft: true } : out;
+  // Whether the chat's read checks this card at all (`checked_on_read`) is said too, by the same rule (markSigns), so the
+  // caller never keeps its own copy of it.
+  const answered = out.outcome === "answered" && REDRAFT_CODES.has(out.code) ? { ...out, redraft: true } : out;
+  return { ...answered, checked_on_read: checkedOnRead };
+}
+
+/**
+ * Whether the chat's read checks an approval card's Card draft before the card is drawn (markSigns, precheck): its step
+ * signs the Card, alone or with the tools or key it covers. The same rule as markSigns: stepFor, the deploy's flags and
+ * what the phone can sign. False with no grant or no draft.
+ */
+export function checkedOnReadFor(grant: ApprovalGrant | undefined, draft: string | undefined, can: string[]): boolean {
+  if (!grant || !draft) return false;
+  const step = stepFor(grant, { draft, can }, readFlags());
+  return step !== undefined && step !== "connect";
+}
+
+/** The deploy's flags for the combined steps, as markSigns and decide read them. */
+function readFlags(): { keyAndCards: boolean; toolsAndCards: boolean } {
+  return { keyAndCards: process.env.TAFS_KEY_AND_CARDS === "on", toolsAndCards: process.env.TAFS_TOOLS_AND_CARDS === "on" };
 }
 
 /** What checkDraft reads with: the person's KIFF session and the phone's planque proof, as sent; nothing is kept. */
@@ -6436,7 +6464,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     if (status !== "error") return sse("step", { call_id: id, status });
     // A connection call's refusal is about Coach's request: its reason is tafs cloud's words, never the server's.
     // The server's own reason is kept beside it, for Coach and the log (keepWhy), never shown as the step's.
-    const plain = steps.connectionWhy(callID);
+    const plain = steps.connectionWhy(callID, r.text);
     // A connection call refused for how Coach wrote it (its order or its shape) isn't a failure of the person's app: nothing
     // was made, and Coach asks again. It ends not made, never "Coach couldn't connect" in red (Android 85, 14 Nov).
     if (plain && coachGuard(r.text)) {

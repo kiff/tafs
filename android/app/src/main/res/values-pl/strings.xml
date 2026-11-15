@@ -100,6 +100,7 @@
     <string name="approval_set_a_screen_lock">Ustaw blokadę ekranu na tym telefonie, aby zatwierdzać</string>
     <string name="approval_settings_face_id_passcode_touch">Ustawienia → Face ID i kod (Touch ID i kod na urządzeniu z Touch ID)</string>
     <string name="approval_settings_path_face_id">Ustawienia → Face ID i kod</string>
+    <string name="approval_settings_path_mac_touch_id">Ustawienia systemowe → Touch ID i hasło</string>
     <string name="approval_settings_path_touch_id">Ustawienia → Touch ID i kod</string>
     <string name="approval_state_none_enrolled">Na tym telefonie nie skonfigurowano odcisku palca. Dodaj go w ustawieniach telefonu, a potem wróć.</string>
     <string name="approval_state_ready">Zatwierdzanie jest skonfigurowane na tym telefonie.</string>

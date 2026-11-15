@@ -1,0 +1,33 @@
+{
+  "about": "GET /v1/connect/apps?q=mail: a search, one app found, with no next page. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "apps": [
+      {
+        "entry": "connector:p:gmail",
+        "vendor": "gmail",
+        "title": "Gmail",
+        "name": "Gmail",
+        "how": "oauth",
+        "state": "needs_reconnect",
+        "grant": "g-gmail",
+        "connected": false,
+        "method": "sign_in",
+        "whose": "Company",
+        "used_by": [
+          {
+            "taf": "taf-aaaa0000000000000000",
+            "name": "Rae"
+          }
+        ],
+        "line": "Sign in · Sign in again · Used by Rae"
+      }
+    ],
+    "by_key": true,
+    "removed_tafs": [
+      {
+        "agent": "old-refunds",
+        "removed_at": "2026-11-07T20:00:00Z"
+      }
+    ]
+  }
+}

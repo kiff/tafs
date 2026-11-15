@@ -51,6 +51,7 @@
   "approval.set_a_screen_lock": "Set a screen lock on this phone to approve",
   "approval.settings_face_id_passcode_touch": "Settings → Face ID & Passcode (Touch ID & Passcode on a device with Touch ID)",
   "approval.settings_path.face_id": "Settings → Face ID & Passcode",
+  "approval.settings_path.mac_touch_id": "System Settings → Touch ID & Password",
   "approval.settings_path.touch_id": "Settings → Touch ID & Passcode",
   "approval.state.none_enrolled": "No fingerprint is set up on this phone. Add one in its settings, then come back.",
   "approval.state.ready": "Approvals are set up on this phone.",

@@ -6503,7 +6503,9 @@ final class AppModel: ObservableObject {
         let signer = self.signer
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
-        defer { planque.signer = nil }
+        // Connect apps' row says it's being removed until planque answered and the list was read again.
+        removingGrants.insert(grantID)
+        defer { planque.signer = nil; removingGrants.remove(grantID) }
         do {
             _ = try await planque.disconnect(grantID: grantID)
         } catch {
@@ -6511,8 +6513,14 @@ final class AppModel: ObservableObject {
             return false
         }
         await refreshConnections()
+        guard gen == accountGeneration else { return true }
+        if connectApps != nil { await loadConnectApps() }
         return true
     }
+
+    /// The connections being removed now (`disconnect`), from Face ID until planque answered and Connect
+    /// apps was read again.
+    @Published private(set) var removingGrants: Set<String> = []
 
     // MARK: Setup (kiff/agents#91)
 

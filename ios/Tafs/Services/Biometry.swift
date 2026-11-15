@@ -18,8 +18,9 @@ enum ApprovalReadiness: Equatable {
 
     static let title = Words.Approval.title
 
-    /// The state, from what `canEvaluatePolicy` said: no error is ready.
-    static func from(_ code: LAError.Code?, biometry: LABiometryType) -> ApprovalReadiness {
+    /// The state, from what `canEvaluatePolicy` said: no error is ready. `mac` is the Mac
+    /// build (docs/mac-app.md).
+    static func from(_ code: LAError.Code?, biometry: LABiometryType, mac: Bool = ThisDevice.isMac) -> ApprovalReadiness {
         guard let code else { return .ready }
         switch code {
         case .biometryNotEnrolled:
@@ -27,8 +28,11 @@ enum ApprovalReadiness: Equatable {
         case .passcodeNotSet:
             return .noPasscode
         case .biometryNotAvailable:
-            // The same code for a device without it and for tafs not allowed to use it.
-            return biometry == .none ? .unsupported : .offForTafs
+            // The same code for a device without it and for tafs not allowed to use it. A Mac
+            // has no switch for one app: its Touch ID is there but out of reach, with the lid
+            // closed on another display or the Touch ID keyboard not connected.
+            if biometry == .none { return .unsupported }
+            return mac ? .unavailable(lockedOut: false) : .offForTafs
         case .biometryLockout:
             return .unavailable(lockedOut: true)
         default:

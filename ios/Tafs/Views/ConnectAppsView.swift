@@ -111,7 +111,8 @@ struct ConnectAppsView: View {
     /// it, and Disconnect); the rest have a compact Connect.
     @ViewBuilder
     private func row(_ app: TafsCloud.ConnectApps.App) -> some View {
-        let said = ConnectRow(app, usedHere: model.connectionGroups(of: app).tafs.map(\.taf))
+        let said = ConnectRow(app, usedHere: model.connectionGroups(of: app).tafs.map(\.taf),
+                              removing: model.connections(of: app).contains { model.removingGrants.contains($0.id) })
         // A connected app always opens its detail, never a tap that does nothing: there, the connections this
         // device reads, or why it reads none.
         if app.connected {
@@ -134,7 +135,7 @@ struct ConnectAppsView: View {
                         Text(setup).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.soft).lineLimit(2)
                     } else if let status = said.status {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(status).scaledFont(14, weight: .semibold).foregroundColor(app.connected ? Theme.ok : Theme.amberText)
+                            Text(status).scaledFont(14, weight: .semibold).foregroundColor(said.removing ? Theme.soft : app.connected ? Theme.ok : Theme.amberText)
                             if let used = said.usedBy { Text(used).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).lineLimit(2) }
                         }
                     }
@@ -274,12 +275,17 @@ struct ConnectRow: Equatable {
     let status: String?
     let usedBy: String?
     let line: String?
+    /// One of its connections is being removed, from Face ID until planque answered and the list was read
+    /// again: it says so where "Connected" would be, as Android does.
+    let removing: Bool
 
     /// `usedHere`: the tafs this phone's planque read names, until tafs cloud sends `used_by`.
-    init(_ app: TafsCloud.ConnectApps.App, usedHere: [String] = []) {
+    init(_ app: TafsCloud.ConnectApps.App, usedHere: [String] = [], removing: Bool = false) {
         how = app.takesKey ? Words.Connect.How.key : Words.Connect.How.signIn
         whose = app.whose
-        status = app.connected ? Words.Connect.Status.connected : app.needsReconnect ? Words.Connect.signInAgain : nil
+        self.removing = removing
+        status = removing ? Words.Connect.disconnecting
+            : app.connected ? Words.Connect.Status.connected : app.needsReconnect ? Words.Connect.signInAgain : nil
         let names = app.usedBy ?? usedHere
         usedBy = app.yours && !names.isEmpty ? Words.Connect.Apps.usedBy(tafs: Words.list(names)) : nil
         line = app.line
@@ -291,7 +297,8 @@ struct ConnectRow: Equatable {
 
     /// The phone's second line: an app to set up says tafs cloud's words for it; else tafs cloud's
     /// line, as sent; else how, whose, where it stands and who uses it.
-    var second: String { setup ?? line ?? [how, whose, status, usedBy].compactMap { $0 }.joined(separator: " · ") }
+    /// While a removal runs, the status goes in place of tafs cloud's line, which still says it's connected.
+    var second: String { setup ?? (removing ? nil : line) ?? [how, whose, status, usedBy].compactMap { $0 }.joined(separator: " · ") }
 
     /// The person's own first (connected, or to sign in again), then the rest, each in tafs cloud's order.
     /// An app under Yours isn't under Discover again in another of its catalog forms: Stripe connected
@@ -658,7 +665,8 @@ struct AppConnectionsView: View {
         cancelling = nil
         busy = g.id
         Task {
-            if await model.disconnect(grantID: g.id) { await model.loadConnectApps() }
+            // Removing reads the list again itself.
+            _ = await model.disconnect(grantID: g.id)
             busy = nil
         }
     }
@@ -937,7 +945,6 @@ struct ConnectApprovalSheet: View {
             defer { busy = false }
             if await model.disconnect(grantID: grant.id) {
                 last4 = ""
-                await model.loadConnectApps()
                 dismiss()
             }
         }
@@ -1126,7 +1133,6 @@ struct ConnectionDetailView: View {
         busy = true
         Task {
             if await model.disconnect(grantID: grantID) {
-                await model.loadConnectApps()
                 dismiss()
             }
             busy = false
