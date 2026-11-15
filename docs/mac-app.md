@@ -73,6 +73,8 @@ That build is unsigned. The signed one goes to TestFlight (below).
 
 If anything readable ever reaches a log, revoke the certificate in App Store Connect at once and make a new one.
 
+**The app's category.** The Mac App Store refuses a Mac upload whose Info.plist has no `LSApplicationCategoryType` (Mac TestFlight's first run stopped there). `project.yml` sets it to `public.app-category.business` (Business); it should be the App Store listing's primary category, which the owner confirms. iOS ignores the key. The Mac workflow checks it's there.
+
 ## Signing and the sandbox
 
 The Mac build has its own entitlements, `Tafs/TafsMac.entitlements` and `Notify/TafsNotifyMac.entitlements`, set for the Mac SDK only in `ios/project.yml` (`CODE_SIGN_ENTITLEMENTS[sdk=macosx*]`). The iPhone and iPad's stay generated from `project.yml`, unchanged. The Mac's files hold every key the iPhone and iPad's do, and:
