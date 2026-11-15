@@ -1,0 +1,2 @@
+- Starting Coach on another phone of the same account no longer leaves an unused key in your KIFF account.
+- When connecting your apps doesn't work, the app says why, and Start tries again. It no longer says another device connects them when that isn't so.

@@ -5,7 +5,7 @@ Uploads the signed release bundle to Google Play's internal track, with its rele
 never a rollout change. The token is a short-lived one from Google's workload identity federation (the release job's
 `google-github-actions/auth`), passed in PLAY_ACCESS_TOKEN; no key file exists anywhere.
 
-  play_internal.py --check                 the release notes of the current versionCode, if any: all eight, each short enough
+  play_internal.py --check                 the release notes of the current versionCode: all eight, each short enough; none fails
   play_internal.py --upload BUNDLE.aab     one edit: the bundle, the internal track's release with its notes, committed
 
 Standard library only: every call to Play is here, in the open.
@@ -98,8 +98,10 @@ def upload(bundle: str) -> None:
 def main(argv: list) -> None:
     if argv[:1] == ["--check"]:
         code = version_code()
-        found = notes(code, required=False)
-        print(f"versionCode {code}: " + (f"release notes in {len(found)} languages" if found else "no release notes yet"))
+        # Required here as at the upload: a version with no notes fails `test` in its own pull request, never the release
+        # after its merge (Android 105 merged with none, and only `release` refused it).
+        found = notes(code, required=True)
+        print(f"versionCode {code}: release notes in {len(found)} languages")
     elif len(argv) == 2 and argv[0] == "--upload":
         upload(argv[1])
     else:

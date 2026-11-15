@@ -1,0 +1,2 @@
+- Coach auf einem weiteren Telefon desselben Kontos zu starten, hinterlässt keinen ungenutzten Schlüssel mehr in deinem KIFF-Konto.
+- Wenn das Verbinden deiner Apps nicht klappt, sagt die App, warum, und Starten versucht es erneut. Sie behauptet nicht mehr, ein anderes Gerät verbinde sie, wenn das nicht stimmt.
