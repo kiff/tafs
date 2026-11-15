@@ -455,6 +455,7 @@ export const pl: Words = {
   act_today: "Dziś",
   act_end: "Nic starszego w tym widoku",
   record_hint: "Szukaj po zamówieniu, fakturze, kwocie lub akcji",
+  record_removed: (name) => `${name} (usunięty)`,
   record_none: (q) => `Nic w rejestrze nie pasuje do „${q}”`,
   record_case_failed: (step, detail) => `${step} nie powiodło się: ${detail}`,
   next_reconnect: "Połącz ponownie",

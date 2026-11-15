@@ -455,6 +455,7 @@ export const nl: Words = {
   act_today: "Vandaag",
   act_end: "Niets ouders in deze weergave",
   record_hint: "Zoek op bestelling, factuur, bedrag of actie",
+  record_removed: (name) => `${name} (verwijderd)`,
   record_none: (q) => `Niets in het logboek komt overeen met "${q}"`,
   record_case_failed: (step, detail) => `${step} is niet gelukt: ${detail}`,
   next_reconnect: "Opnieuw koppelen",

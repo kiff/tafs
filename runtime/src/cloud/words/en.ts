@@ -493,6 +493,7 @@ export const en = {
   act_today: "Today",
   act_end: "Nothing older in this view",
   record_hint: "Search by order, invoice, amount or action",
+  record_removed: (name: string) => `${name} (removed)`,
   record_none: (q: string) => `Nothing in the Record matches "${q}"`,
   record_case_failed: (step: string, detail: string) => `${step} didn't go through: ${detail}`,
   next_reconnect: "Connect it again",

@@ -455,6 +455,7 @@ export const fr: Words = {
   act_today: "Aujourd'hui",
   act_end: "Rien de plus ancien dans cette vue",
   record_hint: "Rechercher par commande, facture, montant ou action",
+  record_removed: (name) => `${name} (supprimé)`,
   record_none: (q) => `Rien dans le registre ne correspond à « ${q} »`,
   record_case_failed: (step, detail) => `${step} n'a pas abouti : ${detail}`,
   next_reconnect: "Reconnecter",

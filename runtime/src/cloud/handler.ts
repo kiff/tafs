@@ -48,7 +48,7 @@ import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
-import { caseView, receiptsExport, recordPage, type RecordTaf } from "./record.js";
+import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, removedRecordTafs, removedTafsKey, type RemovedTaf } from "./record.js";
 import { appCalls, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
@@ -2403,6 +2403,16 @@ async function remove(taf: Taf, me: { tenantID: string }, deps: Deps, token = ""
   if (failed.length === 0 && deps.doors) await step(["doors"], () => removeTafDoors(doorContext(deps), me.tenantID, taf.id));
   // Only this taf's own claim: if a newer start holds the name, it keeps it.
   if (failed.length === 0) await step(["name"], () => deps.names.release(me.tenantID, taf.name, taf.nameClaim));
+  // Kept before its row goes, so the Record still shows its calls, named as removed (record.ts). A failure stops here:
+  // asked again, the removal goes on, and a second entry for the same agent is read once.
+  if (failed.length === 0 && taf.kiffAgent && taf.job !== SETUP_JOB && deps.coach) {
+    const now = deps.now?.() ?? new Date();
+    const row: RemovedTaf = { id: taf.id, kiff_agent: taf.kiffAgent, name: taf.name, removed_at: now.toISOString() };
+    await deps.coach.append(removedTafsKey(me.tenantID), row, new Date(now.getTime() + REMOVED_KEPT_MS)).catch((err) => {
+      console.error(`remove ${taf.id}: record: ${(err as Error).message}`);
+      failed.push("record");
+    });
+  }
   if (failed.length === 0) {
     // Only the list's archive is left, and its ttl takes it if this fails.
     await deps.archived.remove(me.tenantID, taf.id).catch((err) => console.error(`remove ${taf.id}: archive: ${(err as Error).message}`));
@@ -6814,8 +6824,15 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule,
 async function recordRoute(event: HTTPEvent, parts: string[], me: KIFFIdentity, deps: Deps) {
   const [records, access] = await Promise.all([deps.tafs.list(me.tenantID), readAccess(bearer(event), deps.fetch, deps.kiffBase)]);
   const all = records.filter((t) => !t.removing && t.job !== SETUP_JOB);
-  const tafs: RecordTaf[] = all.filter((t) => listable(access, t.kiffAgent)).map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent }));
   const zone = me.timeZone ?? "UTC", now = deps.now?.() ?? new Date(), lang = langOf(event);
+  // Those who see every taf's Record: who oversee or manage each of the account's tafs, and, with none left, who manage
+  // its Cards (every taf removed is no reason for a viewer to see them all).
+  const seesEvery = all.every((t) => access.get(t.kiffAgent)?.oversee || access.get(t.kiffAgent)?.manage)
+    && (all.length > 0 || me.capabilities.includes("cards.manage"));
+  // A removed taf's calls, for them: named as removed (record.ts). An unreadable list leaves them out.
+  const removed = seesEvery && deps.coach
+    ? removedRecordTafs(await deps.coach.get(removedTafsKey(me.tenantID)).catch(() => undefined), new Set(all.map((t) => t.kiffAgent)), lang) : [];
+  const tafs: RecordTaf[] = [...all.filter((t) => listable(access, t.kiffAgent)).map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent })), ...removed];
   const q = new URLSearchParams(event.rawQueryString ?? "");
   if (parts.length === 2) {
     return conditionalPage(event, await recordPage({ token: bearer(event), scope: `${me.tenantID}#${me.subject}`, tafs, zone, now, query: q, lang }, deps.fetch, deps.kiffBase));
@@ -6830,7 +6847,7 @@ async function recordRoute(event: HTTPEvent, parts: string[], me: KIFFIdentity, 
     return view;
   }
   if (parts.length === 3 && parts[2] === "receipts") {
-    if (!all.every((t) => access.get(t.kiffAgent)?.oversee || access.get(t.kiffAgent)?.manage)) {
+    if (!seesEvery) {
       throw new HTTPError(403, "exporting receipts is for the people who see every taf's Record");
     }
     return receiptsExport({ token: bearer(event), from: q.get("from"), to: q.get("to"), tafs, zone }, deps.fetch, deps.kiffBase);

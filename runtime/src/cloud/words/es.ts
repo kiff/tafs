@@ -455,6 +455,7 @@ export const es: Words = {
   act_today: "Hoy",
   act_end: "Nada más antiguo en esta vista",
   record_hint: "Busca por pedido, factura, importe o acción",
+  record_removed: (name) => `${name} (eliminado)`,
   record_none: (q) => `Nada en el registro coincide con «${q}»`,
   record_case_failed: (step, detail) => `${step} no se completó: ${detail}`,
   next_reconnect: "Volver a conectar",
