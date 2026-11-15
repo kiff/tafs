@@ -129,6 +129,22 @@ describe("a taf's server-composed setup", () => {
       notes: Array.from({ length: n }, () => ({ content: "x" })), now, calls: [], statsComplete: true, lang: "pl" }).memory.title;
     expect([notes(1), notes(2), notes(5)]).toEqual(["1 notatka", "2 notatki", "5 notatek"]);
   });
+  // The rest of the page's lines: who keeps the sign-in, a browser connection's own sign-in, and an app with no name.
+  it("says who keeps a sign-in, a site's sign-in and an unnamed app in the person's language", () => {
+    const lines = (lang: (typeof LANGS)[number]) => {
+      const view = (g: GrantView) => setupView({ agent: "agent-example", grants: [g], knob, rules: [], versions: { versions: [] }, notes: [], now, calls: [], statsComplete: true, lang }).connections[0]!;
+      const provider = view({ ...grant, custody: "provider" }), planque = view({ ...grant, custody: "planque" }), browser = view({ ...grant, provider: "browser" });
+      return [provider.custody_words!, planque.custody_words!, browser.site_sign_in!.title, browser.site_sign_in!.words, appDisplayName({ ...grant, vendor: undefined }, lang)];
+    };
+    const en = lines("en");
+    expect(en).toEqual(["Your sign-in is kept by our sign-in partner; the taf never sees it.", "Your sign-in is kept sealed by tafs; the taf never sees it.",
+      "Sign in to a site", "You sign in yourself, in a live view of the taf's browser. What you type goes to the site, never to the taf. Tap Done when you're in.", "Connected app"]);
+    for (const lang of LANGS.filter((l) => l !== "en")) {
+      const said = lines(lang);
+      said.forEach((line, i) => expect(line, `${lang}: ${en[i]}`).not.toBe(en[i]));
+    }
+    expect(lines("es")[3]).toContain("Toca Hecho");
+  });
   it("keeps vendor-supplied display names and removes a server-id suffix only at the source", () => {
     expect(appDisplayName({ ...grant, vendor: "Example Suite" })).toBe("Example Suite");
     expect(appDisplayName(grant)).toBe("Example");

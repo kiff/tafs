@@ -22,11 +22,12 @@ export interface GrantView {
 }
 
 /** One line on who holds a connection's sign-in, for the apps to draw as it comes; none when planque doesn't say. */
-export function custodyWords(custody: GrantView["custody"]): string | undefined {
+export function custodyWords(custody: GrantView["custody"], lang: Lang = "en"): string | undefined {
+  const w = wordsIn(lang);
   switch (custody) {
     // In the owner's words: who keeps it (a third party, said plainly), never an internal service ("the connection service").
-    case "provider": return "Your sign-in is kept by our sign-in partner; the taf never sees it.";
-    case "planque": return "Your sign-in is kept sealed by tafs; the taf never sees it.";
+    case "provider": return w.setup_custody_provider;
+    case "planque": return w.setup_custody_planque;
     default: return undefined;
   }
 }
@@ -47,10 +48,10 @@ export function accountWords(g: Pick<GrantView, "account_name" | "mode_words">):
  * A browser connection's own sign-in (kiff/planque#86, step 4): the owner signs in to a site themselves, in planque's live
  * view, which the apps open as it comes. Offered on a connected browser grant only; the apps show these words and keep none.
  */
-export const SITE_SIGN_IN = {
-  title: "Sign in to a site",
-  words: "You sign in yourself, in a live view of the taf's browser. What you type goes to the site, never to the taf. Tap Done when you're in.",
-} as const;
+export function siteSignIn(lang: Lang = "en"): { title: string; words: string } {
+  const w = wordsIn(lang);
+  return { title: w.setup_site_sign_in_title, words: w.setup_site_sign_in_words };
+}
 
 /** The phone signs this read; tafs cloud forwards the proof unchanged and signs nothing. */
 export async function setupGrants(base: string, tenant: string, proof: string, net: Fetch = fetch): Promise<GrantView[]> {
@@ -65,13 +66,13 @@ export async function setupGrants(base: string, tenant: string, proof: string, n
 }
 
 /** App names are resolved here. Server ids never become labels on either phone. */
-export function appDisplayName(grant: GrantView): string {
+export function appDisplayName(grant: GrantView, lang: Lang = "en"): string {
   const vendor = grant.vendor ?? "";
   if (/[A-Z]/.test(vendor) && !/[-_]mcp(?:[-_]|$)/i.test(vendor)) return vendor;
   const fromHost = vendorName(grant.request.server);
   if (fromHost) return fromHost;
   const name = vendor.replace(/(?:[-_ ]mcp(?:[-_ ]server)?|[-_ ]server)$/i, "").replace(/[_-]+/g, " ").trim();
-  return name ? name.replace(/\b\p{L}/gu, (c) => c.toUpperCase()) : "Connected app";
+  return name ? name.replace(/\b\p{L}/gu, (c) => c.toUpperCase()) : wordsIn(lang).setup_connected_app;
 }
 
 /** Counts cover the whole seven-day interval, or explicitly say it could not be read in full. */
@@ -144,7 +145,7 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
   const lang = input.lang ?? "en";
   const w = wordsIn(lang);
   const grants = input.grants.filter((g) => g.request.agent === input.agent && (["connected", "listed", "signed_in", "needs_reconnect"].includes(g.status) || (g.status === "pending" && g.signed_in === true)));
-  const names = new Map(grants.map((g) => [g.id, appDisplayName(g)]));
+  const names = new Map(grants.map((g) => [g.id, appDisplayName(g, lang)]));
   const owners = new Map<string, string>();
   for (const g of grants) for (const t of ["connected", "needs_reconnect"].includes(g.status) ? g.request.tools ?? [] : []) if (!t.setup_reads) owners.set(t.name || t.tool, g.id);
   const steps = input.knob.what.filter((s) => s.id !== "what_ask").map((s) => {
@@ -170,9 +171,9 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
     return { id: g.id, name: names.get(g.id)!, status: g.status,
       status_words: g.status_words || ({ connected: w.setup_status_connected, listed: w.setup_status_listed, signed_in: w.setup_status_signed_in, needs_reconnect: w.setup_status_needs_reconnect, pending: w.setup_status_pending } as Record<string, string>)[g.status] || w.setup_status_unknown,
       reconnect: g.status === "needs_reconnect", action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: w.setup_workflow_none } : {}),
-      ...(custodyWords(g.custody) ? { custody_words: custodyWords(g.custody) } : {}), ...(g.on_demand === true ? { on_demand: true } : {}),
+      ...(custodyWords(g.custody, lang) ? { custody_words: custodyWords(g.custody, lang) } : {}), ...(g.on_demand === true ? { on_demand: true } : {}),
       ...(accountWords(g) ? { account_words: accountWords(g) } : {}),
-      ...(g.provider === "browser" && g.status === "connected" ? { site_sign_in: { ...SITE_SIGN_IN } } : {}),
+      ...(g.provider === "browser" && g.status === "connected" ? { site_sign_in: siteSignIn(lang) } : {}),
       action_words: actions.length ? w.setup_actions(actions.length, plural(lang, actions.length)) : w.setup_choose_actions,
       actions, steps: steps.filter((s) => s.grant === g.id).map((s) => s.number), workflow_steps: steps.filter((s) => s.grant === g.id),
       running: Boolean(input.running && tools.has(input.running)),
