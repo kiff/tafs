@@ -1364,6 +1364,7 @@
     <string name="pair_device_name">tafs auf diesem %1$s</string>
     <string name="pair_failed">Dieser %1$s wurde nicht hinzugefügt: %2$s. Zeig einen neuen Code und versuch es noch einmal.</string>
     <string name="pair_from_sign_in">Nutzt du tafs schon auf deinem Handy? Füge diesen %1$s damit hinzu.</string>
+    <string name="pair_keychain_refused">Dieser Mac konnte seine Anmeldung nicht im Schlüsselbund sichern (Fehler %1$s) und wurde nicht hinzugefügt. Zeig einen neuen Code und versuch es noch einmal.</string>
     <string name="pair_new_code">Neuen Code zeigen</string>
     <string name="pair_steps">Öffne auf deinem Handy tafs, dann %1$s, %2$s, %3$s. Scanne diesen Code.</string>
     <string name="pair_title">Diesen %1$s mit deinem Handy hinzufügen</string>

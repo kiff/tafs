@@ -1364,6 +1364,7 @@
     <string name="pair_device_name">tafs op deze %1$s</string>
     <string name="pair_failed">Deze %1$s is niet toegevoegd: %2$s. Toon een nieuwe code en probeer het opnieuw.</string>
     <string name="pair_from_sign_in">Gebruik je tafs al op je telefoon? Voeg deze %1$s ermee toe.</string>
+    <string name="pair_keychain_refused">Deze Mac kon zijn login niet in de sleutelhanger bewaren (fout %1$s) en is dus niet toegevoegd. Toon een nieuwe code en probeer het opnieuw.</string>
     <string name="pair_new_code">Toon een nieuwe code</string>
     <string name="pair_steps">Open tafs op je telefoon, dan %1$s, %2$s, %3$s. Scan deze code.</string>
     <string name="pair_title">Voeg deze %1$s toe met je telefoon</string>

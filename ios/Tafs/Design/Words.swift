@@ -2631,6 +2631,8 @@ enum Words {
         static func failed(device: String, why: String) -> String { Words.line("pair.failed", device, why) }
         /// Already use tafs on your phone? Add this {device} with it.
         static func fromSignIn(device: String) -> String { Words.line("pair.from_sign_in", device) }
+        /// This Mac couldn't save its sign-in to the Keychain (error {code}), so it wasn't added. Show a new code and try again.
+        static func keychainRefused(code: String) -> String { Words.line("pair.keychain_refused", code) }
         /// Show a new code
         static var newCode: String { Words.line("pair.new_code") }
         /// On your phone, open tafs, then {account}, {devices}, {pair}. Scan this code.

@@ -1422,6 +1422,7 @@ object Words {
     fun deviceName(device: String): String = Res.s(R.string.pair_device_name, device)
     fun failed(device: String, why: String): String = Res.s(R.string.pair_failed, device, why)
     fun fromSignIn(device: String): String = Res.s(R.string.pair_from_sign_in, device)
+    fun keychainRefused(code: String): String = Res.s(R.string.pair_keychain_refused, code)
     val newCode: String get() = Res.s(R.string.pair_new_code)
     fun steps(account: String, devices: String, pair: String): String = Res.s(R.string.pair_steps, account, devices, pair)
     fun title(device: String): String = Res.s(R.string.pair_title, device)

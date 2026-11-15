@@ -1364,6 +1364,7 @@
     <string name="pair_device_name">tafs neste %1$s</string>
     <string name="pair_failed">Este %1$s não foi adicionado: %2$s. Mostre um código novo e tente outra vez.</string>
     <string name="pair_from_sign_in">Já usa o tafs no telemóvel? Adicione este %1$s com ele.</string>
+    <string name="pair_keychain_refused">Este Mac não conseguiu guardar o início de sessão no porta-chaves (erro %1$s), por isso não foi adicionado. Mostre um código novo e tente outra vez.</string>
     <string name="pair_new_code">Mostrar um código novo</string>
     <string name="pair_steps">No telemóvel, abra o tafs e depois %1$s, %2$s, %3$s. Leia este código.</string>
     <string name="pair_title">Adicione este %1$s com o seu telemóvel</string>
