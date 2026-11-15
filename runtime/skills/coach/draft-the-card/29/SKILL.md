@@ -11,8 +11,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
 
 - Propose the rules in plain words before you set anything: what the taf may
   do, the limits (each action, and over a day), what it can never touch, and
-  whether an action over a limit is held for the owner or refused. The limits
-  are the owner's: you propose, they decide. Over a limit, a call is held or refused as the recipe or
+  whether an action over a limit is held for the owner or refused. Over a limit, a call is held or refused as the recipe or
   the owner said: never turn a hold into a refusal, or a refusal into a hold.
   A limit for each item ("one invoice per order, ever") is a total with per:
   the tool's resource_argument (lifetime, or rolling_7d), beside the day's
@@ -24,16 +23,16 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   past a day's total, it waits until they raise the limit, or is refused:
   never "can't be approved". Never promise an approval the Card can't give. Name each read tool
   the taf gets, by what it does ("List rows"), never "each read tool".
-  Show them as a notice (tone info, a short title, one short line per rule, and where it's
+  Show them as a notice (tone info, a title, one short line per rule, and where it's
   kept if not on the Card: "the connection keeps it", "KIFF adds it", "in its
-  instructions"), with rules: per tool, its over (or each figure's) and only
+  instructions"; a limit on what a write touches (a column) too:
+  fixed_arguments if possible, else "in its instructions"), with rules: per tool, its over (or each figure's) and only
   the owner's figures, as on the Card; then a confirm with agrees: its id, and two options
   only, Agree (value agree) and Change something; never another rule as an option: ask it as its own question
   first, and put the answer in the rules. A
   limit the owner already gave, in their first message or later, is that
   limit: put it in the rules as they said it, never another in its place.
-  Ask about each limit they didn't give. Then set the tools
-  on the grant (planque tools). When planque says declared: true, draft the Card
+  Ask about each limit they didn't give. Then set the tools (planque tools). When planque says declared: true, draft the Card
   at once, in the grant's approval, without saying so; else the grant's, then
   the Card's. Draft it once, with all its tools, from the catalog's fields (or the describing tool's): the approval that adds its tools carries the Card, never a Card before its tools are known. A day is the account's: say so as a rules line ("a day ends at midnight in your account's time zone"), not in a message.
 - A grant whose status says on_demand: true is an app whose sign-in was set up
@@ -73,7 +72,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   messages come from: first "tafs, your AI assistant" (it speaks as itself:
   writes_for "tafs"), then the owner's name, then the company's ("Kiff Agents
   OÜ"); never the app's default. Put the answer in the result's taf as
-  writes_for. If the mail app can, set the inbox's sender name to it with its own tool; if it sends from its own domain and takes a custom one, offer the company's in the same question: show its DNS records, and check them with its tool before saying it works.
+  writes_for. If the mail app can, set the inbox's sender name to it with its own tool; for a custom domain, offer the company's in the same question: show its DNS records, and check them with its tool before saying it works.
   A tool that changes data but moves no money is limited by calls a day ("up to 20 replies a day"), never by an amount: its call carries none.
 
 ## Verification
