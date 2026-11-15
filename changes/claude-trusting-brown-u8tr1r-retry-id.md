@@ -1,0 +1,1 @@
+- **A taf that typed an id the app doesn't know checks it against what it read,** and makes the call once more with the id as read (a new call, with a new operation id), instead of leaving that item undone. Once only (runtime/src/cloud/tafdef.ts).
