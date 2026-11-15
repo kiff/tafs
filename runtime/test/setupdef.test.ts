@@ -285,8 +285,8 @@ describe("Setup's definition on kiff/agents", () => {
     // A hand-off refused by the tool showed as done in the plan (the 870 test).
     expect(flat).toContain("A step whose call came back refused or failed is failed, never done, even when you go on");
     // The rules said reads had no limit; the Card it drafted counted them (the 870 test).
-    expect(flat).toContain("Name each read tool the taf gets, by what it does, with the call count its Card line will have");
-    expect(flat).toContain("never \"each read tool\" or \"no limit\"");
+    expect(flat).toContain('Name each read tool the taf gets, by what it does ("List rows"), never "each read tool".');
+    expect(flat).toContain("never \"each read tool\"");
     // The owner's iPad test (#95): no device's biometry or screen position, a taf that
     // can find its work, the plan finished, and a day that is the account's day.
     // Face ID is named only to say not to name it.
@@ -442,7 +442,7 @@ describe("Setup's definition on kiff/agents", () => {
     // up on every message, one more wait each time (kiff/tafs#138, item 58).
     expect(flat).toContain("the account, and the mode, on every tool that takes them, reads included");
     expect(flat).toContain("A taf then never looks them up: a lookup is a wait on every message");
-    expect(flat).toContain("A read tool's line has only a generous call count; never ask the owner to set it");
+    expect(flat).toContain("Reads go on a Card of their own: KIFF needs a total on every Card, so it counts reads high");
     expect(flat).toContain("Show plan again with every step done or skipped");
     // The nightly of 2026-10-19 (62 words in one message): the day and the mode are lines
     // of the rules notice, not repeated in every message.
