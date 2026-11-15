@@ -68,6 +68,29 @@ jobs:
           brew install xcodegen
           cd ios && xcodegen generate
 
+      # The Mac's entitlements are their own files (docs/mac-app.md): each holds every key
+      # the iPhone and iPad's has, push by its Mac name, and the App Sandbox.
+      - name: Check the Mac's entitlements
+        run: |
+          cd ios
+          check() {
+            plutil -lint "$2"
+            python3 - "$1" "$2" <<'PY'
+          import plistlib, sys
+          ios, mac = (plistlib.load(open(p, "rb")) for p in sys.argv[1:])
+          name = {"aps-environment": "com.apple.developer.aps-environment"}
+          missing = [name.get(k, k) for k in ios if name.get(k, k) not in mac]
+          off = [k for k in ("com.apple.security.app-sandbox", "com.apple.security.network.client") if mac.get(k) is not True]
+          for k in missing: print(f"::error file=ios/{sys.argv[2]}::{k} is in {sys.argv[1]} but not here")
+          for k in off: print(f"::error file=ios/{sys.argv[2]}::{k} must be true")
+          sys.exit(1 if missing or off else 0)
+          PY
+          }
+          check Tafs/Tafs.entitlements Tafs/TafsMac.entitlements
+          check Notify/TafsNotify.entitlements Notify/TafsNotifyMac.entitlements
+          grep -q 'CODE_SIGN_ENTITLEMENTS\[sdk=macosx\*\]"* = Tafs/TafsMac.entitlements' Tafs.xcodeproj/project.pbxproj
+          grep -q 'CODE_SIGN_ENTITLEMENTS\[sdk=macosx\*\]"* = Notify/TafsNotifyMac.entitlements' Tafs.xcodeproj/project.pbxproj
+
       # Unsigned: the Mac's signing is set up at release. The linker still
       # signs the binary ad hoc, which is what lets the tests run it.
       - name: Build for the Mac

@@ -93,6 +93,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app
+        # The Mac build's own entitlements: push by its Mac name, and the App Sandbox
+        # (docs/mac-app.md, "Signing and the sandbox").
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Tafs/TafsMac.entitlements
         # Set by CI for a manually signed TestFlight build; empty otherwise.
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_APP)
         # iPhone and iPad (kiff/tafs#85).
@@ -165,6 +168,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.notify
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Notify/TafsNotifyMac.entitlements
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_NOTIFY)
         TARGETED_DEVICE_FAMILY: "1,2"
   TafsTests:
