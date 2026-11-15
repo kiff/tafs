@@ -117,6 +117,7 @@
   "connect.key_not_given": "Klucz nie został przekazany. {why}",
   "connect.kiff_words_connection_could_not": "Nie udało się odczytać opisu KIFF dla tego połączenia. Nic nie zostało zatwierdzone.",
   "connect.last_failed": "Ostatnio nie powiodło się: {title} · {detail}",
+  "connect.misplaced": "Utworzone dla {taf}, który nie używa {app}.",
   "connect.more_apps": "Więcej aplikacji",
   "connect.more_apps_could_not_listed": "Nie udało się wyświetlić więcej aplikacji: {why}",
   "connect.no_confirmation_code": "Logowanie w {vendor} wróciło bez kodu potwierdzenia. Nic nie zostało połączone.",

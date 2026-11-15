@@ -1653,6 +1653,8 @@ enum Words {
         static var kiffWordsConnectionCouldNot: String { Words.line("connect.kiff_words_connection_could_not") }
         /// Last failed: {title} · {detail}
         static func lastFailed(title: String, detail: String) -> String { Words.line("connect.last_failed", title, detail) }
+        /// Made for {taf}, which doesn't use {app}.
+        static func misplaced(taf: String, app: String) -> String { Words.line("connect.misplaced", taf, app) }
         /// More apps
         static var moreApps: String { Words.line("connect.more_apps") }
         /// More apps couldn't be listed: {why}

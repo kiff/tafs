@@ -43270,6 +43270,59 @@
         }
       }
     },
+    "connect.misplaced": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für %1$@ angelegt, das %2$@ nicht nutzt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Made for %1$@, which doesn't use %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hecha para %1$@, que no usa %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faite pour %1$@, qui n'utilise pas %2$@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fatta per %1$@, che non usa %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemaakt voor %1$@, dat %2$@ niet gebruikt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utworzone dla %1$@, który nie używa %2$@."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feita para %1$@, que não usa %2$@."
+          }
+        }
+      }
+    },
     "connect.more_apps": {
       "extractionState": "manual",
       "localizations": {

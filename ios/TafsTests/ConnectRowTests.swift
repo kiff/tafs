@@ -209,6 +209,19 @@ final class ConnectRowTests: XCTestCase {
         XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: []), .noTaf)
     }
 
+    /// With tafs cloud's `needed_by`, the list only narrows: one taf that needs the app is still asked, as two
+    /// are; none is Ask Coach, and a taf opened from that doesn't need it is Ask Coach too, never a start.
+    func testWithNeededByEvenOneTafIsAsked() {
+        let one = Taf(name: "Refunds", job: "Refunds", tools: [], colorIndex: 0, card: Card(rules: [], issuedBy: "You"))
+        let two = Taf(name: "Disputes", job: "Disputes", tools: [], colorIndex: 1, card: Card(rules: [], issuedBy: "You"))
+        let other = Taf(name: "Unanswered emails", job: "Emails", tools: [], colorIndex: 2, card: Card(rules: [], issuedBy: "You"))
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: [one], needed: true), .ask, "named, never taken")
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: [one, two], needed: true), .ask)
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: [], needed: true), .askCoach)
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: two.id, connectable: [one, two], needed: true), .taf(two.id))
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: other.id, connectable: [one], needed: true), .askCoach, "Stripe under a Gmail taf")
+    }
+
     /// "Make one first" sits over Discover, where connecting needs a taf, and never over Yours: on an
     /// account with no taf and only connected apps, it doesn't show at all.
     func testMakeATafShowsOnlyOverAppsToConnect() throws {

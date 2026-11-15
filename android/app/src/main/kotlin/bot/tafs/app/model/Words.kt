@@ -896,6 +896,7 @@ object Words {
     fun keyNotGiven(why: String): String = Res.s(R.string.connect_key_not_given, why)
     val kiffWordsConnectionCouldNot: String get() = Res.s(R.string.connect_kiff_words_connection_could_not)
     fun lastFailed(title: String, detail: String): String = Res.s(R.string.connect_last_failed, title, detail)
+    fun misplaced(taf: String, app: String): String = Res.s(R.string.connect_misplaced, taf, app)
     val moreApps: String get() = Res.s(R.string.connect_more_apps)
     fun moreAppsCouldNotListed(why: String): String = Res.s(R.string.connect_more_apps_could_not_listed, why)
     fun noConfirmationCode(vendor: String): String = Res.s(R.string.connect_no_confirmation_code, vendor)

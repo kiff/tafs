@@ -873,6 +873,7 @@
     <string name="connect_key_not_given">La clé n\'a pas été donnée. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">Les textes de KIFF pour cette connexion n\'ont pas pu être lus. Rien n\'a été approuvé.</string>
     <string name="connect_last_failed">Dernier échec : %1$s · %2$s</string>
+    <string name="connect_misplaced">Faite pour %1$s, qui n\'utilise pas %2$s.</string>
     <string name="connect_more_apps">Plus d\'apps</string>
     <string name="connect_more_apps_could_not_listed">Les autres apps n\'ont pas pu être listées : %1$s</string>
     <string name="connect_no_confirmation_code">La connexion à %1$s est revenue sans son code de confirmation. Rien n\'a été connecté.</string>
