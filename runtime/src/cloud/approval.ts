@@ -102,6 +102,13 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
     if (left) {
       return { outcome: "answered", answer: `failed: no Card covers "${left}", which the taf's connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${left}" on a Card (a read gets a call count only, generous enough never to get in the way).`, note: W.uncovered(left) };
     }
+    // Every tool the taf will hold, not only this connection's (Eval 43657637947): each of the same taf's other
+    // connected apps is covered too, by the draft or by a Card in force, or the taf would hold a tool KIFF refuses,
+    // and a refused read stops its session before the write that was allowed.
+    const elsewhere = uncoveredElsewhere(grant, others, draft.cards, inForce);
+    if (elsewhere) {
+      return { outcome: "answered", answer: `failed: no Card covers "${elsewhere.tool}", which the taf's ${elsewhere.vendor} connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${elsewhere.tool}" on a Card too (a read gets a call count only, generous enough never to get in the way).`, note: W.uncovered(elsewhere.tool) };
+    }
     // A limit for each item drafted as one lifetime count on the whole tool stops the taf after its first item
     // (Eval 43402441612: "one invoice per order, ever" signed as 1 create_invoice in the Card's life). Never signed.
     const capped = lifetimeCapOnWrite(grant, draft.cards);
@@ -210,6 +217,20 @@ export function strayAction(grant: ApprovalGrant, others: ApprovalGrant[], cards
       const action = fold((g as { action?: unknown }).action);
       if (action && !given.has(action)) return (g as { action: string }).action;
     }
+  }
+  return undefined;
+}
+
+/**
+ * The first tool of the same taf's other connected apps (others, as sameTafOf gives them) that neither the draft's Cards
+ * nor the agent's Cards in force cover, with that app's vendor: the taf holds those tools too. An app still waiting for its
+ * own approval is left to appsWaiting; its tools aren't held yet.
+ */
+export function uncoveredElsewhere(grant: ApprovalGrant, others: ApprovalGrant[], cards: unknown[], inForce: Set<string>): { tool: string; vendor: string } | undefined {
+  for (const g of others) {
+    if (g.id === grant.id || g.status !== "connected") continue;
+    const tool = uncoveredTool(g, cards, inForce);
+    if (tool) return { tool, vendor: vendorOf(g) };
   }
   return undefined;
 }

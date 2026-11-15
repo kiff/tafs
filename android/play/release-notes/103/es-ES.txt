@@ -1,0 +1,1 @@
+- Un teléfono que no puede aprobar lo dice en cuanto se carga tu cuenta: “Vuelve a iniciar sesión en este teléfono para aprobar, o aprueba desde tu otro teléfono.”

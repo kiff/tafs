@@ -104,6 +104,24 @@ class DevicesTest {
     assertTrue("KIFF decides whether it takes it", verifies(signer.publicKeyDER, KiffClient.requestMessage("t_01", "DELETE", "/v1/me/devices/dev_2", ByteArray(0), at), sig))
   }
 
+  @Test fun aViewOnlyPhoneIsToldWhichDeviceCanSignAnotherOut() = runTest {
+    transport.answer("GET /v1/me/devices", 200, devices)
+    transport.answer("DELETE /v1/me/devices/dev_2", 403, """{"error":"view_only","message":"this device can't approve: approve on your phone, or pair this device from it"}""")
+    val m = model(approvalKey = false)
+    m.refreshDevices()
+    assertFalse(m.removeDevice(m.state.value.devices[1]))
+    assertEquals("To sign another device out, use a device that can approve.", m.state.value.devicesError)
+  }
+
+  @Test fun anyOtherRefusalStillSaysWhatDidntGoThrough() = runTest {
+    transport.answer("GET /v1/me/devices", 200, devices)
+    transport.answer("DELETE /v1/me/devices/dev_2", 409, """{"error":"conflict"}""")
+    val m = model(approvalKey = false)
+    m.refreshDevices()
+    assertFalse(m.removeDevice(m.state.value.devices[1]))
+    assertTrue(m.state.value.devicesError!!.startsWith("Sign Ana's iPhone out of your account didn't go through"))
+  }
+
   @Test fun kiffAskingForTheApprovalKeySaysApprovingNeedsANewSignIn() = runTest {
     transport.answer("GET /v1/me/devices", 200, devices)
     transport.answer("DELETE /v1/me/devices/dev_2", 403, """{"error":"approval_key_required"}""")

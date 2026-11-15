@@ -1,0 +1,1 @@
+- **Android 1.29.2 (103): a view-only phone says so as soon as the account loads.** KIFF's `approval_mode` in `GET /v1/me` says how the session approves; `"view"` shows "Sign in again on this phone to approve, or approve from your other phone." from the start, not only once registering the approval key is refused (docs/approvals.md).

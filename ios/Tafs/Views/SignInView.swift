@@ -122,6 +122,8 @@ struct SettingsView: View {
     @State private var confirming: SignOutWay?
     /// `-screen alerts`: the screenshots open Alerts by themselves.
     @State private var openAlerts = Screenshots.enabled && Screenshots.screen == "alerts"
+    /// `-tab account -screen devices`: Devices pushed in Account, over the sample, for the reference set.
+    @State private var openDevices = Screenshots.enabled && Screenshots.screen == "devices"
 
     var body: some View {
         NavigationStack {
@@ -215,6 +217,7 @@ struct SettingsView: View {
             .navigationTitle(Words.Settings.title)
             .task(id: model.mode) { await model.loadSuggestions() }
             .navigationDestination(isPresented: $openAlerts) { NotificationSettingsView().environmentObject(model) }
+            .navigationDestination(isPresented: $openDevices) { DevicesView().environmentObject(model) }
             .sheet(isPresented: $signingIn) { SignInView().environmentObject(model) }
             .confirmingSignOut($confirming) { _ in
                 Task { if await model.signOut() { dismiss() } }
