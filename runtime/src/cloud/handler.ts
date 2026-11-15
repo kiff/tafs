@@ -9390,8 +9390,11 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
       const entry = decodeURIComponent(parts[3] ?? "");
       const [needs, listed] = await Promise.all([needContext(event, me, deps), catalogApp(fetchFn, deps.planqueBase, me.tenantID, bearer(event), entry)]);
       const app = listed ?? { entry };
-      if (!needs || !neededBy(app, needs.tafs, RECIPES, needs.grants, needs.cards, holdersOf(app, needs.uses)).some((n) => n.taf === taf.id)) {
-        throw new HTTPError(409, `${taf.name} doesn't use this app: ask Coach to set it up`, { code: "not_needed" });
+      const w = wordsIn(langOf(event));
+      // The tafs unread: nothing is started on a guess, and the person hears to try again (not that the taf doesn't use it).
+      if (!needs) throw new HTTPError(503, w.connect_tafs_unread, { code: "tafs_unread", words: w.connect_tafs_unread });
+      if (!neededBy(app, needs.tafs, RECIPES, needs.grants, needs.cards).some((n) => n.taf === taf.id)) {
+        throw new HTTPError(409, w.connect_not_needed(taf.name), { code: "not_needed", words: w.connect_not_needed(taf.name) });
       }
       return await startApp(fetchFn, deps.planqueBase, me.tenantID, bearer(event), decodeURIComponent(parts[3] ?? ""), taf.kiffAgent, taf.name);
     }
@@ -9403,7 +9406,7 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
 }
 
 /** What Connect apps' `needed_by` is decided from (needed.ts): the person's tafs, and, with the phone's signed read, planque's grants and the Cards. */
-interface NeedContext { tafs: NeedTaf[]; grants?: GrantView[]; cards?: Mandate[]; uses?: Map<string, AppUser[]> }
+interface NeedContext { tafs: NeedTaf[]; grants?: GrantView[]; cards?: Mandate[] }
 
 /**
  * The tafs this person could connect an app for (live, theirs to see, not Setup), and, with the phone's signed grants
@@ -9422,18 +9425,9 @@ async function needContext(event: HTTPEvent, me: KIFFIdentity, deps: Deps, reads
     console.warn(`connect apps: tafs unread for ${me.tenantID} (${err instanceof Error ? err.message : String(err)})`);
     return undefined;
   }
-  // Without them, the recipes and the tafs holding a connection decide (needed.ts).
+  // Without them (no proof, or a proof planque refused), the recipes alone decide (needed.ts): stricter, never looser.
   const got = await reads().catch(() => undefined);
-  if (got) return { tafs, ...got };
-  const uses = await connectionUses(event, me, deps);
-  return uses ? { tafs, uses } : { tafs };
-}
-
-/** The tafs holding one of an app's connections, by its entry and its vendor's and title's folded names. */
-function holdersOf(app: NeedApp, uses: Map<string, AppUser[]> | undefined): Set<string> {
-  if (!uses) return new Set();
-  const keys = [app.entry, ...(app.vendor ? [foldVendor(app.vendor)] : []), ...(app.title ? [foldVendor(app.title)] : [])];
-  return new Set(keys.flatMap((k) => (uses.get(k) ?? []).map((u) => u.taf)));
+  return got ? { tafs, ...got } : { tafs };
 }
 
 /** planque's grants, read with the phone's proof, and the person's Cards: undefined without the proof, or when either can't be read. */
@@ -9459,7 +9453,7 @@ function shared<T>(make: () => Promise<T>): () => Promise<T> {
 /** An app's `needed_by`, and, with planque's grants, `misplaced`: none at all without a context. */
 function needFields(app: NeedApp, ctx: NeedContext | undefined): { needed_by?: Array<{ taf: string; name: string }>; misplaced?: Array<{ grant: string; taf: string; name: string }> } {
   if (!ctx) return {};
-  const needed = neededBy(app, ctx.tafs, RECIPES, ctx.grants, ctx.cards, holdersOf(app, ctx.uses));
+  const needed = neededBy(app, ctx.tafs, RECIPES, ctx.grants, ctx.cards);
   return { needed_by: needed, ...(ctx.grants ? { misplaced: misplaced(app, ctx.tafs, needed, ctx.grants) } : {}) };
 }
 

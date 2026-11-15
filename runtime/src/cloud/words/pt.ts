@@ -100,6 +100,8 @@ export const pt: Words = {
   connect_again_title: "Ligar novamente",
   connect_again_words: (app: string, taf: string) => `O início de sessão no ${app} expirou, por isso ${taf} não o pode usar. Ligue novamente para iniciar sessão.`,
   connect_again_done: (app: string, taf: string) => `${app} voltou a estar ligado. ${taf} pode usá-lo.`,
+  connect_not_needed: (taf: string) => `${taf} não usa esta app. O Coach pode configurá-la para ${taf}.`,
+  connect_tafs_unread: "Não foi possível ler os seus tafs agora, por isso nada foi ligado. Tente novamente daqui a pouco.",
   check_key_not_ready: "a sua chave ainda não estava pronta; volta a verificar da próxima vez",
   check_dropped: "A verificação não conseguiu ler a app, por isso, por agora, corre nas horas definidas sem verificação. O Coach pode corrigi-la.",
   check_dropped_hourly: "A verificação não conseguiu ler a app, por isso, por agora, corre sem verificação, no máximo uma vez por hora. O Coach pode corrigi-la.",

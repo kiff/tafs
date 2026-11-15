@@ -7,9 +7,9 @@
  * A taf needs an app when its recipe names the app's vendor in one of its connections, or when a Card in force for
  * it has a rule on an action of one of the app's connections (planque's grants for the app, whichever taf asked
  * for them: KIFF's tools are the account's). The second needs planque's grants, which only the phone's signed read
- * gives. Without them, a taf that already holds one of the app's connections counts too (its reconnect from the
- * list), since only the grants and Cards can say it was made under the wrong taf: with them, the Card decides, and a
- * connection held by a taf whose Card doesn't use it is `misplaced`.
+ * gives. Without them, or when that read is refused, the recipes alone decide: stricter, never looser. Holding a
+ * connection never counts on its own, since a connection made under the wrong taf is held by it too (the retest's
+ * Stripe under a Gmail taf); a connection held by a taf that doesn't need the app is `misplaced`.
  */
 import { vendorOf } from "./recipes.js";
 import type { GrantView } from "./taf-setup.js";
@@ -57,11 +57,9 @@ const live = (g: GrantView) => g.status !== "disconnected" && g.status !== "fail
 
 /**
  * The tafs that need the app, in name order. `grants` and `cards` are planque's grants (the phone's signed read) and
- * the person's Cards; leave them out when they can't be read. `holding` is the tafs that hold one of the app's
- * connections, as the account's connections say: counted only without the grants and Cards.
+ * the person's Cards; leave them out when they can't be read, and the recipes alone decide.
  */
-export function neededBy(app: NeedApp, tafs: readonly NeedTaf[], recipes: readonly NeedRecipe[], grants?: readonly GrantView[], cards?: readonly Mandate[],
-  holding: ReadonlySet<string> = new Set()): NeededBy[] {
+export function neededBy(app: NeedApp, tafs: readonly NeedTaf[], recipes: readonly NeedRecipe[], grants?: readonly GrantView[], cards?: readonly Mandate[]): NeededBy[] {
   const vendors = appVendors(app);
   const byRecipe = (t: NeedTaf) => {
     const r = t.recipe ? recipes.find((x) => x.id === t.recipe) : undefined;
@@ -70,9 +68,7 @@ export function neededBy(app: NeedApp, tafs: readonly NeedTaf[], recipes: readon
   const actions = new Set(grants && cards ? grantsOf(app, grants).filter(live).flatMap((g) => [...actionsOf(g)]) : []);
   const byCard = (t: NeedTaf) => actions.size > 0 && !!cards && cards.some((m) => m.subject === t.kiffAgent && m.active && !m.revoked_at
     && (m.grants ?? []).some((x) => actions.has(x.action)));
-  // Holding a connection counts only when the grants and Cards can't be read to say whether it's used.
-  const byHolding = (t: NeedTaf) => !(grants && cards) && holding.has(t.id);
-  return tafs.filter((t) => t.kiffAgent && (byRecipe(t) || byCard(t) || byHolding(t)))
+  return tafs.filter((t) => t.kiffAgent && (byRecipe(t) || byCard(t)))
     .map((t) => ({ taf: t.id, name: t.name })).sort((a, b) => a.name.localeCompare(b.name) || a.taf.localeCompare(b.taf));
 }
 

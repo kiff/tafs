@@ -20,12 +20,7 @@
           }
         ],
         "line": "Sign in · Sign in again · Used by Rae",
-        "needed_by": [
-          {
-            "taf": "taf-aaaa0000000000000000",
-            "name": "Rae"
-          }
-        ]
+        "needed_by": []
       }
     ],
     "by_key": true,

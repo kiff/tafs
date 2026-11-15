@@ -6813,17 +6813,20 @@ describe("the first run", () => {
 // taf there was. Starting a connection from Connect apps now goes only to a taf that needs the app (needed.ts).
 describe("Connect apps: which taf a connection goes to", () => {
   const DESK = "taf-dddd0000000000000000";
-  async function post(w: ReturnType<typeof world>, entry: string, taf: string, opts: { proof?: string; grants?: unknown[]; mandates?: unknown[]; token?: string } = {}) {
+  async function post(w: ReturnType<typeof world>, entry: string, taf: string, opts: { proof?: string; grants?: unknown[]; grantsStatus?: number; mandates?: unknown[]; token?: string; lang?: string } = {}) {
     const started: string[] = [];
     const ok = (v: unknown) => new Response(JSON.stringify(v), { status: 200 });
     const r = await handle({ rawPath: `/v1/connect/apps/${encodeURIComponent(entry)}`, requestContext: { http: { method: "POST" } },
-      headers: { Authorization: `Bearer ${opts.token ?? "ana_co"}`, "content-type": "application/json", ...(opts.proof ? { "planque-device-signature": opts.proof } : {}) },
+      headers: { Authorization: `Bearer ${opts.token ?? "ana_co"}`, "content-type": "application/json", ...(opts.proof ? { "planque-device-signature": opts.proof } : {}),
+        ...(opts.lang ? { "accept-language": opts.lang } : {}) },
       body: JSON.stringify({ taf }) },
     { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
       if (url.startsWith("https://planque.test/v1/accounts/t_acme/catalog?") || url === "https://planque.test/v1/accounts/t_acme/catalog") return ok({ entries: [
         { entry: "stripe@3", vendor: "Stripe", title: "Stripe", how: "oauth", state: "available" },
         { entry: "connector:p:gmail", vendor: "gmail", title: "Gmail", how: "oauth", state: "available" },
         { entry: "typeform@1", vendor: "Typeform", title: "Typeform", how: "oauth", state: "available" },
+        // An entry whose slug isn't its vendor's: only the catalog says it's Stripe.
+        { entry: "acme-pay@2", vendor: "Stripe", title: "Stripe", how: "oauth", state: "available" },
       ] });
       if (url.includes("/catalog/") && url.endsWith("/grants") && init?.method === "POST") {
         started.push(`${decodeURIComponent(url.split("/catalog/")[1]!.replace(/\/grants$/, ""))} for ${JSON.parse(String(init.body)).agent}`);
@@ -6832,7 +6835,7 @@ describe("Connect apps: which taf a connection goes to", () => {
       if (url === "https://planque.test/v1/accounts/t_acme/connections") return ok({ connections: [
         { agent: "desk", vendor: "Stripe", kind: "vendor_sign_in", entry: "stripe@3", status: "connected" },
       ] });
-      if (url === "https://planque.test/v1/accounts/t_acme/grants") return ok({ grants: opts.grants ?? [] });
+      if (url === "https://planque.test/v1/accounts/t_acme/grants") return opts.grantsStatus ? new Response("{}", { status: opts.grantsStatus }) : ok({ grants: opts.grants ?? [] });
       if (url.startsWith("https://planque.test/")) return new Response("{}", { status: 500 });
       if (url.endsWith("/v1/me/mandates")) return ok({ mandates: opts.mandates ?? [] });
       return depsOf(w).fetch!(url, init);
@@ -6850,9 +6853,38 @@ describe("Connect apps: which taf a connection goes to", () => {
   it("refuses a taf that doesn't use the app (not_needed), and starts nothing", async () => {
     const w = tafs();
     const r = await post(w, "typeform@1", NEW);
-    expect(r).toMatchObject({ status: 409, body: { code: "not_needed" } });
-    expect(String(r.body.error ?? r.body.message)).toContain("Refunds doesn't use this app: ask Coach to set it up");
+    expect(r).toMatchObject({ status: 409, body: { code: "not_needed", words: "Refunds doesn't use this app. Coach can set it up for Refunds." } });
     expect(r.started).toEqual([]);
+    // In the person's language, as the halted refusals are.
+    expect((await post(w, "typeform@1", NEW, { lang: "es" })).body.words).toBe("Refunds no usa esta app. Coach puede configurarla para Refunds.");
+  });
+
+  // kiff-qa's 3 on the review: the POST reads the app's vendor from the catalog, not its entry's slug alone.
+  it("reads the app's vendor from the catalog: an entry whose slug isn't the recipe's vendor still goes to the taf whose recipe names it", async () => {
+    const w = tafs();
+    expect((await post(w, "acme-pay@2", NEW)).started).toEqual(["acme-pay@2 for chargebacks"]);
+  });
+
+  // kiff-qa's 2 on the review: the tafs unread, nothing starts, and the person hears to try again, not "doesn't use it".
+  it("fails closed with try-again words when the tafs can't be read (tafs_unread)", async () => {
+    const w = tafs();
+    w.tafs.list = async () => { throw new Error("store down"); };
+    const r = await post(w, "stripe@3", NEW);
+    expect(r).toMatchObject({ status: 503, body: { code: "tafs_unread", words: "Your tafs couldn't be read just now, so nothing was connected. Try again in a moment." } });
+    expect(r.started).toEqual([]);
+  });
+
+  it("never offers a Setup taf, even with a recipe that names the app", async () => {
+    const w = tafs();
+    w.tafs.held.set(`t_acme#taf-ssss0000000000000000`, { id: "taf-ssss0000000000000000", name: "Coach setup", job: "setup", kiffAgent: "setup-x", nameClaim: "s", created: "2026-10-14T09:00:00Z", recipe: "refunds-within-a-limit" });
+    const r = await handle({ rawPath: "/v1/connect/apps", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_co" } },
+      { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+        if (url.startsWith("https://planque.test/v1/accounts/t_acme/catalog")) return new Response(JSON.stringify({ entries: [{ entry: "stripe@3", vendor: "Stripe", title: "Stripe", how: "oauth", state: "available" }] }), { status: 200 });
+        if (url.startsWith("https://planque.test/")) return new Response(JSON.stringify({ connections: [] }), { status: 200 });
+        return depsOf(w).fetch!(url, init);
+      }) as Deps["fetch"] });
+    const stripe = (JSON.parse(r.body).apps as Array<{ entry: string; needed_by?: Array<{ taf: string }> }>).find((a) => a.entry === "stripe@3");
+    expect(stripe?.needed_by?.map((n) => n.taf)).toEqual([NEW]);
   });
 
   // kiff-qa's 4: an app two tafs need is accepted for each.
@@ -6865,13 +6897,19 @@ describe("Connect apps: which taf a connection goes to", () => {
     expect(card.started).toEqual(["stripe@3 for desk"]);
   });
 
-  // kiff-qa's 5, at the start: with the grants and Cards read, holding the wrong connection doesn't make it needed.
-  it("with the phone's grants read, a taf that only holds a connection its Card doesn't use is refused; without them, its reconnect goes", async () => {
+  // kiff-qa's 5, at the start, and the review's blocking change: holding the wrong connection never makes it needed, with
+  // the grants and Cards read, without the proof (every app today), or with a proof planque refused (the GET's resent).
+  it("refuses a taf that only holds a connection, whether the phone's grants are read, missing, or refused", async () => {
     const w = tafs();
     const read = await post(w, "stripe@3", DESK, { proof: "proof-1",
       grants: [{ id: "g-wrong", status: "connected", entry: "stripe@3", tools: ["refund_charge_k3"], request: { agent: "desk" } }], mandates: [] });
     expect(read).toMatchObject({ status: 409, body: { code: "not_needed" } });
-    expect((await post(w, "stripe@3", DESK)).started).toEqual(["stripe@3 for desk"]);
+    const none = await post(w, "stripe@3", DESK);
+    expect(none).toMatchObject({ status: 409, body: { code: "not_needed" } });
+    expect(none.started).toEqual([]);
+    const refused = await post(w, "stripe@3", DESK, { proof: "proof-used", grantsStatus: 401 });
+    expect(refused).toMatchObject({ status: 409, body: { code: "not_needed" } });
+    expect(refused.started).toEqual([]);
   });
 
   // kiff-qa's 2 and 3: another account's taf, or one this person can't manage, is refused before need is asked.

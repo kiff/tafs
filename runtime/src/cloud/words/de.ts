@@ -100,6 +100,8 @@ export const de: Words = {
   connect_again_title: "Erneut verbinden",
   connect_again_words: (app: string, taf: string) => `Die Anmeldung bei ${app} ist abgelaufen, daher kann ${taf} es nicht nutzen. Verbinde erneut, um dich anzumelden.`,
   connect_again_done: (app: string, taf: string) => `${app} ist wieder verbunden. ${taf} kann es nutzen.`,
+  connect_not_needed: (taf: string) => `${taf} nutzt diese App nicht. Coach kann sie für ${taf} einrichten.`,
+  connect_tafs_unread: "Deine tafs konnten gerade nicht gelesen werden, daher wurde nichts verbunden. Versuche es gleich noch einmal.",
   check_key_not_ready: "sein Schlüssel war noch nicht bereit; es prüft beim nächsten Mal erneut",
   check_dropped: "Seine Prüfung konnte die App nicht lesen, daher läuft er vorerst zu seinen Zeiten ohne Prüfung. Coach kann die Prüfung reparieren.",
   check_dropped_hourly: "Seine Prüfung konnte die App nicht lesen, daher läuft er vorerst ohne Prüfung, höchstens einmal pro Stunde. Coach kann die Prüfung reparieren.",

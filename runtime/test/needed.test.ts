@@ -51,10 +51,12 @@ describe("which tafs need an app (needed.ts)", () => {
       [card("chargebacks", "setup_k3")])).toEqual([]);
   });
 
-  it("holding a connection counts only without the grants and Cards (a reconnect from the list); with them, the Card decides", () => {
-    const holding = new Set(["taf-desk"]);
-    expect(neededBy(stripe, [desk], recipes, undefined, undefined, holding)).toEqual([{ taf: "taf-desk", name: "Unanswered emails" }]);
-    expect(neededBy(stripe, [desk], recipes, [grant("g1", "desk")], [], holding)).toEqual([]);
+  // kiff-qa on the first review: holding a connection never counts, or the retest's Stripe under a Gmail taf could be
+  // connected there again by an app that sends no proof. Without the grants and Cards, the recipes alone decide.
+  it("holding a connection never makes a taf need the app: without the grants and Cards, the recipes alone decide", () => {
+    expect(neededBy(stripe, [desk], recipes)).toEqual([]);
+    expect(neededBy(stripe, [desk], recipes, [grant("g1", "desk")], [])).toEqual([]);
+    expect(neededBy(stripe, [desk, refunds], recipes)).toEqual([{ taf: "taf-refunds", name: "Refunds" }]);
   });
 
   // kiff-qa's 5: the owner's Stripe made under "Unanswered emails" is listed, so it can be withdrawn.
