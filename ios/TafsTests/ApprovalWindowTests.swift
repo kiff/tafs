@@ -1,3 +1,4 @@
+import CryptoKit
 import XCTest
 @testable import Tafs
 
@@ -347,6 +348,67 @@ final class ApprovalWindowTests: XCTestCase {
         XCTAssertTrue(sent("POST", "/v1/me/window").isEmpty)
         XCTAssertEqual(signer.currentPrompted.count, 2, "Face ID each time")
         XCTAssertTrue(planqueHeaders().allSatisfy { !$0.contains(",w=") })
+    }
+
+    // MARK: A connection that carries Setup's reads
+
+    /// planque's test grant with its read asked for Setup too (`setup_reads`), and planque's digest of it.
+    private static let setupReadsRequest = PlanqueTests.request.replacingOccurrences(of: #"{"tool":"list_payments","read_only":true}"#, with: #"{"tool":"list_payments","read_only":true,"setup_reads":true}"#)
+    private static var setupReadsDigest: String {
+        let canonical = (try? JCS.canonical(Data(setupReadsRequest.utf8))) ?? Data()
+        return SHA256.hash(data: canonical).map { String(format: "%02x", $0) }.joined()
+    }
+
+    /// The pending grant read again, now asking for Setup's reads, and the window ask for it.
+    private func askForSetupReads(_ model: AppModel) async {
+        let grant = PlanqueTests.grantJSONFor(status: "pending", digest: Self.setupReadsDigest).replacingOccurrences(of: PlanqueTests.request, with: Self.setupReadsRequest)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(grant)]}"#)
+        await model.refreshConnections()
+        StubProtocol.responses[askRoute] = (200, ask(key: "window").replacingOccurrences(of: PlanqueTests.digest, with: Self.setupReadsDigest))
+        StubProtocol.sent = []
+    }
+
+    func testOnlyAToolAskedForSetupsReadsCarriesThem() throws {
+        XCTAssertFalse(AppModel.carriesSetupReads(nil))
+        let plain = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(PlanqueTests.grantJSONFor().utf8))
+        XCTAssertFalse(AppModel.carriesSetupReads(plain), "a read only, not Setup's")
+        let reads = try KIFFClient.decoder.decode(PlanqueClient.Grant.self, from: Data(PlanqueTests.grantJSONFor().replacingOccurrences(of: PlanqueTests.request, with: Self.setupReadsRequest).utf8))
+        XCTAssertTrue(AppModel.carriesSetupReads(reads))
+    }
+
+    /// planque shows a connection's approval to KIFF again for Setup's reader Card once the vendor's sign-in
+    /// comes back, after the app has closed any window: so that approval is never signed in one. Face ID over
+    /// the ask's message, and the device key signs planque's approve as v1, with no window's id; no window opens.
+    func testAConnectionCarryingSetupsReadsTakesFaceIDAndNoWindow() async throws {
+        let signer = TwoKeySigner()
+        let model = await model(signer)
+        StubProtocol.responses["POST /v1/me/window"] = (201, windowOpened)
+        StubProtocol.responses["GET /v1/me/window"] = (200, windowOpened)
+        await askForSetupReads(model)
+        try await approveCard(model)
+        XCTAssertEqual(signer.currentPrompted, ["tafs.connect.v1|t_01|g_01|\(Self.setupReadsDigest)"], model.cardNotes["connect-stripe"] ?? "")
+        XCTAssertTrue(sent("POST", "/v1/me/window").isEmpty, "no window opened")
+        let header = try XCTUnwrap(planqueHeaders().first)
+        XCTAssertTrue(header.contains(",v1=current,d=") && !header.contains(",w="), header)
+        XCTAssertTrue(signer.current.contains { $0.hasPrefix("planque.request.v1\n") }, "the device key, as KIFF checks a lone planque request")
+        XCTAssertTrue(signer.approval.isEmpty, "the approval key signs nothing for planque")
+        XCTAssertEqual(json(sent("POST", "/v1/tafs/taf-setup/components/connect-stripe/approval/ask_1").first)["result"] as? String, "connected")
+    }
+
+    /// Even with a window held, such a connection asks Face ID and signs outside it; the window stays for the next tap.
+    func testInsideAWindowAConnectionCarryingSetupsReadsStillTakesFaceID() async throws {
+        let signer = TwoKeySigner()
+        let model = await model(signer)
+        StubProtocol.responses[askRoute] = (200, ask(key: "window"))
+        StubProtocol.responses["POST /v1/me/window"] = (201, windowOpened)
+        StubProtocol.responses["GET /v1/me/window"] = (200, windowOpened)
+        try await approveCard(model)
+        XCTAssertNotNil(model.kiff.window)
+        await askForSetupReads(model)
+        try await approveCard(model)
+        XCTAssertEqual(signer.currentPrompted.count, 2, "Face ID again")
+        XCTAssertFalse(planqueHeaders().last?.contains(",w=") ?? true)
+        XCTAssertNotNil(model.kiff.window, "the window stays held")
     }
 
     /// A critical ask while a window is held still takes Face ID, and signs outside the window.

@@ -1,0 +1,1 @@
+- **iPhone and iPad: connecting an app that Setup reads from asks for Face ID, outside the approval window.** Setup's reads were refused after the vendor's sign-in (`window_required`), because the connection had been approved inside a window the app had since closed; the connection is now signed outside any window, so the reads are set up (docs/approvals.md).

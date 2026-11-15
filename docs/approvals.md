@@ -191,6 +191,15 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   `kiff.window.v1` (`POST /v1/me/window`, `{message, expires, nonce}`, five minutes at most),
   behind one fingerprint in the card's words. The app opens none on its own guess, and a KIFF
   without the route (404) leaves the step signing as it did.
+- **Setup's reads.** A connection whose tools include Setup's own reads (planque's
+  `setup_reads`) never takes the window, even on a `key: window` ask or with one held: the
+  fingerprint over the ask's message, then planque's approve signed by the device key as
+  `planque.request.v1`, with no window's id. planque shows that approval to KIFF again for
+  Setup's reader Card once the vendor's sign-in comes back, after the app has closed any
+  window, and KIFF checks a window-signed approval against the window open then
+  (`window_required`). KIFF checks a lone planque request against the device key, so the
+  approval key doesn't sign it. On iPhone and iPad, `AppModel.carriesSetupReads`; Android
+  takes the same rule in its own change.
 - **Inside it.** What the approval key would sign goes with the device key and the window's
   id, `t=…,v2=…,w=<id>`, over `kiff.request.v2` to KIFF or `planque.request.v2` to planque,
   the window's id last. planque's calls are signed this way only for the step that took the

@@ -8322,7 +8322,12 @@ final class AppModel: ObservableObject {
                     // tafs cloud's hint that the call takes an approval window (kiff/tafs#494): one Face ID opens it,
                     // unless this phone holds one, and the call goes as a tap. The service decides; a KIFF without
                     // windows leaves the step as it was. As Android's `holdWindow`.
-                    let takesWindow = ask.key == "window" && windowAvailable
+                    // A connection that carries Setup's reads never takes the window: Face ID over this message, and the
+                    // call signed outside any window (`planque.request.v1`). planque keeps that approval and shows it to
+                    // KIFF for Setup's reader Card only once the vendor's sign-in comes back, after the app has closed any
+                    // window, and KIFF refused a window-signed one then (`window_required`). As Android.
+                    let setupReads = ask.step == "connect" && Self.carriesSetupReads(grants.first { $0.id == ask.planque?.grant })
+                    let takesWindow = ask.key == "window" && windowAvailable && !setupReads
                     let confirm: @MainActor () async throws -> Void = { _ = try await signer.sign(Data(ask.message.utf8), reason: ask.reason, grants: true) }
                     var windowed = takesWindow && kiff.window != nil
                     do {
@@ -8689,6 +8694,12 @@ final class AppModel: ObservableObject {
         default:
             return nil
         }
+    }
+
+    /// A connection that asks for Setup's reads (`setup_reads`), which planque turns into Setup's reader Card once
+    /// the vendor's sign-in returns: its approval is signed behind Face ID, outside any window.
+    static func carriesSetupReads(_ grant: PlanqueClient.Grant?) -> Bool {
+        grant?.request.tools.contains { $0.setupReads == true } ?? false
     }
 
     /// What came of the call tafs cloud asked for, as the report says it: never an answer, only what happened.

@@ -417,7 +417,9 @@ the app in sample mode.
   step's calls go as a tap: planque's with `planque.request.v2` and KIFF's draft confirm with `kiff.request.v2`, the
   device key with the window's id (`PlanqueClient.window`, `KIFFClient.signsInWindow`, set for that step only). A
   `critical` ask, no hint, a session without the approval key, a drive, or a KIFF without the route (404) signs as
-  before, with Face ID. planque's `window_required` opens a new window behind Face ID and makes the call once more;
+  before, with Face ID, and so does a connection that carries Setup's reads (`AppModel.carriesSetupReads`, planque's
+  `setup_reads`), window or not: planque shows its approval to KIFF again once the vendor's sign-in comes back, after
+  the window has closed (docs/approvals.md). planque's `window_required` opens a new window behind Face ID and makes the call once more;
   KIFF's `critical_key_required` or `window_required` asks Face ID again and the approval key signs it
   (`windowReconfirm`). KIFF's words are read after each approval and on coming back; a window KIFF says isn't open
   is forgotten. It closes, device-signed, after 30 seconds in the background (on coming back, if iOS suspended the
