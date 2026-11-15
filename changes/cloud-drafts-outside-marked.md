@@ -1,1 +1,1 @@
-- **tafs cloud:** a draft carries the AI disclosure only when its profile marks it as a message reaching people outside the company (a draft email or reply); a draft invoice no longer does ([coach.md](../docs/coach.md)).
+- **tafs cloud:** a draft still carries the AI disclosure by default, and a draft that says `outside: false` in its profile (a draft invoice) no longer does ([coach.md](../docs/coach.md)).

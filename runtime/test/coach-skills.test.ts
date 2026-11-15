@@ -146,8 +146,8 @@ describe("Coach's core", () => {
     expect(body).toContain("never another rule as an option: ask it as its own question first, and put the answer in the rules.");
     expect(body).toContain("Each tool's on_exceed is its agreed line's: owner only where it says the owner is asked, else refuse.");
     expect(body).not.toContain("confirm to agree or change them");
-    // A tool that drafts a message for people outside carries the disclosure too; a draft invoice isn't a message.
-    expect(body).toContain("or drafts a message for them (a draft email or reply), goes in the result's taf as disclose");
+    // A tool that drafts for people outside carries the disclosure too, unless its profile opts out (a draft invoice).
+    expect(body).toContain("or drafts (unless marked outside: false), goes in the result's taf as disclose");
     expect(body).not.toContain("a draft invoice");
   });
 
