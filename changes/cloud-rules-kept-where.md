@@ -1,0 +1,1 @@
+- **Coach keeps a limit on what a write may touch** (draft-the-card@29). "It only writes to that column" is pinned on the connection when the tool takes it, else written into the taf's instructions, and the rules notice says which.
