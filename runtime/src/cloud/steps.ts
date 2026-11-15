@@ -254,12 +254,18 @@ export function whyOf(text: unknown): string | undefined {
     .replace(/\b\d(?:[ -]?\d){11,}\b/g, "it")
     .replace(/\b[0-9a-f]{16,}\b/gi, "it")
     .replace(/\b[a-z]{1,5}_(?=[A-Za-z0-9]*[A-Z0-9])[A-Za-z0-9]{4,}\b/g, "it")
+    // An id in quotes is still an id; then a thing's name that says what a left-out id was ("No such
+    // payment_intent: 'pi_…'"), kept in words, never taken for a code; and the id that only repeated it.
+    .replace(/(["'‘“])it(["'’”])/g, "it")
+    .replace(/\b(no such\s+)([a-z]+(?:_[a-z]+)+)\b/gi, (_, lead: string, name: string) => lead + name.replace(/_/g, " "))
+    .replace(/\b([a-z]+(?:_[a-z]+)+)(?=:\s*it\b)/g, (name: string) => name.replace(/_/g, " "))
+    .replace(/\b(no such(?:\s+[a-z]+)+?):\s*it\b/gi, "$1")
     // A code, with its label; and the service that relayed the call, which the owner never sees.
     .replace(/\b(?:code|error|status|reason)\s+[a-z]+(?:_[a-z]+)+\b/g, "")
     .replace(/\b[a-z]+(?:_[a-z]+)+\b/g, "")
     .replace(/\bplanque\b/gi, "")
     // What's left of a bracket that held only ids and codes, and doubled "it"s.
-    .replace(/\(\s*(?:(?:[a-z]+\s+)?it[\s,]*)*\)/g, "").replace(/,\s*(?=[).;])/g, "")
+    .replace(/\(\s*(?:(?:[a-z]+\s+)?it[\s,]*)*\)/g, "").replace(/,\s*(?=[).;])/g, "").replace(/\(\s*\)/g, "")
     .replace(/\bit(?:\s+it)+\b/g, "it")
     .replace(/\s{2,}/g, " ").replace(/\s+([,.;:)])/g, "$1").trim();
   if (line.length > 160) line = `${line.slice(0, 159).replace(/\s+\S*$/, "")}…`;
