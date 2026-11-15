@@ -6133,6 +6133,16 @@ final class AppModel: ObservableObject {
     /// owner just confirmed with Face ID: the caller has set `kiff.setupSigner` and
     /// `planque.signer`. Sets `lastError` and returns false when it can't.
     private func enrolPlanque(tenant: String, gen: Int) async -> Bool {
+        // planque's enrolled connector key, while KIFF still takes it, is kept: asked first with no key, it
+        // answers `kept`, and no key is minted that would only be left live in KIFF (a phone can't revoke
+        // a connector key). Any other answer (none enrolled, `needs_key`, a planque from before) mints one
+        // and hands it over, as before.
+        if let standing = try? await planque.enrol(deviceKey: signer.publicKeyDER, connectorKey: nil), standing.kept == true {
+            guard gen == accountGeneration else { return false }
+            planqueSetUp(for: tenant)
+            return true
+        }
+        guard gen == accountGeneration else { return false }
         do {
             let key = try await kiff.mintConnectorKey()
             guard gen == accountGeneration else { return false }
