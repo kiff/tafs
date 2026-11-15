@@ -445,6 +445,13 @@ jobs:
               ref taf-card -tab tafs -screen card
               ref taf-chat -tab tafs -screen chat
               ref taf-setup -tab tafs -screen setup
+              ref usage -tab tafs -screen usage
+              ref connect-apps -tab tafs -screen connect-apps
+              ref connect-app -tab tafs -screen connect-app
+              ref devices -tab account -screen devices
+              ref new-taf -tab tafs -screen new-taf
+              ref coach -tab tafs -screen coach
+              ref coach-chat -tab tafs -screen coach-chat
             done
             xcrun simctl ui "$DEVICE_ID" appearance light
           }
