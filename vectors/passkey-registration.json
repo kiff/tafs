@@ -1,5 +1,5 @@
 {
-  "about": "Registering a passkey for the account at kiff.dev (KIFF's pairing contract, \"Registering one\"), as every app must build it. Read by the iPhone and iPad's PasskeyRegistrationTests and Android's PasskeyRegistrationTest, so the apps can't drift. Written by hand from KIFF's contract, with the challenge computed in Python apart from either app: change it only with that contract.",
+  "about": "Registering a passkey for the account at kiff.dev (KIFF's pairing contract, \"Registering one\"), as every app must build it. Read by the iPhone and iPad's PasskeyRegistrationTests and Android's PasskeyRegistrationTest, so the apps can't drift. The creation response's authenticator data is one byte (`h'ff'`), so it tests the mapping only. KIFF would refuse it as malformed: never post it as a real registration. Written by hand from KIFF's contract, with the challenge computed in Python apart from either app: change it only with that contract.",
   "inputs": {
     "tenant": "t_01",
     "subject": "usr_7Hq2",
@@ -37,7 +37,7 @@
   ],
   "name": {
     "longest": 64,
-    "counted_as": "Unicode code points, after trimming spaces and newlines at both ends",
+    "counted_as": "Unicode code points, after trimming spaces and newlines at both ends; a control character inside it (below U+0020, or U+007F) is refused",
     "accepted": [
       [
         "Ana's iPhone",
@@ -60,12 +60,14 @@
       "",
       "   ",
       "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+      "Ana\tiPad",
+      "Ana\u007fiPad"
     ]
   },
   "issued_at": {
-    "date_unix": 1763229600,
-    "rfc3339": "2025-11-15T18:00:00Z",
+    "date_unix": 1794765600,
+    "rfc3339": "2026-11-15T18:00:00Z",
     "within_seconds": 600
   }
 }

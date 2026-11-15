@@ -42,11 +42,14 @@ enum PasskeyRegistration {
         return f.string(from: date)
     }
 
-    /// The name as sent: trimmed, 1 to 64 characters; nil when it isn't one KIFF takes.
+    /// The name as sent: trimmed, 1 to 64 characters, with no control character inside (below U+0020, or
+    /// U+007F, as KIFF refuses them); nil when it isn't one KIFF takes.
     static func name(_ raw: String) -> String? {
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         let count = trimmed.unicodeScalars.count
-        return count >= 1 && count <= longestName ? trimmed : nil
+        guard count >= 1, count <= longestName else { return nil }
+        guard !trimmed.unicodeScalars.contains(where: { $0.value < 0x20 || $0.value == 0x7F }) else { return nil }
+        return trimmed
     }
 
     /// The body of `POST /v1/me/passkeys`: the name, when it was issued, and the creation's answer as the
