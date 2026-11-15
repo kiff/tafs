@@ -310,8 +310,13 @@ things (`runtime/src/cloud/approval.ts`):
   approves the redraft, one Card, not a refused one and then another. It's told once per draft
   version, across phones (a claim, then the answer kept a day). Anything else, or a read past
   its time, or a person whose role can't manage Cards or who hasn't agreed to AI use, draws the
-  card as before, and the tap checks it again. Every refusal a new draft mends ends "Change only
-  what this names; every other line stays exactly as agreed.", at the tap too.
+  card as before, and the tap checks it again. Every refusal a new draft mends, at the tap too,
+  goes on after its reason: "Refused by tafs cloud's check, not by the owner: this approval is
+  closed and nothing waits for them." On a grant not yet connected, it adds that its tools (or its
+  key) weren't approved either and come with the new approval. A `count_on_amount` adds that such
+  a count is never one of the owner's rules, to drop without asking them. Then "Draft it again now
+  and show a new approval." and, last, "Change only what this names; every other line stays
+  exactly as agreed." (Coach read a bare `failed: …` as an approval still waiting.)
   A Card covers a tool by the name planque registered for this taf (`request.tools[].name`),
   never the vendor's own (`tool`). When the vendor's name was taken in KIFF, planque gives the
   tool a free one (`list_charges_noyy`). A draft whose Card names the vendor's name

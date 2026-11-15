@@ -75,11 +75,28 @@ export const KEEP_THE_REST = "Change only what this names; every other line stay
 
 type CardsChecked = Decision | { waitsFor: string } | { draft: NonNullable<Awaited<ReturnType<typeof draftInfo>>> & { version: string } };
 
-/** cardsChecked, with KEEP_THE_REST after each refusal a new draft mends, wherever Coach hears it. */
+/**
+ * What every refusal a new draft mends says to Coach, so it never reads as an approval still waiting (Eval 43705726781's
+ * Refunds: told "failed: …" on the read, Coach said the open approval was the one to finish, and waited four turns).
+ */
+export const REFUSAL_CLOSED = "Refused by tafs cloud's check, not by the owner: this approval is closed and nothing waits for them.";
+export const DRAW_AGAIN = "Draft it again now and show a new approval.";
+/** A count_on_amount refusal's: the count was never the owner's, so Coach drops it without asking them again. */
+export const COUNT_NEVER_A_RULE = "A count of calls on a tool with an amount limit is never one of the owner's rules: drop it without asking them.";
+
+/**
+ * cardsChecked, with what each refusal a new draft mends adds, wherever Coach hears it: the approval is closed, what it
+ * would also have carried wasn't approved either (its tools or its key, on a grant not yet connected), and KEEP_THE_REST.
+ * `failed: …` stays first, as the apps and the e2e read it.
+ */
 async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGrant, vendor: string, ctx: DecideContext, others: ApprovalGrant[] = [], combined = false): Promise<CardsChecked> {
   const checked = await cardsChecked(ask, draftID, grant, vendor, ctx, others, combined);
   if ("outcome" in checked && checked.outcome === "answered" && checked.code && REDRAFT_CODES.has(checked.code)) {
-    return { ...checked, answer: `${checked.answer.replace(/\s+$/, "")} ${KEEP_THE_REST}` };
+    const carried = grant.status === "connected" ? ""
+      : takesKey(grant) ? " Its key wasn't approved either: the new approval carries it with the Card."
+      : " Its tools weren't approved either: the new approval carries them with the Card.";
+    const count = checked.code === "count_on_amount" ? ` ${COUNT_NEVER_A_RULE}` : "";
+    return { ...checked, answer: `${checked.answer.replace(/\s+$/, "")} ${REFUSAL_CLOSED}${carried}${count} ${DRAW_AGAIN} ${KEEP_THE_REST}` };
   }
   return checked;
 }
