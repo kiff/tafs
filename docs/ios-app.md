@@ -469,7 +469,10 @@ the app in sample mode.
   digest before it shows or signs a grant, and refuses one that doesn't match. Without `digest_v`,
   it covers the request alone (v1). With `digest_v: 2`, it covers `{"lang", "request", "text"}`, so
   the words the person reads (`text`, in their language) and that language are what's signed. An
-  unknown version, or a v2 grant without its words or language, never matches. Every request to
+  unknown version, or a v2 grant without its words or language, never matches. Each grant is checked
+  against planque's entry at its own position in the list, never one found by id: a list where an id
+  repeats, or of another length, matches nothing, so the phone never signs one request's digest under
+  another shown in its place (as Android). Every request to
   planque carries the person's languages (`Accept-Language`), for the words it writes.
 - **Did this happen?** (`DidThisHappenCard`, in Needs you): KIFF's money calls whose outcome
   it can't prove (`GET /v1/me/did-this-happen`), each answered No or "Yes, it did" behind

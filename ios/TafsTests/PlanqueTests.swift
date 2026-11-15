@@ -127,6 +127,28 @@ final class PlanqueTests: XCTestCase {
         XCTAssertNil(PlanqueClient.digestCovers(try JCS.parse(Data(Self.v2Grant(lang: nil).utf8))))
     }
 
+    /// Each grant is checked against planque's entry at its own position, never one found by id: two entries
+    /// with one id, the second a different request carrying the first's digest, would otherwise show the second
+    /// as matching, and approving it would sign what wasn't shown. A repeated id matches nothing.
+    func testARepeatedIdMatchesNothingAndEachGrantIsCheckedAtItsOwnPosition() async throws {
+        let (_, planque, _) = clients()
+        planque.tenant = "t_01"
+        planque.signer = { _ in "sig" }
+        planque.deviceID = "dev_phone01"
+        let first = Self.grantJSONFor("g_01")
+        let other = Self.grantJSONFor("g_01").replacingOccurrences(of: #""agent":"refunds""#, with: #""agent":"payouts""#)
+        XCTAssertNotEqual(first, other, "another request, under the first's id and digest")
+
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(first),\#(other)]}"#)
+        let repeated = try await planque.grants()
+        XCTAssertEqual(repeated.map(\.digestMatches), [false, false], "a repeated id: nothing matches, nothing is signed")
+
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(first),\#(other.replacingOccurrences(of: #""id":"g_01""#, with: #""id":"g_02""#))]}"#)
+        let distinct = try await planque.grants()
+        XCTAssertEqual(distinct.map(\.id), ["g_01", "g_02"])
+        XCTAssertEqual(distinct.map(\.digestMatches), [true, false], "each against its own bytes: the second request isn't the first's digest")
+    }
+
     /// A v2 grant matches only with the words and language it was signed over; a v1 grant beside it
     /// still matches as before, so a grant issued before the switch keeps working.
     func testAV2GrantWhoseWordsOrLanguageChangedIsRefused() async throws {
