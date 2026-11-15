@@ -1,0 +1,1 @@
+- Nowość w Urządzenia: „Dodaj klucz dostępu na tym telefonie”. Z kluczem dostępu na tym telefonie komputer może zatwierdzać przez niego: pokazuje kod QR, a Ty skanujesz go tym telefonem. Dodanie wymaga odcisku palca i mogą to zrobić tylko właściciele i administratorzy konta.

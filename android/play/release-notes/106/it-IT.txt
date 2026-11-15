@@ -1,0 +1,2 @@
+- Avviare Coach su un altro telefono dello stesso account non lascia più una chiave inutilizzata nel tuo account KIFF.
+- Quando il collegamento delle tue app non riesce, l'app dice perché, e Avvia riprova. Non dice più che un altro dispositivo le collega quando non è così.

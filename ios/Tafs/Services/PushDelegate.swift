@@ -5,7 +5,7 @@ import UserNotifications
 /// held call was answered elsewhere so its alert goes, and says here which alert was
 /// tapped. tafs cloud sends the pushes (from KIFF's alerts); `AppModel` hands it the token.
 @MainActor
-final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     var onToken: (@MainActor (Data) -> Void)?
     /// A held call changed elsewhere: reload what needs the owner.
     var onHeldChanged: (@MainActor () async -> Void)?
@@ -19,6 +19,16 @@ final class PushDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCen
         didSet { if let onOpen, let waiting = pendingOpen { pendingOpen = nil; onOpen(waiting) } }
     }
     private(set) var pendingOpen: String?
+
+    #if targetEnvironment(macCatalyst)
+    /// The Mac's menu bar has no document items (Duplicate, Move, Rename, Export): tafs has no
+    /// documents. Close and the rest of File stay (docs/mac-app.md, "The menu bar").
+    override func buildMenu(with builder: UIMenuBuilder) {
+        super.buildMenu(with: builder)
+        guard builder.system == .main else { return }
+        builder.remove(menu: .document)
+    }
+    #endif
 
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {

@@ -139,8 +139,8 @@ than the build's commits nothing.
 - **Release notes** live in the repository, one folder per `versionCode`:
   `android/play/release-notes/<versionCode>/<locale>.txt`, for en-US, de-DE, fr-FR, es-ES,
   it-IT, pt-PT, nl-NL and pl-PL, each at most 500 characters. A pull request that raises
-  `versionCode` adds that folder; `test` checks it (`play_internal.py --check`), and the upload
-  refuses a version with none.
+  `versionCode` adds that folder; `test` checks it (`play_internal.py --check`) and fails a
+  version with none, as the upload refuses one (Android 1.29.5; before, `test` passed without them).
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
 it once into the secrets store, and `android/release.sh` builds with it. The app has no native
 code of its own. Its only native libraries are two small ones that AndroidX ships already
@@ -995,8 +995,9 @@ planque's answer, by its place in the list, never by looking its id up (`Planque
 with two entries under one id, the second, shown as its own request, would have been checked against
 the first's bytes. An id that repeats, or an entry under another id, matches nothing, so nothing is
 signed (Android 1.29.4). A mismatch writes one logcat line (tag `TafsPlanque`)
-for each digest: which way it failed (not in the list as sent, no request, a version or v2 words
-the app can't cover, or the hash differs), the grant's status and `digest_v`, never its id, digest
+for each digest: which way it failed (a list of another length, an id repeated, not in the list as
+sent, no request, a version or v2 words the app can't cover, or the hash differs; `unpairedCause`
+tells the first three apart from Android 1.29.5), the grant's status and `digest_v`, never its id, digest
 or words (`PlanqueClient.mismatchCause`, `mismatchLine`, Android 1.29.4).
 
 ## Signing
@@ -1023,8 +1024,53 @@ Links API answers `linked: true`, 15 Nov). So a passkey the app makes or uses th
 Credential Manager has kiff.dev as its relying party, and KIFF takes its origin
 (`android:apk-key-hash:…`). Unlike iOS's `webcredentials:kiff.dev`, Android needs nothing in the
 manifest: the Credential Manager reads the file. Only a build Play signed matches; a debug build,
-or one signed with the upload key, isn't linked and can't use kiff.dev's passkeys. Nothing in the
-app makes a passkey yet: that comes with the passkey work.
+or one signed with the upload key, isn't linked and can't use kiff.dev's passkeys.
+
+## Passkeys on this phone
+
+Account → Devices → **Passkeys** lists the account's passkeys as KIFF lists them (`GET /v1/me/passkeys`), and
+**Add a passkey on this phone** makes one (Android 1.30.0). With a passkey on this phone, a computer that approves with
+a passkey (Linux, macOS 12) approves through it: the computer shows a QR code, and the phone's passkey provider
+answers it. That part is Android's own, with nothing in the app.
+
+- **Making it** (`AppModel.addPasskey`, `makePasskey`): Android's Credential Manager (`androidx.credentials`, with
+  `credentials-play-services-auth` for Android 11 to 13) makes it from WebAuthn's creation options
+  (`PasskeyRegistration.createOptions`):
+  - rp `kiff.dev`;
+  - the person's subject as `user.id` (base64url of its UTF-8) and their email as `user.name`, both read from the
+    account's members, where KIFF marks the person `you`;
+  - ES256 only, user verification required, `residentKey: preferred`, attestation `none`.
+  - The challenge is base64url(SHA-256) of `kiff.passkey.register.v1\n<tenant>\n<subject>\n<issued_at>`, with
+    `issued_at` to the second in UTC (`PasskeyRegistration.issuedAt`), which KIFF takes within 10 minutes.
+  - Android draws its own sheet and asks for the screen lock. Putting it away sends nothing.
+  - **Owners and admins only, read first:** KIFF takes a passkey only from an account's owners and admins. The person's
+    role, from the same members list, is read before Android is asked for anything, so a member's tap leaves no passkey on
+    the phone for KIFF to refuse, and a member isn't offered Add (`PasskeyRegistration.mayAdd`, `AppState.passkeyMayAdd`).
+    KIFF still decides.
+- **Registering it** (`KiffClient.registerPasskey`): `POST /v1/me/passkeys` with `{name, issued_at, client_data_json,
+  attestation_object}`, the creation's response as it came (`PasskeyRegistration.registerBody`). KIFF reads the
+  credential from it; the phone parses nothing.
+  - **The earlier body's fields** (`credential_id`, `public_key`) are never sent too: KIFF refuses both kinds at once.
+  - **The name** is the phone's model, trimmed as KIFF trims (a no-break space and U+0085 too), 1 to 64 code points with
+    no control character inside, or "Android phone" for one KIFF would refuse. It's never cut
+    (`PasskeyRegistration.validName`).
+  - **The signature:** the approval key, behind a fingerprint that says "Add a passkey on this phone to your account",
+    never inside an approval window. A session KIFF holds no approval key for adds none, and Android isn't asked: a
+    stolen session would add its own.
+  - **KIFF's answers:** KIFF decides, and `403 admins_only` says only owners and admins can add one.
+    `409 passkey_registered` (the same passkey again, KIFF's code in `error`) reads as added. `400` with reason
+    `issued_at` says it took too long, to try again.
+  - **Made but not added:** once Android has made the passkey, putting the fingerprint away or any other refusal says
+    it's on this phone but not on the account, and where to remove it (`settings.devices.passkey_not_registered`).
+  - **A debug build is refused:** Credential Manager names the app by its signing certificate
+    (`android:apk-key-hash:…`), and KIFF takes only Play App Signing's (`400 registration_invalid`, reason `origin`).
+    So adding one is tested from a build Play installed (the internal track).
+- **Removing one** (`KiffClient.removePasskey`): `DELETE /v1/me/passkeys/{id}`, signed by the approval key behind a
+  fingerprint that names it, as a device's removal is. A computer's own passkey has no id (it goes with its device,
+  `device_id`), so it says "Goes with its computer", with no Remove.
+- **Tests:** `PasskeyRegistrationTest` reads `vectors/passkey-registration.json`, the vector the iPhone and iPad's
+  tests read too, so the apps can't drift. `PasskeyAddTest` covers the model: the fingerprint, the body, the 409, the
+  sheet put away, no approval key, KIFF's refusals, and a computer's own passkey.
 
 ## Pairing a computer
 
@@ -1166,11 +1212,12 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   goes ("Opens Gmail's sign-in", `opensWords`; a service the card names is shown as it is). "The vendor" only when no app is
   known (Android 1.27.10).
 - **An approval card whose grant planque doesn't list yet** ("Reading what it asks for…") reads the grants again, three
-  seconds apart, until planque lists it or the card is answered: tafs cloud can write the card as the grant is made
+  seconds apart for the first minute and ten seconds apart after (`CARD_GRANT_READ_DELAYS`, Android 1.29.5; before, three
+  seconds throughout), until planque lists it or the card is answered: tafs cloud can write the card as the grant is made
   (`readApprovals`, `AppModel.grantsCardsWaitOn`). Before Android 1.27.8, it waited for another tab to read them. Until
   Android 1.29.4 it read them three times only, so a grant planque listed after nine seconds, with Coach's run done, left
-  the card on that line until the chat was opened again. It reads for ten minutes at most (`CARD_GRANT_READS`), counted
-  on the phone.
+  the card on that line until the chat was opened again. It reads for ten minutes at most, 74 reads, counted on the
+  phone.
 - **The approval window's words** ("No fingerprint for the next 4 minutes") and Approve without the fingerprint named
   go only on a card tafs cloud marks a tap (`signs.takes: "tap"`, `windowWordsFor`): a card that takes the fingerprint, or
   says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9).

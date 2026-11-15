@@ -17,6 +17,8 @@ enum ThisDevice {
     /// "iPhone", "iPad" or "Mac". The model, not the idiom: an iPhone-only build on an iPad
     /// is still the owner's iPad.
     static var kind: String { kind(model: UIDevice.current.model, mac: isMac) }
+    /// An iPhone: not an iPad, not the Mac build.
+    static var isPhone: Bool { platform == "ios" }
     /// The platform KIFF records for this device's key.
     static var platform: String { platform(kind: kind) }
     /// What KIFF records the device as: its list draws the name from it, in the reader's language.

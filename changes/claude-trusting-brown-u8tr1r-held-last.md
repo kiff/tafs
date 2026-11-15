@@ -1,0 +1,1 @@
+- **tafs cloud: a taf makes a call past its limits last, and never sends a placeholder.** A call KIFF holds for the owner pauses the run until they answer, so every call within the taf's limits is made first; and what a call sends is final, or the call isn't made.

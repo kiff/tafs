@@ -86,7 +86,7 @@ Before the first message, one Face ID (`AppModel.startSetup`):
    answer (planque not reached, a 5xx, a refused signature, a 400 for a body it couldn't read) mints
    nothing, since a second enrolment would likely fail too and leave the key live: the app
    says why, and the next Start asks again. Only a 409 with no code, an older planque's, says
-   another device connects the account's apps; planque names each of its own 409s (iPhone and iPad: `AppModel.enrolPlanque`). If planque can't check the phone with KIFF (401), the app says "Connecting
+   another device connects the account's apps; planque names each of its own 409s (iPhone and iPad: `AppModel.enrolPlanque`; Android: `AppModel.enrolForCoach`). If planque can't check the phone with KIFF (401), the app says "Connecting
    your apps didn't work. Tap Start to try again." It never says signed out, since KIFF's
    session still works (Android).
 2. The phone submits a KIFF agent draft with no tools for Coach. tafs cloud claims its

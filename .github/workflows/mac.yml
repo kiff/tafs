@@ -210,6 +210,29 @@ jobs:
           done
           appearance false
           shoot menu-bar whole -tab tafs "${en[@]}"
+          # The menu bar's menus, item by item, as the app builds them: their order and
+          # names are checked here, since a screenshot shows the bar closed.
+          open -n "$app" --args -screenshots YES -signedIn YES -tab tafs "${en[@]}"
+          sleep 6
+          osascript > "$RUNNER_TEMP/mac-shots/menus.txt" <<'OSA' || echo "::warning::couldn't read the menu bar"
+          tell application "System Events" to tell (first process whose unix id is (do shell script "pgrep -nx Tafs") as integer)
+            set out to ""
+            repeat with m in menu bar items of menu bar 1
+              set out to out & "[" & (name of m) & "]" & linefeed
+              try
+                repeat with i in menu items of menu 1 of m
+                  set n to name of i
+                  if n is missing value then set n to "—"
+                  set out to out & "  " & n & linefeed
+                end repeat
+              end try
+            end repeat
+            return out
+          end tell
+          OSA
+          cat "$RUNNER_TEMP/mac-shots/menus.txt" || true
+          pkill -x Tafs || true
+          while pgrep -x Tafs >/dev/null; do sleep 0.5; done
           for lang in fr pt; do
             region=$(echo "$lang" | tr a-z A-Z)
             shoot "$lang-overview" window -tab tafs -AppleLanguages "($lang)" -AppleLocale "${lang}_${region}"
