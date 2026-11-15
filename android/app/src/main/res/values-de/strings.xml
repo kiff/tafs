@@ -1817,6 +1817,7 @@
     <string name="settings_devices_pair_gives_hello">%1$s kann dann die Aktionen deiner tafs mit Windows Hello genehmigen.</string>
     <string name="settings_devices_pair_gives_passkey">%1$s kann dann die Aktionen deiner tafs mit einem Passkey genehmigen.</string>
     <string name="settings_devices_pair_gives_phone">%1$s kann dann die Aktionen deiner tafs genehmigen.</string>
+    <string name="settings_devices_pair_gives_view">%1$s zeigt deine tafs und schickt Genehmigungen an dieses Telefon.</string>
     <string name="settings_devices_pair_invalid">KIFF konnte diesen Code nicht lesen. Lass einen neuen auf deinem Computer anzeigen und scanne ihn erneut.</string>
     <string name="settings_devices_pair_key_registered">Dieser Computer ist schon gekoppelt.</string>
     <string name="settings_devices_pair_named">%1$s koppeln?</string>

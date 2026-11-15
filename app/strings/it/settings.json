@@ -44,6 +44,7 @@
   "settings.devices.pair_gives_hello": "{device} potrà approvare le azioni dei tuoi tafs con Windows Hello.",
   "settings.devices.pair_gives_passkey": "{device} potrà approvare le azioni dei tuoi tafs con una passkey.",
   "settings.devices.pair_gives_phone": "{device} potrà approvare le azioni dei tuoi tafs.",
+  "settings.devices.pair_gives_view": "{device} mostrerà i tuoi tafs e invierà le approvazioni a questo telefono.",
   "settings.devices.pair_invalid": "KIFF non è riuscito a leggere quel codice. Mostrane uno nuovo sul tuo computer e scansionalo di nuovo.",
   "settings.devices.pair_key_registered": "Quel computer è già associato.",
   "settings.devices.pair_named": "Associare {device}?",

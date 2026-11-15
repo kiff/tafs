@@ -1,1 +1,2 @@
 - Coach's rules name each read tool the taf gets, with its own count ("List rows: up to 1,000 reads a day"), never "each read tool", which read as every tool the connection offers, including ones the taf isn't given (`draft-the-card@21`). It also again says never to draft a tool an admin connected for another agent.
+- Coach declares an object argument's fields as plain values or arrays, never objects: a nested object's fields are arguments of their own, at their paths, as planque requires (`name-the-tools@17`).

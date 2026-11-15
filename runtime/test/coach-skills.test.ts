@@ -42,7 +42,7 @@ describe("Coach's skills, as files", () => {
   });
 
   it("are twelve, each in the Agent Skills shape, within its budget, with a description that says when it applies, in the third person", () => {
-    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@27", "did-this-happen@1", "draft-the-card@21", "drive-the-app@3", "halting@1", "improve-a-taf@1", "name-the-tools@15", "set-up-a-taf@11", "the-dial@6", "the-tafs@2", "usage-and-plans@3"]);
+    expect(COACH_SKILLS.map((s) => `${s.name}@${s.version}`)).toEqual(["cards-and-holds@3", "connect-an-app@27", "did-this-happen@1", "draft-the-card@21", "drive-the-app@3", "halting@1", "improve-a-taf@1", "name-the-tools@17", "set-up-a-taf@11", "the-dial@6", "the-tafs@2", "usage-and-plans@3"]);
     for (const s of COACH_SKILLS) {
       expect(s.skill_md.startsWith(`---\nname: ${s.name}\ndescription: `), s.name).toBe(true);
       expect(s.body).toContain("## When to use");
@@ -137,11 +137,13 @@ describe("Coach's core", () => {
     expect(body).toContain("or drafts for them (a draft email, a draft invoice), goes in the result's taf as disclose");
   });
 
-  // The connect batch Eval's introductions replay, 13 Nov: an argument "values" given type object (planque takes string,
-  // integer, number, boolean or array), and an agent named apart from its taf.
-  it("names an object's fields one by one, and the agent from the taf's name", () => {
+  // The connect batch Eval's introductions replay, 13 Nov, and again on 15 Nov: a sheet row update's "values" (an object of
+  // columns) declared without the shape planque takes. Planque takes an object naming its fields, as an array's items do.
+  it("gives an object argument only the fields the taf writes, and the agent from the taf's name", () => {
     const tools = COACH_SKILLS.find((k) => k.name === "name-the-tools")!.body.replace(/\s+/g, " ");
-    expect(tools).toContain("An argument is never an object: name its fields one by one, each at its path (values.Status).");
+    expect(tools).toContain('or object, naming only the fields the taf writes (`type: "object", schema: {type: "object", properties: {"Status": {type: "string"}}}`).');
+    // planque refuses a field that is itself an object (planque#240): a nested object's fields are their own arguments.
+    expect(tools).toContain("A field is plain or an array; a nested object's fields are arguments at their own paths.");
     // agentgabo's Gmail count on Android 80: "Gmail is connected", then "Gmail is connected (read only)", two more approvals
     // for one connection. The tools go once, complete.
     expect(tools).toContain("Ask for a taf's tools once, complete (read_only, pins, arguments): each change is one more approval.");
@@ -158,9 +160,10 @@ describe("Coach's core", () => {
 
   // Eval: the intros replay's sheet write was refused twice by planque (a values type it doesn't take, a row number as
   // resource_argument), and Coach sent the second request again unchanged.
-  it("writes a sheet's values as rows of plain values, never counts a row number, and never resends a refused request unchanged", () => {
+  it("types an argument as its schema does, never counts a row number, and never resends a refused request unchanged", () => {
     const tools = COACH_SKILLS.find((k) => k.name === "name-the-tools")!.body.replace(/\s+/g, " ");
-    expect(tools).toContain("A sheet's `values` is rows of plain values: `{type: array, items: {type: array, items: {type: string}}}`. A row number is never `resource_argument`: limit a sheet write by calls a day.");
+    expect(tools).toContain('Type each argument as its schema does: plain, array (`type: "array", schema: {type: "array", items: {type: "string"}}`)');
+    expect(tools).toContain("A row number is never `resource_argument`: limit a sheet write by calls a day.");
     const connect = COACH_SKILLS.find((k) => k.name === "connect-an-app")!.body.replace(/\s+/g, " ");
     expect(connect).toContain("If planque or KIFF refused the request itself (a name taken, an argument), change what it named, never resend it unchanged, and show the approval of a new planque request.");
   });
@@ -382,15 +385,15 @@ describe("which skills a conversation loads: tafs cloud's decision, never the mo
   }
 
   it("adds the holds to a start with a held call open, and halting to a halted account, in the definition's order", () => {
-    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@21", "halting@1", "name-the-tools@15", "set-up-a-taf@11", "usage-and-plans@3"]);
-    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@21", "improve-a-taf@1", "name-the-tools@15"]);
+    expect(startSkills("free", { heldCall: true, halted: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@21", "halting@1", "name-the-tools@17", "set-up-a-taf@11", "usage-and-plans@3"]);
+    expect(startSkills("improve", { heldCall: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@21", "improve-a-taf@1", "name-the-tools@17"]);
   });
 
   // Eval 42788659962: "Refunds hasn't done anything since this morning" and "Stop everything right now" were
   // answered without their skills, which the model was left to read. An account with a taf has them from the start.
   it("adds the holds and the halting to any start on an account with a taf of its own, and neither to a first taf", () => {
-    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@21", "halting@1", "name-the-tools@15", "set-up-a-taf@11", "usage-and-plans@3"]);
-    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@21", "halting@1", "improve-a-taf@1", "name-the-tools@15"]);
+    expect(startSkills("free", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@21", "halting@1", "name-the-tools@17", "set-up-a-taf@11", "usage-and-plans@3"]);
+    expect(startSkills("improve", { hasTaf: true })).toEqual(["cards-and-holds@3", "connect-an-app@27", "draft-the-card@21", "halting@1", "improve-a-taf@1", "name-the-tools@17"]);
     expect(startSkills("coach_lines", { hasTaf: true })).toEqual(["cards-and-holds@3", "halting@1", "the-tafs@2"]);
     expect(startSkills("free", { hasTaf: false })).toEqual(startSkills("free"));
   });

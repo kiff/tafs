@@ -109,12 +109,17 @@ struct PairComputerView: View {
         }
     }
 
-    /// What saying yes gives, by the computer's kind; a software-keyed one says it never approves alone;
-    /// and only a computer in use now.
+    /// What saying yes gives, by the computer's kind: a phone or tablet's own line, and a software-keyed
+    /// computer's view-only line; then only a device in use now.
     static func lines(_ request: PairingRequest) -> [String] {
         // A phone or tablet (§5.8): what it gets, whatever its biometric, and only one in hand now.
         if request.isPhone {
             return [Words.Settings.Devices.pairGivesPhone(device: request.name), Words.Settings.Devices.pairOnlyNowPhone]
+        }
+        // A computer whose device key is in software pairs view-only: it never approves, and sends every
+        // approval to the phone. Nothing about approving with a passkey is said.
+        if request.softwareKey {
+            return [Words.Settings.Devices.pairGivesView(device: request.name), Words.Settings.Devices.pairOnlyNow]
         }
         var lines: [String] = []
         switch request.kind {
@@ -123,7 +128,6 @@ struct PairComputerView: View {
         case "passkey": lines.append(Words.Settings.Devices.pairGivesPasskey(device: request.name))
         default: break
         }
-        if request.softwareKey { lines.append(Words.Settings.Devices.pairSoftwareKey) }
         lines.append(Words.Settings.Devices.pairOnlyNow)
         return lines
     }
