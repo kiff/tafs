@@ -143,7 +143,7 @@ export const es: Words = {
   setup_site_sign_in_words: "Inicias sesión tú, en una vista en directo del navegador del taf. Lo que escribes va al sitio, nunca al taf. Toca Hecho cuando hayas entrado.",
   setup_connected_app: "App conectada",
   setup_connections_unread: "No se pudieron leer las apps conectadas; reintentar",
-  setup_connections_unproved: "Conecta este teléfono para leer sus apps conectadas",
+  setup_connections_unproved: "Conecta este dispositivo para leer sus apps conectadas",
   each_item_calls: (n, form, window, item) => `${n} ${form === "one" ? "llamada" : "llamadas"} ${window} por cada ${item}`,
   each_item_amount: (amount, over, item) => `${amount} ${over} por cada ${item}`,
   each_item_total_day: "en total al día",

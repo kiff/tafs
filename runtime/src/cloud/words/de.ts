@@ -143,7 +143,7 @@ export const de: Words = {
   setup_site_sign_in_words: "Du meldest dich selbst an, in einer Live-Ansicht des Browsers des tafs. Was du eingibst, geht an die Website, nie an den taf. Tippe auf Erledigt, wenn du drin bist.",
   setup_connected_app: "Verbundene App",
   setup_connections_unread: "Verbundene Apps konnten nicht gelesen werden; erneut versuchen",
-  setup_connections_unproved: "Verbinde dieses Telefon, um seine verbundenen Apps zu lesen",
+  setup_connections_unproved: "Verbinde dieses Gerät, um seine verbundenen Apps zu lesen",
   each_item_calls: (n, form, window, item) => `${n} ${form === "one" ? "Aufruf" : "Aufrufe"} ${window} je ${item}`,
   each_item_amount: (amount, over, item) => `${amount} ${over} je ${item}`,
   each_item_total_day: "insgesamt pro Tag",
