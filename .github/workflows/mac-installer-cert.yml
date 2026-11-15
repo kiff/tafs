@@ -9,7 +9,7 @@ name: Mac installer certificate
 # deletes the artifact. Nothing readable is printed, kept in the repo, or
 # uploaded: this repository is public, so its logs and artifacts are too.
 #
-# It runs from main only, in the `mac-signing` environment, which an admin must
+# It runs from main only, in the `mac-signing` environment, whose reviewer must
 # approve each time: made before its first run, with a required reviewer and
 # deployment branches limited to main (a run from another branch runs that
 # branch's copy of this file), so nobody with push can mint certificates. If anything
