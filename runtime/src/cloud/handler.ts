@@ -4743,8 +4743,8 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
     appCalls(token, taf.kiffAgent, now, deps.fetch ?? fetch, deps.kiffBase ?? KIFF_API),
     agentsCall(() => deps.agents.runs(me.tenantID, taf.id, true, 20)),
     deps.planqueBase && proof ? setupGrants(deps.planqueBase, me.tenantID, proof, deps.fetch).then((grants) => ({ grants, error: undefined as string | undefined }),
-      () => ({ grants: [], error: "Connected apps could not be read; try again" }))
-      : Promise.resolve({ grants: [], error: "Connect this phone to read its connected apps" }),
+      () => ({ grants: [], error: wordsIn(langOf(event)).setup_connections_unread }))
+      : Promise.resolve({ grants: [], error: wordsIn(langOf(event)).setup_connections_unproved }),
   ]);
   const active = runs.find((r) => r.status === "RUNNING");
   const events = active ? await deps.agents.session(me.tenantID, active.session, ownerKey(me)).then((s) => s.events, () => []) : [];

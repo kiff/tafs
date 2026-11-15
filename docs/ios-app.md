@@ -161,7 +161,7 @@ the app in sample mode.
 | `-screenshots YES` | Sample mode with the screenshots' data |
 | `-tab account \| tafs \| needs-you \| record` | Opens that tab |
 | `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| buy-credits` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
-| `-screen usage \| connect-apps \| devices \| new-taf \| coach` | The iPad reference set's screens over the sample (`ReferenceScreensTests`): `usage` and `connect-apps` select their sidebar item (`Screenshots.sidebarScreen`); `devices`, with `-tab account`, pushes Devices in Account, with Add a device; `new-taf` opens + New's job gallery; `coach` opens Coach mode, empty. Connect apps and the gallery read tafs cloud's answers kept in `Samples/` (`SampleScreens`), and Devices three sample devices, only with `-screenshots YES` over the sample |
+| `-screen usage \| connect-apps \| connect-app \| devices \| new-taf \| coach \| coach-chat` | The iPad reference set's screens over the sample (`ReferenceScreensTests`): `usage` and `connect-apps` select their sidebar item (`Screenshots.sidebarScreen`), and `connect-app` also opens the app with the most connections, each under its taf (`Samples/grants.json`, its agents mapped to the sample's tafs); `coach-chat` opens Coach on a sample conversation (`Samples/coach-chat.json`, read as tafs cloud's); `devices`, with `-tab account`, pushes Devices in Account, with Add a device; `new-taf` opens + New's job gallery; `coach` opens Coach mode, empty. Connect apps and the gallery read tafs cloud's answers kept in `Samples/` (`SampleScreens`), and Devices three sample devices, only with `-screenshots YES` over the sample |
 | `-screen calendar \| calendar-week` | Opens Calendar on today, in Day mode, or in Week mode on today's week (the Today pill already today): an iPad's whole-app sidebar selects its Calendar item, the phone opens it as Home's button does; over the sample it reads nothing from tafs cloud. CI's `languages` set shoots both, and the Overview (`-tab tafs`), on the 13-inch iPad in French and Portuguese with `-signedIn YES` (`fr-ipad-calendar-week.png`…) |
 | `-landscape YES` | The iPad's window turned to landscape, for its screenshots |
 | `-signedIn YES` | The iPad's sidebar laid out as for a signed-in account, its screens and Coach above the account, over the sample's tafs: a layout shot, nothing read from KIFF |
@@ -268,7 +268,8 @@ the app in sample mode.
 - **A taf's tabs** (`TafDetailView`): **Chat · Activity · Card · Setup**. Activity: for whoever
   manages it, its doors' knocks first (`TafKnocksPanel`: Do it, Pair them, Ignore, as on Android),
   then the taf's Needs you items, its work and runs, then its record by day (`ActivityFilter`: All, Done, Held,
-  Refused). Card: the Card, its limits, how they're counted, usage, Halt, Revoke. Setup: The job
+  Refused). Card: the Card, its limits, how they're counted, usage, Halt, Revoke (a view-only session gets "To revoke
+  this Card, use a device that can approve." in its place, as Android 104; docs/approvals.md). Setup: The job
   (Improve in Coach), Starts when, Connected apps (`ConnectionsPanel`: **Choose actions**, through Coach, for one signed in with none chosen, then **Connect an app…**), Results go to, what it
   remembers, Versions, Pause (sample mode) and Remove for good. Remove's confirmation says what goes with the taf
   before Face ID: tafs cloud's words from `GET /v1/tafs/{id}/removal` ("Qonto goes with it. Stripe stays: Chargebacks

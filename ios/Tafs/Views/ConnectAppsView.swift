@@ -18,6 +18,8 @@ struct ConnectAppsView: View {
     /// The app waiting for its taf to be chosen.
     @State private var choosing: TafsCloud.ConnectApps.App?
     @Environment(\.horizontalSizeClass) private var sizeClass
+    /// `-screen connect-app`: the app with the most connections, opened from the list, for the reference set.
+    @State private var openingApp = Screenshots.enabled && Screenshots.screen == "connect-app"
     /// On an iPad's full width, a table: App, How it connects, Whose, Status.
     private var table: Bool { sizeClass == .regular }
 
@@ -63,6 +65,11 @@ struct ConnectAppsView: View {
         // The app's cream, not the list's grey, as every screen in the detail pane.
         .screenBackground()
         .navigationTitle(Self.title)
+        .navigationDestination(isPresented: $openingApp) {
+            if let app = model.connectApps?.apps.max(by: { model.connections(of: $0).count < model.connections(of: $1).count }) {
+                AppConnectionsView(app: app)
+            }
+        }
         .searchable(text: $query)
         .task(id: query) {
             // As the owner types, a moment after the last key.

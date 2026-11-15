@@ -659,6 +659,11 @@
     <string name="coach_plan_fold_short">Replier</string>
     <string name="coach_plan_progress">Plan · %1$s sur %2$s</string>
     <string name="coach_plan_show">Afficher tout le plan</string>
+    <string name="coach_plan_step_active">En cours</string>
+    <string name="coach_plan_step_done">Terminé</string>
+    <string name="coach_plan_step_failed">Échec</string>
+    <string name="coach_plan_step_pending">À faire</string>
+    <string name="coach_plan_step_skipped">Ignoré</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Connecter vos apps</string>
     <string name="coach_prompt_give_card">Donner sa Card à Coach</string>
@@ -1364,6 +1369,7 @@
     <string name="pair_device_name">tafs sur ce %1$s</string>
     <string name="pair_failed">Ce %1$s n\'a pas été ajouté : %2$s. Affichez un nouveau code et réessayez.</string>
     <string name="pair_from_sign_in">Vous utilisez déjà tafs sur votre téléphone ? Ajoutez ce %1$s avec lui.</string>
+    <string name="pair_keychain_refused">Ce Mac n\'a pas pu enregistrer sa connexion dans le trousseau (erreur %1$s), il n\'a donc pas été ajouté. Affichez un nouveau code et réessayez.</string>
     <string name="pair_new_code">Afficher un nouveau code</string>
     <string name="pair_steps">Sur votre téléphone, ouvrez tafs, puis %1$s, %2$s, %3$s. Scannez ce code.</string>
     <string name="pair_title">Ajouter ce %1$s avec votre téléphone</string>
