@@ -1,3 +1,4 @@
+import { READS_A_DAY } from "../src/cloud/approval.js";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -126,13 +127,15 @@ describe("Coach's core", () => {
     expect(body).toContain('by what it does ("List rows"), never "each read tool".');
     // Evals 10 to 14 drafted "1,000 a day" on the refund: the read example's number is gone, so nothing is copied.
     expect(body).not.toMatch(/1,000 reads|generous call count/);
+    // One fixed count on the reads' Card, the same as Approve's hint names: never Coach's choice.
+    expect(body).toContain(`so it counts ${READS_A_DAY.toLocaleString("en")} reads a day`);
     // Eval 43700918974: with the count refused (count_on_amount), Coach put a lifetime total of 100000000 on the refund
     // instead. No ceiling the owner didn't give, of any shape; tafs cloud refuses each one it knows.
     expect(body).not.toContain("Count a money tool's calls only when the owner did.");
     expect(body).toContain("Only the limits the owner agreed to: no other ceiling, count or total as a safety margin.");
     // Eval 43686790277: a 1,000-a-day count on the refund tool's Card, which the owner never agreed or saw.
     // A Card needs a total in KIFF: the reads' Card counts them, as KIFF's, never as the owner's limit.
-    expect(body).toContain("Reads go on a Card of their own: KIFF needs a total on every Card, so it counts reads high, shown as \"KIFF adds it\", never as the owner's limit. A write's line has only the agreed limits, never a count beside an amount.");
+    expect(body).toContain("Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as \"KIFF adds it\", never as the owner's limit. A write's line has only the agreed limits, never a count beside an amount.");
     // Eval 43666453786: a held per-refund Card also got a day's total, so past it the refund waited where the rules said refuse.
     expect(body).toContain("each limit on one Card only, the one whose on_exceed its rule says: a held per-action limit's Card has no day's total. Only the limits the owner agreed to");
     // Each line's tool is checked before the approval, and a Card the owner approved is never drafted again.

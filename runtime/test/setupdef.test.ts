@@ -442,7 +442,7 @@ describe("Setup's definition on kiff/agents", () => {
     // up on every message, one more wait each time (kiff/tafs#138, item 58).
     expect(flat).toContain("the account, and the mode, on every tool that takes them, reads included");
     expect(flat).toContain("A taf then never looks them up: a lookup is a wait on every message");
-    expect(flat).toContain("Reads go on a Card of their own: KIFF needs a total on every Card, so it counts reads high");
+    expect(flat).toContain("Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day");
     expect(flat).toContain("Show plan again with every step done or skipped");
     // The nightly of 2026-10-19 (62 words in one message): the day and the mode are lines
     // of the rules notice, not repeated in every message.

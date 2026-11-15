@@ -1,7 +1,7 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { connectedKey, approvalWords, ASK_KEPT_MS, REDRAFT_CODES, WORDS } from "../src/cloud/approval.js";
+import { connectedKey, approvalWords, ASK_KEPT_MS, READS_A_DAY, REDRAFT_CODES, WORDS } from "../src/cloud/approval.js";
 import { approvalAnswerWords, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -463,6 +463,8 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     const r = await ask();
     expect(r).toMatchObject({ outcome: "answered", note: WORDS.uncovered("Read a charge") });
     expect(String(r.answer)).toMatch(/^failed: no Card covers "Read a charge", which the taf's Stripe reads connection gives it.*no_mandate_issued/);
+    // The reads' Card's one count, as draft-the-card names it: KIFF's, never the owner's.
+    expect(String(r.answer)).toContain(`the reads' Card, which carries KIFF's count of ${READS_A_DAY.toLocaleString("en")} a day, not the owner's`);
     // The draft covering it, or a Card of the agent's in force: signed. Setup's own read (fields_ab) is never asked for.
     s.drafts.drf_1.cards = [{ ...card, grants: [...card.grants, { action: " GET_CHARGE " }] }];
     expect(await ask()).toMatchObject({ outcome: "sign" });
