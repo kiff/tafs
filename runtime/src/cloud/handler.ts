@@ -110,7 +110,7 @@ import { findLabel, LabelRefusal, labelsView, readLabels, saveLabels, withLabelC
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
  *   GET  /v1/connect/grants/{grant}/sheet  the secure connection sheet's words for a grant that takes a key, with the phone's read proof (docs/secure-connection.md)
- *   POST /v1/connect/grants/{grant}/check  {draft, shown_draft, can?}: Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code, and whether the chat's read checks the card (checked_on_read) (docs/api.md)
+ *   POST /v1/connect/grants/{grant}/check  {draft, shown_draft, can?}: Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code, whether the chat's read checks the card (checked_on_read), and that the agreed rules weren't checked (rules_unchecked) (docs/api.md)
  *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
@@ -3824,9 +3824,11 @@ async function draftCheckRoute(event: HTTPEvent, grant: string, me: KIFFIdentity
   // A refusal a new draft mends says so (`redraft`): the one Coach hears on the chat's read, before the card is drawn
   // (precheck), so a caller that draws no card (the e2e) hands Coach the same refusals at the same moment, from this list.
   // Whether the chat's read checks this card at all (`checked_on_read`) is said too, by the same rule (markSigns), so the
-  // caller never keeps its own copy of it.
+  // caller never keeps its own copy of it. The rules the owner agreed are Approve's and the chat read's only: this route
+  // has no conversation to read them from, so it says it didn't check them (`rules_unchecked`), and an ok here is never
+  // taken for "the rules hold".
   const answered = out.outcome === "answered" && REDRAFT_CODES.has(out.code) ? { ...out, redraft: true } : out;
-  return { ...answered, checked_on_read: checkedOnRead };
+  return { ...answered, checked_on_read: checkedOnRead, rules_unchecked: true };
 }
 
 /**

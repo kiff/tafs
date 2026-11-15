@@ -366,7 +366,8 @@ things (`runtime/src/cloud/approval.ts`):
   conversation, the draft is approved as before and one line is logged ("approval rules: none
   agreed in the conversation"); with `TAFS_RULES_REQUIRED=on` it's refused (`rules_required`),
   once every Coach run sends them. A conversation that can't be read is read again, never trusted.
-  The check route (`…/check`), which has no conversation, doesn't check the rules. Coach starts
+  The check route (`…/check`), which has no conversation, doesn't check the rules, and says so
+  on every answer (`rules_unchecked: true`). Coach starts
   sending the fields once kiff/agents' component schema takes them; until then nothing carries
   them, and every draft is approved as before. Figures (each call's, the day's) are a later step.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)

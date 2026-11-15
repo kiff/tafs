@@ -1658,11 +1658,11 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     try {
       const r = await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" });
       expect(r.status).toBe(200);
-      expect(r.body).toEqual({ outcome: "answered", code: "vendor_name", redraft: true, checked_on_read: true, note: WORDS.registeredName("list_charges", "list_charges_noyy"),
+      expect(r.body).toEqual({ outcome: "answered", code: "vendor_name", redraft: true, checked_on_read: true, rules_unchecked: true, note: WORDS.registeredName("list_charges", "list_charges_noyy"),
         answer: expect.stringMatching(/^failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy"/) });
       // The draft over the registered name passes: ok, with the version it was checked at.
       s.drafts.drf_1.cards = card(["refund_charge", "list_charges_noyy"]);
-      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "ok", version: "v3", checked_on_read: true });
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "ok", version: "v3", checked_on_read: true, rules_unchecked: true });
       // The log has the reason code only: never the draft, its Cards or the tools.
       expect(logged.filter((l) => l.startsWith("approval check:"))).toEqual(["approval check: vendor_name", "approval check: ok"]);
       expect(logged.join("\n")).not.toMatch(/drf_1|list_charges|refund_charge/);
@@ -1684,7 +1684,7 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     const check = async (body: Record<string, unknown>, path = CHECK, headers: Record<string, string> = {}) => w.call("POST", path, body, headers);
     expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "read_again", code: "out_of_date" });
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
-    expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "read_again", code: "cards_unread", note: WORDS.cardsUnread, checked_on_read: true });
+    expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "read_again", code: "cards_unread", note: WORDS.cardsUnread, checked_on_read: true, rules_unchecked: true });
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: null as unknown as unknown[] };
     expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "no_card", note: WORDS.noCard });
     // A draft for another taf than the grant's, and a grant planque doesn't list for this account.
@@ -1700,6 +1700,23 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
 
   // An e2e harness kept its own copy of which cards the chat's read checks, and it differed from tafs cloud's in two steps,
   // so a refusal the owner would meet at the tap didn't show in the Eval. The route says it, by the chat read's own rule.
+  it("never checks the agreed rules, even where they're required, and says so on every answer (rules_unchecked)", async () => {
+    const s = services();
+    s.grants = [grant({ status: "connected" }, { tools })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: card(["refund_charge", "list_charges_noyy"]) };
+    const w = await world(s);
+    process.env.TAFS_RULES_REQUIRED = "on";
+    try {
+      // Approve would refuse this draft (no rules agreed in a conversation); the check route has none to read, so it says ok
+      // and that the rules weren't checked: a caller never reads its ok as "the rules hold".
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "ok", version: "v3", checked_on_read: true, rules_unchecked: true });
+      s.drafts.drf_1.version = "v4";
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "read_again", rules_unchecked: true });
+    } finally {
+      delete process.env.TAFS_RULES_REQUIRED;
+    }
+  });
+
   describe("says whether the chat's read checks the card (checked_on_read), by the chat read's rule", () => {
     afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; delete process.env.TAFS_KEY_AND_CARDS; });
     const g = (over: Record<string, unknown>, request: Record<string, unknown> = {}) => grant(over, { tools, ...request }) as unknown as Parameters<typeof checkedOnReadFor>[0];
