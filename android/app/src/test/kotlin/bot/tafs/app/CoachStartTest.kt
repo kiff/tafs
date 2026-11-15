@@ -779,6 +779,58 @@ class CoachStartTest {
     assertTrue(m.state.value.grants.any { it.id == "g1" })
   }
 
+  // A live test on Android 104: the card said "Leyendo lo que pide…" for over a minute after the grant was made, until the chat
+  // was opened again. The phone read the grants three times, nine seconds in all, and Coach's run was done, so nothing read
+  // them again. They're read while the card waits on its grant: a minute in, planque lists it and the card has it.
+  @Test fun anApprovalWhoseGrantIsListedAMinuteLaterIsStillRead() = runTest {
+    reads()
+    coachThread("""{"type":"approval","id":"a1","grant":"g1","title":"Connect Stripe"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    val m = model(scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    advanceTimeBy(60_000)
+    runCurrent()
+    assertTrue(m.state.value.grants.none { it.id == "g1" })
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    advanceTimeBy(AppModel.SET_UP_READ_MS + 1)
+    runCurrent()
+    assertTrue(m.state.value.grants.any { it.id == "g1" })
+    // Listed: the reads stop.
+    val read = transport.requestsTo("GET /v1/accounts/t_01/grants").size
+    advanceTimeBy(10 * AppModel.SET_UP_READ_MS)
+    runCurrent()
+    assertEquals(read, transport.requestsTo("GET /v1/accounts/t_01/grants").size)
+  }
+
+  // A grant planque never lists: read for ten minutes at most, never for as long as the chat stays open.
+  @Test fun aCardsGrantIsReadForTenMinutesAtMost() = runTest {
+    reads()
+    coachThread("""{"type":"approval","id":"a1","grant":"g1","title":"Connect Stripe"}""")
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
+    val m = model(scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    assertEquals(10L * 60 * 1000, AppModel.CARD_GRANT_READS * AppModel.SET_UP_READ_MS)
+    advanceTimeBy(AppModel.CARD_GRANT_READS * AppModel.SET_UP_READ_MS + 1)
+    runCurrent()
+    val read = transport.requestsTo("GET /v1/accounts/t_01/grants").size
+    advanceTimeBy(60_000)
+    runCurrent()
+    assertEquals(read, transport.requestsTo("GET /v1/accounts/t_01/grants").size)
+  }
+
+  // Which grants a card waits on: an unanswered approval or sign-in card's, while planque doesn't list it.
+  @Test fun theGrantsCardsWaitOn() {
+    val connect = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"approval","id":"connect","grant":"g1","title":"Connect Stripe"}""")
+    val signIn = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"sign_in","id":"again","grant":"g2","title":"Sign in"}""")
+    val notice = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"notice","id":"n","grant":"g4","title":"Note"}""")
+    val shown = { c: SetupComponent, answer: bot.tafs.app.kiff.CardAnswer? -> bot.tafs.app.kiff.ShownComponent(t0, "s1", "r1", c, answer) }
+    val cards = listOf(shown(connect, null), shown(signIn, null), shown(connect.copy(id = "done", grant = "g3"), bot.tafs.app.kiff.CardAnswer(words = "Approved")), shown(notice, null))
+    assertEquals(setOf("g1", "g2"), AppModel.grantsCardsWaitOn(cards, emptyList()))
+    assertEquals(setOf("g2"), AppModel.grantsCardsWaitOn(cards, listOf(bot.tafs.app.kiff.Grant(id = "g1"))))
+  }
+
   // Review of Android 96: a grant was marked followed on a read planque refused, so no later thread read followed it.
   @Test fun aGrantFirstReadWhilePlanqueRefusedIsStillReadAgainLater() = runTest {
     reads()
@@ -795,6 +847,60 @@ class CoachStartTest {
     advanceTimeBy(AppModel.SET_UP_READ_MS + 1)
     runCurrent()
     assertTrue(m.state.value.grants.any { it.id == "g1" })
+  }
+
+  // A live test: the owner came back to tafs with no link after Stripe's sign-in had reached planque, and Open again opened the
+  // same link, which planque takes once, so the page said it was used. Open again now ends that wait quietly and runs the card's
+  // approval again: planque, holding the sign-in, answers signed_in with its confirm code, and the card is signed in, no page.
+  @Test fun openAgainRunsTheApprovalAgainAndTakesTheSignedInPath() = runTest {
+    reads()
+    coachThread(signInCard)
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth"}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/approve", 200, """{"status":"signed_in","confirm":"c0de"}""")
+    transport.answer("POST /v1/accounts/t_01/grants/g1/confirm", 200, grant("connected"))
+    val left = kotlinx.coroutines.flow.MutableStateFlow(false)
+    var waiting = kotlinx.coroutines.CompletableDeferred<String>()
+    val opened = mutableListOf<String>()
+    var reopened = 0
+    val signIn = object : VendorSignIn {
+      override suspend fun signIn(url: String): String { opened += url; waiting = kotlinx.coroutines.CompletableDeferred(); return waiting.await() }
+      override val left = left
+      override fun reopen() { reopened++ }
+      override fun replace() { waiting.completeExceptionally(bot.tafs.app.kiff.VendorSignInReplaced()) }
+    }
+    val m = model(signIn, scope = backgroundScope)
+    m.loadCoach()
+    m.loadChat(COACH_CHAT)
+    m.startSignInAgain(KiffClient.json.decodeFromString(signInCard))
+    runCurrent()
+    assertEquals(listOf("https://mcp.stripe.com/oauth"), opened)
+    left.value = true
+    runCurrent()
+    m.reopenSignIn()
+    repeat(20) { advanceTimeBy(100); runCurrent() }
+    // The same link was never opened again; the approval ran once more, and planque's signed-in answer was confirmed.
+    assertEquals(0, reopened)
+    assertEquals(listOf("https://mcp.stripe.com/oauth"), opened)
+    assertEquals(2, transport.requestsTo("POST /v1/accounts/t_01/grants/g1/approve").size)
+    assertEquals(1, transport.requestsTo("POST /v1/accounts/t_01/grants/g1/confirm").size)
+    // Coach heard one answer, the second approval's: never "failed" for the page given up.
+    assertEquals(1, transport.requestsTo("POST /v1/tafs/setup_1/components/s1/answer").size)
+    assertEquals("signed in", answered("s1"))
+    assertNull(m.state.value.connecting)
+  }
+
+  // With no approval waiting on the page (none this model started), Open again opens the same page, as before.
+  @Test fun openAgainWithNoApprovalToRunOpensTheSamePage() = runTest {
+    reads()
+    var reopened = 0
+    val signIn = object : VendorSignIn {
+      override suspend fun signIn(url: String): String = kotlinx.coroutines.awaitCancellation()
+      override fun reopen() { reopened++ }
+    }
+    val m = model(signIn, scope = backgroundScope)
+    m.reopenSignIn()
+    assertEquals(1, reopened)
   }
 
   // The owner on Android 97: back in tafs with no link from Google's page, the card offers the page again rather than drop it.

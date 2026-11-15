@@ -1708,3 +1708,31 @@ final class KIFFClient {
         return d
     }()
 }
+
+/// tafs cloud's Activity (`GET /v1/tafs/{id}/activity`, `contracts/taf-activity.json`) sends each entry's call without
+/// `held`, which only KIFF's own read sends: absent, it reads as not held, and the page loads. Written out in an
+/// extension so the memberwise initializer stays.
+extension KIFFClient.ActivityCall {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        proposalID = try c.decode(String.self, forKey: .proposalID)
+        actionName = try c.decode(String.self, forKey: .actionName)
+        title = try c.decodeIfPresent(String.self, forKey: .title)
+        actorID = try c.decodeIfPresent(String.self, forKey: .actorID)
+        outcome = try c.decode(String.self, forKey: .outcome)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        held = try c.decodeIfPresent(Bool.self, forKey: .held) ?? false
+        toolOutcome = try c.decodeIfPresent(ToolOutcome.self, forKey: .toolOutcome)
+        amount = try c.decodeIfPresent(Amount.self, forKey: .amount)
+        readOnly = try c.decodeIfPresent(Bool.self, forKey: .readOnly)
+        entityID = try c.decodeIfPresent(String.self, forKey: .entityID)
+        onHash = try c.decodeIfPresent(String.self, forKey: .onHash)
+        onArg = try c.decodeIfPresent(String.self, forKey: .onArg)
+        answer = try c.decodeIfPresent(Answer.self, forKey: .answer)
+        receipt = try c.decodeIfPresent(Receipt.self, forKey: .receipt)
+        reasons = try c.decodeIfPresent([String].self, forKey: .reasons)
+        madeAt = try c.decodeIfPresent(Date.self, forKey: .madeAt)
+        reason = try c.decodeIfPresent(String.self, forKey: .reason)
+        detail = try c.decodeIfPresent(String.self, forKey: .detail)
+    }
+}

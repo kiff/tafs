@@ -113,12 +113,24 @@ final class ReferenceScreensTests: XCTestCase {
     }
 
     /// Coach mid-conversation over the sample: the sample's thread, in Coach open.
-    func testCoachMidConversationOpensOnTheSamplesThread() async {
+    func testCoachMidConversationOpensOnTheSamplesThread() async throws {
         UserDefaults.standard.set(true, forKey: "screenshots")
         UserDefaults.standard.set("coach-chat", forKey: "screen")
         let model = AppModel(signer: StubSigner())
         await model.startSample()
         XCTAssertTrue(model.coachOpen)
         XCTAssertEqual(model.setupThread.messages.count, 4)
+        // The sample starts no Coach, so the chat draws its thread for this screen alone, not the empty intro
+        // (the reference run drew Coach empty, as for `coach`).
+        XCTAssertFalse(model.setupStarted)
+        XCTAssertTrue(Screenshots.coachChat)
+        UserDefaults.standard.set("coach", forKey: "screen")
+        XCTAssertFalse(Screenshots.coachChat, "`coach` stays empty")
+        UserDefaults.standard.set(false, forKey: "screenshots")
+        UserDefaults.standard.set("coach-chat", forKey: "screen")
+        XCTAssertFalse(Screenshots.coachChat, "only for a screenshot")
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        let chat = try String(contentsOf: root.appendingPathComponent("Views/SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(chat.contains("if !model.setupStarted && !Screenshots.coachChat {"))
     }
 }

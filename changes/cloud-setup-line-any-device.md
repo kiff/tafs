@@ -1,0 +1,1 @@
+- **tafs cloud:** a taf's Setup asks to connect "this device", not "this phone", so the line is right on a Mac, a Windows PC or Linux too, in all 8 languages.

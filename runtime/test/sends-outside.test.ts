@@ -12,11 +12,12 @@ describe("tools that send outside the company (gap 14)", () => {
     for (const none of [undefined, null, "x", {}, { operations: "x" }, { operations: [null, { effect: "sends", resource: { outside: true } }] }]) expect(sendingOutside(none)).toEqual([]);
   });
 
-  // A draft reaches the people it's for once the owner sends it, as written: its tool carries the line too, from what
-  // the tool does (its profile), whatever the job or recipe.
-  it("include every tool that drafts (none_until_approved), a draft email or a draft invoice, outside or not", () => {
-    const profile = { v: "kiff.profile.v1", operations: [op("drafts_create", "none_until_approved"), op("draft_invoice", "none_until_approved", false), op("update_record", "writes"), op("send_email", "sends", true)] };
-    expect(sendingOutside(profile)).toEqual(["draft_invoice", "drafts_create", "send_email"]);
+  // A draft reaches the people it's for once the owner sends it, as written: its tool carries the line by default, so a
+  // forgotten mark still discloses, and a draft that stays out of it opts out explicitly with outside: false, as a draft
+  // invoice does (the line is about who wrote a message; an invoice has its own legal rules). Fail closed.
+  it("include every tool that drafts (none_until_approved) unless it says outside: false, as a draft invoice does", () => {
+    const profile = { v: "kiff.profile.v1", operations: [op("drafts_create", "none_until_approved", true), op("draft_reply", "none_until_approved"), op("draft_invoice", "none_until_approved", false), op("update_record", "writes", true), op("send_email", "sends", true), op("post_internal", "sends")] };
+    expect(sendingOutside(profile)).toEqual(["draft_reply", "drafts_create", "send_email"]);
     expect(undisclosedSending(sendingOutside(profile), ["drafts_create", "send_email"], ["send_email"])).toContain("disclose doesn't name drafts_create, which reaches people outside the company, a draft once it's sent included");
     expect(undisclosedSending(sendingOutside(profile), ["drafts_create", "send_email"], ["send_email", "drafts_create"])).toBeUndefined();
   });

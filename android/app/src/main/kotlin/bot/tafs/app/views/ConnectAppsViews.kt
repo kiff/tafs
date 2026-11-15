@@ -264,10 +264,12 @@ fun ConnectAppsSheet(
                   state.coachNotes[g.id]?.let { Text(it, style = scaled(13, color = Theme.no)) }
                 }
                 // A sign-in that never came back is cancelled, not disconnected: nothing was connected.
+                // While one removal is on its way, its button says so and no other starts (as on iPhone and iPad).
                 if (onDisconnect != null) Text(
-                  bot.tafs.app.model.ConnectionWords.endButton(g),
-                  style = scaled(15, FontWeight.SemiBold, Theme.no),
-                  modifier = Modifier.heightIn(min = 44.dp).confirms().tapping { if (g.cancellable) confirmingCancel = g else confirmingDisconnect = g }.padding(top = 10.dp),
+                  if (state.disconnecting == g.id) Words.Connect.disconnecting else bot.tafs.app.model.ConnectionWords.endButton(g),
+                  style = scaled(15, FontWeight.SemiBold, if (state.disconnecting == null) Theme.no else Theme.dim),
+                  modifier = Modifier.heightIn(min = 44.dp).confirms()
+                    .tapping(enabled = state.disconnecting == null) { if (g.cancellable) confirmingCancel = g else confirmingDisconnect = g }.padding(top = 10.dp),
                 )
               }
             }
@@ -437,7 +439,8 @@ fun ConnectAppsSheet(
           // 2239 left the row dead when the read had failed), and the sheet then says why when there are still none.
           AppRow(app, connect, onChooseActions, onManage = { a: ConnectApps.App ->
             if (connectionsOf(state, a).isNotEmpty()) managing = a else readScope.launch { onReadConnections(); managing = a }
-          }, usedBy = usedBy(state, app), onAskCoach = onAskCoach.takeIf { onConnect != null && tafs.isEmpty() })
+          }, usedBy = usedBy(state, app), onAskCoach = onAskCoach.takeIf { onConnect != null && tafs.isEmpty() },
+            removing = state.disconnecting?.let { id -> connectionsOf(state, app).any { it.id == id } } == true)
         }
         if (yours.isNotEmpty()) {
           bot.tafs.app.design.Eyebrow(Words.Connect.Apps.yours)
@@ -484,6 +487,8 @@ private fun AppRow(
   usedBy: List<String> = emptyList(),
   /** With no taf to connect it for, the way to make one: Coach. */
   onAskCoach: (() -> Unit)? = null,
+  /** One of its connections is being removed: "Removing access…" in place of "Connected" until it's done. */
+  removing: Boolean = false,
 ) {
   // A connected app's whole row opens its connections, not only its "Connected" label (an audit: "I tapped the whole Gmail
   // row and nothing happened").
@@ -511,6 +516,12 @@ private fun AppRow(
         if (!app.needsSetup) Text(ConnectAppsWords.secondLine(app, usedBy), style = scaled(12, color = Theme.dim), maxLines = 2)
       }
       when {
+        // A removal on its way: said, never "Connected", until planque answered and the list was read again.
+        removing -> Text(
+          Words.Connect.disconnecting,
+          style = scaled(14, FontWeight.SemiBold, Theme.dim),
+          modifier = Modifier.heightIn(min = 44.dp).padding(top = 12.dp).semantics { liveRegion = androidx.compose.ui.semantics.LiveRegionMode.Polite },
+        )
         // Connected: its connections, each with Disconnect, a tap away.
         app.connected -> Text(
           ConnectAppsWords.CONNECTED,

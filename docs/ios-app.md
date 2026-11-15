@@ -164,7 +164,7 @@ the app in sample mode.
 | `-screenshots YES` | Sample mode with the screenshots' data |
 | `-tab account \| tafs \| needs-you \| record` | Opens that tab |
 | `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| buy-credits` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
-| `-screen usage \| connect-apps \| connect-app \| devices \| new-taf \| coach \| coach-chat` | The iPad reference set's screens over the sample (`ReferenceScreensTests`): `usage` and `connect-apps` select their sidebar item (`Screenshots.sidebarScreen`), and `connect-app` also opens the app with the most connections, each under its taf (`Samples/grants.json`, its agents mapped to the sample's tafs); `coach-chat` opens Coach on a sample conversation (`Samples/coach-chat.json`, read as tafs cloud's); `devices`, with `-tab account`, pushes Devices in Account, with Add a device; `new-taf` opens + New's job gallery; `coach` opens Coach mode, empty. Connect apps and the gallery read tafs cloud's answers kept in `Samples/` (`SampleScreens`), and Devices three sample devices, only with `-screenshots YES` over the sample |
+| `-screen usage \| connect-apps \| connect-app \| devices \| new-taf \| coach \| coach-chat` | The iPad reference set's screens over the sample (`ReferenceScreensTests`): `usage` and `connect-apps` select their sidebar item (`Screenshots.sidebarScreen`), and `connect-app` also opens the app with the most connections, each under its taf (`Samples/grants.json`, its agents mapped to the sample's tafs); `coach-chat` opens Coach on a sample conversation (`Samples/coach-chat.json`, read as tafs cloud's), drawn though the sample starts no Coach (`Screenshots.coachChat`); `devices`, with `-tab account`, pushes Devices in Account, with Add a device; `new-taf` opens + New's job gallery; `coach` opens Coach mode, empty. Connect apps and the gallery read tafs cloud's answers kept in `Samples/` (`SampleScreens`), and Devices three sample devices, only with `-screenshots YES` over the sample |
 | `-screen calendar \| calendar-week` | Opens Calendar on today, in Day mode, or in Week mode on today's week (the Today pill already today): an iPad's whole-app sidebar selects its Calendar item, the phone opens it as Home's button does; over the sample it reads nothing from tafs cloud. CI's `languages` set shoots both, and the Overview (`-tab tafs`), on the 13-inch iPad in French and Portuguese with `-signedIn YES` (`fr-ipad-calendar-week.png`…) |
 | `-landscape YES` | The iPad's window turned to landscape, for its screenshots |
 | `-signedIn YES` | The iPad's sidebar laid out as for a signed-in account, its screens and Coach above the account, over the sample's tafs: a layout shot, nothing read from KIFF |
@@ -469,7 +469,10 @@ the app in sample mode.
   digest before it shows or signs a grant, and refuses one that doesn't match. Without `digest_v`,
   it covers the request alone (v1). With `digest_v: 2`, it covers `{"lang", "request", "text"}`, so
   the words the person reads (`text`, in their language) and that language are what's signed. An
-  unknown version, or a v2 grant without its words or language, never matches. Every request to
+  unknown version, or a v2 grant without its words or language, never matches. Each grant is checked
+  against planque's entry at its own position in the list, never one found by id: a list where an id
+  repeats, or of another length, matches nothing, so the phone never signs one request's digest under
+  another shown in its place (as Android). Every request to
   planque carries the person's languages (`Accept-Language`), for the words it writes.
 - **Did this happen?** (`DidThisHappenCard`, in Needs you): KIFF's money calls whose outcome
   it can't prove (`GET /v1/me/did-this-happen`), each answered No or "Yes, it did" behind
