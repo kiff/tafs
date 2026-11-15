@@ -928,6 +928,7 @@ describe("tafs cloud", () => {
     expect(home.body.card_unit_exceptions[0]).toMatchObject({ id: "exc-example", taf: RAE, name: "Rae", can_approve_once: false });
     const setup = await call(w, "GET", `/v1/tafs/${RAE}/setup`, { token: "ana" });
     expect(setup.status).toBe(200); expect(setup.body.card_unit_exceptions).toEqual(home.body.card_unit_exceptions);
+    contract("taf-setup", "GET /v1/tafs/{id}/setup for someone who manages the taf: its connections and Cards as the Setup tab draws them, with one Card-unit exception waiting.", setup.body);
     w.account.access = {};
     expect((await call(w, "GET", "/v1/home", { token: "ana" })).body.card_unit_exceptions).toBeUndefined();
     expect((await call(w, "GET", `/v1/tafs/${MAX}/setup`, { token: "ana" })).status).toBe(404);
