@@ -659,6 +659,11 @@
     <string name="coach_plan_fold_short">Fold</string>
     <string name="coach_plan_progress">Plan · %1$s of %2$s</string>
     <string name="coach_plan_show">Show the whole plan</string>
+    <string name="coach_plan_step_active">In progress</string>
+    <string name="coach_plan_step_done">Done</string>
+    <string name="coach_plan_step_failed">Failed</string>
+    <string name="coach_plan_step_pending">To do</string>
+    <string name="coach_plan_step_skipped">Skipped</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Connect your apps</string>
     <string name="coach_prompt_give_card">Give Coach its Card</string>
@@ -1364,6 +1369,7 @@
     <string name="pair_device_name">tafs on this %1$s</string>
     <string name="pair_failed">This %1$s wasn\'t added: %2$s. Show a new code and try again.</string>
     <string name="pair_from_sign_in">Already use tafs on your phone? Add this %1$s with it.</string>
+    <string name="pair_keychain_refused">This Mac couldn\'t save its sign-in to the Keychain (error %1$s), so it wasn\'t added. Show a new code and try again.</string>
     <string name="pair_new_code">Show a new code</string>
     <string name="pair_steps">On your phone, open tafs, then %1$s, %2$s, %3$s. Scan this code.</string>
     <string name="pair_title">Add this %1$s with your phone</string>

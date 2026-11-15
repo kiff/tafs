@@ -83,4 +83,42 @@ final class ReferenceScreensTests: XCTestCase {
         let app = try String(contentsOf: root.appendingPathComponent("App/TafsApp.swift"), encoding: .utf8)
         XCTAssertTrue(app.contains("if coachAvailable || Screenshots.coach {"))
     }
+
+    /// The second pair: one app's connections by taf, and Coach mid-conversation.
+    func testOneAppsConnectionsAndCoachMidConversation() async throws {
+        let grants = try XCTUnwrap(SampleScreens.grants, "Samples/grants.json is in the app and reads")
+        XCTAssertEqual(grants.count, 3)
+        XCTAssertTrue(grants.allSatisfy(\.rowFromPlanque), "each with planque's health and actions")
+        let thread = try XCTUnwrap(SampleScreens.coachThread, "Samples/coach-chat.json reads as tafs cloud's conversation")
+        XCTAssertEqual(thread.messages.count, 4)
+
+        let defaults = UserDefaults.standard
+        defaults.set(true, forKey: "screenshots")
+        defaults.set("connect-app", forKey: "screen")
+        XCTAssertEqual(Screenshots.sidebarScreen, .connectApps)
+        defaults.set("coach-chat", forKey: "screen")
+        XCTAssertTrue(Screenshots.coach)
+
+        defaults.set("connect-app", forKey: "screen")
+        let model = AppModel(signer: StubSigner())
+        await model.startSample()
+        await model.loadConnectApps()
+        let stripe = try XCTUnwrap(model.connectApps?.apps.first { $0.entry == "stripe@3" })
+        XCTAssertEqual(model.connectionGroups(of: stripe).tafs.map(\.taf).sorted(),
+                       [TafTemplates.chargebacks.name, TafTemplates.refunds.name].sorted(), "Stripe's connections, each under its taf")
+
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        let connect = try String(contentsOf: root.appendingPathComponent("Views/ConnectAppsView.swift"), encoding: .utf8)
+        XCTAssertTrue(connect.contains(".navigationDestination(isPresented: $openingApp) {"))
+    }
+
+    /// Coach mid-conversation over the sample: the sample's thread, in Coach open.
+    func testCoachMidConversationOpensOnTheSamplesThread() async {
+        UserDefaults.standard.set(true, forKey: "screenshots")
+        UserDefaults.standard.set("coach-chat", forKey: "screen")
+        let model = AppModel(signer: StubSigner())
+        await model.startSample()
+        XCTAssertTrue(model.coachOpen)
+        XCTAssertEqual(model.setupThread.messages.count, 4)
+    }
 }

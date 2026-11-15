@@ -4743,8 +4743,8 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
     appCalls(token, taf.kiffAgent, now, deps.fetch ?? fetch, deps.kiffBase ?? KIFF_API),
     agentsCall(() => deps.agents.runs(me.tenantID, taf.id, true, 20)),
     deps.planqueBase && proof ? setupGrants(deps.planqueBase, me.tenantID, proof, deps.fetch).then((grants) => ({ grants, error: undefined as string | undefined }),
-      () => ({ grants: [], error: "Connected apps could not be read; try again" }))
-      : Promise.resolve({ grants: [], error: "Connect this phone to read its connected apps" }),
+      () => ({ grants: [], error: wordsIn(langOf(event)).setup_connections_unread }))
+      : Promise.resolve({ grants: [], error: wordsIn(langOf(event)).setup_connections_unproved }),
   ]);
   const active = runs.find((r) => r.status === "RUNNING");
   const events = active ? await deps.agents.session(me.tenantID, active.session, ownerKey(me)).then((s) => s.events, () => []) : [];
@@ -6423,7 +6423,7 @@ async function* relay(run: AsyncGenerator<RunStreamEvent>, first: IteratorResult
     if (status !== "error") return sse("step", { call_id: id, status });
     // A connection call's refusal is about Coach's request: its reason is tafs cloud's words, never the server's.
     // The server's own reason is kept beside it, for Coach and the log (keepWhy), never shown as the step's.
-    const plain = steps.connectionWhy(callID);
+    const plain = steps.connectionWhy(callID, r.text);
     // A connection call refused for how Coach wrote it (its order or its shape) isn't a failure of the person's app: nothing
     // was made, and Coach asks again. It ends not made, never "Coach couldn't connect" in red (Android 85, 14 Nov).
     if (plain && coachGuard(r.text)) {

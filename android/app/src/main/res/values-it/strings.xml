@@ -659,6 +659,11 @@
     <string name="coach_plan_fold_short">Comprimi</string>
     <string name="coach_plan_progress">Piano · %1$s di %2$s</string>
     <string name="coach_plan_show">Mostra tutto il piano</string>
+    <string name="coach_plan_step_active">In corso</string>
+    <string name="coach_plan_step_done">Fatto</string>
+    <string name="coach_plan_step_failed">Non riuscito</string>
+    <string name="coach_plan_step_pending">Da fare</string>
+    <string name="coach_plan_step_skipped">Saltato</string>
     <string name="coach_plan_title">Piano</string>
     <string name="coach_prompt_connect_tools">Collega le tue app</string>
     <string name="coach_prompt_give_card">Dai a Coach la sua Card</string>
@@ -1364,6 +1369,7 @@
     <string name="pair_device_name">tafs su questo %1$s</string>
     <string name="pair_failed">Questo %1$s non è stato aggiunto: %2$s. Mostra un nuovo codice e riprova.</string>
     <string name="pair_from_sign_in">Usi già tafs sul telefono? Aggiungi questo %1$s con il telefono.</string>
+    <string name="pair_keychain_refused">Questo Mac non è riuscito a salvare l\'accesso nel portachiavi (errore %1$s), quindi non è stato aggiunto. Mostra un nuovo codice e riprova.</string>
     <string name="pair_new_code">Mostra un nuovo codice</string>
     <string name="pair_steps">Sul telefono, apri tafs, poi %1$s, %2$s, %3$s. Scansiona questo codice.</string>
     <string name="pair_title">Aggiungi questo %1$s con il telefono</string>

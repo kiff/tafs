@@ -670,6 +670,11 @@ object Words {
       val foldShort: String get() = Res.s(R.string.coach_plan_fold_short)
       fun progress(done: String, total: String): String = Res.s(R.string.coach_plan_progress, done, total)
       val show: String get() = Res.s(R.string.coach_plan_show)
+      val stepActive: String get() = Res.s(R.string.coach_plan_step_active)
+      val stepDone: String get() = Res.s(R.string.coach_plan_step_done)
+      val stepFailed: String get() = Res.s(R.string.coach_plan_step_failed)
+      val stepPending: String get() = Res.s(R.string.coach_plan_step_pending)
+      val stepSkipped: String get() = Res.s(R.string.coach_plan_step_skipped)
     }
     val planTitle: String get() = Res.s(R.string.coach_plan_title)
     object Prompt {
@@ -1422,6 +1427,7 @@ object Words {
     fun deviceName(device: String): String = Res.s(R.string.pair_device_name, device)
     fun failed(device: String, why: String): String = Res.s(R.string.pair_failed, device, why)
     fun fromSignIn(device: String): String = Res.s(R.string.pair_from_sign_in, device)
+    fun keychainRefused(code: String): String = Res.s(R.string.pair_keychain_refused, code)
     val newCode: String get() = Res.s(R.string.pair_new_code)
     fun steps(account: String, devices: String, pair: String): String = Res.s(R.string.pair_steps, account, devices, pair)
     fun title(device: String): String = Res.s(R.string.pair_title, device)

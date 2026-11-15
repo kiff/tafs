@@ -421,9 +421,16 @@ struct TafDetailView: View {
             }
         }
         if taf.state != .revoked, model.mode == .sample || model.manages(taf.id) {
-            Button(Words.Taf.revoke) { confirmRevoke = true }
-                .buttonStyle(OutlineButtonStyle(color: Theme.no))
-                .confirming()
+            if model.mode == .kiff && model.approvalViewOnly {
+                // A view-only session (KIFF's `view_only`) isn't offered Revoke, on every device alike: the line every
+                // app shares says where it's done instead. As Android 104.
+                Text(Words.Taf.revokeNeedsApprover).scaledFont(13).foregroundColor(Theme.soft)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                Button(Words.Taf.revoke) { confirmRevoke = true }
+                    .buttonStyle(OutlineButtonStyle(color: Theme.no))
+                    .confirming()
+            }
         }
     }
 }

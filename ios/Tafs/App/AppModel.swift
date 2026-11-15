@@ -2073,7 +2073,8 @@ final class AppModel: ObservableObject {
             purchases.showSample(Screenshots.products)
             await refreshUsage()
         }
-        // `-screen coach`: Coach open over the sample, empty, for the reference set.
+        // `-screen coach`: Coach open over the sample, empty, for the reference set; `coach-chat`, mid-conversation.
+        if Screenshots.screen == "coach-chat", Screenshots.enabled, let thread = SampleScreens.coachThread { setupThread = thread }
         if Screenshots.coach { coachOpen = true }
     }
 
@@ -2180,7 +2181,10 @@ final class AppModel: ObservableObject {
     func loadConnectApps(_ q: String = "") async {
         guard mode == .kiff else {
             // The reference set's Connect apps over the sample (`-screenshots YES`).
-            if mode == .sample, Screenshots.enabled, q.isEmpty { connectApps = SampleScreens.connectApps }
+            if mode == .sample, Screenshots.enabled, q.isEmpty {
+                connectApps = SampleScreens.connectApps
+                useSampleConnections()
+            }
             return
         }
         // The account's connections too, so a connected app lists each one, with its taf and
@@ -6499,7 +6503,9 @@ final class AppModel: ObservableObject {
         let signer = self.signer
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
-        defer { planque.signer = nil }
+        // Connect apps' row says it's being removed until planque answered and the list was read again.
+        removingGrants.insert(grantID)
+        defer { planque.signer = nil; removingGrants.remove(grantID) }
         do {
             _ = try await planque.disconnect(grantID: grantID)
         } catch {
@@ -6507,8 +6513,14 @@ final class AppModel: ObservableObject {
             return false
         }
         await refreshConnections()
+        guard gen == accountGeneration else { return true }
+        if connectApps != nil { await loadConnectApps() }
         return true
     }
+
+    /// The connections being removed now (`disconnect`), from Face ID until planque answered and Connect
+    /// apps was read again.
+    @Published private(set) var removingGrants: Set<String> = []
 
     // MARK: Setup (kiff/agents#91)
 
@@ -7223,6 +7235,16 @@ final class AppModel: ObservableObject {
 
     /// Reads the gallery of ready-made jobs. A read that fails keeps what was read; a tafs
     /// cloud without the route leaves none, so + New opens Coach as before.
+    /// The reference set's connections over the sample: planque's, each under the sample taf its agent
+    /// stands for, so one app's screen lists them by taf.
+    private func useSampleConnections() {
+        guard let sample = SampleScreens.grants else { return }
+        for (agent, key) in SampleScreens.grantAgents {
+            if let taf = tafs.first(where: { templateOf[$0.id] == key }) { holderIDs[agent] = taf.id }
+        }
+        grants = sample
+    }
+
     func loadGallery() async {
         guard mode == .kiff else {
             // The reference set's job gallery over the sample (`-screenshots YES`).
@@ -8050,9 +8072,21 @@ final class AppModel: ObservableObject {
             if setupLive != nil { continue }
             let mine = setupThread.messages.last(where: { $0.from == .owner })?.id
             if mine != lastOwner { lastOwner = mine; polls = 0 }
-            guard polls < setupPollBudget else { continue }
+            // A card whose grant planque hasn't listed yet keeps the thread read, so its grant is read again
+            // and the card leaves "Reading the request…", however long ago the owner last wrote.
+            guard polls < setupPollBudget || cardWaitsOnItsGrant else { continue }
             polls += 1
             await loadSetupThread()
+        }
+    }
+
+    /// An unanswered approval or sign-in card whose grant this phone hasn't read yet, shown in the last ten
+    /// minutes: the thread is read again while it waits, past the poll budget, so the grant is read too.
+    var cardWaitsOnItsGrant: Bool {
+        setupThread.components.contains { shown in
+            let c = shown.component
+            guard c.type == .approval || c.type == .signIn, let g = c.grant, setupThread.answer(to: c.id) == nil else { return false }
+            return !grants.contains { $0.id == g } && clock().timeIntervalSince(shown.firstAt) < 600
         }
     }
 
@@ -9067,13 +9101,13 @@ enum Screenshots {
     /// is read from KIFF, and the screens it lists aren't opened.
     static var signedIn: Bool { enabled && UserDefaults.standard.bool(forKey: "signedIn") }
     /// `-screen coach`: Coach mode open over the sample, as the reference set shows it.
-    static var coach: Bool { enabled && screen == "coach" }
+    static var coach: Bool { enabled && (screen == "coach" || screen == "coach-chat") }
     /// The iPad sidebar's screen a `-screen` opens beside it: `usage` (Plan & usage), `connect-apps`.
     static var sidebarScreen: HomeSelection? {
         guard enabled else { return nil }
         switch screen {
         case "usage": return .usage
-        case "connect-apps": return .connectApps
+        case "connect-apps", "connect-app": return .connectApps
         default: return nil
         }
     }

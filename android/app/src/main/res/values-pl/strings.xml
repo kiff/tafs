@@ -719,6 +719,11 @@
     <string name="coach_plan_fold_short">Zwiń</string>
     <string name="coach_plan_progress">Plan · %1$s z %2$s</string>
     <string name="coach_plan_show">Pokaż cały plan</string>
+    <string name="coach_plan_step_active">W toku</string>
+    <string name="coach_plan_step_done">Gotowe</string>
+    <string name="coach_plan_step_failed">Nie powiodło się</string>
+    <string name="coach_plan_step_pending">Do zrobienia</string>
+    <string name="coach_plan_step_skipped">Pominięte</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Połącz swoje aplikacje</string>
     <string name="coach_prompt_give_card">Daj Coachowi jego Card</string>
@@ -1464,6 +1469,7 @@
     <string name="pair_device_name">tafs – %1$s</string>
     <string name="pair_failed">Ten %1$s nie został dodany: %2$s. Pokaż nowy kod i spróbuj ponownie.</string>
     <string name="pair_from_sign_in">Używasz już tafs na telefonie? Dodaj ten %1$s za jego pomocą.</string>
+    <string name="pair_keychain_refused">Ten Mac nie mógł zapisać logowania w pęku kluczy (błąd %1$s), więc nie został dodany. Pokaż nowy kod i spróbuj ponownie.</string>
     <string name="pair_new_code">Pokaż nowy kod</string>
     <string name="pair_steps">Na telefonie otwórz tafs, potem %1$s, %2$s, %3$s. Zeskanuj ten kod.</string>
     <string name="pair_title">Dodaj ten %1$s za pomocą telefonu</string>

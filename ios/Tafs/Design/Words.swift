@@ -1234,6 +1234,16 @@ enum Words {
             static func progress(done: String, total: String) -> String { Words.line("coach.plan.progress", done, total) }
             /// Show the whole plan
             static var show: String { Words.line("coach.plan.show") }
+            /// In progress
+            static var stepActive: String { Words.line("coach.plan.step_active") }
+            /// Done
+            static var stepDone: String { Words.line("coach.plan.step_done") }
+            /// Failed
+            static var stepFailed: String { Words.line("coach.plan.step_failed") }
+            /// To do
+            static var stepPending: String { Words.line("coach.plan.step_pending") }
+            /// Skipped
+            static var stepSkipped: String { Words.line("coach.plan.step_skipped") }
         }
         /// Plan
         static var planTitle: String { Words.line("coach.plan_title") }
@@ -2631,6 +2641,8 @@ enum Words {
         static func failed(device: String, why: String) -> String { Words.line("pair.failed", device, why) }
         /// Already use tafs on your phone? Add this {device} with it.
         static func fromSignIn(device: String) -> String { Words.line("pair.from_sign_in", device) }
+        /// This Mac couldn't save its sign-in to the Keychain (error {code}), so it wasn't added. Show a new code and try again.
+        static func keychainRefused(code: String) -> String { Words.line("pair.keychain_refused", code) }
         /// Show a new code
         static var newCode: String { Words.line("pair.new_code") }
         /// On your phone, open tafs, then {account}, {devices}, {pair}. Scan this code.

@@ -6,6 +6,21 @@ import XCTest
 /// thread of messages and components, and the owner's answers.
 @MainActor
 final class SetupTests: XCTestCase {
+    /// A plan step's mark reads its words to VoiceOver, never tafs cloud's raw status ("done").
+    func testAStepsMarkReadsTheWordsNotTheStatus() throws {
+        XCTAssertEqual(StepMark.words("done"), Words.Coach.Plan.stepDone)
+        XCTAssertEqual(StepMark.words("failed"), Words.Coach.Plan.stepFailed)
+        XCTAssertEqual(StepMark.words("active"), Words.Coach.Plan.stepActive)
+        XCTAssertEqual(StepMark.words("skipped"), Words.Coach.Plan.stepSkipped)
+        XCTAssertEqual(StepMark.words("pending"), Words.Coach.Plan.stepPending)
+        XCTAssertEqual(StepMark.words("something new"), Words.Coach.Plan.stepPending, "a status this app doesn't know reads as to do")
+        XCTAssertEqual(Words.Coach.Plan.stepDone, "Done")
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let file = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(file.contains(".accessibilityLabel(Self.words(status))"))
+        XCTAssertFalse(file.contains(".accessibilityLabel(status)"))
+    }
+
     func testAConversationReadCannotOverwriteANewCoachConversation() async throws {
         let model = await model(signer: FaceIDSigner())
         StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
@@ -1854,6 +1869,48 @@ final class SetupTests: XCTestCase {
         await model.refreshConnections()
         XCTAssertEqual(model.setupCardState(try SetupTests.component(#"{"type":"approval","id":"read","grant":"g_01"}"#)),
                        .failed("a read-only tool isn't read-only at the vendor"))
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A connect card whose grant planque hasn't listed yet keeps the thread read past the poll budget,
+    /// so the card doesn't stay on "Reading the request…" until the chat is opened again: only while it's
+    /// unanswered, its grant unread, and for its first ten minutes.
+    func testACardWaitingOnItsGrantKeepsTheThreadRead() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        func at(_ ago: TimeInterval) -> String { iso.string(from: Date().addingTimeInterval(-ago)) }
+        func thread(cardAgo: TimeInterval, answered: Bool = false) -> String {
+            let card = #"{"at":"\#(at(cardAgo))","session":"s1","run":"r1","seq":2,"component":{"type":"approval","id":"connect","grant":"g_01"}}"#
+            let answer = answered ? #",{"at":"\#(at(1))","from":"owner","kind":"message","text":"[approval connect] approved, signed in","session":"s1"}"# : ""
+            return #"{"messages":[{"at":"\#(at(cardAgo + 600))","from":"owner","kind":"message","text":"Refunds, please","session":"s1"}\#(answer)],"components":[\#(card)]}"#
+        }
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread(cardAgo: 30))
+        await model.loadSetup()
+        XCTAssertTrue(model.grants.isEmpty, "planque hasn't listed the grant yet")
+        XCTAssertTrue(model.cardWaitsOnItsGrant)
+
+        // planque lists it: the next read of the thread reads it, and the wait ends.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        await model.loadSetupThread()
+        XCTAssertEqual(model.grants.first?.id, "g_01")
+        XCTAssertFalse(model.cardWaitsOnItsGrant)
+
+        // Not for an answered card, nor past ten minutes.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+        await model.refreshConnections()
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread(cardAgo: 30, answered: true))
+        await model.loadSetupThread()
+        XCTAssertFalse(model.cardWaitsOnItsGrant, "answered")
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread(cardAgo: 660))
+        await model.loadSetupThread()
+        XCTAssertFalse(model.cardWaitsOnItsGrant, "older than ten minutes")
+
+        let file = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/App/AppModel.swift"), encoding: .utf8)
+        XCTAssertTrue(file.contains("guard polls < setupPollBudget || cardWaitsOnItsGrant else { continue }"))
         Keychain.delete(AppModel.planqueAccount)
     }
 

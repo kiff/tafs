@@ -513,9 +513,9 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
   // Evals 10 to 12: the refund Card also counted refunds, 1,000 a day held for the owner, though the rules set only each
   // refund's cap and the day's total, so 1,001 one-cent refunds under the cap would wait for the owner. Coach's words
   // alone didn't hold. A write with an amount limit carries no count of its calls.
-  it("a draft that counts a write's calls beside its amount limits isn't signed; a count of 0, per item, or on a read is", async () => {
+  it("a draft that counts a write's calls beside its amount limits isn't signed; a count of 0, the owner's per item, or on a read is", async () => {
     const s = services();
-    const tools = [{ tool: "refund_charge", name: "refund_charge_k3", title: "Refund a charge", amount_argument: "amount" },
+    const tools = [{ tool: "refund_charge", name: "refund_charge_k3", title: "Refund a charge", amount_argument: "amount", resource_argument: "charge" },
       { tool: "send_reply", name: "send_reply_k3", title: "Send a reply" },
       { tool: "get_charge", name: "get_charge_k3", title: "Read a charge", read_only: true }];
     s.grants = [grant({ status: "connected" }, { tools })];
@@ -541,11 +541,28 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
     draft([each([count(30)]), others]);
     expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
-    // 4. A count of 0 held (each refund asks the owner), or a count per item (one refund per charge): signed.
+    // 4. A count of 0 held (each refund asks the owner), or the owner's limit for each item, per the tool's own
+    // resource_argument over its life or any 7 days (one refund per charge, ever): signed.
     draft([each([count(0)]), daily([day(20_000)]), others]);
     expect(await ask()).toMatchObject({ outcome: "sign" });
     draft([each([count(1, { per: "charge", window: "lifetime" })]), daily([day(20_000)]), others]);
     expect(await ask()).toMatchObject({ outcome: "sign" });
+    draft([each([count(1, { per: " Charge ", window: "rolling_7d" })]), daily([day(20_000)]), others]);
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // 5. A live test's "1 a day for each payment intent" on the money tool: a count per item the owner never gave, so
+    // not signed, and Coach hears the item. Another item than the tool's own, even over its life: not signed either.
+    draft([each([count(1, { per: "payment_intent" })]), daily([day(20_000)]), others]);
+    const p = await ask();
+    expect(p).toMatchObject({ outcome: "answered", note: WORDS.countOnAmount("Refund a charge") });
+    expect(String(p.answer)).toContain(`failed: the draft counts "Refund a charge"'s calls (1 per calendar_day for each payment_intent) beside its amount limits`);
+    draft([each([count(1, { per: "charge" })]), daily([day(20_000)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    draft([each([count(1, { per: "payment_intent", window: "lifetime" })]), daily([day(20_000)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    // 6. With no resource_argument, no count per item is the owner's shape: it goes in the taf's instructions.
+    s.grants = [grant({ status: "connected" }, { tools: tools.map(({ resource_argument: _, ...t }) => t) })];
+    draft([each([count(1, { per: "charge", window: "lifetime" })]), daily([day(20_000)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
   });
 
   // Eval 43402441612: "one invoice per order, ever" and "up to 10 drafts a day" signed as 1 create_invoice in the Card's

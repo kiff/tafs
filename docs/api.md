@@ -23,7 +23,7 @@ they do to KIFF. tafs cloud writes the lines it words for people in the best of 
 else English ([languages.md](languages.md)): so far a taf's work lines and requests (`…/work`, the request
 page, the home list's line), the skipped firings, a run code's `words` (`ai_unavailable`) on a chat's
 `end`, a taf's Setup lines (each action's limits and steps, "See its Card", "App action") and a Card's
-each-item totals (`each_item`). The rest of its lines follow. An `error` stays in English; `words` beside it are the person's.
+each-item totals (`each_item`), each naming its item in the person's language from tafs cloud's words (`payment_intent` is "pago" in Spanish), or a plain "item" for an argument it doesn't know. The rest of its lines follow. An `error` stays in English; `words` beside it are the person's.
 
 Capabilities are KIFF's: `cards.manage`, `holds.answer`, `members.manage`,
 `billing.manage`, `account.delete` ([accounts.md](accounts.md#roles-and-what-a-person-may-do)).

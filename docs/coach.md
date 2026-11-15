@@ -332,11 +332,16 @@ things (`runtime/src/cloud/approval.ts`):
   agrees a limit for each call and a day's total, never a lifetime one. A sum per item and a
   lifetime count per item are signed.
   A draft that limits one of the taf's write tools by its amount (a per-call cap or a total)
-  and also counts its calls (`count`, no `per`, a limit above 0), on the same Card or another,
-  is answered `failed: …` too (`count_on_amount`), naming the tool and the count: the owner
-  agreed the amounts, and a count beside them holds calls those amounts allow (1,001 one-cent
-  refunds under a €50 cap). A count of 0 held (each call asks the owner), a count per item, and
-  a count on a read or on a write with no amount limit are signed.
+  and also counts its calls (`count`, a limit above 0), on the same Card or another, is
+  answered `failed: …` too (`count_on_amount`), naming the tool, the count and its item if it
+  has one: the owner agreed the amounts, and a count beside them holds calls those amounts allow
+  (1,001 one-cent refunds under a €50 cap). A count per item is refused the same way unless it's
+  the shape of the owner's limit for each item: `lifetime` or `rolling_7d`, `per` the tool's own
+  `resource_argument` ("one refund per charge, ever"). So "1 a day for each payment intent" on a
+  refund is refused, and so is a count per another argument, or any count per item on a tool
+  with no `resource_argument`. A count of 0 held (each call asks the owner), and a count on a
+  read or on a write with no amount limit, are signed. The draft doesn't mark which limits the
+  owner gave, so a made-up count in the owner's shape still passes.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.
