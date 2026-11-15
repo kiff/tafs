@@ -1,0 +1,1 @@
+- **Mac: buttons answer the pointer.** On the Mac build, the main and outlined buttons lighten a little under the pointer. Nothing changes on iPhone or iPad (docs/mac-app.md).
