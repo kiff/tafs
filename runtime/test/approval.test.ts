@@ -1819,3 +1819,61 @@ describe("a Card draft is checked as the phone reads the chat, before its card i
     expect(s.checks).toEqual([]);
   });
 });
+
+// Eval 13's Refunds: the owner approved the tools with the Card in one tap, and the Card was then refused (lifetime_sum).
+// The read check covers the steps that sign the Card with the tools or the key, as it does a Card alone.
+describe("the chat's read checks a Card signed with its tools or key too, before the card is drawn", () => {
+  const CHAT = `/v1/tafs/${COACH}/conversation`;
+  const TOOLS = { tools: [{ tool: "refund", name: "refund_k3f9" }] };
+  const API = { kind: "api_key", api: { url: "https://example.com/desk/openapi.json", digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } }, ...TOOLS };
+  const cards = (extra: string[]) => [{ grants: [{ action: "refund_k3f9" }, { action: "list_charges_k3f9" }, ...extra.map((action) => ({ action }))], aggregates: [] }];
+  const a1 = (r: { body: Record<string, unknown> }) =>
+    (r.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: { state: string } }>).find((c) => c.component.id === "a1");
+  afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; delete process.env.TAFS_KEY_AND_CARDS; });
+
+  for (const [step, flag, made] of [
+    ["tools_and_cards", "TAFS_TOOLS_AND_CARDS", () => grant({ status: "pending", connected: [{ tool: "list_charges", name: "list_charges_k3f9" }] }, TOOLS)],
+    ["key_and_cards", "TAFS_KEY_AND_CARDS", () => grant({}, { ...API, tools: [{ tool: "refund", name: "refund_k3f9" }, { tool: "list_charges", name: "list_charges_k3f9" }] })],
+  ] as const) {
+    it(`${step}: tells Coach a refusal a redraft mends once, and draws the card answered with no Approve`, async () => {
+      process.env[flag] = "on";
+      const s = services();
+      s.grants = [made()];
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards(["send_email_everyone"]) };
+      const w = await world(s, { draft: "drf_1" });
+      const logged: string[] = [];
+      const spy = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { logged.push(a.join(" ")); });
+      let first, again;
+      try {
+        first = await w.call("GET", CHAT, undefined, {}, `can=${step}`);
+        again = await w.call("GET", CHAT, undefined, {}, `can=${step}`);
+      } finally {
+        spy.mockRestore();
+      }
+      expect(String(w.told()?.answer)).toMatch(/^failed: the Card covers "send_email_everyone".* Change only what this names; every other line stays exactly as agreed\.$/);
+      expect(a1(first)?.answer?.state).toBe("answered");
+      expect(a1(first)?.component.signs).toBeUndefined();
+      expect(a1(again)?.answer?.state).toBe("answered");
+      expect(logged.filter((l) => l.startsWith("approval precheck:"))).toEqual(["approval precheck: stray"]);
+      expect(s.checks).toEqual([]);
+    });
+
+    it(`${step}: a draft that passes is drawn as before, the Card signed with it, and a phone that can't sign both checks nothing`, async () => {
+      process.env[flag] = "on";
+      const s = services();
+      s.grants = [made()];
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards([]) };
+      const w = await world(s, { draft: "drf_1" });
+      const passed = a1(await w.call("GET", CHAT, undefined, {}, `can=${step}`));
+      expect(passed?.answer).toBeUndefined();
+      expect(passed?.component.signs).toEqual({ card: true, takes: "fingerprint" });
+      expect(w.told()).toBeUndefined();
+      // A refused draft read by a phone that signs the connection alone: the Card isn't on this tap, so nothing is told.
+      s.drafts.drf_1 = { status: "draft", version: "v4", agent_id: "refunds-x", cards: cards(["send_email_everyone"]) };
+      const alone = a1(await w.call("GET", CHAT, undefined, {}));
+      expect(alone?.answer).toBeUndefined();
+      expect(alone?.component.signs).toMatchObject({ card: false });
+      expect(w.told()).toBeUndefined();
+    });
+  }
+});

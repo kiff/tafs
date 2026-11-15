@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
-import { atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { approvalWaits, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -4347,7 +4347,12 @@ describe("Coach's result, handed over by tafs cloud", () => {
       body: JSON.stringify({ run: run.id, agent: COACH, status: "PAUSED", ref: `${Buffer.from("t_acme").toString("base64url")}.abcdefghijklmnopqrstuvwx`, cards }),
     }, deps);
     const answer = () => w.agents.runs.find((r) => r.id === run.id)!.requirements![0]!.result as { answer?: unknown; answered_by?: string } | undefined;
-    return { w, run: run.id, note, answer, deps };
+    // An approval card waiting beside the result: the owner may be approving its Card on it now.
+    const approvalBeside = (answered = false, type = "approval") => w.agents.runs.find((r) => r.id === run.id)!.requirements!.push({
+      call_id: "s0", tool: "show", input: { type, id: "connect", grant: "grt_Desk123456", draft: "drf_s1" }, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card",
+      ...(answered ? { answered: true } : {}),
+    });
+    return { w, run: run.id, note, answer, deps, approvalBeside };
   }
 
   // The first run's item 7 (dev-android on #860): the hand-over card reads this answer, so a taf made with no plan says so.
@@ -4517,7 +4522,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
   // A Card the owner hasn't approved yet isn't a failure: answering "failed" showed "not set up: waiting for
   // your confirmation", in English, under "Set up", while the owner was still reading the Card.
   it("claims only a draft KIFF says is confirmed: one waiting isn't answered, and is made once the owner approves", async () => {
-    const { w, note, answer, deps } = await paused();
+    const { w, note, answer, deps, approvalBeside } = await paused();
+    approvalBeside();
     w.agents.access.set("u_ana", { cards_manage: true });
     w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
     await note();
@@ -4532,19 +4538,24 @@ describe("Coach's result, handed over by tafs cloud", () => {
   });
 
   it("a result still waiting on its Card is tried again with the next note, never answered failed", async () => {
-    const { w, note, answer } = await paused();
-    w.agents.access.set("u_ana", { cards_manage: true });
-    w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
-    await note();
-    expect(answer()).toBeUndefined();
-    await note();
-    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    // Beside an approval card, or a sign-in card carrying the draft (the owner signs in, then the Card).
+    for (const beside of ["approval", "sign_in"]) {
+      const { w, note, answer, approvalBeside } = await paused();
+      approvalBeside(false, beside);
+      w.agents.access.set("u_ana", { cards_manage: true });
+      w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+      await note();
+      expect([beside, answer()]).toEqual([beside, undefined]);
+      await note();
+      expect([beside, answer()]).toEqual([beside, { answer: { taf_id: NEW }, answered_by: "tafs cloud" }]);
+    }
   });
 
   // 13 Nov: Coach was told its approval went through, but only the connection was signed, so no card
   // ever asked for the Card. The result waited, unlogged, for a confirm nothing would ask for.
   it("a result whose Card never comes is answered in plain words after 15 minutes, once, so Coach asks for the Card", async () => {
-    const { w, note, answer, deps } = await paused();
+    const { w, note, answer, deps, approvalBeside } = await paused();
+    approvalBeside();
     w.agents.access.set("u_ana", { cards_manage: true });
     const notReady = () => w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
     const start = w.now;
@@ -4577,6 +4588,48 @@ describe("Coach's result, handed over by tafs cloud", () => {
     } finally {
       console.warn = warn;
     }
+  });
+
+  // Eval 13's Refunds: its draft was refused, and Coach redrafted and showed the result with no approval between. Nothing
+  // asks the owner for that Card, so the result goes back to Coach at once, never 15 minutes on, and Coach shows it.
+  it("answers at once a result whose Card isn't confirmed when no approval card waits beside it, once, and makes nothing", async () => {
+    for (const before of ["none", "answered"] as const) {
+      const { w, note, answer, deps, approvalBeside } = await paused();
+      if (before === "answered") approvalBeside(true);
+      w.agents.access.set("u_ana", { cards_manage: true });
+      w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+      const logged: string[] = [];
+      const log = console.log;
+      console.log = (...a: unknown[]) => { logged.push(a.join(" ")); };
+      try {
+        await note();
+      } finally {
+        console.log = log;
+      }
+      expect([before, answer()]).toEqual([before, { answer: { failed: "The Card for Refunds was never approved, so Refunds isn't set up yet: approve its Card to finish" }, answered_by: "tafs cloud" }]);
+      expect(JSON.stringify(answer())).not.toMatch(/draft_not_ready|drf_/);
+      expect([...w.tafs.held.values()].some((t) => t.kiffAgent === "refunds-x")).toBe(false);
+      expect(logged.some((l) => l.includes('"event":"handover_unconfirmed"'))).toBe(true);
+      // Once: the card no longer waits, so later notes and the sweep do nothing more.
+      const answered = w.agents.calls.filter((c) => c.startsWith("answerResult")).length;
+      expect(answered).toBe(1);
+      await note();
+      await sweepHandOvers(deps);
+      expect(w.agents.calls.filter((c) => c.startsWith("answerResult")).length).toBe(answered);
+    }
+  });
+
+  it("counts only an approval card still waiting as one the owner may be approving on", () => {
+    const card = (input: unknown, more: Record<string, unknown> = {}) => ({ call_id: "c", tool: "show", input, operation: "", expires: "", kind: "card", ...more });
+    expect(approvalWaits({ requirements: [card({ type: "approval", grant: "g" })] })).toBe(true);
+    expect(approvalWaits({ requirements: [card({ type: "result", id: "done" }), card({ type: "approval", grant: "g", draft: "d" })] })).toBe(true);
+    expect(approvalWaits({ requirements: [card({ type: "approval", grant: "g" }, { answered: true })] })).toBe(false);
+    // A sign-in card is decided with its draft as an approval is: the owner may be signing in for the Card now.
+    expect(approvalWaits({ requirements: [card({ type: "result", id: "done" }), card({ type: "sign_in", grant: "g", draft: "d" })] })).toBe(true);
+    expect(approvalWaits({ requirements: [card({ type: "sign_in", grant: "g" }, { answered: true })] })).toBe(false);
+    expect(approvalWaits({ requirements: [card({ type: "result", id: "done" }), card({ type: "question" })] })).toBe(false);
+    expect(approvalWaits({ requirements: [{ ...card({ type: "approval" }), kind: "approval" }] })).toBe(false);
+    expect(approvalWaits({})).toBe(false);
   });
 
   // 14 Nov: every Gmail taf's first check named data.messages, a skill's example, where the read Coach made had its
@@ -4636,7 +4689,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
 
   // The owner's run waited 40 minutes before the first try after a deploy: the 15 minutes count from the pause.
   it("a result already waiting past 15 minutes is answered at its first try", async () => {
-    const { w, note, answer } = await paused();
+    const { w, note, answer, approvalBeside } = await paused();
+    approvalBeside();
     w.agents.access.set("u_ana", { cards_manage: true });
     w.now = new Date(w.now.getTime() + 20 * 60_000);
     w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
@@ -4646,7 +4700,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
 
   // No one need open the app to be told: the sweep tries a waiting hand-over every 5 minutes in its first hour.
   it("the sweep tries a waiting hand-over every 5 minutes in its first hour, and says each try", async () => {
-    const { w, note, answer, deps } = await paused();
+    const { w, note, answer, deps, approvalBeside } = await paused();
+    approvalBeside();
     w.agents.access.set("u_ana", { cards_manage: true });
     const start = w.now;
     const notReady = () => w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
@@ -4678,7 +4733,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
   });
 
   it("a result whose Card is approved within the 15 minutes is made, as before", async () => {
-    const { w, note, answer } = await paused();
+    const { w, note, answer, approvalBeside } = await paused();
+    approvalBeside();
     w.agents.access.set("u_ana", { cards_manage: true });
     const start = w.now;
     w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
