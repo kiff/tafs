@@ -44,6 +44,48 @@ On iPad:
   <img src="screenshots/ios/ipad-setup-dark.png" width="340" alt="Setup on iPad in dark">
 </p>
 
+## iPad reference
+
+**The look every desktop app follows** (macOS, Windows, Linux, the Mac): the iPad with the
+sidebar a signed-in account has, in sample mode, light and dark, at the 13-inch iPad's full
+size (2064 × 2752). They're in [screenshots/ipad/](screenshots/ipad/) as `<screen>.png` and
+`<screen>-dark.png`:
+
+| Screen | Light | Dark |
+|---|---|---|
+| Overview | [overview](screenshots/ipad/overview.png) | [dark](screenshots/ipad/overview-dark.png) |
+| Needs you | [needs-you](screenshots/ipad/needs-you.png) | [dark](screenshots/ipad/needs-you-dark.png) |
+| Record | [record](screenshots/ipad/record.png) | [dark](screenshots/ipad/record-dark.png) |
+| Calendar, day | [calendar](screenshots/ipad/calendar.png) | [dark](screenshots/ipad/calendar-dark.png) |
+| Calendar, week | [calendar-week](screenshots/ipad/calendar-week.png) | [dark](screenshots/ipad/calendar-week-dark.png) |
+| Account | [account](screenshots/ipad/account.png) | [dark](screenshots/ipad/account-dark.png) |
+| Account › Alerts | [alerts](screenshots/ipad/alerts.png) | [dark](screenshots/ipad/alerts-dark.png) |
+| A taf's page (Activity) | [taf](screenshots/ipad/taf.png) | [dark](screenshots/ipad/taf-dark.png) |
+| A taf's Card | [taf-card](screenshots/ipad/taf-card.png) | [dark](screenshots/ipad/taf-card-dark.png) |
+| A taf's chat | [taf-chat](screenshots/ipad/taf-chat.png) | [dark](screenshots/ipad/taf-chat-dark.png) |
+| A taf's Setup | [taf-setup](screenshots/ipad/taf-setup.png) | [dark](screenshots/ipad/taf-setup-dark.png) |
+| Plan & usage | [usage](screenshots/ipad/usage.png) | [dark](screenshots/ipad/usage-dark.png) |
+| Connect apps | [connect-apps](screenshots/ipad/connect-apps.png) | [dark](screenshots/ipad/connect-apps-dark.png) |
+| Account › Devices | [devices](screenshots/ipad/devices.png) | [dark](screenshots/ipad/devices-dark.png) |
+| New taf (the job gallery) | [new-taf](screenshots/ipad/new-taf.png) | [dark](screenshots/ipad/new-taf-dark.png) |
+| Coach, empty | [coach](screenshots/ipad/coach.png) | [dark](screenshots/ipad/coach-dark.png) |
+
+<p>
+  <img src="screenshots/ipad/overview.png" width="340" alt="iPad Overview: the sidebar, then what needs you and each taf's line">
+  <img src="screenshots/ipad/overview-dark.png" width="340" alt="iPad Overview in dark">
+</p>
+
+- **Where they come from:** iOS CI's iPad reference pass (`ref-<screen>[-dark]` in the
+  `screenshots` artifact of a run with `screenshots: reference`, or the end of `full`), never
+  made by hand. To refresh them, run that and replace these files.
+- **Portrait for now.** The CI simulator doesn't turn the device, so they're portrait. The
+  sidebar, rows, type and colours are the same either way.
+- **No keyboard focus.** The iPad runs with no hardware keyboard, so no focus box is drawn.
+- **The chosen row's fill:** a screen opened by launch argument doesn't select its sidebar row
+  the way a tap does, so these show none. The iPad's code draws a grey fill on the chosen row.
+- **Not here yet:** one app's connections and Coach mid-conversation. The app can't open them
+  by launch argument yet.
+
 ## Android
 
 The sample on a phone, except Coach: the sample has none, so Coach is a signed-in account's,

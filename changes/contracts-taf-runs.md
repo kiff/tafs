@@ -1,0 +1,1 @@
+- Four contracts for the desktop apps' Overview: a taf's runs (`taf-runs.json`) and one run's report as it runs, as it ends with its count, and as it stops on an error (`taf-run-report*.json`), written by tafs cloud's tests. No route changes.

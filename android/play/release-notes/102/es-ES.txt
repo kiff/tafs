@@ -1,0 +1,1 @@
+- Dispositivos: en un teléfono que no puede aprobar, cerrar la sesión de otro dispositivo dice: “Para cerrar la sesión de otro dispositivo, usa un dispositivo que pueda aprobar.”

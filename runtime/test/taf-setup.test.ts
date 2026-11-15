@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { appCalls, appDisplayName, runningTool, setupGrants, setupView, type GrantView } from "../src/cloud/taf-setup.js";
-import { avatarRim, summary } from "../src/cloud/home.js";
+import { avatarRim, eachItemWords, summary } from "../src/cloud/home.js";
+import { LANGUAGES as LANGS } from "../src/cloud/words/index.js";
 import { knobOf } from "../src/cloud/knob.js";
 import type { Run, SessionEvent, VersionState } from "../src/cloud/agents.js";
 
@@ -63,6 +64,39 @@ describe("a taf's server-composed setup", () => {
     const args = { agent: "agent-example", grants: [grant], knob, versions: { versions: [] }, notes: [], now, calls: [], statsComplete: true };
     expect(setupView({ ...args, rules: rules("refuse") }).connections[0]!.actions[0]!.limits).toEqual(["Not allowed by this Card"]);
     expect(setupView({ ...args, rules: rules("hold") }).connections[0]!.actions[0]!.limits).toEqual(["Needs your approval for every call"]);
+  });
+  // A Spanish, German or Polish owner read the Setup page's limits, steps and "See its Card" in English. Every line it
+  // makes is in the person's language now, and no line outside English reads as the English one.
+  it("says an action's limits, its steps and its Card's each-item totals in the person's language", () => {
+    // A refund with its limits, a read held each time, and an untitled action on no Card.
+    const tools = [{ tool: "refund", name: "refund", title: "Refund a charge" }, { tool: "read_case", name: "read_case", title: "Read a case" }, { tool: "note", name: "note", title: "" }];
+    const two: GrantView = { ...grant, request: { agent: "agent-example", tools } };
+    const cards = [{ id: "card-refund", subject: "agent-example", active: true, on_exceed: "owner",
+      grants: [{ action: "refund", per_action_max: [{ quantity: "sum(amount)", max: 500, unit: "EUR", scale: 2 }] }],
+      aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day", unit: "EUR", scale: 2 }, { quantity: "count", limit: 1, window: "calendar_day" }] },
+    { id: "card-held", subject: "agent-example", active: true, on_exceed: "owner", grants: [{ action: "read_case" }], aggregates: [{ quantity: "count", limit: 0, window: "calendar_day" }] }];
+    const steps = knobOf({ name: "Example", does: { label: "Refund", line: "Refunds" }, unscheduled: true, doors: [], places: ["door_reply"],
+      setting: { wakes: [], busy: "skip", results: ["door_reply"], what: [{ label: "Refund", words: "Refund a charge", tool: "refund" }] },
+      zone: "UTC", now, today: { done: 0, working: 0, retrying: 0, needs_you: 0 } });
+    const lines = (lang: (typeof LANGS)[number]) => {
+      const view = setupView({ agent: "agent-example", grants: [two], knob: steps, rules: summary(cards, lang).rules, versions: { versions: [] }, notes: [], now, calls: [], statsComplete: true, lang });
+      const actions = view.connections[0]!.actions;
+      return [...actions.flatMap((a) => a.limits), ...actions.map((a) => a.step_words), actions.find((a) => a.name === "note")!.title,
+        eachItemWords({ quantity: "count", limit: 1, window: "rolling_7d", per: "invoice_id" }, lang),
+        eachItemWords({ quantity: "sum(amount)", limit: 10000, window: "calendar_day", per: "order", unit: "EUR", scale: 2 }, lang)];
+    };
+    const en = lines("en");
+    expect(en).toEqual(["€5.00 per action", "€50.00 a day", "1 call a day", "Needs your approval for every call", "See its Card",
+      "Step 1", "Not used by the current workflow", "Not used by the current workflow", "App action",
+      "1 call in any 7 days for each invoice id", "€100.00 in total a day for each order"]);
+    for (const lang of LANGS.filter((l) => l !== "en")) {
+      const said = lines(lang);
+      expect(said, lang).toHaveLength(en.length);
+      said.forEach((line, i) => expect(line, `${lang}: ${en[i]}`).not.toBe(en[i]));
+    }
+    // Polish counts in three forms.
+    const pl = (n: number) => eachItemWords({ quantity: "count", limit: n, window: "calendar_day", per: "order" }, "pl");
+    expect([pl(1), pl(2), pl(5)]).toEqual(["1 wywołanie dziennie na każdy order", "2 wywołania dziennie na każdy order", "5 wywołań dziennie na każdy order"]);
   });
   it("keeps vendor-supplied display names and removes a server-id suffix only at the source", () => {
     expect(appDisplayName({ ...grant, vendor: "Example Suite" })).toBe("Example Suite");

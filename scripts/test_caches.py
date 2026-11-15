@@ -1,5 +1,7 @@
 """Which Actions caches go: superseded copies, and closed pull requests' caches."""
+import subprocess
 import unittest
+from unittest import mock
 
 import caches
 
@@ -53,9 +55,32 @@ class Decide(unittest.TestCase):
         self.assertEqual(self.ids(got), [1, 2])
         self.assertTrue(all(why == "its pull request is closed" for _, why in got))
 
+    def test_a_cache_listed_twice_counts_once(self):
+        # The API's pages can overlap: the same cache must not be deleted twice (14 Nov's first run).
+        all_ = [
+            c(1, "gradle-transforms-v2-a1b2c3d4e5f60718", at="2026-11-12T10:00:00Z"),
+            c(1, "gradle-transforms-v2-a1b2c3d4e5f60718", at="2026-11-12T10:00:00Z"),
+            c(2, "gradle-transforms-v2-b2c3d4e5f6071829", at="2026-11-14T10:00:00Z"),
+        ]
+        self.assertEqual(self.ids(caches.decide(all_, set())), [1])
+
     def test_nothing_to_do(self):
         self.assertEqual(caches.decide([], set()), [])
         self.assertEqual(caches.decide([c(1, "gradle-dependencies-v2-a1b2c3d4e5f60718")], set()), [])
+
+
+class Delete(unittest.TestCase):
+    def run_with(self, code, err):
+        done = subprocess.CompletedProcess(["gh"], code, stdout="", stderr=err)
+        with mock.patch.object(caches.subprocess, "run", return_value=done):
+            caches.delete("kiff/tafs", 7)
+
+    def test_one_already_gone_is_done(self):
+        self.run_with(1, "gh: Not Found (HTTP 404)")
+
+    def test_any_other_failure_stops_the_run(self):
+        with self.assertRaises(subprocess.CalledProcessError):
+            self.run_with(1, "gh: Forbidden (HTTP 403)")
 
 
 if __name__ == "__main__":

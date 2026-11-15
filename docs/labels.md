@@ -69,7 +69,7 @@ Each write moves the account's labels on by one version. A write that lost to an
 
 **What it never holds:** a tool, a limit, an amount or personal data. It changes no Card.
 
-**How it's made:** Coach drafts it with the person, from their answers and, where they agree, their public website (`web_read`). The person confirms it. Coach then saves it with `business_context`, which has its own Card, `coach-business`, at 50 a day:
+**How it's made:** Coach drafts it with the person, from their answers and, where they agree, their public website (`web_read`). The person confirms it. Coach then saves it with `business_context`, which has its own Card, `coach-business`, at limit 0: **KIFF holds every save for the person's yes**, with the text shown. A Card with a limit above 0 would let that many saves through unasked each day.
 
 - `read` answers `{text, version}`;
 - `save {text, version}` keeps the confirmed draft over the version Coach read. It's refused when the description changed since, so Coach reads it again.

@@ -176,7 +176,9 @@ wasn't checked is settled, once:
   - **The task tells the receiver to look again.** The hand-off says how things stood when the
     sending taf wrote it. Before it changes anything, the receiving taf reads what the hand-off
     names as it is now. If that has changed, or KIFF refuses the change because another taf has
-    it, it changes nothing and says why.
+    it, it changes nothing and says why. What it didn't read itself, it tells as the sending
+    taf's word, never as what it found: a receiver that left an item alone, unread, once told the
+    owner that "its dispute records already show as lost", a look-up its record doesn't have.
   - **A taf with nothing to hand over says so.** It writes "Nothing to hand over" as the
     section's first line, then why. The delivery is `none`: "Nothing to hand to Invoices: none of
     the deals was won." No run starts, nobody is told, and Coach isn't offered. A result with no

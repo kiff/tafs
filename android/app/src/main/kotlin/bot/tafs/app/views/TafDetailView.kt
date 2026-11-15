@@ -38,6 +38,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -378,6 +379,9 @@ private fun Activity(taf: Taf, state: AppState, actions: TafActions) {
   ActivityRecord(state.entries(taf.id), state)
 }
 
+/** The line a view-only session gets where Revoke would be. */
+internal const val REVOKE_NEEDS_APPROVER = "taf.revoke_needs_approver"
+
 @Composable
 private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String?, onFront: (String) -> Unit, manages: Boolean, onRevoke: () -> Unit) {
   val cards = taf.shownCards
@@ -406,7 +410,13 @@ private fun CardTab(taf: Taf, issuer: String, actions: TafActions, front: String
   }
   // Revoke: in the sample its own; signed in, KIFF's, for whoever manages it. Pausing is in Setup.
   if (taf.state != TafState.revoked && (taf.cloudId == null || manages)) {
-    OutlineButton(Words.Taf.revoke, onRevoke, Modifier.fillMaxWidth().confirms(), color = Theme.no)
+    if (taf.cloudId != null && LocalViewOnly.current) {
+      // A view-only session (KIFF's approval_mode "view") isn't offered Revoke, on every device alike: the line every app
+      // shares says where it's done instead.
+      Text(Words.Taf.revokeNeedsApprover, style = scaled(13, color = Theme.soft), modifier = Modifier.fillMaxWidth().testTag(REVOKE_NEEDS_APPROVER))
+    } else {
+      OutlineButton(Words.Taf.revoke, onRevoke, Modifier.fillMaxWidth().confirms(), color = Theme.no)
+    }
   }
 }
 

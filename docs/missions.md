@@ -22,7 +22,7 @@ An account has at most 10 missions. A taf is in one mission at most (its `missio
 
 ## Coach's tool
 
-**`mission_create`** (`name`, `goal`, `tafs`) makes a mission and puts its label on its tafs. A label the account already has by that name is used. It's on its own Card, `coach-mission-create`, at 20 a day, and **KIFF holds each one for the person's yes**, with the name, goal and tafs shown. The goal reaches the lead's runs, so only a person puts those words there.
+**`mission_create`** (`name`, `goal`, `tafs`) makes a mission and puts its label on its tafs. A label the account already has by that name is used. It's on its own Card, `coach-mission-create`, at limit 0, so **KIFF holds every one for the person's yes**, with the name, goal and tafs shown. The goal reaches the lead's runs, so only a person puts those words there.
 
 **`mission`** moves tafs and labels and ends missions. It's on its own Card, `coach-missions`, at 50 changes a day. There's no fingerprint and no hold, since it changes no authority and sets no words.
 

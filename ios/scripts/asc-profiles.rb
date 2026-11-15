@@ -5,7 +5,7 @@
 #
 #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH  the API key
 #   DIST_CERT_SERIAL                          the certificate in the keychain
-#   ruby asc-profiles.rb bot.tafs.app+push+timesensitive="tafs App Store CI" bot.tafs.app.widgets="tafs widgets App Store CI"
+#   ruby asc-profiles.rb bot.tafs.app+push+timesensitive+associateddomains="tafs App Store CI" bot.tafs.app.widgets="tafs widgets App Store CI"
 #
 # "+push" turns on Push Notifications for that bundle ID first, and replaces a
 # profile made before it was on: a profile carries the capabilities its bundle
@@ -37,6 +37,8 @@ TOKEN = jwt
 CAPABILITIES = {
   "push" => ["PUSH_NOTIFICATIONS", "aps-environment"],
   "timesensitive" => [nil, "com.apple.developer.usernotifications.time-sensitive"],
+  # webcredentials:kiff.dev, so the app's passkeys are kiff.dev's (KIFF's fixed origin list).
+  "associateddomains" => ["ASSOCIATED_DOMAINS", "com.apple.developer.associated-domains"],
 }
 
 def api(method, path, body = nil)

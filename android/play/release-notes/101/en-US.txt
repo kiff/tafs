@@ -1,0 +1,2 @@
+- Sign in with your other phone: show this phone's code, scan it from the phone you already use with Account, Devices, Add a device, and you're in.
+- Devices opens at full height, Done goes back to Account, and a scanned code that isn't a device now says so and stays.

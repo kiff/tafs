@@ -1,0 +1,1 @@
+- Urządzenia: na telefonie, który nie może zatwierdzać, wylogowanie innego urządzenia mówi: „Aby wylogować inne urządzenie, użyj urządzenia, które może zatwierdzać.”

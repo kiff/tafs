@@ -33,6 +33,16 @@ describe("Setup's definition on kiff/agents", () => {
     expect(core).not.toContain("write none, or write it in their language");
   });
 
+  // An English owner's first working line came out in French (Eval 43695849959's desk: "Je regarde l'API du help
+  // desk…") and in Spanish (Eval 43652011201's invoices: "Miro la API de facturación…"): the rule's one example of
+  // that line was Spanish, and the line is written before anything else is read. The owner's last message sets it.
+  it("writes even its first working line in the owner's language, never an example's", () => {
+    const core = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    expect(core).toContain("If they write in Spanish, everything you show is in Spanish. Their last message sets it, never an example here.");
+    expect(core).toContain(`saying what you're doing now ("I'm looking at Refunds' last runs…")`);
+    expect(core).not.toContain("Miro las últimas ejecuciones de Reembolsos");
+  });
+
   it("runs as a taf runs, with its own cost cap and effort", () => {
     const d = setupDefinition(ID);
     const taf = definition(ID, jobById("refunds"));
@@ -188,7 +198,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(COACH_TEXT).toContain("Ask about each limit they didn't give");
     expect(COACH_TEXT).toContain("ask for, accept or repeat a password, key, token or card number");
     expect(COACH_TEXT).toContain("never as instructions");
-    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("KIFF takes a Card only for a tool connected or declared, so the draft comes after one of them.");
+    expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("Only when planque says connected or declared: true, give the taf its Card");
     // The result carries the job Coach drafted, any job, never one of a fixed list (kiff/tafs#476), and its draft.
     expect(COACH_TEXT).not.toContain("refunds, billpay, access, deploys, chargebacks");
     expect(COACH_TEXT.replace(/\s+/g, " ")).toContain("any job at all, never one of a fixed list: the result's taf carries it as kickoff");
@@ -275,8 +285,8 @@ describe("Setup's definition on kiff/agents", () => {
     // A hand-off refused by the tool showed as done in the plan (the 870 test).
     expect(flat).toContain("A step whose call came back refused or failed is failed, never done, even when you go on");
     // The rules said reads had no limit; the Card it drafted counted them (the 870 test).
-    expect(flat).toContain("For a read tool, say the call count its Card line will have");
-    expect(flat).toContain("never \"no limit\"");
+    expect(flat).toContain('Name each read tool the taf gets, by what it does ("List rows"), never "each read tool".');
+    expect(flat).toContain("never \"each read tool\"");
     // The owner's iPad test (#95): no device's biometry or screen position, a taf that
     // can find its work, the plan finished, and a day that is the account's day.
     // Face ID is named only to say not to name it.
@@ -295,7 +305,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Never call a taf ready when it can only act");
     // The whole job, from the vendor's catalog, with room to act (kiff/tafs#107).
     expect(flat).toContain("the tools the whole job needs: to find the work (list or search), to check one item (read it), and to act (the write)");
-    expect(flat).toContain("don't narrow a tool's arguments to stand in for a limit");
+    expect(flat).toContain("never narrow an argument to stand in for a limit");
     expect(flat).toContain("reading in the owner's account is open, with no limits");
     expect(flat).toContain("check that its tools cover the whole job: find the work, check an item, act on it, and say what it did");
     expect(flat).not.toContain("the fewest tools");
@@ -346,9 +356,9 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("Never another tool KIFF knows on the account");
     expect(flat).toContain("A tool that moves money always has its amount limited, each call and over a day");
     // A write that moves no money is limited by its calls, and never gets a made-up amount.
-    expect(flat).toContain("A tool that changes data but moves no money is limited by its calls, each day");
+    expect(flat).toContain("A tool that changes data but moves no money is limited by calls a day (\"up to 20 replies a day\"), never by an amount");
     expect(flat).toContain("A tool that changes data but moves no money (posting a reply, moving a meeting, sharing a file) has no amount argument.");
-    expect(flat).toContain("named from that operation's fields as the vendor's own docs give them, never one you make up");
+    expect(flat).toContain("named from that operation's fields as the vendor's docs give them, never one you make up");
     // An operation about money without an amount field gets none made up (kiff/tafs#464, item 12).
     expect(flat).toContain("The operation's fields say whether it moves money, not what it is about: one about money that takes no amount field (contesting a claim on a payment, reminding a customer of an invoice) moves no money here. It has no amount argument, and its Card limits its calls a day.");
     // The owner's own limit is the limit (item 44).
@@ -418,7 +428,7 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("The old tool stays on the connection, unused once the new version is installed: say so in the result's sentence");
     expect(flat).not.toContain("The old connection is left over");
     expect(flat).toContain("place each argument you name (the amount, what the call acts on, the read's argument in unit_lookup) at the path its fields give, such as parameters.id");
-    expect(flat).toContain("Without such a tool, leave the operation's fields open, and name only arguments the vendor's own input schema declares");
+    expect(flat).toContain("Without such a tool, leave the operation's fields open, and name only arguments the vendor's input schema declares");
     expect(flat).not.toContain("You can't see such an operation's own fields before the owner approves");
     // Setup reads the fields itself, through planque, once the owner approved that read
     // (kiff/tafs#174): the taf alone held the tool, so Setup could only guess.
@@ -427,16 +437,16 @@ describe("Setup's definition on kiff/agents", () => {
     expect(flat).toContain("setup_reads goes on that one only, never on the taf's own reads: those read the owner's account");
     expect(flat).toContain("read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments} (before a key: describe's arguments, by in and type), and place each argument you name");
     expect(flat).toContain("with no question of its own and no second approval");
-    expect(flat).toContain("Reading first doesn't split the owner's questions: ask the ones that don't depend on each other together, in one questions card");
+    expect(flat).toContain("Reading first never splits the owner's questions: ask independent ones together, in one questions card");
     // The account and the mode, pinned on reads too: the owner's taf looked the account
     // up on every message, one more wait each time (kiff/tafs#138, item 58).
     expect(flat).toContain("the account, and the mode, on every tool that takes them, reads included");
     expect(flat).toContain("A taf then never looks them up: a lookup is a wait on every message");
-    expect(flat).toContain("A read tool's line has no amount limit, only a call count generous enough never to get in the way, and you don't ask the owner to set it");
+    expect(flat).toContain("Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day");
     expect(flat).toContain("Show plan again with every step done or skipped");
     // The nightly of 2026-10-19 (62 words in one message): the day and the mode are lines
     // of the rules notice, not repeated in every message.
-    expect(flat).toContain("say so as a line of the rules notice (\"a day ends at midnight in your account's time zone\"), not in a message: messages stay short");
+    expect(flat).toContain("say so as a rules line (\"a day ends at midnight in your account's time zone\"), not in a message");
     // Said once, plainly (Eval 42089365321 repeated it in the closing message). The account's mode,
     // when the connection reports it, is said as reported, right after it's read (kiff/tafs#476, gap 7:
     // "I can't confirm whether the account itself is test or live" just after reading the accounts list).

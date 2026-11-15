@@ -1,0 +1,79 @@
+{
+  "about": "GET /v1/tafs/{id}/activity for someone who may use the taf: one call, its words and amounts, the Card-unit exceptions (none), and the revision the app sends back as If-None-Match. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "entries": [
+      {
+        "id": "510f2ea5-2afc-5ec7-84d0-52e3104c4479",
+        "at": "2026-11-01T12:00:00.000Z",
+        "kind": "done",
+        "title": "Read a case",
+        "detail": "Done, within its Card",
+        "time": "12:00",
+        "day": "2026-11-01",
+        "day_title": "Today",
+        "call": {
+          "proposal_id": "proposal-0",
+          "actor_id": "agent-example",
+          "action_name": "read_case",
+          "title": "Read a case",
+          "outcome": "allowed",
+          "created_at": "2026-11-01T12:00:00.000Z",
+          "tool_outcome": {
+            "status": "done"
+          }
+        }
+      }
+    ],
+    "groups": [
+      {
+        "id": "2026-11-01",
+        "title": "Today",
+        "entries": [
+          {
+            "id": "510f2ea5-2afc-5ec7-84d0-52e3104c4479",
+            "at": "2026-11-01T12:00:00.000Z",
+            "kind": "done",
+            "title": "Read a case",
+            "detail": "Done, within its Card",
+            "time": "12:00",
+            "day": "2026-11-01",
+            "day_title": "Today",
+            "call": {
+              "proposal_id": "proposal-0",
+              "actor_id": "agent-example",
+              "action_name": "read_case",
+              "title": "Read a case",
+              "outcome": "allowed",
+              "created_at": "2026-11-01T12:00:00.000Z",
+              "tool_outcome": {
+                "status": "done"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "filters": [
+      {
+        "id": "all",
+        "title": "All"
+      },
+      {
+        "id": "done",
+        "title": "Done"
+      },
+      {
+        "id": "held",
+        "title": "Held"
+      },
+      {
+        "id": "refused",
+        "title": "Refused"
+      }
+    ],
+    "filter": "all",
+    "revision": "874037533c5ce2a46531f4ac67d1278c72224e7d332c1134bbb7b2f7e82a5aa3",
+    "card_unit_exceptions": [],
+    "end_words": "Nothing older in this view"
+  }
+}
