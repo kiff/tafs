@@ -7299,7 +7299,14 @@ class AppModel(
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))) }
+      // A view-only session approves nothing, signing another device out included: the line every app shares, which says which
+      // device can do it. KIFF's refusal carries only a developer's message, in English.
+      val said = if (e is KiffError.Server && e.refused("view_only")) {
+        Words.Settings.Devices.signoutNeedsApprover
+      } else {
+        Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))
+      }
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = said) }
       return false
     } finally {
       kiff.setupSigner = null
