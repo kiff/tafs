@@ -37,6 +37,8 @@ interface Services {
   drafts: Record<string, { status: string; version?: string; agent_id?: string; expires_at?: string; cards?: unknown[]; confirm_key?: string; label?: string }>;
   /** What KIFF answers the device-signature check: signed, or a status. */
   signed: true | number;
+  /** KIFF's code with a refused signature (`error`), as its 400s and 403s send it. */
+  signedCode?: string;
   /** Which key KIFF says signed, and the window it named (kiff/tafs#494); none, as a KIFF from before. */
   signedKey?: string;
   signedWindow?: { id: string; open: boolean };
@@ -69,7 +71,7 @@ function net(s: Services) {
     if (url.endsWith("/v1/me")) return new Response(JSON.stringify(me), { status: 200 });
     if (url.endsWith("/v1/me/device-signature")) {
       s.checks.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
-      return s.signed === true ? new Response(JSON.stringify({ signed: true, grant: "dg_1", grant_until: "2026-10-16T12:01:30Z", ...(s.signedKey ? { key: s.signedKey } : {}), ...(s.signedWindow ? { window: s.signedWindow } : {}) }), { status: 200 }) : new Response(JSON.stringify({ error: "no" }), { status: s.signed });
+      return s.signed === true ? new Response(JSON.stringify({ signed: true, grant: "dg_1", grant_until: "2026-10-16T12:01:30Z", ...(s.signedKey ? { key: s.signedKey } : {}), ...(s.signedWindow ? { window: s.signedWindow } : {}) }), { status: 200 }) : new Response(JSON.stringify({ error: s.signedCode ?? "no" }), { status: s.signed });
     }
     if (url.endsWith("/v1/me/agents") && s.agents) return new Response(JSON.stringify({ agents: s.agents }), { status: 200 });
     if (url.endsWith("/v1/me/mandates")) {
@@ -888,6 +890,52 @@ describe("the report: Coach hears approved only after KIFF says the phone signed
     // Still waiting: a signed report after KIFF is back goes through.
     s.signed = true;
     expect((await w.report({ result: "connected" })).body).toMatchObject({ answer: "approved" });
+  });
+
+  it("KIFF's refusal of a signature reaches the app with its code and words for this device, never 'this phone'", async () => {
+    // A view-only Mac heard "this phone didn't sign that answer": the reason was KIFF's, and it was lost here.
+    const SIG = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" };
+    const cases: Array<[number, string, string, string]> = [
+      [403, "view_only", WORDS.signViewOnly, "view_only"],
+      [403, "device_session_required", WORDS.signSession, "device_session_required"],
+      [403, "passkey_not_this_session", WORDS.signPasskey, "passkey_not_this_session"],
+      [403, "signature_invalid", WORDS.signInvalid, "signature_invalid"],
+      [403, "a_code_from_later", WORDS.signInvalid, "signature_invalid"],
+      [400, "signed_at_out_of_range", WORDS.signClock, "signed_at_out_of_range"],
+      [409, "replayed", WORDS.signTaken, "signature_taken"],
+      [503, "", WORDS.signUnchecked, "signature_unchecked"],
+    ];
+    for (const [status, code, words, said] of cases) {
+      const s = services();
+      const w = await world(s);
+      const id = ((await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) })).body.ask as { id: string }).id;
+      s.grants = [grant({ status: "connected" })];
+      s.signed = status;
+      s.signedCode = code;
+      const r = await w.call("POST", `${ASK}/${id}`, { result: "connected" }, SIG);
+      expect(r.body, code).toEqual({ error: words, code: said });
+      expect(r.status, code).toBe(status === 503 ? 502 : status);
+      // Still waiting: the same answer, signed where KIFF takes it, goes through.
+      s.signed = true;
+      expect((await w.call("POST", `${ASK}/${id}`, { result: "connected" }, SIG)).body, code).toMatchObject({ answer: "approved" });
+    }
+    // Not signed at all, and in the person's language.
+    const s = services();
+    const w = await world(s);
+    const id = ((await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) })).body.ask as { id: string }).id;
+    expect((await w.call("POST", `${ASK}/${id}`, { result: "connected" }, {})).body).toEqual({ error: WORDS.signMissing, code: "signature_missing" });
+    s.signed = 403;
+    s.signedCode = "view_only";
+    const pl = await w.call("POST", `${ASK}/${id}`, { result: "connected" }, { ...SIG, "accept-language": "pl" });
+    expect(pl.body).toEqual({ error: approvalWords("pl").signViewOnly, code: "view_only" });
+    // Said of this device, whichever it is: no language's line names a phone.
+    for (const lang of ["en", "de", "fr", "es", "it", "pt", "nl", "pl"] as const) {
+      const W = approvalWords(lang);
+      for (const line of [W.signMissing, W.signInvalid, W.signViewOnly, W.signSession, W.signPasskey, W.signClock, W.signTaken, W.signUnchecked]) {
+        expect(line, `${lang}: ${line}`).not.toMatch(/phone|telefon|teléfono|téléphone|telefono|telefoon|telemóvel|telefone|móvil|portable/i);
+        expect(line.length, `${lang}: ${line}`).toBeGreaterThan(20);
+      }
+    }
   });
 
   it("the service is the truth: a reported success planque doesn't hold is failed, in tafs cloud's words", async () => {
