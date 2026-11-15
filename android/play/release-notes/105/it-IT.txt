@@ -1,0 +1,3 @@
+- Una scheda di approvazione non resta più su “Lettura di ciò che chiede…” quando la richiesta arriva con un po' di ritardo.
+- “Riapri l'accesso” ora chiede di nuovo la tua approvazione, con un'impronta, invece di riaprire un link già usato.
+- Mentre viene rimosso l'accesso di un'app, Collega app dice “Rimozione dell'accesso…”.
