@@ -2074,7 +2074,7 @@ final class AppModel: ObservableObject {
             await refreshUsage()
         }
         // `-screen coach`: Coach open over the sample, empty, for the reference set; `coach-chat`, mid-conversation.
-        if Screenshots.screen == "coach-chat", Screenshots.enabled, let thread = SampleScreens.coachThread { setupThread = thread }
+        if Screenshots.coachChat, let thread = SampleScreens.coachThread { setupThread = thread }
         if Screenshots.coach { coachOpen = true }
     }
 
@@ -9102,6 +9102,9 @@ enum Screenshots {
     static var signedIn: Bool { enabled && UserDefaults.standard.bool(forKey: "signedIn") }
     /// `-screen coach`: Coach mode open over the sample, as the reference set shows it.
     static var coach: Bool { enabled && (screen == "coach" || screen == "coach-chat") }
+    /// `-screen coach-chat`: Coach open over the sample mid-conversation, its thread drawn though the sample
+    /// starts no Coach (`SetupChatView` shows the thread, not the intro).
+    static var coachChat: Bool { enabled && screen == "coach-chat" }
     /// The iPad sidebar's screen a `-screen` opens beside it: `usage` (Plan & usage), `connect-apps`.
     static var sidebarScreen: HomeSelection? {
         guard enabled else { return nil }
