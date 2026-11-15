@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { attachWhys, coachGuard, connectsRefused, failedStep, foldRetried, keyAppsIn, lacksAccess, refusalKind, shownWhy, stepWords, Steps, takeRefused, vendorName, whyOf } from "../src/cloud/steps.js";
-import { LANGUAGES } from "../src/cloud/words/index.js";
+import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 
 describe("what Coach is doing, in a few words (kiff/tafs#214)", () => {
   it("names a vendor from its server's host, and none from a cloud's own URL", () => {
@@ -215,6 +215,39 @@ describe("a connection signed in after a refusal clears it", () => {
     expect(s.connectedBy("c3", '{"id":"g1","status":"failed"}')).toBeUndefined();
     expect(s.connectedBy("c1", '{"id":"g1","status":"signed_in"}')?.key).toBe("https://sheets.googleapis.com/mcp");
     expect(s.connectedBy("c4", '{"status":"connected"}')).toBeUndefined();
+  });
+});
+
+describe("Coach's own reads not set up after a connection that worked (15 Nov, Stripe)", () => {
+  // KIFF's gateway, when it holds no Card for the reads Coach makes as itself while it sets up.
+  const noCard = "Refused by KIFF (refused: no_mandate_issued). Nothing was sent to the tool. Next: No Card covers this tool for this agent. Ask the account owner to issue one, then call again with a new kiff_operation_id.";
+  it("says the reads couldn't be set up, and never asks for a sign-in", () => {
+    const s = new Steps();
+    s.call("planque", { action: "request", server: "https://mcp.stripe.com" }, "c1");
+    s.result("c1", JSON.stringify({ id: "grt_Stripe123456", status: "signed_in" }));
+    s.call("planque", { action: "read", grant: "grt_Stripe123456", tool: "list_customers", arguments: {} }, "c2");
+    expect(s.connectionWhy("c2", noCard)).toBe("Coach's reads of Stripe couldn't be set up");
+    const lines = s.connectionRefusal("c2", noCard)!;
+    expect(lines.reason).toBe("Stripe is connected: only the reads Coach makes while it sets up weren't allowed.");
+    expect(lines.next).toBe("Next: ask Coach to go on without reading Stripe first.");
+    expect(JSON.stringify(lines)).not.toMatch(/sign in|connect Stripe/i);
+    // KIFF's other code for the same, and the words in each language.
+    expect(s.connectionWhy("c2", "Refused by KIFF (refused: mandate_not_covered).")).toBe("Coach's reads of Stripe couldn't be set up");
+    for (const lang of ["es", "fr", "de", "it", "nl", "pl", "pt"] as const) {
+      const t = new Steps(undefined, lang);
+      t.call("planque", { action: "read", grant: "grt_x", tool: "list_customers" }, "r");
+      expect(t.connectionWhy("r", noCard)).toBe(wordsIn(lang).step_reads_not_set_up(""));
+      expect(t.connectionRefusal("r", noCard)?.next).toBe(wordsIn(lang).step_reads_next(""));
+    }
+  });
+  it("leaves every other refusal as it was: a read refused otherwise, or another call refused for no Card", () => {
+    const s = new Steps();
+    s.call("planque", { action: "read", grant: "grt_x", tool: "list_customers" }, "c1");
+    expect(s.connectionWhy("c1", "the sign-in was left")).toBe("Coach couldn't connect the app yet");
+    expect(s.connectionRefusal("c1", "the sign-in was left")?.next).toBe("Next: ask Coach to sign in again, or to use another app.");
+    s.call("planque", { action: "tools", grant: "grt_x" }, "c2");
+    expect(s.connectionWhy("c2", noCard)).toBe("Coach couldn't connect the app yet");
+    expect(s.connectionWhy("c3", noCard)).toBeUndefined();
   });
 });
 
