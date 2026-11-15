@@ -1,0 +1,1 @@
+- Two more contracts for the apps, written by tafs cloud's tests: a taf's Activity (`contracts/taf-activity.json`) and its Setup tab (`contracts/taf-setup.json`), so the desktop apps read the same answers the phones do.

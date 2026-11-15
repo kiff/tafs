@@ -59,6 +59,9 @@ struct ConnectAppsView: View {
                 ProgressView().frame(maxWidth: .infinity)
             }
         }
+        .scrollContentBackground(.hidden)
+        // The app's cream, not the list's grey, as every screen in the detail pane.
+        .screenBackground()
         .navigationTitle(Self.title)
         .searchable(text: $query)
         .task(id: query) {
@@ -500,6 +503,9 @@ struct AppConnectionsView: View {
                 Text(error).foregroundColor(Theme.no)
             }
         }
+        .scrollContentBackground(.hidden)
+        // The app's cream, not the list's grey, as every screen in the detail pane.
+        .screenBackground()
         .navigationTitle(Words.Connect.Apps.yourConnections(app: "\(app.displayName)"))
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $replacing) { g in
@@ -1085,6 +1091,9 @@ struct ConnectionDetailView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        // The app's cream, not the list's grey, as every screen in the detail pane.
+        .screenBackground()
         .navigationTitle(g?.name ?? appTitle)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(item: $replacing) { g in

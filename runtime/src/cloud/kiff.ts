@@ -94,7 +94,8 @@ export async function draftInfo(token: string, draftID: string, doFetch: Fetch =
   const expired = d.status === "draft" && d.expires_at && new Date(d.expires_at).getTime() <= now.getTime();
   return { status: expired ? "expired" : d.status ?? "", agent: d.agent_id ?? "", ...(typeof d.version === "string" && d.version ? { version: d.version } : {}),
     // Its Cards as KIFF shows them (each with its actions, limits and what happens past them), for a check before signing.
-    ...(Array.isArray(d.cards) ? { cards: d.cards } : {}),
+    // KIFF shows a draft with no Card as null: that's a draft with none, not a read without them.
+    ...(Array.isArray(d.cards) ? { cards: d.cards } : d.cards === null ? { cards: [] } : {}),
     // Which key confirms it, as KIFF decides (kiff/tafs#494): "window" when the draft widens nothing a Card in
     // force allows, so a tap inside an approval window does; "critical" when it needs the fingerprint.
     ...(d.confirm_key === "window" || d.confirm_key === "critical" ? { confirmKey: d.confirm_key } : {}),

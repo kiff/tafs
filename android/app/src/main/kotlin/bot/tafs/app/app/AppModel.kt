@@ -50,6 +50,9 @@ import bot.tafs.app.model.threeMonthsOn
 import bot.tafs.app.kiff.Account
 import bot.tafs.app.kiff.AlertTarget
 import bot.tafs.app.kiff.Grant
+import bot.tafs.app.kiff.PairOffer
+import bot.tafs.app.kiff.PairQr
+import bot.tafs.app.kiff.Pairing
 import bot.tafs.app.kiff.CloudSetup
 import bot.tafs.app.kiff.PlanqueClient
 import bot.tafs.app.kiff.PlanqueError
@@ -223,6 +226,11 @@ data class AppState(
    * phone turned its key off when a fingerprint was added. Refusing still works.
    */
   val approvalKeyLost: Boolean = false,
+  /**
+   * KIFF keeps this session view-only (`view_only`): the phone signed in with no approval key while the person has another
+   * device that approves, so it gains none here. Approving takes a new sign-in on this phone, or the other phone.
+   */
+  val approvalViewOnly: Boolean = false,
   /** Approve again, waiting for the browser: the code to compare, and where to approve it. */
   val relink: Relink? = null,
   /** Why the last Approve again didn't go through. */
@@ -589,6 +597,14 @@ data class AppState(
   val peopleError: String? = null,
   /** The devices signed in as this person on the account (Settings, Devices), and why they couldn't be read or one signed out. */
   val devices: List<Device> = emptyList(),
+  /**
+   * Adding a device (docs/android-app.md, Pairing a computer): the QR read, while the person compares its code; the line that says
+   * what came of it; and whether a scan or a pairing is under way. Kept here, not in the sheet, so the sheet coming back from
+   * Google's scanner, or from the fingerprint, loses none of it.
+   */
+  val pairAsking: PairQr? = null,
+  val pairLine: String? = null,
+  val pairBusy: Boolean = false,
   val devicesError: String? = null,
   /** The account is being deleted, and why deleting it stopped, for its sheet; null when nothing went wrong. */
   val deletingAccount: Boolean = false,
@@ -1131,8 +1147,13 @@ class AppModel(
    * Asks KIFF with [poll] until the person approves [start]'s code in their browser. It keeps asking through a dropped
    * connection or a KIFF error until the code expires.
    */
-  private suspend fun <T> untilApproved(start: DeviceStart, deadline: Instant = clock().plusSeconds(start.expiresIn.toLong()), poll: suspend () -> T): T {
-    var intervalMs = maxOf(start.interval, signInMinimumIntervalSeconds) * 1000L
+  private suspend fun <T> untilApproved(
+    start: DeviceStart,
+    deadline: Instant = clock().plusSeconds(start.expiresIn.toLong()),
+    minimumSeconds: Int = signInMinimumIntervalSeconds,
+    poll: suspend () -> T,
+  ): T {
+    var intervalMs = maxOf(start.interval, minimumSeconds) * 1000L
     while (clock() < deadline) {
       var waited = 0L
       while (waited < intervalMs && !signInNudged) {
@@ -1152,6 +1173,39 @@ class AppModel(
       }
     }
     throw KiffError.Expired
+  }
+
+  // MARK: Signing in with your other phone
+
+  /**
+   * Starts being added from the person's other phone (KIFF's pairing contract for phones): this phone's two keys in a
+   * `kiff.pair.v1` QR the other phone scans, with the code both screens show. The approval key is required, so a phone with no
+   * strong biometric can't be paired: it says so, and signs in with KIFF instead. Nothing is sent until [finishPairSignIn].
+   */
+  fun startPairSignIn(): PairOffer {
+    val key = signer.publicKeyDER
+    val approvalKey = signer.approvalPublicKeyDER
+    if (key.isEmpty() || approvalKey.isEmpty()) throw bot.tafs.app.model.OwnWords(Words.SignIn.pairNoKey(device = bot.tafs.app.model.ThisDevice.word))
+    return PairOffer.make(key, approvalKey, deviceName, bot.tafs.app.model.ThisDevice.kiffKind, PairOffer.freshNonce(), clock())
+  }
+
+  /** The least time between two claims, in seconds: KIFF asks for 3 or more. */
+  var pairClaimIntervalSeconds = 3
+
+  /**
+   * Claims, until the other phone approves [offer], the session KIFF minted for this phone, proving with its device key that it
+   * holds the key; then uses it as any sign-in does. Throws [KiffError.Expired] once the offer's time is up: the screen shows a
+   * new one. KIFF decides everything else: whether the claim's proof holds, and what the session may do.
+   */
+  suspend fun finishPairSignIn(offer: PairOffer) {
+    // One signature, by the device key and without a prompt: it names only the nonce and the key, so every poll sends it.
+    val proof = signer.signConfirmed(offer.claimMessage)
+    val start = DeviceStart(
+      deviceCode = offer.nonce, userCode = offer.checkCode, verificationUri = "", verificationUriComplete = "",
+      expiresIn = maxOf(0L, java.time.Duration.between(clock(), offer.expires).seconds).toInt(), interval = pairClaimIntervalSeconds,
+    )
+    val token = untilApproved(start, offer.expires, minimumSeconds = pairClaimIntervalSeconds) { kiff.claimPairing(offer.nonce, offer.pub, proof) }
+    withContext(NonCancellable) { useSession(token.accessToken, token.tenant) }
   }
 
   /** A failure worth trying again: the network, or KIFF briefly not answering. */
@@ -1434,6 +1488,10 @@ class AppModel(
       e.fingerprint // the key sent at sign-in, or another
     } catch (e: Exception) {
       if (e is CancellationException) throw e
+      // KIFF keeps this session view-only: say so, once, and ask nothing more of it until a new sign-in.
+      if (e is KiffError.Server && e.refused("view_only") && generation == accountGeneration) {
+        _state.update { it.copy(approvalKeyLost = true, approvalViewOnly = true) }
+      }
       return
     }
     if (generation != accountGeneration) return
@@ -1451,7 +1509,7 @@ class AppModel(
   private fun useApprovalKey() {
     approvalKeyRefusals = 0
     sessionHasApprovalKey = true
-    _state.update { it.copy(approvalKeyLost = false) }
+    _state.update { it.copy(approvalKeyLost = false, approvalViewOnly = false) }
     val signer = signer
     kiff.approvalSigner = { built -> signer.signApproval(approvalReason, built) }
   }
@@ -7038,7 +7096,15 @@ class AppModel(
     AccountTime.use(account.timeZone ?: "UTC")
     val device = java.time.ZoneId.systemDefault().id
     val offer = device.takeIf { it != (account.timeZone ?: "UTC") && secrets.load(declinedZoneKey()) != it }
-    _state.update { it.copy(kiffAccount = account, timeZoneOffer = offer) }
+    // KIFF says how this session approves (`approval_mode`): a view-only one is shown as such from the start, not only once
+    // registering the approval key is refused. Only KIFF's word sets it; a new sign-in that approves clears it.
+    val viewOnly = account.viewOnly
+    _state.update {
+      it.copy(
+        kiffAccount = account, timeZoneOffer = offer,
+        approvalViewOnly = it.approvalViewOnly || viewOnly, approvalKeyLost = it.approvalKeyLost || viewOnly,
+      )
+    }
   }
 
   private fun declinedZoneKey(): String = "tafs.timeZone.declined|${kiffTenant.orEmpty()}"
@@ -7214,29 +7280,156 @@ class AppModel(
     }
   }
 
-  /** Signs another device out of the account, behind one confirmation. This device signs out with Sign out instead. False when it didn't go through. */
+  /**
+   * Signs another device out of the account, behind one fingerprint that names it. This device signs out with Sign out instead.
+   * Removing a device that holds an approval key takes an approval at KIFF (its pairing contract), so the approval key signs it,
+   * its fingerprint the confirmation; a session KIFF holds no approval key for confirms here, and KIFF decides. False when it
+   * didn't go through.
+   */
   suspend fun removeDevice(device: Device): Boolean {
     val tenant = kiffTenant
-    if (_state.value.mode != Mode.kiff || tenant == null || device.thisDevice) return false
+    if (_state.value.mode != Mode.kiff || tenant == null || device.thisDevice || !_state.value.sessionHasKey) return false
     val generation = accountGeneration
     val what = Words.Settings.Devices.signOutPrompt(device = device.shown ?: Words.Settings.Devices.thisDevice)
+    kiff.tenant = tenant
+    val signer = signer
     try {
-      signer.sign("tafs.devices.v1|$tenant|${device.id}".toByteArray(), what)
+      if (!sessionHasApprovalKey) signer.sign("tafs.devices.v1|$tenant|${device.id}".toByteArray(), what)
+      if (generation != accountGeneration) return false
+      approvalReason = what
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      kiff.removeDevice(device.id)
     } catch (_: SignerException) {
       return false
-    }
-    if (generation != accountGeneration) return false
-    kiff.tenant = tenant
-    try {
-      kiff.removeDevice(device.id)
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = KiffClient.APPROVAL_KEY_LOST) }
+      return false
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))) }
+      // A view-only session approves nothing, signing another device out included: the line every app shares, which says which
+      // device can do it. KIFF's refusal carries only a developer's message, in English.
+      val said = if (e is KiffError.Server && e.refused("view_only")) {
+        Words.Settings.Devices.signoutNeedsApprover
+      } else {
+        Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))
+      }
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = said) }
       return false
+    } finally {
+      kiff.setupSigner = null
+      approvalReason = Words.Approval.Prompt.approveOnKiff
     }
     refreshDevices()
     return true
+  }
+
+  /**
+   * Pairs the computer whose QR the person scanned and whose check code they said matches (KIFF's pairing contract):
+   * the QR's fields, signed by the approval key behind its fingerprint, which names the computer. Whether it's paired is KIFF's:
+   * the phone shows KIFF's answer, the computer then listed in Devices with Sign out. Null when it didn't go through, why in
+   * [AppState.devicesError]; also null, with nothing to say, when the person put the fingerprint away.
+   */
+  suspend fun pairComputer(qr: PairQr): Pairing? {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null) return null
+    // Only an approval device grants approval authority: a session KIFF holds no approval key for can't pair one.
+    if (!_state.value.sessionHasKey || !sessionHasApprovalKey || _state.value.approvalKeyLost) {
+      _state.update { it.copy(devicesError = KiffClient.APPROVAL_KEY_LOST) }
+      return null
+    }
+    val generation = accountGeneration
+    val what = Words.Settings.Devices.pairPrompt(device = qr.name)
+    approvalReason = what
+    kiff.tenant = tenant
+    val signer = signer
+    kiff.setupSigner = { signer.signConfirmed(it) }
+    _state.update { it.copy(devicesError = null) }
+    val pairing = try {
+      kiff.pair(qr)
+    } catch (_: SignerException) {
+      return null
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = KiffClient.APPROVAL_KEY_LOST) }
+      return null
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Common.didntGoThrough(what = Words.Settings.Devices.pair, why = pairingWhy(e))) }
+      return null
+    } finally {
+      kiff.setupSigner = null
+      approvalReason = Words.Approval.Prompt.approveOnKiff
+    }
+    if (generation != accountGeneration) return null
+    refreshDevices()
+    return pairing
+  }
+
+  /**
+   * Add a device: [scan] reads a QR (Google's scanner, in its own screen), then the QR is asked about ([AppState.pairAsking]), or
+   * the line says it isn't a pairing. In the model's scope, so the sheet torn down and rebuilt while the scanner is in front
+   * changes nothing. A scan already under way, or a pairing, starts nothing more.
+   */
+  fun addDevice(scan: suspend () -> String?) {
+    if (_state.value.pairBusy) return
+    _state.update { it.copy(pairLine = null, pairAsking = null, pairBusy = true) }
+    scope.launch {
+      try {
+        val text = try {
+          scan()
+        } catch (e: CancellationException) {
+          throw e
+        } catch (e: Exception) {
+          _state.update { it.copy(pairLine = Words.Settings.Devices.pairScannerFailed(why = ErrorWords.of(e))) }
+          return@launch
+        } ?: return@launch
+        val qr = PairQr.read(text)
+        _state.update { it.copy(pairAsking = qr, pairLine = if (qr == null) Words.Settings.Devices.pairNotAPairing else null) }
+      } finally {
+        _state.update { it.copy(pairBusy = false) }
+      }
+    }
+  }
+
+  /** Yes to the device being asked about: it's paired ([pairComputer]), and the line says what came of it. */
+  fun confirmPairing() {
+    val qr = _state.value.pairAsking ?: return
+    _state.update { it.copy(pairAsking = null, pairBusy = true) }
+    scope.launch {
+      try {
+        pairComputer(qr)?.let { p -> _state.update { it.copy(pairLine = bot.tafs.app.kiff.pairedLine(qr, p)) } }
+      } finally {
+        _state.update { it.copy(pairBusy = false) }
+      }
+    }
+  }
+
+  /** Cancel on the device being asked about: nothing is signed. */
+  fun cancelPairing() {
+    _state.update { it.copy(pairAsking = null) }
+  }
+
+  /** Devices closed: what came of the last pairing goes with it. */
+  fun clearPairLine() {
+    _state.update { it.copy(pairLine = null, pairAsking = null) }
+  }
+
+  /**
+   * Why a pairing didn't go through: KIFF's own words where it sends them; for its codes (§5.3), the app's words until KIFF
+   * words them; else the usual.
+   */
+  internal fun pairingWhy(e: Throwable): String {
+    if (e is KiffError.Server) {
+      e.words?.takeIf { it.isNotBlank() }?.let { return it }
+      when {
+        e.refused("pairing_expired") -> return Words.Settings.Devices.pairExpired
+        e.refused("pairing_used") -> return Words.Settings.Devices.pairUsed
+        e.refused("key_registered") -> return Words.Settings.Devices.pairKeyRegistered
+        e.refused("invalid_pairing") -> return Words.Settings.Devices.pairInvalid
+      }
+    }
+    return ErrorWords.of(e)
   }
 
   // MARK: Deleting the account

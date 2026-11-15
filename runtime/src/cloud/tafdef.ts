@@ -99,7 +99,12 @@ export const CALL_INSTRUCTIONS = `How you make a call under your Card:
   When the call has no such field, say who it's for in your message.
 - A held call isn't done: it "waits for your approval", never "submitted",
   "sent" or "done", until KIFF says it ran. Name a date or a day only when you
-  read it; never "today" or "tomorrow" from a guess.`;
+  read it; never "today" or "tomorrow" from a guess.
+- When the app says an id you typed doesn't exist ("no such", "not found"),
+  check it against what you read (the list, your check's items). If you
+  mistyped it, make the call once more with the id as you read it, and a new
+  kiff_operation_id: that's a new call, not a retry. Once only: if it still
+  isn't found, or the id was right, report it.`;
 
 /**
  * What every run is told about the items its check hands it (kiff/agents schedule/check.go, itemsHead): its work

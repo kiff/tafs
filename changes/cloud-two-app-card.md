@@ -1,0 +1,1 @@
+- **A Card over two apps never leaves one app's tools waiting.** tafs cloud won't sign a Card while another app the taf's Card covers still waits for its own approval, and says which app goes first. "Approved" now comes only when every app the Card covers is connected ([secure-connection.md](docs/secure-connection.md)).

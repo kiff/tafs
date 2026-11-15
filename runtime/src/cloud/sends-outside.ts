@@ -3,9 +3,10 @@ import type { CoachStore } from "./coach.js";
 /**
  * The AI disclosure, closed structurally (kiff/tafs#476, gap 14). A connection's profile (KIFF's
  * `kiff.profile.v1`, inside the grant's signed request) says what each write does: an operation whose
- * `effect` is `sends` with `resource.outside` sends to people who may be outside the company. Such a
- * tool's every call must carry the disclosure, so a taf that has one names it in `disclose`, and Coach
- * can't leave it out by forgetting.
+ * `effect` is `sends` with `resource.outside` sends to people who may be outside the company, and one
+ * whose `effect` is `none_until_approved` drafts what reaches them once the owner sends it (a draft
+ * email, a draft invoice). Such a tool's every call must carry the disclosure, so a taf that has one
+ * names it in `disclose`, and Coach can't leave it out by forgetting.
  *
  * tafs cloud reads grants only on the phone's Approve, with its signed read, while a taf's `disclose`
  * comes later, in Coach's result. So each Approve notes the grant's sending tools by the taf's KIFF
@@ -20,14 +21,19 @@ export const sendsOutsideKey = (tenant: string, agent: string) => `${tenant}#sen
 
 interface Note { grants: Record<string, string[]>; at: string }
 
-/** The tools a grant's profile says send to people outside the company: each operation's tool, `sends` with `resource.outside`. */
+/**
+ * The tools a grant's profile says reach people outside the company: each operation's tool that `sends` with
+ * `resource.outside`, or that drafts (`none_until_approved`), since a draft reaches them as written once the owner
+ * sends it.
+ */
 export function sendingOutside(profile: unknown): string[] {
   const ops = profile && typeof profile === "object" ? (profile as { operations?: unknown }).operations : undefined;
   if (!Array.isArray(ops)) return [];
   const out = new Set<string>();
   for (const op of ops as Array<Record<string, unknown>>) {
     const resource = op?.resource as { outside?: unknown } | undefined;
-    if (op && op.effect === "sends" && resource?.outside === true && typeof op.tool === "string" && op.tool) out.add(op.tool);
+    const reaches = (op?.effect === "sends" && resource?.outside === true) || op?.effect === "none_until_approved";
+    if (op && reaches && typeof op.tool === "string" && op.tool) out.add(op.tool);
   }
   return [...out].sort();
 }
@@ -94,7 +100,7 @@ export function undisclosedSending(noted: string[], tools: string[] | undefined,
   const missing = has.filter((t) => !disclosed.includes(t));
   if (!missing.length) return undefined;
   const names = missing.join(", ");
-  return `disclose doesn't name ${names}, which ${missing.length === 1 ? "sends" : "send"} to people outside the company (its connection says so): add ${missing.length === 1 ? "it" : "each"} to disclose with the line it carries, and send the result again`;
+  return `disclose doesn't name ${names}, which ${missing.length === 1 ? "reaches" : "reach"} people outside the company, a draft once it's sent included (its connection says so): add ${missing.length === 1 ? "it" : "each"} to disclose with the line it carries, and send the result again`;
 }
 
 /** The words when the note can't be read: the result isn't let through, and Coach can send it again. */

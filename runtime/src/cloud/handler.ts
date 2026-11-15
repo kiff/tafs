@@ -48,12 +48,12 @@ import { inbound, isDoorPath } from "./doors/inbound.js";
 import { type AccountEvent, type EventLog, logEvent } from "./events.js";
 import { fileReport, reportInput, type ReportsDeps } from "./reports.js";
 import { activityPage, ActivityError, representationTag, nextForCalled, type NextStep } from "./activity.js";
-import { caseView, receiptsExport, recordPage, type RecordTaf } from "./record.js";
+import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, removedRecordTafs, removedTafsKey, type RemovedTaf } from "./record.js";
 import { appCalls, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, askOf, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor, takesOf } from "./approval.js";
+import { CARD_NEXT, ApprovalError, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor, takesOf } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 import { findLabel, LabelRefusal, labelsView, readLabels, saveLabels, withLabelChanged, withTafLabels } from "./labels.js";
@@ -110,6 +110,7 @@ import { BusinessRefusal, businessView, readBusiness, saveBusiness } from "./bus
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
  *   GET  /v1/connect/grants/{grant}/sheet  the secure connection sheet's words for a grant that takes a key, with the phone's read proof (docs/secure-connection.md)
+ *   POST /v1/connect/grants/{grant}/check  Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code (docs/api.md)
  *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
@@ -700,6 +701,9 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "usage" && parts[2] === "credits" && method === "GET" && parts.length === 5 && parts[3] === "tafs") {
     return tafCredits(event, await person(event, deps), parts[4] ?? "", deps);
   }
+  if (parts[1] === "connect" && parts[2] === "grants" && parts.length === 5 && parts[4] === "check" && method === "POST") {
+    return draftCheckRoute(event, decodeURIComponent(parts[3] ?? ""), await person(event, deps), deps);
+  }
   if (parts[1] === "connect" && parts[2] === "grants" && parts.length === 5 && parts[4] === "sheet" && method === "GET") {
     return grantSheet(event, decodeURIComponent(parts[3] ?? ""), await person(event, deps), deps);
   }
@@ -1031,7 +1035,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const [doors, titles, posted] = await Promise.all([managing, titlesOf(event, me, taf, deps), weekOne]);
     const { messages, components, held, drives, sessions, usage } = await conversation(me, posted ? { ...taf, weekOne: posted } : taf, deps, undefined, doors, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
-    await markSigns(event, me, components, deps);
+    await markSigns(event, me, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)), ...(doors ? await openKnocks(me, taf, deps) : {}) };
   }
@@ -1041,7 +1045,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     const [only, titles] = await Promise.all([ownChat(me, taf, parts[4] ?? "", deps), titlesOf(event, me, taf, deps)]);
     const { messages, components, held, drives, sessions, usage } = await conversation(me, taf, deps, only, false, titles, langOf(event));
     await handOverShown(me.tenantID, taf, components, deps);
-    await markSigns(event, me, components, deps);
+    await markSigns(event, me, taf, components, deps);
     const latest = await latestRun(me, taf, sessions, deps);
     return { messages, components, items: threadItems(messages, components, held, drives), working: latest.working, steering: latest.steering, ...(latest.capped ? { capped: latest.capped } : {}), ...(latest.stopped ? { stopped: latest.stopped } : {}), ...(usage ? { usage } : {}), ...(await coachLines(me, taf, deps)) };
   }
@@ -2407,6 +2411,16 @@ async function remove(taf: Taf, me: { tenantID: string }, deps: Deps, token = ""
   if (failed.length === 0 && deps.doors) await step(["doors"], () => removeTafDoors(doorContext(deps), me.tenantID, taf.id));
   // Only this taf's own claim: if a newer start holds the name, it keeps it.
   if (failed.length === 0) await step(["name"], () => deps.names.release(me.tenantID, taf.name, taf.nameClaim));
+  // Kept before its row goes, so the Record still shows its calls, named as removed (record.ts). A failure stops here:
+  // asked again, the removal goes on, and a second entry for the same agent is read once.
+  if (failed.length === 0 && taf.kiffAgent && taf.job !== SETUP_JOB && deps.coach) {
+    const now = deps.now?.() ?? new Date();
+    const row: RemovedTaf = { id: taf.id, kiff_agent: taf.kiffAgent, name: taf.name, removed_at: now.toISOString() };
+    await deps.coach.append(removedTafsKey(me.tenantID), row, new Date(now.getTime() + REMOVED_KEPT_MS)).catch((err) => {
+      console.error(`remove ${taf.id}: record: ${(err as Error).message}`);
+      failed.push("record");
+    });
+  }
   if (failed.length === 0) {
     // Only the list's archive is left, and its ttl takes it if this fails.
     await deps.archived.remove(me.tenantID, taf.id).catch((err) => console.error(`remove ${taf.id}: archive: ${(err as Error).message}`));
@@ -3225,7 +3239,7 @@ const SIGNS_READ_MS = 1500;
  * Planque-Device-Signature and what it can sign (`?can=tools_and_cards,key_and_cards`); without the proof, or when
  * the connections can't be read in time, the cards are left as they were.
  */
-async function markSigns(event: HTTPEvent, me: KIFFIdentity, components: ThreadComponent[], deps: Deps): Promise<void> {
+async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps): Promise<void> {
   const proof = event.headers?.["planque-device-signature"] ?? "";
   if (!proof || !deps.planqueBase) return;
   const waiting = components.filter((c) => !c.answer && (c.component as { type?: unknown; grant?: unknown } | undefined)?.type === "approval" &&
@@ -3242,13 +3256,89 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, components: ThreadC
     const draft = typeof card.draft === "string" && card.draft ? card.draft : undefined;
     const step = grant && stepFor(grant, { draft, can }, flags);
     if (!step) continue;
-    // A Card alone takes the key KIFF names for its draft: read it, in the same time, or say nothing of the key.
-    const confirmKey = step === "cards" && draft
-      ? await within(draftInfo(bearer(event), draft, deps.fetch, deps.kiffBase), SIGNS_READ_MS).then((d) => d ? d.confirmKey ?? null : undefined).catch(() => undefined)
-      : null;
+    // A step that signs the Card (alone, or with the tools or key it covers) reads its draft, in the same time: a Card
+    // alone takes the key KIFF names for it, or nothing is said of the key.
+    const signsCard = step !== "connect" && !!draft;
+    const info = signsCard
+      ? await within(draftInfo(bearer(event), draft!, deps.fetch, deps.kiffBase), SIGNS_READ_MS).catch(() => undefined)
+      : undefined;
+    const confirmKey = step === "cards" && draft ? (info ? info.confirmKey ?? null : undefined) : null;
+    // Its Cards checked before the card is drawn: a draft Approve would refuse is never shown with Approve. On the
+    // combined steps too (Eval 13's Refunds: the owner approved the tools with the Card, and the Card was then refused).
+    if (signsCard && info?.version) {
+      const refused = await precheck(event, me, taf, c, { grant: card.grant, draft: draft!, version: info.version }, grants, deps);
+      if (refused) {
+        c.answer = refused;
+        continue;
+      }
+    }
     const takes = takesOf(step, confirmKey);
     c.component = { ...card, signs: { ...signsOf(step, draft, lang, grant), ...(takes ? { takes } : {}) } };
   }
+}
+
+/** How long a checked draft version is remembered: a second phone's read, or the same phone's next, checks it no more. */
+const PRECHECK_KEPT_MS = 24 * 3600_000;
+/** How long the chat's read waits for the check: past it, the card is drawn as before, and the tap checks again. */
+const PRECHECK_MS = 2500;
+const precheckKeys = {
+  claim: (tenant: string, draft: string, version: string) => `${tenant}#draft-precheck#${draft}#${version}`,
+  told: (tenant: string, draft: string, version: string) => `${tenant}#draft-precheck-told#${draft}#${version}`,
+};
+/** A refusal Coach was told on a chat's read: its answer, so every phone draws the card as answered. */
+interface PrecheckTold { answer: string; at: string }
+
+/**
+ * A Card draft checked as the phone reads the chat, before its card is drawn (Eval 43690861487's Refunds: the owner
+ * approved a Card that Approve then refused, and approved the redraft, two Card approvals for one app). The check is
+ * Approve's own (approval.ts checkDraft), read with this phone's planque proof and the grants the read has already. A
+ * refusal a new draft mends (REDRAFT_CODES) is Coach's to hear now, as the person's answer to the card, as a tap would
+ * have given it: the card is drawn answered, never with Approve, and Coach drafts again. Once per draft version, across
+ * phones and reads (a claim, then the answer kept). Anything else draws the card as before, and the tap checks it again:
+ * a draft that passes, a refusal Coach can't mend with a redraft, a read past its time, or a person whose role can't
+ * manage Cards or who hasn't agreed to AI use (Coach would take a turn on the answer). The log has the code only.
+ */
+async function precheck(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadComponent, ask: { grant: string; draft: string; version: string },
+  grants: Awaited<ReturnType<typeof readGrants>>, deps: Deps): Promise<CardAnswer | undefined> {
+  if (!deps.coach || !me.capabilities.includes("cards.manage")) return undefined;
+  const component = String((c.component as { id?: unknown })?.id ?? "");
+  if (!component) return undefined;
+  const now = nowOf(deps);
+  const lang = langOf(event);
+  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer }, lang) ?? "", at: t.at });
+  const claim = precheckKeys.claim(me.tenantID, ask.draft, ask.version);
+  const toldKey = precheckKeys.told(me.tenantID, ask.draft, ask.version);
+  const kept = new Date(now.getTime() + PRECHECK_KEPT_MS);
+  if (!(await deps.coach.once(claim, kept).catch(() => false))) {
+    // Checked already (another phone, an earlier read), or being checked: drawn answered once Coach was told.
+    const told = (await deps.coach.get(toldKey).catch(() => undefined)) as PrecheckTold | undefined;
+    return told && typeof told.answer === "string" && typeof told.at === "string" ? shown(told) : undefined;
+  }
+  const release = () => deps.coach!.remove(claim).catch(() => undefined);
+  try {
+    await requireAIConsent(event, me, deps);
+  } catch {
+    await release();
+    return undefined;
+  }
+  const out = await within(checkDraft({ grant: ask.grant, draft: ask.draft, shown_draft: ask.version }, checkContext(event, me, deps), grants), PRECHECK_MS).catch(() => undefined);
+  if (!out || out.outcome === "read_again") {
+    // Not read in time, or not read whole: the next read checks again.
+    await release();
+    return undefined;
+  }
+  console.log(`approval precheck: ${out.outcome === "ok" ? "ok" : out.code}`);
+  if (out.outcome !== "answered" || !REDRAFT_CODES.has(out.code)) return undefined;
+  try {
+    await tellCoach(me, taf, { session: c.session, run: c.run }, component, out.answer, deps);
+  } catch (err) {
+    // The card stopped waiting (answered meanwhile, or its run went on): nothing to tell. Anything else, the next read tries again.
+    if (!(err instanceof HTTPError && err.status === 409)) await release();
+    return undefined;
+  }
+  const told: PrecheckTold = { answer: out.answer, at: now.toISOString() };
+  await deps.coach.put(toldKey, told, kept).catch(() => undefined);
+  return shown(told);
 }
 
 /** An `answered` event's body as the app shows it. */
@@ -3519,6 +3609,13 @@ async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, compone
   if (body.answer !== "declined" && await shownCard(me, taf, component, "drive", card.session, deps)) {
     throw new HTTPError(400, "a drive is approved with your fingerprint: POST /v1/coach/drive, signed with the approval key");
   }
+  // An approval card is approved only through Approve (POST …/approval), signed and checked: the person answers one
+  // "declined", or "failed: <why>" when their own approval didn't go through, never "approved" or "already approved",
+  // which tafs cloud alone answers after that path. A session alone, a view-only device's too, never makes Coach's
+  // card read "Approved" with nothing signed.
+  if (!personAnswersApproval(body.answer) && await shownCard(me, taf, component, "approval", card.session, deps)) {
+    throw new HTTPError(400, "an approval is approved with your fingerprint, through Approve: answer it only declined, or failed: <why>");
+  }
   try {
     const run = await deps.agents.answerCard(me.tenantID, taf.id, card.run, component, body.answer, member(me));
     return { session: card.session, run: run.id, status: run.status };
@@ -3704,6 +3801,42 @@ function approvalContext(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
   };
 }
 
+/**
+ * POST /v1/connect/grants/{grant}/check {draft, shown_draft}: the checks Approve makes on a Card draft before it asks
+ * for a signature (approval.ts checkDraft), for a caller that confirms the draft itself: the e2e (Eval 43681227913).
+ * It only checks: nothing is signed, confirmed, kept or told to Coach. The grant is read from planque with the
+ * caller's own phone proof (planque-device-signature), so only this account's grants; the draft with the caller's
+ * KIFF session, so only a draft KIFF shows them. The log has the outcome's reason code, never the draft or its Cards.
+ */
+async function draftCheckRoute(event: HTTPEvent, grant: string, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  need(me, "cards.manage");
+  if (!deps.planqueBase) throw new HTTPError(503, "Connect apps isn't set up here");
+  const body = parseBody(event);
+  const draft = str(body.draft).trim();
+  const shown = str(body.shown_draft).trim();
+  if (!/^[A-Za-z0-9_.:-]{1,128}$/.test(grant) || !/^[A-Za-z0-9_.:-]{1,128}$/.test(draft) || !shown || shown.length > 256) {
+    throw new HTTPError(400, "send the grant, its Card draft and the draft's version you read");
+  }
+  const out = await checkDraft({ grant, draft, shown_draft: shown }, checkContext(event, me, deps)).catch(approvalFailure);
+  console.log(`approval check: ${out.outcome === "ok" ? "ok" : out.code}`);
+  // A refusal a new draft mends says so (`redraft`): the one Coach hears on the chat's read, before the card is drawn
+  // (precheck), so a caller that draws no card (the e2e) hands Coach the same refusals at the same moment, from this list.
+  return out.outcome === "answered" && REDRAFT_CODES.has(out.code) ? { ...out, redraft: true } : out;
+}
+
+/** What checkDraft reads with: the person's KIFF session and the phone's planque proof, as sent; nothing is kept. */
+function checkContext(event: HTTPEvent, me: KIFFIdentity, deps: Deps): import("./approval.js").DecideContext {
+  return {
+    tenant: me.tenantID, taf: "", component: "", token: bearer(event), proof: event.headers?.["planque-device-signature"] ?? "",
+    store: deps.coach!, planqueBase: deps.planqueBase ?? "", kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, now: deps.now?.() ?? new Date(),
+    newID: () => "", lang: langOf(event),
+    removedAgent: async (agent, askedOn) => {
+      const [archived, tafs] = await Promise.all([readArchived(bearer(event), deps.fetch, deps.kiffBase), deps.tafs.list(me.tenantID)]);
+      return removedAgent(agent, archived, new Set(tafs.filter((t) => !t.removing && t.kiffAgent).map((t) => t.kiffAgent)), askedOn);
+    },
+  };
+}
+
 /** Coach hears an approval's outcome from tafs cloud, as the person's answer to the card. */
 async function tellCoach(me: KIFFIdentity, taf: Taf, card: { session: string; run: string }, component: string, answer: string, deps: Deps) {
   try {
@@ -3728,8 +3861,8 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
   await requireAIConsent(event, me, deps);
   const body = parseBody(event);
   const ask = askOrRefuse(() => askOf(body));
-  const ctx = approvalContext(event, me, taf, component, deps);
   const session = str(body.session).trim();
+  const ctx = approvalContext(event, me, taf, component, deps);
   const approval = await shownCard(me, taf, component, "approval", session, deps);
   // A sign-in card asks too when its connection takes no approval now (signed in already, or past approving): tafs cloud
   // answers it in the person's words, never planque's status ("This connection is listed."). Anything to sign, it leaves to
@@ -3737,7 +3870,7 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
   const signIn = approval ? undefined : await shownCard(me, taf, component, "sign_in", session, deps);
   const card = approval ?? signIn;
   if (!card) throw new HTTPError(404, "no card of yours by that id");
-  const decision = await decideApproval(ask, ctx).catch(approvalFailure);
+  const decision = await decideApproval(ask, { ...ctx, session: card.session }).catch(approvalFailure);
   if (signIn && decision.outcome !== "answered") return { outcome: "sign_in" };
   if (decision.outcome === "answered") {
     // A sign-in card's answer is "signed in" or "failed: …": already approved means already signed in.
@@ -3808,7 +3941,7 @@ async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf,
   if (!card) throw new HTTPError(404, "no card of yours by that id");
   const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
   const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
-  const outcome = await settleApproval(askID, report, { ...ctx, signed }).catch(approvalFailure);
+  const outcome = await settleApproval(askID, report, { ...ctx, signed, session: card.session }).catch(approvalFailure);
   await deps.coach!.remove(approvalWaitKey(me.tenantID, taf.id, me.subject)).catch(() => undefined);
   let told: Awaited<ReturnType<typeof tellCoach>> | { session: string };
   try {
@@ -3864,6 +3997,11 @@ async function shownCard(me: KIFFIdentity, taf: Taf, id: string, type: string | 
  * declined, already approved: <why> or failed: <why>, sign_in → signed in, not now or failed: <why>. Undefined
  * for any other text.
  */
+/** The answers a person gives an approval card themselves: "declined", or "failed: <why>". Approving is Approve's alone. */
+export function personAnswersApproval(answer: unknown): boolean {
+  return answer === "declined" || (typeof answer === "string" && answer.startsWith("failed:"));
+}
+
 export function oldFormCard(text: string): { type: string; id: string; answer: unknown } | undefined {
   const m = /^\[([a-z_]+) ([^\]\s]+)\] ([\s\S]+)$/.exec(text);
   if (!m || !ANSWERABLE.includes(m[1]!)) return undefined;
@@ -3880,7 +4018,8 @@ export function oldFormCard(text: string): { type: string; id: string; answer: u
         return undefined;
       }
     case "approval": {
-      const answer = rest === "approved" || rest.startsWith("approved,") ? "approved" : rest === "declined" ? "declined" : rest.startsWith("already approved:") ? rest : failed;
+      // Only what a person answers themselves: "approved" in a message is a message, never the card's answer.
+      const answer = rest === "declined" ? "declined" : failed;
       return answer ? { type, id, answer } : undefined;
     }
     default: {
@@ -4617,10 +4756,10 @@ async function setupPage(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Dep
   ]);
   const active = runs.find((r) => r.status === "RUNNING");
   const events = active ? await deps.agents.session(me.tenantID, active.session, ownerKey(me)).then((s) => s.events, () => []) : [];
-  const rules = summary(cards.mandates.filter((m) => m.subject === taf.kiffAgent)).rules;
+  const rules = summary(cards.mandates.filter((m) => m.subject === taf.kiffAgent), langOf(event)).rules;
   const unitExceptions = cardUnitExceptions(taf, cards.held, rules, me.timeZone ?? "UTC", now, langOf(event));
   const setup = setupView({ agent: taf.kiffAgent, grants: grants.grants, knob: knob as import("./knob.js").Knob, rules, notes: memory,
-    versions, calls: stats.calls, now, running: runningTool(events, active), statsComplete: stats.complete });
+    versions, calls: stats.calls, now, running: runningTool(events, active), statsComplete: stats.complete, lang: langOf(event) });
   // A connection whose sign-in the vendor no longer takes: the taf's own Connect again, naming its grant, so the app
   // signs that same connection in again (planque's approve) and the taf keeps its tools and Card. One job per view:
   // never "go to Connect apps".
@@ -6693,8 +6832,17 @@ async function view(taf: Taf, me: KIFFIdentity, deps: Deps, schedule?: Schedule,
 async function recordRoute(event: HTTPEvent, parts: string[], me: KIFFIdentity, deps: Deps) {
   const [records, access] = await Promise.all([deps.tafs.list(me.tenantID), readAccess(bearer(event), deps.fetch, deps.kiffBase)]);
   const all = records.filter((t) => !t.removing && t.job !== SETUP_JOB);
-  const tafs: RecordTaf[] = all.filter((t) => listable(access, t.kiffAgent)).map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent }));
   const zone = me.timeZone ?? "UTC", now = deps.now?.() ?? new Date(), lang = langOf(event);
+  // Those who see every taf's Record: who oversee or manage each of the account's tafs, and, with none left, who manage
+  // its Cards (every taf removed is no reason for a viewer to see them all).
+  const seesEvery = all.every((t) => access.get(t.kiffAgent)?.oversee || access.get(t.kiffAgent)?.manage)
+    && (all.length > 0 || me.capabilities.includes("cards.manage"));
+  // A removed taf's calls, named as removed (record.ts), only for those who manage the account's Cards, whatever tafs
+  // remain: who sees "every taf" now may never have seen the removed one, and KIFF's access for an archived agent can't
+  // be read back. An unreadable list leaves them out.
+  const removed = me.capabilities.includes("cards.manage") && deps.coach
+    ? removedRecordTafs(await deps.coach.get(removedTafsKey(me.tenantID)).catch(() => undefined), new Set(all.map((t) => t.kiffAgent)), lang) : [];
+  const tafs: RecordTaf[] = [...all.filter((t) => listable(access, t.kiffAgent)).map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent })), ...removed];
   const q = new URLSearchParams(event.rawQueryString ?? "");
   if (parts.length === 2) {
     return conditionalPage(event, await recordPage({ token: bearer(event), scope: `${me.tenantID}#${me.subject}`, tafs, zone, now, query: q, lang }, deps.fetch, deps.kiffBase));
@@ -6709,7 +6857,7 @@ async function recordRoute(event: HTTPEvent, parts: string[], me: KIFFIdentity, 
     return view;
   }
   if (parts.length === 3 && parts[2] === "receipts") {
-    if (!all.every((t) => access.get(t.kiffAgent)?.oversee || access.get(t.kiffAgent)?.manage)) {
+    if (!seesEvery) {
       throw new HTTPError(403, "exporting receipts is for the people who see every taf's Record");
     }
     return receiptsExport({ token: bearer(event), from: q.get("from"), to: q.get("to"), tafs, zone }, deps.fetch, deps.kiffBase);
@@ -8269,13 +8417,27 @@ async function waitedForCard(tenant: string, r: Run, card: string, deps: Deps): 
   return now.getTime() - Date.parse(first) >= HANDOVER_CARD_WAIT_MS;
 }
 
+/**
+ * Whether the run waits on an approval or sign-in card too: the owner may be approving the result's Card on it now (a
+ * sign-in card is decided with its draft as an approval is), so the result waits for it (HANDOVER_CARD_WAIT_MS). Any
+ * such card counts, the connection alone too: the Card may come with it. An answered one doesn't: its answer says
+ * "approved" only once KIFF shows its draft issued (approval.ts reported), the status kiff/agents' claim reads, so an
+ * approved card can't leave the result's draft unconfirmed while the confirm is in flight.
+ */
+export function approvalWaits(r: Pick<Run, "requirements">): boolean {
+  return (r.requirements ?? []).some((q) => {
+    const type = (q.input as { type?: unknown } | undefined)?.type;
+    return q.kind === "card" && !q.answered && (type === "approval" || type === "sign_in");
+  });
+}
+
 /** How long a result's hand-over holds its card, so a repeat note or a second phone can't make two. */
 const HANDOVER_HELD_MS = 10 * 60_000;
 
 /**
- * A result whose draft KIFF says isn't confirmed: the owner hasn't approved its Card yet. It isn't
- * answered as failed (the owner would read "not set up" while they're still deciding, and Coach would
- * hand it over again); the card waits, and the taf is made once they approve.
+ * A result whose draft KIFF says isn't confirmed: the owner hasn't approved its Card yet. While an approval card waits
+ * beside it, it isn't answered as failed (the owner would read "not set up" while they're still deciding, and Coach
+ * would hand it over again); the card waits, and the taf is made once they approve. With none, it's answered at once.
  */
 class CardNotApproved extends Error {
   constructor() { super(WAITING_FOR_CONFIRMATION); }
@@ -8319,10 +8481,16 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
     }
     const make = card.taf.improves ? improvedVersionFor(tenant, coach.id, r, card.id, { ...card.taf as ImprovedTaf, ...(tools ? { tools } : {}) }, tafs, deps) : newTafFor(tenant, coach.id, r, { ...card.taf, ...(tools ? { tools } : {}) }, tafs, deps);
     const outcome = await make.catch(async (err): Promise<ResultOutcome | undefined> => {
-      // A Card the owner hasn't approved yet is no error: the card waits, and the taf is made once they approve.
+      // A Card the owner is approving is no error: the card waits, and the taf is made once they approve.
       // But not for ever, and never unsaid: past HANDOVER_CARD_WAIT_MS from the first try, nothing is asking
       // for that Card, so the result is answered in plain words and Coach asks for it.
       if (err instanceof CardNotApproved) {
+        // With no approval card waiting beside it, nothing asks the owner for that Card, so it's answered at once and
+        // Coach shows the approval (Eval 13's Refunds: its draft refused, redrafted, then a result with no approval).
+        if (!approvalWaits(r)) {
+          console.log(JSON.stringify({ event: "handover_unconfirmed", run: r.id, card: card.id }));
+          return { failed: cardNeverApproved(card.taf?.name) };
+        }
         if (await waitedForCard(tenant, r, card.id!, deps)) return { failed: cardNeverApproved(card.taf?.name) };
         console.warn(`handover ${r.id} ${card.id}: waiting for the Card's approval (draft ${card.taf?.draft ?? "none"})`);
       } else console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);

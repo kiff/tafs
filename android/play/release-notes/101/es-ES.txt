@@ -1,0 +1,2 @@
+- Inicia sesión con tu otro teléfono: muestra el código de este teléfono, escanéalo desde el que ya usas en Cuenta, Dispositivos, Añadir un dispositivo, y listo.
+- Dispositivos se abre a tamaño completo, Hecho vuelve a Cuenta, y un código escaneado que no es un dispositivo ahora lo dice y se queda.

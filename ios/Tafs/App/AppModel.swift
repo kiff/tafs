@@ -393,6 +393,12 @@ final class AppModel: ObservableObject {
     /// KIFF holds an approval key for the session that isn't this phone's (it changed after
     /// registering, or another was registered): approving waits for a new sign-in.
     @Published private(set) var approvalKeyLost = false
+    /// KIFF keeps this session view-only (`view_only`): the phone signed in with no approval key while the
+    /// person has another device that approves, so it gains none here. Approving takes a new sign-in on
+    /// this phone, or the other phone; KIFF is asked nothing more of it until then.
+    @Published private(set) var approvalViewOnly = false
+    /// What the person reads while this phone can't approve: the view-only words, or the lost key's.
+    var approvalKeyLostWords: String { approvalViewOnly ? Words.Approval.viewOnly : KIFFClient.approvalKeyLost }
     /// A re-link waiting for the person's browser: the code to check there, and the page.
     struct Relink: Equatable { let userCode: String; let url: URL }
     @Published private(set) var relink: Relink?
@@ -769,6 +775,63 @@ final class AppModel: ObservableObject {
         throw KIFFClient.KIFFError.expired
     }
 
+    // MARK: Signing in from another phone (KIFF's pairing contract §5.8)
+
+    /// How long between two claims: at least 3 s (§5.4), longer when KIFF says to slow down.
+    var pairClaimInterval: UInt64 = 3_000_000_000
+
+    /// A pairing offer shown on this device, with the claim's proof its device key signed once.
+    struct PairingStart: Equatable {
+        let offer: PairingOffer
+        let proof: String
+    }
+
+    /// This device holds no key (no Secure Enclave): it can't be paired, and signs in with KIFF instead.
+    struct CannotPair: LocalizedError {
+        /// Worked out where it's thrown, on the main actor, where the device's kind is read.
+        let message: String
+        var errorDescription: String? { message }
+    }
+
+    /// Makes the QR this device shows, from the keys it already holds, and signs the claim's proof once,
+    /// behind Face ID or the passcode: the person is here, with this device in their hands.
+    func startPairingSignIn() async throws -> PairingStart {
+        let key = signer.publicKeyDER, approvalKey = signer.approvalPublicKeyDER
+        guard !key.isEmpty, !approvalKey.isEmpty else { throw CannotPair(message: Words.SignIn.pairNoKey(device: "\(ThisDevice.kind)")) }
+        let offer = PairingOffer.make(publicKey: key, approvalKey: approvalKey,
+                                      name: Words.Settings.Devices.thisDeviceName(device: "\(ThisDevice.kind)"),
+                                      platform: ThisDevice.platform,
+                                      deviceKind: PairingOffer.deviceKind(platform: ThisDevice.platform, kiffKind: ThisDevice.kiffKind),
+                                      nonce: PairingOffer.freshNonce(), now: clock())
+        let proof = try await signer.sign(offer.claimMessage, reason: Words.SignIn.pairPrompt(device: "\(ThisDevice.kind)"))
+        return PairingStart(offer: offer, proof: proof)
+    }
+
+    /// Claims until the other phone approves (at least 3 s apart, slower when KIFF asks), then uses the
+    /// session, bound to this device's two keys. Throws `expired` when the code runs out first.
+    func finishPairingSignIn(_ start: PairingStart) async throws {
+        var interval = pairClaimInterval
+        while clock() < start.offer.expires {
+            var waited: UInt64 = 0
+            while waited < interval {
+                try await Task.sleep(nanoseconds: min(signInSlice, interval - waited))
+                waited += signInSlice
+            }
+            do {
+                let token = try await kiff.claimPairing(nonce: start.offer.nonce, pub: start.offer.pub, proof: start.proof)
+                await useSession(token.accessToken, tenant: token.tenant)
+                return
+            } catch KIFFClient.KIFFError.authorizationPending {
+                continue
+            } catch KIFFClient.KIFFError.slowDown {
+                interval += 2_000_000_000
+            } catch where Self.transient(error) {
+                continue
+            }
+        }
+        throw KIFFClient.KIFFError.expired
+    }
+
     /// A failure worth trying again: the network, or KIFF briefly not answering.
     static func transient(_ error: Error) -> Bool {
         if let e = error as? URLError {
@@ -851,6 +914,12 @@ final class AppModel: ObservableObject {
             held = try await kiff.registerApprovalKey(key, signer: { try signer.signConfirmed($0) })
         } catch KIFFClient.KIFFError.approvalKeyExists(let fingerprint) {
             held = fingerprint // the key sent at sign-in, or another
+        } catch KIFFClient.KIFFError.server(403, "view_only", _) {
+            // KIFF keeps this session view-only: say so, once, and ask nothing more of it until a new sign-in.
+            guard gen == accountGeneration else { return }
+            approvalKeyLost = true
+            approvalViewOnly = true
+            return
         } catch {
             return
         }
@@ -873,7 +942,7 @@ final class AppModel: ObservableObject {
     /// the second refusal in a row, where to write too. A key KIFF holds another of keeps the lost
     /// key's words.
     private func approvalKeyRefused() -> String {
-        if approvalKeyLost { return KIFFClient.approvalKeyLost }
+        if approvalKeyLost { return approvalKeyLostWords }
         approvalKeyRefusals += 1
         return approvalKeyRefusals >= 2 ? Words.Approval.keyNotAccepted + "\n" + Words.Approval.keyNotAcceptedSupport : Words.Approval.keyNotAccepted
     }
@@ -886,6 +955,7 @@ final class AppModel: ObservableObject {
         approvalKeyRefusals = 0
         sessionHasApprovalKey = true
         approvalKeyLost = false
+        approvalViewOnly = false
         let signer = self.signer
         kiff.approvalSigner = { try signer.signApprovalConfirmed($0) }
     }
@@ -895,6 +965,7 @@ final class AppModel: ObservableObject {
         cancelRelink()
         sessionHasApprovalKey = false
         approvalKeyLost = false
+        approvalViewOnly = false
         kiff.approvalSigner = nil
     }
 
@@ -914,7 +985,8 @@ final class AppModel: ObservableObject {
     /// page to open, or nil when it couldn't start (`lastError` says why).
     @discardableResult
     func startRelink() async -> URL? {
-        guard mode == .kiff, approvalKeyLost, sessionHasKey, relink == nil, let tenant = kiffTenant else { return nil }
+        // A view-only session can't be re-linked: KIFF refuses it, so only a new sign-in, or the other phone, approves.
+        guard mode == .kiff, approvalKeyLost, !approvalViewOnly, sessionHasKey, relink == nil, let tenant = kiffTenant else { return nil }
         let key = signer.approvalPublicKeyDER
         guard !key.isEmpty else {
             lastError = Words.Approval.addFaceIdFirst(device: "\(ThisDevice.kind)")
@@ -968,7 +1040,7 @@ final class AppModel: ObservableObject {
                 guard gen == accountGeneration else { return }
                 // KIFF's fingerprint says which key it holds now: only ours lets this phone approve.
                 guard KIFFClient.sameKey(held, key) else {
-                    lastError = KIFFClient.approvalKeyLost
+                    lastError = approvalKeyLostWords
                     return
                 }
                 Keychain.save(KIFFClient.fingerprint(key), for: Self.approvalKeyedAccount)
@@ -1075,7 +1147,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var devicesError: String?
 
     func refreshDevices() async {
-        guard mode == .kiff, let tenant = kiffTenant else { devices = []; return }
+        // The reference set's Devices over the sample (`-screenshots YES`); none otherwise without a session.
+        guard mode == .kiff, let tenant = kiffTenant else { devices = mode == .sample && Screenshots.enabled ? SampleScreens.devices() : []; return }
         let gen = accountGeneration
         kiff.tenant = tenant
         do {
@@ -1089,18 +1162,26 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Signs another device out of the account, behind Face ID. This device signs out with
-    /// Sign out instead. False when it didn't go through.
+    /// Signs another device out of the account: the approval key signs the DELETE itself, behind Face ID
+    /// or Touch ID naming the device, never inside a window, since removing a device that holds an
+    /// approval key or a passkey is an approval (KIFF's pairing contract). This device signs out with Sign out
+    /// instead. False when it didn't go through.
     @discardableResult
     func removeDevice(_ device: KIFFClient.Device) async -> Bool {
         guard mode == .kiff, let tenant = kiffTenant, !device.thisDevice else { return false }
         let gen = accountGeneration
         let what = Words.Settings.Devices.signOutPrompt(device: device.name ?? Words.Settings.Devices.thisDevice)
-        do { _ = try await signer.sign(Data("tafs.devices.v1|\(tenant)|\(device.id)".utf8), reason: what) } catch { return false }
-        guard gen == accountGeneration else { return false }
         kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let signature: String
         do {
-            try await kiff.removeDevice(device.id)
+            prepared = try kiff.prepareRemoveDevice(device.id, signedAt: signedAt)
+            signature = try await signer.signApproval(prepared.message, reason: what)
+        } catch { return false }
+        guard gen == accountGeneration else { return false }
+        do {
+            try await kiff.removeDevice(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
         } catch {
             guard gen == accountGeneration else { return false }
             devicesError = Words.Common.didntGoThrough(what: "\(what)", why: "\(error.localizedDescription)")
@@ -1108,6 +1189,60 @@ final class AppModel: ObservableObject {
         }
         await refreshDevices()
         return true
+    }
+
+    /// How a computer's pairing ended: paired (what to say), refused (why), or not sent (Face ID cancelled).
+    enum PairingOutcome: Equatable {
+        case paired(String)
+        case failed(String)
+        case cancelled
+    }
+
+    /// Pairs a computer (KIFF's pairing contract §5.3): the approval key signs `POST /v1/me/pairings` with the
+    /// QR's fields, behind Face ID or Touch ID naming the computer, never inside a window. Then KIFF's code
+    /// is shown beside the one the person checked, and Devices is read again.
+    func pairComputer(_ request: PairingRequest) async -> PairingOutcome {
+        guard mode == .kiff, let tenant = kiffTenant else { return .failed(Words.Error.signInFirstOnDevice(device: "\(ThisDevice.kind)")) }
+        let gen = accountGeneration
+        kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let signature: String
+        do {
+            prepared = try kiff.preparePairing(request, signedAt: signedAt)
+            signature = try await signer.signApproval(prepared.message, reason: Words.Settings.Devices.pairPrompt(device: request.name))
+        } catch { return .cancelled }
+        guard gen == accountGeneration else { return .cancelled }
+        do {
+            let pairing = try await kiff.approvePairing(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
+            guard gen == accountGeneration else { return .cancelled }
+            await refreshDevices()
+            return .paired(Self.pairedWords(request, kiffCode: pairing.code))
+        } catch KIFFClient.KIFFError.server(_, let message, let reason) {
+            return .failed(Self.pairingRefusal(message: message, reason: reason))
+        } catch {
+            return .failed(Words.Common.didntGoThrough(what: "\(Words.Settings.Devices.pairNamed(device: request.name))", why: "\(error.localizedDescription)"))
+        }
+    }
+
+    /// Paired: the code KIFF worked out is the one checked, or the person is told it isn't, and to sign
+    /// the computer out if it isn't theirs.
+    static func pairedWords(_ request: PairingRequest, kiffCode: String) -> String {
+        let shown = request.checkCode
+        return kiffCode == shown ? Words.Settings.Devices.pairDone(device: request.name, code: shown)
+            : Words.Settings.Devices.pairCodeDiffers(device: request.name, kiff: kiffCode, shown: shown)
+    }
+
+    /// A refused pairing in KIFF's words when it sent them; the app's own only where it sent none.
+    static func pairingRefusal(message: String, reason: String?) -> String {
+        if let reason, message != reason { return message }
+        switch reason {
+        case "pairing_expired": return Words.Settings.Devices.pairExpired
+        case "pairing_used": return Words.Settings.Devices.pairUsed
+        case "key_registered": return Words.Settings.Devices.pairKeyRegistered
+        case "invalid_pairing": return Words.Settings.Devices.pairInvalid
+        default: return message
+        }
     }
 
     /// Makes one change to groups or sharing, behind Face ID as KIFF asks of a phone, then
@@ -1938,6 +2073,8 @@ final class AppModel: ObservableObject {
             purchases.showSample(Screenshots.products)
             await refreshUsage()
         }
+        // `-screen coach`: Coach open over the sample, empty, for the reference set.
+        if Screenshots.coach { coachOpen = true }
     }
 
     // MARK: Starting a taf
@@ -2041,7 +2178,11 @@ final class AppModel: ObservableObject {
 
     /// Reads Connect apps' first page, filtered by what the owner typed.
     func loadConnectApps(_ q: String = "") async {
-        guard mode == .kiff else { return }
+        guard mode == .kiff else {
+            // The reference set's Connect apps over the sample (`-screenshots YES`).
+            if mode == .sample, Screenshots.enabled, q.isEmpty { connectApps = SampleScreens.connectApps }
+            return
+        }
         // The account's connections too, so a connected app lists each one, with its taf and
         // Disconnect.
         if q.isEmpty { await refreshConnections() }
@@ -2795,7 +2936,7 @@ final class AppModel: ObservableObject {
         // Approving, or raising a Card, needs the approval key KIFF holds: without it, only a
         // new sign-in lets this phone approve (kiff/tafs#233).
         if approvalKeyLost, call.kiffID != nil, answer == .approveOnce || answer == .extraRoom {
-            lastError = KIFFClient.approvalKeyLost
+            lastError = approvalKeyLostWords
             return
         }
         let reason = Words.NeedsYou.Prompt.answer(summary: call.proposed.summary)
@@ -2843,7 +2984,7 @@ final class AppModel: ObservableObject {
                 case .extraRoom: try await kiff.changeCard(kiffID, signature: signed)
                 }
             } catch KIFFClient.KIFFError.approvalKeyRequired {
-                lastError = KIFFClient.approvalKeyLost
+                lastError = approvalKeyLostWords
                 return
             } catch {
                 lastError = Self.answerRefusedWords(error)
@@ -7083,7 +7224,11 @@ final class AppModel: ObservableObject {
     /// Reads the gallery of ready-made jobs. A read that fails keeps what was read; a tafs
     /// cloud without the route leaves none, so + New opens Coach as before.
     func loadGallery() async {
-        guard mode == .kiff else { return }
+        guard mode == .kiff else {
+            // The reference set's job gallery over the sample (`-screenshots YES`).
+            if mode == .sample, Screenshots.enabled { gallery = SampleScreens.gallery }
+            return
+        }
         let gen = accountGeneration
         do {
             let g = try await cloud.recipesGallery()
@@ -8921,6 +9066,17 @@ enum Screenshots {
     /// Coach above the account), over the sample's tafs. A screenshot of the layout only: nothing
     /// is read from KIFF, and the screens it lists aren't opened.
     static var signedIn: Bool { enabled && UserDefaults.standard.bool(forKey: "signedIn") }
+    /// `-screen coach`: Coach mode open over the sample, as the reference set shows it.
+    static var coach: Bool { enabled && screen == "coach" }
+    /// The iPad sidebar's screen a `-screen` opens beside it: `usage` (Plan & usage), `connect-apps`.
+    static var sidebarScreen: HomeSelection? {
+        guard enabled else { return nil }
+        switch screen {
+        case "usage": return .usage
+        case "connect-apps": return .connectApps
+        default: return nil
+        }
+    }
 
     @MainActor static func turnToLandscape() {
         for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
