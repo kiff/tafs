@@ -1,0 +1,1 @@
+- **Coach's first working line is in the owner's language.** The rule's one example of that line was in Spanish, so an English owner could see "Miro…" or "Je regarde…" before Coach's reply. The example is now in English, and the rule says the owner's last message sets the language, never an example.
