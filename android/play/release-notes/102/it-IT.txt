@@ -1,0 +1,1 @@
+- Dispositivi: su un telefono che non può approvare, disconnettere un altro dispositivo dice: “Per disconnettere un altro dispositivo, usa un dispositivo che può approvare.”

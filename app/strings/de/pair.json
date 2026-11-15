@@ -1,0 +1,16 @@
+{
+  "pair.added": "Dieser {device} ist hinzugefügt.",
+  "pair.added_passkey": "Dieser {device} kann Genehmigungen nicht selbst signieren. Genehmige auf deinem Handy oder mit einem Passkey.",
+  "pair.check_code_lead": "Dein Handy fragt, ob dein {device} diesen Code zeigt:",
+  "pair.code_expired": "Dieser Code ist abgelaufen.",
+  "pair.device_name": "tafs auf diesem {device}",
+  "pair.failed": "Dieser {device} wurde nicht hinzugefügt: {why}. Zeig einen neuen Code und versuch es noch einmal.",
+  "pair.from_sign_in": "Nutzt du tafs schon auf deinem Handy? Füge diesen {device} damit hinzu.",
+  "pair.new_code": "Neuen Code zeigen",
+  "pair.steps": "Öffne auf deinem Handy tafs, dann {account}, {devices}, {pair}. Scanne diesen Code.",
+  "pair.title": "Diesen {device} mit deinem Handy hinzufügen",
+  "pair.view_only.add": "Diesen {device} hinzufügen",
+  "pair.view_only.lead": "Dieser {device} zeigt deine tafs, Braucht dich und das Protokoll. Genehmigen kann er erst, wenn du ihn mit deinem Handy hinzufügst.",
+  "pair.view_only.title": "Nur ansehen",
+  "pair.waiting": "Warten auf dein Handy…"
+}

@@ -9,6 +9,7 @@ import android.text.format.DateUtils
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -30,6 +31,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
@@ -37,6 +39,9 @@ import bot.tafs.app.design.Panel
 import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.kiff.Device
+import bot.tafs.app.kiff.PairQr
+import bot.tafs.app.kiff.Pairing
+import bot.tafs.app.model.ErrorWords
 import java.time.Instant
 import kotlinx.coroutines.launch
 
@@ -48,19 +53,37 @@ private fun lastUsed(device: Device): String {
   return Words.Settings.Devices.lastUsed(DateUtils.getRelativeTimeSpanString(at.toEpochMilli(), now, DateUtils.MINUTE_IN_MILLIS).toString())
 }
 
-/** Settings, Devices: the devices signed in as this person on the account, each with when it was last used, and Sign out for any but this one. */
+/**
+ * Settings, Devices: the devices signed in as this person on the account, each with when it was last used, and Sign out for any
+ * but this one. With [pair], "Add a device" scans a computer's, or a new phone's, QR ([scan]), asks whether the computer shows the same check
+ * code, and on yes pairs it (docs/android-app.md, Pairing a computer).
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (Device) -> Boolean, onClose: () -> Unit) {
+fun DevicesSheet(
+  state: AppState,
+  refresh: suspend () -> Unit,
+  remove: suspend (Device) -> Boolean,
+  onClose: () -> Unit,
+  addDevice: (() -> Unit)? = null,
+  confirmPair: () -> Unit = {},
+  cancelPair: () -> Unit = {},
+) {
   val scope = rememberCoroutineScope()
   var removing by remember { mutableStateOf<Device?>(null) }
+  // The device whose QR was read, while the person compares its code, and what came of it: the model's, so the sheet rebuilt
+  // after Google's scanner or the fingerprint still shows them.
+  val asking = state.pairAsking
+  val pairLine = state.pairLine
+  val pairing = state.pairBusy
   LaunchedEffect(Unit) { refresh() }
   DriveSheet(
     onDismissRequest = onClose,
     sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     containerColor = Theme.background,
   ) {
-    Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
+    // Full height from the first frame, as Connect apps: the list is short, and a half-height sheet left Home showing above it.
+    Column(Modifier.fillMaxSize().navigationBarsPadding().testTag(DEVICES_SHEET)) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(Words.Settings.Devices.title, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
         Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
@@ -70,6 +93,7 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         state.devicesError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
+        pairLine?.let { Panel(Modifier.testTag(PAIR_LINE)) { Text(it, style = scaled(14, color = Theme.ink)) } }
         state.devices.forEach { device ->
           Panel {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -84,6 +108,14 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
               }
             }
           }
+        }
+        if (addDevice != null) {
+          Text(
+            Words.Settings.Devices.pair,
+            style = scaled(15, FontWeight.SemiBold, if (pairing) Theme.dim else Theme.amber),
+            modifier = Modifier.heightIn(min = 44.dp).testTag(PAIR_BUTTON).confirms().tapping(enabled = !pairing, onClick = addDevice)
+              .padding(horizontal = 4.dp, vertical = 10.dp),
+          )
         }
         Text(
           Words.Settings.Devices.note,
@@ -103,4 +135,41 @@ fun DevicesSheet(state: AppState, refresh: suspend () -> Unit, remove: suspend (
       dismissButton = { TextButton(onClick = { removing = null }) { Text(Words.Common.cancel) } },
     )
   }
+  asking?.let { qr ->
+    // The check code, before the fingerprint: a page showing its own QR can't get this phone to pair another key unnoticed.
+    DriveAlert(
+      onDismissRequest = cancelPair,
+      title = { Text(Words.Settings.Devices.pairNamed(device = qr.name)) },
+      text = {
+        // What saying yes gives that computer, before the code: the code protects against a swapped QR only if the person
+        // knows why it matters.
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          Text(pairGives(qr))
+          Text(if (qr.isPhone) Words.Settings.Devices.pairOnlyNowPhone else Words.Settings.Devices.pairOnlyNow)
+          val check = if (qr.isPhone) Words.Settings.Devices.pairCheckPhone(code = qr.checkCode.orEmpty()) else Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty())
+          Text(check, fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag(PAIR_CHECK))
+        }
+      },
+      confirmButton = {
+        TextButton(onClick = confirmPair, modifier = Modifier.confirms()) { Text(Words.Settings.Devices.pairYes, color = Theme.amber) }
+      },
+      dismissButton = { TextButton(onClick = cancelPair) { Text(Words.Common.cancel) } },
+    )
+  }
 }
+
+/** What pairing gives the computer, by what approves on it (§5.1's `kind`). */
+internal fun pairGives(qr: PairQr): String = when {
+  qr.isPhone -> Words.Settings.Devices.pairGivesPhone(device = qr.name)
+  // A computer whose device key is in software never approves: it shows the tafs and sends each approval to this phone.
+  qr.keyStore == "software" -> Words.Settings.Devices.pairGivesView(device = qr.name)
+  // A Windows computer approves with Windows Hello as its own platform passkey (§2.6).
+  qr.kind == "hello" || (qr.kind == "passkey" && qr.credential != null && qr.platform == "windows") -> Words.Settings.Devices.pairGivesHello(device = qr.name)
+  qr.kind == "enclave" -> Words.Settings.Devices.pairGivesEnclave(device = qr.name)
+  else -> Words.Settings.Devices.pairGivesPasskey(device = qr.name)
+}
+
+internal const val DEVICES_SHEET = "devices-sheet"
+internal const val PAIR_BUTTON = "devices.pair"
+internal const val PAIR_CHECK = "devices.pair.check"
+internal const val PAIR_LINE = "devices.pair.line"

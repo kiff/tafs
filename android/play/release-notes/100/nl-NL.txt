@@ -1,0 +1,1 @@
+- Apparaat toevoegen: scan in Account, Apparaten de code van je computer, controleer dat hij dezelfde 6 tekens toont en keur goed met je vingerafdruk.

@@ -538,7 +538,8 @@ answered:
   Pair them, Ignore), then its runs, where its work stands (each request opens step by step) and
   its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`).
 - **Card:** only what's on its Card: the Card, its limits and how they're counted, its usage,
-  Halt and Revoke.
+  Halt and Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
+  that can approve." in Revoke's place ([approvals.md](approvals.md)); the sample keeps its own Revoke.
 
 Who it's shared with (`PeopleWords.sharedWith`) leaves out the person reading: the one KIFF marks
 `you` in its people list, or the one whose email is the account read's, as on iOS. Their own share is
@@ -1003,6 +1004,100 @@ the taf as the person knows them (`ConnectionWords.connectPrompt`, `giveKeyPromp
 Connect apps title for that connection, else planque's vendor name, and the taf's name, else the
 name planque keeps (`agent_name`). It never shows an agent id or a server's slug. With no name for
 the taf, it names the app alone ("Connect Stripe").
+
+## Pairing a computer
+
+Account → Devices → **Add a device** gives a computer, or a new phone or tablet, approval authority on the account, as
+KIFF's pairing contract sets out. Only a phone KIFF holds an approval key for can
+pair one; without it, Devices says approving needs a new sign-in and sends nothing.
+
+1. **The scan.** Google's code scanner (`play-services-code-scanner`) reads the QR in its own
+   screen, so the app asks for no camera permission; the manifest has Play services fetch it as
+   the app installs (`app/PairScan.kt`). Closing the scanner does nothing.
+2. **The QR** is read by `kiff/Pairing.kt` (`PairQr.read`): `kiff.pair.v1`, a device key, a
+   name, a nonce, an expiry, a `kind` of `hello`, `enclave` or `passkey`, and keys that decode as base64url. Anything else, a web address
+   say, says "That QR code isn't a computer asking to be paired." Whether the fields are within
+   KIFF's bounds, the keys P-256, or the expiry still ahead, is KIFF's to say.
+3. **The check code** is the first 6 characters of base32(sha256(device key ‖ approval key)),
+   RFC 4648 with no padding. A computer's own platform passkey (Windows Hello, §2.6), which a
+   `kind: "passkey"` QR carries as `credential {id, public_key}`, takes the approval key's place,
+   so the code covers the passkey the pairing registers; with neither, or for a computer whose device
+   key is in software (`key_store: "software"`), the device key alone. The alert asks
+   "Pair {name}?", says first what yes gives ("{name} will be able to approve your tafs' actions
+   with Windows Hello" for `hello` or a Windows computer's own passkey, Touch ID for `enclave`, a
+   passkey for any other `passkey`), for a computer whose QR
+   says `key_store: "software"`, which never approves, "{name} will show your tafs and send approvals
+   to this phone." in place of what it would approve with,
+   and "Only pair a computer you're using right now.", then "Does your computer show {code}?", with **Yes, pair it** or
+   Cancel. A page showing its own QR shows another code; the code protects only if the person
+   knows what yes gives.
+4. **The approval.** On yes, `POST /v1/me/pairings` carries the QR's fields as they came
+   (`credential` included),
+   signed by the approval key behind a fingerprint that reads "Pair {name}: it can approve actions".
+   The route grants authority (`KiffClient.grantsAuthority`), so it is never signed inside an
+   approval window, which never covers a pairing.
+5. **KIFF's answer.** `201 {pairing: {id, code, expires}}`: Devices shows "{name} is paired. It
+   showed {code}.", and reads the list again. When KIFF's code isn't the one the person checked,
+   it says so instead, and to sign the computer out if it isn't theirs. In the list the computer has Sign out
+   like any other device. A refusal says what didn't go through, in KIFF's `words` when it sends
+   them; until then, the app words its codes: `pairing_expired`, `pairing_used`,
+   `key_registered` and `invalid_pairing` each say to show a new code or that the computer is
+   paired already, and `approval_key_required` that approving needs a new sign-in.
+
+**Signing a device out** (Devices → Sign out on another device) is signed too. Removing a
+device that holds an approval key or a passkey takes an approval at KIFF (KIFF's pairing
+contract), and the phone can't tell which devices do, so `DELETE /v1/me/devices/{id}` is always
+signed by the approval key, behind one fingerprint that names the device ("Sign {device} out of
+your account"), never inside an approval window. A session KIFF holds no approval key for confirms
+on the phone and signs with the device key; KIFF decides, and its `approval_key_required` says
+approving needs a new sign-in. A view-only session (`view_only`) is told "To sign another device out, use a device
+that can approve.", the line every app shares (`settings.devices.signout_needs_approver`). This phone signs itself out with Sign out, unchanged.
+
+**Where it's held.** The QR being asked about, the line that says what came of it, and whether a
+scan or a pairing is under way are the model's (`AppState.pairAsking`, `pairLine`, `pairBusy`), and
+the scan, the alert's Yes and the pairing run in the model's scope (`AppModel.addDevice`,
+`confirmPairing`, `cancelPairing`). The sheet only draws them: torn down and rebuilt as Google's
+scanner or the fingerprint closes, it still shows the line and the alert. On Android 100 they were
+the sheet's own, and a phone showed "That QR code isn't a computer asking to be paired." for a
+moment, then nothing. The line stays until Devices closes.
+
+**The sheet** opens at full height from the first frame, as Connect apps does, and Done goes back to
+Account, where Devices was opened.
+
+Both controls carry the confirm mark: Coach never pairs a computer ([drive.md](drive.md)).
+Tests: `PairingTest` (a fixed check-code vector worked out outside the app, which every
+implementation of §5.2 must give literally: the P-256 keys of private keys 1 and 2 give `H6SJNU`,
+the first alone `LTJFF6`; RFC 4648's base32 vectors; what is read, the signed
+request, the window, each refusal) and `PairComputerTest` (the sheet).
+
+## Signing in with your other phone
+
+A new phone or tablet can be added from a phone that's already signed in, with no browser:
+the sign-in sheet's **Sign in with your other phone** (KIFF's pairing contract for phones; the
+approving side is [Pairing a computer](#pairing-a-computer)).
+
+1. **The offer** (`kiff/Pairing.kt`, `PairOffer.make`): the same `kiff.pair.v1` QR as a computer, with
+   `platform: "android"`, `kind: "keystore"`, `device_kind` (`android_phone` or `android_tablet`),
+   both of this phone's keys, a fresh 32-byte nonce and an expiry 4 minutes 30 seconds ahead, under
+   the contract's 5. The approval key is required, so a phone with no strong biometric can't be
+   paired: it says "This phone can't hold a key, so it can't be paired. Sign in with KIFF instead."
+2. **The screen** (`views/PairSignInView.kt`) draws the QR itself (zxing's encoder, error correction
+   M, dark on white), says how to scan it from the other phone ("Account → Devices → Add a device"),
+   and shows the 6-character code the other phone asks about, then "Waiting for your other phone…".
+   Sign in with KIFF goes back to the browser sign-in; while the QR shows, the browser code isn't
+   asked about.
+3. **The claim** (`AppModel.finishPairSignIn`): `POST /v1/pair/claim` with no session, every 3
+   seconds or more, with the nonce, the device key and a proof: the device key's signature over
+   `kiff.pair.claim.v1`, the nonce and sha256 of the key in hex, made once with no prompt. KIFF
+   answers pending, slow down or expired as the device sign-in does. Once the other phone
+   approves, its answer is used like any sign-in's (`useSession`), and the approval key's check
+   after a sign-in confirms KIFF holds this phone's key.
+4. **An offer that runs out** is replaced by a new one, which says "That code expired, so here's a
+   new one."; anything else KIFF refuses (`invalid_proof`, say) stops with Try again.
+
+Tests: `PairSignInTest` (the shared check-code vector, the claim message, the QR read by the
+approving side's own reader, the drawn QR decoded back, the claim's proof verified, the 3-second
+pace, expiry, a refused proof, a phone with no approval key) and `PairSignInViewTest` (the screen).
 
 ## The calendar
 

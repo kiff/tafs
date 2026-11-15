@@ -1,0 +1,11 @@
+{
+  "about": "GET /v1/tafs/{id}/runs/{session} for a run that ended: its last answer, and its count from the record in the owner's words. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "session": "sess3",
+    "report": {
+      "status": "idle",
+      "text": "Evidence went on the disputes; one waits for you.",
+      "counted": "From the Record — done: 5 · waiting for you: 1 · refused: 2"
+    }
+  }
+}

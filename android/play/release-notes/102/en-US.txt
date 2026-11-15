@@ -1,0 +1,1 @@
+- Devices: on a phone that can't approve, signing another device out says: “To sign another device out, use a device that can approve.”

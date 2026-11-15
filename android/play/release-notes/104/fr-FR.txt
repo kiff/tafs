@@ -1,0 +1,1 @@
+- Sur un téléphone qui ne peut pas approuver, l'onglet de la Card ne propose plus Révoquer. Il indique : « Pour révoquer cette Card, utilisez un appareil qui peut approuver. »

@@ -5,6 +5,8 @@ tafs for iPhone and iPad is SwiftUI, iOS 16 and later. The project is generated:
 page is a map of the code; what each feature does is on its own page
 ([README.md](README.md)).
 
+The same project builds the Mac app, with Mac Catalyst: [mac-app.md](mac-app.md).
+
 ## Targets
 
 | Target | Sources | What it is |
@@ -159,6 +161,7 @@ the app in sample mode.
 | `-screenshots YES` | Sample mode with the screenshots' data |
 | `-tab account \| tafs \| needs-you \| record` | Opens that tab |
 | `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| buy-credits` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
+| `-screen usage \| connect-apps \| devices \| new-taf \| coach` | The iPad reference set's screens over the sample (`ReferenceScreensTests`): `usage` and `connect-apps` select their sidebar item (`Screenshots.sidebarScreen`); `devices`, with `-tab account`, pushes Devices in Account, with Add a device; `new-taf` opens + New's job gallery; `coach` opens Coach mode, empty. Connect apps and the gallery read tafs cloud's answers kept in `Samples/` (`SampleScreens`), and Devices three sample devices, only with `-screenshots YES` over the sample |
 | `-screen calendar \| calendar-week` | Opens Calendar on today, in Day mode, or in Week mode on today's week (the Today pill already today): an iPad's whole-app sidebar selects its Calendar item, the phone opens it as Home's button does; over the sample it reads nothing from tafs cloud. CI's `languages` set shoots both, and the Overview (`-tab tafs`), on the 13-inch iPad in French and Portuguese with `-signedIn YES` (`fr-ipad-calendar-week.png`…) |
 | `-landscape YES` | The iPad's window turned to landscape, for its screenshots |
 | `-signedIn YES` | The iPad's sidebar laid out as for a signed-in account, its screens and Coach above the account, over the sample's tafs: a layout shot, nothing read from KIFF |
@@ -189,6 +192,13 @@ the app in sample mode.
     those being set up. The rest are in the list behind the mascot;
   - **at its foot, always in sight:** Coach, then the account button, which says who is signed in
     and opens Account beside the sidebar.
+  - **the detail pane is the app's cream, edge to edge,** at every width and in split view: the
+    Overview's 980-point column stretches to the pane, and every list in it (Connect apps, an app's
+    connections, a connection, what a Card counted) hides its grey for `screenBackground`;
+  - **the Overview's Needs you** lists the held calls, then, when Needs you counts more (a Coach chat,
+    a step, "Did this happen?", Card units, as tafs cloud's `needs_you.count` does), one line in its
+    words that opens Needs you (`OverviewView.showsRest`). So "Needs you · 3" beside "No tafs yet"
+    still shows what waits.
   
   Each item opens its existing screen beside the sidebar (`HomeSelection`). The app's tab and the
   selection follow each other, so a notification, a drive or a shortcut that opens a tab opens its
@@ -893,6 +903,58 @@ step; `KIFF/TafsCloud+YourStep.swift`, `Views/YourStepCard.swift`, `AppModel.ans
 
 Tests: `TafsTests/YourStepTests.swift`.
 
+## Pairing a computer
+
+Account → Devices → **Add a device** pairs one of the person's computers, or a new phone or tablet
+(§5.8, `isPhone`: `platform` `ios`, `ipados` or `android`), from this phone
+(KIFF's pairing contract §5; `KIFF/Pairing.swift`, `PairComputerView`,
+`AppModel.pairComputer`). The phone holds the approving half; the computer never pairs itself.
+
+- **The scan:** the camera reads the computer's QR. `PairingRequest.read` checks it strictly before
+  anything is shown or signed: `kiff.pair.v1`, no field KIFF doesn't take, `exp` not passed and at
+  most 5 minutes ahead, a known `kind` and `platform`, a usable `name`, a 32-byte nonce, P-256 keys
+  that differ, `approval_pub` exactly for `hello` and `enclave`, `key_store` only `software` (with it, whatever the kind, a `view` device: no approval key and no
+  credential, the code over `pub` alone), and `credential` (the computer's own platform passkey, as Windows pairs with
+  Windows Hello) only for `passkey`, exactly `{id, public_key}`, an id of at most 1023 bytes and a
+  P-256 key that isn't the device key. The body sends it on as read. A code it won't pair is said in words, and the camera keeps reading.
+- **Before the fingerprint:** what pairing gives by kind ("… will be able to approve your tafs'
+  actions with Windows Hello"), or for a computer whose key is in software (`key_store: "software"`,
+  which KIFF pairs view-only) "… will show your tafs and send approvals to this phone" in its place
+  (`pair_gives_view`), "Only pair a computer you're
+  using right now", and "Does your computer show XFI4MD?" with the check code (§5.2, base32 of
+  sha256 over the keys' DER, a passkey's key in the approval key's place; the shared vector `H6SJNU` and `LTJFF6` is asserted literally).
+- **Yes:** the approval key signs `POST /v1/me/pairings` (`kiff.request.v1` over the QR's fields),
+  behind Face ID or Touch ID naming the computer, never inside a window. KIFF's code is said beside
+  the one checked; if they differ, the person is told to sign the computer out if it isn't theirs.
+  A refusal is KIFF's `words`, or the app's own line for its code where KIFF sent none.
+- **Signing a device out:** the approval key signs `DELETE /v1/me/devices/{id}` too, since removing a
+  device that holds an approval key or a passkey is an approval.
+- **A phone or tablet** takes `kind` `enclave` or `keystore` and always an approval key, with
+  `device_kind` sent on as it came; whether a kind matches its platform is KIFF's check
+  (`invalid_pairing`), as on Android. Its alert says what it gets whatever its biometric
+  (`pair_gives_phone`), to add only one in hand now, and asks whether the new phone or tablet shows
+  the code.
+- **Coach** can't start or confirm a pairing: both controls carry the confirm mark.
+- Its lines are tafs#1033's `settings.devices.pair*` keys, shared with Android.
+
+### Signing in from another phone
+
+A new iPhone or iPad gets approval authority the way a computer does (KIFF's pairing contract §5.8;
+`KIFF/PairingOffer.swift`, `PairSignInView`, `AppModel.startPairingSignIn`/`finishPairingSignIn`).
+On the sign-in screen, **Sign in with your other phone**:
+
+- The device shows the `kiff.pair.v1` QR from the keys it already holds: `platform` `ios` or
+  `ipados`, `kind` `enclave`, its approval key, and `device_kind` `iphone` or `ipad`. The Mac build
+  sends `macos` and no `device_kind`, so it pairs as a computer through the same screen. The code
+  lasts 4½ minutes, and an expired one is replaced by a new one.
+- Beside it: how to scan it from the other phone (its Account, Devices and add button, in the app's
+  own words) and the check code that phone will ask about.
+- **The claim:** the device key signs `kiff.pair.claim.v1` (the nonce and the key's sha256) once,
+  behind Face ID or the passcode, and that proof is sent with `POST /v1/pair/claim` at least every
+  3 s until the other phone approves. KIFF's session is then used as a sign-in's is. A device with
+  no Secure Enclave holds no key, so it can't be paired and says to sign in with KIFF instead.
+- Nothing is approved on this device: the other phone approves, behind its own Face ID.
+
 ## Tests and CI
 
 - **Unit tests** (`TafsTests`) sit by feature: `ChatTests`, `WorkLogTests`,
@@ -919,6 +981,13 @@ Tests: `TafsTests/YourStepTests.swift`.
   already passed at an earlier commit with nothing changed since that it tests (the app for
   the unit tests, the screens for the UI tests, the iPad's layout for the iPad's), so an
   upload can go straight to the archive; a tag runs everything.
+- **The upload's profiles** (`ios/scripts/asc-profiles.rb`, through the App Store Connect API):
+  `bot.tafs.app` with Push, Time Sensitive Notifications (turned on once in the developer
+  portal, since the API can't) and Associated Domains, turned on by the script the first time,
+  for `webcredentials:kiff.dev`. kiff.dev's `apple-app-site-association` lists
+  `R54YWFRK4B.bot.tafs.app`, so the app's passkeys are kiff.dev's, at the origin KIFF accepts.
+  A profile made before a capability was on is replaced. Only the upload signs: tests,
+  screenshots and the Mac build don't.
 - **Screenshot runs** are manual runs with `upload` off and `screenshots` set (`full`, `key`
   or `languages`; it's `none` by default). They wait for an empty queue: one stops at once,
   before it takes a macOS runner, while another manual or tag run is queued or running, so

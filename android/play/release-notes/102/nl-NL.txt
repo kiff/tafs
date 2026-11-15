@@ -1,0 +1,1 @@
+- Apparaten: op een telefoon die niet kan goedkeuren, zegt een ander apparaat uitloggen: “Gebruik een apparaat dat kan goedkeuren om een ander apparaat uit te loggen.”

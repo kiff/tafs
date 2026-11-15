@@ -1,0 +1,1 @@
+- **iPhone and iPad:** Account → Devices → Add a device (was Add a computer) also adds a new phone or tablet: scan the code it shows, check it, and approve with Face ID or Touch ID ([ios-app.md](../docs/ios-app.md#pairing-a-computer)).
