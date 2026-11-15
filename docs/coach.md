@@ -219,7 +219,10 @@ then shows its plan. Then, each step behind the owner's yes:
    set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
    itself; and until the answer comes, "Setting up…". A first check that read but didn't find what it named leaves the taf
    on plain timing, at most once an hour, and `check` says so: Coach fixes the check with `taf_dial`. A result whose Card the owner hasn't
-   approved yet (KIFF's `draft_not_ready`) isn't answered at first: it waits, and the taf is made once they
+   approved yet (KIFF's `draft_not_ready`) with no approval card waiting beside it in the same run is answered at
+   once, in the words below: nothing asks the owner for that Card (a redraft shown with no approval of its own), so
+   Coach shows its approval, and the result once the owner approved it. With an approval card waiting beside it, the
+   result isn't answered at first: it waits, and the taf is made once they
    approve, with the next note, chat read or sweep: the sweep tries a waiting hand-over every 5 minutes for
    its first hour, then on the deletions' backoff, so no one need open the app. Each try is logged. Still
    unapproved 15 minutes after the run paused on it, nothing is asking for that Card, so the result is answered in plain words (`{failed: "The
@@ -299,8 +302,8 @@ things (`runtime/src/cloud/approval.ts`):
   that confirms the draft itself (the e2e), and answers with each refusal's reason code, and
   `redraft: true` on a refusal a new draft mends (below).
   The same checks run as the phone reads the chat, before an approval card over a draft is
-  drawn (a connected app's Card alone), with the grants that read has, read with the phone's
-  proof. A refusal a new draft mends (no Card, a vendor name, a tool on no Card or a stray one,
+  drawn (a connected app's Card alone, or the Card signed with added tools or a key, `tools_and_cards` and
+  `key_and_cards`), with the grants that read has, read with the phone's proof. A refusal a new draft mends (no Card, a vendor name, a tool on no Card or a stray one,
   an on-demand app's write let run, a lifetime count or total, a day's total twice, a count on a
   write with an amount limit) goes to Coach
   then, as the card's answer, and the card is drawn answered, never with Approve: the owner

@@ -1,0 +1,2 @@
+- **A Coach result whose Card isn't approved is answered at once when no approval card waits beside it,** so Coach shows the approval instead of a result over an unsigned draft; with one waiting, it waits as before (docs/coach.md).
+- **The chat's read checks a Card signed with added tools or a key too,** before the card is drawn, so a refusal a redraft mends reaches Coach before the owner's tap (docs/coach.md).

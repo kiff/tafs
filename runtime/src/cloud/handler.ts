@@ -3238,14 +3238,17 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     const draft = typeof card.draft === "string" && card.draft ? card.draft : undefined;
     const step = grant && stepFor(grant, { draft, can }, flags);
     if (!step) continue;
-    // A Card alone takes the key KIFF names for its draft: read it, in the same time, or say nothing of the key.
-    const info = step === "cards" && draft
-      ? await within(draftInfo(bearer(event), draft, deps.fetch, deps.kiffBase), SIGNS_READ_MS).catch(() => undefined)
+    // A step that signs the Card (alone, or with the tools or key it covers) reads its draft, in the same time: a Card
+    // alone takes the key KIFF names for it, or nothing is said of the key.
+    const signsCard = step !== "connect" && !!draft;
+    const info = signsCard
+      ? await within(draftInfo(bearer(event), draft!, deps.fetch, deps.kiffBase), SIGNS_READ_MS).catch(() => undefined)
       : undefined;
     const confirmKey = step === "cards" && draft ? (info ? info.confirmKey ?? null : undefined) : null;
-    // Its Cards checked before the card is drawn: a draft Approve would refuse is never shown with Approve.
-    if (step === "cards" && draft && info?.version) {
-      const refused = await precheck(event, me, taf, c, { grant: card.grant, draft, version: info.version }, grants, deps);
+    // Its Cards checked before the card is drawn: a draft Approve would refuse is never shown with Approve. On the
+    // combined steps too (Eval 13's Refunds: the owner approved the tools with the Card, and the Card was then refused).
+    if (signsCard && info?.version) {
+      const refused = await precheck(event, me, taf, c, { grant: card.grant, draft: draft!, version: info.version }, grants, deps);
       if (refused) {
         c.answer = refused;
         continue;
@@ -8360,13 +8363,21 @@ async function waitedForCard(tenant: string, r: Run, card: string, deps: Deps): 
   return now.getTime() - Date.parse(first) >= HANDOVER_CARD_WAIT_MS;
 }
 
+/**
+ * Whether the run waits on an approval card too: the owner may be approving the result's Card on it now, so the result
+ * waits for it (HANDOVER_CARD_WAIT_MS). Any approval card counts, the connection alone too: the Card may come with it.
+ */
+export function approvalWaits(r: Pick<Run, "requirements">): boolean {
+  return (r.requirements ?? []).some((q) => q.kind === "card" && !q.answered && (q.input as { type?: unknown } | undefined)?.type === "approval");
+}
+
 /** How long a result's hand-over holds its card, so a repeat note or a second phone can't make two. */
 const HANDOVER_HELD_MS = 10 * 60_000;
 
 /**
- * A result whose draft KIFF says isn't confirmed: the owner hasn't approved its Card yet. It isn't
- * answered as failed (the owner would read "not set up" while they're still deciding, and Coach would
- * hand it over again); the card waits, and the taf is made once they approve.
+ * A result whose draft KIFF says isn't confirmed: the owner hasn't approved its Card yet. While an approval card waits
+ * beside it, it isn't answered as failed (the owner would read "not set up" while they're still deciding, and Coach
+ * would hand it over again); the card waits, and the taf is made once they approve. With none, it's answered at once.
  */
 class CardNotApproved extends Error {
   constructor() { super(WAITING_FOR_CONFIRMATION); }
@@ -8410,10 +8421,16 @@ async function handOver(tenant: string, agent: string, run: string, deps: Deps):
     }
     const make = card.taf.improves ? improvedVersionFor(tenant, coach.id, r, card.id, { ...card.taf as ImprovedTaf, ...(tools ? { tools } : {}) }, tafs, deps) : newTafFor(tenant, coach.id, r, { ...card.taf, ...(tools ? { tools } : {}) }, tafs, deps);
     const outcome = await make.catch(async (err): Promise<ResultOutcome | undefined> => {
-      // A Card the owner hasn't approved yet is no error: the card waits, and the taf is made once they approve.
+      // A Card the owner is approving is no error: the card waits, and the taf is made once they approve.
       // But not for ever, and never unsaid: past HANDOVER_CARD_WAIT_MS from the first try, nothing is asking
       // for that Card, so the result is answered in plain words and Coach asks for it.
       if (err instanceof CardNotApproved) {
+        // With no approval card waiting beside it, nothing asks the owner for that Card, so it's answered at once and
+        // Coach shows the approval (Eval 13's Refunds: its draft refused, redrafted, then a result with no approval).
+        if (!approvalWaits(r)) {
+          console.log(JSON.stringify({ event: "handover_unconfirmed", run: r.id, card: card.id }));
+          return { failed: cardNeverApproved(card.taf?.name) };
+        }
         if (await waitedForCard(tenant, r, card.id!, deps)) return { failed: cardNeverApproved(card.taf?.name) };
         console.warn(`handover ${r.id} ${card.id}: waiting for the Card's approval (draft ${card.taf?.draft ?? "none"})`);
       } else console.error(`handover ${r.id} ${card.id}: ${(err as Error).message}`);
