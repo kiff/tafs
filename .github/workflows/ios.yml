@@ -398,7 +398,8 @@ jobs:
           # signed-in account has it, in light then dark (ref-<screen>[-dark]). Sample mode: no
           # real account, name or address. A headless simulator keeps the window upright and
           # shows keyboard focus, so the iPad boots with no hardware keyboard and opens in
-          # Simulator.app turned to landscape (the app's -landscape asks the same of its window).
+          # Simulator.app turned to landscape by its device preference (the app's -landscape
+          # asks the same of its window).
           reference_pass() {
             xcrun simctl shutdown "$DEVICE_ID" || true
             DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
@@ -417,23 +418,16 @@ jobs:
             sleep 15
             xcrun simctl status_bar "$DEVICE_ID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
             xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
-            # Landscape check: the first shot's width. Still upright, the Device menu turns it.
-            shoot ref-probe -screenshots YES -signedIn YES -landscape YES -tab tafs
-            wide() { python3 -c 'import struct,sys; b=open(sys.argv[1],"rb").read(24); w,h=struct.unpack(">II",b[16:24]); sys.exit(0 if w>h else 1)' "$1"; }
-            if ! wide "$RUNNER_TEMP/shots/ref-probe.png"; then
-              echo "The iPad is upright after Simulator.app's preference: turning it with Device › Rotate Left."
-              osascript -e 'tell application "Simulator" to activate' \
-                -e 'tell application "System Events" to tell process "Simulator" to click menu item "Rotate Left" of menu "Device" of menu bar 1' \
-                || echo "::warning::Couldn't turn the Simulator with its Device menu."
-              sleep 5
-              shoot ref-probe -screenshots YES -signedIn YES -landscape YES -tab tafs
-              wide "$RUNNER_TEMP/shots/ref-probe.png" || echo "::warning::The iPad reference is still portrait."
-            fi
-            rm -f "$RUNNER_TEMP/shots/ref-probe.png"
             for look in light dark; do
               xcrun simctl ui "$DEVICE_ID" appearance "$look"
               suffix=""; [ "$look" = dark ] && suffix="-dark"
-              ref() { name=$1; shift; shoot "ref-$name$suffix" -screenshots YES -signedIn YES -landscape YES "$@"; }
+              # simctl saves the display as the hardware has it, upright, with the turned
+              # screen on its side: each shot is turned a quarter back (sips turns clockwise).
+              ref() {
+                name=$1; shift
+                shoot "ref-$name$suffix" -screenshots YES -signedIn YES -landscape YES "$@"
+                sips -r 270 "$RUNNER_TEMP/shots/ref-$name$suffix.png" >/dev/null
+              }
               ref overview -tab tafs
               ref needs-you -tab needs-you
               ref record -tab record
