@@ -1,0 +1,1 @@
+- **tafs cloud: a taf makes every call it can in the run it's in.** A taf that typed an id the app didn't know now makes the corrected call before it reports, never "next run", and a run makes every call its work needs before it reports, leaving only what KIFF held or refused, or what it couldn't do.

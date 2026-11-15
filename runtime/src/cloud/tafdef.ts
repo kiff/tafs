@@ -103,8 +103,12 @@ export const CALL_INSTRUCTIONS = `How you make a call under your Card:
 - When the app says an id you typed doesn't exist ("no such", "not found"),
   check it against what you read (the list, your check's items). If you
   mistyped it, make the call once more with the id as you read it, and a new
-  kiff_operation_id: that's a new call, not a retry. Once only: if it still
-  isn't found, or the id was right, report it.`;
+  kiff_operation_id: that's a new call, not a retry. Make it now, in this run,
+  before you report: never leave it for the next run. Once only: if it still
+  isn't found, or the id was right, report it.
+- Do every call this run's work needs before you report. A call you can make
+  now never waits for the next run; report as left only what KIFF held or
+  refused, or what you couldn't do.`;
 
 /**
  * What every run is told about the items its check hands it (kiff/agents schedule/check.go, itemsHead): its work
