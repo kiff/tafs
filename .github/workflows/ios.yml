@@ -40,7 +40,7 @@ on:
         type: boolean
         default: true
       screenshots:
-        description: "Which screenshots: none, full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark) languages (the main screens in each of the eight languages, then the iPad's Overview, Calendar and Week in French and Portuguese) or reference (the iPad reference alone, landscape, light and dark: docs/screenshots/ipad/). A screenshot run waits for an empty queue: it stops if another manual or tag run is queued or running."
+        description: "Which screenshots: none, full (every screen, light, dark, largest text, iPad, landscape), key (a few screens, light and dark) languages (the main screens in each of the eight languages, then the iPad's Overview, Calendar and Week in French and Portuguese) or reference (the iPad reference alone, light and dark, no keyboard focus: docs/screenshots/ipad/). A screenshot run waits for an empty queue: it stops if another manual or tag run is queued or running."
         type: choice
         options: [none, full, key, languages, reference]
         default: none
@@ -394,12 +394,12 @@ jobs:
             xcrun simctl terminate "$DEVICE_ID" bot.tafs.app || true
           }
           # The desktop apps' reference (docs/screenshots.md, iPad reference): each screen the
-          # app opens by launch argument on the 13-inch iPad, landscape, with the sidebar as a
+          # app opens by launch argument on the 13-inch iPad, with the sidebar as a
           # signed-in account has it, in light then dark (ref-<screen>[-dark]). Sample mode: no
-          # real account, name or address. A headless simulator keeps the window upright and
-          # shows keyboard focus, so the iPad boots with no hardware keyboard and opens in
-          # Simulator.app turned to landscape by its device preference (the app's -landscape
-          # asks the same of its window).
+          # real account, name or address. A headless simulator draws keyboard focus (an orange
+          # box on the selected sidebar item), so the iPad boots with no hardware keyboard, in
+          # Simulator.app. The shots are portrait: neither the app's -landscape nor the
+          # Simulator's orientation preference turns the device here.
           reference_pass() {
             xcrun simctl shutdown "$DEVICE_ID" || true
             DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
@@ -411,7 +411,7 @@ jobs:
           ')
             defaults write com.apple.iphonesimulator ConnectHardwareKeyboard -bool false
             defaults write com.apple.iphonesimulator DevicePreferences -dict-add "$DEVICE_ID" \
-              '<dict><key>ConnectHardwareKeyboard</key><false/><key>SimulatorWindowOrientation</key><string>LandscapeLeft</string><key>SimulatorWindowRotationAngle</key><real>90</real></dict>'
+              '<dict><key>ConnectHardwareKeyboard</key><false/></dict>'
             xcrun simctl boot "$DEVICE_ID" || true
             xcrun simctl bootstatus "$DEVICE_ID" -b
             open -a Simulator --args -CurrentDeviceUDID "$DEVICE_ID"
@@ -421,13 +421,7 @@ jobs:
             for look in light dark; do
               xcrun simctl ui "$DEVICE_ID" appearance "$look"
               suffix=""; [ "$look" = dark ] && suffix="-dark"
-              # simctl saves the display as the hardware has it, upright, with the turned
-              # screen on its side: each shot is turned a quarter back (sips turns clockwise).
-              ref() {
-                name=$1; shift
-                shoot "ref-$name$suffix" -screenshots YES -signedIn YES -landscape YES "$@"
-                sips -r 270 "$RUNNER_TEMP/shots/ref-$name$suffix.png" >/dev/null
-              }
+              ref() { local screen=$1; shift; shoot "ref-$screen$suffix" -screenshots YES -signedIn YES "$@"; }
               ref overview -tab tafs
               ref needs-you -tab needs-you
               ref record -tab record
