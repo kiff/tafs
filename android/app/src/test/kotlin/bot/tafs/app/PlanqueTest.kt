@@ -25,6 +25,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -32,6 +35,25 @@ import org.junit.Test
 
 /** Canonical JSON, the signed requests planque takes, and approving what Coach proposes. A fake planque, KIFF and tafs cloud stand in. */
 class PlanqueTest {
+  // A live test: the owner saw "no coincide", and logcat had nothing. One line per mismatch, saying which way it failed, with
+  // its status and digest_v only: nothing that names the grant, the account or the words.
+  @Test fun aDigestMismatchIsLoggedWithItsCauseStatusAndVersionOnly() {
+    val p = { s: String -> kotlinx.serialization.json.JsonPrimitive(s) }
+    val request = kotlinx.serialization.json.buildJsonObject { put("agent", p("refunds")) }
+    val v2 = { extra: Map<String, kotlinx.serialization.json.JsonElement> -> kotlinx.serialization.json.JsonObject(mapOf("request" to request, "digest_v" to p("2")) + extra) }
+    assertEquals("not in the list as sent", PlanqueClient.mismatchCause(null, null))
+    assertEquals("no request", PlanqueClient.mismatchCause(kotlinx.serialization.json.JsonObject(mapOf("id" to p("g1"))), null))
+    assertEquals("v2 without its words or language", PlanqueClient.mismatchCause(v2(mapOf("lang" to p("es"))), null))
+    assertEquals("a digest_v the app doesn't know", PlanqueClient.mismatchCause(kotlinx.serialization.json.JsonObject(mapOf("request" to request, "digest_v" to p("3"))), null))
+    assertEquals("the hash differs", PlanqueClient.mismatchCause(kotlinx.serialization.json.JsonObject(mapOf("request" to request)), request))
+    assertEquals("grant digest doesn't match: the hash differs; status approved, digest_v 1", PlanqueClient.mismatchLine("approved", null, "the hash differs"))
+    assertEquals("grant digest doesn't match: no request; status pending, digest_v 2",
+      PlanqueClient.mismatchLine("pending", kotlinx.serialization.json.JsonPrimitive(2), "no request"))
+    // Anything that isn't a plain status or version is never echoed.
+    assertEquals("grant digest doesn't match: the hash differs; status unknown, digest_v unknown",
+      PlanqueClient.mismatchLine("g_123 acme@example.com", p("2; g_123"), "the hash differs"))
+  }
+
   private val transport = FakeTransport()
   private val secrets = InMemorySecretStore()
   private val auth = FakeAuthenticator()
@@ -168,6 +190,27 @@ class PlanqueTest {
     assertEquals("mcp.stripe.com", ok.vendor)
     assertEquals(listOf("Refund a payment", "list charges"), ok.request.tools.map { it.words })
     assertTrue(ok.request.tools.all { it.tafs })
+  }
+
+  // A review of the digest check: each grant's bytes were found by its id, the first entry with it. With two entries under one id
+  // (request A, then request B carrying A's digest), B was shown as B and marked matching from A's bytes, so its Approve signed
+  // A's digest while the person read B. Each grant is checked against its own entry, by its place; an id that repeats matches nothing.
+  @Test fun aGrantIsCheckedAgainstItsOwnEntryNeverAnotherWithItsId() = runTest {
+    val other = request.replace("create_refund_repg", "create_refund_other")
+    val b = """{"id":"g1","status":"pending","text":"Connect Stripe: something else.","digest":"$digest","request":$other,"events":[]}"""
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("g1")},$b]}""")
+    val (first, second) = planque().grants()
+    assertEquals(listOf("create_refund_repg", "create_refund_other"), listOf(first, second).map { it.request.tools.first().name })
+    assertFalse("the shown request B never matches from A's bytes", second.digestMatches)
+    assertFalse("an id that repeats matches nothing", first.digestMatches)
+    // Paired by place: an entry under another id, or a list of another length, gives none.
+    val g = { id: String -> kotlinx.serialization.json.JsonObject(mapOf("id" to kotlinx.serialization.json.JsonPrimitive(id))) }
+    assertEquals(listOf(g("g1"), g("g2")), PlanqueClient.pairedRaws(listOf("g1", "g2"), listOf(g("g1"), g("g2"))))
+    assertEquals(listOf(null, null), PlanqueClient.pairedRaws(listOf("g1", "g2"), listOf(g("g2"), g("g1"))))
+    assertEquals(listOf(null, null), PlanqueClient.pairedRaws(listOf("g1", "g2"), listOf(g("g1"))))
+    assertEquals(listOf(null, null, g("g2")), PlanqueClient.pairedRaws(listOf("g1", "g1", "g2"), listOf(g("g1"), g("g1"), g("g2"))))
+    assertEquals("an id repeated in the list", PlanqueClient.unpairedCause(listOf("g1", "g1"), listOf(g("g1"), g("g1")), 1))
+    assertEquals("not in the list as sent", PlanqueClient.unpairedCause(listOf("g1", "g2"), listOf(g("g1")), 0))
   }
 
   @Test fun aRequestTheAppCannotCanonicalizeIsNeverApproved() = runTest {
@@ -844,6 +887,38 @@ class PlanqueTest {
     assertNull("the signer a confirmed step set is gone", m.state.value.connecting)
   }
 
+  // Open again on an approval card (tafs cloud's asked call): the page given up is reported to no one, and the card's approval
+  // runs again, asking tafs cloud once more; planque, holding the sign-in, answers signed_in, and that is what's reported.
+  @Test fun openAgainOnAnApprovalCardReportsOnlyTheApprovalThatRanAgain() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant()}]}""")
+    transport.answer(askRoute, 200, signConnect())
+    transport.answer(approve, 200, """{"status":"approved","sign_in_url":"https://mcp.stripe.com/oauth?x=1"}""")
+    transport.answer(approve, 200, """{"status":"signed_in","confirm":"c0de"}""")
+    transport.answer(confirm, 200, grant("g1", "connected"))
+    transport.answer(reportRoute, 200, """{"outcome":"answered","answer":"approved","session":"s1","run":"r1"}""")
+    var waiting = kotlinx.coroutines.CompletableDeferred<String>()
+    val signIn = object : bot.tafs.app.kiff.VendorSignIn {
+      override suspend fun signIn(url: String): String { waiting = kotlinx.coroutines.CompletableDeferred(); return waiting.await() }
+      override fun replace() { waiting.completeExceptionally(bot.tafs.app.kiff.VendorSignInReplaced()) }
+    }
+    val m = model(signIn, scope = backgroundScope)
+    coachWithCard(m)
+    transport.answer("GET /v1/tafs/setup_1/conversation", 200, """{"messages":[],"components":[]}""")
+    m.startApproval(approvalComponent(), digest, null)
+    runCurrent()
+    assertEquals(1, transport.requestsTo(approve).size)
+    assertTrue(transport.requestsTo(reportRoute).isEmpty())
+    m.reopenSignIn()
+    repeat(20) { advanceTimeBy(100); runCurrent() }
+    assertEquals(2, transport.requestsTo(askRoute).size)
+    assertEquals(2, transport.requestsTo(approve).size)
+    assertEquals("c0de", bodyOf(transport.requestsTo(confirm).single()).getValue("confirm").jsonPrimitive.content)
+    assertEquals("connected", bodyOf(transport.requestsTo(reportRoute).single()).getValue("result").jsonPrimitive.content)
+    assertNull(m.state.value.coachNotes["a1"])
+    assertNull(m.state.value.connecting)
+  }
+
   @Test fun whatTafsCloudAnsweredItselfIsOnlyShownAndNothingIsSigned() = runTest {
     reads()
     transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")
@@ -1508,6 +1583,30 @@ class PlanqueTest {
     auth.confirms = false
     assertFalse(m.disconnect("g1"))
     assertEquals(1, transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").size)
+  }
+
+  // A live test: while a removal was on its way, Connect apps still said "Connected ✓". The removal is the state's, from the
+  // fingerprint until the list was read again, so its app and its row say "Removing access…"; no second removal starts.
+  @Test fun aRemovalOnItsWayIsTheStatesUntilTheListIsReadAgain() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")
+    transport.answer("DELETE /v1/accounts/t_01/grants/g1", 200, grant("g1", "disconnected"))
+    val m = model()
+    m.refreshConnections()
+    assertNull(m.state.value.disconnecting)
+    transport.hold("DELETE /v1/accounts/t_01/grants/g1")
+    val removal = async { m.disconnect("g1") }
+    runCurrent()
+    assertEquals("g1", m.state.value.disconnecting)
+    assertFalse("one removal at a time", m.disconnect("g1"))
+    transport.release("DELETE /v1/accounts/t_01/grants/g1")
+    assertTrue(removal.await())
+    assertNull(m.state.value.disconnecting)
+    assertEquals(1, transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").size)
+    // A fingerprint refused: no removal, and nothing left saying one is on its way.
+    auth.confirms = false
+    assertFalse(m.disconnect("g1"))
+    assertNull(m.state.value.disconnecting)
   }
 
   // MARK: Plain words for ending access (the owner, 12 Nov: "connection" and "disconnect" assume too much)
