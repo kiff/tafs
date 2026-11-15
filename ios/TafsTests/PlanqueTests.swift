@@ -370,7 +370,7 @@ final class PlanqueTests: XCTestCase {
         let model = await model(signer: signer, vendor: StubVendor())
         StubProtocol.responses["GET /v1/me/devices"] = (200, #"{"devices":[{"id":"dev_iphone01","this_device":false},{"id":"dev_ipad01","this_device":true}]}"#)
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"dev_ipad01"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"dev_ipad01","kept":true}"#)
         StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
 
         let ready = await model.setUpPlanque()
@@ -419,8 +419,8 @@ final class PlanqueTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
-    /// A 2xx that doesn't say `kept` is planque taking this phone's enrolment: set up, and nothing minted. Only
-    /// `409 needs_key` mints (the rule since 17:20, as Windows and the Mac).
+    /// A 2xx that doesn't say `kept` mints nothing, and isn't taken as set up: it stops and says so, and the next
+    /// Start asks again (as Windows and the Mac). Only `409 needs_key` mints (the rule since 17:20).
     func testATwoHundredWithoutKeptMintsNothing() async throws {
         for answer in [(201, #"{"tenant":"t_01","device":"ab12"}"#), (200, #"{"tenant":"t_01","device":"ab12","kept":false}"#)] {
             let signer = FaceIDSigner()
@@ -430,8 +430,9 @@ final class PlanqueTests: XCTestCase {
             StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
 
             let ready = await model.setUpPlanque()
-            XCTAssertTrue(ready, "\(answer.1): \(model.lastError ?? "")")
-            XCTAssertTrue(model.planqueReady, answer.1)
+            XCTAssertFalse(ready, answer.1)
+            XCTAssertFalse(model.planqueReady, answer.1)
+            XCTAssertEqual(model.lastError, Words.Coach.connectingFailed, answer.1)
             XCTAssertTrue(sent("POST", "api.test", "/v1/keys").isEmpty, "\(answer.1): nothing minted")
             XCTAssertEqual(sent("POST", "planque.test", "/v1/accounts/t_01/enrolment").count, 1, answer.1)
             Keychain.delete(AppModel.planqueAccount)

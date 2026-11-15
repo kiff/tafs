@@ -6267,13 +6267,18 @@ final class AppModel: ObservableObject {
     private func enrolPlanque(tenant: String, gen: Int) async -> Bool {
         // planque's enrolled connector key, while KIFF still takes it, is kept: asked first with no key, it
         // answers `kept`, and no key is minted that would only be left live in KIFF (a phone can't revoke
-        // a connector key). A key is minted only when planque says it needs one (`409 needs_key`). A 2xx is
-        // planque taking this phone's enrolment, `kept` or not: nothing is minted. Any other answer (not
-        // reached, a 5xx, a refused signature, a 400 for a body it couldn't read) mints nothing either: a second
-        // enrolment would likely fail too and leave the key live. It says why, and the next Start asks again.
+        // a connector key). A key is minted only when planque says it needs one (`409 needs_key`). A 2xx that
+        // doesn't say `kept` mints nothing either, and isn't taken as set up: it may mean planque has this phone
+        // but no key, so it stops and says so, as the desktops do, until planque says what it means. Any other
+        // answer (not reached, a 5xx, a refused signature, a 400 for a body it couldn't read) mints nothing: a
+        // second enrolment would likely fail too and leave the key live. It says why, and the next Start asks again.
         do {
-            _ = try await planque.enrol(deviceKey: signer.publicKeyDER, connectorKey: nil)
+            let standing = try await planque.enrol(deviceKey: signer.publicKeyDER, connectorKey: nil)
             guard gen == accountGeneration else { return false }
+            guard standing.kept == true else {
+                lastError = Words.Coach.connectingFailed
+                return false
+            }
             planqueSetUp(for: tenant)
             return true
         } catch PlanqueClient.PlanqueError.needsKey {
