@@ -1,0 +1,63 @@
+import Foundation
+
+/// Your tafs on the wrist, with Halt and Halt all. Kept in memory only, like Needs you.
+@MainActor
+final class TafsModel: ObservableObject {
+    enum State: Equatable {
+        case loading
+        case loaded([WatchTaf])
+        case unreachable
+        case signedOut
+        case failed(String)
+    }
+
+    /// Halt all's key in `halts`.
+    static let all = ""
+
+    @Published private(set) var state: State = .loading
+    /// Each Halt sent from here, by tafs cloud's id for the taf; Halt all under `all`.
+    @Published private(set) var halts: [String: WatchAnswer] = [:]
+    private let phone: PhoneAsking
+    private let clock: () -> Date
+    private var asking = false
+
+    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init) {
+        self.phone = phone
+        self.clock = clock
+    }
+
+    func load() async {
+        guard !asking else { return }
+        asking = true
+        defer { asking = false }
+        if case .loaded = state {} else { state = .loading }
+        guard let reply = await phone.ask(WatchRequest(.tafs, made: clock())) else {
+            state = .unreachable
+            return
+        }
+        switch reply.outcome {
+        case .ok: state = .loaded(reply.tafs ?? [])
+        case .signedOut: state = .signedOut; halts = [:]
+        case .failed: state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
+        case .refused, .stale, .notYet, .answered: state = .unreachable
+        }
+    }
+
+    /// Halts one taf, or with none every taf, through the phone: no Face ID, since it only
+    /// takes authority away. Then reads the list again, so it shows what tafs cloud holds.
+    func halt(_ taf: String?) async {
+        let key = taf ?? Self.all
+        guard halts[key]?.isSending != true else { return }
+        halts[key] = .sending
+        let request = taf.map { WatchRequest(.halt, made: clock(), taf: $0) } ?? WatchRequest(.haltAll, made: clock())
+        let reply = await phone.ask(request)
+        if reply?.outcome == .signedOut { state = .signedOut; halts = [:]; return }
+        halts[key] = WatchAnswer.from(reply)
+        if reply?.outcome == .ok { await load() }
+    }
+
+    func leave() {
+        state = .loading
+        halts = [:]
+    }
+}

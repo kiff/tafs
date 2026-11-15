@@ -13,6 +13,10 @@ final class WatchRelayTests: XCTestCase {
         var signedIn = true
         var reads = 0
         var fails = false
+        var refused: [String] = []
+        var halted: [String?] = []
+        var refuseOutcome = NotificationRefuse.Outcome.refused(left: 0)
+        var haltOutcome = HaltAll.Outcome.done("Halted. Resuming starts only new work.")
         let page: WatchNeedsYou
         init(at: Date) {
             page = WatchNeedsYou(count: 2, calls: [.init(id: "ce_1", taf: "Rae", what: "Refund order 4502, €480.00",
@@ -23,6 +27,21 @@ final class WatchRelayTests: XCTestCase {
             if fails { throw URLError(.notConnectedToInternet) }
             return page
         }
+        func tafs() async throws -> [WatchTaf] {
+            reads += 1
+            if fails { throw URLError(.notConnectedToInternet) }
+            return [WatchTaf(id: "depl_1", name: "Rae", line: "Paused", halted: false)]
+        }
+        func refuse(hold: String, now: Date) async -> NotificationRefuse.Outcome {
+            refused.append(hold)
+            return refuseOutcome
+        }
+        func halt(taf: String?) async -> HaltAll.Outcome {
+            halted.append(taf)
+            return haltOutcome
+        }
+        /// Nothing was read, refused or halted.
+        var untouched: Bool { reads == 0 && refused.isEmpty && halted.isEmpty }
     }
 
     private func send(_ request: WatchRequest, reading: Reading) async -> WatchReply {
@@ -51,7 +70,7 @@ final class WatchRelayTests: XCTestCase {
             let reply = await raw(#"{"kind":"\#(kind)","made":\#(made),"hold":"ce_1"}"#, reading: reading)
             XCTAssertEqual(reply, WatchReply(.refused), kind)
         }
-        XCTAssertEqual(reading.reads, 0)
+        XCTAssertTrue(reading.untouched)
     }
 
     func testAnUnknownKindOrMalformedBytesAreRefused() async {
@@ -61,7 +80,7 @@ final class WatchRelayTests: XCTestCase {
             let reply = await raw(bytes, reading: reading)
             XCTAssertEqual(reply, WatchReply(.refused), bytes)
         }
-        XCTAssertEqual(reading.reads, 0)
+        XCTAssertTrue(reading.untouched)
     }
 
     func testARequestMissingWhatItNamesIsRefused() async {
@@ -71,7 +90,7 @@ final class WatchRelayTests: XCTestCase {
             let reply = await send(request, reading: reading)
             XCTAssertEqual(reply, WatchReply(.refused), "\(request.kind)")
         }
-        XCTAssertEqual(reading.reads, 0)
+        XCTAssertTrue(reading.untouched)
     }
 
     func testOnlyALiveRequestIsAnswered() async {
@@ -82,7 +101,7 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(lateRead, WatchReply(.stale))
         let ahead = await send(WatchRequest(.needsYou, made: now.addingTimeInterval(31)), reading: reading)
         XCTAssertEqual(ahead, WatchReply(.stale), "nor one from ahead of the phone's clock")
-        XCTAssertEqual(reading.reads, 0)
+        XCTAssertTrue(reading.untouched)
         let justInTime = await send(WatchRequest(.needsYou, made: now.addingTimeInterval(-29)), reading: reading)
         XCTAssertEqual(justInTime.outcome, .ok)
     }
@@ -93,7 +112,7 @@ final class WatchRelayTests: XCTestCase {
         let reply = await send(WatchRequest(.needsYou, made: now), reading: reading)
         XCTAssertEqual(reply, WatchReply(.signedOut))
         XCTAssertNil(reply.needsYou)
-        XCTAssertEqual(reading.reads, 0)
+        XCTAssertTrue(reading.untouched)
     }
 
     func testAReadThatFailsSaysSoInThePhonesWords() async {
@@ -103,15 +122,45 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(reply, WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff))
     }
 
-    func testRefuseHaltAndCoachAreNotAnsweredFromTheWatchYet() async {
+    func testCoachIsNotAnsweredFromTheWatchYet() async {
         let reading = Reading(at: now)
-        for request in [WatchRequest(.refuse, made: now, hold: "ce_1"), WatchRequest(.halt, made: now, taf: "depl_1"),
-                        WatchRequest(.haltAll, made: now), WatchRequest(.tafs, made: now),
-                        WatchRequest(.coach, made: now, text: "Pause Rae")] {
-            let reply = await send(request, reading: reading)
-            XCTAssertEqual(reply, WatchReply(.notYet), "\(request.kind)")
-        }
-        XCTAssertEqual(reading.reads, 0)
+        let reply = await send(WatchRequest(.coach, made: now, text: "Pause Rae"), reading: reading)
+        XCTAssertEqual(reply, WatchReply(.notYet))
+        XCTAssertTrue(reading.untouched)
+    }
+
+    func testRefuseNamesItsHoldAndSaysWhatKIFFDid() async {
+        let reading = Reading(at: now)
+        let refused = await send(WatchRequest(.refuse, made: now, hold: "ce_1"), reading: reading)
+        XCTAssertEqual(refused, WatchReply(.ok, line: Words.Watch.refused))
+        XCTAssertEqual(reading.refused, ["ce_1"])
+        reading.refuseOutcome = .gone
+        let gone = await send(WatchRequest(.refuse, made: now, hold: "ce_1"), reading: reading)
+        XCTAssertEqual(gone, WatchReply(.answered, line: Words.Watch.alreadyAnswered))
+        reading.refuseOutcome = .needsApp(Words.Alert.kiffDidNotTakeRefusal)
+        let failed = await send(WatchRequest(.refuse, made: now, hold: "ce_1"), reading: reading)
+        XCTAssertEqual(failed, WatchReply(.failed, line: Words.Alert.kiffDidNotTakeRefusal))
+        XCTAssertTrue(reading.halted.isEmpty)
+    }
+
+    func testHaltNamesItsTafAndHaltAllNone() async {
+        let reading = Reading(at: now)
+        let one = await send(WatchRequest(.halt, made: now, taf: "depl_1"), reading: reading)
+        XCTAssertEqual(one, WatchReply(.ok, line: "Halted. Resuming starts only new work."))
+        // A Halt all naming a taf still halts everything it says: never a taf in its place.
+        _ = await send(WatchRequest(.haltAll, made: now, taf: "depl_1"), reading: reading)
+        XCTAssertEqual(reading.halted, ["depl_1", nil])
+        reading.haltOutcome = .needsApp(Words.HaltAll.running)
+        let failed = await send(WatchRequest(.haltAll, made: now), reading: reading)
+        XCTAssertEqual(failed, WatchReply(.failed, line: Words.HaltAll.running))
+        XCTAssertTrue(reading.refused.isEmpty)
+    }
+
+    func testYourTafsAreRead() async {
+        let reading = Reading(at: now)
+        let reply = await send(WatchRequest(.tafs, made: now), reading: reading)
+        XCTAssertEqual(reply.outcome, .ok)
+        XCTAssertEqual(reply.tafs?.map(\.id), ["depl_1"])
     }
 
     // MARK: The reads, with the session the app keeps
@@ -141,13 +190,88 @@ final class WatchRelayTests: XCTestCase {
                 TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "dev_token", session: session))
     }
 
+    /// Signs with the current key only. Anything that would use the approval key, or ask for
+    /// Face ID, fails the test: nothing from the wrist grants authority.
+    private final class CurrentKeyOnly: ApprovalSigning {
+        var signed: [String] = []
+        var publicKeyDER: Data { Data([0x30, 0x59, 0x01]) }
+        var approvalPublicKeyDER: Data { Data([0x30, 0x59, 0x02]) }
+        func signConfirmed(_ message: Data) throws -> String {
+            signed.append(String(decoding: message, as: UTF8.self))
+            return "signature"
+        }
+        func sign(_ message: Data, reason: String) async throws -> String {
+            XCTFail("the watch's path asked for Face ID"); throw ApprovalSigner.SignerError.notAuthenticated
+        }
+        func sign(_ message: Data, reason: String, grants: Bool) async throws -> String {
+            XCTFail("the watch's path asked to grant"); throw ApprovalSigner.SignerError.notAuthenticated
+        }
+        func signApproval(_ message: Data, reason: String) async throws -> String {
+            XCTFail("the watch's path used the approval key"); throw ApprovalSigner.SignerError.notAuthenticated
+        }
+        func signApprovalConfirmed(_ message: Data) throws -> String {
+            XCTFail("the watch's path used the approval key"); throw ApprovalSigner.SignerError.notAuthenticated
+        }
+        func allowUnlockReuse() { XCTFail("the watch's path reused an unlock") }
+    }
+
+    private func kept(_ signer: ApprovalSigning) -> KeptWatchReading {
+        let (kiff, cloud) = clients()
+        StubProtocol.responses["POST /v1/me/card-exceptions/ce_1/reject"] = (200, #"{"id":"ce_1"}"#)
+        return KeptWatchReading(kiff: kiff, cloud: cloud, signer: signer, tenant: "t1", keyed: true, wait: {})
+    }
+
+    private func sent(_ method: String, _ path: String) -> [URLRequest] {
+        StubProtocol.sent.filter { $0.httpMethod == method && $0.url?.path == path }
+    }
+
+    func testRefuseFromTheWristIsTheNotificationsSignedRefusalWithTheCurrentKey() async {
+        let signer = CurrentKeyOnly()
+        let outcome = await kept(signer).refuse(hold: "ce_1", now: now)
+        XCTAssertEqual(outcome, .refused(left: 1))
+        XCTAssertEqual(sent("POST", "/v1/me/card-exceptions/ce_1/reject").count, 1)
+        XCTAssertEqual(signer.signed.count, 1)
+        XCTAssertTrue(signer.signed[0].contains("ce_1"), "it signs that hold's refusal")
+    }
+
+    func testAHoldAlreadyAnsweredIsNotRefusedAgain() async {
+        let signer = CurrentKeyOnly()
+        let outcome = await kept(signer).refuse(hold: "ce_9", now: now)
+        XCTAssertEqual(outcome, .gone)
+        XCTAssertTrue(StubProtocol.sent.allSatisfy { $0.httpMethod == "GET" }, "no second call to KIFF")
+        XCTAssertTrue(signer.signed.isEmpty, "nothing signed")
+    }
+
+    func testHaltFromTheWristIsTheAppsHaltWithNoSignature() async {
+        let reading = kept(CurrentKeyOnly())
+        let halted = #"{"halt":{"state":"halted","halted_at":"2026-10-24T12:00:00Z","runtime":true,"kiff":true,"planque":true,"account":false,"stopped":1}}"#
+        StubProtocol.responses["POST /v1/tafs/depl_1/halt"] = (200, halted)
+        StubProtocol.responses["POST /v1/halt"] = (200, halted)
+        let one = await reading.halt(taf: "depl_1")
+        XCTAssertEqual(one, .done(Words.Halt.Explain.halted))
+        XCTAssertEqual(sent("POST", "/v1/tafs/depl_1/halt").count, 1)
+        XCTAssertTrue(sent("POST", "/v1/halt").isEmpty, "one taf, not all")
+        _ = await reading.halt(taf: nil)
+        XCTAssertEqual(sent("POST", "/v1/halt").count, 1)
+        XCTAssertTrue(StubProtocol.sent.allSatisfy { $0.value(forHTTPHeaderField: "KIFF-Device-Signature") == nil },
+                      "halting only takes authority away: no signature")
+    }
+
+    func testEachTafWithItsHalt() async throws {
+        let reading = kept(CurrentKeyOnly())
+        StubProtocol.responses["GET /v1/halt"] = (200, #"{"halt":{"state":"running","runtime":false,"kiff":false,"planque":false,"account":false}}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/halt"] = (200, #"{"halt":{"state":"halted","halted_at":"2026-10-24T12:00:00Z","runtime":true,"kiff":true,"planque":true,"account":false,"stopped":1}}"#)
+        let tafs = try await reading.tafs()
+        XCTAssertEqual(tafs, [WatchTaf(id: "depl_1", name: "Rae", line: Words.Taf.State.halted, halted: true)])
+    }
+
     func testTheReadsUseTheSessionTheAppKeeps() {
         XCTAssertEqual(HoldNotification.sessionAccount, AppModel.tokenAccount)
     }
 
     func testEachHeldCallInThePhonesWordsTheSoonestFirst() async throws {
         let (kiff, cloud) = clients()
-        let page = try await KeptWatchReading(kiff: kiff, cloud: cloud).needsYou(now: now)
+        let page = try await KeptWatchReading(kiff: kiff, cloud: cloud, signer: CurrentKeyOnly(), tenant: "t1", keyed: true).needsYou(now: now)
         XCTAssertEqual(page.calls.map(\.id), ["ce_1", "ce_2"], "the soonest to lapse first")
         XCTAssertEqual(page.calls.map(\.taf), [Words.Coach.title, "Rae"], "Coach's own agent is named Coach")
         XCTAssertEqual(page.calls.map { String($0.answerBy.prefix(5)) }, ["19:51", "19:58"], "in the account's zone, Tokyo")
@@ -165,6 +289,6 @@ final class WatchRelayTests: XCTestCase {
 
     func testNoSessionKeptIsSignedOut() {
         let (_, cloud) = clients()
-        XCTAssertFalse(KeptWatchReading(kiff: KIFFClient(), cloud: cloud).signedIn)
+        XCTAssertFalse(KeptWatchReading(kiff: KIFFClient(), cloud: cloud, signer: CurrentKeyOnly(), tenant: nil, keyed: false).signedIn)
     }
 }

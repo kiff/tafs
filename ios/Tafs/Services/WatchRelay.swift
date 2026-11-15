@@ -11,12 +11,19 @@ protocol WatchReading {
     var signedIn: Bool { get }
     /// Needs you: tafs cloud's count, and KIFF's held calls in the phone's words.
     func needsYou(now: Date) async throws -> WatchNeedsYou
+    /// Your tafs, each with its state in one line.
+    func tafs() async throws -> [WatchTaf]
+    /// Refuses a held call as its notification does: signed with the current key, never the
+    /// approval key, and only once KIFF still holds it.
+    func refuse(hold: String, now: Date) async -> NotificationRefuse.Outcome
+    /// Halts a taf, or with none every taf, as the app and Siri do: no Face ID.
+    func halt(taf: String?) async -> HaltAll.Outcome
 }
 
 /// Answers the watch's requests (docs/watch-app.md, "The relay"). It answers only the kinds
 /// `WatchRequest` decodes, only when the request is complete and live, and only while the
-/// phone is signed in: anything else is refused before any read, and nothing here signs.
-/// Refuse, Halt, Halt all and Coach are known and not answered from the watch yet.
+/// phone is signed in: anything else is refused before any read or signature. Only Refuse
+/// signs, with the current key, as from its notification. Coach isn't answered from the watch yet.
 @MainActor
 enum WatchRelay {
     static func answer(_ data: Data, now: Date, reading: WatchReading) async -> WatchReply {
@@ -33,7 +40,24 @@ enum WatchRelay {
             } catch {
                 return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
             }
-        case .tafs, .refuse, .halt, .haltAll, .coach:
+        case .tafs:
+            do {
+                return WatchReply(.ok, tafs: try await reading.tafs())
+            } catch {
+                return WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff)
+            }
+        case .refuse:
+            switch await reading.refuse(hold: request.hold ?? "", now: now) {
+            case .refused: return WatchReply(.ok, line: Words.Watch.refused)
+            case .gone: return WatchReply(.answered, line: Words.Watch.alreadyAnswered)
+            case .needsApp(let why): return WatchReply(.failed, line: why)
+            }
+        case .halt, .haltAll:
+            switch await reading.halt(taf: request.kind == .haltAll ? nil : request.taf) {
+            case .done(let said): return WatchReply(.ok, line: said)
+            case .needsApp(let said): return WatchReply(.failed, line: said)
+            }
+        case .coach:
             return WatchReply(.notYet)
         }
     }
@@ -45,17 +69,28 @@ enum WatchRelay {
 struct KeptWatchReading: WatchReading {
     let kiff: KIFFClient
     let cloud: TafsCloud
+    let signer: ApprovalSigning
+    let tenant: String?
+    let keyed: Bool
+    /// Between two reads of a halt still halting.
+    let wait: () async -> Void
 
     init() {
         let token = Keychain.load(HoldNotification.sessionAccount)
         let kiff = KIFFClient()
         kiff.token = token
-        self.init(kiff: kiff, cloud: TafsCloud(token: token))
+        self.init(kiff: kiff, cloud: TafsCloud(token: token), signer: ApprovalSigner(),
+                  tenant: Keychain.load(AppModel.tenantAccount), keyed: Keychain.load(AppModel.keyedAccount) == "1")
     }
 
-    init(kiff: KIFFClient, cloud: TafsCloud) {
+    init(kiff: KIFFClient, cloud: TafsCloud, signer: ApprovalSigning, tenant: String?, keyed: Bool,
+         wait: @escaping () async -> Void = { try? await Task.sleep(nanoseconds: 1_000_000_000) }) {
         self.kiff = kiff
         self.cloud = cloud
+        self.signer = signer
+        self.tenant = tenant
+        self.keyed = keyed
+        self.wait = wait
     }
 
     var signedIn: Bool { kiff.token != nil }
@@ -80,6 +115,46 @@ struct KeptWatchReading: WatchReading {
             }
         let count = await home?.needsYou?.count ?? calls.count
         return WatchNeedsYou(count: max(count, calls.count), calls: calls, at: now)
+    }
+
+    /// Each taf with its state: halted with the account, or on its own, then paused, then its
+    /// next run as tafs cloud words it.
+    func tafs() async throws -> [WatchTaf] {
+        let listed = try await cloud.tafs()
+        let all = try? await cloud.halted(nil)
+        var tafs: [WatchTaf] = []
+        for taf in listed {
+            let halt = all?.state == .running ? (try? await cloud.halted(taf.id)) : all
+            let line: String?
+            switch halt?.state {
+            case .halted: line = Words.Taf.State.halted
+            case .halting: line = Words.Taf.Halt.halting
+            case .running, nil: line = taf.paused ? Words.Taf.State.paused : taf.nextRunWords
+            }
+            tafs.append(WatchTaf(id: taf.id, name: taf.name, line: line, halted: halt.map { $0.state != .running } ?? false))
+        }
+        return tafs
+    }
+
+    /// `NotificationRefuse.refuseKept`, answering the watch: the same signed refusal, then the
+    /// lock screen in step. The phone posts no notification of its own: the watch says why.
+    func refuse(hold: String, now: Date) async -> NotificationRefuse.Outcome {
+        let outcome = await NotificationRefuse.refuse(hold: hold, kiff: kiff, signer: signer, tenant: tenant, keyed: keyed, now: now)
+        switch outcome {
+        case .refused(let left):
+            PushDelegate.removeAlerts(forHold: hold)
+            if left == 0 { await LockScreen.endActivities() }
+        case .gone:
+            PushDelegate.removeAlerts(forHold: hold)
+        case .needsApp:
+            break
+        }
+        return outcome
+    }
+
+    func halt(taf: String?) async -> HaltAll.Outcome {
+        guard let taf else { return await HaltAll.run(cloud: cloud, wait: wait) }
+        return await HaltAll.runOne(taf, cloud: cloud, wait: wait)
     }
 }
 
