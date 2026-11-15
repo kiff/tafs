@@ -10,8 +10,9 @@ name: Mac installer certificate
 # uploaded: this repository is public, so its logs and artifacts are too.
 #
 # It runs from main only, in the `mac-signing` environment, which an admin must
-# approve each time (set up with a required reviewer before its first run), so
-# nobody with push can mint certificates by running it again. If anything
+# approve each time: made before its first run, with a required reviewer and
+# deployment branches limited to main (a run from another branch runs that
+# branch's copy of this file), so nobody with push can mint certificates. If anything
 # readable ever reaches a log, the certificate is revoked in App Store Connect
 # at once and a new one made.
 

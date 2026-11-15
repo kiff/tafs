@@ -47,6 +47,7 @@ That build is unsigned. The signed one goes to TestFlight (below).
 
 **The installer certificate is made once** (`.github/workflows/mac-installer-cert.yml`). Its private key is made inside that run and leaves it only encrypted to an admin's public key. This repository is public, so its logs and artifacts are too. An admin does each step, on their own machine:
 
+0. **Make the `mac-signing` environment first** (Settings → Environments), with an admin as required reviewer and deployment branches limited to `main`. Without it, GitHub makes the environment unprotected on the first run, and a run from another branch, which runs that branch's copy of the workflow, isn't held to `main`.
 1. **Make an RSA key pair** and keep its private half there:
 
    ```bash
@@ -54,7 +55,7 @@ That build is unsigned. The signed one goes to TestFlight (below).
    openssl rsa -in mac-signing.pem -pubout | base64 | tr -d '\n'
    ```
 
-2. **Run "Mac installer certificate"** from main, with that line as `public_key`. It runs in the `mac-signing` environment, which must have a required reviewer before its first run, so the admin approves it. The run prints the certificate's id and expiry only.
+2. **Run "Mac installer certificate"** from main, with that line as `public_key`. It runs in the `mac-signing` environment, so the admin approves it. The run prints the certificate's id and expiry only.
 3. **Decrypt the artifact and store the two secrets:**
 
    ```bash
