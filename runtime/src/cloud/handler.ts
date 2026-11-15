@@ -3511,6 +3511,13 @@ async function answerRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, compone
   if (body.answer !== "declined" && await shownCard(me, taf, component, "drive", card.session, deps)) {
     throw new HTTPError(400, "a drive is approved with your fingerprint: POST /v1/coach/drive, signed with the approval key");
   }
+  // An approval card is approved only through Approve (POST …/approval), signed and checked: the person answers one
+  // "declined", or "failed: <why>" when their own approval didn't go through, never "approved" or "already approved",
+  // which tafs cloud alone answers after that path. A session alone, a view-only device's too, never makes Coach's
+  // card read "Approved" with nothing signed.
+  if (!personAnswersApproval(body.answer) && await shownCard(me, taf, component, "approval", card.session, deps)) {
+    throw new HTTPError(400, "an approval is approved with your fingerprint, through Approve: answer it only declined, or failed: <why>");
+  }
   try {
     const run = await deps.agents.answerCard(me.tenantID, taf.id, card.run, component, body.answer, member(me));
     return { session: card.session, run: run.id, status: run.status };
@@ -3856,6 +3863,11 @@ async function shownCard(me: KIFFIdentity, taf: Taf, id: string, type: string | 
  * declined, already approved: <why> or failed: <why>, sign_in → signed in, not now or failed: <why>. Undefined
  * for any other text.
  */
+/** The answers a person gives an approval card themselves: "declined", or "failed: <why>". Approving is Approve's alone. */
+export function personAnswersApproval(answer: unknown): boolean {
+  return answer === "declined" || (typeof answer === "string" && answer.startsWith("failed:"));
+}
+
 export function oldFormCard(text: string): { type: string; id: string; answer: unknown } | undefined {
   const m = /^\[([a-z_]+) ([^\]\s]+)\] ([\s\S]+)$/.exec(text);
   if (!m || !ANSWERABLE.includes(m[1]!)) return undefined;
@@ -3872,7 +3884,8 @@ export function oldFormCard(text: string): { type: string; id: string; answer: u
         return undefined;
       }
     case "approval": {
-      const answer = rest === "approved" || rest.startsWith("approved,") ? "approved" : rest === "declined" ? "declined" : rest.startsWith("already approved:") ? rest : failed;
+      // Only what a person answers themselves: "approved" in a message is a message, never the card's answer.
+      const answer = rest === "declined" ? "declined" : failed;
       return answer ? { type, id, answer } : undefined;
     }
     default: {

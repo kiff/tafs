@@ -1,0 +1,1 @@
+- An approval card in Coach's chat reads "Approved" only after Approve's signed, checked path: a person's own answer to one is "declined" or "failed: …", and "approved" or "already approved" from their session is refused, so a view-only device can't make the record say the owner approved.

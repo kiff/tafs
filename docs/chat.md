@@ -321,7 +321,11 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   `{"<question>": {"value"} | {"values"} | {"own"}}`; approval, `declined` from the phone, and
   otherwise what tafs cloud decided ([coach.md](coach.md#approving-tafs-cloud-decides)): `approved`
   only after a signature it checked, `already approved: <vendor> is connected and its Card is
-  confirmed` for a connection and Card approved earlier with their own signature, or `failed: <why>`;
+  confirmed` for a connection and Card approved earlier with their own signature, or `failed: <why>`.
+  From the person, `POST …/components/{id}/answer` on an approval card takes only `declined` or
+  `failed: <why>`; `approved` and `already approved: …` are refused (400), so a session alone, a
+  view-only device's too, never makes the card read "Approved", and the old form's `[approval <id>]
+  approved` goes as a message;
   sign_in, `signed in`, `not now` or `failed: <why>`. The run goes on with it.
 - Writing a message instead while a card waits answers it with those words: the run that
   waits goes on, and no second run starts beside it.
