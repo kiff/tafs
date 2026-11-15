@@ -1,0 +1,18 @@
+{
+  "watch.already_answered": "Już odpowiedziano.",
+  "watch.answer_longer": "Odpowiedź Coacha jest dłuższa. Otwórz ją na telefonie.",
+  "watch.approve_on_phone": "Zatwierdź na telefonie",
+  "watch.asking_phone": "Pytam telefon…",
+  "watch.coach_consent_on_phone": "Coach potrzebuje najpierw Twojej zgody na telefonie.",
+  "watch.held_calls": {
+    "one": "{count} oczekujące wywołanie czeka na Ciebie",
+    "few": "{count} oczekujące wywołania czekają na Ciebie",
+    "many": "{count} oczekujących wywołań czeka na Ciebie",
+    "other": "{count} oczekującego wywołania czeka na Ciebie"
+  },
+  "watch.needs_lock": "Aby odrzucać lub blokować z tego zegarka, ustaw blokadę ekranu i odblokuj go.",
+  "watch.open_on_phone": "Otwórz na telefonie",
+  "watch.phone_not_reachable": "Nie można połączyć się z telefonem. Trzymaj go blisko i spróbuj ponownie.",
+  "watch.sign_in_on_phone": "Najpierw zaloguj się do tafs na telefonie.",
+  "watch.voice_text_only": "Coach dostaje Twoje słowa jako tekst, nigdy Twój głos."
+}

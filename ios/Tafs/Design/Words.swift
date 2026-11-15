@@ -4698,6 +4698,30 @@ enum Words {
         /// What you said stays in the message box, unsent.
         static var whatYouSaidStaysMessage: String { Words.line("voice.what_you_said_stays_message") }
     }
+    enum Watch {
+        /// Already answered.
+        static var alreadyAnswered: String { Words.line("watch.already_answered") }
+        /// Coach's answer is longer. Open it on your phone.
+        static var answerLonger: String { Words.line("watch.answer_longer") }
+        /// Approve on your phone
+        static var approveOnPhone: String { Words.line("watch.approve_on_phone") }
+        /// Asking your phone…
+        static var askingPhone: String { Words.line("watch.asking_phone") }
+        /// Coach needs your yes on your phone first.
+        static var coachConsentOnPhone: String { Words.line("watch.coach_consent_on_phone") }
+        /// {count} held calls need you
+        static func heldCalls(count: Int) -> String { Words.count("watch.held_calls", count) }
+        /// To refuse or halt from this watch, set a screen lock on it and unlock it.
+        static var needsLock: String { Words.line("watch.needs_lock") }
+        /// Open on phone
+        static var openOnPhone: String { Words.line("watch.open_on_phone") }
+        /// Can't reach your phone. Keep it close and try again.
+        static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
+        /// Sign in to tafs on your phone first.
+        static var signInOnPhone: String { Words.line("watch.sign_in_on_phone") }
+        /// Coach gets your words as text, never your voice.
+        static var voiceTextOnly: String { Words.line("watch.voice_text_only") }
+    }
     enum Work {
         /// Answer within
         static var answerWithin: String { Words.line("work.answer_within") }

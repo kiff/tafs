@@ -1,0 +1,16 @@
+{
+  "watch.already_answered": "Ya respondida.",
+  "watch.answer_longer": "La respuesta de Coach es más larga. Ábrela en tu teléfono.",
+  "watch.approve_on_phone": "Aprueba en tu teléfono",
+  "watch.asking_phone": "Preguntando a tu teléfono…",
+  "watch.coach_consent_on_phone": "Coach necesita primero tu sí en tu teléfono.",
+  "watch.held_calls": {
+    "one": "{count} llamada retenida te necesita",
+    "other": "{count} llamadas retenidas te necesitan"
+  },
+  "watch.needs_lock": "Para rechazar o bloquear desde este reloj, pon un bloqueo de pantalla y desbloquéalo.",
+  "watch.open_on_phone": "Abrir en el teléfono",
+  "watch.phone_not_reachable": "No se puede contactar con tu teléfono. Tenlo cerca y vuelve a intentarlo.",
+  "watch.sign_in_on_phone": "Primero inicia sesión en tafs en tu teléfono.",
+  "watch.voice_text_only": "Coach recibe tus palabras como texto, nunca tu voz."
+}

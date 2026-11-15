@@ -2485,6 +2485,22 @@
     <string name="voice_title">Dyktowanie</string>
     <string name="voice_voice_becomes_text_device_not">Twój głos zamienia się w tekst na tym urządzeniu. Nie zostanie wysłany, dopóki go nie wyślesz.</string>
     <string name="voice_what_you_said_stays_message">Podyktowany tekst zostaje w polu wiadomości, niewysłany.</string>
+    <string name="watch_already_answered">Już odpowiedziano.</string>
+    <string name="watch_answer_longer">Odpowiedź Coacha jest dłuższa. Otwórz ją na telefonie.</string>
+    <string name="watch_approve_on_phone">Zatwierdź na telefonie</string>
+    <string name="watch_asking_phone">Pytam telefon…</string>
+    <string name="watch_coach_consent_on_phone">Coach potrzebuje najpierw Twojej zgody na telefonie.</string>
+    <plurals name="watch_held_calls">
+        <item quantity="one">%1$s oczekujące wywołanie czeka na Ciebie</item>
+        <item quantity="few">%1$s oczekujące wywołania czekają na Ciebie</item>
+        <item quantity="many">%1$s oczekujących wywołań czeka na Ciebie</item>
+        <item quantity="other">%1$s oczekującego wywołania czeka na Ciebie</item>
+    </plurals>
+    <string name="watch_needs_lock">Aby odrzucać lub blokować z tego zegarka, ustaw blokadę ekranu i odblokuj go.</string>
+    <string name="watch_open_on_phone">Otwórz na telefonie</string>
+    <string name="watch_phone_not_reachable">Nie można połączyć się z telefonem. Trzymaj go blisko i spróbuj ponownie.</string>
+    <string name="watch_sign_in_on_phone">Najpierw zaloguj się do tafs na telefonie.</string>
+    <string name="watch_voice_text_only">Coach dostaje Twoje słowa jako tekst, nigdy Twój głos.</string>
     <string name="work_answer_within">Odpowiedź w ciągu</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s dzień</item>

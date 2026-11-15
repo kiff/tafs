@@ -1,0 +1,16 @@
+{
+  "watch.already_answered": "Déjà traité.",
+  "watch.answer_longer": "La réponse de Coach est plus longue. Ouvrez-la sur votre téléphone.",
+  "watch.approve_on_phone": "Approuvez sur votre téléphone",
+  "watch.asking_phone": "Demande à votre téléphone…",
+  "watch.coach_consent_on_phone": "Coach a d'abord besoin de votre accord sur votre téléphone.",
+  "watch.held_calls": {
+    "one": "{count} appel retenu vous attend",
+    "other": "{count} appels retenus vous attendent"
+  },
+  "watch.needs_lock": "Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l'écran et déverrouillez-la.",
+  "watch.open_on_phone": "Ouvrir sur le téléphone",
+  "watch.phone_not_reachable": "Votre téléphone est injoignable. Gardez-le à proximité et réessayez.",
+  "watch.sign_in_on_phone": "Connectez-vous d'abord à tafs sur votre téléphone.",
+  "watch.voice_text_only": "Coach reçoit vos mots en texte, jamais votre voix."
+}

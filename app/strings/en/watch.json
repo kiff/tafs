@@ -1,0 +1,16 @@
+{
+  "watch.already_answered": "Already answered.",
+  "watch.answer_longer": "Coach's answer is longer. Open it on your phone.",
+  "watch.approve_on_phone": "Approve on your phone",
+  "watch.asking_phone": "Asking your phone…",
+  "watch.coach_consent_on_phone": "Coach needs your yes on your phone first.",
+  "watch.held_calls": {
+    "one": "{count} held call needs you",
+    "other": "{count} held calls need you"
+  },
+  "watch.needs_lock": "To refuse or halt from this watch, set a screen lock on it and unlock it.",
+  "watch.open_on_phone": "Open on phone",
+  "watch.phone_not_reachable": "Can't reach your phone. Keep it close and try again.",
+  "watch.sign_in_on_phone": "Sign in to tafs on your phone first.",
+  "watch.voice_text_only": "Coach gets your words as text, never your voice."
+}

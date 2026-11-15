@@ -1,0 +1,16 @@
+{
+  "watch.already_answered": "Già risposta.",
+  "watch.answer_longer": "La risposta di Coach è più lunga. Aprila sul telefono.",
+  "watch.approve_on_phone": "Approva sul telefono",
+  "watch.asking_phone": "Chiedo al telefono…",
+  "watch.coach_consent_on_phone": "Coach ha prima bisogno del tuo sì sul telefono.",
+  "watch.held_calls": {
+    "one": "{count} chiamata trattenuta ti aspetta",
+    "other": "{count} chiamate trattenute ti aspettano"
+  },
+  "watch.needs_lock": "Per rifiutare o bloccare da questo orologio, imposta un blocco schermo e sbloccalo.",
+  "watch.open_on_phone": "Apri sul telefono",
+  "watch.phone_not_reachable": "Il telefono non è raggiungibile. Tienilo vicino e riprova.",
+  "watch.sign_in_on_phone": "Prima accedi a tafs sul telefono.",
+  "watch.voice_text_only": "Coach riceve le tue parole come testo, mai la tua voce."
+}
