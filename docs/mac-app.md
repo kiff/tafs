@@ -37,6 +37,23 @@ xcodebuild build -project Tafs.xcodeproj -scheme TafsMac \
 
 The build is unsigned for now. Signing, and the disk image, are set up at release.
 
+## Signing and the sandbox
+
+The Mac build has its own entitlements, `Tafs/TafsMac.entitlements` and `Notify/TafsNotifyMac.entitlements`, set for the Mac SDK only in `ios/project.yml` (`CODE_SIGN_ENTITLEMENTS[sdk=macosx*]`). The iPhone and iPad's stay generated from `project.yml`, unchanged. The Mac's files hold every key the iPhone and iPad's do, and:
+
+| Key | Why |
+|---|---|
+| `com.apple.developer.aps-environment` | push, by its macOS name, in place of iOS's `aps-environment` |
+| `com.apple.security.app-sandbox` | the Mac App Store and TestFlight require it, for the app and its extension |
+| `com.apple.security.network.client` | KIFF, tafs cloud and the vendors' sign-ins |
+| `com.apple.security.device.camera` | the pairing code and a photo for a message |
+| `com.apple.security.device.audio-input` | dictation |
+| `com.apple.security.files.user-selected.read-only` | a file the person picks to attach |
+
+Keychain, `webcredentials:kiff.dev` (passkeys) and time-sensitive notifications are the iPhone's keys, unchanged. The Mac workflow checks that each Mac file holds every key of its iPhone file and has the sandbox and the network on, so a key added for the iPhone and missed for the Mac fails CI.
+
+CI builds the Mac app unsigned, so the sandbox is only ever on in a signed build. Signing is done on another computer, with the Mac's App Store profile; its first signed build is where the sandbox is first tried.
+
 ## What differs from the iPad
 
 - **The device's name.** `ThisDevice` tells KIFF what the device is. A Mac build says `kind` "Mac", `platform` `macos` and KIFF's kind `other`, which is what KIFF records for a computer. The Mac build reports an iPad's model, so the build decides before the model does (`ThisDevice.kind(model:mac:)`).
