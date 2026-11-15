@@ -119,6 +119,7 @@
   "kiff/Planque.kt": {
     "TafsPlanque": "logcat's tag",
     "grant digest doesn't match: $cause; status $st, digest_v $v": "diagnostics, for logcat only: never shown to a person",
+    "a list of another length": "diagnostics, for logcat only: never shown to a person",
     "not in the list as sent": "diagnostics, for logcat only: never shown to a person",
     "no request": "diagnostics, for logcat only: never shown to a person",
     "v2 without its words or language": "diagnostics, for logcat only: never shown to a person",

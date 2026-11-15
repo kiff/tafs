@@ -833,7 +833,8 @@ class CoachStartTest {
     runCurrent()
     assertTrue(m.state.value.grants.none { it.id == "g1" })
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
-    advanceTimeBy(AppModel.SET_UP_READ_MS + 1)
+    // Past the first minute, read 10 s apart.
+    advanceTimeBy(10_000 + 1)
     runCurrent()
     assertTrue(m.state.value.grants.any { it.id == "g1" })
     // Listed: the reads stop.
@@ -851,10 +852,15 @@ class CoachStartTest {
     val m = model(scope = backgroundScope)
     m.loadCoach()
     m.loadChat(COACH_CHAT)
-    assertEquals(10L * 60 * 1000, AppModel.CARD_GRANT_READS * AppModel.SET_UP_READ_MS)
-    advanceTimeBy(AppModel.CARD_GRANT_READS * AppModel.SET_UP_READ_MS + 1)
+    // 3 s apart for the first minute, then 10 s apart: ten minutes in all, 74 reads where 3 s throughout took 200.
+    assertEquals(10L * 60 * 1000, AppModel.CARD_GRANT_READ_DELAYS.sum())
+    assertEquals(74, AppModel.CARD_GRANT_READ_DELAYS.size)
+    assertEquals(60_000L, AppModel.CARD_GRANT_READ_DELAYS.takeWhile { it == 3_000L }.sum())
+    val before = transport.requestsTo("GET /v1/accounts/t_01/grants").size
+    advanceTimeBy(AppModel.CARD_GRANT_READ_DELAYS.sum() + 1)
     runCurrent()
     val read = transport.requestsTo("GET /v1/accounts/t_01/grants").size
+    assertEquals(before + 74, read)
     advanceTimeBy(60_000)
     runCurrent()
     assertEquals(read, transport.requestsTo("GET /v1/accounts/t_01/grants").size)

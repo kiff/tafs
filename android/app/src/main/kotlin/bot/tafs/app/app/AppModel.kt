@@ -3551,14 +3551,15 @@ class AppModel(
     refreshConnections()
     // An open card whose grant planque doesn't list yet: tafs cloud can write the card as the grant is made, and the card would
     // say "Reading what it asks for…" until the chat was opened again (a live test: over a minute, with Coach's run done, so
-    // the thread wasn't read again either). Planque's grants are read again a few seconds apart while such a card waits:
-    // until planque lists its grant or the card is answered, for ten minutes at most from when this phone began reading.
+    // the thread wasn't read again either). Planque's grants are read again while such a card waits, 3 s apart for the first
+    // minute and 10 s apart after (CARD_GRANT_READ_DELAYS): until planque lists its grant or the card is answered, for ten
+    // minutes at most from when this phone began reading.
     val unread = grantsCardsWaitOn(_state.value.coachComponents, _state.value.grants)
       // Marked followed only once a re-read starts: a read planque refused leaves them for the next thread read.
       .takeIf { _state.value.planqueReady }.orEmpty().filter { grantsFollowed.add(it) }
     if (unread.isNotEmpty()) scope.launch {
-      repeat(CARD_GRANT_READS) {
-        delay(SET_UP_READ_MS)
+      for (wait in CARD_GRANT_READ_DELAYS) {
+        delay(wait)
         if (generation != accountGeneration) return@launch
         refreshConnections()
         val s = _state.value
@@ -8139,10 +8140,11 @@ class AppModel(
     const val REPLACE_WAIT_MS = 10_000L
 
     /**
-     * How many times planque's grants are read, [SET_UP_READ_MS] apart, while a card waits on its grant: ten minutes, counted on
-     * this phone (never against the card's time, which is tafs cloud's clock).
+     * How long before each read of planque's grants while a card waits on its grant: 3 s apart for the first minute, when a
+     * grant is most likely to be listed, then 10 s apart, ten minutes in all, counted on this phone (never against the card's
+     * time, which is tafs cloud's clock). 74 signed reads at most, where 3 s throughout took 200.
      */
-    const val CARD_GRANT_READS = 200
+    val CARD_GRANT_READ_DELAYS: List<Long> = List(20) { 3_000L } + List(54) { 10_000L }
 
     /**
      * The grants that an unanswered approval or sign-in card in the thread waits on: planque doesn't list them yet. While one

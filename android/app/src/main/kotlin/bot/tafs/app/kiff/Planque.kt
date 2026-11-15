@@ -614,7 +614,7 @@ class PlanqueClient(
 
     /** Why a grant has no entry to check ([pairedRaws]), in a few fixed words. */
     fun unpairedCause(ids: List<String>, raws: List<JsonElement>, i: Int): String = when {
-      raws.size != ids.size -> "not in the list as sent"
+      raws.size != ids.size -> "a list of another length"
       ids.count { it == ids[i] } > 1 -> "an id repeated in the list"
       else -> "not in the list as sent"
     }
