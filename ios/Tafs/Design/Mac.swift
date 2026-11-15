@@ -31,7 +31,9 @@ struct MacCommands: Commands {
     var body: some Commands {
         CommandGroup(replacing: .newItem) { items(MacMenu.file) }
         CommandGroup(replacing: .appSettings) { items(MacMenu.app) }
-        CommandGroup(before: .sidebar) { items(MacMenu.view) }
+        // Placed before the sidebar's item, the group's items reach the View menu last first
+        // (seen on a Mac with TestFlight build 2), so they're given in reverse.
+        CommandGroup(before: .sidebar) { items(MacMenu.viewInPlacementOrder) }
     }
 
     /// Off while Coach drives the app, as the shortcuts are: a key pressed then isn't a shortcut.
