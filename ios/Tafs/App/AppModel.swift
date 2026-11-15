@@ -264,6 +264,7 @@ final class AppModel: ObservableObject {
     let planque: PlanqueClient
     /// The vendor's sign-in page, opened for a connection the owner approved.
     private let vendorSignIn: VendorSigningIn
+    private let passkeyMaker: PasskeyMaking
     /// The KIFF account this phone signed in to; part of every signed answer.
     var kiffTenant: String?
     /// The KIFF account signed in to, as KIFF says (kiff/tafs#73): what Settings shows.
@@ -467,7 +468,8 @@ final class AppModel: ObservableObject {
          store: SampleStore? = nil,
          remembered: UserDefaults? = nil,
          purchases: Purchases? = nil,
-         clock: @escaping () -> Date = Date.init) {
+         clock: @escaping () -> Date = Date.init,
+         passkeyMaker: PasskeyMaking = PasskeyMaker()) {
         self.purchases = purchases ?? Purchases()
         self.ownerName = ownerName
         self.signer = signer
@@ -475,6 +477,7 @@ final class AppModel: ObservableObject {
         self.cloud = cloud
         self.planque = planque
         self.vendorSignIn = vendorSignIn
+        self.passkeyMaker = passkeyMaker
         self.store = store
         self.remembered = remembered
         self.clock = clock
@@ -1188,6 +1191,116 @@ final class AppModel: ObservableObject {
             return false
         }
         await refreshDevices()
+        return true
+    }
+
+    // MARK: Passkeys
+
+    /// The account's passkeys, as KIFF lists them, and why they couldn't be read.
+    @Published private(set) var passkeys: [KIFFClient.Passkey] = []
+    @Published private(set) var passkeysError: String?
+
+    /// Whether this person may add a passkey to the account: an owner or admin, on a session that approves.
+    var canAddPasskey: Bool {
+        mode == .kiff && sessionHasApprovalKey && !approvalViewOnly && ["owner", "admin"].contains(me?.role ?? "")
+    }
+
+    func refreshPasskeys() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        do {
+            let list = try await kiff.passkeys()
+            guard gen == accountGeneration else { return }
+            passkeys = list
+            passkeysError = nil
+        } catch {
+            guard gen == accountGeneration else { return }
+            passkeysError = "\(error.localizedDescription)"
+        }
+    }
+
+    /// How adding a passkey ended. The view says each in its words.
+    enum PasskeyOutcome: Equatable {
+        case added
+        /// The same passkey is registered already (`409 passkey_registered`): done, not a failure.
+        case alreadyThere
+        /// The person closed the platform's sheet, or cancelled Face ID: nothing was sent.
+        case cancelled
+        /// A name KIFF wouldn't take: 1 to 64 characters.
+        case badName
+        /// Not an owner or admin, or a session that doesn't approve.
+        case notAllowed
+        case failed(String)
+    }
+
+    /// Adds a passkey for the account at kiff.dev (KIFF's pairing contract, "Registering one"). The platform
+    /// makes it, asking Face ID or Touch ID itself. Then this session's approval key signs its registration
+    /// behind Face ID again, saying `reason`, never inside a window, and KIFF checks the creation's own
+    /// bytes. `409 passkey_registered` is the same passkey again: done.
+    func addPasskey(name: String, reason: String) async -> PasskeyOutcome {
+        guard canAddPasskey, let tenant = kiffTenant, let me else { return .notAllowed }
+        guard let named = PasskeyRegistration.name(name) else { return .badName }
+        let gen = accountGeneration
+        let issuedAt = PasskeyRegistration.issuedAt(clock())
+        let made: MadePasskey
+        do {
+            made = try await passkeyMaker.create(challenge: PasskeyRegistration.challenge(tenant: tenant, subject: me.subject, issuedAt: issuedAt),
+                                                 userName: me.email ?? me.subject, userID: PasskeyRegistration.userID(subject: me.subject))
+        } catch PasskeyMaker.MakeError.cancelled {
+            return .cancelled
+        } catch {
+            return .failed("\(error.localizedDescription)")
+        }
+        guard gen == accountGeneration else { return .cancelled }
+        guard let body = PasskeyRegistration.body(name: named, issuedAt: issuedAt, clientDataJSON: made.clientDataJSON,
+                                                  attestationObject: made.attestationObject) else { return .badName }
+        kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let signature: String
+        do {
+            prepared = try kiff.preparePasskeyRegistration(body, signedAt: signedAt)
+            signature = try await signer.signApproval(prepared.message, reason: reason)
+        } catch {
+            return .cancelled
+        }
+        guard gen == accountGeneration else { return .cancelled }
+        do {
+            _ = try await kiff.registerPasskey(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
+        } catch KIFFClient.KIFFError.server(409, _, "passkey_registered") {
+            await refreshPasskeys()
+            return .alreadyThere
+        } catch KIFFClient.KIFFError.server(403, _, _) {
+            return .notAllowed
+        } catch {
+            return .failed("\(error.localizedDescription)")
+        }
+        await refreshPasskeys()
+        return .added
+    }
+
+    /// Removes one of the account's passkeys: the approval key signs it behind Face ID, saying `reason`,
+    /// never the device key alone. A computer's own passkey goes with its computer and isn't removed here.
+    func removePasskey(_ passkey: KIFFClient.Passkey, reason: String) async -> Bool {
+        guard mode == .kiff, let tenant = kiffTenant, passkey.removable, let id = passkey.passkeyID else { return false }
+        let gen = accountGeneration
+        kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let signature: String
+        do {
+            prepared = try kiff.preparePasskeyRemoval(id, signedAt: signedAt)
+            signature = try await signer.signApproval(prepared.message, reason: reason)
+        } catch { return false }
+        guard gen == accountGeneration else { return false }
+        do {
+            try await kiff.removePasskey(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
+        } catch {
+            guard gen == accountGeneration else { return false }
+            passkeysError = "\(error.localizedDescription)"
+            return false
+        }
+        await refreshPasskeys()
         return true
     }
 
