@@ -139,8 +139,8 @@ than the build's commits nothing.
 - **Release notes** live in the repository, one folder per `versionCode`:
   `android/play/release-notes/<versionCode>/<locale>.txt`, for en-US, de-DE, fr-FR, es-ES,
   it-IT, pt-PT, nl-NL and pl-PL, each at most 500 characters. A pull request that raises
-  `versionCode` adds that folder; `test` checks it (`play_internal.py --check`), and the upload
-  refuses a version with none.
+  `versionCode` adds that folder; `test` checks it (`play_internal.py --check`) and fails a
+  version with none, as the upload refuses one (Android 1.29.5; before, `test` passed without them).
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
 it once into the secrets store, and `android/release.sh` builds with it. The app has no native
 code of its own. Its only native libraries are two small ones that AndroidX ships already
@@ -995,8 +995,9 @@ planque's answer, by its place in the list, never by looking its id up (`Planque
 with two entries under one id, the second, shown as its own request, would have been checked against
 the first's bytes. An id that repeats, or an entry under another id, matches nothing, so nothing is
 signed (Android 1.29.4). A mismatch writes one logcat line (tag `TafsPlanque`)
-for each digest: which way it failed (not in the list as sent, no request, a version or v2 words
-the app can't cover, or the hash differs), the grant's status and `digest_v`, never its id, digest
+for each digest: which way it failed (a list of another length, an id repeated, not in the list as
+sent, no request, a version or v2 words the app can't cover, or the hash differs; `unpairedCause`
+tells the first three apart from Android 1.29.5), the grant's status and `digest_v`, never its id, digest
 or words (`PlanqueClient.mismatchCause`, `mismatchLine`, Android 1.29.4).
 
 ## Signing
@@ -1166,11 +1167,12 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
   goes ("Opens Gmail's sign-in", `opensWords`; a service the card names is shown as it is). "The vendor" only when no app is
   known (Android 1.27.10).
 - **An approval card whose grant planque doesn't list yet** ("Reading what it asks for…") reads the grants again, three
-  seconds apart, until planque lists it or the card is answered: tafs cloud can write the card as the grant is made
+  seconds apart for the first minute and ten seconds apart after (`CARD_GRANT_READ_DELAYS`, Android 1.29.5; before, three
+  seconds throughout), until planque lists it or the card is answered: tafs cloud can write the card as the grant is made
   (`readApprovals`, `AppModel.grantsCardsWaitOn`). Before Android 1.27.8, it waited for another tab to read them. Until
   Android 1.29.4 it read them three times only, so a grant planque listed after nine seconds, with Coach's run done, left
-  the card on that line until the chat was opened again. It reads for ten minutes at most (`CARD_GRANT_READS`), counted
-  on the phone.
+  the card on that line until the chat was opened again. It reads for ten minutes at most, 74 reads, counted on the
+  phone.
 - **The approval window's words** ("No fingerprint for the next 4 minutes") and Approve without the fingerprint named
   go only on a card tafs cloud marks a tap (`signs.takes: "tap"`, `windowWordsFor`): a card that takes the fingerprint, or
   says nothing of it, keeps "Approve with fingerprint" and no window line (Android 1.27.9).

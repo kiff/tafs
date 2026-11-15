@@ -22,6 +22,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -68,7 +69,7 @@ class CoachStartTest {
         "card":{"body":$cardBody,"card_title":"Coach","cards":[{"title":"Install a version","lines":["Always asks you"]},{"id":7}]}}"""
   private val coach = """{"id":"setup_1","name":"Coach","kiff_agent":"setup-acme"}"""
 
-  private fun startAnswers(keys: Pair<Int, String> = 200 to """{"plaintext":"kk_connector"}""", enrol: Pair<Int, String> = 200 to """{"tenant":"t_01","device":"ab12"}""") {
+  private fun startAnswers(keys: Pair<Int, String> = 200 to """{"plaintext":"kk_connector"}""", enrol: Pair<Int, String> = 200 to """{"tenant":"t_01","device":"ab12"}""", keyless: Pair<Int, String>? = 409 to """{"error":"no connector key stands for this account","code":"needs_key"}""") {
     // Before the start, no Coach; once started, its tools still to give, read by the start and by the tools panel; once given, given.
     transport.answer("GET /v1/setup", 200, """{"setup":null}""")
     transport.answer("GET /v1/setup", 200, """{"setup":$coach,"tools":$toGive}""")
@@ -77,6 +78,9 @@ class CoachStartTest {
     transport.answer("GET /v1/accounts/t_01/grants", 403, """{"error":"this device is not enrolled"}""")
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[]}""")
     transport.answer("POST /v1/keys", keys.first, keys.second)
+    // Asked first with no key: nothing enrolled yet, so planque needs one; then the minted key goes in.
+    // No keyless answer: the network dropped it.
+    if (keyless == null) transport.drop("POST /v1/accounts/t_01/enrolment") else transport.answer("POST /v1/accounts/t_01/enrolment", keyless.first, keyless.second)
     transport.answer("POST /v1/accounts/t_01/enrolment", enrol.first, enrol.second)
     transport.answer("POST /v1/me/agent-drafts", 200, """{"id":"dr_setup","status":"confirmed","claim_secret":"cs_1"}""")
     transport.answer("POST /v1/setup", 200, """{"setup":$coach}""")
@@ -122,7 +126,9 @@ class CoachStartTest {
     assertTrue(m.state.value.planqueReady)
     assertNull(m.state.value.coachStartError)
     // planque keeps the connector key; the phone keeps nothing of it.
-    val enrol = body("POST /v1/accounts/t_01/enrolment")
+    // Asked first with no key, then the minted one: the phone keeps nothing of it.
+    assertNull(body("POST /v1/accounts/t_01/enrolment").get("connector_key"))
+    val enrol = body("POST /v1/accounts/t_01/enrolment", 1)
     assertEquals("kk_connector", enrol.getValue("connector_key").jsonPrimitive.content)
     assertEquals(java.util.Base64.getEncoder().encodeToString(signer.publicKeyDER), enrol.getValue("device_key").jsonPrimitive.content)
     assertEquals("connector", body("POST /v1/keys").getValue("roles").jsonArray.single().jsonPrimitive.content)
@@ -135,7 +141,7 @@ class CoachStartTest {
     assertEquals("cs_1", setup.getValue("claim_secret").jsonPrimitive.content)
     // Each setup call is signed, under the one confirmation.
     for (key in listOf("POST /v1/keys", "POST /v1/me/agent-drafts")) assertNotNull(key, transport.requestsTo(key).first().headers["KIFF-Device-Signature"])
-    assertNotNull(transport.requestsTo("POST /v1/accounts/t_01/enrolment").single().headers["Planque-Device-Signature"])
+    assertEquals(2, transport.requestsTo("POST /v1/accounts/t_01/enrolment").count { it.headers["Planque-Device-Signature"] != null })
   }
 
   @Test fun coachsToolsAndCardGoToKiffExactlyAsTafsCloudGivesThemOnce() = runTest {
@@ -361,6 +367,70 @@ class CoachStartTest {
     assertEquals(CoachWords.CONNECTING_FAILED, m.state.value.coachStartError)
     assertEquals(bot.tafs.app.app.Mode.kiff, m.state.value.mode)
     assertEquals("at_1", secrets.load(AppModel.TOKEN))
+  }
+
+  /**
+   * The account's enrolled connector key still stands (another device enrolled it): asked first with no key, planque answers
+   * `kept`, and no key is minted, since a phone can't revoke one and a new one would only be left live in KIFF.
+   */
+  @Test fun aKeptEnrolmentMintsNoConnectorKey() = runTest {
+    reads()
+    startAnswers(keyless = 200 to """{"kept":true}""")
+    val m = model()
+    assertTrue(m.startCoach())
+    assertTrue(transport.requestsTo("POST /v1/keys").isEmpty())
+    val enrolment = transport.requestsTo("POST /v1/accounts/t_01/enrolment").single()
+    assertNotNull(enrolment.headers["Planque-Device-Signature"])
+    assertNull(body("POST /v1/accounts/t_01/enrolment").get("connector_key"))
+    assertTrue(m.state.value.planqueReady)
+    assertEquals(listOf("Start Coach"), auth.fingerprints)
+  }
+
+  /** No key stands (`needs_key`), and only then: one key is minted and handed over. */
+  @Test fun withNoStandingKeyOneIsMintedAndHandedOver() = runTest {
+    for (refusal in listOf(409 to """{"error":"no connector key stands for this account","code":"needs_key"}""")) {
+      transport.reset()
+      auth.fingerprints.clear()
+      reads()
+      startAnswers(keyless = refusal)
+      val m = model()
+      assertTrue(m.startCoach())
+      assertEquals(1, transport.requestsTo("POST /v1/keys").size)
+      val keys = transport.requestsTo("POST /v1/accounts/t_01/enrolment").map {
+        KiffClient.json.parseToJsonElement(String(it.body!!)).jsonObject["connector_key"]?.jsonPrimitive?.content
+      }
+      assertEquals(listOf(null, "kk_connector"), keys)
+      assertTrue(m.state.value.planqueReady)
+      assertEquals(listOf("Start Coach"), auth.fingerprints)
+    }
+  }
+
+  /**
+   * Any other answer to the keyless ask mints nothing: planque not reached, a 5xx, a replayed signature, a 400 (a body planque
+   * couldn't read, which an enrolment with a key would fail the same way). A key minted then,
+   * its enrolment failing too, would be left live in KIFF, held by no device. Start says why, and the next Start asks again.
+   */
+  @Test fun aKeylessAskPlanqueDidntAnswerMintsNoKey() = runTest {
+    val answers: List<Pair<Int, String>?> = listOf(
+      null,
+      503 to """{"error":"planque is unavailable"}""",
+      409 to """{"error":"this signature was already used","code":"signature_replayed"}""",
+      400 to """{"error":"the body can't be read"}""",
+    )
+    for (keyless in answers) {
+      transport.reset()
+      reads()
+      startAnswers(keyless = keyless)
+      val m = model()
+      assertFalse("$keyless", m.startCoach())
+      assertTrue("$keyless", transport.requestsTo("POST /v1/keys").isEmpty())
+      val enrolment = transport.requestsTo("POST /v1/accounts/t_01/enrolment").single()
+      assertFalse("$keyless", String(enrolment.body!!).contains("connector_key"))
+      assertFalse(m.state.value.planqueReady)
+      assertNotNull("$keyless", m.state.value.coachStartError)
+      // A coded 409 is planque's why, never "another device", which only a planque that enrolled one phone said (no code).
+      assertNotEquals("$keyless", "Another device connects this account's apps for now. Connect them from that one.", m.state.value.coachStartError)
+    }
   }
 
   // MARK: Hand-overs
@@ -793,7 +863,8 @@ class CoachStartTest {
     runCurrent()
     assertTrue(m.state.value.grants.none { it.id == "g1" })
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("approved")}]}""")
-    advanceTimeBy(AppModel.SET_UP_READ_MS + 1)
+    // Past the first minute, read 10 s apart.
+    advanceTimeBy(10_000 + 1)
     runCurrent()
     assertTrue(m.state.value.grants.any { it.id == "g1" })
     // Listed: the reads stop.
@@ -811,10 +882,15 @@ class CoachStartTest {
     val m = model(scope = backgroundScope)
     m.loadCoach()
     m.loadChat(COACH_CHAT)
-    assertEquals(10L * 60 * 1000, AppModel.CARD_GRANT_READS * AppModel.SET_UP_READ_MS)
-    advanceTimeBy(AppModel.CARD_GRANT_READS * AppModel.SET_UP_READ_MS + 1)
+    // 3 s apart for the first minute, then 10 s apart: ten minutes in all, 74 reads where 3 s throughout took 200.
+    assertEquals(10L * 60 * 1000, AppModel.CARD_GRANT_READ_DELAYS.sum())
+    assertEquals(74, AppModel.CARD_GRANT_READ_DELAYS.size)
+    assertEquals(60_000L, AppModel.CARD_GRANT_READ_DELAYS.takeWhile { it == 3_000L }.sum())
+    val before = transport.requestsTo("GET /v1/accounts/t_01/grants").size
+    advanceTimeBy(AppModel.CARD_GRANT_READ_DELAYS.sum() + 1)
     runCurrent()
     val read = transport.requestsTo("GET /v1/accounts/t_01/grants").size
+    assertEquals(before + 74, read)
     advanceTimeBy(60_000)
     runCurrent()
     assertEquals(read, transport.requestsTo("GET /v1/accounts/t_01/grants").size)

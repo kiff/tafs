@@ -210,7 +210,8 @@ class PlanqueTest {
     assertEquals(listOf(null, null), PlanqueClient.pairedRaws(listOf("g1", "g2"), listOf(g("g1"))))
     assertEquals(listOf(null, null, g("g2")), PlanqueClient.pairedRaws(listOf("g1", "g1", "g2"), listOf(g("g1"), g("g1"), g("g2"))))
     assertEquals("an id repeated in the list", PlanqueClient.unpairedCause(listOf("g1", "g1"), listOf(g("g1"), g("g1")), 1))
-    assertEquals("not in the list as sent", PlanqueClient.unpairedCause(listOf("g1", "g2"), listOf(g("g1")), 0))
+    assertEquals("a list of another length", PlanqueClient.unpairedCause(listOf("g1", "g2"), listOf(g("g1")), 0))
+    assertEquals("not in the list as sent", PlanqueClient.unpairedCause(listOf("g1", "g2"), listOf(g("g1"), g("g3")), 1))
   }
 
   @Test fun aRequestTheAppCannotCanonicalizeIsNeverApproved() = runTest {
