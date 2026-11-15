@@ -107,6 +107,7 @@ jobs:
           import CoreGraphics
           import Foundation
           let all = CommandLine.arguments.contains("-all")
+          let pid = CommandLine.arguments.dropFirst().compactMap { Int($0) }.first
           let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
           var best: (id: Int, area: Double)?
           for w in list {
@@ -116,7 +117,8 @@ jobs:
             let b = w[kCGWindowBounds as String] as? [String: Double] ?? [:]
             let area = (b["Width"] ?? 0) * (b["Height"] ?? 0)
             if all { print("\(owner) id=\(id) layer=\(layer) \(Int(b["Width"] ?? 0))x\(Int(b["Height"] ?? 0)) \(w[kCGWindowName as String] as? String ?? "")") }
-            if owner == "Tafs", layer == 0, area > (best?.area ?? 0) { best = (id, area) }
+            let ownerPID = w[kCGWindowOwnerPID as String] as? Int ?? 0
+            if ownerPID == pid || owner.lowercased() == "tafs", layer == 0, area > (best?.area ?? 0) { best = (id, area) }
           }
           if !all, let best { print(best.id) }
           SWIFT
@@ -131,7 +133,7 @@ jobs:
             prev=0
             ready=""
             for _ in $(seq 30); do
-              id=$("$RUNNER_TEMP/windows")
+              id=$("$RUNNER_TEMP/windows" "$(pgrep -nx Tafs || echo 0)")
               if [ "$whole" = whole ] || [ -z "$id" ]; then screencapture -x "$frame"; else screencapture -x -o -l "$id" "$frame"; fi
               size=$(wc -c < "$frame")
               if [ -n "$id" ] && [ $(( (size - prev) * 200 )) -le "$size" ] && [ $(( (prev - size) * 200 )) -le "$size" ]; then
@@ -140,6 +142,11 @@ jobs:
               prev=$size
               sleep 1
             done
+            if [ -z "$id" ]; then
+              echo "::error::$name: no window of the app's on screen; the windows there:"
+              "$RUNNER_TEMP/windows" -all
+              exit 1
+            fi
             [ -n "$ready" ] || echo "::warning::$name: the window hadn't drawn and settled after 30 s"
             [ "$whole" = whole ] && "$RUNNER_TEMP/windows" -all
             mv "$frame" "$RUNNER_TEMP/mac-shots/$name.png"
