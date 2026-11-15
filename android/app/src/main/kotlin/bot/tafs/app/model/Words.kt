@@ -116,6 +116,7 @@ object Words {
     val settingsFaceIdPasscodeTouch: String get() = Res.s(R.string.approval_settings_face_id_passcode_touch)
     object SettingsPath {
       val faceId: String get() = Res.s(R.string.approval_settings_path_face_id)
+      val macTouchId: String get() = Res.s(R.string.approval_settings_path_mac_touch_id)
       val touchId: String get() = Res.s(R.string.approval_settings_path_touch_id)
     }
     object State {

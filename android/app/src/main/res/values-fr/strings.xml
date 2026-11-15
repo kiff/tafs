@@ -98,6 +98,7 @@
     <string name="approval_set_a_screen_lock">Définissez un verrouillage d\'écran sur ce téléphone pour approuver</string>
     <string name="approval_settings_face_id_passcode_touch">Réglages → Face ID et code (Touch ID et code sur un appareil avec Touch ID)</string>
     <string name="approval_settings_path_face_id">Réglages → Face ID et code</string>
+    <string name="approval_settings_path_mac_touch_id">Réglages Système → Touch ID et mot de passe</string>
     <string name="approval_settings_path_touch_id">Réglages → Touch ID et code</string>
     <string name="approval_state_none_enrolled">Aucune empreinte n\'est configurée sur ce téléphone. Ajoutez-en une dans ses paramètres, puis revenez.</string>
     <string name="approval_state_ready">Les approbations sont configurées sur ce téléphone.</string>
