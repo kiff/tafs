@@ -1,1 +1,1 @@
-- **Mac: buttons answer the pointer.** On the Mac build, the main and outlined buttons lighten a little under the pointer. Nothing changes on iPhone or iPad (docs/mac-app.md).
+- **Mac: buttons and rows answer the pointer.** On the Mac build, buttons and rows change a little under the pointer. Nothing changes on iPhone or iPad (docs/mac-app.md).

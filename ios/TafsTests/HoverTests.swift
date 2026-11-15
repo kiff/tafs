@@ -19,5 +19,10 @@ final class HoverTests: XCTestCase {
         XCTAssertEqual(Hover.outlineOpacity(pressed: false, hovered: false), 0)
         XCTAssertGreaterThan(Hover.outlineOpacity(pressed: false, hovered: true), 0)
         XCTAssertGreaterThan(Hover.outlineOpacity(pressed: true, hovered: true), Hover.outlineOpacity(pressed: false, hovered: true))
+        XCTAssertEqual(Hover.plainOpacity(pressed: false, hovered: false), 1)
+        XCTAssertLessThan(Hover.plainOpacity(pressed: false, hovered: true), 1)
+        XCTAssertLessThan(Hover.plainOpacity(pressed: true, hovered: true), Hover.plainOpacity(pressed: false, hovered: true))
+        // Pressed, a plain button fades as it always has.
+        XCTAssertEqual(Hover.plainOpacity(pressed: true, hovered: false), 0.6)
     }
 }

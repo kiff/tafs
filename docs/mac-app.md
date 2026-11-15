@@ -124,7 +124,13 @@ A new global shortcut is added to `KeyCommand.global` and to one of `MacMenu`'s 
 
 ## The pointer
 
-On the Mac, the main and outlined buttons answer the pointer: under it, the main button's fill lightens a little and the outlined one takes a light wash of ink, less than a press, so a press still shows (`Hover`, `Design/Components.swift`). The iPad keeps its own pointer effects, so this shows on the Mac build only. Rows and the sidebar come next.
+On the Mac, buttons answer the pointer, each a little less than a press, so a press still shows (`Hover`, `Design/Components.swift`):
+
+- **the main button's** fill lightens;
+- **the outlined button** takes a light wash of ink;
+- **a plain button**, which is what a row or a link is (`DrivablePlainButtonStyle`), fades a little, as it fades more when pressed.
+
+The iPad keeps its own pointer effects, so this shows on the Mac build only. The sidebar's rows are the system's list, which answers the pointer itself.
 
 ## The window
 
@@ -178,7 +184,7 @@ After the unit tests, the Mac workflow runs the app in sample mode and takes the
 
 | What | State |
 |---|---|
-| Pointer hover | the main and outlined buttons ("The pointer"); rows next |
+| Pointer hover | buttons and rows ("The pointer"); **owed:** seen by a person, since a screenshot can't show it |
 | **The menu bar and the window, seen by a person** | the menu bar is in CI's screenshots (`menu-bar.png`); **owed:** its menus opened, and the smallest window size, on a Mac. |
 | Approvals with Touch ID on a Mac | the iPad's key and prompt; a Mac never says Touch ID is off for tafs, and says where in System Settings it's set up |
 | Adding a Mac from a phone (the QR code and the check code) | built: the iPad's "sign in from another phone" (`AppModel.startPairingSignIn`, `PairingOffer`), with the Mac shown as a computer (`macos`, no `device_kind`). Not yet tried on a real Mac |

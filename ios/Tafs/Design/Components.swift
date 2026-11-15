@@ -160,6 +160,9 @@ enum Hover {
 
     /// The outlined button's wash of ink: none, a light one under the pointer, more pressed.
     static func outlineOpacity(pressed: Bool, hovered: Bool) -> Double { pressed ? 0.08 : hovered ? 0.04 : 0 }
+
+    /// A plain button (a row, a link): as it is, a little faded under the pointer, more pressed.
+    static func plainOpacity(pressed: Bool, hovered: Bool) -> Double { pressed ? 0.6 : hovered ? 0.8 : 1 }
 }
 
 struct Panel<Content: View>: View {
