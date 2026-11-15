@@ -3640,6 +3640,8 @@ enum Words {
             static var passkeyNeedsApprover: String { Words.line("settings.devices.passkey_needs_approver") }
             /// This phone couldn't make a passkey. {why}
             static func passkeyNotMade(why: String) -> String { Words.line("settings.devices.passkey_not_made", why) }
+            /// The passkey was made on this phone but not added to your account. You can remove it from this phone's saved passwords and passkeys.
+            static var passkeyNotRegistered: String { Words.line("settings.devices.passkey_not_registered") }
             /// With a passkey on this phone, a computer can approve through it: the computer shows a QR code, and you scan it with this phone.
             static var passkeyNote: String { Words.line("settings.devices.passkey_note") }
             /// Add a passkey on this phone to your account
@@ -3650,6 +3652,8 @@ enum Words {
             static func passkeyRemoveNamed(name: String) -> String { Words.line("settings.devices.passkey_remove_named", name) }
             /// Remove the passkey {name} from your account
             static func passkeyRemovePrompt(name: String) -> String { Words.line("settings.devices.passkey_remove_prompt", name) }
+            /// That took too long. Try again.
+            static var passkeyTooSlow: String { Words.line("settings.devices.passkey_too_slow") }
             /// Goes with its computer
             static var passkeyWithComputer: String { Words.line("settings.devices.passkey_with_computer") }
             /// Couldn't load your passkeys. {why}

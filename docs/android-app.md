@@ -1052,7 +1052,10 @@ answers it. That part is Android's own, with nothing in the app.
     never inside an approval window. A session KIFF holds no approval key for adds none, and Android isn't asked: a
     stolen session would add its own.
   - **KIFF's answers:** KIFF decides, and `403 admins_only` says only owners and admins can add one.
-    `409 passkey_registered` (the same passkey again) reads as added. Any other refusal is said with KIFF's own why.
+    `409 passkey_registered` (the same passkey again, KIFF's code in `error`) reads as added. `400` with reason
+    `issued_at` says it took too long, to try again.
+  - **Made but not added:** once Android has made the passkey, putting the fingerprint away or any other refusal says
+    it's on this phone but not on the account, and where to remove it (`settings.devices.passkey_not_registered`).
   - **A debug build is refused:** Credential Manager names the app by its signing certificate
     (`android:apk-key-hash:…`), and KIFF takes only Play App Signing's (`400 registration_invalid`, reason `origin`).
     So adding one is tested from a build Play installed (the internal track).

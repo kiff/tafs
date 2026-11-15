@@ -1953,11 +1953,13 @@
     <string name="settings_devices_passkey_admins_only">Tylko właściciele i administratorzy konta mogą dodać klucz dostępu.</string>
     <string name="settings_devices_passkey_needs_approver">Aby dodać klucz dostępu, użyj urządzenia, które może zatwierdzać.</string>
     <string name="settings_devices_passkey_not_made">Ten telefon nie mógł utworzyć klucza dostępu. %1$s</string>
+    <string name="settings_devices_passkey_not_registered">Klucz dostępu został utworzony na tym telefonie, ale nie dodano go do konta. Możesz usunąć go z haseł i kluczy dostępu zapisanych na tym telefonie.</string>
     <string name="settings_devices_passkey_note">Z kluczem dostępu na tym telefonie komputer może zatwierdzać przez niego: komputer pokazuje kod QR, a Ty skanujesz go tym telefonem.</string>
     <string name="settings_devices_passkey_prompt">Dodaj do konta klucz dostępu na tym telefonie</string>
     <string name="settings_devices_passkey_remove">Usuń</string>
     <string name="settings_devices_passkey_remove_named">Usunąć %1$s?</string>
     <string name="settings_devices_passkey_remove_prompt">Usuń klucz dostępu %1$s z konta</string>
+    <string name="settings_devices_passkey_too_slow">Trwało to zbyt długo. Spróbuj ponownie.</string>
     <string name="settings_devices_passkey_with_computer">Należy do swojego komputera</string>
     <string name="settings_devices_passkeys_not_loaded">Nie udało się wczytać Twoich kluczy dostępu. %1$s</string>
     <string name="settings_devices_passkeys_title">Klucze dostępu</string>

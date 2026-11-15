@@ -7519,6 +7519,7 @@ class AppModel(
     kiff.tenant = tenant
     _state.update { it.copy(passkeyBusy = true, passkeyLine = null) }
     val signer = signer
+    var made = false
     try {
       // The person, as KIFF lists them: the subject the challenge names and the email the passkey is shown with.
       val me = kiff.people().firstOrNull { it.you == true }
@@ -7537,6 +7538,8 @@ class AppModel(
         if (generation == accountGeneration) _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyNotMade(why = ErrorWords.of(e))) }
         return false
       } ?: return false
+      // From here, the passkey is on the phone: if it isn't added, the person is told so, and where to remove it.
+      made = true
       if (generation != accountGeneration) return false
       val body = PasskeyRegistration.registerBody(PasskeyRegistration.name(model), issuedAt, response)
       approvalReason = Words.Settings.Devices.passkeyPrompt
@@ -7548,6 +7551,8 @@ class AppModel(
         if (e.status != 409 || !e.refused("passkey_registered")) throw e
       }
     } catch (_: SignerException) {
+      // The fingerprint put away after Android made the passkey: it's on the phone, not on the account.
+      if (made && generation == accountGeneration) _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyNotRegistered) }
       return false
     } catch (_: KiffError.ApprovalKeyRequired) {
       if (generation == accountGeneration) _state.update { it.copy(passkeyLine = KiffClient.APPROVAL_KEY_LOST) }
@@ -7558,6 +7563,10 @@ class AppModel(
       val said = when {
         e is KiffError.Server && e.refused("admins_only") -> Words.Settings.Devices.passkeyAdminsOnly
         e is KiffError.Server && e.refused("view_only") -> Words.Settings.Devices.passkeyNeedsApprover
+        // KIFF takes the challenge's time within 10 minutes: past it, a new passkey from a new challenge.
+        e is KiffError.Server && e.refused("issued_at") -> Words.Settings.Devices.passkeyTooSlow
+        // Made, then refused (a debug build's origin among them): it's on the phone, not on the account.
+        made -> Words.Settings.Devices.passkeyNotRegistered
         else -> Words.Common.didntGoThrough(what = Words.Settings.Devices.passkeyAdd, why = ErrorWords.of(e))
       }
       if (generation == accountGeneration) _state.update { it.copy(passkeyLine = said) }

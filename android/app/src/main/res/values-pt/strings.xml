@@ -1841,11 +1841,13 @@
     <string name="settings_devices_passkey_admins_only">Só os proprietários e administradores da conta podem adicionar uma chave de acesso.</string>
     <string name="settings_devices_passkey_needs_approver">Para adicionar uma chave de acesso, use um dispositivo que possa aprovar.</string>
     <string name="settings_devices_passkey_not_made">Este telefone não conseguiu criar uma chave de acesso. %1$s</string>
+    <string name="settings_devices_passkey_not_registered">A chave de acesso foi criada neste telefone, mas não foi adicionada à sua conta. Pode removê-la das palavras-passe e chaves de acesso guardadas neste telefone.</string>
     <string name="settings_devices_passkey_note">Com uma chave de acesso neste telefone, um computador pode aprovar através dele: o computador mostra um código QR, que lê com este telefone.</string>
     <string name="settings_devices_passkey_prompt">Adicionar à sua conta uma chave de acesso neste telefone</string>
     <string name="settings_devices_passkey_remove">Remover</string>
     <string name="settings_devices_passkey_remove_named">Remover %1$s?</string>
     <string name="settings_devices_passkey_remove_prompt">Remover a chave de acesso %1$s da sua conta</string>
+    <string name="settings_devices_passkey_too_slow">Demorou demasiado. Tente novamente.</string>
     <string name="settings_devices_passkey_with_computer">Vai com o seu computador</string>
     <string name="settings_devices_passkeys_not_loaded">Não foi possível carregar as suas chaves de acesso. %1$s</string>
     <string name="settings_devices_passkeys_title">Chaves de acesso</string>

@@ -1841,11 +1841,13 @@
     <string name="settings_devices_passkey_admins_only">Alleen eigenaars en beheerders van het account kunnen een passkey toevoegen.</string>
     <string name="settings_devices_passkey_needs_approver">Gebruik een apparaat dat kan goedkeuren om een passkey toe te voegen.</string>
     <string name="settings_devices_passkey_not_made">Deze telefoon kon geen passkey maken. %1$s</string>
+    <string name="settings_devices_passkey_not_registered">De passkey is op deze telefoon gemaakt, maar niet aan je account toegevoegd. Je kunt hem verwijderen uit de opgeslagen wachtwoorden en passkeys van deze telefoon.</string>
     <string name="settings_devices_passkey_note">Met een passkey op deze telefoon kan een computer via deze telefoon goedkeuren: de computer toont een QR-code en jij scant die met deze telefoon.</string>
     <string name="settings_devices_passkey_prompt">Een passkey op deze telefoon aan je account toevoegen</string>
     <string name="settings_devices_passkey_remove">Verwijderen</string>
     <string name="settings_devices_passkey_remove_named">%1$s verwijderen?</string>
     <string name="settings_devices_passkey_remove_prompt">De passkey %1$s uit je account verwijderen</string>
+    <string name="settings_devices_passkey_too_slow">Dat duurde te lang. Probeer het opnieuw.</string>
     <string name="settings_devices_passkey_with_computer">Hoort bij zijn computer</string>
     <string name="settings_devices_passkeys_not_loaded">Kon je passkeys niet laden. %1$s</string>
     <string name="settings_devices_passkeys_title">Passkeys</string>

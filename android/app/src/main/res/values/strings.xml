@@ -1841,11 +1841,13 @@
     <string name="settings_devices_passkey_admins_only">Only the account\'s owners and admins can add a passkey.</string>
     <string name="settings_devices_passkey_needs_approver">To add a passkey, use a device that can approve.</string>
     <string name="settings_devices_passkey_not_made">This phone couldn\'t make a passkey. %1$s</string>
+    <string name="settings_devices_passkey_not_registered">The passkey was made on this phone but not added to your account. You can remove it from this phone\'s saved passwords and passkeys.</string>
     <string name="settings_devices_passkey_note">With a passkey on this phone, a computer can approve through it: the computer shows a QR code, and you scan it with this phone.</string>
     <string name="settings_devices_passkey_prompt">Add a passkey on this phone to your account</string>
     <string name="settings_devices_passkey_remove">Remove</string>
     <string name="settings_devices_passkey_remove_named">Remove %1$s?</string>
     <string name="settings_devices_passkey_remove_prompt">Remove the passkey %1$s from your account</string>
+    <string name="settings_devices_passkey_too_slow">That took too long. Try again.</string>
     <string name="settings_devices_passkey_with_computer">Goes with its computer</string>
     <string name="settings_devices_passkeys_not_loaded">Couldn\'t load your passkeys. %1$s</string>
     <string name="settings_devices_passkeys_title">Passkeys</string>

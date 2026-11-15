@@ -68,7 +68,8 @@ class PasskeyAddTest {
   }
 
   @Test fun theSamePasskeyRegisteredAlreadyIsDone() = runTest {
-    transport.answer("POST /v1/me/passkeys", 409, """{"error":"passkey_registered"}""")
+    // KIFF's own answer: its code in `error`, with no `reason`.
+    transport.answer("POST /v1/me/passkeys", 409, """{"error":"passkey_registered","message":"this passkey is already registered"}""")
     val m = model()
     assertTrue(m.addPasskey("Pixel 8") { made })
     assertEquals(Words.Settings.Devices.passkeyAdded, m.state.value.passkeyLine)
@@ -105,13 +106,27 @@ class PasskeyAddTest {
     val m = model()
     assertFalse(m.addPasskey("Pixel 8") { made })
     assertEquals(Words.Settings.Devices.passkeyAdminsOnly, m.state.value.passkeyLine)
-    // A debug build's origin: KIFF's refusal, said with its reason, never an app's guess.
+    // A debug build's origin: made on the phone, refused by KIFF, so it says the passkey isn't on the account.
     transport.reset()
     val n = model()
     transport.answer("POST /v1/me/passkeys", 400, """{"error":"registration_invalid","reason":"origin"}""")
     assertFalse(n.addPasskey("Pixel 8") { made })
-    assertTrue(n.state.value.passkeyLine!!.isNotEmpty())
-    assertTrue(transport.requestsTo("POST /v1/me/passkeys").size == 1)
+    assertEquals(Words.Settings.Devices.passkeyNotRegistered, n.state.value.passkeyLine)
+    // Past KIFF's 10 minutes from the challenge: try again, with a new one.
+    transport.reset()
+    val o = model()
+    transport.answer("POST /v1/me/passkeys", 400, """{"error":"registration_invalid","reason":"issued_at"}""")
+    assertFalse(o.addPasskey("Pixel 8") { made })
+    assertEquals(Words.Settings.Devices.passkeyTooSlow, o.state.value.passkeyLine)
+  }
+
+  /** The fingerprint put away after Android made the passkey: nothing is sent, and the person hears it isn't added. */
+  @Test fun theFingerprintPutAwayAfterItsMadeSaysItIsntAdded() = runTest {
+    val m = model()
+    auth.confirms = false
+    assertFalse(m.addPasskey("Pixel 8") { made })
+    assertTrue(transport.requestsTo("POST /v1/me/passkeys").isEmpty())
+    assertEquals(Words.Settings.Devices.passkeyNotRegistered, m.state.value.passkeyLine)
   }
 
   @Test fun aComputersOwnPasskeyIsNeverRemovedHere() = runTest {

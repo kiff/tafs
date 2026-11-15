@@ -92978,6 +92978,59 @@
         }
       }
     },
+    "settings.devices.passkey_not_registered": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Passkey wurde auf diesem Telefon erstellt, aber nicht zu deinem Konto hinzugefügt. Du kannst ihn aus den gespeicherten Passwörtern und Passkeys dieses Telefons entfernen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The passkey was made on this phone but not added to your account. You can remove it from this phone's saved passwords and passkeys."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La llave de acceso se creó en este teléfono, pero no se añadió a tu cuenta. Puedes quitarla de las contraseñas y llaves de acceso guardadas en este teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé d'accès a été créée sur ce téléphone, mais pas ajoutée à votre compte. Vous pouvez la supprimer des mots de passe et clés d'accès enregistrés sur ce téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La passkey è stata creata su questo telefono, ma non è stata aggiunta al tuo account. Puoi rimuoverla dalle password e passkey salvate su questo telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De passkey is op deze telefoon gemaakt, maar niet aan je account toegevoegd. Je kunt hem verwijderen uit de opgeslagen wachtwoorden en passkeys van deze telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz dostępu został utworzony na tym telefonie, ale nie dodano go do konta. Możesz usunąć go z haseł i kluczy dostępu zapisanych na tym telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave de acesso foi criada neste telefone, mas não foi adicionada à sua conta. Pode removê-la das palavras-passe e chaves de acesso guardadas neste telefone."
+          }
+        }
+      }
+    },
     "settings.devices.passkey_note": {
       "extractionState": "manual",
       "localizations": {
@@ -93239,6 +93292,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Remover a chave de acesso %1$@ da sua conta"
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_too_slow": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das hat zu lange gedauert. Versuche es noch einmal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That took too long. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha tardado demasiado. Inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cela a pris trop de temps. Réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ci è voluto troppo tempo. Riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dat duurde te lang. Probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trwało to zbyt długo. Spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demorou demasiado. Tente novamente."
           }
         }
       }
