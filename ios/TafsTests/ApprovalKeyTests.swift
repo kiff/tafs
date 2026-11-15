@@ -130,6 +130,21 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertNil(relink, "a view-only session isn't re-linked: only a new sign-in, or the other phone")
     }
 
+    /// A view-only session isn't offered Revoke on a taf's Card, on every device alike (Android 104): the
+    /// shared line says where it's done instead. The sample, and a session that approves, keep Revoke.
+    func testAViewOnlySessionIsToldWhereToRevokeInsteadOfRevoke() throws {
+        XCTAssertEqual(Words.Taf.revokeNeedsApprover, "To revoke this Card, use a device that can approve.")
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let file = try String(contentsOf: views.appendingPathComponent("TafDetailView.swift"), encoding: .utf8)
+        let gate = try XCTUnwrap(file.range(of: "if taf.state != .revoked, model.mode == .sample || model.manages(taf.id) {"))
+        let rest = String(file[gate.upperBound...].prefix(900))
+        let line = try XCTUnwrap(rest.range(of: "if model.mode == .kiff && model.approvalViewOnly {"))
+        let words = try XCTUnwrap(rest.range(of: "Text(Words.Taf.revokeNeedsApprover)"))
+        let button = try XCTUnwrap(rest.range(of: "Button(Words.Taf.revoke) { confirmRevoke = true }"))
+        XCTAssertTrue(line.upperBound <= words.lowerBound && words.upperBound <= button.lowerBound, "the line in Revoke's place")
+        XCTAssertTrue(rest[words.upperBound..<button.lowerBound].contains("} else {"), "Revoke only where the line isn't")
+    }
+
     /// Another refusal leaves the session as before: no view-only words.
     func testAnotherRefusalIsntViewOnly() async throws {
         let model = await signedIn(TwoKeySigner(), registration: (404, #"{"error":"not_found"}"#))
