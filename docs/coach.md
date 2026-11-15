@@ -82,8 +82,8 @@ Before the first message, one Face ID (`AppModel.startSetup`):
    on the phone. The phone asks first with no key: while the key planque holds still stands
    (another device enrolled it), planque answers `kept` and no key is minted, since a phone
    can't revoke a connector key and a new one would only be left live in KIFF. Only when
-   planque says it needs one (`needs_key`, or a planque from before's 400) does it mint one
-   and hand it over. Any other answer (planque not reached, a 5xx, a refused signature) mints
+   planque says it needs one (`409 needs_key`) does it mint one and hand it over. Any other
+   answer (planque not reached, a 5xx, a refused signature, a 400 for a body it couldn't read) mints
    nothing, since a second enrolment would likely fail too and leave the key live: the app
    says why, and the next Start asks again. Only a 409 with no code, an older planque's, says
    another device connects the account's apps; planque names each of its own 409s (iPhone and iPad: `AppModel.enrolPlanque`). If planque can't check the phone with KIFF (401), the app says "Connecting

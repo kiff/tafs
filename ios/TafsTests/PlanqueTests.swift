@@ -419,40 +419,39 @@ final class PlanqueTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
-    /// No standing key (`needs_key`), or a planque from before that takes no keyless enrolment: a key is
-    /// minted once and handed over, as before.
+    /// No standing key (`409 needs_key`): a key is minted once and handed over, under the one Face ID.
     func testWithNoStandingKeyOneIsMintedAndHandedOver() async throws {
-        for refusal in [(409, #"{"error":"no connector key stands for this account","code":"needs_key"}"#),
-                        (400, #"{"error":"KIFF did not accept the connector key"}"#)] {
-            let signer = FaceIDSigner()
-            let model = await model(signer: signer, vendor: StubVendor())
-            let route = "POST /v1/accounts/t_01/enrolment"
-            StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-            StubProtocol.responses[route] = refusal
-            StubProtocol.thenRespond[route] = [route: (201, #"{"tenant":"t_01","device":"ab12"}"#)]
-            StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer, vendor: StubVendor())
+        let route = "POST /v1/accounts/t_01/enrolment"
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses[route] = (409, #"{"error":"no connector key stands for this account","code":"needs_key"}"#)
+        StubProtocol.thenRespond[route] = [route: (201, #"{"tenant":"t_01","device":"ab12"}"#)]
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
 
-            let ready = await model.setUpPlanque()
-            XCTAssertTrue(ready, "\(refusal.0): \(model.lastError ?? "")")
-            XCTAssertEqual(sent("POST", "api.test", "/v1/keys").count, 1)
-            let enrolments = sent("POST", "planque.test", "/v1/accounts/t_01/enrolment")
-            XCTAssertEqual(enrolments.map { body($0)["connector_key"] as? String }, [nil, "kiff_live_connector"])
-            XCTAssertEqual(signer.prompts, ["tafs.planque.v1|t_01"], "under the one Face ID")
-            Keychain.delete(AppModel.planqueAccount)
-        }
+        let ready = await model.setUpPlanque()
+        XCTAssertTrue(ready, model.lastError ?? "")
+        XCTAssertEqual(sent("POST", "api.test", "/v1/keys").count, 1)
+        let enrolments = sent("POST", "planque.test", "/v1/accounts/t_01/enrolment")
+        XCTAssertEqual(enrolments.map { body($0)["connector_key"] as? String }, [nil, "kiff_live_connector"])
+        XCTAssertEqual(signer.prompts, ["tafs.planque.v1|t_01"], "under the one Face ID")
+        Keychain.delete(AppModel.planqueAccount)
     }
 
     /// Only planque saying it needs a key (`needs_key`, or an older planque's 400) mints one. Planque not
     /// reached, or a 5xx, mints nothing: a second enrolment would likely fail too and leave a key live in KIFF
     /// that no device can revoke. It says why, and the next Start asks again.
     func testPlanqueNotReachedOrFailingMintsNoConnectorKey() async throws {
-        for failure in ["not reached", "503", "replayed"] {
+        for failure in ["not reached", "503", "replayed", "400"] {
             let signer = FaceIDSigner()
             let model = await model(signer: signer, vendor: StubVendor())
             let route = "POST /v1/accounts/t_01/enrolment"
             StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
             if failure == "503" {
                 StubProtocol.responses[route] = (503, #"{"error":"unavailable"}"#)
+            } else if failure == "400" {
+                // planque's 400 is a body it couldn't read: our own, so a second enrolment would fail the same way.
+                StubProtocol.responses[route] = (400, #"{"error":"bad request"}"#)
             } else if failure == "replayed" {
                 // Today's planque names each of its 409s: only a code-less one, an older planque's, is another device.
                 StubProtocol.responses[route] = (409, #"{"error":"this signature was already used","code":"signature_replayed"}"#)

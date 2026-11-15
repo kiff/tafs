@@ -23,8 +23,8 @@ final class PlanqueClient {
         /// Signed in an approval window that has ended (kiff/tafs#494): nothing was done; a new
         /// window, then the same call again.
         case windowRequired
-        /// Asked with no connector key, planque holds none that still stands (`409 needs_key`): the one answer,
-        /// with an older planque's 400, on which the phone mints a key.
+        /// Asked with no connector key, planque holds none that still stands (`409 needs_key`): the one answer
+        /// on which the phone mints a key.
         case needsKey
 
         var errorDescription: String? {
