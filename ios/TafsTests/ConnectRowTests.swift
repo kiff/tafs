@@ -63,6 +63,31 @@ final class ConnectRowTests: XCTestCase {
         XCTAssertTrue(source.contains("yourConnections(app: \"\\(app.displayName)\")"), "the app's own screen by its name")
     }
 
+    /// While one of its connections is being removed, the row says so where "Connected" would be, in place of
+    /// tafs cloud's line too, which still says connected (as Android 105). The model marks the grant from Face
+    /// ID until planque answered and Connect apps was read again.
+    func testARowBeingRemovedSaysSo() throws {
+        let sheets = try app(#"{"entry":"sheets","title":"Google Sheets","how":"oauth","state":"connected","whose":"Yours","line":"Sign in · Connected"}"#)
+        let said = ConnectRow(sheets, removing: true)
+        XCTAssertTrue(said.removing)
+        XCTAssertEqual(said.status, Words.Connect.disconnecting)
+        XCTAssertEqual(said.second, [Words.Connect.How.signIn, "Yours", Words.Connect.disconnecting].joined(separator: " · "))
+        XCTAssertEqual(Words.Connect.disconnecting, "Removing access…")
+        XCTAssertEqual(ConnectRow(sheets).second, "Sign in · Connected", "otherwise tafs cloud's line")
+
+        let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs")
+        let model = try String(contentsOf: root.appendingPathComponent("App/AppModel.swift"), encoding: .utf8)
+        let start = try XCTUnwrap(model.range(of: "func disconnect(grantID: String) async -> Bool {"))
+        let body = String(model[start.upperBound...].prefix(2000))
+        let marked = try XCTUnwrap(body.range(of: "removingGrants.insert(grantID)"))
+        let call = try XCTUnwrap(body.range(of: "try await planque.disconnect(grantID: grantID)"))
+        let reread = try XCTUnwrap(body.range(of: "if connectApps != nil { await loadConnectApps() }"))
+        XCTAssertTrue(marked.upperBound < call.lowerBound && call.upperBound < reread.lowerBound, "marked after Face ID, until the list is read again")
+        XCTAssertTrue(body.contains("defer { planque.signer = nil; removingGrants.remove(grantID) }"))
+        let view = try String(contentsOf: root.appendingPathComponent("Views/ConnectAppsView.swift"), encoding: .utf8)
+        XCTAssertTrue(view.contains("removing: model.connections(of: app).contains { model.removingGrants.contains($0.id) })"))
+    }
+
     /// Connected: how it connects, whose, Connected, and who uses it. To connect: how it connects
     /// alone. With no `used_by` yet, this phone's own read names the tafs.
     func testWhatEachRowSays() throws {
