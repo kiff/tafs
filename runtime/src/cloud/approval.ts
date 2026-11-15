@@ -65,6 +65,12 @@ export const REDRAFT_CODES: ReadonlySet<string> = new Set(["no_card", "vendor_na
  * What a refusal Coach redrafts on adds, so the redraft mends only what was named: the redraft under Eval 43690861487's
  * refusal merged two agreed read limits into one and put a count back on a refund.
  */
+/**
+ * The one count a Card of reads carries: KIFF refuses a Card with no total, so the reads' Card has this, the same in
+ * draft-the-card and here, never Coach's choice and never shown as the owner's limit.
+ */
+export const READS_A_DAY = 10_000;
+
 export const KEEP_THE_REST = "Change only what this names; every other line stays exactly as agreed.";
 
 type CardsChecked = Decision | { waitsFor: string } | { draft: NonNullable<Awaited<ReturnType<typeof draftInfo>>> & { version: string } };
@@ -152,14 +158,14 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
     }
     const left = uncoveredTool(grant, draft.cards, inForce);
     if (left) {
-      return { outcome: "answered", answer: `failed: no Card covers "${left}", which the taf's connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${left}" on a Card (a read gets a call count only, generous enough never to get in the way).`, note: W.uncovered(left), code: "uncovered" };
+      return { outcome: "answered", answer: `failed: no Card covers "${left}", which the taf's connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${left}" on a Card (a read goes on the reads' Card, which carries KIFF's count of ${READS_A_DAY.toLocaleString("en")} a day, not the owner's).`, note: W.uncovered(left), code: "uncovered" };
     }
     // Every tool the taf will hold, not only this connection's (Eval 43657637947): each of the same taf's other
     // connected apps is covered too, by the draft or by a Card in force, or the taf would hold a tool KIFF refuses,
     // and a refused read stops its session before the write that was allowed.
     const elsewhere = uncoveredElsewhere(grant, others, draft.cards, inForce);
     if (elsewhere) {
-      return { outcome: "answered", answer: `failed: no Card covers "${elsewhere.tool}", which the taf's ${elsewhere.vendor} connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${elsewhere.tool}" on a Card too (a read gets a call count only, generous enough never to get in the way).`, note: W.uncovered(elsewhere.tool), code: "uncovered_elsewhere" };
+      return { outcome: "answered", answer: `failed: no Card covers "${elsewhere.tool}", which the taf's ${elsewhere.vendor} connection gives it, so KIFF would refuse every call of it (no_mandate_issued). Draft it again with "${elsewhere.tool}" on a Card too (a read goes on the reads' Card, which carries KIFF's count of ${READS_A_DAY.toLocaleString("en")} a day, not the owner's).`, note: W.uncovered(elsewhere.tool), code: "uncovered_elsewhere" };
     }
     // A limit for each item drafted as one lifetime count on the whole tool stops the taf after its first item
     // (Eval 43402441612: "one invoice per order, ever" signed as 1 create_invoice in the Card's life). Never signed.
