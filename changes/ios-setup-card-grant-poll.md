@@ -1,0 +1,1 @@
+- **iPhone and iPad: a connect card no longer stays on "Reading the request…".** Coach's chat stopped reading its thread five minutes after the owner last wrote, so a card whose grant planque listed later waited until the chat was opened again; it now keeps reading while the card waits on its grant, for its first ten minutes (docs/ios-app.md).
