@@ -563,6 +563,55 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(await ask()).toMatchObject({ outcome: "sign" });
   });
 
+  // Eval 43681227913: list_charges was taken in KIFF by another connection, so planque granted this taf "list_charges_noyy". Coach drafted
+  // the Card over "list_charges", the other connection's name, and it was signed: the taf's own list tool had no Card. A Card
+  // covers a renamed tool by its registered name (request.tools[].name) only, never the vendor's (tool).
+  it("a Card over a renamed tool's vendor name isn't signed: Coach hears the name planque registered for this taf", async () => {
+    const s = services();
+    const tools = [{ tool: "stripe_api_details", name: "stripe_api_details_noyy", title: "Stripe API details", setup_reads: true },
+      { tool: "list_charges", name: "list_charges_noyy", title: "List charges", read_only: true },
+      { tool: "stripe_api_read", name: "read_charge", title: "Read a charge", read_only: true },
+      { tool: "create_refund", name: "refund_charge", title: "Refund a charge", resource_argument: "charge" }];
+    // The same taf's earlier Stripe connection, still connected, holds "list_charges": the stray check alone let the Card through.
+    const earlier = grant({ id: "g_0", status: "connected" }, { tools: [{ tool: "list_charges", name: "list_charges", read_only: true }] });
+    s.grants = [earlier, grant({ status: "connected" }, { tools })];
+    const reads = (action: string) => ({ id: "list-charges", subject: "refunds-x", grants: [{ action }], aggregates: [{ quantity: "count", limit: 1000, window: "calendar_day" }] });
+    const others = [
+      { id: "refund-each", subject: "refunds-x", grants: [{ action: "refund_charge", limits: { amount: 500 } }], on_exceed: "owner", aggregates: [] },
+      { id: "refund-day", subject: "refunds-x", grants: [{ action: "refund_charge" }], on_exceed: "refuse", aggregates: [{ quantity: "sum(amount)", limit: 5000, window: "calendar_day" }] },
+      { id: "read-charge", subject: "refunds-x", grants: [{ action: "read_charge" }], aggregates: [{ quantity: "count", limit: 1000, window: "calendar_day" }] },
+    ];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [others[0], others[1], reads("list_charges"), others[2]] };
+    const ask = async () => (await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+    const r = await ask();
+    expect(r).toMatchObject({ outcome: "answered", note: WORDS.registeredName("list_charges", "list_charges_noyy") });
+    expect(String(r.answer)).toBe(`failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy": "list_charges" is another connection's name in KIFF, so it isn't signed. Draft it again with "list_charges_noyy" in its place.`);
+    // With no other connection holding the name: the same answer, not the stray one, so Coach hears the name to use.
+    s.grants = [grant({ status: "connected" }, { tools })];
+    expect((await ask()).note).toBe(WORDS.registeredName("list_charges", "list_charges_noyy"));
+    // KIFF folds case and spaces: so does the check.
+    s.drafts.drf_1.cards = [others[0], others[1], reads(" LIST_Charges "), others[2]];
+    expect((await ask()).note).toBe(WORDS.registeredName(" LIST_Charges ", "list_charges_noyy"));
+    // A renamed tool of the same taf's other connection is checked too.
+    s.grants = [grant({ id: "g_2", status: "connected", vendor: "Mail" }, { server: "mcp.mail.example", tools: [{ tool: "send", name: "send_ab12", title: "Send" }] }),
+      grant({ status: "connected" }, { tools: tools.map((t) => (t.tool === "list_charges" ? { ...t, name: "list_charges" } : t)) })];
+    s.drafts.drf_1.cards = [...others, reads("list_charges"), { id: "mail", subject: "refunds-x", grants: [{ action: "send" }], aggregates: [] }];
+    expect((await ask()).note).toBe(WORDS.registeredName("send", "send_ab12"));
+    // Over the registered name: signed. (The earlier connection's "list_charges" would need its own Card: uncoveredElsewhere.)
+    s.grants = [grant({ status: "connected" }, { tools })];
+    s.drafts.drf_1.cards = [others[0], others[1], reads("list_charges_noyy"), others[2]];
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // Two of the taf's apps with the same vendor name, each under its own name, on one Card: both covered, signed.
+    s.grants = [grant({ id: "g_2", status: "connected", vendor: "Mail" }, { server: "mcp.mail.example", tools: [{ tool: "list_charges", name: "list_charges", read_only: true }] }),
+      grant({ status: "connected" }, { tools })];
+    s.drafts.drf_1.cards = [others[0], others[1], { ...reads("list_charges_noyy"), grants: [{ action: "list_charges_noyy" }, { action: "list_charges" }] }, others[2]];
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // Its registered name on a Card in force already: the vendor name beside it is the other app's, signed.
+    s.mandates = [{ id: "c0", subject: "refunds-x", active: true, grants: [{ action: "list_charges_noyy" }] }];
+    s.drafts.drf_1.cards = [others[0], others[1], reads("list_charges"), others[2]];
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+  });
+
   it("an app set up on demand asks for every change: a draft that lets one of its writes run outright isn't signed (kiff/planque#87)", async () => {
     const s = services();
     const tools = [{ tool: "send", name: "send_x", title: "Send an email" }, { tool: "list", name: "list_x", title: "List emails", read_only: true }];

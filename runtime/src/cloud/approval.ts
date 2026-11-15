@@ -83,6 +83,13 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
     // And the other way (qa-kiff's negative 1 on #919): every action the draft's Cards allow is one of this connection's
     // tools, one of the same taf's other connections', or allowed already. A Card signed under "Connect Stripe" never
     // also lets the taf act on something no connection of its gives it here.
+    // A tool planque renamed for this taf (its vendor name was taken in KIFF) is covered by its registered name only
+    // (Eval 43681227913: the Card covered "list_charges", another connection's tool, and the taf was granted "list_charges_noyy").
+    // Coach hears the name to draft it with. Before the stray check: another grant's tool by that name would pass it.
+    const renamed = vendorNameOnCard(grant, others, draft.cards, inForce);
+    if (renamed) {
+      return { outcome: "answered", answer: `failed: the Card covers "${renamed.action}", but this taf's connection gives that tool as "${renamed.name}": "${renamed.action}" is another connection's name in KIFF, so it isn't signed. Draft it again with "${renamed.name}" in its place.`, note: W.registeredName(renamed.action, renamed.name) };
+    }
     const stray = strayAction(grant, others, draft.cards, inForce);
     if (stray) {
       return { outcome: "answered", answer: `failed: the Card covers "${stray}", which no connection of this taf gives it, so it isn't signed. Draft it again over the taf's connected tools only.`, note: W.stray(stray) };
@@ -273,6 +280,39 @@ export function appsWaiting(grant: ApprovalGrant, others: ApprovalGrant[], cards
     .map((g) => vendorOf(g));
 }
 
+/**
+ * The first Card action that is the vendor's own name of a tool planque renamed for this taf, while the draft and the Cards
+ * in force leave the tool's registered name uncovered: with its name taken in KIFF, planque gave the tool a free one
+ * (`request.tools[].name`), and only that name is this taf's. The vendor name (`tool`) is another connection's in KIFF, so a
+ * Card over it never covers this taf's tool, whatever else holds that name. With the registered name.
+ */
+export function vendorNameOnCard(grant: ApprovalGrant, others: ApprovalGrant[], cards: unknown[], inForce: Set<string>): { action: string; name: string } | undefined {
+  const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+  const covered = new Set(inForce);
+  const actions: string[] = [];
+  for (const raw of cards) {
+    const card = raw as { grants?: unknown };
+    if (!Array.isArray(card.grants)) continue;
+    for (const g of card.grants) {
+      const action = (g as { action?: unknown }).action;
+      if (typeof action === "string" && fold(action)) { covered.add(fold(action)); actions.push(action); }
+    }
+  }
+  // Each renamed tool's vendor name, to its registered name, the grant being approved first.
+  const renamed = new Map<string, string>();
+  for (const g of [grant, ...others.filter((o) => o.id !== grant.id)]) {
+    for (const t of g.request.tools ?? []) {
+      const vendor = fold(t.tool), name = fold(t.name);
+      if (vendor && name && vendor !== name && !renamed.has(vendor)) renamed.set(vendor, t.name!.trim());
+    }
+  }
+  for (const action of actions) {
+    const name = renamed.get(fold(action));
+    if (name && !covered.has(fold(name))) return { action, name };
+  }
+  return undefined;
+}
+
 export function strayAction(grant: ApprovalGrant, others: ApprovalGrant[], cards: unknown[], inForce: Set<string>): string | undefined {
   const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
   const given = new Set(inForce);
@@ -413,6 +453,7 @@ export function approvalWords(lang: Lang = "en") {
     cardsUnread: w.approval_cards_unread,
     uncovered: w.approval_uncovered,
     stray: w.approval_stray,
+    registeredName: w.approval_registered_name,
     lifetimeCap: w.approval_lifetime_cap,
     lifetimeSum: w.approval_lifetime_sum,
     dayTotalTwice: w.approval_day_total_twice,

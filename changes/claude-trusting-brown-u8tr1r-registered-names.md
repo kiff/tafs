@@ -1,0 +1,1 @@
+- A Card drafted over a tool's vendor name, when planque registered the tool for the taf under another name (its vendor name was taken in KIFF), isn't signed. Coach hears the registered name and drafts it again over it ([docs/coach.md](../docs/coach.md)).

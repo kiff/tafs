@@ -102,6 +102,7 @@ export const pt: Words = {
   approval_cards_unread: "O Card ainda não pôde ser verificado. Leia-o novamente e depois aprove.",
   approval_uncovered: (tool: string) => `Este Card não cobre «${tool}», que o taf recebeu, por isso cada chamada seria recusada. Nada foi aprovado. O Coach volta a redigi-lo.`,
   approval_stray: (tool: string) => `Este Card também deixaria o taf usar «${tool}», que nenhuma ligação sua lhe dá. Nada foi aprovado. O Coach volta a redigi-lo.`,
+  approval_registered_name: (asked: string, given: string) => `Este Card nomeia «${asked}», mas a ligação dá essa ferramenta ao taf como «${given}». Nada foi aprovado. O Coach volta a redigi-lo.`,
   approval_lifetime_cap: (tool: string) => `Este Card deixaria «${tool}» correr só um número fixo de vezes no total, para todos os itens e não para cada um. Nada foi aprovado. O Coach volta a redigi-lo.`,
   approval_lifetime_sum: (tool: string) => `Este Card limitaria «${tool}» a um valor total para sempre, para todos os itens, o que não foi combinado. Nada foi aprovado. O Coach volta a redigi-lo.`,
   approval_day_total_twice: (tool: string) => `Este Card definiria dois totais diários para «${tool}», e um podia decidir acima do limite de forma diferente do combinado. Nada foi aprovado. O Coach volta a redigi-lo.`,
