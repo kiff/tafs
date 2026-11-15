@@ -446,13 +446,16 @@ final class PlanqueTests: XCTestCase {
     /// reached, or a 5xx, mints nothing: a second enrolment would likely fail too and leave a key live in KIFF
     /// that no device can revoke. It says why, and the next Start asks again.
     func testPlanqueNotReachedOrFailingMintsNoConnectorKey() async throws {
-        for failure in ["not reached", "503"] {
+        for failure in ["not reached", "503", "replayed"] {
             let signer = FaceIDSigner()
             let model = await model(signer: signer, vendor: StubVendor())
             let route = "POST /v1/accounts/t_01/enrolment"
             StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
             if failure == "503" {
                 StubProtocol.responses[route] = (503, #"{"error":"unavailable"}"#)
+            } else if failure == "replayed" {
+                // Today's planque names each of its 409s: only a code-less one, an older planque's, is another device.
+                StubProtocol.responses[route] = (409, #"{"error":"this signature was already used","code":"signature_replayed"}"#)
             } else {
                 StubProtocol.dropped[route] = [.notConnectedToInternet]
             }
@@ -463,8 +466,22 @@ final class PlanqueTests: XCTestCase {
             XCTAssertFalse(model.planqueReady, failure)
             XCTAssertTrue(sent("POST", "api.test", "/v1/keys").isEmpty, "\(failure): nothing minted")
             XCTAssertNotNil(model.lastError, "\(failure): it says why")
+            XCTAssertNotEqual(model.lastError, Words.Coach.connectOtherDevice, "\(failure): never \"another device\"")
             Keychain.delete(AppModel.planqueAccount)
         }
+    }
+
+    /// An older planque's 409 with no code is another device's enrolment: it says so, and mints nothing.
+    func testACodelessConflictIsAnotherDevice() async throws {
+        let signer = FaceIDSigner()
+        let model = await model(signer: signer, vendor: StubVendor())
+        StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (409, #"{"error":"another phone is enrolled"}"#)
+        let ready = await model.setUpPlanque()
+        XCTAssertFalse(ready)
+        XCTAssertEqual(model.lastError, Words.Coach.connectOtherDevice)
+        XCTAssertTrue(sent("POST", "api.test", "/v1/keys").isEmpty)
+        Keychain.delete(AppModel.planqueAccount)
     }
 
     /// Setting up planque is its own Face ID, once: planque gets the phone's key and a

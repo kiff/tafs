@@ -61,6 +61,9 @@ final class PlanqueClient {
     /// takes one runs, so its calls go as a tap (`v2`, with the window's id); planque asks KIFF
     /// whether it is open. Nil signs as before.
     var window: String?
+    /// planque's `code` on the last refusal, or nil when it sent none: a 409 an older planque sent with no code at
+    /// enrolment is another device's; today's planque names each of its own (`signature_replayed`, …).
+    private(set) var lastRefusalCode: String?
     private let session: URLSession
 
     init(baseURL: URL = URL(string: "https://planque.kiff.dev")!, session: URLSession = .shared) {
@@ -682,7 +685,8 @@ final class PlanqueClient {
                 if window == held { window = nil }
                 throw PlanqueError.windowRequired
             }
-            if status == 409, Self.refusalCode(data) == "needs_key" { throw PlanqueError.needsKey }
+            lastRefusalCode = Self.refusalCode(data)
+            if status == 409, lastRefusalCode == "needs_key" { throw PlanqueError.needsKey }
             let said = Self.refusal(data)
             throw PlanqueError.server(status: status, message: said.error ?? Words.Error.connectionAnswered(status: "\(status)"), words: said.words)
         }

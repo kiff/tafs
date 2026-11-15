@@ -6147,7 +6147,9 @@ final class AppModel: ObservableObject {
             }
         } catch PlanqueClient.PlanqueError.needsKey {
         } catch PlanqueClient.PlanqueError.server(400, _, _) {
-        } catch PlanqueClient.PlanqueError.server(409, _, _) {
+        } catch PlanqueClient.PlanqueError.server(409, _, _) where planque.lastRefusalCode == nil {
+            // A code-less 409 is an older planque's other device; a coded one (a replayed signature, a changed
+            // enrolment) says why below, never "another device".
             lastError = Words.Coach.connectOtherDevice
             return false
         } catch {
@@ -6162,7 +6164,9 @@ final class AppModel: ObservableObject {
         } catch KIFFClient.KIFFError.server(403, _, _) {
             lastError = Words.Coach.connectAdminOnly
             return false
-        } catch PlanqueClient.PlanqueError.server(409, _, _) {
+        } catch PlanqueClient.PlanqueError.server(409, _, _) where planque.lastRefusalCode == nil {
+            // A code-less 409 is an older planque's other device; a coded one (a replayed signature, a changed
+            // enrolment) says why below, never "another device".
             lastError = Words.Coach.connectOtherDevice
             return false
         } catch {
