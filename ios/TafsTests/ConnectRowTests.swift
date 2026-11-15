@@ -198,6 +198,17 @@ final class ConnectRowTests: XCTestCase {
                       "a name on one line, never broken inside a word")
     }
 
+    /// A connection goes only to a taf the person named: the one the list was opened from, else their
+    /// pick, asked even when one taf is all there is. Never a guess.
+    func testConnectAsksWhichTafEvenWithOne() {
+        let one = Taf(name: "Unanswered emails", job: "Emails", tools: [], colorIndex: 0, card: Card(rules: [], issuedBy: "You"))
+        let two = Taf(name: "Refunds", job: "Refunds", tools: [], colorIndex: 1, card: Card(rules: [], issuedBy: "You"))
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: [one]), .ask, "one taf is still asked, never taken")
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: [one, two]), .ask)
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: two.id, connectable: [one, two]), .taf(two.id), "opened from a taf: that one")
+        XCTAssertEqual(ConnectRow.connectFor(openedFrom: nil, connectable: []), .noTaf)
+    }
+
     /// "Make one first" sits over Discover, where connecting needs a taf, and never over Yours: on an
     /// account with no taf and only connected apps, it doesn't show at all.
     func testMakeATafShowsOnlyOverAppsToConnect() throws {
