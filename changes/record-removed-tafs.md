@@ -1,0 +1,1 @@
+- **A removed taf's calls stay in Record,** named as removed ("Rae (removed)", in the person's language), for those who manage the account's Cards: in the search, a case and the receipts. Only tafs removed from now on. With no taf left, the receipts are for those who manage the Cards too (docs/api.md).

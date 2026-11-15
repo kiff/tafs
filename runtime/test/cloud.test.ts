@@ -6379,6 +6379,55 @@ describe("the Record across the person's tafs", () => {
     expect((await call(w, "GET", "/v1/record", { token: "ana_paris", query: "q=1042" })).body.entries).toEqual([]);
   });
 
+  // An owner removed every taf, and Record read "Nothing yet.", though the removal said KIFF's receipts stay. A removed
+  // taf's calls stay in the Record, named as removed, for those who see every taf's Record.
+  it("keeps a removed taf's calls, named as removed, for those who see every taf's Record", async () => {
+    const w = world();
+    w.now = new Date("2026-11-05T10:00:00Z");
+    w.account.calls = calls();
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const req = async (method: string, path: string, token: string, query = "", lang = "en") => {
+      const r = await handle({ rawPath: path, rawQueryString: query, requestContext: { http: { method } },
+        headers: { Authorization: `Bearer ${token}`, "Accept-Language": lang } }, deps);
+      return { status: r.statusCode, body: r.body ? JSON.parse(r.body) : undefined };
+    };
+    const ids = (r: { body: { entries: Array<{ call: ActivityCall }> } }) => r.body.entries.map((e) => e.call.proposal_id);
+    // A failed write of its row stops the removal before the taf's own row goes; asked again, it finishes.
+    const append = deps.coach.append.bind(deps.coach);
+    deps.coach.append = async () => { throw new Error("the table is down"); };
+    const stopped = await req("DELETE", `/v1/tafs/${RAE}`, "ana");
+    expect(stopped.body).toMatchObject({ done: false, failed: ["record"] });
+    expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
+    deps.coach.append = append;
+    expect((await req("DELETE", `/v1/tafs/${RAE}`, "ana")).body).toMatchObject({ done: true, failed: [] });
+    expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(false);
+    // Its calls, named as removed, in the person's language; another agent's never.
+    const found = await req("GET", "/v1/record", "ana_paris", "q=order%201042");
+    expect(ids(found)).toEqual(["p-reply", "p-refund"]);
+    expect(found.body.entries[1]).toMatchObject({ taf: { id: RAE, name: "Rae (removed)" }, about: "Order #1042" });
+    expect((await req("GET", "/v1/record", "ana_paris", "q=order%201042", "fr")).body.entries[0].taf.name).toBe("Rae (supprimé)");
+    // Its case and its receipts too.
+    expect((await req("GET", `/v1/record/cases/${encodeURIComponent("order 1042")}`, "ana_paris")).status).toBe(200);
+    const receipts = await req("GET", "/v1/record/receipts", "ana_paris", "from=2026-11-05&to=2026-11-05");
+    expect(receipts.status).toBe(200);
+    expect(receipts.body.csv).toContain('"Rae (removed)"');
+    // Kept once, though a removal asked again appends it twice.
+    await deps.coach.append(`t_acme#removed-tafs`, { id: RAE, kiff_agent: "rae", name: "Rae", removed_at: w.now.toISOString() }, new Date(w.now.getTime() + 86400_000));
+    expect(ids(await req("GET", "/v1/record", "ana_paris", "q=order%201042"))).toEqual(["p-reply", "p-refund"]);
+    // Every taf removed is no reason for a viewer to see them all: nothing, and no receipts.
+    expect((await req("GET", "/v1/record", "viewer_paris", "q=order%201042")).body.entries).toEqual([]);
+    expect((await req("GET", "/v1/record/receipts", "viewer_paris", "from=2026-11-05&to=2026-11-05")).status).toBe(403);
+    // Nor is overseeing every live taf: someone who never saw a removed taf doesn't see it once it's removed. Only those
+    // who manage the Cards do.
+    w.tafs.held.set(`t_acme#${RAE}`, { id: RAE, name: "Rae", job: "refunds", kiffAgent: "rae", nameClaim: "c", created: "2026-10-17T09:00:00Z" } as Taf);
+    w.account.access = { rae: { use: true, oversee: true, manage: false } };
+    w.account.calls = [...calls(), { proposal_id: "p-gone", actor_id: "gone-agent", action_name: "create_refund", outcome: "allowed", created_at: at(1), about: "Order 1042" } as ActivityCall];
+    await deps.coach.append(`t_acme#removed-tafs`, { id: "taf-gone", kiff_agent: "gone-agent", name: "Secret", removed_at: w.now.toISOString() }, new Date(w.now.getTime() + 86400_000));
+    const named = (r: { body: { entries: Array<{ taf: { name: string }; call: ActivityCall }> } }) => r.body.entries.map((e) => `${e.taf.name}:${e.call.proposal_id}`);
+    expect(named(await req("GET", "/v1/record", "viewer_paris", "q=order%201042"))).toEqual(["Rae:p-reply", "Rae:p-refund"]);
+    expect(named(await req("GET", "/v1/record", "ana_paris", "q=order%201042"))).toEqual(["Rae:p-reply", "Rae:p-refund", "Secret (removed):p-gone"]);
+  });
+
   it("exports the receipts for those who oversee every taf, and no one else", async () => {
     const w = world();
     w.now = new Date("2026-11-05T10:00:00Z");

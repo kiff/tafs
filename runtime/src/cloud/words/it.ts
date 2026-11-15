@@ -466,6 +466,7 @@ export const it: Words = {
   act_today: "Oggi",
   act_end: "Niente di più vecchio in questa vista",
   record_hint: "Cerca per ordine, fattura, importo o azione",
+  record_removed: (name) => `${name} (rimosso)`,
   record_none: (q) => `Nulla nel registro corrisponde a «${q}»`,
   record_case_failed: (step, detail) => `${step} non è andato a buon fine: ${detail}`,
   next_reconnect: "Collega di nuovo",
