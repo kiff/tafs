@@ -35,6 +35,9 @@ class TafsUITestCase: XCTestCase {
             alert.buttons.element(boundBy: count - 1).tap()
             return true
         }
+        // As with Reduce Motion: nothing animates on its own, so the app goes idle between steps. An endless
+        // animation kept it busy, and XCTest waited a minute before each step until a test ran out of time.
+        if !app.launchArguments.contains("-reduceMotion") { app.launchArguments += ["-reduceMotion", "YES"] }
         app.launch()
         letTheMonitorRun(app)
     }

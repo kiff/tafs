@@ -9085,6 +9085,10 @@ extension AppModel {
 
 enum Screenshots {
     static var enabled: Bool { UserDefaults.standard.bool(forKey: "screenshots") }
+    /// `-reduceMotion YES`, with `-screenshots YES`: the app moves as with Reduce Motion on (`Motion.reduced`), and
+    /// UIKit's own animations are off. The UI tests pass it: an endless animation (a door's rim, the dial's
+    /// breathing) kept the app from ever going idle, and XCTest waited a minute before each step.
+    static var reduceMotion: Bool { enabled && UserDefaults.standard.bool(forKey: "reduceMotion") }
     /// `-screen taf` opens a taf's page, `-screen card` its Cards; `-screen new` the new-taf flow; `-screen solo` and
     /// `-screen add-tasks` the purchase screens, for the products in App Store Connect.
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
