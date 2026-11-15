@@ -1,3 +1,4 @@
+import { rulesMismatch, type RulesAgreement } from "./rules.js";
 import { noteSendingOutside } from "./sends-outside.js";
 /**
  * An approval card's outcome is tafs cloud's to decide (kiff/tafs#413). The
@@ -59,7 +60,10 @@ export interface ApprovalGrant {
  * refused one and then its redraft (Eval 43690861487's Refunds). The rest (no draft, a removed taf, another app first,
  * a read that didn't come back) wait for the owner's tap, as before.
  */
-export const REDRAFT_CODES: ReadonlySet<string> = new Set(["no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice", "count_on_amount"]);
+export const REDRAFT_CODES: ReadonlySet<string> = new Set(["no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice", "count_on_amount",
+  "rules_on_exceed", "rules_missing", "rules_unagreed", "rules_required"]);
+/** The refusals Coach mends by having the owner agree to the rules first, then drafting again. */
+const AGREE_FIRST_CODES: ReadonlySet<string> = new Set(["rules_unagreed", "rules_required"]);
 
 /**
  * What a refusal Coach redrafts on adds, so the redraft mends only what was named: the redraft under Eval 43690861487's
@@ -81,6 +85,7 @@ type CardsChecked = Decision | { waitsFor: string } | { draft: NonNullable<Await
  */
 export const REFUSAL_CLOSED = "Refused by tafs cloud's check, not by the owner: this approval is closed and nothing waits for them.";
 export const DRAW_AGAIN = "Draft it again now and show a new approval.";
+export const AGREE_FIRST = "Show the rules for the owner to agree first, then draft it again and show a new approval.";
 /** A count_on_amount refusal's: the count was never the owner's, so Coach drops it without asking them again. */
 export const COUNT_NEVER_A_RULE = "A count of calls on a tool with an amount limit is never one of the owner's rules: drop it without asking them.";
 
@@ -96,7 +101,8 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
       : takesKey(grant) ? " Its key wasn't approved either: the new approval carries it with the Card."
       : " Its tools weren't approved either: the new approval carries them with the Card.";
     const count = checked.code === "count_on_amount" ? ` ${COUNT_NEVER_A_RULE}` : "";
-    return { ...checked, answer: `${checked.answer.replace(/\s+$/, "")} ${REFUSAL_CLOSED}${carried}${count} ${DRAW_AGAIN} ${KEEP_THE_REST}` };
+    const next = AGREE_FIRST_CODES.has(checked.code) ? AGREE_FIRST : DRAW_AGAIN;
+    return { ...checked, answer: `${checked.answer.replace(/\s+$/, "")} ${REFUSAL_CLOSED}${carried}${count} ${next} ${KEEP_THE_REST}` };
   }
   return checked;
 }
@@ -199,6 +205,10 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
       return { outcome: "answered", answer: `failed: the draft counts "${counted.tool}"'s calls (${counted.limit} per ${counted.window}${each}) beside its amount limits. A write with an amount limit has only the agreed amounts, each call's and the day's total: no count of its calls. Draft it again without the count.`, note: W.countOnAmount(counted.tool), code: "count_on_amount" };
     }
   }
+  // What happens past each limit is what the owner agreed (rules.ts): the newest rules they agreed in this conversation,
+  // as data on the rules notice, never Coach's words alone (Evals 5 to 9: a refused day's total drafted as held).
+  const ruled = await rulesChecked(grant, others, draft.cards, ctx);
+  if (ruled) return ruled;
   return { draft: draft as NonNullable<typeof draft> & { version: string } };
 }
 
@@ -560,6 +570,10 @@ export function approvalWords(lang: Lang = "en") {
     lifetimeSum: w.approval_lifetime_sum,
     dayTotalTwice: w.approval_day_total_twice,
     countOnAmount: w.approval_count_on_amount,
+    rulesOnExceed: w.approval_rules_on_exceed,
+    rulesMissing: w.approval_rules_missing,
+    rulesUnagreed: w.approval_rules_unagreed,
+    rulesRequired: w.approval_rules_required,
     onDemandLetsRun: w.approval_on_demand,
     criticalKey: w.approval_critical_key,
     driveKey: w.approval_drive_key,
@@ -682,6 +696,41 @@ export function askOf(body: Record<string, unknown>): ApprovalAsk {
   return ask;
 }
 
+/**
+ * The draft's Cards against the rules the owner agreed in the conversation (rules.ts). With no conversation to read (a
+ * caller that draws no card), nothing to check. A conversation that can't be read isn't checked on trust: read again.
+ * With no rules shown, a draft is approved as before and logged, unless the rules are required (TAFS_RULES_REQUIRED).
+ */
+async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards: unknown[], ctx: DecideContext): Promise<Decision & { code?: string } | undefined> {
+  if (!ctx.rulesAgreement) return undefined;
+  const W = approvalWords(ctx.lang);
+  let agreement: RulesAgreement | undefined;
+  try {
+    agreement = await ctx.rulesAgreement();
+  } catch {
+    agreement = undefined;
+  }
+  if (!agreement) return { outcome: "read_again", note: W.cardsUnread, code: "rules_unread" };
+  if (agreement.state === "none") {
+    if (ctx.rulesRequired) {
+      return { outcome: "answered", answer: `failed: no rules the owner agreed are in this conversation, so what happens past each limit isn't theirs. Show the rules as a notice with rules [{tool, over}] and a confirm with agrees naming it, and draft once the owner tapped agree.`, note: W.rulesRequired, code: "rules_required" };
+    }
+    console.log("approval rules: none agreed in the conversation");
+    return undefined;
+  }
+  if (agreement.state === "unagreed") {
+    return { outcome: "answered", answer: `failed: the rules notice "${agreement.notice}" isn't agreed yet, so the owner is looking at rules they haven't agreed to. Show its confirm with agrees "${agreement.notice}", and draft once the owner tapped agree.`, note: W.rulesUnagreed, code: "rules_unagreed" };
+  }
+  const off = rulesMismatch([grant, ...others], cards, agreement.rules);
+  if (!off) return undefined;
+  if (off.kind === "missing") {
+    return { outcome: "answered", answer: `failed: the rules the owner agreed say nothing of "${off.tool}", a write the draft covers, so what happens past its limit was never agreed. Show the rules again with "${off.tool}" in them, then draft it again.`, note: W.rulesMissing(off.tool), code: "rules_missing" };
+  }
+  const said = off.over === "ask" ? "asks them past its limit" : "refuses past its limit";
+  const want = off.over === "ask" ? "owner" : "refuse";
+  return { outcome: "answered", answer: `failed: the rules the owner agreed say "${off.tool}" ${said}, and the draft's Card for it has on_exceed "${off.onExceed}". Draft it again with on_exceed "${want}" on that Card.`, note: W.rulesOnExceed(off.tool), code: "rules_on_exceed" };
+}
+
 export interface DecideContext {
   /**
    * Whether a key grant with its Card's draft is asked as one signature (`key_and_cards`): on only once KIFF and the
@@ -720,6 +769,13 @@ export interface DecideContext {
    * draft over it is approved in that conversation (approvedDraftKey): Coach never re-drafts after the owner signed.
    */
   session?: string;
+  /**
+   * The rules the owner agreed in the conversation the card is in (rules.ts), read when a draft is checked. Unset, the
+   * draft isn't checked against rules (a caller that draws no card); a read that fails is read again, never trusted.
+   */
+  rulesAgreement?: () => Promise<RulesAgreement>;
+  /** A draft with no agreed rules is refused too (TAFS_RULES_REQUIRED=on), once every Coach run sends them. */
+  rulesRequired?: boolean;
 }
 
 /** Where the Card a conversation approved for a connection is noted: one draft per connection, per conversation. */

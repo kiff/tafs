@@ -1,4 +1,5 @@
 import { checkMisfitSeen } from "./checkseen.js";
+import { rulesAgreement } from "./rules.js";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { CUSTOM, DISCLOSE_MAX, discloseOf, type Job, JOBS, jobById, ownJob, writesForIn, writesForOf } from "../jobs.js";
 import { type AIView, view as aiView } from "./aiuse.js";
@@ -3313,7 +3314,7 @@ async function precheck(event: HTTPEvent, me: KIFFIdentity, taf: Taf, c: ThreadC
     await release();
     return undefined;
   }
-  const out = await within(checkDraft({ grant: ask.grant, draft: ask.draft, shown_draft: ask.version }, checkContext(event, me, deps), grants), PRECHECK_MS).catch(() => undefined);
+  const out = await within(checkDraft({ grant: ask.grant, draft: ask.draft, shown_draft: ask.version }, withRules(checkContext(event, me, deps), me, c.session, deps), grants), PRECHECK_MS).catch(() => undefined);
   if (!out || out.outcome === "read_again") {
     // Not read in time, or not read whole: the next read checks again.
     await release();
@@ -3857,6 +3858,18 @@ function checkContext(event: HTTPEvent, me: KIFFIdentity, deps: Deps): import(".
   };
 }
 
+/**
+ * The rules the owner agreed in the card's conversation (rules.ts), read with their own access when a draft is checked,
+ * and whether a draft with none is refused too (TAFS_RULES_REQUIRED=on, once every Coach run sends them).
+ */
+function withRules(ctx: import("./approval.js").DecideContext, me: KIFFIdentity, session: string, deps: Deps): import("./approval.js").DecideContext {
+  return {
+    ...ctx,
+    rulesRequired: process.env.TAFS_RULES_REQUIRED === "on",
+    rulesAgreement: async () => rulesAgreement((await deps.agents.session(me.tenantID, session, ownerKey(me))).events),
+  };
+}
+
 /** Coach hears an approval's outcome from tafs cloud, as the person's answer to the card. */
 async function tellCoach(me: KIFFIdentity, taf: Taf, card: { session: string; run: string }, component: string, answer: string, deps: Deps) {
   try {
@@ -3890,7 +3903,7 @@ async function approvalAskRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf, co
   const signIn = approval ? undefined : await shownCard(me, taf, component, "sign_in", session, deps);
   const card = approval ?? signIn;
   if (!card) throw new HTTPError(404, "no card of yours by that id");
-  const decision = await decideApproval(ask, { ...ctx, session: card.session }).catch(approvalFailure);
+  const decision = await decideApproval(ask, withRules({ ...ctx, session: card.session }, me, card.session, deps)).catch(approvalFailure);
   if (signIn && decision.outcome !== "answered") return { outcome: "sign_in" };
   if (decision.outcome === "answered") {
     // A sign-in card's answer is "signed in" or "failed: …": already approved means already signed in.
