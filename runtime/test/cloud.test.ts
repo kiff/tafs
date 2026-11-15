@@ -956,6 +956,8 @@ describe("tafs cloud", () => {
       words: "Gmail's sign-in has expired, so Rae can't use it. Connect again to sign in.", done_words: "Gmail is connected again. Rae can use it." });
     expect((await setup("needs_reconnect", "fr")).connect_again?.title).toBe("Se reconnecter");
     expect((await setup("connected")).connect_again).toBeUndefined();
+    contract("taf-setup-connected", "GET /v1/tafs/{id}/setup for someone who manages the taf, with one app connected (Gmail): its connection as the Setup tab draws it.", await setup("connected"));
+    contract("taf-setup-reconnect", "GET /v1/tafs/{id}/setup when the taf's own connection's sign-in has expired: the connection and the taf's Connect again.", await setup("needs_reconnect"));
   });
 
   it("does not claim no currency exceptions wait when KIFF could not be read", async () => {
