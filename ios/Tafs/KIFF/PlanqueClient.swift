@@ -334,8 +334,15 @@ final class PlanqueClient {
         var grants = try KIFFClient.decoder.decode(Response.self, from: data).grants
         // The request as planque sent it, numbers as written, so the digest is planque's.
         let raws = (try? JCS.parse(data))?["grants"]?.array ?? []
+        // Each grant with planque's entry at its own position, never looked up by id: two entries with one id
+        // (one request, then another carrying the first's digest) would mark the second as matching from the
+        // first's bytes, and approving it would sign what wasn't shown. An id that repeats, or a list of
+        // another length, pairs nothing: no grant matches, and nothing is signed.
+        let ids = grants.map(\.id)
+        let paired = raws.count == grants.count && Set(ids).count == ids.count
         for i in grants.indices {
-            guard let raw = raws.first(where: { $0["id"]?.string == grants[i].id }), let request = raw["request"] else { continue }
+            guard paired, raws[i]["id"]?.string == grants[i].id, let request = raws[i]["request"] else { continue }
+            let raw = raws[i]
             grants[i].profile = request["profile"]
             guard let covered = Self.digestCovers(raw), let canonical = try? JCS.canonical(covered) else { continue }
             let hash = SHA256.hash(data: canonical).map { String(format: "%02x", $0) }.joined()
