@@ -1960,6 +1960,47 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     expect(await tap()).toMatchObject({ outcome: "answered", note: WORDS.rulesMissing("Refund a charge") });
   });
 
+  // kiff-qa on #1100: the conversation that can't be read is never trusted; it's read again, nothing signed.
+  it("a conversation that can't be read isn't trusted: the card reads again, and nothing is signed", async () => {
+    // How many conversation reads a tap makes, the rules' own read last; then the same tap with only that read failing.
+    const count = await setUp("refuse");
+    count.rules("rules-1", RULES);
+    const counted = count.w.agents.api.session.bind(count.w.agents.api);
+    let n = 0;
+    count.w.agents.api.session = async (...a: Parameters<typeof counted>) => { n++; return counted(...a); };
+    expect(await count.tap()).toMatchObject({ outcome: "sign" });
+    const { s, w, rules, tap } = await setUp("refuse");
+    rules("rules-1", RULES);
+    const real = w.agents.api.session.bind(w.agents.api);
+    let reads = 0;
+    w.agents.api.session = async (...a: Parameters<typeof real>) => {
+      if (++reads === n) throw new Error("kiff/agents is down");
+      return real(...a);
+    };
+    expect(await tap()).toMatchObject({ outcome: "read_again", note: WORDS.cardsUnread });
+    expect(s.checks).toEqual([]);
+  });
+
+  // kiff-qa on #1100: the rules hold for every tool the taf holds, the same taf's other connections included.
+  it("another connection's tool of the same taf follows the agreed rules too", async () => {
+    const s = services();
+    const mail = [{ tool: "send_reply", name: "send_reply_m7", title: "Send a reply" }];
+    s.grants = [grant({ status: "connected" }, { tools }), grant({ id: "g_2", status: "connected", vendor: "Mail" }, { server: "mcp.mail.example", tools: mail })];
+    const mailCard = (onExceed: string) => ({ id: "c3", subject: "refunds-x", on_exceed: onExceed, grants: [{ action: "send_reply_m7" }], aggregates: [] });
+    const both = [...RULES, { tool: "send_reply", over: "refuse" }];
+    for (const [onExceed, rulesList, want] of [["refuse", both, "sign"], ["owner", both, WORDS.rulesOnExceed("Send a reply")], ["refuse", RULES, WORDS.rulesMissing("Send a reply")]] as const) {
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [...cards("refuse"), mailCard(onExceed)] };
+      const w = await world(s, { draft: "drf_1" });
+      w.agents.show(w.stored, { type: "notice", id: "rules-1", tone: "info", text: "The rules.", rules: rulesList });
+      w.agents.show(w.stored, { type: "confirm", id: "ok-rules-1", text: "Agree?", agrees: "rules-1", options: [{ value: "agree", label: "Agree" }, { value: "change", label: "Change something" }] });
+      const list = w.agents.events.get(w.stored.session)!;
+      list.push({ session: w.stored.session, run: w.stored.id, seq: list.length + 1, time: NOW.toISOString(), kind: "answered", body: { id: "ok-rules-1", type: "confirm", answer: "agree", words: "Agree" } });
+      const r = (await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+      if (want === "sign") expect(r).toMatchObject({ outcome: "sign" });
+      else expect(r).toMatchObject({ outcome: "answered", note: want });
+    }
+  });
+
   it("rules shown and not agreed yet, or newer than the agreement, block the draft until agreed", async () => {
     const shown = await setUp("refuse");
     shown.rules("rules-1", RULES, false);
