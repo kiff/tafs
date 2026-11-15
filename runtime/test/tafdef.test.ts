@@ -225,4 +225,22 @@ describe("a section of the kiff skill", () => {
     expect(CALL_INSTRUCTIONS).not.toMatch(/T-20\d\d|dispute/);
     expect(definition(ID, jobById("chargebacks")).instructions).toContain("A call you can make\n  now never waits for the next run");
   });
+
+  // Chargebacks: KIFF held one of a run's calls, which pauses the run until the owner answers, and the calls the taf
+  // hadn't made yet were never made. The calls within its limits go first; one past a limit goes last.
+  it("tells the taf to make a call past its limits last, since a held call pauses the run", () => {
+    expect(CALL_INSTRUCTIONS).toContain("A call KIFF holds for the owner pauses the run until they answer.");
+    expect(CALL_INSTRUCTIONS).toContain("make\n  every call within your limits first, and a call past a limit your Card or\n  your instructions name last, once nothing else this run needs is left.");
+    // Still made: last, never skipped (one request is one call, and KIFF decides).
+    expect(CALL_INSTRUCTIONS).not.toMatch(/skip a call past|don't make a call past/);
+    expect(CALL_INSTRUCTIONS).not.toMatch(/T-20\d\d|dispute/);
+    expect(definition(ID, jobById("chargebacks")).instructions).toContain("pauses the run until they answer");
+  });
+
+  // Chargebacks: a taf sent a "placeholder" evidence update to a dispute it should have closed. What a call sends is
+  // final, or the call isn't made.
+  it("tells the taf to send only what's final, never a placeholder", () => {
+    expect(CALL_INSTRUCTIONS).toContain("Send only what's final: never a placeholder, a test value or text you mean\n  to replace. If you can't write it yet, don't make the call; say why.");
+    expect(definition(ID, jobById("chargebacks")).instructions).toContain("never a placeholder");
+  });
 });
