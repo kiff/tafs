@@ -166,9 +166,11 @@ final class KIFFTests: XCTestCase {
         XCTAssertEqual(token.accessToken, "tok")
         XCTAssertFalse(token.viewOnly, "no approval_mode, as from an older KIFF: not view-only")
         StubProtocol.responses["POST /v1/auth/device/token"] = (200, #"{"access_token":"tok","token_type":"Bearer","expires_in":3600,"tenant":"t1","subject":"user_1","approval_mode":"view"}"#)
-        XCTAssertTrue(try await client.pollDeviceToken(deviceCode: "dc").viewOnly)
+        let view = try await client.pollDeviceToken(deviceCode: "dc")
+        XCTAssertTrue(view.viewOnly)
         StubProtocol.responses["POST /v1/auth/device/token"] = (200, #"{"access_token":"tok","token_type":"Bearer","expires_in":3600,"tenant":"t1","subject":"user_1","approval_mode":"key"}"#)
-        XCTAssertFalse(try await client.pollDeviceToken(deviceCode: "dc").viewOnly)
+        let keyed = try await client.pollDeviceToken(deviceCode: "dc")
+        XCTAssertFalse(keyed.viewOnly)
         XCTAssertEqual(String(data: StubProtocol.sent.last?.httpBody ?? Data(), encoding: .utf8), #"{"device_code":"dc"}"#)
     }
 
