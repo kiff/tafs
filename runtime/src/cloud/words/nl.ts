@@ -107,6 +107,7 @@ export const nl: Words = {
   approval_lifetime_cap: (tool: string) => `Deze Card zou "${tool}" in totaal maar een vast aantal keer laten draaien, voor alle items samen en niet per item. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_lifetime_sum: (tool: string) => `Deze Card zou "${tool}" voor altijd tot een totaalbedrag beperken, voor alle items samen, en dat was niet afgesproken. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_day_total_twice: (tool: string) => `Deze Card zou twee dagtotalen voor "${tool}" instellen, waardoor er één boven de limiet anders kan beslissen dan afgesproken. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
+  approval_count_on_amount: (tool: string) => `Deze Card zou naast de bedraglimieten ook de aanroepen van "${tool}" tellen: een aantal dat niemand heeft afgesproken, dat aanroepen kan tegenhouden die de limieten toestaan. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} is vandaag ingesteld, dus elke wijziging moet het je eerst vragen; deze Card zou "${tool}" zonder vragen laten uitvoeren. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_critical_key: "Dit verruimt wat het taf mag, dus het vraagt je vingerafdruk. Er is niets goedgekeurd; keur het opnieuw goed met je vingerafdruk.",
   approval_drive_key: "Coach de app laten bedienen vraagt je vingerafdruk. Er is niets gestart; keur het opnieuw goed met je vingerafdruk.",

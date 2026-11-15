@@ -107,6 +107,7 @@ export const de: Words = {
   approval_lifetime_cap: (tool: string) => `Diese Card würde „${tool}“ insgesamt nur eine feste Zahl von Malen erlauben, über alle Einträge hinweg statt für jeden einzeln. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_lifetime_sum: (tool: string) => `Diese Card würde „${tool}“ auf einen Gesamtbetrag über die ganze Laufzeit begrenzen, über alle Einträge hinweg, was nicht vereinbart war. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_day_total_twice: (tool: string) => `Diese Card würde für „${tool}“ zwei Tagessummen festlegen, sodass eine davon über dem Limit anders entscheiden könnte als vereinbart. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
+  approval_count_on_amount: (tool: string) => `Diese Card würde neben den Betragslimits auch die Aufrufe von „${tool}“ zählen: eine Anzahl, die niemand vereinbart hat und die erlaubte Aufrufe zurückhalten könnte. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_on_demand: (vendor: string, tool: string) => `${vendor} wurde heute eingerichtet, also muss jede Änderung dich zuerst fragen; diese Card würde „${tool}“ ohne Nachfrage laufen lassen. Es wurde nichts genehmigt. Coach entwirft sie neu.`,
   approval_critical_key: "Das erweitert, was der taf darf, also braucht es deinen Fingerabdruck. Es wurde nichts genehmigt; genehmige es erneut mit deinem Fingerabdruck.",
   approval_drive_key: "Damit Coach die App bedienen darf, braucht es deinen Fingerabdruck. Nichts wurde gestartet; genehmige es erneut mit deinem Fingerabdruck.",
