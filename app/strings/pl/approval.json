@@ -63,6 +63,7 @@
   "approval.turned_off_tafs_open_settings": "{either} jest wyłączone dla tafs. Otwórz Ustawienia i włącz {either_2} dla tafs.",
   "approval.turned_off_tafs_turn_tafs": "{either} jest wyłączone dla tafs. Włącz je w ustawieniach tafs, aby zatwierdzać.",
   "approval.view_only": "Zaloguj się ponownie na tym telefonie, aby zatwierdzać, lub zatwierdź na drugim telefonie.",
+  "approval.view_only_mac": "Ten Mac może tylko wyświetlać. Aby zatwierdzać tutaj, dodaj go na telefonie: Konto › Urządzenia › Dodaj urządzenie.",
   "approval.why": "Każde zatwierdzenie w tafs, Card, połączenie czy płatność ponad limit, jest podpisywane na tym telefonie kluczem, który odblokowuje tylko Twój odcisk palca. Twój PIN ani wzór nie mogą zatwierdzać.",
   "approval.without_allows": "Bez zatwierdzania nadal możesz się zalogować, przeglądać, odrzucać i blokować.",
   "approval.your_passcode": "Twój kod"

@@ -233,6 +233,8 @@ enum Words {
         static func turnedOffTafsTurnTafs(either: String) -> String { Words.line("approval.turned_off_tafs_turn_tafs", either) }
         /// Sign in again on this phone to approve, or approve from your other phone.
         static var viewOnly: String { Words.line("approval.view_only") }
+        /// This Mac can only view. To approve here, add it from your phone: Account › Devices › Add a device.
+        static var viewOnlyMac: String { Words.line("approval.view_only_mac") }
         /// Every approval you give in tafs, a Card, a connection or a payment over a limit, is signed on this phone with a key only your fingerprint unlocks. Your PIN or pattern can't approve.
         static var why: String { Words.line("approval.why") }
         /// Without approvals you can still sign in, review, refuse and halt.
@@ -4653,6 +4655,8 @@ enum Words {
         static func dictationIn(language: String) -> String { Words.line("voice.dictation_in", language) }
         /// Dictation isn't on this {device} yet. Add a keyboard with dictation on in Settings › General › Keyboard › Keyboards, wait for its language to download, then try again.
         static func dictationNotAddKeyboardDictation(device: String) -> String { Words.line("voice.dictation_not_add_keyboard_dictation", device) }
+        /// Dictation isn't on for this Mac yet. Turn it on in System Settings › Keyboard › Dictation (on macOS 12: System Preferences › Keyboard › Dictation), wait for its language to download, then try again.
+        static var dictationNotAddKeyboardDictationMac: String { Words.line("voice.dictation_not_add_keyboard_dictation_mac") }
         /// Dictation isn't available right now. Try again in a moment.
         static var dictationNotAvailableRightTry: String { Words.line("voice.dictation_not_available_right_try") }
         /// Dictation stopped: {why} Tap the mic to start again.
@@ -4663,6 +4667,8 @@ enum Words {
         static func listeningIn(name: String) -> String { Words.line("voice.listening_in", name) }
         /// The microphone is off for tafs. Turn it on in Settings › tafs › Microphone.
         static var microphoneOffTafsTurnSettings: String { Words.line("voice.microphone_off_tafs_turn_settings") }
+        /// The microphone is off for tafs. Turn it on in System Settings › Privacy & Security › Microphone (on macOS 12: System Preferences › Security & Privacy › Privacy › Microphone).
+        static var microphoneOffTafsTurnSettingsMac: String { Words.line("voice.microphone_off_tafs_turn_settings_mac") }
         /// Allow tafs to use the microphone to dictate. Your voice becomes text on this phone and isn't sent anywhere.
         static var noMicrophone: String { Words.line("voice.no_microphone") }
         /// This phone can't recognise speech on the phone itself, so the mic doesn't work here: your voice would have to leave it. You can type instead.
@@ -4675,6 +4681,8 @@ enum Words {
         static var speechRecognitionNotAvailableLanguage: String { Words.line("voice.speech_recognition_not_available_language") }
         /// Speech recognition is off for tafs. Turn it on in Settings › Privacy & Security › Speech Recognition.
         static var speechRecognitionOffTafsTurn: String { Words.line("voice.speech_recognition_off_tafs_turn") }
+        /// Speech recognition is off for tafs. Turn it on in System Settings › Privacy & Security › Speech Recognition (on macOS 12: System Preferences › Security & Privacy › Privacy › Speech Recognition).
+        static var speechRecognitionOffTafsTurnMac: String { Words.line("voice.speech_recognition_off_tafs_turn_mac") }
         /// Speech recognition is restricted on this device, so dictation can't run.
         static var speechRecognitionRestrictedDeviceDictation: String { Words.line("voice.speech_recognition_restricted_device_dictation") }
         /// Stop dictating
