@@ -292,6 +292,8 @@ things (`runtime/src/cloud/approval.ts`):
   `GET /v1/me/mandates`): KIFF refuses every call no Card covers (`no_mandate_issued`), reads
   included, so the taf couldn't use it. Setup's own reads (planque's `setup_reads`) are left
   out. When the Cards in force can't be read, the answer is **read_again**, never a signature.
+  So is a draft that KIFF shows without its Cards (none, `null` or an empty list), on every
+  grant: each check here reads them, so none is skipped, and nothing is signed.
   A Card covers a tool by the name planque registered for this taf (`request.tools[].name`),
   never the vendor's own (`tool`). When the vendor's name was taken in KIFF, planque gives the
   tool a free one (`list_charges_noyy`). A draft whose Card names the vendor's name

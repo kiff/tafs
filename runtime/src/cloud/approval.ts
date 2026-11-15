@@ -61,11 +61,12 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
   if (issued(draft.status)) return { outcome: "answered", answer: `already approved: ${vendor} is connected and its Card is confirmed`, note: W.alreadyApproved };
   if (draft.status !== "draft") return { outcome: "answered", answer: `failed: the Card draft is ${draft.status}`, note: `The Card draft is ${draft.status}. Ask Coach for a new one.` };
   if (!draft.version || draft.version !== ask.shown_draft) return { outcome: "read_again", note: W.outOfDate };
+  // Every check below reads the Cards as KIFF shows them: a draft read without them (none, or KIFF's null for a draft
+  // with no Card) is never signed, so no check is skipped (fail closed). It was the on-demand grants' rule alone.
+  if (!draft.cards?.length) return { outcome: "read_again", note: W.cardsUnread };
   // An app set up on demand asks for every change (kiff/planque#87): a draft that lets one of its
   // writes run outright isn't signed, and Coach hears why, so the default holds here, not only in its words.
-  // The check needs the Cards as KIFF shows them: a draft read without them isn't signed on trust.
-  if (grant.on_demand === true && !draft.cards) return { outcome: "read_again", note: W.cardsUnread };
-  const letsRun = onDemandLetsRun(grant, draft.cards ?? []);
+  const letsRun = onDemandLetsRun(grant, draft.cards);
   if (letsRun) {
     const why = W.onDemandLetsRun(vendor, letsRun);
     return { outcome: "answered", answer: `failed: ${vendor} was set up on demand, so every write and money tool of it must ask the owner each time (0 a day, held); the draft lets "${letsRun}" run without asking. Draft it again with that tool held.`, note: why };
@@ -73,7 +74,7 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
   // Every tool the taf was given goes on a Card, the reads too: a draft that leaves one uncovered,
   // with no Card in force covering it either, isn't signed, and Coach hears which. A draft read
   // without its Cards, or Cards in force that can't be read, isn't signed on trust.
-  if (draft.cards) {
+  {
     let inForce: Set<string>;
     try {
       inForce = await actionsInForce(ctx.token, draft.agent, ctx.fetch, ctx.kiffBase ?? KIFF_API);
