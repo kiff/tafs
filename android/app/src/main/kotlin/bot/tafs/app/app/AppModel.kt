@@ -127,6 +127,8 @@ import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** How the app is fed: nothing yet, the sample, or the owner's KIFF account. */
 enum class Mode { signedOut, sample, kiff }
@@ -496,6 +498,11 @@ data class AppState(
   val coachNotes: Map<String, String> = emptyMap(),
   /** Clearing removed tafs' connections is on its way, and how it went, under them in Connect apps. */
   val clearingRemoved: Boolean = false,
+  /**
+   * The connection whose removal is on its way, by its grant: from Disconnect's fingerprint until planque answered and the list
+   * was read again. Its app and its row say "Removing access…", never "Connected", meanwhile (as iOS's button does).
+   */
+  val disconnecting: String? = null,
   val clearNote: String? = null,
   /** A drive card being approved, by its key: Approve waits for the fingerprint and tafs cloud. */
   val driveStarting: String? = null,
@@ -3538,17 +3545,19 @@ class AppModel(
     if (approvals.isEmpty()) return
     refreshConnections()
     // An open card whose grant planque doesn't list yet: tafs cloud can write the card as the grant is made, and the card would
-    // say "Reading what it asks for…" until another tab read the grants. Read them again a few seconds apart until planque has it.
-    val unread = _state.value.coachComponents.filter { it.answer == null && (it.component.type == "approval" || it.component.type == "sign_in") }
-      .mapNotNull { it.component.grant }.filter { g -> _state.value.grants.none { it.id == g } }
+    // say "Reading what it asks for…" until the chat was opened again (a live test: over a minute, with Coach's run done, so
+    // the thread wasn't read again either). Planque's grants are read again a few seconds apart while such a card waits:
+    // until planque lists its grant or the card is answered, for ten minutes at most from when this phone began reading.
+    val unread = grantsCardsWaitOn(_state.value.coachComponents, _state.value.grants)
       // Marked followed only once a re-read starts: a read planque refused leaves them for the next thread read.
       .takeIf { _state.value.planqueReady }.orEmpty().filter { grantsFollowed.add(it) }
     if (unread.isNotEmpty()) scope.launch {
-      repeat(SET_UP_READS) {
+      repeat(CARD_GRANT_READS) {
         delay(SET_UP_READ_MS)
         if (generation != accountGeneration) return@launch
         refreshConnections()
-        if (unread.all { g -> _state.value.grants.any { it.id == g } }) return@launch
+        val s = _state.value
+        if (unread.none { it in grantsCardsWaitOn(s.coachComponents, s.grants) }) return@launch
       }
     }
     for (c in approvals) {
@@ -4579,6 +4588,10 @@ class AppModel(
         // Listed is signed in too: planque holds the sign-in and listed the vendor's tools for Setup to choose from.
         if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor), "the sign-in at ${grant.vendor} came back, but planque says the connection is ${connected.status}")
         return Connected.Done(connected)
+      } catch (e: bot.tafs.app.kiff.VendorSignInReplaced) {
+        // Given up for a new approval (reopenSignIn): nothing to say or answer; the approval runs again.
+        refreshConnections()
+        return Connected.Stopped
       } catch (e: VendorSignInCancelled) {
         refreshConnections()
         return Connected.Failed(Words.Connect.signInClosedNothingConnected, told = "The sign-in was closed. Nothing was connected.")
@@ -4605,7 +4618,37 @@ class AppModel(
    * (planque's confirm, the answer to Coach, reading the thread, following the run) goes on whatever happens to it.
    */
   fun startApproval(c: SetupComponent, shownDigest: String?, shownDraft: String?) {
-    scope.launch { approveCoach(c, shownDigest, shownDraft) }
+    scope.launch { restartable({ startApproval(c, shownDigest, shownDraft) }) { approveCoach(c, shownDigest, shownDraft) } }
+  }
+
+  /** How the approval waiting on a vendor's page now starts again, for [reopenSignIn]; none once it ended. */
+  @Volatile private var signInRestart: (() -> Unit)? = null
+
+  private suspend fun <T> restartable(again: () -> Unit, run: suspend () -> T): T {
+    signInRestart = again
+    try {
+      return run()
+    } finally {
+      if (signInRestart === again) signInRestart = null
+    }
+  }
+
+  /**
+   * Open again, on a sign-in the owner came back from with no link (docs/android-app.md › Connect apps). A vendor's sign-in link
+   * is single-use: once its first redirect reached planque, the same page only says it's used. So the wait on it ends quietly
+   * (nothing answered or reported), and the card's approval runs again, one fingerprint: planque answers a grant it holds
+   * signed in with its confirm code (the signed-in path, no page), and any other with a fresh link. Where no approval can run
+   * again, the same page opens, as before.
+   */
+  fun reopenSignIn() {
+    val again = signInRestart ?: return vendorSignIn.reopen()
+    signInRestart = null
+    scope.launch {
+      vendorSignIn.replace()
+      // Once the approval that waited has stopped: only one runs at a time.
+      withTimeoutOrNull(REPLACE_WAIT_MS) { _state.first { it.connecting == null } } ?: return@launch
+      again()
+    }
   }
 
   /**
@@ -4631,7 +4674,7 @@ class AppModel(
 
   /** The sign-in card's Sign in again, run by the model for the same reason as [startApproval]. */
   fun startSignInAgain(c: SetupComponent) {
-    scope.launch { signInAgain(c) }
+    scope.launch { restartable({ startSignInAgain(c) }) { signInAgain(c) } }
   }
 
   /** A taf page's Sign in again (a connection its vendor signed out), run by the model for the same reason. */
@@ -4766,10 +4809,12 @@ class AppModel(
             }
             came = made
           }
+          // Given up for a new approval: tafs cloud hears nothing of this one, and the card waits for the next.
+          if (came == Came.Replaced) return true
           val report = kotlinx.serialization.json.buildJsonObject {
             when (val c2 = came) {
               is Came.Of -> { put("result", c2.result); c2.status?.let { put("status", it) }; c2.why?.let { put("why", it) } }
-              Came.WindowEnded -> put("result", "failed")
+              Came.WindowEnded, Came.Replaced -> put("result", "failed")
             }
             session?.let { put("session", it) }
           }
@@ -4929,6 +4974,9 @@ class AppModel(
 
     /** planque refused it: signed in an approval window that had ended, so nothing was done. */
     data object WindowEnded : Came
+
+    /** The vendor's page was given up for a new approval (reopenSignIn): nothing is reported; the approval runs again. */
+    data object Replaced : Came
   }
 
   /**
@@ -5034,6 +5082,8 @@ class AppModel(
         }
       }
     }
+  } catch (e: bot.tafs.app.kiff.VendorSignInReplaced) {
+    Came.Replaced
   } catch (e: VendorSignInCancelled) {
     Came.Of("sign_in_closed")
   } catch (e: bot.tafs.app.kiff.PlanqueError.WindowRequired) {
@@ -5222,6 +5272,16 @@ class AppModel(
 
   /** Disconnects a vendor: planque removes its tools from KIFF and revokes the sign-in at the vendor. Asks for the owner's confirmation. */
   suspend fun disconnect(grantId: String): Boolean {
+    if (_state.value.disconnecting != null) return false
+    _state.update { it.copy(disconnecting = grantId) }
+    return try {
+      disconnectNow(grantId)
+    } finally {
+      _state.update { if (it.disconnecting == grantId) it.copy(disconnecting = null) else it }
+    }
+  }
+
+  private suspend fun disconnectNow(grantId: String): Boolean {
     val tenant = kiffTenant
     val grant = _state.value.grants.firstOrNull { it.id == grantId }
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || grant == null || !_state.value.planqueReady) return false
@@ -8069,6 +8129,26 @@ class AppModel(
     /** How many times, and how far apart, the list is read for a taf tafs cloud said it set up, until the list has it. */
     const val SET_UP_READS = 3
     const val SET_UP_READ_MS = 3_000L
+
+    /** How long Open again waits for the approval it gave up to stop, before its new one starts; past it, none starts. */
+    const val REPLACE_WAIT_MS = 10_000L
+
+    /**
+     * How many times planque's grants are read, [SET_UP_READ_MS] apart, while a card waits on its grant: ten minutes, counted on
+     * this phone (never against the card's time, which is tafs cloud's clock).
+     */
+    const val CARD_GRANT_READS = 200
+
+    /**
+     * The grants that an unanswered approval or sign-in card in the thread waits on: planque doesn't list them yet. While one
+     * does, planque's grants are read again, as iOS's thread reads do.
+     */
+    fun grantsCardsWaitOn(components: List<ShownComponent>, grants: List<Grant>): Set<String> =
+      components.asSequence()
+        .filter { it.answer == null && (it.component.type == "approval" || it.component.type == "sign_in") }
+        .mapNotNull { it.component.grant }
+        .filter { g -> grants.none { it.id == g } }
+        .toSet()
 
     /** The stops of the run's own: it ends with no words for it. */
     val CAP_STOPS = setOf("cost_cap", "turn_cap", "max_token", "refused")

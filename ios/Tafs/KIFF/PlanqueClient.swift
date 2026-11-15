@@ -88,13 +88,19 @@ final class PlanqueClient {
         let tenant: String
         /// The phone key's fingerprint, as planque shows it in its record.
         let device: String
+        /// The connector key planque holds still stands, so it kept it and took no new one.
+        var kept: Bool?
     }
 
     /// Hands planque the KIFF connector key it keeps to register tools. Signed with
     /// `deviceID`, any of the owner's devices may (kiff/planque#10). The device's key goes
-    /// too, for a planque from before that, which enrols one phone by its key.
-    func enrol(deviceKey: Data, connectorKey: String) async throws -> Enrolment {
-        try await send("POST", "enrolment", body: ["device_key": deviceKey.base64EncodedString(), "connector_key": connectorKey])
+    /// too, for a planque from before that, which enrols one phone by its key. With no
+    /// `connectorKey`, it only asks whether the enrolled key still stands: planque answers
+    /// `kept`, or refuses (`needs_key`) and keeps nothing.
+    func enrol(deviceKey: Data, connectorKey: String?) async throws -> Enrolment {
+        var body = ["device_key": deviceKey.base64EncodedString()]
+        if let connectorKey { body["connector_key"] = connectorKey }
+        return try await send("POST", "enrolment", body: body)
     }
 
     // MARK: Grants
@@ -334,8 +340,15 @@ final class PlanqueClient {
         var grants = try KIFFClient.decoder.decode(Response.self, from: data).grants
         // The request as planque sent it, numbers as written, so the digest is planque's.
         let raws = (try? JCS.parse(data))?["grants"]?.array ?? []
+        // Each grant with planque's entry at its own position, never looked up by id: two entries with one id
+        // (one request, then another carrying the first's digest) would mark the second as matching from the
+        // first's bytes, and approving it would sign what wasn't shown. An id that repeats, or a list of
+        // another length, pairs nothing: no grant matches, and nothing is signed.
+        let ids = grants.map(\.id)
+        let paired = raws.count == grants.count && Set(ids).count == ids.count
         for i in grants.indices {
-            guard let raw = raws.first(where: { $0["id"]?.string == grants[i].id }), let request = raw["request"] else { continue }
+            guard paired, raws[i]["id"]?.string == grants[i].id, let request = raws[i]["request"] else { continue }
+            let raw = raws[i]
             grants[i].profile = request["profile"]
             guard let covered = Self.digestCovers(raw), let canonical = try? JCS.canonical(covered) else { continue }
             let hash = SHA256.hash(data: canonical).map { String(format: "%02x", $0) }.joined()

@@ -1,4 +1,4 @@
-import { rulesMismatch, type RulesAgreement } from "./rules.js";
+import { rulesMismatch, rulesUnnamedFigures, rulesUnsaid, type RulesAgreement } from "./rules.js";
 import { noteSendingOutside } from "./sends-outside.js";
 /**
  * An approval card's outcome is tafs cloud's to decide (kiff/tafs#413). The
@@ -61,7 +61,7 @@ export interface ApprovalGrant {
  * a read that didn't come back) wait for the owner's tap, as before.
  */
 export const REDRAFT_CODES: ReadonlySet<string> = new Set(["no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice", "count_on_amount",
-  "rules_on_exceed", "rules_missing", "rules_unagreed", "rules_required"]);
+  "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed", "rules_required"]);
 /** The refusals Coach mends by having the owner agree to the rules first, then drafting again. */
 const AGREE_FIRST_CODES: ReadonlySet<string> = new Set(["rules_unagreed", "rules_required"]);
 
@@ -572,6 +572,7 @@ export function approvalWords(lang: Lang = "en") {
     countOnAmount: w.approval_count_on_amount,
     rulesOnExceed: w.approval_rules_on_exceed,
     rulesMissing: w.approval_rules_missing,
+    rulesFigures: w.approval_rules_figures,
     rulesUnagreed: w.approval_rules_unagreed,
     rulesRequired: w.approval_rules_required,
     onDemandLetsRun: w.approval_on_demand,
@@ -633,7 +634,7 @@ async function noteConnected(store: CoachStore, tenant: string, grant: ApprovalG
 
 /** The grants planque shows this phone, read with the proof the phone signed and tafs cloud forwards unchanged. */
 export async function readGrants(base: string, tenant: string, proof: string, net: Fetch): Promise<ApprovalGrant[]> {
-  if (!proof || proof.length > 4096) throw new ApprovalError(503, "Connect this phone to read its connected apps");
+  if (!proof || proof.length > 4096) throw new ApprovalError(503, "Connect this device to read its connected apps");
   let res: Response;
   try {
     res = await net(`${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/grants`, { headers: { accept: "application/json", "Planque-Device-Signature": proof } });
@@ -722,9 +723,20 @@ async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards
     return { outcome: "answered", answer: `failed: the rules notice "${agreement.notice}" isn't agreed yet, so the owner is looking at rules they haven't agreed to. Show its confirm with agrees "${agreement.notice}", and draft once the owner tapped agree.`, note: W.rulesUnagreed, code: "rules_unagreed" };
   }
   const off = rulesMismatch([grant, ...others], cards, agreement.rules);
-  if (!off) return undefined;
+  if (!off) {
+    // Figures the Cards add that the rules don't name, and figures the notice's words don't say: logged, never refused yet.
+    for (const f of rulesUnnamedFigures([grant, ...others], cards, agreement.rules)) console.log(`approval rules: a figure the rules don't name: ${f}`);
+    for (const f of rulesUnsaid(agreement.rules, agreement.text)) console.log(`approval rules: a figure the notice's words don't say: ${f}`);
+    return undefined;
+  }
   if (off.kind === "missing") {
     return { outcome: "answered", answer: `failed: the rules the owner agreed say nothing of "${off.tool}", a write the draft covers, so what happens past its limit was never agreed. Show the rules again with "${off.tool}" in them, then draft it again.`, note: W.rulesMissing(off.tool), code: "rules_missing" };
+  }
+  if (off.kind === "figure") {
+    const each = off.window === "call" ? "each call" : "a day's total";
+    const where = off.window === "call" ? `per_action_max {quantity: "${off.quantity}", max: ${off.agreed}} on its grant` : `an aggregate {quantity: "${off.quantity}", window: "calendar_day", limit: ${off.agreed}} with no per`;
+    const has = off.drafted === undefined ? "no Card covering it has that figure" : `a Card covering it has ${off.drafted}`;
+    return { outcome: "answered", answer: `failed: the rules the owner agreed give "${off.tool}" ${off.agreed} as ${each} on ${off.quantity}, and ${has}. Draft it again with ${where}, and no other figure for it on any Card.`, note: W.rulesFigures(off.tool), code: "rules_figures" };
   }
   const said = off.over === "ask" ? "asks them past its limit" : "refuses past its limit";
   const want = off.over === "ask" ? "owner" : "refuse";

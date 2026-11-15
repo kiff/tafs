@@ -79,7 +79,11 @@ Before the first message, one Face ID (`AppModel.startSetup`):
 
 1. The phone enrolls with planque: planque gets the phone's key, and a KIFF key that
    connects tools and does nothing else, minted with a signed setup call and never kept
-   on the phone. If planque can't check the phone with KIFF (401), the app says "Connecting
+   on the phone. The phone asks first with no key: while the key planque holds still stands
+   (another device enrolled it), planque answers `kept` and no key is minted, since a phone
+   can't revoke a connector key and a new one would only be left live in KIFF. Otherwise
+   (`needs_key`, or a planque from before) it mints one and hands it over (iPhone and iPad:
+   `AppModel.enrolPlanque`). If planque can't check the phone with KIFF (401), the app says "Connecting
    your apps didn't work. Tap Start to try again." It never says signed out, since KIFF's
    session still works (Android).
 2. The phone submits a KIFF agent draft with no tools for Coach. tafs cloud claims its
@@ -370,9 +374,28 @@ things (`runtime/src/cloud/approval.ts`):
   on every answer (`rules_unchecked: true`). Coach sends the
   fields from `draft-the-card@26`: the rules notice carries `rules: [{tool, over, limits}]`, only
   the owner's figures and as the Card will have them, and its confirm `agrees` with its id, with
-  options Agree (value `agree`) and Change something. That skill ships once kiff/agents'
-  component schema takes the fields; until then nothing carries them, and every draft is
-  approved as before. Figures (each call's, the day's) are a later step.
+  options Agree (value `agree`) and Change something. kiff/agents' component schema takes the
+  fields; before that skill, nothing carried them, and every draft was approved as before.
+  **The figures the owner agreed.** A rule may also carry the figures the owner read,
+  `limits: [{quantity, window, limit}]`, 1 to 4: `quantity` as a Card writes it (`count` or
+  `sum(<arg>)`, the argument 1 to 64 letters, digits, `_` or `.`, as kiff/agents' schema takes it; matched exactly, so `sum( amount )` is another quantity), `window` `call` (each
+  call's) or `calendar_day` (the day's total), and `limit` a whole number from 0 (never) to
+  2^53−1 in the Card's own units (minor units of the connection's currency, as
+  `per_action_max.max` and `aggregates[].limit` are). A rule's figures are read whole or not at
+  all: an empty list, a fifth figure, the same quantity and window twice, or a limit that isn't
+  such a number leaves the notice with no rules. The same notice shown again with another figure
+  is other rules, and blocks the draft until agreed. At the check, each agreed figure is on a
+  Card covering the tool with exactly that figure: `call` as a `per_action_max` of that quantity
+  on the tool's grant, `calendar_day` as an aggregate of that quantity with `window:
+  calendar_day` and no `per` (a total for each customer is another total). Missing, or another
+  figure for the same quantity and window on any Card covering it, looser or stricter, is
+  answered `failed: …` with the agreed figure and the shape that holds it (`rules_figures`), and
+  Coach drafts it again. A rule with no figures is checked as before. Two things are logged, never
+  refused: a figure a Card adds on a tool whose rule has figures, for a quantity and window the
+  rule doesn't name ("approval rules: a figure the rules don't name: …"; refused behind a flag
+  after an Eval), and an agreed figure whose number, in the Card's units or in hundredths, the
+  notice's words don't write ("approval rules: a figure the notice's words don't say: …"), since
+  formats vary by language.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.

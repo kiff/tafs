@@ -21,7 +21,8 @@ import java.lang.ref.WeakReference
  * left unfinished for 15 minutes (how long planque takes the confirmation) is closed. The app back in front with no link from the
  * vendor ([resumed]) is [left]: the owner may have closed the tab, or gone to another app for a code and come back to tafs from the
  * launcher, which closes the tab with Google's page still waiting (the owner on Android 97). Nothing is dropped: the card offers
- * the same page again ([reopen]) and Cancel.
+ * to open it again and Cancel. Opening it again runs the card's approval once more ([replace]), since a vendor's link is single-use
+ * once its sign-in reached planque; [reopen] opens the same page only where no new approval can run.
  *
  * The tab opens from the app's own screen ([attach]), in tafs's task: an owner who leaves for another app mid-way (an
  * authenticator for a code) and comes back to tafs from the launcher comes back to the vendor's tab, not to tafs's screen, which
@@ -61,6 +62,8 @@ class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
     wait.reopened()
     open(again)
   }
+
+  override fun replace() = wait.replace()
 
   private fun open(url: String) {
     val tab = CustomTabsIntent.Builder().build()
@@ -121,6 +124,11 @@ class VendorWait {
 
   fun cancel() {
     waiting?.completeExceptionally(VendorSignInCancelled())
+  }
+
+  /** The sign-in left is given up for a new approval: the wait ends with [VendorSignInReplaced]. */
+  fun replace() {
+    waiting?.completeExceptionally(VendorSignInReplaced())
   }
 
   fun paused() {

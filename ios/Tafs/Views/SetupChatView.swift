@@ -66,7 +66,8 @@ struct SetupChatView: View {
     var body: some View {
         HStack(spacing: 0) {
             VStack(spacing: 0) {
-                if !model.setupStarted {
+                // `-screen coach-chat` draws the sample conversation, over the sample, which has no Coach to start.
+                if !model.setupStarted && !Screenshots.coachChat {
                     intro
                     if model.setupHanded && !model.approvalBlocked {
                         // Words first (docs/ios-app.md): what was handed over waits in the
