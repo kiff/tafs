@@ -86,6 +86,10 @@ targets:
         # app's items stay where they are, since this is the group it used by default.
         keychain-access-groups:
           - $(AppIdentifierPrefix)bot.tafs.app
+        # kiff.dev vouches for the app (its apple-app-site-association lists R54YWFRK4B.bot.tafs.app),
+        # so a passkey made or used here is kiff.dev's, with the origin KIFF accepts (`https://kiff.dev`).
+        com.apple.developer.associated-domains:
+          - webcredentials:kiff.dev
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app
