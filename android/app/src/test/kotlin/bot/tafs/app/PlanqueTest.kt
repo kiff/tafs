@@ -25,6 +25,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.runCurrent
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -32,6 +34,25 @@ import org.junit.Test
 
 /** Canonical JSON, the signed requests planque takes, and approving what Coach proposes. A fake planque, KIFF and tafs cloud stand in. */
 class PlanqueTest {
+  // A live test: the owner saw "no coincide", and logcat had nothing. One line per mismatch, saying which way it failed, with
+  // its status and digest_v only: nothing that names the grant, the account or the words.
+  @Test fun aDigestMismatchIsLoggedWithItsCauseStatusAndVersionOnly() {
+    val p = { s: String -> kotlinx.serialization.json.JsonPrimitive(s) }
+    val request = kotlinx.serialization.json.buildJsonObject { put("agent", p("refunds")) }
+    val v2 = { extra: Map<String, kotlinx.serialization.json.JsonElement> -> kotlinx.serialization.json.JsonObject(mapOf("request" to request, "digest_v" to p("2")) + extra) }
+    assertEquals("not in the list as sent", PlanqueClient.mismatchCause(null, null))
+    assertEquals("no request", PlanqueClient.mismatchCause(kotlinx.serialization.json.JsonObject(mapOf("id" to p("g1"))), null))
+    assertEquals("v2 without its words or language", PlanqueClient.mismatchCause(v2(mapOf("lang" to p("es"))), null))
+    assertEquals("a digest_v the app doesn't know", PlanqueClient.mismatchCause(kotlinx.serialization.json.JsonObject(mapOf("request" to request, "digest_v" to p("3"))), null))
+    assertEquals("the hash differs", PlanqueClient.mismatchCause(kotlinx.serialization.json.JsonObject(mapOf("request" to request)), request))
+    assertEquals("grant digest doesn't match: the hash differs; status approved, digest_v 1", PlanqueClient.mismatchLine("approved", null, "the hash differs"))
+    assertEquals("grant digest doesn't match: no request; status pending, digest_v 2",
+      PlanqueClient.mismatchLine("pending", kotlinx.serialization.json.JsonPrimitive(2), "no request"))
+    // Anything that isn't a plain status or version is never echoed.
+    assertEquals("grant digest doesn't match: the hash differs; status unknown, digest_v unknown",
+      PlanqueClient.mismatchLine("g_123 acme@example.com", p("2; g_123"), "the hash differs"))
+  }
+
   private val transport = FakeTransport()
   private val secrets = InMemorySecretStore()
   private val auth = FakeAuthenticator()
@@ -1508,6 +1529,30 @@ class PlanqueTest {
     auth.confirms = false
     assertFalse(m.disconnect("g1"))
     assertEquals(1, transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").size)
+  }
+
+  // A live test: while a removal was on its way, Connect apps still said "Connected ✓". The removal is the state's, from the
+  // fingerprint until the list was read again, so its app and its row say "Removing access…"; no second removal starts.
+  @Test fun aRemovalOnItsWayIsTheStatesUntilTheListIsReadAgain() = runTest {
+    reads()
+    transport.answer(grants, 200, """{"grants":[${grant(status = "connected")}]}""")
+    transport.answer("DELETE /v1/accounts/t_01/grants/g1", 200, grant("g1", "disconnected"))
+    val m = model()
+    m.refreshConnections()
+    assertNull(m.state.value.disconnecting)
+    transport.hold("DELETE /v1/accounts/t_01/grants/g1")
+    val removal = async { m.disconnect("g1") }
+    runCurrent()
+    assertEquals("g1", m.state.value.disconnecting)
+    assertFalse("one removal at a time", m.disconnect("g1"))
+    transport.release("DELETE /v1/accounts/t_01/grants/g1")
+    assertTrue(removal.await())
+    assertNull(m.state.value.disconnecting)
+    assertEquals(1, transport.requestsTo("DELETE /v1/accounts/t_01/grants/g1").size)
+    // A fingerprint refused: no removal, and nothing left saying one is on its way.
+    auth.confirms = false
+    assertFalse(m.disconnect("g1"))
+    assertNull(m.state.value.disconnecting)
   }
 
   // MARK: Plain words for ending access (the owner, 12 Nov: "connection" and "disconnect" assume too much)

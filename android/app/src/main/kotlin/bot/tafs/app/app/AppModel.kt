@@ -496,6 +496,11 @@ data class AppState(
   val coachNotes: Map<String, String> = emptyMap(),
   /** Clearing removed tafs' connections is on its way, and how it went, under them in Connect apps. */
   val clearingRemoved: Boolean = false,
+  /**
+   * The connection whose removal is on its way, by its grant: from Disconnect's fingerprint until planque answered and the list
+   * was read again. Its app and its row say "Removing access…", never "Connected", meanwhile (as iOS's button does).
+   */
+  val disconnecting: String? = null,
   val clearNote: String? = null,
   /** A drive card being approved, by its key: Approve waits for the fingerprint and tafs cloud. */
   val driveStarting: String? = null,
@@ -3538,17 +3543,19 @@ class AppModel(
     if (approvals.isEmpty()) return
     refreshConnections()
     // An open card whose grant planque doesn't list yet: tafs cloud can write the card as the grant is made, and the card would
-    // say "Reading what it asks for…" until another tab read the grants. Read them again a few seconds apart until planque has it.
-    val unread = _state.value.coachComponents.filter { it.answer == null && (it.component.type == "approval" || it.component.type == "sign_in") }
-      .mapNotNull { it.component.grant }.filter { g -> _state.value.grants.none { it.id == g } }
+    // say "Reading what it asks for…" until the chat was opened again (a live test: over a minute, with Coach's run done, so
+    // the thread wasn't read again either). Planque's grants are read again a few seconds apart while such a card waits:
+    // until planque lists its grant or the card is answered, for ten minutes at most from when this phone began reading.
+    val unread = grantsCardsWaitOn(_state.value.coachComponents, _state.value.grants)
       // Marked followed only once a re-read starts: a read planque refused leaves them for the next thread read.
       .takeIf { _state.value.planqueReady }.orEmpty().filter { grantsFollowed.add(it) }
     if (unread.isNotEmpty()) scope.launch {
-      repeat(SET_UP_READS) {
+      repeat(CARD_GRANT_READS) {
         delay(SET_UP_READ_MS)
         if (generation != accountGeneration) return@launch
         refreshConnections()
-        if (unread.all { g -> _state.value.grants.any { it.id == g } }) return@launch
+        val s = _state.value
+        if (unread.none { it in grantsCardsWaitOn(s.coachComponents, s.grants) }) return@launch
       }
     }
     for (c in approvals) {
@@ -5222,6 +5229,16 @@ class AppModel(
 
   /** Disconnects a vendor: planque removes its tools from KIFF and revokes the sign-in at the vendor. Asks for the owner's confirmation. */
   suspend fun disconnect(grantId: String): Boolean {
+    if (_state.value.disconnecting != null) return false
+    _state.update { it.copy(disconnecting = grantId) }
+    return try {
+      disconnectNow(grantId)
+    } finally {
+      _state.update { if (it.disconnecting == grantId) it.copy(disconnecting = null) else it }
+    }
+  }
+
+  private suspend fun disconnectNow(grantId: String): Boolean {
     val tenant = kiffTenant
     val grant = _state.value.grants.firstOrNull { it.id == grantId }
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || grant == null || !_state.value.planqueReady) return false
@@ -8069,6 +8086,23 @@ class AppModel(
     /** How many times, and how far apart, the list is read for a taf tafs cloud said it set up, until the list has it. */
     const val SET_UP_READS = 3
     const val SET_UP_READ_MS = 3_000L
+
+    /**
+     * How many times planque's grants are read, [SET_UP_READ_MS] apart, while a card waits on its grant: ten minutes, counted on
+     * this phone (never against the card's time, which is tafs cloud's clock).
+     */
+    const val CARD_GRANT_READS = 200
+
+    /**
+     * The grants that an unanswered approval or sign-in card in the thread waits on: planque doesn't list them yet. While one
+     * does, planque's grants are read again, as iOS's thread reads do.
+     */
+    fun grantsCardsWaitOn(components: List<ShownComponent>, grants: List<Grant>): Set<String> =
+      components.asSequence()
+        .filter { it.answer == null && (it.component.type == "approval" || it.component.type == "sign_in") }
+        .mapNotNull { it.component.grant }
+        .filter { g -> grants.none { it.id == g } }
+        .toSet()
 
     /** The stops of the run's own: it ends with no words for it. */
     val CAP_STOPS = setOf("cost_cap", "turn_cap", "max_token", "refused")

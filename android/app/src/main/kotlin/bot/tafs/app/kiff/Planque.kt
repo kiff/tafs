@@ -319,8 +319,21 @@ class PlanqueClient(
       val raw = raws.firstOrNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.content == grant.id } as? JsonObject
       val covered = raw?.let(::digestCovers)
       val matches = covered != null && runCatching { sha256Hex(Jcs.canonical(covered).toByteArray()) == grant.digest }.getOrDefault(false)
+      if (!matches) logMismatch(grant.digest, grant.status, raw?.get("digest_v"), mismatchCause(raw, covered))
       grant.copy(digestMatches = matches)
     }
+  }
+
+  /** The digests whose mismatch was logged: each one once, however often the grants are read. Never logged themselves. */
+  private val mismatchesLogged = mutableSetOf<String>()
+
+  /**
+   * One logcat line for a grant whose request doesn't hash to its digest: the phone shows "doesn't match" and signs nothing, and
+   * the line says so where diagnostics are read. Its status and `digest_v` only: no id, digest or words.
+   */
+  private fun logMismatch(digest: String, status: String, digestV: JsonElement?, cause: String) {
+    if (!synchronized(mismatchesLogged) { mismatchesLogged.add(digest) }) return
+    runCatching { android.util.Log.w(LOG_TAG, mismatchLine(status, digestV, cause)) }
   }
 
   /** One read of the account's grants, forwarded by tafs cloud; it grants and signs nothing there. */
@@ -566,6 +579,30 @@ class PlanqueClient(
   companion object {
     /** The header an API-key connection's key goes to planque in, once. */
     const val VENDOR_KEY = "Planque-Vendor-Key"
+
+    /** Logcat's tag for planque's reads. */
+    const val LOG_TAG = "TafsPlanque"
+
+    /**
+     * The mismatch's logcat line: which way it failed ([mismatchCause]), the grant's status and its `digest_v` (1 when it has
+     * none), nothing that names it.
+     */
+    fun mismatchLine(status: String, digestV: JsonElement?, cause: String): String {
+      val v = (digestV as? JsonPrimitive)?.content?.takeIf { it.isNotEmpty() && it.all(Char::isLetterOrDigit) }?.take(8) ?: if (digestV == null) "1" else "unknown"
+      val st = status.takeIf { it.isNotEmpty() && it.all { c -> c.isLetter() || c == '_' } }?.take(32) ?: "unknown"
+      return "grant digest doesn't match: $cause; status $st, digest_v $v"
+    }
+
+    /**
+     * Why a grant's digest didn't match, in a few fixed words: planque's list didn't hold the grant as sent, or no request;
+     * a version or a v2 grant's words or language the phone can't cover; or what it covers hashed to another digest.
+     */
+    fun mismatchCause(raw: JsonObject?, covered: JsonElement?): String = when {
+      raw == null -> "not in the list as sent"
+      raw["request"] == null -> "no request"
+      covered == null -> if ((raw["digest_v"] as? JsonPrimitive)?.content == "2") "v2 without its words or language" else "a digest_v the app doesn't know"
+      else -> "the hash differs"
+    }
 
     /**
      * What the phone signs inside an approval window (planque's `device.MessageWindow`): [message]'s lines under
