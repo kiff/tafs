@@ -87,60 +87,61 @@ jobs:
             -destination "platform=macOS,variant=Mac Catalyst" \
             -derivedDataPath build CODE_SIGNING_ALLOWED=NO
 
-      # They show the Mac app, they don't test it: the whole screen, so the
-      # menu bar is in the picture with the window. The iPad's reference set
+      # They show the Mac app, they don't test it. The iPad's reference set
       # (ios.yml, docs/screenshots/ipad/), light and dark, with the same launch
-      # arguments, so each Mac screen can be laid beside its iPad one. Then the
-      # Overview in French and Portuguese, for the menu bar's words.
+      # arguments, so each Mac screen can be laid beside its iPad one: the app's
+      # window alone, by its window id. Then the whole screen once, for the menu
+      # bar, and the Overview in French and Portuguese.
       #
-      # Every launch is in sample mode, which never asks the App Store. A
-      # launch outside it (the welcome screen) starts listening for purchases,
-      # and on a runner, which has no Apple Account, the App Store's sign-in
-      # then covers the window for the launches after it.
-      # TEMPORARY, removed before review: who raises the App Store's sign-in.
-      - name: Diagnose the App Store sign-in
-        continue-on-error: true
-        run: |
-          app="$PWD/ios/build/Build/Products/Debug-maccatalyst/Tafs.app"
-          start=$(date "+%Y-%m-%d %H:%M:%S")
-          open -n "$app" --args -screenshots YES -signedIn YES -tab tafs
-          sleep 12
-          echo "--- windows by process"
-          osascript -e 'tell application "System Events" to get {name, (count windows)} of (every process whose background only is false)' || true
-          osascript -e 'tell application "System Events" to get name of every process whose (count windows) > 0' || true
-          echo "--- store and account processes"
-          ps axo pid,ppid,comm | grep -iE "store|ams|akd|account|appleid" | grep -v grep || true
-          echo "--- log"
-          log show --start "$start" --style compact --predicate 'subsystem BEGINSWITH "com.apple.AppleMediaServices" OR subsystem BEGINSWITH "com.apple.storekit" OR subsystem BEGINSWITH "com.apple.commerce" OR process == "storeaccountd" OR process == "storekitagent" OR process == "appstoreagent" OR process == "Tafs"' 2>/dev/null | grep -iE "auth|sign|account|bundle|client|request|receipt|tafs" | head -150 || true
-          pkill -x Tafs || true
-          sleep 2
-
+      # The window alone, because a runner has no Apple Account: the App Store
+      # asks for one in a window of its own, over the app's, as it would on a
+      # Mac signed out of the App Store. A person's Mac is signed in.
       - name: Run the Mac app and take screenshots
         run: |
           cd ios
           app="$PWD/build/Build/Products/Debug-maccatalyst/Tafs.app"
           mkdir -p "$RUNNER_TEMP/mac-shots"
-          # Opened as a person opens it, so it's the front app and the menu bar
-          # is its own. A shot is taken once two frames a second apart are
-          # within 0.5% of each other's size; after 30 s, as it is, with a warning.
+          # The app's main window's id, from the window server; with -all, each
+          # window on screen, for the log.
+          cat > "$RUNNER_TEMP/windows.swift" <<'SWIFT'
+          import CoreGraphics
+          import Foundation
+          let all = CommandLine.arguments.contains("-all")
+          let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]] ?? []
+          var best: (id: Int, area: Double)?
+          for w in list {
+            let owner = w[kCGWindowOwnerName as String] as? String ?? ""
+            let id = w[kCGWindowNumber as String] as? Int ?? 0
+            let layer = w[kCGWindowLayer as String] as? Int ?? 0
+            let b = w[kCGWindowBounds as String] as? [String: Double] ?? [:]
+            let area = (b["Width"] ?? 0) * (b["Height"] ?? 0)
+            if all { print("\(owner) id=\(id) layer=\(layer) \(Int(b["Width"] ?? 0))x\(Int(b["Height"] ?? 0)) \(w[kCGWindowName as String] as? String ?? "")") }
+            if owner == "Tafs", layer == 0, area > (best?.area ?? 0) { best = (id, area) }
+          }
+          if !all, let best { print(best.id) }
+          SWIFT
+          swiftc -O -o "$RUNNER_TEMP/windows" "$RUNNER_TEMP/windows.swift"
+          # A shot is taken once two frames a second apart are within 0.5% of
+          # each other's size; after 30 s, as it is, with a warning.
           shoot() {
-            name=$1; shift
+            name=$1; whole=$2; shift 2
             frame="$RUNNER_TEMP/frame.png"
             open -n "$app" --args -screenshots YES -signedIn YES "$@"
             sleep 4
             prev=0
             ready=""
             for _ in $(seq 30); do
-              screencapture -x "$frame"
+              id=$("$RUNNER_TEMP/windows")
+              if [ "$whole" = whole ] || [ -z "$id" ]; then screencapture -x "$frame"; else screencapture -x -o -l "$id" "$frame"; fi
               size=$(wc -c < "$frame")
-              if [ $(( (size - prev) * 200 )) -le "$size" ] && [ $(( (prev - size) * 200 )) -le "$size" ]; then
+              if [ -n "$id" ] && [ $(( (size - prev) * 200 )) -le "$size" ] && [ $(( (prev - size) * 200 )) -le "$size" ]; then
                 ready=1; break
               fi
               prev=$size
               sleep 1
             done
-            [ -n "$ready" ] || echo "::warning::$name: the screen hadn't settled after 30 s"
-            pgrep -x Tafs >/dev/null || echo "::warning::$name: the app wasn't running when the shot was taken"
+            [ -n "$ready" ] || echo "::warning::$name: the window hadn't drawn and settled after 30 s"
+            [ "$whole" = whole ] && "$RUNNER_TEMP/windows" -all
             mv "$frame" "$RUNNER_TEMP/mac-shots/$name.png"
             pkill -x Tafs || true
             while pgrep -x Tafs >/dev/null; do sleep 0.5; done
@@ -148,7 +149,7 @@ jobs:
           en=(-AppleLanguages "(en)" -AppleLocale en_US)
           for look in Light Dark; do
             suffix=""; [ "$look" = Dark ] && suffix="-dark"
-            ref() { local screen=$1; shift; shoot "$screen$suffix" "$@" -AppleInterfaceStyle "$look" "${en[@]}"; }
+            ref() { local screen=$1; shift; shoot "$screen$suffix" window "$@" -AppleInterfaceStyle "$look" "${en[@]}"; }
             ref overview -tab tafs
             ref needs-you -tab needs-you
             ref record -tab record
@@ -168,9 +169,10 @@ jobs:
             ref coach -tab tafs -screen coach
             ref coach-chat -tab tafs -screen coach-chat
           done
+          shoot menu-bar whole -tab tafs "${en[@]}"
           for lang in fr pt; do
             region=$(echo "$lang" | tr a-z A-Z)
-            shoot "$lang-overview" -tab tafs -AppleLanguages "($lang)" -AppleLocale "${lang}_${region}"
+            shoot "$lang-overview" window -tab tafs -AppleLanguages "($lang)" -AppleLocale "${lang}_${region}"
           done
           ls -la "$RUNNER_TEMP/mac-shots"
 
