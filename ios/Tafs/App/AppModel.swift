@@ -8050,9 +8050,21 @@ final class AppModel: ObservableObject {
             if setupLive != nil { continue }
             let mine = setupThread.messages.last(where: { $0.from == .owner })?.id
             if mine != lastOwner { lastOwner = mine; polls = 0 }
-            guard polls < setupPollBudget else { continue }
+            // A card whose grant planque hasn't listed yet keeps the thread read, so its grant is read again
+            // and the card leaves "Reading the request…", however long ago the owner last wrote.
+            guard polls < setupPollBudget || cardWaitsOnItsGrant else { continue }
             polls += 1
             await loadSetupThread()
+        }
+    }
+
+    /// An unanswered approval or sign-in card whose grant this phone hasn't read yet, shown in the last ten
+    /// minutes: the thread is read again while it waits, past the poll budget, so the grant is read too.
+    var cardWaitsOnItsGrant: Bool {
+        setupThread.components.contains { shown in
+            let c = shown.component
+            guard c.type == .approval || c.type == .signIn, let g = c.grant, setupThread.answer(to: c.id) == nil else { return false }
+            return !grants.contains { $0.id == g } && clock().timeIntervalSince(shown.firstAt) < 600
         }
     }
 

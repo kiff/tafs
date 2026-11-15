@@ -68,7 +68,10 @@ which reads that again with the phone's own session and takes nothing from the p
 
 Every refresh and every push also reads planque's grants again: tafs cloud never sees them, so
 this is how a connection its vendor signed out reaches the list. A change of a kind the app
-doesn't know is ignored.
+doesn't know is ignored. While Coach's chat is open, its thread is read every 3 seconds (every second
+while it works) for five minutes after the owner last wrote, and longer while an unanswered approval or
+sign-in card's grant isn't read yet, for that card's first ten minutes (`AppModel.cardWaitsOnItsGrant`):
+each read reads planque's grants again, so the card doesn't stay on "Reading the request…".
 
 Each taf has one `DoorsModel` (`AppModel.doors(for:)`), shared by Setup › Starts when and its chat,
 so a door's knocks sit in the chat at their own times (`ChatItem.knock`). A paired sender's
