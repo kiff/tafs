@@ -109,6 +109,7 @@ import { findLabel, LabelRefusal, labelsView, readLabels, saveLabels, withLabelC
  *   GET  /v1/connect/apps?q=            Connect apps: planque's catalog, the account's connections marked, and the removed tafs whose connections may be cleared
  *   POST /v1/connect/apps/{entry}       {taf}: a connection started for that taf, for the phone to approve
  *   GET  /v1/connect/grants/{grant}/sheet  the secure connection sheet's words for a grant that takes a key, with the phone's read proof (docs/secure-connection.md)
+ *   POST /v1/connect/grants/{grant}/check  Approve's checks on a Card draft, with nothing signed, confirmed or told to Coach: ok, or Approve's answer and its reason code (docs/api.md)
  *   GET  /v1/recipes                    the recipes a new Coach conversation opens to, by category, filtered to what the catalog can connect (kiff/tafs#476); empty once the account has a live taf, or with suggestions off
  *   GET  /v1/recipes/gallery            every ready-made job the catalog can connect, at any time (+ New), with each job's apps and logos, and the strip under the tafs list
  *   GET  /v1/logos/{key}                an app's logo as a small PNG, from tafs cloud only: no session, only keys tafs cloud recorded (logos.ts)
