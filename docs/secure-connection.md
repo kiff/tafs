@@ -122,21 +122,6 @@ each in its service's signature header as today, with `v3=` for the signature an
 naming the other request's hash: `KIFF-Device-Signature: t={signed_at},v3={signature},with=sha256:{hex}`,
 and the same fields in the connection server's header.
 
-**A computer that approves with its own passkey** (Windows Hello, a session in `passkey` approval
-mode) holds no approval key. It signs the same `kiff.requests.v1` message with one passkey
-assertion, under one Windows Hello, and sends it on each request to KIFF with the other request's
-hash, as a `v3` does:
-`KIFF-Passkey-Assertion: t={signed_at},a={assertion},with=sha256:{hex}`.
-- **The assertion** is the same base64url JSON as for one request (`credential_id`,
-  `client_data_json`, `authenticator_data`, `signature`). Its WebAuthn challenge is base64url of
-  the SHA-256 of the `kiff.requests.v1` message above, not of one request's message.
-- **KIFF's API and its gateway** each rebuild their own request message, hash it, form the list
-  with `with`, and check the assertion with the computer's own credential, as for one request
-  (user verification, kiff.dev's relying party, a passkey that never leaves the computer).
-  `with` is 64 lowercase hex and never the request's own hash, and each request's use is its own.
-- **Windows' first start** signs Coach's tools batch to the gateway and its Card's draft to KIFF
-  this way. The rules above (the time, once only, never a window's tap) hold as for a `v3`.
-
 - **Each service** rebuilds its own request message from the request it received, hashes
   it, forms the list with `with`, and checks the signature over it with the device's approval
   key. It never reads the other request: it knows only that its own was signed together with
@@ -155,6 +140,21 @@ hash, as a `v3` does:
   fingerprint over KIFF's request alone (`kiff.request.v1`), as a Card confirm does today.
 - **Without a draft** (an app that signs in at the vendor, whose tools are known only after
   the sign-in), the two steps stay as they are.
+
+**A computer that approves with its own passkey** (Windows Hello, a session in `passkey` approval
+mode) holds no approval key. It signs the same `kiff.requests.v1` message with one passkey
+assertion, under one Windows Hello, and sends it on each request to KIFF with the other request's
+hash, as a `v3` does:
+`KIFF-Passkey-Assertion: t={signed_at},a={assertion},with=sha256:{hex}`.
+- **The assertion** is the same base64url JSON as for one request (`credential_id`,
+  `client_data_json`, `authenticator_data`, `signature`). Its WebAuthn challenge is base64url of
+  the SHA-256 of the `kiff.requests.v1` message above, not of one request's message.
+- **KIFF's API and its gateway** each rebuild their own request message, hash it, form the list
+  with `with`, and check the assertion with the computer's own credential, as for one request
+  (user verification, kiff.dev's relying party, a passkey that never leaves the computer).
+  `with` is 64 lowercase hex and never the request's own hash, and each request's use is its own.
+- **Windows' first start** signs Coach's tools batch to the gateway and its Card's draft to KIFF
+  this way. The rules above (the time, once only, never a window's tap) hold as for a `v3`.
 
 **Built in tafs cloud** (`approval.ts`, `decide` and `settle`): with `TAFS_KEY_AND_CARDS=on`, a grant that takes
 a key, asked with its Card's draft by a phone that says it can sign the step (`can: ["key_and_cards"]` in the
