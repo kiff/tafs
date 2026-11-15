@@ -53,7 +53,32 @@ export interface ApprovalGrant {
  * it's still a draft at the version the card showed, an app set up on demand lets none of its writes run outright,
  * and every tool the connection gives the taf is on a Card. Otherwise what answers instead.
  */
-async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGrant, vendor: string, ctx: DecideContext, others: ApprovalGrant[] = [], combined = false): Promise<Decision | { waitsFor: string } | { draft: NonNullable<Awaited<ReturnType<typeof draftInfo>>> & { version: string } }> {
+/**
+ * The refusals of a draft's Cards that a new draft mends: Coach hears them before the owner is shown the card, when tafs
+ * cloud checks the draft as the phone reads the chat (handler.ts, precheck), so the owner approves one Card, not a
+ * refused one and then its redraft (Eval 43690861487's Refunds). The rest (no draft, a removed taf, another app first,
+ * a read that didn't come back) wait for the owner's tap, as before.
+ */
+export const REDRAFT_CODES: ReadonlySet<string> = new Set(["no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice"]);
+
+/**
+ * What a refusal Coach redrafts on adds, so the redraft mends only what was named: the redraft under Eval 43690861487's
+ * refusal merged two agreed read limits into one and put a count back on a refund.
+ */
+export const KEEP_THE_REST = "Change only what this names; every other line stays exactly as agreed.";
+
+type CardsChecked = Decision | { waitsFor: string } | { draft: NonNullable<Awaited<ReturnType<typeof draftInfo>>> & { version: string } };
+
+/** cardsChecked, with KEEP_THE_REST after each refusal a new draft mends, wherever Coach hears it. */
+async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGrant, vendor: string, ctx: DecideContext, others: ApprovalGrant[] = [], combined = false): Promise<CardsChecked> {
+  const checked = await cardsChecked(ask, draftID, grant, vendor, ctx, others, combined);
+  if ("outcome" in checked && checked.outcome === "answered" && checked.code && REDRAFT_CODES.has(checked.code)) {
+    return { ...checked, answer: `${checked.answer.replace(/\s+$/, "")} ${KEEP_THE_REST}` };
+  }
+  return checked;
+}
+
+async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGrant, vendor: string, ctx: DecideContext, others: ApprovalGrant[] = [], combined = false): Promise<CardsChecked> {
   const W = approvalWords(ctx.lang);
   const draft = await draftInfo(ctx.token, draftID, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now);
   if (!draft) return { outcome: "answered", answer: `failed: KIFF has no Card draft ${draftID} on this account`, note: `KIFF has no Card draft for this. Ask Coach for a new one.`, code: "no_draft" };
@@ -735,9 +760,10 @@ export type DraftCheck = { outcome: "ok"; version: string } | (Exclude<Decision,
  * person's session, the same agentRefusal and cardsReady as `decide`'s. For the e2e, which confirms the draft itself
  * and so never went through Approve (Eval 43681227913): the gate then measures the checks an owner's app goes through.
  */
-export async function checkDraft(ask: { grant: string; draft: string; shown_draft: string }, ctx: DecideContext): Promise<DraftCheck> {
+export async function checkDraft(ask: { grant: string; draft: string; shown_draft: string }, ctx: DecideContext, read?: ApprovalGrant[]): Promise<DraftCheck> {
   const W = approvalWords(ctx.lang);
-  const grants = await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
+  // The grants the caller read already with the same proof (the chat's read), or read now.
+  const grants = read ?? await readGrants(ctx.planqueBase, ctx.tenant, ctx.proof, ctx.fetch);
   const grant = grants.find((g) => g.id === ask.grant);
   if (!grant) return { outcome: "answered", answer: `failed: ${W.noGrant}`, note: W.noGrant, code: "no_grant" };
   const vendor = vendorOf(grant);
