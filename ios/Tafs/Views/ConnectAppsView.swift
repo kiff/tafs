@@ -201,8 +201,7 @@ struct ConnectAppsView: View {
         } else {
             Button { connect(app) } label: {
                 // No taf needs it: Coach sets one up, never a guess.
-                Text(route(app) == .askCoach ? Words.Coach.ask : app.needsReconnect ? Words.Connect.signInAgain : Words.Connect.Apps.connect)
-                    .padding(.horizontal, 16)
+                Text(route(app) == .askCoach ? Words.Coach.ask : app.needsReconnect ? Words.Connect.signInAgain : Words.Connect.Apps.connect).padding(.horizontal, 16)
             }
                 .buttonStyle(OutlineButtonStyle())
                 .fixedSize(horizontal: true, vertical: false)
