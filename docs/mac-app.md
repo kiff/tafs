@@ -149,7 +149,7 @@ A Mac with Touch ID approves as an iPad does: the same approval key, made in the
 What differs is how the Mac reports Touch ID:
 
 - **A Mac has no Touch ID switch for one app.** On an iPhone or iPad, "not available" with Face ID or Touch ID present means it's turned off for tafs, and Open Settings turns it on. On a Mac it means Touch ID is out of reach: the lid is closed on another display, or the Touch ID keyboard isn't connected. So the Mac says Touch ID can't be used right now, with no Open Settings (`ApprovalReadiness.from`, `mac:`).
-- **A Mac with no Touch ID can't approve** with this app. It approves on another device, as an iPad without Face ID or Touch ID does. The macOS 12 app is the one made for those Macs.
+- **A Mac with no Touch ID can't approve** with this app. It approves on another device, as an iPad without Face ID or Touch ID does. The macOS 12 app is the one made for those Macs: it approves with a USB security key or on the phone ([computer-passkeys.md](computer-passkeys.md)).
 
 Where Touch ID is set up, the Mac says its own path, "System Settings → Touch ID & Password", in the person's language (`approval.settings_path.mac_touch_id`), never the iPhone's "Settings → Touch ID & Passcode".
 
