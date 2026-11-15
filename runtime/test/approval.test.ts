@@ -1600,7 +1600,7 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     try {
       const r = await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" });
       expect(r.status).toBe(200);
-      expect(r.body).toEqual({ outcome: "answered", code: "vendor_name", note: WORDS.registeredName("list_charges", "list_charges_noyy"),
+      expect(r.body).toEqual({ outcome: "answered", code: "vendor_name", redraft: true, note: WORDS.registeredName("list_charges", "list_charges_noyy"),
         answer: expect.stringMatching(/^failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy"/) });
       // The draft over the registered name passes: ok, with the version it was checked at.
       s.drafts.drf_1.cards = card(["refund_charge", "list_charges_noyy"]);
@@ -1631,7 +1631,10 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "no_card", note: WORDS.noCard });
     // A draft for another taf than the grant's, and a grant planque doesn't list for this account.
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "someone-else", cards: card(["refund_charge", "list_charges_noyy"]) };
-    expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "other_taf" });
+    const otherTaf = (await check({ draft: "drf_1", shown_draft: "v3" })).body;
+    expect(otherTaf).toMatchObject({ outcome: "answered", code: "other_taf" });
+    // Not one a new draft mends: no redraft mark, so a caller leaves it to the tap.
+    expect(otherTaf.redraft).toBeUndefined();
     expect((await check({ draft: "drf_1", shown_draft: "v3" }, "/v1/connect/grants/g_9/check")).body).toMatchObject({ outcome: "answered", code: "no_grant" });
     // KIFF has no such draft for this person.
     expect((await check({ draft: "drf_9", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "no_draft" });

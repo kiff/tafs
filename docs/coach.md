@@ -296,7 +296,8 @@ things (`runtime/src/cloud/approval.ts`):
   skipped, and nothing is signed. A draft with no Card at all (KIFF's `null`, or an empty list)
   is answered `failed: …` instead, so Coach drafts one rather than the card asking it again.
   `POST /v1/connect/grants/{grant}/check` runs the same checks with nothing signed, for a caller
-  that confirms the draft itself (the e2e), and answers with each refusal's reason code.
+  that confirms the draft itself (the e2e), and answers with each refusal's reason code, and
+  `redraft: true` on a refusal a new draft mends (below).
   The same checks run as the phone reads the chat, before an approval card over a draft is
   drawn (a connected app's Card alone), with the grants that read has, read with the phone's
   proof. A refusal a new draft mends (no Card, a vendor name, a tool on no Card or a stray one,
