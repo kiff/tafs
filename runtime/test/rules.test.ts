@@ -202,3 +202,45 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     expect(rulesUnsaid(rule(), "Refunds up to €5 each.")).toEqual(["refund_charge sum(amount) calendar_day 5000"]);
   });
 });
+
+// Eval 16's refunds: "ask past €5 a refund, refuse past €50 a day" is one tool with two answers, so the answer goes on
+// the figure (agentgabo and kiff-admin, #1614 18:16): the rule's `over` is the default for a figure that says none.
+describe("what happens past each figure (over on a limit)", () => {
+  const stripe = grantOf("g1", [tool("refund_charge", "k3")]);
+  const EACH = { quantity: "sum(amount)", window: "call" as const, limit: 500, over: "ask" as const };
+  const DAY = { quantity: "sum(amount)", window: "calendar_day" as const, limit: 5000 };
+  const rules = [{ tool: "refund_charge", over: "refuse" as const, limits: [EACH, DAY] }];
+  const each = (onExceed: string) => ({ id: "each", subject: "refunds-x", on_exceed: onExceed, grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] });
+  const day = (onExceed: string) => ({ id: "day", subject: "refunds-x", on_exceed: onExceed, grants: [{ action: "refund_charge_k3" }], aggregates: [{ quantity: "sum(amount)", window: "calendar_day", limit: 5000 }] });
+
+  it("reads a figure's over with the rules, and the same rules with another over are other rules", () => {
+    expect(rulesAgreement([notice("n1", rules), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "agreed", notice: "n1", rules, text: "The rules" });
+    const flipped = [{ ...rules[0]!, limits: [{ ...EACH, over: "refuse" as const }, DAY] }];
+    expect(rulesAgreement([notice("n1", rules), confirm("c1", "n1"), answered("c1", "agree"), notice("n1", flipped)])).toEqual({ state: "unagreed", notice: "n1" });
+    for (const over of ["maybe", "", 1, null]) {
+      expect(rulesAgreement([notice("n1", [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, over }] }]), confirm("c1", "n1"), answered("c1", "agree")])).toEqual({ state: "none" });
+    }
+  });
+
+  it("each Card answers as its figures say: the held call figure on its own Card, the refused day's total on another", () => {
+    expect(rulesMismatch([stripe], [each("owner"), day("refuse")], rules)).toBeUndefined();
+    expect(rulesMismatch([stripe], [each("refuse"), day("refuse")], rules)).toEqual({ kind: "on_exceed", tool: "refund charge", over: "ask", onExceed: "refuse" });
+    expect(rulesMismatch([stripe], [each("owner"), day("owner")], rules)).toEqual({ kind: "on_exceed", tool: "refund charge", over: "refuse", onExceed: "owner" });
+  });
+
+  it("two figures with different answers on one Card are refused: one Card has one on_exceed", () => {
+    const both = { ...each("owner"), aggregates: day("refuse").aggregates };
+    expect(rulesMismatch([stripe], [both], rules)).toEqual({ kind: "mixed", tool: "refund charge" });
+    expect(rulesMismatch([stripe], [{ ...both, on_exceed: "refuse" }], rules)).toEqual({ kind: "mixed", tool: "refund charge" });
+    // The same answer on both figures may share a Card.
+    const sameAnswer = [{ tool: "refund_charge", over: "refuse" as const, limits: [{ ...EACH, over: "refuse" as const }, DAY] }];
+    expect(rulesMismatch([stripe], [{ ...both, on_exceed: "refuse" }], sameAnswer)).toBeUndefined();
+  });
+
+  it("a figure that says no over takes the tool's, and a Card with no agreed figure answers as the tool does", () => {
+    const plain = [{ tool: "refund_charge", over: "refuse" as const, limits: [{ ...EACH, over: undefined }, DAY] }];
+    expect(rulesMismatch([stripe], [each("refuse"), day("refuse")], plain)).toBeUndefined();
+    const other = { id: "o", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge_k3" }], aggregates: [{ quantity: "sum(fee)", window: "calendar_day", limit: 9 }] };
+    expect(rulesMismatch([stripe], [each("owner"), day("refuse"), other], rules)).toEqual({ kind: "on_exceed", tool: "refund charge", over: "refuse", onExceed: "owner" });
+  });
+});

@@ -732,6 +732,9 @@ async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards
   if (off.kind === "missing") {
     return { outcome: "answered", answer: `failed: the rules the owner agreed say nothing of "${off.tool}", a write the draft covers, so what happens past its limit was never agreed. Show the rules again with "${off.tool}" in them, then draft it again.`, note: W.rulesMissing(off.tool), code: "rules_missing" };
   }
+  if (off.kind === "mixed") {
+    return { outcome: "answered", answer: `failed: the rules the owner agreed ask past one of "${off.tool}"'s limits and refuse past another, and the draft puts both on one Card, which has one on_exceed. Draft it again with each on its own Card: on_exceed "owner" on the one whose limit asks, "refuse" on the one whose limit refuses.`, note: W.rulesOnExceed(off.tool), code: "rules_on_exceed" };
+  }
   if (off.kind === "figure") {
     const each = off.window === "call" ? "each call" : "a day's total";
     const where = off.window === "call" ? `per_action_max {quantity: "${off.quantity}", max: ${off.agreed}} on its grant` : `an aggregate {quantity: "${off.quantity}", window: "calendar_day", limit: ${off.agreed}} with no per`;
