@@ -1197,6 +1197,37 @@ describe("tafs cloud", () => {
     Object.assign(run, { tally: {} });
     expect((await read()).body.report).not.toHaveProperty("counted");
   });
+
+  // What the desktops' Overview reads for a taf's last result: its runs, in kiff/agents' order, and one run's report as
+  // it ran, as it ended with a count, and as it stopped on an error.
+  it("keeps the runs list and a run's report as contracts, for the Overview's last result", async () => {
+    const w = world();
+    const first = await call(w, "POST", `/v1/tafs/${RAE}/run`, { token: "ana" });
+    const second = await call(w, "POST", `/v1/tafs/${RAE}/run`, { token: "ana" });
+    const runOf = (session: string) => w.agents.runs.find((r) => r.session === session)!;
+    const failed = runOf(first.body.session);
+    const done = runOf(second.body.session);
+    Object.assign(failed, { status: "ERROR", error: "The taf stopped before it finished: the app didn't answer." });
+    const runs = await call(w, "GET", `/v1/tafs/${RAE}/runs`, { token: "ana" });
+    expect(runs.body.runs).toHaveLength(2);
+    expect(runs.body.runs.find((r: { session: string }) => r.session === first.body.session).error).toBe("The taf stopped before it finished: the app didn't answer.");
+    expect(runs.body.runs.find((r: { session: string }) => r.session === second.body.session).error).toBeNull();
+    contract("taf-runs", "GET /v1/tafs/{id}/runs for someone who may use the taf: two runs, one that stopped on an error and one with none.", runs.body);
+
+    const read = (session: string) => call(w, "GET", `/v1/tafs/${RAE}/runs/${session}`, { token: "ana" });
+    const running = await read(second.body.session);
+    expect(running.body.report).toEqual({ status: "running", text: "" });
+    contract("taf-run-report-running", "GET /v1/tafs/{id}/runs/{session} for a run still working (waiting on the owner reads the same).", running.body);
+
+    Object.assign(done, { status: "COMPLETED", output: "Evidence went on the disputes; one waits for you.", tally: { submit_evidence: { sent: 5, held: 1 }, shop_get_order: { refused: 2 } } });
+    const ended = await read(second.body.session);
+    expect(ended.body.report.counted).toBe("From the Record — done: 5 · waiting for you: 1 · refused: 2");
+    contract("taf-run-report", "GET /v1/tafs/{id}/runs/{session} for a run that ended: its last answer, and its count from the record in the owner's words.", ended.body);
+
+    const stopped = await read(first.body.session);
+    expect(stopped.body.report.status).toBe("terminated");
+    contract("taf-run-report-terminated", "GET /v1/tafs/{id}/runs/{session} for a run that stopped on an error: terminated, with no answer.", stopped.body);
+  });
 });
 
 describe("countedLine", () => {
