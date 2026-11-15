@@ -2617,36 +2617,8 @@ enum Words {
         static var nothingYet: String { Words.line("overview.nothing_yet") }
     }
     enum Pair {
-        /// This {device} is added.
-        static func added(device: String) -> String { Words.line("pair.added", device) }
-        /// This {device} can't sign approvals itself. Approve on your phone, or with a passkey.
-        static func addedPasskey(device: String) -> String { Words.line("pair.added_passkey", device) }
-        /// Your phone asks if your {device} shows this code:
-        static func checkCodeLead(device: String) -> String { Words.line("pair.check_code_lead", device) }
-        /// This code expired.
-        static var codeExpired: String { Words.line("pair.code_expired") }
-        /// tafs on this {device}
-        static func deviceName(device: String) -> String { Words.line("pair.device_name", device) }
-        /// This {device} wasn't added: {why}. Show a new code and try again.
-        static func failed(device: String, why: String) -> String { Words.line("pair.failed", device, why) }
-        /// Already use tafs on your phone? Add this {device} with it.
-        static func fromSignIn(device: String) -> String { Words.line("pair.from_sign_in", device) }
-        /// Show a new code
-        static var newCode: String { Words.line("pair.new_code") }
-        /// On your phone, open tafs, then {account}, {devices}, {pair}. Scan this code.
-        static func steps(account: String, devices: String, pair: String) -> String { Words.line("pair.steps", account, devices, pair) }
-        /// Add this {device} with your phone
-        static func title(device: String) -> String { Words.line("pair.title", device) }
-        enum ViewOnly {
-            /// Add this {device}
-            static func add(device: String) -> String { Words.line("pair.view_only.add", device) }
-            /// This {device} shows your tafs, Needs you and the Record. It can't approve until you add it with your phone.
-            static func lead(device: String) -> String { Words.line("pair.view_only.lead", device) }
-            /// View only
-            static var title: String { Words.line("pair.view_only.title") }
-        }
-        /// Waiting for your phone…
-        static var waiting: String { Words.line("pair.waiting") }
+        /// This Mac couldn't save its sign-in to the Keychain (error {code}), so it wasn't added. Show a new code on this Mac and scan it again.
+        static func keychainRefused(code: String) -> String { Words.line("pair.keychain_refused", code) }
     }
     enum People {
         /// THE ACCOUNT'S PEOPLE
