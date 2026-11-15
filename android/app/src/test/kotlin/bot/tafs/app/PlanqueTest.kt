@@ -192,6 +192,27 @@ class PlanqueTest {
     assertTrue(ok.request.tools.all { it.tafs })
   }
 
+  // A review of the digest check: each grant's bytes were found by its id, the first entry with it. With two entries under one id
+  // (request A, then request B carrying A's digest), B was shown as B and marked matching from A's bytes, so its Approve signed
+  // A's digest while the person read B. Each grant is checked against its own entry, by its place; an id that repeats matches nothing.
+  @Test fun aGrantIsCheckedAgainstItsOwnEntryNeverAnotherWithItsId() = runTest {
+    val other = request.replace("create_refund_repg", "create_refund_other")
+    val b = """{"id":"g1","status":"pending","text":"Connect Stripe: something else.","digest":"$digest","request":$other,"events":[]}"""
+    transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[${grant("g1")},$b]}""")
+    val (first, second) = planque().grants()
+    assertEquals(listOf("create_refund_repg", "create_refund_other"), listOf(first, second).map { it.request.tools.first().name })
+    assertFalse("the shown request B never matches from A's bytes", second.digestMatches)
+    assertFalse("an id that repeats matches nothing", first.digestMatches)
+    // Paired by place: an entry under another id, or a list of another length, gives none.
+    val g = { id: String -> kotlinx.serialization.json.JsonObject(mapOf("id" to kotlinx.serialization.json.JsonPrimitive(id))) }
+    assertEquals(listOf(g("g1"), g("g2")), PlanqueClient.pairedRaws(listOf("g1", "g2"), listOf(g("g1"), g("g2"))))
+    assertEquals(listOf(null, null), PlanqueClient.pairedRaws(listOf("g1", "g2"), listOf(g("g2"), g("g1"))))
+    assertEquals(listOf(null, null), PlanqueClient.pairedRaws(listOf("g1", "g2"), listOf(g("g1"))))
+    assertEquals(listOf(null, null, g("g2")), PlanqueClient.pairedRaws(listOf("g1", "g1", "g2"), listOf(g("g1"), g("g1"), g("g2"))))
+    assertEquals("an id repeated in the list", PlanqueClient.unpairedCause(listOf("g1", "g1"), listOf(g("g1"), g("g1")), 1))
+    assertEquals("not in the list as sent", PlanqueClient.unpairedCause(listOf("g1", "g2"), listOf(g("g1")), 0))
+  }
+
   @Test fun aRequestTheAppCannotCanonicalizeIsNeverApproved() = runTest {
     val risky = request.replace(""""read_only":true""", """"read_only":true,"limit":99999999999999999999""")
     transport.answer("GET /v1/accounts/t_01/grants", 200, """{"grants":[{"id":"g1","status":"pending","text":"t","digest":"${digest}","request":$risky,"events":[]}]}""")

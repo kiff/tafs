@@ -315,11 +315,12 @@ class PlanqueClient(
     val grants = KiffClient.json.decodeFromString<Grants>(String(data)).grants
     // The grant as planque sent it, numbers as written, so the digest is planque's.
     val raws = runCatching { KiffClient.json.parseToJsonElement(String(data)).jsonObject["grants"]?.jsonArray }.getOrNull().orEmpty()
-    return grants.map { grant ->
-      val raw = raws.firstOrNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.content == grant.id } as? JsonObject
+    val paired = pairedRaws(grants.map { it.id }, raws)
+    return grants.mapIndexed { i, grant ->
+      val raw = paired[i]
       val covered = raw?.let(::digestCovers)
       val matches = covered != null && runCatching { sha256Hex(Jcs.canonical(covered).toByteArray()) == grant.digest }.getOrDefault(false)
-      if (!matches) logMismatch(grant.digest, grant.status, raw?.get("digest_v"), mismatchCause(raw, covered))
+      if (!matches) logMismatch(grant.digest, grant.status, raw?.get("digest_v"), if (raw == null) unpairedCause(grants.map { it.id }, raws, i) else mismatchCause(raw, covered))
       grant.copy(digestMatches = matches)
     }
   }
@@ -591,6 +592,27 @@ class PlanqueClient(
       val v = (digestV as? JsonPrimitive)?.content?.takeIf { it.isNotEmpty() && it.all(Char::isLetterOrDigit) }?.take(8) ?: if (digestV == null) "1" else "unknown"
       val st = status.takeIf { it.isNotEmpty() && it.all { c -> c.isLetter() || c == '_' } }?.take(32) ?: "unknown"
       return "grant digest doesn't match: $cause; status $st, digest_v $v"
+    }
+
+    /**
+     * Each decoded grant's entry as planque sent it, by its place in the list, never looked up by id: with two entries under one
+     * id, a lookup would check the second grant (shown as its own request) against the first's bytes, and its Approve would sign
+     * the first's digest. An entry whose id isn't its grant's, an id that repeats, or a list whose length differs gives none, so
+     * nothing there matches and nothing is signed.
+     */
+    fun pairedRaws(ids: List<String>, raws: List<JsonElement>): List<JsonObject?> {
+      if (raws.size != ids.size) return ids.map { null }
+      val repeated = ids.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
+      return ids.mapIndexed { i, id ->
+        (raws[i] as? JsonObject)?.takeIf { id !in repeated && (it["id"] as? JsonPrimitive)?.content == id }
+      }
+    }
+
+    /** Why a grant has no entry to check ([pairedRaws]), in a few fixed words. */
+    fun unpairedCause(ids: List<String>, raws: List<JsonElement>, i: Int): String = when {
+      raws.size != ids.size -> "not in the list as sent"
+      ids.count { it == ids[i] } > 1 -> "an id repeated in the list"
+      else -> "not in the list as sent"
     }
 
     /**

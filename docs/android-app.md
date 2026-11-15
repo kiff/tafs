@@ -990,7 +990,11 @@ what planque sent and refuses one that doesn't match (`PlanqueClient.digestCover
 their language) and that language are what's signed. An unknown version, or a v2 grant without its
 words or its language, never matches. Every request to planque carries the person's language
 (`Accept-Language`, as tafs cloud gets it), for the words planque writes. Nothing changes on screen
-until planque issues v2 grants; iOS checks the same. A mismatch writes one logcat line (tag `TafsPlanque`)
+until planque issues v2 grants; iOS checks the same. Each grant is checked against its own entry in
+planque's answer, by its place in the list, never by looking its id up (`PlanqueClient.pairedRaws`):
+with two entries under one id, the second, shown as its own request, would have been checked against
+the first's bytes. An id that repeats, or an entry under another id, matches nothing, so nothing is
+signed (Android 1.29.4). A mismatch writes one logcat line (tag `TafsPlanque`)
 for each digest: which way it failed (not in the list as sent, no request, a version or v2 words
 the app can't cover, or the hash differs), the grant's status and `digest_v`, never its id, digest
 or words (`PlanqueClient.mismatchCause`, `mismatchLine`, Android 1.29.4).

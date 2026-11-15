@@ -123,6 +123,7 @@
     "no request": "diagnostics, for logcat only: never shown to a person",
     "v2 without its words or language": "diagnostics, for logcat only: never shown to a person",
     "a digest_v the app doesn't know": "diagnostics, for logcat only: never shown to a person",
-    "the hash differs": "diagnostics, for logcat only: never shown to a person"
+    "the hash differs": "diagnostics, for logcat only: never shown to a person",
+    "an id repeated in the list": "diagnostics, for logcat only: never shown to a person"
   }
 }
