@@ -1,1 +1,1 @@
-- **Mac: the View menu in order, and the app named tafs.** The View menu lists Tafs, Needs you, Record and Coach mode in that order, and the menu bar says "tafs", not "Tafs". Nothing changes on iPhone or iPad (docs/mac-app.md).
+- **Mac: the menu bar as tafs's.** The View menu lists Tafs, Needs you, Record and Coach mode in that order, the menu bar says "tafs", not "Tafs", and File has no document items. Nothing changes on iPhone or iPad (docs/mac-app.md).
