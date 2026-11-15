@@ -44,6 +44,9 @@ targets:
       path: Tafs/Info.plist
       properties:
         CFBundleDisplayName: tafs
+        # The Mac's menu bar and its app menu ("About tafs", "Quit tafs") read the bundle's
+        # name, which is otherwise the target's, "Tafs". iPhone and iPad show the display name.
+        CFBundleName: tafs
         # From the build settings, so CI's build number reaches App Store Connect.
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
