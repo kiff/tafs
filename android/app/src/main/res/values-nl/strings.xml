@@ -1817,6 +1817,7 @@
     <string name="settings_devices_pair_gives_hello">%1$s kan dan de acties van je tafs goedkeuren met Windows Hello.</string>
     <string name="settings_devices_pair_gives_passkey">%1$s kan dan de acties van je tafs goedkeuren met een passkey.</string>
     <string name="settings_devices_pair_gives_phone">%1$s kan dan de acties van je tafs goedkeuren.</string>
+    <string name="settings_devices_pair_gives_view">%1$s toont je tafs en stuurt goedkeuringen naar deze telefoon.</string>
     <string name="settings_devices_pair_invalid">KIFF kon die code niet lezen. Toon een nieuwe op je computer en scan die opnieuw.</string>
     <string name="settings_devices_pair_key_registered">Die computer is al gekoppeld.</string>
     <string name="settings_devices_pair_named">%1$s koppelen?</string>

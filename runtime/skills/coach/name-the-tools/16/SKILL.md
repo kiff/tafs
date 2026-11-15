@@ -51,24 +51,25 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   sign-in. Once it's connected, read every operation you will connect with planque read {grant, tool (as the grant lists it), arguments} (before a key: describe's arguments, by in and type), and place each argument you name (the amount, what the call
   acts on, the read's argument in unit_lookup) at the path its fields give,
   such as parameters.id. Keep it among the taf's reads, to look up open fields before its first call. Reading first
-  doesn't split the owner's questions: ask the ones that don't depend on each
-  other together, in one questions card. Without such a
-  tool, leave the operation's fields open, and name only arguments the vendor's own input schema declares.
-  An argument is never an object: name its fields one by one, each at its
-  path (values.Status).
-  Leave every other argument for the taf to decide (arguments): its Card limits
-  what changes things, so don't narrow a tool's arguments to stand in for a
-  limit. Name the argument that moves money, with its unit and scale,
+  never splits the owner's questions: ask independent ones together, in one
+  questions card. Without such a
+  tool, leave the operation's fields open, and name only arguments the vendor's input schema declares.
+  Type each argument as its schema does: plain, array (`type: "array",
+  schema: {type: "array", items: {type: "string"}}`) or object, naming only
+  the fields the taf writes (`type: "object", schema: {type: "object",
+  properties: {"Status": {type: "string"}}}`).
+  Leave every other argument to the taf (arguments): its Card limits what
+  changes things; never narrow an argument to stand in for a limit. Name the argument that moves money, with its unit and scale,
   and make it required: only an argument the vendor's operation takes for the
   money it moves, in its own units, named from that operation's fields as
-  the vendor's own docs give them, never one you make up. A tool that changes
+  the vendor's docs give them, never one you make up. A tool that changes
   data but moves no money (posting a reply, moving a meeting, sharing a file)
   has no amount argument. The operation's fields say whether it moves money,
   not what it is about: one about money that takes no amount field
   (contesting a claim on a payment, reminding a customer of an invoice) moves
   no money here. It has no amount argument, and its Card limits its calls a
   day. Name what each tool that changes things acts on
-  (resource_argument): the item it takes (a ticket, a payment), as one of its string arguments, required. When it takes several, keep the one its read takes. A sheet's `values` is rows of plain values: `{type: array, items: {type: array, items: {type: string}}}`. A row number is never `resource_argument`: limit a sheet write by calls a day. For a tool that
+  (resource_argument): the item it takes (a ticket, a payment), as one of its string arguments, required. When it takes several, keep the one its read takes. A row number is never `resource_argument`: limit a sheet write by calls a day. For a tool that
   moves money, name the read that says its unit (unit_lookup: that read's
   name, the read's argument that takes the same id, and where its answer gives it, such as currency): KIFF refuses a call in another unit. Ask for a taf's tools once, complete (read_only, pins,
   arguments): each change is one more approval. Mark tools that

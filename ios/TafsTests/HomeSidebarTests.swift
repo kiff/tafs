@@ -127,4 +127,32 @@ final class HomeSidebarTests: XCTestCase {
         XCTAssertEqual(HomeSelection.of(.needsYou), .needsYou)
         XCTAssertNil(HomeSelection.of(.tafs), "the tafs tab: the list, as before")
     }
+
+    /// The owner's iPad: the cream fills the whole detail pane. Overview's column stretches to the pane's
+    /// width, and the lists in the pane hide their grey for the app's background.
+    func testTheDetailPaneIsCreamEdgeToEdge() throws {
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let overview = try String(contentsOf: views.appendingPathComponent("ShareViews.swift"), encoding: .utf8)
+        XCTAssertTrue(overview.contains(".frame(maxWidth: 980, alignment: .leading)\n            // The column stretches"), "the column, then the stretch")
+        XCTAssertTrue(overview.contains("            .frame(maxWidth: .infinity)\n        }\n        .screenBackground()"))
+        let connect = try String(contentsOf: views.appendingPathComponent("ConnectAppsView.swift"), encoding: .utf8)
+        XCTAssertEqual(connect.components(separatedBy: "        List {").count - 1,
+                       connect.components(separatedBy: ".scrollContentBackground(.hidden)").count - 1, "every list in Connect apps")
+        let taf = try String(contentsOf: views.appendingPathComponent("TafDetailView.swift"), encoding: .utf8)
+        let counted = String(taf[try XCTUnwrap(taf.range(of: "struct CountedView: View {")).upperBound...].prefix(900))
+        XCTAssertTrue(counted.contains(".scrollContentBackground(.hidden)"))
+    }
+
+    /// The owner's iPad: "Needs you · 3" beside "No tafs yet". With no held call, what Needs you counts (a
+    /// Coach chat, a step) still shows on Overview, as a line opening Needs you.
+    func testOverviewShowsWhatNeedsYouCountsBeyondHeldCalls() throws {
+        XCTAssertTrue(OverviewView.showsRest(count: 3, held: 0))
+        XCTAssertTrue(OverviewView.showsRest(count: 3, held: 2))
+        XCTAssertFalse(OverviewView.showsRest(count: 2, held: 2), "the held calls are each listed already")
+        XCTAssertFalse(OverviewView.showsRest(count: 0, held: 0))
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let overview = try String(contentsOf: views.appendingPathComponent("ShareViews.swift"), encoding: .utf8)
+        XCTAssertTrue(overview.contains("if model.needsYouCount > 0 { needsYou }"))
+        XCTAssertTrue(overview.contains("Button { open(.needsYou) } label:"))
+    }
 }

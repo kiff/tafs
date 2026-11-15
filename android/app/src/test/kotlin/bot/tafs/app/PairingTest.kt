@@ -13,6 +13,7 @@ import java.security.spec.ECGenParameterSpec
 import java.security.spec.X509EncodedKeySpec
 import java.time.Instant
 import java.util.Base64
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -56,7 +57,7 @@ class PairingTest {
     append(""""name":"$name","platform":"windows","kind":"${if (approvalPub != null) "hello" else "passkey"}","nonce":"$nonce","exp":"$exp"}""")
   }
 
-  private suspend fun model(approvalKey: Boolean = true): AppModel {
+  private suspend fun model(approvalKey: Boolean = true, scope: kotlinx.coroutines.CoroutineScope? = null): AppModel {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":[]}""")
     transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
     transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
@@ -67,7 +68,7 @@ class PairingTest {
     secrets.save("t_01", AppModel.TENANT)
     secrets.save("1", AppModel.KEYED)
     if (approvalKey) secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
-    return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false).also { it.restore(); it.refresh() }
+    return testModel(auth = auth, transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false, scope = scope).also { it.restore(); it.refresh() }
   }
 
   private fun verifies(publicDER: ByteArray, message: ByteArray, signatureBase64: String): Boolean {
@@ -108,6 +109,8 @@ class PairingTest {
     val approvalPub = hex("3059301306072a8648ce3d020106082a8648ce3d030107034200047cf27b188d034f7e8a52380304b51ac3c08969e277f21b35a60b48fc4766997807775510db8ed040293d9ac69f7430dbba7dade63ce982299e04b79d227873d1")
     assertEquals("H6SJNU", PairQr.read(qrText(pub = url(pub), approvalPub = url(approvalPub)))!!.checkCode)
     assertEquals("LTJFF6", PairQr.read(qrText(pub = url(pub), approvalPub = null))!!.checkCode)
+    // A software-keyed computer's code is over pub alone, whatever else its QR carries.
+    assertEquals("LTJFF6", PairQr.read(qrText(pub = url(pub), approvalPub = url(approvalPub)).replace("\"exp\":", "\"key_store\":\"software\",\"exp\":"))!!.checkCode)
     // A computer's own passkey (Windows Hello) takes approval_pub's place: the same keys, the same code.
     val windows = PairQr.read(windowsQr(url(pub), url(approvalPub)))!!
     assertEquals("H6SJNU", windows.checkCode)
@@ -139,15 +142,22 @@ class PairingTest {
     assertTrue(bot.tafs.app.views.pairGives(PairQr.read(qrText(approvalPub = null))!!).endsWith("with a passkey."))
   }
 
+  @Test fun aComputerWithASoftwareKeyIsSaidToSendItsApprovalsToThisPhone() {
+    val mac = PairQr.read(qrText(approvalPub = null).replace("\"platform\":\"windows\"", "\"platform\":\"macos\"").replace("\"exp\":", "\"key_store\":\"software\",\"exp\":").replace("tafs on this Windows PC", "tafs on this Mac"))!!
+    assertEquals("tafs on this Mac will show your tafs and send approvals to this phone.", bot.tafs.app.views.pairGives(mac))
+    // A passkey computer without a software key still approves with a passkey.
+    assertTrue(bot.tafs.app.views.pairGives(PairQr.read(qrText(approvalPub = null))!!).endsWith("with a passkey."))
+  }
+
   @Test fun aCodeKiffPairedThatIsntTheOneCheckedIsSaid() {
     val qr = PairQr.read(qrText())!!
     val code = qr.checkCode!!
-    assertEquals("tafs on this Windows PC is paired. It showed $code.", bot.tafs.app.views.pairedLine(qr, bot.tafs.app.kiff.Pairing("pair_1", code, "")))
-    assertEquals("tafs on this Windows PC is paired. It showed $code.", bot.tafs.app.views.pairedLine(qr, bot.tafs.app.kiff.Pairing("pair_1", "", "")))
+    assertEquals("tafs on this Windows PC is paired. It showed $code.", bot.tafs.app.kiff.pairedLine(qr, bot.tafs.app.kiff.Pairing("pair_1", code, "")))
+    assertEquals("tafs on this Windows PC is paired. It showed $code.", bot.tafs.app.kiff.pairedLine(qr, bot.tafs.app.kiff.Pairing("pair_1", "", "")))
     val other = if (code == "AAAAAA") "BBBBBB" else "AAAAAA"
     assertEquals(
       "KIFF paired tafs on this Windows PC with the code $other, not $code as checked. If that isn't your computer, sign it out here.",
-      bot.tafs.app.views.pairedLine(qr, bot.tafs.app.kiff.Pairing("pair_1", other, "")),
+      bot.tafs.app.kiff.pairedLine(qr, bot.tafs.app.kiff.Pairing("pair_1", other, "")),
     )
   }
 
@@ -273,5 +283,62 @@ class PairingTest {
     transport.answer("POST /v1/me/pairings", 409, """{"error":"pairing_used","words":"This computer's code was already approved from another phone."}""")
     assertNull(m.pairComputer(PairQr.read(qrText())!!))
     assertTrue(m.state.value.devicesError!!.contains("This computer's code was already approved from another phone."))
+  }
+
+  // MARK: Add a device, held by the model
+
+  @Test fun aScannedPairingIsAskedAboutAndHeldByTheModel() = runTest {
+    val m = model(scope = backgroundScope)
+    val waiting = kotlinx.coroutines.CompletableDeferred<String?>()
+    m.addDevice { waiting.await() }
+    runCurrent()
+    assertTrue("busy while the scanner is in front", m.state.value.pairBusy)
+    // The scanner answers after the sheet may have gone and come back: the model has it either way.
+    waiting.complete(qrText())
+    runCurrent()
+    assertEquals("tafs on this Windows PC", m.state.value.pairAsking?.name)
+    assertNull(m.state.value.pairLine)
+    assertFalse(m.state.value.pairBusy)
+  }
+
+  @Test fun aQrThatIsntAPairingLeavesALineThatStays() = runTest {
+    val m = model(scope = backgroundScope)
+    m.addDevice { "https://kiff.dev/tafs" }
+    runCurrent()
+    assertNull(m.state.value.pairAsking)
+    assertEquals("That QR code isn't a computer asking to be paired.", m.state.value.pairLine)
+    // It stays until Devices closes.
+    m.refreshDevices()
+    assertEquals("That QR code isn't a computer asking to be paired.", m.state.value.pairLine)
+    m.clearPairLine()
+    assertNull(m.state.value.pairLine)
+  }
+
+  @Test fun aScannerThatFailsSaysSoAndOneClosedSaysNothing() = runTest {
+    val m = model(scope = backgroundScope)
+    m.addDevice { throw IllegalStateException("no module") }
+    runCurrent()
+    assertTrue(m.state.value.pairLine!!.startsWith("Couldn't open the scanner."))
+    m.addDevice { null }
+    runCurrent()
+    assertNull(m.state.value.pairLine)
+    assertNull(m.state.value.pairAsking)
+  }
+
+  @Test fun yesPairsWhatWasAskedAboutAndCancelSignsNothing() = runTest {
+    transport.answer("POST /v1/me/pairings", 201, """{"pairing":{"id":"pair_1","code":"${PairQr.read(qrText())!!.checkCode}","expires":"2026-11-14T18:05:00Z"}}""")
+    val m = model(scope = backgroundScope)
+    m.addDevice { qrText() }
+    runCurrent()
+    m.cancelPairing()
+    assertNull(m.state.value.pairAsking)
+    assertTrue(transport.requestsTo("POST /v1/me/pairings").isEmpty())
+    m.addDevice { qrText() }
+    runCurrent()
+    m.confirmPairing()
+    runCurrent()
+    assertEquals(1, transport.requestsTo("POST /v1/me/pairings").size)
+    assertEquals("tafs on this Windows PC is paired. It showed ${PairQr.read(qrText())!!.checkCode}.", m.state.value.pairLine)
+    assertFalse(m.state.value.pairBusy)
   }
 }

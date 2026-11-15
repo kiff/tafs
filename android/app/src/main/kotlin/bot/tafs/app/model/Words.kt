@@ -1948,6 +1948,7 @@ object Words {
       fun pairGivesHello(device: String): String = Res.s(R.string.settings_devices_pair_gives_hello, device)
       fun pairGivesPasskey(device: String): String = Res.s(R.string.settings_devices_pair_gives_passkey, device)
       fun pairGivesPhone(device: String): String = Res.s(R.string.settings_devices_pair_gives_phone, device)
+      fun pairGivesView(device: String): String = Res.s(R.string.settings_devices_pair_gives_view, device)
       val pairInvalid: String get() = Res.s(R.string.settings_devices_pair_invalid)
       val pairKeyRegistered: String get() = Res.s(R.string.settings_devices_pair_key_registered)
       fun pairNamed(device: String): String = Res.s(R.string.settings_devices_pair_named, device)

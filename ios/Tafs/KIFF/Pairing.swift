@@ -85,14 +85,20 @@ struct PairingRequest: Equatable {
         let deviceKind = object["device_kind"]
         if deviceKind != nil, !(deviceKind is String) { return .failure(.badField) }
 
-        // `key_store` is only ever "software", and only for a passkey computer.
+        // `key_store` is only ever "software". With it, whatever the kind, the device is `view` (§5.1): it
+        // never approves, so it brings no approval key and no credential, and the code covers `pub` alone.
         let keyStore = object["key_store"]
-        if keyStore != nil, !(keyStore as? String == "software" && kind == "passkey") { return .failure(.badField) }
+        if keyStore != nil, keyStore as? String != "software" { return .failure(.badField) }
+        let software = keyStore != nil
 
         let approvalPub = object["approval_pub"]
         if approvalPub != nil, !(approvalPub is String) { return .failure(.badKeys) }
         let approval = approvalPub as? String
-        guard (approval != nil) == approvalKinds.contains(kind) else { return .failure(.badKeys) }
+        if software {
+            guard approval == nil, object["credential"] == nil else { return .failure(.badKeys) }
+        } else {
+            guard (approval != nil) == approvalKinds.contains(kind) else { return .failure(.badKeys) }
+        }
         guard let pubDER = p256(pub) else { return .failure(.badKeys) }
         var approvalDER: Data?
         if let approval {
@@ -114,7 +120,7 @@ struct PairingRequest: Equatable {
                                        pubDER: pubDER, approvalDER: approvalDER))
     }
 
-    /// Its device key is in software: it never approves by itself.
+    /// Its device key is in software: KIFF pairs it `view`, and it never approves.
     var softwareKey: Bool { keyStore == "software" }
 
     /// The 6 characters both screens show before the fingerprint (§5.2): base32 of sha256 over the device

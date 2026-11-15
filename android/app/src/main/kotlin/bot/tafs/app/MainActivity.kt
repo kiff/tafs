@@ -826,10 +826,13 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (showingPeople) PeopleGroupsSheet(state, people, onClose = { showingPeople = false })
     if (showingDevices) {
       DevicesSheet(
-        state, refresh = model::refreshDevices, remove = model::removeDevice, onClose = { showingDevices = false },
-        // Pairing a computer gives it approval authority: offered only on a KIFF account.
-        scan = drivingActivity?.takeIf { state.mode == bot.tafs.app.app.Mode.kiff }?.let { activity -> { bot.tafs.app.app.scanPairingQr(activity) } },
-        pair = model::pairComputer,
+        state, refresh = model::refreshDevices, remove = model::removeDevice, onClose = { model.clearPairLine(); showingDevices = false; showingSettings = true },
+        // Adding a device gives it approval authority: offered only on a KIFF account. The scan and what follows run in the model.
+        addDevice = drivingActivity?.takeIf { state.mode == bot.tafs.app.app.Mode.kiff }?.let { activity ->
+          { model.addDevice { bot.tafs.app.app.scanPairingQr(activity) } }
+        },
+        confirmPair = model::confirmPairing,
+        cancelPair = model::cancelPairing,
       )
     }
     if (showingConnectApps) {
