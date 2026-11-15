@@ -1,5 +1,7 @@
 package bot.tafs.app.views
 
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.layout.fillMaxSize
 import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.secret
@@ -413,7 +415,8 @@ fun ConnectAppsSheet(
         },
       )
     }
-    Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
+    // At full height from the first frame: the list it's waiting for never makes it open small and then grow (the owner on Android 97).
+    Column(Modifier.fillMaxSize().navigationBarsPadding().testTag(CONNECT_APPS_SHEET)) {
       Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
         Text(ConnectAppsWords.TITLE, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
         Text(Words.Common.done, style = scaled(17, FontWeight.SemiBold, Theme.amber), modifier = Modifier.heightIn(min = 44.dp).tapping(onClick = onClose).padding(top = 8.dp))
@@ -425,6 +428,8 @@ fun ConnectAppsSheet(
         OutlinedTextField(query, driveTyped({ query = it }), Modifier.fillMaxWidth(), placeholder = { Text(ConnectAppsWords.SEARCH) }, singleLine = true)
         state.connectAppsError?.let { Panel { Text(it, style = scaled(14, color = Theme.no)) } }
         val apps = state.connectApps
+        // Not read yet: said where the list goes.
+        if (apps == null && state.connectAppsError == null) Text(Words.Common.loading, style = scaled(14, color = Theme.dim), modifier = Modifier.padding(top = 8.dp))
         // Yours first (connected, signed in, or to sign in again), then Discover: tafs cloud's order within each.
         val (yours, discover) = apps?.apps.orEmpty().partition { it.yours }
         val row: @Composable (ConnectApps.App) -> Unit = { app ->
@@ -692,3 +697,6 @@ internal fun DescribedConnectionRow(g: bot.tafs.app.kiff.Grant, app: String, sta
 
 /** A connections sheet emptied by a removal closes, unless the read failed: then it says why. */
 internal fun closesWhenEmptied(connectionsError: String?): Boolean = connectionsError == null
+
+/** The Connect apps sheet's content, for tests: it fills the sheet's height from the first frame. */
+internal const val CONNECT_APPS_SHEET = "connect-apps-sheet"

@@ -1,0 +1,2 @@
+- Um início de sessão já não fecha quando sai para obter um código e volta.
+- O cartão de início de sessão indica a app que abre.

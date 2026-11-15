@@ -115,7 +115,9 @@ struct HomeSplitView: View {
                 case .haltAll?:
                     HaltScreen(tafID: nil)
                 case .overview?:
-                    OverviewView { open in withMotion(.easeInOut(duration: 0.25)) { selection = open } }
+                    // As the whole app's sidebar (an iPad's full width), Calendar is its item: the
+                    // Overview doesn't draw a second way to it.
+                    OverviewView(showsCalendar: !calendarInSidebar) { open in withMotion(.easeInOut(duration: 0.25)) { selection = open } }
                 case .calendar?:
                     CalendarView { id in withMotion(.easeInOut(duration: 0.25)) { selection = .taf(id) } }
                 case nil where model.homeListsRecipes:
@@ -210,8 +212,19 @@ struct HomeSplitView: View {
             // that asks for a screen still opens Refunds.
             let onList = tab != nil && !(Screenshots.enabled && Screenshots.screen != nil)
             opened = onList ? .overview : Self.opening(model.listedTafs, screenshot: Screenshots.enabled && !Screenshots.listSettlesOnReturn)
+            // `-screen calendar` and `calendar-week` select Calendar, the sidebar's item (Screenshots.calendar).
+            // `-screen usage` and `connect-apps` select their sidebar item, for the reference set.
+            if let screen = Screenshots.sidebarScreen { opened = screen }
+            if Screenshots.calendar != nil { opened = .calendar }
             chosen = false
-            selection = opened
+            // A tab asked for before the sidebar drew (an alert that opened the app on Needs you, a route, a
+            // screenshot's `-tab`) opens its screen: the tafs list only when none was.
+            selection = tab.flatMap { HomeSelection.of($0.wrappedValue) } ?? opened
+            // `-screen new-taf`: + New's job gallery over the sample, as the reference set shows it.
+            if Screenshots.enabled, Screenshots.screen == "new-taf", showingGallery == nil {
+                await model.loadGallery()
+                if model.gallery != nil { showingGallery = .create }
+            }
         }
     }
 
@@ -240,6 +253,10 @@ struct HomeSplitView: View {
 
     /// The signed-in account's items: KIFF mode, or its screenshot over the sample (`-signedIn`).
     private var signedInLayout: Bool { model.mode == .kiff || Screenshots.signedIn }
+
+    /// Calendar is a sidebar item: the sidebar is the whole app's (`tab` set, an iPad's full
+    /// width), signed in. The Overview then has no calendar button of its own.
+    private var calendarInSidebar: Bool { tab != nil && signedInLayout }
 
     private var sidebar: some View {
         // Only the owner's taps write through this binding, so each one is a choice, a tap on

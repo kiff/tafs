@@ -140,4 +140,40 @@ final class CalendarTests: XCTestCase {
         XCTAssertNotNil(CalendarMath.slots([before, after], on: "2026-10-24")[9])
         XCTAssertNotNil(CalendarMath.slots([before, after], on: "2026-10-25")[9], "the same slot on both days")
     }
+
+    private func calendarSource() throws -> String {
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        return try String(contentsOf: views.appendingPathComponent("CalendarView.swift"), encoding: .utf8)
+    }
+
+    /// The owner's iPad: Week's heading said "9 – 15 novembre" over a strip from 9 to 21. Week's strip is
+    /// the heading's seven days, at an iPad's regular width as on a phone; Day's still scrolls the month.
+    func testWeeksStripIsTheSevenDaysItsHeadingNames() throws {
+        let week = CalendarState(mode: .week, selected: "2026-11-11")
+        XCTAssertEqual(CalendarMath.stripDays(week), ["2026-11-09", "2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13", "2026-11-14", "2026-11-15"])
+        XCTAssertEqual(CalendarMath.stripDays(week), CalendarMath.shown(week), "the days its heading names")
+        // An iPad upright, regular width: the compact layout, whose strip it is.
+        XCTAssertEqual(CalendarLayout.of(width: 820, height: 1180), .compact)
+        XCTAssertEqual(CalendarMath.stripDays(CalendarState(mode: .week, selected: "2026-11-30")).count, 7, "across a month's end too")
+        XCTAssertEqual(CalendarMath.stripDays(CalendarState(mode: .day, selected: "2026-11-11")), CalendarMath.monthGrid("2026-11-11"))
+
+        let file = try calendarSource()
+        let strip = String(file[try XCTUnwrap(file.range(of: "@ViewBuilder private var weekStrip: some View {")).upperBound...].prefix(600))
+        XCTAssertTrue(strip.contains("if state.mode == .week {\n            HStack(spacing: 6) {"), "Week's strip doesn't scroll on to the next weeks")
+        XCTAssertTrue(strip.contains("stripCell(day, fills: true)"), "the seven share the width")
+    }
+
+    /// The owner's iPad in French and Portuguese: "Aujourd'hui" and "Hoje" were cut at both edges and greyed.
+    /// The pill is its word's width, on one line, with room inside its stroke, and stays readable on today.
+    func testTodaysPillFitsItsWordAndStaysReadable() throws {
+        let file = try calendarSource()
+        let pill = String(file[try XCTUnwrap(file.range(of: "private var todayPill: some View {")).upperBound...].prefix(900))
+        XCTAssertTrue(pill.contains(".lineLimit(1)\n                .fixedSize()"))
+        XCTAssertTrue(pill.contains(".padding(.horizontal, 16)"))
+        XCTAssertTrue(pill.contains(".foregroundColor(atToday ? Theme.soft : Theme.ink)"), "never dimmer than the app's own dim")
+        XCTAssertFalse(pill.contains("\n                .opacity(") || pill.contains("\n        .opacity("), "its word never faded")
+        XCTAssertFalse(pill.contains(".disabled("), "a tap on today does nothing, and the pill isn't drawn as disabled")
+        XCTAssertFalse(pill.contains(".frame(width:"), "no fixed width")
+        XCTAssertFalse(pill.contains("OutlineButtonStyle"), "the outline button fades when disabled and has no room inside")
+    }
 }

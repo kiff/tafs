@@ -1,0 +1,2 @@
+- Un inicio de sesión ya no se cierra si sales a por un código y vuelves.
+- La tarjeta de inicio de sesión nombra la app que abre.

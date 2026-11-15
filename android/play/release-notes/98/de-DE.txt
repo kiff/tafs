@@ -1,0 +1,2 @@
+- Eine Anmeldung schließt sich nicht mehr, wenn du kurz für einen Code wechselst.
+- Die Anmeldekarte nennt die App, die sie öffnet.

@@ -5,6 +5,8 @@ tafs for iPhone and iPad is SwiftUI, iOS 16 and later. The project is generated:
 page is a map of the code; what each feature does is on its own page
 ([README.md](README.md)).
 
+The same project builds the Mac app, with Mac Catalyst: [mac-app.md](mac-app.md).
+
 ## Targets
 
 | Target | Sources | What it is |
@@ -159,6 +161,8 @@ the app in sample mode.
 | `-screenshots YES` | Sample mode with the screenshots' data |
 | `-tab account \| tafs \| needs-you \| record` | Opens that tab |
 | `-screen taf \| card \| setup \| starts \| results \| alerts \| chat \| new \| solo \| buy-credits` | Opens that screen (`starts` and `results`: Setup's screens with `Screenshots.setupKnob`; `alerts`: Account › Alerts, with `-tab account`) |
+| `-screen usage \| connect-apps \| devices \| new-taf \| coach` | The iPad reference set's screens over the sample (`ReferenceScreensTests`): `usage` and `connect-apps` select their sidebar item (`Screenshots.sidebarScreen`); `devices`, with `-tab account`, pushes Devices in Account, with Add a device; `new-taf` opens + New's job gallery; `coach` opens Coach mode, empty. Connect apps and the gallery read tafs cloud's answers kept in `Samples/` (`SampleScreens`), and Devices three sample devices, only with `-screenshots YES` over the sample |
+| `-screen calendar \| calendar-week` | Opens Calendar on today, in Day mode, or in Week mode on today's week (the Today pill already today): an iPad's whole-app sidebar selects its Calendar item, the phone opens it as Home's button does; over the sample it reads nothing from tafs cloud. CI's `languages` set shoots both, and the Overview (`-tab tafs`), on the 13-inch iPad in French and Portuguese with `-signedIn YES` (`fr-ipad-calendar-week.png`…) |
 | `-landscape YES` | The iPad's window turned to landscape, for its screenshots |
 | `-signedIn YES` | The iPad's sidebar laid out as for a signed-in account, its screens and Coach above the account, over the sample's tafs: a layout shot, nothing read from KIFF |
 | `-pack <id>` | The Add credits screen with that pack alone |
@@ -180,17 +184,26 @@ the app in sample mode.
   - **at the top,** the mascot and "tafs": the way to the tafs list (the Overview screen, every taf),
     which is what opens first;
   - **the app's screens as items:** Needs you (with its count), Record, Calendar, Usage (Plan &
-    usage) and Connect apps, then the held calls;
+    usage) and Connect apps, then the held calls. With Calendar an item, the Overview has no calendar
+    button of its own (`calendarInSidebar`);
   - **only the tafs relevant now** (`AppModel.relevantNow`): one with an item in Needs you (a held
     call, a step it handed over, a knock at its door), or a run or a change in the last 24 hours
     (`last_run`, `last_change`), and
     those being set up. The rest are in the list behind the mascot;
   - **at its foot, always in sight:** Coach, then the account button, which says who is signed in
     and opens Account beside the sidebar.
+  - **the detail pane is the app's cream, edge to edge,** at every width and in split view: the
+    Overview's 980-point column stretches to the pane, and every list in it (Connect apps, an app's
+    connections, a connection, what a Card counted) hides its grey for `screenBackground`;
+  - **the Overview's Needs you** lists the held calls, then, when Needs you counts more (a Coach chat,
+    a step, "Did this happen?", Card units, as tafs cloud's `needs_you.count` does), one line in its
+    words that opens Needs you (`OverviewView.showsRest`). So "Needs you · 3" beside "No tafs yet"
+    still shows what waits.
   
   Each item opens its existing screen beside the sidebar (`HomeSelection`). The app's tab and the
   selection follow each other, so a notification, a drive or a shortcut that opens a tab opens its
-  screen here; ⌘1 from a screen goes back to the tafs list. Each item is in the drive's
+  screen here, at launch too (a tab asked for before the sidebar drew opens its screen, not the tafs list); ⌘1
+  from a screen goes back to the tafs list. Each item is in the drive's
   registry, as the rail's were. Account and Record are built again on each pick, not kept as the
   phone's tabs are. The iPhone keeps the bar.
 - **Plan & usage** (`UsageView`, opened from Settings' Plan card and Home's plan line), with
@@ -393,6 +406,29 @@ the app in sample mode.
   At Approve, the step tafs cloud asks must sign the Card as the mark said (`AppModel.stepMatchesMark`): a Card drawn
   as signed with only the connection asked, or drawn as next and asked now, is out of date. Nothing is signed, and the
   card is read again, as for `read_again`.
+  **Whether Approve is a tap** is on the mark too (`signs.takes`, `"tap"` or `"fingerprint"`, docs/chat.md), read
+  as `Signs.takes`. KIFF's approval-window words ("No fingerprint for the next 4 minutes") may go only on a `"tap"`
+  card (`SetupComponent.windowWords`, as Android 1.27.9's `windowWordsFor`): never on one that takes the fingerprint
+  or has no mark. The line under Approve (`SetupApproval.approveLine`) is KIFF's words on a `"tap"` card while this
+  phone holds a window, hidden while the approval runs; anywhere else it names Face ID ("Approving asks for Face ID.").
+  **The approval window** is Android's (docs/approvals.md): `KIFFClient.window`, `openWindow`, `readWindow` and
+  `closeWindow` on `/v1/me/window`, and `AppModel.windowWords`. On an ask with `key: window`, one Face ID over the
+  ask's message opens a window (the approval key signs `kiff.window.v1`, five minutes) unless one is held, and the
+  step's calls go as a tap: planque's with `planque.request.v2` and KIFF's draft confirm with `kiff.request.v2`, the
+  device key with the window's id (`PlanqueClient.window`, `KIFFClient.signsInWindow`, set for that step only). A
+  `critical` ask, no hint, a session without the approval key, a drive, or a KIFF without the route (404) signs as
+  before, with Face ID. planque's `window_required` opens a new window behind Face ID and makes the call once more;
+  KIFF's `critical_key_required` or `window_required` asks Face ID again and the approval key signs it
+  (`windowReconfirm`). KIFF's words are read after each approval and on coming back; a window KIFF says isn't open
+  is forgotten. It closes, device-signed, after 30 seconds in the background (on coming back, if iOS suspended the
+  app first), at once when the screen locks (`protectedDataWillBecomeUnavailable`) and before a drive starts; it is
+  dropped at sign-out and at a new sign-in (`ApprovalWindowTests`).
+  **A sign-in card names its app**: the card's `service`, else the connection's app as Connect apps names it, else
+  planque's vendor in people's words (`AppModel.signInApp`, `appName`): "Sign in at Gmail", and "Sign in at the
+  vendor" only when no app is known, never a connection's status. When the connection takes no approval now
+  (signed in already, or past approving), Sign in asks tafs cloud's approval route, which takes a sign-in card too
+  (docs/api.md): tafs cloud answers Coach and the card shows its note in the person's words, never "This connection
+  is listed." Where tafs cloud can't be asked, the app's line stands, as on Android 1.27.8.
   **The key and its Card under one Face ID** (`AppModel.approveKeyAndCard`, `RequestsTogether`), when the sheet is
   opened from Coach's card and that card carries the taf's Card as a draft:
   - The sheet draws **Its Card**: KIFF's own lines for the draft this phone read from KIFF.
@@ -701,10 +737,15 @@ their addresses, Coach's Cards and the step's words are tafs cloud's.
 
 ## The calendar
 
-The tafs' scheduled work still to come (kiff/tafs#534), opened from the calendar
-icon at the top right of the Overview (the iPad's sidebar) and, on the iPhone,
-beside + in the home's bar. `Views/CalendarView.swift` draws Day, Week and Month,
-Week first, with Today, previous and next, and a date to pick. On a phone the range
+The tafs' scheduled work still to come (kiff/tafs#534), opened from the sidebar's
+Calendar item on an iPad's full width, from the calendar icon at the top right of the
+Overview beside the Tafs tab's own sidebar (an iPad's narrower split; never beside the
+whole app's sidebar, which already has Calendar, `OverviewView.showsCalendar`) and, on
+the iPhone, beside + in the home's bar. `Views/CalendarView.swift` draws Day, Week and Month,
+Week first, with Today, previous and next, and a date to pick. Today is a pill as wide as
+its word in every language ("Aujourd'hui", "Hoje", "Vandaag"), on one line with room inside
+its stroke; with today already shown a tap does nothing and its word stays readable, never
+faded. On a phone the range
 ("9 – 15 Nov") has a line of its own above the buttons, so it's never cut. tafs cloud computes
 every occurrence (`GET /v1/calendar`, docs/api.md): live schedules' firings in the
 account's zone, follow-ups and runs' next tries, only for the tafs the person may
@@ -714,8 +755,10 @@ zone, so the app places it and converts nothing. `Model/CalendarModel.swift`
 one read per grid), groups events by day and hour, and picks the layout: wide
 (`CalendarLayout.of`: at least 700 points wide, on its side, a tablet's height),
 with a month navigator at the upper left, the calendar beside it and the agenda
-under them; compact otherwise, with a scrolling week strip and the selected day's
-work under it. What it shows (`CalendarState`) is kept on `AppModel`, so a rotation
+under them; compact otherwise, with a week strip and the selected day's
+work under it. In Week the strip is exactly the seven days its heading names, sharing
+the width at any width (`CalendarMath.stripDays`): an upright iPad showed "9 – 15 novembre"
+over a strip from 9 to 21. In Day it scrolls the month's weeks. What it shows (`CalendarState`) is kept on `AppModel`, so a rotation
 or a new layout keeps it, and cleared with the rest of an account's state. A tap
 opens the taf. Read-only; no new dependency. Tests: `TafsTests/CalendarTests.swift`.
 
@@ -860,6 +903,58 @@ step; `KIFF/TafsCloud+YourStep.swift`, `Views/YourStepCard.swift`, `AppModel.ans
 
 Tests: `TafsTests/YourStepTests.swift`.
 
+## Pairing a computer
+
+Account → Devices → **Add a device** pairs one of the person's computers, or a new phone or tablet
+(§5.8, `isPhone`: `platform` `ios`, `ipados` or `android`), from this phone
+(KIFF's pairing contract §5; `KIFF/Pairing.swift`, `PairComputerView`,
+`AppModel.pairComputer`). The phone holds the approving half; the computer never pairs itself.
+
+- **The scan:** the camera reads the computer's QR. `PairingRequest.read` checks it strictly before
+  anything is shown or signed: `kiff.pair.v1`, no field KIFF doesn't take, `exp` not passed and at
+  most 5 minutes ahead, a known `kind` and `platform`, a usable `name`, a 32-byte nonce, P-256 keys
+  that differ, `approval_pub` exactly for `hello` and `enclave`, `key_store` only `software` (with it, whatever the kind, a `view` device: no approval key and no
+  credential, the code over `pub` alone), and `credential` (the computer's own platform passkey, as Windows pairs with
+  Windows Hello) only for `passkey`, exactly `{id, public_key}`, an id of at most 1023 bytes and a
+  P-256 key that isn't the device key. The body sends it on as read. A code it won't pair is said in words, and the camera keeps reading.
+- **Before the fingerprint:** what pairing gives by kind ("… will be able to approve your tafs'
+  actions with Windows Hello"), or for a computer whose key is in software (`key_store: "software"`,
+  which KIFF pairs view-only) "… will show your tafs and send approvals to this phone" in its place
+  (`pair_gives_view`), "Only pair a computer you're
+  using right now", and "Does your computer show XFI4MD?" with the check code (§5.2, base32 of
+  sha256 over the keys' DER, a passkey's key in the approval key's place; the shared vector `H6SJNU` and `LTJFF6` is asserted literally).
+- **Yes:** the approval key signs `POST /v1/me/pairings` (`kiff.request.v1` over the QR's fields),
+  behind Face ID or Touch ID naming the computer, never inside a window. KIFF's code is said beside
+  the one checked; if they differ, the person is told to sign the computer out if it isn't theirs.
+  A refusal is KIFF's `words`, or the app's own line for its code where KIFF sent none.
+- **Signing a device out:** the approval key signs `DELETE /v1/me/devices/{id}` too, since removing a
+  device that holds an approval key or a passkey is an approval.
+- **A phone or tablet** takes `kind` `enclave` or `keystore` and always an approval key, with
+  `device_kind` sent on as it came; whether a kind matches its platform is KIFF's check
+  (`invalid_pairing`), as on Android. Its alert says what it gets whatever its biometric
+  (`pair_gives_phone`), to add only one in hand now, and asks whether the new phone or tablet shows
+  the code.
+- **Coach** can't start or confirm a pairing: both controls carry the confirm mark.
+- Its lines are tafs#1033's `settings.devices.pair*` keys, shared with Android.
+
+### Signing in from another phone
+
+A new iPhone or iPad gets approval authority the way a computer does (KIFF's pairing contract §5.8;
+`KIFF/PairingOffer.swift`, `PairSignInView`, `AppModel.startPairingSignIn`/`finishPairingSignIn`).
+On the sign-in screen, **Sign in with your other phone**:
+
+- The device shows the `kiff.pair.v1` QR from the keys it already holds: `platform` `ios` or
+  `ipados`, `kind` `enclave`, its approval key, and `device_kind` `iphone` or `ipad`. The Mac build
+  sends `macos` and no `device_kind`, so it pairs as a computer through the same screen. The code
+  lasts 4½ minutes, and an expired one is replaced by a new one.
+- Beside it: how to scan it from the other phone (its Account, Devices and add button, in the app's
+  own words) and the check code that phone will ask about.
+- **The claim:** the device key signs `kiff.pair.claim.v1` (the nonce and the key's sha256) once,
+  behind Face ID or the passcode, and that proof is sent with `POST /v1/pair/claim` at least every
+  3 s until the other phone approves. KIFF's session is then used as a sign-in's is. A device with
+  no Secure Enclave holds no key, so it can't be paired and says to sign in with KIFF instead.
+- Nothing is approved on this device: the other phone approves, behind its own Face ID.
+
 ## Tests and CI
 
 - **Unit tests** (`TafsTests`) sit by feature: `ChatTests`, `WorkLogTests`,
@@ -886,6 +981,13 @@ Tests: `TafsTests/YourStepTests.swift`.
   already passed at an earlier commit with nothing changed since that it tests (the app for
   the unit tests, the screens for the UI tests, the iPad's layout for the iPad's), so an
   upload can go straight to the archive; a tag runs everything.
+- **The upload's profiles** (`ios/scripts/asc-profiles.rb`, through the App Store Connect API):
+  `bot.tafs.app` with Push, Time Sensitive Notifications (turned on once in the developer
+  portal, since the API can't) and Associated Domains, turned on by the script the first time,
+  for `webcredentials:kiff.dev`. kiff.dev's `apple-app-site-association` lists
+  `R54YWFRK4B.bot.tafs.app`, so the app's passkeys are kiff.dev's, at the origin KIFF accepts.
+  A profile made before a capability was on is replaced. Only the upload signs: tests,
+  screenshots and the Mac build don't.
 - **Screenshot runs** are manual runs with `upload` off and `screenshots` set (`full`, `key`
   or `languages`; it's `none` by default). They wait for an empty queue: one stops at once,
   before it takes a macOS runner, while another manual or tag run is queued or running, so
@@ -953,8 +1055,11 @@ reads from KIFF's own answers (" · it didn't go through: "), and the sign-in's 
 The pages the app opens follow the lines' language (`KIFFClient.appLanguage`, the first of the languages the screens
 resolved to), never the browser's:
 
-- **kiff.dev's Terms and Privacy policy** (Sign-in, Settings, Plan & usage): `/terms#tafs` in English, `/de/terms#tafs` in
-  German, and so on (`Legal`).
+- **tafs's own Terms and Privacy policy** (Sign-in, Account › Legal, Plan & usage): `kiff.dev/tafs/terms` and
+  `kiff.dev/tafs/privacy`, the pages Google's consent screen names (`Legal`), as Android 1.27.8 opens. They're in
+  English only until kiff.dev serves them in other languages, so outside English the Account and Plan & usage links
+  say so ("Terms (auf Englisch)", `settings.legal_in_english`, `Legal.label`). Before, they opened KIFF's pages
+  (`/terms#tafs`, `/de/terms#tafs`).
 - **KIFF's approval page**, for a sign-in and for approving again after Face ID changed: the link KIFF answers gets
   `lang=<language>`, and a link that already names one keeps it (`DeviceStart.inAppLanguage`).
 - **A held call's page in KIFF**: `/needs-you/{id}?lang=<language>` (`KIFFClient.answerPage`).

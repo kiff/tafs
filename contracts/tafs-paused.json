@@ -1,0 +1,24 @@
+{
+  "about": "GET /v1/tafs for someone who manages the tafs: the same taf, paused. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "tafs": [
+      {
+        "id": "taf-aaaa0000000000000000",
+        "name": "Rae",
+        "job": "refunds",
+        "kiff_agent": "rae",
+        "status": "paused",
+        "next_run": null,
+        "next_run_words": null,
+        "last_run": null,
+        "results": [
+          "door_reply"
+        ],
+        "time_zone": "UTC",
+        "time_zone_words": "Times in UTC",
+        "schedule_time_zone": "UTC"
+      }
+    ],
+    "removing": []
+  }
+}

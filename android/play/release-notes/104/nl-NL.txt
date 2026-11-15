@@ -1,0 +1,1 @@
+- Op een telefoon die niet kan goedkeuren, biedt het Card-tabblad geen Intrekken meer. Er staat: “Gebruik een apparaat dat kan goedkeuren om deze Card in te trekken.”

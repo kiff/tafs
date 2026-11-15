@@ -1,0 +1,1 @@
+- **A refused Card draft says the approval is closed:** every refusal a new draft mends tells Coach it was refused by tafs cloud's check, not the owner, that nothing waits, whether its tools or key weren't approved either, and to draw a new approval now. A refused count on a money tool is never one of the owner's rules, to drop without asking (docs/coach.md).

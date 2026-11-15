@@ -15,7 +15,8 @@ struct CalendarView: View {
     private static let hourHeight: CGFloat = 44
 
     private var today: String { CalendarMath.today(in: AccountTime.zone) }
-    private var state: CalendarState { model.calendarState ?? CalendarState(selected: today) }
+    /// Until a choice is made here, a screenshot's `-screen calendar` or `calendar-week` (Screenshots.calendar).
+    private var state: CalendarState { model.calendarState ?? Screenshots.calendar ?? CalendarState(selected: today) }
     /// The read for the selected date's range, or nil while it's being read.
     private var read: TafsCloud.CalendarRead? { CalendarMath.current(model.calendarRead, selected: state.selected) }
     private var events: [TafsCloud.CalendarEvent] { read?.events ?? [] }
@@ -86,11 +87,7 @@ struct CalendarView: View {
             .foregroundColor(Theme.ink)
             .accessibilityIdentifier("calendar.title")
         let nav = HStack(spacing: 10) {
-            Button(Words.Calendar.today) { select(today) }
-                .buttonStyle(OutlineButtonStyle())
-                .fixedSize(horizontal: true, vertical: false)
-                .disabled(state.selected == today)
-                .accessibilityIdentifier("calendar.today")
+            todayPill
             Button { show(CalendarMath.step(state, by: -1)) } label: { Image(systemName: "chevron.left") }
                 .accessibilityLabel(state.mode == .day ? Words.Calendar.previousDay : state.mode == .week ? Words.Calendar.previousWeek : Words.Calendar.previousMonth)
             Button { show(CalendarMath.step(state, by: 1)) } label: { Image(systemName: "chevron.right") }
@@ -137,6 +134,29 @@ struct CalendarView: View {
             Text(read.words).scaledFont(13, weight: .semibold).foregroundColor(read.halted ? Theme.no : Theme.soft)
                 .accessibilityIdentifier("calendar.words")
         }
+    }
+
+    /// Today, as a pill sized to its word in every language ("Aujourd'hui", "Hoje", "Vandaag"):
+    /// one line, its own width and room inside the stroke, never a fixed width that cuts it. With
+    /// today already shown it does nothing, and its word stays readable (`Theme.soft`), never
+    /// faded as a disabled outline button is (the owner's iPad, in French and Portuguese).
+    private var todayPill: some View {
+        let atToday = state.selected == today
+        return Button { if !atToday { select(today) } } label: {
+            Text(Words.Calendar.today)
+                .scaledFont(15, weight: .medium)
+                .lineLimit(1)
+                .fixedSize()
+                .foregroundColor(atToday ? Theme.soft : Theme.ink)
+                .padding(.horizontal, 16)
+                .frame(minHeight: 40)
+                .overlay(Capsule().stroke(Theme.ink.opacity(atToday ? 0.2 : 0.4), lineWidth: 1))
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.drivablePlain)
+        .fixedSize()
+        .accessibilityAddTraits(atToday ? .isSelected : [])
+        .accessibilityIdentifier("calendar.today")
     }
 
     /// The selected date as a date at noon UTC, drawn in UTC: the picker shows the same day it holds.
@@ -224,25 +244,38 @@ struct CalendarView: View {
 
     // MARK: The week strip (compact)
 
-    private var weekStrip: some View {
-        ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
-                    ForEach(CalendarMath.monthGrid(state.selected), id: \.self) { day in
-                        stripCell(day).id(day)
-                    }
+    /// Week: exactly the seven days its heading names, sharing the width, so an iPad's width
+    /// never shows the next week beside them ("9 – 15 novembre" over 9 to 21). Day: the month's
+    /// weeks in a row that scrolls, the selected day's week first.
+    @ViewBuilder private var weekStrip: some View {
+        if state.mode == .week {
+            HStack(spacing: 6) {
+                ForEach(CalendarMath.stripDays(state), id: \.self) { day in
+                    stripCell(day, fills: true)
                 }
-                .padding(.vertical, 2)
             }
-            .onAppear { proxy.scrollTo(CalendarMath.weekStart(state.selected), anchor: .leading) }
-            .onChange(of: state.selected) { day in
-                withMotion(.easeInOut(duration: 0.2)) { proxy.scrollTo(CalendarMath.weekStart(day), anchor: .leading) }
+            .padding(.vertical, 2)
+            .accessibilityIdentifier("calendar.strip")
+        } else {
+            ScrollViewReader { proxy in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        ForEach(CalendarMath.stripDays(state), id: \.self) { day in
+                            stripCell(day, fills: false).id(day)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+                .onAppear { proxy.scrollTo(CalendarMath.weekStart(state.selected), anchor: .leading) }
+                .onChange(of: state.selected) { day in
+                    withMotion(.easeInOut(duration: 0.2)) { proxy.scrollTo(CalendarMath.weekStart(day), anchor: .leading) }
+                }
             }
+            .accessibilityIdentifier("calendar.strip")
         }
-        .accessibilityIdentifier("calendar.strip")
     }
 
-    private func stripCell(_ day: String) -> some View {
+    private func stripCell(_ day: String, fills: Bool) -> some View {
         let selected = day == state.selected
         let marks = CalendarMath.marks(events, on: day)
         return Button { select(day) } label: {
@@ -258,7 +291,7 @@ struct CalendarView: View {
                 }
                 .frame(height: 5)
             }
-            .frame(width: 46, height: 66)
+            .frame(minWidth: fills ? 0 : 46, maxWidth: fills ? CGFloat.infinity : 46, minHeight: 66, maxHeight: 66)
             .background(RoundedRectangle(cornerRadius: 12).fill(selected ? Theme.amber : Theme.panel))
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(day == today && !selected ? Theme.amber : Color.clear, lineWidth: 1.5))
         }

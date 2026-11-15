@@ -1,0 +1,1 @@
+- **Contracts for Coach's conversation:** `GET /v1/setup` with Coach, Coach's chats, and one Coach chat with work, a refused connection, an answer in the owner's words, the three card kinds and Coach's lines, written by tafs cloud's tests (contracts/README.md).

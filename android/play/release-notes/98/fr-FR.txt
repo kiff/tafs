@@ -1,0 +1,2 @@
+- Une connexion ne se ferme plus quand vous allez chercher un code et revenez.
+- La carte de connexion nomme l'app qu'elle ouvre.

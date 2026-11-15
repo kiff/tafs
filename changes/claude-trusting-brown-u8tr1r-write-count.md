@@ -1,0 +1,1 @@
+- **Coach puts no call count on a write's Card that the owner didn't agree:** the generous count is for read tools only (`draft-the-card@22`, docs/coach.md).

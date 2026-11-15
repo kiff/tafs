@@ -1276,7 +1276,10 @@ struct SetupComponentView: View {
 
     @ViewBuilder private func signIn(_ c: SetupComponent) -> some View {
         let state = model.setupCardState(c)
-        let vendor = c.service ?? Words.Coach.theVendor
+        // The app by name ("Sign in at Gmail"): the card's service, else the connection's app as Connect apps
+        // and planque name it; "the vendor" only when neither is known (Android 1.27.8).
+        let app = AppModel.signInApp(service: c.service, app: model.grants.first { $0.id == c.grant }.map { model.appName($0) })
+        let vendor = app ?? Words.Coach.theVendor
         switch state {
         case .done:
             OutcomeLine(text: Words.Coach.Answer.signedInAt(vendor: "\(vendor)"), tone: Theme.ok)
@@ -1290,7 +1293,7 @@ struct SetupComponentView: View {
                 Eyebrow(text: state.isFailure ? Words.Coach.didNotGoThroughSign : Words.Coach.SignIn.eyebrow,
                         color: state.isFailure ? Theme.no : Theme.amber)
                 // A connection its vendor signed out reads planque's words for it (needs_reconnect).
-                Text(signedOut?.signedOutWords ?? Words.Coach.SignIn.at(vendor: "\(vendor)")).scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                Text(signedOut?.signedOutWords ?? AppModel.signInWords(app: app)).scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
                 if case .failed(let why) = state {
                     Text(why.map { Words.Coach.Answer.failedWhy(value: "\($0)") } ?? Words.Coach.Answer.failed)
                         .scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
@@ -1488,6 +1491,14 @@ struct SetupApproval: View {
             case .needsYou: break // between the approval and the grant's refresh
             }
         }
+    }
+
+    /// The line under Approve: KIFF's approval-window words where tafs cloud marks the card a tap and
+    /// this phone holds a window (`held`), hidden while an approval runs, as Android hides them; else
+    /// that approving asks for Face ID or Touch ID.
+    static func approveLine(_ component: SetupComponent, held: String?, approving: Bool) -> String? {
+        if let words = component.windowWords(held) { return approving ? nil : words }
+        return Words.Coach.approvingAsks(biometry: "\(Biometry.name)")
     }
 
     /// Whether this card's connection is approved by giving its key: planque says it takes one
@@ -1688,7 +1699,11 @@ struct SetupApproval: View {
                 }
                 .disabled(busy || (answered && !state.isFailure))
                 CardNote(id: component.id)
-                Text(Words.Coach.approvingAsks(biometry: "\(Biometry.name)")).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
+                // Face ID named only where Approve still asks for it: on a card tafs cloud marks a tap, while
+                // this phone holds an approval window, KIFF's words for the next tap instead (as Android).
+                if let line = Self.approveLine(component, held: model.windowWords, approving: model.connecting != nil) {
+                    Text(line).scaledFont(12, relativeTo: .caption).foregroundColor(Theme.dim).frame(maxWidth: .infinity)
+                }
             }
         }
     }

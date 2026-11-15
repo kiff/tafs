@@ -1396,6 +1396,9 @@ struct CountedView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        // The app's cream, not the list's grey, as every screen in the detail pane.
+        .screenBackground()
         .navigationTitle(Self.title)
         .navigationBarTitleDisplayMode(.inline)
         .accessibilityIdentifier("counted.\(card)")

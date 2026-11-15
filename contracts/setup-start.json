@@ -111,6 +111,15 @@
                 "read_only": true
               },
               {
+                "name": "taf_labels",
+                "url": "https://tafs.test/v1/mcp",
+                "tool": "taf_labels",
+                "mode": "verify",
+                "audience": "https://tafs.test/v1/mcp",
+                "control": true,
+                "idempotency_argument": "tafs_op"
+              },
+              {
                 "name": "version_try",
                 "url": "https://tafs.test/v1/mcp",
                 "tool": "version_try",
@@ -160,6 +169,7 @@
             "Draft a change to a taf",
             "Say what a taf will likely use",
             "Read a public web page",
+            "Label tafs",
             "Try a version of a taf, sending nothing",
             "Install a version of a taf",
             "See the app on your device while it drives",
@@ -414,6 +424,24 @@
                     "window": "calendar_day"
                   }
                 ]
+              },
+              {
+                "id": "coach-labels",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "taf_labels"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 100,
+                    "window": "calendar_day"
+                  }
+                ]
               }
             ],
             "contract_digest": "cd_123"
@@ -497,6 +525,12 @@
               "lines": [
                 "KIFF's line for coach-web-reads"
               ]
+            },
+            {
+              "id": "coach-labels",
+              "lines": [
+                "KIFF's line for coach-labels"
+              ]
             }
           ]
         }
@@ -569,6 +603,11 @@
                 "name": "Read a public page",
                 "does": "Read one public web page, such as an app's documentation or its published API description, to connect it the right way. Only public pages, with nothing signed in. Up to 50 a day.",
                 "why": "It reads only what anyone can open on the web."
+              },
+              {
+                "name": "Label tafs",
+                "does": "Put labels on your tafs, such as Money or Customers, so you can filter the list. A label is only a name: it changes nothing a taf may do. Up to 100 a day.",
+                "why": "It changes only how your list is filtered."
               },
               {
                 "name": "Try a version",

@@ -46,6 +46,55 @@ enum KeyCommand: CaseIterable {
     var modifiers: EventModifiers { self == .close ? [] : .command }
 }
 
+extension KeyCommand {
+    /// The shortcuts that work on every screen. The others (send, close, stop) belong to the
+    /// screen that shows their button.
+    static let global: [KeyCommand] = [.newTaf, .tafs, .needsYou, .record, .account, .coach]
+}
+
+/// Where each of the global shortcuts sits in the Mac's menu bar (docs/mac-app.md): the
+/// system's own menus, so no menu has a name to translate.
+enum MacMenu {
+    /// The File menu, in place of "New Window".
+    static let file: [KeyCommand] = [.newTaf]
+    /// The app's menu, in place of "Settings…".
+    static let app: [KeyCommand] = [.account]
+    /// The View menu.
+    static let view: [KeyCommand] = [.tafs, .needsYou, .record, .coach]
+}
+
+extension AppModel {
+    /// Coach mode works with the owner's KIFF account, once signed in.
+    /// Coach only for those who may use it: it was shown to a Viewer, who got no_access, or
+    /// Touch ID and then a refusal (the 805 retest).
+    var coachAvailable: Bool { signedIn && mode == .kiff && mayUseCoach }
+
+    /// Does what a global shortcut does, from the Mac's menu bar. A screen's own shortcut
+    /// (send, close, stop) does nothing here: its button is the screen's.
+    func run(_ command: KeyCommand) {
+        switch command {
+        case .newTaf: startNewTaf()
+        case .tafs: requestedTab = .tafs
+        case .needsYou: requestedTab = .needsYou
+        case .record: requestedTab = .record
+        case .account: requestedTab = .account
+        case .coach: coachOpen = true
+        case .send, .close, .stop: break
+        }
+    }
+
+    /// Whether a global shortcut can be used now: signed in, and Coach's only where Coach is.
+    func allows(_ command: KeyCommand) -> Bool {
+        guard signedIn else { return false }
+        switch command {
+        case .newTaf: return coachAvailable
+        case .coach: return coachAvailable && !coachOpen
+        case .tafs, .needsYou, .record, .account: return true
+        case .send, .close, .stop: return false
+        }
+    }
+}
+
 extension View {
     /// This control's keyboard shortcut (kiff/tafs#210).
     func shortcut(_ command: KeyCommand) -> some View {
