@@ -44,6 +44,9 @@ targets:
       path: Tafs/Info.plist
       properties:
         CFBundleDisplayName: tafs
+        # The Mac App Store takes a Mac build only with its category (App Store Connect's error 90242); the
+        # iPhone and iPad ignore it. tafs runs a business's routine jobs: Business.
+        LSApplicationCategoryType: public.app-category.business
         # From the build settings, so CI's build number reaches App Store Connect.
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
