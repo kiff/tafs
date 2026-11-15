@@ -6829,8 +6829,10 @@ async function recordRoute(event: HTTPEvent, parts: string[], me: KIFFIdentity, 
   // its Cards (every taf removed is no reason for a viewer to see them all).
   const seesEvery = all.every((t) => access.get(t.kiffAgent)?.oversee || access.get(t.kiffAgent)?.manage)
     && (all.length > 0 || me.capabilities.includes("cards.manage"));
-  // A removed taf's calls, for them: named as removed (record.ts). An unreadable list leaves them out.
-  const removed = seesEvery && deps.coach
+  // A removed taf's calls, named as removed (record.ts), only for those who manage the account's Cards, whatever tafs
+  // remain: who sees "every taf" now may never have seen the removed one, and KIFF's access for an archived agent can't
+  // be read back. An unreadable list leaves them out.
+  const removed = me.capabilities.includes("cards.manage") && deps.coach
     ? removedRecordTafs(await deps.coach.get(removedTafsKey(me.tenantID)).catch(() => undefined), new Set(all.map((t) => t.kiffAgent)), lang) : [];
   const tafs: RecordTaf[] = [...all.filter((t) => listable(access, t.kiffAgent)).map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent })), ...removed];
   const q = new URLSearchParams(event.rawQueryString ?? "");

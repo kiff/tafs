@@ -6363,6 +6363,15 @@ describe("the Record across the person's tafs", () => {
     // Every taf removed is no reason for a viewer to see them all: nothing, and no receipts.
     expect((await req("GET", "/v1/record", "viewer_paris", "q=order%201042")).body.entries).toEqual([]);
     expect((await req("GET", "/v1/record/receipts", "viewer_paris", "from=2026-11-05&to=2026-11-05")).status).toBe(403);
+    // Nor is overseeing every live taf: someone who never saw a removed taf doesn't see it once it's removed. Only those
+    // who manage the Cards do.
+    w.tafs.held.set(`t_acme#${RAE}`, { id: RAE, name: "Rae", job: "refunds", kiffAgent: "rae", nameClaim: "c", created: "2026-10-17T09:00:00Z" } as Taf);
+    w.account.access = { rae: { use: true, oversee: true, manage: false } };
+    w.account.calls = [...calls(), { proposal_id: "p-gone", actor_id: "gone-agent", action_name: "create_refund", outcome: "allowed", created_at: at(1), about: "Order 1042" } as ActivityCall];
+    await deps.coach.append(`t_acme#removed-tafs`, { id: "taf-gone", kiff_agent: "gone-agent", name: "Secret", removed_at: w.now.toISOString() }, new Date(w.now.getTime() + 86400_000));
+    const named = (r: { body: { entries: Array<{ taf: { name: string }; call: ActivityCall }> } }) => r.body.entries.map((e) => `${e.taf.name}:${e.call.proposal_id}`);
+    expect(named(await req("GET", "/v1/record", "viewer_paris", "q=order%201042"))).toEqual(["Rae:p-reply", "Rae:p-refund"]);
+    expect(named(await req("GET", "/v1/record", "ana_paris", "q=order%201042"))).toEqual(["Rae:p-reply", "Rae:p-refund", "Secret (removed):p-gone"]);
   });
 
   it("exports the receipts for those who oversee every taf, and no one else", async () => {
