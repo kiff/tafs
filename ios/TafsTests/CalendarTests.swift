@@ -176,4 +176,15 @@ final class CalendarTests: XCTestCase {
         XCTAssertFalse(pill.contains(".frame(width:"), "no fixed width")
         XCTAssertFalse(pill.contains("OutlineButtonStyle"), "the outline button fades when disabled and has no room inside")
     }
+
+    /// The Mac's date picker writes the date as the iPad's compact one does, never as numbers in a
+    /// field: the day held at noon UTC reads the same day, whatever the Mac's zone.
+    func testTheMacPickerWritesTheDateAsTheIPadDoes() {
+        var c = Calendar(identifier: .gregorian)
+        c.timeZone = TimeZone(identifier: "UTC")!
+        let date = c.date(from: DateComponents(year: 2026, month: 11, day: 15, hour: 12))!
+        XCTAssertEqual(CalendarView.pickerTitle(date, locale: Locale(identifier: "en_US")), "Nov 15, 2026")
+        XCTAssertEqual(CalendarView.pickerTitle(date, locale: Locale(identifier: "fr_FR")), "15 nov. 2026")
+        XCTAssertFalse(CalendarView.pickerTitle(date, locale: Locale(identifier: "en_US")).contains("/"))
+    }
 }

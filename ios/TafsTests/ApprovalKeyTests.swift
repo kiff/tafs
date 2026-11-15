@@ -29,7 +29,10 @@ final class TwoKeySigner: ApprovalSigning {
 
     /// Set when the next approval prompt closes without a recognized face or finger.
     var approvalUnrecognized = false
+    /// Thrown by the next approval prompt instead: the person's own cancel (`LAError.userCancel`), say.
+    var approvalThrows: Error?
     func signApproval(_ message: Data, reason: String) async throws -> String {
+        if let approvalThrows { throw approvalThrows }
         if approvalUnrecognized { throw ApprovalSigner.SignerError.notAuthenticated }
         approvalPrompted.append(String(decoding: message, as: UTF8.self))
         return "approval"

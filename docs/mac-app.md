@@ -73,6 +73,8 @@ That build is unsigned. The signed one goes to TestFlight (below).
 
 If anything readable ever reaches a log, revoke the certificate in App Store Connect at once and make a new one.
 
+**The app's category.** The Mac App Store refuses a Mac upload whose Info.plist has no `LSApplicationCategoryType` (Mac TestFlight's first run stopped there). `project.yml` sets it to `public.app-category.business` (Business); it should be the App Store listing's primary category, which the owner confirms. iOS ignores the key. The Mac workflow checks it's there.
+
 ## Signing and the sandbox
 
 The Mac build has its own entitlements, `Tafs/TafsMac.entitlements` and `Notify/TafsNotifyMac.entitlements`, set for the Mac SDK only in `ios/project.yml` (`CODE_SIGN_ENTITLEMENTS[sdk=macosx*]`). The iPhone and iPad's stay generated from `project.yml`, unchanged. The Mac's files hold every key the iPhone and iPad's do, and:
@@ -118,9 +120,23 @@ Both come from one list, `KeyCommand`. `MacMenu` says where each sits:
 
 A new global shortcut is added to `KeyCommand.global` and to one of `MacMenu`'s lists. `MacMenuTests` fails until it's in both.
 
+## Where the Mac draws a control differently
+
+- **The calendar's date** (`CalendarView.datePicker`): the Mac draws the iPad's compact date picker as numbers in a field ("11/15/2026"). On the Mac it's the iPad's look instead, the date in words ("Nov 15, 2026"), which opens the month to choose a day from.
+
+## The pointer
+
+On the Mac, buttons answer the pointer, each a little less than a press, so a press still shows (`Hover`, `Design/Components.swift`):
+
+- **the main button's** fill lightens;
+- **the outlined button** takes a light wash of ink;
+- **a plain button**, which is what a row or a link is (`DrivablePlainButtonStyle`), fades a little, as it fades more when pressed.
+
+The iPad keeps its own pointer effects, so this shows on the Mac build only. The sidebar is the system's list: its screens and tafs show the selection as the system draws it, and its plain buttons fade as above. The sidebar's Coach button lightens under the pointer as the main button does.
+
 ## The window
 
-The window never goes smaller than 820 × 600 points (`MacWindow.minimumSize`): the width of an iPad held upright, so the sidebar and a screen beside it always fit. It has no default size of its own: macOS chooses the first one and remembers the person's.
+The window never goes smaller than 820 × 600 points (`MacWindow.minimumSize`): the width of an iPad held upright, so the sidebar and a screen beside it always fit. It has no default size of its own: macOS chooses the first one and remembers the person's. The window shows no title, as the iPad shows none; the sidebar says "tafs" under its icon.
 
 ## Approvals with Touch ID
 
@@ -170,7 +186,7 @@ After the unit tests, the Mac workflow runs the app in sample mode and takes the
 
 | What | State |
 |---|---|
-| Pointer hover on rows and buttons | next |
+| Pointer hover | buttons and rows ("The pointer"); **owed:** seen by a person, since a screenshot can't show it |
 | **The menu bar and the window, seen by a person** | the menu bar is in CI's screenshots (`menu-bar.png`); **owed:** its menus opened, and the smallest window size, on a Mac. |
 | Approvals with Touch ID on a Mac | the iPad's key and prompt; a Mac never says Touch ID is off for tafs, and says where in System Settings it's set up |
 | Adding a Mac from a phone (the QR code and the check code) | built: the iPad's "sign in from another phone" (`AppModel.startPairingSignIn`, `PairingOffer`), with the Mac shown as a computer (`macos`, no `device_kind`). Not yet tried on a real Mac |

@@ -2156,6 +2156,24 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(String(w.told()?.answer)).toMatch(/^failed: the rules the owner agreed give "Refund a charge" 5000 as a day's total on sum\(amount\), and a Card covering it has 2000\. Draft it again with an aggregate \{quantity: "sum\(amount\)", window: "calendar_day", limit: 5000\} with no per/);
     });
 
+    // Eval 16's refunds: ask past €5 a refund, refuse past €50 a day, as data, and each answer on its own Card.
+    it("ask past one figure and refuse past another: signed on two Cards, refused on one", async () => {
+      const split = [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, over: "ask" }, DAY] }, { tool: "list_charges", over: "refuse" }];
+      const two = await setUp("refuse");
+      two.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
+        { id: "c1", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] },
+        { id: "c1b", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(5000)] },
+        { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }] };
+      two.rules("rules-1", split);
+      expect(await two.tap()).toMatchObject({ outcome: "sign" });
+      const one = await setUp("refuse");
+      setFigures(one.s, 500, [dayTotal(5000)]);
+      one.rules("rules-1", split);
+      const r = await one.tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesOnExceed("Refund a charge") });
+      expect(String(r.answer)).toContain(`failed: the rules the owner agreed ask past one of "Refund a charge"'s limits and refuse past another, and the draft puts both on one Card, which has one on_exceed. Draft it again with each on its own Card`);
+    });
+
     it("a figure the rules don't name, and one the notice's words don't say, are logged and signed", async () => {
       const { s, rules, tap } = await setUp("refuse");
       // A count beside the amounts is refused on its own (count_on_amount): the unnamed figure here is a total of another argument.

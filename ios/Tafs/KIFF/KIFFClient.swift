@@ -480,6 +480,64 @@ final class KIFFClient {
         let _: Empty = try await send("DELETE", prepared.path, body: Optional<RawJSON>.none, presigned: signatureHeader)
     }
 
+    // MARK: Passkeys
+
+    static let passkeysPath = "/v1/me/passkeys"
+
+    /// A passkey of the account's, as KIFF lists it (KIFF's pairing contract, "Registering one"): the
+    /// person's own, with its id, or a computer's own (`device_id`, no id), which goes with its device and
+    /// is never removed on its own. `synced` stays unknown until the passkey's first approval.
+    struct Passkey: Decodable, Equatable {
+        var passkeyID: String? = nil
+        var name: String? = nil
+        var synced: Bool? = nil
+        var createdAt: Date? = nil
+        var deviceID: String? = nil
+
+        /// Only a passkey of its own can be removed: a computer's goes with the computer.
+        var removable: Bool { passkeyID != nil && deviceID == nil }
+
+        enum CodingKeys: String, CodingKey {
+            case passkeyID = "id", name, synced, createdAt = "created_at", deviceID = "device_id"
+        }
+    }
+
+    /// The account's passkeys. Read unsigned, as Devices is.
+    func passkeys() async throws -> [Passkey] {
+        struct Response: Decodable { let passkeys: [Passkey]? }
+        let r: Response = try await send("GET", Self.passkeysPath)
+        return r.passkeys ?? []
+    }
+
+    /// Registering a passkey, built to be signed by the approval key: `kiff.request.v1` over
+    /// `POST /v1/me/passkeys` and its body, never inside a window. KIFF takes it only from an approval
+    /// device, an owner's or an admin's.
+    func preparePasskeyRegistration(_ body: PasskeyRegistration.Body, signedAt: String) throws -> Prepared {
+        try prepare(method: "POST", path: Self.passkeysPath, body: try JSONEncoder().encode(body), gateway: false, signedAt: signedAt)
+    }
+
+    /// Sends a passkey's registration, prepared and signed. `409 passkey_registered` is the same passkey
+    /// registered already: the caller takes it as done.
+    func registerPasskey(_ prepared: Prepared, signatureHeader: String) async throws -> Passkey {
+        struct Answer: Decodable { let passkey: Passkey }
+        let answer: Answer = try await send(prepared.method, prepared.path, body: RawJSON(data: prepared.body), presigned: signatureHeader)
+        return answer.passkey
+    }
+
+    static func passkeyPath(_ id: String) -> String {
+        "\(passkeysPath)/\(id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? id)"
+    }
+
+    /// Removing a passkey, built to be signed by the approval key, never by the device key alone.
+    func preparePasskeyRemoval(_ id: String, signedAt: String) throws -> Prepared {
+        try prepare(method: "DELETE", path: Self.passkeyPath(id), body: Data(), gateway: false, signedAt: signedAt)
+    }
+
+    /// Sends a passkey's removal, prepared and signed.
+    func removePasskey(_ prepared: Prepared, signatureHeader: String) async throws {
+        let _: Empty = try await send("DELETE", prepared.path, body: Optional<RawJSON>.none, presigned: signatureHeader)
+    }
+
     // MARK: Held calls
 
     struct CardException: Decodable, Equatable {

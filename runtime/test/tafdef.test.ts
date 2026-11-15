@@ -205,11 +205,24 @@ describe("a section of the kiff skill", () => {
   it("tells the taf to check an id the app doesn't know against what it read, and make the call once more", () => {
     expect(CALL_INSTRUCTIONS).toContain('When the app says an id you typed doesn\'t exist ("no such", "not found"),\n  check it against what you read');
     expect(CALL_INSTRUCTIONS).toContain("make the call once more with the id as you read it, and a new\n  kiff_operation_id: that's a new call, not a retry.");
+    // In this run: a taf that saw its slip once said it would redo the call "next run", and didn't make it.
+    expect(CALL_INSTRUCTIONS).toContain("Make it now, in this run,\n  before you report: never leave it for the next run.");
     // Once, and only for a slip: never a loop, and never a different item.
     expect(CALL_INSTRUCTIONS).toContain("Once only: if it still\n  isn't found, or the id was right, report it.");
     // No Eval case's own example in every taf's instructions.
     expect(CALL_INSTRUCTIONS).not.toMatch(/T-20\d\d|dispute id/);
     // Every job's definition carries it.
     expect(definition(ID, jobById("chargebacks")).instructions).toContain("that's a new call, not a retry");
+  });
+
+  // Chargebacks: a taf made some of its calls, then reported the rest as left for the next run though nothing stopped
+  // it. Every call the run can make is made before it reports; only what KIFF held or refused, or it couldn't do, is left.
+  it("tells the taf to make every call this run needs before it reports", () => {
+    expect(CALL_INSTRUCTIONS).toContain("Do every call this run's work needs before you report. A call you can make\n  now never waits for the next run");
+    // A note that says not to do it still wins (NOTES_INSTRUCTIONS): what it stopped is reported as left too.
+    expect(CALL_INSTRUCTIONS).toContain("report as left only what KIFF held or\n  refused, what a note stopped, or what you couldn't do.");
+    expect(NOTES_INSTRUCTIONS).toContain("When a\nnote says not to do it, the note wins: don't make the call, and say in your report\nwhich note stopped you.");
+    expect(CALL_INSTRUCTIONS).not.toMatch(/T-20\d\d|dispute/);
+    expect(definition(ID, jobById("chargebacks")).instructions).toContain("A call you can make\n  now never waits for the next run");
   });
 });

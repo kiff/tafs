@@ -86,6 +86,9 @@ jobs:
           sys.exit(1 if missing or off else 0)
           PY
           }
+          # The Mac App Store refuses a Mac upload without a category (Mac TestFlight's first run).
+          [ -n "$(plutil -extract LSApplicationCategoryType raw -o - Tafs/Info.plist 2>/dev/null)" ] \
+            || { echo "::error file=ios/project.yml::the app's Info.plist has no LSApplicationCategoryType"; exit 1; }
           check Tafs/Tafs.entitlements Tafs/TafsMac.entitlements
           check Notify/TafsNotify.entitlements Notify/TafsNotifyMac.entitlements
           grep -q 'CODE_SIGN_ENTITLEMENTS\[sdk=macosx\*\]"* = Tafs/TafsMac.entitlements' Tafs.xcodeproj/project.pbxproj

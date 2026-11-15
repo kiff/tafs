@@ -23,6 +23,9 @@ final class PlanqueClient {
         /// Signed in an approval window that has ended (kiff/tafs#494): nothing was done; a new
         /// window, then the same call again.
         case windowRequired
+        /// Asked with no connector key, planque holds none that still stands (`409 needs_key`): the one answer
+        /// on which the phone mints a key.
+        case needsKey
 
         var errorDescription: String? {
             switch self {
@@ -36,6 +39,7 @@ final class PlanqueClient {
             case .server(let status, _, let words): return words ?? PlainError.words(status: status)
             // The app's own words: planque's `error` is for the log, never the person.
             case .windowRequired: return Words.Error.approvalWindowEnded
+            case .needsKey: return PlainError.words(status: 409)
             }
         }
     }
@@ -57,6 +61,9 @@ final class PlanqueClient {
     /// takes one runs, so its calls go as a tap (`v2`, with the window's id); planque asks KIFF
     /// whether it is open. Nil signs as before.
     var window: String?
+    /// planque's `code` on the last refusal, or nil when it sent none: a 409 an older planque sent with no code at
+    /// enrolment is another device's; today's planque names each of its own (`signature_replayed`, …).
+    private(set) var lastRefusalCode: String?
     private let session: URLSession
 
     init(baseURL: URL = URL(string: "https://planque.kiff.dev")!, session: URLSession = .shared) {
@@ -678,6 +685,8 @@ final class PlanqueClient {
                 if window == held { window = nil }
                 throw PlanqueError.windowRequired
             }
+            lastRefusalCode = Self.refusalCode(data)
+            if status == 409, lastRefusalCode == "needs_key" { throw PlanqueError.needsKey }
             let said = Self.refusal(data)
             throw PlanqueError.server(status: status, message: said.error ?? Words.Error.connectionAnswered(status: "\(status)"), words: said.words)
         }

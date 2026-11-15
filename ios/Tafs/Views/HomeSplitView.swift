@@ -83,6 +83,8 @@ struct HomeSplitView: View {
     /// do, the first taf in the list is the one open (the 859 test).
     @State private var opened: HomeSelection?
     @State private var chosen = false
+    /// The pointer is over the sidebar's Coach button (the Mac's, `Hover`).
+    @State private var coachHovered = false
     /// A recipe's sheet, opened from the detail pane with no taf, or from the strip in the sidebar.
     @State private var openRecipe: TafsCloud.Recipes.Recipe?
     /// + New's gallery of every ready-made job, and what was chosen in it: acted on once it closes.
@@ -549,10 +551,11 @@ struct HomeSplitView: View {
                 .scaledFont(15, weight: .semibold).lineLimit(1)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .foregroundColor(Theme.onFill)
-                .background(drive.isOn ? Theme.amber : Theme.ink)
+                .background((drive.isOn ? Theme.amber : Theme.ink).opacity(Hover.primaryOpacity(pressed: false, hovered: coachHovered)))
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
+        .onHover { coachHovered = Hover.shows($0) }
         // In the drive's registry with no action: Coach can't use it, and the person's tap on it stops the drive.
         .drivable(Words.Coach.title, id: DriveSession.coachButtonID)
         .accessibilityLabel(Words.Coach.coachMode)

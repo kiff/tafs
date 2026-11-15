@@ -15,10 +15,15 @@
  * and the day's total (`"calendar_day"`), in the Card's own units (minor units of the connection's currency, as
  * `per_action_max.max` and `aggregates[].limit` are). Each is on a Card covering the tool with exactly that figure, and
  * no Card covering it has another figure for the same quantity and window, stricter or looser.
+ *
+ * A figure may say what happens past it (`over`), when it isn't the tool's: "ask past €5 a refund, refuse past €50 a
+ * day" is one tool, `over: refuse`, whose call figure says `over: ask`. A Card's `on_exceed` is then the `over` of the
+ * agreed figures it carries (the tool's for one that carries none), so two figures with different answers are never on
+ * one Card: one Card has one `on_exceed`.
  */
 import type { ApprovalGrant } from "./approval.js";
 
-export interface AgreedLimit { quantity: string; window: "call" | "calendar_day"; limit: number }
+export interface AgreedLimit { quantity: string; window: "call" | "calendar_day"; limit: number; over?: "ask" | "refuse" }
 export interface AgreedRule { tool: string; over: "ask" | "refuse"; limits?: AgreedLimit[] }
 
 /** What the conversation says of the rules: none shown, agreed (the newest agreement's), or shown and not agreed. */
@@ -62,19 +67,20 @@ function rulesOf(c: Record<string, unknown>): AgreedRule[] | undefined {
 
 /**
  * A rule's figures, read whole or not at all: 1 to 4, each with a quantity as a Card writes it (`count`, `sum(<arg>)`,
- * matched exactly), a window of `call` or `calendar_day`, and a whole limit from 0 (never) to 2^53−1, with no
- * quantity and window twice. An empty list is no figures read, never figures agreed, so the notice carries no rules.
+ * matched exactly), a window of `call` or `calendar_day`, a whole limit from 0 (never) to 2^53−1, and, if it says
+ * one, an `over` of ask or refuse, with no quantity and window twice. An empty list is no figures read, never figures agreed, so the notice carries no rules.
  */
 function limitsOf(given: unknown): AgreedLimit[] | undefined {
   if (!Array.isArray(given) || given.length === 0 || given.length > LIMITS_MAX) return undefined;
   const out: AgreedLimit[] = [];
   for (const l of given as unknown[]) {
-    const { quantity, window, limit } = (l ?? {}) as { quantity?: unknown; window?: unknown; limit?: unknown };
+    const { quantity, window, limit, over } = (l ?? {}) as { quantity?: unknown; window?: unknown; limit?: unknown; over?: unknown };
     if (typeof quantity !== "string" || !QUANTITY.test(quantity)) return undefined;
     if (window !== "call" && window !== "calendar_day") return undefined;
     if (typeof limit !== "number" || !Number.isSafeInteger(limit) || limit < 0) return undefined;
+    if (over !== undefined && over !== "ask" && over !== "refuse") return undefined;
     if (out.some((x) => x.quantity === quantity && x.window === window)) return undefined;
-    out.push({ quantity, window, limit });
+    out.push({ quantity, window, limit, ...(over === undefined ? {} : { over }) });
   }
   return out;
 }
@@ -123,12 +129,13 @@ function sameRules(a: AgreedRule[], b: AgreedRule[]): boolean {
 
 /** The same figures, in any order: a rule shown again with another figure is other rules. */
 function sameLimits(a: AgreedLimit[] | undefined, b: AgreedLimit[] | undefined): boolean {
-  const key = (l: AgreedLimit[] | undefined) => (l ?? []).map((x) => `${x.quantity}|${x.window}|${x.limit}`).sort().join(",");
+  const key = (l: AgreedLimit[] | undefined) => (l ?? []).map((x) => `${x.quantity}|${x.window}|${x.limit}|${x.over ?? ""}`).sort().join(",");
   return key(a) === key(b);
 }
 
 export type RulesMismatch =
   | { kind: "on_exceed"; tool: string; over: "ask" | "refuse"; onExceed: "owner" | "refuse" }
+  | { kind: "mixed"; tool: string }
   | { kind: "missing"; tool: string }
   | { kind: "figure"; tool: string; quantity: string; window: "call" | "calendar_day"; agreed: number; drafted?: number };
 
@@ -156,10 +163,16 @@ export function rulesMismatch(grants: readonly ApprovalGrant[], cards: readonly 
         if (!t.read_only && !t.setup_reads) return { kind: "missing", tool: shown };
         continue;
       }
-      const want = rule.over === "ask" ? "owner" : "refuse";
       for (const raw of covering) {
+        // What happens past this Card's limits: the `over` of the agreed figures it carries, else the tool's.
+        const carried = new Set(figuresOn([raw], name)
+          .map((f) => rule.limits?.find((l) => l.quantity === f.quantity && l.window === f.window))
+          .filter((l): l is AgreedLimit => l !== undefined)
+          .map((l) => l.over ?? rule.over));
+        if (carried.size > 1) return { kind: "mixed", tool: shown };
+        const over = carried.size === 1 ? [...carried][0]! : rule.over;
         const onExceed = (raw as { on_exceed?: unknown }).on_exceed === "refuse" ? "refuse" : "owner";
-        if (onExceed !== want) return { kind: "on_exceed", tool: shown, over: rule.over, onExceed };
+        if (onExceed !== (over === "ask" ? "owner" : "refuse")) return { kind: "on_exceed", tool: shown, over, onExceed };
       }
       for (const l of rule.limits ?? []) {
         const drafted = figuresOn(covering, name).filter((f) => f.quantity === l.quantity && f.window === l.window).map((f) => f.limit);
