@@ -36,6 +36,10 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
         UNUserNotificationCenter.current().delegate = self
         // Approve and Refuse on a hold's notification (kiff/tafs#210).
         UNUserNotificationCenter.current().setNotificationCategories(AlertAnswers.categories())
+        #if canImport(WatchConnectivity) && !targetEnvironment(macCatalyst)
+        // The watch's requests (docs/watch-app.md): answered even when its message launched tafs.
+        WatchLink.shared.start()
+        #endif
         return true
     }
 
