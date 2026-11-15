@@ -611,6 +611,9 @@ jobs:
       && (needs.ipad.result == 'success' || (needs.ipad.result == 'skipped' && needs.changes.outputs.ipad_tested == 'true'))
     runs-on: macos-26
     timeout-minutes: 45
+    # The signing secrets (DIST_P12, ASC_KEY_P8) are this environment's, which deploys only from main and
+    # v* tags: a workflow pushed on another branch can't read them (docs/mac-app.md, Signing and TestFlight).
+    environment: apple-release
     env:
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
