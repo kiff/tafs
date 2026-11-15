@@ -6,6 +6,11 @@
 #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_PATH  the API key
 #   DIST_CERT_SERIAL                          the certificate in the keychain
 #   ruby asc-profiles.rb bot.tafs.app+push+timesensitive+associateddomains="tafs App Store CI" bot.tafs.app.widgets="tafs widgets App Store CI"
+#   ruby asc-profiles.rb --mac bot.tafs.app+push+timesensitive+associateddomains="tafs Mac App Store CI"
+#
+# "--mac" makes Mac Catalyst App Store profiles (docs/mac-app.md), with the same
+# distribution certificate and the iPhone's and iPad's bundle IDs: on a Mac, push
+# is named com.apple.developer.aps-environment in the profile.
 #
 # "+push" turns on Push Notifications for that bundle ID first, and replaces a
 # profile made before it was on: a profile carries the capabilities its bundle
@@ -31,6 +36,9 @@ def jwt
 end
 
 TOKEN = jwt
+
+MAC = ARGV.delete("--mac") ? true : false
+PROFILE_TYPE = MAC ? "MAC_CATALYST_APP_STORE" : "IOS_APP_STORE"
 
 # Each "+capability": App Store Connect's type (nil: the API has none), and the
 # entitlement a profile made with it names.
@@ -73,6 +81,8 @@ ARGV.each do |arg|
   unknown = capabilities - CAPABILITIES.keys
   abort "unknown capability in #{spec}" unless unknown.empty?
   wanted = CAPABILITIES.slice(*capabilities)
+  # A Mac profile names push as macOS does.
+  wanted = wanted.transform_values { |(type, entitlement)| [type, entitlement == "aps-environment" ? "com.apple.developer.aps-environment" : entitlement] } if MAC
   bundle = api("get", "/v1/bundleIds?filter[identifier]=#{identifier}&limit=5")["data"].find { |b| b.dig("attributes", "identifier") == identifier }
   # A new extension's bundle ID (the notification extension, kiff/tafs#210) is registered
   # here, under the app's: only ever one below bot.tafs.app.
@@ -96,7 +106,7 @@ ARGV.each do |arg|
 
   found = api("get", "/v1/profiles?filter[name]=#{URI.encode_www_form_component(name)}&include=certificates&limit=20")
   profile = (found["data"] || []).find do |p|
-    p.dig("attributes", "profileState") == "ACTIVE" &&
+    p.dig("attributes", "profileState") == "ACTIVE" && p.dig("attributes", "profileType") == PROFILE_TYPE &&
       (p.dig("relationships", "certificates", "data") || []).any? { |c| c["id"] == cert["id"] } &&
       # The profile's signed plist names each capability's entitlement only when it was made with it on.
       wanted.values.all? { |(_, entitlement)| Base64.decode64(p.dig("attributes", "profileContent").to_s).include?(entitlement) }
@@ -108,7 +118,7 @@ ARGV.each do |arg|
   end
   unless profile
     profile = api("post", "/v1/profiles", { data: { type: "profiles",
-      attributes: { name: name, profileType: "IOS_APP_STORE" },
+      attributes: { name: name, profileType: PROFILE_TYPE },
       relationships: { bundleId: { data: { type: "bundleIds", id: bundle["id"] } },
                        certificates: { data: [{ type: "certificates", id: cert["id"] }] } } } })["data"]
     puts "created profile #{profile["id"]} (#{name})"
@@ -119,6 +129,14 @@ ARGV.each do |arg|
     abort "#{identifier}'s new profile lacks #{missing.join(", ")}: turn it on for #{identifier} in the developer portal (Identifiers), then run this again"
   end
   uuid = profile.dig("attributes", "uuid")
-  File.binwrite(File.join(dir, "#{uuid}.mobileprovision"), Base64.decode64(profile.dig("attributes", "profileContent")))
+  if MAC
+    # Where Xcode looks for a Mac profile, under the name it expects there: its own folder, and the older one.
+    [dir, File.expand_path("~/Library/Developer/Xcode/UserData/Provisioning Profiles")].each do |d|
+      FileUtils.mkdir_p(d)
+      File.binwrite(File.join(d, "#{uuid}.provisionprofile"), content)
+    end
+  else
+    File.binwrite(File.join(dir, "#{uuid}.mobileprovision"), content)
+  end
   puts "installed #{name} for #{identifier}"
 end

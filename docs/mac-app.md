@@ -35,7 +35,43 @@ xcodebuild build -project Tafs.xcodeproj -scheme TafsMac \
   -destination "platform=macOS,variant=Mac Catalyst" CODE_SIGNING_ALLOWED=NO
 ```
 
-The build is unsigned for now. Signing, and the disk image, are set up at release.
+That build is unsigned. The signed one goes to TestFlight (below).
+
+## Signing and TestFlight
+
+**Mac TestFlight** (`.github/workflows/mac-testflight.yml`, by hand only) uploads a signed Mac build for the team's testers: no review submission and no external group.
+
+- **The app and its notification extension** are signed with the same Apple Distribution certificate as the iOS upload (`DIST_P12`). They use the iPhone's and iPad's bundle IDs, so it's universal purchase: the same products, and restore across devices.
+- **Their profiles** are Mac Catalyst App Store profiles (`MAC_CATALYST_APP_STORE`), made and installed through the App Store Connect API: `asc-profiles.rb --mac`, "tafs Mac App Store CI" and "tafs notify Mac App Store CI". On a Mac, push is named `com.apple.developer.aps-environment`, and the script checks the profile carries it.
+- **The package** is signed with the Mac Installer Distribution certificate (`MAC_INSTALLER_P12`, `MAC_INSTALLER_P12_PASSWORD`). The run stops with a clear error while it isn't stored.
+- **Which is which:** only the certificate's own workflow (below) runs in the `mac-signing` environment, so its reviewer approves once per certificate, when it's made and at renewal. The two certificate secrets are **repository** secrets, not the environment's, so Mac TestFlight reads them with no approval, and an upload never waits on anyone.
+
+**The installer certificate is made once** (`.github/workflows/mac-installer-cert.yml`). Its private key is made inside that run and leaves it only encrypted to an admin's public key. This repository is public, so its logs and artifacts are too. An admin does each step, on their own machine:
+
+0. **The `mac-signing` environment comes first** (Settings → Environments), with a required reviewer and deployment branches limited to `main`. Without it, GitHub makes the environment unprotected on the first run, and a run from another branch, which runs that branch's copy of the workflow, isn't held to `main`.
+1. **Make an RSA key pair** and keep its private half there:
+
+   ```bash
+   openssl genrsa -out mac-signing.pem 4096
+   openssl rsa -in mac-signing.pem -pubout | base64 | tr -d '\n'
+   ```
+
+2. **Run "Mac installer certificate"** from main, with that line as `public_key`. It runs in the `mac-signing` environment, so its reviewer approves it. The run prints the certificate's id and expiry only.
+3. **Decrypt the artifact and store the two secrets,** as repository secrets (`gh secret set -R kiff/tafs`), not the environment's:
+
+   ```bash
+   gh run download <run id> -R kiff/tafs -n mac-installer-sealed -D sealed
+   openssl pkeyutl -decrypt -inkey mac-signing.pem -in sealed/mac-installer.key.enc -out aes.key \
+     -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256
+   openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in sealed/mac-installer.tar.enc -out bundle.tar -pass file:aes.key
+   mkdir out && tar -C out -xf bundle.tar
+   base64 < out/installer.p12 | tr -d '\n' | gh secret set MAC_INSTALLER_P12 -R kiff/tafs
+   tr -d '\n' < out/password.txt | gh secret set MAC_INSTALLER_P12_PASSWORD -R kiff/tafs
+   ```
+
+4. **Delete the run's artifact** (Actions → the run → Artifacts), and the local files: `sealed`, `aes.key`, `bundle.tar`, `out` and, once the secrets are stored, `mac-signing.pem`.
+
+If anything readable ever reaches a log, revoke the certificate in App Store Connect at once and make a new one.
 
 ## Signing and the sandbox
 
@@ -130,5 +166,5 @@ A draft pull request runs it too. The Mac build can only be checked on a machine
 | **The menu bar and the window, seen by a person** | **owed.** The menu bar and the smallest window size are built and unit-tested, but nobody has seen them on a Mac. |
 | Approvals with Touch ID on a Mac | the iPad's key and prompt; a Mac never says Touch ID is off for tafs, and says where in System Settings it's set up |
 | Adding a Mac from a phone (the QR code and the check code) | after KIFF's pairing routes |
-| Signing, notarizing and the disk image | at release |
+| Notarizing and a disk image, outside the Mac App Store | at release |
 | **A check on a real Mac with Touch ID** | **owed.** The Mac build has only run in CI, where there is no Touch ID. A person must approve a Card with Touch ID on a real, signed Mac build before the first release. If it says Touch ID "can't be used right now" with the lid open and Touch ID set up, the build's signing or entitlements are wrong. |
