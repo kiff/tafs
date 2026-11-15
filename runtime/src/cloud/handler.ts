@@ -3798,7 +3798,9 @@ async function draftCheckRoute(event: HTTPEvent, grant: string, me: KIFFIdentity
   }
   const out = await checkDraft({ grant, draft, shown_draft: shown }, checkContext(event, me, deps)).catch(approvalFailure);
   console.log(`approval check: ${out.outcome === "ok" ? "ok" : out.code}`);
-  return out;
+  // A refusal a new draft mends says so (`redraft`): the one Coach hears on the chat's read, before the card is drawn
+  // (precheck), so a caller that draws no card (the e2e) hands Coach the same refusals at the same moment, from this list.
+  return out.outcome === "answered" && REDRAFT_CODES.has(out.code) ? { ...out, redraft: true } : out;
 }
 
 /** What checkDraft reads with: the person's KIFF session and the phone's planque proof, as sent; nothing is kept. */
