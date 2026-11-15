@@ -116,6 +116,13 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
       const per = capped.resource ? `per: "${capped.resource}" (its resource_argument)` : "per its resource_argument";
       return { outcome: "answered", answer: `failed: the draft counts "${capped.tool}" ${capped.limit} in its whole life, across every item, so the taf would stop after its first. A limit for each item is a total with ${per}: count, lifetime, limit ${capped.limit}, per that argument, beside the day's total. With no resource_argument, it goes in the taf's instructions, and the rules say KIFF can't count it. Draft it again.`, note: W.lifetimeCap(capped.tool) };
     }
+    // An amount capped over the taf's whole life, across every item, is a total nobody agreed to (Eval 43674391351:
+    // a lifetime sum(amount) of 1,000,000 on refund_charge beside the agreed €5 a call and €50 a day). The rules have
+    // each call's limit and a day's total; a budget, if an owner ever asks for one, is a feature of its own. Never signed.
+    const budget = lifetimeSumOnWrite(grant, draft.cards);
+    if (budget) {
+      return { outcome: "answered", answer: `failed: the draft caps "${budget.tool}"'s ${budget.quantity} at ${budget.limit} over its whole life, across every item: a lifetime total isn't something the owner agreed to. Its limits are each call's and the day's total, as agreed: no lifetime total on an amount. Draft it again without it.`, note: W.lifetimeSum(budget.tool) };
+    }
     // A tool's amount over a day is counted once across the draft's Cards (Eval 43666453786: a held per-refund Card also
     // got a day's total, so past it the refund waited for the owner where the rules said refuse). Two day totals of the
     // same amount on one tool make the stricter one decide past the limit, whatever was agreed. Never signed.
@@ -162,8 +169,8 @@ export function dayTotalTwice(grant: ApprovalGrant, cards: unknown[]): { tool: s
 
 /**
  * A write tool of the connection that a Card counts over its whole life with no `per`: one count total on the tool
- * for every item, which stops it after the first (count, lifetime, no per). A sum over a lifetime is a budget, and a
- * count per item is the limit for each item: both are kept. The first such tool, with its resource argument if the
+ * for every item, which stops it after the first (count, lifetime, no per). A count per item is the limit for each
+ * item, and is kept; a sum over a lifetime is lifetimeSumOnWrite's. The first such tool, with its resource argument if the
  * request names one, so Coach knows what to count per.
  */
 export function lifetimeCapOnWrite(grant: ApprovalGrant, cards: unknown[]): { tool: string; limit: number; resource?: string } | undefined {
@@ -181,6 +188,31 @@ export function lifetimeCapOnWrite(grant: ApprovalGrant, cards: unknown[]): { to
           const resource = (t as { resource_argument?: unknown }).resource_argument;
           return { tool: t.title || t.name || t.tool || name, limit: typeof a.limit === "number" ? a.limit : 0,
             ...(typeof resource === "string" && resource.trim() ? { resource: resource.trim() } : {}) };
+        }
+      }
+    }
+  }
+  return undefined;
+}
+
+/**
+ * A write tool of the connection whose amount a Card sums over its whole life with no `per`: one total across every
+ * item that the owner never agreed to, since the rules give each call's limit and a day's total (Eval 43674391351).
+ * A sum per item (`per` its argument) is kept, as is a lifetime count on a read. The first such tool, with its total.
+ */
+export function lifetimeSumOnWrite(grant: ApprovalGrant, cards: unknown[]): { tool: string; quantity: string; limit: number } | undefined {
+  const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
+  const writes = (grant.request.tools ?? []).filter((t) => !t.read_only && !t.setup_reads);
+  for (const t of writes) {
+    const name = fold(t.name || t.tool);
+    if (!name) continue;
+    for (const raw of cards) {
+      const card = raw as { grants?: unknown; aggregates?: unknown };
+      const actions = Array.isArray(card.grants) ? card.grants.map((g) => fold((g as { action?: unknown }).action)) : [];
+      if (!actions.includes(name) || !Array.isArray(card.aggregates)) continue;
+      for (const a of card.aggregates as Array<{ quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown }>) {
+        if (fold(a.quantity).startsWith("sum(") && fold(a.window) === "lifetime" && !fold(a.per)) {
+          return { tool: t.title || t.name || t.tool || name, quantity: fold(a.quantity), limit: typeof a.limit === "number" ? a.limit : 0 };
         }
       }
     }
@@ -382,6 +414,7 @@ export function approvalWords(lang: Lang = "en") {
     uncovered: w.approval_uncovered,
     stray: w.approval_stray,
     lifetimeCap: w.approval_lifetime_cap,
+    lifetimeSum: w.approval_lifetime_sum,
     dayTotalTwice: w.approval_day_total_twice,
     onDemandLetsRun: w.approval_on_demand,
     criticalKey: w.approval_critical_key,
