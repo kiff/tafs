@@ -158,12 +158,20 @@ A draft pull request runs it too. The Mac build can only be checked on a machine
 - **Approvals are always ready on the Simulator.** On a Mac they depend on its Touch ID, and a runner has none. A test that needs an approval sets its model ready (`model.readApprovalReadiness = { .ready }`), with a stub signer.
 - **`testTheSimulatorIsReady` is skipped** off the Simulator.
 
+## Screenshots
+
+After the unit tests, the Mac workflow runs the app in sample mode and takes the iPad's reference set (`docs/screenshots/ipad/`, `ios.yml`'s `ref` list): the same 18 screens with the same launch arguments, light and dark, so each Mac screen can be laid beside its iPad one. Then the Overview in French and Portuguese, and the whole screen once, for the menu bar. They're the run's `mac-screenshots` artifact.
+
+- **The window alone**, found by the app's process in the window server's list, not the whole screen. A runner has no Apple Account, so the App Store's sign-in (its own process, `storeuid`) shows over the app, as it would on a Mac signed out of the App Store. A person's Mac is signed in. The menu bar shot is the whole screen, sign-in included.
+- **Dark** is the runner's own appearance, switched for the dark half, as a person's Mac switches it.
+- **A shot is taken** once two frames a second apart are within 0.5% of each other's size, or after 30 s with a warning. A launch with no window stops the step at once, with the windows on screen in the log.
+
 ## Not done yet
 
 | What | State |
 |---|---|
-| Pointer hover on rows and buttons | next, with screenshots of the Mac app from CI |
-| **The menu bar and the window, seen by a person** | **owed.** The menu bar and the smallest window size are built and unit-tested, but nobody has seen them on a Mac. |
+| Pointer hover on rows and buttons | next |
+| **The menu bar and the window, seen by a person** | the menu bar is in CI's screenshots (`menu-bar.png`); **owed:** its menus opened, and the smallest window size, on a Mac. |
 | Approvals with Touch ID on a Mac | the iPad's key and prompt; a Mac never says Touch ID is off for tafs, and says where in System Settings it's set up |
 | Adding a Mac from a phone (the QR code and the check code) | after KIFF's pairing routes |
 | Notarizing and a disk image, outside the Mac App Store | at release |
