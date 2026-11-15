@@ -98,6 +98,7 @@
   "taf.revoke": "Revoke",
   "taf.revoke_and_stop": "Revoke and stop",
   "taf.revoke_body": "No new action goes through. Anything already done stays done.",
+  "taf.revoke_needs_approver": "To revoke this Card, use a device that can approve.",
   "taf.revoke_title": "Revoke {taf|possessive} Card?",
   "taf.run_not_started": "The run didn't start. {why}",
   "taf.run_now": "Run now",

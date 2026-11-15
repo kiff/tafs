@@ -538,7 +538,8 @@ answered:
   Pair them, Ignore), then its runs, where its work stands (each request opens step by step) and
   its last run, then its Record by day: All, Done, Held, Refused (`ActivityRecord`).
 - **Card:** only what's on its Card: the Card, its limits and how they're counted, its usage,
-  Halt and Revoke.
+  Halt and Revoke. A view-only session (`approvalViewOnly`) gets "To revoke this Card, use a device
+  that can approve." in Revoke's place ([approvals.md](approvals.md)); the sample keeps its own Revoke.
 
 Who it's shared with (`PeopleWords.sharedWith`) leaves out the person reading: the one KIFF marks
 `you` in its people list, or the one whose email is the account read's, as on iOS. Their own share is

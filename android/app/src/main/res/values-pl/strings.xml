@@ -2201,6 +2201,7 @@
     <string name="taf_revoke">Unieważnij</string>
     <string name="taf_revoke_and_stop">Unieważnij i zatrzymaj</string>
     <string name="taf_revoke_body">Żadna nowa akcja nie przejdzie. To, co już zostało zrobione, pozostaje zrobione.</string>
+    <string name="taf_revoke_needs_approver">Aby unieważnić tę Card, użyj urządzenia, które może zatwierdzać.</string>
     <string name="taf_revoke_title">Unieważnić Card %1$s?</string>
     <string name="taf_run_not_started">Uruchomienie się nie rozpoczęło. %1$s</string>
     <string name="taf_run_now">Uruchom teraz</string>
