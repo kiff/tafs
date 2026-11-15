@@ -33,6 +33,16 @@ describe("Setup's definition on kiff/agents", () => {
     expect(core).not.toContain("write none, or write it in their language");
   });
 
+  // An English owner's first working line came out in French (Eval 43695849959's desk: "Je regarde l'API du help
+  // desk…") and in Spanish (Eval 43652011201's invoices: "Miro la API de facturación…"): the rule's one example of
+  // that line was Spanish, and the line is written before anything else is read. The owner's last message sets it.
+  it("writes even its first working line in the owner's language, never an example's", () => {
+    const core = SETUP_INSTRUCTIONS.replace(/\s+/g, " ");
+    expect(core).toContain("If they write in Spanish, everything you show is in Spanish. Their last message sets it, never an example here.");
+    expect(core).toContain(`saying what you're doing now ("I'm looking at Refunds' last runs…")`);
+    expect(core).not.toContain("Miro las últimas ejecuciones de Reembolsos");
+  });
+
   it("runs as a taf runs, with its own cost cap and effort", () => {
     const d = setupDefinition(ID);
     const taf = definition(ID, jobById("refunds"));
