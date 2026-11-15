@@ -51,6 +51,7 @@
   "approval.set_a_screen_lock": "Defina um bloqueio de ecrã neste telefone para aprovar",
   "approval.settings_face_id_passcode_touch": "Definições → Face ID e código (Touch ID e código num dispositivo com Touch ID)",
   "approval.settings_path.face_id": "Definições → Face ID e código",
+  "approval.settings_path.mac_touch_id": "Definições do Sistema → Touch ID e palavra-passe",
   "approval.settings_path.touch_id": "Definições → Touch ID e código",
   "approval.state.none_enrolled": "Não há nenhuma impressão digital configurada neste telefone. Adicione uma nas definições e depois volte.",
   "approval.state.ready": "As aprovações estão configuradas neste telefone.",

@@ -66,6 +66,7 @@ size (2064 × 2752). They're in [screenshots/ipad/](screenshots/ipad/) as `<scre
 | A taf's Setup | [taf-setup](screenshots/ipad/taf-setup.png) | [dark](screenshots/ipad/taf-setup-dark.png) |
 | Plan & usage | [usage](screenshots/ipad/usage.png) | [dark](screenshots/ipad/usage-dark.png) |
 | Connect apps | [connect-apps](screenshots/ipad/connect-apps.png) | [dark](screenshots/ipad/connect-apps-dark.png) |
+| One app's connections | [connect-app](screenshots/ipad/connect-app.png) | [dark](screenshots/ipad/connect-app-dark.png) |
 | Account › Devices | [devices](screenshots/ipad/devices.png) | [dark](screenshots/ipad/devices-dark.png) |
 | New taf (the job gallery) | [new-taf](screenshots/ipad/new-taf.png) | [dark](screenshots/ipad/new-taf-dark.png) |
 | Coach, empty | [coach](screenshots/ipad/coach.png) | [dark](screenshots/ipad/coach-dark.png) |
@@ -83,8 +84,8 @@ size (2064 × 2752). They're in [screenshots/ipad/](screenshots/ipad/) as `<scre
 - **No keyboard focus.** The iPad runs with no hardware keyboard, so no focus box is drawn.
 - **The chosen row's fill:** a screen opened by launch argument doesn't select its sidebar row
   the way a tap does, so these show none. The iPad's code draws a grey fill on the chosen row.
-- **Not here yet:** one app's connections and Coach mid-conversation. The app can't open them
-  by launch argument yet.
+- **Not here yet:** Coach mid-conversation. Its launch argument (`coach-chat`) opens Coach
+  empty in CI, so the sample conversation isn't drawn yet.
 
 ## Android
 

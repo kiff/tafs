@@ -300,7 +300,9 @@ things (`runtime/src/cloud/approval.ts`):
   is answered `failed: …` instead, so Coach drafts one rather than the card asking it again.
   `POST /v1/connect/grants/{grant}/check` runs the same checks with nothing signed, for a caller
   that confirms the draft itself (the e2e), and answers with each refusal's reason code, and
-  `redraft: true` on a refusal a new draft mends (below).
+  `redraft: true` on a refusal a new draft mends (below). It also says `checked_on_read`:
+  whether the chat's read checks this card at all, by the rule below (`checkedOnReadFor`), with
+  the `can` the caller sends, so the e2e takes the product's rule rather than a copy of it.
   The same checks run as the phone reads the chat, before an approval card over a draft is
   drawn (a connected app's Card alone, or the Card signed with added tools or a key, `tools_and_cards` and
   `key_and_cards`), with the grants that read has, read with the phone's proof. A refusal a new draft mends (no Card, a vendor name, a tool on no Card or a stray one,

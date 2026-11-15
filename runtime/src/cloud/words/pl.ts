@@ -59,6 +59,10 @@ export const pl: Words = {
   step_connection_next_sign_in: (vendor: string) => vendor ? `Dalej: poproś Coacha, by ponownie zalogował się do ${vendor} albo użył innej aplikacji.` : "Dalej: poproś Coacha, by ponownie się zalogował albo użył innej aplikacji.",
   step_connection_next_again: (vendor: string) => vendor ? `Dalej: poproś Coacha, by ponownie połączył ${vendor} albo użył innej aplikacji.` : "Dalej: poproś Coacha, by ponownie ją połączył albo użył innej aplikacji.",
   step_connection_next_cant: (vendor: string) => vendor ? `Dalej: zapytaj Coacha, co ${vendor} może zrobić zamiast tego, albo poproś o użycie innej aplikacji.` : "Dalej: zapytaj Coacha, co aplikacja może zrobić zamiast tego, albo poproś o użycie innej aplikacji.",
+  // A read of Coach's own while it sets up, refused because KIFF has no Card for those reads: the connection worked.
+  step_reads_not_set_up: (vendor: string) => vendor ? `Nie udało się przygotować odczytów Coacha w ${vendor}` : "Nie udało się przygotować odczytów Coacha w aplikacji",
+  step_reads_why: (vendor: string) => vendor ? `${vendor} jest połączony: nie zezwolono jedynie na odczyty, które Coach wykonuje podczas konfiguracji.` : "Aplikacja jest połączona: nie zezwolono jedynie na odczyty, które Coach wykonuje podczas konfiguracji.",
+  step_reads_next: (vendor: string) => vendor ? `Dalej: poproś Coacha, by kontynuował bez wcześniejszego odczytu ${vendor}.` : "Dalej: poproś Coacha, by kontynuował bez wcześniejszego odczytu aplikacji.",
   removal_goes: (apps: string[]) => `${list(apps)} ${apps.length > 1 ? "odchodzą" : "odchodzi"} razem z nim.`,
   removal_stays: (app: string, tafs: string[]) => `${app} zostaje: ${tafs.length > 1 ? "używają" : "używa"} go ${list(tafs)}.`,
   doing_draft: "Przygotowuję Card…",

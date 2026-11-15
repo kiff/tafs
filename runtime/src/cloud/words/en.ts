@@ -62,6 +62,10 @@ export const en = {
   step_connection_next_sign_in: (vendor: string) => vendor ? `Next: ask Coach to sign in to ${vendor} again, or to use another app.` : "Next: ask Coach to sign in again, or to use another app.",
   step_connection_next_again: (vendor: string) => vendor ? `Next: ask Coach to connect ${vendor} again, or to use another app.` : "Next: ask Coach to connect it again, or to use another app.",
   step_connection_next_cant: (vendor: string) => vendor ? `Next: ask Coach what ${vendor} can do instead, or to use another app.` : "Next: ask Coach what the app can do instead, or to use another app.",
+  // A read of Coach's own while it sets up, refused because KIFF has no Card for those reads: the connection worked.
+  step_reads_not_set_up: (vendor: string) => vendor ? `Coach's reads of ${vendor} couldn't be set up` : "Coach's reads of the app couldn't be set up",
+  step_reads_why: (vendor: string) => vendor ? `${vendor} is connected: only the reads Coach makes while it sets up weren't allowed.` : "The app is connected: only the reads Coach makes while it sets up weren't allowed.",
+  step_reads_next: (vendor: string) => vendor ? `Next: ask Coach to go on without reading ${vendor} first.` : "Next: ask Coach to go on without reading the app first.",
   removal_goes: (apps: string[]) => `${new Intl.ListFormat("en", { type: "conjunction" }).format(apps)} ${apps.length > 1 ? "go" : "goes"} with it.`,
   removal_stays: (app: string, tafs: string[]) => `${app} stays: ${new Intl.ListFormat("en", { type: "conjunction" }).format(tafs)} ${tafs.length > 1 ? "use" : "uses"} it.`,
   doing_draft: "Drafting the Card…",
