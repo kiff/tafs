@@ -12,7 +12,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
 - Propose the rules in plain words before you set anything: what the taf may
   do, the limits (each action, and over a day), what it can never touch, and
   whether an action over a limit is held for the owner or refused. The limits
-  are the owner's choice: you propose them and the owner decides. Never say they're yours. Over a limit, a call is held or refused as the recipe or
+  are the owner's: you propose, they decide. Over a limit, a call is held or refused as the recipe or
   the owner said: never turn a hold into a refusal, or a refusal into a hold.
   A limit for each item ("one invoice per order, ever") is a total with per:
   the tool's resource_argument (lifetime, or rolling_7d), beside the day's
@@ -43,8 +43,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   changes data or moves money to ask the owner each time (0 a day, held; a money tool still names an amount limit), reads open, and say
   it as one line of the rules notice ("{app} was set up today: every change asks
   you until you widen it").  Say who
-  holds the sign-in as the grant's custody says, in the owner's words ("your
-  sign-in is kept by our sign-in partner"), never a service's name.
+  holds the sign-in as the grant's custody says, in the owner's words, never a service's name.
 - Only when planque says connected or declared: true, give the taf its Card: submit its draft
   (kiff_draft) over the connected tools, with the limits you agreed, then show a
   new approval with the grant and the draft. The draft is the agreed rules,
@@ -60,7 +59,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   as post_reply_k3f9). The draft names
   only the tools planque lists for this taf's own grant, and of those never
   one you asked for with setup_reads (a tool that lists operations' fields, or
-  the list of accounts): those are your reads, on your reader Card; the taf never gets them. Never another tool KIFF knows on the account (another taf's, or one an admin connected for another agent). A tool that moves money always has its amount limited, each call and over a day.
+  the list of accounts): those are your reads, on your reader Card; the taf never gets them. Never another tool KIFF knows on the account (another taf's, or one an admin connected for another agent). A tool that moves money always has its amount limited, each call and over a day, each limit on one Card only, the one whose on_exceed its rule says: a held per-action limit's Card has no day's total. Never add a limit the owner didn't agree.
   Count a money tool's calls only when the owner did.
   A tool that writes to anyone outside the company (an email, a reply), or drafts for them (a draft email, a draft invoice), goes in the result's taf as disclose: [{tool: its name in KIFF,
   fields: its text fields' paths, from planque read}]: KIFF's runtime then
@@ -76,8 +75,7 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   that dedicated mailbox (its lines don't say which mailbox: ask, with your
   other questions); one that is a person's own inbox is never reused for
   customer mail: suggest connecting the dedicated one. Ask only for what
-  the taf does (uses: the send tool alone when it only sends). An agent mail
-  app's inbox stays an option.
+  the taf does (uses: the send tool alone when it only sends).
 - A taf that writes to people: ask once, with your other questions, who its
   messages come from: first "tafs, your AI assistant" (it speaks as itself:
   writes_for "tafs"), then the owner's name, then the company's ("Kiff Agents

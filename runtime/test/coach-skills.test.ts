@@ -125,6 +125,8 @@ describe("Coach's core", () => {
     const body = COACH_SKILLS.find((k) => k.name === "draft-the-card")!.body.replace(/\s+/g, " ");
     expect(body).toContain('never "each read tool" or "no limit"');
     expect(body).toContain("Count a money tool's calls only when the owner did.");
+    // Eval 43666453786: a held per-refund Card also got a day's total, so past it the refund waited where the rules said refuse.
+    expect(body).toContain("each limit on one Card only, the one whose on_exceed its rule says: a held per-action limit's Card has no day's total. Never add a limit the owner didn't agree.");
     // Each line's tool is checked before the approval, and a Card the owner approved is never drafted again.
     expect(body).toContain("Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop.");
     // The Card comes from the rules as agreed: the agreement offers no other rule as a tap, and each
@@ -141,9 +143,10 @@ describe("Coach's core", () => {
   // columns) declared without the shape planque takes. Planque takes an object naming its fields, as an array's items do.
   it("gives an object argument only the fields the taf writes, and the agent from the taf's name", () => {
     const tools = COACH_SKILLS.find((k) => k.name === "name-the-tools")!.body.replace(/\s+/g, " ");
-    expect(tools).toContain('or object, naming only the fields the taf writes (`type: "object", schema: {type: "object", properties: {"Status": {type: "string"}}}`).');
+    // Eval 43666453786: values declared an object naming no field. Its fields are named from the job or the owner, never none.
+    expect(tools).toContain("or object, naming the fields the taf writes, by the job's or owner's names (ask one you don't know), never none (`type: \"object\", schema: {type: \"object\", properties: {\"Status\": {type: \"string\"}}}`).");
     // planque refuses a field that is itself an object (planque#240): a nested object's fields are their own arguments.
-    expect(tools).toContain("A field is plain or an array; a nested object's fields are arguments at their own paths.");
+    expect(tools).toContain("A field is plain or an array; a nested one's fields are arguments at their paths.");
     // agentgabo's Gmail count on Android 80: "Gmail is connected", then "Gmail is connected (read only)", two more approvals
     // for one connection. The tools go once, complete.
     expect(tools).toContain("Ask for a taf's tools once, complete (read_only, pins, arguments): each change is one more approval.");

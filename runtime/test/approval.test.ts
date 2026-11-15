@@ -471,6 +471,36 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     }
   });
 
+  // Eval 43666453786: a held per-refund Card (50, owner) also got a day's total, beside the refused day's total (200,
+  // refuse), so past the day's total the refund waited for the owner where the rules said refuse. One day's total per tool.
+  it("a draft that counts a tool's amount over a day twice isn't signed; different totals on the same tool are", async () => {
+    const s = services();
+    const tools = [{ tool: "refund_charge", name: "refund_charge_k3", title: "Refund a charge", amount_argument: "amount" }];
+    s.grants = [grant({ status: "connected" }, { tools })];
+    const day = (limit: number, extra: Record<string, unknown> = {}) => ({ quantity: "sum(amount)", limit, window: "calendar_day", ...extra });
+    const each = (aggregates: unknown[]) => ({ id: "each", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 5000 }] }], aggregates });
+    const daily = (aggregates: unknown[], on_exceed = "refuse") => ({ id: "daily", subject: "refunds-x", on_exceed, grants: [{ action: " REFUND_CHARGE_K3 " }], aggregates });
+    const ask = async () => (await (await world(s, { draft: "drf_1" })).call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+    const draft = (cards: unknown[]) => { s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards }; };
+    // 1. Held per refund, refused past the day's total: signed.
+    draft([each([{ quantity: "count", limit: 100, window: "calendar_day" }]), daily([day(20_000)])]);
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // 2. The same, plus a day's total on the held Card: not signed, and Coach hears both totals and what each does.
+    draft([each([day(5000)]), daily([day(20_000)])]);
+    const r = await ask();
+    expect(r).toMatchObject({ outcome: "answered", note: WORDS.dayTotalTwice("Refund a charge") });
+    expect(String(r.answer)).toContain(`failed: the draft counts "Refund a charge"'s amount over a day on two Cards: 5000 on one whose on_exceed is "owner", and 20000 on one whose on_exceed is "refuse"`);
+    // 3. Two day totals on the same amount, both refused, even on one Card: not signed.
+    draft([daily([day(20_000), day(30_000)])]);
+    expect((await ask()).note).toBe(WORDS.dayTotalTwice("Refund a charge"));
+    // 4. An amount over a day beside a count over a day: different totals, signed.
+    draft([daily([day(20_000), { quantity: "count", limit: 10, window: "calendar_day" }])]);
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // 5. An amount over a day beside an hour's, or a total for each item: different totals, signed.
+    draft([daily([day(20_000), { ...day(5000), window: "rolling_1h" }, day(1000, { per: "charge" })])]);
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+  });
+
   // Eval 43402441612: "one invoice per order, ever" and "up to 10 drafts a day" signed as 1 create_invoice in the Card's
   // whole life, across every order, though the tool named its order (resource_argument). The skill's words alone didn't hold.
   it("a draft that counts a write once in its whole life, across every item, isn't signed: a limit for each item is per its argument", async () => {

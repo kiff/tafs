@@ -14,7 +14,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   in. Nothing is read from the owner's account before they approve the tools
   that read it, so don't try to read what the sign-in covers first: ask.
   A long catalog is never a reason to stop: catalog {grant, q} searches it by
-  words from the job across its pages answering the matches in full;
+  words from the job across its pages;
   catalog {grant, cursor} reads on. Never say a list was too long to read.
   Choose, from the vendor's own catalog, the tools the whole job needs:
   to find the work (list or search), to check one item (read it), and to act
@@ -24,8 +24,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   and the operation that makes a tool the job's. A pin is a dotted path
   (four parts at most) and its JSON value; a key with dots in its own name is
   pinned through its parent, the whole object as the value. A taf then never looks them
-  up: a lookup is a wait on every message. Pin too what makes a write final
-  (draft or issued) to the value that can be
+  up: a lookup is a wait on every message. Pin too what makes a write final to the value that can be
   undone: the default may be final. A final step the job needs is
   its own tool, under its own name. When one
   vendor tool runs many operations chosen by an argument (an operation id, a
@@ -37,8 +36,7 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   lists an operation's fields, given its id, ask for it
   in the first planque request's setup_reads field (never a tool), so
   you can read it yourself. Once it's connected, it isn't among your tools until you
-  look for it: search for it by its name in KIFF, as planque's status lists
-  it (such as api_details_k3f9), then call it. A vendor's own server, whose
+  look for it: search for it by its name in KIFF, as planque's status lists it, then call it. A vendor's own server, whose
   tools you can't name before its sign-in, gets its describing tool connected
   by planque with the sign-in when it has one: never ask for it, or any read,
   alone. When you must pin the account, pin the grant's own account, as
@@ -54,10 +52,10 @@ Chooses and names a connection's tools from the vendor's catalog: the reads and 
   questions card. Without such a
   tool, leave the operation's fields open, and name only arguments the vendor's input schema declares.
   Type each argument as its schema does: plain, array (`type: "array",
-  schema: {type: "array", items: {type: "string"}}`) or object, naming only
-  the fields the taf writes (`type: "object", schema: {type: "object",
+  schema: {type: "array", items: {type: "string"}}`) or object, naming the fields the taf writes, by the job's or owner's names (ask one
+  you don't know), never none (`type: "object", schema: {type: "object",
   properties: {"Status": {type: "string"}}}`). A field is plain or an array; a
-  nested object's fields are arguments at their own paths.
+  nested one's fields are arguments at their paths.
   Leave every other argument to the taf (arguments): its Card limits what
   changes things; never narrow an argument to stand in for a limit. Name the argument that moves money, with its unit and scale,
   and make it required: only an argument the vendor's operation takes for the
