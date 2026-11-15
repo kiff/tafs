@@ -1,0 +1,10 @@
+{
+  "about": "GET /v1/tafs/{id}/runs/{session} for a run still working (waiting on the owner reads the same). Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "session": "sess3",
+    "report": {
+      "status": "running",
+      "text": ""
+    }
+  }
+}
