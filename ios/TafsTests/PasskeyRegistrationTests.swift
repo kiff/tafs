@@ -59,7 +59,7 @@ final class PasskeyRegistrationTests: XCTestCase {
         }
     }
 
-    /// A name is 1 to 64 characters once trimmed, counted as KIFF counts them.
+    /// A name is 1 to 64 characters once trimmed, counted as KIFF counts them, with no control character inside.
     func testANameIsOneToSixtyFourCharacters() throws {
         let n = try XCTUnwrap(try vector()["name"] as? [String: Any])
         XCTAssertEqual(PasskeyRegistration.longestName, n["longest"] as? Int)
