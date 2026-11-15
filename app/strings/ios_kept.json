@@ -66,5 +66,8 @@
   },
   "Services/ThisDevice.swift": {
     "Mac": "the device's name, a product's name, the same in every language, as iPhone and iPad are"
+  },
+  "Model/SampleScreens.swift": {
+    "Mac": "the device's name, a product's name, the same in every language, as iPhone and iPad are (the reference set's sample Devices)"
   }
 }

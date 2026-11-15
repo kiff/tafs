@@ -1147,7 +1147,8 @@ final class AppModel: ObservableObject {
     @Published private(set) var devicesError: String?
 
     func refreshDevices() async {
-        guard mode == .kiff, let tenant = kiffTenant else { devices = []; return }
+        // The reference set's Devices over the sample (`-screenshots YES`); none otherwise without a session.
+        guard mode == .kiff, let tenant = kiffTenant else { devices = mode == .sample && Screenshots.enabled ? SampleScreens.devices() : []; return }
         let gen = accountGeneration
         kiff.tenant = tenant
         do {
@@ -2072,6 +2073,8 @@ final class AppModel: ObservableObject {
             purchases.showSample(Screenshots.products)
             await refreshUsage()
         }
+        // `-screen coach`: Coach open over the sample, empty, for the reference set.
+        if Screenshots.coach { coachOpen = true }
     }
 
     // MARK: Starting a taf
@@ -2175,7 +2178,11 @@ final class AppModel: ObservableObject {
 
     /// Reads Connect apps' first page, filtered by what the owner typed.
     func loadConnectApps(_ q: String = "") async {
-        guard mode == .kiff else { return }
+        guard mode == .kiff else {
+            // The reference set's Connect apps over the sample (`-screenshots YES`).
+            if mode == .sample, Screenshots.enabled, q.isEmpty { connectApps = SampleScreens.connectApps }
+            return
+        }
         // The account's connections too, so a connected app lists each one, with its taf and
         // Disconnect.
         if q.isEmpty { await refreshConnections() }
@@ -7217,7 +7224,11 @@ final class AppModel: ObservableObject {
     /// Reads the gallery of ready-made jobs. A read that fails keeps what was read; a tafs
     /// cloud without the route leaves none, so + New opens Coach as before.
     func loadGallery() async {
-        guard mode == .kiff else { return }
+        guard mode == .kiff else {
+            // The reference set's job gallery over the sample (`-screenshots YES`).
+            if mode == .sample, Screenshots.enabled { gallery = SampleScreens.gallery }
+            return
+        }
         let gen = accountGeneration
         do {
             let g = try await cloud.recipesGallery()
@@ -9055,6 +9066,17 @@ enum Screenshots {
     /// Coach above the account), over the sample's tafs. A screenshot of the layout only: nothing
     /// is read from KIFF, and the screens it lists aren't opened.
     static var signedIn: Bool { enabled && UserDefaults.standard.bool(forKey: "signedIn") }
+    /// `-screen coach`: Coach mode open over the sample, as the reference set shows it.
+    static var coach: Bool { enabled && screen == "coach" }
+    /// The iPad sidebar's screen a `-screen` opens beside it: `usage` (Plan & usage), `connect-apps`.
+    static var sidebarScreen: HomeSelection? {
+        guard enabled else { return nil }
+        switch screen {
+        case "usage": return .usage
+        case "connect-apps": return .connectApps
+        default: return nil
+        }
+    }
 
     @MainActor static func turnToLandscape() {
         for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {

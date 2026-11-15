@@ -214,10 +214,17 @@ struct HomeSplitView: View {
             opened = onList ? .overview : Self.opening(model.listedTafs, screenshot: Screenshots.enabled && !Screenshots.listSettlesOnReturn)
             // `-screen calendar` and `calendar-week` select Calendar, the sidebar's item (Screenshots.calendar).
             if Screenshots.calendar != nil { opened = .calendar }
+            // `-screen usage` and `connect-apps` select their sidebar item, for the reference set.
+            if let screen = Screenshots.sidebarScreen { opened = screen }
             chosen = false
             // A tab asked for before the sidebar drew (an alert that opened the app on Needs you, a route, a
             // screenshot's `-tab`) opens its screen: the tafs list only when none was.
             selection = tab.flatMap { HomeSelection.of($0.wrappedValue) } ?? opened
+            // `-screen new-taf`: + New's job gallery over the sample, as the reference set shows it.
+            if Screenshots.enabled, Screenshots.screen == "new-taf", showingGallery == nil {
+                await model.loadGallery()
+                if model.gallery != nil { showingGallery = .create }
+            }
         }
     }
 
