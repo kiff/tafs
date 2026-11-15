@@ -659,6 +659,11 @@
     <string name="coach_plan_fold_short">Replier</string>
     <string name="coach_plan_progress">Plan · %1$s sur %2$s</string>
     <string name="coach_plan_show">Afficher tout le plan</string>
+    <string name="coach_plan_step_active">En cours</string>
+    <string name="coach_plan_step_done">Terminé</string>
+    <string name="coach_plan_step_failed">Échec</string>
+    <string name="coach_plan_step_pending">À faire</string>
+    <string name="coach_plan_step_skipped">Ignoré</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Connecter vos apps</string>
     <string name="coach_prompt_give_card">Donner sa Card à Coach</string>

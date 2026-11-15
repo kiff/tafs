@@ -659,6 +659,11 @@
     <string name="coach_plan_fold_short">Fold</string>
     <string name="coach_plan_progress">Plan · %1$s of %2$s</string>
     <string name="coach_plan_show">Show the whole plan</string>
+    <string name="coach_plan_step_active">In progress</string>
+    <string name="coach_plan_step_done">Done</string>
+    <string name="coach_plan_step_failed">Failed</string>
+    <string name="coach_plan_step_pending">To do</string>
+    <string name="coach_plan_step_skipped">Skipped</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Connect your apps</string>
     <string name="coach_prompt_give_card">Give Coach its Card</string>

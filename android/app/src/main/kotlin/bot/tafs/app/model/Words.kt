@@ -670,6 +670,11 @@ object Words {
       val foldShort: String get() = Res.s(R.string.coach_plan_fold_short)
       fun progress(done: String, total: String): String = Res.s(R.string.coach_plan_progress, done, total)
       val show: String get() = Res.s(R.string.coach_plan_show)
+      val stepActive: String get() = Res.s(R.string.coach_plan_step_active)
+      val stepDone: String get() = Res.s(R.string.coach_plan_step_done)
+      val stepFailed: String get() = Res.s(R.string.coach_plan_step_failed)
+      val stepPending: String get() = Res.s(R.string.coach_plan_step_pending)
+      val stepSkipped: String get() = Res.s(R.string.coach_plan_step_skipped)
     }
     val planTitle: String get() = Res.s(R.string.coach_plan_title)
     object Prompt {

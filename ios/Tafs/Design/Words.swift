@@ -1234,6 +1234,16 @@ enum Words {
             static func progress(done: String, total: String) -> String { Words.line("coach.plan.progress", done, total) }
             /// Show the whole plan
             static var show: String { Words.line("coach.plan.show") }
+            /// In progress
+            static var stepActive: String { Words.line("coach.plan.step_active") }
+            /// Done
+            static var stepDone: String { Words.line("coach.plan.step_done") }
+            /// Failed
+            static var stepFailed: String { Words.line("coach.plan.step_failed") }
+            /// To do
+            static var stepPending: String { Words.line("coach.plan.step_pending") }
+            /// Skipped
+            static var stepSkipped: String { Words.line("coach.plan.step_skipped") }
         }
         /// Plan
         static var planTitle: String { Words.line("coach.plan_title") }

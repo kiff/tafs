@@ -659,6 +659,11 @@
     <string name="coach_plan_fold_short">Inklappen</string>
     <string name="coach_plan_progress">Plan · %1$s van %2$s</string>
     <string name="coach_plan_show">Het hele plan tonen</string>
+    <string name="coach_plan_step_active">Bezig</string>
+    <string name="coach_plan_step_done">Klaar</string>
+    <string name="coach_plan_step_failed">Mislukt</string>
+    <string name="coach_plan_step_pending">Te doen</string>
+    <string name="coach_plan_step_skipped">Overgeslagen</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Je apps koppelen</string>
     <string name="coach_prompt_give_card">Coach zijn Card geven</string>
