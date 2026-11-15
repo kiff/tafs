@@ -102,6 +102,7 @@ export const nl: Words = {
   approval_cards_unread: "De Card kon nog niet worden gecontroleerd. Lees hem opnieuw en keur hem dan goed.",
   approval_uncovered: (tool: string) => `Deze Card dekt "${tool}" niet, terwijl het taf het heeft gekregen, dus elke aanroep ervan zou worden geweigerd. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_stray: (tool: string) => `Deze Card zou het taf ook "${tool}" laten gebruiken, wat geen van zijn koppelingen geeft. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
+  approval_registered_name: (asked: string, given: string) => `Deze Card noemt "${asked}", maar de koppeling geeft het taf dat hulpmiddel als "${given}". Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_lifetime_cap: (tool: string) => `Deze Card zou "${tool}" in totaal maar een vast aantal keer laten draaien, voor alle items samen en niet per item. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_lifetime_sum: (tool: string) => `Deze Card zou "${tool}" voor altijd tot een totaalbedrag beperken, voor alle items samen, en dat was niet afgesproken. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
   approval_day_total_twice: (tool: string) => `Deze Card zou twee dagtotalen voor "${tool}" instellen, waardoor er één boven de limiet anders kan beslissen dan afgesproken. Er is niets goedgekeurd. Coach stelt hem opnieuw op.`,
