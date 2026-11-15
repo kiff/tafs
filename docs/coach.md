@@ -367,9 +367,12 @@ things (`runtime/src/cloud/approval.ts`):
   agreed in the conversation"); with `TAFS_RULES_REQUIRED=on` it's refused (`rules_required`),
   once every Coach run sends them. A conversation that can't be read is read again, never trusted.
   The check route (`…/check`), which has no conversation, doesn't check the rules, and says so
-  on every answer (`rules_unchecked: true`). Coach starts
-  sending the fields once kiff/agents' component schema takes them; until then nothing carries
-  them, and every draft is approved as before. Figures (each call's, the day's) are a later step.
+  on every answer (`rules_unchecked: true`). Coach sends the
+  fields from `draft-the-card@26`: the rules notice carries `rules: [{tool, over, limits}]`, only
+  the owner's figures and as the Card will have them, and its confirm `agrees` with its id, with
+  options Agree (value `agree`) and Change something. That skill ships once kiff/agents'
+  component schema takes the fields; until then nothing carries them, and every draft is
+  approved as before. Figures (each call's, the day's) are a later step.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.

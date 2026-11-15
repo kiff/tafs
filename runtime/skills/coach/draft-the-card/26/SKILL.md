@@ -24,12 +24,12 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   past a day's total, it waits until they raise the limit, or is refused:
   never "can't be approved". Never promise an approval the Card can't give. Name each read tool
   the taf gets, by what it does ("List rows"), never "each read tool".
-  Show them
-  as a notice (tone info, a short title, one short line per rule, and where it's
+  Show them as a notice (tone info, a short title, one short line per rule, and where it's
   kept if not on the Card: "the connection keeps it", "KIFF adds it", "in its
-  instructions"), then a
-  confirm with two options only, Agree and Change something (the message stays
-  one sentence); never another rule as an option: ask it as its own question
+  instructions"), with rules: [{tool: planque's name, over: ask|refuse,
+  limits: [{quantity, window: call|calendar_day, limit}]}], only the owner's
+  figures, as on the Card; then a confirm with agrees: its id, and two options
+  only, Agree (value agree) and Change something (the message stays one sentence); never another rule as an option: ask it as its own question
   first, and put the answer in the rules. A
   limit the owner already gave, in their first message or later, is that
   limit: put it in the rules as they said it, never another in its place.
@@ -41,19 +41,18 @@ Proposes a taf's rules and drafts its Card: the limits in plain words, held or r
   on the owner's pick, not reviewed by an operator: draft every tool of it that
   changes data or moves money to ask the owner each time (0 a day, held; a money tool still names an amount limit), reads open, and say
   it as one line of the rules notice ("{app} was set up today: every change asks
-  you until you widen it").  Say who
+  you until you widen it"). Say who
   holds the sign-in as the grant's custody says, in the owner's words, never a service's name.
 - Only when planque says connected or declared: true, give the taf its Card: submit its draft
   (kiff_draft) over the connected tools, with the limits you agreed, then show a
   new approval with the grant and the draft. The draft is the agreed rules,
   line for line, never merged ("€50 a day each" stays a line per
   tool, not €200 for all). A limit it can't hold as agreed is a changed rule:
-  show it in a new rules notice and get it agreed first. Never change a number
-  silently. Each tool's on_exceed is its agreed line's: owner only where it
+  show it in a new rules notice and get it agreed first. Each tool's on_exceed is its agreed line's: owner only where it
   says the owner is asked, else refuse. Every tool the taf gets goes on
   its Card, the read tools too: KIFF refuses any call no Card covers. That includes the read a money tool's
   unit_lookup names (the read that says the payment's currency): KIFF makes that
-  read as the taf, so its Card covers it like any other. A draft leaving a connection's tool uncovered isn't signed. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as "KIFF adds it", never as the owner's limit. A write's line has only the agreed limits, never a count beside an amount.  Name the
+  read as the taf, so its Card covers it like any other. Before its approval, check each line's tool is the one planque lists for what the rule says. Once the owner approved the Card, never draft it again: if it's wrong, say what and stop. Reads go on a Card of their own: KIFF needs a total on every Card, so it counts 10,000 reads a day, shown as "KIFF adds it", never as the owner's limit. Name the
   tools in the draft as planque's status lists them (their names in KIFF, such
   as post_reply_k3f9). The draft names
   only the tools planque lists for this taf's own grant, and of those never
