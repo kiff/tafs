@@ -1,0 +1,69 @@
+{
+  "about": "Registering a passkey for the account at kiff.dev (KIFF's pairing contract, \"Registering one\"), as every app must build it. Read by the iPhone and iPad's PasskeyRegistrationTests and Android's PasskeyRegistrationTest, so the apps can't drift. Written by hand from KIFF's contract, not by tafs cloud's tests: change it only with that contract.",
+  "challenge": {
+    "tenant": "t_01",
+    "subject": "usr_7Hq2",
+    "issued_at": "2026-11-15T18:00:00Z",
+    "message": "kiff.passkey.register.v1\nt_01\nusr_7Hq2\n2026-11-15T18:00:00Z",
+    "message_sha256_hex": "b5a239f608877d1b9b14da2273220b2dcae29112fce04c4cc73fdd1f656c2192",
+    "challenge_base64url": "taI59giHfRubFNoicyILLcrikRL84ExMxz_dH2VsIZI"
+  },
+  "create": {
+    "rp_id": "kiff.dev",
+    "user_id_base64url": "dXNyXzdIcTI",
+    "user_name": "owner@example.com",
+    "algorithm": -7,
+    "user_verification": "required",
+    "attestation": "none",
+    "resident_key": "preferred"
+  },
+  "body": {
+    "name": "Ana's iPhone",
+    "issued_at": "2026-11-15T18:00:00Z",
+    "client_data_json_hex": "7b2274797065223a22776562617574686e2e637265617465222c226368616c6c656e6765223a22746149353967694866527562464e6f696379494c4c6372696b524c383445784d787a5f6448325673495a49222c226f726967696e223a2268747470733a2f2f6b6966662e646576227d",
+    "attestation_object_hex": "a363666d74646e6f6e656761747453746d74a068617574684461746141ff",
+    "expected": {
+      "name": "Ana's iPhone",
+      "issued_at": "2026-11-15T18:00:00Z",
+      "client_data_json": "eyJ0eXBlIjoid2ViYXV0aG4uY3JlYXRlIiwiY2hhbGxlbmdlIjoidGFJNTlnaUhmUnViRk5vaWN5SUxMY3Jpa1JMODRFeE14el9kSDJWc0laSSIsIm9yaWdpbiI6Imh0dHBzOi8va2lmZi5kZXYifQ",
+      "attestation_object": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YUH_"
+    },
+    "never_sent": [
+      "credential_id",
+      "public_key"
+    ]
+  },
+  "name": {
+    "longest": 64,
+    "counted_as": "Unicode code points, after trimming spaces and newlines at both ends",
+    "accepted": [
+      [
+        "Ana's iPhone",
+        "Ana's iPhone"
+      ],
+      [
+        " Ana's iPad \n",
+        "Ana's iPad"
+      ],
+      [
+        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      ],
+      [
+        "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+      ]
+    ],
+    "refused": [
+      "",
+      "   ",
+      "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+    ]
+  },
+  "issued_at": {
+    "date_unix": 1763229600,
+    "rfc3339": "2025-11-15T18:00:00Z",
+    "within_seconds": 600
+  }
+}
