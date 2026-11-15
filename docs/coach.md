@@ -81,9 +81,11 @@ Before the first message, one Face ID (`AppModel.startSetup`):
    connects tools and does nothing else, minted with a signed setup call and never kept
    on the phone. The phone asks first with no key: while the key planque holds still stands
    (another device enrolled it), planque answers `kept` and no key is minted, since a phone
-   can't revoke a connector key and a new one would only be left live in KIFF. Otherwise
-   (`needs_key`, or a planque from before) it mints one and hands it over (iPhone and iPad:
-   `AppModel.enrolPlanque`). If planque can't check the phone with KIFF (401), the app says "Connecting
+   can't revoke a connector key and a new one would only be left live in KIFF. Only when
+   planque says it needs one (`needs_key`, or a planque from before's 400) does it mint one
+   and hand it over. Any other answer (planque not reached, a 5xx, a refused signature) mints
+   nothing, since a second enrolment would likely fail too and leave the key live: the app
+   says why, and the next Start asks again (iPhone and iPad: `AppModel.enrolPlanque`). If planque can't check the phone with KIFF (401), the app says "Connecting
    your apps didn't work. Tap Start to try again." It never says signed out, since KIFF's
    session still works (Android).
 2. The phone submits a KIFF agent draft with no tools for Coach. tafs cloud claims its

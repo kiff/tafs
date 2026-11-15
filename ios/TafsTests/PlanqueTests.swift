@@ -442,6 +442,31 @@ final class PlanqueTests: XCTestCase {
         }
     }
 
+    /// Only planque saying it needs a key (`needs_key`, or an older planque's 400) mints one. Planque not
+    /// reached, or a 5xx, mints nothing: a second enrolment would likely fail too and leave a key live in KIFF
+    /// that no device can revoke. It says why, and the next Start asks again.
+    func testPlanqueNotReachedOrFailingMintsNoConnectorKey() async throws {
+        for failure in ["not reached", "503"] {
+            let signer = FaceIDSigner()
+            let model = await model(signer: signer, vendor: StubVendor())
+            let route = "POST /v1/accounts/t_01/enrolment"
+            StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
+            if failure == "503" {
+                StubProtocol.responses[route] = (503, #"{"error":"unavailable"}"#)
+            } else {
+                StubProtocol.dropped[route] = [.notConnectedToInternet]
+            }
+            defer { StubProtocol.dropped = [:] }
+
+            let ready = await model.setUpPlanque()
+            XCTAssertFalse(ready, failure)
+            XCTAssertFalse(model.planqueReady, failure)
+            XCTAssertTrue(sent("POST", "api.test", "/v1/keys").isEmpty, "\(failure): nothing minted")
+            XCTAssertNotNil(model.lastError, "\(failure): it says why")
+            Keychain.delete(AppModel.planqueAccount)
+        }
+    }
+
     /// Setting up planque is its own Face ID, once: planque gets the phone's key and a
     /// connector key minted with a signed setup call.
     func testSetUpPlanqueOnce() async throws {

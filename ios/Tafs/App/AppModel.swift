@@ -6135,12 +6135,24 @@ final class AppModel: ObservableObject {
     private func enrolPlanque(tenant: String, gen: Int) async -> Bool {
         // planque's enrolled connector key, while KIFF still takes it, is kept: asked first with no key, it
         // answers `kept`, and no key is minted that would only be left live in KIFF (a phone can't revoke
-        // a connector key). Any other answer (none enrolled, `needs_key`, a planque from before) mints one
-        // and hands it over, as before.
-        if let standing = try? await planque.enrol(deviceKey: signer.publicKeyDER, connectorKey: nil), standing.kept == true {
+        // a connector key). A key is minted only when planque says it needs one (`needs_key`, or an older
+        // planque's 400). Any other answer (not reached, a 5xx, a refused signature) mints nothing: a second
+        // enrolment would likely fail too and leave the key live. It says why, and the next Start asks again.
+        do {
+            let standing = try await planque.enrol(deviceKey: signer.publicKeyDER, connectorKey: nil)
             guard gen == accountGeneration else { return false }
-            planqueSetUp(for: tenant)
-            return true
+            if standing.kept == true {
+                planqueSetUp(for: tenant)
+                return true
+            }
+        } catch PlanqueClient.PlanqueError.needsKey {
+        } catch PlanqueClient.PlanqueError.server(400, _, _) {
+        } catch PlanqueClient.PlanqueError.server(409, _, _) {
+            lastError = Words.Coach.connectOtherDevice
+            return false
+        } catch {
+            lastError = Words.Coach.connectingNotSetUp(why: "\(error.localizedDescription)")
+            return false
         }
         guard gen == accountGeneration else { return false }
         do {
