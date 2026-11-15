@@ -2620,6 +2620,8 @@ enum Words {
             static func notAnswered(why: String) -> String { Words.line("needs_you.your_step.not_answered", why) }
             /// Not answered: it wasn't confirmed.
             static var notAnsweredUnconfirmed: String { Words.line("needs_you.your_step.not_answered_unconfirmed") }
+            /// Set up Windows Hello (a PIN is enough) to answer here, or answer on your phone.
+            static var setUpHello: String { Words.line("needs_you.your_step.set_up_hello") }
         }
     }
     enum Overview {

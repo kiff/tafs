@@ -1361,6 +1361,7 @@
     <string name="needs_you_your_step_ended">Deze stap is al beantwoord of is afgelopen.</string>
     <string name="needs_you_your_step_not_answered">Je antwoord is niet doorgekomen. %1$s</string>
     <string name="needs_you_your_step_not_answered_unconfirmed">Niet beantwoord: het is niet bevestigd.</string>
+    <string name="needs_you_your_step_set_up_hello">Stel Windows Hello in (een pincode is genoeg) om hier te antwoorden, of antwoord vanaf je telefoon.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nog niets</string>
     <string name="pair_added">Deze %1$s is toegevoegd.</string>

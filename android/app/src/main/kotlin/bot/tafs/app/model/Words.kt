@@ -1414,6 +1414,7 @@ object Words {
       val ended: String get() = Res.s(R.string.needs_you_your_step_ended)
       fun notAnswered(why: String): String = Res.s(R.string.needs_you_your_step_not_answered, why)
       val notAnsweredUnconfirmed: String get() = Res.s(R.string.needs_you_your_step_not_answered_unconfirmed)
+      val setUpHello: String get() = Res.s(R.string.needs_you_your_step_set_up_hello)
     }
   }
   object Overview {

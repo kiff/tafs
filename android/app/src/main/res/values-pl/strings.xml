@@ -1461,6 +1461,7 @@
     <string name="needs_you_your_step_ended">Na ten krok już odpowiedziano albo się zakończył.</string>
     <string name="needs_you_your_step_not_answered">Twoja odpowiedź nie dotarła. %1$s</string>
     <string name="needs_you_your_step_not_answered_unconfirmed">Bez odpowiedzi: nie zostało potwierdzone.</string>
+    <string name="needs_you_your_step_set_up_hello">Skonfiguruj Windows Hello (wystarczy PIN), aby odpowiadać tutaj, lub odpowiedz na telefonie.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Jeszcze nic</string>
     <string name="pair_added">Ten %1$s został dodany.</string>

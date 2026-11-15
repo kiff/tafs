@@ -68042,6 +68042,59 @@
         }
       }
     },
+    "needs_you.your_step.set_up_hello": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richte Windows Hello ein (eine PIN reicht), um hier zu antworten, oder antworte auf deinem Telefon."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up Windows Hello (a PIN is enough) to answer here, or answer on your phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configura Windows Hello (basta con un PIN) para responder aquí, o responde desde tu teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configurez Windows Hello (un code PIN suffit) pour répondre ici, ou répondez depuis votre téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configura Windows Hello (basta un PIN) per rispondere qui, oppure rispondi dal tuo telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stel Windows Hello in (een pincode is genoeg) om hier te antwoorden, of antwoord vanaf je telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skonfiguruj Windows Hello (wystarczy PIN), aby odpowiadać tutaj, lub odpowiedz na telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure o Windows Hello (basta um PIN) para responder aqui, ou responda a partir do seu telefone."
+          }
+        }
+      }
+    },
     "overview.hero": {
       "extractionState": "manual",
       "localizations": {

@@ -78,5 +78,6 @@
   "needs_you.when_taf_asks_something_outside": "Een melding bereikt je op deze {device}, ook als tafs gesloten is.",
   "needs_you.your_step.ended": "Deze stap is al beantwoord of is afgelopen.",
   "needs_you.your_step.not_answered": "Je antwoord is niet doorgekomen. {why}",
-  "needs_you.your_step.not_answered_unconfirmed": "Niet beantwoord: het is niet bevestigd."
+  "needs_you.your_step.not_answered_unconfirmed": "Niet beantwoord: het is niet bevestigd.",
+  "needs_you.your_step.set_up_hello": "Stel Windows Hello in (een pincode is genoeg) om hier te antwoorden, of antwoord vanaf je telefoon."
 }
