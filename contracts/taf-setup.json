@@ -31,6 +31,6 @@
         "coach_text": "Add a USD limit to this action for Rae. Its Card only allows EUR. Read its current Card first and ask me to approve the change."
       }
     ],
-    "connections_error": "Connect this phone to read its connected apps"
+    "connections_error": "Connect this device to read its connected apps"
   }
 }

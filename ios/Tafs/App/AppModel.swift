@@ -2074,7 +2074,7 @@ final class AppModel: ObservableObject {
             await refreshUsage()
         }
         // `-screen coach`: Coach open over the sample, empty, for the reference set; `coach-chat`, mid-conversation.
-        if Screenshots.screen == "coach-chat", Screenshots.enabled, let thread = SampleScreens.coachThread { setupThread = thread }
+        if Screenshots.coachChat, let thread = SampleScreens.coachThread { setupThread = thread }
         if Screenshots.coach { coachOpen = true }
     }
 
@@ -6133,6 +6133,16 @@ final class AppModel: ObservableObject {
     /// owner just confirmed with Face ID: the caller has set `kiff.setupSigner` and
     /// `planque.signer`. Sets `lastError` and returns false when it can't.
     private func enrolPlanque(tenant: String, gen: Int) async -> Bool {
+        // planque's enrolled connector key, while KIFF still takes it, is kept: asked first with no key, it
+        // answers `kept`, and no key is minted that would only be left live in KIFF (a phone can't revoke
+        // a connector key). Any other answer (none enrolled, `needs_key`, a planque from before) mints one
+        // and hands it over, as before.
+        if let standing = try? await planque.enrol(deviceKey: signer.publicKeyDER, connectorKey: nil), standing.kept == true {
+            guard gen == accountGeneration else { return false }
+            planqueSetUp(for: tenant)
+            return true
+        }
+        guard gen == accountGeneration else { return false }
         do {
             let key = try await kiff.mintConnectorKey()
             guard gen == accountGeneration else { return false }
@@ -9102,6 +9112,9 @@ enum Screenshots {
     static var signedIn: Bool { enabled && UserDefaults.standard.bool(forKey: "signedIn") }
     /// `-screen coach`: Coach mode open over the sample, as the reference set shows it.
     static var coach: Bool { enabled && (screen == "coach" || screen == "coach-chat") }
+    /// `-screen coach-chat`: Coach open over the sample mid-conversation, its thread drawn though the sample
+    /// starts no Coach (`SetupChatView` shows the thread, not the intro).
+    static var coachChat: Bool { enabled && screen == "coach-chat" }
     /// The iPad sidebar's screen a `-screen` opens beside it: `usage` (Plan & usage), `connect-apps`.
     static var sidebarScreen: HomeSelection? {
         guard enabled else { return nil }

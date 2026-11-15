@@ -55,7 +55,7 @@ export function siteSignIn(lang: Lang = "en"): { title: string; words: string } 
 
 /** The phone signs this read; tafs cloud forwards the proof unchanged and signs nothing. */
 export async function setupGrants(base: string, tenant: string, proof: string, net: Fetch = fetch): Promise<GrantView[]> {
-  if (!proof || proof.length > 4096) throw new Error("Connect this phone to read its connected apps");
+  if (!proof || proof.length > 4096) throw new Error("Connect this device to read its connected apps");
   const res = await net(`${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/grants`, {
     headers: { accept: "application/json", "Planque-Device-Signature": proof },
   });
