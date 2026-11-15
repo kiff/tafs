@@ -32,6 +32,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [api.md](api.md) | tafs cloud's HTTP API, every route |
 | [ios-app.md](ios-app.md) | The app's code: its model, screens, services, launch arguments and tests |
 | [mac-app.md](mac-app.md) | The Mac app (macOS 13 and later): the iPhone and iPad app built with Mac Catalyst, what differs from the iPad, its tests, and what isn't done yet |
+| [computer-passkeys.md](computer-passkeys.md) | How a computer approves with a passkey: a Mac with Touch ID, Windows Hello, and a USB security key or the phone for a Mac without Touch ID and Linux; what a passkey approval carries |
 | [android-app.md](android-app.md) | The Android app's code: building and testing it, its packages, signing, releases |
 | [data.md](data.md) | Where every piece of data lives, for how long, and who deletes it |
 | [kiff-decides.md](kiff-decides.md) | How KIFF decides every taf action, with the first held calls on a phone |
