@@ -190,10 +190,13 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
     }
     // A write with an amount limit is limited by its amounts, as agreed: a count of its calls beside them is a limit
     // nobody set (Evals 10 to 12: a refund Card also held past 1,000 refunds a day, so 1,001 one-cent refunds under the
-    // agreed cap would wait for the owner). Never signed. A count of 0 held (asking each time) and a count per item are kept.
+    // agreed cap would wait for the owner). Never signed. A count of 0 held (asking each time) is kept, and so is the owner's
+    // limit for each item, in its one shape; any other count per item is one nobody set (a live test's "1 a day for each
+    // payment intent" on a money tool).
     const counted = countOnAmountWrite(grant, draft.cards);
     if (counted) {
-      return { outcome: "answered", answer: `failed: the draft counts "${counted.tool}"'s calls (${counted.limit} per ${counted.window}) beside its amount limits. A write with an amount limit has only the agreed amounts, each call's and the day's total: no count of its calls. Draft it again without the count.`, note: W.countOnAmount(counted.tool), code: "count_on_amount" };
+      const each = counted.per ? ` for each ${counted.per}` : "";
+      return { outcome: "answered", answer: `failed: the draft counts "${counted.tool}"'s calls (${counted.limit} per ${counted.window}${each}) beside its amount limits. A write with an amount limit has only the agreed amounts, each call's and the day's total: no count of its calls. Draft it again without the count.`, note: W.countOnAmount(counted.tool), code: "count_on_amount" };
     }
   }
   return { draft: draft as NonNullable<typeof draft> & { version: string } };
@@ -201,11 +204,12 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
 
 /**
  * The first write tool of the connection that the draft's Cards limit by its amount (a per-call cap on a sum, or a
- * sum over any window) and also count by its calls (count, with no per and a limit above 0), on the same Card or
- * another. A count of 0 (each call asks the owner, as on demand) and a count per item (per its argument) are kept, as
- * is a count on a read. The tool is named as the connection titles it, with the count's limit and window.
+ * sum over any window) and also count by its calls (count, a limit above 0), on the same Card or another. A count of 0
+ * (each call asks the owner, as on demand) is kept, as is a count on a read. A count per item is kept only in the
+ * shape of the owner's limit for each item ("one invoice per order, ever"): lifetime or rolling_7d, per the tool's own
+ * resource_argument. The tool is named as the connection titles it, with the count's limit, window and item.
  */
-export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { tool: string; limit: number; window: string } | undefined {
+export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { tool: string; limit: number; window: string; per?: string } | undefined {
   const fold = (v: unknown) => (typeof v === "string" ? v.trim().toLowerCase() : "");
   const writes = (grant.request.tools ?? []).filter((t) => !t.read_only && !t.setup_reads);
   type Aggregate = { quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown };
@@ -214,7 +218,10 @@ export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { to
     const name = fold(t.name || t.tool);
     if (!name) continue;
     let amount = false;
-    let count: { limit: number; window: string } | undefined;
+    let count: { limit: number; window: string; per?: string } | undefined;
+    const resource = fold((t as { resource_argument?: unknown }).resource_argument);
+    // The owner's limit for each item, as the rules draft it: never another item, or a day's count per item.
+    const owners = (a: Aggregate) => !!resource && fold(a.per) === resource && ["lifetime", "rolling_7d"].includes(fold(a.window));
     for (const raw of cards) {
       const card = raw as { grants?: unknown; aggregates?: unknown };
       const grants = (Array.isArray(card.grants) ? card.grants : []) as Grant[];
@@ -225,7 +232,9 @@ export function countOnAmountWrite(grant: ApprovalGrant, cards: unknown[]): { to
       for (const a of aggregates) {
         if (fold(a.quantity).startsWith("sum(")) amount = true;
         const limit = typeof a.limit === "number" ? a.limit : 0;
-        if (!count && fold(a.quantity) === "count" && !fold(a.per) && limit > 0) count = { limit, window: fold(a.window) || "window" };
+        if (count || fold(a.quantity) !== "count" || limit <= 0) continue;
+        if (!fold(a.per)) count = { limit, window: fold(a.window) || "window" };
+        else if (!owners(a)) count = { limit, window: fold(a.window) || "window", per: (a.per as string).trim() };
       }
     }
     if (amount && count) return { tool: t.title || t.name || t.tool || name, ...count };
