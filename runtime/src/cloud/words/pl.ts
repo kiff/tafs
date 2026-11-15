@@ -147,7 +147,7 @@ export const pl: Words = {
   setup_site_sign_in_words: "Logujesz się sam, w podglądzie na żywo przeglądarki tafa. To, co wpiszesz, trafia do strony, nigdy do tafa. Stuknij Gotowe, gdy się zalogujesz.",
   setup_connected_app: "Połączona aplikacja",
   setup_connections_unread: "Nie udało się odczytać połączonych aplikacji; spróbuj ponownie",
-  setup_connections_unproved: "Połącz ten telefon, aby odczytać połączone aplikacje",
+  setup_connections_unproved: "Połącz to urządzenie, aby odczytać połączone aplikacje",
   each_item_calls: (n, form, window, item) => `${n} ${form === "one" ? "wywołanie" : form === "few" ? "wywołania" : "wywołań"} ${window} na ${item}`,
   each_item_amount: (amount, over, item) => `${amount} ${over} na ${item}`,
   each_item_total_day: "łącznie dziennie",

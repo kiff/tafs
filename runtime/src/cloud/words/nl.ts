@@ -147,7 +147,7 @@ export const nl: Words = {
   setup_site_sign_in_words: "Je logt zelf in, in een live weergave van de browser van de taf. Wat je typt gaat naar de site, nooit naar de taf. Tik op Klaar als je binnen bent.",
   setup_connected_app: "Gekoppelde app",
   setup_connections_unread: "Gekoppelde apps konden niet worden gelezen; opnieuw proberen",
-  setup_connections_unproved: "Koppel deze telefoon om de gekoppelde apps te lezen",
+  setup_connections_unproved: "Koppel dit apparaat om de gekoppelde apps te lezen",
   each_item_calls: (n, form, window, item) => `${n} ${form === "one" ? "aanroep" : "aanroepen"} ${window} per ${item}`,
   each_item_amount: (amount, over, item) => `${amount} ${over} per ${item}`,
   each_item_total_day: "in totaal per dag",

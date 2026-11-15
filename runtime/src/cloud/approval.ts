@@ -633,7 +633,7 @@ async function noteConnected(store: CoachStore, tenant: string, grant: ApprovalG
 
 /** The grants planque shows this phone, read with the proof the phone signed and tafs cloud forwards unchanged. */
 export async function readGrants(base: string, tenant: string, proof: string, net: Fetch): Promise<ApprovalGrant[]> {
-  if (!proof || proof.length > 4096) throw new ApprovalError(503, "Connect this phone to read its connected apps");
+  if (!proof || proof.length > 4096) throw new ApprovalError(503, "Connect this device to read its connected apps");
   let res: Response;
   try {
     res = await net(`${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/grants`, { headers: { accept: "application/json", "Planque-Device-Signature": proof } });

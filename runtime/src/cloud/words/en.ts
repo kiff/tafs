@@ -154,7 +154,7 @@ export const en = {
   setup_site_sign_in_words: "You sign in yourself, in a live view of the taf's browser. What you type goes to the site, never to the taf. Tap Done when you're in.",
   setup_connected_app: "Connected app",
   setup_connections_unread: "Connected apps could not be read; try again",
-  setup_connections_unproved: "Connect this phone to read its connected apps",
+  setup_connections_unproved: "Connect this device to read its connected apps",
   each_item_calls: (n: number, form: Intl.LDMLPluralRule, window: string, item: string) => `${n} ${form === "one" ? "call" : "calls"} ${window} for each ${item}`,
   each_item_amount: (amount: string, over: string, item: string) => `${amount} ${over} for each ${item}`,
   each_item_total_day: "in total a day",

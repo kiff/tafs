@@ -147,7 +147,7 @@ export const fr: Words = {
   setup_site_sign_in_words: "Vous vous connectez vous-même, dans une vue en direct du navigateur du taf. Ce que vous saisissez va au site, jamais au taf. Touchez Terminé une fois connecté.",
   setup_connected_app: "App connectée",
   setup_connections_unread: "Les apps connectées n'ont pas pu être lues ; réessayer",
-  setup_connections_unproved: "Connectez ce téléphone pour lire ses apps connectées",
+  setup_connections_unproved: "Connectez cet appareil pour lire ses apps connectées",
   each_item_calls: (n, form, window, item) => `${n} ${form === "one" ? "appel" : "appels"} ${window} pour chaque ${item}`,
   each_item_amount: (amount, over, item) => `${amount} ${over} pour chaque ${item}`,
   each_item_total_day: "au total par jour",
