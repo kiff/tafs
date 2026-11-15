@@ -219,9 +219,9 @@ then shows its plan. Then, each step behind the owner's yes:
    set up, with Open; why it wasn't, with no Try again, since Coach hands it over again
    itself; and until the answer comes, "Setting up…". A first check that read but didn't find what it named leaves the taf
    on plain timing, at most once an hour, and `check` says so: Coach fixes the check with `taf_dial`. A result whose Card the owner hasn't
-   approved yet (KIFF's `draft_not_ready`) with no approval card waiting beside it in the same run is answered at
+   approved yet (KIFF's `draft_not_ready`) with no approval or sign-in card waiting beside it in the same run is answered at
    once, in the words below: nothing asks the owner for that Card (a redraft shown with no approval of its own), so
-   Coach shows its approval, and the result once the owner approved it. With an approval card waiting beside it, the
+   Coach shows its approval, and the result once the owner approved it. With one waiting beside it, the
    result isn't answered at first: it waits, and the taf is made once they
    approve, with the next note, chat read or sweep: the sweep tries a waiting hand-over every 5 minutes for
    its first hour, then on the deletions' backoff, so no one need open the app. Each try is logged. Still

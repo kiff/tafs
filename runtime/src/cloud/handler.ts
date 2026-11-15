@@ -8364,11 +8364,17 @@ async function waitedForCard(tenant: string, r: Run, card: string, deps: Deps): 
 }
 
 /**
- * Whether the run waits on an approval card too: the owner may be approving the result's Card on it now, so the result
- * waits for it (HANDOVER_CARD_WAIT_MS). Any approval card counts, the connection alone too: the Card may come with it.
+ * Whether the run waits on an approval or sign-in card too: the owner may be approving the result's Card on it now (a
+ * sign-in card is decided with its draft as an approval is), so the result waits for it (HANDOVER_CARD_WAIT_MS). Any
+ * such card counts, the connection alone too: the Card may come with it. An answered one doesn't: its answer says
+ * "approved" only once KIFF shows its draft issued (approval.ts reported), the status kiff/agents' claim reads, so an
+ * approved card can't leave the result's draft unconfirmed while the confirm is in flight.
  */
 export function approvalWaits(r: Pick<Run, "requirements">): boolean {
-  return (r.requirements ?? []).some((q) => q.kind === "card" && !q.answered && (q.input as { type?: unknown } | undefined)?.type === "approval");
+  return (r.requirements ?? []).some((q) => {
+    const type = (q.input as { type?: unknown } | undefined)?.type;
+    return q.kind === "card" && !q.answered && (type === "approval" || type === "sign_in");
+  });
 }
 
 /** How long a result's hand-over holds its card, so a repeat note or a second phone can't make two. */

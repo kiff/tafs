@@ -4348,8 +4348,8 @@ describe("Coach's result, handed over by tafs cloud", () => {
     }, deps);
     const answer = () => w.agents.runs.find((r) => r.id === run.id)!.requirements![0]!.result as { answer?: unknown; answered_by?: string } | undefined;
     // An approval card waiting beside the result: the owner may be approving its Card on it now.
-    const approvalBeside = (answered = false) => w.agents.runs.find((r) => r.id === run.id)!.requirements!.push({
-      call_id: "s0", tool: "show", input: { type: "approval", id: "connect", grant: "grt_Desk123456", draft: "drf_s1" }, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card",
+    const approvalBeside = (answered = false, type = "approval") => w.agents.runs.find((r) => r.id === run.id)!.requirements!.push({
+      call_id: "s0", tool: "show", input: { type, id: "connect", grant: "grt_Desk123456", draft: "drf_s1" }, operation: "", expires: "2026-11-05T12:00:00Z", kind: "card",
       ...(answered ? { answered: true } : {}),
     });
     return { w, run: run.id, note, answer, deps, approvalBeside };
@@ -4538,14 +4538,17 @@ describe("Coach's result, handed over by tafs cloud", () => {
   });
 
   it("a result still waiting on its Card is tried again with the next note, never answered failed", async () => {
-    const { w, note, answer, approvalBeside } = await paused();
-    approvalBeside();
-    w.agents.access.set("u_ana", { cards_manage: true });
-    w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
-    await note();
-    expect(answer()).toBeUndefined();
-    await note();
-    expect(answer()).toEqual({ answer: { taf_id: NEW }, answered_by: "tafs cloud" });
+    // Beside an approval card, or a sign-in card carrying the draft (the owner signs in, then the Card).
+    for (const beside of ["approval", "sign_in"]) {
+      const { w, note, answer, approvalBeside } = await paused();
+      approvalBeside(false, beside);
+      w.agents.access.set("u_ana", { cards_manage: true });
+      w.agents.fail.set("claimTafDraft", new AgentsError(409, "KIFF can't give this draft's key now", undefined, "draft_not_ready"));
+      await note();
+      expect([beside, answer()]).toEqual([beside, undefined]);
+      await note();
+      expect([beside, answer()]).toEqual([beside, { answer: { taf_id: NEW }, answered_by: "tafs cloud" }]);
+    }
   });
 
   // 13 Nov: Coach was told its approval went through, but only the connection was signed, so no card
@@ -4621,6 +4624,9 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(approvalWaits({ requirements: [card({ type: "approval", grant: "g" })] })).toBe(true);
     expect(approvalWaits({ requirements: [card({ type: "result", id: "done" }), card({ type: "approval", grant: "g", draft: "d" })] })).toBe(true);
     expect(approvalWaits({ requirements: [card({ type: "approval", grant: "g" }, { answered: true })] })).toBe(false);
+    // A sign-in card is decided with its draft as an approval is: the owner may be signing in for the Card now.
+    expect(approvalWaits({ requirements: [card({ type: "result", id: "done" }), card({ type: "sign_in", grant: "g", draft: "d" })] })).toBe(true);
+    expect(approvalWaits({ requirements: [card({ type: "sign_in", grant: "g" }, { answered: true })] })).toBe(false);
     expect(approvalWaits({ requirements: [card({ type: "result", id: "done" }), card({ type: "question" })] })).toBe(false);
     expect(approvalWaits({ requirements: [{ ...card({ type: "approval" }), kind: "approval" }] })).toBe(false);
     expect(approvalWaits({})).toBe(false);
