@@ -659,6 +659,11 @@
     <string name="coach_plan_fold_short">Einklappen</string>
     <string name="coach_plan_progress">Plan · %1$s von %2$s</string>
     <string name="coach_plan_show">Ganzen Plan zeigen</string>
+    <string name="coach_plan_step_active">In Arbeit</string>
+    <string name="coach_plan_step_done">Erledigt</string>
+    <string name="coach_plan_step_failed">Fehlgeschlagen</string>
+    <string name="coach_plan_step_pending">Offen</string>
+    <string name="coach_plan_step_skipped">Übersprungen</string>
     <string name="coach_plan_title">Plan</string>
     <string name="coach_prompt_connect_tools">Deine Apps verbinden</string>
     <string name="coach_prompt_give_card">Coach seine Card geben</string>

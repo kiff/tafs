@@ -6,6 +6,21 @@ import XCTest
 /// thread of messages and components, and the owner's answers.
 @MainActor
 final class SetupTests: XCTestCase {
+    /// A plan step's mark reads its words to VoiceOver, never tafs cloud's raw status ("done").
+    func testAStepsMarkReadsTheWordsNotTheStatus() throws {
+        XCTAssertEqual(StepMark.words("done"), Words.Coach.Plan.stepDone)
+        XCTAssertEqual(StepMark.words("failed"), Words.Coach.Plan.stepFailed)
+        XCTAssertEqual(StepMark.words("active"), Words.Coach.Plan.stepActive)
+        XCTAssertEqual(StepMark.words("skipped"), Words.Coach.Plan.stepSkipped)
+        XCTAssertEqual(StepMark.words("pending"), Words.Coach.Plan.stepPending)
+        XCTAssertEqual(StepMark.words("something new"), Words.Coach.Plan.stepPending, "a status this app doesn't know reads as to do")
+        XCTAssertEqual(Words.Coach.Plan.stepDone, "Done")
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let file = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(file.contains(".accessibilityLabel(Self.words(status))"))
+        XCTAssertFalse(file.contains(".accessibilityLabel(status)"))
+    }
+
     func testAConversationReadCannotOverwriteANewCoachConversation() async throws {
         let model = await model(signer: FaceIDSigner())
         StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)

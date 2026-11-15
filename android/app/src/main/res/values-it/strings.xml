@@ -659,6 +659,11 @@
     <string name="coach_plan_fold_short">Comprimi</string>
     <string name="coach_plan_progress">Piano · %1$s di %2$s</string>
     <string name="coach_plan_show">Mostra tutto il piano</string>
+    <string name="coach_plan_step_active">In corso</string>
+    <string name="coach_plan_step_done">Fatto</string>
+    <string name="coach_plan_step_failed">Non riuscito</string>
+    <string name="coach_plan_step_pending">Da fare</string>
+    <string name="coach_plan_step_skipped">Saltato</string>
     <string name="coach_plan_title">Piano</string>
     <string name="coach_prompt_connect_tools">Collega le tue app</string>
     <string name="coach_prompt_give_card">Dai a Coach la sua Card</string>
