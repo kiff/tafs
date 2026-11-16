@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { businessText } from "../src/cloud/business.js";
 import { keyOf, type LabelSet, labelsView, withLabelChanged, withTafLabels } from "../src/cloud/labels.js";
 
 // Labels (docs/labels.md): chips on one flat list, with the filter row's counts and headline from tafs cloud.
@@ -34,5 +35,15 @@ describe("labels", () => {
     expect(labelsView(set, listed, labelsOf, "en")).toEqual([{ id: "m", name: "Money", color: "money", count: 2, waiting: 1, headline: { words: "1 taf working · Money" } }]);
     // A suggested label reads in the person's language; a named one as named.
     expect(labelsView(set, listed, labelsOf, "fr")[0]).toMatchObject({ name: "Argent", headline: { words: "1 taf en cours · Argent" } });
+  });
+});
+
+describe("the business description's limits", () => {
+  it("keeps its lines, trims it, and refuses one past 300 words or 2400 characters", () => {
+    expect(businessText("  We sell lamps.  \r\n\r\n\r\n\r\nTo shops.  ")).toBe("We sell lamps.\n\nTo shops.");
+    expect(businessText("")).toBe("");
+    expect(() => businessText("w ".repeat(301))).toThrow("this one has 301 words");
+    expect(() => businessText("x".repeat(2401))).toThrow("2401 characters");
+    expect(() => businessText(undefined)).toThrow("the whole description");
   });
 });

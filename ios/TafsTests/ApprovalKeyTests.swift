@@ -122,7 +122,7 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertTrue(model.approvalKeyLost)
         XCTAssertTrue(model.approvalViewOnly)
         XCTAssertFalse(model.sessionHasApprovalKey)
-        XCTAssertEqual(model.approvalKeyLostWords, Words.Approval.viewOnly)
+        XCTAssertEqual(model.approvalKeyLostWords, ThisDevice.isMac ? Words.Approval.viewOnlyMac : Words.Approval.viewOnly)
         XCTAssertEqual(Words.Approval.viewOnly, "Sign in again on this phone to approve, or approve from your other phone.")
         let asked = sent("POST", "/v1/me/device/approval-key").count
         XCTAssertEqual(asked, 1)
@@ -167,7 +167,7 @@ final class ApprovalKeyTests: XCTestCase {
         await model.useSession("kiff_dev_x", tenant: "t_01", viewOnly: true)
         XCTAssertTrue(model.approvalViewOnly)
         XCTAssertTrue(model.approvalKeyLost)
-        XCTAssertEqual(model.approvalKeyLostWords, Words.Approval.viewOnly)
+        XCTAssertEqual(model.approvalKeyLostWords, ThisDevice.isMac ? Words.Approval.viewOnlyMac : Words.Approval.viewOnly)
         XCTAssertTrue(sent("POST", "/v1/me/device/approval-key").isEmpty, "a view-only session registers no approval key")
         // A new sign-in that may approve clears it.
         await model.useSession("kiff_dev_y", tenant: "t_01")
@@ -187,6 +187,12 @@ final class ApprovalKeyTests: XCTestCase {
                 if let p = body.range(of: prompt) { XCTAssertTrue(gate.upperBound <= p.lowerBound, "\(start) asks before the gate") }
             }
         }
+    }
+
+    /// A view-only Mac says how to add it from a phone, never "sign in again on this phone".
+    func testAViewOnlyMacSaysToAddItFromThePhone() {
+        XCTAssertEqual(Words.Approval.viewOnlyMac, "This Mac can only view. To approve here, add it from your phone: Account › Devices › Add a device.")
+        XCTAssertFalse(Words.Approval.viewOnlyMac.contains("this phone"))
     }
 
     /// Another refusal leaves the session as before: no view-only words.

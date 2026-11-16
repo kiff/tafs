@@ -14,18 +14,21 @@
     <string name="needs_you_refuse">Refuser</string>
     <string name="needs_you_title">Vous attend</string>
     <string name="taf_state_halted">Bloqué</string>
-    <string name="watch_already_answered">Déjà traité.</string>
-    <string name="watch_answer_longer">La réponse de Coach est plus longue. Ouvrez-la sur votre téléphone.</string>
+    <string name="watch_already_answered">Déjà répondu, ou terminé.</string>
     <string name="watch_approve_on_phone">Approuvez sur votre téléphone</string>
+    <string name="watch_as_of">Mis à jour à %1$s</string>
     <string name="watch_asking_phone">Demande à votre téléphone…</string>
-    <string name="watch_coach_consent_on_phone">Coach a d\'abord besoin de votre accord sur votre téléphone.</string>
+    <string name="watch_coach_needs_consent">Avant de parler à Coach, autorisez l\'utilisation de l\'IA dans tafs sur votre téléphone.</string>
+    <string name="watch_glance_description">Combien vous attendent, jamais quoi ni qui.</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s appel retenu vous attend</item>
         <item quantity="other">%1$s appels retenus vous attendent</item>
     </plurals>
+    <string name="watch_more_on_phone">La suite est sur votre téléphone.</string>
     <string name="watch_needs_lock">Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l\'écran et déverrouillez-la.</string>
     <string name="watch_open_on_phone">Ouvrir sur le téléphone</string>
-    <string name="watch_phone_not_reachable">Votre téléphone est injoignable. Gardez-le à proximité et réessayez.</string>
+    <string name="watch_phone_not_reachable">Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.</string>
+    <string name="watch_refused">Refusé. Rien n\'a été envoyé.</string>
     <string name="watch_sign_in_on_phone">Connectez-vous d\'abord à tafs sur votre téléphone.</string>
     <string name="watch_voice_text_only">Coach reçoit vos mots en texte, jamais votre voix.</string>
 </resources>

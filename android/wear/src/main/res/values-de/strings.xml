@@ -14,18 +14,21 @@
     <string name="needs_you_refuse">Ablehnen</string>
     <string name="needs_you_title">Braucht dich</string>
     <string name="taf_state_halted">Angehalten</string>
-    <string name="watch_already_answered">Bereits beantwortet.</string>
-    <string name="watch_answer_longer">Die Antwort von Coach ist länger. Öffne sie auf deinem Handy.</string>
+    <string name="watch_already_answered">Schon beantwortet oder beendet.</string>
     <string name="watch_approve_on_phone">Genehmige auf deinem Handy</string>
+    <string name="watch_as_of">Stand: %1$s</string>
     <string name="watch_asking_phone">Fragt dein Handy…</string>
-    <string name="watch_coach_consent_on_phone">Coach braucht zuerst dein Ja auf deinem Handy.</string>
+    <string name="watch_coach_needs_consent">Bevor du mit Coach sprichst, erlaube die KI-Nutzung in tafs auf deinem Handy.</string>
+    <string name="watch_glance_description">Wie viele dich brauchen, nie was oder wer.</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s zurückgehaltener Aufruf braucht dich</item>
         <item quantity="other">%1$s zurückgehaltene Aufrufe brauchen dich</item>
     </plurals>
+    <string name="watch_more_on_phone">Der Rest ist auf deinem Handy.</string>
     <string name="watch_needs_lock">Um mit dieser Uhr abzulehnen oder anzuhalten, richte eine Displaysperre ein und entsperre sie.</string>
     <string name="watch_open_on_phone">Auf dem Handy öffnen</string>
-    <string name="watch_phone_not_reachable">Dein Handy ist nicht erreichbar. Halte es in der Nähe und versuche es erneut.</string>
+    <string name="watch_phone_not_reachable">Dein Handy ist nicht in Reichweite. Bring es näher und versuch es dann erneut.</string>
+    <string name="watch_refused">Abgelehnt. Nichts wurde gesendet.</string>
     <string name="watch_sign_in_on_phone">Melde dich zuerst auf deinem Handy bei tafs an.</string>
     <string name="watch_voice_text_only">Coach bekommt deine Worte als Text, nie deine Stimme.</string>
 </resources>
