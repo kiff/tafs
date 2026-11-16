@@ -9234,6 +9234,14 @@ final class AppModel: ObservableObject {
         }
     }
 
+    /// A language picked in the app (Account › Language): every screen draws its lines again in it, and
+    /// tafs cloud's and KIFF's words are read again, since each request names the new language first.
+    func languageChanged() {
+        objectWillChange.send()
+        guard mode == .kiff else { return }
+        Task { await refresh() }
+    }
+
     /// Back on screen: a close waiting on the background is called off, and KIFF's words read again.
     /// iOS may have suspended the app before its 30 seconds were up: away that long, it closes now.
     func cameToForeground() {

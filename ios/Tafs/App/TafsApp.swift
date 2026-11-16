@@ -9,10 +9,18 @@ struct TafsApp: App {
     /// The app went to the background since it was last active.
     @State private var wasAway = false
     private let lockScreen = LockScreen()
+    /// The language picked in the app (Account › Language), so the screens follow it at once.
+    @AppStorage(AppLanguage.key) private var language = ""
+
+    init() {
+        // The lines are read in the language picked in the app before anything is drawn.
+        AppLanguage.apply()
+    }
 
     var body: some Scene {
         WindowGroup {
             RootView()
+                .environment(\.locale, language.isEmpty ? Words.locale : Locale(identifier: language))
                 .preferredColorScheme(ThemePreference(rawValue: theme)?.scheme)
                 // The screenshots' narrow iPad window (kiff/tafs#210): Slide Over's width.
                 .modifier(NarrowForScreenshots())
