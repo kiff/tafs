@@ -30811,6 +30811,59 @@
         }
       }
     },
+    "coach.card_draft_not_read": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFFs Entwurf dieser Card konnte nicht gelesen werden. %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "KIFF's draft of this Card couldn't be read. %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo leer el borrador de KIFF de esta Card. %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le brouillon de KIFF pour cette Card n'a pas pu être lu. %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile leggere la bozza di KIFF di questa Card. %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het concept van KIFF voor deze Card kon niet worden gelezen. %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się odczytać szkicu KIFF dla tej Card. %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível ler o rascunho do KIFF deste Card. %1$@"
+          }
+        }
+      }
+    },
     "coach.card_of": {
       "extractionState": "manual",
       "localizations": {

@@ -47,6 +47,7 @@
   "coach.away": "Enquanto esteve ausente",
   "coach.back_width": "Voltar à largura normal",
   "coach.card_answer_not_sent": "A sua resposta não foi enviada. {why}",
+  "coach.card_draft_not_read": "Não foi possível ler o rascunho do KIFF deste Card. {why}",
   "coach.card_of": "Card de {owner}",
   "coach.chats.archive": "Arquivar",
   "coach.chats.archive_body": "Sai desta lista em todos os seus dispositivos. Encontra-a em Arquivadas, onde a pode abrir ou repor.",

@@ -630,6 +630,7 @@
     <string name="coach_away">Mentre eri via</string>
     <string name="coach_back_width">Torna alla sua larghezza</string>
     <string name="coach_card_answer_not_sent">La tua risposta non è stata inviata. %1$s</string>
+    <string name="coach_card_draft_not_read">Non è stato possibile leggere la bozza di KIFF di questa Card. %1$s</string>
     <string name="coach_card_of">Card di %1$s</string>
     <string name="coach_chats_archive">Archivia</string>
     <string name="coach_chats_archive_body">Esce da questo elenco su tutti i tuoi dispositivi. La trovi in Archiviate, dove puoi aprirla o ripristinarla.</string>

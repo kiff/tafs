@@ -507,6 +507,8 @@ data class AppState(
   val profileWords: Map<String, bot.tafs.app.kiff.ProfileWords> = emptyMap(),
   /** Why a grant's words couldn't be read or didn't check out, by grant id. */
   val profileWordsErrors: Map<String, String> = emptyMap(),
+  /** Why KIFF's draft for an approval card couldn't be read, by draft id: said on the card, with Try again ([AppModel.loadDraft]). */
+  val draftErrors: Map<String, String> = emptyMap(),
   val planqueReady: Boolean = false,
   /** Why the last read of planque's connections failed, in words; null once a read went through. */
   val connectionsError: String? = null,
@@ -3668,9 +3670,39 @@ class AppModel(
     for (c in approvals) {
       val id = c.draft ?: continue
       if (_state.value.setupDrafts[id]?.confirmed == true) continue
-      val draft = attempt { kiff.draft(id) } ?: continue
-      if (generation == accountGeneration) _state.update { it.copy(setupDrafts = it.setupDrafts + (id to draft)) }
+      loadDraft(id)
     }
+    // A card whose draft KIFF didn't give: read again while it waits, as for planque's grants (CARD_GRANT_READ_DELAYS), so a
+    // read that failed once doesn't leave the card on "Reading KIFF's words…" with Approve waiting until the chat is read again.
+    val unreadDrafts = draftsCardsWaitOn(_state.value.coachComponents, _state.value.setupDrafts.keys).filter { draftsFollowed.add(it) }
+    if (unreadDrafts.isNotEmpty()) scope.launch {
+      for (wait in CARD_GRANT_READ_DELAYS) {
+        delay(wait)
+        if (generation != accountGeneration) return@launch
+        val still = draftsCardsWaitOn(_state.value.coachComponents, _state.value.setupDrafts.keys).filter { it in unreadDrafts }
+        if (still.isEmpty()) return@launch
+        still.forEach { loadDraft(it) }
+      }
+    }
+  }
+
+  /**
+   * KIFF's draft [id] for an approval card, read with this person's session. A read that fails is said on the card, with KIFF's
+   * reason and Try again ([AppState.draftErrors]); it used to be dropped, and the card waited on "Reading KIFF's words…".
+   */
+  suspend fun loadDraft(id: String) {
+    if (_state.value.mode != Mode.kiff) return
+    val generation = accountGeneration
+    val result = try {
+      Result.success(kiff.draft(id))
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      Result.failure(e)
+    }
+    if (generation != accountGeneration) return
+    result.onSuccess { d -> _state.update { it.copy(setupDrafts = it.setupDrafts + (id to d), draftErrors = it.draftErrors - id) } }
+      .onFailure { e -> _state.update { it.copy(draftErrors = it.draftErrors + (id to Words.Coach.cardDraftNotRead(why = ErrorWords.of(e)))) } }
   }
 
   /**
@@ -5320,6 +5352,9 @@ class AppModel(
 
   /** The grants an open approval card names that planque didn't list yet, read again for once each. */
   private val grantsFollowed = mutableSetOf<String>()
+
+  /** The drafts an open approval card names that KIFF didn't give yet, read again for once each. */
+  private val draftsFollowed = mutableSetOf<String>()
 
   /** The versions tafs cloud said it made from an improvement, by taf and number, that the taf's Versions were read again for. */
   private val versionsRead = mutableSetOf<String>()
@@ -8569,6 +8604,17 @@ class AppModel(
         .filter { it.answer == null && (it.component.type == "approval" || it.component.type == "sign_in") }
         .mapNotNull { it.component.grant }
         .filter { g -> grants.none { it.id == g } }
+        .toSet()
+
+    /**
+     * The drafts that an unanswered approval card in the thread waits on: KIFF hasn't given them to this phone yet ([read] holds
+     * the ones it has). While one does, it's read again.
+     */
+    fun draftsCardsWaitOn(components: List<ShownComponent>, read: Set<String>): Set<String> =
+      components.asSequence()
+        .filter { it.answer == null && it.component.type == "approval" }
+        .mapNotNull { it.component.draft?.takeIf { d -> d.isNotEmpty() } }
+        .filter { it !in read }
         .toSet()
 
     /** The stops of the run's own: it ends with no words for it. */

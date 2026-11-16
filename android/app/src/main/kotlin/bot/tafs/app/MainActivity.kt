@@ -617,6 +617,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
         openTaf = { coachOpen = false; openTaf = it },
         openVersions = { coachOpen = false; openTaf = it; versionsTaf = it },
         loadProfileWords = model::loadProfileWords,
+        loadDraft = model::loadDraft,
         loadKnob = model::loadKnob,
         confirmKnob = model::confirmKnobChange,
         approveDrive = model::approveDrive,

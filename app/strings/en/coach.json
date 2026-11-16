@@ -47,6 +47,7 @@
   "coach.away": "While you were away",
   "coach.back_width": "Back to its width",
   "coach.card_answer_not_sent": "Your answer wasn't sent. {why}",
+  "coach.card_draft_not_read": "KIFF's draft of this Card couldn't be read. {why}",
   "coach.card_of": "{owner|possessive} Card",
   "coach.chats.archive": "Archive",
   "coach.chats.archive_body": "It leaves this list on all your devices. You'll find it under Archived, where you can open it or put it back.",

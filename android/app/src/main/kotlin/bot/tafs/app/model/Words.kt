@@ -632,6 +632,7 @@ object Words {
     val away: String get() = Res.s(R.string.coach_away)
     val backWidth: String get() = Res.s(R.string.coach_back_width)
     fun cardAnswerNotSent(why: String): String = Res.s(R.string.coach_card_answer_not_sent, why)
+    fun cardDraftNotRead(why: String): String = Res.s(R.string.coach_card_draft_not_read, why)
     fun cardOf(owner: String): String = Res.s(R.string.coach_card_of, owner, Words.possessive(owner))
     object Chats {
       val archive: String get() = Res.s(R.string.coach_chats_archive)
