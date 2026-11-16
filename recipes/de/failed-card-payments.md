@@ -5,9 +5,9 @@ today: Eine abgelaufene oder abgelehnte Karte beendet ein Abo still, und die Kun
 line: Wenn eine Kartenzahlung fehlschlägt, schreibt der Kundschaft mit dem Link zum Bezahlen, im Rahmen der Card.
 card:
   allows:
-    - Nachrichten an die Kundschaft, bis zu 20 am Tag
+    - E-Mails oder Entwürfe an die Kundschaft, bis zu 20 am Tag
   holds:
-    - Eine Nachricht über 20 an einem Tag
+    - Eine E-Mail oder ein Entwurf über 20 an einem Tag
   never:
     - Eine Abbuchung oder ein neuer Zahlungsversuch
     - Eine Erstattung

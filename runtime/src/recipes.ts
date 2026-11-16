@@ -721,10 +721,10 @@ export const RECIPES = [
     ],
     "card": {
       "allows": [
-        "Messages to the customer, up to 20 a day"
+        "Emails or drafts to customers, up to 20 a day"
       ],
       "holds": [
-        "A message past 20 in a day"
+        "An email or draft past 20 in a day"
       ],
       "never": [
         "A charge or a payment retry",
@@ -741,10 +741,10 @@ export const RECIPES = [
         "say": "Wenn bei meinem Zahlungsanbieter eine Kartenzahlung fehlschlägt, schreib der Kundschaft mit dem Link, um die Karte zu aktualisieren und zu bezahlen, einmal pro fehlgeschlagener Rechnung. Höchstens 20 Nachrichten am Tag; schick sie, oder lass sie als Entwurf, wo meine E-Mail nicht senden kann. Alles darüber wartet auf mich. Buche nie ab, versuche nie erneut eine Zahlung, erstatte nichts und kündige kein Abo.",
         "card": {
           "allows": [
-            "Nachrichten an die Kundschaft, bis zu 20 am Tag"
+            "E-Mails oder Entwürfe an die Kundschaft, bis zu 20 am Tag"
           ],
           "holds": [
-            "Eine Nachricht über 20 an einem Tag"
+            "Eine E-Mail oder ein Entwurf über 20 an einem Tag"
           ],
           "never": [
             "Eine Abbuchung oder ein neuer Zahlungsversuch",
@@ -761,10 +761,10 @@ export const RECIPES = [
         "say": "Quand le paiement par carte d'un client échoue chez mon prestataire de paiement, écris-lui avec le lien pour mettre à jour sa carte et payer, une fois par facture échouée. Au plus 20 messages par jour ; envoie-les, ou laisse-les en brouillon là où mon e-mail ne peut pas envoyer. Au-delà, cela attend mon accord. Ne prélève jamais, ne relance jamais un paiement, ne rembourse pas et n'annule aucun abonnement.",
         "card": {
           "allows": [
-            "Des messages au client, jusqu'à 20 par jour"
+            "Des e-mails ou brouillons aux clients, jusqu'à 20 par jour"
           ],
           "holds": [
-            "Un message au-delà de 20 dans la journée"
+            "Un e-mail ou brouillon au-delà de 20 dans la journée"
           ],
           "never": [
             "Un prélèvement ou une nouvelle tentative de paiement",
@@ -781,10 +781,10 @@ export const RECIPES = [
         "say": "Cuando falle el pago con tarjeta de un cliente en mi proveedor de pagos, escríbele con el enlace para actualizar su tarjeta y pagar, una vez por cada factura fallida. Como mucho 20 mensajes al día; envíalos, o déjalos como borrador donde mi email no pueda enviar. Cualquier cosa más me espera. Nunca cobres, reintentes un pago, reembolses ni canceles una suscripción.",
         "card": {
           "allows": [
-            "Mensajes al cliente, hasta 20 al día"
+            "Emails o borradores a clientes, hasta 20 al día"
           ],
           "holds": [
-            "Un mensaje por encima de 20 en un día"
+            "Un email o borrador por encima de 20 en un día"
           ],
           "never": [
             "Un cobro o un nuevo intento de pago",
@@ -801,10 +801,10 @@ export const RECIPES = [
         "say": "Quando il pagamento con carta di un cliente non riesce nel mio fornitore di pagamenti, scrivigli con il link per aggiornare la carta e pagare, una volta per ogni fattura non riuscita. Al massimo 20 messaggi al giorno; inviali, o lasciali come bozza dove la mia email non può inviare. Qualsiasi cosa in più aspetta me. Non addebitare, non ritentare un pagamento, non rimborsare e non annullare mai un abbonamento.",
         "card": {
           "allows": [
-            "Messaggi al cliente, fino a 20 al giorno"
+            "Email o bozze ai clienti, fino a 20 al giorno"
           ],
           "holds": [
-            "Un messaggio oltre 20 in un giorno"
+            "Un'email o bozza oltre 20 in un giorno"
           ],
           "never": [
             "Un addebito o un nuovo tentativo di pagamento",
@@ -821,10 +821,10 @@ export const RECIPES = [
         "say": "Quando o pagamento com cartão de um cliente falhar no meu fornecedor de pagamentos, escreve-lhe com a ligação para atualizar o cartão e pagar, uma vez por cada fatura falhada. No máximo 20 mensagens por dia; envia-as, ou deixa-as como rascunho onde o meu email não consegue enviar. Qualquer coisa a mais espera por mim. Nunca cobres, tentes de novo um pagamento, reembolses nem canceles uma subscrição.",
         "card": {
           "allows": [
-            "Mensagens ao cliente, até 20 por dia"
+            "Emails ou rascunhos a clientes, até 20 por dia"
           ],
           "holds": [
-            "Uma mensagem acima de 20 num dia"
+            "Um email ou rascunho acima de 20 num dia"
           ],
           "never": [
             "Uma cobrança ou uma nova tentativa de pagamento",
@@ -841,10 +841,10 @@ export const RECIPES = [
         "say": "Als de kaartbetaling van een klant bij mijn betaalprovider mislukt, schrijf de klant met de link om de kaart bij te werken en te betalen, één keer per mislukte factuur. Hooguit 20 berichten per dag; verstuur ze, of laat ze als concept staan waar mijn e-mail niet kan versturen. Alles daarboven wacht op mij. Schrijf nooit af, probeer nooit opnieuw te betalen, betaal niets terug en zeg geen abonnement op.",
         "card": {
           "allows": [
-            "Berichten aan de klant, tot 20 per dag"
+            "E-mails of concepten aan klanten, tot 20 per dag"
           ],
           "holds": [
-            "Een bericht boven 20 op één dag"
+            "Een e-mail of concept boven 20 op één dag"
           ],
           "never": [
             "Een afschrijving of een nieuwe betaalpoging",
@@ -861,10 +861,10 @@ export const RECIPES = [
         "say": "Gdy u mojego operatora płatności nie powiedzie się płatność kartą klienta, napisz do niego z linkiem do aktualizacji karty i zapłaty, raz na każdą nieopłaconą fakturę. Najwyżej 20 wiadomości dziennie; wyślij je albo zostaw jako wersje robocze tam, gdzie moja poczta nie może wysyłać. Wszystko ponad to czeka na mnie. Nigdy nie obciążaj, nie ponawiaj płatności, nie zwracaj pieniędzy i nie anuluj subskrypcji.",
         "card": {
           "allows": [
-            "Wiadomości do klienta, do 20 dziennie"
+            "E-maile lub wersje robocze do klientów, do 20 dziennie"
           ],
           "holds": [
-            "Wiadomość powyżej 20 w ciągu dnia"
+            "E-mail lub wersja robocza powyżej 20 w ciągu dnia"
           ],
           "never": [
             "Obciążenie lub ponowna próba płatności",
@@ -1738,10 +1738,10 @@ export const RECIPES = [
     ],
     "card": {
       "allows": [
-        "Messages to the customer, up to 30 a day"
+        "Emails or drafts to customers, up to 30 a day"
       ],
       "holds": [
-        "A message past 30 in a day"
+        "An email or draft past 30 in a day"
       ],
       "never": [
         "A new label",
@@ -1757,10 +1757,10 @@ export const RECIPES = [
         "say": "Prüf jeden Morgen die Sendungsverfolgung meiner Pakete. Wenn sich ein Paket seit 3 Werktagen nicht bewegt hat oder an mich zurückgeht, schreib der Kundschaft, dass es so ist und dass ich mich darum kümmere. Höchstens 30 Nachrichten am Tag; schick sie, oder lass sie als Entwurf, wo meine E-Mail nicht senden kann. Alles darüber wartet auf mich. Kauf nie ein Etikett, erstatte nichts und versprich weder eine Erstattung noch ein neues Lieferdatum.",
         "card": {
           "allows": [
-            "Nachrichten an die Kundschaft, bis zu 30 am Tag"
+            "E-Mails oder Entwürfe an die Kundschaft, bis zu 30 am Tag"
           ],
           "holds": [
-            "Eine Nachricht über 30 an einem Tag"
+            "Eine E-Mail oder ein Entwurf über 30 an einem Tag"
           ],
           "never": [
             "Ein neues Versandetikett",
@@ -1776,10 +1776,10 @@ export const RECIPES = [
         "say": "Vérifie chaque matin le suivi de mes colis. Quand un colis n'a pas bougé depuis 3 jours ouvrés, ou qu'il me revient, écris au client pour le lui dire et pour dire que je m'en occupe. Au plus 30 messages par jour ; envoie-les, ou laisse-les en brouillon là où mon e-mail ne peut pas envoyer. Au-delà, cela attend mon accord. N'achète jamais d'étiquette, ne rembourse pas, et ne promets ni remboursement ni nouvelle date de livraison.",
         "card": {
           "allows": [
-            "Des messages au client, jusqu'à 30 par jour"
+            "Des e-mails ou brouillons aux clients, jusqu'à 30 par jour"
           ],
           "holds": [
-            "Un message au-delà de 30 dans la journée"
+            "Un e-mail ou brouillon au-delà de 30 dans la journée"
           ],
           "never": [
             "Une nouvelle étiquette",
@@ -1795,10 +1795,10 @@ export const RECIPES = [
         "say": "Revisa cada mañana el seguimiento de mis paquetes. Cuando un paquete no se haya movido en 3 días laborables, o esté volviendo a mí, escribe al cliente para decírselo y que me estoy ocupando. Como mucho 30 mensajes al día; envíalos, o déjalos como borrador donde mi email no pueda enviar. Cualquier cosa más me espera. Nunca compres una etiqueta, reembolses ni prometas un reembolso o una nueva fecha de entrega.",
         "card": {
           "allows": [
-            "Mensajes al cliente, hasta 30 al día"
+            "Emails o borradores a clientes, hasta 30 al día"
           ],
           "holds": [
-            "Un mensaje por encima de 30 en un día"
+            "Un email o borrador por encima de 30 en un día"
           ],
           "never": [
             "Una etiqueta nueva",
@@ -1814,10 +1814,10 @@ export const RECIPES = [
         "say": "Controlla ogni mattina il tracciamento dei miei pacchi. Quando un pacco non si muove da 3 giorni lavorativi, o sta tornando da me, scrivi al cliente per dirglielo e che me ne sto occupando. Al massimo 30 messaggi al giorno; inviali, o lasciali come bozza dove la mia email non può inviare. Qualsiasi cosa in più aspetta me. Non comprare mai un'etichetta, non rimborsare e non promettere un rimborso o una nuova data di consegna.",
         "card": {
           "allows": [
-            "Messaggi al cliente, fino a 30 al giorno"
+            "Email o bozze ai clienti, fino a 30 al giorno"
           ],
           "holds": [
-            "Un messaggio oltre 30 in un giorno"
+            "Un'email o bozza oltre 30 in un giorno"
           ],
           "never": [
             "Una nuova etichetta",
@@ -1833,10 +1833,10 @@ export const RECIPES = [
         "say": "Verifica todas as manhãs o seguimento das minhas encomendas. Quando uma encomenda não se mexer há 3 dias úteis, ou estiver a voltar para mim, escreve ao cliente a dizê-lo e que estou a tratar do assunto. No máximo 30 mensagens por dia; envia-as, ou deixa-as como rascunho onde o meu email não consegue enviar. Qualquer coisa a mais espera por mim. Nunca compres uma etiqueta, reembolses nem prometas um reembolso ou uma nova data de entrega.",
         "card": {
           "allows": [
-            "Mensagens ao cliente, até 30 por dia"
+            "Emails ou rascunhos a clientes, até 30 por dia"
           ],
           "holds": [
-            "Uma mensagem acima de 30 num dia"
+            "Um email ou rascunho acima de 30 num dia"
           ],
           "never": [
             "Uma etiqueta nova",
@@ -1852,10 +1852,10 @@ export const RECIPES = [
         "say": "Controleer elke ochtend de tracking van mijn pakketten. Als een pakket al 3 werkdagen niet beweegt, of naar mij teruggaat, schrijf de klant dat het zo is en dat ik ermee bezig ben. Hooguit 30 berichten per dag; verstuur ze, of laat ze als concept staan waar mijn e-mail niet kan versturen. Alles daarboven wacht op mij. Koop nooit een label, betaal niets terug en beloof geen terugbetaling of nieuwe leverdatum.",
         "card": {
           "allows": [
-            "Berichten aan de klant, tot 30 per dag"
+            "E-mails of concepten aan klanten, tot 30 per dag"
           ],
           "holds": [
-            "Een bericht boven 30 op één dag"
+            "Een e-mail of concept boven 30 op één dag"
           ],
           "never": [
             "Een nieuw verzendlabel",
@@ -1871,10 +1871,10 @@ export const RECIPES = [
         "say": "Każdego ranka sprawdzaj śledzenie moich paczek. Gdy paczka nie ruszyła się od 3 dni roboczych albo wraca do mnie, napisz do klienta, że tak jest i że się tym zajmuję. Najwyżej 30 wiadomości dziennie; wyślij je albo zostaw jako wersje robocze tam, gdzie moja poczta nie może wysyłać. Wszystko ponad to czeka na mnie. Nigdy nie kupuj etykiety, nie zwracaj pieniędzy i nie obiecuj zwrotu ani nowej daty dostawy.",
         "card": {
           "allows": [
-            "Wiadomości do klienta, do 30 dziennie"
+            "E-maile lub wersje robocze do klientów, do 30 dziennie"
           ],
           "holds": [
-            "Wiadomość powyżej 30 w ciągu dnia"
+            "E-mail lub wersja robocza powyżej 30 w ciągu dnia"
           ],
           "never": [
             "Nowa etykieta",

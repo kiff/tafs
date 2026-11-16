@@ -5,9 +5,9 @@ today: Un pacco bloccato in transito diventa un'email preoccupata, poi un reclam
 line: Quando il tracciamento di un pacco si ferma o torna al mittente, avvisa il cliente prima che chieda, nei limiti della Card.
 card:
   allows:
-    - Messaggi al cliente, fino a 30 al giorno
+    - Email o bozze ai clienti, fino a 30 al giorno
   holds:
-    - Un messaggio oltre 30 in un giorno
+    - Un'email o bozza oltre 30 in un giorno
   never:
     - Una nuova etichetta
     - Un rimborso

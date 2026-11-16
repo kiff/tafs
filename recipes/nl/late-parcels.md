@@ -5,9 +5,9 @@ today: Een pakket dat onderweg vastzit, wordt een bezorgde e-mail, dan een klach
 line: Als de tracking van een pakket stilvalt of het teruggaat naar de afzender, laat het de klant weten voordat die het vraagt, binnen de Card.
 card:
   allows:
-    - Berichten aan de klant, tot 30 per dag
+    - E-mails of concepten aan klanten, tot 30 per dag
   holds:
-    - Een bericht boven 30 op één dag
+    - Een e-mail of concept boven 30 op één dag
   never:
     - Een nieuw verzendlabel
     - Een terugbetaling

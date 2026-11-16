@@ -5,9 +5,9 @@ today: Uma encomenda parada em trânsito transforma-se num email preocupado, dep
 line: Quando o seguimento de uma encomenda para ou ela volta ao remetente, avisa o cliente antes de ele perguntar, dentro da Card.
 card:
   allows:
-    - Mensagens ao cliente, até 30 por dia
+    - Emails ou rascunhos a clientes, até 30 por dia
   holds:
-    - Uma mensagem acima de 30 num dia
+    - Um email ou rascunho acima de 30 num dia
   never:
     - Uma etiqueta nova
     - Um reembolso

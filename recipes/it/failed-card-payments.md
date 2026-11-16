@@ -5,9 +5,9 @@ today: Una carta scaduta o rifiutata ferma un abbonamento in silenzio, e il clie
 line: Quando il pagamento con carta di un cliente non riesce, gli scrive con il link per pagare, nei limiti della Card.
 card:
   allows:
-    - Messaggi al cliente, fino a 20 al giorno
+    - Email o bozze ai clienti, fino a 20 al giorno
   holds:
-    - Un messaggio oltre 20 in un giorno
+    - Un'email o bozza oltre 20 in un giorno
   never:
     - Un addebito o un nuovo tentativo di pagamento
     - Un rimborso

@@ -11,9 +11,9 @@ connections:
   - gmail | intercom
 card:
   allows:
-    - Messages to the customer, up to 20 a day
+    - Emails or drafts to customers, up to 20 a day
   holds:
-    - A message past 20 in a day
+    - An email or draft past 20 in a day
   never:
     - A charge or a payment retry
     - A refund

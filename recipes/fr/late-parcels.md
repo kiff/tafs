@@ -5,9 +5,9 @@ today: Un colis bloqué en route devient un e-mail inquiet, puis une réclamatio
 line: Quand le suivi d'un colis s'arrête ou qu'il repart vers l'expéditeur, prévient le client avant qu'il ne demande, dans les limites de la Card.
 card:
   allows:
-    - Des messages au client, jusqu'à 30 par jour
+    - Des e-mails ou brouillons aux clients, jusqu'à 30 par jour
   holds:
-    - Un message au-delà de 30 dans la journée
+    - Un e-mail ou brouillon au-delà de 30 dans la journée
   never:
     - Une nouvelle étiquette
     - Un remboursement

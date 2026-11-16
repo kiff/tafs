@@ -5,9 +5,9 @@ today: Een verlopen of geweigerde kaart stopt een abonnement stilletjes, en de k
 line: Als de kaartbetaling van een klant mislukt, schrijft de klant met de link om te betalen, binnen de Card.
 card:
   allows:
-    - Berichten aan de klant, tot 20 per dag
+    - E-mails of concepten aan klanten, tot 20 per dag
   holds:
-    - Een bericht boven 20 op één dag
+    - Een e-mail of concept boven 20 op één dag
   never:
     - Een afschrijving of een nieuwe betaalpoging
     - Een terugbetaling

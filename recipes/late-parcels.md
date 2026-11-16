@@ -11,9 +11,9 @@ connections:
   - gmail | intercom | zendesk
 card:
   allows:
-    - Messages to the customer, up to 30 a day
+    - Emails or drafts to customers, up to 30 a day
   holds:
-    - A message past 30 in a day
+    - An email or draft past 30 in a day
   never:
     - A new label
     - A refund
