@@ -829,6 +829,10 @@ exactly as today. The draft draws the sample's brief only (`-brief YES` over the
   only (`-brief YES`).
 - **A recommendation is shown, never acted on.** An answer goes through the route its decision already
   has (`ref`: a held call, a step, a connection, a proposal); nothing is signed from the brief.
+- **A taf whose scheduled check keeps failing** (`ref.kind: check`, tafs cloud's decision after two
+  failed checks in a row): its answer, "Open the taf", opens that taf's page, found by tafs cloud's id
+  (`ref.taf`): pushed on a phone, selected in the sidebar on a wide screen. A taf the app doesn't list
+  opens Needs you.
 - **The urgent alert** (the owner's mockup 3). Urgency is tafs cloud's call, never the app's. A
   decision it marks `urgent` is drawn with a red border and tafs cloud's word on its badge
   (`words.urgent`), its why it can't wait (`cant_wait`), and never a Later, whatever was sent. Its push

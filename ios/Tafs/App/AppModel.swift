@@ -1504,6 +1504,9 @@ final class AppModel: ObservableObject {
     /// A taf to select in the iPad's sidebar, asked for by "See it on…" (kiff/tafs#96); the
     /// split view selects it and clears this.
     @Published var requestedTaf: UUID?
+    /// A taf's page to push on a compact width, asked for by a route (`taf:<tafs cloud id>`): the
+    /// phone's Home pushes it and clears this. A wide screen's sidebar selects it through `requestedTaf`.
+    @Published var requestedTafPage: UUID?
     /// The iPad's sidebar is on screen: opening a trial, or ending one, selects its row there.
     /// Kept here as well as in the environment, which a sheet's or a pushed screen's work
     /// didn't always see: Start trying pushed the trial beside a sidebar still showing the
@@ -1546,6 +1549,17 @@ final class AppModel: ObservableObject {
         case let d where d.hasPrefix("step:"):
             requestedTab = .needsYou
             requestedStep = String(d.dropFirst("step:".count))
+        // A taf's own page, by tafs cloud's id (the brief's `check` decision). A taf the app doesn't
+        // list opens Needs you instead.
+        case let d where d.hasPrefix("taf:"):
+            let cloudID = String(d.dropFirst("taf:".count))
+            guard let id = cloudTafs.first(where: { $0.value.id == cloudID }).flatMap({ holderIDs[$0.key] }) else {
+                requestedTab = .needsYou
+                return
+            }
+            requestedTab = .tafs
+            requestedTaf = id
+            requestedTafPage = id
         default:
             if let hold = AlertAnswers.request(from: destination) {
                 requestedTab = .needsYou
@@ -2269,6 +2283,9 @@ final class AppModel: ObservableObject {
     /// path, where an unlock seconds before counts as the Face ID, and the brief never takes it. The person
     /// approves on KIFF's own card, with Face ID asked there. Nothing is answered from the brief.
     nonisolated static func destination(of decision: TafsCloud.Brief.Decision, answer: TafsCloud.Brief.Answer) -> String {
+        // A taf whose scheduled check keeps failing (`check`): "Open the taf" opens its page, from tafs
+        // cloud's id for it. Without one, Needs you.
+        if decision.ref.kind == "check" { return decision.ref.taf.isEmpty ? "needs-you" : "taf:" + decision.ref.taf }
         guard !decision.ref.id.isEmpty else { return "needs-you" }
         switch decision.ref.kind {
         case "hold":

@@ -99,6 +99,26 @@ final class BriefTests: XCTestCase {
         XCTAssertEqual(AppModel.destination(of: unknown, answer: decision.answers[0]), "needs-you")
     }
 
+    /// A taf whose scheduled check keeps failing (`ref.kind: check`): "Open the taf" opens that taf's page,
+    /// found by tafs cloud's id; a taf the app doesn't list, or no id, opens Needs you.
+    func testACheckDecisionOpensItsTaf() async throws {
+        let model = await kiffModel()
+        var decision = try brief(Self.liveBrief).decisions[0]
+        decision.ref = .init(kind: "check", id: "", taf: "depl_1")
+        let destination = AppModel.destination(of: decision, answer: decision.answers[0])
+        XCTAssertEqual(destination, "taf:depl_1", "opened by the taf, whatever its id")
+        model.open(destination)
+        let rae = try XCTUnwrap(model.tafs.first { $0.name == "Rae" })
+        XCTAssertEqual(model.requestedTab, .tafs)
+        XCTAssertEqual(model.requestedTafPage, rae.id, "the phone's Home pushes its page")
+        XCTAssertEqual(model.requestedTaf, rae.id, "a wide screen's sidebar selects it")
+        model.requestedTab = nil
+        model.open("taf:depl_gone")
+        XCTAssertEqual(model.requestedTab, .needsYou, "a taf the app doesn't list opens Needs you")
+        decision.ref = .init(kind: "check", id: "c1", taf: "")
+        XCTAssertEqual(AppModel.destination(of: decision, answer: decision.answers[0]), "needs-you")
+    }
+
     /// Needs you stays reachable whatever the brief shows, matched by item: equal counts of different items
     /// still leave a link (a held call Later moved out, a step the brief doesn't carry).
     func testNeedsYouStaysReachableMatchedByItemNeverByNumber() {

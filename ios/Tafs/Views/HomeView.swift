@@ -4,6 +4,8 @@ struct HomeView: View {
     @EnvironmentObject private var model: AppModel
     @Binding var tab: Tab
     @State private var showingBuyCredits = false
+    /// A taf's page a route asked for (`AppModel.requestedTafPage`), pushed here.
+    @State private var pushedTaf: UUID?
     @State private var showingSolo = false
     @State private var showingExport = false
     @State private var openingFirst = false
@@ -159,6 +161,16 @@ struct HomeView: View {
                 openRecipe = nil
                 model.handRecipeToCoach(recipe)
             }
+        }
+        // A taf's page a route asked for (the brief's "Open the taf").
+        .navigationDestination(isPresented: Binding(get: { pushedTaf != nil }, set: { if !$0 { pushedTaf = nil } })) {
+            if let pushedTaf { TafDetailView(tafID: pushedTaf) }
+        }
+        .onChange(of: model.requestedTafPage) { id in
+            guard let id else { return }
+            pushedTaf = id
+            model.requestedTafPage = nil
+            model.requestedTaf = nil
         }
         .navigationDestination(for: UUID.self) { id in
             if let tafID = model.tafOfTrialChat(id) { TrialScreen(chatID: id, tafID: tafID) } else { TafDetailView(tafID: id) }
