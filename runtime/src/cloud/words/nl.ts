@@ -282,6 +282,7 @@ export const nl: Words = {
   home_discard_no: "Bewaren",
   home_needs_you_none: "Niets wacht op jou.",
   labels_all: "Alle",
+  brief_title: "Jouw briefing",
   brief_decisions: "Beslissingen",
   brief_done: "Klaar",
   brief_rest: "De rest",

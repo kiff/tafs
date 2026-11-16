@@ -282,6 +282,7 @@ export const it: Words = {
   home_discard_no: "Tienila",
   home_needs_you_none: "Niente ti aspetta.",
   labels_all: "Tutti",
+  brief_title: "Il tuo riepilogo",
   brief_decisions: "Decisioni",
   brief_done: "Fatto",
   brief_rest: "Il resto",

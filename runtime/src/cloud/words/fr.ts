@@ -282,6 +282,7 @@ export const fr: Words = {
   home_discard_no: "La garder",
   home_needs_you_none: "Rien ne vous attend.",
   labels_all: "Tous",
+  brief_title: "Votre briefing",
   brief_decisions: "Décisions",
   brief_done: "Terminé",
   brief_rest: "Le reste",

@@ -301,6 +301,7 @@ export const en = {
   home_needs_you_none: "Nothing needs you.",
   labels_all: "All",
   // Your brief (docs/missions.md, Your brief): its headings, Later, and the decisions made from held calls and steps.
+  brief_title: "Your brief",
   brief_decisions: "Decisions",
   brief_done: "Done",
   brief_rest: "The rest",

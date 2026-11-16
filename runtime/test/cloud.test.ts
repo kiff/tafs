@@ -6953,7 +6953,7 @@ describe("GET /v1/brief and Later", () => {
     expect(r.status).toBe(200);
     // 11:00 in Paris: the brief is this morning's 08:00, the next is 18:00.
     expect(r.body).toMatchObject({ at: "2026-10-29T07:00:00.000Z", next_at: "2026-10-29T17:00:00.000Z", done: [], rest: { count: 0, words: "Nothing else." },
-      words: { decisions: "Decisions", done: "Done", rest: "The rest" } });
+      words: { title: "Your brief", decisions: "Decisions", done: "Done", rest: "The rest" } });
     expect(r.body.decisions).toEqual([
       { id: "step:ho_1", question: "Approve 3 supplier payments", answers: [{ words: "Done", answer: "done", recommended: false }, { words: "Skip it", answer: "skip", recommended: false }],
         meanwhile: "Its run waits for this step.", deadline: "2026-10-29T13:00:00.000Z", urgent: true, ref: { kind: "step", id: "ho_1", taf: RAE } },
@@ -6963,7 +6963,7 @@ describe("GET /v1/brief and Later", () => {
     expect(r.body.more).toBeUndefined();
     expect(r.body.credits).toBeUndefined();
     const de = await ask("GET", "/v1/brief", { headers: { "accept-language": "de" } });
-    expect(de.body.words).toEqual({ decisions: "Entscheidungen", done: "Erledigt", rest: "Der Rest" });
+    expect(de.body.words).toEqual({ title: "Dein Briefing", decisions: "Entscheidungen", done: "Erledigt", rest: "Der Rest" });
     expect(de.body.decisions[1]).toMatchObject({ meanwhile: "Bis du antwortest, passiert nichts.", answers: [{ words: "Genehmigen" }, { words: "Ablehnen" }], later: { words: "Später" } });
     // A label no taf carries narrows the brief to nothing.
     expect((await ask("GET", "/v1/brief", { query: "label=lbl_none" })).body).toMatchObject({ decisions: [], rest: { count: 0 } });

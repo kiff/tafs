@@ -7352,12 +7352,14 @@ async function brief(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const label = new URLSearchParams(event.rawQueryString ?? "").get("label") ?? undefined;
   const waiting = new Set(decisions.map((d) => d.taf.id));
   const rest = tafs.filter((t) => !waiting.has(t.id) && (!label || t.labels.includes(label))).length;
-  return buildBrief({
+  const b = buildBrief({
     now, timeZone: me.timeZone ?? "UTC", decisions, cases: [], later, tafs, rest, ...(label ? { label } : {}),
     labels: (labelSet?.labels ?? []).map((l) => ({ id: l.id, name: labelName(l, lang), color: l.color })),
     words: { decisions: w.brief_decisions, done: w.brief_done, rest: w.brief_rest, later: w.brief_later,
       more: (n) => w.brief_more(n, plural(lang, n)), restLine: (n) => w.brief_rest_line(n, plural(lang, n)) },
   });
+  // The tab's own name, in the glossary's words ("Your brief"), with the headings.
+  return { ...b, words: { title: w.brief_title, ...b.words } };
 }
 
 /**
