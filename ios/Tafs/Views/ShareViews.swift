@@ -32,10 +32,19 @@ struct ShareLine: View {
             .padding(.top, 2)
             .task(id: model.groups) { shares = try? await model.kiff.shares(agent: agent) }
             .task { if model.groups.isEmpty && model.people.isEmpty { await model.refreshPeople() } }
+            // Share, asked for by name (`AppModel.requestedTafPage`).
+            .onAppear { take(model.requestedTafPage) }
+            .onChange(of: model.requestedTafPage) { take($0) }
             .sheet(isPresented: $sharing, onDismiss: { Task { shares = try? await model.kiff.shares(agent: agent) } }) {
                 ShareTafSheet(taf: taf, agent: agent).environmentObject(model)
             }
         }
+    }
+
+    private func take(_ request: AppModel.TafPageRequest?) {
+        guard let request, request.taf == tafID, request.page == .share, model.manages(tafID) else { return }
+        sharing = true
+        model.requestedTafPage = nil
     }
 
     /// "Shared with Support and ana@acme.com", or not shared yet. The person reading it is
