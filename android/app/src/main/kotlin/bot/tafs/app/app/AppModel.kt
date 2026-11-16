@@ -657,6 +657,18 @@ data class AppState(
    */
   fun manages(tafId: String): Boolean = access[tafId]?.manage ?: false
 
+  /**
+   * Whether the taf was shared with this person to use, not theirs to manage (as iPhone's `sharedWithMe`): KIFF's answer for
+   * it says use without manage. No answer yet isn't "shared", so a taf never jumps to Shared with you before KIFF has said.
+   */
+  fun sharedWithMe(tafId: String): Boolean = mode == Mode.kiff && access[tafId]?.let { !it.manage } ?: false
+
+  /**
+   * [tafs], in Home's order and filter, split as Home lists them (as iPhone's `tafSections`): the person's own, then those shared
+   * with them to use. Home draws from this, so the rule is in one place.
+   */
+  fun sections(tafs: List<Taf>): Pair<List<Taf>, List<Taf>> = tafs.partition { !sharedWithMe(it.id) }
+
   /** The taf's connected Slack bot connections, which a Slack door listens through. */
   fun slackBots(tafId: String): List<bot.tafs.app.kiff.Grant> = grants.filter { it.connected && it.isSlackBot && it.request.agent == tafId }
 
