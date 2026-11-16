@@ -1,4 +1,4 @@
 - Nuovi disegni nel benvenuto, in un elenco di tafs vuoto, in «Ti aspetta» quando non c'è niente, all'avvio di Coach e altrove.
 - Le parole di un pulsante principale vanno su due righe invece di essere tagliate.
 - Un accesso che hai interrotto viene chiuso su KIFF, non conservato.
-- Una volta connesso, «Andiamo» è l'unica strada.
+- Dopo l'accesso, lo schermo mostra solo «Andiamo».

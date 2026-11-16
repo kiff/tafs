@@ -1,4 +1,4 @@
 - New drawings on the welcome, an empty tafs list, Needs you with nothing waiting, Coach's start and more.
 - A main button's words take two lines rather than being cut.
 - A sign-in you stopped is ended at KIFF, not kept.
-- Once you're connected, Let's go is the one way on.
+- After you sign in, the screen shows only Let's go.
