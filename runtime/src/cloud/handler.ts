@@ -659,7 +659,12 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "alerts" && parts.length === 2) return alerts(event, method, await person(event, deps), deps);
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
   if (parts[1] === "brief" && parts.length === 2 && method === "GET") return brief(event, await person(event, deps), deps);
-  if (parts[1] === "brief" && parts.length === 5 && parts[2] === "decisions" && parts[4] === "later" && method === "POST") return briefLater(event, await person(event, deps), parts[3]!, deps);
+  if (parts[1] === "brief" && parts.length === 5 && parts[2] === "decisions" && parts[4] === "later" && method === "POST") {
+    // A decision's id has a ':' ("hold:<id>"), sent as is or escaped ("hold%3A<id>"): both are the same decision.
+    let id: string;
+    try { id = decodeURIComponent(parts[3] ?? ""); } catch { throw new HTTPError(404, "no such decision in your brief"); }
+    return briefLater(event, await person(event, deps), id, deps);
+  }
   if (parts[1] === "missions" && parts.length === 4 && parts[3] === "log" && method === "GET") return missionLog(event, await person(event, deps), parts[2]!, deps);
   if (parts[1] === "home" && parts[2] === "coach-waiting" && method === "POST" && (parts.length === 4 || parts.length === 5) && parts[parts.length - 1] === "set-aside") {
     let session: string | undefined;
