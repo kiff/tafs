@@ -28,14 +28,14 @@ struct ReadinessReader<Content: View>: View {
 /// Language & Region, whose Applications list sets each app's language.
 @MainActor func openLanguageSettings() {
     #if targetEnvironment(macCatalyst)
-    if let url = URL(string: macLanguageSettings) { UIApplication.shared.open(url) }
+    if let url = macLanguageSettings { UIApplication.shared.open(url) }
     #else
     openTafsSettings()
     #endif
 }
 
 /// System Settings › General › Language & Region, on macOS 13 and later.
-let macLanguageSettings = "x-apple.systempreferences:com.apple.Localization-Settings.extension"
+let macLanguageSettings = URL(string: "x-apple.systempreferences:com.apple.Localization-Settings.extension")
 
 /// An approval's button, or, while this device can't approve, the state's words and what to
 /// do in its place: the person learns why before the prompt, not from a failure after it.

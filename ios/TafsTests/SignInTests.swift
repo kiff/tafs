@@ -179,7 +179,6 @@ final class SignInTests: XCTestCase {
         let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
         let account = try String(contentsOf: views.appendingPathComponent("SignInView.swift"), encoding: .utf8)
         XCTAssertTrue(account.contains("Button(Words.Settings.changeLanguage) { openLanguageSettings() }"))
-        XCTAssertEqual(macLanguageSettings, "x-apple.systempreferences:com.apple.Localization-Settings.extension")
-        XCTAssertNotNil(URL(string: macLanguageSettings))
+        XCTAssertEqual(macLanguageSettings?.absoluteString, "x-apple.systempreferences:com.apple.Localization-Settings.extension")
     }
 }
