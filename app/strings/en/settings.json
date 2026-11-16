@@ -87,6 +87,7 @@
   "settings.each_sends_who_answered_through": "Each sends who was answered and through which door, never its words. Turn it off in the taf's Setup › Results go to.",
   "settings.find_time_zone": "Find a time zone",
   "settings.kiff_account": "KIFF account",
+  "settings.language_device": "This {device|possessive} language",
   "settings.language_title": "Language",
   "settings.legal": "Legal",
   "settings.legal_in_english": "{label} (in English)",

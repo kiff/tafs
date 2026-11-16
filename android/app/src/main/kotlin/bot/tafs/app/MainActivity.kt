@@ -134,6 +134,11 @@ class MainActivity : FragmentActivity() {
   /** Play's flexible in-app update; null where Play isn't there to ask. */
   private val updates: bot.tafs.app.push.PlayUpdates? by lazy { runCatching { bot.tafs.app.push.PlayUpdates(this) }.getOrNull() }
 
+  // The language picked in Account › Language, on Android 11 and 12 (AppLocale): this screen's resources are in it.
+  override fun attachBaseContext(newBase: android.content.Context) {
+    super.attachBaseContext(bot.tafs.app.design.AppLocale.wrap(newBase))
+  }
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     // The words in this screen's language, which follows the app's own when the person picked one: a language changed while

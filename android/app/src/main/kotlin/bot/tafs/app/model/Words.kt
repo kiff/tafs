@@ -2051,6 +2051,7 @@ object Words {
     val eachSendsWhoAnsweredThrough: String get() = Res.s(R.string.settings_each_sends_who_answered_through)
     val findTimeZone: String get() = Res.s(R.string.settings_find_time_zone)
     val kiffAccount: String get() = Res.s(R.string.settings_kiff_account)
+    fun languageDevice(device: String): String = Res.s(R.string.settings_language_device, device, Words.possessive(device))
     val languageTitle: String get() = Res.s(R.string.settings_language_title)
     val legal: String get() = Res.s(R.string.settings_legal)
     fun legalInEnglish(label: String): String = Res.s(R.string.settings_legal_in_english, label)

@@ -3791,6 +3791,8 @@ enum Words {
         static var findTimeZone: String { Words.line("settings.find_time_zone") }
         /// KIFF account
         static var kiffAccount: String { Words.line("settings.kiff_account") }
+        /// This {device|possessive} language
+        static func languageDevice(device: String) -> String { Words.line("settings.language_device", device, Words.possessive(device)) }
         /// Language
         static var languageTitle: String { Words.line("settings.language_title") }
         /// Legal

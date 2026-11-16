@@ -87,6 +87,7 @@
   "settings.each_sends_who_answered_through": "Jede sagt, wem über welche Tür geantwortet wurde, nie den Wortlaut. Ausschalten kannst du das im Setup des tafs › Ergebnisse gehen an.",
   "settings.find_time_zone": "Zeitzone suchen",
   "settings.kiff_account": "KIFF-Konto",
+  "settings.language_device": "Sprache dieses {device|possessive}",
   "settings.language_title": "Sprache",
   "settings.legal": "Rechtliches",
   "settings.legal_in_english": "{label} (auf Englisch)",

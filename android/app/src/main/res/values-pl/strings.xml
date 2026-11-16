@@ -2035,6 +2035,7 @@
     <string name="settings_each_sends_who_answered_through">Każdy z nich wysyła, komu i przez które drzwi odpowiedziano, nigdy treść. Wyłącz to w tafie: Konfiguracja › Wyniki trafiają do.</string>
     <string name="settings_find_time_zone">Znajdź strefę czasową</string>
     <string name="settings_kiff_account">Konto KIFF</string>
+    <string name="settings_language_device">Język tego urządzenia (%1$s)</string>
     <string name="settings_language_title">Język</string>
     <string name="settings_legal">Informacje prawne</string>
     <string name="settings_legal_in_english">%1$s (po angielsku)</string>

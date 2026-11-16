@@ -87,6 +87,7 @@
   "settings.each_sends_who_answered_through": "Chacune indique à qui il a été répondu et par quelle porte, jamais son contenu. Désactivez-la dans Configuration du taf › Les résultats vont vers.",
   "settings.find_time_zone": "Rechercher un fuseau horaire",
   "settings.kiff_account": "Compte KIFF",
+  "settings.language_device": "La langue de cet {device}",
   "settings.language_title": "Langue",
   "settings.legal": "Mentions légales",
   "settings.legal_in_english": "{label} (en anglais)",

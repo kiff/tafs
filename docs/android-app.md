@@ -438,10 +438,17 @@ searches across their tafs, opens one case, and exports receipts
 
 ## Words and languages
 
-**Account › Language** shows the lines' language named in itself ("Français", `AppLanguage.name`) and **Change
-language**, which opens the phone's own setting: Android 13+'s per-app language for tafs, which offers the 8 because the
-manifest declares the generated `locales_config` (`android:localeConfig`), else the phone's languages on Android 11 and
-12. There's no picker of the app's own.
+**Account › Language** shows the lines' language named in itself ("Français", `AppLanguage.name`), as the resources
+resolved it, and **Change language**, which opens the app's own list: "This phone's language" first, then the 8, each
+named in itself, in the order of the languages table. The current choice is marked; a tap applies it at once and closes the
+list (`AppLocale`). On Android 13+ the choice is the phone's per-app language for tafs (`LocaleManager`, the same one
+Settings › Apps › tafs › Language changes, which offers the 8 because the manifest declares the generated `locales_config`):
+Android keeps it and recreates the screen in it, and "This phone's language" clears it. On Android 11 and 12, which have
+no per-app language, the app keeps the choice in its own preferences, makes the application's and the screen's contexts
+in it as they start (`attachBaseContext`), and recreates the screen after a change. A choice kept on 12 is handed to the
+per-app language once the phone moves to 13. Either way the words are installed again at once, so lines drawn outside the
+screen change too, and every request's `Accept-Language` follows. The session and what's open stay: the model lives in
+`TafsApplication`, not the screen, and the Account sheet stays open.
 
 **Numbers and money** follow the app's language too (`Res.locale`, from the lines' `words_language`), never the phone's
 region: an English app on a German phone writes "€2,000", a French one "2 000 €". An amount keeps its own currency and

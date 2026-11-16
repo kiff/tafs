@@ -1919,6 +1919,7 @@
     <string name="settings_each_sends_who_answered_through">Jede sagt, wem über welche Tür geantwortet wurde, nie den Wortlaut. Ausschalten kannst du das im Setup des tafs › Ergebnisse gehen an.</string>
     <string name="settings_find_time_zone">Zeitzone suchen</string>
     <string name="settings_kiff_account">KIFF-Konto</string>
+    <string name="settings_language_device">Sprache dieses %2$s</string>
     <string name="settings_language_title">Sprache</string>
     <string name="settings_legal">Rechtliches</string>
     <string name="settings_legal_in_english">%1$s (auf Englisch)</string>

@@ -1919,6 +1919,7 @@
     <string name="settings_each_sends_who_answered_through">Elke melding vermeldt wie er is beantwoord en via welke deur, nooit de woorden. Zet het uit in Configuratie › Resultaten gaan naar van het taf.</string>
     <string name="settings_find_time_zone">Een tijdzone zoeken</string>
     <string name="settings_kiff_account">KIFF-account</string>
+    <string name="settings_language_device">De taal van deze %1$s</string>
     <string name="settings_language_title">Taal</string>
     <string name="settings_legal">Juridisch</string>
     <string name="settings_legal_in_english">%1$s (in het Engels)</string>

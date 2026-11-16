@@ -87,6 +87,7 @@
   "settings.each_sends_who_answered_through": "Każdy z nich wysyła, komu i przez które drzwi odpowiedziano, nigdy treść. Wyłącz to w tafie: Konfiguracja › Wyniki trafiają do.",
   "settings.find_time_zone": "Znajdź strefę czasową",
   "settings.kiff_account": "Konto KIFF",
+  "settings.language_device": "Język tego urządzenia ({device})",
   "settings.language_title": "Język",
   "settings.legal": "Informacje prawne",
   "settings.legal_in_english": "{label} (po angielsku)",

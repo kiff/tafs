@@ -23,8 +23,15 @@ import bot.tafs.app.signing.KeystoreKeys
  * session. The signer stays across a rotation; the prompt shows on whichever activity is on screen.
  */
 class TafsApplication : Application() {
+  // The language picked in Account › Language, on Android 11 and 12, where the app keeps it (AppLocale); 13+ does it itself.
+  override fun attachBaseContext(base: android.content.Context) {
+    super.attachBaseContext(bot.tafs.app.design.AppLocale.wrap(base))
+  }
+
   override fun onCreate() {
     super.onCreate()
+    // A language picked on Android 12 goes on after the phone moves to 13, as its per-app language.
+    bot.tafs.app.design.AppLocale.carryOver(this)
     // The words, in the language Android resolved for tafs, before anything is shown (docs/languages.md).
     bot.tafs.app.model.Res.install(bot.tafs.app.design.AndroidWords(this))
     // The lines that name this device say tablet on a large screen, as Android's own sw600dp does.

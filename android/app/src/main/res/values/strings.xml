@@ -1919,6 +1919,7 @@
     <string name="settings_each_sends_who_answered_through">Each sends who was answered and through which door, never its words. Turn it off in the taf\'s Setup › Results go to.</string>
     <string name="settings_find_time_zone">Find a time zone</string>
     <string name="settings_kiff_account">KIFF account</string>
+    <string name="settings_language_device">This %2$s language</string>
     <string name="settings_language_title">Language</string>
     <string name="settings_legal">Legal</string>
     <string name="settings_legal_in_english">%1$s (in English)</string>
