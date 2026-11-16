@@ -2357,6 +2357,20 @@
     <string name="voice_title">Dettatura</string>
     <string name="voice_voice_becomes_text_device_not">La tua voce diventa testo su questo dispositivo. Non viene inviata finché non la invii tu.</string>
     <string name="voice_what_you_said_stays_message">Ciò che hai detto resta nella casella del messaggio, non inviato.</string>
+    <string name="watch_already_answered">Già risposta.</string>
+    <string name="watch_answer_longer">La risposta di Coach è più lunga. Aprila sul telefono.</string>
+    <string name="watch_approve_on_phone">Approva sul telefono</string>
+    <string name="watch_asking_phone">Chiedo al telefono…</string>
+    <string name="watch_coach_consent_on_phone">Coach ha prima bisogno del tuo sì sul telefono.</string>
+    <plurals name="watch_held_calls">
+        <item quantity="one">%1$s chiamata trattenuta ti aspetta</item>
+        <item quantity="other">%1$s chiamate trattenute ti aspettano</item>
+    </plurals>
+    <string name="watch_needs_lock">Per rifiutare o bloccare da questo orologio, imposta un blocco schermo e sbloccalo.</string>
+    <string name="watch_open_on_phone">Apri sul telefono</string>
+    <string name="watch_phone_not_reachable">Il telefono non è raggiungibile. Tienilo vicino e riprova.</string>
+    <string name="watch_sign_in_on_phone">Prima accedi a tafs sul telefono.</string>
+    <string name="watch_voice_text_only">Coach riceve le tue parole come testo, mai la tua voce.</string>
     <string name="work_answer_within">Rispondi entro</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s giorno</item>

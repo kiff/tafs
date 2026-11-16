@@ -2357,6 +2357,20 @@
     <string name="voice_title">Diktieren</string>
     <string name="voice_voice_becomes_text_device_not">Deine Stimme wird auf diesem Gerät zu Text. Sie wird erst gesendet, wenn du sendest.</string>
     <string name="voice_what_you_said_stays_message">Was du gesagt hast, bleibt ungesendet im Nachrichtenfeld.</string>
+    <string name="watch_already_answered">Bereits beantwortet.</string>
+    <string name="watch_answer_longer">Die Antwort von Coach ist länger. Öffne sie auf deinem Handy.</string>
+    <string name="watch_approve_on_phone">Genehmige auf deinem Handy</string>
+    <string name="watch_asking_phone">Fragt dein Handy…</string>
+    <string name="watch_coach_consent_on_phone">Coach braucht zuerst dein Ja auf deinem Handy.</string>
+    <plurals name="watch_held_calls">
+        <item quantity="one">%1$s zurückgehaltener Aufruf braucht dich</item>
+        <item quantity="other">%1$s zurückgehaltene Aufrufe brauchen dich</item>
+    </plurals>
+    <string name="watch_needs_lock">Um mit dieser Uhr abzulehnen oder anzuhalten, richte eine Displaysperre ein und entsperre sie.</string>
+    <string name="watch_open_on_phone">Auf dem Handy öffnen</string>
+    <string name="watch_phone_not_reachable">Dein Handy ist nicht erreichbar. Halte es in der Nähe und versuche es erneut.</string>
+    <string name="watch_sign_in_on_phone">Melde dich zuerst auf deinem Handy bei tafs an.</string>
+    <string name="watch_voice_text_only">Coach bekommt deine Worte als Text, nie deine Stimme.</string>
     <string name="work_answer_within">Antwort innerhalb</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s Tag</item>

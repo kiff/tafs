@@ -2538,6 +2538,19 @@ object Words {
     val voiceBecomesTextDeviceNot: String get() = Res.s(R.string.voice_voice_becomes_text_device_not)
     val whatYouSaidStaysMessage: String get() = Res.s(R.string.voice_what_you_said_stays_message)
   }
+  object Watch {
+    val alreadyAnswered: String get() = Res.s(R.string.watch_already_answered)
+    val answerLonger: String get() = Res.s(R.string.watch_answer_longer)
+    val approveOnPhone: String get() = Res.s(R.string.watch_approve_on_phone)
+    val askingPhone: String get() = Res.s(R.string.watch_asking_phone)
+    val coachConsentOnPhone: String get() = Res.s(R.string.watch_coach_consent_on_phone)
+    fun heldCalls(count: Int): String = Res.p(R.plurals.watch_held_calls, count, Res.number(count))
+    val needsLock: String get() = Res.s(R.string.watch_needs_lock)
+    val openOnPhone: String get() = Res.s(R.string.watch_open_on_phone)
+    val phoneNotReachable: String get() = Res.s(R.string.watch_phone_not_reachable)
+    val signInOnPhone: String get() = Res.s(R.string.watch_sign_in_on_phone)
+    val voiceTextOnly: String get() = Res.s(R.string.watch_voice_text_only)
+  }
   object Work {
     val answerWithin: String get() = Res.s(R.string.work_answer_within)
     fun answerWithinDays(count: Int): String = Res.p(R.plurals.work_answer_within_days, count, Res.number(count))
