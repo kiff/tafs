@@ -1,19 +1,21 @@
 {
-  "watch.already_answered": "Już odpowiedziano.",
-  "watch.answer_longer": "Odpowiedź Coacha jest dłuższa. Otwórz ją na telefonie.",
+  "watch.already_answered": "Już odpowiedziano albo zakończono.",
   "watch.approve_on_phone": "Zatwierdź na telefonie",
+  "watch.as_of": "Stan na {time}",
   "watch.asking_phone": "Pytam telefon…",
-  "watch.coach_consent_on_phone": "Coach potrzebuje najpierw Twojej zgody na telefonie.",
-  "watch.coach_sent": "Wysłano do Coacha. Odpowiedź jest na telefonie.",
+  "watch.coach_needs_consent": "Zanim porozmawiasz z Coachem, zezwól na użycie AI w tafs na telefonie.",
+  "watch.glance_description": "Ile czeka na Ciebie, nigdy co ani kto.",
   "watch.held_calls": {
     "one": "{count} oczekujące wywołanie czeka na Ciebie",
     "few": "{count} oczekujące wywołania czekają na Ciebie",
     "many": "{count} oczekujących wywołań czeka na Ciebie",
     "other": "{count} oczekującego wywołania czeka na Ciebie"
   },
+  "watch.more_on_phone": "Reszta jest na telefonie.",
   "watch.needs_lock": "Aby odrzucać lub blokować z tego zegarka, ustaw blokadę ekranu i odblokuj go.",
   "watch.open_on_phone": "Otwórz na telefonie",
-  "watch.phone_not_reachable": "Nie można połączyć się z telefonem. Trzymaj go blisko i spróbuj ponownie.",
+  "watch.phone_not_reachable": "Telefon jest poza zasięgiem. Przybliż go i spróbuj ponownie.",
+  "watch.refused": "Odrzucono. Nic nie zostało wysłane.",
   "watch.sign_in_on_phone": "Najpierw zaloguj się do tafs na telefonie.",
   "watch.voice_text_only": "Coach dostaje Twoje słowa jako tekst, nigdy Twój głos."
 }

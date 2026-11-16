@@ -1,17 +1,19 @@
 {
-  "watch.already_answered": "Já respondida.",
-  "watch.answer_longer": "A resposta do Coach é mais longa. Abra-a no telemóvel.",
+  "watch.already_answered": "Já respondido, ou terminado.",
   "watch.approve_on_phone": "Aprove no telemóvel",
+  "watch.as_of": "Atualizado às {time}",
   "watch.asking_phone": "A perguntar ao telemóvel…",
-  "watch.coach_consent_on_phone": "O Coach precisa primeiro do seu sim no telemóvel.",
-  "watch.coach_sent": "Enviado ao Coach. A resposta está no telemóvel.",
+  "watch.coach_needs_consent": "Antes de falar com o Coach, permita a utilização de IA no tafs no telemóvel.",
+  "watch.glance_description": "Quantos precisam de si, nunca o quê nem quem.",
   "watch.held_calls": {
     "one": "{count} chamada retida precisa de si",
     "other": "{count} chamadas retidas precisam de si"
   },
+  "watch.more_on_phone": "O resto está no telemóvel.",
   "watch.needs_lock": "Para recusar ou bloquear a partir deste relógio, defina um bloqueio de ecrã e desbloqueie-o.",
   "watch.open_on_phone": "Abrir no telemóvel",
-  "watch.phone_not_reachable": "Não é possível contactar o telemóvel. Mantenha-o por perto e tente novamente.",
-  "watch.sign_in_on_phone": "Primeiro inicie sessão no tafs no telemóvel.",
+  "watch.phone_not_reachable": "O telemóvel não está ao alcance. Aproxime-o e tente novamente.",
+  "watch.refused": "Recusado. Nada foi enviado.",
+  "watch.sign_in_on_phone": "Primeiro, inicie sessão no tafs no telemóvel.",
   "watch.voice_text_only": "O Coach recebe as suas palavras como texto, nunca a sua voz."
 }

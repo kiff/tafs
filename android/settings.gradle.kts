@@ -33,3 +33,6 @@ plugins {
 rootProject.name = "Tafs"
 
 include(":app")
+// The Wear OS watch (docs/watch-wear.md): its app, and the messages it and the phone exchange, which both build on.
+include(":watchlink")
+include(":wear")

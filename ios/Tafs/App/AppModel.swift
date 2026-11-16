@@ -399,7 +399,10 @@ final class AppModel: ObservableObject {
     /// this phone, or the other phone; KIFF is asked nothing more of it until then.
     @Published private(set) var approvalViewOnly = false
     /// What the person reads while this phone can't approve: the view-only words, or the lost key's.
-    var approvalKeyLostWords: String { approvalViewOnly ? Words.Approval.viewOnly : KIFFClient.approvalKeyLost }
+    /// A view-only Mac says how a Mac is added from a phone; a phone or tablet, to sign in again or use the other phone.
+    var approvalKeyLostWords: String {
+        approvalViewOnly ? (ThisDevice.isMac ? Words.Approval.viewOnlyMac : Words.Approval.viewOnly) : KIFFClient.approvalKeyLost
+    }
     /// A re-link waiting for the person's browser: the code to check there, and the page.
     struct Relink: Equatable { let userCode: String; let url: URL }
     @Published private(set) var relink: Relink?

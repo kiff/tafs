@@ -1,0 +1,1 @@
+- **Coach: a taf the owner didn't name is named in the owner's language** (`set-up-a-taf@12`): a Spanish owner gets "Reembolsos", never "Refunds". A name the owner gave is kept as given.

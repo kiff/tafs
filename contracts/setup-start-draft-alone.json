@@ -274,6 +274,25 @@
                     "window": "calendar_day"
                   }
                 ]
+              },
+              {
+                "id": "coach-business",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "owner",
+                "hold_expiry": "10m",
+                "grants": [
+                  {
+                    "action": "business_context"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 0,
+                    "window": "calendar_day"
+                  }
+                ]
               }
             ]
           },
@@ -362,6 +381,12 @@
               "lines": [
                 "KIFF's line for coach-labels"
               ]
+            },
+            {
+              "id": "coach-business",
+              "lines": [
+                "KIFF's line for coach-business"
+              ]
             }
           ]
         }
@@ -439,6 +464,11 @@
                 "name": "Label tafs",
                 "does": "Put labels on your tafs, such as Money or Customers, so you can filter the list. A label is only a name: it changes nothing a taf may do. Up to 100 a day.",
                 "why": "It changes only how your list is filtered."
+              },
+              {
+                "name": "Keep your business description",
+                "does": "Keep a short description of your business that you confirmed: what you sell, to whom, your tone and your contact rules. Each one waits for your approval.",
+                "why": "It's words only, and you see it in Account."
               },
               {
                 "name": "Try a version",

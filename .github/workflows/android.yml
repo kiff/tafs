@@ -63,6 +63,9 @@ jobs:
           if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json; fi
       - name: Unit tests and the debug builds
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace
+      # The Wear OS watch (docs/watch-wear.md): the messages it and the phone exchange, and its debug build.
+      - name: The watch's tests and its debug build
+        run: ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDebug --stacktrace
       # The current versionCode's Play release notes, when there are any: all eight languages, each short enough.
       - name: Play release notes, and the upload's own tests
         run: |
@@ -73,7 +76,10 @@ jobs:
         if: failure()
         with:
           name: android-unit-test-results
-          path: android/app/build/reports/tests
+          path: |
+            android/app/build/reports/tests
+            android/watchlink/build/reports/tests
+            android/wear/build/reports/tests
 
   # The screens' UI tests (the held call's card) on an emulator: KVM makes it fast enough.
   ui:
