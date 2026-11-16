@@ -386,14 +386,19 @@ things (`runtime/src/cloud/approval.ts`):
   `sum(<arg>)`, the argument 1 to 64 letters, digits, `_` or `.`, as kiff/agents' schema takes it; matched exactly, so `sum( amount )` is another quantity), `window` `call` (each
   call's) or `calendar_day` (the day's total), and `limit` a whole number from 0 (never) to
   2^53−1 in the Card's own units (minor units of the connection's currency, as
-  `per_action_max.max` and `aggregates[].limit` are). A rule's figures are read whole or not at
-  all: an empty list, a fifth figure, the same quantity and window twice, or a limit that isn't
+  `per_action_max.max` and `aggregates[].limit` are). A figure with `per` is a total for each item
+  ("one invoice per order, ever": `{quantity: "count", window: "lifetime", per: "order_id",
+  limit: 1}`): `per` the argument the Card's aggregate counts it by (1 to 64 letters, digits, `_`
+  or `.`), and `window` any of an aggregate's (`calendar_day`, `rolling_1h`, `rolling_24h`,
+  `rolling_7d`, `lifetime`), never `call`. A rule's figures are read whole or not at
+  all: an empty list, a fifth figure, the same quantity, window and per twice, or a limit that isn't
   such a number leaves the notice with no rules. The same notice shown again with another figure
   is other rules, and blocks the draft until agreed. At the check, each agreed figure is on a
   Card covering the tool with exactly that figure: `call` as a `per_action_max` of that quantity
   on the tool's grant, `calendar_day` as an aggregate of that quantity with `window:
-  calendar_day` and no `per` (a total for each customer is another total). Missing, or another
-  figure for the same quantity and window on any Card covering it, looser or stricter, is
+  calendar_day` and no `per` (a total for each customer is another total), and a `per` figure as an
+  aggregate with that quantity, window and `per` (folded). Missing, or another
+  figure for the same quantity, window and per on any Card covering it, looser or stricter, is
   answered `failed: …` with the agreed figure and the shape that holds it (`rules_figures`), and
   Coach drafts it again. A rule with no figures is checked as before. A figure may say what happens
   past it, `over: "ask" | "refuse"`, when that isn't the tool's: "ask past €5 a refund, refuse past
@@ -408,8 +413,11 @@ things (`runtime/src/cloud/approval.ts`):
   day's, `rolling_1h`, `rolling_24h`, `rolling_7d`, `lifetime`). Coach hears that one figure, and to
   draft again without it, changing nothing else. The person reads the rules-figures note (Eval
   43927756622: after a refused draft, Coach signed an hour's €50 held beside the agreed €5 a refund
-  and €50 a day refused). A total for each item (`per`) is the earlier checks', and a count of 0
-  (each call asks) only asks, so neither is refused here. Logged, never refused: an agreed figure whose
+  and €50 a day refused). A total for each item (`per`) is unagreed unless a figure with the same
+  quantity, window and per names it: on a rule that names a `per` figure, always; on a rule that
+  names none, only with `TAFS_RULES_PER=on`, switched on once Coach's rules carry `per` figures,
+  and until then left to the earlier checks. A count of 0 (each call asks) only asks, so it isn't
+  refused here. Logged, never refused: an agreed figure whose
   number, in the Card's units or in hundredths, the notice's words don't write ("approval rules: a
   figure the notice's words don't say: …"), since formats vary by language.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
