@@ -30,6 +30,14 @@ enum ReceiptCheck: Equatable {
         guard let receipt = try? JSONSerialization.jsonObject(with: response) as? [String: Any] else {
             return .failed(Words.Receipt.Check.unreadable)
         }
+        // A key written twice is read as one copy here and maybe the other elsewhere: the chain hashed
+        // could differ from the one another reader shows. KIFF's encoder never repeats a key, so a
+        // receipt that does, at its top or in its attestation, isn't one KIFF wrote.
+        // An attestation that isn't an object yet (null: not signed yet) has no keys to repeat.
+        let attestationKeys = RawJSON.value(of: "attestation", in: response).flatMap(RawJSON.keys(of:)) ?? []
+        guard RawJSON.keysAreUnique(in: response), Set(attestationKeys).count == attestationKeys.count else {
+            return .failed(Words.Receipt.Check.unreadable)
+        }
         guard let attestation = receipt["attestation"] as? [String: Any] else { return .notSignedYet }
         guard attestation["algorithm"] as? String == algorithm else {
             return .failed(Words.Receipt.Check.unknownSignature)
@@ -120,6 +128,38 @@ enum RawJSON {
             if bytes[i] == UInt8(ascii: ",") { i += 1; continue }
             return nil
         }
+    }
+
+    /// An object's own keys, in the order written (not those of objects inside it); nil when
+    /// `data` isn't an object that reads to its end.
+    static func keys(of data: Data) -> [String]? {
+        let bytes = [UInt8](data)
+        var i = skipSpace(bytes, 0)
+        guard i < bytes.count, bytes[i] == UInt8(ascii: "{") else { return nil }
+        i = skipSpace(bytes, i + 1)
+        var out: [String] = []
+        if i < bytes.count, bytes[i] == UInt8(ascii: "}") { return out }
+        while true {
+            guard i < bytes.count, bytes[i] == UInt8(ascii: "\""), let keyEnd = endOfString(bytes, i),
+                  let name = (try? JSONSerialization.jsonObject(with: Data(bytes[i..<keyEnd]), options: .fragmentsAllowed)) as? String
+            else { return nil }
+            out.append(name)
+            i = skipSpace(bytes, keyEnd)
+            guard i < bytes.count, bytes[i] == UInt8(ascii: ":") else { return nil }
+            i = skipSpace(bytes, i + 1)
+            guard let valueEnd = endOfValue(bytes, i) else { return nil }
+            i = skipSpace(bytes, valueEnd)
+            guard i < bytes.count else { return nil }
+            if bytes[i] == UInt8(ascii: "}") { return out }
+            guard bytes[i] == UInt8(ascii: ",") else { return nil }
+            i = skipSpace(bytes, i + 1)
+        }
+    }
+
+    /// No key of the object written twice. An object it can't read isn't unique.
+    static func keysAreUnique(in data: Data) -> Bool {
+        guard let keys = keys(of: data) else { return false }
+        return Set(keys).count == keys.count
     }
 
     /// A JSON array's elements, each its own bytes as written; nil when `data` isn't an array.
