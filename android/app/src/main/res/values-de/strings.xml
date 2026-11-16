@@ -2362,6 +2362,7 @@
     <string name="watch_approve_on_phone">Genehmige auf deinem Handy</string>
     <string name="watch_asking_phone">Fragt dein Handy…</string>
     <string name="watch_coach_consent_on_phone">Coach braucht zuerst dein Ja auf deinem Handy.</string>
+    <string name="watch_coach_sent">An Coach gesendet. Die Antwort findest du auf deinem Handy.</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s zurückgehaltener Aufruf braucht dich</item>
         <item quantity="other">%1$s zurückgehaltene Aufrufe brauchen dich</item>

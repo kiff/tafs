@@ -2490,6 +2490,7 @@
     <string name="watch_approve_on_phone">Zatwierdź na telefonie</string>
     <string name="watch_asking_phone">Pytam telefon…</string>
     <string name="watch_coach_consent_on_phone">Coach potrzebuje najpierw Twojej zgody na telefonie.</string>
+    <string name="watch_coach_sent">Wysłano do Coacha. Odpowiedź jest na telefonie.</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s oczekujące wywołanie czeka na Ciebie</item>
         <item quantity="few">%1$s oczekujące wywołania czekają na Ciebie</item>

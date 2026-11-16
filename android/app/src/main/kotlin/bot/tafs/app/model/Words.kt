@@ -2544,6 +2544,7 @@ object Words {
     val approveOnPhone: String get() = Res.s(R.string.watch_approve_on_phone)
     val askingPhone: String get() = Res.s(R.string.watch_asking_phone)
     val coachConsentOnPhone: String get() = Res.s(R.string.watch_coach_consent_on_phone)
+    val coachSent: String get() = Res.s(R.string.watch_coach_sent)
     fun heldCalls(count: Int): String = Res.p(R.plurals.watch_held_calls, count, Res.number(count))
     val needsLock: String get() = Res.s(R.string.watch_needs_lock)
     val openOnPhone: String get() = Res.s(R.string.watch_open_on_phone)

@@ -4,6 +4,7 @@
   "watch.approve_on_phone": "Aprove no telemóvel",
   "watch.asking_phone": "A perguntar ao telemóvel…",
   "watch.coach_consent_on_phone": "O Coach precisa primeiro do seu sim no telemóvel.",
+  "watch.coach_sent": "Enviado ao Coach. A resposta está no telemóvel.",
   "watch.held_calls": {
     "one": "{count} chamada retida precisa de si",
     "other": "{count} chamadas retidas precisam de si"

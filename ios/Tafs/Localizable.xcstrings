@@ -119919,6 +119919,59 @@
         }
       }
     },
+    "watch.coach_sent": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An Coach gesendet. Die Antwort findest du auf deinem Handy."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent to Coach. Its answer is on your phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviado a Coach. Su respuesta está en tu teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Envoyé à Coach. Sa réponse est sur votre téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inviato a Coach. La sua risposta è sul telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naar Coach gestuurd. Het antwoord staat op je telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wysłano do Coacha. Odpowiedź jest na telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviado ao Coach. A resposta está no telemóvel."
+          }
+        }
+      }
+    },
     "watch.held_calls|few": {
       "extractionState": "manual",
       "localizations": {

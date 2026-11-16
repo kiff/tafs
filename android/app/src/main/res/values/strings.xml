@@ -2362,6 +2362,7 @@
     <string name="watch_approve_on_phone">Approve on your phone</string>
     <string name="watch_asking_phone">Asking your phone…</string>
     <string name="watch_coach_consent_on_phone">Coach needs your yes on your phone first.</string>
+    <string name="watch_coach_sent">Sent to Coach. Its answer is on your phone.</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s held call needs you</item>
         <item quantity="other">%1$s held calls need you</item>

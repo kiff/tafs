@@ -4,6 +4,7 @@
   "watch.approve_on_phone": "Aprueba en tu teléfono",
   "watch.asking_phone": "Preguntando a tu teléfono…",
   "watch.coach_consent_on_phone": "Coach necesita primero tu sí en tu teléfono.",
+  "watch.coach_sent": "Enviado a Coach. Su respuesta está en tu teléfono.",
   "watch.held_calls": {
     "one": "{count} llamada retenida te necesita",
     "other": "{count} llamadas retenidas te necesitan"

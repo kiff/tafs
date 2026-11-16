@@ -2362,6 +2362,7 @@
     <string name="watch_approve_on_phone">Keur goed op je telefoon</string>
     <string name="watch_asking_phone">Je telefoon vragen…</string>
     <string name="watch_coach_consent_on_phone">Coach heeft eerst je ja op je telefoon nodig.</string>
+    <string name="watch_coach_sent">Naar Coach gestuurd. Het antwoord staat op je telefoon.</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s vastgehouden aanroep wacht op jou</item>
         <item quantity="other">%1$s vastgehouden aanroepen wachten op jou</item>

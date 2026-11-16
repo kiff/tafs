@@ -4709,6 +4709,8 @@ enum Words {
         static var askingPhone: String { Words.line("watch.asking_phone") }
         /// Coach needs your yes on your phone first.
         static var coachConsentOnPhone: String { Words.line("watch.coach_consent_on_phone") }
+        /// Sent to Coach. Its answer is on your phone.
+        static var coachSent: String { Words.line("watch.coach_sent") }
         /// {count} held calls need you
         static func heldCalls(count: Int) -> String { Words.count("watch.held_calls", count) }
         /// To refuse or halt from this watch, set a screen lock on it and unlock it.

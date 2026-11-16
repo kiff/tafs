@@ -4,6 +4,7 @@
   "watch.approve_on_phone": "Zatwierdź na telefonie",
   "watch.asking_phone": "Pytam telefon…",
   "watch.coach_consent_on_phone": "Coach potrzebuje najpierw Twojej zgody na telefonie.",
+  "watch.coach_sent": "Wysłano do Coacha. Odpowiedź jest na telefonie.",
   "watch.held_calls": {
     "one": "{count} oczekujące wywołanie czeka na Ciebie",
     "few": "{count} oczekujące wywołania czekają na Ciebie",

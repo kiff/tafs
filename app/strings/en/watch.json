@@ -4,6 +4,7 @@
   "watch.approve_on_phone": "Approve on your phone",
   "watch.asking_phone": "Asking your phone…",
   "watch.coach_consent_on_phone": "Coach needs your yes on your phone first.",
+  "watch.coach_sent": "Sent to Coach. Its answer is on your phone.",
   "watch.held_calls": {
     "one": "{count} held call needs you",
     "other": "{count} held calls need you"

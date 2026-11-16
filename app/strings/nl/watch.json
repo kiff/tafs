@@ -4,6 +4,7 @@
   "watch.approve_on_phone": "Keur goed op je telefoon",
   "watch.asking_phone": "Je telefoon vragen…",
   "watch.coach_consent_on_phone": "Coach heeft eerst je ja op je telefoon nodig.",
+  "watch.coach_sent": "Naar Coach gestuurd. Het antwoord staat op je telefoon.",
   "watch.held_calls": {
     "one": "{count} vastgehouden aanroep wacht op jou",
     "other": "{count} vastgehouden aanroepen wachten op jou"

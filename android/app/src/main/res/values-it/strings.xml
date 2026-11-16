@@ -2362,6 +2362,7 @@
     <string name="watch_approve_on_phone">Approva sul telefono</string>
     <string name="watch_asking_phone">Chiedo al telefono…</string>
     <string name="watch_coach_consent_on_phone">Coach ha prima bisogno del tuo sì sul telefono.</string>
+    <string name="watch_coach_sent">Inviato a Coach. La sua risposta è sul telefono.</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s chiamata trattenuta ti aspetta</item>
         <item quantity="other">%1$s chiamate trattenute ti aspettano</item>

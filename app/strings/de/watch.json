@@ -4,6 +4,7 @@
   "watch.approve_on_phone": "Genehmige auf deinem Handy",
   "watch.asking_phone": "Fragt dein Handy…",
   "watch.coach_consent_on_phone": "Coach braucht zuerst dein Ja auf deinem Handy.",
+  "watch.coach_sent": "An Coach gesendet. Die Antwort findest du auf deinem Handy.",
   "watch.held_calls": {
     "one": "{count} zurückgehaltener Aufruf braucht dich",
     "other": "{count} zurückgehaltene Aufrufe brauchen dich"

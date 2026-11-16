@@ -2362,6 +2362,7 @@
     <string name="watch_approve_on_phone">Aprove no telemóvel</string>
     <string name="watch_asking_phone">A perguntar ao telemóvel…</string>
     <string name="watch_coach_consent_on_phone">O Coach precisa primeiro do seu sim no telemóvel.</string>
+    <string name="watch_coach_sent">Enviado ao Coach. A resposta está no telemóvel.</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s chamada retida precisa de si</item>
         <item quantity="other">%1$s chamadas retidas precisam de si</item>
