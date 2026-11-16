@@ -7,7 +7,7 @@ import { type BalanceView, balanceView, type CreditRun, CreditsError, runCredits
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
-import { alertTarget, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, briefNotification, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
@@ -61,7 +61,7 @@ import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
 import { findLabel, LabelRefusal, labelName, labelsView, readLabels, saveLabels, withLabelChanged, withTafLabels } from "./labels.js";
 import { BusinessRefusal, businessView, readBusiness, saveBusiness } from "./business.js";
 import { MissionRefusal, planMission, readMissions, saveMissions } from "./missions.js";
-import { briefLaterKey, buildBrief, connectionDecision, type BriefDecisionIn, type DecisionWords, holdDecision, laterOf, putOff, stepDecision } from "./brief.js";
+import { briefDue, briefLaterKey, briefZoneKey, buildBrief, connectionDecision, type BriefDecisionIn, type DecisionWords, holdDecision, laterOf, putOff, stepDecision } from "./brief.js";
 import { logDelivered, logPage, readLog } from "./missionlog.js";
 
 /**
@@ -7437,6 +7437,10 @@ async function brief(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     briefInputs(event, me, deps, now),
     within(readBalance(bearer(event), deps.fetch, deps.kiffBase), SIGNS_READ_MS).catch(() => undefined),
   ]);
+  // The account's zone, kept for the brief's push at its times (sweepBriefs has no person's session to ask KIFF with).
+  if (deps.coach && me.timeZone) {
+    await deps.coach.put(briefZoneKey(me.tenantID), { zone: me.timeZone }, new Date(now.getTime() + 30 * 24 * 3600_000)).catch(() => undefined);
+  }
   const label = new URLSearchParams(event.rawQueryString ?? "").get("label") ?? undefined;
   const waiting = new Set(decisions.map((d) => d.taf.id));
   const rest = tafs.filter((t) => !waiting.has(t.id) && (!label || t.labels.includes(label))).length;
@@ -7484,6 +7488,34 @@ async function missionLog(event: HTTPEvent, me: KIFFIdentity, id: string, deps: 
   const names = new Map(live.map((t) => [t.id, t.name]));
   const before = new URLSearchParams(event.rawQueryString ?? "").get("before") ?? undefined;
   return logPage(log.entries.filter((e) => !(e.by.kind === "taf" && hidden.has(e.by.id ?? ""))), names, langOf(event), before);
+}
+
+/**
+ * Your brief is ready (design v2.1 §7.5, 6): at each brief's time (08:00 and 18:00 in the zone of the account's last
+ * brief read), one alert to the phones of the people who may answer, saying only that it's ready, in each phone's
+ * language. Once per account and brief (a claim), within 10 minutes of its time; an account whose brief was never read
+ * has no zone kept and gets none. Off until `TAFS_BRIEF_PUSH=on`, as the apps' brief tab ships.
+ */
+export async function sweepBriefs(deps: Deps): Promise<Array<{ tenant: string; at: string; sent: number }>> {
+  if (process.env.TAFS_BRIEF_PUSH !== "on" || !deps.coach) return [];
+  const now = deps.now?.() ?? new Date();
+  const out: Array<{ tenant: string; at: string; sent: number }> = [];
+  for (const tenant of await deps.tafs.tenants()) {
+    const kept = (await deps.coach.get(briefZoneKey(tenant)).catch(() => undefined)) as { zone?: unknown } | undefined;
+    if (typeof kept?.zone !== "string" || !kept.zone) continue;
+    const due = briefDue(now, kept.zone);
+    if (!due) continue;
+    if (!(await deps.coach.once(`${tenant}#brief-sent#${due.at.toISOString()}`, new Date(now.getTime() + 24 * 3600_000)).catch(() => false))) continue;
+    const { devices } = await deps.push.get(tenant).catch(() => ({ devices: [] as Device[] }));
+    let sent = 0;
+    for (const d of devices.filter((x) => x.answers)) {
+      const r = await sendNotification(deps.apns, d, briefNotification(due.at, due.next_at, due.hm, deviceLang(d))).catch(() => "failed" as const);
+      if (r === "gone") await deps.push.removeDevice(tenant, d.token).catch(() => undefined);
+      else if (r === "sent") sent++;
+    }
+    out.push({ tenant, at: due.at.toISOString(), sent });
+  }
+  return out;
 }
 
 /**

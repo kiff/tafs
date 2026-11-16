@@ -353,10 +353,28 @@ function heldNotification(body: AlertBody, holdID: string, now: Date, lang: Lang
       },
       open: "needs-you",
       hold_id: holdID,
+      // Your brief (design v2.1 §7.5, 6): an alert that comes at once is an urgent one, with the decision it opens.
+      brief_kind: "urgent",
+      decision: `hold:${holdID}`,
       ...(expires && !Number.isNaN(expires.getTime()) ? { expires_at: expires.toISOString() } : {}),
     },
     collapseID: holdID.slice(0, 64),
     expiresAt: expires && !Number.isNaN(expires.getTime()) && expires > now ? expires : undefined,
+  };
+}
+
+/**
+ * Your brief is ready (design v2.1 §7.5, 6): its time, never what's in it, so nothing of the account goes through Apple
+ * or Google. The phone reads the brief with its own session. One per brief: a later one replaces it.
+ */
+export function briefNotification(at: Date, nextAt: Date, hm: string, lang: Lang = "en"): Notification {
+  const w = wordsIn(lang);
+  return {
+    preference: "needs_you",
+    kind: "alert",
+    payload: { aps: { alert: { title: w.brief_title, body: w.brief_ready(hm) }, "thread-id": "brief", ...apsFor("quiet") }, open: "brief", brief_kind: "brief", at: at.toISOString() },
+    collapseID: "brief",
+    expiresAt: nextAt,
   };
 }
 

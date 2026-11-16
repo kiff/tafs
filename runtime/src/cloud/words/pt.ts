@@ -284,6 +284,7 @@ export const pt: Words = {
   home_needs_you_none: "Nada precisa de si.",
   labels_all: "Todos",
   brief_title: "O seu resumo",
+  brief_ready: (hm) => `O seu resumo das ${hm} está pronto.`,
   brief_decisions: "Decisões",
   brief_done: "Concluído",
   brief_rest: "O resto",

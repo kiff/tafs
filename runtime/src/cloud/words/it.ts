@@ -284,6 +284,7 @@ export const it: Words = {
   home_needs_you_none: "Niente ti aspetta.",
   labels_all: "Tutti",
   brief_title: "Il tuo riepilogo",
+  brief_ready: (hm) => `Il tuo riepilogo delle ${hm} è pronto.`,
   brief_decisions: "Decisioni",
   brief_done: "Fatto",
   brief_rest: "Il resto",

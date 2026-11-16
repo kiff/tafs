@@ -80,7 +80,13 @@ Later at `POST /v1/brief/decisions/{id}/later` ([api.md](api.md)).
 
 - **What it's built from**, read as Home reads it: the calls KIFF holds on the tafs the person may see (Approve or Refuse,
   as equals: KIFF gives no why), the steps their runs handed their owner (with KIFF's expiry as the deadline), and their
-  connections that need signing in again (blocked, so urgent). The credits line is the balance's, as Settings says it. Coach's proposals, case lines and the pushes come next.
+  connections that need signing in again (blocked, so urgent). The credits line is the balance's, as Settings says it. Coach's proposals and case lines come next.
+- **Alerts**: each carries `brief_kind` (`brief` or `urgent`; not `kind`, which FCM's data uses already), so Android puts
+  it on the Briefs or the Urgent channel. At each brief's time, the phones of the people who may answer get "Your 08:00
+  brief is ready." in their own language, and nothing of what's in it; the zone is the one the account's last brief read
+  was in, kept for this. It's off until `TAFS_BRIEF_PUSH=on`, as the apps' brief tab ships. A held call's alert, which
+  comes at once, is `urgent`, with `decision: hold:<id>`. Moving the held calls that aren't urgent out of the at-once
+  alerts and into the brief is the owner's call, not made here.
 
 - **Urgent** is tafs cloud's rule, never a model's: a deadline before the next brief, money going out today, a halt, a
   blocked connection, or "ask me at once".

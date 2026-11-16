@@ -284,6 +284,7 @@ export const de: Words = {
   home_needs_you_none: "Nichts braucht dich.",
   labels_all: "Alle",
   brief_title: "Dein Briefing",
+  brief_ready: (hm) => `Dein Briefing für ${hm} ist da.`,
   brief_decisions: "Entscheidungen",
   brief_done: "Erledigt",
   brief_rest: "Der Rest",
