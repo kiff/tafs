@@ -118,7 +118,17 @@ data class SetupComponent(
   val connection: SetupConnection? = null,
   /** What this card's fingerprint covers, tafs cloud's mark, read leniently: one of another shape is no mark, never a failed card. */
   @SerialName("signs") val signsRead: kotlinx.serialization.json.JsonElement? = null,
+  /**
+   * tafs cloud's mark that the app's sign-in can't be narrowed to the job (docs/chat.md, `wider: {words}`): its words, in the
+   * reader's language, are drawn above the card's buttons. Read leniently: one of another shape is no mark, never a failed card.
+   */
+  @SerialName("wider") val widerRead: kotlinx.serialization.json.JsonElement? = null,
 ) {
+  /** [widerRead]'s words, when tafs cloud sent some. */
+  val wider: String?
+    get() = ((widerRead as? kotlinx.serialization.json.JsonObject)?.get("words") as? kotlinx.serialization.json.JsonPrimitive)
+      ?.takeIf { it.isString }?.content?.takeIf { it.isNotBlank() }
+
   /** Whether this card's fingerprint signs the Card ([SetupSigns]); none from a tafs cloud before the mark. */
   val signs: SetupSigns? get() = signsRead?.let { runCatching { bot.tafs.app.kiff.KiffClient.json.decodeFromJsonElement(SetupSigns.serializer(), it) }.getOrNull() }
 

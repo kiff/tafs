@@ -915,6 +915,17 @@ class CoachStartTest {
     assertEquals(read, transport.requestsTo("GET /v1/accounts/t_01/grants").size)
   }
 
+  // tafs#1218: a card for a sign-in planque couldn't narrow carries `wider: {words}`, drawn above its buttons. Read leniently.
+  @Test fun aWiderSignInIsReadFromTheCardLeniently() {
+    fun card(wider: String) = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"approval","id":"c","grant":"g1"$wider}""")
+    val words = "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools."
+    assertEquals(words, card(""","wider":{"words":"$words"}""").wider)
+    assertNull("no mark", card("").wider)
+    assertNull("blank words", card(""","wider":{"words":" "}""").wider)
+    assertNull("another shape is no mark, never a failed card", card(""","wider":true""").wider)
+    assertNull(card(""","wider":{"words":3}""").wider)
+  }
+
   // Which grants a card waits on: an unanswered approval or sign-in card's, while planque doesn't list it.
   @Test fun theGrantsCardsWaitOn() {
     val connect = KiffClient.json.decodeFromString<SetupComponent>("""{"type":"approval","id":"connect","grant":"g1","title":"Connect Stripe"}""")

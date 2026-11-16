@@ -465,6 +465,8 @@ private fun ApprovalCard(c: SetupComponent, state: AppState, answered: String?, 
           // Card comes next ("Its Card: you approve it next"), so the owner knows a second approval follows.
           c.signs?.words?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(13, FontWeight.Medium, Theme.dim)) }
         }
+        // A sign-in that asks for more than the job, said above the buttons, in tafs cloud's words (docs/chat.md).
+        c.wider?.let { WiderLine(it) }
         if (!grant.digestMatches) {
           Text(CoachWords.DIGEST_MISMATCH, style = scaled(13, color = Theme.no))
         } else {
@@ -673,6 +675,7 @@ private fun SignInCard(c: SetupComponent, state: AppState, answered: String?, er
         Eyebrow(Words.Coach.SignIn.eyebrow, Theme.amberText)
         Text(grant?.takeIf { again }?.statusWords ?: signInAt, style = scaled(20, FontWeight.Bold, Theme.ink, display = true))
         Text(c.note ?: CoachWords.SIGN_IN_NOTE, style = scaled(14, color = Theme.soft))
+        c.wider?.let { WiderLine(it) }
         PrimaryButton(
           when {
             waiting -> state.connectStep ?: Words.Connect.openingSignIn
@@ -915,4 +918,10 @@ private fun DraftNotRead(why: String, retry: suspend () -> Unit) {
     style = scaled(13, FontWeight.SemiBold, Theme.amberText),
     modifier = Modifier.heightIn(min = 44.dp).tapping { scope.launch { retry() } }.padding(vertical = 10.dp).testTag("card.draft.retry"),
   )
+}
+
+/** A sign-in wider than the job, in tafs cloud's words (`wider.words`): above the card's buttons, so no card stands unsaid. */
+@Composable
+private fun WiderLine(words: String) {
+  Text(words, style = scaled(14, FontWeight.Medium, Theme.amberText), modifier = Modifier.testTag("card.wider"))
 }
