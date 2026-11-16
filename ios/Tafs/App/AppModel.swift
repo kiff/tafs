@@ -1995,6 +1995,10 @@ final class AppModel: ObservableObject {
                 offerTimeZone(account)
             }
             show(list, exceptions)
+            // Your brief, read with the list: tafs cloud answering `/v1/brief` is what turns it on
+            // (a 404, an error or a brief with nothing in it keeps Needs you as today).
+            await loadBrief()
+            guard gen == accountGeneration else { return }
             // An account with no taf: Home lists the recipes, where tafs cloud says so, so they're
             // read with each refresh that finds none, not only when Coach opens (docs/ios-app.md).
             if tafs.isEmpty {

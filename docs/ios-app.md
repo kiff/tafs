@@ -804,8 +804,9 @@ Tests: `TafsTests/RecordSearchTests.swift`.
 
 "Your brief" takes Needs you's place once there is one (Missions design v2.1 §7; `BriefView`,
 `KIFF/TafsCloud+Brief.swift`). Until then, and for anyone tafs cloud doesn't send one to, Needs you is
-exactly as today. The draft draws the sample's brief only (`-brief YES` over the sample,
-`Brief.sample`); tafs cloud's `GET /v1/brief?label=` isn't read until its `TAFS_MISSIONS` flag is on.
+exactly as today. In KIFF mode, tafs cloud's `GET /v1/brief?label=` is read with every refresh (sign-in,
+back in the app, a pull) and with a brief's alert: its answer is the switch, and a 404, an error or a brief
+with nothing in it keeps Needs you. The sample draws its own brief (`-brief YES`, `Brief.sample`).
 
 - **Read leniently, in v2.1's names:** `decisions` (`question`, `answers` with `recommended`, `why`,
   `meanwhile`, `deadline`, `urgent`, `later`, `ref`), `more`, `done` (cases with `state` and

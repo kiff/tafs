@@ -64,6 +64,26 @@ final class BriefTests: XCTestCase {
         XCTAssertEqual(AppModel.destination(of: b.decisions[1], answer: b.decisions[1].answers[0]), "step:h1")
     }
 
+    /// The brief is read with every refresh, not only when an alert or a label chip asks for it: a
+    /// signed-in phone or Mac shows it as soon as tafs cloud serves one (the owner's Mac build 7 never
+    /// read it).
+    func testARefreshReadsTheBrief() async {
+        let session = stubbedSession()
+        let model = AppModel(signer: StubSigner(),
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/brief"] = (200, Self.liveBrief)
+        await model.useSession("kiff_dev_x")
+        XCTAssertNotNil(model.brief, "read with the sign-in's refresh")
+        XCTAssertTrue(StubProtocol.sent.contains { $0.url?.path == "/v1/brief" })
+        StubProtocol.responses["GET /v1/brief"] = (404, #"{"error":"not found"}"#)
+        await model.refresh()
+        XCTAssertNil(model.brief, "and dropped when tafs cloud stops serving it")
+        XCTAssertEqual(model.needsYouTabTitle, Words.NeedsYou.title)
+    }
+
     func testNoRouteYetMeansNoBriefAndNeedsYouAsToday() async {
         let model = await kiffModel()
         StubProtocol.responses["GET /v1/brief"] = (404, #"{"error":"not found"}"#)
