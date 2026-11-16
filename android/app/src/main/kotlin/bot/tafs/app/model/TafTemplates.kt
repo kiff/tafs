@@ -20,7 +20,7 @@ object TafTemplates {
   fun template(key: String?): TafTemplate? = all.firstOrNull { it.key == key }
 
   /** Support: settle refund and credit requests within policy. */
-  val refunds = TafTemplate(
+  val refunds: TafTemplate get() = TafTemplate(
     key = "refunds", name = Words.Sample.Refunds.name,
     job = Words.Sample.Refunds.job,
     tools = listOf(Words.Sample.Tool.payments, Words.Sample.Tool.store, Words.Sample.Tool.email),
@@ -38,7 +38,7 @@ object TafTemplates {
   )
 
   /** Accounts payable: match, approve and pay routine vendor bills. */
-  val billPay = TafTemplate(
+  val billPay: TafTemplate get() = TafTemplate(
     key = "billpay", name = Words.Sample.BillPay.name,
     job = Words.Sample.BillPay.job,
     tools = listOf(Words.Sample.Tool.accounting, Words.Sample.Tool.email),
@@ -56,7 +56,7 @@ object TafTemplates {
   )
 
   /** IT: joiners, movers and leavers across identity, workspace and code. */
-  val access = TafTemplate(
+  val access: TafTemplate get() = TafTemplate(
     key = "access", name = Words.Sample.Access.name,
     job = Words.Sample.Access.job,
     tools = listOf(Words.Sample.Tool.signIn, Words.Sample.Tool.code),
@@ -76,7 +76,7 @@ object TafTemplates {
   )
 
   /** Engineering: ship fixes and roll back, never destroy. */
-  val deploys = TafTemplate(
+  val deploys: TafTemplate get() = TafTemplate(
     key = "deploys", name = Words.Sample.Deploys.name,
     job = Words.Sample.Deploys.job,
     tools = listOf(Words.Sample.Tool.code, Words.Sample.Tool.hosting, Words.Sample.Tool.network),
@@ -94,7 +94,7 @@ object TafTemplates {
   )
 
   /** Payments: answer disputes with evidence before the deadline. */
-  val chargebacks = TafTemplate(
+  val chargebacks: TafTemplate get() = TafTemplate(
     key = "chargebacks", name = Words.Sample.Chargebacks.name,
     job = Words.Sample.Chargebacks.job,
     tools = listOf(Words.Sample.Tool.payments),
