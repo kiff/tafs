@@ -145,12 +145,13 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
     containerColor = Theme.background,
   ) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
-      // Once connected, Let's go is the one way on: no Cancel above it.
+      // Once connected, Let's go is the one way on: no Cancel above it. Its row keeps its height, so the sheet doesn't shrink
+      // and show the screen behind it cut at its edge.
       if (!connected) Text(
         Words.Common.cancel,
         style = scaled(17, color = Theme.amber),
         modifier = Modifier.padding(horizontal = 24.dp).heightIn(min = 44.dp).tapping(onClick = close).padding(top = 8.dp),
-      )
+      ) else androidx.compose.foundation.layout.Spacer(Modifier.padding(horizontal = 24.dp).heightIn(min = 44.dp).padding(top = 8.dp))
       Column(
         Modifier.verticalScroll(rememberScrollState()).padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),

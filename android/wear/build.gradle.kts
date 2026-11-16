@@ -1,4 +1,4 @@
-// The Wear OS watch (docs/watch-wear.md): a companion to the phone app, on Samsung Galaxy Watch and Pixel Watch. It holds no
+// The Wear OS watch (docs/watch-wear.md): a companion to the phone app, on Wear OS 3 or later. It holds no
 // keys and no session; it asks the phone over the Wearable Data Layer, in watchlink's messages, and draws what comes back.
 plugins {
   alias(libs.plugins.android.application)
@@ -26,7 +26,7 @@ android {
   defaultConfig {
     // The phone's package: the Data Layer only joins a watch app and a phone app with the same package and signing key.
     applicationId = "dev.kiff.tafs"
-    // Wear OS 3 and later: Galaxy Watch4 onwards, and every Pixel Watch.
+    // Wear OS 3 or later.
     minSdk = 30
     // Wear OS 6's level, the newest a watch runs.
     targetSdk = 36
