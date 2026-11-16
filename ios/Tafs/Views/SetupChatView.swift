@@ -1658,6 +1658,20 @@ struct SetupApproval: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Theme.raised)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            } else if let id = component.draft, draft == nil, !replaced, !answered {
+                // The Card isn't read yet, so Approve waits. Said, never a blank: KIFF's reason with
+                // Try again when it wouldn't give it, as on Android. It's read again while the card waits.
+                if let why = model.setupDraftErrors[id] {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(Words.Coach.cardDraftNotRead(why: why))
+                            .scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true)
+                        Button(Words.Common.tryAgain) { Task { await model.readCardDraft(id) } }
+                            .scaledFont(13, weight: .semibold, relativeTo: .footnote)
+                            .accessibilityIdentifier("approval.draft-try-again")
+                    }
+                } else {
+                    Text(Words.Coach.readingKiffWords).scaledFont(13, relativeTo: .footnote).foregroundColor(Theme.dim)
+                }
             } else if grant != nil, let words = Self.cardNextWords(component) {
                 // An app's first sign-in has no draft yet (a Card is drafted over the tools it brings):
                 // tafs cloud's words still say a Card comes next, so the owner knows a second approval

@@ -1969,6 +1969,48 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A card waiting on KIFF's draft of its Card that KIFF won't give says KIFF's reason, with Try
+    /// again, never "Reading…" for good with Approve off. It keeps the
+    /// thread read while it waits, so the draft is read again, and once KIFF gives it the card has its Card.
+    func testACardDraftKIFFDidntGiveSaysWhyAndIsReadAgain() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let card = #"{"at":"\#(iso.string(from: Date().addingTimeInterval(-30)))","session":"s1","run":"r1","seq":2,"component":{"type":"approval","id":"card","grant":"g_01","draft":"d_01"}}"#
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[\#(card)]}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "connected"))]}"#)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (404, #"{"error":"draft not found"}"#)
+        await model.loadSetup()
+        XCTAssertEqual(model.grants.first?.id, "g_01", "the grant is read")
+        XCTAssertNil(model.setupDrafts["d_01"])
+        let why = try XCTUnwrap(model.setupDraftErrors["d_01"], "KIFF's refusal is kept for the card")
+        XCTAssertFalse(why.isEmpty)
+        XCTAssertEqual(Words.Coach.cardDraftNotRead(why: why), "KIFF's draft of this Card couldn't be read. \(why)")
+        XCTAssertTrue(model.cardWaitsOnItsGrant, "the thread is read again while the card waits on its Card")
+
+        // KIFF gives it on the next read: the card has its Card, the reason goes, and so does the wait.
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"draft","version":"v3"}"#)
+        await model.loadSetupThread()
+        XCTAssertEqual(model.setupDrafts["d_01"]?.version, "v3")
+        XCTAssertNil(model.setupDraftErrors["d_01"])
+        XCTAssertFalse(model.cardWaitsOnItsGrant)
+
+        // Try again reads it at once, and a draft read before stays drawn if a read fails.
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (503, #"{"error":"down"}"#)
+        let read = await model.readCardDraft("d_01")
+        XCTAssertFalse(read)
+        XCTAssertEqual(model.setupDrafts["d_01"]?.version, "v3")
+        XCTAssertFalse(model.cardWaitsOnItsGrant)
+
+        let view = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/Views/SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(view.contains("Text(Words.Coach.cardDraftNotRead(why: why))"))
+        XCTAssertTrue(view.contains("Button(Words.Common.tryAgain) { Task { await model.readCardDraft(id) } }"))
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// A new conversation (#73): the thread is empty and nothing is read until the
     /// first message, which asks for a new chat; that chat is the one shown from then on.
     func testANewConversationStartsItsOwnChat() async throws {

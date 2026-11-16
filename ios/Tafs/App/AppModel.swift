@@ -888,7 +888,7 @@ final class AppModel: ObservableObject {
         grantsReadFor = []
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
-        setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
+        setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; setupDraftErrors = [:]; answered = []; setupError = nil
         setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
@@ -1475,7 +1475,7 @@ final class AppModel: ObservableObject {
         grantsReadFor = []
         refusedRequests = []
         setupStream?.cancel(); setupStream = nil; setupLive = nil
-        setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; answered = []; setupError = nil
+        setupTaf = nil; setupThread = SetupThread(); setupAwaiting = nil; setupDrafts = [:]; setupDraftErrors = [:]; answered = []; setupError = nil
         setupUnsent = []; setupDraft = ""; cardNotes = [:]; setupSettled = []; setupEnded = nil; setupChat = nil; setupHanded = false; coachStart = nil; coachTools = nil; coachToolsAsked = false; coachToolsError = nil; setupFresh = false; setupChats = []; archivedSetupChats = []; setupSent = []; chatSent = [:]; recipes = nil; gallery = nil; suggestions = nil; suggestionsBusy = false; suggestionsError = nil; calendarState = nil; calendarRead = nil; calendarError = nil
         chatStreams.values.forEach { $0.cancel() }; chatStreams = [:]; chatStates = [:]; kiffAccount = nil; chatFiles = [:]; fileNotices = [:]; Self.removeOpenedFiles()
         usage = nil; usageError = nil; balance = nil; balanceError = nil; balanceStale = false; planMessage = nil; credits = nil; previousCredits = nil; tafCredits = [:]; creditsError = nil; previousCreditsError = nil; tafCreditsError = [:]
@@ -6744,6 +6744,14 @@ final class AppModel: ObservableObject {
         grants.filter { ($0.entry == app.entry || $0.id == app.grant) && !["disconnected", "failed"].contains($0.status) }
     }
 
+    /// Whether an app's row in Connect apps opens its connections: when tafs cloud says it's connected,
+    /// or whenever this device holds one of its connections, such as a sign-in whose card was declined
+    /// (`listed`), so Disconnect is in reach. `connected` keeps its meaning: a `listed` grant gives no taf
+    /// access, and the app still offers Connect.
+    static func opensConnections(_ app: TafsCloud.ConnectApps.App, in grants: [PlanqueClient.Grant]) -> Bool {
+        app.connected || !connections(of: app, in: grants).isEmpty
+    }
+
     /// An app's connections for one taf, under its name (the owner's Connect apps ask): the
     /// heading, and its connections in planque's order.
     struct ConnectionGroup: Identifiable, Equatable {
@@ -6935,6 +6943,8 @@ final class AppModel: ObservableObject {
     @Published var setupError: String?
     /// The drafts Setup's approvals name, read from KIFF so the owner sees the Cards.
     @Published private(set) var setupDrafts: [String: KIFFClient.AgentDraft] = [:]
+    /// Why KIFF's draft of a card's Card couldn't be read, by draft id: KIFF's reason, for the card.
+    @Published private(set) var setupDraftErrors: [String: String] = [:]
     /// Cards the owner answered on this phone, by `ShownComponent.ref`, so their buttons go
     /// quiet. Never by id alone: Coach can use an id again, and a card answered in one
     /// conversation is never answered in the next (kiff/tafs#387). A card is the thread's once
@@ -7785,8 +7795,28 @@ final class AppModel: ObservableObject {
             await refreshConnections()
         }
         for c in approvals {
-            guard let d = c.draft, setupDrafts[d]?.confirmed != true, let draft = try? await kiff.draft(id: d), gen == accountGeneration else { continue }
-            setupDrafts[d] = draft
+            guard let d = c.draft, setupDrafts[d]?.confirmed != true else { continue }
+            await readCardDraft(d)
+            guard gen == accountGeneration else { return }
+        }
+    }
+
+    /// Reads KIFF's draft of a card's Card. A read KIFF refuses keeps KIFF's reason for the card,
+    /// which says it with Try again, never a card left on "Reading…" for good with Approve off.
+    /// A draft read before stays drawn.
+    @discardableResult
+    func readCardDraft(_ id: String) async -> Bool {
+        let gen = accountGeneration
+        do {
+            let draft = try await kiff.draft(id: id)
+            guard gen == accountGeneration else { return false }
+            setupDrafts[id] = draft
+            setupDraftErrors[id] = nil
+            return true
+        } catch {
+            guard gen == accountGeneration else { return false }
+            setupDraftErrors[id] = (error as? LocalizedError)?.errorDescription ?? error.localizedDescription
+            return false
         }
     }
 
@@ -8470,21 +8500,24 @@ final class AppModel: ObservableObject {
             if setupLive != nil { continue }
             let mine = setupThread.messages.last(where: { $0.from == .owner })?.id
             if mine != lastOwner { lastOwner = mine; polls = 0 }
-            // A card whose grant planque hasn't listed yet keeps the thread read, so its grant is read again
-            // and the card leaves "Reading the request…", however long ago the owner last wrote.
+            // A card whose grant planque hasn't listed yet, or whose Card KIFF hasn't given, keeps the thread
+            // read, so both are read again and the card leaves "Reading…", however long ago the owner last wrote.
             guard polls < setupPollBudget || cardWaitsOnItsGrant else { continue }
             polls += 1
             await loadSetupThread()
         }
     }
 
-    /// An unanswered approval or sign-in card whose grant this phone hasn't read yet, shown in the last ten
-    /// minutes: the thread is read again while it waits, past the poll budget, so the grant is read too.
+    /// An unanswered approval or sign-in card whose grant, or KIFF's draft of whose Card, this phone hasn't
+    /// read yet, shown in the last ten minutes: the thread is read again while it waits, past the poll
+    /// budget, so the grant and the draft are read too.
     var cardWaitsOnItsGrant: Bool {
         setupThread.components.contains { shown in
             let c = shown.component
             guard c.type == .approval || c.type == .signIn, let g = c.grant, setupThread.answer(to: c.id) == nil else { return false }
-            return !grants.contains { $0.id == g } && clock().timeIntervalSince(shown.firstAt) < 600
+            // Its grant, or KIFF's draft of its Card, not read yet: Approve waits on both.
+            let unread = !grants.contains { $0.id == g } || c.draft.map { setupDrafts[$0] == nil } == true
+            return unread && clock().timeIntervalSince(shown.firstAt) < 600
         }
     }
 
