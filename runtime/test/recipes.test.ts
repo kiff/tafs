@@ -234,10 +234,12 @@ Bezahle meine Rechnungen unter 100 EUR.
     expect(ids).toContain("follow-up-new-leads");
     const without = new Set([...CONNECTS_TODAY].filter((v) => v !== "typeform"));
     expect(recipesFor(undefined, "en", true, without).recipes.map((r) => r.id)).not.toContain("follow-up-new-leads");
-    // Google Calendar, Drive and Sheets were proved by sign-ins on a phone (16 Nov): appointments and receipts are listed.
-    expect(ids).toEqual(expect.arrayContaining(["book-and-move-appointments", "file-receipts"]));
-    const noSheets = new Set([...CONNECTS_TODAY].filter((v) => v !== "googlesheets"));
-    expect(recipesFor(undefined, "en", true, noSheets).recipes.map((r) => r.id)).not.toContain("file-receipts");
+    // Google Calendar and Drive were proved by sign-ins on a phone (16 Nov): appointments are listed. Sheets connected
+    // too, but its sign-in was called read-only before the grant; receipts waits until that fix is live.
+    expect(ids).toContain("book-and-move-appointments");
+    expect(ids).not.toContain("file-receipts");
+    const withSheets = new Set([...CONNECTS_TODAY, "googlesheets"]);
+    expect(recipesFor(undefined, "en", true, withSheets).recipes.map((r) => r.id)).toContain("file-receipts");
   });
 
   // Three jobs for small shops that need only apps that connect today: listed now, with no proof run.
