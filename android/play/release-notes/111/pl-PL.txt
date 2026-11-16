@@ -1,0 +1,6 @@
+- Card mówi, gdy logowanie aplikacji wymaga więcej, niż potrzeba do zadania.
+- Coach: nic w czacie się nie przesuwa, gdy odpowiada.
+- Rejestr nigdy nie pokazuje surowego błędu aplikacji.
+- Zamknięcie prośby o odcisk palca pokazuje „Anulowano. Nic się nie zmieniło.”
+- Szkic Card, którego nie udało się odczytać, mówi dlaczego, z „Spróbuj ponownie”.
+- Konto › Strefa czasowa proponuje strefę telefonu tylko, gdy jest inna.

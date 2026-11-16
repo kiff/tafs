@@ -1,0 +1,6 @@
+- Une Card indique quand la connexion d'une app demande plus que ce dont la tâche a besoin.
+- Coach : rien ne bouge dans la conversation pendant qu'il répond.
+- Le Registre n'affiche jamais l'erreur brute d'une app.
+- Fermer la demande d'empreinte affiche « Annulé. Rien n'a changé. »
+- Un brouillon de Card illisible dit pourquoi, avec Réessayer.
+- Compte › Fuseau horaire ne propose celui du téléphone que s'il est différent.
