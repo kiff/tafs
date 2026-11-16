@@ -5,9 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasAnyAncestor
-import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.isDialog
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -23,6 +21,7 @@ import bot.tafs.app.views.DevicesSheet
 import bot.tafs.app.views.PAIR_BUTTON
 import bot.tafs.app.views.PAIR_CHECK
 import bot.tafs.app.views.PAIR_LINE
+import bot.tafs.app.views.PAIR_TITLE
 import java.security.KeyPairGenerator
 import java.security.spec.ECGenParameterSpec
 import java.util.Base64
@@ -80,8 +79,8 @@ class PairComputerTest {
     open()
     val code = PairQr.read(qr)!!.checkCode!!
     // The title names no device: its name is only its claim, shown after the code. The Devices sheet behind has its own
-    // "Add a device" button, so the title is looked for inside the dialog.
-    rule.onNode(hasText("Add a device") and hasAnyAncestor(isDialog())).assertIsDisplayed()
+    // "Add a device" button (itself in a dialog window, the sheet), so the alert's title is found by its own tag.
+    rule.onNodeWithTag(PAIR_TITLE).assertIsDisplayed().assertTextEquals("Add a device")
     rule.onAllNodesWithText("Pair tafs on this Windows PC?").assertCountEquals(0)
     rule.onNodeWithTag(PAIR_CHECK).assertIsDisplayed()
     rule.onNodeWithText("Does your computer show $code?").assertIsDisplayed()

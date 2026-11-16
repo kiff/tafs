@@ -183,7 +183,7 @@ fun DevicesSheet(
     DriveAlert(
       onDismissRequest = cancelPair,
       // "Add a device", never its name: the name is only what it says it is, so it comes after the code (qa-kiff, as on iOS).
-      title = { Text(pairTitle()) },
+      title = { Text(pairTitle(), modifier = Modifier.testTag(PAIR_TITLE)) },
       text = {
         // The check code first: the name is only what the other device says it is, so the code on its screen is what binds this
         // yes to the device in front of the person (qa-kiff, 16 Nov). Then the owner's line, the name as its claim, what yes gives.
@@ -231,6 +231,7 @@ internal fun pairGives(qr: PairQr): String = when {
 internal const val DEVICES_SHEET = "devices-sheet"
 internal const val PAIR_BUTTON = "devices.pair"
 internal const val PAIR_CHECK = "devices.pair.check"
+internal const val PAIR_TITLE = "devices.pair.title"
 internal const val PAIR_LINE = "devices.pair.line"
 internal const val PASSKEY_BUTTON = "devices.passkey.add"
 internal const val PASSKEY_LINE = "devices.passkey.line"
