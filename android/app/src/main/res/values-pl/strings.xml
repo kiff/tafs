@@ -62,6 +62,7 @@
     <string name="approval_biometry_screen_lock">blokada ekranu</string>
     <string name="approval_biometry_timed_out">%1$s: upłynął limit czasu. Spróbuj ponownie.</string>
     <string name="approval_can_not_used_right_try">%1$s nie może być teraz użyte. Spróbuj ponownie za chwilę.</string>
+    <string name="approval_cancelled">Anulowano. Nic się nie zmieniło.</string>
     <string name="approval_cancelled_nothing_approved_request_kept">Anulowano, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz.</string>
     <string name="approval_cant_approve_none_enrolled">Zatwierdzenie wymaga odcisku palca na tym telefonie.</string>
     <string name="approval_cant_approve_temporarily_unavailable">Czytnika linii papilarnych nie można teraz użyć. Spróbuj ponownie za chwilę.</string>
@@ -2089,6 +2090,7 @@
     <string name="setup_choose_actions">Wybierz akcje</string>
     <string name="setup_connect_app">Połącz aplikację…</string>
     <string name="setup_connected_apps">Połączone aplikacje</string>
+    <string name="setup_discard_not_confirmed">Nie odrzucono. Nic się nie zmieniło.</string>
     <string name="setup_doors">Drzwi</string>
     <string name="setup_edit">Edytuj</string>
     <string name="setup_follow_ups">Przypomnienia, które sam ustawił</string>

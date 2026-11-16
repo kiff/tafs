@@ -125,6 +125,8 @@ enum Words {
         static func biometryTimedOut(biometry: String) -> String { Words.line("approval.biometry_timed_out", biometry) }
         /// {either} can't be used right now. Try again in a moment.
         static func canNotUsedRightTry(either: String) -> String { Words.line("approval.can_not_used_right_try", either) }
+        /// Cancelled. Nothing changed.
+        static var cancelled: String { Words.line("approval.cancelled") }
         /// Cancelled, so nothing was approved. The request is kept: approve again when you're ready.
         static var cancelledNothingApprovedRequestKept: String { Words.line("approval.cancelled_nothing_approved_request_kept") }
         enum CantApprove {
@@ -3911,6 +3913,8 @@ enum Words {
         static var connectApp: String { Words.line("setup.connect_app") }
         /// Connected apps
         static var connectedApps: String { Words.line("setup.connected_apps") }
+        /// Not discarded. Nothing changed.
+        static var discardNotConfirmed: String { Words.line("setup.discard_not_confirmed") }
         /// Doors
         static var doors: String { Words.line("setup.doors") }
         /// Edit

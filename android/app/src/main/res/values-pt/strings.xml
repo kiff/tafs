@@ -60,6 +60,7 @@
     <string name="approval_biometry_screen_lock">o seu bloqueio de ecrã</string>
     <string name="approval_biometry_timed_out">%1$s: o tempo esgotou. Tente novamente.</string>
     <string name="approval_can_not_used_right_try">Não é possível usar %1$s neste momento. Tente novamente daqui a pouco.</string>
+    <string name="approval_cancelled">Cancelado. Nada mudou.</string>
     <string name="approval_cancelled_nothing_approved_request_kept">Cancelado, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto.</string>
     <string name="approval_cant_approve_none_enrolled">Aprovar requer uma impressão digital neste telefone.</string>
     <string name="approval_cant_approve_temporarily_unavailable">Não é possível usar o sensor de impressões digitais neste momento. Tente novamente daqui a pouco.</string>
@@ -1973,6 +1974,7 @@
     <string name="setup_choose_actions">Escolher ações</string>
     <string name="setup_connect_app">Ligar uma app…</string>
     <string name="setup_connected_apps">Apps ligadas</string>
+    <string name="setup_discard_not_confirmed">Não descartado. Nada mudou.</string>
     <string name="setup_doors">Portas</string>
     <string name="setup_edit">Editar</string>
     <string name="setup_follow_ups">Acompanhamentos que definiu para si</string>

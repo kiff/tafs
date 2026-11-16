@@ -13,6 +13,7 @@
   "approval.biometry.screen_lock": "o seu bloqueio de ecrã",
   "approval.biometry_timed_out": "{biometry}: o tempo esgotou. Tente novamente.",
   "approval.can_not_used_right_try": "Não é possível usar {either} neste momento. Tente novamente daqui a pouco.",
+  "approval.cancelled": "Cancelado. Nada mudou.",
   "approval.cancelled_nothing_approved_request_kept": "Cancelado, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto.",
   "approval.cant_approve.none_enrolled": "Aprovar requer uma impressão digital neste telefone.",
   "approval.cant_approve.temporarily_unavailable": "Não é possível usar o sensor de impressões digitais neste momento. Tente novamente daqui a pouco.",

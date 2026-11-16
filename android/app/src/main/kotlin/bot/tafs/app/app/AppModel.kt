@@ -1614,9 +1614,11 @@ class AppModel(
 
   /**
    * What a signature that didn't happen says: the phone's own reason where the owner can act on it (no fingerprint,
-   * the key turned off), else [otherwise]. A key the phone turned off ends approving until a new sign-in.
+   * the key turned off), else [otherwise]. A key the phone turned off ends approving until a new sign-in. A prompt the person
+   * closed says [closed]: "Cancelled. Nothing changed." where nothing is waiting, or that the request is kept where it is.
    */
-  private fun notSigned(e: SignerException, otherwise: String): String = when {
+  private fun notSigned(e: SignerException, otherwise: String, closed: String = Words.Approval.cancelled): String = when {
+    e is bot.tafs.app.signing.PromptClosed -> closed
     e is ApprovalKeyRenewed -> {
       lostApprovalKey()
       e.message!!
@@ -2097,7 +2099,8 @@ class AppModel(
     val signature = try {
       cloud.discardSignature(agent, tenant) { built -> signer.signCritical(taf.discard.words.title) { built() } }
     } catch (e: SignerException) {
-      e.message?.takeIf { it != bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED }?.let(::fail)
+      // A closed prompt drops nothing, and says so; a finger not recognized, or no fingerprint set up, says why.
+      fail(if (e is bot.tafs.app.signing.PromptClosed) Words.Setup.discardNotConfirmed else e.message ?: Words.Setup.discardNotConfirmed)
       return false
     }
     if (generation != accountGeneration) return false
@@ -2310,7 +2313,10 @@ class AppModel(
       refresh()
       loadTafSetup(taf.id)
     } catch (e: SignerException) {
-      if (generation == accountGeneration) fail(notSigned(e, Words.NeedsYou.CardUnit.notDismissedUnconfirmed))
+      // The request stays in Needs you, so a closed prompt says it's kept, as Refuse does.
+      if (generation == accountGeneration) {
+        fail(notSigned(e, Words.NeedsYou.CardUnit.notDismissedUnconfirmed, closed = Words.Approval.cancelledNothingApprovedRequestKept))
+      }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -2352,7 +2358,10 @@ class AppModel(
       drop(current.id)
       refresh()
     } catch (e: SignerException) {
-      if (generation == accountGeneration) fail(notSigned(e, Words.NeedsYou.YourStep.notAnsweredUnconfirmed))
+      // The step is still waiting, so a closed prompt says the request is kept, as Refuse does.
+      if (generation == accountGeneration) {
+        fail(notSigned(e, Words.NeedsYou.YourStep.notAnsweredUnconfirmed, closed = Words.Approval.cancelledNothingApprovedRequestKept))
+      }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
@@ -2499,9 +2508,9 @@ class AppModel(
     val signature = try {
       cloud.removalSignature(cloudId, tenant) { built -> signer.signCritical(Words.Taf.Remove.prompt(taf = taf.name)) { built() } }
     } catch (e: SignerException) {
-      // A prompt closed or a finger not recognized removes nothing, and says so ("Not removed. Nothing changed."), rather than the
-      // button coming back with no word; anything else (no fingerprint set up) says why.
-      return if (e.message == bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED) Words.Taf.Remove.notConfirmed else e.message
+      // A closed prompt removes nothing, and says so ("Not removed. Nothing changed."), rather than the button coming back with no
+      // word; anything else (a finger not recognized, no fingerprint set up) says why.
+      return if (e is bot.tafs.app.signing.PromptClosed) Words.Taf.Remove.notConfirmed else e.message
     }
     if (generation != accountGeneration) return null
     var cardsLeft = 0
@@ -6595,8 +6604,12 @@ class AppModel(
     val answered = try {
       presigned ?: signAnswer(call, answer, Words.NeedsYou.Prompt.answer(summary = call.proposed.summary), confirmed)
     } catch (e: SignerException) {
-      // Nothing was sent, so the hold stays where it was; say so after why (requirement: a clear outcome, the request kept).
-      fail("${notSigned(e, Words.Common.notSentUnconfirmed)} ${bot.tafs.app.model.ApprovalWords.KEPT}")
+      // Nothing was sent, so the hold stays where it was; say so after why (requirement: a clear outcome, the request kept). A
+      // closed prompt's line already says the request is kept.
+      fail(
+        if (e is bot.tafs.app.signing.PromptClosed) Words.Approval.cancelledNothingApprovedRequestKept
+        else "${notSigned(e, Words.Common.notSentUnconfirmed)} ${bot.tafs.app.model.ApprovalWords.KEPT}",
+      )
       return false
     }
     val signature = answered.value
@@ -7675,7 +7688,9 @@ class AppModel(
       approvalReason = what
       kiff.setupSigner = { signer.signConfirmed(it) }
       kiff.removeDevice(device.id)
-    } catch (_: SignerException) {
+    } catch (e: SignerException) {
+      // Signed out of nothing: a closed prompt says so ("Cancelled. Nothing changed."), a finger not recognized says try again.
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = notSigned(e, Words.Common.didntGoThroughUnconfirmed(what = what))) }
       return false
     } catch (_: KiffError.ApprovalKeyRequired) {
       if (generation == accountGeneration) _state.update { it.copy(devicesError = KiffClient.APPROVAL_KEY_LOST) }
@@ -7912,7 +7927,10 @@ class AppModel(
       approvalReason = Words.Settings.Devices.passkeyRemovePrompt(name = passkey.name)
       kiff.setupSigner = { signer.signConfirmed(it) }
       kiff.removePasskey(id)
-    } catch (_: SignerException) {
+    } catch (e: SignerException) {
+      // Nothing removed: a closed prompt says so ("Cancelled. Nothing changed."), a finger not recognized says try again.
+      val what = Words.Settings.Devices.passkeyRemovePrompt(name = passkey.name)
+      if (generation == accountGeneration) _state.update { it.copy(passkeyLine = notSigned(e, Words.Common.didntGoThroughUnconfirmed(what = what))) }
       return false
     } catch (_: KiffError.ApprovalKeyRequired) {
       if (generation == accountGeneration) _state.update { it.copy(passkeyLine = KiffClient.APPROVAL_KEY_LOST) }

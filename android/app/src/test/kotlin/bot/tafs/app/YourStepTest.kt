@@ -36,7 +36,8 @@ class YourStepTest {
   private val t0 = Instant.parse("2026-11-11T17:00:00Z")
   private val transport = FakeTransport()
   private val secrets = InMemorySecretStore()
-  private val signer = softwareSigner()
+  private val auth = FakeAuthenticator()
+  private val signer = softwareSigner(auth)
   private val read = "GET /v1/me/handoffs/ho_1"
   private val answer = "POST /v1/me/handoffs/ho_1/answer"
 
@@ -155,6 +156,18 @@ class YourStepTest {
     m.answerYourStep(m.state.value.yourSteps.single(), done = false)
     val sent = KiffClient.json.parseToJsonElement(String(transport.requestsTo(answer).single().body!!)).jsonObject
     assertEquals("skipped", sent["answer"]!!.jsonPrimitive.content)
+  }
+
+  @Test fun aClosedPromptAnswersNothingAndSaysTheStepIsKept() = runTest {
+    reads()
+    transport.answer(read, 200, """{"id":"ho_1","version":1,"status":"waiting"}""")
+    val m = model()
+    m.refresh()
+    auth.fails = bot.tafs.app.signing.PromptClosed()
+    m.answerYourStep(m.state.value.yourSteps.single(), done = true)
+    assertTrue(transport.requestsTo(answer).isEmpty())
+    assertEquals(listOf("ho_1"), m.state.value.yourSteps.map { it.handoff })
+    assertEquals(bot.tafs.app.model.Words.Approval.cancelledNothingApprovedRequestKept, m.state.value.lastError)
   }
 
   @Test fun aStepKiffNoLongerWaitsOnIsNotAnsweredAndLeaves() = runTest {
