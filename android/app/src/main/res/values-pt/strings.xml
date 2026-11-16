@@ -2141,6 +2141,7 @@
     </plurals>
     <string name="taf_remove_done">O seu agendamento, chats, relatórios de execução, memória e chave foram eliminados, e o nome %1$s está livre. Os recibos do KIFF mantêm-se.</string>
     <string name="taf_remove_finishes_on_refresh">Se a remoção começou, o tafs conclui-a na próxima atualização.</string>
+    <string name="taf_remove_not_confirmed">Não removido. Nada mudou.</string>
     <string name="taf_remove_not_finished">Não concluído: não foi possível remover %1$s. O tafs tenta novamente sempre que atualiza.</string>
     <string name="taf_remove_not_finished_after">%1$s Não concluído: não foi possível remover %2$s. O tafs tenta novamente sempre que atualiza.</string>
     <string name="taf_remove_prompt">Remover %1$s definitivamente</string>

@@ -77,6 +77,7 @@
   },
   "taf.remove.done": "La sua pianificazione, le chat, i resoconti delle esecuzioni, la memoria e la chiave vengono eliminati, e il nome {taf} torna libero. Le ricevute di KIFF restano.",
   "taf.remove.finishes_on_refresh": "Se la rimozione è iniziata, tafs la completa al prossimo aggiornamento.",
+  "taf.remove.not_confirmed": "Non rimosso. Non è cambiato nulla.",
   "taf.remove.not_finished": "Non completato: non è stato possibile rimuovere {steps}. tafs riprova a ogni aggiornamento.",
   "taf.remove.not_finished_after": "{cards} Non completato: non è stato possibile rimuovere {failed}. tafs riprova a ogni aggiornamento.",
   "taf.remove.prompt": "Rimuovi {taf} definitivamente",

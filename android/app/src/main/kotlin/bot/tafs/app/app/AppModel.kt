@@ -2499,8 +2499,9 @@ class AppModel(
     val signature = try {
       cloud.removalSignature(cloudId, tenant) { built -> signer.signCritical(Words.Taf.Remove.prompt(taf = taf.name)) { built() } }
     } catch (e: SignerException) {
-      // A prompt closed or a finger not recognized does nothing; anything else (no fingerprint set up) says why.
-      return e.message?.takeIf { it != bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED }
+      // A prompt closed or a finger not recognized removes nothing, and says so ("Not removed. Nothing changed."), rather than the
+      // button coming back with no word; anything else (no fingerprint set up) says why.
+      return if (e.message == bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED) Words.Taf.Remove.notConfirmed else e.message
     }
     if (generation != accountGeneration) return null
     var cardsLeft = 0

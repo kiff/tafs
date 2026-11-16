@@ -2302,6 +2302,7 @@ object Words {
       fun connectionsLeft(count: Int): String = Res.p(R.plurals.taf_remove_connections_left, count, Res.number(count))
       fun done(taf: String): String = Res.s(R.string.taf_remove_done, taf)
       val finishesOnRefresh: String get() = Res.s(R.string.taf_remove_finishes_on_refresh)
+      val notConfirmed: String get() = Res.s(R.string.taf_remove_not_confirmed)
       fun notFinished(steps: String): String = Res.s(R.string.taf_remove_not_finished, steps)
       fun notFinishedAfter(cards: String, failed: String): String = Res.s(R.string.taf_remove_not_finished_after, cards, failed)
       fun prompt(taf: String): String = Res.s(R.string.taf_remove_prompt, taf)

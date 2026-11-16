@@ -679,6 +679,8 @@ never named, and a taf shared with no one else reads "Not shared".
     under **Not sent**, with the place's name for one of the taf's own, and **Send again** by its place.
   - **What it remembers**, **Versions**, Pause (in the sample) and **Remove for good**. Remove for good reads tafs cloud's
     words before its confirmation opens; meanwhile the button takes no second tap and reads as disabled (Android 1.27.11).
+    The fingerprint comes first: with the prompt closed or the finger not recognized, nothing is removed and the screen says
+    so, "Not removed. Nothing changed." (`taf.remove.not_confirmed`); before, the button came back with no word.
 
 A change to the dial's setting (a size, Skip it / Run after, a place in an app) makes the taf's
 next version: "DRAFT · Vn · NOT LIVE" and **Make N changes live** show in the sheet while it waits

@@ -2141,6 +2141,7 @@
     </plurals>
     <string name="taf_remove_done">Sein Zeitplan, seine Chats, Laufberichte, sein Gedächtnis und sein Schlüssel sind gelöscht, und der Name %1$s ist frei. KIFFs Belege bleiben.</string>
     <string name="taf_remove_finishes_on_refresh">Falls das Entfernen begonnen hat, schließt tafs es bei der nächsten Aktualisierung ab.</string>
+    <string name="taf_remove_not_confirmed">Nicht entfernt. Nichts wurde geändert.</string>
     <string name="taf_remove_not_finished">Nicht abgeschlossen, nicht entfernt: %1$s. tafs versucht es bei jeder Aktualisierung erneut.</string>
     <string name="taf_remove_not_finished_after">%1$s Nicht abgeschlossen, nicht entfernt: %2$s. tafs versucht es bei jeder Aktualisierung erneut.</string>
     <string name="taf_remove_prompt">%1$s endgültig entfernen</string>
