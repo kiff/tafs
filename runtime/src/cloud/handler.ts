@@ -7,7 +7,7 @@ import { type BalanceView, balanceView, type CreditRun, CreditsError, runCredits
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
-import { alertTarget, briefNotification, type Change, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
@@ -1205,6 +1205,13 @@ async function alert(event: HTTPEvent, deps: Deps): Promise<unknown> {
     keep: (key, until) => deps.slots.keep(key, until),
     release: (key) => deps.slots.release(key),
     now,
+    // Held calls that can wait for the brief go in it, not on the phones now: off until the owner turns it on.
+    ...(process.env.TAFS_BRIEF_HELD_WAIT === "on" && deps.coach ? {
+      heldWaits: async (t: string, hold: Parameters<typeof heldWaitsForBrief>[0]) => {
+        const kept = (await deps.coach!.get(briefZoneKey(t)).catch(() => undefined)) as { zone?: unknown } | undefined;
+        return heldWaitsForBrief(hold, typeof kept?.zone === "string" ? kept.zone : undefined, now);
+      },
+    } : {}),
   });
   if (handedOn) return out;
   // Early: KIFF sends it again on its backoff (any status outside 2xx), and kiff/agents answers 404 only
