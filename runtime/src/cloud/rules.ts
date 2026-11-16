@@ -10,6 +10,8 @@
  * At Approve, a draft's Cards are checked against the newest rules the owner agreed: each Card covering a tool has
  * `on_exceed: "owner"` where its rule says ask and `"refuse"` where it says refuse, and a write with no rule isn't
  * signed. A rules notice newer than that agreement (or one never agreed) blocks the draft until the owner agrees to it.
+ * On a tool whose rule has figures, a Card carries those alone: any other figure, in any window, isn't signed
+ * (`rulesUnnamedFigures`).
  *
  * A rule may also carry the figures the owner read, `limits: [{quantity, window, limit}]`: each call's (`window: "call"`)
  * and the day's total (`"calendar_day"`), in the Card's own units (minor units of the connection's currency, as
@@ -217,13 +219,19 @@ function figuresOn(cards: readonly unknown[], name: string): Figure[] {
   return out;
 }
 
+/** A figure a Card adds on a tool the rules don't name: its quantity, its window as the Card writes it, and its limit. */
+export interface UnnamedFigure { tool: string; quantity: string; window: string; limit: number }
+
 /**
- * The figures the Cards add that the agreed rules don't name: on a tool whose rule has figures, each call's or a day's
- * total on a quantity and window the rule doesn't give. Logged for now, never refused (a later flag refuses them).
- * Each is "tool quantity window limit", the tool as the connection names it.
+ * The figures the Cards add that the agreed rules don't name: on a tool whose rule has figures, each call's or a total
+ * over any window (a day's, an hour's, a week's, a lifetime's) on a quantity and window the rule doesn't give. Refused at
+ * Approve (Eval 43927756622: after a refused draft, Coach signed a rolling hour's €50 on refunds beside the agreed €5 a
+ * refund and €50 a day, and held past it where the rules said refuse). Not named: a total for each item (`per`), whose
+ * shapes the checks before this one judge; and a count of 0 (each call asks), which only asks. The tool is named as the
+ * connection titles it.
  */
-export function rulesUnnamedFigures(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[]): string[] {
-  const out: string[] = [];
+export function rulesUnnamedFigures(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[]): UnnamedFigure[] {
+  const out: UnnamedFigure[] = [];
   for (const g of grants) {
     for (const t of g.request.tools ?? []) {
       const name = fold(t.name || t.tool);
@@ -231,9 +239,33 @@ export function rulesUnnamedFigures(grants: readonly ApprovalGrant[], cards: rea
       const before = fold(t.tool || t.name);
       const rule = rules.find((r) => fold(r.tool) === before) ?? rules.find((r) => fold(r.tool) === name);
       if (!rule?.limits) continue;
-      for (const f of figuresOn(cards, name)) {
-        if (!rule.limits.some((l) => l.quantity === f.quantity && l.window === f.window)) out.push(`${t.name || t.tool} ${f.quantity} ${f.window} ${f.limit}`);
+      for (const f of figuresInAnyWindow(cards, name)) {
+        if (f.quantity === "count" && f.limit === 0) continue;
+        if (!rule.limits.some((l) => l.quantity === f.quantity && l.window === f.window)) {
+          out.push({ tool: t.title || t.name || t.tool || name, ...f });
+        }
       }
+    }
+  }
+  return out;
+}
+
+/**
+ * The figures the Cards set on one tool (its KIFF name, folded), in every window: each call's, from its grants'
+ * `per_action_max` (`call`), and each total with no `per`, from the Cards' `aggregates`, in the window it names, folded
+ * (`calendar_day`, `rolling_1h`, `lifetime`…; none written reads as ""). Quantities as `figuresOn` reads them.
+ */
+function figuresInAnyWindow(cards: readonly unknown[], name: string): Array<{ quantity: string; window: string; limit: number }> {
+  const out: Array<{ quantity: string; window: string; limit: number }> = figuresOn(cards, name).filter((f) => f.window === "call");
+  const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : -1);
+  const trim = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  for (const raw of cards) {
+    const card = raw as { grants?: unknown; aggregates?: unknown };
+    const grants = (Array.isArray(card.grants) ? card.grants : []) as Array<{ action?: unknown }>;
+    if (!grants.some((g) => fold(g.action) === name)) continue;
+    for (const a of (Array.isArray(card.aggregates) ? card.aggregates : []) as Array<{ quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown }>) {
+      if (fold(a.per)) continue;
+      out.push({ quantity: trim(a.quantity), window: fold(a.window), limit: num(a.limit) });
     }
   }
   return out;

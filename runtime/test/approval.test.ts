@@ -2394,7 +2394,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(w.rulesFigures("X")).toContain("X");
       expect(w.rulesFigures("X")).not.toBe(WORDS.rulesFigures("X"));
     }
-    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_figures") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
+    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_figures") && REDRAFT_CODES.has("rules_unagreed_figure") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
   });
 
   describe("the figures the owner agreed", () => {
@@ -2432,6 +2432,32 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(String(w.told()?.answer)).toMatch(/^failed: the rules the owner agreed give "Refund a charge" 5000 as a day's total on sum\(amount\), and a Card covering it has 2000\. Draft it again with an aggregate \{quantity: "sum\(amount\)", window: "calendar_day", limit: 5000\} with no per/);
     });
 
+    // Eval 43927756622 (Setup, run 1): refused once for a day's total on both Cards, Coach redrafted with an hour's €50 held
+    // on the per-refund Card, beside the agreed €5 a refund held and €50 a day refused, and signed it. Never signed now,
+    // and Coach hears the one figure to drop and to change nothing else.
+    it("a limit the owner never agreed, in any window, is refused, and Coach hears to drop only that one", async () => {
+      const split = [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, over: "ask" }, DAY] }, { tool: "list_charges", over: "refuse" }];
+      const cards = (held: unknown[]) => [
+        { id: "c1", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: held },
+        { id: "c1b", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(5000)] },
+        { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }];
+      const hour = await setUp("refuse");
+      hour.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards([{ quantity: "sum(amount)", window: "rolling_1h", limit: 5000 }]) };
+      hour.rules("rules-1", split);
+      const r = await hour.tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
+      expect(String(r.answer)).toMatch(/^failed: the draft gives "Refund a charge" a limit the owner never agreed: 5000 on sum\(amount\), per rolling_1h\. /);
+      expect(String(r.answer)).toContain("Draft it again without that one, and change nothing else: no new limit, Card or tool in its place.");
+      expect(String(r.answer)).toContain(`${REFUSAL_CLOSED}`);
+      expect(String(r.answer)).toContain(DRAW_AGAIN);
+      expect(hour.s.checks).toEqual([]);
+      // The same Cards with only what was agreed: signed.
+      const agreed = await setUp("refuse");
+      agreed.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards([]) };
+      agreed.rules("rules-1", split);
+      expect(await agreed.tap()).toMatchObject({ outcome: "sign" });
+    });
+
     // Eval 16's refunds: ask past €5 a refund, refuse past €50 a day, as data, and each answer on its own Card.
     it("ask past one figure and refuse past another: signed on two Cards, refused on one", async () => {
       const split = [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, over: "ask" }, DAY] }, { tool: "list_charges", over: "refuse" }];
@@ -2450,11 +2476,17 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(String(r.answer)).toContain(`failed: the rules the owner agreed ask past one of "Refund a charge"'s limits and refuse past another, and the draft puts both on one Card, which has one on_exceed. Draft it again with each on its own Card`);
     });
 
-    it("a figure the rules don't name, and one the notice's words don't say, are logged and signed", async () => {
+    it("a figure the rules don't name is refused; one the notice's words don't say is logged and signed", async () => {
+      // A total of another argument the rules never set: refused (a count beside the amounts is count_on_amount's).
+      const extra = await setUp("refuse");
+      setFigures(extra.s, 500, [dayTotal(5000), { quantity: "sum(fee)", window: "calendar_day", limit: 100 }]);
+      extra.rules("rules-1", FIGURED);
+      const r = await extra.tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
+      expect(String(r.answer)).toMatch(/^failed: the draft gives "Refund a charge" a limit the owner never agreed: 100 on sum\(fee\), per calendar_day\. /);
+      // The test notice says "€50 a day", so the €5 a refund is the figure its words don't say: logged, and signed.
       const { s, rules, tap } = await setUp("refuse");
-      // A count beside the amounts is refused on its own (count_on_amount): the unnamed figure here is a total of another argument.
-      setFigures(s, 500, [dayTotal(5000), { quantity: "sum(fee)", window: "calendar_day", limit: 100 }]);
-      // The test notice says "€50 a day", so the €5 a refund is the figure its words don't say.
+      setFigures(s, 500, [dayTotal(5000)]);
       rules("rules-1", FIGURED);
       const logged: string[] = [];
       const spy = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { logged.push(a.join(" ")); });
@@ -2463,7 +2495,6 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       } finally {
         spy.mockRestore();
       }
-      expect(logged).toContain("approval rules: a figure the rules don't name: refund_charge_k3 sum(fee) calendar_day 100");
       expect(logged).toContain("approval rules: a figure the notice's words don't say: refund_charge sum(amount) call 500");
       expect(logged.filter((l) => l.includes("calendar_day 5000"))).toEqual([]);
     });

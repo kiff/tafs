@@ -71,7 +71,7 @@ export interface ApprovalGrant {
  * a read that didn't come back) wait for the owner's tap, as before.
  */
 export const REDRAFT_CODES: ReadonlySet<string> = new Set(["no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice", "count_on_amount",
-  "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed", "rules_required"]);
+  "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed_figure", "rules_unagreed", "rules_required"]);
 /** The refusals Coach mends by having the owner agree to the rules first, then drafting again. */
 /**
  * Said with every refusal for rules not agreed: nothing waits for the owner until Coach shows the rules, so Coach shows
@@ -858,8 +858,14 @@ async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards
   }
   const off = rulesMismatch([grant, ...others], cards, agreement.rules);
   if (!off) {
-    // Figures the Cards add that the rules don't name, and figures the notice's words don't say: logged, never refused yet.
-    for (const f of rulesUnnamedFigures([grant, ...others], cards, agreement.rules)) console.log(`approval rules: a figure the rules don't name: ${f}`);
+    // A limit the owner never agreed, in any window, is never signed (Eval 43927756622: an hour's €50 held, beside the
+    // agreed €5 a refund held and €50 a day refused). Coach hears the one figure to drop, and to change nothing else.
+    const extra = rulesUnnamedFigures([grant, ...others], cards, agreement.rules)[0];
+    if (extra) {
+      const per = extra.window === "call" ? "each call" : extra.window ? `per ${extra.window}` : "with no window";
+      return { outcome: "answered", answer: `failed: the draft gives "${extra.tool}" a limit the owner never agreed: ${extra.limit} on ${extra.quantity}, ${per}. The rules they agreed name every limit it has, and a Card carries those alone: no other ceiling, total or count, even as a safety margin. Draft it again without that one, and change nothing else: no new limit, Card or tool in its place.`, note: W.rulesFigures(extra.tool), code: "rules_unagreed_figure" };
+    }
+    // Figures the notice's words don't say: logged, never refused (formats vary by language).
     for (const f of rulesUnsaid(agreement.rules, agreement.text)) console.log(`approval rules: a figure the notice's words don't say: ${f}`);
     return undefined;
   }
