@@ -7,6 +7,7 @@ import bot.tafs.watchlink.WatchReply
 import bot.tafs.watchlink.WatchRequest
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -20,6 +21,14 @@ class WatchModelTest {
   private class Phone(val answers: (WatchRequest) -> Asked) : PhoneLink {
     val asked = mutableListOf<WatchRequest>()
     override suspend fun ask(request: WatchRequest): Asked = answers(request).also { asked += request }
+  }
+
+  /** The all-clear (board 12) shows only when nothing waits: no count and no held call. */
+  @Test fun theAllClearShowsOnlyWhenNothingWaits() {
+    assertTrue(WatchModel.NeedsYouRead(0, "Nothing needs you", emptyList()).allClear)
+    assertFalse(WatchModel.NeedsYouRead(1, "1 held call", listOf(call)).allClear)
+    // tafs cloud counts something the watch can't draw (a step, say): not all clear.
+    assertFalse(WatchModel.NeedsYouRead(2, "2 need you", emptyList()).allClear)
   }
 
   @Test fun showsNeedsYouAndYourTafsInThePhonesWords() = runTest {
