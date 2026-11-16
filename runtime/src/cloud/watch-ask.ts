@@ -15,6 +15,9 @@ import { wordsIn, type Lang } from "./words/index.js";
 
 export type AskState = "accepted" | "working" | "done" | "no_taf" | "failed";
 
+/** The states nothing more comes of: only a request in one of them can be replied to. */
+export const ASK_FINAL: readonly AskState[] = ["done", "no_taf", "failed"];
+
 /** A watch request as tafs cloud keeps it. */
 export interface Ask {
   id: string;

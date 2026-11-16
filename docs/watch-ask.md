@@ -49,6 +49,9 @@ message carries.
 - **Only the tafs the person may use.** `tafs_state` in a watch conversation lists only those KIFF says they may use.
 - **No guessing.** A request no taf can do, or more than one could, ends as `no_taf`, with Coach's sentence.
 - **Once.** A request is claimed once per person and `client_id`: a retry gets the same request back and starts nothing.
+- **A reply waits for its request's end.** `reply_to` goes on in that request's conversation only once it's `done`, `no_taf` or
+  `failed`, with no turn of Coach's pending; before that it's 409 `reply_too_soon`, so a hand-over made for the earlier
+  request can never count as the reply's.
 - **Cut off with the phone.** Removing the phone under Settings → Devices revokes its device key, and every watch request
   through it is refused.
 
@@ -82,5 +85,5 @@ in; if Coach's turn can't be started, the taf's own two sentences, checked the s
 ## The switch
 
 `TAFS_WATCH_ASK` in tafs cloud's environment: `on` for every account, a comma-separated list of account ids for those
-alone (the owner's test on a real watch), anything else off. Off, every `/v1/watch` route is 404 `watch_off`. It goes on
+alone (the owner's test on a real watch), anything else off. Off, every `/v1/watch` route is 404 with `code: "watch_off"`. It goes on
 only once kiff/agents holds a session to its `only` and keeps named-only skills out of `read_skill`.

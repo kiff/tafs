@@ -2522,6 +2522,10 @@ class AppModel(
     return cloud.watchAsk(clientId, text, replyTo, tenant) { signer.signConfirmed(it) }
   }
 
+  /** One of the watch's asks, by its id; null when the phone isn't signed in. */
+  suspend fun watchAskById(id: String): bot.tafs.app.kiff.WatchAsk? =
+    if (_state.value.mode != Mode.kiff) null else cloud.watchAskById(id)
+
   /** The watch's asks, as tafs cloud has them, updated after [since]; null when the phone isn't signed in. */
   suspend fun watchAsks(since: String?): List<bot.tafs.app.kiff.WatchAsk>? =
     if (_state.value.mode != Mode.kiff) null else cloud.watchAsks(since)

@@ -9,7 +9,7 @@
   "watch.asking_phone": "Pytam telefon…",
   "watch.check_phone": "Sprawdź połączenie telefonu",
   "watch.coach_needs_consent": "Zanim porozmawiasz z Coachem, zezwól na użycie AI w tafs na telefonie.",
-  "watch.didnt_catch": "Nie zrozumiałem. Dotknij, aby spróbować ponownie.",
+  "watch.didnt_catch": "Nie udało się zrozumieć. Dotknij, aby spróbować ponownie.",
   "watch.glance_description": "Ile czeka na Ciebie, nigdy co ani kto.",
   "watch.halting": "Blokowanie: {taf}…",
   "watch.halting_all": "Blokowanie wszystkich Twoich tafs…",

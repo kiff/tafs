@@ -2494,7 +2494,7 @@
         <item quantity="one">%1$s ti aspetta</item>
         <item quantity="other">%1$s ti aspettano</item>
     </plurals>
-    <string name="watch_not_sure">Non è sicuro che sia arrivato</string>
+    <string name="watch_not_sure">Arrivo non confermato</string>
     <string name="watch_open_on_phone">Apri sul telefono</string>
     <string name="watch_phone_not_reachable">Il telefono non è raggiungibile. Avvicinalo, poi riprova.</string>
     <plurals name="watch_ready_count">

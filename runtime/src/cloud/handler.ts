@@ -53,7 +53,7 @@ import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, 
 import { appCalls, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
-import { type Ask, type AskState, askOfSession, ASK_KEPT_MS, checkedLine, CLIENT_ID, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchKeys } from "./watch-ask.js";
+import { type Ask, type AskState, askOfSession, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
 import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
@@ -10238,10 +10238,10 @@ async function openKnocks(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ kno
  * client id gets the same request back and starts nothing.
  */
 async function watchRoute(event: HTTPEvent, method: string, parts: string[], deps: Deps): Promise<unknown> {
-  if (!deps.watchAsk || !deps.coach) throw new HTTPError(404, "watch_off");
+  if (!deps.watchAsk || !deps.coach) throw new HTTPError(404, "asking from the watch isn't on yet", { code: "watch_off" });
   const store = deps.coach;
   const me = await person(event, deps);
-  if (deps.watchAsk !== true && !(Array.isArray(deps.watchAsk) && deps.watchAsk.includes(me.tenantID))) throw new HTTPError(404, "watch_off");
+  if (deps.watchAsk !== true && !(Array.isArray(deps.watchAsk) && deps.watchAsk.includes(me.tenantID))) throw new HTTPError(404, "asking from the watch isn't on yet", { code: "watch_off" });
   const now = deps.now?.() ?? new Date();
   const lang = langOf(event);
   if (parts.length === 3 && method === "GET") {
@@ -10251,7 +10251,7 @@ async function watchRoute(event: HTTPEvent, method: string, parts: string[], dep
   }
   if (parts.length === 4 && method === "GET") {
     const ask = await ownAsk(store, me.tenantID, me.subject, parts[3] ?? "");
-    if (!ask) throw new HTTPError(404, "no_ask");
+    if (!ask) throw new HTTPError(404, "no watch request of yours by that id", { code: "no_ask" });
     return { ask: shownAsk(ask, lang) };
   }
   if (parts.length !== 3 || method !== "POST") throw new HTTPError(404, "not found");
@@ -10276,9 +10276,12 @@ async function watchRoute(event: HTTPEvent, method: string, parts: string[], dep
   }
   await requireAIConsent(event, me, deps);
   const setup = (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
-  if (!setup) throw new HTTPError(404, "no_coach");
+  if (!setup) throw new HTTPError(404, "start Coach on the phone first", { code: "no_coach" });
   const before = replyTo ? await ownAsk(store, me.tenantID, me.subject, replyTo) : undefined;
-  if (replyTo && (!before || !before.session)) throw new HTTPError(404, "no_ask");
+  if (replyTo && (!before || !before.session)) throw new HTTPError(404, "no watch request of yours by that id", { code: "no_ask" });
+  // A reply goes on in its request's conversation only once that request is final, with no turn of Coach's pending: a hand-over
+  // made by a turn still at work would otherwise count as the reply's own (one taf per request, check 3).
+  if (before && (!ASK_FINAL.includes(before.state) || before.turn)) throw new HTTPError(409, "wait for its result before replying", { code: "reply_too_soon" });
   // Claimed once per person and client id: two deliveries of one request at once make one.
   if (!(await store.once(`${watchKeys.client(me.tenantID, me.subject, client)}#claim`, new Date(now.getTime() + ASK_KEPT_MS)))) {
     const id = (await store.get(watchKeys.client(me.tenantID, me.subject, client))) as string | undefined;

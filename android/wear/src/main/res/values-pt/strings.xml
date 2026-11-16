@@ -56,7 +56,7 @@
     <string name="watch_reply">Responder</string>
     <string name="watch_result_ready">Há um resultado pronto</string>
     <string name="watch_results_channel">Resultados</string>
-    <string name="watch_retry">Tentar novamente</string>
+    <string name="watch_retry">Repetir</string>
     <string name="watch_sending">A enviar…</string>
     <string name="watch_sent">Enviado</string>
     <string name="watch_sign_in_on_phone">Primeiro, inicie sessão no tafs no telemóvel.</string>

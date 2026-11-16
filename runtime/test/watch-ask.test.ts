@@ -91,7 +91,7 @@ const ASK = { client_id: "c_watch_0001", text: "Move my four o'clock call to six
 describe("a request from the watch", () => {
   it("is off until tafs cloud's switch is on", async () => {
     const w = world({ on: false });
-    expect(await w.call("POST", "/v1/watch/asks", ASK)).toMatchObject({ status: 404 });
+    expect(await w.call("POST", "/v1/watch/asks", ASK)).toMatchObject({ status: 404, body: { code: "watch_off" } });
     expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([]);
   });
 
@@ -195,6 +195,31 @@ describe("the watch's conversation", () => {
     expect(await w.askOf(id)).toMatchObject({ state: "working", taf: { id: CAL, name: "Calendar" } });
     // In a new run of the person's own, never into one at work or the phone's live chat with the taf.
     expect(w.agents.calls.filter((c) => c.startsWith(`startRun ${CAL}`))).toEqual([`startRun ${CAL} new`]);
+  });
+
+  it("takes a reply only once its request is final, with no turn of Coach's pending (check 3)", async () => {
+    const { w, id, session } = await asked();
+    const reply = { client_id: "c_watch_reply1", text: "and tell the guests", reply_to: id };
+    // Still choosing its taf, then at work: too soon.
+    expect(await w.call("POST", "/v1/watch/asks", reply)).toMatchObject({ status: 409, body: { code: "reply_too_soon" } });
+    await w.tool("taf_task", { taf: CAL, text: ASK.text }, session);
+    expect(await w.call("POST", "/v1/watch/asks", reply)).toMatchObject({ status: 409 });
+    // The taf ends: Coach's result turn is pending, still too soon, and its hand-over would be refused as this request's second.
+    const tafRun = w.agents.runs.find((r) => r.agent === CAL)!;
+    Object.assign(tafRun, { status: "COMPLETED", output: "Moved it.", stop: "answered" });
+    await w.ended(w.agents.notified.get(tafRun.id)!.ref, tafRun.id, CAL, "COMPLETED");
+    expect(await w.call("POST", "/v1/watch/asks", reply)).toMatchObject({ status: 409 });
+    await expect(w.tool("taf_task", { taf: INBOX, text: "tell the guests" }, session)).rejects.toThrow(/one taf per request/);
+    // The line comes back: final, and the reply goes on in the same conversation as a request of its own.
+    const lineRun = w.agents.runs.filter((r) => r.agent === COACH).at(-1)!;
+    Object.assign(lineRun, { status: "COMPLETED", output: "Moved your call to 18:00." });
+    await w.ended(w.agents.notified.get(lineRun.id)!.ref, lineRun.id, COACH, "COMPLETED");
+    const r = await w.call("POST", "/v1/watch/asks", reply);
+    expect(r.status).toBe(200);
+    const next = await w.askOf((r.body.ask as { id: string }).id);
+    expect(next).toMatchObject({ session, reply_to: id, state: "accepted" });
+    expect((await w.tool("taf_task", { taf: INBOX, text: "tell the guests" }, session)) as { taf: string }).toMatchObject({ taf: "Inbox" });
+    expect(await w.askOf(id)).toMatchObject({ state: "done", taf: { name: "Calendar" } });
   });
 
   it("tells only the person's Android phone, with the request's id alone", async () => {

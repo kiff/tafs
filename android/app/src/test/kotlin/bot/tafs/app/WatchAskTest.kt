@@ -23,7 +23,7 @@ import org.junit.Test
 
 /**
  * Ask tafs from the Wear OS watch (docs/watch-wear.md): the words go to tafs cloud as this phone's, signed with its device key and
- * no prompt, after the AI consent given on the phone; tafs cloud's receipt comes back as it is, and a retry carries the same id.
+ * no prompt; tafs cloud checks the AI consent given on the phone, and its receipt comes back as it is, and a retry carries the same id.
  * The phone never names the taf or marks the ask as the watch's: tafs cloud's own route does.
  */
 class WatchAskTest {
@@ -79,13 +79,13 @@ class WatchAskTest {
     assertTrue(String(sent.body!!).contains("\"reply_to\":\"wa_01\""))
   }
 
-  @Test fun withoutTheAIConsentNothingIsSent() = runTest {
+  /** tafs cloud checks the AI consent (`ai_consent_required`): the watch is told, in its words, to allow it on the phone. */
+  @Test fun withoutTheAIConsentTafsCloudRefusesAndTheWatchIsTold() = runTest {
     reads(given = false)
     val m = model()
-    val before = transport.requests.size
+    transport.answer("POST /v1/watch/asks", 403, """{"error":"Allow AI use first","code":"ai_consent_required"}""")
     val reply = WatchRelay(model = { m }, now = { now }).ask(WatchRequest.Ask(now, "w_7f3a9c21", "Move my call"))
     assertEquals(WatchReply.Failed("Before you ask tafs, allow AI use in tafs on your phone."), reply)
-    assertTrue(transport.requests.drop(before).none { it.method == "POST" })
   }
 
   @Test fun noAnswerFromTafsCloudMayHaveArrived() = runTest {
@@ -119,6 +119,13 @@ class WatchAskTest {
     assertTrue(transport.requests.last { it.method == "GET" && it.url.contains("/v1/watch/asks") }.url.endsWith("/v1/watch/asks?since=2026-11-16T19%3A00%3A00Z"))
   }
 
+  /** tafs cloud checks the AI consent and says so by its code: the watch gets its own words for it, as for asking not being on. */
+  @Test fun tafsCloudsRefusalsReachTheWatchInItsWords() {
+    assertEquals(WatchReply.Failed(bot.tafs.app.model.Words.Watch.askNeedsConsent), WatchRelay.refusedAsk(bot.tafs.app.kiff.CloudError(403, "Allow AI use first", code = "ai_consent_required")))
+    assertEquals(WatchReply.Failed(bot.tafs.app.model.Words.Watch.askNotOn), WatchRelay.refusedAsk(bot.tafs.app.kiff.CloudError(404, "watch_off", code = "watch_off")))
+    assertEquals(WatchReply.Unsure, WatchRelay.refusedAsk(bot.tafs.app.kiff.CloudError(502, "bad gateway")))
+  }
+
   @Test fun aWatchCantSendThePhonesOwnMessage() = runTest {
     assertEquals(WatchReply.Refused(NotAccepted.UNKNOWN_PATH), WatchRelay(model = { testModel() }, now = { now }).answer(WatchLink.ASK_RESULT, "{}".encodeToByteArray()))
   }
@@ -128,8 +135,7 @@ class WatchAskTest {
     assertEquals(Alert.WatchAsk("wa_01"), AlertPayload.parse(mapOf("kind" to "background", "change" to "watch_ask", "ask_id" to "wa_01")))
     assertNull(AlertPayload.parse(mapOf("kind" to "background", "change" to "watch_ask")))
     val ask = bot.tafs.app.kiff.WatchAsk("wa_01", "w_7f3a9c21", "working", bot.tafs.app.kiff.WatchAskTaf("taf_1", "Calendar"), null, "Working", "2026-11-16T19:01:00Z")
-    assertEquals(AskLine("wa_01", "w_7f3a9c21", "working", "Calendar", null, "Working", "2026-11-16T19:01:00Z"), WatchResults.pick(listOf(ask), "wa_01"))
-    assertNull(WatchResults.pick(listOf(ask), "wa_02"))
+    assertEquals(AskLine("wa_01", "w_7f3a9c21", "working", "Calendar", null, "Working", "2026-11-16T19:01:00Z"), WatchRelay.lineOf(ask))
     assertFalse(AlertPayload.CHANGES.contains(AlertPayload.WATCH_ASK))
   }
 }

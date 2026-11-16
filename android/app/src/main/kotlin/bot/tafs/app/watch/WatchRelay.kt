@@ -65,12 +65,12 @@ class WatchRelay(
 
   /**
    * Ask tafs from the wrist (docs/watch-wear.md): the words, as text, sent to tafs cloud as this phone's, signed with its device
-   * key, after the AI consent given on the phone. tafs cloud gives its receipt, the same for a retry with the same id; with no
+   * key; tafs cloud asks for the AI consent given on the phone. It gives its receipt, the same for a retry with the same id; with no
    * answer from it, the watch is told it may have arrived ([WatchReply.Unsure]) and retries with the same id.
    */
   private suspend fun ask(request: WatchRequest.Ask): WatchReply {
     val model = signedIn() ?: return WatchReply.SignedOut
-    if (model.state.value.aiConsent?.given != true) return WatchReply.Failed(Words.Watch.askNeedsConsent)
+    // The AI consent is tafs cloud's to check: it refuses with `ai_consent_required`, said in the watch's words below.
     return try {
       val ask = model.watchAsk(request.clientId, request.text, request.replyTo) ?: return WatchReply.SignedOut
       WatchReply.AskTaken(lineOf(ask))
@@ -179,6 +179,7 @@ class WatchRelay(
      */
     fun refusedAsk(e: bot.tafs.app.kiff.CloudError): WatchReply = when {
       e.code == "watch_off" -> WatchReply.Failed(Words.Watch.askNotOn)
+      e.code == "ai_consent_required" -> WatchReply.Failed(Words.Watch.askNeedsConsent)
       e.status >= 500 -> WatchReply.Unsure
       e.status == 401 -> WatchReply.SignedOut
       else -> WatchReply.Failed(e.message?.takeIf { it.isNotBlank() } ?: Words.Watch.openOnPhone)

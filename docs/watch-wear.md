@@ -92,15 +92,15 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
     is sent and the watch says `watch.needs_lock`.
   - **The watch's own id for each ask** (`client_id`, `w_` and 24 random hex digits), the same on every retry, so tafs cloud
     never starts it twice. The phone signs the ask with its **device key, no prompt**, as the wrist's Refuse, and sends it to
-    tafs cloud (`POST /v1/watch/asks`, `AppModel.watchAsk`), only with the AI consent given on the phone (else
-    `watch.ask_needs_consent`). It sends the words and the id, and a reply's ask: never a taf, never a mark that it's the
+    tafs cloud (`POST /v1/watch/asks`, `AppModel.watchAsk`). tafs cloud checks the AI consent given on the phone, and its
+    refusal (`ai_consent_required`) reaches the watch as `watch.ask_needs_consent`. It sends the words and the id, and a reply's ask: never a taf, never a mark that it's the
     watch's, which tafs cloud's own route decides. The approval key is never used on this path.
   - **Sending…, then Sent** with the taf it went to and its state once tafs cloud names one ("Calendar · Working"); the
     microphone comes back after 2.5 s, so the wrist can drop.
   - **No receipt** (the phone out of reach, tafs cloud not answering, a 5xx: `unsure`): **"Not sure it arrived"**, with
     **Retry**, which sends the same words with the same id. A definite refusal says why in the phone's or tafs cloud's words
     (`watch.ask_not_on` while tafs cloud has it off; `watch.update_phone` from a phone with an older tafs).
-  - **The result.** tafs cloud's push tells the phone an ask changed (`watch_ask`, with its id); the phone reads it and sends it
+  - **The result.** tafs cloud's push tells the phone an ask changed (`watch_ask`, with its id); the phone reads that one ask (`GET /v1/watch/asks/{id}`) and sends it
     to the watch (`WatchResults`, `/tafs/watch/v1/ask-result`, to the watches declaring `tafs_watch_app`), and shows nothing
     itself. On the watch (`AskResultService`), with the app open, it's drawn at once; otherwise, once ended, it's the watch's own
     notification: the taf and its line, and, locked, only "A result is ready". Tapping opens the **result card**: the taf, tafs

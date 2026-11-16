@@ -25,7 +25,7 @@
     "one": "{count} ti aspetta",
     "other": "{count} ti aspettano"
   },
-  "watch.not_sure": "Non è sicuro che sia arrivato",
+  "watch.not_sure": "Arrivo non confermato",
   "watch.open_on_phone": "Apri sul telefono",
   "watch.phone_not_reachable": "Il telefono non è raggiungibile. Avvicinalo, poi riprova.",
   "watch.ready_count": {

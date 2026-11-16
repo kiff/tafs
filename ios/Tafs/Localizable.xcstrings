@@ -125468,7 +125468,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Demander"
+            "value": "Demander à tafs"
           }
         },
         "it": {
@@ -125521,7 +125521,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Avant de demander à tafs, autorisez l'utilisation de l'IA dans tafs sur votre téléphone."
+            "value": "Avant de demander à tafs, autorisez l'IA dans tafs sur votre téléphone."
           }
         },
         "it": {
@@ -125857,7 +125857,7 @@
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie zrozumiałem. Dotknij, aby spróbować ponownie."
+            "value": "Nie udało się zrozumieć. Dotknij, aby spróbować ponownie."
           }
         },
         "pt": {
@@ -126525,7 +126525,7 @@
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non è sicuro che sia arrivato"
+            "value": "Arrivo non confermato"
           }
         },
         "nl": {
@@ -127042,7 +127042,7 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tentar novamente"
+            "value": "Repetir"
           }
         }
       }

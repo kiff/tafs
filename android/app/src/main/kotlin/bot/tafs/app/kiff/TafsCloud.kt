@@ -736,6 +736,10 @@ class TafsCloud(
     return KiffClient.json.decodeFromString(WatchAskTaken.serializer(), String(send("POST", path, payload, mapOf("KIFF-Device-Signature" to "t=$signedAt,v1=$signature")))).ask
   }
 
+  /** One of the watch's asks, as tafs cloud has it, by its id: what a `watch_ask` push names. */
+  suspend fun watchAskById(id: String): WatchAsk =
+    KiffClient.json.decodeFromString(WatchAskTaken.serializer(), String(send("GET", "/v1/watch/asks/" + java.net.URLEncoder.encode(id, "UTF-8")))).ask
+
   /** The watch's asks, as tafs cloud has them: those updated after [since], or in the last day. */
   suspend fun watchAsks(since: String?): List<WatchAsk> =
     KiffClient.json.decodeFromString(WatchAskList.serializer(), String(send("GET", "/v1/watch/asks" + (since?.let { "?since=" + java.net.URLEncoder.encode(it, "UTF-8") } ?: "")))).asks

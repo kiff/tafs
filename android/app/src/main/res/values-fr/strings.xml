@@ -2471,8 +2471,8 @@
     <string name="watch_already_answered">Déjà répondu, ou terminé.</string>
     <string name="watch_approve_on_phone">Approuvez sur votre téléphone</string>
     <string name="watch_as_of">Mis à jour à %1$s</string>
-    <string name="watch_ask">Demander</string>
-    <string name="watch_ask_needs_consent">Avant de demander à tafs, autorisez l\'utilisation de l\'IA dans tafs sur votre téléphone.</string>
+    <string name="watch_ask">Demander à tafs</string>
+    <string name="watch_ask_needs_consent">Avant de demander à tafs, autorisez l\'IA dans tafs sur votre téléphone.</string>
     <string name="watch_ask_not_on">Demander depuis la montre n\'est pas encore activé.</string>
     <string name="watch_ask_text_only">tafs reçoit vos mots en texte, jamais votre voix.</string>
     <string name="watch_asking_phone">Demande à votre téléphone…</string>
