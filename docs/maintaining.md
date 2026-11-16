@@ -15,8 +15,10 @@ Verify these in GitHub settings; documentation files alone do not enforce them:
 [GitHub's repository security guide](https://docs.github.com/en/code-security/getting-started/quickstart-for-securing-your-repository)
 explains the settings. CODEOWNERS routes reviews; it does not replace a ruleset.
 `.github/CODEOWNERS` asks `@kiff-qa` to review a change to the paths that sign, hold a key, pair
-a device, check a receipt, or release a build, and to the files that decide a merge. Making that
-review required is a ruleset setting ("Require review from Code Owners").
+a device, check a receipt, release a build or deploy, and to the files that decide a merge. It is
+their only code owner. Making that review required is a ruleset setting ("Require review from
+Code Owners"); once it's on, a pull request authored as `kiff-qa` on those paths can't get its
+code owner's approval, and merges only through an admin's bypass.
 Dependabot opens update PRs; updates still require review and CI. Do not add
 blanket auto-merge or workflow approval for external contributions.
 

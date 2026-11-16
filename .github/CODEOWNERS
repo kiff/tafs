@@ -3,11 +3,13 @@
 * @gabosarmiento @agentgabo
 
 # The paths that sign, hold a key, pair a device, check a receipt, or release a
-# build: a change to one asks @kiff-qa to review it. The last line that matches
-# a file wins, so these replace the line above for their files.
+# build or a deploy: a change to one asks @kiff-qa to review it. The last line
+# that matches a file wins, so these replace the line above for their files,
+# and @kiff-qa is their only code owner (docs/maintaining.md).
 
 # iOS and the Mac
 /ios/Tafs/KIFF/JCS.swift @kiff-qa
+/ios/Tafs/KIFF/KIFFClient.swift @kiff-qa
 /ios/Tafs/KIFF/Keccak.swift @kiff-qa
 /ios/Tafs/KIFF/Keychain.swift @kiff-qa
 /ios/Tafs/KIFF/Pairing.swift @kiff-qa
@@ -23,6 +25,7 @@
 # Android
 /android/app/src/main/kotlin/bot/tafs/app/signing/ @kiff-qa
 /android/app/src/main/kotlin/bot/tafs/app/kiff/Jcs.kt @kiff-qa
+/android/app/src/main/kotlin/bot/tafs/app/kiff/KiffClient.kt @kiff-qa
 /android/app/src/main/kotlin/bot/tafs/app/kiff/Pairing.kt @kiff-qa
 /android/app/src/main/kotlin/bot/tafs/app/kiff/Passkeys.kt @kiff-qa
 /android/app/src/main/kotlin/bot/tafs/app/kiff/ReceiptCheck.kt @kiff-qa
@@ -33,16 +36,19 @@
 /android/app/build.gradle.kts @kiff-qa
 /android/play/*.py @kiff-qa
 
-# tafs cloud and the shared test vectors
+# tafs cloud, the shared test vectors, and the cloud's secrets
 /runtime/src/cloud/approval.ts @kiff-qa
 /runtime/src/cloud/doors/sign.ts @kiff-qa
 /vectors/ @kiff-qa
+/infra/aws.sh @kiff-qa
 
-# Release workflows, and what decides a merge
+# Release and deploy workflows, and what decides a merge
 /.github/workflows/ios.yml @kiff-qa
 /.github/workflows/android.yml @kiff-qa
 /.github/workflows/mac-testflight.yml @kiff-qa
 /.github/workflows/mac-installer-cert.yml @kiff-qa
+/.github/workflows/runtime.yml @kiff-qa
+/.github/workflows/upgrade.yml @kiff-qa
 /.github/workflows/automerge.yml @kiff-qa
 /.github/automerge.json @kiff-qa
 /scripts/automerge.py @kiff-qa
