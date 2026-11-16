@@ -4931,28 +4931,72 @@ enum Words {
         static var approveOnPhone: String { Words.line("watch.approve_on_phone") }
         /// As of {time}
         static func asOf(time: String) -> String { Words.line("watch.as_of", time) }
+        /// Ask tafs
+        static var ask: String { Words.line("watch.ask") }
+        /// Before you ask tafs, allow AI use in tafs on your phone.
+        static var askNeedsConsent: String { Words.line("watch.ask_needs_consent") }
+        /// Asking from your watch isn't on yet.
+        static var askNotOn: String { Words.line("watch.ask_not_on") }
+        /// tafs gets your words as text, never your voice.
+        static var askTextOnly: String { Words.line("watch.ask_text_only") }
         /// Asking your phone…
         static var askingPhone: String { Words.line("watch.asking_phone") }
+        /// Check your phone's connection
+        static var checkPhone: String { Words.line("watch.check_phone") }
         /// Before you talk to Coach, allow AI use in tafs on your phone.
         static var coachNeedsConsent: String { Words.line("watch.coach_needs_consent") }
+        /// Didn't catch that. Tap to try again.
+        static var didntCatch: String { Words.line("watch.didnt_catch") }
         /// How many need you, never what or who.
         static var glanceDescription: String { Words.line("watch.glance_description") }
+        /// Halting {taf}…
+        static func halting(taf: String) -> String { Words.line("watch.halting", taf) }
+        /// Halting all your tafs…
+        static var haltingAll: String { Words.line("watch.halting_all") }
+        /// Hear
+        static var hear: String { Words.line("watch.hear") }
         /// {count} held calls need you
         static func heldCalls(count: Int) -> String { Words.count("watch.held_calls", count) }
+        /// To ask by voice, allow the microphone for tafs on this watch.
+        static var micNeeded: String { Words.line("watch.mic_needed") }
         /// The rest is on your phone.
         static var moreOnPhone: String { Words.line("watch.more_on_phone") }
         /// To refuse or halt from this watch, set a screen lock on it and unlock it.
         static var needsLock: String { Words.line("watch.needs_lock") }
+        /// {count} need you
+        static func needsYouCount(count: Int) -> String { Words.count("watch.needs_you_count", count) }
+        /// Not sure it arrived
+        static var notSure: String { Words.line("watch.not_sure") }
         /// Open on phone
         static var openOnPhone: String { Words.line("watch.open_on_phone") }
         /// Your phone isn't in reach. Bring it closer, then try again.
         static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
+        /// {count} ready
+        static func readyCount(count: Int) -> String { Words.count("watch.ready_count", count) }
         /// Refused. Nothing was sent.
         static var refused: String { Words.line("watch.refused") }
+        /// Reply
+        static var reply: String { Words.line("watch.reply") }
+        /// A result is ready
+        static var resultReady: String { Words.line("watch.result_ready") }
+        /// Results
+        static var resultsChannel: String { Words.line("watch.results_channel") }
+        /// Retry
+        static var retry: String { Words.line("watch.retry") }
+        /// Sending…
+        static var sending: String { Words.line("watch.sending") }
+        /// Sent
+        static var sent: String { Words.line("watch.sent") }
         /// Sign in to tafs on your phone first.
         static var signInOnPhone: String { Words.line("watch.sign_in_on_phone") }
+        /// Listen {listen} ms · receipt {receipt} ms · result {result} ms
+        static func timing(listen: String, receipt: String, result: String) -> String { Words.line("watch.timing", listen, receipt, result) }
+        /// Update tafs on your phone, then try again.
+        static var updatePhone: String { Words.line("watch.update_phone") }
         /// Coach gets your words as text, never your voice.
         static var voiceTextOnly: String { Words.line("watch.voice_text_only") }
+        /// {count} working
+        static func workingCount(count: Int) -> String { Words.count("watch.working_count", count) }
     }
     enum Work {
         /// Answer within

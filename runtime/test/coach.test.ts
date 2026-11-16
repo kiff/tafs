@@ -96,12 +96,13 @@ function world() {
 }
 
 describe("a drive's tools are told the chat (kiff/tafs#544)", () => {
-  it("declare it to kiff/agents only on app_look and app_act, never required, and refuse another chat's call", async () => {
+  it("declare it to kiff/agents only on app_look, app_act and the two a watch request uses, never required, and refuse another chat's call", async () => {
     const w = world();
     const list = await w.rpc("tools/list");
     const tools = (list.result?.tools ?? []) as Array<{ name: string; inputSchema: { properties: Record<string, unknown>; required: string[] } }>;
     for (const t of tools) {
-      const asks = t.name === "app_look" || t.name === "app_act";
+      // A drive's tools, and tafs_state and taf_task, which a watch request's conversation reads and hands over with (docs/watch-ask.md).
+      const asks = ["app_look", "app_act", "tafs_state", "taf_task"].includes(t.name);
       expect(SESSION_ARG in t.inputSchema.properties, t.name).toBe(asks);
       expect(t.inputSchema.required).not.toContain(SESSION_ARG);
     }

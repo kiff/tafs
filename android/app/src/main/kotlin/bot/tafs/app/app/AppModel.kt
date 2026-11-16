@@ -2527,6 +2527,25 @@ class AppModel(
     }
   }
 
+  /**
+   * Ask tafs, from the Wear OS watch (docs/watch-wear.md): sent to tafs cloud as this phone's own, signed with its device key and
+   * no prompt, as the wrist's Refuse is. Never the approval key: an ask grants nothing, and the taf it goes to acts under its own
+   * Cards. Null when the phone isn't signed in.
+   */
+  suspend fun watchAsk(clientId: String, text: String, replyTo: String?): bot.tafs.app.kiff.WatchAsk? {
+    if (_state.value.mode != Mode.kiff) return null
+    val tenant = kiffTenant ?: return null
+    return cloud.watchAsk(clientId, text, replyTo, tenant) { signer.signConfirmed(it) }
+  }
+
+  /** One of the watch's asks, by its id; null when the phone isn't signed in. */
+  suspend fun watchAskById(id: String): bot.tafs.app.kiff.WatchAsk? =
+    if (_state.value.mode != Mode.kiff) null else cloud.watchAskById(id)
+
+  /** The watch's asks, as tafs cloud has them, updated after [since]; null when the phone isn't signed in. */
+  suspend fun watchAsks(since: String?): List<bot.tafs.app.kiff.WatchAsk>? =
+    if (_state.value.mode != Mode.kiff) null else cloud.watchAsks(since)
+
   suspend fun removeTaf(tafId: String): String? {
     val s = _state.value
     val taf = s.taf(tafId)

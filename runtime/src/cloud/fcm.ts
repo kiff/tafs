@@ -75,6 +75,8 @@ export function fcmMessage(n: Notification, now: Date): { data: Record<string, s
     // What changed on the account, for the phone to read again: only the kind and the taf.
     set("change", str(p.change));
     set("taf_id", str(p.taf_id));
+    // A watch request's id (docs/watch-ask.md): the phone reads it and passes it to the watch.
+    set("ask_id", str(p.ask_id));
   } else {
     data.kind = "alert";
     set("title", str(alert?.title));

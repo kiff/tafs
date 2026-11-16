@@ -2,18 +2,49 @@
   "watch.already_answered": "Al beantwoord, of beëindigd.",
   "watch.approve_on_phone": "Keur goed op je telefoon",
   "watch.as_of": "Bijgewerkt om {time}",
+  "watch.ask": "Vraag tafs",
+  "watch.ask_needs_consent": "Sta eerst AI-gebruik toe in tafs op je telefoon voordat je tafs iets vraagt.",
+  "watch.ask_not_on": "Vragen vanaf je horloge staat nog niet aan.",
+  "watch.ask_text_only": "tafs krijgt je woorden als tekst, nooit je stem.",
   "watch.asking_phone": "Je telefoon vragen…",
+  "watch.check_phone": "Controleer de verbinding van je telefoon",
   "watch.coach_needs_consent": "Sta eerst AI-gebruik toe in tafs op je telefoon voordat je met Coach praat.",
+  "watch.didnt_catch": "Niet verstaan. Tik om het opnieuw te proberen.",
   "watch.glance_description": "Hoeveel er op je wachten, nooit wat of wie.",
+  "watch.halting": "{taf} wordt stilgezet…",
+  "watch.halting_all": "Al je tafs worden stilgezet…",
+  "watch.hear": "Beluisteren",
   "watch.held_calls": {
     "one": "{count} vastgehouden aanroep wacht op jou",
     "other": "{count} vastgehouden aanroepen wachten op jou"
   },
+  "watch.mic_needed": "Sta de microfoon toe voor tafs op dit horloge om met je stem te vragen.",
   "watch.more_on_phone": "De rest staat op je telefoon.",
   "watch.needs_lock": "Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te weigeren of stil te zetten.",
+  "watch.needs_you_count": {
+    "one": "{count} wacht op jou",
+    "other": "{count} wachten op jou"
+  },
+  "watch.not_sure": "Onzeker of het aankwam",
   "watch.open_on_phone": "Openen op telefoon",
   "watch.phone_not_reachable": "Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.",
+  "watch.ready_count": {
+    "one": "{count} klaar",
+    "other": "{count} klaar"
+  },
   "watch.refused": "Geweigerd. Er is niets verstuurd.",
+  "watch.reply": "Antwoorden",
+  "watch.result_ready": "Er is een resultaat",
+  "watch.results_channel": "Resultaten",
+  "watch.retry": "Opnieuw",
+  "watch.sending": "Versturen…",
+  "watch.sent": "Verstuurd",
   "watch.sign_in_on_phone": "Log eerst in bij tafs op je telefoon.",
-  "watch.voice_text_only": "Coach krijgt je woorden als tekst, nooit je stem."
+  "watch.timing": "Luisteren {listen} ms · ontvangst {receipt} ms · resultaat {result} ms",
+  "watch.update_phone": "Werk tafs bij op je telefoon en probeer het opnieuw.",
+  "watch.voice_text_only": "Coach krijgt je woorden als tekst, nooit je stem.",
+  "watch.working_count": {
+    "one": "{count} bezig",
+    "other": "{count} bezig"
+  }
 }

@@ -21,7 +21,14 @@ import { RECIPES } from "../recipes.js";
 export type SkillRef = `${string}@${string}`;
 
 /** How a Coach conversation opened, as tafs cloud knows it from the first message and the account. */
-export type CoachEntry = "improve" | "recipe" | "door" | "coach_lines" | "delivery" | "did_this_happen" | "free";
+export type CoachEntry = "improve" | "recipe" | "door" | "coach_lines" | "delivery" | "did_this_happen" | "free" | "watch";
+
+/**
+ * Skills only a conversation that names them at its start ever has (kiff/agents' `named_only`): never in
+ * Coach's map, never read by read_skill elsewhere, never added by a tool. The watch's own set: only tafs
+ * cloud's signed watch route opens a conversation with it (docs/watch-ask.md), and no text can.
+ */
+export const NAMED_ONLY: readonly string[] = ["ask-a-taf"];
 
 const SKILL_BY_NAME = new Map<string, (typeof COACH_SKILLS)[number]>(COACH_SKILLS.map((s) => [s.name, s]));
 
@@ -55,6 +62,8 @@ const ENTRY_SKILLS: Record<CoachEntry, string[]> = {
   coach_lines: ["the-tafs"],
   delivery: ["the-dial"],
   did_this_happen: ["did-this-happen", "cards-and-holds"],
+  // The watch's request (docs/watch-ask.md): its own skill alone, never a phone set's connect or Card skills.
+  watch: ["ask-a-taf"],
 };
 
 /**
@@ -111,6 +120,8 @@ const DELIVERY_NOTE = /^.{1,120} didn't deliver its result to .{1,200}Find out w
  */
 export function startSkills(entry: CoachEntry, state: CoachState = {}): SkillRef[] {
   const names = new Set(ENTRY_SKILLS[entry]);
+  // A watch request routes and reports: the holds and the halting stay the phone's.
+  if (entry === "watch") return ordered(names);
   if (state.heldCall || state.hasTaf) names.add("cards-and-holds");
   if (state.halted || state.hasTaf) names.add("halting");
   return ordered(names);

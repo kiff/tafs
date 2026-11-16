@@ -885,4 +885,6 @@ export const pl: Words = {
   ai_consent_paused_no_one: "Wstrzymane: nikt jeszcze nie zezwolił na użycie AI w uruchomieniach tego tafa. Ruszy, gdy ktoś, kto zarządza tafami, zezwoli na to w Koncie.",
   ai_consent_paused_not_given: "Wstrzymane: zgodę na użycie AI w uruchomieniach tego tafa wycofano. Ruszy, gdy zgoda znów zostanie dana lub ktoś, kto zarządza tafami, go przejmie.",
   ai_consent_paused_left: "Wstrzymane: osoba, której zgody na AI używały jego uruchomienia, nie należy już do konta. Ruszy, gdy ktoś, kto zarządza tafami, go przejmie.",
+  // A request from the watch, by its state (docs/watch-ask.md): the watch shows and says these.
+  watch_ask: { accepted: "Wysłano", working: "W toku", done: "Gotowe", no_taf: "Żaden taf tego nie przyjął", failed: "To się nie udało" },
 };

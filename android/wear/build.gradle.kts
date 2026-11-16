@@ -38,7 +38,14 @@ android {
   }
 
   buildTypes {
+    debug {
+      // The timing line on a result (listen, receipt, result), for the owner's test of the internal build.
+      buildConfigField("boolean", "TIMING", "true")
+    }
     release {
+      // Only an internal build asks for it (TAFS_WATCH_TIMING=1 or -PwatchTiming); a production build never shows it.
+      val timing = System.getenv("TAFS_WATCH_TIMING") == "1" || project.hasProperty("watchTiming")
+      buildConfigField("boolean", "TIMING", timing.toString())
       if (uploadKeystore != null) signingConfig = signingConfigs.getByName("upload")
       isMinifyEnabled = true
       isShrinkResources = true
@@ -56,7 +63,7 @@ android {
   buildFeatures {
     compose = true
     aidl = false
-    buildConfig = false
+    buildConfig = true
     shaders = false
   }
 }

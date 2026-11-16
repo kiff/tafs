@@ -7,7 +7,7 @@ import { type BalanceView, balanceView, type CreditRun, CreditsError, runCredits
 import { type AgentDefinition, type AgentVersion, type Agents, AgentsError, refused, type AttachmentRef, type BlockingRun, type AIBound, type AgentsHalt, type CardRevision, type Fired, type Notify, type Requester, type ResultOutcome, type Run, type RunAt, type RunStreamEvent, type SessionEvent, type Schedule, type Session, type Trial, type VersionState } from "./agents.js";
 import { activeCards, cardRevisions, claimDraft, draftConfirmed, draftInfo, draftStatus, dropped, endTrialIn, type Fetch, haltedInKIFF, haltInKIFF, issued, KIFF_API, KIFFError, type KIFFHalt, type KIFFIdentity, redraft, restoreDraft, gatewayConnections, previewBatchDraft, previewDraft, runGrant, toolTitles, trialOf, whoIs, setTimeZoneInKIFF, activeMembers } from "./kiff.js";
 import { NotPausedYet, type ReadyRun } from "./forward.js";
-import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF } from "./push.js";
+import { alertTarget, briefNotification, type Change, heldWaitsForBrief, CONNECTION_SIGNED_OUT, CREDITS_WARNING, REFUND_NOTICE, type Device, deviceLang, MAX_DEVICES, tellChange, type Notification, PACK_REQUESTED, PushError, type PushStore, receiveAlert, registration, sendNotification, type Sender, signedByKIFF, watchAskNotification } from "./push.js";
 import { backoffMs, checkIntent, type Deletion, type DeletionPeer, type Deletions, IntentError, parseIntent, PeerError, STEPS, type Step } from "./deletion.js";
 import { setupDefinition } from "./setupdef.js";
 import { alertChoices } from "./alert-preferences.js";
@@ -53,6 +53,7 @@ import { caseView, receiptsExport, recordPage, type RecordTaf, REMOVED_KEPT_MS, 
 import { appCalls, type GrantView, runningTool, setupGrants, setupView } from "./taf-setup.js";
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
+import { type Ask, type AskState, askOfSession, ASK_FINAL, ASK_KEPT_MS, checkedLine, CLIENT_ID, keepAsk, MAX_ASK_TEXT, newAskID, ownAsk, recentAsks, shownAsk, SINCE_DEFAULT_MS, WATCH_TOOLS, watchKeys } from "./watch-ask.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
 import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
@@ -88,6 +89,9 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   GET | POST | DELETE /v1/halt        the whole account's halt: read, halt, resume once KIFF runs again
  *   POST /v1/coach/drive                start the person's drive for one request, signed with the approval key (kiff/tafs#544, docs/drive.md)
  *   GET  /v1/coach/drive                their drive as it stands, and its steps
+ *   POST /v1/watch/asks                 a request from the watch, signed by the phone's device key: a Coach conversation of the watch's own (docs/watch-ask.md)
+ *   GET  /v1/watch/asks?since=          the person's own watch requests, newest first
+ *   GET  /v1/watch/asks/{id}            one of them
  *   POST /v1/coach/drive/pause          the person touched the app: pause it, so Coach sends nothing (docs/drive.md)
  *   POST /v1/coach/drive/resume         the person tapped Continue: go on, with a look first
  *   POST /v1/coach/drive/stop           end it: the owner took over, left the app, stopped it, locked or signed out
@@ -267,6 +271,12 @@ export interface Deps {
    * Missing: the tools aren't served here.
    */
   coach?: CoachStore;
+  /**
+   * Requests from the watch (docs/watch-ask.md): on only once kiff/agents holds a session to its `only` and
+   * keeps named-only skills out of read_skill. Off or missing: every /v1/watch route is 404 `watch_off`.
+   * A list of accounts: on for those alone, as for the owner's test on a real watch before it's on for all.
+   */
+  watchAsk?: boolean | readonly string[];
   /** How logos are fetched and drawn (logos.ts): the real ones when missing. */
   logos?: LogoDeps;
   /** KIFF's permit keys, by kid; missing, the ones KIFF publishes. */
@@ -682,6 +692,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "record" && method === "GET") return recordRoute(event, parts, await person(event, deps), deps);
   if (parts[1] === "halt" && parts.length === 2) return haltRoute(event, method, await person(event, deps), undefined, deps);
   if (parts[1] === "coach" && parts[2] === "drive") return driveRoute(event, method, parts, await person(event, deps), deps);
+  // A request from the watch, through the paired phone (docs/watch-ask.md).
+  if (parts[1] === "watch" && parts[2] === "asks") return watchRoute(event, method, parts, deps);
   // Halts, resumes and door events, newest first, for Activity (kiff/tafs#236, items 15 and 19).
   if (parts[1] === "events" && parts.length === 2 && method === "GET") {
     const me = await person(event, deps);
@@ -2828,7 +2840,7 @@ async function conversation(me: KIFFIdentity, taf: Taf, deps: Deps, only?: Sessi
     agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me))),
     doors ? agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned)) : Promise.resolve([]),
   ]);
-  const chats = [...own.filter((s) => s.kind === "chat"), ...all.filter((s) => s.kind === "chat" && s.owner?.startsWith("door:"))]
+  const chats = [...own.filter(phoneChat), ...all.filter((s) => phoneChat(s) && s.owner?.startsWith("door:"))]
     .filter((s) => !s.archived).sort((a, b) => b.updated.localeCompare(a.updated));
   const picked = only ? [only] : [
     ...own.filter((s) => s.kind === "run").slice(0, CHAT.runsInThread),
@@ -4156,7 +4168,7 @@ async function shownCard(me: KIFFIdentity, taf: Taf, id: string, type: string | 
   if (!id) return undefined;
   const picked = session ? [await ownChat(me, taf, session, deps)] :
     (await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me))))
-      .filter((s) => s.kind === "chat" && !s.archived).sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, CHAT.chatsInThread);
+      .filter((s) => phoneChat(s) && !s.archived).sort((a, b) => b.updated.localeCompare(a.updated)).slice(0, CHAT.chatsInThread);
   let found: { session: string; run: string; time: string } | undefined;
   for (const s of picked) {
     const read = await deps.agents.session(me.tenantID, s.id, ownerKey(me)).catch(() => undefined);
@@ -4321,7 +4333,7 @@ export const LIVE_CHAT_MS = 30 * 60_000;
  */
 async function liveChatOf(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<string | undefined> {
   const owner = ownerKey(me);
-  const latest = (await deps.agents.sessions(me.tenantID, taf.id, 5, owner, true)).find((s) => s.owner === owner && s.kind === "chat");
+  const latest = (await deps.agents.sessions(me.tenantID, taf.id, 5, owner, true)).find((s) => s.owner === owner && phoneChat(s));
   if (!latest || latest.archived) return undefined;
   const now = (deps.now?.() ?? new Date()).getTime();
   return now - Date.parse(latest.updated) < LIVE_CHAT_MS ? latest.id : undefined;
@@ -4383,6 +4395,8 @@ async function loadToolSkills(name: string, call: CoachCall, deps: Deps): Promis
     const setup = (await deps.tafs.list(call.tenant)).find((t) => t.job === SETUP_JOB && !t.removing);
     if (!setup) return;
     const [run, live] = await Promise.all([deps.agents.getRun(call.tenant, setup.id, runID), deps.agents.getAgent(call.tenant, setup.id)]);
+    // A watch conversation keeps its one skill: a tool never adds another (docs/watch-ask.md, check 6).
+    if (await askOfSession(deps.coach, call.tenant, call.session ?? run.session)) return;
     const until = new Date((deps.now?.() ?? new Date()).getTime() + LOADED_KEPT_MS);
     const add: typeof refs = [];
     // At the versions the live definition names (asNamed): kiff/agents adds no other.
@@ -5909,8 +5923,16 @@ async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind:
     if (err instanceof AgentsError && err.status === 404) throw new HTTPError(404, "no such chat");
     throw agentsFailure(err);
   }
-  if (read.session.agent !== taf.id || read.session.kind !== kind) throw new HTTPError(404, "no such chat");
+  if (read.session.agent !== taf.id || read.session.kind !== kind || read.session.only) throw new HTTPError(404, "no such chat");
   return read.session;
+}
+
+/**
+ * One of the phone's chats: a watch request's conversation is held to its `only` and is the watch's, so the
+ * phone never lists, opens or goes on in it, and Coach on the phone stays as it was (docs/watch-ask.md).
+ */
+function phoneChat(s: Session): boolean {
+  return s.kind === "chat" && !s.only;
 }
 
 /**
@@ -5922,7 +5944,7 @@ async function ownChat(me: KIFFIdentity, taf: Taf, id: string, deps: Deps, kind:
 async function chats(me: KIFFIdentity, taf: Taf, deps: Deps, archivedOnly = false): Promise<Array<{ session: string; started: string; updated: string; title: string; set_aside?: true }>> {
   await moveArchived(me, taf, deps);
   const all = await agentsCall(() => deps.agents.sessions(me.tenantID, taf.id, CHAT.sessionsScanned, ownerKey(me)));
-  const listed = all.filter((s) => s.kind === "chat" && (s.archived === true) === archivedOnly).slice(0, CHAT.chatsListed);
+  const listed = all.filter((s) => phoneChat(s) && (s.archived === true) === archivedOnly).slice(0, CHAT.chatsListed);
   const read = await Promise.all(listed.map((s) => deps.agents.session(me.tenantID, s.id, ownerKey(me)).catch(() => undefined)));
   // Coach's chats set aside (setAsideCoach keeps each by its session for 30 days); a read that fails marks none.
   const setAside = taf.job === SETUP_JOB && deps.coach
@@ -8446,6 +8468,10 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
       const may = all;
       tafs = tafs.filter((t) => may[t.kiffAgent]?.use || may[t.kiffAgent]?.oversee);
     }
+    // A watch conversation chooses from what each taf can do, and only among those the person may use.
+    if (deps.coach && await askOfSession(deps.coach, call.tenant, call.session)) {
+      return watchTafs(all ? tafs.filter((t) => all![t.kiffAgent]?.use) : tafs);
+    }
     const labels = deps.coach ? (await readLabels(deps.coach, call.tenant)).labels : [];
     const missions = deps.coach ? (await readMissions(deps.coach, call.tenant)).missions : [];
     return {
@@ -8537,6 +8563,9 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
   if (name === "taf_task") {
     const text = str(args.text).trim();
     if (!text || text.length > CHAT.maxText) throw new ToolRefusal(`write the task in 1 to ${CHAT.maxText} characters`);
+    // From the watch: one taf per request, in a new run of the person's own (docs/watch-ask.md).
+    const watch = await watchHandOver(call, args, deps);
+    if (watch) args = { ...args, chat: "new" };
     const running = str(args.run).trim();
     if (running) {
       // Writing into a run is writing into a conversation: only one's own.
@@ -8571,7 +8600,8 @@ async function coachToolOf(name: string, args: Record<string, unknown>, call: Co
     }
     const notify = call.notify();
     const run = await agentsCall(() => deps.agents.startRun(call.tenant, taf.id, text, at, undefined, notify));
-    await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: await coachRun(call, deps), what: text.slice(0, 120), person: call.person?.subject }, deps);
+    await keepTask(call, notify, { taf: taf.id, run: run.id, coachRun: watch ? watch.coach_run : await coachRun(call, deps), what: text.slice(0, 120), person: call.person?.subject, ...(watch ? { ask: watch.id } : {}) }, deps);
+    if (watch) await watchHandedOver(call.tenant, watch, taf, run, deps);
     return { taf: taf.name, run: run.id, chat: run.session, status: run.status, result: "comes back to you when the run ends: don't poll" };
   }
   if (name === "run_stop") {
@@ -8740,6 +8770,9 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (note && deps.doors && await doorRunEnded(note, doorContext(deps))) return { taken: true };
   const tenant = note && refTenant(note.ref);
   if (!note || !tenant || !deps.coach) return { taken: false };
+  // A watch conversation's Coach run (docs/watch-ask.md): the note's ref was kept for its request.
+  const watchAsk = (await deps.coach.get(watchKeys.ref(tenant, note.ref))) as string | undefined;
+  if (watchAsk) return { taken: await watchCoachEnded(tenant, watchAsk, note, deps) };
   if (note.status === "PAUSED" && note.cards?.some((c) => c.type === "result")) return { taken: await handOverOrKeep(tenant, note.agent, note.run, deps) };
   const key = coachKeys.task(tenant, note.ref);
   const task = (await deps.coach.get(key)) as Task | undefined;
@@ -8801,6 +8834,12 @@ async function tellRunEnded(tenant: string, key: string, task: Task, r: Run, end
   const level = ended ? levelOf("run_ended", !(await deps.slots.held(presenceKey(tenant)))) : undefined;
   const tafs = await deps.tafs.list(tenant);
   const setup = tafs.find((t) => t.job === SETUP_JOB && !t.removing);
+  // A watch request's taf: its line goes to the watch, never to the phone's Coach chat or its alerts.
+  if (task.ask) {
+    if (taf && !taf.removing) await watchTaskEnded(tenant, setup, task, r, line, said, deps);
+    if (ended) await deps.coach?.remove(key);
+    return { taken: true };
+  }
   let told = false;
   if (setup && task.coachRun) {
     told = await deps.agents.steerRun(tenant, setup.id, task.coachRun, line).then(() => true, () => false);
@@ -10193,4 +10232,201 @@ async function openKnocks(me: KIFFIdentity, taf: Taf, deps: Deps): Promise<{ kno
   if (!deps.doors) return {};
   const knocks = (await knocksOf(deps.doors.store, me.tenantID, taf.id).catch(() => [])).filter((k) => k.state === "open");
   return knocks.length ? { knocks } : {};
+}
+
+/**
+ * A request from the owner's watch (docs/watch-ask.md), sent by the paired phone with its device signature.
+ * This route is the only watch mark: it opens a Coach conversation with the watch's one skill, held to
+ * reading the tafs and handing one of them the request (kiff/agents' session `only`). A retry with the same
+ * client id gets the same request back and starts nothing.
+ */
+async function watchRoute(event: HTTPEvent, method: string, parts: string[], deps: Deps): Promise<unknown> {
+  if (!deps.watchAsk || !deps.coach) throw new HTTPError(404, "asking from the watch isn't on yet", { code: "watch_off" });
+  const store = deps.coach;
+  const me = await person(event, deps);
+  if (deps.watchAsk !== true && !(Array.isArray(deps.watchAsk) && deps.watchAsk.includes(me.tenantID))) throw new HTTPError(404, "asking from the watch isn't on yet", { code: "watch_off" });
+  const now = deps.now?.() ?? new Date();
+  const lang = langOf(event);
+  if (parts.length === 3 && method === "GET") {
+    const raw = new URLSearchParams(event.rawQueryString ?? "").get("since") ?? "";
+    const since = raw && !Number.isNaN(Date.parse(raw)) ? new Date(Date.parse(raw)) : new Date(now.getTime() - SINCE_DEFAULT_MS);
+    return { asks: (await recentAsks(store, me.tenantID, me.subject, since)).map((a) => shownAsk(a, lang)) };
+  }
+  if (parts.length === 4 && method === "GET") {
+    const ask = await ownAsk(store, me.tenantID, me.subject, parts[3] ?? "");
+    if (!ask) throw new HTTPError(404, "no watch request of yours by that id", { code: "no_ask" });
+    return { ask: shownAsk(ask, lang) };
+  }
+  if (parts.length !== 3 || method !== "POST") throw new HTTPError(404, "not found");
+  const body = parseBody(event);
+  const extra = Object.keys(body).filter((k) => !["client_id", "text", "reply_to"].includes(k));
+  const client = str(body.client_id);
+  const text = str(body.text).trim();
+  const replyTo = body.reply_to === undefined ? "" : str(body.reply_to);
+  if (extra.length || !CLIENT_ID.test(client) || !text || text.length > MAX_ASK_TEXT || (body.reply_to !== undefined && !replyTo)) {
+    throw new HTTPError(400, "a watch request is {client_id, text, reply_to?}");
+  }
+  // The phone's device key signed it (checks 2 and 5): a removed phone's key is refused by KIFF.
+  const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
+  const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
+  // A retry signs again (a signature is taken once), so the client's id is looked up first: the same request comes back.
+  const known = (await store.get(watchKeys.client(me.tenantID, me.subject, client))) as string | undefined;
+  await checkSigned({ tenant: me.tenantID, taf: "", component: "", token: bearer(event), proof: "", store, planqueBase: deps.planqueBase ?? "", kiffBase: deps.kiffBase,
+    fetch: deps.fetch ?? fetch, now, newID: () => "", signed, lang }).catch(approvalFailure);
+  if (known) {
+    const kept = await ownAsk(store, me.tenantID, me.subject, known);
+    if (kept) return { ask: shownAsk(kept, lang) };
+  }
+  await requireAIConsent(event, me, deps);
+  const setup = (await deps.tafs.list(me.tenantID)).find((t) => t.job === SETUP_JOB && !t.removing);
+  if (!setup) throw new HTTPError(404, "start Coach on the phone first", { code: "no_coach" });
+  const before = replyTo ? await ownAsk(store, me.tenantID, me.subject, replyTo) : undefined;
+  if (replyTo && (!before || !before.session)) throw new HTTPError(404, "no watch request of yours by that id", { code: "no_ask" });
+  // A reply goes on in its request's conversation only once that request is final, with no turn of Coach's pending: a hand-over
+  // made by a turn still at work would otherwise count as the reply's own (one taf per request, check 3).
+  if (before && (!ASK_FINAL.includes(before.state) || before.turn)) throw new HTTPError(409, "wait for its result before replying", { code: "reply_too_soon" });
+  // Claimed once per person and client id: two deliveries of one request at once make one.
+  if (!(await store.once(`${watchKeys.client(me.tenantID, me.subject, client)}#claim`, new Date(now.getTime() + ASK_KEPT_MS)))) {
+    const id = (await store.get(watchKeys.client(me.tenantID, me.subject, client))) as string | undefined;
+    const kept = id ? await ownAsk(store, me.tenantID, me.subject, id) : undefined;
+    if (kept) return { ask: shownAsk(kept, lang) };
+    throw new HTTPError(409, "this request is already on its way: ask again in a moment");
+  }
+  const id = newAskID(deps.newID ?? (() => randomUUID()));
+  const at = now.toISOString();
+  const ask: Ask = { id, client_id: client, person: me.subject, state: "accepted", at, updated: at, turn: "route", ...(before ? { reply_to: before.id } : {}) };
+  // The conversation: a reply goes on in its request's own; a new request opens one, the watch's alone.
+  const run: RunAt = await granted(event, setup.kiffAgent, before?.session
+    ? { session: before.session, requester: member(me) }
+    : { requester: member(me), skills: asNamed(startSkills("watch"), (await deps.agents.getAgent(me.tenantID, setup.id).catch(() => undefined))?.skills),
+      only: { skills: true, tools: [...WATCH_TOOLS] } }, deps);
+  const ref = newRef(me.tenantID);
+  const notify = watchNotify(event, ref, deps);
+  let started: Run;
+  try {
+    started = await deps.agents.startRun(me.tenantID, setup.id, withZone(withLanguage(text, lang, lang), me.timeZone, now), run, await aiBound(event, deps), notify);
+  } catch (err) {
+    await store.remove(`${watchKeys.client(me.tenantID, me.subject, client)}#claim`).catch(() => undefined);
+    throw agentsFailure(err);
+  }
+  Object.assign(ask, { session: started.session, coach_run: started.id });
+  const until = new Date(now.getTime() + ASK_KEPT_MS);
+  await keepAsk(store, me.tenantID, ask, now);
+  await Promise.all([
+    store.put(watchKeys.client(me.tenantID, me.subject, client), id, until),
+    store.put(watchKeys.session(me.tenantID, started.session), id, until),
+    store.put(watchKeys.ref(me.tenantID, ref), id, until),
+  ]);
+  // Logged with the device's signature checked, never the request's words (check 2).
+  console.log(JSON.stringify({ event: "watch_ask", tenant: me.tenantID, ask: id, signed: "device", reply: Boolean(before) }));
+  return { ask: shownAsk(ask, lang) };
+}
+
+/** Where a watch conversation's Coach run says it ended. */
+function watchNotify(event: HTTPEvent | undefined, ref: string, deps: Deps): Notify | undefined {
+  const host = event?.headers?.host ?? event?.headers?.Host;
+  const self = deps.publicURL ?? (host ? `https://${host}` : "");
+  return self ? { url: `${self}/v1/runs/ended`, ref } : undefined;
+}
+
+/** The tafs a watch conversation chooses from, each with what it can do: its own words and the tools it holds. */
+function watchTafs(tafs: Taf[]): ToolAnswer {
+  return {
+    tafs: tafs.map((t) => ({ id: t.id, name: t.name, can: { does: tafPurpose(t, undefined), tools: [...(t.tools ?? [])] } })),
+    reading: "Choose from can alone: one taf, none, or say which ones could.",
+  };
+}
+
+/** A watch request's state changed: kept, then the person's Android phones are told its id alone. */
+async function watchChanged(tenant: string, ask: Ask, deps: Deps): Promise<void> {
+  if (!deps.coach) return;
+  const now = deps.now?.() ?? new Date();
+  ask.updated = now.toISOString();
+  await keepAsk(deps.coach, tenant, ask, now);
+  try {
+    const { devices } = await deps.push.get(tenant);
+    const n = watchAskNotification(ask.id);
+    await Promise.all(devices.filter((d) => d.subject === ask.person && d.platform === "android").map(async (d) => {
+      const r = await sendNotification(deps.apns, d, n).catch(() => "failed" as const);
+      if (r === "gone") await deps.push.removeDevice(tenant, d.token);
+    }));
+  } catch (err) {
+    console.error(`watch ask ${ask.id} not told: ${(err as Error).message}`);
+  }
+}
+
+/**
+ * The taf_task of a watch conversation: one taf per request (check 3), the person's own, and never into a run
+ * at work. Undefined when the call isn't from a watch conversation, which goes on as before.
+ */
+async function watchHandOver(call: CoachCall, args: Record<string, unknown>, deps: Deps): Promise<Ask | undefined> {
+  if (!deps.coach) return undefined;
+  const ask = await askOfSession(deps.coach, call.tenant, call.session);
+  if (!ask) return undefined;
+  if (!call.person || call.person.subject !== ask.person) throw new ToolRefusal("this watch request isn't this person's");
+  if (str(args.run).trim()) throw new ToolRefusal("a watch request starts its own run: leave out run");
+  // A result turn's input is the taf's own result (an app's words can be in it): it reports, and never hands anything over.
+  if (ask.turn === "result") throw new ToolRefusal("this turn says how the taf's work went: it hands nothing over");
+  if (ask.taf || !(await deps.coach.once(`${watchKeys.ask(call.tenant, ask.id)}#handed`, new Date((deps.now?.() ?? new Date()).getTime() + ASK_KEPT_MS)))) {
+    throw new ToolRefusal("this watch request went to a taf already: one taf per request");
+  }
+  return ask;
+}
+
+/** The watch request's taf took it: it's working, and the watch hears which taf. */
+async function watchHandedOver(tenant: string, ask: Ask, taf: Taf, run: Run, deps: Deps): Promise<void> {
+  Object.assign(ask, { taf: { id: taf.id, name: taf.name }, taf_run: run.id, state: "working" as const });
+  await watchChanged(tenant, ask, deps);
+}
+
+/**
+ * A watch conversation's Coach run ended or paused. After routing: no taf took it, and Coach's sentence says why
+ * (none can, or which could). After a result: Coach's line, checked, ends the request as the taf's run did.
+ */
+async function watchCoachEnded(tenant: string, id: string, note: { run: string; agent: string; status: string }, deps: Deps): Promise<boolean> {
+  if (!deps.coach) return false;
+  const ask = (await deps.coach.get(watchKeys.ask(tenant, id))) as Ask | undefined;
+  if (!ask) return false;
+  const r = await deps.agents.getRun(tenant, note.agent, note.run).catch(() => undefined);
+  if (!r || !["COMPLETED", "ERROR", "CANCELLED", "PAUSED"].includes(r.status)) return false;
+  const line = r.status === "COMPLETED" ? checkedLine(r.output) : undefined;
+  if (ask.turn === "result") {
+    Object.assign(ask, { state: ask.next ?? "done", ...(line ? { line } : {}) });
+  } else if (!ask.taf) {
+    Object.assign(ask, r.status === "COMPLETED" ? { state: "no_taf", ...(line ? { line } : {}) } : { state: "failed" });
+  } else {
+    return true; // routed: the taf's run tells how it went
+  }
+  delete ask.turn;
+  delete ask.next;
+  await watchChanged(tenant, ask, deps);
+  return true;
+}
+
+/**
+ * The taf a watch request went to paused or ended: Coach's watch conversation writes it as one line, in a turn of
+ * its own. If kiff/agents won't start that turn, the taf's own words, checked, are the line.
+ */
+async function watchTaskEnded(tenant: string, setup: Taf | undefined, task: Task, r: Run, line: string, said: string, deps: Deps): Promise<void> {
+  if (!deps.coach || !task.ask) return;
+  const ask = (await deps.coach.get(watchKeys.ask(tenant, task.ask))) as Ask | undefined;
+  if (!ask) return;
+  const next: AskState = r.status === "PAUSED" ? "working" : r.status === "COMPLETED" && (!r.stop || r.stop === "answered") ? "done" : "failed";
+  const ref = newRef(tenant);
+  // The note's own request isn't at hand here (it's claimed and told once): tafs cloud's public address names the route.
+  const notify = watchNotify(undefined, ref, deps);
+  if (setup && ask.session && notify) {
+    try {
+      await deps.agents.startRun(tenant, setup.id, line, { session: ask.session, requester: { kind: "member", id: ask.person } }, undefined, notify);
+      await deps.coach.put(watchKeys.ref(tenant, ref), ask.id, new Date((deps.now?.() ?? new Date()).getTime() + ASK_KEPT_MS));
+      Object.assign(ask, { turn: "result", next });
+      await keepAsk(deps.coach, tenant, ask, deps.now?.() ?? new Date());
+      return;
+    } catch (err) {
+      console.error(`watch ask ${ask.id}: Coach's line not started: ${(err as Error).message}`);
+    }
+  }
+  const own = checkedLine(said);
+  Object.assign(ask, { state: next, ...(own ? { line: own } : {}) });
+  await watchChanged(tenant, ask, deps);
 }
