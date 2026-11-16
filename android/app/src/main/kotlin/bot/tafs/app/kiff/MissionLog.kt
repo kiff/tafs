@@ -21,6 +21,8 @@ data class MissionLogItem(
   val id: String = "",
   val at: String = "",
   val by: MissionLogBy = MissionLogBy(),
+  /** Who, in tafs cloud's words, when it says more than a name: "Bills in → Payouts" on a hand-off. */
+  @SerialName("by_words") val byWords: String? = null,
   /** delivered, handed, stuck, decided or note: the colour the app draws it in. */
   val kind: String = "",
   /** The kind in the person's words ("delivered", "handed"…), from tafs cloud. */
@@ -46,8 +48,8 @@ object MissionLogs {
   fun drawn(pages: List<MissionLogPage>): List<MissionLogItem> =
     pages.flatMap { it.items }.filter { it.words.isNotBlank() }.distinctBy { it.id.ifEmpty { it.at + it.words } }
 
-  /** The name an entry is by: the taf's, else tafs cloud's words for the lead or the person, else nothing. */
-  fun byName(item: MissionLogItem): String? = item.by.name?.takeIf { it.isNotBlank() }
+  /** Who an entry is by: tafs cloud's words for it ("Bills in → Payouts", "Coach", "You"), else the taf's name, else nothing. */
+  fun byName(item: MissionLogItem): String? = item.byWords?.takeIf { it.isNotBlank() } ?: item.by.name?.takeIf { it.isNotBlank() }
 
   /** When an entry was written, in the phone's own time and language ("14 Nov, 07:10"); as tafs cloud sent it if unreadable. */
   fun shownAt(at: String, zone: java.time.ZoneId = java.time.ZoneId.systemDefault(), locale: java.util.Locale = java.util.Locale.getDefault()): String =

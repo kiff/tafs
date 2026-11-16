@@ -20,7 +20,7 @@ import org.junit.Test
 class MissionLogTest {
   private val page = """{"items":[
     {"id":"log_3","at":"2026-11-14T06:10:00Z","by":{"kind":"lead"},"kind":"stuck","kind_words":"stuck","words":"Payouts didn't run at 07:00: its bank sign-in needs you.","evidence":[{"kind":"run","id":"run_9"},{"kind":"hold","id":"h_2","words":"hold"}]},
-    {"id":"log_2","at":"2026-11-14T06:02:00Z","by":{"kind":"taf","name":"Bills in"},"kind":"delivered","kind_words":"delivered","words":"12 bills sorted, 2 didn't match their order.","evidence":[{"kind":"item","id":"rec_1","words":"12 record lines"}],"value":"€4,120 sorted"},
+    {"id":"log_2","at":"2026-11-14T06:02:00Z","by":{"kind":"taf","name":"Bills in"},"by_words":"Bills in → Payouts","kind":"delivered","kind_words":"delivered","words":"12 bills sorted, 2 didn't match their order.","evidence":[{"kind":"item","id":"rec_1","words":"12 record lines"}],"value":"€4,120 sorted"},
     {"id":"log_1","at":"2026-11-13T08:12:00Z","by":{"kind":"taf"},"kind":"delivered","words":"3 quotes drafted for new clients.","evidence":[],"removed":true},
     {"id":"log_0","at":"2026-11-13T08:00:00Z","by":{"kind":"taf","name":"Collect"},"kind":"note","words":"  "},
     {"oddly":"shaped"}
@@ -31,7 +31,8 @@ class MissionLogTest {
     assertEquals("log_0", read.before)
     val drawn = MissionLogs.drawn(listOf(read, read))
     assertEquals("blank words and the empty entry left out, a page read twice shown once", listOf("log_3", "log_2", "log_1"), drawn.map { it.id })
-    assertEquals("Bills in", MissionLogs.byName(drawn[1]))
+    assertEquals("tafs cloud's words first", "Bills in → Payouts", MissionLogs.byName(drawn[1]))
+    assertEquals("Bills in", MissionLogs.byName(drawn[1].copy(byWords = null)))
     assertNull("the lead and a removed taf carry no name of their own", MissionLogs.byName(drawn[0]))
     assertTrue(drawn[2].removed)
     assertEquals("€4,120 sorted", drawn[1].value)
