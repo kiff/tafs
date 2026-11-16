@@ -246,6 +246,9 @@ than the build's commits nothing.
   it-IT, pt-PT, nl-NL and pl-PL, each at most 500 characters. A pull request that raises
   `versionCode` adds that folder; `test` checks it (`play_internal.py --check`) and fails a
   version with none, as the upload refuses one (Android 1.29.5; before, `test` passed without them).
+- **The Wear OS watch** has its own release job (`wear-release`), track (`wear:internal`) and variable (`WEAR_UPLOAD`),
+  signed with the same upload key (docs/watch-wear.md, Versions). A run by hand builds the phone's bundle unless its
+  `form` is `wear`.
 The upload key is never in the repository or a session: `android/make-upload-key.sh` made
 it once into the secrets store, and `android/release.sh` builds with it. The app has no native
 code of its own. Its only native libraries are two small ones that AndroidX ships already

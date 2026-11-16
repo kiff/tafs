@@ -79,6 +79,31 @@ class PlayInternal(unittest.TestCase):
         for other in ("production", "alpha", "beta", "userFraction", "inProgress"):
             self.assertNotIn(f'"{other}"', code)
 
+    def test_the_watch_goes_to_its_own_internal_track_only(self):
+        p.version_code = lambda wear=False: 400000001 if wear else 85
+        self.answers["/edits/e1/bundles"] = {"versionCode": 400000001}
+        p.upload(self.bundle.name, wear=True)
+        self.assertEqual([c[:2] for c in self.calls], [
+            ("POST", "/edits"), ("POST", "U/edits/e1/bundles"), ("PUT", "/edits/e1/tracks/wear:internal"), ("POST", "/edits/e1:commit")])
+        body = self.calls[2][2]
+        self.assertEqual(body["track"], "wear:internal")
+        self.assertEqual(body["releases"][0]["versionCodes"], ["400000001"])
+        self.assertEqual([n["language"] for n in body["releases"][0]["releaseNotes"]], p.LOCALES)
+        self.assertEqual(p.WEAR_TRACK, "wear:internal")
+
+    def test_a_phone_bundle_sent_as_the_watch_commits_nothing(self):
+        p.version_code = lambda wear=False: 400000001 if wear else 85
+        self.answers["/edits/e1/bundles"] = {"versionCode": 85}
+        with self.assertRaises(SystemExit):
+            p.upload(self.bundle.name, wear=True)
+        self.assertNotIn("PUT", [c[0] for c in self.calls])
+
+    def test_the_watchs_version_is_read_from_its_own_build_in_its_own_band(self):
+        # Kotlin writes it 400_000_001; the phone's file is never read for the watch.
+        self.assertGreaterEqual(p.version_code(wear=True), p.WEAR_FIRST)
+        self.assertLess(p.version_code(), p.WEAR_FIRST)
+        p.main(["--wear", "--check"])
+
 
 if __name__ == "__main__":
     unittest.main()
