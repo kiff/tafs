@@ -200,19 +200,21 @@ enum Words {
         ///  The request is kept.
         static var requestKept: String { Words.line("approval.request_kept") }
         enum SecurityKey {
-            /// Enter your security key's PIN. It's asked each time, and it's never kept.
+            /// Enter your security key's PIN. tafs asks for it each time and never stores it.
             static var enterPin: String { Words.line("approval.security_key.enter_pin") }
-            /// The security key couldn't approve. Nothing was approved.
+            /// The security key couldn't sign, so nothing was approved. The request is kept: approve again when you're ready.
             static var failed: String { Words.line("approval.security_key.failed") }
-            /// This security key is locked after too many wrong PINs, so it can't approve. Resetting it erases it. Approve on your phone instead.
+            /// This security key is locked after too many wrong PINs, so it can't approve. Approve on your phone. Resetting the key erases it, so to approve with a key again, pair this computer again.
             static var locked: String { Words.line("approval.security_key.locked") }
             /// Plug in your security key, then try again.
             static var noKey: String { Words.line("approval.security_key.no_key") }
-            /// This security key has no PIN, so it can't approve. Set a PIN on it, then try again.
+            /// This security key has no PIN, so it can't approve. Plug in the one that goes with this computer. If it was reset, approve on your phone, and pair this computer again to approve with a key.
             static var noPinSet: String { Words.line("approval.security_key.no_pin_set") }
-            /// This security key can't check a PIN, so it can't approve. A FIDO2 key can.
+            /// The security key didn't allow it, so nothing was approved. The request is kept: approve again when you're ready.
+            static var notAllowed: String { Words.line("approval.security_key.not_allowed") }
+            /// This security key can't check a PIN, so it can't approve. Plug in the one that goes with this computer.
             static var notFido2: String { Words.line("approval.security_key.not_fido2") }
-            /// This isn't the security key added with this computer.
+            /// This isn't the security key that goes with this computer. Plug that one in and try again, or approve on your phone.
             static var notThisKey: String { Words.line("approval.security_key.not_this_key") }
             /// PIN
             static var pin: String { Words.line("approval.security_key.pin") }
@@ -220,13 +222,11 @@ enum Words {
             static var pinPaused: String { Words.line("approval.security_key.pin_paused") }
             /// That PIN is too long for a security key.
             static var pinTooLong: String { Words.line("approval.security_key.pin_too_long") }
-            /// A PIN has at least 4 characters.
+            /// A security key's PIN has at least 4 characters.
             static var pinTooShort: String { Words.line("approval.security_key.pin_too_short") }
-            /// The security key refused. Nothing was approved.
-            static var refused: String { Words.line("approval.security_key.refused") }
-            /// More than one security key is plugged in. Leave only the one added with this computer.
+            /// More than one security key is plugged in. Unplug the others, keep the one that goes with this computer, then try again.
             static var severalKeys: String { Words.line("approval.security_key.several_keys") }
-            /// The key wasn't touched in time. Nothing was approved.
+            /// The security key wasn't touched in time, so nothing was approved. The request is kept: approve again when you're ready.
             static var timedOut: String { Words.line("approval.security_key.timed_out") }
             /// Approve with your security key
             static var title: String { Words.line("approval.security_key.title") }
@@ -234,11 +234,11 @@ enum Words {
             static var touch: String { Words.line("approval.security_key.touch") }
             /// {count} tries left before the key locks.
             static func triesLeft(count: Int) -> String { Words.count("approval.security_key.tries_left", count) }
-            /// The security key was unplugged. Nothing was approved.
+            /// The security key was unplugged, so nothing was approved. The request is kept: approve again when you're ready.
             static var unplugged: String { Words.line("approval.security_key.unplugged") }
             /// Wrong PIN. {count} tries left before the key locks.
             static func wrongPin(count: Int) -> String { Words.count("approval.security_key.wrong_pin", count) }
-            /// Wrong PIN.
+            /// Wrong PIN. Try again.
             static var wrongPinNoCount: String { Words.line("approval.security_key.wrong_pin_no_count") }
         }
         /// Set a screen lock on this phone to approve

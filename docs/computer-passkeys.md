@@ -31,9 +31,9 @@ paired with it. Its PIN is asked for each approval, and a lost key is removed by
 computer out.
 
 The PIN sheet's words are the shared `approval.security_key.*` lines: the PIN, the touch, tries
-left, and why the key gave no answer (none plugged in, more than one, not FIDO2, no PIN set, a
-wrong PIN, three in a row, locked, another key, not touched in time, refused, unplugged). Each
-failure says nothing was approved.
+left, and why the key gave no answer (none plugged in, more than one, a key that can't check a PIN, no PIN set,
+a wrong PIN, three in a row, locked, another key, not touched in time, not allowed, unplugged).
+Each failure says nothing was approved.
 
 ## What a passkey approval carries
 
