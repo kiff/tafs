@@ -164,7 +164,14 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
       const first = waiting[0]!;
       // Named so it differs from this app (Eval 18, intros: two key apps on one host were both "the host", and Coach put the
       // Card on the waiting app's own approval): its tools when the names clash, and its grant id for Coach.
-      return { outcome: "answered", answer: `failed: the Card also covers ${first.name}'s tools (grant ${first.grant}), which still wait for their own approval: show ${first.name}'s approval first, as its own connection with no Card, then show this one (${ownName(grant, others)}, grant ${grant.id}) again: it carries the Card`, note: W.otherAppFirst(first.name), code: "other_app_first" };
+      // The Card comes with the last app's approval, as the person reads it (approval_other_app_first): the waiting app's,
+      // with this same draft. Never this one again once it's connected (Eval 19, intros: told "then show this one again:
+      // it carries the Card", Coach showed the connected sheet's approval again after the mailbox's had confirmed the Card).
+      const own = `${ownName(grant, others)} (grant ${grant.id})`;
+      const next = grant.status === "connected"
+        ? `show ${first.name}'s approval with this same draft: it carries the Card. ${own} is connected already: never show its approval again`
+        : `show ${own}'s approval for its connection alone, with no draft, then ${first.name}'s with this same draft: the last one carries the Card. Show each approval once`;
+      return { outcome: "answered", answer: `failed: the Card also covers ${first.name}'s tools (grant ${first.grant}), which still wait for their own approval. The Card comes with the last app's approval: ${next}.`, note: W.otherAppFirst(first.name), code: "other_app_first" };
     }
     const left = uncoveredTool(grant, draft.cards, inForce);
     if (left) {
