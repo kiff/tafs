@@ -96,6 +96,7 @@ export const it: Words = {
   approval_cards_not_issued: (why: string) => `KIFF non ha emesso le Card del taf: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} è connesso. Ora, la Card.`,
   approval_other_app_first: (vendor: string) => `${vendor} attende ancora la sua approvazione. Approva prima ${vendor}; questa Card arriva con l'ultima app.`,
+  approval_with_its_card: (vendor: string) => `${vendor} si approva insieme alla sua Card. Coach lo mostra di nuovo con la Card.`,
   approval_draft_is: (status: string) => `stato della bozza: ${status}`,
   approval_no_draft: "KIFF non ha questa bozza",
   approval_card_next: "La sua Card: la approvi subito dopo",

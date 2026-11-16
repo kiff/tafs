@@ -705,6 +705,7 @@ final class AppModel: ObservableObject {
             recordHint = nil; recordSearch = nil; recordCase = nil; recordCaseError = nil
             recordTyping?.cancel(); recordTyping = nil
             cardUnitExceptions = []; dismissingCardUnits = []; setupContextTafID = nil; homeNeedsYou = nil; homeHeadline = nil
+            homeLabels = []; homeLabelsAll = nil; listLabel = nil
             yourSteps = []; answeredSteps = []; answeringSteps = []; requestedStep = nil; answeredStillCounted = 0; coachWaitingListed = []
             coachWaitingClear = nil; settingAside = []; setAsideChats = []
             haltErrors = [:]
@@ -2073,6 +2074,8 @@ final class AppModel: ObservableObject {
         coachWaitingClear = home.coachWaitingClear.flatMap { $0.usable ? $0 : nil }
         homeNeedsYou = home.needsYou
         homeHeadline = home.headlineWords
+        homeLabels = home.labels?.items ?? []
+        homeLabelsAll = home.labelsWords?.all
         var running: [String: TafsCloud.CloudTaf] = [:]
         for t in home.tafs { if let c = t.cloudTaf { running[t.kiffAgent] = c } }
         cloudTafs = running
@@ -2207,9 +2210,180 @@ final class AppModel: ObservableObject {
         listOrder = [last] + listOrder.dropLast()
     }
 
+    // MARK: Your brief (Missions design v2.1, draft)
+
+    /// "Your brief", in Needs you's place once there is one: tafs cloud's (`GET /v1/brief`, behind its
+    /// `TAFS_MISSIONS` flag), or the sample's for screenshots (`-brief YES`). Nil: Needs you, as today.
+    @Published private(set) var brief: TafsCloud.Brief?
+    /// The label the brief is filtered to; nil is All.
+    @Published private(set) var briefLabel: String?
+    /// Decisions answered or put off here, until the next read drops them.
+    @Published private(set) var briefSetAside: Set<String> = []
+    /// The next move dismissed here: it isn't shown again for the same cases.
+    @Published private(set) var nextMoveDismissed = false
+
+    /// The tab's name: tafs cloud's ("Your brief") once there's a brief, else Needs you.
+    var needsYouTabTitle: String {
+        guard let words = brief?.words.tab, !words.isEmpty else { return Words.NeedsYou.title }
+        return words
+    }
+
+    /// The brief's decisions still to answer here.
+    var briefDecisions: [TafsCloud.Brief.Decision] { (brief?.decisions ?? []).filter { !briefSetAside.contains($0.id) } }
+
+    /// How much of Needs you the brief doesn't show, matched item by item, never by number: a held call or a
+    /// step the brief shows is matched by its `ref` (`hold:<id>`, `step:<handoff>`), and anything the brief
+    /// can't carry (`others`) counts. Equal counts of different items still leave something to link to.
+    nonisolated static func needsYouBeyondBrief(items: [String], others: Int, brief: [TafsCloud.Brief.Decision]) -> Int {
+        let shown = Set(brief.map { "\($0.ref.kind):\($0.ref.id)" })
+        return items.filter { !shown.contains($0) }.count + others
+    }
+
+    /// Needs you's count of what the brief doesn't show, under the brief: nothing waiting is ever out of
+    /// reach. Nil when the brief shows it all.
+    var briefNeedsYouLine: String? {
+        let items = held.compactMap { $0.kiffID.map { "hold:" + $0 } } + yourSteps.map { "step:" + $0.handoff }
+        let others = held.filter { $0.kiffID == nil }.count + cardUnitExceptions.count + unproven.count + coachWaiting.count
+        let beyond = Self.needsYouBeyondBrief(items: items, others: others, brief: briefDecisions)
+        return beyond > 0 ? Words.NeedsYou.count(count: beyond) : nil
+    }
+
+    /// Reads the brief for the label chosen: the sample's for screenshots, else tafs cloud's. The switch is
+    /// the route itself: until tafs cloud serves `GET /v1/brief`, it answers 404 and there's no brief, so
+    /// Needs you is as today. Any other failure keeps Needs you too: the brief never hides what waits.
+    func loadBrief() async {
+        if mode == .sample, Screenshots.brief {
+            if brief == nil, briefLabel == nil { briefLabel = Screenshots.briefLabel }
+            brief = .sample(label: briefLabel, urgent: Screenshots.briefUrgent)
+            return
+        }
+        guard mode == .kiff else { brief = nil; return }
+        let gen = accountGeneration
+        let read = try? await cloud.brief(label: briefLabel)
+        guard gen == accountGeneration else { return }
+        brief = read.flatMap { $0.decisions.isEmpty && $0.done.isEmpty && $0.nextMove == nil ? nil : $0 }
+    }
+
+    /// Where a decision is answered: the route it already has, where its own signed answer is given. A held
+    /// call opens on its own card with **no answer chosen**: an answer chosen in advance is the notification's
+    /// path, where an unlock seconds before counts as the Face ID, and the brief never takes it. The person
+    /// approves on KIFF's own card, with Face ID asked there. Nothing is answered from the brief.
+    nonisolated static func destination(of decision: TafsCloud.Brief.Decision, answer: TafsCloud.Brief.Answer) -> String {
+        guard !decision.ref.id.isEmpty else { return "needs-you" }
+        switch decision.ref.kind {
+        case "hold":
+            return AlertAnswers.destination(hold: decision.ref.id)
+        case "step":
+            return "step:" + decision.ref.id
+        default:
+            return "needs-you"
+        }
+    }
+
+    func filterBrief(_ label: String?) async {
+        briefLabel = label
+        briefSetAside = []
+        await loadBrief()
+    }
+
+    /// One tap answers one decision through the route it already has (design v2.1: a held call, a step, a
+    /// connection, a proposal), where its own signed answer is given; nothing is signed from the brief
+    /// itself. Draft: on the sample the card is set aside; the route is wired once tafs cloud's is live.
+    func answerBrief(_ decision: TafsCloud.Brief.Decision, _ answer: TafsCloud.Brief.Answer) {
+        guard mode == .kiff else { briefSetAside.insert(decision.id); return }
+        open(Self.destination(of: decision, answer: answer))
+    }
+
+    /// "Later": the decision moves to the next brief (`POST /v1/brief/decisions/{id}/later`, wired once
+    /// tafs cloud's route is live). Draft: set aside here.
+    func laterBrief(_ decision: TafsCloud.Brief.Decision) {
+        // An urgent decision can't be put off, whatever was sent: refused here as the card hides it.
+        guard decision.later != nil, !decision.urgent else { return }
+        guard mode == .kiff else { briefSetAside.insert(decision.id); return }
+        let gen = accountGeneration
+        Task {
+            // Set aside only once tafs cloud has moved it; else it stays, to answer or try again.
+            guard (try? await cloud.briefLater(decision.id)) != nil, gen == accountGeneration else { return }
+            briefSetAside.insert(decision.id)
+        }
+    }
+
+    /// Start the next move: Coach opens with it, where the person and Coach take it on.
+    func startNextMove(_ move: TafsCloud.Brief.NextMove) {
+        nextMoveDismissed = true
+        guard mayUseCoach || mode == .sample else { return }
+        setupDraft = move.words
+        coachOpen = true
+    }
+
+    func dismissNextMove() { nextMoveDismissed = true }
+
+    // MARK: Labels on the tafs list (Missions draft)
+
+    /// The label the tafs list is filtered to; nil is All.
+    @Published private(set) var listLabel: String?
+
+    /// The account's labels as Home sends them (docs/labels.md), in the order to show them; none
+    /// with no labelled taf, and the list draws no chips, as today.
+    @Published private(set) var homeLabels: [TafsCloud.Brief.Label] = []
+    /// Home's word for the first chip (`labels_words.all`).
+    @Published private(set) var homeLabelsAll: String?
+
+    /// The sample's labels, for screenshots only (`-brief YES`).
+    private var sampleLabelled: Bool { mode == .sample && Screenshots.brief }
+
+    /// Each taf's labels, in the account's order: Home's `labels` on the taf, or the sample's.
+    func labels(of taf: Taf) -> [TafsCloud.Brief.Label] {
+        if sampleLabelled {
+            guard let key = templateOf[taf.id] else { return [] }
+            return TafsCloud.Brief.sampleLabels.filter { $0.tafs.contains(key) }.map { $0.label }
+        }
+        guard let ids = cloudTaf(for: taf.id)?.labels, !ids.isEmpty else { return [] }
+        return homeLabels.filter { ids.contains($0.id) }
+    }
+
+    /// The list's chips: each label with how many listed tafs carry it, and how many of them wait for the
+    /// person (the amber dot), counted by tafs cloud; the sample counts its own.
+    var listLabels: [TafsCloud.Brief.Label] {
+        guard sampleLabelled else { return homeLabels }
+        return TafsCloud.Brief.sampleLabels.map { entry in
+            let tafs = listedTafs.filter { taf in templateOf[taf.id].map { entry.tafs.contains($0) } ?? false }
+            var label = entry.label
+            label.count = tafs.count
+            label.waiting = tafs.filter { !heldCalls(for: $0.id).isEmpty }.count
+            return label
+        }.filter { $0.count > 0 }
+    }
+
+    /// The first chip's word: Home's, the brief's, or the app's own where neither sent one.
+    var labelsAllWords: String {
+        homeLabelsAll ?? brief.flatMap { $0.words.all.isEmpty ? nil : $0.words.all } ?? Words.Record.Filter.all
+    }
+
+    /// Home's first line: filtered to the chosen label, tafs cloud's line for it ("2 tafs working · Money").
+    var listHeadline: String {
+        listLabel.flatMap { id in listLabels.first { $0.id == id }?.headline } ?? workingWords
+    }
+
+    func filterList(_ label: String?) { listLabel = label }
+
+    /// The tafs the list shows under its chip: all, or those carrying it. The order never changes; a
+    /// label that's gone shows them all.
+    func filtered(_ tafs: [Taf]) -> [Taf] {
+        guard let listLabel, listLabels.contains(where: { $0.id == listLabel }) else { return tafs }
+        return tafs.filter { labels(of: $0).contains { $0.id == listLabel } }
+    }
+
+    /// A mission's log, newest first: the sample's for screenshots; tafs cloud's route once it's on.
+    func missionLog(_ mission: String) async -> TafsCloud.MissionLog? {
+        if mode == .sample { return TafsCloud.Brief.sampleLog() }
+        return try? await cloud.missionLog(mission)
+    }
+
     func startSample() async {
         mode = .sample
         await loadSample()
+        await loadBrief()
         save()
         if Screenshots.listSettlesOnReturn { settleListOrder() }
         if Screenshots.purchases {
@@ -9306,6 +9480,12 @@ enum Screenshots {
     static var narrow: Bool { UserDefaults.standard.bool(forKey: "narrow") }
     /// `-landscape YES`: the iPad's window turned to landscape, for its screenshots.
     static var landscape: Bool { UserDefaults.standard.bool(forKey: "landscape") }
+    /// `-brief YES`: "Your brief" in Needs you's place, over the sample's own brief (Missions draft).
+    static var brief: Bool { enabled && UserDefaults.standard.bool(forKey: "brief") }
+    /// `-briefLabel money`: the brief filtered to that label from the start.
+    static var briefLabel: String? { brief ? UserDefaults.standard.string(forKey: "briefLabel") : nil }
+    /// `-briefUrgent YES`: the sample's brief with an urgent decision leading it.
+    static var briefUrgent: Bool { brief && UserDefaults.standard.bool(forKey: "briefUrgent") }
     /// `-signedIn YES`: the iPad's sidebar laid out as for a signed-in account (its screens and
     /// Coach above the account), over the sample's tafs. A screenshot of the layout only: nothing
     /// is read from KIFF, and the screens it lists aren't opened.
