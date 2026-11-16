@@ -1,0 +1,1 @@
+- Compte et les autres volets restent immobiles après un balayage rapide, et « Se déconnecter » s'affiche en entier.
