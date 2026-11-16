@@ -1,0 +1,1 @@
+- **Coach: a column limit is said as kept only when the request fixes it** (`draft-the-card@30`): otherwise the rules notice says "in its instructions", never that the connection keeps it.

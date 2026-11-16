@@ -14,6 +14,13 @@ Verify these in GitHub settings; documentation files alone do not enforce them:
 
 [GitHub's repository security guide](https://docs.github.com/en/code-security/getting-started/quickstart-for-securing-your-repository)
 explains the settings. CODEOWNERS routes reviews; it does not replace a ruleset.
+`.github/CODEOWNERS` asks `@kiff-qa` to review a change to the paths that sign, hold a key, pair
+a device, check a receipt, release a build or deploy, and to the files that decide a merge. It is
+their only code owner. The apps' lanes (`ios/`, `android/`, their two pages in `docs/`, and
+`changes/`) have no default owner, so a pull request there waits only for the reviewers its author
+asks. Making `@kiff-qa`'s review required is a ruleset setting ("Require review from
+Code Owners"); once it's on, a pull request authored as `kiff-qa` on those paths can't get its
+code owner's approval, and merges only through an admin's bypass.
 Dependabot opens update PRs; updates still require review and CI. Do not add
 blanket auto-merge or workflow approval for external contributions.
 
@@ -41,9 +48,14 @@ auto-merge: every condition below must hold, and anything else waits for a maint
 - **Every file it touches is in one lane's paths:** `ios/` and `docs/ios-app.md`, or `android/` and
   `docs/android-app.md`. Its own changelog fragment may come with it. One file anywhere else
   (tafs cloud, the shared strings, a workflow, a contract in `docs/`, this rule itself) and it waits.
-- **A listed reviewer other than its author approved its latest commit,** and none of them has
-  changes requested. A push after the approval needs a new one. Authors and reviewers are listed
-  by GitHub login, so "other than its author" means another login.
+- **A listed reviewer other than its author approved its latest commit, and so did every reviewer
+  it names,** with nobody asking for changes. The ones it names are each reviewer still asked, each
+  one asked before whose request wasn't taken back (GitHub stops listing a reviewer as asked once
+  they leave any review, a comment too, so the pull request's events are read), and each listed
+  reviewer who reviewed it. A stranger's review names no one, since anyone can leave one on a public
+  repository. A team asked to review, or events that can't be read, and it waits. A push after the
+  approvals needs new ones. Authors and reviewers are listed by GitHub login, so "other than its
+  author" means another login.
 - **Every check on its latest commit finished and passed,** and GitHub says it can be merged. When
   it touches an app's code, that app's own tests must be among them and have succeeded (`required`
   in `.github/automerge.json`: iOS's `test`; Android's `test` and `ui`). They start later than the

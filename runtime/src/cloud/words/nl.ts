@@ -96,6 +96,7 @@ export const nl: Words = {
   approval_cards_not_issued: (why: string) => `KIFF heeft de Cards van het taf niet uitgegeven: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} is verbonden. Nu de Card.`,
   approval_other_app_first: (vendor: string) => `${vendor} wacht nog op een eigen goedkeuring. Eerst ${vendor} goedkeuren; deze Card komt met de laatste app.`,
+  approval_with_its_card: (vendor: string) => `${vendor} wordt samen met zijn Card goedgekeurd. Coach toont het opnieuw met de Card.`,
   approval_draft_is: (status: string) => `het concept is ${status}`,
   approval_no_draft: "KIFF heeft zo'n concept niet",
   approval_card_next: "Zijn Card: die keur je hierna goed",

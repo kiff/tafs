@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:keep="@array/android_wear_capabilities">
+    <!-- What the Wear OS watch looks for to find this phone (WatchLink.PHONE_CAPABILITY, docs/watch-wear.md). -->
+    <string-array name="android_wear_capabilities" translatable="false">
+        <item>tafs_phone_relay</item>
+    </string-array>
+</resources>

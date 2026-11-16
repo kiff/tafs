@@ -37,8 +37,8 @@ CHECKS = [
 
 
 class Decide(unittest.TestCase):
-    def decide(self, p=None, files=FILES, reviews=APPROVAL, checks=CHECKS, hold=""):
-        return automerge.decide(p or pr(), files, reviews, checks, CONFIG, hold)
+    def decide(self, p=None, files=FILES, reviews=APPROVAL, checks=CHECKS, hold="", events=()):
+        return automerge.decide(p or pr(), files, reviews, checks, CONFIG, hold, events)
 
     def test_a_green_approved_pull_request_in_one_lane_merges(self):
         self.assertEqual(self.decide(), (True, "ios", ""))
@@ -87,6 +87,65 @@ class Decide(unittest.TestCase):
         self.assertTrue(self.decide(reviews=settled)[0])
         # A later comment from the one who approved doesn't take the approval back.
         self.assertTrue(self.decide(reviews=APPROVAL + [{"user": {"login": "agentgabo"}, "state": "COMMENTED", "commit_id": HEAD}])[0])
+
+    def test_every_reviewer_still_asked_must_approve_its_latest_commit(self):
+        # Two asked, one approved: the other is still asked, and it waits for them.
+        asked = pr(requested_reviewers=[{"login": "kiff-qa"}], user={"login": "build-qa"})
+        self.assertEqual(self.decide(asked)[2], "it waits for kiff-qa to approve its latest commit")
+        both = APPROVAL + [{"user": {"login": "kiff-qa"}, "state": "APPROVED", "commit_id": HEAD}]
+        self.assertTrue(self.decide(asked, reviews=both)[0])
+        # Someone asked who isn't a listed reviewer is waited for too, though their approval
+        # alone never merges it.
+        other = pr(requested_reviewers=[{"login": "kiff-admin"}])
+        self.assertEqual(self.decide(other)[2], "it waits for kiff-admin to approve its latest commit")
+        theirs = [{"user": {"login": "kiff-admin"}, "state": "APPROVED", "commit_id": HEAD}]
+        self.assertEqual(self.decide(other, reviews=theirs)[2], "no listed reviewer approved its latest commit")
+        self.assertTrue(self.decide(other, reviews=APPROVAL + theirs)[0])
+
+    def test_a_reviewer_asked_before_who_only_commented_is_still_waited_for(self):
+        # GitHub stops listing a reviewer as asked once they leave any review, a comment too:
+        # the request in the events still names them.
+        asked = [{"event": "review_requested", "requested_reviewer": {"login": "agentgabo"}},
+                 {"event": "review_requested", "requested_reviewer": {"login": "kiff-qa"}}]
+        p = pr(user={"login": "build-qa"})
+        commented = APPROVAL + [{"user": {"login": "kiff-qa"}, "state": "COMMENTED", "commit_id": HEAD}]
+        self.assertEqual(self.decide(p, reviews=commented, events=asked)[2], "it waits for kiff-qa to approve its latest commit")
+        # Their approval of an earlier commit isn't one of the latest.
+        stale = APPROVAL + [{"user": {"login": "kiff-qa"}, "state": "APPROVED", "commit_id": "b" * 40}]
+        self.assertFalse(self.decide(p, reviews=stale, events=asked)[0])
+        # A dismissed approval is no approval.
+        dismissed = stale[:1] + [{"user": {"login": "kiff-qa"}, "state": "DISMISSED", "commit_id": HEAD}]
+        self.assertFalse(self.decide(p, reviews=dismissed, events=asked)[0])
+        self.assertTrue(self.decide(p, reviews=commented + [{"user": {"login": "kiff-qa"}, "state": "APPROVED", "commit_id": HEAD}], events=asked)[0])
+        # A request taken back names them no more, and asking again names them again.
+        removed = asked + [{"event": "review_request_removed", "requested_reviewer": {"login": "kiff-qa"}}]
+        self.assertTrue(self.decide(p, reviews=APPROVAL, events=removed)[0])
+        again = removed + [{"event": "review_requested", "requested_reviewer": {"login": "kiff-qa"}}]
+        self.assertFalse(self.decide(p, reviews=APPROVAL, events=again)[0])
+        # Other events, and a team's request (no reviewer in it), name no one.
+        noise = [{"event": "labeled"}, {"event": "review_requested", "requested_team": {"slug": "x"}}]
+        self.assertTrue(self.decide(p, events=noise)[0])
+
+    def test_a_listed_reviewer_who_reviewed_is_waited_for_and_a_stranger_isnt(self):
+        commented = APPROVAL + [{"user": {"login": "gabosarmiento"}, "state": "COMMENTED", "commit_id": HEAD}]
+        self.assertEqual(self.decide(reviews=commented)[2], "it waits for gabosarmiento to approve its latest commit")
+        # Anyone can leave a review on a public repository: a stranger's names no one.
+        stranger = APPROVAL + [{"user": {"login": "someone-else"}, "state": "COMMENTED", "commit_id": HEAD}]
+        self.assertTrue(self.decide(reviews=stranger)[0])
+        self.assertTrue(self.decide(reviews=APPROVAL + [{"user": {"login": "someone-else"}, "state": "CHANGES_REQUESTED", "commit_id": HEAD}])[0])
+        # The author's own comment names no one either.
+        own = APPROVAL + [{"user": {"login": "kiff-qa"}, "state": "COMMENTED", "commit_id": HEAD}]
+        self.assertTrue(self.decide(reviews=own)[0])
+
+    def test_a_named_reviewer_asking_for_changes_stops_it(self):
+        asked = pr(requested_reviewers=[{"login": "kiff-admin"}])
+        changes = APPROVAL + [{"user": {"login": "kiff-admin"}, "state": "CHANGES_REQUESTED", "commit_id": HEAD}]
+        self.assertEqual(self.decide(asked, reviews=changes)[2], "a reviewer asked for changes")
+
+    def test_a_team_asked_or_events_that_cant_be_read_wait(self):
+        team = pr(requested_teams=[{"slug": "maintainers"}])
+        self.assertEqual(self.decide(team)[2], "a team is asked to review it")
+        self.assertEqual(self.decide(events=None)[2], "its review requests couldn't be read")
 
     def test_every_check_must_have_finished_and_passed(self):
         self.assertFalse(self.decide(checks=[])[0])
@@ -169,6 +228,7 @@ class Pass(unittest.TestCase):
         for n in numbers:
             out[f"repos/kiff/tafs/pulls/{n}/files"] = [{"filename": f} for f in FILES]
             out[f"repos/kiff/tafs/pulls/{n}/reviews"] = APPROVAL
+            out[f"repos/kiff/tafs/issues/{n}/events"] = []
             out[f"repos/kiff/tafs/pulls/{n}"] = failed if n in broken else pr()
         out[f"repos/kiff/tafs/commits/{HEAD}/check-runs"] = {"check_runs": CHECKS}
         return out
@@ -193,6 +253,21 @@ class Pass(unittest.TestCase):
         self.assertEqual(lines[0], "#772: couldn't be read, skipped")
         self.assertEqual(merged, ["repos/kiff/tafs/pulls/773/merge"])
         self.assertEqual(code, 0)
+
+    def test_events_that_cant_be_read_merge_nothing_of_that_pull_request(self):
+        answers = self.answers([772, 773])
+        answers["repos/kiff/tafs/issues/772/events"] = subprocess.CalledProcessError(1, ["gh", "api"], stderr="HTTP 502")
+        code, lines, merged = self.run_pass(answers)
+        self.assertEqual(lines, ["#772: couldn't be read, skipped", "#773: merged (ios)"])
+        self.assertEqual((code, merged), (0, ["repos/kiff/tafs/pulls/773/merge"]))
+
+    def test_a_reviewer_asked_who_only_commented_holds_the_merge(self):
+        answers = self.answers([772])
+        answers["repos/kiff/tafs/issues/772/events"] = [{"event": "review_requested", "requested_reviewer": {"login": "build-qa"}}]
+        answers["repos/kiff/tafs/pulls/772/reviews"] = APPROVAL + [{"user": {"login": "build-qa"}, "state": "COMMENTED", "commit_id": HEAD}]
+        code, lines, merged = self.run_pass(answers)
+        self.assertEqual(lines, ["#772: waits for a maintainer: it waits for build-qa to approve its latest commit"])
+        self.assertEqual((code, merged), (0, []))
 
     def test_a_run_where_nothing_could_be_read_fails(self):
         code, lines, merged = self.run_pass(self.answers([772, 773], broken=[772, 773]))

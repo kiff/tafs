@@ -97,6 +97,9 @@
     <string name="approval_prompt_approve_on_kiff">Zatwierdź w KIFF</string>
     <string name="approval_ready_approve">Ten %1$s jest gotowy do zatwierdzania przez %2$s.</string>
     <string name="approval_request_kept">" Prośba zostaje zachowana."</string>
+    <string name="approval_security_key_add">Dodaj klucz</string>
+    <string name="approval_security_key_add_enter_pin">Wpisz PIN swojego klucza bezpieczeństwa, aby go dodać. tafs pyta o niego za każdym razem i nigdy go nie zapisuje.</string>
+    <string name="approval_security_key_add_title">Dodaj klucz bezpieczeństwa do tego komputera</string>
     <string name="approval_security_key_enter_pin">Wpisz PIN swojego klucza bezpieczeństwa. tafs pyta o niego za każdym razem i nigdy go nie zapisuje.</string>
     <string name="approval_security_key_failed">Klucz bezpieczeństwa nie mógł podpisać, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz.</string>
     <string name="approval_security_key_locked">Ten klucz bezpieczeństwa jest zablokowany po zbyt wielu złych PIN-ach, więc nie może zatwierdzać. Zatwierdź na telefonie. Zresetowanie klucza go wymazuje, więc aby znów zatwierdzać kluczem, sparuj ten komputer ponownie.</string>
@@ -105,6 +108,7 @@
     <string name="approval_security_key_not_allowed">Klucz bezpieczeństwa na to nie pozwolił, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz.</string>
     <string name="approval_security_key_not_fido2">Ten klucz bezpieczeństwa nie umie sprawdzić PIN-u, więc nie może zatwierdzać. Podłącz klucz powiązany z tym komputerem.</string>
     <string name="approval_security_key_not_this_key">To nie jest klucz bezpieczeństwa powiązany z tym komputerem. Podłącz tamten i spróbuj ponownie albo zatwierdź na telefonie.</string>
+    <string name="approval_security_key_pair_without">Sparuj bez klucza</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">To trzy złe PIN-y z rzędu. Odłącz klucz, podłącz go ponownie i spróbuj jeszcze raz.</string>
     <string name="approval_security_key_pin_too_long">Ten PIN jest za długi dla klucza bezpieczeństwa.</string>
@@ -238,6 +242,14 @@
     <string name="billing_test_purchase_credits">Zakupy testowe nie dodają kredytów do tego konta.</string>
     <string name="billing_try_free">Wypróbuj %1$s za darmo</string>
     <string name="billing_what_credits">Na co są kredyty</string>
+    <string name="brief_decisions">Decyzje</string>
+    <string name="brief_done">Gotowe od ostatniego przeglądu</string>
+    <string name="brief_evidence">Dowody</string>
+    <string name="brief_meanwhile">W międzyczasie:</string>
+    <string name="brief_next_move">Następny krok</string>
+    <string name="brief_recommends">Coach poleca</string>
+    <string name="brief_title">Twój przegląd</string>
+    <string name="brief_urgent">Pilne</string>
     <string name="calendar_agenda">Plan dnia</string>
     <string name="calendar_choose_date">Wybierz datę</string>
     <string name="calendar_date_picker">Data</string>
@@ -1314,6 +1326,7 @@
     <string name="home_explore_jobs">Przeglądaj zadania</string>
     <string name="home_footer">Zalogowano przez KIFF.</string>
     <string name="home_halted_open_halt">Zablokowane. Otwórz sekcję Zablokuj</string>
+    <string name="home_labels_all">Wszystkie</string>
     <string name="home_loading">Wczytywanie Twoich tafs…</string>
     <string name="home_new_taf">Nowy taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Już nie działa. tafs usuwa to, co zostało, przy każdym odświeżeniu.</string>
@@ -1412,6 +1425,9 @@
         <item quantity="many">%2$s · %1$s pozycji</item>
         <item quantity="other">%2$s · %1$s pozycji</item>
     </plurals>
+    <string name="mission_log">Dziennik</string>
+    <string name="mission_read_only">Tylko do odczytu · najnowsze najpierw</string>
+    <string name="mission_removed">usunięty</string>
     <string name="needs_you_a_taf">Taf</string>
     <string name="needs_you_allow_from_now_on">Zezwalaj od teraz</string>
     <string name="needs_you_allow_not_offered">Ta zmiana nie jest tą, którą zaproponowano.</string>

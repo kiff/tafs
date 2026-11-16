@@ -179,8 +179,8 @@ Bezahle meine Rechnungen unter 100 EUR.
 
   it("keeps the apps' order: by category, then each recipe's place, with refunds leading Money", () => {
     expect(RECIPES.map((r) => r.id)).toEqual([
-      "refunds-within-a-limit", "chargebacks-with-evidence", "chase-overdue-invoices", "save-a-customer-who-cancels",
-      "answer-questions-about-orders", "follow-up-new-leads", "acknowledge-every-ticket", "returns-by-email",
+      "refunds-within-a-limit", "chargebacks-with-evidence", "chase-overdue-invoices", "save-a-customer-who-cancels", "failed-card-payments", "payouts-matched-to-the-bank",
+      "answer-questions-about-orders", "follow-up-new-leads", "acknowledge-every-ticket", "returns-by-email", "late-parcels",
       "book-and-move-appointments", "ship-when-green",
       "file-receipts",
     ]);
@@ -191,7 +191,7 @@ Bezahle meine Rechnungen unter 100 EUR.
     // Filtered or in another language, the order holds.
     expect(recipesFor(undefined, "pl").recipes[0]!.id).toBe("refunds-within-a-limit");
     const stripeAndGmail = [{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gmail", vendor: "Gmail" }];
-    expect(recipesFor(stripeAndGmail).recipes.map((r) => r.id)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels"]);
+    expect(recipesFor(stripeAndGmail).recipes.map((r) => r.id)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels", "failed-card-payments"]);
   });
 
   it("leads Home with the recipes only for a person who manages tafs, and only with one to lead with", () => {
@@ -235,6 +235,16 @@ Bezahle meine Rechnungen unter 100 EUR.
     expect(recipesFor(undefined, "en", true, withTypeform).recipes.map((r) => r.id)).toContain("follow-up-new-leads");
   });
 
+  // Three jobs for small shops that need only apps that connect today: listed now, with no proof run.
+  it("lists failed card payments, payouts matched to the bank and late parcels with today's apps", () => {
+    const ids = recipesFor(undefined).recipes.map((r) => r.id);
+    expect(ids).toEqual(expect.arrayContaining(["failed-card-payments", "payouts-matched-to-the-bank", "late-parcels"]));
+    // A read-only job holds nothing: its Card allows reads and refuses every move of money.
+    const payouts = RECIPES.find((r) => r.id === "payouts-matched-to-the-bank")!;
+    expect(payouts.card.holds).toEqual([]);
+    for (const lang of Object.keys(payouts.languages)) expect(payouts.languages[lang as keyof typeof payouts.languages].card.holds, lang).toEqual([]);
+  });
+
   // Returns by email: small shops on a store app handle each return by hand. It stays out until the store app is proved.
   it("lists returns by email only once its store app connects today", () => {
     expect(recipesFor(undefined).recipes.map((r) => r.id)).not.toContain("returns-by-email");
@@ -258,7 +268,7 @@ Bezahle meine Rechnungen unter 100 EUR.
   it("filters by every connection, taking any vendor that would do for it, by category", () => {
     const ids = (apps: Array<{ entry: string; vendor: string }>) => recipesFor(apps, "en", true, null).recipes.map((r) => r.id);
     const stripeAndGmail = [{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gmail", vendor: "Gmail" }];
-    expect(ids(stripeAndGmail)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels"]);
+    expect(ids(stripeAndGmail)).toEqual(["refunds-within-a-limit", "save-a-customer-who-cancels", "failed-card-payments"]);
     // Gorgias instead of Gmail does as well for Refunds; Chargebacks needs Stripe and a shop or help desk; a help desk alone does for tickets.
     expect(ids([{ entry: "stripe@3", vendor: "Stripe" }, { entry: "connector:composio:gorgias", vendor: "Gorgias" }]))
       .toEqual(["refunds-within-a-limit", "chargebacks-with-evidence", "acknowledge-every-ticket"]);

@@ -95,6 +95,9 @@
     <string name="approval_prompt_approve_on_kiff">Bei KIFF genehmigen</string>
     <string name="approval_ready_approve">Dieses %1$s ist bereit, mit %2$s zu genehmigen.</string>
     <string name="approval_request_kept">" Die Anfrage bleibt erhalten."</string>
+    <string name="approval_security_key_add">Schlüssel hinzufügen</string>
+    <string name="approval_security_key_add_enter_pin">Gib die PIN deines Sicherheitsschlüssels ein, um ihn hinzuzufügen. tafs fragt jedes Mal danach und speichert sie nie.</string>
+    <string name="approval_security_key_add_title">Deinen Sicherheitsschlüssel zu diesem Computer hinzufügen</string>
     <string name="approval_security_key_enter_pin">Gib die PIN deines Sicherheitsschlüssels ein. tafs fragt jedes Mal danach und speichert sie nie.</string>
     <string name="approval_security_key_failed">Der Sicherheitsschlüssel konnte nicht signieren, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
     <string name="approval_security_key_locked">Dieser Sicherheitsschlüssel ist nach zu vielen falschen PINs gesperrt und kann nicht genehmigen. Genehmige auf deinem Telefon. Beim Zurücksetzen wird der Schlüssel gelöscht. Um wieder mit einem Schlüssel zu genehmigen, kopple diesen Computer erneut.</string>
@@ -103,6 +106,7 @@
     <string name="approval_security_key_not_allowed">Der Sicherheitsschlüssel hat es nicht zugelassen, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
     <string name="approval_security_key_not_fido2">Dieser Sicherheitsschlüssel kann keine PIN prüfen und daher nicht genehmigen. Steck den Schlüssel ein, der zu diesem Computer gehört.</string>
     <string name="approval_security_key_not_this_key">Das ist nicht der Sicherheitsschlüssel, der zu diesem Computer gehört. Steck diesen ein und versuch es erneut, oder genehmige auf deinem Telefon.</string>
+    <string name="approval_security_key_pair_without">Ohne Schlüssel koppeln</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Das sind drei falsche PINs hintereinander. Zieh den Schlüssel ab, steck ihn wieder ein und versuch es dann erneut.</string>
     <string name="approval_security_key_pin_too_long">Diese PIN ist für einen Sicherheitsschlüssel zu lang.</string>
@@ -224,6 +228,14 @@
     <string name="billing_test_purchase_credits">Testkäufe fügen diesem Konto keine Credits hinzu.</string>
     <string name="billing_try_free">%1$s kostenlos testen</string>
     <string name="billing_what_credits">Wofür die Credits sind</string>
+    <string name="brief_decisions">Entscheidungen</string>
+    <string name="brief_done">Erledigt seit dem letzten Briefing</string>
+    <string name="brief_evidence">Belege</string>
+    <string name="brief_meanwhile">Inzwischen:</string>
+    <string name="brief_next_move">Nächster Schritt</string>
+    <string name="brief_recommends">Coach empfiehlt</string>
+    <string name="brief_title">Dein Briefing</string>
+    <string name="brief_urgent">Dringend</string>
     <string name="calendar_agenda">Agenda</string>
     <string name="calendar_choose_date">Datum wählen</string>
     <string name="calendar_date_picker">Datum</string>
@@ -1220,6 +1232,7 @@
     <string name="home_explore_jobs">Aufgaben entdecken</string>
     <string name="home_footer">Mit KIFF angemeldet.</string>
     <string name="home_halted_open_halt">Angehalten. „Anhalten“ öffnen</string>
+    <string name="home_labels_all">Alle</string>
     <string name="home_loading">Deine tafs werden geladen…</string>
     <string name="home_new_taf">Neuer taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Er läuft nicht mehr. tafs löscht bei jeder Aktualisierung, was noch übrig ist.</string>
@@ -1312,6 +1325,9 @@
         <item quantity="one">%2$s · %1$s Stopp</item>
         <item quantity="other">%2$s · %1$s Stopps</item>
     </plurals>
+    <string name="mission_log">Protokoll</string>
+    <string name="mission_read_only">Nur lesen · neueste zuerst</string>
+    <string name="mission_removed">entfernt</string>
     <string name="needs_you_a_taf">Ein taf</string>
     <string name="needs_you_allow_from_now_on">Ab jetzt erlauben</string>
     <string name="needs_you_allow_not_offered">Diese Änderung ist nicht die angebotene.</string>

@@ -200,6 +200,12 @@ enum Words {
         ///  The request is kept.
         static var requestKept: String { Words.line("approval.request_kept") }
         enum SecurityKey {
+            /// Add key
+            static var add: String { Words.line("approval.security_key.add") }
+            /// Enter your security key's PIN to add it. tafs asks for it each time and never stores it.
+            static var addEnterPin: String { Words.line("approval.security_key.add_enter_pin") }
+            /// Add your security key to this computer
+            static var addTitle: String { Words.line("approval.security_key.add_title") }
             /// Enter your security key's PIN. tafs asks for it each time and never stores it.
             static var enterPin: String { Words.line("approval.security_key.enter_pin") }
             /// The security key couldn't sign, so nothing was approved. The request is kept: approve again when you're ready.
@@ -216,6 +222,8 @@ enum Words {
             static var notFido2: String { Words.line("approval.security_key.not_fido2") }
             /// This isn't the security key that goes with this computer. Plug that one in and try again, or approve on your phone.
             static var notThisKey: String { Words.line("approval.security_key.not_this_key") }
+            /// Pair without a key
+            static var pairWithout: String { Words.line("approval.security_key.pair_without") }
             /// PIN
             static var pin: String { Words.line("approval.security_key.pin") }
             /// That's three wrong PINs in a row. Unplug the key, plug it in again, then try again.
@@ -439,6 +447,24 @@ enum Words {
         static func tryFree(trial: String) -> String { Words.line("billing.try_free", trial) }
         /// What the credits are for
         static var whatCredits: String { Words.line("billing.what_credits") }
+    }
+    enum Brief {
+        /// Decisions
+        static var decisions: String { Words.line("brief.decisions") }
+        /// Done since the last brief
+        static var done: String { Words.line("brief.done") }
+        /// Evidence
+        static var evidence: String { Words.line("brief.evidence") }
+        /// Meanwhile:
+        static var meanwhile: String { Words.line("brief.meanwhile") }
+        /// Next move
+        static var nextMove: String { Words.line("brief.next_move") }
+        /// Coach recommends
+        static var recommends: String { Words.line("brief.recommends") }
+        /// Your brief
+        static var title: String { Words.line("brief.title") }
+        /// Urgent
+        static var urgent: String { Words.line("brief.urgent") }
     }
     enum Calendar {
         /// Agenda
@@ -2339,6 +2365,8 @@ enum Words {
         static var footer: String { Words.line("home.footer") }
         /// Halted. Open Halt
         static var haltedOpenHalt: String { Words.line("home.halted_open_halt") }
+        /// All
+        static var labelsAll: String { Words.line("home.labels_all") }
         /// Loading your tafs…
         static var loading: String { Words.line("home.loading") }
         /// New taf
@@ -2513,6 +2541,14 @@ enum Words {
         static var why: String { Words.line("knob.why") }
         /// {name} · {count} stops
         static func withStops(count: Int, name: String) -> String { Words.count("knob.with_stops", count, name) }
+    }
+    enum Mission {
+        /// Log
+        static var log: String { Words.line("mission.log") }
+        /// Read only · newest first
+        static var readOnly: String { Words.line("mission.read_only") }
+        /// removed
+        static var removed: String { Words.line("mission.removed") }
     }
     enum NeedsYou {
         /// A taf
