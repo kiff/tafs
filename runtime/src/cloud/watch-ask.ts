@@ -151,10 +151,13 @@ export async function askOfSession(store: CoachStore, tenant: string, session: s
   return id ? ((await store.get(watchKeys.ask(tenant, id))) as Ask | undefined) : undefined;
 }
 
-/** TAFS_WATCH_ASK: "on" for every account, a comma-separated list of account ids for those alone, else off (docs/watch-ask.md). */
+/**
+ * TAFS_WATCH_ASK: "on" for every account; one account id, or several joined with "+", for those alone; else off
+ * (docs/watch-ask.md). Never commas: infra/aws.sh passes tafs cloud's environment to Lambda as a comma-separated list.
+ */
 export function watchAskOn(v: string | undefined): boolean | string[] {
   const s = (v ?? "").trim();
   if (s === "on") return true;
-  const ids = s.split(",").map((x) => x.trim()).filter((x) => /^[A-Za-z0-9_-]{1,64}$/.test(x) && x !== "off");
+  const ids = s.split("+").map((x) => x.trim()).filter((x) => /^[A-Za-z0-9_-]{1,64}$/.test(x) && x !== "off");
   return ids.length ? ids : false;
 }

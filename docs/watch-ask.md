@@ -85,6 +85,8 @@ in; if Coach's turn can't be started, the taf's own two sentences, checked the s
 
 ## The switch
 
-`TAFS_WATCH_ASK` in tafs cloud's environment: `on` for every account, a comma-separated list of account ids for those
-alone (the owner's test on a real watch), anything else off. Off, every `/v1/watch` route is 404 with `code: "watch_off"`. It goes on
+`TAFS_WATCH_ASK` in tafs cloud's environment: `on` for every account, one account id, or several joined with `+`, for those
+alone (a test on a real watch before it's on for everyone), anything else off. Never commas: `infra/aws.sh` passes the
+environment to Lambda as a comma-separated list. It's set with a rerun of `infra/aws.sh`, which keeps every other flag:
+`TAFS_WATCH_ASK=<account id> infra/aws.sh`. Off, every `/v1/watch` route is 404 with `code: "watch_off"`. It goes on
 only once kiff/agents holds a session to its `only` and keeps named-only skills out of `read_skill`.

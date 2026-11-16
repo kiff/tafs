@@ -98,7 +98,7 @@ describe("a request from the watch", () => {
   it("can be on for some accounts alone, as for the owner's test on a real watch", async () => {
     expect((await world({ on: ["t_other"] }).call("POST", "/v1/watch/asks", ASK)).status).toBe(404);
     expect((await world({ on: [T] }).call("POST", "/v1/watch/asks", ASK)).status).toBe(200);
-    expect([watchAskOn("on"), watchAskOn(""), watchAskOn(undefined), watchAskOn("off"), watchAskOn(" t_acme, t_b ")]).toEqual([true, false, false, false, ["t_acme", "t_b"]]);
+    expect([watchAskOn("on"), watchAskOn(""), watchAskOn(undefined), watchAskOn("off"), watchAskOn(" t_acme+t_b "), watchAskOn("t_acme")]).toEqual([true, false, false, false, ["t_acme", "t_b"], ["t_acme"]]);
   });
 
   it("needs the phone's device signature, checked by KIFF, not the bearer alone (checks 2 and 5)", async () => {
