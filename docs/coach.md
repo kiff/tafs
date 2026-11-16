@@ -896,6 +896,19 @@ proved by a check that connected it. A job whose app can't connect yet ("Chase o
 "Follow up new leads within the hour") stays out, and comes back with no other change once its app is
 added there.
 
+**How an app is proved.** An app joins `CONNECTS_TODAY` only after one of two checks has connected it:
+
+- **By its key:** the app's published API description reads through planque's own parser, with the auth it
+  names, and lists the job's tools. An app with no published description can't take this route.
+- **By a sign-in:** a tester completes the app's sign-in through Coach on a phone, planque shows the grant
+  `connected`, and one read-only call returns data. The taf never runs and nothing is written. Then the taf
+  is archived and the grant disconnected.
+
+The result is posted as one line: the app, `connected`, the read's tool and a count, with no ids or account
+names. Then kiff.dev's apps list marks the app as working, and a tafs PR adds it to `CONNECTS_TODAY`, with a
+test that its jobs are listed. A proof covers the account it ran on: an app whose accounts live in another
+region (a separate API address) is proved for that region only.
+
 They show only while the account has no live taf, and while its "Show suggestions" setting is
 on (the owner's decision): tafs cloud decides, and `GET /v1/recipes` sends the list or an empty
 one with `shown: false` and the words why. A manager turns them off for good with

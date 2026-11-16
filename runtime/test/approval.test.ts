@@ -1,7 +1,7 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AGREE_FIRST, connectedKey, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, WORDS } from "../src/cloud/approval.js";
+import { AGREE_FIRST, connectedKey, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS } from "../src/cloud/approval.js";
 import { approvalAnswerWords, checkedOnReadFor, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -1535,6 +1535,116 @@ describe("the app that waits is named so it differs from this one (other_app_fir
   });
 });
 
+// Eval 20b, intros run 1: told other_app_first, Coach showed the mailbox's key approval without the draft, the owner
+// approved it, and the Card came on a third approval. tafs cloud now keeps the draft the waiting app's approval must
+// carry, and answers that approval shown without it on the chat's read, before the owner sees Approve.
+describe("the waiting app's approval is never shown without the waiting draft (other_app_first, Eval 20b)", () => {
+  const CHAT = `/v1/tafs/${COACH}/conversation`;
+  const base = (name: string, tool: string, title: string) => ({ kind: "api_key", server: "desk.example.com",
+    api: { url: `https://desk.example.com/${name}/openapi.json`, digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } },
+    tools: [{ tool, name: `${tool}_k3`, title }] });
+  const sheet = (over: Record<string, unknown> = {}) => grant({ id: "g_1", vendor: "desk.example.com", title: "desk.example.com", ...over }, base("sheet", "append_row", "Append a row"));
+  const mailbox = (over: Record<string, unknown> = {}) => grant({ id: "g_2", vendor: "desk.example.com", title: "desk.example.com", ...over }, base("mail", "send_mail", "Send an email"));
+  const both = [{ id: "c1", subject: "refunds-x", grants: [{ action: "append_row_k3" }, { action: "send_mail_k3" }], aggregates: [] }];
+  const services2 = () => {
+    const s = services();
+    s.grants = [sheet({ status: "connected" }), mailbox()];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: both };
+    return s;
+  };
+  const a1 = (r: { body: Record<string, unknown> }) =>
+    (r.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: { state: string } }>).find((c) => c.component.id === "a1");
+  const NAME = "desk.example.com (Send an email)";
+
+  it("keeps the draft and the waiting app's name when the Card is refused for the other app first", async () => {
+    const w = await world(services2(), { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sheet({ status: "connected" }).digest, draft: "drf_1", shown_draft: "v3" });
+    expect(String(r.body.answer)).toMatch(/^failed: the Card also covers /);
+    expect(await w.coach.get(waitingDraftKey("t_acme", "g_2"))).toEqual({ draft: "drf_1", name: NAME, at: NOW.toISOString() });
+    // Kept against the waiting app only: the first app's own approval isn't held to it.
+    expect(await w.coach.get(waitingDraftKey("t_acme", "g_1"))).toBeUndefined();
+  });
+
+  it("answers that app's approval shown with no draft on the chat's read, once, so the owner never approves its key alone", async () => {
+    const w = await world(services2(), { grant: "g_2" });
+    await w.coach.put(waitingDraftKey("t_acme", "g_2"), { draft: "drf_1", name: NAME, at: NOW.toISOString() }, new Date(NOW.getTime() + WAITING_DRAFT_KEPT_MS));
+    const first = await w.call("GET", CHAT, undefined);
+    expect(first.status).toBe(200);
+    const answer = String(w.told()?.answer);
+    expect(answer).toBe(`failed: ${NAME}'s approval was shown without the Card draft drf_1, which waits for it: ${NAME}'s connection and the Card go under one approval, so this one is never shown to the owner. ${REFUSAL_CLOSED} Show ${NAME}'s approval again with draft drf_1: it carries the Card. Show it once.`);
+    // Drawn answered on this read: no signs, so no Approve.
+    expect(a1(first)?.answer?.state).toBe("answered");
+    expect(a1(first)?.component.signs).toBeUndefined();
+    // Another read draws it answered and tells nothing more; another account's card by the same id is untouched.
+    expect(a1(await w.call("GET", CHAT, undefined))?.answer?.state).toBe("answered");
+    expect(w.boTold()).toBeUndefined();
+    // The tap on it finds it waits no more.
+    expect((await w.call("POST", ASK, { grant: "g_2", shown_digest: mailbox().digest })).status).toBe(409);
+  });
+
+  it("never signs that app's key alone on a tap either, as when a phone drew Approve before the chat's check", async () => {
+    const s = services2();
+    const w = await world(s, { grant: "g_2" });
+    await w.coach.put(waitingDraftKey("t_acme", "g_2"), { draft: "drf_1", name: NAME, at: NOW.toISOString() }, new Date(NOW.getTime() + WAITING_DRAFT_KEPT_MS));
+    const r = await w.call("POST", ASK, { grant: "g_2", shown_digest: mailbox().digest });
+    expect(r.body).toMatchObject({ outcome: "answered", note: "desk.example.com is approved together with its Card. Coach shows it again with the Card." });
+    expect(String(r.body.answer)).toMatch(/^failed: desk\.example\.com \(Send an email\)'s approval was shown without the Card draft drf_1/);
+    expect(s.checks).toEqual([]);
+    // With the draft, the tap goes on as before (no split answer).
+    const w2 = await world(services2(), { grant: "g_2", draft: "drf_1" });
+    await w2.coach.put(waitingDraftKey("t_acme", "g_2"), { draft: "drf_1", name: NAME, at: NOW.toISOString() }, new Date(NOW.getTime() + WAITING_DRAFT_KEPT_MS));
+    const r2 = await w2.call("POST", ASK, { grant: "g_2", shown_digest: mailbox().digest, draft: "drf_1", shown_draft: "v3" });
+    expect(String(r2.body.answer ?? "")).not.toContain("was shown without the Card draft");
+  });
+
+  it("forgets the note once its draft is confirmed, so a later draftless approval of that app is drawn and tapped as normal", async () => {
+    // Run 1's sequence done right: the mailbox approved with the draft, so KIFF shows it confirmed. Then a Sign in again
+    // (or a tools addition) of the same app, with no draft.
+    const s = services2();
+    s.drafts.drf_1 = { ...s.drafts.drf_1!, status: "confirmed" };
+    const w = await world(s, { grant: "g_2" });
+    const put = () => w.coach.put(waitingDraftKey("t_acme", "g_2"), { draft: "drf_1", name: NAME, at: NOW.toISOString() }, new Date(NOW.getTime() + WAITING_DRAFT_KEPT_MS));
+    await put();
+    expect(a1(await w.call("GET", CHAT, undefined))?.answer).toBeUndefined();
+    expect(w.told()).toBeUndefined();
+    expect(await w.coach.get(waitingDraftKey("t_acme", "g_2"))).toBeUndefined();
+    await put();
+    expect((await w.call("POST", ASK, { grant: "g_2", shown_digest: mailbox().digest })).body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+    expect(await w.coach.get(waitingDraftKey("t_acme", "g_2"))).toBeUndefined();
+    // A draft KIFF no longer has: the same.
+    delete s.drafts.drf_1;
+    await put();
+    expect((await w.call("POST", "/v1/connect/grants/g_2/check", { draft: "" })).body).toEqual({ outcome: "ok", checked_on_read: false, rules_unchecked: true });
+  });
+
+  it("answers the e2e's /check for a draftless card as the chat's read does (split_approval), and ok with no note", async () => {
+    const w = await world(services2(), { grant: "g_2" });
+    const CHECK = "/v1/connect/grants/g_2/check";
+    expect((await w.call("POST", CHECK, { draft: "" })).body).toEqual({ outcome: "ok", checked_on_read: false, rules_unchecked: true });
+    await w.coach.put(waitingDraftKey("t_acme", "g_2"), { draft: "drf_1", name: NAME, at: NOW.toISOString() }, new Date(NOW.getTime() + WAITING_DRAFT_KEPT_MS));
+    const r = await w.call("POST", CHECK, { draft: "" });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ outcome: "answered", code: "split_approval", redraft: true, checked_on_read: true, rules_unchecked: true });
+    expect(String(r.body.answer)).toMatch(new RegExp(`^failed: ${NAME.replace(/[().]/g, "\\$&")}'s approval was shown without the Card draft drf_1`));
+    // Only checked: Coach heard nothing, and the card still waits.
+    expect(w.told()).toBeUndefined();
+  });
+
+  it("leaves the approval with the draft, a redraft's, and any app with no waiting draft as they were", async () => {
+    const note = { draft: "drf_1", name: NAME, at: NOW.toISOString() };
+    expect(splitApproval({ grant: "g_2", draft: "drf_1" }, note)).toBeUndefined();
+    expect(splitApproval({ grant: "g_2", draft: "drf_2" }, note)).toBeUndefined();
+    expect(splitApproval({ grant: "g_2" }, undefined)).toBeUndefined();
+    expect(splitApproval({ grant: "g_2" }, { draft: "", name: NAME })).toBeUndefined();
+    expect(splitApproval({ grant: "g_2" }, note)).toMatch(/^failed: /);
+    // On the chat's read: the waiting app's approval with the draft isn't answered by this check.
+    const w = await world(services2(), { grant: "g_2", draft: "drf_1" });
+    await w.coach.put(waitingDraftKey("t_acme", "g_2"), note, new Date(NOW.getTime() + WAITING_DRAFT_KEPT_MS));
+    await w.call("GET", CHAT, undefined);
+    expect(String(w.told()?.answer ?? "")).not.toContain("was shown without the Card draft");
+  });
+});
+
 describe("one signature for a key and its Card (key_and_cards, docs/secure-connection.md)", () => {
   const API = { kind: "api_key", api: { url: "https://example.com/desk/openapi.json", digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } } };
   const keyGrant = (over: Record<string, unknown> = {}) => grant(over, API);
@@ -1874,9 +1984,12 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" }, {}, undefined, "nobody")).status).toBe(401);
     // Only someone who may manage the account's Cards, as for the secure connection sheet.
     expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" }, {}, undefined, "cy")).status).toBe(403);
-    for (const body of [{ shown_draft: "v3" }, { draft: "drf_1" }, { draft: "../x", shown_draft: "v3" }, { draft: "drf_1", shown_draft: "v".repeat(300) }]) {
+    for (const body of [{ draft: "drf_1" }, { draft: "../x", shown_draft: "v3" }, { draft: "drf_1", shown_draft: "v".repeat(300) }]) {
       expect((await w.call("POST", CHECK, body)).status).toBe(400);
     }
+    // A card with no draft is a check of its own (the waiting draft, Eval 20b): nothing to refuse here, with the proof.
+    expect((await w.call("POST", CHECK, { shown_draft: "v3" })).body).toEqual({ outcome: "ok", checked_on_read: false, rules_unchecked: true });
+    expect((await w.call("POST", CHECK, { draft: "" }, { "planque-device-signature": "" })).status).toBe(503);
     expect((await w.call("POST", "/v1/connect/grants/g%2F1/check", { draft: "drf_1", shown_draft: "v3" })).status).toBe(400);
     expect(s.checks).toEqual([]);
   });
