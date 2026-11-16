@@ -43,6 +43,14 @@ this page says what is there now and what each step adds.
 cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDebug
 ```
 
+## Versions
+
+The watch shares the phone's package, and Play needs every `versionCode` on the listing to be unique across the phone's and
+the watch's builds. The phone counts up by one from 1 (docs/android-app.md, Versions). **The watch has its own band: it
+counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the two never meet. Its `versionName` is its own
+(`0.x` until it's on Play). Nothing of the watch is uploaded yet: the release job builds `:app` only, and the Wear OS form
+factor on the listing is the owner's.
+
 ## How the watch talks to KIFF and tafs cloud: through the phone
 
 The watch holds **no keys, no session and no KIFF client**. It sends the phone a request over the Data Layer, the phone
