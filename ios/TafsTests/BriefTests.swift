@@ -291,11 +291,12 @@ final class BriefTests: XCTestCase {
     /// The urgent alert (the owner's mockup 3): a brief's or an urgent push opens the brief, and only those;
     /// an urgent card has tafs cloud's word on its badge and never offers Later.
     func testTheUrgentAlertOpensTheBriefAndItsCardHasNoLater() throws {
-        XCTAssertEqual(PushDelegate.briefDestination(["kind": "urgent"]), "needs-you")
-        XCTAssertEqual(PushDelegate.briefDestination(["kind": "brief"]), "needs-you")
-        XCTAssertNil(PushDelegate.briefDestination(["kind": "hold"]), "another kind opens as it says")
+        XCTAssertEqual(PushDelegate.briefDestination(["brief_kind": "urgent", "decision": "hold:ce_1"]), "needs-you")
+        XCTAssertEqual(PushDelegate.briefDestination(["brief_kind": "brief"]), "needs-you")
+        XCTAssertNil(PushDelegate.briefDestination(["brief_kind": "hold"]), "another kind opens as it says")
+        XCTAssertNil(PushDelegate.briefDestination(["kind": "brief"]), "`kind` is an alert's other field, not the brief's")
         XCTAssertNil(PushDelegate.briefDestination([:]))
-        XCTAssertNil(PushDelegate.briefDestination(["kind": 1]))
+        XCTAssertNil(PushDelegate.briefDestination(["brief_kind": 1]))
 
         let words = try KIFFClient.decoder.decode(TafsCloud.Brief.Words.self, from: Data(#"{"urgent":"Urgent","all":"All"}"#.utf8))
         XCTAssertEqual(words.urgent, "Urgent")

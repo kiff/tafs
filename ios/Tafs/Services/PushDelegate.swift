@@ -12,7 +12,7 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
     /// Something on the account changed (docs/approvals.md, "Live updates"): its kind
     /// (`change`) and tafs cloud's id for the taf, read again with the phone's own session.
     var onChange: (@MainActor (String, String?) async -> Void)?
-    /// A brief's alert, or an urgent one (Missions design v2.1, `kind`), showed with tafs open: read the
+    /// A brief's alert, or an urgent one (Missions design v2.1, `brief_kind`), showed with tafs open: read the
     /// brief again.
     var onBrief: (@MainActor () async -> Void)?
     /// A hold's alert showed with tafs open: reload until Needs you has that hold.
@@ -83,10 +83,11 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
         Task { @MainActor in self.open(target) }
     }
 
-    /// Where a brief's alert or an urgent one opens (`kind: brief|urgent`, Missions design v2.1): the
-    /// brief, in Needs you's place. Any other kind is nil, and the alert opens as it says.
+    /// Where a brief's alert or an urgent one opens (`brief_kind: brief|urgent`, Missions design v2.1, as
+    /// tafs cloud sends it): the brief, in Needs you's place. It isn't `kind`, which already names an
+    /// alert's other sorts. Anything else is nil, and the alert opens as it says.
     nonisolated static func briefDestination(_ info: [AnyHashable: Any]) -> String? {
-        guard let kind = info["kind"] as? String, kind == "brief" || kind == "urgent" else { return nil }
+        guard let kind = info["brief_kind"] as? String, kind == "brief" || kind == "urgent" else { return nil }
         return "needs-you"
     }
 
