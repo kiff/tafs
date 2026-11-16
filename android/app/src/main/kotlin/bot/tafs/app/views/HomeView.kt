@@ -188,12 +188,16 @@ fun HomeView(
         state.held.firstOrNull()?.let { first ->
           state.taf(first.tafId)?.let { taf -> item { NeedsYouStrip(first, taf, onNeedsYou) } }
         }
+        // Theirs first, then, apart, the ones shared with them to use (as on iPhone and iPad, kiff/tafs#306). Each keeps the
+        // list's order, and the label filters both.
+        val byId = onLabel(state.listedTafs, label?.id).associateBy { it.id }
+        val listed: @Composable (Taf) -> Unit = { taf ->
+          TafRow(taf, state.signedOut(taf.id)?.let(bot.tafs.app.model.ConnectionWords::signedOut), onHalted = { onHalted(taf.id) }, tags = labelTags(taf, state.labels)) { onOpenTaf(taf.id) }
+        }
+        val (own, shared) = order.mapNotNull(byId::get).partition { !state.sharedWithMe(it.id) }
         item {
           Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            val byId = onLabel(state.listedTafs, label?.id).associateBy { it.id }
-            order.forEach { id ->
-              byId[id]?.let { taf -> TafRow(taf, state.signedOut(taf.id)?.let(bot.tafs.app.model.ConnectionWords::signedOut), onHalted = { onHalted(taf.id) }, tags = labelTags(taf, state.labels)) { onOpenTaf(taf.id) } }
-            }
+            own.forEach { taf -> listed(taf) }
           }
         }
         if (label == null && state.settingUp.isNotEmpty()) {
@@ -208,6 +212,15 @@ fun HomeView(
                 val discard = taf.discard
                 if (discard != null && onDiscardSetup != null) DiscardSetup(taf.id, discard.words, onDiscardSetup)
               }
+            }
+          }
+        }
+        if (shared.isNotEmpty()) {
+          // Shared with this person to use, not theirs to manage: under its own heading, after their own and those being set up.
+          item {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+              Eyebrow(Words.Home.sharedYou)
+              shared.forEach { taf -> listed(taf) }
             }
           }
         }

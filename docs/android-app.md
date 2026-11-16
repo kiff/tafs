@@ -112,6 +112,15 @@ them; tafs cloud lists them, counts them and words the filtered headline.
 - **A mission's row** (§3, a draft until tafs cloud sends it): filtered to a label that is a mission's (`labels[].mission:
   {id, name, goal}`), the list shows its goal in the person's words and **Log** (`MissionRow`).
 
+## Shared with you
+
+Home lists the person's own tafs first, then the tafs being set up, then, under **Shared with you**
+(`home.shared_you`), the tafs shared with them to use but not to manage, as on iPhone and iPad (kiff/tafs#306). A taf is
+shared when KIFF's access answer for it says use without manage (`AppState.sharedWithMe`, `tafSections`). Until KIFF has
+answered for a taf, it stays among the person's own, so it never moves once the answer comes. Both lists keep the list's
+order (waiting first, then the one used most recently), and a label filters both. The sample has nothing shared
+(`SharedUseTest`).
+
 ## A mission's log
 
 Missions v2.1 §6, a draft until tafs cloud's log route and its words land: **Log** opens `GET /v1/missions/{id}/log` over the
