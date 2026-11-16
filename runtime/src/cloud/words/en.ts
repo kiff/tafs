@@ -99,6 +99,7 @@ export const en = {
   approval_cards_not_issued: (why: string) => `KIFF didn't issue the taf's Cards: ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} is connected. Next, its Card.`,
   approval_other_app_first: (vendor: string) => `${vendor} still waits for its own approval. Approve ${vendor} first; this Card comes with the last app.`,
+  approval_with_its_card: (vendor: string) => `${vendor} is approved together with its Card. Coach shows it again with the Card.`,
   approval_draft_is: (status: string) => `the draft is ${status}`,
   approval_no_draft: "KIFF has no such draft",
   /** On an approval card whose fingerprint signs the connection alone, above its Card (`signs.words`). */

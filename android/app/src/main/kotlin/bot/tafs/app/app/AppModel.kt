@@ -1061,11 +1061,15 @@ class AppModel(
 
   // MARK: Where the owner left off
 
-  /** Restores where the owner left off: signed in to KIFF, or the saved sample. */
-  suspend fun restore() {
+  /**
+   * Restores where the owner left off: signed in to KIFF, or the saved sample. [onScreen] false is the Wear OS watch's relay
+   * with no screen up: what needs the person (the approval key's registration, behind the fingerprint) and Play are left for
+   * [finishRestoreOnScreen] (RestoreOnce).
+   */
+  suspend fun restore(onScreen: Boolean = true) {
     val token = secrets.load(TOKEN)
     if (token != null) {
-      resumeSession(token, secrets.load(TENANT), keyed = secrets.load(KEYED) == "1")
+      resumeSession(token, secrets.load(TENANT), keyed = secrets.load(KEYED) == "1", onScreen = onScreen)
       endDriveLeftOn()
     } else {
       store?.load()?.let { startSample() }
@@ -1074,7 +1078,7 @@ class AppModel(
   }
 
   /** Goes on with a KIFF session kept from an earlier launch. */
-  private suspend fun resumeSession(token: String, tenant: String?, keyed: Boolean) {
+  private suspend fun resumeSession(token: String, tenant: String?, keyed: Boolean, onScreen: Boolean = true) {
     kiff.token = token
     cloud.token = token
     kiffTenant = tenant
@@ -1092,10 +1096,18 @@ class AppModel(
     if (keyGone) lostApprovalKey()
     refresh()
     loadAIConsent(ask = true)
-    // A session from before the approval key registers it once (kiff/tafs#233).
-    registerApprovalKey()
     // This phone's alerts, where its owner turned them on.
     syncPush()
+    if (onScreen) finishRestoreOnScreen()
+  }
+
+  /**
+   * What a restore leaves for a screen, where the person can answer: a session from before the approval key registers it once
+   * (kiff/tafs#233), signed behind the fingerprint; and Play's purchases. Run by the restore itself on screen, or by the screen's
+   * first ask after a restore for the watch (RestoreOnce).
+   */
+  suspend fun finishRestoreOnScreen() {
+    registerApprovalKey()
     startPurchases()
   }
 

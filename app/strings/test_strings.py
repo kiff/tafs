@@ -117,6 +117,12 @@ class SharedWords(unittest.TestCase):
         for lang in self.langs["shipped"]:
             self.assertEqual(sorted(set(self.source) - set(self.lines[lang])), [], lang)
 
+    def test_every_phone_line_the_watch_shows_is_here(self):
+        # The Wear OS watch carries its own area and these lines of the phone's (android.py); a key renamed or removed
+        # here would otherwise just drop out of the watch's files.
+        import android
+        self.assertEqual([k for k in android.WEAR_KEYS if k not in self.source], [])
+
     def test_a_line_is_a_text_or_a_count_everywhere(self):
         for lang, lines in self.lines.items():
             for key, line in lines.items():

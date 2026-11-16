@@ -1063,10 +1063,11 @@ reads from KIFF's own answers (" · it didn't go through: "), and the sign-in's 
 The pages the app opens follow the lines' language (`KIFFClient.appLanguage`, the first of the languages the screens
 resolved to), never the browser's:
 
-- **tafs's own Terms and Privacy policy** (Sign-in, Account › Legal, Plan & usage): `kiff.dev/tafs/terms` and
-  `kiff.dev/tafs/privacy`, the pages Google's consent screen names (`Legal`), as Android 1.27.8 opens. They're in
-  English only until kiff.dev serves them in other languages, so outside English the Account and Plan & usage links
-  say so ("Terms (auf Englisch)", `settings.legal_in_english`, `Legal.label`). Before, they opened KIFF's pages
+- **tafs's own Terms and Privacy policy** (Sign-in, Account › Legal, Plan & usage): the pages Google's consent
+  screen names (`Legal`), in the app's language where kiff.dev serves them: `kiff.dev/<lang>/tafs/terms` and
+  `/<lang>/tafs/privacy` for de, es, fr, it, nl, pl and pt, and `kiff.dev/tafs/terms` and `/tafs/privacy` (never
+  `/en/`) for English or any other language. Only a link that opens the English page from another language says so
+  ("Terms (in English)", `settings.legal_in_english`, `Legal.label`). Before, they opened KIFF's pages
   (`/terms#tafs`, `/de/terms#tafs`).
 - **KIFF's approval page**, for a sign-in and for approving again after Face ID changed: the link KIFF answers gets
   `lang=<language>`, and a link that already names one keeps it (`DeviceStart.inAppLanguage`).
