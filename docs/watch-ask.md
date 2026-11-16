@@ -41,7 +41,8 @@ message carries.
 
 ## What a watch request may do
 
-- **One taf, per request.** A second `taf_task` in the same conversation is refused, whichever taf it names. The task
+- **One taf, per request.** A second `taf_task` in the same conversation is refused, whichever taf it names, and Coach's
+  turn that writes the result line hands nothing over at all: its input is the taf's own result. The task
   starts a new run of the person's own, never into a run at work.
 - **Under the taf's own Cards.** `taf_task` is Coach's, under `coach-taf-task` (`{limit: 50, asks: true}`), and the taf's
   run is under its own Cards. Nothing on this path creates a grant, approves a Card, widens one or signs anything. A

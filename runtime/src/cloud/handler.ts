@@ -10362,6 +10362,8 @@ async function watchHandOver(call: CoachCall, args: Record<string, unknown>, dep
   if (!ask) return undefined;
   if (!call.person || call.person.subject !== ask.person) throw new ToolRefusal("this watch request isn't this person's");
   if (str(args.run).trim()) throw new ToolRefusal("a watch request starts its own run: leave out run");
+  // A result turn's input is the taf's own result (an app's words can be in it): it reports, and never hands anything over.
+  if (ask.turn === "result") throw new ToolRefusal("this turn says how the taf's work went: it hands nothing over");
   if (ask.taf || !(await deps.coach.once(`${watchKeys.ask(call.tenant, ask.id)}#handed`, new Date((deps.now?.() ?? new Date()).getTime() + ASK_KEPT_MS)))) {
     throw new ToolRefusal("this watch request went to a taf already: one taf per request");
   }

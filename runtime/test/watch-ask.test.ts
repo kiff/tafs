@@ -209,7 +209,8 @@ describe("the watch's conversation", () => {
     Object.assign(tafRun, { status: "COMPLETED", output: "Moved it.", stop: "answered" });
     await w.ended(w.agents.notified.get(tafRun.id)!.ref, tafRun.id, CAL, "COMPLETED");
     expect(await w.call("POST", "/v1/watch/asks", reply)).toMatchObject({ status: 409 });
-    await expect(w.tool("taf_task", { taf: INBOX, text: "tell the guests" }, session)).rejects.toThrow(/one taf per request/);
+    // The result turn reports and hands nothing over, whatever the taf's words asked for.
+    await expect(w.tool("taf_task", { taf: INBOX, text: "tell the guests" }, session)).rejects.toThrow(/hands nothing over/);
     // The line comes back: final, and the reply goes on in the same conversation as a request of its own.
     const lineRun = w.agents.runs.filter((r) => r.agent === COACH).at(-1)!;
     Object.assign(lineRun, { status: "COMPLETED", output: "Moved your call to 18:00." });
