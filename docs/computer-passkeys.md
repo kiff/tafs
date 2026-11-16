@@ -30,6 +30,11 @@ itself can be plugged into another computer, but it approves nothing there unles
 paired with it. Its PIN is asked for each approval, and a lost key is removed by signing its
 computer out.
 
+The PIN sheet's words are the shared `approval.security_key.*` lines: the PIN, the touch, tries
+left, and why the key gave no answer (none plugged in, more than one, not FIDO2, no PIN set, a
+wrong PIN, three in a row, locked, another key, not touched in time, refused, unplugged). Each
+failure says nothing was approved.
+
 ## What a passkey approval carries
 
 A passkey approves one exact request, or two requests signed together, never anything else.

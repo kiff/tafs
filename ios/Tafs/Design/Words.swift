@@ -199,6 +199,48 @@ enum Words {
         static func readyApprove(device: String, either: String) -> String { Words.line("approval.ready_approve", device, either) }
         ///  The request is kept.
         static var requestKept: String { Words.line("approval.request_kept") }
+        enum SecurityKey {
+            /// Enter your security key's PIN. It's asked each time, and it's never kept.
+            static var enterPin: String { Words.line("approval.security_key.enter_pin") }
+            /// The security key couldn't approve. Nothing was approved.
+            static var failed: String { Words.line("approval.security_key.failed") }
+            /// This security key is locked after too many wrong PINs, so it can't approve. Resetting it erases it. Approve on your phone instead.
+            static var locked: String { Words.line("approval.security_key.locked") }
+            /// Plug in your security key, then try again.
+            static var noKey: String { Words.line("approval.security_key.no_key") }
+            /// This security key has no PIN, so it can't approve. Set a PIN on it, then try again.
+            static var noPinSet: String { Words.line("approval.security_key.no_pin_set") }
+            /// This security key can't check a PIN, so it can't approve. A FIDO2 key can.
+            static var notFido2: String { Words.line("approval.security_key.not_fido2") }
+            /// This isn't the security key added with this computer.
+            static var notThisKey: String { Words.line("approval.security_key.not_this_key") }
+            /// PIN
+            static var pin: String { Words.line("approval.security_key.pin") }
+            /// That's three wrong PINs in a row. Unplug the key, plug it in again, then try again.
+            static var pinPaused: String { Words.line("approval.security_key.pin_paused") }
+            /// That PIN is too long for a security key.
+            static var pinTooLong: String { Words.line("approval.security_key.pin_too_long") }
+            /// A PIN has at least 4 characters.
+            static var pinTooShort: String { Words.line("approval.security_key.pin_too_short") }
+            /// The security key refused. Nothing was approved.
+            static var refused: String { Words.line("approval.security_key.refused") }
+            /// More than one security key is plugged in. Leave only the one added with this computer.
+            static var severalKeys: String { Words.line("approval.security_key.several_keys") }
+            /// The key wasn't touched in time. Nothing was approved.
+            static var timedOut: String { Words.line("approval.security_key.timed_out") }
+            /// Approve with your security key
+            static var title: String { Words.line("approval.security_key.title") }
+            /// Touch your security key.
+            static var touch: String { Words.line("approval.security_key.touch") }
+            /// {count} tries left before the key locks.
+            static func triesLeft(count: Int) -> String { Words.count("approval.security_key.tries_left", count) }
+            /// The security key was unplugged. Nothing was approved.
+            static var unplugged: String { Words.line("approval.security_key.unplugged") }
+            /// Wrong PIN. {count} tries left before the key locks.
+            static func wrongPin(count: Int) -> String { Words.count("approval.security_key.wrong_pin", count) }
+            /// Wrong PIN.
+            static var wrongPinNoCount: String { Words.line("approval.security_key.wrong_pin_no_count") }
+        }
         /// Set a screen lock on this phone to approve
         static var setAScreenLock: String { Words.line("approval.set_a_screen_lock") }
         /// Settings → Face ID & Passcode (Touch ID & Passcode on a device with Touch ID)
