@@ -216,7 +216,7 @@ leaves the app's own count of the tafs at work.
 **Needs you's count** (Home's line and the tab's badge) is tafs cloud's (`needs_you`: its count and
 words, covering held calls, "Did this happen?" calls, currency requests and tafs with a knock). When
 tafs cloud leaves it out (it couldn't read all of it), the app counts what it has (`needsYouCount`).
-Android shows each alert on the lock screen as it comes, with no count of its own there. An app's
+Android shows each alert on the lock screen as it comes, with no count of its own there. Locked, the phone, and any watch it bridges alerts to, show only **A taf needs you** (`alert.needs_you`): every alert is private, with that as its public version (`Alert.Show.locked`), so an amount, a merchant or a person's name waits for the unlock, as iOS's hidden previews do (`LockedAlertTest`). An app's
 sheet with no saved workflow says so once, under a Workflow line of its own (`workflow_words`).
 
 **A held call's card** (`HeldCallCard`) has KIFF's face: the amount in its declared unit, the
@@ -751,7 +751,7 @@ sound; an answer, silent), each marked **Example** so no one looks for that taf,
 and the line under them. **What alerts you** is read only, at the levels `push/Alerts.kt` uses: a
 taf needs you and every taf halted, with sound, always; a taf answered someone, silent, for the
 tafs whose results include our phones (`Taf.results` has `app`; "N tafs ›" lists them); a reply
-wasn't sent, silent.
+wasn't sent, silent. Whatever the kind, a locked phone or watch shows only **A taf needs you** until it's unlocked; the examples here are what it shows unlocked.
 
 **Turning alerts on** (`AppModel.turnOnAlerts`) asks for the phone's notification permission, then points the account's KIFF
 alert target at tafs cloud: a setup call signed with this phone's device key, never the approval key, so there's no

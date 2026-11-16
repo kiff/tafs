@@ -19,7 +19,14 @@ import java.time.Instant
  */
 sealed interface Alert {
   /** A notification to show. */
-  data class Show(val title: String, val body: String, val open: String, val tag: String, val loud: Boolean, val expiresAt: Instant?) : Alert
+  data class Show(val title: String, val body: String, val open: String, val tag: String, val loud: Boolean, val expiresAt: Instant?) : Alert {
+    /**
+     * What this alert says on a locked phone, or a locked watch it bridges to: only that a taf needs you (`alert.needs_you`, iOS's
+     * hidden-preview placeholder), never tafs cloud's title or body, which can name an amount, a merchant or a person. The same for
+     * every alert, quiet ones too: a usage line can name an amount.
+     */
+    fun locked(): Show = copy(title = Words.Alert.needsYou, body = "")
+  }
 
   /** A notification to take away: its call was answered. */
   data class Clear(val tag: String) : Alert

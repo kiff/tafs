@@ -1,0 +1,1 @@
+- **The business description, in tafs cloud.** Coach keeps "What tafs know about your business", the account's description in the person's words, up to 300 words, once they confirm it. Account shows it read-only, with "Change" to open Coach. It's words only, and it changes nothing a taf may do ([labels.md](docs/labels.md#the-business-description)).

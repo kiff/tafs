@@ -1,16 +1,19 @@
 {
-  "watch.already_answered": "Al beantwoord.",
-  "watch.answer_longer": "Het antwoord van Coach is langer. Open het op je telefoon.",
+  "watch.already_answered": "Al beantwoord, of beëindigd.",
   "watch.approve_on_phone": "Keur goed op je telefoon",
+  "watch.as_of": "Bijgewerkt om {time}",
   "watch.asking_phone": "Je telefoon vragen…",
-  "watch.coach_consent_on_phone": "Coach heeft eerst je ja op je telefoon nodig.",
+  "watch.coach_needs_consent": "Sta eerst AI-gebruik toe in tafs op je telefoon voordat je met Coach praat.",
+  "watch.glance_description": "Hoeveel er op je wachten, nooit wat of wie.",
   "watch.held_calls": {
     "one": "{count} vastgehouden aanroep wacht op jou",
     "other": "{count} vastgehouden aanroepen wachten op jou"
   },
+  "watch.more_on_phone": "De rest staat op je telefoon.",
   "watch.needs_lock": "Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te weigeren of stil te zetten.",
   "watch.open_on_phone": "Openen op telefoon",
-  "watch.phone_not_reachable": "Je telefoon is niet bereikbaar. Houd hem in de buurt en probeer het opnieuw.",
+  "watch.phone_not_reachable": "Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.",
+  "watch.refused": "Geweigerd. Er is niets verstuurd.",
   "watch.sign_in_on_phone": "Log eerst in bij tafs op je telefoon.",
   "watch.voice_text_only": "Coach krijgt je woorden als tekst, nooit je stem."
 }
