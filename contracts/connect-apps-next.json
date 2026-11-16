@@ -11,7 +11,8 @@
         "state": "available",
         "connected": false,
         "method": "sign_in",
-        "line": "Sign in"
+        "line": "Sign in",
+        "needed_by": []
       },
       {
         "entry": "connector:p:notion",
@@ -22,7 +23,8 @@
         "state": "available",
         "connected": false,
         "method": "sign_in",
-        "line": "Sign in"
+        "line": "Sign in",
+        "needed_by": []
       }
     ],
     "by_key": true,

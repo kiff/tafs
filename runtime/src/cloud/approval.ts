@@ -630,6 +630,14 @@ export function approvalWords(lang: Lang = "en") {
     criticalKey: w.approval_critical_key,
     driveKey: w.approval_drive_key,
     windowClosed: w.approval_window_closed,
+    signMissing: w.approval_sign_missing,
+    signInvalid: w.approval_sign_invalid,
+    signViewOnly: w.approval_sign_view_only,
+    signSession: w.approval_sign_session,
+    signPasskey: w.approval_sign_passkey,
+    signClock: w.approval_sign_clock,
+    signTaken: w.approval_sign_taken,
+    signUnchecked: w.approval_sign_unchecked,
     signInClosed: w.approval_sign_in_closed,
     noCode: w.approval_no_code,
     // What came back, in the owner's words, never planque's status: already signed in (its actions come next), or nothing opened.
@@ -1122,8 +1130,30 @@ export interface ReportContext extends DecideContext {
   signed: { method: string; uri: string; body: string; signature: string };
 }
 
+/** KIFF's code for a refused signature (`error`, as its 400s and 403s send it), or "" when it sent none it could read. */
+async function kiffCode(res: Response): Promise<string> {
+  const body = (await res.json().catch(() => ({}))) as { error?: unknown };
+  return typeof body.error === "string" ? body.error : "";
+}
+
 /**
- * Asks KIFF whether this phone signed the report, with the phone's own session
+ * KIFF's refusal of a device's signature, in the person's words and with KIFF's code, so the app and the person
+ * hear why: a view-only device, a session that can't sign for it, a passkey this session doesn't approve with, a
+ * clock that's off, or a signature that didn't check out. Said of "this device", whichever it is (a phone, a tablet,
+ * a computer), never "this phone". A code tafs cloud doesn't know reads as a signature that didn't check out.
+ */
+export function signRefusal(status: number, code: string, W: ReturnType<typeof approvalWords>): ApprovalError {
+  switch (code) {
+    case "view_only": return new ApprovalError(403, W.signViewOnly, code);
+    case "device_session_required": return new ApprovalError(403, W.signSession, code);
+    case "passkey_not_this_session": return new ApprovalError(403, W.signPasskey, code);
+    case "signed_at_out_of_range": return new ApprovalError(400, W.signClock, code);
+    default: return new ApprovalError(status === 400 ? 400 : 403, W.signInvalid, "signature_invalid");
+  }
+}
+
+/**
+ * Asks KIFF whether this device signed the report, with the device's own session
  * (`POST /v1/me/device-signature`): tafs cloud holds no device key and checks
  * no signature itself. Each signed report is taken once. KIFF also says which
  * key signed and, for a signature made inside an approval window, whether that
@@ -1137,7 +1167,7 @@ export interface ReportContext extends DecideContext {
 export async function checkSigned(ctx: Pick<ReportContext, "signed" | "fetch" | "kiffBase" | "token" | "lang"> & Partial<ReportContext>, key: "window" | "critical" | "approval" = "window"): Promise<void> {
   const W = approvalWords(ctx.lang);
   const { signed } = ctx;
-  if (!signed.signature) throw new ApprovalError(403, "this answer isn't signed by your phone");
+  if (!signed.signature) throw new ApprovalError(403, W.signMissing, "signature_missing");
   let res: Response;
   try {
     res = await ctx.fetch(`${ctx.kiffBase ?? KIFF_API}/v1/me/device-signature`, {
@@ -1146,17 +1176,17 @@ export async function checkSigned(ctx: Pick<ReportContext, "signed" | "fetch" | 
       body: JSON.stringify({ method: signed.method, uri: signed.uri, body_sha256: createHash("sha256").update(signed.body, "utf8").digest("hex"), signature: signed.signature }),
     });
   } catch {
-    throw new ApprovalError(502, "KIFF didn't answer; try again");
+    throw new ApprovalError(502, W.signUnchecked, "signature_unchecked");
   }
-  if (res.status === 403) throw new ApprovalError(403, "this phone didn't sign that answer");
-  if (res.status === 409) throw new ApprovalError(409, "this signed answer was already taken");
+  if (res.status === 403 || res.status === 400) throw signRefusal(res.status, await kiffCode(res), W);
+  if (res.status === 409) throw new ApprovalError(409, W.signTaken, "signature_taken");
   if (res.status === 401) throw new KIFFError(401, "KIFF did not accept this sign-in");
-  if (!res.ok) throw new ApprovalError(502, `KIFF answered ${res.status} for the signature`);
+  if (!res.ok) throw new ApprovalError(502, W.signUnchecked, "signature_unchecked");
   // KIFF's answer also carries a one-minute device grant (`grant`, `grant_until`): the writes a
   // service like the gateway then makes for the phone. tafs cloud makes none and must not use
   // it, so only `signed` is read; the grant is dropped here and never kept or passed on.
   const out = (await res.json().catch(() => ({}))) as { signed?: unknown; key?: unknown; window?: { open?: unknown } };
-  if (out.signed !== true) throw new ApprovalError(403, "this phone didn't sign that answer");
+  if (out.signed !== true) throw new ApprovalError(403, W.signInvalid, "signature_invalid");
   // Only the approval key, behind the fingerprint: a Coach drive's start (kiff/tafs#544).
   if (key === "approval" && (out.key !== "critical" || out.window)) throw new ApprovalError(403, W.driveKey, "critical_key_required");
   if (!out.window) return; // signed outside a window: as every report before (the device key's, v1)

@@ -106,6 +106,9 @@ export const en = {
   connect_again_title: "Connect again",
   connect_again_words: (app: string, taf: string) => `${app}'s sign-in has expired, so ${taf} can't use it. Connect again to sign in.`,
   connect_again_done: (app: string, taf: string) => `${app} is connected again. ${taf} can use it.`,
+  /** Connect apps: a connection started for a taf that doesn't use the app (not_needed), and the tafs unread (tafs_unread). */
+  connect_not_needed: (taf: string) => `${taf} doesn't use this app. Coach can set it up for ${taf}.`,
+  connect_tafs_unread: "Your tafs couldn't be read just now, so nothing was connected. Try again in a moment.",
   /** A first check that ran before the taf's key was stored: said in place of the store's own words. */
   check_key_not_ready: "its key wasn't ready yet; it checks again at its next time",
   check_dropped: "Its check couldn't read the app, so it runs at its set times without the check for now. Coach can fix the check.",
@@ -167,6 +170,15 @@ export const en = {
   // A taf's removal unsigned, or signed without the screen lock, once signing is required (handler.ts, removalSigned).
   remove_signed: "Remove it from your device: removing a taf asks for your screen lock each time. Nothing was removed.",
   approval_window_closed: "Your approval window has ended. Nothing was approved; approve it again with your fingerprint.",
+  /** KIFF's refusal of a device's signature (POST /v1/me/device-signature), by its code: said of this device, whichever it is, never "this phone". */
+  approval_sign_missing: "This wasn't signed on this device, so nothing was done. Try again here.",
+  approval_sign_invalid: "This device's signature didn't check out, so nothing was done. Try again, and if it happens again, sign in again on this device.",
+  approval_sign_view_only: "This device can only view, so nothing was done. Do it on a device that approves, or add this one from that device.",
+  approval_sign_session: "This sign-in can't sign for this device, so nothing was done. Sign in again on this device.",
+  approval_sign_passkey: "This device's sign-in doesn't approve with a passkey, so nothing was done. Sign in again on this device.",
+  approval_sign_clock: "This device's clock is more than 5 minutes off, so nothing was done. Set its date and time to update automatically, then try again.",
+  approval_sign_taken: "This was already signed and taken once, so nothing more was done.",
+  approval_sign_unchecked: "KIFF couldn't check this device's signature just now, so nothing was done. Try again in a moment.",
   approval_sign_in_closed: "The sign-in was closed. Nothing was connected.",
   approval_no_code: (vendor: string) => `The sign-in at ${vendor} came back without its confirmation code. Nothing was connected.`,
   approval_came_back: (vendor: string) => `${vendor} didn't open a sign-in page, so nothing was connected. Try again.`,
