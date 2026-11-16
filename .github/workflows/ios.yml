@@ -459,6 +459,33 @@ jobs:
             mv "$frame" "$out"
             xcrun simctl terminate "$DEVICE_ID" bot.tafs.app || true
           }
+          # The smallest iPhone the runner has (an SE, then a mini, then a 16e; otherwise the first
+          # iPhone listed): the welcome, the tafs list and Needs you, light then dark (small-…). The
+          # welcome has no scroll view, so its drawing (board 1) must shrink to leave the buttons
+          # on screen; this is where that shows. It leaves the small iPhone booted as DEVICE_ID.
+          small_pass() {
+            xcrun simctl shutdown "$DEVICE_ID" || true
+            DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          devices = json.load(sys.stdin)["devices"]
+          ios = sorted(k for k in devices if "iOS" in k)
+          iphones = [d for d in devices[ios[-1]] if d["name"].startswith("iPhone")]
+          small = [d for key in ("SE", "mini", "16e") for d in iphones if key in d["name"]]
+          print((small or iphones)[0]["udid"])
+          ')
+            xcrun simctl boot "$DEVICE_ID" || true
+            xcrun simctl bootstatus "$DEVICE_ID" -b
+            xcrun simctl status_bar "$DEVICE_ID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
+            xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
+            for look in light dark; do
+              xcrun simctl ui "$DEVICE_ID" appearance "$look"
+              suffix=""; [ "$look" = dark ] && suffix="-dark"
+              shoot "small-1-welcome$suffix"
+              shoot "small-2-tafs$suffix" -screenshots YES -tab tafs
+              shoot "small-3-needs-you$suffix" -screenshots YES -tab needs-you
+            done
+            xcrun simctl ui "$DEVICE_ID" appearance light
+          }
           # The desktop apps' reference (docs/screenshots.md, iPad reference): each screen the
           # app opens by launch argument on the 13-inch iPad, with the sidebar as a
           # signed-in account has it, in light then dark (ref-<screen>[-dark]). Sample mode: no
@@ -568,6 +595,7 @@ jobs:
           fi
           # The key set: the screens most changes touch, light and dark.
           if [ "$SET" = key ]; then
+            shoot 1-welcome
             shoot 2-tafs -screenshots YES -tab tafs
             shoot 5-taf -screenshots YES -tab tafs -screen taf
             shoot 8-setup -screenshots YES -tab tafs -screen setup
@@ -578,6 +606,7 @@ jobs:
             shoot dark-setup -screenshots YES -tab tafs -screen setup
             shoot dark-tab-account -screenshots YES -tab account
             xcrun simctl ui "$DEVICE_ID" appearance light
+            small_pass
             ls -la "$RUNNER_TEMP/shots"
             exit 0
           fi
@@ -624,6 +653,7 @@ jobs:
             shoot "dark-$screen" -screenshots YES -tab tafs -screen "$screen"
           done
           xcrun simctl ui "$DEVICE_ID" appearance light
+          small_pass
           # The iPad (kiff/tafs#85): the sidebar beside the open taf. The largest iPad,
           # whose portrait width still fits the taf's second column.
           xcrun simctl shutdown "$DEVICE_ID" || true
