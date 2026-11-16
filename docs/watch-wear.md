@@ -24,7 +24,7 @@ this page says what is there now and what each step adds.
 
 - **The phone's relay** (`app/…/watch/WearRelayService`, `WatchRelay`). The phone app declares `tafs_phone_relay`
   (`res/values/wear.xml`) and answers requests under `/tafs/watch/v1/` only. Each passes `WatchLink.accept` first; then
-  Needs you is read again (`refresh`) and answered as the phone shows it: tafs cloud's count and words, and each held call's
+  Needs you is read again (`refresh`), at most once every 10 s for the watch (`RefreshFloor`), and answered as the phone shows it: tafs cloud's count and words, and each held call's
   taf, summary, KIFF's amount and reason. Your tafs is each taf's line (`Taf.now`), or Halted. With no KIFF session (signed
   out, or the sample) the watch is told `signed_out`. Refuse, Halt and Coach are answered Open on phone for now, with
   nothing read, signed or sent (`WatchRelayTest`).

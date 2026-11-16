@@ -26,7 +26,7 @@ class WearRelayService : WearableListenerService() {
     val answer = TaskCompletionSource<ByteArray>()
     val failed = { WatchLink.encodeReply(bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone)) }
     scope.launch {
-      val reply = runCatching { WatchRelay(model = { app.restoredModel(onScreen = false) }).answer(path, request) }
+      val reply = runCatching { WatchRelay(model = { app.restoredModel(onScreen = false) }, floor = floor).answer(path, request) }
         .getOrElse { bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone) }
       answer.trySetResult(WatchLink.encodeReply(reply))
     }.invokeOnCompletion {
@@ -40,5 +40,10 @@ class WearRelayService : WearableListenerService() {
   override fun onDestroy() {
     scope.cancel()
     super.onDestroy()
+  }
+
+  private companion object {
+    /** One for the process, across the service's restarts: the watch's reads of tafs cloud and KIFF are at least 10 s apart. */
+    val floor = RefreshFloor()
   }
 }

@@ -3,6 +3,8 @@ package bot.tafs.app
 import bot.tafs.app.app.Mode
 import bot.tafs.app.kiff.Halt
 import bot.tafs.app.push.AlertPayload
+import bot.tafs.app.app.AppModel
+import bot.tafs.app.watch.RefreshFloor
 import bot.tafs.app.watch.WatchRelay
 import bot.tafs.watchlink.NotAccepted
 import bot.tafs.watchlink.WatchLink
@@ -81,6 +83,44 @@ class WatchRelayTest {
     val all = WatchRelay.tafs(base.copy(halts = mapOf("" to Halt(state = Halt.HALTED))))
     assertTrue(all.allHalted)
     assertTrue(all.tafs.all { it.halted })
+  }
+
+  @Test fun theFloorLetsOneReadThroughEveryTenSeconds() {
+    val floor = RefreshFloor()
+    assertTrue(floor.due(now))
+    assertFalse(floor.due(now + 1))
+    assertFalse(floor.due(now + 9_999))
+    assertTrue(floor.due(now + 10_000))
+    assertFalse(floor.due(now + 10_500))
+    // A clock set back reads again rather than waiting.
+    assertTrue(floor.due(now - 60_000))
+  }
+
+  /** A watch asking in a loop reads tafs cloud and KIFF once per floor; every ask is still answered, from that read. */
+  @Test fun aWatchAskingInALoopReadsTafsCloudOncePerFloor() = runTest {
+    val transport = FakeTransport()
+    val secrets = bot.tafs.app.kiff.InMemorySecretStore()
+    secrets.save("at_1", AppModel.TOKEN)
+    secrets.save("t_01", AppModel.TENANT)
+    transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme","capabilities":["cards.manage"]}""")
+    transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[]}""")
+    transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[]}""")
+    transport.answer("GET /v1/me/activity", 200, """{"calls":[]}""")
+    val model = testModel(transport = transport, secrets = secrets, start = false, scope = backgroundScope)
+    model.restore(onScreen = false)
+    val before = transport.requestsTo("GET /v1/home").size
+    var t = now
+    val relay = WatchRelay(model = { model }, now = { t }, floor = RefreshFloor())
+    repeat(5) {
+      val (path, data) = request(WatchRequest.NeedsYou(t))
+      assertTrue(relay.answer(path, data) is WatchReply.NeedsYou)
+      t += 1_000
+    }
+    assertEquals("five asks in 5 s: one read", 1, transport.requestsTo("GET /v1/home").size - before)
+    t = now + 10_000
+    val (path, data) = request(WatchRequest.NeedsYou(t))
+    assertTrue(relay.answer(path, data) is WatchReply.NeedsYou)
+    assertEquals("past the floor: read again", 2, transport.requestsTo("GET /v1/home").size - before)
   }
 
   @Test fun theWatchsOpenOnPhoneOpensNeedsYouAndNothingElse() {
