@@ -375,7 +375,7 @@ under one fingerprint ([secure-connection.md](secure-connection.md)). With `card
 Card's limits as being signed now: they go under `words`.
 
 **A sign-in wider than the job is said on the card.** When planque couldn't narrow an app's sign-in to what the
-taf uses (`usual_access` on its grant: the app's sign-in offers no narrower scope, such as Google Sheets with no
+taf uses (`request.connector.usual_access` on its grant: the app's sign-in offers no narrower scope, such as Google Sheets with no
 read-only one), each waiting approval or sign-in card for it carries `wider: {words}`: "The sign-in for Google
 Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own
 tools.", in the reader's language. The apps draw it above the card's buttons, so no card stands unsaid under

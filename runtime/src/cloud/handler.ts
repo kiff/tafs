@@ -3318,7 +3318,8 @@ async function markWider(me: KIFFIdentity, taf: Taf, cards: ThreadComponent[], g
   for (const c of cards) {
     const card = c.component as { grant: string };
     const grant = grants.find((g) => g.id === card.grant);
-    if (grant?.usual_access !== true) continue;
+    // planque keeps it on the connector's request, never at the grant's top level (grantView).
+    if (grant?.request.connector?.usual_access !== true) continue;
     const vendor = grant.vendor || vendorName(grant.request.server) || "";
     c.component = { ...card, wider: { words: wordsIn(lang).card_wider(vendor || undefined) } };
     if (!deps.coach) continue;
