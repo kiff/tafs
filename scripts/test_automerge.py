@@ -37,8 +37,8 @@ CHECKS = [
 
 
 class Decide(unittest.TestCase):
-    def decide(self, p=None, files=FILES, reviews=APPROVAL, checks=CHECKS, hold=""):
-        return automerge.decide(p or pr(), files, reviews, checks, CONFIG, hold)
+    def decide(self, p=None, files=FILES, reviews=APPROVAL, checks=CHECKS, hold="", events=()):
+        return automerge.decide(p or pr(), files, reviews, checks, CONFIG, hold, events)
 
     def test_a_green_approved_pull_request_in_one_lane_merges(self):
         self.assertEqual(self.decide(), (True, "ios", ""))
@@ -87,6 +87,45 @@ class Decide(unittest.TestCase):
         self.assertTrue(self.decide(reviews=settled)[0])
         # A later comment from the one who approved doesn't take the approval back.
         self.assertTrue(self.decide(reviews=APPROVAL + [{"user": {"login": "agentgabo"}, "state": "COMMENTED", "commit_id": HEAD}])[0])
+
+    def test_a_named_reviewer_who_only_commented_holds_it(self):
+        commented = APPROVAL + [{"user": {"login": "gabosarmiento"}, "state": "COMMENTED", "commit_id": HEAD}]
+        self.assertEqual(self.decide(reviews=commented)[2], "not every reviewer named on it approved its latest commit: gabosarmiento")
+        self.assertTrue(self.decide(reviews=commented + [{"user": {"login": "gabosarmiento"}, "state": "APPROVED", "commit_id": HEAD}])[0])
+
+    def test_every_reviewer_asked_for_must_approve_its_latest_commit(self):
+        # Still asked for, not reviewed yet.
+        asked = pr(requested_reviewers=[{"login": "gabosarmiento"}])
+        self.assertEqual(self.decide(asked)[2], "not every reviewer named on it approved its latest commit: gabosarmiento")
+        # Asked for earlier: an approval takes a person off GitHub's list, and the events still name them.
+        events = [{"event": "review_requested", "requested_reviewer": {"login": "gabosarmiento"}}]
+        old = APPROVAL + [{"user": {"login": "gabosarmiento"}, "state": "APPROVED", "commit_id": "b" * 40}]
+        self.assertEqual(self.decide(reviews=old, events=events)[2], "not every reviewer named on it approved its latest commit: gabosarmiento")
+        both = APPROVAL + [{"user": {"login": "gabosarmiento"}, "state": "APPROVED", "commit_id": HEAD}]
+        self.assertTrue(self.decide(reviews=both, events=events)[0])
+        # A request taken back names no one.
+        removed = events + [{"event": "review_request_removed", "requested_reviewer": {"login": "gabosarmiento"}}]
+        self.assertTrue(self.decide(events=removed)[0])
+        # Someone asked for who isn't a listed reviewer must approve too, and their approval alone isn't enough.
+        outside = [{"event": "review_requested", "requested_reviewer": {"login": "a-collaborator"}}]
+        self.assertFalse(self.decide(events=outside)[0])
+        theirs = [{"user": {"login": "a-collaborator"}, "state": "APPROVED", "commit_id": HEAD}]
+        self.assertTrue(self.decide(reviews=APPROVAL + theirs, events=outside)[0])
+        self.assertEqual(self.decide(reviews=theirs, events=outside)[2], "no listed reviewer approved its latest commit")
+        asks = [{"user": {"login": "a-collaborator"}, "state": "CHANGES_REQUESTED", "commit_id": HEAD}]
+        self.assertEqual(self.decide(reviews=APPROVAL + asks, events=outside)[2], "a reviewer asked for changes")
+        # The author asking themselves names no one.
+        self.assertTrue(self.decide(pr(requested_reviewers=[{"login": "kiff-qa"}]))[0])
+
+    def test_a_strangers_review_names_no_one(self):
+        # The repository is public: a passer-by's comment, or their request for changes, holds nothing.
+        for state in ["COMMENTED", "CHANGES_REQUESTED", "APPROVED"]:
+            stranger = APPROVAL + [{"user": {"login": "someone-else"}, "state": state, "commit_id": HEAD}]
+            self.assertTrue(self.decide(reviews=stranger)[0], state)
+
+    def test_a_team_asked_for_holds_it(self):
+        team = pr(requested_teams=[{"slug": "maintainers"}])
+        self.assertEqual(self.decide(team)[2], "a team's review is asked for, and a team can't be counted")
 
     def test_every_check_must_have_finished_and_passed(self):
         self.assertFalse(self.decide(checks=[])[0])
@@ -169,6 +208,7 @@ class Pass(unittest.TestCase):
         for n in numbers:
             out[f"repos/kiff/tafs/pulls/{n}/files"] = [{"filename": f} for f in FILES]
             out[f"repos/kiff/tafs/pulls/{n}/reviews"] = APPROVAL
+            out[f"repos/kiff/tafs/issues/{n}/events"] = [{"event": "labeled"}]
             out[f"repos/kiff/tafs/pulls/{n}"] = failed if n in broken else pr()
         out[f"repos/kiff/tafs/commits/{HEAD}/check-runs"] = {"check_runs": CHECKS}
         return out
@@ -231,6 +271,18 @@ class Pass(unittest.TestCase):
         code, lines, merged = self.run_pass(answers)
         self.assertEqual(lines, ["#772: couldn't be merged, skipped (HTTP 409)", "#773: waits for a maintainer: no listed reviewer approved its latest commit"])
         self.assertEqual(code, 0)
+
+    def test_who_was_asked_for_a_review_is_read_from_its_events(self):
+        answers = self.answers([772, 773])
+        answers["repos/kiff/tafs/issues/772/events"] = [
+            {"event": "labeled"}, {"event": "review_requested", "requested_reviewer": {"login": "gabosarmiento"}}]
+        code, lines, merged = self.run_pass(answers)
+        self.assertEqual(lines, ["#772: waits for a maintainer: not every reviewer named on it approved its latest commit: gabosarmiento",
+                                 "#773: merged (ios)"])
+        self.assertEqual(merged, ["repos/kiff/tafs/pulls/773/merge"])
+        # Its events can't be read: nothing is decided on half of what the rule needs.
+        answers["repos/kiff/tafs/issues/772/events"] = subprocess.CalledProcessError(1, ["gh", "api"])
+        self.assertEqual(self.run_pass(answers)[1][0], "#772: couldn't be read, skipped")
 
     def test_a_run_with_every_pull_request_read_passes_as_before(self):
         code, lines, merged = self.run_pass(self.answers([772, 773]))

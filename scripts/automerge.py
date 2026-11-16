@@ -8,8 +8,9 @@ A pull request merges by itself only when all of this holds:
   - every file it touches is in one lane's paths (.github/automerge.json), or is the
     one changelog fragment named after its branch;
   - it carries no hold label, and merging isn't on hold for the repository;
-  - a listed reviewer other than its author approved its latest commit, and none of
-    them has changes requested;
+  - every reviewer named on it approved its latest commit: each one asked for a review,
+    now or earlier, and each listed reviewer who has reviewed it, other than its author;
+    at least one did, and none of them has changes requested;
   - every check on its latest commit finished and passed, its lane's own tests among
     them when it touches the app's code, and it can be merged.
 
@@ -59,18 +60,44 @@ def lane_of(files, branch, config):
     return lanes.pop(), code, ""
 
 
-def approved(reviews, author, head, reviewers):
-    """Whether a listed reviewer other than the author approved the latest commit, with
-    no listed reviewer asking for changes. Each reviewer's latest review counts."""
+def named(pr, events, reviews, reviewers, author):
+    """Who must approve it: everyone asked for a review, still or earlier (an approval takes
+    a person off GitHub's list, so its events say who was asked), unless that request was
+    taken back; and every listed reviewer who has reviewed it, a comment included. Never its
+    author. A stranger's review names no one: the repository is public, and a passer-by's
+    comment would hold every pull request."""
+    asked = set()
+    for e in events:
+        who = (e.get("requested_reviewer") or {}).get("login")
+        if e.get("event") == "review_requested" and who:
+            asked.add(who)
+        elif e.get("event") == "review_request_removed" and who:
+            asked.discard(who)
+    asked |= {u["login"] for u in pr.get("requested_reviewers") or []}
+    asked |= {(r.get("user") or {}).get("login") for r in reviews} & set(reviewers)
+    asked.discard(author)
+    asked.discard(None)
+    return asked
+
+
+def approved(reviews, author, head, reviewers, names=()):
+    """Whether every one of `names` and at least one listed reviewer, other than the author,
+    approved the latest commit, with none of them asking for changes. Each one's latest
+    review counts; a comment after an approval doesn't take it back."""
+    count = set(reviewers) | set(names)
     latest = {}
     for r in reviews:
         who = (r.get("user") or {}).get("login")
-        if who in reviewers and who != author and r.get("state") in ("APPROVED", "CHANGES_REQUESTED", "DISMISSED"):
+        if who in count and who != author and r.get("state") in ("APPROVED", "CHANGES_REQUESTED", "DISMISSED"):
             latest[who] = r
     if any(r["state"] == "CHANGES_REQUESTED" for r in latest.values()):
         return False, "a reviewer asked for changes"
-    if not any(r["state"] == "APPROVED" and r.get("commit_id") == head for r in latest.values()):
+    at_head = {who for who, r in latest.items() if r["state"] == "APPROVED" and r.get("commit_id") == head}
+    if not at_head & set(reviewers):
         return False, "no listed reviewer approved its latest commit"
+    waiting = sorted(set(names) - at_head - {author})
+    if waiting:
+        return False, "not every reviewer named on it approved its latest commit: " + ", ".join(waiting)
     return True, ""
 
 
@@ -91,7 +118,7 @@ def checks_passed(checks, required=()):
     return True, ""
 
 
-def decide(pr, files, reviews, checks, config, hold=""):
+def decide(pr, files, reviews, checks, config, hold="", events=()):
     """(merge, lane, why not). The whole rule, with nothing read from outside."""
     if hold:
         return False, None, f"merging is on hold: {hold}"
@@ -110,7 +137,10 @@ def decide(pr, files, reviews, checks, config, hold=""):
     lane, code, why = lane_of(files, head.get("ref", ""), config)
     if not lane:
         return False, None, why
-    ok, why = approved(reviews, author, head.get("sha"), config["reviewers"])
+    if pr.get("requested_teams"):
+        return False, lane, "a team's review is asked for, and a team can't be counted"
+    names = named(pr, events, reviews, config["reviewers"], author)
+    ok, why = approved(reviews, author, head.get("sha"), config["reviewers"], names)
     if not ok:
         return False, lane, why
     ok, why = checks_passed(checks, config["required"][lane] if code else ())
@@ -163,15 +193,16 @@ def status_of(err):
 
 
 def read(repo, n):
-    """What `decide` needs of one pull request: itself, its files, its reviews, and the checks on
-    its latest commit."""
+    """What `decide` needs of one pull request: itself, its files, its reviews, who was asked
+    for a review (its events), and the checks on its latest commit."""
     pr = gh(f"repos/{repo}/pulls/{n}")
     changed = pages(f"repos/{repo}/pulls/{n}/files")
     # A renamed file leaves a place too: its old name counts.
     files = [f["filename"] for f in changed] + [f["previous_filename"] for f in changed if f.get("previous_filename")]
     reviews = pages(f"repos/{repo}/pulls/{n}/reviews")
+    events = [e for e in pages(f"repos/{repo}/issues/{n}/events") if e["event"].startswith("review_request")]
     checks = pages(f"repos/{repo}/commits/{pr['head']['sha']}/check-runs")
-    return pr, files, reviews, checks
+    return pr, files, reviews, events, checks
 
 
 def main(argv):
@@ -195,12 +226,12 @@ def main(argv):
         # One pull request that can't be read is skipped, and the pass goes on to the others: a
         # single failed request never keeps the rest from merging. It is read again next run.
         try:
-            pr, files, reviews, checks = read(repo, n)
+            pr, files, reviews, events, checks = read(repo, n)
         except UNREAD:
             print(f"#{n}: couldn't be read, skipped")
             unread += 1
             continue
-        ok, lane, why = decide(pr, files, reviews, checks, config, hold)
+        ok, lane, why = decide(pr, files, reviews, checks, config, hold, events)
         if not ok:
             print(f"#{n}: waits for a maintainer: {why}")
             continue

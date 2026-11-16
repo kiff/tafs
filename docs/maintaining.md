@@ -41,9 +41,12 @@ auto-merge: every condition below must hold, and anything else waits for a maint
 - **Every file it touches is in one lane's paths:** `ios/` and `docs/ios-app.md`, or `android/` and
   `docs/android-app.md`. Its own changelog fragment may come with it. One file anywhere else
   (tafs cloud, the shared strings, a workflow, a contract in `docs/`, this rule itself) and it waits.
-- **A listed reviewer other than its author approved its latest commit,** and none of them has
-  changes requested. A push after the approval needs a new one. Authors and reviewers are listed
-  by GitHub login, so "other than its author" means another login.
+- **Every reviewer named on it approved its latest commit,** at least one of them a listed
+  reviewer, and none has changes requested. Named means asked for a review, still or earlier
+  (unless the request was taken back), or a listed reviewer who has reviewed it, a comment
+  included. A stranger's review names no one, since the repository is public; a team asked for
+  holds it, since a team can't be counted. A push after an approval needs a new one. Authors and
+  reviewers are listed by GitHub login, and the author is never one of its reviewers.
 - **Every check on its latest commit finished and passed,** and GitHub says it can be merged. When
   it touches an app's code, that app's own tests must be among them and have succeeded (`required`
   in `.github/automerge.json`: iOS's `test`; Android's `test` and `ui`). They start later than the
