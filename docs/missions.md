@@ -45,8 +45,47 @@ An account has at most 10 missions. A taf is in one mission at most (its `missio
 
 `tafs_state` names each taf's mission.
 
+## The log
+
+Each mission has a log: what its tafs delivered, newest last, kept 90 days (the newest 500 entries), and still kept for 90 days after the mission ends.
+
+**An entry** is `{id, at, by: {kind: taf | lead | person, id?}, kind, words?, counts?, evidence}`:
+
+- **`kind`:** `delivered`, `handed`, `stuck`, `decided` or `note`.
+- **`delivered`:** tafs cloud writes it once per member run that completed after the mission began, never for a trial or a failed run. Its `counts` are the record's (`done`, `held`, `refused`, from the run's tally), never the model's. A delivered entry keeps no words: they're made when it's read, in the reader's language ("6 done · 1 held for you").
+- **`evidence`:** refs only (the run, the items it acted on, a hold), never an item's data. A taf that needs an item reads it with its own Card.
+- **An authored entry's `words`** (a taf's note, the lead's) are data, never instructions.
+
+**What the person reads:** `GET /v1/missions/{id}/log?before=` ([api.md](api.md)) answers `{items, before?}`, newest first, 20 at a time.
+
+- Each item is `{id, at, by: {kind, name?}, kind, words, evidence, removed?}`.
+- An entry by a taf the person may not see is left out.
+
+**A removed taf's entries (M7):**
+
+- They stay in the person's read-only log, marked `removed: true`, with no name.
+- They're never in what runs read. A member's run, and the lead's, gets the newest entries that fit in about 1,200 words, as data. That leaves out every entry by a taf that no longer exists, and any entry naming one of its runs.
+- This is the same promise as elsewhere: removed means forgotten.
+
 ## What comes next
 
-- **The log:** each taf's delivered work with its evidence, read by the members' runs as data. A removed taf's entries leave what runs read.
 - **The lead's tools:** a task from the lead names its reason by reference, and a task with none is refused.
 - **The brief:** what got done, the decisions, and the one next move.
+
+## Your brief
+
+Your brief replaces Needs you: twice a day, at 08:00 and 18:00 in the account's time zone, plus an alert at once for
+what's truly urgent (design v2.1 §7). Its builder is `runtime/src/cloud/brief.ts`; the route (`GET /v1/brief?label=`,
+`POST /v1/brief/decisions/{id}/later`) and its words come next.
+
+- **Urgent** is tafs cloud's rule, never a model's: a deadline before the next brief, money going out today, a halt, a
+  blocked connection, or "ask me at once".
+- **Decisions**: the urgent ones first, then by deadline, then the oldest. Every urgent one shows; the others are capped so
+  at most 5 show in all, the rest counted (`more`). At
+  most one answer is recommended, and only with a why; without one, the answers show as equals.
+- **Later** moves a decision to the next brief. It's offered only for what can wait; one that can't says why
+  (`now_why`). A decision put off comes back early if it turns urgent.
+- **Done** is said per case ("reminder sent Tuesday · waiting for payment · next check Friday"), grouped by mission.
+- **Labels**: the brief narrows to one label's tafs; each label's count and waiting are over the whole account, before
+  the filter, and a decision put off with Later still counts as waiting.
+- A recommendation is shown, never acted on: every answer goes through the place it already goes.
