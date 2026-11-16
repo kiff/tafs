@@ -2,6 +2,7 @@ package bot.tafs.app.drive
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
@@ -44,7 +45,8 @@ fun DriveSheet(
 ) {
   DriveWindow()
   // A list that reaches its end with speed left over keeps that leftover: the sheet never gets it (KeepUpwardLeftovers).
-  Column(Modifier.nestedScroll(remember { KeepUpwardLeftovers() })) { content() }
+  // Full width, as Material's own sheet column is, so a child that centres itself still centres in the whole sheet.
+  Column(Modifier.fillMaxWidth().nestedScroll(remember { KeepUpwardLeftovers() })) { content() }
 }
 
 /**
