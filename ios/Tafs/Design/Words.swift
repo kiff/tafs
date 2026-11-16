@@ -3547,6 +3547,38 @@ enum Words {
             /// How did this morning go?
             static var question: String { Words.line("sample.chat.question") }
         }
+        enum Coach {
+            /// Agree
+            static var agree: String { Words.line("sample.coach.agree") }
+            /// Set up refunds for my online shop
+            static var ask: String { Words.line("sample.coach.ask") }
+            /// Change them
+            static var change: String { Words.line("sample.coach.change") }
+            /// I'll connect your payments first.
+            static var connectFirst: String { Words.line("sample.coach.connect_first") }
+            /// Connected. Here are the rules I'd use.
+            static var connected: String { Words.line("sample.coach.connected") }
+            /// Read your payments and refund one.
+            static var grant: String { Words.line("sample.coach.grant") }
+            /// Step 3 of 6 · Your rules
+            static var planLine: String { Words.line("sample.coach.plan_line") }
+            /// Refund up to €50 each, €200 a day. Anything over waits for you.
+            static var rules: String { Words.line("sample.coach.rules") }
+            /// Use these rules?
+            static var rulesTitle: String { Words.line("sample.coach.rules_title") }
+            enum Step {
+                /// Your Card
+                static var card: String { Words.line("sample.coach.step.card") }
+                /// Connect your payments
+                static var connect: String { Words.line("sample.coach.step.connect") }
+                /// Read your payments
+                static var read: String { Words.line("sample.coach.step.read") }
+                /// Your rules
+                static var rules: String { Words.line("sample.coach.step.rules") }
+                /// Start Refunds
+                static var start: String { Words.line("sample.coach.step.start") }
+            }
+        }
         enum Credits {
             /// Then 900 in packs, which never expire
             static var balanceDetail: String { Words.line("sample.credits.balance_detail") }

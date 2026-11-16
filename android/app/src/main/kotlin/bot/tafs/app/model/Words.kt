@@ -1923,6 +1923,24 @@ object Words {
     object Chat {
       val question: String get() = Res.s(R.string.sample_chat_question)
     }
+    object Coach {
+      val agree: String get() = Res.s(R.string.sample_coach_agree)
+      val ask: String get() = Res.s(R.string.sample_coach_ask)
+      val change: String get() = Res.s(R.string.sample_coach_change)
+      val connectFirst: String get() = Res.s(R.string.sample_coach_connect_first)
+      val connected: String get() = Res.s(R.string.sample_coach_connected)
+      val grant: String get() = Res.s(R.string.sample_coach_grant)
+      val planLine: String get() = Res.s(R.string.sample_coach_plan_line)
+      val rules: String get() = Res.s(R.string.sample_coach_rules)
+      val rulesTitle: String get() = Res.s(R.string.sample_coach_rules_title)
+      object Step {
+        val card: String get() = Res.s(R.string.sample_coach_step_card)
+        val connect: String get() = Res.s(R.string.sample_coach_step_connect)
+        val read: String get() = Res.s(R.string.sample_coach_step_read)
+        val rules: String get() = Res.s(R.string.sample_coach_step_rules)
+        val start: String get() = Res.s(R.string.sample_coach_step_start)
+      }
+    }
     object Credits {
       val balanceDetail: String get() = Res.s(R.string.sample_credits_balance_detail)
       val balanceWords: String get() = Res.s(R.string.sample_credits_balance_words)

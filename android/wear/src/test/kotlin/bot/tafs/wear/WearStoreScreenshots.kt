@@ -55,6 +55,7 @@ class WearStoreScreenshots(private val language: String, private val playLocale:
     compose.setContent { MaterialTheme { Box(Modifier.fillMaxSize().background(Color.Black)) { content() } } }
     val out = File(repo, "android/play/wear-screenshots/$playLocale/$name.png")
     compose.onRoot().captureRoboImage(out.path)
+    opaqueForPlay(out)
     // Drawn in the watch's own words: the screen's language is the one asked for.
     assertTrue(Res.language, Res.language == language)
   }
@@ -118,4 +119,16 @@ class WearStoreScreenshots(private val language: String, private val playLocale:
       arrayOf("it", "it-IT"), arrayOf("pt", "pt-PT"), arrayOf("nl", "nl-NL"), arrayOf("pl", "pl-PL"),
     )
   }
+}
+
+/**
+ * Play takes a phone or Wear OS screenshot only as a JPEG or a 24-bit PNG with no alpha: the recorded image is written again as
+ * opaque RGB. Only when recording, so a normal run leaves the committed images as they are.
+ */
+internal fun opaqueForPlay(file: java.io.File) {
+  if (System.getProperty("roborazzi.test.record") != "true" || !file.exists()) return
+  val drawn = javax.imageio.ImageIO.read(file)
+  val rgb = java.awt.image.BufferedImage(drawn.width, drawn.height, java.awt.image.BufferedImage.TYPE_INT_RGB)
+  rgb.createGraphics().apply { drawImage(drawn, 0, 0, null); dispose() }
+  javax.imageio.ImageIO.write(rgb, "png", file)
 }

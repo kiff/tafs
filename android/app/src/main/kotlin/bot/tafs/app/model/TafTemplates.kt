@@ -19,12 +19,20 @@ object TafTemplates {
 
   fun template(key: String?): TafTemplate? = all.firstOrNull { it.key == key }
 
+  /**
+   * The templates read their words each time, so each is in the app's language now (a language picked in Account, or each of the
+   * store screenshots' 8). Their rules keep one id each all the same, from the action (unique across the templates), so a template
+   * read again is the same template and a sample taf's Card still matches its job's.
+   */
+  private fun sampleRules(vararg rules: CardRule): List<CardRule> =
+    rules.map { it.copy(id = java.util.UUID.nameUUIDFromBytes("tafs.sample.rule.${it.action}".toByteArray()).toString()) }
+
   /** Support: settle refund and credit requests within policy. */
   val refunds: TafTemplate get() = TafTemplate(
     key = "refunds", name = Words.Sample.Refunds.name,
     job = Words.Sample.Refunds.job,
     tools = listOf(Words.Sample.Tool.payments, Words.Sample.Tool.store, Words.Sample.Tool.email),
-    rules = listOf(
+    rules = sampleRules(
       CardRule(action = "refund", label = Words.Sample.Refunds.Rule.refunds, perAction = Money.eur(150.0), perWindow = Money.eur(2_000.0), window = Window.day, nextSteps = listOf(Words.Sample.Refunds.nextStep)),
       CardRule(action = "credit", label = Words.Sample.Refunds.Rule.credits, perAction = Money.eur(100.0), perWindow = Money.eur(1_000.0), window = Window.day),
       CardRule(action = "payout", label = Words.Sample.Refunds.Rule.payouts, never = true, outside = Outside.refuse),
@@ -42,7 +50,7 @@ object TafTemplates {
     key = "billpay", name = Words.Sample.BillPay.name,
     job = Words.Sample.BillPay.job,
     tools = listOf(Words.Sample.Tool.accounting, Words.Sample.Tool.email),
-    rules = listOf(
+    rules = sampleRules(
       CardRule(action = "pay_bill", label = Words.Sample.BillPay.Rule.bills, perAction = Money.eur(5_000.0), perWindow = Money.eur(25_000.0), window = Window.week, nextSteps = listOf(Words.Sample.BillPay.nextStep)),
       CardRule(action = "wire", label = Words.Sample.BillPay.Rule.wires, alwaysAsk = true),
       CardRule(action = "bank_details", label = Words.Sample.BillPay.Rule.bankDetails, never = true, outside = Outside.refuse),
@@ -60,7 +68,7 @@ object TafTemplates {
     key = "access", name = Words.Sample.Access.name,
     job = Words.Sample.Access.job,
     tools = listOf(Words.Sample.Tool.signIn, Words.Sample.Tool.code),
-    rules = listOf(
+    rules = sampleRules(
       CardRule(action = "grant_role", label = Words.Sample.Access.Rule.approvedRoles, countPerWindow = 40, window = Window.day),
       CardRule(action = "deactivate", label = Words.Sample.Access.Rule.deactivations, countPerWindow = 20, window = Window.day),
       CardRule(action = "elevate", label = Words.Sample.Access.Rule.elevated, alwaysAsk = true),
@@ -80,7 +88,7 @@ object TafTemplates {
     key = "deploys", name = Words.Sample.Deploys.name,
     job = Words.Sample.Deploys.job,
     tools = listOf(Words.Sample.Tool.code, Words.Sample.Tool.hosting, Words.Sample.Tool.network),
-    rules = listOf(
+    rules = sampleRules(
       CardRule(action = "deploy", label = Words.Sample.Deploys.Rule.deploys, countPerWindow = 10, window = Window.day),
       CardRule(action = "rollback", label = Words.Sample.Deploys.Rule.rollbacks, countPerWindow = 20, window = Window.day),
       CardRule(action = "migration", label = Words.Sample.Deploys.Rule.migrations, alwaysAsk = true, nextSteps = listOf(Words.Sample.Deploys.nextStep)),
@@ -98,7 +106,7 @@ object TafTemplates {
     key = "chargebacks", name = Words.Sample.Chargebacks.name,
     job = Words.Sample.Chargebacks.job,
     tools = listOf(Words.Sample.Tool.payments),
-    rules = listOf(
+    rules = sampleRules(
       CardRule(action = "submit_evidence", label = Words.Sample.Chargebacks.Rule.evidence, perAction = Money.eur(500.0), countPerWindow = 50, window = Window.day),
       CardRule(action = "accept_dispute", label = Words.Sample.Chargebacks.Rule.acceptingLoss, perAction = Money.eur(100.0), perWindow = Money.eur(500.0), window = Window.week),
     ),
