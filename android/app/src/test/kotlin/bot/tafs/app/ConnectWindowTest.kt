@@ -145,9 +145,10 @@ class ConnectWindowTest {
   }
 
   @Test fun anyOtherRefusalToOpenTheWindowStopsTheConnectionWithNothingSentToPlanque() = runTest {
-    // Only a KIFF without the route (404, 405) leaves the phone's own fingerprint and `v1`; a 500 or a 403 is no such KIFF.
-    for (status in listOf(500, 403)) {
-      transport.answer(open, status, """{"error":"no"}""")
+    // Only a KIFF without the route (404, 405) leaves the phone's own fingerprint and `v1`; a 500 is no such KIFF, nor is KIFF's
+    // own refusal of an open the approval key didn't sign (403 `approval_key_required`), which must never become a `v1` approval.
+    for ((status, body) in listOf(500 to """{"error":"no"}""", 403 to """{"error":"approval_key_required"}""")) {
+      transport.answer(open, status, body)
       val m = model()
       m.connectAgain("mail-1")
       assertTrue("$status: nothing approved", transport.requestsTo(approve).isEmpty())
