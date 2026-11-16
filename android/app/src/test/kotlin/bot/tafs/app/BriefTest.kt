@@ -15,6 +15,7 @@ import bot.tafs.app.kiff.MissionLogs
 import bot.tafs.app.model.SampleBrief
 import bot.tafs.app.model.Words
 import bot.tafs.app.push.Alert
+import bot.tafs.app.push.AlertChannel
 import bot.tafs.app.push.AlertPayload
 import bot.tafs.app.signing.ApprovalSigning
 import java.io.File
@@ -473,6 +474,29 @@ class BriefTest {
     assertEquals("ce_1", held.tag)
     val other = AlertPayload.parse(mapOf("kind" to "alert", "open" to "usage", "brief_kind" to "something-newer")) as Alert.Show
     assertFalse("a brief_kind it doesn't know is no brief's", other.brief)
+  }
+
+  /**
+   * Each kind on its own channel, so the person can set them apart: a held call stays on Needs you's (its settings kept, though
+   * tafs cloud marks it urgent), an urgent one that isn't a held call goes on Urgent, Your brief's on Briefs, the rest by sound.
+   */
+  @Test fun eachAlertGoesOnItsOwnChannel() {
+    fun channel(vararg pairs: Pair<String, String>) = (AlertPayload.parse(mapOf(*pairs)) as Alert.Show).channel
+    assertEquals(AlertChannel.NEEDS_YOU, channel("kind" to "alert", "hold_id" to "ce_1", "brief_kind" to "urgent", "decision" to "hold:ce_1", "level" to "interrupt"))
+    assertEquals(AlertChannel.NEEDS_YOU, channel("kind" to "alert", "hold_id" to "ce_1", "level" to "interrupt"))
+    assertEquals(AlertChannel.URGENT, channel("kind" to "alert", "open" to "brief", "brief_kind" to "urgent", "level" to "interrupt"))
+    assertEquals(AlertChannel.BRIEFS, channel("kind" to "alert", "open" to "brief", "brief_kind" to "brief", "level" to "quiet"))
+    assertEquals(AlertChannel.OTHER, channel("kind" to "alert", "open" to "usage", "level" to "quiet"))
+    assertEquals(AlertChannel.NEEDS_YOU, channel("kind" to "alert", "open" to "needs-you"))
+    assertEquals("an earlier draft's kinds read the same", AlertChannel.BRIEFS, channel("kind" to "brief", "level" to "quiet"))
+    assertEquals(AlertChannel.URGENT, channel("kind" to "urgent"))
+    // Locked, the public version goes on the same channel, so it sounds (or doesn't) as the alert would.
+    val urgent = AlertPayload.parse(mapOf("kind" to "alert", "brief_kind" to "urgent", "title" to "Pay before 12:00")) as Alert.Show
+    assertEquals(AlertChannel.URGENT, urgent.locked().channel)
+    // The ids Needs you's and the quiet channel always had stay, so the settings people gave them hold.
+    assertEquals("holds", bot.tafs.app.push.AlertNotifier.idOf(AlertChannel.NEEDS_YOU))
+    assertEquals("quiet", bot.tafs.app.push.AlertNotifier.idOf(AlertChannel.OTHER))
+    assertEquals(listOf(true, true, false, false), AlertChannel.entries.map { bot.tafs.app.push.AlertNotifier.interrupts(it) })
   }
 
   @Test fun aHeldCallsAlertOpensNeedsYouOverTheBriefOnlyWhenThereIsOne() = runTest {

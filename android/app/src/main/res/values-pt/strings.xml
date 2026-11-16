@@ -1506,9 +1506,12 @@
     <string name="people_title">Pessoas e grupos</string>
     <string name="people_uses">Usa %1$s</string>
     <string name="people_uses_none">Ainda não usa nenhum taf</string>
+    <string name="push_channel_briefs">Resumos</string>
+    <string name="push_channel_briefs_description">O seu resumo nas horas dele, sem som.</string>
     <string name="push_channel_holds_description">Uma chamada está retida à espera da sua resposta. Nada é enviado até a aprovar.</string>
     <string name="push_channel_other">Outros alertas</string>
     <string name="push_channel_other_description">Pedidos de tarefas e as respetivas respostas, sem som.</string>
+    <string name="push_channel_urgent_description">O que não pode esperar pelo seu próximo resumo, com som.</string>
     <string name="push_open_needs_you">Abra Precisa de si para responder.</string>
     <string name="push_open_taf">Abra o taf para ver.</string>
     <string name="push_open_usage">Abra Plano e utilização para ver.</string>

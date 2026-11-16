@@ -2914,12 +2914,18 @@ enum Words {
     }
     enum Push {
         enum Channel {
+            /// Briefs
+            static var briefs: String { Words.line("push.channel.briefs") }
+            /// Your brief at its times, with no sound.
+            static var briefsDescription: String { Words.line("push.channel.briefs_description") }
             /// A call is held for your answer. Nothing is sent until you approve it.
             static var holdsDescription: String { Words.line("push.channel.holds_description") }
             /// Other alerts
             static var other: String { Words.line("push.channel.other") }
             /// Requests for tasks and their answers, with no sound.
             static var otherDescription: String { Words.line("push.channel.other_description") }
+            /// What can't wait for your next brief, with sound.
+            static var urgentDescription: String { Words.line("push.channel.urgent_description") }
         }
         /// Open Needs you to answer.
         static var openNeedsYou: String { Words.line("push.open_needs_you") }
