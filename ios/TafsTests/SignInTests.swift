@@ -227,4 +227,33 @@ final class SignInTests: XCTestCase {
         XCTAssertTrue(ways.phoneRuns)
         XCTAssertFalse(ways.kiffRuns, "the QR again stops KIFF's code")
     }
+
+    /// A session KIFF hands over just after the person stopped that way (Continue, or Show the code) is never
+    /// kept: it's ended at KIFF with its own token, so only the way the person chose can land.
+    func testASessionHandedOverAfterTheWayStoppedIsEndedAtKiff() async throws {
+        let model = model()
+        StubProtocol.responses["POST /v1/auth/device/logout"] = (200, "{}")
+        let token = try JSONDecoder().decode(KIFFClient.DeviceToken.self, from: Data(Self.token.utf8))
+        do {
+            try await model.takeSession(token, stopped: true)
+            XCTFail("a stopped way keeps nothing")
+        } catch is CancellationError {}
+        let logout = StubProtocol.sent.filter { $0.httpMethod == "POST" && $0.url?.path == "/v1/auth/device/logout" }
+        XCTAssertEqual(logout.count, 1, "ended at KIFF")
+        XCTAssertEqual(logout.first?.value(forHTTPHeaderField: "Authorization"), "Bearer kiff_dev_new", "with its own token")
+        XCTAssertEqual(model.mode, .signedOut)
+        XCTAssertNil(model.kiff.token)
+        XCTAssertNil(Keychain.load(AppModel.tokenAccount))
+    }
+
+    /// The way still running keeps its session, as before.
+    func testASessionOnTheWayStillRunningIsKept() async throws {
+        let model = model()
+        let token = try JSONDecoder().decode(KIFFClient.DeviceToken.self, from: Data(Self.token.utf8))
+        try await model.takeSession(token, stopped: false)
+        XCTAssertEqual(model.mode, .kiff)
+        XCTAssertEqual(model.kiff.token, "kiff_dev_new")
+        XCTAssertFalse(StubProtocol.sent.contains { $0.url?.path == "/v1/auth/device/logout" })
+        Keychain.delete(AppModel.tokenAccount)
+    }
 }

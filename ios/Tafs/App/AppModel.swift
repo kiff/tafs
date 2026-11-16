@@ -769,7 +769,7 @@ final class AppModel: ObservableObject {
             signInNudged = false
             do {
                 let token = try await kiff.pollDeviceToken(deviceCode: start.deviceCode)
-                await useSession(token.accessToken, tenant: token.tenant, viewOnly: token.viewOnly)
+                try await takeSession(token, stopped: Task.isCancelled)
                 return
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue
@@ -828,7 +828,7 @@ final class AppModel: ObservableObject {
             }
             do {
                 let token = try await kiff.claimPairing(nonce: start.offer.nonce, pub: start.offer.pub, proof: start.proof)
-                await useSession(token.accessToken, tenant: token.tenant, viewOnly: token.viewOnly)
+                try await takeSession(token, stopped: Task.isCancelled)
                 return
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue
@@ -839,6 +839,17 @@ final class AppModel: ObservableObject {
             }
         }
         throw KIFFClient.KIFFError.expired
+    }
+
+    /// Uses a session KIFF just handed over, unless the person stopped that way of signing in meanwhile
+    /// (Continue, or Show the code): then it's never kept, and it's ended at KIFF with its own token, so only
+    /// the way the person chose can land and nothing is left half-held. Throws `CancellationError` then.
+    func takeSession(_ token: KIFFClient.DeviceToken, stopped: Bool) async throws {
+        guard !stopped else {
+            try? await kiff.signOut(bearer: token.accessToken)
+            throw CancellationError()
+        }
+        await useSession(token.accessToken, tenant: token.tenant, viewOnly: token.viewOnly)
     }
 
     /// A failure worth trying again: the network, or KIFF briefly not answering.

@@ -1021,7 +1021,9 @@ key, and the drawings are shapes only, with no letter, number or word in them.
 - **One way at a time** (`SignInWays`), as on every computer: the phone half's pairing runs from the start, and
   **Continue** stops it, leaving the phone half with **Show the code** (`sign_in.show_code`). That starts the pairing
   again with a new QR and stops KIFF's code. So a code approved in a browser and a QR scanned on a phone can never
-  race into two accounts: only the way the person chose can land.
+  race into two accounts: only the way the person chose can land. A session KIFF hands over just after the way
+  was stopped is never kept: it's ended at KIFF with its own token (`AppModel.takeSession`), so nothing is left
+  half-held.
 - **Either way ends on the celebration** (`AppModel.justConnected`, shown over the home screen by the root view):
   the computer and the phone joined by a check, "You're connected. Let's build great things together.", and
   **Let's go** (`sign_in.connected`, `sign_in.connected_line`, `sign_in.lets_go`). Never in sample mode or the
