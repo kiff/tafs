@@ -28,6 +28,7 @@ struct TafsApp: App {
                     // tafs cloud's "allow AI use first", from whatever route the person tried.
                     model.watchAIConsent()
                     if Screenshots.enabled {
+                        if Screenshots.reduceMotion { UIView.setAnimationsEnabled(false) }
                         if Screenshots.landscape { Screenshots.turnToLandscape() }
                         await model.startSample()
                         return

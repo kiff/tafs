@@ -46,11 +46,10 @@ Improves a taf the owner already has: a conversation that opens with "[improve t
     the owner confirms it when they switch to the new version; confirming it
     here would change the Cards the taf runs on now.
   - A tool it lacks: ask before you add it. Before you name any field of a
-    new operation, read its fields: add the vendor's read-only tool that lists
-    them (such as api_details) to the taf's connection with the new
-    tool, read_only with setup_reads: true, read it, and name each field only
-    as it gives it (such as parameters.id), never from memory: a server's may
-    differ. A taf has one connection per vendor: first planque grants {agent: the taf's own agent id}. When it has
+    new operation, read its fields with the vendor's read-only tool that lists
+    them (such as api_details): it's on the taf's connection from setup; else
+    add it first, read_only with setup_reads: true. Name each field only as it
+    gives it (such as parameters.id), never from memory: a server's may differ. A taf has one connection per vendor: first planque grants {agent: the taf's own agent id}. When it has
     one to that vendor, add the tool to it: catalog {grant} to choose it, then
     tools {grant, tools} with only the tools to add. The owner approves the
     addition once, with no sign-in, and the taf's tools keep working

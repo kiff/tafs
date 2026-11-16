@@ -51,6 +51,7 @@
   "approval.set_a_screen_lock": "Set a screen lock on this phone to approve",
   "approval.settings_face_id_passcode_touch": "Settings → Face ID & Passcode (Touch ID & Passcode on a device with Touch ID)",
   "approval.settings_path.face_id": "Settings → Face ID & Passcode",
+  "approval.settings_path.mac_touch_id": "System Settings → Touch ID & Password",
   "approval.settings_path.touch_id": "Settings → Touch ID & Passcode",
   "approval.state.none_enrolled": "No fingerprint is set up on this phone. Add one in its settings, then come back.",
   "approval.state.ready": "Approvals are set up on this phone.",
@@ -62,6 +63,7 @@
   "approval.turned_off_tafs_open_settings": "{either} is turned off for tafs. Open Settings and turn on {either_2} for tafs.",
   "approval.turned_off_tafs_turn_tafs": "{either} is turned off for tafs. Turn it on in tafs' settings to approve.",
   "approval.view_only": "Sign in again on this phone to approve, or approve from your other phone.",
+  "approval.view_only_mac": "This Mac can only view. To approve here, add it from your phone: Account › Devices › Add a device.",
   "approval.why": "Every approval you give in tafs, a Card, a connection or a payment over a limit, is signed on this phone with a key only your fingerprint unlocks. Your PIN or pattern can't approve.",
   "approval.without_allows": "Without approvals you can still sign in, review, refuse and halt.",
   "approval.your_passcode": "your passcode"

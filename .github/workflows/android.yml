@@ -9,10 +9,10 @@ name: Android
 on:
   push:
     branches: [main]
-    paths: ["android/**", "contracts/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "contracts/**", "vectors/**", ".github/workflows/android.yml"]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    paths: ["android/**", "contracts/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "contracts/**", "vectors/**", ".github/workflows/android.yml"]
   # The signed release bundle for Play, on demand (the release job).
   workflow_dispatch:
 
@@ -148,7 +148,9 @@ jobs:
     if: >-
       !cancelled() && needs.test.result == 'success' && needs.ui.result == 'success' &&
       (github.event_name == 'workflow_dispatch' || needs.version.outputs.raised == 'true')
-    # The owner approves each release here; the release role trusts only this environment.
+    # An internal release goes out on a merge to main that raises versionCode (or a manual run), with no reviewer to wait on:
+    # CI, the reviews and the internal track are the guardrails. Promotion beyond internal (Play review) is the owner's, in Play.
+    # The release role trusts only this environment.
     environment: android-release
     runs-on: ubuntu-latest
     timeout-minutes: 30

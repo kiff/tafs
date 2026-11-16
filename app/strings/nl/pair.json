@@ -6,6 +6,7 @@
   "pair.device_name": "tafs op deze {device}",
   "pair.failed": "Deze {device} is niet toegevoegd: {why}. Toon een nieuwe code en probeer het opnieuw.",
   "pair.from_sign_in": "Gebruik je tafs al op je telefoon? Voeg deze {device} ermee toe.",
+  "pair.keychain_refused": "Deze Mac kon zijn login niet in de sleutelhanger bewaren (fout {code}) en is dus niet toegevoegd. Toon een nieuwe code en probeer het opnieuw.",
   "pair.new_code": "Toon een nieuwe code",
   "pair.steps": "Open tafs op je telefoon, dan {account}, {devices}, {pair}. Scan deze code.",
   "pair.title": "Voeg deze {device} toe met je telefoon",

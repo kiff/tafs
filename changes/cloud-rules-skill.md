@@ -1,0 +1,1 @@
+- **Coach sends the rules as data** (draft-the-card@26). The rules notice carries each tool's rule and the figures the owner read: what happens past each limit, each call's figure and the day's total. The confirm names the notice it agrees to, so Approve holds the Card to exactly what the owner agreed.

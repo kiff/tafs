@@ -51,6 +51,7 @@
   "approval.set_a_screen_lock": "Imposta un blocco schermo su questo telefono per approvare",
   "approval.settings_face_id_passcode_touch": "Impostazioni → Face ID e codice (Touch ID e codice su un dispositivo con Touch ID)",
   "approval.settings_path.face_id": "Impostazioni → Face ID e codice",
+  "approval.settings_path.mac_touch_id": "Impostazioni di Sistema → Touch ID e password",
   "approval.settings_path.touch_id": "Impostazioni → Touch ID e codice",
   "approval.state.none_enrolled": "Nessuna impronta è configurata su questo telefono. Aggiungine una nelle sue impostazioni, poi torna qui.",
   "approval.state.ready": "Le approvazioni sono configurate su questo telefono.",
@@ -62,6 +63,7 @@
   "approval.turned_off_tafs_open_settings": "{either} è disattivato per tafs. Apri Impostazioni e attiva {either_2} per tafs.",
   "approval.turned_off_tafs_turn_tafs": "{either} è disattivato per tafs. Attivalo nelle impostazioni di tafs per approvare.",
   "approval.view_only": "Accedi di nuovo su questo telefono per approvare, oppure approva dall'altro telefono.",
+  "approval.view_only_mac": "Questo Mac può solo visualizzare. Per approvare qui, aggiungilo dal tuo telefono: Account › Dispositivi › Aggiungi un dispositivo.",
   "approval.why": "Ogni approvazione che dai in tafs, una Card, un collegamento o un pagamento oltre un limite, viene firmata su questo telefono con una chiave che solo la tua impronta sblocca. Il PIN o la sequenza non possono approvare.",
   "approval.without_allows": "Senza approvazioni puoi comunque accedere, controllare, rifiutare e bloccare.",
   "approval.your_passcode": "il tuo codice"

@@ -1,0 +1,1 @@
+- Nouveau dans Appareils : « Ajouter une clé d'accès sur ce téléphone ». Avec une clé d'accès sur ce téléphone, un ordinateur peut approuver par son biais : il affiche un code QR, et vous le scannez avec ce téléphone. L'ajout demande votre empreinte, et seuls les propriétaires et administrateurs du compte peuvent le faire.

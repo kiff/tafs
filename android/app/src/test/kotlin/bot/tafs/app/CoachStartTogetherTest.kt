@@ -59,6 +59,7 @@ class CoachStartTogetherTest {
     transport.answer("POST /v1/connections/batch", 200, "{}")
     transport.answer("POST /v1/me/agent-drafts", 201, """{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x"}""")
     transport.answer("POST /v1/keys", 200, """{"plaintext":"kk_connector"}""")
+    transport.answer("POST /v1/accounts/t_01/enrolment", 409, """{"error":"no connector key stands for this account","code":"needs_key"}""")
     transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12"}""")
     transport.answer("POST /v1/setup", 200, """{"setup":$coach}""")
   }
@@ -116,7 +117,7 @@ class CoachStartTogetherTest {
     // This phone enrolled first, before anything went to KIFF for Coach; then the batch, the draft and the claim. Never an empty draft.
     val order = transport.requests.filter { it.method == "POST" }.map { java.net.URI.create(it.url).path }
       .filter { it in listOf("/v1/accounts/t_01/enrolment", "/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup") }
-    assertEquals(listOf("/v1/accounts/t_01/enrolment", "/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup"), order)
+    assertEquals(listOf("/v1/accounts/t_01/enrolment", "/v1/accounts/t_01/enrolment", "/v1/connections/batch", "/v1/me/agent-drafts", "/v1/setup"), order)
     assertTrue(transport.requestsTo("POST /v1/connections/batch").single().url.startsWith("https://mcp."))
     // Each body as tafs cloud wrote it, its contract digest with it.
     assertEquals(json(batchBody), sentBody("POST /v1/connections/batch"))
@@ -202,7 +203,7 @@ class CoachStartTogetherTest {
     // The fingerprint first, then the enrolment, then the draft.
     val order = transport.requests.filter { it.method == "POST" }.map { java.net.URI.create(it.url).path }
       .filter { it in listOf("/v1/accounts/t_01/enrolment", "/v1/me/agent-drafts") }
-    assertEquals(listOf("/v1/accounts/t_01/enrolment", "/v1/me/agent-drafts"), order)
+    assertEquals(listOf("/v1/accounts/t_01/enrolment", "/v1/accounts/t_01/enrolment", "/v1/me/agent-drafts"), order)
     assertEquals("setup_1", m.state.value.coachCloudId)
   }
 
@@ -211,6 +212,7 @@ class CoachStartTogetherTest {
     val m = model()
     m.loadCoach()
     transport.answer("POST /v1/keys", 200, """{"plaintext":"kk_connector"}""")
+    transport.answer("POST /v1/accounts/t_01/enrolment", 409, """{"error":"no connector key stands for this account","code":"needs_key"}""")
     transport.answer("POST /v1/accounts/t_01/enrolment", 200, """{"tenant":"t_01","device":"ab12"}""")
     transport.answer("POST /v1/connections/batch", 200, "{}")
     transport.answer("POST /v1/me/agent-drafts", 409, """{"error":"the tools changed since these Cards were worded; read them again","code":"contract_changed"}""")

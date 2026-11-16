@@ -7,12 +7,14 @@ enum MacWindow {
     /// screen beside it always fit.
     static let minimumSize = CGSize(width: 820, height: 600)
 
-    /// Sets the smallest size on every window. Nothing to do on iPhone and iPad.
+    /// Sets the smallest size on every window, and hides the window's title: the iPad shows
+    /// none, and the sidebar already says "tafs" under its icon. Nothing to do on iPhone and iPad.
     @MainActor
     static func apply() {
         #if targetEnvironment(macCatalyst)
         for case let scene as UIWindowScene in UIApplication.shared.connectedScenes {
             scene.sizeRestrictions?.minimumSize = minimumSize
+            scene.titlebar?.titleVisibility = .hidden
         }
         #endif
     }
@@ -29,7 +31,9 @@ struct MacCommands: Commands {
     var body: some Commands {
         CommandGroup(replacing: .newItem) { items(MacMenu.file) }
         CommandGroup(replacing: .appSettings) { items(MacMenu.app) }
-        CommandGroup(before: .sidebar) { items(MacMenu.view) }
+        // Placed before the sidebar's item, the group's items reach the View menu last first
+        // (seen on a Mac with TestFlight build 2), so they're given in reverse.
+        CommandGroup(before: .sidebar) { items(MacMenu.viewInPlacementOrder) }
     }
 
     /// Off while Coach drives the app, as the shortcuts are: a key pressed then isn't a shortcut.

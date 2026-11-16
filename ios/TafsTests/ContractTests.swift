@@ -44,6 +44,61 @@ final class ContractTests: XCTestCase {
         XCTAssertNotNil(read.labels, "the sheet's words")
     }
 
+    /// One contract, decoded with the app's decoder as the type its read decodes; a failure names the file and why.
+    private func decodes<T: Decodable>(_ type: T.Type, _ file: String, line: UInt = #line) -> T? {
+        do {
+            return try KIFFClient.decoder.decode(T.self, from: try answer(file))
+        } catch {
+            XCTFail("\(file) doesn't read as \(T.self): \(error)", line: line)
+            return nil
+        }
+    }
+
+    /// A taf's Activity as tafs cloud sends it: each entry's call comes without `held`, which only KIFF's own read
+    /// sends, so it reads as not held. It was required, and the page never loaded (linux-dev's find, porting).
+    func testATafsActivityReadsAsTafsCloudSendsIt() throws {
+        let page = try XCTUnwrap(decodes(TafsCloud.ActivityPage.self, "taf-activity.json"))
+        XCTAssertFalse(page.entries.isEmpty)
+        XCTAssertTrue(page.entries.allSatisfy { !$0.call.held })
+        let raw = try JSONSerialization.jsonObject(with: try answer("taf-activity.json")) as? [String: Any]
+        let calls = (raw?["entries"] as? [[String: Any]] ?? []).compactMap { $0["call"] as? [String: Any] }
+        XCTAssertTrue(calls.allSatisfy { $0["held"] == nil }, "the case this reads: no held at all")
+    }
+
+    /// Every other answer the iPad reads that tafs cloud keeps as a contract, as the app's own read decodes it.
+    func testEveryContractTheIPadReadsDecodes() {
+        for file in ["taf-setup.json", "taf-setup-connected.json", "taf-setup-reconnect.json"] {
+            _ = decodes(TafsCloud.SetupView.self, file)
+        }
+        struct Runs: Decodable { let runs: [TafsCloud.Run] }
+        XCTAssertFalse(decodes(Runs.self, "taf-runs.json")?.runs.isEmpty ?? true)
+        struct Reported: Decodable { let report: TafsCloud.Report }
+        for file in ["taf-run-report.json", "taf-run-report-running.json", "taf-run-report-terminated.json"] {
+            _ = decodes(Reported.self, file)
+        }
+        struct Listed: Decodable { let tafs: [TafsCloud.CloudTaf]; let removing: [TafsCloud.PendingRemoval]? }
+        for file in ["tafs.json", "tafs-paused.json"] {
+            XCTAssertFalse(decodes(Listed.self, file)?.tafs.isEmpty ?? true, file)
+        }
+        for file in ["home.json", "home-paused.json"] {
+            _ = decodes(TafsCloud.Home.self, file)
+        }
+        struct Setup: Decodable { let setup: TafsCloud.CloudTaf? }
+        XCTAssertNotNil(decodes(Setup.self, "setup-coach.json")?.setup, "Coach as a taf")
+        struct Chats: Decodable { let chats: [TafsCloud.Chat] }
+        XCTAssertFalse(decodes(Chats.self, "coach-chats.json")?.chats.isEmpty ?? true)
+        do {
+            let thread = try TafsCloud.setupThread(decoding: try answer("coach-conversation.json"))
+            XCTAssertFalse(thread.messages.isEmpty)
+            XCTAssertFalse(thread.components.isEmpty)
+        } catch {
+            XCTFail("coach-conversation.json doesn't read as Coach's thread: \(error)")
+        }
+        for file in ["connect-apps.json", "connect-apps-search.json", "connect-apps-next.json", "connect-apps-removed.json"] {
+            XCTAssertFalse(decodes(TafsCloud.ConnectApps.self, file)?.apps.isEmpty ?? true, file)
+        }
+    }
+
     func testTheAIConsentReadsAsTafsCloudAnswersIt() throws {
         let all = try cases("ai-consent.json")
         XCTAssertGreaterThanOrEqual(all.count, 5)

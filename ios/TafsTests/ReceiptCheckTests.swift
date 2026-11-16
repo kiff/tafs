@@ -56,4 +56,20 @@ final class ReceiptCheckTests: XCTestCase {
         let short = Self.signed.replacing(#/"signature":"[0-9a-f]+"/#, with: #""signature":"00""#)
         XCTAssertEqual(ReceiptCheck.check(Data(short.utf8), signer: Self.testSigner), .failed("The signature is malformed."))
     }
+
+    /// The line's amount and the receipt's signed amount match as numbers in the same unit: "150.00" and
+    /// "150" are one amount, never a false mismatch (win-dev's find on Windows #56, the iPad's too).
+    func testAmountsMatchAsNumbersInTheSameUnit() {
+        typealias Amount = KIFFClient.ActivityCall.Amount
+        XCTAssertTrue(Amount(value: "150.00", unit: "EUR").same(as: Amount(value: "150", unit: "EUR")))
+        XCTAssertTrue(Amount(value: "3.5", unit: "eur").same(as: Amount(value: "3.50", unit: "EUR")), "the unit's case doesn't matter")
+        XCTAssertFalse(Amount(value: "150.01", unit: "EUR").same(as: Amount(value: "150", unit: "EUR")))
+        XCTAssertFalse(Amount(value: "150", unit: "EUR").same(as: Amount(value: "150", unit: "USD")), "another unit")
+        XCTAssertFalse(Amount(value: "150", unit: "EUR").same(as: Amount(value: "150", unit: nil)))
+        XCTAssertFalse(Amount(value: "150abc", unit: "EUR").same(as: Amount(value: "150", unit: "EUR")), "not a plain number: as written")
+        XCTAssertTrue(Amount(value: "n/a", unit: nil).same(as: Amount(value: "n/a", unit: nil)))
+        let source = (try? String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/Views/RecordView.swift"), encoding: .utf8)) ?? ""
+        XCTAssertTrue(source.contains("return !line.same(as: signed)"), "the receipt sheet uses it")
+    }
 }

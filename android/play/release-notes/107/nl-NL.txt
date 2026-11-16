@@ -1,0 +1,1 @@
+- Nieuw in Apparaten: “Passkey op deze telefoon toevoegen”. Met een passkey op deze telefoon kan een computer via deze telefoon goedkeuren: de computer toont een QR-code en jij scant die met deze telefoon. Toevoegen vraagt je vingerafdruk, en alleen eigenaars en beheerders van het account kunnen het.

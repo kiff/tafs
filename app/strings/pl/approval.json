@@ -51,6 +51,7 @@
   "approval.set_a_screen_lock": "Ustaw blokadę ekranu na tym telefonie, aby zatwierdzać",
   "approval.settings_face_id_passcode_touch": "Ustawienia → Face ID i kod (Touch ID i kod na urządzeniu z Touch ID)",
   "approval.settings_path.face_id": "Ustawienia → Face ID i kod",
+  "approval.settings_path.mac_touch_id": "Ustawienia systemowe → Touch ID i hasło",
   "approval.settings_path.touch_id": "Ustawienia → Touch ID i kod",
   "approval.state.none_enrolled": "Na tym telefonie nie skonfigurowano odcisku palca. Dodaj go w ustawieniach telefonu, a potem wróć.",
   "approval.state.ready": "Zatwierdzanie jest skonfigurowane na tym telefonie.",
@@ -62,6 +63,7 @@
   "approval.turned_off_tafs_open_settings": "{either} jest wyłączone dla tafs. Otwórz Ustawienia i włącz {either_2} dla tafs.",
   "approval.turned_off_tafs_turn_tafs": "{either} jest wyłączone dla tafs. Włącz je w ustawieniach tafs, aby zatwierdzać.",
   "approval.view_only": "Zaloguj się ponownie na tym telefonie, aby zatwierdzać, lub zatwierdź na drugim telefonie.",
+  "approval.view_only_mac": "Ten Mac może tylko wyświetlać. Aby zatwierdzać tutaj, dodaj go na telefonie: Konto › Urządzenia › Dodaj urządzenie.",
   "approval.why": "Każde zatwierdzenie w tafs, Card, połączenie czy płatność ponad limit, jest podpisywane na tym telefonie kluczem, który odblokowuje tylko Twój odcisk palca. Twój PIN ani wzór nie mogą zatwierdzać.",
   "approval.without_allows": "Bez zatwierdzania nadal możesz się zalogować, przeglądać, odrzucać i blokować.",
   "approval.your_passcode": "Twój kod"
