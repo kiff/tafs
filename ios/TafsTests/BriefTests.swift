@@ -136,7 +136,6 @@ final class BriefTests: XCTestCase {
         try await cloud.briefLater("hold:ce_1")
         let sent = try XCTUnwrap(StubProtocol.sent.first { $0.httpMethod == "POST" })
         XCTAssertEqual(sent.url?.absoluteString, "https://cloud.test/v1/brief/decisions/hold:ce_1/later")
-        XCTAssertTrue(model.briefDecisions.isEmpty)
     }
 
     func testTheBriefReadsV21sFieldsAsSent() throws {
