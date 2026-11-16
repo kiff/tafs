@@ -2,5 +2,5 @@ A app tafs para Wear OS, companheira da app tafs no telemóvel.
 - Peça aos seus tafs a partir do relógio: fale e ouça o resultado.
 - «Precisa de si» e «Os seus tafs» no pulso, lidos a partir do telemóvel.
 - Recuse uma chamada retida ou bloqueie um taf a partir do relógio. Aprovar continua no telemóvel.
-- Quando nada precisa de si, um visto verde di-lo.
+- Quando nada precisa de si, um visto verde indica-o.
 - Um mosaico para pedir, com quantos precisam de si com o relógio desbloqueado.

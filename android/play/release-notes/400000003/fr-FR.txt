@@ -1,6 +1,6 @@
 L'app tafs pour Wear OS, compagne de l'app tafs sur votre téléphone.
 - Demandez à vos tafs depuis votre montre : parlez, et écoutez le résultat.
 - « Vous attend » et « Vos tafs » à votre poignet, lus depuis votre téléphone.
-- Refusez un appel en attente ou bloquez un taf depuis la montre. L'approbation reste sur votre téléphone.
+- Refusez un appel retenu ou bloquez un taf depuis la montre. L'approbation reste sur votre téléphone.
 - Quand rien ne vous attend, une coche verte vous le dit.
 - Une carte pour demander, avec le nombre qui vous attend quand la montre est déverrouillée.
