@@ -40,9 +40,12 @@ class SharedUseTest {
       mode = Mode.kiff, kiffAccount = acme, tafs = listOf(refunds, quotes, payouts),
       access = mapOf("taf_1" to Access(use = true, manage = true), "taf_2" to Access(use = true), "taf_3" to Access(use = true, oversee = true, manage = true)),
     )
-    val (own, shared) = s.tafSections
-    assertEquals(listOf("taf_1", "taf_3"), own.map { it.id })
+    // Home's ordered, filtered list, as HomeView hands it over: each section keeps that order.
+    val (own, shared) = s.sections(listOf(payouts, quotes, refunds))
+    assertEquals(listOf("taf_3", "taf_1"), own.map { it.id })
     assertEquals(listOf("taf_2"), shared.map { it.id })
+    // Filtered to one label, only what the filter kept is split.
+    assertEquals(Pair(listOf(refunds), emptyList<Taf>()), s.sections(listOf(refunds)))
     assertTrue(s.sharedWithMe("taf_2"))
     assertFalse(s.sharedWithMe("taf_1"))
   }
@@ -51,13 +54,13 @@ class SharedUseTest {
   @Test fun aTafKiffHasntAnsweredForYetIsntShared() {
     val s = AppState(mode = Mode.kiff, kiffAccount = acme, tafs = listOf(refunds, quotes), access = mapOf("taf_2" to Access(use = true)))
     assertFalse(s.sharedWithMe("taf_1"))
-    assertEquals(listOf("taf_1"), s.tafSections.first.map { it.id })
+    assertEquals(listOf("taf_1"), s.sections(listOf(refunds, quotes)).first.map { it.id })
   }
 
   // The sample has no KIFF answer and nothing shared.
   @Test fun theSampleSharesNothing() {
     val s = AppState(mode = Mode.sample, tafs = listOf(refunds, quotes), access = mapOf("taf_2" to Access(use = true)))
     assertFalse(s.sharedWithMe("taf_2"))
-    assertEquals(emptyList<Taf>(), s.tafSections.second)
+    assertEquals(emptyList<Taf>(), s.sections(listOf(refunds, quotes)).second)
   }
 }

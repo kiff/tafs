@@ -663,8 +663,11 @@ data class AppState(
    */
   fun sharedWithMe(tafId: String): Boolean = mode == Mode.kiff && access[tafId]?.let { !it.manage } ?: false
 
-  /** The tafs as Home lists them, the person's own, then those shared with them to use (as iPhone's `tafSections`). */
-  val tafSections: Pair<List<Taf>, List<Taf>> get() = listedTafs.partition { !sharedWithMe(it.id) }
+  /**
+   * [tafs], in Home's order and filter, split as Home lists them (as iPhone's `tafSections`): the person's own, then those shared
+   * with them to use. Home draws from this, so the rule is in one place.
+   */
+  fun sections(tafs: List<Taf>): Pair<List<Taf>, List<Taf>> = tafs.partition { !sharedWithMe(it.id) }
 
   /** The taf's connected Slack bot connections, which a Slack door listens through. */
   fun slackBots(tafId: String): List<bot.tafs.app.kiff.Grant> = grants.filter { it.connected && it.isSlackBot && it.request.agent == tafId }

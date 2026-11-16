@@ -194,7 +194,7 @@ fun HomeView(
         val listed: @Composable (Taf) -> Unit = { taf ->
           TafRow(taf, state.signedOut(taf.id)?.let(bot.tafs.app.model.ConnectionWords::signedOut), onHalted = { onHalted(taf.id) }, tags = labelTags(taf, state.labels)) { onOpenTaf(taf.id) }
         }
-        val (own, shared) = order.mapNotNull(byId::get).partition { !state.sharedWithMe(it.id) }
+        val (own, shared) = state.sections(order.mapNotNull(byId::get))
         item {
           Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             own.forEach { taf -> listed(taf) }

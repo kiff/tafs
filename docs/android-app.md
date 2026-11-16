@@ -116,9 +116,10 @@ them; tafs cloud lists them, counts them and words the filtered headline.
 
 Home lists the person's own tafs first, then the tafs being set up, then, under **Shared with you**
 (`home.shared_you`), the tafs shared with them to use but not to manage, as on iPhone and iPad (kiff/tafs#306). A taf is
-shared when KIFF's access answer for it says use without manage (`AppState.sharedWithMe`, `tafSections`). Until KIFF has
-answered for a taf, it stays among the person's own, so it never moves once the answer comes. Both lists keep the list's
-order (waiting first, then the one used most recently), and a label filters both. The sample has nothing shared
+shared when KIFF's access answer for it says use without manage (`AppState.sharedWithMe`). Until KIFF has answered for a
+taf, it stays among the person's own; it moves under Shared with you only once that answer says so. Home splits its ordered,
+filtered list with one function (`AppState.sections`), so both lists keep the list's order (waiting first, then the one used
+most recently), and a label filters both. The sample has nothing shared
 (`SharedUseTest`).
 
 ## A mission's log
