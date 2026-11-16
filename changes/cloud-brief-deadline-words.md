@@ -1,0 +1,1 @@
+- **tafs cloud: a decision's deadline in words:** Your brief says each deadline as people read it ("by Fri 12:00"), in the account's time zone and the person's language, beside the time itself ([api.md](../docs/api.md)).

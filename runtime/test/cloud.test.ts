@@ -6982,7 +6982,7 @@ describe("GET /v1/brief and Later", () => {
       words: { title: "Your brief", decisions: "Decisions", done: "Done", rest: "The rest" } });
     expect(r.body.decisions).toEqual([
       { id: "step:ho_1", question: "Approve 3 supplier payments", answers: [{ words: "Done", answer: "done", recommended: false }, { words: "Skip it", answer: "skip", recommended: false }],
-        meanwhile: "Its run waits for this step.", deadline: "2026-10-29T13:00:00.000Z", urgent: true, ref: { kind: "step", id: "ho_1", taf: RAE } },
+        meanwhile: "Its run waits for this step.", deadline: "2026-10-29T13:00:00.000Z", deadline_words: "by 14:00", urgent: true, ref: { kind: "step", id: "ho_1", taf: RAE } },
       { id: "hold:h1", question: "Refund order 1042, €80", answers: [{ words: "Approve", answer: "approve", recommended: false }, { words: "Refuse", answer: "refuse", recommended: false }],
         meanwhile: "Nothing is done until you answer.", urgent: false, later: { words: "Later" }, ref: { kind: "hold", id: "h1", taf: RAE } },
     ]);
@@ -6990,6 +6990,8 @@ describe("GET /v1/brief and Later", () => {
     expect(r.body.credits).toBeUndefined();
     const de = await ask("GET", "/v1/brief", { headers: { "accept-language": "de" } });
     expect(de.body.words).toEqual({ title: "Dein Briefing", decisions: "Entscheidungen", done: "Erledigt", rest: "Der Rest" });
+    // The deadline in words, in the account's zone (Paris: 14:00) and the reader's language.
+    expect(de.body.decisions[0].deadline_words).toBe("bis 14:00");
     expect(de.body.decisions[1]).toMatchObject({ meanwhile: "Bis du antwortest, passiert nichts.", answers: [{ words: "Genehmigen" }, { words: "Ablehnen" }], later: { words: "Später" } });
     // A label no taf carries narrows the brief to nothing.
     expect((await ask("GET", "/v1/brief", { query: "label=lbl_none" })).body).toMatchObject({ decisions: [], rest: { count: 0 } });

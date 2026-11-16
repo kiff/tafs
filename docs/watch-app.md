@@ -38,7 +38,17 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
 - **Signed out:** the phone answers only that, and the watch shows nothing of the account.
 - **With tafs closed:** the phone answers with the session it keeps, as a hold's notification
   is filled in (`HoldNotification`), so the phone can be locked in a pocket.
-- **Today:** Needs you is answered. Your tafs, Refuse, Halt, Halt all and Coach come next.
+- **Refuse** is the notification's own refusal (`NotificationRefuse.refuse`): signed with the
+  current key, never the approval key, and only if KIFF still holds the call. Unlike the
+  notification's, it may be signed while the phone is locked in a pocket: the only presence is
+  the watch's own unlock, on the wrist. That's accepted because Refuse only takes authority
+  away, as Halt all does. One already
+  answered or lapsed says so, with no second call to KIFF.
+- **Halt and Halt all** are the app's and Siri's (`HaltAll`): tafs cloud's request with the
+  session, no signature and no Face ID. Resuming stays on the phone, behind Face ID.
+- **The wrist shows the phone's result:** "Refused" or "Halted" appears only once KIFF or tafs
+  cloud has answered. If it didn't go, it says why, in the phone's words.
+- **Coach** comes next.
 
 ## What the watch keeps
 

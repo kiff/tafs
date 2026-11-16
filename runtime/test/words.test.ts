@@ -42,6 +42,7 @@ const ARGS: Record<string, unknown[][]> = {
   ],
   counted_line: [[{ sent: 5, held: 1, refused: 2, failed: 1, unknown: 1 }], [{ sent: 0, held: 0, refused: 2, failed: 0, unknown: 0 }]],
   removal_goes: [[["Qonto"]], [["Qonto", "Gmail"]]],
+  brief_by: [[{ hm: "12:00" }], [{ hm: "12:00", day: "Fri" }]],
   removal_stays: [["Stripe", ["Chargebacks"]], ["Stripe", ["Chargebacks", "Refunds"]]],
 };
 

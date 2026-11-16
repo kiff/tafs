@@ -6,6 +6,7 @@ import SwiftUI
 @main
 struct TafsWatchApp: App {
     @StateObject private var needsYou = NeedsYouModel(phone: PhoneLink.shared)
+    @StateObject private var tafs = TafsModel(phone: PhoneLink.shared)
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -14,13 +15,26 @@ struct TafsWatchApp: App {
 
     var body: some Scene {
         WindowGroup {
-            NeedsYouScreen(model: needsYou)
+            // Needs you first: it's why the wrist is looked at.
+            TabView {
+                NeedsYouScreen(model: needsYou)
+                TafsScreen(model: tafs)
+            }
+            .tabViewStyle(.verticalPage)
         }
         .onChange(of: scenePhase) { _, phase in
             // In memory only: what was read goes once the app leaves the screen, and is read
             // again when it's back.
-            if phase == .background { needsYou.leave() }
-            if phase == .active { Task { await needsYou.load() } }
+            if phase == .background {
+                needsYou.leave()
+                tafs.leave()
+            }
+            if phase == .active {
+                Task {
+                    await needsYou.load()
+                    await tafs.load()
+                }
+            }
         }
     }
 }
