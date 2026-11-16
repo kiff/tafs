@@ -2,7 +2,7 @@ name: Merge by itself
 
 # A pull request that needs no judgment merges by itself (docs/maintaining.md,
 # "Merging by itself"): green, approved on its latest commit by a listed
-# reviewer other than its author, and touching only one app's own paths
+# reviewer other than its author and by every reviewer it names, and touching only one app's own paths
 # (.github/automerge.json). Everything else waits for a maintainer, as before.
 #
 # The rule is scripts/automerge.py, with its tests. This workflow only runs it:
