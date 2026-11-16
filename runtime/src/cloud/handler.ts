@@ -8762,11 +8762,15 @@ export const NOTE_LEASE_MS = 2 * 60_000;
 
 /**
  * The key a run's note is acted on under: the run and its state, read back from kiff/agents. An ended run's status;
- * a paused run's status and the calls it waits on, so a second pause on another card or call is its own.
+ * a paused run's status, its resume count and the calls it waits on, so a second pause on another card or call, or
+ * after another resume, is its own.
  */
-export function noteClaim(tenant: string, ref: string, r: Pick<Run, "id" | "status" | "requirements">): string {
-  const waits = r.status === "PAUSED" ? (r.requirements ?? []).filter((q) => !q.answered).map((q) => q.call_id).sort().join(",") : "";
-  return `${tenant}#run-note#${ref}#${r.id}#${r.status}${waits ? `#${waits}` : ""}`;
+export function noteClaim(tenant: string, ref: string, r: Pick<Run, "id" | "status" | "requirements" | "resumes">): string {
+  if (r.status !== "PAUSED") return `${tenant}#run-note#${ref}#${r.id}#${r.status}`;
+  // A pause is its open calls, and which resume of the run it is: a run kiff/agents resumed after a crash may pause with
+  // no open call, and each such retry is its own note, while a duplicate of one reads the same count.
+  const waits = (r.requirements ?? []).filter((q) => !q.answered).map((q) => q.call_id).sort().join(",");
+  return `${tenant}#run-note#${ref}#${r.id}#PAUSED#r${r.resumes ?? 0}${waits ? `#${waits}` : ""}`;
 }
 
 /** What a run's note says, once: Coach told at work, or a note kept for the person's chat, the phones, and the task forgotten once it ended. */

@@ -881,7 +881,10 @@ describe("a run's note acts at most once (kiff/agents sends it at least once)", 
     const run = { id: "run_1", status: "PAUSED" as const, requirements: [
       { call_id: "c2", tool: "t", input: {}, operation: "o", expires: "" }, { call_id: "c1", tool: "t", input: {}, operation: "o", expires: "" },
       { call_id: "c0", tool: "t", input: {}, operation: "o", expires: "", answered: "2026-10-16T12:00:00Z" }] };
-    expect(noteClaim("t_acme", "ref1", run)).toBe("t_acme#run-note#ref1#run_1#PAUSED#c1,c2");
+    expect(noteClaim("t_acme", "ref1", run)).toBe("t_acme#run-note#ref1#run_1#PAUSED#r0#c1,c2");
+    // A run resumed after a crash may pause with no open call: each resume is its own note, the same one again isn't.
+    expect(noteClaim("t_acme", "ref1", { id: "run_1", status: "PAUSED", resumes: 1 })).toBe("t_acme#run-note#ref1#run_1#PAUSED#r1");
+    expect(noteClaim("t_acme", "ref1", { id: "run_1", status: "PAUSED", resumes: 2 })).not.toBe(noteClaim("t_acme", "ref1", { id: "run_1", status: "PAUSED", resumes: 1 }));
     expect(noteClaim("t_acme", "ref1", { id: "run_1", status: "COMPLETED", requirements: run.requirements })).toBe("t_acme#run-note#ref1#run_1#COMPLETED");
   });
 });

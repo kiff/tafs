@@ -654,7 +654,7 @@ When a run Coach handed a taf pauses or ends, kiff/agents tells tafs cloud
 trust the note, and Coach hears it in its run at work, or at its next turn. kiff/agents
 sends a note at least once, so tafs cloud acts on each at most once: before it tells Coach, keeps
 the chat's line or notifies the phones, it claims the run's state as read back (an ended run by its
-status, a paused one by the calls it waits on, `noteClaim`). The same note again, or two at once, is
+status, a paused one by its resume count and the calls it waits on, `noteClaim`). The same note again, or two at once, is
 answered `taken: true` and does nothing more. A pause on another call is told again. The claim is a
 two-minute lease while the note is told (`NOTE_LEASE_MS`, shorter than kiff/agents' first retry),
 then a mark kept as long as the task. A telling that fails releases the lease, and one killed midway
