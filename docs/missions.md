@@ -81,12 +81,22 @@ Later at `POST /v1/brief/decisions/{id}/later` ([api.md](api.md)).
 - **What it's built from**, read as Home reads it: the calls KIFF holds on the tafs the person may see (Approve or Refuse,
   as equals: KIFF gives no why), the steps their runs handed their owner (with KIFF's expiry as the deadline), and their
   connections that need signing in again (blocked, so urgent). The credits line is the balance's, as Settings says it. Coach's proposals and case lines come next.
-- **Alerts**: each carries `brief_kind` (`brief` or `urgent`; not `kind`, which FCM's data uses already), so Android puts
-  it on the Briefs or the Urgent channel. At each brief's time, the phones of the people who may answer get "Your 08:00
-  brief is ready." in their own language, and nothing of what's in it; the zone is the one the account's last brief read
-  was in, kept for this. It's off until `TAFS_BRIEF_PUSH=on`, as the apps' brief tab ships. A held call's alert, which
-  comes at once, is `urgent`, with `decision: hold:<id>`. Moving the held calls that aren't urgent out of the at-once
-  alerts and into the brief is the owner's call, not made here.
+- **Alerts**: each carries `brief_kind` (`brief` or `urgent`; not `kind`, which FCM's data uses already). On Android
+  today an urgent one goes on the Needs you channel and the brief's on the quiet one; channels named Briefs and Urgent
+  are an app follow-up. At each brief's time, the phones of the people who may answer get "Your 08:00 brief is ready."
+  in their own language, and nothing of what's in it. It's off until `TAFS_BRIEF_PUSH=on`, as the apps' brief tab ships.
+  - The zone is the one the account's **last** brief read was in, kept for this: on an account whose people sit in two
+    zones, the push follows whoever read last, as the brief itself does. KIFF's account zone, once the sweep can read
+    it, settles that.
+  - It's claimed before it's sent, once per account and brief: if every phone's send fails (APNs or FCM down at that
+    minute), that brief's push isn't tried again. A passive "ready" alert can live with that; the brief is still there.
+  - A held call's alert, which comes at once, is `urgent`, with `decision: hold:<id>`.
+- **Held calls that can wait** (`TAFS_BRIEF_HELD_WAIT=on`, off until the owner turns it on): a held call goes in the
+  brief instead of on the phones at once when the account's brief times are known, it expires at or after the next
+  brief, and KIFF's alert doesn't say it's urgent, money going out today or "ask me at once" (`hold.urgent`,
+  `hold.money_today`, `hold.ask_at_once`). Anything else alerts at once, as today: no readable expiry, an account whose
+  brief was never read, or KIFF's word. Its answer still reaches the phones. KIFF's alert carries no call's arguments, so
+  "money out today" is only known when KIFF says it; until it does, turn the switch on knowing that.
 
 - **Urgent** is tafs cloud's rule, never a model's: a deadline before the next brief, money going out today, a halt, a
   blocked connection, or "ask me at once".

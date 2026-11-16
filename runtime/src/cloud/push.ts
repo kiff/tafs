@@ -2,6 +2,7 @@ import { LANGUAGES, type Lang, wordsIn } from "./words/index.js";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { apsFor, levelOf } from "./levels.js";
 import { parseKinds, type AlertKind, type AlertKinds } from "./alert-preferences.js";
+import { briefTimes } from "./brief.js";
 
 /**
  * Alerts that reach a closed app: KIFF tells tafs cloud when a call is held
@@ -185,7 +186,8 @@ interface AlertBody {
   outcome?: unknown;
   action?: unknown;
   entity_id?: unknown;
-  hold?: { id?: unknown; expires_at?: unknown } | null;
+  /** `urgent`, `money_today`, `ask_at_once`: KIFF's word that a held call can't wait for the brief, when it says so. */
+  hold?: { id?: unknown; expires_at?: unknown; urgent?: unknown; money_today?: unknown; ask_at_once?: unknown } | null;
   /** On a pack request's alerts: the request, who asked (their sign-in subject) and an admin's note. */
   request?: { id?: unknown; kind?: unknown; pack?: unknown; status?: unknown; asked_by?: unknown; note?: unknown } | null;
   /** On a credits warning: the share ("80" or "100") and, at 100, why the tafs wait. */
@@ -218,6 +220,26 @@ export interface AlertDeps {
   now: Date;
   /** The taf a KIFF agent runs, by its agent id: its id and name, for a signed-out connection's alert. */
   tafOf?(tenant: string, agent: string): Promise<{ id: string; name: string } | undefined>;
+  /**
+   * Whether a held call's alert waits for the account's brief instead of coming at once (heldWaitsForBrief, behind
+   * `TAFS_BRIEF_HELD_WAIT`). Left out, or false, the alert comes at once, as always.
+   */
+  heldWaits?(tenant: string, hold: AlertBody["hold"]): Promise<boolean>;
+}
+
+/**
+ * Whether a held call can wait for the next brief by tafs cloud's rules (design v2.1 §7: only the truly urgent alert at
+ * once), from what KIFF's alert carries. It waits only when all of these hold: the account's brief times are known
+ * (`zone`), the call expires at or after the next brief, and KIFF doesn't say it's urgent, money going out today or
+ * "ask me at once". A call with no readable expiry, or on an account whose brief was never read, alerts at once: never a
+ * held call missed on a guess. A halted taf or a blocked connection holds no call, so those rules don't arise here.
+ */
+export function heldWaitsForBrief(hold: AlertBody["hold"], zone: string | undefined, now: Date): boolean {
+  if (!hold || !zone) return false;
+  if (hold.urgent === true || hold.money_today === true || hold.ask_at_once === true) return false;
+  const expires = typeof hold.expires_at === "string" ? Date.parse(hold.expires_at) : Number.NaN;
+  if (Number.isNaN(expires)) return false;
+  return expires >= briefTimes(now, zone).next_at.getTime();
 }
 
 /**
@@ -293,6 +315,9 @@ export async function receiveAlert(signature: string, raw: string, deps: AlertDe
   } else {
     const holdID = typeof body.hold?.id === "string" ? body.hold.id : "";
     if (!eventID || !holdID) throw new PushError(400, "an alert names its event and its held call");
+    // A held call that can wait goes in the account's brief, not on the phones now (`TAFS_BRIEF_HELD_WAIT`). Its answer
+    // (a background push) still goes, so a phone that showed it earlier drops it.
+    if (outcome === HELD && deps.heldWaits && await deps.heldWaits(tenant, body.hold).catch(() => false)) return { waiting_for_brief: holdID };
     build = (lang) => (outcome === HELD ? heldNotification(body, holdID, deps.now, lang) : answeredNotification(holdID));
     // The people KIFF names, when it names them: it decides who may answer, and
     // leaves out whoever asked. Otherwise, as before, the phones of people who may answer.

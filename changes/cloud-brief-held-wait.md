@@ -1,0 +1,1 @@
+- **tafs cloud: held calls that can wait go in Your brief** (off until the owner turns on `TAFS_BRIEF_HELD_WAIT`): a held call that expires after the next brief, and that KIFF doesn't mark urgent, money out today or "ask me at once", goes in the brief instead of alerting at once ([missions.md](../docs/missions.md#your-brief)).
