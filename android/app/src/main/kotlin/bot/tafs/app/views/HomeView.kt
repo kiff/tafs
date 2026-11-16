@@ -94,6 +94,8 @@ fun HomeView(
   onExplore: (() -> Unit)? = null,
   /** "Say it in your own words", first on Home: Coach, empty, to build the taf with the person. */
   onOwnWords: (() -> Unit)? = null,
+  /** A mission's Log, from its row on the list filtered to its label (Missions v2.1); null where there's none to open. */
+  onMissionLog: ((bot.tafs.app.kiff.HomeLabelMission) -> Unit)? = null,
   modifier: Modifier = Modifier,
 ) {
   // Pulling to refresh plays the sample's next round; signed in, it reads KIFF again.
@@ -178,6 +180,10 @@ fun HomeView(
             // cloud sends its words: it leaves them out while Home already lists every job.
             if (onExplore != null) HomeWords.exploreRow(state.gallery)?.let { ExploreRow(it, onExplore) }
           }
+        }
+        // Filtered to a mission's label: the mission's row, with its goal and Log (Missions v2.1, mockup §3).
+        label?.mission?.takeIf { it.id.isNotBlank() && onMissionLog != null }?.let { mission ->
+          item { MissionRow(mission) { onMissionLog?.invoke(mission) } }
         }
         state.held.firstOrNull()?.let { first ->
           state.taf(first.tafId)?.let { taf -> item { NeedsYouStrip(first, taf, onNeedsYou) } }

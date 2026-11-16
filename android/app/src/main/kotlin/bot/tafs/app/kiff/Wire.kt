@@ -150,7 +150,16 @@ data class HomeLabel(
   val count: Int = 0,
   val waiting: Int = 0,
   val headline: HomeHeadline? = null,
+  /**
+   * The mission this label stands for, when it is one (Missions v2.1, docs/missions.md): its id for the log, its name, and the
+   * person's own words for its goal. A label that isn't a mission's leaves it out.
+   */
+  val mission: HomeLabelMission? = null,
 )
+
+/** A mission, as its label carries it on Home: what the filtered list's mission row shows, and the id its log is read by. */
+@Serializable
+data class HomeLabelMission(val id: String = "", val name: String = "", val goal: String? = null)
 
 /** The label row's own words from tafs cloud: "All". */
 @Serializable

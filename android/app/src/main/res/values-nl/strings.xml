@@ -1313,6 +1313,9 @@
         <item quantity="one">%2$s · %1$s stand</item>
         <item quantity="other">%2$s · %1$s standen</item>
     </plurals>
+    <string name="mission_log">Logboek</string>
+    <string name="mission_read_only">Alleen lezen · nieuwste eerst</string>
+    <string name="mission_removed">verwijderd</string>
     <string name="needs_you_a_taf">Een taf</string>
     <string name="needs_you_allow_from_now_on">Voortaan toestaan</string>
     <string name="needs_you_allow_not_offered">Deze wijziging is niet wat werd aangeboden.</string>

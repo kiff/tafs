@@ -525,6 +525,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   var overviewOpen by rememberSaveable { mutableStateOf(false) }
   // The calendar of the tafs' scheduled work (kiff/tafs#534): from the Overview on a tablet, from the home's header on a phone.
   var calendarOpen by rememberSaveable { mutableStateOf(false) }
+  // A mission's log, open over the tafs list (Missions v2.1): its label's mission, found again by id.
+  var missionOpen by rememberSaveable { mutableStateOf<String?>(null) }
   // Another account (signed in from the sample, or switched): the Tafs tab opens on its list, nothing of the last one left open.
   val whose = accountShown(state)
   var shownAccount by rememberSaveable { mutableStateOf(whose) }
@@ -642,6 +644,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
   // Back closes the open taf before it leaves the app.
   BackHandler(enabled = tab == Tab.Tafs && openTaf != null && !coachOpen) { openTaf = null }
   BackHandler(enabled = tab == Tab.Tafs && calendarOpen && openTaf == null && !coachOpen) { calendarOpen = false }
+  BackHandler(enabled = tab == Tab.Tafs && missionOpen != null && openTaf == null && !coachOpen) { missionOpen = null }
   BackHandler(enabled = tab == Tab.Tafs && trialTaf != null) { trialTaf = null }
   BackHandler(enabled = tab == Tab.Tafs && coachOpen) { coachOpen = false }
   // Whether Coach is on screen, for the badge: its own chat waiting on the person isn't counted while it's open.
@@ -705,6 +708,7 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
               onNewTaf = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryBrowsing = false; galleryOpen = true }) else null,
               onExplore = if (state.mode == Mode.kiff && state.gallery != null) ({ galleryBrowsing = true; galleryOpen = true }) else null,
               onOwnWords = if (state.mode == Mode.kiff) model::openCoachEmpty else null,
+              onMissionLog = if (state.mode == Mode.kiff) ({ m -> coachOpen = false; trialTaf = null; missionOpen = m.id }) else null,
               onFinishSetup = if (state.mode == Mode.kiff) ({ f -> scope.launch { model.finishSetup(f) } }) else null,
               onDiscardSetup = if (state.mode == Mode.kiff) ({ agent -> scope.launch { model.discardSetup(agent) } }) else null,
             )
@@ -734,6 +738,9 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
           val open: (@Composable () -> Unit)? = when {
             trying != null -> ({ TrialScreen(trying, state, versionActions, actions, onBack = { trialTaf = null }) })
             calendarOpen && openTaf == null && !coachOpen && !wide -> ({ calendar(true) })
+            missionOpen != null && openTaf == null && !coachOpen -> state.labels.firstNotNullOfOrNull { it.mission?.takeIf { m -> m.id == missionOpen } }?.let { m ->
+              ({ bot.tafs.app.views.MissionLogView(m, load = model::missionLog, onBack = { missionOpen = null }) })
+            }
             openTaf != null || coachOpen || coachVisibility.currentState || !coachVisibility.isIdle -> ({
               Box(Modifier.fillMaxSize()) {
                 openTaf?.let { detail(it) }

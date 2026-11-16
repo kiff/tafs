@@ -1358,6 +1358,11 @@ object Words {
     val why: String get() = Res.s(R.string.knob_why)
     fun withStops(count: Int, name: String): String = Res.p(R.plurals.knob_with_stops, count, Res.number(count), name)
   }
+  object Mission {
+    val log: String get() = Res.s(R.string.mission_log)
+    val readOnly: String get() = Res.s(R.string.mission_read_only)
+    val removed: String get() = Res.s(R.string.mission_removed)
+  }
   object NeedsYou {
     val aTaf: String get() = Res.s(R.string.needs_you_a_taf)
     val allowFromNowOn: String get() = Res.s(R.string.needs_you_allow_from_now_on)
