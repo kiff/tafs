@@ -6744,6 +6744,14 @@ final class AppModel: ObservableObject {
         grants.filter { ($0.entry == app.entry || $0.id == app.grant) && !["disconnected", "failed"].contains($0.status) }
     }
 
+    /// Whether an app's row in Connect apps opens its connections: when tafs cloud says it's connected,
+    /// or whenever this device holds one of its connections, such as a sign-in whose card was declined
+    /// (`listed`), so Disconnect is in reach. `connected` keeps its meaning: a `listed` grant gives no taf
+    /// access, and the app still offers Connect (kiff/kiff-cloud#1677, the PM's 12:44).
+    static func opensConnections(_ app: TafsCloud.ConnectApps.App, in grants: [PlanqueClient.Grant]) -> Bool {
+        app.connected || !connections(of: app, in: grants).isEmpty
+    }
+
     /// An app's connections for one taf, under its name (the owner's Connect apps ask): the
     /// heading, and its connections in planque's order.
     struct ConnectionGroup: Identifiable, Equatable {

@@ -43,6 +43,25 @@ final class ConnectionSheetTests: XCTestCase {
         XCTAssertEqual(AppModel.connections(of: try app(stripe), in: grants).map(\.id), ["g1", "g2", "g5"])
     }
 
+    /// A sign-in whose card was declined leaves a `listed` grant: signed in, not approved, no taf access.
+    /// tafs cloud doesn't count it as connected, and that meaning stays. Its app's row still opens its
+    /// connections, where the grant says Disconnect, as on Android (tafs#1219). An app this device holds no
+    /// connection to doesn't open (kiff/kiff-cloud#1677, the owner's Google Sheets).
+    func testADeclinedSignInsAppOpensToItsDisconnect() throws {
+        let sheets = "connector:composio:googlesheets"
+        let declined = try JSONDecoder().decode(TafsCloud.ConnectApps.App.self, from: Data(#"{"entry":"\#(sheets)","vendor":"Google Sheets","title":"Google Sheets","how":"oauth","state":"available"}"#.utf8))
+        let listed = try g("g1", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"row-counter","tools":[]}"#, entry: sheets, status: "listed")
+        XCTAssertFalse(declined.connected, "a listed grant gives no access: the app isn't connected")
+        XCTAssertFalse(listed.connected)
+        XCTAssertEqual(AppModel.connections(of: declined, in: [listed]).map(\.id), ["g1"])
+        XCTAssertTrue(AppModel.opensConnections(declined, in: [listed]), "its row opens, so Disconnect is in reach")
+        XCTAssertEqual(ConnectionFixWords.endWord(listed), Words.Connect.disconnectButton)
+        XCTAssertFalse(AppModel.opensConnections(declined, in: []), "no connection held: a compact Connect only")
+        let ended = try g("g1", #"{"server":"https://backend.composio.dev/api/v3.1","agent":"row-counter","tools":[]}"#, entry: sheets, status: "disconnected")
+        XCTAssertFalse(AppModel.opensConnections(declined, in: [ended]), "a disconnected grant is gone")
+        XCTAssertTrue(AppModel.opensConnections(try app(sheets), in: []), "a connected app always opens")
+    }
+
     /// An app's connections grouped by taf (the owner's Connect apps ask): a taf with one
     /// needing attention first, the rest by name, each taf's connections together in planque's
     /// order; those with no taf the app can name apart, to show last as "Other connections".
