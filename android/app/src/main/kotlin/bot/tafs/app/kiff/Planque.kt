@@ -210,6 +210,13 @@ data class Grant(
   val cancellable: Boolean get() = waitingSignIn || pendingRequest
 
   /**
+   * planque draws this connection's row (its health and its actions): the list shows it as sent, and a tap opens its detail,
+   * where its actions are. Without health words, the row is the app's own, with Cancel or Disconnect (as iOS reads it), so a
+   * request nobody answered is never a row with nothing to end it.
+   */
+  val rowFromPlanque: Boolean get() = !health?.words.isNullOrEmpty() && actions != null
+
+  /**
    * A managed provider's connection, connected: planque can't sign it in again in place (it can't tell which account a new
    * sign-in at the provider is), so it's disconnected and connected again instead.
    */
@@ -247,7 +254,8 @@ data class Approved(
 
 /** planque's answer to an enrolment: the account, and the phone key's fingerprint as planque shows it in its record. */
 @Serializable
-data class Enrolment(val tenant: String = "", val device: String = "")
+/** planque's enrolment. [kept]: asked with no connector key, the account's enrolled one still stands, so nothing was written. */
+data class Enrolment(val tenant: String = "", val device: String = "", val kept: Boolean = false)
 
 /** What a finished vendor sign-in hands back: `tafs://planque/signed-in?tenant&grant&confirm`. */
 data class SignedIn(val tenant: String, val grant: String, val code: String)
@@ -282,10 +290,13 @@ class PlanqueClient(
 
   /**
    * Hands planque the KIFF connector key it keeps to register tools. Signed with [deviceId], any of the owner's devices may. The
-   * device's key goes too, for a planque from before that, which enrols one phone by its key.
+   * device's key goes too, for a planque from before that, which enrols one phone by its key. With no [connectorKey], it only
+   * asks whether the enrolled key still stands: planque answers [Enrolment.kept], or refuses (`needs_key`) and writes nothing.
    */
-  suspend fun enrol(deviceKey: ByteArray, connectorKey: String): Enrolment =
-    decode(raw("POST", "enrolment", body("device_key" to java.util.Base64.getEncoder().encodeToString(deviceKey), "connector_key" to connectorKey)))
+  suspend fun enrol(deviceKey: ByteArray, connectorKey: String? = null): Enrolment {
+    val key = "device_key" to java.util.Base64.getEncoder().encodeToString(deviceKey)
+    return decode(raw("POST", "enrolment", if (connectorKey == null) body(key) else body(key, "connector_key" to connectorKey)))
+  }
 
   /**
    * What a grant's digest covers, as its `digest_v` says (docs/android-app.md › Connect apps). Without one, the request alone (v1).
@@ -315,12 +326,26 @@ class PlanqueClient(
     val grants = KiffClient.json.decodeFromString<Grants>(String(data)).grants
     // The grant as planque sent it, numbers as written, so the digest is planque's.
     val raws = runCatching { KiffClient.json.parseToJsonElement(String(data)).jsonObject["grants"]?.jsonArray }.getOrNull().orEmpty()
-    return grants.map { grant ->
-      val raw = raws.firstOrNull { (it as? JsonObject)?.get("id")?.jsonPrimitive?.content == grant.id } as? JsonObject
+    val paired = pairedRaws(grants.map { it.id }, raws)
+    return grants.mapIndexed { i, grant ->
+      val raw = paired[i]
       val covered = raw?.let(::digestCovers)
       val matches = covered != null && runCatching { sha256Hex(Jcs.canonical(covered).toByteArray()) == grant.digest }.getOrDefault(false)
+      if (!matches) logMismatch(grant.digest, grant.status, raw?.get("digest_v"), if (raw == null) unpairedCause(grants.map { it.id }, raws, i) else mismatchCause(raw, covered))
       grant.copy(digestMatches = matches)
     }
+  }
+
+  /** The digests whose mismatch was logged: each one once, however often the grants are read. Never logged themselves. */
+  private val mismatchesLogged = mutableSetOf<String>()
+
+  /**
+   * One logcat line for a grant whose request doesn't hash to its digest: the phone shows "doesn't match" and signs nothing, and
+   * the line says so where diagnostics are read. Its status and `digest_v` only: no id, digest or words.
+   */
+  private fun logMismatch(digest: String, status: String, digestV: JsonElement?, cause: String) {
+    if (!synchronized(mismatchesLogged) { mismatchesLogged.add(digest) }) return
+    runCatching { android.util.Log.w(LOG_TAG, mismatchLine(status, digestV, cause)) }
   }
 
   /** One read of the account's grants, forwarded by tafs cloud; it grants and signs nothing there. */
@@ -566,6 +591,51 @@ class PlanqueClient(
   companion object {
     /** The header an API-key connection's key goes to planque in, once. */
     const val VENDOR_KEY = "Planque-Vendor-Key"
+
+    /** Logcat's tag for planque's reads. */
+    const val LOG_TAG = "TafsPlanque"
+
+    /**
+     * The mismatch's logcat line: which way it failed ([mismatchCause]), the grant's status and its `digest_v` (1 when it has
+     * none), nothing that names it.
+     */
+    fun mismatchLine(status: String, digestV: JsonElement?, cause: String): String {
+      val v = (digestV as? JsonPrimitive)?.content?.takeIf { it.isNotEmpty() && it.all(Char::isLetterOrDigit) }?.take(8) ?: if (digestV == null) "1" else "unknown"
+      val st = status.takeIf { it.isNotEmpty() && it.all { c -> c.isLetter() || c == '_' } }?.take(32) ?: "unknown"
+      return "grant digest doesn't match: $cause; status $st, digest_v $v"
+    }
+
+    /**
+     * Each decoded grant's entry as planque sent it, by its place in the list, never looked up by id: with two entries under one
+     * id, a lookup would check the second grant (shown as its own request) against the first's bytes, and its Approve would sign
+     * the first's digest. An entry whose id isn't its grant's, an id that repeats, or a list whose length differs gives none, so
+     * nothing there matches and nothing is signed.
+     */
+    fun pairedRaws(ids: List<String>, raws: List<JsonElement>): List<JsonObject?> {
+      if (raws.size != ids.size) return ids.map { null }
+      val repeated = ids.groupingBy { it }.eachCount().filterValues { it > 1 }.keys
+      return ids.mapIndexed { i, id ->
+        (raws[i] as? JsonObject)?.takeIf { id !in repeated && (it["id"] as? JsonPrimitive)?.content == id }
+      }
+    }
+
+    /** Why a grant has no entry to check ([pairedRaws]), in a few fixed words. */
+    fun unpairedCause(ids: List<String>, raws: List<JsonElement>, i: Int): String = when {
+      raws.size != ids.size -> "a list of another length"
+      ids.count { it == ids[i] } > 1 -> "an id repeated in the list"
+      else -> "not in the list as sent"
+    }
+
+    /**
+     * Why a grant's digest didn't match, in a few fixed words: planque's list didn't hold the grant as sent, or no request;
+     * a version or a v2 grant's words or language the phone can't cover; or what it covers hashed to another digest.
+     */
+    fun mismatchCause(raw: JsonObject?, covered: JsonElement?): String = when {
+      raw == null -> "not in the list as sent"
+      raw["request"] == null -> "no request"
+      covered == null -> if ((raw["digest_v"] as? JsonPrimitive)?.content == "2") "v2 without its words or language" else "a digest_v the app doesn't know"
+      else -> "the hash differs"
+    }
 
     /**
      * What the phone signs inside an approval window (planque's `device.MessageWindow`): [message]'s lines under

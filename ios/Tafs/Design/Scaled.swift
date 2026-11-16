@@ -107,8 +107,10 @@ extension View {
 /// Whether the owner turned on Reduce Motion (kiff/tafs#210).
 @MainActor
 enum Motion {
+    /// Reduce Motion, or `-reduceMotion YES` for a screenshot or a UI test: nothing animates on its own, so the
+    /// app goes idle between steps and a test never waits a minute on an endless animation (`Screenshots.reduceMotion`).
     static var reduced: Bool {
-        UIAccessibility.isReduceMotionEnabled
+        UIAccessibility.isReduceMotionEnabled || Screenshots.reduceMotion
     }
 }
 

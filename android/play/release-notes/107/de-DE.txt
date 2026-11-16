@@ -1,0 +1,1 @@
+- Neu in Geräte: „Passkey auf diesem Telefon hinzufügen“. Mit einem Passkey auf diesem Telefon kann ein Computer darüber genehmigen: Der Computer zeigt einen QR-Code, und du scannst ihn mit diesem Telefon. Das Hinzufügen braucht deinen Fingerabdruck und ist nur Inhabern und Admins des Kontos möglich.

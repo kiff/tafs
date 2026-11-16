@@ -245,12 +245,19 @@ struct OverviewView: View {
                         .accessibilityIdentifier("overview.calendar")
                     }
                 }
-                if !model.held.isEmpty { needsYou }
+                // Everything Needs you counts, not only the held calls: with no taf, a Coach chat or a step
+                // still waits (the owner's iPad: "Needs you · 3" beside "No tafs yet").
+                if model.needsYouCount > 0 { needsYou }
+                // The labels' chips (Missions draft), filtering the table below.
+                if !model.listLabels.isEmpty { LabelChips(labels: model.listLabels, selected: model.listLabel, all: model.labelsAllWords) { model.filterList($0) } }
                 tafsTable
                 Text(Words.Home.Overview.eachLineOpens).scaledFont(12).foregroundColor(Theme.dim)
             }
             .padding(24)
             .frame(maxWidth: 980, alignment: .leading)
+            // The column stretches to the pane's width, so the cream reaches both edges (the owner's iPad:
+            // white strips beside a 980-point column), as the recipes' pane does.
+            .frame(maxWidth: .infinity)
         }
         .screenBackground()
         .task {
@@ -281,8 +288,28 @@ struct OverviewView: View {
                     .buttonStyle(.drivablePlain)
                 }
             }
+            // What else waits (Coach's chats, steps, "Did this happen?", Card units): tafs cloud's count,
+            // in its words, opening Needs you, where each is answered.
+            if Self.showsRest(count: model.needsYouCount, held: model.held.count) {
+                Button { open(.needsYou) } label: {
+                    HStack(spacing: 10) {
+                        Circle().fill(Theme.amber).frame(width: 8, height: 8)
+                        Text(model.needsYouWords).scaledFont(14, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
+                        Spacer()
+                        Image(systemName: "chevron.right").scaledFont(12, weight: .semibold).foregroundColor(Theme.soft)
+                    }
+                    .padding(12)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Theme.raised))
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.drivablePlain)
+                .accessibilityIdentifier("overview.needsYou")
+            }
         }
     }
+
+    /// Needs you counts more than the held calls listed here: a line opens the rest.
+    static func showsRest(count: Int, held: Int) -> Bool { count > held }
 
     /// One grid, so each heading sits over its column (the 870 test: the headings drifted
     /// apart from the rows, and only one showed over its column).
@@ -294,7 +321,7 @@ struct OverviewView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            ForEach(model.listedTafs) { taf in
+            ForEach(model.filtered(model.listedTafs)) { taf in
                 Divider().gridCellUnsizedAxes(.horizontal)
                 row(taf)
             }
@@ -313,6 +340,7 @@ struct OverviewView: View {
                         Text(taf.name).scaledFont(15, weight: .semibold).foregroundColor(Theme.ink).oneLineUnlessLarge()
                         let who = usedBy(taf)
                         if !who.isEmpty { Text(who).scaledFont(12).foregroundColor(Theme.dim).oneLineUnlessLarge() }
+                        TafLabels(taf: taf)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -32,6 +32,30 @@ final class ReceiptCheckTests: XCTestCase {
         XCTAssertNil(RawJSON.value(of: "missing", in: Data(Self.signed.utf8)))
     }
 
+    /// A receipt with a key written twice isn't one KIFF wrote: the chain hashed (the first copy) could
+    /// differ from the one another reader shows (often the last). Refused, at its top and in its attestation.
+    func testAReceiptThatRepeatsAKeyIsRefused() {
+        XCTAssertEqual(RawJSON.keys(of: Data(#"{"a":1,"b":{"a":2},"c":[{"a":3}]}"#.utf8)), ["a", "b", "c"], "an object's own keys only")
+        XCTAssertTrue(RawJSON.keysAreUnique(in: Data(Self.signed.utf8)))
+        let shown = #","causal_chain":[{"sequence":1,"kind":"decision","message":"refund €5"}]}"#
+        let twice = String(Self.signed.dropLast()) + shown
+        XCTAssertEqual(ReceiptCheck.check(Data(twice.utf8), signer: Self.testSigner), .failed("The receipt couldn't be read."))
+        let signer = Self.signed.replacingOccurrences(of: #""algorithm":"secp256k1+keccak256","#,
+                                                      with: #""algorithm":"secp256k1+keccak256","wallet_address":"0x0","#)
+        XCTAssertNotEqual(signer, Self.signed)
+        XCTAssertEqual(ReceiptCheck.check(Data(signer.utf8), signer: Self.testSigner), .failed("The receipt couldn't be read."))
+        XCTAssertEqual(ReceiptCheck.check(Data(Self.signed.utf8), signer: Self.testSigner), .verified(signer: Self.testSigner), "one copy each still checks out")
+    }
+
+    /// "What happened" is drawn only for a receipt this device checked as KIFF's, and only when it matches the line.
+    func testWhatHappenedIsDrawnOnlyForACheckedReceiptThatMatchesTheLine() {
+        XCTAssertTrue(ReceiptView.showsWhatHappened(.verified(signer: Self.testSigner), mismatch: false))
+        XCTAssertFalse(ReceiptView.showsWhatHappened(.verified(signer: Self.testSigner), mismatch: true), "KIFF's, but another line's")
+        XCTAssertFalse(ReceiptView.showsWhatHappened(.failed("It isn't signed by KIFF."), mismatch: false))
+        XCTAssertFalse(ReceiptView.showsWhatHappened(.notSignedYet, mismatch: false))
+        XCTAssertFalse(ReceiptView.showsWhatHappened(nil, mismatch: false), "still checking")
+    }
+
     func testAChangedByteInTheChainFails() {
         let changed = Self.signed.replacingOccurrences(of: #""data_hash":"bb""#, with: #""data_hash":"bc""#)
         XCTAssertNotEqual(changed, Self.signed)
@@ -55,5 +79,21 @@ final class ReceiptCheckTests: XCTestCase {
         XCTAssertNil(ReceiptCheck.recoverAddress(digest: Data(repeating: 1, count: 32), signature: Data(repeating: 0xFF, count: 65)))
         let short = Self.signed.replacing(#/"signature":"[0-9a-f]+"/#, with: #""signature":"00""#)
         XCTAssertEqual(ReceiptCheck.check(Data(short.utf8), signer: Self.testSigner), .failed("The signature is malformed."))
+    }
+
+    /// The line's amount and the receipt's signed amount match as numbers in the same unit: "150.00" and
+    /// "150" are one amount, never a false mismatch (win-dev's find on Windows #56, the iPad's too).
+    func testAmountsMatchAsNumbersInTheSameUnit() {
+        typealias Amount = KIFFClient.ActivityCall.Amount
+        XCTAssertTrue(Amount(value: "150.00", unit: "EUR").same(as: Amount(value: "150", unit: "EUR")))
+        XCTAssertTrue(Amount(value: "3.5", unit: "eur").same(as: Amount(value: "3.50", unit: "EUR")), "the unit's case doesn't matter")
+        XCTAssertFalse(Amount(value: "150.01", unit: "EUR").same(as: Amount(value: "150", unit: "EUR")))
+        XCTAssertFalse(Amount(value: "150", unit: "EUR").same(as: Amount(value: "150", unit: "USD")), "another unit")
+        XCTAssertFalse(Amount(value: "150", unit: "EUR").same(as: Amount(value: "150", unit: nil)))
+        XCTAssertFalse(Amount(value: "150abc", unit: "EUR").same(as: Amount(value: "150", unit: "EUR")), "not a plain number: as written")
+        XCTAssertTrue(Amount(value: "n/a", unit: nil).same(as: Amount(value: "n/a", unit: nil)))
+        let source = (try? String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/Views/RecordView.swift"), encoding: .utf8)) ?? ""
+        XCTAssertTrue(source.contains("return !line.same(as: signed)"), "the receipt sheet uses it")
     }
 }

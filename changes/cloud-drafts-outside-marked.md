@@ -1,0 +1,1 @@
+- **tafs cloud:** a draft still carries the AI disclosure by default, and a draft that says `outside: false` in its profile (a draft invoice) no longer does ([coach.md](../docs/coach.md)).

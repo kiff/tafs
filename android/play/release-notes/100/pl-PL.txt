@@ -1,0 +1,1 @@
+- Dodaj urządzenie: w sekcji Konto, Urządzenia zeskanuj kod komputera, sprawdź, czy pokazuje te same 6 znaków, i zatwierdź odciskiem palca.

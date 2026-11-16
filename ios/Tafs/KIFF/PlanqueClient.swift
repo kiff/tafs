@@ -23,6 +23,9 @@ final class PlanqueClient {
         /// Signed in an approval window that has ended (kiff/tafs#494): nothing was done; a new
         /// window, then the same call again.
         case windowRequired
+        /// Asked with no connector key, planque holds none that still stands (`409 needs_key`): the one answer
+        /// on which the phone mints a key.
+        case needsKey
 
         var errorDescription: String? {
             switch self {
@@ -36,6 +39,7 @@ final class PlanqueClient {
             case .server(let status, _, let words): return words ?? PlainError.words(status: status)
             // The app's own words: planque's `error` is for the log, never the person.
             case .windowRequired: return Words.Error.approvalWindowEnded
+            case .needsKey: return PlainError.words(status: 409)
             }
         }
     }
@@ -57,6 +61,9 @@ final class PlanqueClient {
     /// takes one runs, so its calls go as a tap (`v2`, with the window's id); planque asks KIFF
     /// whether it is open. Nil signs as before.
     var window: String?
+    /// planque's `code` on the last refusal, or nil when it sent none: a 409 an older planque sent with no code at
+    /// enrolment is another device's; today's planque names each of its own (`signature_replayed`, …).
+    private(set) var lastRefusalCode: String?
     private let session: URLSession
 
     init(baseURL: URL = URL(string: "https://planque.kiff.dev")!, session: URLSession = .shared) {
@@ -88,13 +95,19 @@ final class PlanqueClient {
         let tenant: String
         /// The phone key's fingerprint, as planque shows it in its record.
         let device: String
+        /// The connector key planque holds still stands, so it kept it and took no new one.
+        var kept: Bool?
     }
 
     /// Hands planque the KIFF connector key it keeps to register tools. Signed with
     /// `deviceID`, any of the owner's devices may (kiff/planque#10). The device's key goes
-    /// too, for a planque from before that, which enrols one phone by its key.
-    func enrol(deviceKey: Data, connectorKey: String) async throws -> Enrolment {
-        try await send("POST", "enrolment", body: ["device_key": deviceKey.base64EncodedString(), "connector_key": connectorKey])
+    /// too, for a planque from before that, which enrols one phone by its key. With no
+    /// `connectorKey`, it only asks whether the enrolled key still stands: planque answers
+    /// `kept`, or refuses (`needs_key`) and keeps nothing.
+    func enrol(deviceKey: Data, connectorKey: String?) async throws -> Enrolment {
+        var body = ["device_key": deviceKey.base64EncodedString()]
+        if let connectorKey { body["connector_key"] = connectorKey }
+        return try await send("POST", "enrolment", body: body)
     }
 
     // MARK: Grants
@@ -334,8 +347,15 @@ final class PlanqueClient {
         var grants = try KIFFClient.decoder.decode(Response.self, from: data).grants
         // The request as planque sent it, numbers as written, so the digest is planque's.
         let raws = (try? JCS.parse(data))?["grants"]?.array ?? []
+        // Each grant with planque's entry at its own position, never looked up by id: two entries with one id
+        // (one request, then another carrying the first's digest) would mark the second as matching from the
+        // first's bytes, and approving it would sign what wasn't shown. An id that repeats, or a list of
+        // another length, pairs nothing: no grant matches, and nothing is signed.
+        let ids = grants.map(\.id)
+        let paired = raws.count == grants.count && Set(ids).count == ids.count
         for i in grants.indices {
-            guard let raw = raws.first(where: { $0["id"]?.string == grants[i].id }), let request = raw["request"] else { continue }
+            guard paired, raws[i]["id"]?.string == grants[i].id, let request = raws[i]["request"] else { continue }
+            let raw = raws[i]
             grants[i].profile = request["profile"]
             guard let covered = Self.digestCovers(raw), let canonical = try? JCS.canonical(covered) else { continue }
             let hash = SHA256.hash(data: canonical).map { String(format: "%02x", $0) }.joined()
@@ -665,6 +685,8 @@ final class PlanqueClient {
                 if window == held { window = nil }
                 throw PlanqueError.windowRequired
             }
+            lastRefusalCode = Self.refusalCode(data)
+            if status == 409, lastRefusalCode == "needs_key" { throw PlanqueError.needsKey }
             let said = Self.refusal(data)
             throw PlanqueError.server(status: status, message: said.error ?? Words.Error.connectionAnswered(status: "\(status)"), words: said.words)
         }

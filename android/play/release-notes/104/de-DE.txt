@@ -1,0 +1,1 @@
+- Auf einem Telefon, das nicht genehmigen kann, bietet der Card-Tab kein Widerrufen mehr an. Er sagt: „Um diese Card zu widerrufen, nutze ein Gerät, das genehmigen kann.“

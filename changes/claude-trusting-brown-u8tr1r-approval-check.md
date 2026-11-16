@@ -1,0 +1,1 @@
+- **tafs cloud: `POST /v1/connect/grants/{grant}/check` runs Approve's checks on a Card draft with nothing signed,** so the e2e measures what an owner's app goes through: Approve's answer with a reason code, or ok. A Card draft with no Card at all is answered `failed: …`, so Coach drafts one, rather than the card reading it again (docs/api.md, docs/coach.md).

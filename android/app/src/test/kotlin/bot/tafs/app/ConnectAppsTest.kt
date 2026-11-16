@@ -47,10 +47,10 @@ class ConnectAppsTest {
     val m = model()
     // planque's grant comes back as its view, an object.
     transport.answer("POST /v1/connect/apps/notion@1", 200, """{"grant":{"id":"g7","status":"pending"}}""")
-    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("notion@1", "Notion", "Notion"))
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("notion@1", "Notion", "Notion"), m.state.value.connectableTafs.single().id)
     val sent = transport.requestsTo("POST /v1/connect/apps/notion@1").single()
     assertEquals("Bearer at_1", sent.headers["Authorization"])
-    assertEquals("for the only taf this person manages, by its tafs cloud id", """{"taf":"taf_1"}""", String(sent.body!!))
+    assertEquals("for the taf the person picked, by its tafs cloud id", """{"taf":"taf_1"}""", String(sent.body!!))
     assertEquals("g7", m.state.value.listApproval)
     assertNull(m.state.value.startingApp)
     m.closeListApproval()
@@ -60,12 +60,69 @@ class ConnectAppsTest {
   @Test fun aVendorThatTakesAKeyOpensItsApprovalToTakeTheKeyThere() = runTest {
     val m = model()
     transport.answer("POST /v1/connect/apps/holded", 200, """{"grant":"g8","needs_key":true}""")
-    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("holded", "Holded", "Holded", how = "key"))
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("holded", "Holded", "Holded", how = "key"), m.state.value.connectableTafs.single().id)
     assertEquals("g8", m.state.value.listApproval)
     assertTrue("the key is typed on the sheet", m.state.value.listApprovalNeedsKey)
     assertNull(m.state.value.connectAppsError)
     m.closeListApproval()
     assertFalse(m.state.value.listApprovalNeedsKey)
+  }
+
+  @Test fun aConnectForNoNamedTafStartsNothingEvenWithOneTaf() = runTest {
+    val m = model()
+    assertEquals(1, m.state.value.connectableTafs.size)
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("notion@1", "Notion", "Notion"))
+    assertTrue("never the only taf, guessed", transport.requests.none { it.method == "POST" && it.url.contains("/connect/apps") })
+    assertNull(m.state.value.listApproval)
+  }
+
+  @Test fun connectAsksWhichTafEvenWithOne() {
+    assertEquals("one taf is still asked, never taken", bot.tafs.app.views.ConnectFor.Ask, bot.tafs.app.views.connectFor(null, listOf("a")))
+    assertEquals(bot.tafs.app.views.ConnectFor.Ask, bot.tafs.app.views.connectFor(null, listOf("a", "b")))
+    assertEquals("opened from a taf: that one", bot.tafs.app.views.ConnectFor.Taf("b"), bot.tafs.app.views.connectFor("b", listOf("a", "b")))
+    assertEquals(bot.tafs.app.views.ConnectFor.NoTaf, bot.tafs.app.views.connectFor(null, emptyList()))
+  }
+
+  /** tafs cloud's `needed_by` and `misplaced` are read as sent; a tafs cloud before them sends neither. */
+  @Test fun neededByAndMisplacedAreReadAsSent() {
+    val page = bot.tafs.app.kiff.KiffClient.json.decodeFromString<bot.tafs.app.kiff.ConnectApps>(
+      """{"apps":[{"entry":"stripe@3","vendor":"Stripe","title":"Stripe","state":"connected","needed_by":[{"taf":"taf_2","name":"Refunds"}],""" +
+        """"misplaced":[{"grant":"g9","taf":"taf_1","name":"Unanswered emails"}]},{"entry":"notion@1","vendor":"Notion","title":"Notion"}],"by_key":true}""",
+    )
+    val (stripe, notion) = page.apps
+    assertEquals(listOf("taf_2"), stripe.neededBy?.map { it.taf })
+    assertEquals(bot.tafs.app.kiff.ConnectApps.Misplaced("g9", "taf_1", "Unanswered emails"), stripe.misplaced.single())
+    assertNull("no needed_by: every taf the person manages is asked", notion.neededBy)
+    assertTrue(notion.misplaced.isEmpty())
+  }
+
+  /** "Which taf?" lists only the tafs tafs cloud says need the app, matched by tafs cloud id; none is Ask Coach; still asked with one. */
+  @Test fun whichTafListsOnlyTheTafsThatNeedTheApp() {
+    fun taf(id: String, cloud: String?) = bot.tafs.app.model.Taf(id = id, name = id, job = "custom", tools = emptyList(), colorIndex = 0,
+      card = bot.tafs.app.model.Card(rules = emptyList(), issuedBy = "you"), cloudId = cloud)
+    val mine = listOf(taf("emails", "taf_1"), taf("refunds", "taf_2"))
+    fun app(needed: List<String>?) = bot.tafs.app.kiff.ConnectApps.App("stripe@3", "Stripe", "Stripe",
+      neededBy = needed?.map { bot.tafs.app.kiff.ConnectApps.UsedBy(it, it) })
+    assertEquals(listOf("refunds"), bot.tafs.app.views.tafsFor(app(listOf("taf_2")), mine).map { it.id })
+    assertEquals("one taf is still asked, never taken", bot.tafs.app.views.ConnectFor.Ask,
+      bot.tafs.app.views.connectFor(null, bot.tafs.app.views.tafsFor(app(listOf("taf_2")), mine).map { it.id }))
+    assertEquals("none needs it: Ask Coach", bot.tafs.app.views.ConnectFor.NoTaf,
+      bot.tafs.app.views.connectFor(null, bot.tafs.app.views.tafsFor(app(emptyList()), mine).map { it.id }))
+    assertEquals("a tafs cloud before needed_by: all of them", mine, bot.tafs.app.views.tafsFor(app(null), mine))
+    assertTrue("a taf another person manages isn't offered", bot.tafs.app.views.tafsFor(app(listOf("taf_9")), mine).isEmpty())
+  }
+
+  /** The POST sends this phone's signed grants read, so tafs cloud decides `needed_by` as the list did; not_needed says tafs cloud's words. */
+  @Test fun connectSendsTheProofAndNotNeededSaysTafsCloudsWords() = runTest {
+    val m = model()
+    transport.answer("POST /v1/connect/apps/stripe@3", 409, """{"error":"Refunds doesn't use this app: ask Coach to set it up","code":"not_needed"}""")
+    m.startConnectApp(bot.tafs.app.kiff.ConnectApps.App("stripe@3", "Stripe", "Stripe"), m.state.value.connectableTafs.single().id)
+    val sent = transport.requestsTo("POST /v1/connect/apps/stripe@3").single()
+    assertEquals("""{"taf":"taf_1"}""", String(sent.body!!))
+    assertEquals("the same proof as the list's read", transport.requestsTo(apps).lastOrNull()?.headers?.get("Planque-Device-Signature")?.substringAfter("d="),
+      sent.headers["Planque-Device-Signature"]?.substringAfter("d="))
+    assertNull(m.state.value.listApproval)
+    assertTrue(m.state.value.connectAppsError!!.contains("Refunds doesn't use this app: ask Coach to set it up"))
   }
 
   @Test fun signingInAgainOpensTheGrantItHasWithNoNewOne() = runTest {

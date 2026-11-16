@@ -1,0 +1,1 @@
+- **tafs cloud: a run reports as left what a note stopped, too.** Every call a run can make is still made before it reports; what KIFF held or refused, what one of the taf's notes said not to do, and what it couldn't do are what it reports as left.

@@ -31,7 +31,11 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [reliability.md](reliability.md) | Reliable work, being built: accepted work kept, crashes recovered, nothing paid twice, results delivered |
 | [api.md](api.md) | tafs cloud's HTTP API, every route |
 | [ios-app.md](ios-app.md) | The app's code: its model, screens, services, launch arguments and tests |
+| [mac-app.md](mac-app.md) | The Mac app (macOS 13 and later): the iPhone and iPad app built with Mac Catalyst, what differs from the iPad, its tests, and what isn't done yet |
+| [watch-app.md](watch-app.md) | The Apple Watch companion (watchOS 10 and later): what it does in v1, how it reaches tafs cloud and KIFF through the iPhone, and where its code is |
+| [computer-passkeys.md](computer-passkeys.md) | How a computer approves with a passkey: a Mac with Touch ID, Windows Hello, and a USB security key or the phone for a Mac without Touch ID and Linux; what a passkey approval carries |
 | [android-app.md](android-app.md) | The Android app's code: building and testing it, its packages, signing, releases |
+| [watch-wear.md](watch-wear.md) | The Wear OS watch (Samsung Galaxy Watch, Pixel Watch): a companion to the Android app that asks the phone, holds no keys, and what it may and may not do |
 | [data.md](data.md) | Where every piece of data lives, for how long, and who deletes it |
 | [kiff-decides.md](kiff-decides.md) | How KIFF decides every taf action, with the first held calls on a phone |
 | [screenshots.md](screenshots.md) | The apps' screenshots, iPhone, iPad and Android, light and dark, and where each set comes from |

@@ -1,0 +1,8 @@
+{"apps":[
+ {"entry":"connector:composio:gmail","vendor":"Gmail","name":"Gmail","subtitle":"Mail: reads, and drafts replies","how":"oauth","method":"sign_in","state":"connected","connected":true,"line":"Sign in · Connected · Used by Refunds","whose":"Yours","used_by":["Refunds"]},
+ {"entry":"stripe@3","vendor":"Stripe","name":"Stripe","subtitle":"Payments: refunds and charges","how":"key","method":"key","state":"connected","connected":true,"line":"Key · Connected · Used by Refunds and Chargebacks","whose":"Yours","used_by":["Refunds","Chargebacks"]},
+ {"entry":"connector:composio:googlesheets","vendor":"Google Sheets","name":"Google Sheets","subtitle":"Spreadsheets: rows read and written","how":"oauth","method":"sign_in","state":"available","line":"Sign in"},
+ {"entry":"connector:composio:slack","vendor":"Slack","name":"Slack","subtitle":"Messages to your team's channels","how":"oauth","method":"sign_in","state":"available","line":"Sign in"},
+ {"entry":"qonto@1","vendor":"Qonto","name":"Qonto","subtitle":"Invoicing: reads, and invoice drafts from quotes","how":"key","method":"key","state":"available","line":"Key"},
+ {"entry":"connector:composio:hubspot","vendor":"HubSpot","name":"HubSpot","subtitle":"Contacts and deals","how":"oauth","method":"sign_in","state":"available","line":"Sign in"}
+],"by_key":true}

@@ -1,0 +1,2 @@
+- "Voor welk taf is dit?" toont alleen de tafs die de app gebruiken. Een app die geen van je tafs gebruikt, biedt Coach vragen.
+- Een koppeling voor een taf dat de app niet gebruikt, zegt dat, en kun je vanaf de rij beëindigen.

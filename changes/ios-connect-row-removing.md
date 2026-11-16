@@ -1,0 +1,1 @@
+- **iPhone and iPad: Connect apps says "Removing access…" on an app's row while its connection is being removed.** The row said "Connected" until the removal was done; now it says so from Face ID until planque answered and the list was read again, as Android does (docs/ios-app.md).

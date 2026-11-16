@@ -1,0 +1,1 @@
+- **Coach redrafts at once when tafs cloud refuses a draft it can mend.** A draft answered "Draft it again" was never shown to the owner: Coach does what the answer says and shows only the new draft's approval, never asking the owner to approve the refused one (`draft-the-card@27`, docs/coach.md).

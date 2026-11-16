@@ -98,6 +98,7 @@
   "taf.revoke": "Widerrufen",
   "taf.revoke_and_stop": "Widerrufen und stoppen",
   "taf.revoke_body": "Keine neue Aktion geht durch. Was schon erledigt ist, bleibt erledigt.",
+  "taf.revoke_needs_approver": "Um diese Card zu widerrufen, nutze ein Gerät, das genehmigen kann.",
   "taf.revoke_title": "{taf|possessive} Card widerrufen?",
   "taf.run_not_started": "Der Lauf ist nicht gestartet. {why}",
   "taf.run_now": "Jetzt ausführen",

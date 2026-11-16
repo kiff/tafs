@@ -3,6 +3,7 @@ import type { Knob } from "./knob.js";
 import type { Rule } from "./home.js";
 import { amountWords, type ActivityCall, activityMatches } from "./activity.js";
 import { vendorName } from "./steps.js";
+import { type Lang, plural, wordsIn } from "./words/index.js";
 import { type Fetch } from "./kiff.js";
 
 export interface GrantView {
@@ -21,11 +22,12 @@ export interface GrantView {
 }
 
 /** One line on who holds a connection's sign-in, for the apps to draw as it comes; none when planque doesn't say. */
-export function custodyWords(custody: GrantView["custody"]): string | undefined {
+export function custodyWords(custody: GrantView["custody"], lang: Lang = "en"): string | undefined {
+  const w = wordsIn(lang);
   switch (custody) {
     // In the owner's words: who keeps it (a third party, said plainly), never an internal service ("the connection service").
-    case "provider": return "Your sign-in is kept by our sign-in partner; the taf never sees it.";
-    case "planque": return "Your sign-in is kept sealed by tafs; the taf never sees it.";
+    case "provider": return w.setup_custody_provider;
+    case "planque": return w.setup_custody_planque;
     default: return undefined;
   }
 }
@@ -46,14 +48,14 @@ export function accountWords(g: Pick<GrantView, "account_name" | "mode_words">):
  * A browser connection's own sign-in (kiff/planque#86, step 4): the owner signs in to a site themselves, in planque's live
  * view, which the apps open as it comes. Offered on a connected browser grant only; the apps show these words and keep none.
  */
-export const SITE_SIGN_IN = {
-  title: "Sign in to a site",
-  words: "You sign in yourself, in a live view of the taf's browser. What you type goes to the site, never to the taf. Tap Done when you're in.",
-} as const;
+export function siteSignIn(lang: Lang = "en"): { title: string; words: string } {
+  const w = wordsIn(lang);
+  return { title: w.setup_site_sign_in_title, words: w.setup_site_sign_in_words };
+}
 
 /** The phone signs this read; tafs cloud forwards the proof unchanged and signs nothing. */
 export async function setupGrants(base: string, tenant: string, proof: string, net: Fetch = fetch): Promise<GrantView[]> {
-  if (!proof || proof.length > 4096) throw new Error("Connect this phone to read its connected apps");
+  if (!proof || proof.length > 4096) throw new Error("Connect this device to read its connected apps");
   const res = await net(`${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/grants`, {
     headers: { accept: "application/json", "Planque-Device-Signature": proof },
   });
@@ -64,13 +66,13 @@ export async function setupGrants(base: string, tenant: string, proof: string, n
 }
 
 /** App names are resolved here. Server ids never become labels on either phone. */
-export function appDisplayName(grant: GrantView): string {
+export function appDisplayName(grant: GrantView, lang: Lang = "en"): string {
   const vendor = grant.vendor ?? "";
   if (/[A-Z]/.test(vendor) && !/[-_]mcp(?:[-_]|$)/i.test(vendor)) return vendor;
   const fromHost = vendorName(grant.request.server);
   if (fromHost) return fromHost;
   const name = vendor.replace(/(?:[-_ ]mcp(?:[-_ ]server)?|[-_ ]server)$/i, "").replace(/[_-]+/g, " ").trim();
-  return name ? name.replace(/\b\p{L}/gu, (c) => c.toUpperCase()) : "Connected app";
+  return name ? name.replace(/\b\p{L}/gu, (c) => c.toUpperCase()) : wordsIn(lang).setup_connected_app;
 }
 
 /** Counts cover the whole seven-day interval, or explicitly say it could not be read in full. */
@@ -91,13 +93,16 @@ export async function appCalls(token: string, agent: string, now: Date, net: Fet
   return { calls, complete: false };
 }
 
-function limitsOf(rules: Rule[]): string[] {
+/** Each rule's limits as whole lines in the person's language; its window words come with the rule (summary, by lang). */
+function limitsOf(rules: Rule[], lang: Lang): string[] {
+  const w = wordsIn(lang);
   return rules.flatMap((r) => {
-    if (r.count_per_window === 0) return [r.outside === "hold" ? "Needs your approval for every call" : "Not allowed by this Card"];
-    const money = (m: NonNullable<Rule["per_action"]>) => amountWords({ value: String(m.minor / 10 ** m.scale), unit: m.unit });
-    return [r.per_action ? `${money(r.per_action)} per action` : undefined,
+    if (r.count_per_window === 0) return [r.outside === "hold" ? w.setup_every_call_asks : w.setup_not_allowed];
+    const money = (m: NonNullable<Rule["per_action"]>) => amountWords({ value: String(m.minor / 10 ** m.scale), unit: m.unit }) ?? "";
+    return [r.per_action ? w.setup_per_action(money(r.per_action)) : undefined,
+      // An amount then its window ("€50.00 a day"), in every language: the window's words are the language's.
       r.per_window ? `${money(r.per_window)} ${r.window_words.each}` : undefined,
-      r.count_per_window !== null ? `${r.count_per_window} calls ${r.window_words.each}` : undefined].filter((s): s is string => Boolean(s));
+      r.count_per_window !== null ? w.setup_calls_window(r.count_per_window, plural(lang, r.count_per_window), r.window_words.each) : undefined].filter((s): s is string => Boolean(s));
   });
 }
 
@@ -136,9 +141,11 @@ function repeats(words: string, label: string): boolean {
 }
 
 export function setupView(input: { agent: string; grants: GrantView[]; knob: Knob; rules: Rule[];
-  notes: Array<{ content: string }>; versions: VersionState; calls: ActivityCall[]; now: Date; running?: string; statsComplete: boolean }): SetupView {
+  notes: Array<{ content: string }>; versions: VersionState; calls: ActivityCall[]; now: Date; running?: string; statsComplete: boolean; lang?: Lang }): SetupView {
+  const lang = input.lang ?? "en";
+  const w = wordsIn(lang);
   const grants = input.grants.filter((g) => g.request.agent === input.agent && (["connected", "listed", "signed_in", "needs_reconnect"].includes(g.status) || (g.status === "pending" && g.signed_in === true)));
-  const names = new Map(grants.map((g) => [g.id, appDisplayName(g)]));
+  const names = new Map(grants.map((g) => [g.id, appDisplayName(g, lang)]));
   const owners = new Map<string, string>();
   for (const g of grants) for (const t of ["connected", "needs_reconnect"].includes(g.status) ? g.request.tools ?? [] : []) if (!t.setup_reads) owners.set(t.name || t.tool, g.id);
   const steps = input.knob.what.filter((s) => s.id !== "what_ask").map((s) => {
@@ -151,36 +158,37 @@ export function setupView(input: { agent: string; grants: GrantView[]; knob: Kno
     const actions = (["connected", "needs_reconnect"].includes(g.status) ? g.request.tools ?? [] : []).filter((t) => !t.setup_reads).map((t) => {
       const name = t.name || t.tool;
       const used = input.knob.what.filter((s) => s.tool === name);
-      const limits = limitsOf(input.rules.filter((r) => r.action === name));
-      return { name, title: t.title || input.rules.find((r) => r.action === name)?.label || "App action",
-        limits: limits.length ? limits : ["See its Card"], steps: used.map((s) => s.step),
+      const limits = limitsOf(input.rules.filter((r) => r.action === name), lang);
+      return { name, title: t.title || input.rules.find((r) => r.action === name)?.label || w.setup_app_action,
+        limits: limits.length ? limits : [w.setup_see_card], steps: used.map((s) => s.step),
         // With no workflow, no action says anything: the app's own Workflow line does (kiff/tafs#469 item 2).
-        step_words: !steps.length ? "" : used.length ? used.map((s) => `Step ${s.step}`).join(" · ") : "Not used by the current workflow" };
+        step_words: !steps.length ? "" : used.length ? used.map((s) => w.setup_step(s.step)).join(" · ") : w.setup_not_used };
     });
     const tools = new Set(actions.map((a) => a.name));
     const ownCalls = calls.filter((c) => tools.has(c.action_name));
     const done = ownCalls.filter((c) => activityMatches(c, "done")).length;
     const held = ownCalls.filter((c) => activityMatches(c, "held")).length;
     return { id: g.id, name: names.get(g.id)!, status: g.status,
-      status_words: g.status_words || ({ connected: "Connected", listed: "Signed in · choose its actions", signed_in: "Signed in", needs_reconnect: "Sign in again", pending: "Signed in · actions waiting for approval" } as Record<string, string>)[g.status] || "Read its connection",
-      reconnect: g.status === "needs_reconnect", action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: "Ask Coach to set its workflow" } : {}),
-      ...(custodyWords(g.custody) ? { custody_words: custodyWords(g.custody) } : {}), ...(g.on_demand === true ? { on_demand: true } : {}),
+      status_words: g.status_words || ({ connected: w.setup_status_connected, listed: w.setup_status_listed, signed_in: w.setup_status_signed_in, needs_reconnect: w.setup_status_needs_reconnect, pending: w.setup_status_pending } as Record<string, string>)[g.status] || w.setup_status_unknown,
+      reconnect: g.status === "needs_reconnect", action_count: actions.length, ...(!steps.length && actions.length ? { workflow_words: w.setup_workflow_none } : {}),
+      ...(custodyWords(g.custody, lang) ? { custody_words: custodyWords(g.custody, lang) } : {}), ...(g.on_demand === true ? { on_demand: true } : {}),
       ...(accountWords(g) ? { account_words: accountWords(g) } : {}),
-      ...(g.provider === "browser" && g.status === "connected" ? { site_sign_in: { ...SITE_SIGN_IN } } : {}),
-      action_words: actions.length ? `${actions.length} action${actions.length === 1 ? "" : "s"}` : "Choose actions",
+      ...(g.provider === "browser" && g.status === "connected" ? { site_sign_in: siteSignIn(lang) } : {}),
+      action_words: actions.length ? w.setup_actions(actions.length, plural(lang, actions.length)) : w.setup_choose_actions,
       actions, steps: steps.filter((s) => s.grant === g.id).map((s) => s.number), workflow_steps: steps.filter((s) => s.grant === g.id),
       running: Boolean(input.running && tools.has(input.running)),
       stats: { calls: ownCalls.length, done, held, complete: input.statsComplete,
         activity_query: new URLSearchParams({ tools: [...tools].join(","), from: new Date(cutoff).toISOString() }).toString(),
-        words: input.statsComplete ? `${ownCalls.length} calls · ${done} done · ${held} held in the last 7 days` : "The last 7 days could not be read in full; try again" } };
+        words: input.statsComplete ? w.setup_stats(ownCalls.length, plural(lang, ownCalls.length), done, held) : w.setup_stats_incomplete } };
   });
   const live = input.versions.versions.find((v) => v.live)?.n;
   const earlier = input.versions.versions.filter((v) => live !== undefined && v.n < live).length;
   const apps = steps.map((s) => s.app).filter((s): s is string => Boolean(s));
   const order = apps.filter((app, i) => app !== apps[i - 1]);
   const running = steps.find((s) => s.running)?.number;
-  return { connections, workflow: { title: "Workflow", summary: steps.length ? `${steps.length} step${steps.length === 1 ? "" : "s"}${order.length ? ` · ${order.join(" → ")}` : ""}` : "Ask Coach to set its workflow",
+  // Every line in the app's language (docs/languages.md): the app shows them as they come.
+  return { connections, workflow: { title: w.setup_workflow_title, summary: steps.length ? `${w.setup_workflow_steps(steps.length, plural(lang, steps.length))}${order.length ? ` · ${order.join(" → ")}` : ""}` : w.setup_workflow_none,
     steps, ...(running ? { running_step: running } : {}) },
-    memory: { count: input.notes.length, title: `${input.notes.length} note${input.notes.length === 1 ? "" : "s"}`, ...(input.notes[0] ? { latest: input.notes[0].content } : {}) },
-    versions: { title: "Changes to how it runs", summary: live !== undefined ? `v${live} live · ${earlier} earlier` : "Runs its original definition", ...(live !== undefined ? { live } : {}), earlier } };
+    memory: { count: input.notes.length, title: w.setup_notes(input.notes.length, plural(lang, input.notes.length)), ...(input.notes[0] ? { latest: input.notes[0].content } : {}) },
+    versions: { title: w.setup_versions_title, summary: live !== undefined ? w.setup_versions_live(live, earlier) : w.setup_versions_original, ...(live !== undefined ? { live } : {}), earlier } };
 }
