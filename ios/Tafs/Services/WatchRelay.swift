@@ -155,8 +155,9 @@ struct KeptWatchReading: WatchReading {
         return outcome
     }
 
-    /// How long the phone waits for Coach's answer, inside the watch's live request.
-    static let coachWait: TimeInterval = 20
+    /// How long the phone waits for Coach's answer, inside the watch's live request: well within what
+    /// the watch waits for a reply, so the watch always hears back; past it, the rest is on the phone.
+    static let coachWait: TimeInterval = 12
 
     /// Coach, as the app's plain send does (`AppModel`'s setup send when the stream can't open):
     /// the words to Coach's current chat, then its thread read until Coach's answer to them is
@@ -193,8 +194,11 @@ struct KeptWatchReading: WatchReading {
     /// Coach's answer to the person's message: Coach's words written after it in that chat, and
     /// whether it shows any card there. Nil while Coach has written nothing yet.
     static func answer(in thread: SetupThread, after sentID: String?, session: String) -> WatchCoachAnswer? {
-        let mine = thread.messages.last { $0.session == session && $0.from == .owner && (sentID == nil || $0.serverID == sentID) }
-        let since = mine?.at ?? .distantPast
+        // Until the person's own message is in the thread, nothing in it can be its answer: an older
+        // answer or card is never taken for this one.
+        guard let mine = thread.messages.last(where: { $0.session == session && $0.from == .owner && (sentID == nil || $0.serverID == sentID) })
+        else { return nil }
+        let since = mine.at
         let words = thread.messages.filter { $0.session == session && $0.from == .taf && $0.at >= since }.map(\.text)
             .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         let cards = thread.components.contains { $0.session == session && $0.firstAt >= since }

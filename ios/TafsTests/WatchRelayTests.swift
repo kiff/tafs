@@ -319,6 +319,37 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertNil(KeptWatchReading.answer(in: SetupThread(), after: "m1", session: "s1"), "nothing written yet")
     }
 
+    func testAnOlderAnswerIsNeverTakenForThisOne() throws {
+        let at = { (s: TimeInterval) in self.now.addingTimeInterval(s) }
+        var thread = SetupThread()
+        // Coach's earlier answer and card, in the same chat; the person's new message isn't in yet.
+        thread.messages = [TafsCloud.ChatMessage(at: at(-60), from: .owner, text: "Connect Stripe", session: "s1", serverID: "m0"),
+                           TafsCloud.ChatMessage(at: at(-55), from: .taf, text: "Approve the connection.", session: "s1")]
+        thread.components = [ShownComponent(firstAt: at(-54), session: "s1", run: "r1",
+                                            component: try SetupTests.component(#"{"type":"approval","id":"connect","waits":"owner","grant":"g_01"}"#))]
+        XCTAssertNil(KeptWatchReading.answer(in: thread, after: "m1", session: "s1"), "not yet: keep waiting")
+        // Then the person's message and Coach's reply to it.
+        thread.messages += [TafsCloud.ChatMessage(at: at(0), from: .owner, text: "Pause Rae", session: "s1", serverID: "m1"),
+                            TafsCloud.ChatMessage(at: at(4), from: .taf, text: "Rae is paused.", session: "s1")]
+        let answer = try XCTUnwrap(KeptWatchReading.answer(in: thread, after: "m1", session: "s1"))
+        XCTAssertEqual(answer, WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false),
+                       "the older card isn't this answer's")
+    }
+
+    func testCoachsWordsOverTwoThousandCharactersAreRefused() async {
+        let reading = Reading(at: now)
+        let long = String(repeating: "a", count: WatchRequest.coachLimit + 1)
+        let refused = await send(WatchRequest(.coach, made: now, text: long), reading: reading)
+        XCTAssertEqual(refused, WatchReply(.refused))
+        XCTAssertTrue(reading.untouched, "nothing sent to Coach")
+        let atLimit = await send(WatchRequest(.coach, made: now, text: String(repeating: "a", count: WatchRequest.coachLimit)), reading: reading)
+        XCTAssertEqual(atLimit.outcome, .ok)
+    }
+
+    func testThePhoneAnswersWellWithinTheWatchsWait() {
+        XCTAssertLessThanOrEqual(KeptWatchReading.coachWait, 15)
+    }
+
     func testALongAnswerIsCutAtAWord() {
         let long = Array(repeating: "refund", count: 80).joined(separator: " ")
         let cut = WatchCoachAnswer.cut(long, more: false, approveOnPhone: false)

@@ -18,6 +18,8 @@ struct WatchRequest: Codable, Equatable, Sendable {
 
     /// How old a request may be when the phone reads it, either way.
     static let maxAge: TimeInterval = 30
+    /// The most Coach's words may be, as on Wear OS: longer is refused before anything is sent.
+    static let coachLimit = 2_000
 
     var kind: Kind
     /// When the watch made it.
@@ -44,7 +46,7 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case .needsYou, .tafs, .haltAll: return true
         case .refuse: return given(hold)
         case .halt: return given(taf)
-        case .coach: return given(text)
+        case .coach: return given(text) && (text ?? "").count <= Self.coachLimit
         }
     }
 }

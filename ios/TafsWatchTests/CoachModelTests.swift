@@ -36,6 +36,15 @@ final class CoachModelTests: XCTestCase {
         XCTAssertEqual(model.state, .writing)
     }
 
+    func testWordsOverTheLimitCantBeSent() async {
+        let phone = Phone(nil)
+        let model = CoachModel(phone: phone, clock: { self.now })
+        model.draft = String(repeating: "a", count: WatchRequest.coachLimit + 1)
+        XCTAssertFalse(model.canSend)
+        await model.send()
+        XCTAssertTrue(phone.asked.isEmpty)
+    }
+
     func testARefusalKeepsTheWordsAndSaysWhy() async {
         let model = CoachModel(phone: Phone(WatchReply(.failed, line: "Before you talk to Coach, allow AI use in tafs on your phone.")), clock: { self.now })
         model.draft = "Pause Rae"

@@ -50,7 +50,8 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   cloud has answered. If it didn't go, it says why, in the phone's words.
 - **Coach** gets text only: the words the person dictated or wrote on the watch, shown there
   before they're sent. The phone sends them to Coach's current chat with the session it keeps,
-  then reads the thread for up to 20 seconds for Coach's answer to them.
+  then reads the thread for up to 12 seconds for Coach's answer to them, so the watch always hears
+  back before it gives up; past that, "The rest is on your phone".
 
 ## Coach
 
@@ -60,6 +61,7 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
 - **Out:** Coach's words, cut at about 300 characters with "The rest is on your phone". If the
   answer shows any card or step, the wrist says "Approve on your phone" and nothing of the card:
   nothing started from the wrist can grant anything.
+- **At most 2,000 characters,** as on Wear OS: longer is refused before anything is sent.
 - **Refused:** without the AI-use consent, "allow AI use in tafs on your phone"; past the
   credits, the app's own words; anything else, "Not sent" and why.
 
@@ -101,5 +103,6 @@ listing changes, made separately.
   set, as the `testflight` job sets it. The `watch` job checks the generated project both ways.
 - **Its App ID and profile** (`bot.tafs.app.watchkitapp`, "tafs watch App Store CI") are made
   by `ios/scripts/asc-profiles.rb` through the App Store Connect API, like the extensions'.
-- **Its icon** is the phone's, one 1024-point image, and its privacy manifest declares no
-  tracking and no data collected on the watch: what it shows is read by the phone.
+- **Its icon** is the phone's, one 1024-point image. Its privacy manifest declares no tracking,
+  and one kind of data collected: the words the person sends Coach from the watch (other user
+  content, linked, for the app's function), which go through the phone to tafs cloud.

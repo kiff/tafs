@@ -23,7 +23,7 @@ final class CoachModel: ObservableObject {
         self.clock = clock
     }
 
-    var canSend: Bool { state != .sending && !words.isEmpty }
+    var canSend: Bool { state != .sending && !words.isEmpty && words.count <= WatchRequest.coachLimit }
     private var words: String { draft.trimmingCharacters(in: .whitespacesAndNewlines) }
 
     /// Sends the words the person sees, through the phone.
