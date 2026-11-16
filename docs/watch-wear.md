@@ -97,6 +97,10 @@ the watch's builds. The phone counts up by one from 1 (docs/android-app.md, Vers
 counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the two never meet. Its `versionName` is its own
 (`0.x` until it's on Play).
 
+**400,000,002 (0.2.0)** carries the all-clear. Its notes are the watch's first in production, since Play shows only the latest
+release's, so they describe the whole watch app, with Wear OS's own word for a tile in each language (Ansicht, carte,
+tarjeta, scheda, mosaico, tegel, karta).
+
 **Releases to Play** (`android.yml`'s `wear-release` job), as the phone's, on their own:
 - **When:** by hand (Run workflow, form `wear`), or on a merge to main that raises the watch's `versionCode` (the `version`
   job compares the phone's and the watch's each on their own), once `test` passed, which runs the watch's tests.
