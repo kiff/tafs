@@ -1,0 +1,1 @@
+- **iPhone and iPad: Terms and Privacy open in the app's language** (de, es, fr, it, nl, pl, pt), and say "(in English)" only when the page is English ([docs/ios-app.md](docs/ios-app.md)).
