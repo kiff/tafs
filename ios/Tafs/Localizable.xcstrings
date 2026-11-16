@@ -121023,6 +121023,59 @@
         }
       }
     },
+    "watch.asking_phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fragt dein Handy…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asking your phone…"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preguntando a tu teléfono…"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demande à votre téléphone…"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiedo al telefono…"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je telefoon vragen…"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pytam telefon…"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A perguntar ao telemóvel…"
+          }
+        }
+      }
+    },
     "watch.coach_needs_consent": {
       "extractionState": "manual",
       "localizations": {
@@ -121129,6 +121182,134 @@
         }
       }
     },
+    "watch.held_calls|few": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ oczekujące wywołania czekają na Ciebie"
+          }
+        }
+      }
+    },
+    "watch.held_calls|many": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ oczekujących wywołań czeka na Ciebie"
+          }
+        }
+      }
+    },
+    "watch.held_calls|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ zurückgehaltener Aufruf braucht dich"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ held call needs you"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ llamada retenida te necesita"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ appel retenu vous attend"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ chiamata trattenuta ti aspetta"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ vastgehouden aanroep wacht op jou"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ oczekujące wywołanie czeka na Ciebie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ chamada retida precisa de si"
+          }
+        }
+      }
+    },
+    "watch.held_calls|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ zurückgehaltene Aufrufe brauchen dich"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ held calls need you"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ llamadas retenidas te necesitan"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ appels retenus vous attendent"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ chiamate trattenute ti aspettano"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ vastgehouden aanroepen wachten op jou"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ oczekującego wywołania czeka na Ciebie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ chamadas retidas precisam de si"
+          }
+        }
+      }
+    },
     "watch.more_on_phone": {
       "extractionState": "manual",
       "localizations": {
@@ -121178,6 +121359,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "O resto está no telemóvel."
+          }
+        }
+      }
+    },
+    "watch.needs_lock": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um mit dieser Uhr abzulehnen oder anzuhalten, richte eine Displaysperre ein und entsperre sie."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To refuse or halt from this watch, set a screen lock on it and unlock it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para rechazar o bloquear desde este reloj, pon un bloqueo de pantalla y desbloquéalo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l'écran et déverrouillez-la."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per rifiutare o bloccare da questo orologio, imposta un blocco schermo e sbloccalo."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te weigeren of stil te zetten."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aby odrzucać lub blokować z tego zegarka, ustaw blokadę ekranu i odblokuj go."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para recusar ou bloquear a partir deste relógio, defina um bloqueio de ecrã e desbloqueie-o."
           }
         }
       }
@@ -121390,6 +121624,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Primeiro, inicie sessão no tafs no telemóvel."
+          }
+        }
+      }
+    },
+    "watch.voice_text_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach bekommt deine Worte als Text, nie deine Stimme."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach gets your words as text, never your voice."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach recibe tus palabras como texto, nunca tu voz."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach reçoit vos mots en texte, jamais votre voix."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach riceve le tue parole come testo, mai la tua voce."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach krijgt je woorden als tekst, nooit je stem."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coach dostaje Twoje słowa jako tekst, nigdy Twój głos."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Coach recebe as suas palavras como texto, nunca a sua voz."
           }
         }
       }

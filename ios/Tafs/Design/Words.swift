@@ -4747,12 +4747,18 @@ enum Words {
         static var approveOnPhone: String { Words.line("watch.approve_on_phone") }
         /// As of {time}
         static func asOf(time: String) -> String { Words.line("watch.as_of", time) }
+        /// Asking your phone…
+        static var askingPhone: String { Words.line("watch.asking_phone") }
         /// Before you talk to Coach, allow AI use in tafs on your phone.
         static var coachNeedsConsent: String { Words.line("watch.coach_needs_consent") }
         /// How many need you, never what or who.
         static var glanceDescription: String { Words.line("watch.glance_description") }
+        /// {count} held calls need you
+        static func heldCalls(count: Int) -> String { Words.count("watch.held_calls", count) }
         /// The rest is on your phone.
         static var moreOnPhone: String { Words.line("watch.more_on_phone") }
+        /// To refuse or halt from this watch, set a screen lock on it and unlock it.
+        static var needsLock: String { Words.line("watch.needs_lock") }
         /// Open on phone
         static var openOnPhone: String { Words.line("watch.open_on_phone") }
         /// Your phone isn't in reach. Bring it closer, then try again.
@@ -4761,6 +4767,8 @@ enum Words {
         static var refused: String { Words.line("watch.refused") }
         /// Sign in to tafs on your phone first.
         static var signInOnPhone: String { Words.line("watch.sign_in_on_phone") }
+        /// Coach gets your words as text, never your voice.
+        static var voiceTextOnly: String { Words.line("watch.voice_text_only") }
     }
     enum Work {
         /// Answer within
