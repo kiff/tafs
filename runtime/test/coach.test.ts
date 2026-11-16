@@ -806,7 +806,8 @@ describe("a run's note acts at most once (kiff/agents sends it at least once)", 
     (w.deps.slots as ReturnType<typeof memorySlots>).taken.add(`present#${T}`);
     const note = { run: task.json.run, agent: RAE, status: "COMPLETED", ref };
     const [a, b] = await Promise.all([w.send("POST", "/v1/runs/ended", note), w.send("POST", "/v1/runs/ended", note)]);
-    expect([a.status, b.status]).toEqual([200, 200]);
+    // One tells it; the other finds it being told and isn't taken (409), so kiff/agents sends it again later, then taken.
+    expect([a.status, b.status].sort()).toEqual([200, 409]);
     expect(w.agents.runs.find((r) => r.id === coachRun.id)!.steering!.filter((x) => x.text.includes(task.json.run))).toHaveLength(1);
     expect(w.pushed).toHaveLength(1);
   });
@@ -865,16 +866,22 @@ describe("a run's note acts at most once (kiff/agents sends it at least once)", 
     const now = new Date("2026-10-16T12:00:00Z").getTime();
     const lines = async () => ((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines ?? []) as unknown[];
     const note = { run: task.json.run, agent: RAE, status: "ERROR", ref };
-    // A handling at work holds its lease: a duplicate meanwhile is taken and does nothing.
+    // A handling at work holds its lease: a duplicate meanwhile does nothing, and isn't taken (409), so kiff/agents keeps
+    // the note owed and sends it again at its next wait, in case that handling dies.
     w.coach.held.set(claim, { value: true, until: now + NOTE_LEASE_MS });
-    expect((await w.send("POST", "/v1/runs/ended", note)).body).toEqual({ taken: true });
+    const during = await w.send("POST", "/v1/runs/ended", note);
+    expect(during.status).toBe(409);
+    expect(during.body).toMatchObject({ taken: false, being_told: true });
     expect(await lines()).toHaveLength(0);
     // That handling died (no throw, no mark): its lease runs out, and the next delivery tells it.
     w.coach.held.set(claim, { value: true, until: now - 1 });
     expect((await w.send("POST", "/v1/runs/ended", note)).body).toEqual({ taken: true });
     expect(await lines()).toHaveLength(1);
-    // Told: the mark is kept as long as the task, so a late duplicate never tells it again.
+    // Told: the mark is kept as long as the task, so a late duplicate is taken (200) and never tells it again.
     expect(w.coach.held.get(claim)).toMatchObject({ value: "told", until: now + TASK_KEPT_MS });
+    // (The ended run's task is forgotten too, so it's answered as a spent ref: a 2xx all the same, which settles it.)
+    expect((await w.send("POST", "/v1/runs/ended", note)).status).toBe(200);
+    expect(await lines()).toHaveLength(1);
   });
 
   it("claims a run's state as read back: an ended run by its status, a paused one by what it waits on", () => {

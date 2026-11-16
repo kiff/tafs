@@ -8741,7 +8741,13 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   // killed between the two (a timeout, a deploy) leaves only the lease, so kiff/agents' next delivery tells it.
   const claim = noteClaim(tenant, note.ref, r);
   const at = deps.now?.() ?? new Date();
-  if (!(await deps.coach.once(claim, new Date(at.getTime() + NOTE_LEASE_MS)))) return { taken: true };
+  if (!(await deps.coach.once(claim, new Date(at.getTime() + NOTE_LEASE_MS)))) {
+    // Told already: taken. Still a lease, another handling at work: not taken yet, so kiff/agents keeps the note owed
+    // and sends it again at its next wait (a 2xx would settle it, and a handling killed inside the lease would leave it
+    // never told).
+    if ((await deps.coach.get(claim).catch(() => undefined)) === "told") return { taken: true };
+    throw new HTTPError(409, "this note is being told now: send it again later", { taken: false, being_told: true });
+  }
   let told: { taken: boolean };
   try {
     told = await tellRunEnded(tenant, key, task, r, ended, at, deps);
