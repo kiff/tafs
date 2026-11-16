@@ -1,0 +1,4 @@
+- Nuevos dibujos en la bienvenida, en una lista de tafs vacía, en «Te necesita» sin nada pendiente, al empezar con Coach y más.
+- Las palabras de un botón principal ocupan dos líneas en vez de cortarse.
+- Un inicio de sesión que detuviste se termina en KIFF, no se guarda.
+- Una vez conectado, «Vamos» es el único camino.

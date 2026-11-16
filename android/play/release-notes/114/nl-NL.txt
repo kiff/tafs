@@ -1,0 +1,4 @@
+- Nieuwe tekeningen bij het welkom, bij een lege tafs-lijst, bij "Wacht op jou" als er niets wacht, bij de start van Coach en meer.
+- De woorden van een hoofdknop krijgen twee regels in plaats van afgekapt te worden.
+- Een aanmelding die je hebt gestopt, wordt bij KIFF beëindigd, niet bewaard.
+- Eenmaal verbonden is "Aan de slag" de enige weg.

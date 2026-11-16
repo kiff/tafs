@@ -1,0 +1,4 @@
+- Novos desenhos nas boas-vindas, numa lista de tafs vazia, em «Precisa de si» sem nada pendente, no arranque do Coach e mais.
+- As palavras de um botão principal ocupam duas linhas em vez de serem cortadas.
+- Uma sessão que interrompeu é terminada no KIFF, não guardada.
+- Depois de ligado, «Vamos lá» é o único caminho.

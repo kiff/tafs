@@ -1,0 +1,4 @@
+- Neue Zeichnungen beim Willkommen, bei einer leeren tafs-Liste, bei „Braucht dich“, wenn nichts wartet, bei Coachs Start und mehr.
+- Die Worte eines Hauptknopfs nehmen zwei Zeilen, statt abgeschnitten zu werden.
+- Eine Anmeldung, die du abgebrochen hast, wird bei KIFF beendet, nicht behalten.
+- Sobald du verbunden bist, führt nur „Los geht's“ weiter.

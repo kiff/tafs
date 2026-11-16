@@ -1,0 +1,4 @@
+- Nowe rysunki na powitaniu, na pustej liście tafs, w „Czeka na Ciebie”, gdy nic nie czeka, na starcie Coacha i nie tylko.
+- Słowa głównego przycisku zajmują dwa wiersze, zamiast być ucięte.
+- Logowanie, które przerwałeś, jest kończone w KIFF, a nie zachowywane.
+- Po połączeniu „Zaczynamy” to jedyna droga dalej.

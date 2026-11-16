@@ -1,0 +1,4 @@
+- De nouveaux dessins à l'accueil, sur une liste de tafs vide, dans « Vous attend » quand rien n'attend, au début de Coach et ailleurs.
+- Les mots d'un bouton principal passent sur deux lignes au lieu d'être coupés.
+- Une connexion que vous avez arrêtée est terminée chez KIFF, pas conservée.
+- Une fois connecté, « C'est parti » est le seul chemin.
