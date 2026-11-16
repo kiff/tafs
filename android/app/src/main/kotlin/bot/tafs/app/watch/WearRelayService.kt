@@ -26,13 +26,18 @@ class WearRelayService : WearableListenerService() {
     if (!path.startsWith(WatchLink.PREFIX)) return null
     val app = application as TafsApplication
     val answer = TaskCompletionSource<ByteArray>()
+    val failed = { WatchLink.encodeReply(bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone)) }
     scope.launch {
       // Only a watch connected to this phone now: the Data Layer names the node it came from, and it must be one of them.
       val connected = runCatching { Wearable.getNodeClient(this@WearRelayService).connectedNodes.await().any { it.id == nodeId } }.getOrDefault(false)
       val reply = if (!connected) bot.tafs.watchlink.WatchReply.Refused(bot.tafs.watchlink.NotAccepted.UNKNOWN_PATH)
-      else runCatching { WatchRelay(model = { app.restoredModel() }).answer(path, request) }
+      else runCatching { WatchRelay(model = { app.restoredModel(onScreen = false) }, floor = floor).answer(path, request) }
         .getOrElse { bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone) }
       answer.trySetResult(WatchLink.encodeReply(reply))
+    }.invokeOnCompletion {
+      // Cancelled before it answered (the service went away, even before the work began): the watch hears Open on phone,
+      // never silence until its own limit.
+      answer.trySetResult(failed())
     }
     return answer.task
   }
@@ -40,5 +45,10 @@ class WearRelayService : WearableListenerService() {
   override fun onDestroy() {
     scope.cancel()
     super.onDestroy()
+  }
+
+  private companion object {
+    /** One for the process, across the service's restarts: the watch's reads of tafs cloud and KIFF are at least 10 s apart. */
+    val floor = RefreshFloor()
   }
 }
