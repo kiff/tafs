@@ -109,7 +109,7 @@ counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the tw
 **The store screenshots** (`WearStoreScreenshots`): the watch's real screen, drawn on the JVM (Robolectric and Roborazzi,
 test-only) in each of the 8 languages, round, 384 × 384 px, the smallest size Play takes for Wear OS. They're filled with the
 phone app's own sample tafs and words (`app/strings/<lang>/sample.json`, `taf.json`) and the watch's own strings, with
-nothing drawn over them. The amount is written as the phone sends it (`Money.formatted`: a whole amount has no cents). Three per language, into `android/play/wear-screenshots/<locale>/`:
+nothing drawn over them, and written as opaque RGB PNGs, since Play takes no alpha (`opaqueForPlay`). The amount is written as the phone sends it (`Money.formatted`: a whole amount has no cents). Three per language, into `android/play/wear-screenshots/<locale>/`:
 - `1-needs-you`: a held refund, with Refuse and Approve on your phone;
 - `2-refused`: what the wrist says once it's refused;
 - `3-halt-all`: Halt all, asked once more.

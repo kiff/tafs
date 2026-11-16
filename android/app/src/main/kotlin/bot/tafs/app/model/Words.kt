@@ -1854,6 +1854,54 @@ object Words {
       val updateBank: String get() = Res.s(R.string.sample_bill_pay_update_bank)
       val updateBankWhy: String get() = Res.s(R.string.sample_bill_pay_update_bank_why)
     }
+    object Brief {
+      object Case {
+        val billsLine: String get() = Res.s(R.string.sample_brief_case_bills_line)
+        val brio: String get() = Res.s(R.string.sample_brief_case_brio)
+        val brioLine: String get() = Res.s(R.string.sample_brief_case_brio_line)
+        val dubois: String get() = Res.s(R.string.sample_brief_case_dubois)
+        val duboisLine: String get() = Res.s(R.string.sample_brief_case_dubois_line)
+        val duboisNext: String get() = Res.s(R.string.sample_brief_case_dubois_next)
+        val fern: String get() = Res.s(R.string.sample_brief_case_fern)
+        val fernLine: String get() = Res.s(R.string.sample_brief_case_fern_line)
+        val support: String get() = Res.s(R.string.sample_brief_case_support)
+        val supportLine: String get() = Res.s(R.string.sample_brief_case_support_line)
+      }
+      val credits: String get() = Res.s(R.string.sample_brief_credits)
+      object Expires {
+        val answer: String get() = Res.s(R.string.sample_brief_expires_answer)
+        val cantWait: String get() = Res.s(R.string.sample_brief_expires_cant_wait)
+        val decline: String get() = Res.s(R.string.sample_brief_expires_decline)
+        val meanwhile: String get() = Res.s(R.string.sample_brief_expires_meanwhile)
+        val question: String get() = Res.s(R.string.sample_brief_expires_question)
+        fun why(taf: String): String = Res.s(R.string.sample_brief_expires_why, taf)
+      }
+      object Label {
+        val clients: String get() = Res.s(R.string.sample_brief_label_clients)
+        val money: String get() = Res.s(R.string.sample_brief_label_money)
+        val support: String get() = Res.s(R.string.sample_brief_label_support)
+      }
+      val later: String get() = Res.s(R.string.sample_brief_later)
+      val moneyValue: String get() = Res.s(R.string.sample_brief_money_value)
+      val nextMove: String get() = Res.s(R.string.sample_brief_next_move)
+      val nextMoveDismiss: String get() = Res.s(R.string.sample_brief_next_move_dismiss)
+      object Pay {
+        val answer: String get() = Res.s(R.string.sample_brief_pay_answer)
+        val deadline: String get() = Res.s(R.string.sample_brief_pay_deadline)
+        val meanwhile: String get() = Res.s(R.string.sample_brief_pay_meanwhile)
+        val note: String get() = Res.s(R.string.sample_brief_pay_note)
+        val question: String get() = Res.s(R.string.sample_brief_pay_question)
+        fun why(taf: String): String = Res.s(R.string.sample_brief_pay_why, taf)
+      }
+      object Remind {
+        val decline: String get() = Res.s(R.string.sample_brief_remind_decline)
+        val meanwhile: String get() = Res.s(R.string.sample_brief_remind_meanwhile)
+        val question: String get() = Res.s(R.string.sample_brief_remind_question)
+        val why: String get() = Res.s(R.string.sample_brief_remind_why)
+      }
+      fun rest(count: Int): String = Res.p(R.plurals.sample_brief_rest, count, Res.number(count))
+      val `when`: String get() = Res.s(R.string.sample_brief_when)
+    }
     object Card {
       val readStripe: String get() = Res.s(R.string.sample_card_read_stripe)
       val refundsStripe: String get() = Res.s(R.string.sample_card_refunds_stripe)
@@ -1874,6 +1922,24 @@ object Words {
     }
     object Chat {
       val question: String get() = Res.s(R.string.sample_chat_question)
+    }
+    object Coach {
+      val agree: String get() = Res.s(R.string.sample_coach_agree)
+      val ask: String get() = Res.s(R.string.sample_coach_ask)
+      val change: String get() = Res.s(R.string.sample_coach_change)
+      val connectFirst: String get() = Res.s(R.string.sample_coach_connect_first)
+      val connected: String get() = Res.s(R.string.sample_coach_connected)
+      val grant: String get() = Res.s(R.string.sample_coach_grant)
+      val planLine: String get() = Res.s(R.string.sample_coach_plan_line)
+      val rules: String get() = Res.s(R.string.sample_coach_rules)
+      val rulesTitle: String get() = Res.s(R.string.sample_coach_rules_title)
+      object Step {
+        val card: String get() = Res.s(R.string.sample_coach_step_card)
+        val connect: String get() = Res.s(R.string.sample_coach_step_connect)
+        val read: String get() = Res.s(R.string.sample_coach_step_read)
+        val rules: String get() = Res.s(R.string.sample_coach_step_rules)
+        val start: String get() = Res.s(R.string.sample_coach_step_start)
+      }
     }
     object Credits {
       val balanceDetail: String get() = Res.s(R.string.sample_credits_balance_detail)

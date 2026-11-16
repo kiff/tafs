@@ -200,7 +200,8 @@ decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read 
 - **A mission's log:** Done's Evidence opens the same `MissionLogView` the tafs list's mission row opens (A mission's log,
   above), by the log id Done carries (`log`) under the mission's name. Ask Coach there opens Coach with the mission's name in
   the message box; nothing is sent.
-- **The sample's brief** (`SampleBrief`, English stand-ins for tafs cloud's words) shows only for the store's screenshots: a debug
+- **The sample's brief** (`SampleBrief`, stand-ins for tafs cloud's words, in each language from app/strings' `sample.brief.*`
+  and the brief's own headings) shows only for the store's screenshots: a debug
   build opened with `--ez screenshots true --ez brief true` (and `--es briefLabel money`, `--ez briefUrgent true`), with its
   mission's log as one page (`SampleBrief.log`, `AppModel.missionLog`). The sample walk keeps Needs you, and has no log.
 
@@ -1367,6 +1368,33 @@ cloud's (`TafsCloud.calendar`, `GET /v1/calendar`); the app converts no zone. Wh
 it shows is kept in `AppState`, so a rotation keeps it, and a new account starts
 afresh. A tap opens the taf. Read-only; no new dependency. Tests:
 `CalendarTest.kt`.
+
+## Store screenshots
+
+The phone's Play screenshots (`PhoneStoreScreenshots`, a unit test) are the app's real screens over the sample, drawn on the
+JVM with Robolectric and Roborazzi in each of the 8 languages, as the watch's are (docs/watch-wear.md). Each screen is reached
+by tapping, as the person would, and nothing is drawn over it. They're 1080 × 1918 px, an S23's width (384 × 682 dp at 450 dpi), about 9:16,
+since Play refuses a phone screenshot whose long side is more than twice its short one. Six per language, written as opaque RGB PNGs since Play takes no alpha (`opaqueForPlay`), into
+`android/play/phone-screenshots/<locale>/`:
+
+1. **Your brief** (`showBriefForScreenshots`), in Needs you's place.
+2. **The tafs list**, with the held call that needs you on top.
+3. **Needs you**, each held call with its Card's reason.
+4. **Coach at work** (`CoachScreen`): its plan, a connection approved and the rules to agree to, in the sample's stand-ins
+   for tafs cloud's words (`sample.coach.*`).
+5. **Sign in with KIFF**, the phone's one way: KIFF's code and Open KIFF to approve, while KIFF waits.
+6. **You're connected.**
+
+The sample runs on the phone's own clock, so its held calls are waiting rather than expired, and the phone's fingerprint is set
+up for approvals and named in its language (`LocalBiometry`, as `MainActivity` provides it). The sample's templates (`TafTemplates`) read their words each time, so each language draws its own. The
+images are written only when asked:
+
+```bash
+cd android && ./gradlew :app:testDebugUnitTest --tests bot.tafs.app.PhoneStoreScreenshots -PphoneScreenshots
+```
+
+Otherwise the test still draws every screen, so one that no longer draws fails CI. Uploading them to Play's listing is a
+store change, made by hand on the owner's yes.
 
 ## Tests
 
