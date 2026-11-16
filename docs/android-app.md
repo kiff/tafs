@@ -1451,6 +1451,12 @@ owner's email (`Account.personal`), so it shows the email once, as the account's
 count alone for a personal account, else "Acme · 3 people".
 
 `ThemePreference` and `TafsTheme` apply the saved Light/Dark/System choice.
+**Sheets stay put after a fast fling.** Every sheet opens through `DriveSheet`, which keeps what a list inside it doesn't use
+going up past its end (`KeepUpwardLeftovers`). Material's sheet would otherwise settle on that leftover speed with a spring that
+overshoots, and on a tall sheet the overshoot moved it under the status bar, changed its insets and its height, and set it
+bouncing on its own: Account did after a fast swipe to Sign out, never after a slow one (Android 111). A pull downwards at a
+list's top still reaches the sheet and closes it.
+
 `SettingsSheet` exposes source-defined phone alerts and time zones. Alert
 choices are saved for this device and account and sent on registration; Off
 unregisters this phone. Account › Time zone shows the account's zone, Choose a time zone, and "Use this phone's: ‹zone›"

@@ -1,5 +1,6 @@
 package bot.tafs.app.drive
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePickerDialog
@@ -10,6 +11,12 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.window.Dialog
@@ -36,7 +43,23 @@ fun DriveSheet(
   containerColor = containerColor,
 ) {
   DriveWindow()
-  content()
+  // A list that reaches its end with speed left over keeps that leftover: the sheet never gets it (KeepUpwardLeftovers).
+  Column(Modifier.nestedScroll(remember { KeepUpwardLeftovers() })) { content() }
+}
+
+/**
+ * What a sheet's list doesn't use when it scrolls up past its end stays with the list. Material's sheet otherwise takes that
+ * leftover, and a fast fling's leftover speed settles the sheet, already open, with a spring that overshoots. On a tall sheet
+ * the overshoot moves it under the status bar, which changes its insets, so its height and its open position, and it settles
+ * again: the sheet bounced on its own after a fast swipe to the end of Account (Android 111), never after a slow one. A pull
+ * downwards still reaches the sheet, so pulling a list down at its top closes the sheet as before.
+ */
+internal class KeepUpwardLeftovers : NestedScrollConnection {
+  override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset =
+    if (available.y < 0f) Offset(0f, available.y) else Offset.Zero
+
+  override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity =
+    if (available.y < 0f) Velocity(0f, available.y) else Velocity.Zero
 }
 
 @Composable
