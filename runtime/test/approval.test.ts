@@ -1,7 +1,7 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { AGREE_FIRST, connectedKey, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS } from "../src/cloud/approval.js";
+import { AGREE_FIRST, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS } from "../src/cloud/approval.js";
 import { approvalAnswerWords, checkedOnReadFor, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
@@ -537,6 +537,7 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect(r).toMatchObject({ outcome: "answered", note: WORDS.countOnAmount("Refund a charge") });
     expect(String(r.answer)).toContain(`failed: the draft counts "Refund a charge"'s calls (1000 per calendar_day) beside its amount limits`);
     expect(String(r.answer)).toContain(`${REFUSAL_CLOSED} ${COUNT_NEVER_A_RULE} ${DRAW_AGAIN} ${KEEP_THE_REST}`);
+    expect(String(r.answer)).not.toContain(SHOW_NOW);
     expect(REDRAFT_CODES.has("count_on_amount")).toBe(true);
     // 3. The count on the day's Card, or with only a per-call cap and no day's total: not signed either.
     draft([each([]), daily([day(20_000), count(30)]), others]);
@@ -2321,6 +2322,10 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesUnagreed });
     expect(String(r.answer)).toContain(AGREE_FIRST);
     expect(String(r.answer)).not.toContain(DRAW_AGAIN);
+    // Nothing waits for the owner after this refusal: Coach shows the rules' confirm in the same turn, never ending on
+    // "waiting for you to approve" with nothing to tap (the Typeform proof, 16 Nov).
+    expect(String(r.answer)).toContain(`${AGREE_FIRST} ${SHOW_NOW}`);
+    expect(String(r.answer)).toMatch(/^failed: /);
     const newer = await setUp("refuse");
     newer.rules("rules-1", RULES);
     newer.rules("rules-2", [{ tool: "refund_charge", over: "ask" }, { tool: "list_charges", over: "refuse" }], false);
@@ -2342,6 +2347,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
     const r = await required.tap();
     expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesRequired });
     expect(String(r.answer)).toContain(AGREE_FIRST);
+    expect(String(r.answer)).toContain(SHOW_NOW);
   });
 
   it("the owner's notes are in each language", () => {

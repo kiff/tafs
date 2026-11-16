@@ -369,7 +369,9 @@ things (`runtime/src/cloud/approval.ts`):
   or the agreed one shown again with other rules, blocks the draft until the owner agrees to it
   (`rules_unagreed`). These go to Coach on the chat's read like the refusals above; the two that
   need the owner's agreement end "Show the rules for the owner to agree first, then draft it
-  again and show a new approval." in place of "Draft it again now…". With no rules notice in the
+  again and show a new approval." in place of "Draft it again now…", and then that nothing waits for the
+  owner until Coach shows the rules' confirm, so Coach shows it in the same turn and never ends one on
+  "waiting for your approval" with no card to tap (`SHOW_NOW`). With no rules notice in the
   conversation, the draft is approved as before and one line is logged ("approval rules: none
   agreed in the conversation"); with `TAFS_RULES_REQUIRED=on` it's refused (`rules_required`),
   once every Coach run sends them. A conversation that can't be read is read again, never trusted.
