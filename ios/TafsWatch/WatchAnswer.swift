@@ -11,8 +11,9 @@ enum WatchAnswer: Equatable {
 
     /// What a reply means for the answer. `notDone` titles a failure ("Not refused").
     static func from(_ reply: WatchReply?, notDone: String? = nil) -> WatchAnswer {
-        guard let reply else { return .failed(Words.Watch.phoneNotReachable) }
         let titled = { (line: String) in [notDone, line].compactMap { $0 }.joined(separator: "\n") }
+        // Out of reach is a failure like any other: titled too, so the wrist says what didn't happen.
+        guard let reply else { return .failed(titled(Words.Watch.phoneNotReachable)) }
         switch reply.outcome {
         case .ok, .answered:
             return .done(reply.line ?? "")
