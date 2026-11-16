@@ -449,6 +449,9 @@ the app in sample mode.
   is forgotten. It closes, device-signed, after 30 seconds in the background (on coming back, if iOS suspended the
   app first), at once when the screen locks (`protectedDataWillBecomeUnavailable`) and before a drive starts; it is
   dropped at sign-out and at a new sign-in (`ApprovalWindowTests`).
+  **A sign-in wider than the job is said on the card**: when tafs cloud marks an approval or sign-in card `wider: {words}`
+  (the app's sign-in can't be narrowed to the taf's tools), its words go above the card's buttons, in amber
+  (`WiderLine`, `SetupComponent.widerWords`), as on Android. A mark of another shape, or blank, is no mark.
   **A sign-in card names its app**: the card's `service`, else the connection's app as Connect apps names it, else
   planque's vendor in people's words (`AppModel.signInApp`, `appName`): "Sign in at Gmail", and "Sign in at the
   vendor" only when no app is known, never a connection's status. When the connection takes no approval now
