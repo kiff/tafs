@@ -81,8 +81,29 @@ class WatchModel(
   /** Refuses one held call, through the phone. Nothing is sent from a watch without its lock, or locked. */
   suspend fun refuse(holdId: String) = act(WatchRequest.Refuse(now(), holdId))
 
-  /** Halts one taf, or with [tafId] null every taf, through the phone. Nothing is sent from a watch without its lock, or locked. */
-  suspend fun halt(tafId: String?) = act(WatchRequest.Halt(now(), tafId))
+  /** Halts one taf through the phone. Nothing is sent from a watch without its lock, or locked. */
+  suspend fun halt(tafId: String) = act(WatchRequest.Halt(now(), tafId))
+
+  private val _confirmingHaltAll = MutableStateFlow(false)
+
+  /** Halt all is asked first, on the watch, before anything goes to the phone. */
+  val confirmingHaltAll: StateFlow<Boolean> = _confirmingHaltAll.asStateFlow()
+
+  /** Halt all tapped: the watch asks to confirm, and sends nothing yet. */
+  fun askHaltAll() {
+    _confirmingHaltAll.value = true
+  }
+
+  fun cancelHaltAll() {
+    _confirmingHaltAll.value = false
+  }
+
+  /** Halt all confirmed: every taf, through the phone. Nothing is sent unless it was asked first. */
+  suspend fun confirmHaltAll() {
+    if (!_confirmingHaltAll.value) return
+    _confirmingHaltAll.value = false
+    act(WatchRequest.Halt(now(), null))
+  }
 
   private suspend fun act(request: WatchRequest) {
     if (!unlocked()) {
@@ -131,6 +152,7 @@ class WatchModel(
   fun forget() {
     _shown.value = Shown.Asking
     _outcome.value = null
+    _confirmingHaltAll.value = false
   }
 
   private fun show(shown: Shown) {

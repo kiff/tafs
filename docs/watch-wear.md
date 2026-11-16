@@ -35,7 +35,13 @@ this page says what is there now and what each step adds.
   - **Refuse:** reads Needs you again; a call answered or gone meanwhile is `already_answered`, and nothing goes to KIFF. Else
     it answers it as its own Refuse does (`AppModel.answer`, `confirmed`), signed with the **signing key** and no prompt of its
     own, the watch's unlock being the confirmation. The approval key is never asked on this path.
-  - **Halt** (`AppModel.halt`): one taf, or every taf; no confirmation, as on the phone.
+  - **Halt** (`AppModel.halt`): one taf, or every taf. **Halt all** is asked once more on the watch first (`halt_all.title`,
+    with Halt all now and Cancel), and nothing is sent until it's confirmed. The phone reads where the halt stands first: one
+    halted or halting already (a Halt sent twice, or from the phone meanwhile) is answered as it stands, and tafs cloud isn't
+    asked again.
+  - **Whether a call may be refused is the phone's call,** on its own fresh read (`canAnswer`), never the watch's word: a
+    request carries nothing but its hold, and a call the phone can't answer here is Open on phone. A Refuse sent twice finds
+    the call already answered.
   - The watch shows the result only once the phone has KIFF's or tafs cloud's answer: "Refused", "Halted", "All your tafs
     halted", tafs cloud's halting line, or what went wrong with Open on phone (`WatchRefuseHaltTest`, `WatchModelTest`).
 - **One model for the process.** The relay reads the app's own `AppModel`, which `TafsApplication` now owns
