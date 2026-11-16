@@ -100,6 +100,8 @@ export const fr: Words = {
   connect_again_title: "Se reconnecter",
   connect_again_words: (app: string, taf: string) => `La connexion à ${app} a expiré, donc ${taf} ne peut plus l'utiliser. Reconnectez-vous pour vous identifier.`,
   connect_again_done: (app: string, taf: string) => `${app} est de nouveau connecté. ${taf} peut l'utiliser.`,
+  connect_not_needed: (taf: string) => `${taf} n'utilise pas cette app. Coach peut la configurer pour ${taf}.`,
+  connect_tafs_unread: "Vos tafs n'ont pas pu être lus pour l'instant, donc rien n'a été connecté. Réessayez dans un instant.",
   check_key_not_ready: "sa clé n'était pas encore prête ; il vérifie de nouveau la prochaine fois",
   check_dropped: "Sa vérification n'a pas pu lire l'app, il tourne donc à ses heures sans vérification pour l'instant. Coach peut corriger la vérification.",
   check_dropped_hourly: "Sa vérification n'a pas pu lire l'app, il tourne donc sans vérification pour l'instant, au plus une fois par heure. Coach peut corriger la vérification.",

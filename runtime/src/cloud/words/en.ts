@@ -106,6 +106,9 @@ export const en = {
   connect_again_title: "Connect again",
   connect_again_words: (app: string, taf: string) => `${app}'s sign-in has expired, so ${taf} can't use it. Connect again to sign in.`,
   connect_again_done: (app: string, taf: string) => `${app} is connected again. ${taf} can use it.`,
+  /** Connect apps: a connection started for a taf that doesn't use the app (not_needed), and the tafs unread (tafs_unread). */
+  connect_not_needed: (taf: string) => `${taf} doesn't use this app. Coach can set it up for ${taf}.`,
+  connect_tafs_unread: "Your tafs couldn't be read just now, so nothing was connected. Try again in a moment.",
   /** A first check that ran before the taf's key was stored: said in place of the store's own words. */
   check_key_not_ready: "its key wasn't ready yet; it checks again at its next time",
   check_dropped: "Its check couldn't read the app, so it runs at its set times without the check for now. Coach can fix the check.",

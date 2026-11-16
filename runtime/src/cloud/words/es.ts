@@ -100,6 +100,8 @@ export const es: Words = {
   connect_again_title: "Conectar de nuevo",
   connect_again_words: (app: string, taf: string) => `El inicio de sesión de ${app} ha caducado, así que ${taf} no puede usarlo. Conecta de nuevo para iniciar sesión.`,
   connect_again_done: (app: string, taf: string) => `${app} vuelve a estar conectado. ${taf} puede usarlo.`,
+  connect_not_needed: (taf: string) => `${taf} no usa esta app. Coach puede configurarla para ${taf}.`,
+  connect_tafs_unread: "No se pudieron leer tus tafs ahora mismo, así que no se conectó nada. Puedes reintentar en un momento.",
   check_key_not_ready: "su clave aún no estaba lista; vuelve a comprobarlo la próxima vez",
   check_dropped: "Su comprobación no pudo leer la app, así que por ahora se ejecuta a sus horas sin comprobación. Coach puede arreglarla.",
   check_dropped_hourly: "Su comprobación no pudo leer la app, así que por ahora se ejecuta sin comprobación, como mucho una vez por hora. Coach puede arreglarla.",

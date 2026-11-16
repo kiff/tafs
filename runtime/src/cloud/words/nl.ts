@@ -100,6 +100,8 @@ export const nl: Words = {
   connect_again_title: "Opnieuw verbinden",
   connect_again_words: (app: string, taf: string) => `De aanmelding bij ${app} is verlopen, dus ${taf} kan het niet gebruiken. Verbind opnieuw om je aan te melden.`,
   connect_again_done: (app: string, taf: string) => `${app} is weer verbonden. ${taf} kan het gebruiken.`,
+  connect_not_needed: (taf: string) => `${taf} gebruikt deze app niet. Coach kan hem voor ${taf} instellen.`,
+  connect_tafs_unread: "Je tafs konden nu niet worden gelezen, dus er is niets verbonden. Probeer het zo opnieuw.",
   check_key_not_ready: "de sleutel was nog niet klaar; het controleert de volgende keer opnieuw",
   check_dropped: "De controle kon de app niet lezen, dus hij draait voorlopig op zijn tijden zonder controle. Coach kan de controle herstellen.",
   check_dropped_hourly: "De controle kon de app niet lezen, dus hij draait voorlopig zonder controle, hooguit één keer per uur. Coach kan de controle herstellen.",
