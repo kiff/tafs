@@ -207,7 +207,7 @@ struct HomeSplitView: View {
             // A cross-fade, as iOS moves between a list's items, not a cut (the 755 retest).
             withMotion(.easeInOut(duration: 0.25)) { selection = .taf(id) }
             model.requestedTaf = nil
-            model.requestedTafPage = nil
+            model.requestedTafPush = nil
         }
         // Something open from the start: the first taf in the list, which is the one used
         // last, a call waiting on it first (CI's screenshots open Refunds, as on the phone).

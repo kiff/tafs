@@ -4,7 +4,7 @@ struct HomeView: View {
     @EnvironmentObject private var model: AppModel
     @Binding var tab: Tab
     @State private var showingBuyCredits = false
-    /// A taf's page a route asked for (`AppModel.requestedTafPage`), pushed here.
+    /// A taf's page a destination asked for (`AppModel.requestedTafPush`), pushed here.
     @State private var pushedTaf: UUID?
     @State private var showingSolo = false
     @State private var showingExport = false
@@ -191,10 +191,10 @@ struct HomeView: View {
         .navigationDestination(isPresented: Binding(get: { pushedTaf != nil }, set: { if !$0 { pushedTaf = nil } })) {
             if let pushedTaf { TafDetailView(tafID: pushedTaf) }
         }
-        .onChange(of: model.requestedTafPage) { id in
+        .onChange(of: model.requestedTafPush) { id in
             guard let id else { return }
             pushedTaf = id
-            model.requestedTafPage = nil
+            model.requestedTafPush = nil
             model.requestedTaf = nil
         }
         .navigationDestination(for: UUID.self) { id in

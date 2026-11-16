@@ -1519,9 +1519,10 @@ final class AppModel: ObservableObject {
     /// A taf to select in the iPad's sidebar, asked for by "See it on…" (kiff/tafs#96); the
     /// split view selects it and clears this.
     @Published var requestedTaf: UUID?
-    /// A taf's page to push on a compact width, asked for by a route (`taf:<tafs cloud id>`): the
-    /// phone's Home pushes it and clears this. A wide screen's sidebar selects it through `requestedTaf`.
-    @Published var requestedTafPage: UUID?
+    /// A taf's page to push on a compact width, asked for by a destination (`taf:<tafs cloud id>`, the
+    /// brief's "Open the taf"): the phone's Home pushes it and clears this. A wide screen's sidebar
+    /// selects it through `requestedTaf`. A route by name uses `requestedTafPage` instead.
+    @Published var requestedTafPush: UUID?
     /// The iPad's sidebar is on screen: opening a trial, or ending one, selects its row there.
     /// Kept here as well as in the environment, which a sheet's or a pushed screen's work
     /// didn't always see: Start trying pushed the trial beside a sidebar still showing the
@@ -1574,7 +1575,7 @@ final class AppModel: ObservableObject {
             }
             requestedTab = .tafs
             requestedTaf = id
-            requestedTafPage = id
+            requestedTafPush = id
         default:
             if let hold = AlertAnswers.request(from: destination) {
                 requestedTab = .needsYou
