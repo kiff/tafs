@@ -213,4 +213,18 @@ final class SignInTests: XCTestCase {
         let client = KIFFClient(baseURL: URL(string: "https://api.test")!, webURL: URL(string: "https://app.test")!, token: nil)
         XCTAssertEqual(client.answerPage(for: "ce_1", language: "fr").absoluteString, "https://app.test/needs-you/ce_1?lang=fr")
     }
+
+    /// One way at a time, as on every computer: the phone's pairing runs at first, Continue stops it and starts
+    /// KIFF's code, and "Show the code" goes back. Never both, so two approvals can't race into two accounts.
+    func testTheSignInRunsOneWayAtATime() {
+        var ways = SignInWays()
+        XCTAssertTrue(ways.phoneRuns)
+        XCTAssertFalse(ways.kiffRuns)
+        ways.continueWithKiff()
+        XCTAssertTrue(ways.kiffRuns)
+        XCTAssertFalse(ways.phoneRuns, "Continue stops the phone's pairing")
+        ways.showPhone()
+        XCTAssertTrue(ways.phoneRuns)
+        XCTAssertFalse(ways.kiffRuns, "the QR again stops KIFF's code")
+    }
 }

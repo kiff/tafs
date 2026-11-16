@@ -5,8 +5,9 @@ import SwiftUI
 /// way, and "Sign in with your phone", the pairing QR, shown at once with no prompt. A narrow window stacks
 /// them. An iPhone shows only "Sign in with KIFF": any phone can open KIFF's own sign-in, so it never pairs.
 /// Continue shows a code, the person approves it in KIFF (on the web, signed in as themselves), and this
-/// device receives a session. Either way ends on the celebration (`ConnectedView`). Every word is a shared
-/// key; the drawings carry no text.
+/// device receives a session. One way runs at a time (`SignInWays`): Continue stops the phone half's pairing, and
+/// "Show the code" starts it again and stops KIFF's, so only the sign-in the person chose can land. Either way ends
+/// on the celebration (`ConnectedView`). Every word is a shared key; the drawings carry no text.
 struct SignInView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
@@ -17,8 +18,10 @@ struct SignInView: View {
     @State private var problem: String?
     @State private var task: Task<Void, Never>?
     @State private var copied = false
+    /// Which way is running: the phone's pairing at first, KIFF's code once Continue is tapped.
+    @State private var ways = SignInWays()
     /// Continue was tapped: the code is asked for and shown.
-    @State private var continuing = false
+    private var continuing: Bool { ways.kiffRuns }
 
     /// Whether this device offers "Sign in with your phone": every device but an iPhone.
     static func offersPhone(isPhone: Bool = ThisDevice.isPhone) -> Bool { !isPhone }
@@ -128,13 +131,41 @@ struct SignInView: View {
     }
 
     /// The other way, on an iPad or a Mac: this device's pairing QR, scanned and approved from the person's phone.
-    private var phoneHalf: some View {
-        PairSignInView(embedded: true) { connected() }
+    /// Stopped while KIFF's code runs: its pairing ends with the view, and "Show the code" starts it again.
+    @ViewBuilder private var phoneHalf: some View {
+        if ways.phoneRuns {
+            PairSignInView(embedded: true) { connected() }
+                .padding(.vertical, 8)
+        } else {
+            VStack(spacing: 22) {
+                Image(systemName: "qrcode").font(.system(size: 64)).foregroundColor(Theme.dim)
+                    .frame(height: 120).accessibilityHidden(true)
+                Text(Words.SignIn.withPhone)
+                    .scaledFont(30, weight: .bold, design: .rounded, relativeTo: .title).foregroundColor(Theme.ink)
+                    .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                Button(Words.SignIn.showCode) { showPhone() }
+                    .buttonStyle(OutlineButtonStyle())
+                    .frame(maxWidth: 320)
+                    .accessibilityIdentifier("signIn.showCode")
+            }
+            .padding(32)
             .padding(.vertical, 8)
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    /// Back to the phone's way: KIFF's code stops, and the pairing QR shows again with a new code.
+    private func showPhone() {
+        task?.cancel()
+        task = nil
+        start = nil
+        problem = nil
+        copied = false
+        ways.showPhone()
     }
 
     private func begin() {
-        continuing = true
+        ways.continueWithKiff()
         problem = nil
         start = nil
         copied = false
@@ -158,6 +189,22 @@ struct SignInView: View {
         model.justConnected = true
         dismiss()
     }
+}
+
+/// The sign-in's two ways, one at a time (as on every computer): the phone's pairing runs from the start where it's
+/// offered, Continue stops it and starts KIFF's code, and "Show the code" goes back. Never both, so a code approved
+/// in a browser and a QR scanned on a phone can't race into two accounts.
+struct SignInWays: Equatable {
+    /// KIFF's code is asked for and polled.
+    private(set) var kiffRuns = false
+    /// The phone half's pairing QR is shown and polled. Where the phone half isn't offered, nothing reads it.
+    var phoneRuns: Bool { !kiffRuns }
+
+    /// Continue: KIFF's code starts, and the phone's pairing stops.
+    mutating func continueWithKiff() { kiffRuns = true }
+
+    /// "Show the code": the phone's pairing starts again, and KIFF's code stops.
+    mutating func showPhone() { kiffRuns = false }
 }
 
 /// After signing in or pairing: a moment, not a flash. The computer and the phone, joined; the shared
