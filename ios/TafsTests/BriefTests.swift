@@ -130,7 +130,7 @@ final class BriefTests: XCTestCase {
         model.open(destination)
         let rae = try XCTUnwrap(model.tafs.first { $0.name == "Rae" })
         XCTAssertEqual(model.requestedTab, .tafs)
-        XCTAssertEqual(model.requestedTafPage, rae.id, "the phone's Home pushes its page")
+        XCTAssertEqual(model.requestedTafPush, rae.id, "the phone's Home pushes its page")
         XCTAssertEqual(model.requestedTaf, rae.id, "a wide screen's sidebar selects it")
         model.requestedTab = nil
         model.open("taf:depl_gone")
