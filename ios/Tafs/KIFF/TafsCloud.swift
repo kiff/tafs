@@ -83,6 +83,8 @@ final class TafsCloud {
         var nextRunWords: String? = nil
         /// When it last changed (a version, its Card or a setting), as Home says; not read from a taf's own record.
         var lastChange: Date? = nil
+        /// Its labels by id, as Home says; not read from a taf's own record.
+        var labels: [String] = []
 
         enum CodingKeys: String, CodingKey {
             case id, name, job, status, unscheduled, results
@@ -297,6 +299,8 @@ final class TafsCloud {
         /// When it last changed (a version, its Card or a setting), an ISO time; read leniently (any shape, never
         /// failing Home's read) into `CloudTaf.lastChange`.
         var lastChange: JSONValue? = nil
+        /// Its labels by id (docs/labels.md), only on a taf that has any; missing is none.
+        var labels: LabelIDs? = nil
         let color: Int
         /// working, paused, waiting, idle (an agent tafs doesn't run) or stopped (no active Card).
         let state: String
@@ -350,6 +354,7 @@ final class TafsCloud {
             case scheduleTimeZoneWords = "schedule_time_zone_words"
             case kiffAgent = "kiff_agent", nextRun = "next_run", lastRun = "last_run", jobSummary = "job_summary"
             case lastChange = "last_change"
+            case labels
         }
 
         /// tafs cloud's record of it, for its chat, runs and schedule; nil for another agent.
@@ -358,7 +363,8 @@ final class TafsCloud {
             // its chat can't take (kiff/tafs#206 section 2).
             id.map { CloudTaf(id: $0, name: name, job: job ?? "", kiffAgent: kiffAgent, status: status ?? "active", nextRun: nextRun, lastRun: lastRun,
                               unscheduled: unscheduled, results: results, timeZoneWords: timeZoneWords, scheduleTimeZone: scheduleTimeZone, scheduleTimeZoneWords: scheduleTimeZoneWords,
-                              nextRunWords: nextRunWords, lastChange: { if case .string(let s)? = lastChange { return Self.time(s) }; return nil }()) }
+                              nextRunWords: nextRunWords, lastChange: { if case .string(let s)? = lastChange { return Self.time(s) }; return nil }(),
+                              labels: labels?.ids ?? []) }
         }
 
         /// An ISO time as tafs cloud writes it, with or without fractions of a second; anything else is none.
@@ -396,6 +402,11 @@ final class TafsCloud {
         /// Home's line, counted by tafs cloud with its words (the tafs at work; with none, the
         /// tafs ready to work from their chat); nil when it sent none, and the app counts its own.
         var headline: Headline? = nil
+        /// The account's labels, in the order to show them (docs/labels.md); absent with no labelled taf,
+        /// and the apps draw no filter row.
+        var labels: LabelList? = nil
+        /// The words for the labels' first chip ("All").
+        var labelsWords: LabelsWords? = nil
 
         /// tafs cloud's line for Home, drawn as sent.
         struct Headline: Decodable, Equatable {
@@ -477,7 +488,8 @@ final class TafsCloud {
             case coachWaiting = "coach_waiting"
             case coachWaitingClear = "coach_waiting_clear"
             case needsYou = "needs_you"
-            case headline
+            case headline, labels
+            case labelsWords = "labels_words"
         }
     }
 

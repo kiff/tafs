@@ -1,0 +1,1 @@
+- **Android: a mission's log (Missions v2.1, not served yet).** Filtered to a mission's label, the tafs list shows the mission's goal and Log, which opens what its tafs and the lead did, newest first, read only, as tafs cloud words it; a removed taf's entries stay, greyed (docs/android-app.md, A mission's log).

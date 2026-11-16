@@ -9,15 +9,30 @@ import org.junit.Test
 class LegalTest {
   // The owner on Android 95: Terms and Privacy opened KIFF's pages, not tafs's own.
   @Test fun theLinksOpenTafssOwnPages() {
-    assertEquals("https://kiff.dev/tafs/terms", Legal.terms())
-    assertEquals("https://kiff.dev/tafs/privacy", Legal.privacy())
+    assertEquals("https://kiff.dev/tafs/terms", Legal.terms("en"))
+    assertEquals("https://kiff.dev/tafs/privacy", Legal.privacy("en"))
   }
 
-  // The pages are in English only: a reader in another language is told so, as kiff.dev does.
-  @Test fun aReaderInAnotherLanguageIsToldThePageIsInEnglish() {
+  // kiff.dev serves them in every language the app ships: each opens its own, and English is the unprefixed page.
+  @Test fun eachLanguageOpensItsOwnPage() {
+    for (lang in listOf("de", "es", "fr", "it", "nl", "pl", "pt")) {
+      assertEquals("https://kiff.dev/$lang/tafs/terms", Legal.terms(lang))
+      assertEquals("https://kiff.dev/$lang/tafs/privacy", Legal.privacy(lang))
+      // In its own language, so the link doesn't say "in English".
+      assertEquals("Terms", Legal.label("Terms", lang))
+    }
+    // Every shipped language but English is served.
+    val shipped = listOf("en", "de", "fr", "es", "it", "pt", "nl", "pl")
+    assertEquals(shipped.filter { it != "en" }.toSet(), Legal.SERVED)
+  }
+
+  // A language kiff.dev doesn't serve the pages in opens English, and says so, as kiff.dev does.
+  @Test fun aLanguageWithNoPageOpensEnglishAndSaysSo() {
+    assertEquals("https://kiff.dev/tafs/terms", Legal.terms("sv"))
+    assertEquals("https://kiff.dev/tafs/privacy", Legal.privacy("sv"))
     assertEquals("Terms", Legal.label("Terms", "en"))
     // The lines here resolve to English, so the mark reads as English's own line.
-    assertEquals("Terms (in English)", Legal.label("Terms", "de"))
+    assertEquals("Terms (in English)", Legal.label("Terms", "sv"))
   }
 
   @Test fun kiffsApprovalLinkNamesTheAppsLanguageOnce() {

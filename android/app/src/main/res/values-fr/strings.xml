@@ -95,6 +95,9 @@
     <string name="approval_prompt_approve_on_kiff">Approuver sur KIFF</string>
     <string name="approval_ready_approve">Cet %1$s est prêt à approuver avec %2$s.</string>
     <string name="approval_request_kept">" La demande est conservée."</string>
+    <string name="approval_security_key_add">Ajouter la clé</string>
+    <string name="approval_security_key_add_enter_pin">Saisissez le code PIN de votre clé de sécurité pour l\'ajouter. tafs le demande à chaque fois et ne l\'enregistre jamais.</string>
+    <string name="approval_security_key_add_title">Ajouter votre clé de sécurité à cet ordinateur</string>
     <string name="approval_security_key_enter_pin">Saisissez le code PIN de votre clé de sécurité. tafs le demande à chaque fois et ne l\'enregistre jamais.</string>
     <string name="approval_security_key_failed">La clé de sécurité n\'a pas pu signer : rien n\'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt.</string>
     <string name="approval_security_key_locked">Cette clé de sécurité est verrouillée après trop de codes PIN incorrects : elle ne peut pas approuver. Approuvez sur votre téléphone. Réinitialiser la clé l\'efface : pour approuver de nouveau avec une clé, associez de nouveau cet ordinateur.</string>
@@ -103,6 +106,7 @@
     <string name="approval_security_key_not_allowed">La clé de sécurité ne l\'a pas autorisé : rien n\'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt.</string>
     <string name="approval_security_key_not_fido2">Cette clé de sécurité ne peut pas vérifier un code PIN : elle ne peut pas approuver. Branchez celle liée à cet ordinateur.</string>
     <string name="approval_security_key_not_this_key">Ce n\'est pas la clé de sécurité liée à cet ordinateur. Branchez celle-ci et réessayez, ou approuvez sur votre téléphone.</string>
+    <string name="approval_security_key_pair_without">Associer sans clé</string>
     <string name="approval_security_key_pin">Code PIN</string>
     <string name="approval_security_key_pin_paused">Trois codes PIN incorrects de suite. Débranchez la clé, rebranchez-la, puis réessayez.</string>
     <string name="approval_security_key_pin_too_long">Ce code PIN est trop long pour une clé de sécurité.</string>
@@ -1220,6 +1224,7 @@
     <string name="home_explore_jobs">Explorer les tâches</string>
     <string name="home_footer">Connecté avec KIFF.</string>
     <string name="home_halted_open_halt">Bloqué. Ouvrir Bloquer</string>
+    <string name="home_labels_all">Tous</string>
     <string name="home_loading">Chargement de vos tafs…</string>
     <string name="home_new_taf">Nouveau taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Il ne tourne plus. tafs supprime ce qui reste à chaque actualisation.</string>
@@ -1312,6 +1317,9 @@
         <item quantity="one">%2$s · %1$s cran</item>
         <item quantity="other">%2$s · %1$s crans</item>
     </plurals>
+    <string name="mission_log">Journal</string>
+    <string name="mission_read_only">Lecture seule · plus récent d\'abord</string>
+    <string name="mission_removed">retiré</string>
     <string name="needs_you_a_taf">Un taf</string>
     <string name="needs_you_allow_from_now_on">Autoriser désormais</string>
     <string name="needs_you_allow_not_offered">Ce changement n\'est pas celui qui était proposé.</string>

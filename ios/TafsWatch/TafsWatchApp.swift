@@ -5,9 +5,22 @@ import SwiftUI
 /// watch holds neither. Approvals stay on the phone.
 @main
 struct TafsWatchApp: App {
+    @StateObject private var needsYou = NeedsYouModel(phone: PhoneLink.shared)
+    @Environment(\.scenePhase) private var scenePhase
+
+    init() {
+        PhoneLink.shared.start()
+    }
+
     var body: some Scene {
         WindowGroup {
-            NeedsYouScreen()
+            NeedsYouScreen(model: needsYou)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            // In memory only: what was read goes once the app leaves the screen, and is read
+            // again when it's back.
+            if phase == .background { needsYou.leave() }
+            if phase == .active { Task { await needsYou.load() } }
         }
     }
 }
