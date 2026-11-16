@@ -20,6 +20,7 @@ KEPT = os.path.join(HERE, "ios_kept.json")
 # Whole files that stay in code, and why.
 KEPT_FILES = {
     "Design/Words.swift": "the generated accessors",
+    "Design/AppRoutes.swift": "the generated routes (app/routes.py): paths and line keys, not words",
     "Services/KnobSample.swift": "the knob's server-shaped sample",
     "Drive/": "the drive's lines, which only Coach reads",
 }
