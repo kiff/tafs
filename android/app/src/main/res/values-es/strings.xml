@@ -60,6 +60,7 @@
     <string name="approval_biometry_screen_lock">tu bloqueo de pantalla</string>
     <string name="approval_biometry_timed_out">Se agotó el tiempo de %1$s. Vuelve a intentarlo.</string>
     <string name="approval_can_not_used_right_try">Ahora mismo no se puede usar %1$s. Vuelve a intentarlo en un momento.</string>
+    <string name="approval_cancelled">Cancelado. No cambió nada.</string>
     <string name="approval_cancelled_nothing_approved_request_kept">Cancelado, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras.</string>
     <string name="approval_cant_approve_none_enrolled">Para aprobar se necesita una huella en este teléfono.</string>
     <string name="approval_cant_approve_temporarily_unavailable">Ahora mismo no se puede usar el sensor de huellas. Vuelve a intentarlo en un momento.</string>
@@ -1868,8 +1869,10 @@
     <string name="settings_devices_note">Cerrar la sesión de un dispositivo termina al instante su inicio de sesión en esta cuenta. Para cerrar la sesión de este teléfono, usa Cerrar sesión en Cuenta.</string>
     <string name="settings_devices_note_device">Cerrar la sesión de un dispositivo termina al instante su inicio de sesión en esta cuenta. Para cerrar la sesión de este %1$s, usa Cerrar sesión de KIFF.</string>
     <string name="settings_devices_pair">Añadir un dispositivo</string>
+    <string name="settings_devices_pair_add_only">Añadir este dispositivo a tu cuenta. Solo este dispositivo; nada más cambia.</string>
     <string name="settings_devices_pair_check">¿Tu ordenador muestra %1$s?</string>
     <string name="settings_devices_pair_check_phone">¿Tu nuevo teléfono o tableta muestra %1$s?</string>
+    <string name="settings_devices_pair_claims">Dice llamarse %1$s.</string>
     <string name="settings_devices_pair_code_differs">KIFF vinculó %1$s con el código %2$s, no con %3$s como comprobaste. Si no es tu ordenador, cierra su sesión aquí.</string>
     <string name="settings_devices_pair_done">%1$s está vinculado. Mostraba %2$s.</string>
     <string name="settings_devices_pair_expired">El código de tu ordenador ha caducado. Muestra uno nuevo y escanéalo otra vez.</string>
@@ -1973,6 +1976,7 @@
     <string name="setup_choose_actions">Elegir acciones</string>
     <string name="setup_connect_app">Conectar una app…</string>
     <string name="setup_connected_apps">Apps conectadas</string>
+    <string name="setup_discard_not_confirmed">No se descartó. No cambió nada.</string>
     <string name="setup_doors">Puertas</string>
     <string name="setup_edit">Editar</string>
     <string name="setup_follow_ups">Seguimientos que se programó</string>
@@ -2022,6 +2026,8 @@
     <string name="sign_in_again_to_sign_device">Vuelve a iniciar sesión con KIFF: este inicio de sesión no puede firmar por el %1$s.</string>
     <string name="sign_in_agree">Al iniciar sesión, aceptas las %1$s de KIFF, que cubren tafs, y su %2$s.</string>
     <string name="sign_in_check_code">Comprueba que KIFF muestra el mismo código antes de aprobar.</string>
+    <string name="sign_in_connected">Todo conectado.</string>
+    <string name="sign_in_connected_line">Construyamos juntos grandes cosas.</string>
     <string name="sign_in_could_not_finish">No se pudo terminar: %1$s. Vuelve a intentarlo.</string>
     <string name="sign_in_could_not_start">No se pudo empezar: %1$s. Vuelve a intentarlo.</string>
     <string name="sign_in_deletes_every_taf_runs_chats">Elimina cada taf, sus ejecuciones, chats y notas, tus Cards y tus conexiones. No se puede deshacer.</string>
@@ -2030,6 +2036,7 @@
     <string name="sign_in_how_works">Cómo funciona</string>
     <string name="sign_in_ios_did_not_open_sign">iOS no abrió la página de inicio de sesión (error %1$s; %2$s). Vuelve a intentarlo con tafs abierto.</string>
     <string name="sign_in_lead">Tus tafs actúan con Cards de KIFF. Aprueba este %1$s en KIFF y aquí aparecerán las Cards que emitiste.</string>
+    <string name="sign_in_lets_go">Vamos</string>
     <string name="sign_in_not_signed_out">Aún no se ha cerrado la sesión en KIFF. Vuelve a intentarlo, o cierra la sesión de este teléfono desde Dispositivos en otro dispositivo.</string>
     <string name="sign_in_not_signed_out_device">Aún no se ha cerrado la sesión en KIFF: %1$s. Vuelve a intentarlo, o cierra la sesión de este %2$s desde Dispositivos en otro dispositivo.</string>
     <string name="sign_in_open_kiff">Abrir KIFF para aprobar</string>
@@ -2049,6 +2056,8 @@
     <string name="sign_in_relink_no_connection">Sin conexión. Vuelve a intentarlo.</string>
     <string name="sign_in_relink_not_approved_in_browser">No se aprobó en el navegador.</string>
     <string name="sign_in_relink_prompt">Volver a aprobar con esta huella</string>
+    <string name="sign_in_scan_with_tafs">Escanea con tafs</string>
+    <string name="sign_in_show_code">Mostrar el código</string>
     <string name="sign_in_sign_did_not_come_back">El inicio de sesión no volvió a tafs.</string>
     <string name="sign_in_tafs_had_no_window_screen">tafs no tenía ninguna ventana en pantalla sobre la que abrir el inicio de sesión. Abre tafs y vuelve a intentarlo.</string>
     <string name="sign_in_waiting">Esperando tu aprobación…</string>
@@ -2062,6 +2071,7 @@
     <string name="sign_in_welcome_revoked_rest">no se completa ninguna acción nueva.</string>
     <string name="sign_in_welcome_title">tafs</string>
     <string name="sign_in_with_kiff">Iniciar sesión con KIFF</string>
+    <string name="sign_in_with_phone">Iniciar sesión con tu teléfono</string>
     <string name="sign_in_your_code">Tu código</string>
     <string name="taf_activity_all_apps">Todas las apps</string>
     <string name="taf_activity_checking_waits">Comprobando lo que te espera…</string>

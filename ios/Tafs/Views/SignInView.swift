@@ -167,13 +167,13 @@ struct SettingsView: View {
                     NavigationLink(NotificationSettingsView.title) { NotificationSettingsView() }
                 }
                 Section(Words.Settings.themeTitle) { ThemePicker() }
-                // The language tafs's lines are in, by its own name, and iOS's own setting to change
-                // it (Settings › tafs › Language). No picker of the app's own, as on Android.
+                // The language tafs's lines are in, by its own name, and Change language opens the
+                // app's own list, as on Android: on a Mac too, which has no Settings › tafs page.
                 Section(Words.Settings.languageTitle) {
                     LabeledContent(Words.Settings.languageTitle, value: AppLanguage.name())
                         .accessibilityIdentifier("settings.language")
-                    Button(Words.Settings.changeLanguage) { openTafsSettings() }
-                        .foregroundColor(Theme.amberText)
+                    NavigationLink { LanguagePicker() } label: { Text(Words.Settings.changeLanguage).foregroundColor(Theme.amberText) }
+                        .accessibilityIdentifier("settings.change-language")
                 }
                 // The AI-data consent: given, with Withdraw; not given, its screen. tafs cloud's words.
                 if model.mode == .kiff, model.aiConsent?.drawable == true {

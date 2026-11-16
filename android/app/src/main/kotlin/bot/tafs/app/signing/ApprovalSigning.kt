@@ -111,14 +111,27 @@ class ConfirmationTimedOut : SignerException(WORDS) {
   }
 }
 
+/**
+ * The person closed the prompt (Cancel, back, or the system closed it): nothing was confirmed and nothing is sent, which is all
+ * there is to say, so it's "Cancelled. Nothing changed.", not a fingerprint to try again.
+ */
+class PromptClosed : SignerException(WORDS) {
+  companion object {
+    val WORDS: String get() = Words.Approval.cancelled
+  }
+}
+
 interface Authenticator {
   /** Whether this phone has something to ask with. */
   val canAuthenticate: Boolean
 
-  /** True when they confirmed; false when they didn't or it was cancelled. */
+  /** True when they confirmed; false when it didn't confirm. Throws [PromptClosed] when they closed the prompt. */
   suspend fun authenticate(reason: String): Boolean
 
-  /** Asks with a strong biometric only, and unlocks [signature] for one use. True when it may sign now. */
+  /**
+   * Asks with a strong biometric only, and unlocks [signature] for one use. True when it may sign now; false when it didn't
+   * confirm (a lockout, say). Throws [PromptClosed] when they closed the prompt.
+   */
   suspend fun authenticate(reason: String, signature: Signature): Boolean
 }
 
@@ -162,8 +175,8 @@ class DeviceSigner(
       throw SignerException(NO_FINGERPRINT)
     }
     val signature = keys.approvalSignature()
-    // A finger not recognized, or the prompt closed, while the key is still good: trying again may do, and a new sign-in does if
-    // the fingerprints changed.
+    // A finger not recognized while the key is still good: trying again may do, and a new sign-in does if the fingerprints changed.
+    // A closed prompt throws PromptClosed instead, from the authenticator.
     if (!authenticator.authenticate(reason, signature)) throw SignerException(NOT_RECOGNIZED)
     return try {
       signature.update(built())

@@ -125,6 +125,8 @@ enum Words {
         static func biometryTimedOut(biometry: String) -> String { Words.line("approval.biometry_timed_out", biometry) }
         /// {either} can't be used right now. Try again in a moment.
         static func canNotUsedRightTry(either: String) -> String { Words.line("approval.can_not_used_right_try", either) }
+        /// Cancelled. Nothing changed.
+        static var cancelled: String { Words.line("approval.cancelled") }
         /// Cancelled, so nothing was approved. The request is kept: approve again when you're ready.
         static var cancelledNothingApprovedRequestKept: String { Words.line("approval.cancelled_nothing_approved_request_kept") }
         enum CantApprove {
@@ -3688,10 +3690,14 @@ enum Words {
             static func noteDevice(device: String) -> String { Words.line("settings.devices.note_device", device) }
             /// Add a device
             static var pair: String { Words.line("settings.devices.pair") }
+            /// Add this device to your account. Only this device; nothing else changes.
+            static var pairAddOnly: String { Words.line("settings.devices.pair_add_only") }
             /// Does your computer show {code}?
             static func pairCheck(code: String) -> String { Words.line("settings.devices.pair_check", code) }
             /// Does your new phone or tablet show {code}?
             static func pairCheckPhone(code: String) -> String { Words.line("settings.devices.pair_check_phone", code) }
+            /// It calls itself {name}.
+            static func pairClaims(name: String) -> String { Words.line("settings.devices.pair_claims", name) }
             /// KIFF paired {device} with the code {kiff}, not {shown} as checked. If that isn't your computer, sign it out here.
             static func pairCodeDiffers(device: String, kiff: String, shown: String) -> String { Words.line("settings.devices.pair_code_differs", device, kiff, shown) }
             /// {device} is paired. It showed {code}.
@@ -3911,6 +3917,8 @@ enum Words {
         static var connectApp: String { Words.line("setup.connect_app") }
         /// Connected apps
         static var connectedApps: String { Words.line("setup.connected_apps") }
+        /// Not discarded. Nothing changed.
+        static var discardNotConfirmed: String { Words.line("setup.discard_not_confirmed") }
         /// Doors
         static var doors: String { Words.line("setup.doors") }
         /// Edit
@@ -4015,6 +4023,10 @@ enum Words {
         static func agree(terms: String, privacy: String) -> String { Words.line("sign_in.agree", terms, privacy) }
         /// Check that KIFF shows the same code before you approve.
         static var checkCode: String { Words.line("sign_in.check_code") }
+        /// You're connected.
+        static var connected: String { Words.line("sign_in.connected") }
+        /// Let's build great things together.
+        static var connectedLine: String { Words.line("sign_in.connected_line") }
         /// Couldn't finish: {why}. Try again.
         static func couldNotFinish(why: String) -> String { Words.line("sign_in.could_not_finish", why) }
         /// Couldn't start: {why}. Try again.
@@ -4031,6 +4043,8 @@ enum Words {
         static func iosDidNotOpenSign(code: String, context: String) -> String { Words.line("sign_in.ios_did_not_open_sign", code, context) }
         /// Your tafs act under KIFF Cards. Approve this {device} in KIFF, and the Cards you issued show up here.
         static func lead(device: String) -> String { Words.line("sign_in.lead", device) }
+        /// Let's go
+        static var letsGo: String { Words.line("sign_in.lets_go") }
         /// Not signed out at KIFF yet. Try again, or sign this phone out from another device's Devices.
         static var notSignedOut: String { Words.line("sign_in.not_signed_out") }
         /// Not signed out at KIFF yet: {why}. Try again, or sign this {device} out from another device's Devices.
@@ -4071,6 +4085,10 @@ enum Words {
             /// Approve again with this fingerprint
             static var prompt: String { Words.line("sign_in.relink.prompt") }
         }
+        /// Scan with tafs
+        static var scanWithTafs: String { Words.line("sign_in.scan_with_tafs") }
+        /// Show the code
+        static var showCode: String { Words.line("sign_in.show_code") }
         /// The sign-in didn't come back to tafs.
         static var signDidNotComeBack: String { Words.line("sign_in.sign_did_not_come_back") }
         /// tafs had no window on screen to open the sign-in over. Open tafs and try again.
@@ -4099,6 +4117,8 @@ enum Words {
         }
         /// Sign in with KIFF
         static var withKiff: String { Words.line("sign_in.with_kiff") }
+        /// Sign in with your phone
+        static var withPhone: String { Words.line("sign_in.with_phone") }
         /// Your code
         static var yourCode: String { Words.line("sign_in.your_code") }
     }
@@ -4872,7 +4892,7 @@ enum Words {
     /// The number is the line's first value, written as the app's language writes it.
     static func count(_ key: String, _ count: Int, _ values: String...) -> String {
         let form = "\(key)|\(pluralForm(count))"
-        let known = Bundle.main.localizedString(forKey: form, value: nil, table: nil) != form
+        let known = bundle.localizedString(forKey: form, value: nil, table: nil) != form
         return filled(known ? form : "\(key)|other", [number(count)] + values)
     }
 
@@ -4880,8 +4900,12 @@ enum Words {
     /// asks the servers for, never a language only Siri's phrases are in.
     static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"]
 
+    /// The catalog the lines are read from: the system's pick for the app, or the language picked
+    /// in the app (`AppLanguage.choose`), so a pick applies at once, with no relaunch.
+    nonisolated(unsafe) static var bundle = Bundle.main
+
     /// The language the app's lines are in, as the catalog names it, never the device's region.
-    static let locale = Locale(identifier: Bundle.main.localizedString(forKey: "_language", value: "en", table: nil))
+    static var locale: Locale { Locale(identifier: bundle.localizedString(forKey: "_language", value: "en", table: nil)) }
 
     /// A count's number as the app's language writes it: 1,000, 1.000, 1 000.
     static func number(_ n: Int) -> String {
@@ -4919,13 +4943,13 @@ enum Words {
 
     /// The plural form a number takes in the app's language: one, few, many, other…
     static func pluralForm(_ count: Int) -> String {
-        let format = Bundle.main.localizedString(forKey: "_plural", value: nil, table: nil)
+        let format = bundle.localizedString(forKey: "_plural", value: nil, table: nil)
         let picked = String(format: format, locale: locale, count)
         return picked.split(separator: "|").last.map(String.init) ?? "other"
     }
 
     private static func filled(_ key: String, _ values: [String]) -> String {
-        let format = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+        let format = bundle.localizedString(forKey: key, value: nil, table: nil)
         return values.isEmpty ? format : String(format: format, locale: locale, arguments: values)
     }
 }

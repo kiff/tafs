@@ -154,6 +154,15 @@ class PasskeyAddTest {
     assertEquals(Words.Settings.Devices.passkeyNotRegistered, m.state.value.passkeyLine)
   }
 
+  @Test fun aClosedPromptRemovesNoPasskeyAndSaysCancelled() = runTest {
+    transport.answer("DELETE /v1/me/passkeys/pk_1", 204, "")
+    val m = model()
+    auth.fails = bot.tafs.app.signing.PromptClosed()
+    assertFalse(m.removePasskey(Passkey(id = "pk_1", name = "Pixel 8")))
+    assertTrue(transport.requestsTo("DELETE /v1/me/passkeys/pk_1").isEmpty())
+    assertEquals("Cancelled. Nothing changed.", m.state.value.passkeyLine)
+  }
+
   @Test fun aComputersOwnPasskeyIsNeverRemovedHere() = runTest {
     transport.answer("DELETE /v1/me/passkeys/pk_1", 204, "")
     val m = model()

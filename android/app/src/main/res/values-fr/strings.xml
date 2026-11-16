@@ -60,6 +60,7 @@
     <string name="approval_biometry_screen_lock">votre verrouillage d\'écran</string>
     <string name="approval_biometry_timed_out">%1$s : délai dépassé. Réessayez.</string>
     <string name="approval_can_not_used_right_try">%1$s ne peut pas être utilisé pour le moment. Réessayez dans un instant.</string>
+    <string name="approval_cancelled">Annulé. Rien n\'a changé.</string>
     <string name="approval_cancelled_nothing_approved_request_kept">Annulé : rien n\'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt.</string>
     <string name="approval_cant_approve_none_enrolled">Approuver nécessite une empreinte sur ce téléphone.</string>
     <string name="approval_cant_approve_temporarily_unavailable">Le capteur d\'empreintes ne peut pas être utilisé pour le moment. Réessayez dans un instant.</string>
@@ -1868,8 +1869,10 @@
     <string name="settings_devices_note">Déconnecter un appareil met fin immédiatement à sa connexion sur ce compte. Pour déconnecter ce téléphone, utilisez Se déconnecter dans Compte.</string>
     <string name="settings_devices_note_device">Déconnecter un appareil met fin immédiatement à sa connexion sur ce compte. Pour déconnecter cet %1$s, utilisez Se déconnecter de KIFF.</string>
     <string name="settings_devices_pair">Ajouter un appareil</string>
+    <string name="settings_devices_pair_add_only">Ajouter cet appareil à votre compte. Uniquement cet appareil ; rien d\'autre ne change.</string>
     <string name="settings_devices_pair_check">Votre ordinateur affiche-t-il %1$s ?</string>
     <string name="settings_devices_pair_check_phone">Votre nouveau téléphone ou tablette affiche-t-il %1$s ?</string>
+    <string name="settings_devices_pair_claims">Il se présente comme %1$s.</string>
     <string name="settings_devices_pair_code_differs">KIFF a associé %1$s avec le code %2$s, et non %3$s comme vérifié. Si ce n\'est pas votre ordinateur, déconnectez-le ici.</string>
     <string name="settings_devices_pair_done">%1$s est associé. Il affichait %2$s.</string>
     <string name="settings_devices_pair_expired">Le code sur votre ordinateur a expiré. Affichez-en un nouveau et scannez-le à nouveau.</string>
@@ -1973,6 +1976,7 @@
     <string name="setup_choose_actions">Choisir les actions</string>
     <string name="setup_connect_app">Connecter une app…</string>
     <string name="setup_connected_apps">Apps connectées</string>
+    <string name="setup_discard_not_confirmed">Pas abandonné. Rien n\'a changé.</string>
     <string name="setup_doors">Portes</string>
     <string name="setup_edit">Modifier</string>
     <string name="setup_follow_ups">Relances qu\'il s\'est fixées</string>
@@ -2022,6 +2026,8 @@
     <string name="sign_in_again_to_sign_device">Reconnectez-vous avec KIFF : cette connexion ne peut pas signer pour l\'%1$s.</string>
     <string name="sign_in_agree">En vous connectant, vous acceptez les %1$s de KIFF, qui couvrent tafs, et sa %2$s.</string>
     <string name="sign_in_check_code">Vérifiez que KIFF affiche le même code avant d\'approuver.</string>
+    <string name="sign_in_connected">Connexion établie.</string>
+    <string name="sign_in_connected_line">Construisons ensemble de grandes choses.</string>
     <string name="sign_in_could_not_finish">Impossible de terminer : %1$s. Réessayez.</string>
     <string name="sign_in_could_not_start">Impossible de démarrer : %1$s. Réessayez.</string>
     <string name="sign_in_deletes_every_taf_runs_chats">Supprime chaque taf, ses exécutions, chats et notes, vos Cards et vos connexions. C\'est irréversible.</string>
@@ -2030,6 +2036,7 @@
     <string name="sign_in_how_works">Comment ça marche</string>
     <string name="sign_in_ios_did_not_open_sign">iOS n\'a pas ouvert la page de connexion (erreur %1$s ; %2$s). Réessayez avec tafs ouvert.</string>
     <string name="sign_in_lead">Vos tafs agissent sous des Cards KIFF. Approuvez cet %1$s dans KIFF, et les Cards que vous avez émises s\'affichent ici.</string>
+    <string name="sign_in_lets_go">C\'est parti</string>
     <string name="sign_in_not_signed_out">Pas encore déconnecté de KIFF. Réessayez, ou déconnectez ce téléphone depuis Appareils sur un autre appareil.</string>
     <string name="sign_in_not_signed_out_device">Pas encore déconnecté de KIFF : %1$s. Réessayez, ou déconnectez cet %2$s depuis Appareils sur un autre appareil.</string>
     <string name="sign_in_open_kiff">Ouvrir KIFF pour approuver</string>
@@ -2049,6 +2056,8 @@
     <string name="sign_in_relink_no_connection">Pas de connexion. Réessayez.</string>
     <string name="sign_in_relink_not_approved_in_browser">Elle n\'a pas été approuvée dans le navigateur.</string>
     <string name="sign_in_relink_prompt">Approuver à nouveau avec cette empreinte</string>
+    <string name="sign_in_scan_with_tafs">Scannez avec tafs</string>
+    <string name="sign_in_show_code">Afficher le code</string>
     <string name="sign_in_sign_did_not_come_back">La connexion n\'est pas revenue vers tafs.</string>
     <string name="sign_in_tafs_had_no_window_screen">tafs n\'avait aucune fenêtre à l\'écran pour y ouvrir la connexion. Ouvrez tafs et réessayez.</string>
     <string name="sign_in_waiting">En attente de votre approbation…</string>
@@ -2062,6 +2071,7 @@
     <string name="sign_in_welcome_revoked_rest">aucune nouvelle action ne passe.</string>
     <string name="sign_in_welcome_title">tafs</string>
     <string name="sign_in_with_kiff">Se connecter avec KIFF</string>
+    <string name="sign_in_with_phone">Se connecter avec votre téléphone</string>
     <string name="sign_in_your_code">Votre code</string>
     <string name="taf_activity_all_apps">Toutes les apps</string>
     <string name="taf_activity_checking_waits">Vérification de ce qui vous attend…</string>
