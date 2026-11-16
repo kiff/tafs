@@ -75534,13 +75534,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Briefing zu seinen Zeiten, ohne Ton."
+            "value": "Dein Briefing zu den festen Zeiten, ohne Ton."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your brief at its times, with no sound."
+            "value": "Your brief at its set times, with no sound."
           }
         },
         "es": {
@@ -75552,7 +75552,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre briefing à ses heures, sans son."
+            "value": "Votre briefing aux heures prévues, sans son."
           }
         },
         "it": {
@@ -75576,7 +75576,7 @@
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O seu resumo nas horas dele, sem som."
+            "value": "O seu resumo às horas definidas, sem som."
           }
         }
       }
