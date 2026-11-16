@@ -51,21 +51,25 @@ struct PairComputerView: View {
         }
     }
 
-    /// What pairing gives, said before the check code, then the code itself and the one yes.
+    /// The check code first: it, not the name, binds this yes to the device in front of the person. Then
+    /// that it adds only this device, the name as the device's own claim, what pairing gives, and the one yes.
     private func confirm(_ request: PairingRequest) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text(Words.Settings.Devices.pairNamed(device: request.name))
-                .scaledFont(22, weight: .bold, design: .rounded, relativeTo: .title2).foregroundColor(Theme.ink)
-                .fixedSize(horizontal: false, vertical: true)
-            ForEach(Self.lines(request), id: \.self) { line in
-                Text(line).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
-            }
             Text(Self.check(request))
                 .scaledFont(17, weight: .semibold).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
             Text(request.checkCode)
                 .scaledFont(34, weight: .bold, design: .monospaced, relativeTo: .largeTitle).tracking(4)
                 .foregroundColor(Theme.ink)
                 .accessibilityIdentifier("pair.code")
+            Text(Words.Settings.Devices.pairAddOnly)
+                .scaledFont(20, weight: .bold, design: .rounded, relativeTo: .title3).foregroundColor(Theme.ink)
+                .fixedSize(horizontal: false, vertical: true)
+            Text(Words.Settings.Devices.pairClaims(name: request.name))
+                .scaledFont(15).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("pair.claims")
+            ForEach(Self.lines(request), id: \.self) { line in
+                Text(line).scaledFont(15).foregroundColor(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            }
             if let problem { Text(problem).scaledFont(14).foregroundColor(Theme.no).fixedSize(horizontal: false, vertical: true) }
             Button { Task { await pair(request) } } label: { Text(Words.Settings.Devices.pairYes) }
                 .buttonStyle(PrimaryButtonStyle())
