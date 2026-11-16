@@ -372,8 +372,9 @@ class KiffClient(
     }
   }
 
-  suspend fun signOut() {
-    send("POST", "/v1/auth/device/logout", mapOf<String, String>())
+  /** Ends a session at KIFF: this client's, or [bearer]'s, a token the app didn't keep (a sign-in the person stopped). */
+  suspend fun signOut(bearer: String? = null) {
+    send("POST", "/v1/auth/device/logout", mapOf<String, String>(), bearer = bearer)
   }
 
   suspend fun me(): Account = call("GET", "/v1/me")
@@ -826,7 +827,8 @@ class KiffClient(
     body: Map<String, String>? = null,
     authorized: Boolean = true,
     signedBy: ((ByteArray) -> String)? = null,
-  ): ByteArray = sendJson(method, path, body?.let { JsonObject(it.mapValues { (_, v) -> JsonPrimitive(v) }) }, authorized, signedBy)
+    bearer: String? = null,
+  ): ByteArray = sendJson(method, path, body?.let { JsonObject(it.mapValues { (_, v) -> JsonPrimitive(v) }) }, authorized, signedBy, bearer = bearer)
 
   /** Sends one request with a JSON body, which may nest. [gateway] sends it to KIFF's MCP gateway rather than the API. */
   internal suspend fun sendJson(
@@ -837,6 +839,8 @@ class KiffClient(
     signedBy: ((ByteArray) -> String)? = null,
     gateway: Boolean = false,
     inWindow: Boolean = true,
+    // Another session's token than this client's (a stopped sign-in's, ended at KIFF).
+    bearer: String? = null,
   ): ByteArray {
     val url = (if (gateway) gatewayUrl else baseUrl) + path
     val uri = try { URI.create(url) } catch (_: IllegalArgumentException) { throw KiffError.Server(0, Words.Error.badPath) }
@@ -871,8 +875,8 @@ class KiffClient(
       headers["KIFF-Device-Signature"] = if (held != null) "t=$signedAt,v2=$value,w=$held" else "t=$signedAt,v1=$value"
     }
     if (authorized) {
-      val bearer = token ?: throw KiffError.Unauthorized
-      headers["Authorization"] = "Bearer $bearer"
+      val sent = bearer ?: token ?: throw KiffError.Unauthorized
+      headers["Authorization"] = "Bearer $sent"
     }
 
     val response = transport.send(HttpRequest(method, url, headers, payload))
