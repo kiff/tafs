@@ -1325,7 +1325,7 @@
         <item quantity="one">%2$s · %1$s tappa</item>
         <item quantity="other">%2$s · %1$s tappe</item>
     </plurals>
-    <string name="mission_log">Registro</string>
+    <string name="mission_log">Cronologia</string>
     <string name="mission_read_only">Sola lettura · prima i più recenti</string>
     <string name="mission_removed">rimosso</string>
     <string name="needs_you_a_taf">Un taf</string>
