@@ -1,0 +1,1 @@
+- **tafs cloud: Your brief's builder** (part 1 of the brief): its times at 08:00 and 18:00 in the account's zone, tafs cloud's urgency rules, decisions ordered and capped at 5 with one recommendation only with a why, Later for what can wait, Done per case and the label filter ([missions.md](../docs/missions.md#your-brief)). The route and its words come next.
