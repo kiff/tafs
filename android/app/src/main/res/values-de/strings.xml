@@ -95,6 +95,9 @@
     <string name="approval_prompt_approve_on_kiff">Bei KIFF genehmigen</string>
     <string name="approval_ready_approve">Dieses %1$s ist bereit, mit %2$s zu genehmigen.</string>
     <string name="approval_request_kept">" Die Anfrage bleibt erhalten."</string>
+    <string name="approval_security_key_add">Schlüssel hinzufügen</string>
+    <string name="approval_security_key_add_enter_pin">Gib die PIN deines Sicherheitsschlüssels ein, um ihn hinzuzufügen. tafs fragt jedes Mal danach und speichert sie nie.</string>
+    <string name="approval_security_key_add_title">Deinen Sicherheitsschlüssel zu diesem Computer hinzufügen</string>
     <string name="approval_security_key_enter_pin">Gib die PIN deines Sicherheitsschlüssels ein. tafs fragt jedes Mal danach und speichert sie nie.</string>
     <string name="approval_security_key_failed">Der Sicherheitsschlüssel konnte nicht signieren, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
     <string name="approval_security_key_locked">Dieser Sicherheitsschlüssel ist nach zu vielen falschen PINs gesperrt und kann nicht genehmigen. Genehmige auf deinem Telefon. Beim Zurücksetzen wird der Schlüssel gelöscht. Um wieder mit einem Schlüssel zu genehmigen, kopple diesen Computer erneut.</string>
@@ -103,6 +106,7 @@
     <string name="approval_security_key_not_allowed">Der Sicherheitsschlüssel hat es nicht zugelassen, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
     <string name="approval_security_key_not_fido2">Dieser Sicherheitsschlüssel kann keine PIN prüfen und daher nicht genehmigen. Steck den Schlüssel ein, der zu diesem Computer gehört.</string>
     <string name="approval_security_key_not_this_key">Das ist nicht der Sicherheitsschlüssel, der zu diesem Computer gehört. Steck diesen ein und versuch es erneut, oder genehmige auf deinem Telefon.</string>
+    <string name="approval_security_key_pair_without">Ohne Schlüssel koppeln</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Das sind drei falsche PINs hintereinander. Zieh den Schlüssel ab, steck ihn wieder ein und versuch es dann erneut.</string>
     <string name="approval_security_key_pin_too_long">Diese PIN ist für einen Sicherheitsschlüssel zu lang.</string>

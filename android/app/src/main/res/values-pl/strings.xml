@@ -97,6 +97,9 @@
     <string name="approval_prompt_approve_on_kiff">Zatwierdź w KIFF</string>
     <string name="approval_ready_approve">Ten %1$s jest gotowy do zatwierdzania przez %2$s.</string>
     <string name="approval_request_kept">" Prośba zostaje zachowana."</string>
+    <string name="approval_security_key_add">Dodaj klucz</string>
+    <string name="approval_security_key_add_enter_pin">Wpisz PIN swojego klucza bezpieczeństwa, aby go dodać. tafs pyta o niego za każdym razem i nigdy go nie zapisuje.</string>
+    <string name="approval_security_key_add_title">Dodaj klucz bezpieczeństwa do tego komputera</string>
     <string name="approval_security_key_enter_pin">Wpisz PIN swojego klucza bezpieczeństwa. tafs pyta o niego za każdym razem i nigdy go nie zapisuje.</string>
     <string name="approval_security_key_failed">Klucz bezpieczeństwa nie mógł podpisać, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz.</string>
     <string name="approval_security_key_locked">Ten klucz bezpieczeństwa jest zablokowany po zbyt wielu złych PIN-ach, więc nie może zatwierdzać. Zatwierdź na telefonie. Zresetowanie klucza go wymazuje, więc aby znów zatwierdzać kluczem, sparuj ten komputer ponownie.</string>
@@ -105,6 +108,7 @@
     <string name="approval_security_key_not_allowed">Klucz bezpieczeństwa na to nie pozwolił, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz.</string>
     <string name="approval_security_key_not_fido2">Ten klucz bezpieczeństwa nie umie sprawdzić PIN-u, więc nie może zatwierdzać. Podłącz klucz powiązany z tym komputerem.</string>
     <string name="approval_security_key_not_this_key">To nie jest klucz bezpieczeństwa powiązany z tym komputerem. Podłącz tamten i spróbuj ponownie albo zatwierdź na telefonie.</string>
+    <string name="approval_security_key_pair_without">Sparuj bez klucza</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">To trzy złe PIN-y z rzędu. Odłącz klucz, podłącz go ponownie i spróbuj jeszcze raz.</string>
     <string name="approval_security_key_pin_too_long">Ten PIN jest za długi dla klucza bezpieczeństwa.</string>
