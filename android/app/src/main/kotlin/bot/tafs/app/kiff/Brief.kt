@@ -122,7 +122,9 @@ data class Brief(
       }.filter { it.words.isNotEmpty() },
       why = c.text("why"),
       meanwhile = c.text("meanwhile").orEmpty(),
-      deadline = c.text("deadline"),
+      // The line to draw ("by Fri 12:00"), in the person's language and the account's zone: `deadline_words`, never the time
+      // `deadline` is (KIFF's expiry, for a machine). With no words there's no deadline line.
+      deadline = c.text("deadline_words"),
       urgent = c.bool("urgent") ?: false,
       // `{words}`, as v2.1 sends it; a plain line from an earlier draft reads the same.
       later = c.obj("later")?.text("words") ?: c.text("later"),

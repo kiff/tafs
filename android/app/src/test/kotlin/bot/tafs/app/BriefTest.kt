@@ -219,6 +219,17 @@ class BriefTest {
   }
 
   /** The route's ids are `hold:<id>` and `step:<handoff>`, read raw: the `:` goes as is, anything else is escaped. */
+  /** `deadline` is a time for machines; `deadline_words` is the line the card draws (kiff/tafs#1192). */
+  @Test fun theDeadlineDrawnIsTafsCloudsWordsNeverTheTime() {
+    fun decision(extra: String) = brief(
+      """{"decisions":[{"id":"step:s1","question":"Send the signed form?","answers":[{"words":"Done","answer":"done"}],""" +
+        """"meanwhile":"The run waits.","urgent":false,$extra"ref":{"kind":"step","id":"s1","taf":"t1"}}]}""",
+    ).decisions.single()
+    assertEquals("by Fri 12:00", decision(""""deadline":"2026-10-29T13:00:00.000Z","deadline_words":"by Fri 12:00",""").deadline)
+    assertEquals("bis 14:00", decision(""""deadline_words":"bis 14:00",""").deadline)
+    assertNull("a time alone draws nothing", decision(""""deadline":"2026-10-29T13:00:00.000Z",""").deadline)
+  }
+
   @Test fun laterSendsTheDecisionsColonAsIs() = runTest {
     transport.answer("POST /v1/brief/decisions/hold:ce_1/later", 200, "{}")
     transport.answer("POST /v1/brief/decisions/step:a b/later", 200, "{}")
@@ -277,7 +288,7 @@ class BriefTest {
       """{"at":"2026-11-14T08:00:00+01:00","next_at":"2026-11-14T18:00:00+01:00",
        "decisions":[{"id":"d1","question":"Pay 3 supplier bills due Friday, €1,240?",
                      "answers":[{"words":"Pay the 3","answer":"approve","recommended":true},{"words":"Not now","answer":"reject","decline":true}],
-                     "why":"All three match their orders.","meanwhile":"these three wait.","deadline":"by Fri 12:00","urgent":false,
+                     "why":"All three match their orders.","meanwhile":"these three wait.","deadline":"2026-11-14T11:00:00.000Z","deadline_words":"by Fri 12:00","urgent":false,
                      "later":{"words":"Later"},"ref":{"kind":"hold","id":"h1","taf":"t1"}},
                     {"id":"d2","question":"Pay Mercier €2,100 before 12:00?","answers":[{"words":"Pay €2,100","answer":"approve","recommended":true}],
                      "why":"It matches order 0388.","meanwhile":"held.","urgent":true,"now_why":"This can't wait: it expires at 12:00.","ref":{"kind":"hold","id":"h2","taf":"t1"}},
@@ -333,6 +344,7 @@ class BriefTest {
     assertEquals("Your brief", b.words.titleShown)
     assertEquals(listOf("hold:h1", "step:s1"), b.decisions.map { it.id })
     assertEquals("It expires at 12:00, before the next brief.", b.decisions[0].cantWait)
+    assertNull("a time with no words to draw it is no deadline line, never the raw time", b.decisions[0].deadline)
     assertNull("an urgent decision offers no Later", b.decisions[0].later)
     assertEquals("Later", b.decisions[1].later)
     assertEquals(Brief.Ref("step", "s1", "t1"), b.decisions[1].ref)

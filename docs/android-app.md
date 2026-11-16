@@ -135,7 +135,7 @@ the Needs you tab is exactly as today. The switch is the route itself: a 404, a 
 decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read with every refresh).
 
 - **Read leniently, in v2.1's names** (`Brief.parse`): `decisions` (`question`, `answers` with `recommended` and `decline`,
-  `why`, `meanwhile`, `deadline`, `urgent`, `later: {words}`, `now_why`, `note`, `ref: {kind, id, taf}`), `more`, `done`
+  `why`, `meanwhile`, `deadline_words` (drawn; `deadline`, a time, never is), `urgent`, `later: {words}`, `now_why`, `note`, `ref: {kind, id, taf}`), `more`, `done`
   (cases with `state` and `next_check`, `value`, `log`), `next_move`, `rest`, `credits: {words}`, `labels` and the headings'
   `words`. Field by field: a part the app can't read is left out, never the brief; unknown fields are ignored.
 - **Drawn as sent:** the tab is named tafs cloud's `words.title` ("Your brief"), else Needs you. Decisions first, each with its
