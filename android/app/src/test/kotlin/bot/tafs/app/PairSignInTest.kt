@@ -95,6 +95,44 @@ class PairSignInTest {
 
   private val token = """{"access_token":"at_p","token_type":"Bearer","expires_in":3600,"tenant":"t_01","subject":"user_1","device_id":"dev_9"}"""
 
+  // MARK: A token for a way the person stopped (qa-kiff, 16 Nov; iOS's tafs#1246)
+
+  private val late = KiffClient.json.decodeFromString(bot.tafs.app.kiff.DeviceToken.serializer(), token)
+
+  // On a tablet the person switched ways (or left) just as this one's token landed: it's ended at KIFF with its own bearer,
+  // nothing of it is kept, and the stop goes on.
+  @Test fun aTokenForAWayThePersonStoppedIsEndedAtKiffNotKept() = runTest {
+    transport.answer("POST /v1/auth/device/logout", 204, "")
+    val m = model()
+    try {
+      m.takeSession(late, stopped = true)
+      fail("a stopped way's token was kept")
+    } catch (_: kotlinx.coroutines.CancellationException) {
+    }
+    val logout = transport.requestsTo("POST /v1/auth/device/logout")
+    assertEquals(1, logout.size)
+    assertEquals("with the late token's own bearer", "Bearer at_p", logout.single().headers["Authorization"])
+    assertEquals(null, secrets.load(AppModel.TOKEN))
+    assertTrue("nothing of the account is read", transport.requestsTo("GET /v1/me").isEmpty())
+    assertFalse(m.state.value.mode == Mode.kiff)
+  }
+
+  // The way still running: its token is the session, as before, and nothing is ended.
+  @Test fun aTokenForTheWayStillRunningIsTheSession() = runTest {
+    signedIn()
+    val m = model()
+    m.takeSession(late, stopped = false)
+    assertEquals("at_p", secrets.load(AppModel.TOKEN))
+    assertEquals(Mode.kiff, m.state.value.mode)
+    assertTrue(transport.requestsTo("POST /v1/auth/device/logout").isEmpty())
+  }
+
+  // Both ways hand their token over the same way, so neither can keep a token for a way that was stopped.
+  @Test fun bothWaysTakeTheirTokenThroughTakeSession() {
+    val model = java.io.File("src/main/kotlin/bot/tafs/app/app/AppModel.kt").readText()
+    assertEquals(2, Regex("""takeSession\(token, stopped = !currentCoroutineContext\(\)\.isActive\)""").findAll(model).count())
+  }
+
   private fun signedIn() {
     transport.answer("GET /v1/me", 200, """{"tenant_id":"t_01","tenant_slug":"acme"}""")
     transport.answer("POST /v1/me/device/approval-key", 409, """{"error":"approval_key_set","fingerprint":"${KiffClient.fingerprint(signer.approvalPublicKeyDER)}"}""")
