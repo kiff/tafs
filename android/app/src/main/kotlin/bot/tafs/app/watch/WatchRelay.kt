@@ -4,6 +4,7 @@ import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
 import bot.tafs.app.model.Answer
+import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.Words
 import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
@@ -25,6 +26,8 @@ class WatchRelay(
   /** The app's model, its session restored; null when there's none to read with. */
   private val model: suspend () -> AppModel?,
   private val now: () -> Long = System::currentTimeMillis,
+  /** Shared by every request in the process (WearRelayService): a watch asking in a loop reads tafs cloud and KIFF at most this often. */
+  private val floor: RefreshFloor = RefreshFloor(),
 ) {
   suspend fun answer(path: String, data: ByteArray): WatchReply {
     val request = when (val accepted = WatchLink.accept(path, data, now())) {
@@ -34,8 +37,9 @@ class WatchRelay(
     return when (request) {
       is WatchRequest.NeedsYou, is WatchRequest.Tafs -> {
         val model = signedIn() ?: return WatchReply.SignedOut
-        // Read again now: the watch shows what tafs cloud and KIFF say, not what the phone last drew.
-        if (request is WatchRequest.NeedsYou) model.refresh()
+        // Read again now: the watch shows what tafs cloud and KIFF say, not what the phone last drew. Within the floor of the
+        // last read, that read stands.
+        if (request is WatchRequest.NeedsYou && floor.due(now())) model.refresh()
         val state = model.state.value
         if (state.mode != Mode.kiff) WatchReply.SignedOut else if (request is WatchRequest.NeedsYou) needsYou(state) else tafs(state)
       }
@@ -57,7 +61,7 @@ class WatchRelay(
     model.refresh()
     val before = model.state.value
     val call = before.held.firstOrNull { it.id == holdId } ?: return WatchReply.AlreadyAnswered
-    if (!before.canAnswer(call)) return WatchReply.Failed(Words.Watch.openOnPhone)
+    if (!refusableFromWrist(before, call)) return WatchReply.Failed(Words.Watch.openOnPhone)
     val done = model.answer(call, Answer.Refuse, confirmed = true)
     val after = model.state.value
     return when {
@@ -90,6 +94,13 @@ class WatchRelay(
 
   companion object {
     /**
+     * Whether the wrist may refuse [call]: one KIFF holds that this phone can answer from here. A call tafs cloud holds alone
+     * (no KIFF id) is signed through the phone's own prompt, which nobody would see with the phone in a pocket, so it's
+     * Approve and Refuse on the phone. The wrist's Refuse is always the signing key with no prompt (`signConfirmed`).
+     */
+    fun refusableFromWrist(state: AppState, call: HeldCall): Boolean = call.kiffId != null && state.canAnswer(call)
+
+    /**
      * Needs you as the phone shows it: tafs cloud's count and its words, and each held call with its taf, what it wants, KIFF's
      * amount and the reason. One this phone can't answer from here (KIFF doesn't hold its key) isn't refusable from the wrist.
      */
@@ -103,7 +114,7 @@ class WatchRelay(
           wants = call.proposed.summary,
           amount = call.proposed.amount?.formatted,
           reason = call.reason.takeIf { it.isNotBlank() },
-          refusable = state.canAnswer(call),
+          refusable = refusableFromWrist(state, call),
         )
       },
     )
@@ -116,5 +127,20 @@ class WatchRelay(
       },
       allHalted = state.haltOf(null).halted,
     )
+  }
+}
+
+/**
+ * The shortest time between two reads of tafs cloud and KIFF for the watch's Needs you: within [ms] of the last one, the phone
+ * answers from what that read brought. Only the watch's reads count; the screen's own refreshes don't wait on it.
+ */
+class RefreshFloor(private val ms: Long = 10_000) {
+  private var last: Long? = null
+
+  @Synchronized fun due(now: Long): Boolean {
+    val then = last
+    if (then != null && now - then in 0 until ms) return false
+    last = now
+    return true
   }
 }
