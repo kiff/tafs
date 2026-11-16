@@ -2380,7 +2380,7 @@ final class AppModel: ObservableObject {
 
     /// The first chip's word: Home's, the brief's, or the app's own where neither sent one.
     var labelsAllWords: String {
-        homeLabelsAll ?? brief.flatMap { $0.words.all.isEmpty ? nil : $0.words.all } ?? Words.Record.Filter.all
+        homeLabelsAll ?? brief.flatMap { $0.words.all.isEmpty ? nil : $0.words.all } ?? Words.Home.labelsAll
     }
 
     /// Home's first line: filtered to the chosen label, tafs cloud's line for it ("2 tafs working · Money").

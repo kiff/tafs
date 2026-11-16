@@ -358,7 +358,7 @@ final class BriefTests: XCTestCase {
         XCTAssertEqual(model.listHeadline, model.workingWords, "and the line as before")
         model.filterList("gone")
         XCTAssertEqual(model.listHeadline, model.workingWords, "a label that's gone: the whole list's line")
-        XCTAssertEqual(model.labelsAllWords, Words.Record.Filter.all)
+        XCTAssertEqual(model.labelsAllWords, Words.Home.labelsAll)
     }
 
     /// The urgent alert (the owner's mockup 3): a brief's or an urgent push opens the brief, and only those;
