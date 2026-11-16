@@ -73,6 +73,7 @@ object Words {
     }
     fun biometryTimedOut(biometry: String): String = Res.s(R.string.approval_biometry_timed_out, biometry)
     fun canNotUsedRightTry(either: String): String = Res.s(R.string.approval_can_not_used_right_try, either)
+    val cancelled: String get() = Res.s(R.string.approval_cancelled)
     val cancelledNothingApprovedRequestKept: String get() = Res.s(R.string.approval_cancelled_nothing_approved_request_kept)
     object CantApprove {
       val noneEnrolled: String get() = Res.s(R.string.approval_cant_approve_none_enrolled)
@@ -2117,6 +2118,7 @@ object Words {
     val chooseActions: String get() = Res.s(R.string.setup_choose_actions)
     val connectApp: String get() = Res.s(R.string.setup_connect_app)
     val connectedApps: String get() = Res.s(R.string.setup_connected_apps)
+    val discardNotConfirmed: String get() = Res.s(R.string.setup_discard_not_confirmed)
     val doors: String get() = Res.s(R.string.setup_doors)
     val edit: String get() = Res.s(R.string.setup_edit)
     val followUps: String get() = Res.s(R.string.setup_follow_ups)

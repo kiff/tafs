@@ -107,15 +107,16 @@ struct ConnectAppsView: View {
         .accessibilityHidden(true)
     }
 
-    /// One app: its connected apps open their detail (what it can read and do, which tafs use
-    /// it, and Disconnect); the rest have a compact Connect.
+    /// One app: its connected apps, and any this device holds a connection to, open their detail (what
+    /// it can read and do, which tafs use it, and Disconnect); the rest have a compact Connect.
     @ViewBuilder
     private func row(_ app: TafsCloud.ConnectApps.App) -> some View {
         let said = ConnectRow(app, usedHere: model.connectionGroups(of: app).tafs.map(\.taf),
                               removing: model.connections(of: app).contains { model.removingGrants.contains($0.id) })
         // A connected app always opens its detail, never a tap that does nothing: there, the connections this
-        // device reads, or why it reads none.
-        if app.connected {
+        // device reads, or why it reads none. So does an app this device holds a connection to that isn't
+        // connected (a declined sign-in), so its Disconnect is in reach; its Connect stays beside it.
+        if AppModel.opensConnections(app, in: model.grants) {
             NavigationLink { AppConnectionsView(app: app) } label: { cells(app, said) }
                 .accessibilityIdentifier("connect.manage." + app.entry)
         } else {

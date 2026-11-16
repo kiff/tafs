@@ -2,11 +2,14 @@
 """
 Uploads the signed release bundle to Google Play's internal track, with its release notes in the eight languages
 (docs/android-app.md, "Releases to Play"). Only the internal track, ever: never production, closed or open testing, and
-never a rollout change. The token is a short-lived one from Google's workload identity federation (the release job's
+never a rollout change. With --wear, the Wear OS watch's bundle goes to the watch's own internal track (`wear:internal`),
+with its own notes (docs/watch-wear.md, Versions). The token is a short-lived one from Google's workload identity federation (the release job's
 `google-github-actions/auth`), passed in PLAY_ACCESS_TOKEN; no key file exists anywhere.
 
   play_internal.py --check                 the release notes of the current versionCode: all eight, each short enough; none fails
   play_internal.py --upload BUNDLE.aab     one edit: the bundle, the internal track's release with its notes, committed
+  play_internal.py --wear --check          the same, for the watch's versionCode and notes
+  play_internal.py --wear --upload BUNDLE.aab
 
 Standard library only: every call to Play is here, in the open.
 """
@@ -18,21 +21,29 @@ import urllib.error
 import urllib.request
 
 PACKAGE = "dev.kiff.tafs"
-TRACK = "internal"  # The only track this script ever writes.
+TRACK = "internal"  # The only track this script ever writes for the phone.
+WEAR_TRACK = "wear:internal"  # And for the watch: Play's internal track for the Wear OS form factor, never another.
 LOCALES = ["en-US", "de-DE", "fr-FR", "es-ES", "it-IT", "pt-PT", "nl-NL", "pl-PL"]
 NOTES_MAX = 500  # Play's limit for a release note, per language.
 API = "https://androidpublisher.googleapis.com/androidpublisher/v3/applications/" + PACKAGE
 UPLOAD = "https://androidpublisher.googleapis.com/upload/androidpublisher/v3/applications/" + PACKAGE
 HERE = os.path.dirname(os.path.abspath(__file__))
 GRADLE = os.path.join(HERE, "..", "app", "build.gradle.kts")
+WEAR_GRADLE = os.path.join(HERE, "..", "wear", "build.gradle.kts")
+# The watch's versionCodes are in their own band (400,000,001 and up): a phone's code can never name a watch's notes.
+WEAR_FIRST = 400_000_001
 
 
-def version_code() -> int:
-    with open(GRADLE, encoding="utf-8") as f:
-        m = re.search(r"^\s*versionCode\s*=\s*(\d+)\s*$", f.read(), re.M)
+def version_code(wear: bool = False) -> int:
+    with open(WEAR_GRADLE if wear else GRADLE, encoding="utf-8") as f:
+        # `400_000_001` is Kotlin's way of writing 400000001.
+        m = re.search(r"^\s*versionCode\s*=\s*([\d_]+)\s*$", f.read(), re.M)
     if not m:
-        sys.exit("versionCode not found in app/build.gradle.kts")
-    return int(m.group(1))
+        sys.exit(f"versionCode not found in {'wear' if wear else 'app'}/build.gradle.kts")
+    code = int(m.group(1).replace("_", ""))
+    if wear != (code >= WEAR_FIRST):
+        sys.exit(f"versionCode {code} is outside the {'watch' if wear else 'phone'}'s band (the watch's starts at {WEAR_FIRST})")
+    return code
 
 
 def notes(code: int, required: bool) -> list:
@@ -75,35 +86,39 @@ def call(method: str, url: str, token: str, body=None, raw: bytes = None, kind: 
         sys.exit(f"Play answered {e.code} to {method} {url.split('?')[0].replace(API, '').replace(UPLOAD, '') or '/'}: {e.read().decode(errors='replace')[:2000]}")
 
 
-def upload(bundle: str) -> None:
+def upload(bundle: str, wear: bool = False) -> None:
     token = os.environ.get("PLAY_ACCESS_TOKEN", "")
     if not token:
         sys.exit("PLAY_ACCESS_TOKEN is empty: the workload identity sign-in didn't run")
-    code = version_code()
+    track = WEAR_TRACK if wear else TRACK
+    code = version_code(wear) if wear else version_code()
     release_notes = notes(code, required=True)
     edit = call("POST", f"{API}/edits", token, body={})["id"]
     with open(bundle, "rb") as f:
         sent = call("POST", f"{UPLOAD}/edits/{edit}/bundles?uploadType=media", token, raw=f.read(), kind="application/octet-stream")
     if int(sent.get("versionCode", -1)) != code:
-        sys.exit(f"the bundle Play received is versionCode {sent.get('versionCode')}, but app/build.gradle.kts says {code}: nothing committed")
+        sys.exit(f"the bundle Play received is versionCode {sent.get('versionCode')}, but {'wear' if wear else 'app'}/build.gradle.kts says {code}: nothing committed")
     # The internal track's release: this bundle alone, completed (internal testing has no staged rollout), with its notes.
-    call("PUT", f"{API}/edits/{edit}/tracks/{TRACK}", token, body={
-        "track": TRACK,
+    call("PUT", f"{API}/edits/{edit}/tracks/{track}", token, body={
+        "track": track,
         "releases": [{"versionCodes": [str(code)], "status": "completed", "releaseNotes": release_notes}],
     })
     call("POST", f"{API}/edits/{edit}:commit", token)
-    print(f"versionCode {code} is on Play's {TRACK} track, with release notes in {len(release_notes)} languages")
+    print(f"versionCode {code} is on Play's {track} track, with release notes in {len(release_notes)} languages")
 
 
 def main(argv: list) -> None:
+    wear = argv[:1] == ["--wear"]
+    if wear:
+        argv = argv[1:]
     if argv[:1] == ["--check"]:
-        code = version_code()
+        code = version_code(wear) if wear else version_code()
         # Required here as at the upload: a version with no notes fails `test` in its own pull request, never the release
         # after its merge (Android 105 merged with none, and only `release` refused it).
         found = notes(code, required=True)
         print(f"versionCode {code}: release notes in {len(found)} languages")
     elif len(argv) == 2 and argv[0] == "--upload":
-        upload(argv[1])
+        upload(argv[1], wear) if wear else upload(argv[1])
     else:
         sys.exit(__doc__)
 

@@ -13,6 +13,7 @@
   "approval.biometry.screen_lock": "votre verrouillage d'écran",
   "approval.biometry_timed_out": "{biometry} : délai dépassé. Réessayez.",
   "approval.can_not_used_right_try": "{either} ne peut pas être utilisé pour le moment. Réessayez dans un instant.",
+  "approval.cancelled": "Annulé. Rien n'a changé.",
   "approval.cancelled_nothing_approved_request_kept": "Annulé : rien n'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt.",
   "approval.cant_approve.none_enrolled": "Approuver nécessite une empreinte sur ce téléphone.",
   "approval.cant_approve.temporarily_unavailable": "Le capteur d'empreintes ne peut pas être utilisé pour le moment. Réessayez dans un instant.",

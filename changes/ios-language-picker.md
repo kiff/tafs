@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: an in-app language picker**: Account › Language › Change language lists the device's language and tafs's 8, each named in itself, and a tap applies it at once ([docs/ios-app.md](docs/ios-app.md)).

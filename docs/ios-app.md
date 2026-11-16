@@ -70,8 +70,11 @@ Every refresh and every push also reads planque's grants again: tafs cloud never
 this is how a connection its vendor signed out reaches the list. A change of a kind the app
 doesn't know is ignored. While Coach's chat is open, its thread is read every 3 seconds (every second
 while it works) for five minutes after the owner last wrote, and longer while an unanswered approval or
-sign-in card's grant isn't read yet, for that card's first ten minutes (`AppModel.cardWaitsOnItsGrant`):
-each read reads planque's grants again, so the card doesn't stay on "Reading the request…".
+sign-in card's grant, or KIFF's draft of its Card, isn't read yet, for that card's first ten minutes
+(`AppModel.cardWaitsOnItsGrant`): each read reads planque's grants and the card's draft again, so the card
+doesn't stay on "Reading the request…". Approve waits for the draft. Until it's read the card says "Reading
+KIFF's words for this connection…", and when KIFF refuses the read it says why (`coach.card_draft_not_read`,
+KIFF's reason) with **Try again** (`AppModel.readCardDraft`), as on Android. A draft read before stays drawn.
 
 Each taf has one `DoorsModel` (`AppModel.doors(for:)`), shared by Setup › Starts when and its chat,
 so a door's knocks sit in the chat at their own times (`ChatItem.knock`). A paired sender's
@@ -323,8 +326,12 @@ the app in sample mode.
   for want of it goes back where it was (the composer, with its files; the card, as chosen), with no Not sent row.
 - **Account › Language:** the language tafs's lines are in, by its own name ("Français", "Polski",
   `AppLanguage.name`), so someone in a language they don't read still finds theirs, and **Change
-  language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. No picker
-  of the app's own, as on Android (`settings.language_title`, `settings.change_language`).
+  language**, which opens the app's own list (`LanguagePicker`), as on Android and on a Mac too. The device's
+  language comes first ("This iPhone's language", `settings.language_device`), then the 8, each named in
+  itself, and the one in use is marked. A tap applies it at once, with no relaunch: the lines are read from
+  that language's catalog (`Words.bundle`, `AppLanguage.choose`), every screen draws again, and tafs cloud and
+  KIFF are read again in it. It's kept for the next launch (`tafs.language`), and iOS's own Settings › tafs ›
+  Language shows the same (`AppleLanguages`). The device's language clears both.
 - **Account says who is signed in once** (`AccountLines`): the account's name, then "Signed in as" only when the
   email differs from it (a Solo account is named after its owner's email). The account's id is on the account's
   own screen only. People & groups' first line is the count alone for such an account.
@@ -536,6 +543,10 @@ A connected app (“Connected ✓”) opens its connections (`AppConnectionsView
 - **A connected app always opens** its connections, never a tap that does nothing. A device that doesn't read the
   account's connections (connected tools not set up on it, or a session without its key: `readsConnections`) says so
   there, in the shared words, instead of an empty list.
+- **So does an app this device holds a connection to that isn't connected** (`AppModel.opensConnections`), such as
+  a sign-in whose card was declined (`listed`: signed in, not approved). Its row opens to that connection's
+  Disconnect, and its Connect stays beside it. tafs cloud's `connected` keeps its meaning, since a `listed` grant
+  gives no taf access. This is the same rule as Android's (tafs#1219).
 - **One section per taf,** its name as the heading, holding each of the account's live grants for the app (not `disconnected` or `failed`). The tafs with a connection that needs the owner come first (a sign-in waiting, signed out, or a last call that failed), then the rest by name. A row shows the connection's name as the connection service gives it (`title`, such as “Gmail · Demo Shop”; `Grant.name`), else a direct sign-in's or a key's account, else the app's name. A managed app's `account` is the provider's id, kept only to be sent back with a door's trigger, and never drawn. Then the connection's status words, and “Also on Chargebacks' Card” when another taf's Card uses it. When the connection service draws its rows (`used_by`, `health`, `actions`; `Grant.rowFromPlanque`), each row is
   its name, "Used by" its tafs, and its health in its words, as sent; a tap opens `ConnectionDetailView`: the health,
   the tafs on it, and only the actions it offers that the app knows (`sign_in_again` by `approve` or `key`, `remove`,
@@ -1087,8 +1098,8 @@ reads "1,000 runs", not "1.000 runs".
 The notification extension compiles Model and KIFF, so it has `Words.swift` and the catalog too.
 
 The app ships the eight languages `app/strings/languages.json` lists, and iOS picks the phone's (or the
-language chosen for tafs in Settings), else English. What the servers say comes in the same language: every request to
-KIFF and tafs cloud carries `Accept-Language` with the language the screens resolved to, then the phone's other
+language chosen for tafs in Settings or in Account › Language), else English. What the servers say comes in the same language: every request to
+KIFF and tafs cloud carries `Accept-Language` with the lines' own language (`Words.locale`), then the phone's other
 languages the app ships (`Words.languages`), at most four, then `en` (`KIFFClient.screenLanguages`). A language only
 Siri's phrases are in never counts. The calendar's titles follow the language's order (`calendar.title.*`), and its
 month view names the month on its own (`calendar.month_title.*`, the nominative in Polish). Halt all's Siri lines

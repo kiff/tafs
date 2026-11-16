@@ -288,6 +288,17 @@ class AnswerKiffTest {
     assertTrue(m.state.value.record.none { it.signature != null })
   }
 
+  @Test fun aClosedPromptSendsNothingAndSaysTheRequestIsKept() = runTest {
+    reads()
+    val m = model()
+    auth.fails = bot.tafs.app.signing.PromptClosed()
+    assertFalse(m.answer(m.state.value.held.single(), Answer.ApproveOnce))
+    assertTrue(transport.requests.none { it.method == "POST" })
+    assertEquals(1, m.state.value.held.size)
+    // The call still waits, so it's the line that says so, not "Cancelled. Nothing changed." and not a finger to try again.
+    assertEquals(bot.tafs.app.model.Words.Approval.cancelledNothingApprovedRequestKept, m.state.value.lastError)
+  }
+
   @Test fun aPhoneWithNoScreenLockAnswersNothing() = runTest {
     reads()
     val m = model()
