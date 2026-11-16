@@ -1,0 +1,1 @@
+- **tafs cloud: a sign-in wider than the job is said before it's given.** When planque couldn't narrow an app's sign-in to what the taf uses (such as Google Sheets with no read-only scope), its approval and sign-in cards carry the words to say so, and Coach is told once to say it plainly and never call it read-only (docs/chat.md).

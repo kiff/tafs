@@ -42,7 +42,15 @@ export interface ApprovalGrant {
   on_demand?: boolean;
   /** planque's name for the connection, the same in every app: its app and, when known, its account ("Gmail · Demo Shop"). */
   title?: string;
-  request: { agent?: string; server?: string; profile?: unknown; tools?: Array<{ tool?: string; name?: string; title?: string; read_only?: boolean; setup_reads?: boolean }> } & Record<string, unknown>;
+  request: {
+    agent?: string; server?: string; profile?: unknown; tools?: Array<{ tool?: string; name?: string; title?: string; read_only?: boolean; setup_reads?: boolean }>;
+    /**
+     * A managed connector's request (kiff/planque `ConnectorRequest`): `usual_access` when planque couldn't narrow the app's
+     * sign-in to what the taf uses (its ceiling has no narrower scope, such as Google Sheets with no read-only one), so the
+     * sign-in asks for more access than the job needs.
+     */
+    connector?: { usual_access?: boolean } & Record<string, unknown>;
+  } & Record<string, unknown>;
   /** The tools it had before the addition that waits now: a connected grant whose new tools wait for their approval. */
   connected?: unknown[];
   /** planque holds a confirmed sign-in for it (a reused one, or one made earlier): approving its tools needs no sign-in. */

@@ -2123,6 +2123,39 @@ describe("a Card draft is checked as the phone reads the chat, before its card i
   });
 });
 
+// The Sheets proof (16 Nov): Coach's card said "change nothing" above a consent screen asking to edit and delete, since
+// planque couldn't narrow Google Sheets' sign-in (its ceiling has no read-only scope) and nothing in tafs cloud read that.
+describe("a card whose sign-in planque couldn't narrow says so, and Coach hears it once", () => {
+  const CHAT = `/v1/tafs/${COACH}/conversation`;
+  const comp = (r: { body: Record<string, unknown> }) =>
+    (r.body.components as Array<{ component: { id?: string; wider?: { words: string } } }>).find((c) => c.component.id === "a1")?.component;
+
+  it("marks a waiting card wider from planque's usual_access, in the reader's language, and tells Coach once per connection", async () => {
+    const s = services();
+    // Where planque's grantView carries it: on the connector's request, not at the grant's top level.
+    s.grants = [grant({ status: "pending", vendor: "Google Sheets" }, { connector: { usual_access: true } })];
+    const w = await world(s, {});
+    const first = await w.call("GET", CHAT, undefined);
+    expect(comp(first)?.wider).toEqual({ words: "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools." });
+    const fr = await w.call("GET", CHAT, undefined, { "accept-language": "fr" });
+    expect(comp(fr)?.wider?.words).toMatch(/^La connexion à Google Sheets ne peut pas être limitée/);
+    // Coach reads it with the owner's next message, once, however many reads.
+    const notes = (await w.coach.get("t_acme#coach-notes#u_ana")) as Array<{ text: string; said: string }> | undefined;
+    const lines = (notes ?? []).filter((n) => n.text.startsWith("[connection Google Sheets (grant g_1)]"));
+    expect(lines).toHaveLength(1);
+    expect(lines[0]!.text).toMatch(/never call this sign-in read-only or say it changes nothing/);
+  });
+
+  it("leaves a card whose sign-in is narrowed as it was, and tells Coach nothing, a flag at the grant's top level included", async () => {
+    const s = services();
+    s.grants = [grant({ status: "pending", usual_access: true }, { connector: { usual_access: false } })];
+    const w = await world(s, {});
+    expect(comp(await w.call("GET", CHAT, undefined))?.wider).toBeUndefined();
+    const notes = (await w.coach.get("t_acme#coach-notes#u_ana")) as Array<{ text: string }> | undefined;
+    expect((notes ?? []).some((n) => n.text.startsWith("[connection"))).toBe(false);
+  });
+});
+
 // Eval 13's Refunds: the owner approved the tools with the Card in one tap, and the Card was then refused (lifetime_sum).
 // The read check covers the steps that sign the Card with the tools or the key, as it does a Card alone.
 describe("the chat's read checks a Card signed with its tools or key too, before the card is drawn", () => {

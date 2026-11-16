@@ -304,6 +304,7 @@ export const pt: Words = {
   brief_sign_in_again: "Iniciar sessão novamente",
   brief_connection_meanwhile: (taf, vendor) => `${taf} não consegue aceder a ${vendor} até lá.`,
   brief_open_taf: "Abrir o taf",
+  card_wider: (vendor) => `${vendor ? `O início de sessão em ${vendor}` : "Este início de sessão"} não pode ser limitado a esta tarefa: pede mais acesso do que o taf usa. O taf continua a usar apenas as suas próprias ferramentas.`,
   brief_check_meanwhile: (taf) => `${taf} não encontra trabalho novo até a verificação voltar a conseguir ler.`,
   mission_log_delivered: (done, held, refused) => [`${done} feito${done === 1 ? "" : "s"}`, held ? `${held} retida${held === 1 ? "" : "s"}` : "", refused ? `${refused} recusado${refused === 1 ? "" : "s"}` : ""].filter(Boolean).join(" · "),
   business_title: "O que os tafs sabem do seu negócio",
