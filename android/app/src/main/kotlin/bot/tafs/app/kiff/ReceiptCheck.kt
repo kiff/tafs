@@ -240,6 +240,14 @@ data class ReceiptStep(
 )
 
 object ReceiptSteps {
+  /**
+   * "What happened" is what KIFF signed for this line: drawn only once this phone checked KIFF's signature and the
+   * receipt matches the line. Not signed yet, or not checking out, its steps aren't drawn as what happened (the full
+   * receipt still shows them, under what didn't check out).
+   */
+  fun showsWhatHappened(check: ReceiptCheck?, entry: bot.tafs.app.model.RecordEntry, steps: List<ReceiptStep>): Boolean =
+    check is ReceiptCheck.Verified && mismatch(entry, steps) == null
+
   /** The signed chain's steps, from the receipt as KIFF wrote it; none when it can't be read. */
   fun of(raw: ByteArray): List<ReceiptStep> {
     val chain = RawJson.valueOf("causal_chain", raw) ?: return emptyList()

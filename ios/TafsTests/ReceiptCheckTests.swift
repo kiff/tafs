@@ -47,6 +47,15 @@ final class ReceiptCheckTests: XCTestCase {
         XCTAssertEqual(ReceiptCheck.check(Data(Self.signed.utf8), signer: Self.testSigner), .verified(signer: Self.testSigner), "one copy each still checks out")
     }
 
+    /// "What happened" is drawn only for a receipt this device checked as KIFF's, and only when it matches the line.
+    func testWhatHappenedIsDrawnOnlyForACheckedReceiptThatMatchesTheLine() {
+        XCTAssertTrue(ReceiptView.showsWhatHappened(.verified(signer: Self.testSigner), mismatch: false))
+        XCTAssertFalse(ReceiptView.showsWhatHappened(.verified(signer: Self.testSigner), mismatch: true), "KIFF's, but another line's")
+        XCTAssertFalse(ReceiptView.showsWhatHappened(.failed("It isn't signed by KIFF."), mismatch: false))
+        XCTAssertFalse(ReceiptView.showsWhatHappened(.notSignedYet, mismatch: false))
+        XCTAssertFalse(ReceiptView.showsWhatHappened(nil, mismatch: false), "still checking")
+    }
+
     func testAChangedByteInTheChainFails() {
         let changed = Self.signed.replacingOccurrences(of: #""data_hash":"bb""#, with: #""data_hash":"bc""#)
         XCTAssertNotEqual(changed, Self.signed)

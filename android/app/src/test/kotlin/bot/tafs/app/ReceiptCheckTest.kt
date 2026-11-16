@@ -95,6 +95,19 @@ class ReceiptCheckTest {
     answer = answer?.let { bot.tafs.app.model.RecordAnswer(decision = it) },
   )
 
+  /** "What happened" is drawn only for a receipt this phone checked as KIFF's, and only when it matches the line. */
+  @Test fun whatHappenedIsDrawnOnlyForACheckedReceiptThatMatchesTheLine() {
+    val steps = bot.tafs.app.kiff.ReceiptSteps.of(signed.toByteArray())
+    val shows = bot.tafs.app.kiff.ReceiptSteps::showsWhatHappened
+    assertTrue(shows(ReceiptCheck.Verified(testSigner), entry(), steps))
+    assertEquals(false, shows(ReceiptCheck.Failed("It isn't signed by KIFF."), entry(), steps))
+    assertEquals(false, shows(ReceiptCheck.NotSignedYet, entry(), steps))
+    assertEquals(false, shows(null, entry(), steps))
+    // The chain below signs a decision on payment pi_3Q: another payment's line doesn't draw it.
+    val onPayment = bot.tafs.app.kiff.ReceiptSteps.of(chain.toByteArray())
+    assertEquals(false, shows(ReceiptCheck.Verified(testSigner), entry(onValue = "pi_OTHER"), onPayment))
+  }
+
   @Test fun theSheetShowsTheStepsKiffSignedInWords() {
     val steps = bot.tafs.app.kiff.ReceiptSteps.of(signed.toByteArray())
     assertEquals(listOf("held: over <€100> & more", "settled"), steps.map { it.words })
