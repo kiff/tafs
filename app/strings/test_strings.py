@@ -153,6 +153,8 @@ class SharedWords(unittest.TestCase):
                     self.assertNotRegex(generate.PLACEHOLDER.sub("", text), r"[{}]", f"{lang} {key} has a stray brace")
                     if lang not in generate.POSSESSIVE:
                         self.assertNotIn("|possessive}", text, f"{lang} {key}: {lang} has no possessive rule; word the line around the name")
+                    if lang not in generate.THIS:
+                        self.assertNotRegex(text, r"\|[Tt]his\}", f"{lang} {key}: {lang} has no rule for \"this\"; write the word in the line")
 
     def test_a_macs_own_sentence_sits_beside_the_phones_and_names_the_macs_settings(self):
         # A `*_mac` line that isn't a Touch ID prompt (no "prompt" in its key) is a whole sentence for
@@ -345,7 +347,7 @@ class Possessives(unittest.TestCase):
                  "fr": {"a.also_on": "Aussi sur la Carte de {taf}, avec {vendor}"}}
         self.assertEqual(generate.arguments("a.also_on", source), ["taf", "vendor"], "the accessor takes the name as it is")
         self.assertEqual(generate.possessives("a.also_on", source, lines), ["taf"])
-        owned = generate.possessives("a.also_on", source, lines)
+        owned = generate.derived("a.also_on", source, lines)
         self.assertEqual(generate.ios_text(source["a.also_on"], "a.also_on", source, owned), "Also on %3$@ Card, with %2$@")
         self.assertEqual(generate.ios_text(lines["de"]["a.also_on"], "a.also_on", source, owned), "Auch auf %3$@ Karte, mit %2$@")
         self.assertEqual(generate.ios_text(lines["fr"]["a.also_on"], "a.also_on", source, owned), "Aussi sur la Carte de %1$@, avec %2$@")
@@ -358,6 +360,49 @@ class Possessives(unittest.TestCase):
         self.assertIn('case "de": return name + ("sßxz".contains(last) ? "\'" : "s")', swift)
         self.assertIn("switch locale.language.languageCode?.identifier", swift, "picked by the lines' language, never the device's")
 
+
+class This(unittest.TestCase):
+    """`{name|this}`: "this name" by the line language's rule (generate.THIS), `{name|This}` to open a sentence."""
+
+    def test_the_rule_both_ways(self):
+        # French: "ce" before a consonant, "cet" before a vowel or a mute h, for every device word it has.
+        self.assertEqual([generate.this(n, "fr") for n in ["Mac", "PC", "PC Windows", "appareil", "iPad", "écran", "hôte"]],
+                         ["ce Mac", "ce PC", "ce PC Windows", "cet appareil", "cet iPad", "cet écran", "cet hôte"])
+        self.assertEqual([generate.this(n, "fr", capital=True) for n in ["Mac", "appareil"]], ["Ce Mac", "Cet appareil"])
+        self.assertEqual(generate.this("Mac", "en"), "Mac", "a language with no rule keeps the name")
+        self.assertEqual(generate.this("", "fr"), "")
+        self.assertEqual(sorted(generate.THIS), ["fr"])
+
+    def test_french_never_writes_its_own_word_before_a_device(self):
+        # "cet {device}" read "cet Mac" on a Mac, "ce {device}" "ce appareil" on a phone, and "l'{device}" "l'Mac":
+        # the rule picks the word.
+        for key, line in generate.load("fr").items():
+            for text in generate.forms_of(line):
+                self.assertNotRegex(text, r"(\b([Cc]e(t|tte)?|[Ll][ea]|[Dd]u|[Aa]u) |\b[Ll]')\{device\}", f"fr {key}: write {{device|this}}")
+
+    def test_this_is_a_value_after_the_lines_own_and_each_app_says_it(self):
+        source = {"a.on_device": "Alerts on this {device} for {taf|possessive} Card"}
+        lines = {"fr": {"a.on_device": "Alertes sur {device|this} pour la Carte de {taf}"},
+                 "pl": {"a.on_device": "Alerty na tym {device} dla Karty {taf}"},
+                 "nl": {"a.on_device": "{device|This}: meldingen voor {taf}"}}
+        self.assertEqual(generate.derived("a.on_device", source, lines),
+                         [("taf", "possessive"), ("device", "this"), ("device", "This")], "English first, then each language's")
+        self.assertEqual(generate.possessives("a.on_device", source, lines), ["taf"])
+        owned = generate.derived("a.on_device", source, lines)
+        self.assertEqual(generate.ios_text(lines["fr"]["a.on_device"], "a.on_device", source, owned), "Alertes sur %4$@ pour la Carte de %2$@")
+        self.assertEqual(generate.ios_text(lines["pl"]["a.on_device"], "a.on_device", source, owned), "Alerty na tym %1$@ dla Karty %2$@")
+        self.assertEqual(generate.ios_text(lines["nl"]["a.on_device"], "a.on_device", source, owned), "%5$@: meldingen voor %2$@")
+        swift = generate.ios_swift(source, lines)
+        self.assertIn('static func onDevice(device: String, taf: String) -> String { Words.line("a.on_device", device, taf, '
+                      'Words.possessive(taf), Words.demonstrative(device), Words.demonstrative(device, capital: true)) }', swift)
+        self.assertIn('case "fr": word = "aeiouyhàâäéèêëîïôöùûüœæ".contains(first) ? "cet " : "ce "', swift)
+        import android
+        kotlin = android.words_kt(source, lines)
+        self.assertIn('fun onDevice(device: String, taf: String): String = Res.s(R.string.a_on_device, device, taf, '
+                      'Words.possessive(taf), Words.demonstrative(device), Words.demonstrative(device, capital = true))', kotlin)
+        self.assertIn('"fr" -> if (name.first().lowercaseChar() in "aeiouyhàâäéèêëîïôöùûüœæ") "cet " else "ce "', kotlin)
+        self.assertEqual(android.android_text(lines["fr"]["a.on_device"], ["device", "taf"], owned, True),
+                         "Alertes sur %4$s pour la Carte de %2$s")
 
 class IOSLiterals(unittest.TestCase):
     """No English left in the iPhone and iPad app's code, outside what must stay (ios_literals.py)."""

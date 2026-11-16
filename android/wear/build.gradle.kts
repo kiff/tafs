@@ -49,6 +49,10 @@ android {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
+  // The store screenshots render the real screen with its resources under Robolectric (WearStoreScreenshots).
+  testOptions {
+    unitTests.isIncludeAndroidResources = true
+  }
   buildFeatures {
     compose = true
     aidl = false
@@ -83,4 +87,18 @@ dependencies {
 
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation(composeBom)
+  testImplementation(libs.androidx.compose.ui.test.junit4)
+  testImplementation(libs.androidx.test.ext.junit)
+  testImplementation(libs.robolectric)
+  testImplementation(libs.roborazzi)
+  testImplementation(libs.roborazzi.compose)
+  debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+// The store screenshots are drawn only when asked (`-PwearScreenshots`), into android/play/wear-screenshots; the test runs
+// either way, so a screen that no longer draws fails CI.
+tasks.withType<Test>().configureEach {
+  systemProperty("roborazzi.test.record", if (project.hasProperty("wearScreenshots")) "true" else "false")
+  systemProperty("tafs.repo", rootProject.projectDir.parentFile.absolutePath)
 }

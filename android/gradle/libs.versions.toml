@@ -22,6 +22,9 @@ credentials = "1.5.0"
 zxing = "3.5.3"
 googleServices = "4.4.3"
 junit = "4.13.2"
+# The watch's store screenshots, drawn on the JVM (docs/watch-wear.md): test-only.
+robolectric = "4.17"
+roborazzi = "1.77.0"
 kotlin = "2.4.21"
 nav3Core = "1.0.1"
 # The Wear OS watch (wear/, docs/watch-wear.md): its Compose, its tile, and the Data Layer to the phone.
@@ -67,6 +70,9 @@ androidx-test-ext-junit = { module = "androidx.test.ext:junit", version.ref = "a
 androidx-test-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "androidxTestEspresso" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTestRunner" }
 junit = { module = "junit:junit", version.ref = "junit" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+roborazzi = { module = "io.github.takahirom.roborazzi:roborazzi", version.ref = "roborazzi" }
+roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose", version.ref = "roborazzi" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3Core" }

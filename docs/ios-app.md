@@ -66,6 +66,11 @@ which reads that again with the phone's own session and takes nothing from the p
 - `halted` and `resumed`: the home list;
 - `knock`: that taf's doors, and its thread where it's been read.
 
+**Coach's thread keeps the order it has drawn** (`SteadyOrder`, as Android's tafs#1233): what's on screen never moves
+while Coach answers. Items drawn keep their places, new ones go after them in the thread's order, and an earlier page
+goes before. The owner's message keeps its place when tafs cloud's copy replaces the one sent from this device
+(another id and time, the same words). Another conversation, or the thread reopened, is drawn in its own order.
+
 Every refresh and every push also reads planque's grants again: tafs cloud never sees them, so
 this is how a connection its vendor signed out reaches the list. A change of a kind the app
 doesn't know is ignored. While Coach's chat is open, its thread is read every 3 seconds (every second
@@ -290,6 +295,11 @@ the app in sample mode.
   phone sends no disconnect of its own and asks for one Face ID, the removal's. The result says "Its access to
   apps is removed." only when tafs cloud lists `connections` as removed, and names "access to apps" among the steps
   left when it lists it as failed (`AppModel.removalCards`, `removalStep`).
+  **Face ID closed, or a face not recognised, is never silent** (`ApprovalReadiness.notDone`). Remove for good says
+  "Not removed. Nothing changed." (`taf.remove.not_confirmed`, as Android), a taf's Discard "Not discarded. Nothing
+  changed." (`setup.discard_not_confirmed`), and signing a device out or removing a passkey "Cancelled. Nothing
+  changed." (`approval.cancelled`), where nothing is left waiting.
+  A key that couldn't sign says why. Nothing is sent either way.
 - **Setup › Starts when** (`StartsWhenView`, `TafSetupViews.swift`), from `GET …/knob`
   `wakes`: its schedule with − and + through the stop's `size.choices` (`adjustKnob`), Skip it /
   Run after (`setting.busy`), app events with **Approve** (`AppEventApprovalSheet`, the signed
@@ -439,6 +449,9 @@ the app in sample mode.
   is forgotten. It closes, device-signed, after 30 seconds in the background (on coming back, if iOS suspended the
   app first), at once when the screen locks (`protectedDataWillBecomeUnavailable`) and before a drive starts; it is
   dropped at sign-out and at a new sign-in (`ApprovalWindowTests`).
+  **A sign-in wider than the job is said on the card**: when tafs cloud marks an approval or sign-in card `wider: {words}`
+  (the app's sign-in can't be narrowed to the taf's tools), its words go above the card's buttons, in amber
+  (`WiderLine`, `SetupComponent.widerWords`), as on Android. A mark of another shape, or blank, is no mark.
   **A sign-in card names its app**: the card's `service`, else the connection's app as Connect apps names it, else
   planque's vendor in people's words (`AppModel.signInApp`, `appName`): "Sign in at Gmail", and "Sign in at the
   vendor" only when no app is known, never a connection's status. When the connection takes no approval now

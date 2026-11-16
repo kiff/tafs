@@ -1,4 +1,5 @@
 import CryptoKit
+import LocalAuthentication
 import XCTest
 @testable import Tafs
 
@@ -86,6 +87,15 @@ final class DevicesTests: XCTestCase {
         let phone = try XCTUnwrap(model.devices.first { $0.id == "dev_phone01" })
         let removed = await model.removeDevice(phone)
         XCTAssertFalse(removed)
+        XCTAssertTrue(deletes().isEmpty)
+        // Said, never silent: a key that couldn't sign says why, and a closed prompt that it wasn't confirmed.
+        let what = Words.Settings.Devices.signOutPrompt(device: try XCTUnwrap(phone.name))
+        XCTAssertEqual(model.devicesError?.hasPrefix(what + " didn't go through."), true, model.devicesError ?? "")
+        signer.refuse = false
+        signer.throwing = LAError(.userCancel)
+        let cancelled = await model.removeDevice(phone)
+        XCTAssertFalse(cancelled)
+        XCTAssertEqual(model.devicesError, "Cancelled. Nothing changed.")
         XCTAssertTrue(deletes().isEmpty)
     }
 

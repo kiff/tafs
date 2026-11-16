@@ -65,4 +65,15 @@ object Words {
     "de" -> name + if (name.last().lowercaseChar() in "sßxz") "'" else "s"
     else -> name
   }
+
+  /** "This name" in the lines' language (app/strings/generate.py's THIS): "ce Mac", "cet appareil"; `capital` opens
+   * a sentence. As it is in a language with no rule: its lines write their own word. */
+  fun demonstrative(name: String, capital: Boolean = false): String {
+    if (name.isEmpty()) return name
+    val word = when (Res.language) {
+      "fr" -> if (name.first().lowercaseChar() in "aeiouyhàâäéèêëîïôöùûüœæ") "cet " else "ce "
+      else -> return name
+    }
+    return (if (capital) word.replaceFirstChar { it.uppercaseChar() } else word) + name
+  }
 }

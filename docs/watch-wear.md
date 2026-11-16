@@ -23,7 +23,9 @@ this page says what is there now and what each step adds.
   watch's own `Res`. A strings test fails if `WEAR_KEYS` names a line that isn't there.
 
 - **The phone's relay** (`app/…/watch/WearRelayService`, `WatchRelay`). The phone app declares `tafs_phone_relay`
-  (`res/values/wear.xml`) and answers requests under `/tafs/watch/v1/` only. Each passes `WatchLink.accept` first; then
+  (`res/values/wear.xml`, kept through the release build's resource shrinking by `res/raw/keep.xml`: Google Play
+  services reads it and no code does, so 111 went out without it and the watch read the phone as out of range; CI's
+  `play/check_watch_link.sh` fails a release build without it) and answers requests under `/tafs/watch/v1/` only. Each passes `WatchLink.accept` first; then
   Needs you is read again (`refresh`), at most once every 10 s for the watch (`RefreshFloor`), and answered as the phone shows it: tafs cloud's count and words, and each held call's
   taf, summary, KIFF's amount and reason. Your tafs is each taf's line (`Taf.now`), or Halted. With no KIFF session (signed
   out, or the sample) the watch is told `signed_out`. Coach is answered Open on phone for now, with nothing sent
@@ -103,6 +105,22 @@ counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the tw
 - **Before `WEAR_UPLOAD` goes on:** Play takes a watch bundle only once the listing has the Wear OS form factor (Play
   Console › Test and release › Advanced settings › Form factors), which is a store-listing change and the owner's.
 
+**The store screenshots** (`WearStoreScreenshots`): the watch's real screen, drawn on the JVM (Robolectric and Roborazzi,
+test-only) in each of the 8 languages, round, 384 × 384 px, the smallest size Play takes for Wear OS. They're filled with the
+phone app's own sample tafs and words (`app/strings/<lang>/sample.json`, `taf.json`) and the watch's own strings, with
+nothing drawn over them. The amount is written as the phone sends it (`Money.formatted`: a whole amount has no cents). Three per language, into `android/play/wear-screenshots/<locale>/`:
+- `1-needs-you`: a held refund, with Refuse and Approve on your phone;
+- `2-refused`: what the wrist says once it's refused;
+- `3-halt-all`: Halt all, asked once more.
+
+They're redrawn only when asked:
+
+```bash
+cd android && ./gradlew :wear:testDebugUnitTest --tests 'bot.tafs.wear.WearStoreScreenshots' -PwearScreenshots
+```
+
+Otherwise the same tests still draw every screen, without writing a file, so a screen that no longer draws fails CI.
+
 ## How the watch talks to KIFF and tafs cloud: through the phone
 
 The watch holds **no keys, no session and no KIFF client**. It sends the phone a request over the Data Layer, the phone
@@ -151,7 +169,7 @@ watch doesn't know is shown as Open on phone, never guessed at.
 
 ## Still to come
 
-1. Screenshots in all 8 languages, and the Wear OS form factor on Play's listing, which is the owner's. Until then the
-   watch's release job builds and keeps its signed bundle, and `WEAR_UPLOAD` stays off.
+1. The listing's Wear OS screenshots are drawn (below); putting them on the listing, and the Wear OS opt-in and review
+   policy for production, are the owner's, in Play Console.
 2. On a real watch, with the always-on display on, before the internal track: neither the screen nor the tile shows a held
    call's details while the watch is locked or dimmed, and the app forgets them on `onStop` (from kiff/tafs#1161's review).

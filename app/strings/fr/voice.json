@@ -4,7 +4,7 @@
   "voice.dictate": "Dicter un message",
   "voice.dictation_could_not_start": "La dictée n'a pas pu démarrer : {why}",
   "voice.dictation_in": "Dictée en {language}. Changer de langue",
-  "voice.dictation_not_add_keyboard_dictation": "La dictée n'est pas encore disponible sur cet {device}. Ajoutez un clavier avec la dictée activée dans Réglages › Général › Clavier › Claviers, attendez le téléchargement de sa langue, puis réessayez.",
+  "voice.dictation_not_add_keyboard_dictation": "La dictée n'est pas encore disponible sur {device|this}. Ajoutez un clavier avec la dictée activée dans Réglages › Général › Clavier › Claviers, attendez le téléchargement de sa langue, puis réessayez.",
   "voice.dictation_not_add_keyboard_dictation_mac": "La dictée n'est pas encore activée sur ce Mac. Activez-la dans Réglages Système › Clavier › Dictée (sous macOS 12 : Préférences Système › Clavier › Dictée), attendez le téléchargement de sa langue, puis réessayez.",
   "voice.dictation_not_available_right_try": "La dictée n'est pas disponible pour le moment. Réessayez dans un instant.",
   "voice.dictation_stopped_tap_mic_start": "Dictée arrêtée : {why} Touchez le micro pour recommencer.",
