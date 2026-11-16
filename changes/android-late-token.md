@@ -1,0 +1,1 @@
+- **Android: a sign-in the person stopped never signs them in.** On a tablet, a token that lands just as the person switches between KIFF's code and the phone's QR, or leaves the sheet, is ended at KIFF with its own token rather than kept, as on iOS (docs/android-app.md).

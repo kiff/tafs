@@ -49,6 +49,10 @@ android {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
+  // The store screenshots render the real screens with their resources under Robolectric (PhoneStoreScreenshots).
+  testOptions {
+    unitTests.isIncludeAndroidResources = true
+  }
   buildFeatures {
     compose = true
     aidl = false
@@ -105,6 +109,11 @@ dependencies {
   // Local tests: jUnit, coroutines, Android runner
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
+  // The phone's store screenshots, the real screens drawn on the JVM (PhoneStoreScreenshots): test-only.
+  testImplementation(libs.robolectric)
+  testImplementation(libs.roborazzi)
+  testImplementation(libs.roborazzi.compose)
+  testImplementation(libs.androidx.compose.ui.test.junit4)
 
   // Instrumented tests: jUnit rules and runners
   androidTestImplementation(libs.androidx.test.core)
@@ -143,4 +152,10 @@ dependencies {
 
 // Unit tests run in UTC, as CI does, so a developer's own time zone never changes what they read; a test that needs a phone in
 // another zone sets it itself.
-tasks.withType<Test>().configureEach { systemProperty("user.timezone", "UTC") }
+tasks.withType<Test>().configureEach {
+  systemProperty("user.timezone", "UTC")
+  // The store screenshots are drawn only when asked (`-PphoneScreenshots`), into android/play/phone-screenshots; the test runs
+  // either way, so a screen that no longer draws fails CI.
+  systemProperty("roborazzi.test.record", if (project.hasProperty("phoneScreenshots")) "true" else "false")
+  systemProperty("tafs.repo", rootProject.projectDir.parentFile.absolutePath)
+}
