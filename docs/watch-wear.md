@@ -22,7 +22,24 @@ this page says what is there now and what each step adds.
   shows as they are (`WEAR_KEYS`), into `wear/src/main/res/values*/strings.xml` and `wear/…/Words.kt`, read through the
   watch's own `Res`. A strings test fails if `WEAR_KEYS` names a line that isn't there.
 
-The phone doesn't answer yet: its relay is the next step, so on a real watch this screen says it can't reach the phone.
+- **The phone's relay** (`app/…/watch/WearRelayService`, `WatchRelay`). The phone app declares `tafs_phone_relay`
+  (`res/values/wear.xml`) and answers requests under `/tafs/watch/v1/` only. Each passes `WatchLink.accept` first; then
+  Needs you is read again (`refresh`), at most once every 10 s for the watch (`RefreshFloor`), and answered as the phone shows it: tafs cloud's count and words, and each held call's
+  taf, summary, KIFF's amount and reason. Your tafs is each taf's line (`Taf.now`), or Halted. With no KIFF session (signed
+  out, or the sample) the watch is told `signed_out`. Refuse, Halt and Coach are answered Open on phone for now, with
+  nothing read, signed or sent (`WatchRelayTest`).
+- **One model for the process.** The relay reads the app's own `AppModel`, which `TafsApplication` now owns
+  (`TafsApplication.model`) and `MainActivity` draws. It isn't an activity's ViewModel any more, so closing the screen doesn't
+  end it while the watch asks, and the session's hooks on the KIFF and tafs cloud clients are never two models'. Where the
+  owner left off is restored once per process (`restoredModel`, `RestoreOnce`), by the screen or by the relay with the app
+  closed. Restoring from the relay asks the person nothing: what needs them (the approval key's registration for a session
+  from before it, behind the fingerprint) and Play's purchases are left for the screen, whose first ask afterwards does them
+  once (`finishRestoreOnScreen`), so a watch read never uses them up. A request the service can't finish, even one cancelled
+  before it began, answers Open on phone. **Visible on the phone:** what the screen holds in memory now lasts while the process does, so backing out of the
+  app and opening it again comes back to it, where it used to start afresh (`SharedModelSourceTest`, and `SharedModelTest`
+  on an emulator).
+- **`tafs://open/needs-you`** opens Needs you on the phone (`AlertPayload.openedFromWatch`); any other `tafs://open/` link
+  opens nothing.
 
 ```bash
 cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDebug
@@ -84,8 +101,7 @@ watch doesn't know is shown as Open on phone, never guessed at.
 
 ## Still to come
 
-1. The phone's relay for Needs you and Your tafs (answering `tafs_phone_relay`), the phone's `tafs://open/` link, and the
-   tile with Needs you's count.
+1. The tile with Needs you's count.
 2. Refuse and Halt (one taf, every taf) from the wrist.
 3. Talk to Coach by voice.
 4. Screenshots in all 8 languages. A Wear OS build on Play's listing (the internal track first) is a store-listing change,

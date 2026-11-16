@@ -312,12 +312,13 @@ icons dark on the light ground and light on the dark one when the choice changes
 
 | Package | What's in it |
 |---|---|
-| (root) | `MainActivity` (the bar: Account, Tafs, Needs you, Record, Coach, or a rail on a tablet; the list beside what's open on a tablet), `TafsApplication` (the clients, the keys, alerts, Google Play) |
+| (root) | `MainActivity` (the bar: Account, Tafs, Needs you, Record, Coach, or a rail on a tablet; the list beside what's open on a tablet), `TafsApplication` (the clients, the keys, alerts, Google Play, and the app's one `AppModel`, which the screen and the watch's relay share) |
 | `app/` | `AppModel` (the one view model: state, and everything the screens ask of the backends), `SampleStore` |
 | `kiff/` | The clients: `KiffClient` (KIFF's API), `TafsCloud`, `Planque`, `Transport`; `KiffMapping` (KIFF's records into the app's), `Stream` (a chat's streamed events), `ReceiptCheck` (receipts checked on the phone), `Jcs`, `SigningTime`, `SecretStore`, the wire types (`Wire`, `Usage`, `Coach`, `Doors`, `Versions`) |
 | `model/` | The app's own types and words: `Models` (`Taf`, `Card`, `HeldCall`, `RecordEntry`…), `Chat`, `Attachments`, `CardCheck` (the sample only), and one `…Words` object per feature, for words the backends don't send yet |
 | `signing/` | `KeystoreKeys` (the signing key and the approval key, in the Keystore), `DeviceSigner`, `BiometricAuthenticator` |
 | `push/` | Alerts through Firebase Cloud Messaging: `TafsMessagingService`, `AndroidPush`, `Alerts` |
+| `watch/` | The Wear OS watch's requests: `WearRelayService` and `WatchRelay` (docs/watch-wear.md). They read the app's one model, which `TafsApplication` owns: it lasts while the process does, so backing out of the app and opening it again comes back to what the screen held, where it used to start afresh |
 | `billing/` | `Purchases` and `PlayBillingStore`: Google Play, behind the flag |
 | `files/` | `PhotoPrep`: a photo redrawn as a JPEG, with no metadata |
 | `voice/` | `Dictation` and `DeviceSpeech`: dictation, recognised on the phone |
