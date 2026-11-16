@@ -229,6 +229,8 @@ fun NeedsYouView(
     // Cards asked to take another currency: tafs cloud's rows, apart from the held calls, with no Approve once.
     items(state.cardUnitExceptions, key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
     if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty() && state.coachWaiting.isEmpty()) {
+      // Nothing waiting: the owner's board 6, above the screen's own line.
+      item { bot.tafs.app.design.Illustrated(Modifier.padding(bottom = 12.dp)) { bot.tafs.app.design.NeedsYouClearArt(it) } }
       item {
         Panel {
           Text(Words.NeedsYou.nothingWaiting, style = scaled(15, FontWeight.SemiBold, Theme.ink))

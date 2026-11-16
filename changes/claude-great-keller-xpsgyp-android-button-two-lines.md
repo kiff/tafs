@@ -1,0 +1,1 @@
+- **Android: a main button's words read whole.** A long language's main action, as French's "Approuver une fois avec votre empreinte digitale" on a held call, takes two lines on a phone rather than being cut to "…digit…" (docs/android-app.md).

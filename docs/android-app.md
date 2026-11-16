@@ -464,6 +464,10 @@ searches across their tafs, opens one case, and exports receipts
 
 ## Words and languages
 
+**Long languages read whole on a main button.** `PrimaryButton`'s words take up to two lines before anything is cut
+(`PRIMARY_BUTTON_LINES`), so French's "Approuver une fois avec votre empreinte digitale" reads whole on a 360 dp phone
+rather than "…digit…"; a short action stays one line, at the same height (`PrimaryButtonTest`).
+
 **Account › Language** shows the lines' language named in itself ("Français", `AppLanguage.name`), as the resources
 resolved it, and **Change language**, which opens the app's own list: "This phone's language" first, then the 8, each
 named in itself, in the order of the languages table. The current choice is marked; a tap applies it at once and closes the
@@ -1330,7 +1334,7 @@ and "Scan with tafs". KIFF's code is made only once Continue is tapped, which st
 brings the QR back and forgets that code, so one sign-in runs at a time. A token that lands just as the
 person switches ways, or leaves, is ended at KIFF with its own bearer and never kept (`AppModel.takeSession`), on both ways. Signed in either way, the sheet shows
 **You're connected.**, "Let's build great things together." and **Let's go**, under the mascot (no words in the
-image), before it closes onto the app (`SignedInCelebration`).
+image), before it closes onto the app (`SignedInCelebration`). Let's go is then the one way on: the sheet's Cancel is gone.
 
 1. **The offer** (`kiff/Pairing.kt`, `PairOffer.make`): the same `kiff.pair.v1` QR as a computer, with
    `platform: "android"`, `kind: "keystore"`, `device_kind` (`android_phone` or `android_tablet`),
@@ -1368,6 +1372,31 @@ cloud's (`TafsCloud.calendar`, `GET /v1/calendar`); the app converts no zone. Wh
 it shows is kept in `AppState`, so a rotation keeps it, and a new account starts
 afresh. A tap opens the taf. Read-only; no new dependency. Tests:
 `CalendarTest.kt`.
+
+## Illustrations
+
+The owner's approved boards 1–10, drawn as shapes in `design/Illustrations.kt`, never image files, and with **no letter,
+number or word** in any drawing (rule 14). Every word on those screens stays the screen's own. Each drawing is hidden from
+TalkBack, keeps its board's proportions, and is scaled to the room it gets (`Illustrated`, about 180 dp tall at most on a
+phone), so a short screen gets a smaller drawing rather than a scroll. Cards are `Theme.panel` and the marks are the theme's
+amber and the brand's sweep, so light and dark both read. The boards are placed as iOS places them (docs/ios-app.md,
+Illustrations):
+
+| Board | Drawing | Where | Shown when |
+|---|---|---|---|
+| 1 First run | `FirstRunArt` | `OnboardingView` | always on the welcome, in place of the mascot |
+| 2 No tafs yet | `NoTafsArt` | `HomeView` | no taf, and no job listed |
+| 3 Brief, nothing to decide | `BriefClearArt` | `BriefView`'s decisions | the brief has no decisions |
+| 4 All halted | `AllHaltedArt` | `HaltSheet` | Halt all, once every taf reads halted |
+| 5 An app connected | `AppConnectedArt` | `SecureKeySheet`'s receipt | after a key is given |
+| 6 Needs you, nothing waiting | `NeedsYouClearArt` | `NeedsYouView` | nothing waiting, above its line |
+| 7 Coach, nothing or one taf | `CoachStartArt` | `CoachIntro`; Coach's start; an empty conversation | not improving a taf, with at most one taf |
+| 8 New taf, small | `NewTafArt` | `HomeRecipes`, beside Say it in your own words | in the gallery's create mode |
+| 9 Coach starting (tablet) | `CoachLoadingArt` | Coach's start, before it has started | a wide screen only |
+| 10 Overview (tablet) | `OverviewArt` | `OverviewView`, under its title | the tablet's Overview |
+
+`IllustrationsTest` draws each in light and dark (written with `-PphoneScreenshots` for a look beside its board), and
+`IllustrationPlacementTest` checks that each screen draws its board and that the drawings hold no text, string or image.
 
 ## Store screenshots
 

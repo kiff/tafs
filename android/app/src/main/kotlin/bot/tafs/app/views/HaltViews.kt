@@ -121,6 +121,8 @@ fun HaltSheet(tafId: String?, state: AppState, actions: AccountActions, onClose:
         Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
       ) {
+        // Halt all, once every taf reads halted: the owner's board 4, above the halt's own words.
+        if (tafId == null && h.halted) bot.tafs.app.design.Illustrated { bot.tafs.app.design.AllHaltedArt(it) }
         Panel {
           Eyebrow(name, if (h.running) Theme.dim else Theme.no)
           Text(HaltWords.headline(h), style = scaled(26, FontWeight.Bold, Theme.ink, display = true))

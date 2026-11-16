@@ -69,6 +69,13 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
 - **Refused:** without the AI-use consent, "allow AI use in tafs on your phone"; past the
   credits, the app's own words; anything else, "Not sent" and why.
 
+## The illustration
+
+Needs you with nothing waiting shows the approved board 11 (`AllClearArt`): a calm check in a green
+circle above "Nothing waiting". It's drawn in code with shapes and one symbol, and holds no letter,
+number or word. VoiceOver skips it, since the line under it says the same. It shows only once the
+phone has answered, never in place of loading. A locked watch doesn't show the app at all.
+
 ## What the watch keeps
 
 - **In memory only:** the list, the amounts and Coach's answers. They go when the app leaves the
