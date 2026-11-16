@@ -1313,6 +1313,9 @@
         <item quantity="one">%2$s · %1$s paragem</item>
         <item quantity="other">%2$s · %1$s paragens</item>
     </plurals>
+    <string name="mission_log">Registo</string>
+    <string name="mission_read_only">Só leitura · mais recente primeiro</string>
+    <string name="mission_removed">removido</string>
     <string name="needs_you_a_taf">Um taf</string>
     <string name="needs_you_allow_from_now_on">Permitir a partir de agora</string>
     <string name="needs_you_allow_not_offered">Esta alteração não é a que foi proposta.</string>

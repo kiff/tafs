@@ -2516,6 +2516,14 @@ enum Words {
         /// {name} · {count} stops
         static func withStops(count: Int, name: String) -> String { Words.count("knob.with_stops", count, name) }
     }
+    enum Mission {
+        /// Log
+        static var log: String { Words.line("mission.log") }
+        /// Read only · newest first
+        static var readOnly: String { Words.line("mission.read_only") }
+        /// removed
+        static var removed: String { Words.line("mission.removed") }
+    }
     enum NeedsYou {
         /// A taf
         static var aTaf: String { Words.line("needs_you.a_taf") }

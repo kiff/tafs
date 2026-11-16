@@ -94,7 +94,7 @@ person's language.
 
 ## Labels
 
-Missions v2.1 §3 (a draft until tafs cloud serves labels): Coach-managed chips on the flat tafs list. The app only filters by
+Missions v2.1 §3: Coach-managed chips on the flat tafs list. The app only filters by
 them; tafs cloud lists them, counts them and words the filtered headline.
 
 - **What Home sends** ([labels.md](labels.md), "What the apps get"): `labels: [{id, name, color, count, waiting,
@@ -109,6 +109,21 @@ them; tafs cloud lists them, counts them and words the filtered headline.
   Money"), else the label's name (`labelHeadline`). The tafs still being set up and the other agents aren't shown.
 - **On each row:** its labels by name, at most three, under its line (`LabelTags`).
 - **"All"** is tafs cloud's word (`labels_words.all`), else the app's (`home.labels_all`).
+- **A mission's row** (§3, a draft until tafs cloud sends it): filtered to a label that is a mission's (`labels[].mission:
+  {id, name, goal}`), the list shows its goal in the person's words and **Log** (`MissionRow`).
+
+## A mission's log
+
+Missions v2.1 §6, a draft until tafs cloud's log route and its words land: **Log** opens `GET /v1/missions/{id}/log` over the
+tafs list (`MissionLogView`), read only, newest first, a page at a time (`before`), More for the next.
+
+- **Each entry**, drawn as tafs cloud words it (`MissionLogItem`): who wrote it (a taf by name; the lead and the person by
+  tafs cloud's words), its kind in tafs cloud's words (`kind_words`), coloured by kind (delivered green, handed blue, stuck
+  amber, decided ink, a note grey), its sentence, what it refers to (tafs cloud's words for each, else its kind: "run",
+  "hold") and its value ("€4,120 sorted"). The time is the phone's own ("14 Nov, 07:10").
+- **A removed taf's entries stay**, greyed and marked `mission.removed`, so the history is whole.
+- **Nothing in it acts:** it reads only. An entry with no words isn't drawn, and a page read twice shows once
+  (`MissionLogs.drawn`, `MissionLogTest`).
 
 ## Building and testing
 

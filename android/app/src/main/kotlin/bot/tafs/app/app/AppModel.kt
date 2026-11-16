@@ -7218,6 +7218,10 @@ class AppModel(
     scope.launch { refresh() }
   }
 
+  /** A page of a mission's log (Missions v2.1 §6), read only; null when it can't be read now. Signed in only. */
+  suspend fun missionLog(mission: String, before: String? = null): bot.tafs.app.kiff.MissionLogPage? =
+    if (_state.value.mode != Mode.kiff) null else attempt { cloud.missionLog(mission, before) }
+
   /** Reads where a halt stands. */
   suspend fun refreshHalt(tafId: String?) {
     val key = haltKey(tafId)

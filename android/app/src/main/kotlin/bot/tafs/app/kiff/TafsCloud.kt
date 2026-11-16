@@ -250,6 +250,10 @@ class TafsCloud(
   /** The taf's chats, newest first. */
   suspend fun chats(id: String): List<Chat> = get<Chats>("/v1/tafs/${escaped(id)}/chats").chats
 
+  /** A mission's log, newest first, a page at a time (Missions v2.1 §6): [before] is the previous page's `before`. */
+  suspend fun missionLog(id: String, before: String? = null): MissionLogPage =
+    get("/v1/missions/${escaped(id)}/log" + (before?.let { "?before=" + escaped(it) } ?: ""))
+
   /** The chats the owner archived, to find and reopen one. */
   suspend fun archivedChats(id: String): List<Chat> = get<Chats>("/v1/tafs/${escaped(id)}/chats/archived").chats
 
