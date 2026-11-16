@@ -16,7 +16,9 @@ Verify these in GitHub settings; documentation files alone do not enforce them:
 explains the settings. CODEOWNERS routes reviews; it does not replace a ruleset.
 `.github/CODEOWNERS` asks `@kiff-qa` to review a change to the paths that sign, hold a key, pair
 a device, check a receipt, release a build or deploy, and to the files that decide a merge. It is
-their only code owner. Making that review required is a ruleset setting ("Require review from
+their only code owner. The apps' lanes (`ios/`, `android/`, their two pages in `docs/`, and
+`changes/`) have no default owner, so a pull request there waits only for the reviewers its author
+asks. Making `@kiff-qa`'s review required is a ruleset setting ("Require review from
 Code Owners"); once it's on, a pull request authored as `kiff-qa` on those paths can't get its
 code owner's approval, and merges only through an admin's bypass.
 Dependabot opens update PRs; updates still require review and CI. Do not add

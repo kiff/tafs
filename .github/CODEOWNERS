@@ -2,6 +2,15 @@
 # CODEOWNERS requests review; branch protection/rulesets enforce approval.
 * @gabosarmiento @agentgabo
 
+# The two apps' lanes, the ones the merge bot can take (.github/automerge.json):
+# no default owner, so a pull request there waits only for the reviewers its
+# author asks, and for @kiff-qa on the files below.
+/ios/
+/android/
+/docs/ios-app.md
+/docs/android-app.md
+/changes/
+
 # The paths that sign, hold a key, pair a device, check a receipt, or release a
 # build or a deploy: a change to one asks @kiff-qa to review it. The last line
 # that matches a file wins, so these replace the line above for their files,
