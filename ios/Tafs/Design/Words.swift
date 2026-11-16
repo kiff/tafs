@@ -440,6 +440,26 @@ enum Words {
         /// What the credits are for
         static var whatCredits: String { Words.line("billing.what_credits") }
     }
+    enum Brief {
+        /// Decisions
+        static var decisions: String { Words.line("brief.decisions") }
+        /// Done since the last brief
+        static var done: String { Words.line("brief.done") }
+        /// Evidence
+        static var evidence: String { Words.line("brief.evidence") }
+        /// The mission's history couldn't be read.
+        static var logUnread: String { Words.line("brief.log_unread") }
+        /// Meanwhile:
+        static var meanwhile: String { Words.line("brief.meanwhile") }
+        /// Next move
+        static var nextMove: String { Words.line("brief.next_move") }
+        /// Coach recommends
+        static var recommends: String { Words.line("brief.recommends") }
+        /// Your brief
+        static var title: String { Words.line("brief.title") }
+        /// Urgent
+        static var urgent: String { Words.line("brief.urgent") }
+    }
     enum Calendar {
         /// Agenda
         static var agenda: String { Words.line("calendar.agenda") }

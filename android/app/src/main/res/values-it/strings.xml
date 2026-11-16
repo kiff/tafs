@@ -224,6 +224,15 @@
     <string name="billing_test_purchase_credits">Gli acquisti di prova non aggiungono crediti a questo account.</string>
     <string name="billing_try_free">Prova %1$s gratis</string>
     <string name="billing_what_credits">A cosa servono i crediti</string>
+    <string name="brief_decisions">Decisioni</string>
+    <string name="brief_done">Fatto dall\'ultimo riepilogo</string>
+    <string name="brief_evidence">Prove</string>
+    <string name="brief_log_unread">Impossibile leggere la cronologia della missione.</string>
+    <string name="brief_meanwhile">Nel frattempo:</string>
+    <string name="brief_next_move">Prossima mossa</string>
+    <string name="brief_recommends">Coach consiglia</string>
+    <string name="brief_title">Il tuo riepilogo</string>
+    <string name="brief_urgent">Urgente</string>
     <string name="calendar_agenda">Agenda</string>
     <string name="calendar_choose_date">Scegli una data</string>
     <string name="calendar_date_picker">Data</string>

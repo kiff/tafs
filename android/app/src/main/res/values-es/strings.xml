@@ -224,6 +224,15 @@
     <string name="billing_test_purchase_credits">Las compras de prueba no añaden créditos a esta cuenta.</string>
     <string name="billing_try_free">Prueba %1$s gratis</string>
     <string name="billing_what_credits">Para qué son los créditos</string>
+    <string name="brief_decisions">Decisiones</string>
+    <string name="brief_done">Hecho desde el último resumen</string>
+    <string name="brief_evidence">Pruebas</string>
+    <string name="brief_log_unread">No se pudo leer el historial de la misión.</string>
+    <string name="brief_meanwhile">Mientras tanto:</string>
+    <string name="brief_next_move">Siguiente paso</string>
+    <string name="brief_recommends">Coach recomienda</string>
+    <string name="brief_title">Tu resumen</string>
+    <string name="brief_urgent">Urgente</string>
     <string name="calendar_agenda">Agenda</string>
     <string name="calendar_choose_date">Elige una fecha</string>
     <string name="calendar_date_picker">Fecha</string>

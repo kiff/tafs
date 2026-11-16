@@ -12,7 +12,11 @@ class TafsMessagingService : FirebaseMessagingService() {
   override fun onMessageReceived(message: RemoteMessage) {
     val notifier = AlertNotifier(applicationContext)
     when (val alert = AlertPayload.parse(message.data)) {
-      is Alert.Show -> notifier.show(alert)
+      is Alert.Show -> {
+        notifier.show(alert)
+        // The brief's alert, or an urgent one, with the app up: the brief is read again.
+        if (alert.brief) (application as TafsApplication).changeArrived(Alert.Changed(bot.tafs.app.app.BriefRoutes.BRIEF_CHANGE, null))
+      }
       is Alert.Clear -> notifier.clear(alert.tag)
       // Nothing to show: the app, if it's up, reads again what changed.
       is Alert.Changed -> (application as TafsApplication).changeArrived(alert)

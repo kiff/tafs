@@ -110,6 +110,46 @@ them; tafs cloud lists them, counts them and words the filtered headline.
 - **On each row:** its labels by name, at most three, under its line (`LabelTags`).
 - **"All"** is tafs cloud's word (`labels_words.all`), else the app's (`home.labels_all`).
 
+## Your brief
+
+Missions v2.1 §7 (a draft until tafs cloud serves `GET /v1/brief`), as on iPhone and iPad: "Your brief" takes Needs you's place
+once there is one (`BriefTab`, `views/BriefView.kt`; `kiff/Brief.kt`). Until then, and for anyone tafs cloud sends none to,
+the Needs you tab is exactly as today. The switch is the route itself: a 404, a failure, another shape, or a brief with no
+decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read with every refresh).
+
+- **Read leniently, in v2.1's names** (`Brief.parse`): `decisions` (`question`, `answers` with `recommended` and `decline`,
+  `why`, `meanwhile`, `deadline`, `urgent`, `later: {words}`, `cant_wait`, `note`, `ref: {kind, id, taf}`), `more`, `done`
+  (cases with `state` and `next_check`, `value`, `log`), `next_move`, `rest`, `credits: {words}`, `labels` and the headings'
+  `words`. Field by field: a part the app can't read is left out, never the brief; unknown fields are ignored.
+- **Drawn as sent:** the tab is named tafs cloud's `words.tab` ("Your brief"), else Needs you. Decisions first, each with its
+  taf, Coach's recommendation and its why (no why, and the answers show as equals), what happens meanwhile, why it can't wait
+  when it can't, and its answers (the recommended one filled, a decline in red, Later beside them). Then one next move (Start
+  opens Coach with it in the message box; nothing is sent), then Done case by case (green once closed, amber while waiting),
+  with its value and Evidence, which opens the mission's log. On a wide screen, decisions beside Done, the next move under
+  Done. Every heading is tafs cloud's; the app's own (`brief.*`) only stand in where it sent none.
+- **Label chips** (`LabelRow`, as on the tafs list, All with no count) filter the brief: `GET /v1/brief?label=`, as tafs
+  cloud filters it. A chosen chip tapped again is All.
+- **An answer is never given from the brief** (`BriefRoutes.destination`). A tap opens where the decision's own signed answer
+  is given, over the brief with a way back: a held call (`ref.kind: hold`) on its own card in Needs you (`HeldCallCard`), with
+  **no answer chosen**, so the person approves there, with the fingerprint asked there and a fresh signature; a step
+  (`step`) on its own panel; anything else (a connection, a proposal, no id) Needs you's list. The answer tapped isn't part of
+  the destination; the brief's code signs and sends nothing (`BriefTest`). Answered there, the card goes back to the brief.
+- **Needs you stays reachable.** The rest line (`rest`) opens today's Needs you list; whenever the app's own Needs you count is
+  more than the brief's decisions, its count shows there too, with the same link, even when tafs cloud sent no `rest`
+  (`AppState.briefNeedsYouLine`). A held call's alert opens Needs you's list over the brief.
+- **Later** (`POST /v1/brief/decisions/{id}/later`) moves a card to the next brief only once tafs cloud took it; refused, the
+  card stays and the alert says why. Never on an urgent decision, whatever was sent (`Decision.laterShown`, and the model
+  refuses it too).
+- **Urgent** is tafs cloud's call: a red border, its word on the badge (`words.urgent`), its `cant_wait`, no Later. A push whose
+  `kind` is `brief` or `urgent` opens the brief (`AlertPayload.BRIEF`) unless it names where it opens (`open`), sounds as its
+  `level` says (the existing channels), and with the app open reads the brief again. A time-sensitive channel of its own is a
+  follow-up.
+- **A mission's log** (`GET /v1/missions/{id}/log`): read only, newest first, by day; each entry's taf, Coach or You, its kind
+  in colour and word, its evidence and value; a removed taf's entries greyed and marked. Ask Coach opens Coach on the mission.
+- **The sample's brief** (`SampleBrief`, English stand-ins for tafs cloud's words) shows only for the store's screenshots: a debug
+  build opened with `--ez screenshots true --ez brief true` (and `--es briefLabel money`, `--ez briefUrgent true`). The
+  sample walk keeps Needs you.
+
 ## Building and testing
 
 ```bash

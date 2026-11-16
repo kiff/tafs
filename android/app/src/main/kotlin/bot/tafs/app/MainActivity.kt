@@ -66,6 +66,8 @@ import bot.tafs.app.design.Theme
 import bot.tafs.app.design.scaled
 import bot.tafs.app.signing.Biometry
 import bot.tafs.app.views.AccountActions
+import bot.tafs.app.views.BriefActions
+import bot.tafs.app.views.BriefTab
 import bot.tafs.app.views.CoachActions
 import bot.tafs.app.views.CoachChatActions
 import bot.tafs.app.views.ConnectionActions
@@ -180,7 +182,13 @@ class MainActivity : FragmentActivity() {
         androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { biometry = Biometry.of(this@MainActivity) }
         // The store's screenshots, from a debug build opened with `--ez screenshots true`: the sample shows the Coach button.
         val shooting = remember { (applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0 && intent?.getBooleanExtra("screenshots", false) == true }
-        LaunchedEffect(model, shooting) { if (shooting) model.showForScreenshots() }
+        LaunchedEffect(model, shooting) {
+          if (shooting) model.showForScreenshots()
+          // `--ez brief true` (with `--es briefLabel money`, `--ez briefUrgent true`): Your brief over the sample's own brief.
+          if (shooting && intent?.getBooleanExtra("brief", false) == true) {
+            model.showBriefForScreenshots(intent?.getStringExtra("briefLabel"), intent?.getBooleanExtra("briefUrgent", false) == true)
+          }
+        }
         // Firebase gave the phone a new token: the model tells tafs cloud.
         DisposableEffect(model) {
           app.tokenListener = model::tokenArrived
@@ -616,12 +624,28 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
       ),
     )
   }
+  val briefActions = remember(model, state.mayUseCoach) {
+    BriefActions(
+      filter = model::filterBrief,
+      answer = model::answerBrief,
+      later = model::laterBrief,
+      startNextMove = model::startNextMove,
+      dismissNextMove = model::dismissNextMove,
+      openNeedsYou = model::openNeedsYouFromBrief,
+      close = model::closeBriefOpen,
+      missionLog = model::missionLog,
+      askCoach = if (state.mode == Mode.kiff && state.mayUseCoach) model::askCoachAboutMission else null,
+      refresh = { model.refresh() },
+    )
+  }
   // A tapped alert goes where it said: a held call to Needs you, a request for tasks to Usage, a door's alert to its taf.
   LaunchedEffect(state.requestedOpen, state.tafs) {
     val open = state.requestedOpen ?: return@LaunchedEffect
     val cloudId = AlertPayload.tafOf(open)
     when {
-      open == AlertPayload.NEEDS_YOU -> { tab = Tab.NeedsYou; showingSettings = false }
+      // A held call's alert opens Needs you's own list, over the brief when there is one; the brief's alert, the brief itself.
+      open == AlertPayload.NEEDS_YOU -> { tab = Tab.NeedsYou; showingSettings = false; if (state.brief != null) model.openNeedsYouFromBrief() }
+      open == AlertPayload.BRIEF -> { tab = Tab.NeedsYou; showingSettings = false; model.closeBriefOpen() }
       open == AlertPayload.USAGE -> usageOpen = true
       cloudId != null -> {
         // The list may not be read yet: the taf opens once it's there, and an alert for a taf no longer listed opens the list.
@@ -676,6 +700,8 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
     if (tappedAgainGoesToStart(tab, t)) {
       openTaf = null; trialTaf = null; calendarOpen = false; overviewOpen = false; coachOpen = false
     }
+    // Your brief's tab tapped again goes back to the brief from what an answer opened.
+    if (tab == Tab.NeedsYou && t == Tab.NeedsYou) model.closeBriefOpen()
     tab = t
   }
   Row(Modifier.fillMaxSize().background(Theme.background).imePadding()) {
@@ -786,7 +812,10 @@ private fun SignedInView(model: AppModel, onSignIn: () -> Unit) {
             (open ?: home)()
           }
         }
-        Tab.NeedsYou -> NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null, onSetAside = if (state.mode == Mode.kiff) model::startSetAsideCoach else null)
+        // "Your brief" in Needs you's place once tafs cloud sends one (Missions design v2.1); Needs you, as today, otherwise.
+        Tab.NeedsYou -> BriefTab(state, briefActions, onAnswerHold = { call, answer -> model.answer(call, answer) }) {
+          NeedsYouView(state, onAnswer = { call, answer -> model.answer(call, answer) }, onRefresh = { model.refresh() }, onAnswerUnsure = { call, happened -> model.answerDidThisHappen(call, happened) }, onCheckUnsure = { model.checkDidThisHappen(it) }, onOpenCoach = if (state.mode == Mode.kiff && state.mayUseCoach) ({ w -> scope.launch { model.openWaitingCoach(w) } }) else null, onSetAside = if (state.mode == Mode.kiff) model::startSetAsideCoach else null)
+        }
         Tab.Record -> RecordView(
           state,
           record = recordActions,
@@ -978,7 +1007,7 @@ internal fun TabBar(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
         selected = tab == t,
         onClick = { bot.tafs.app.design.Haptics.tap(); onTab(t) },
         icon = { TabIcon(t, state) },
-        label = { Text(t.title, style = scaled(11), maxLines = 1, softWrap = false) },
+        label = { Text(tabTitle(t, state), style = scaled(11), maxLines = 1, softWrap = false) },
         colors = barColors(),
       )
     }
@@ -1006,7 +1035,7 @@ private fun TabRail(tab: Tab, state: bot.tafs.app.app.AppState, onTab: (Tab) -> 
         selected = tab == t,
         onClick = { bot.tafs.app.design.Haptics.tap(); onTab(t) },
         icon = { TabIcon(t, state) },
-        label = { Text(t.title, style = scaled(11), maxLines = 1, softWrap = false) },
+        label = { Text(tabTitle(t, state), style = scaled(11), maxLines = 1, softWrap = false) },
         colors = railColors(),
       )
     }
@@ -1083,6 +1112,9 @@ private fun railColors() = androidx.compose.material3.NavigationRailItemDefaults
 )
 
 /** Whether tapping [tapped] while on [current] goes back to its start: Tafs tapped again closes the taf on screen. */
+/** A tab's name: Needs you's place says tafs cloud's "Your brief" once there is one. */
+internal fun tabTitle(t: Tab, state: bot.tafs.app.app.AppState): String = if (t == Tab.NeedsYou) state.needsYouTabTitle else t.title
+
 internal fun tappedAgainGoesToStart(current: Tab, tapped: Tab): Boolean = current == tapped && tapped == Tab.Tafs
 
 /** The bar's two places that open: the account (Settings) and Coach. */

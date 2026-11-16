@@ -224,6 +224,15 @@
     <string name="billing_test_purchase_credits">Les achats de test n\'ajoutent pas de crédits à ce compte.</string>
     <string name="billing_try_free">Essayer gratuitement pendant %1$s</string>
     <string name="billing_what_credits">À quoi servent les crédits</string>
+    <string name="brief_decisions">Décisions</string>
+    <string name="brief_done">Terminé depuis le dernier briefing</string>
+    <string name="brief_evidence">Preuves</string>
+    <string name="brief_log_unread">Impossible de lire l\'historique de la mission.</string>
+    <string name="brief_meanwhile">En attendant :</string>
+    <string name="brief_next_move">Prochaine étape</string>
+    <string name="brief_recommends">Coach recommande</string>
+    <string name="brief_title">Votre briefing</string>
+    <string name="brief_urgent">Urgent</string>
     <string name="calendar_agenda">Agenda</string>
     <string name="calendar_choose_date">Choisir une date</string>
     <string name="calendar_date_picker">Date</string>

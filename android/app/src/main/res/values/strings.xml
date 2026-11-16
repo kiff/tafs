@@ -224,6 +224,15 @@
     <string name="billing_test_purchase_credits">Test purchases don\'t add credits to this account.</string>
     <string name="billing_try_free">Try %1$s free</string>
     <string name="billing_what_credits">What the credits are for</string>
+    <string name="brief_decisions">Decisions</string>
+    <string name="brief_done">Done since the last brief</string>
+    <string name="brief_evidence">Evidence</string>
+    <string name="brief_log_unread">The mission\'s history couldn\'t be read.</string>
+    <string name="brief_meanwhile">Meanwhile:</string>
+    <string name="brief_next_move">Next move</string>
+    <string name="brief_recommends">Coach recommends</string>
+    <string name="brief_title">Your brief</string>
+    <string name="brief_urgent">Urgent</string>
     <string name="calendar_agenda">Agenda</string>
     <string name="calendar_choose_date">Choose a date</string>
     <string name="calendar_date_picker">Date</string>
