@@ -1868,8 +1868,10 @@
     <string name="settings_devices_note">Een apparaat uitloggen beëindigt meteen de login ervan op dit account. Gebruik Uitloggen in Account om deze telefoon uit te loggen.</string>
     <string name="settings_devices_note_device">Een apparaat uitloggen beëindigt meteen de login ervan op dit account. Gebruik Uitloggen bij KIFF om deze %1$s uit te loggen.</string>
     <string name="settings_devices_pair">Apparaat toevoegen</string>
+    <string name="settings_devices_pair_add_only">Dit apparaat aan je account toevoegen. Alleen dit apparaat; verder verandert er niets.</string>
     <string name="settings_devices_pair_check">Toont je computer %1$s?</string>
     <string name="settings_devices_pair_check_phone">Toont je nieuwe telefoon of tablet %1$s?</string>
+    <string name="settings_devices_pair_claims">Het noemt zichzelf %1$s.</string>
     <string name="settings_devices_pair_code_differs">KIFF heeft %1$s gekoppeld met de code %2$s, niet %3$s zoals gecontroleerd. Is dat niet jouw computer, log hem hier dan uit.</string>
     <string name="settings_devices_pair_done">%1$s is gekoppeld. Hij toonde %2$s.</string>
     <string name="settings_devices_pair_expired">De code op je computer is verlopen. Toon een nieuwe en scan die opnieuw.</string>
@@ -2022,6 +2024,8 @@
     <string name="sign_in_again_to_sign_device">Log opnieuw in met KIFF: deze login kan niet voor de %1$s ondertekenen.</string>
     <string name="sign_in_agree">Door in te loggen ga je akkoord met de %1$s van KIFF, die ook voor tafs gelden, en het %2$s.</string>
     <string name="sign_in_check_code">Controleer of KIFF dezelfde code toont voordat je goedkeurt.</string>
+    <string name="sign_in_connected">Je bent verbonden.</string>
+    <string name="sign_in_connected_line">Laten we samen mooie dingen bouwen.</string>
     <string name="sign_in_could_not_finish">Kon niet afronden: %1$s. Probeer het opnieuw.</string>
     <string name="sign_in_could_not_start">Kon niet starten: %1$s. Probeer het opnieuw.</string>
     <string name="sign_in_deletes_every_taf_runs_chats">Verwijdert elk taf, met zijn runs, chats en notities, je Cards en je koppelingen. Dit kan niet ongedaan worden gemaakt.</string>
@@ -2030,6 +2034,7 @@
     <string name="sign_in_how_works">Hoe het werkt</string>
     <string name="sign_in_ios_did_not_open_sign">iOS heeft de inlogpagina niet geopend (fout %1$s; %2$s). Probeer het opnieuw met tafs geopend.</string>
     <string name="sign_in_lead">Je tafs handelen onder KIFF-Cards. Je kunt deze %1$s goedkeuren in KIFF, waarna de Cards die je hebt uitgegeven hier verschijnen.</string>
+    <string name="sign_in_lets_go">Aan de slag</string>
     <string name="sign_in_not_signed_out">Nog niet uitgelogd bij KIFF. Probeer het opnieuw, of log deze telefoon uit via Apparaten op een ander apparaat.</string>
     <string name="sign_in_not_signed_out_device">Nog niet uitgelogd bij KIFF: %1$s. Probeer het opnieuw, of log deze %2$s uit via Apparaten op een ander apparaat.</string>
     <string name="sign_in_open_kiff">KIFF openen om goed te keuren</string>
@@ -2049,6 +2054,8 @@
     <string name="sign_in_relink_no_connection">Geen verbinding. Probeer het opnieuw.</string>
     <string name="sign_in_relink_not_approved_in_browser">Het is niet goedgekeurd in de browser.</string>
     <string name="sign_in_relink_prompt">Opnieuw goedkeuren met deze vingerafdruk</string>
+    <string name="sign_in_scan_with_tafs">Scan met tafs</string>
+    <string name="sign_in_show_code">Toon de code</string>
     <string name="sign_in_sign_did_not_come_back">De login is niet teruggekomen bij tafs.</string>
     <string name="sign_in_tafs_had_no_window_screen">tafs had geen venster op het scherm om de login over te openen. Open tafs en probeer het opnieuw.</string>
     <string name="sign_in_waiting">Wacht op je goedkeuring…</string>
@@ -2062,6 +2069,7 @@
     <string name="sign_in_welcome_revoked_rest">gaat er geen nieuwe actie meer door.</string>
     <string name="sign_in_welcome_title">tafs</string>
     <string name="sign_in_with_kiff">Inloggen met KIFF</string>
+    <string name="sign_in_with_phone">Inloggen met je telefoon</string>
     <string name="sign_in_your_code">Je code</string>
     <string name="taf_activity_all_apps">Alle apps</string>
     <string name="taf_activity_checking_waits">Controleren wat op je wacht…</string>

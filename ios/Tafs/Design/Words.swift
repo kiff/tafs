@@ -3688,10 +3688,14 @@ enum Words {
             static func noteDevice(device: String) -> String { Words.line("settings.devices.note_device", device) }
             /// Add a device
             static var pair: String { Words.line("settings.devices.pair") }
+            /// Add this device to your account. Only this device; nothing else changes.
+            static var pairAddOnly: String { Words.line("settings.devices.pair_add_only") }
             /// Does your computer show {code}?
             static func pairCheck(code: String) -> String { Words.line("settings.devices.pair_check", code) }
             /// Does your new phone or tablet show {code}?
             static func pairCheckPhone(code: String) -> String { Words.line("settings.devices.pair_check_phone", code) }
+            /// It calls itself {name}.
+            static func pairClaims(name: String) -> String { Words.line("settings.devices.pair_claims", name) }
             /// KIFF paired {device} with the code {kiff}, not {shown} as checked. If that isn't your computer, sign it out here.
             static func pairCodeDiffers(device: String, kiff: String, shown: String) -> String { Words.line("settings.devices.pair_code_differs", device, kiff, shown) }
             /// {device} is paired. It showed {code}.
@@ -4015,6 +4019,10 @@ enum Words {
         static func agree(terms: String, privacy: String) -> String { Words.line("sign_in.agree", terms, privacy) }
         /// Check that KIFF shows the same code before you approve.
         static var checkCode: String { Words.line("sign_in.check_code") }
+        /// You're connected.
+        static var connected: String { Words.line("sign_in.connected") }
+        /// Let's build great things together.
+        static var connectedLine: String { Words.line("sign_in.connected_line") }
         /// Couldn't finish: {why}. Try again.
         static func couldNotFinish(why: String) -> String { Words.line("sign_in.could_not_finish", why) }
         /// Couldn't start: {why}. Try again.
@@ -4031,6 +4039,8 @@ enum Words {
         static func iosDidNotOpenSign(code: String, context: String) -> String { Words.line("sign_in.ios_did_not_open_sign", code, context) }
         /// Your tafs act under KIFF Cards. Approve this {device} in KIFF, and the Cards you issued show up here.
         static func lead(device: String) -> String { Words.line("sign_in.lead", device) }
+        /// Let's go
+        static var letsGo: String { Words.line("sign_in.lets_go") }
         /// Not signed out at KIFF yet. Try again, or sign this phone out from another device's Devices.
         static var notSignedOut: String { Words.line("sign_in.not_signed_out") }
         /// Not signed out at KIFF yet: {why}. Try again, or sign this {device} out from another device's Devices.
@@ -4071,6 +4081,10 @@ enum Words {
             /// Approve again with this fingerprint
             static var prompt: String { Words.line("sign_in.relink.prompt") }
         }
+        /// Scan with tafs
+        static var scanWithTafs: String { Words.line("sign_in.scan_with_tafs") }
+        /// Show the code
+        static var showCode: String { Words.line("sign_in.show_code") }
         /// The sign-in didn't come back to tafs.
         static var signDidNotComeBack: String { Words.line("sign_in.sign_did_not_come_back") }
         /// tafs had no window on screen to open the sign-in over. Open tafs and try again.
@@ -4099,6 +4113,8 @@ enum Words {
         }
         /// Sign in with KIFF
         static var withKiff: String { Words.line("sign_in.with_kiff") }
+        /// Sign in with your phone
+        static var withPhone: String { Words.line("sign_in.with_phone") }
         /// Your code
         static var yourCode: String { Words.line("sign_in.your_code") }
     }

@@ -3,6 +3,8 @@
   "sign_in.again_to_sign_device": "Sign in with KIFF again: this sign-in can't sign for the {device}.",
   "sign_in.agree": "By signing in, you agree to KIFF's {terms}, which cover tafs, and its {privacy}.",
   "sign_in.check_code": "Check that KIFF shows the same code before you approve.",
+  "sign_in.connected": "You're connected.",
+  "sign_in.connected_line": "Let's build great things together.",
   "sign_in.could_not_finish": "Couldn't finish: {why}. Try again.",
   "sign_in.could_not_start": "Couldn't start: {why}. Try again.",
   "sign_in.deletes_every_taf_runs_chats": "Deletes every taf, its runs, chats and notes, your Cards and your connections. It can't be undone.",
@@ -11,6 +13,7 @@
   "sign_in.how_works": "How it works",
   "sign_in.ios_did_not_open_sign": "iOS didn't open the sign-in page (error {code}; {context}). Try again with tafs open.",
   "sign_in.lead": "Your tafs act under KIFF Cards. Approve this {device} in KIFF, and the Cards you issued show up here.",
+  "sign_in.lets_go": "Let's go",
   "sign_in.not_signed_out": "Not signed out at KIFF yet. Try again, or sign this phone out from another device's Devices.",
   "sign_in.not_signed_out_device": "Not signed out at KIFF yet: {why}. Try again, or sign this {device} out from another device's Devices.",
   "sign_in.open_kiff": "Open KIFF to approve",
@@ -30,6 +33,8 @@
   "sign_in.relink.no_connection": "No connection. Try again.",
   "sign_in.relink.not_approved_in_browser": "It wasn't approved in the browser.",
   "sign_in.relink.prompt": "Approve again with this fingerprint",
+  "sign_in.scan_with_tafs": "Scan with tafs",
+  "sign_in.show_code": "Show the code",
   "sign_in.sign_did_not_come_back": "The sign-in didn't come back to tafs.",
   "sign_in.tafs_had_no_window_screen": "tafs had no window on screen to open the sign-in over. Open tafs and try again.",
   "sign_in.waiting": "Waiting for your approval…",
@@ -43,5 +48,6 @@
   "sign_in.welcome.revoked_rest": "no new action goes through.",
   "sign_in.welcome.title": "tafs",
   "sign_in.with_kiff": "Sign in with KIFF",
+  "sign_in.with_phone": "Sign in with your phone",
   "sign_in.your_code": "Your code"
 }

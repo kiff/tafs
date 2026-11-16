@@ -3,6 +3,8 @@
   "sign_in.again_to_sign_device": "Reconnectez-vous avec KIFF : cette connexion ne peut pas signer pour l'{device}.",
   "sign_in.agree": "En vous connectant, vous acceptez les {terms} de KIFF, qui couvrent tafs, et sa {privacy}.",
   "sign_in.check_code": "Vérifiez que KIFF affiche le même code avant d'approuver.",
+  "sign_in.connected": "Connexion établie.",
+  "sign_in.connected_line": "Construisons ensemble de grandes choses.",
   "sign_in.could_not_finish": "Impossible de terminer : {why}. Réessayez.",
   "sign_in.could_not_start": "Impossible de démarrer : {why}. Réessayez.",
   "sign_in.deletes_every_taf_runs_chats": "Supprime chaque taf, ses exécutions, chats et notes, vos Cards et vos connexions. C'est irréversible.",
@@ -11,6 +13,7 @@
   "sign_in.how_works": "Comment ça marche",
   "sign_in.ios_did_not_open_sign": "iOS n'a pas ouvert la page de connexion (erreur {code} ; {context}). Réessayez avec tafs ouvert.",
   "sign_in.lead": "Vos tafs agissent sous des Cards KIFF. Approuvez cet {device} dans KIFF, et les Cards que vous avez émises s'affichent ici.",
+  "sign_in.lets_go": "C'est parti",
   "sign_in.not_signed_out": "Pas encore déconnecté de KIFF. Réessayez, ou déconnectez ce téléphone depuis Appareils sur un autre appareil.",
   "sign_in.not_signed_out_device": "Pas encore déconnecté de KIFF : {why}. Réessayez, ou déconnectez cet {device} depuis Appareils sur un autre appareil.",
   "sign_in.open_kiff": "Ouvrir KIFF pour approuver",
@@ -30,6 +33,8 @@
   "sign_in.relink.no_connection": "Pas de connexion. Réessayez.",
   "sign_in.relink.not_approved_in_browser": "Elle n'a pas été approuvée dans le navigateur.",
   "sign_in.relink.prompt": "Approuver à nouveau avec cette empreinte",
+  "sign_in.scan_with_tafs": "Scannez avec tafs",
+  "sign_in.show_code": "Afficher le code",
   "sign_in.sign_did_not_come_back": "La connexion n'est pas revenue vers tafs.",
   "sign_in.tafs_had_no_window_screen": "tafs n'avait aucune fenêtre à l'écran pour y ouvrir la connexion. Ouvrez tafs et réessayez.",
   "sign_in.waiting": "En attente de votre approbation…",
@@ -43,5 +48,6 @@
   "sign_in.welcome.revoked_rest": "aucune nouvelle action ne passe.",
   "sign_in.welcome.title": "tafs",
   "sign_in.with_kiff": "Se connecter avec KIFF",
+  "sign_in.with_phone": "Se connecter avec votre téléphone",
   "sign_in.your_code": "Votre code"
 }
