@@ -5,9 +5,9 @@ today: Paczka utknięta w drodze zamienia się w zaniepokojony e-mail, potem w r
 line: Gdy śledzenie paczki staje albo paczka wraca do nadawcy, informuje klienta, zanim zapyta, w ramach Card.
 card:
   allows:
-    - E-maile lub wersje robocze do klientów, do 30 dziennie
+    - Wiadomości lub wersje robocze do klientów, do 30 dziennie
   holds:
-    - E-mail lub wersja robocza powyżej 30 w ciągu dnia
+    - Wiadomość lub wersja robocza powyżej 30 w ciągu dnia
   never:
     - Nowa etykieta
     - Zwrot pieniędzy

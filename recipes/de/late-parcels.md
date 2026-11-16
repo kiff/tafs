@@ -5,9 +5,9 @@ today: Ein Paket, das unterwegs feststeckt, wird zu einer besorgten E-Mail, dann
 line: Wenn die Sendungsverfolgung eines Pakets stockt oder es an dich zurückgeht, sagt es der Kundschaft, bevor sie fragt, im Rahmen der Card.
 card:
   allows:
-    - E-Mails oder Entwürfe an die Kundschaft, bis zu 30 am Tag
+    - Nachrichten oder Entwürfe an die Kundschaft, bis zu 30 am Tag
   holds:
-    - Eine E-Mail oder ein Entwurf über 30 an einem Tag
+    - Eine Nachricht oder ein Entwurf über 30 an einem Tag
   never:
     - Ein neues Versandetikett
     - Eine Erstattung

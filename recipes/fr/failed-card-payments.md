@@ -5,9 +5,9 @@ today: Une carte expirée ou refusée arrête un abonnement en silence, et le cl
 line: Quand le paiement par carte d'un client échoue, lui écrit avec le lien pour payer, dans les limites de la Card.
 card:
   allows:
-    - Des e-mails ou brouillons aux clients, jusqu'à 20 par jour
+    - Des messages ou brouillons aux clients, jusqu'à 20 par jour
   holds:
-    - Un e-mail ou brouillon au-delà de 20 dans la journée
+    - Un message ou brouillon au-delà de 20 dans la journée
   never:
     - Un prélèvement ou une nouvelle tentative de paiement
     - Un remboursement

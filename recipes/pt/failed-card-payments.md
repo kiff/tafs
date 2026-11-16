@@ -5,9 +5,9 @@ today: Um cartão expirado ou recusado para uma subscrição em silêncio, e o c
 line: Quando o pagamento com cartão de um cliente falha, escreve-lhe com a ligação para pagar, dentro da Card.
 card:
   allows:
-    - Emails ou rascunhos a clientes, até 20 por dia
+    - Mensagens ou rascunhos a clientes, até 20 por dia
   holds:
-    - Um email ou rascunho acima de 20 num dia
+    - Uma mensagem ou rascunho acima de 20 num dia
   never:
     - Uma cobrança ou uma nova tentativa de pagamento
     - Um reembolso

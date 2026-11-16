@@ -5,9 +5,9 @@ today: Un paquete atascado en tránsito se convierte en un email preocupado, lue
 line: Cuando el seguimiento de un paquete se detiene o vuelve al remitente, avisa al cliente antes de que pregunte, dentro de la Card.
 card:
   allows:
-    - Emails o borradores a clientes, hasta 30 al día
+    - Mensajes o borradores a clientes, hasta 30 al día
   holds:
-    - Un email o borrador por encima de 30 en un día
+    - Un mensaje o borrador por encima de 30 en un día
   never:
     - Una etiqueta nueva
     - Un reembolso

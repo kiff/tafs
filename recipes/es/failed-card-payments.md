@@ -5,9 +5,9 @@ today: Una tarjeta caducada o rechazada detiene una suscripción sin ruido, y el
 line: Cuando falla el pago con tarjeta de un cliente, le escribe con el enlace para pagar, dentro de la Card.
 card:
   allows:
-    - Emails o borradores a clientes, hasta 20 al día
+    - Mensajes o borradores a clientes, hasta 20 al día
   holds:
-    - Un email o borrador por encima de 20 en un día
+    - Un mensaje o borrador por encima de 20 en un día
   never:
     - Un cobro o un nuevo intento de pago
     - Un reembolso

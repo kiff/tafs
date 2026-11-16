@@ -5,9 +5,9 @@ today: Wygasła lub odrzucona karta po cichu zatrzymuje subskrypcję, a klient n
 line: Gdy płatność kartą klienta się nie powiedzie, pisze do niego z linkiem do zapłaty, w ramach Card.
 card:
   allows:
-    - E-maile lub wersje robocze do klientów, do 20 dziennie
+    - Wiadomości lub wersje robocze do klientów, do 20 dziennie
   holds:
-    - E-mail lub wersja robocza powyżej 20 w ciągu dnia
+    - Wiadomość lub wersja robocza powyżej 20 w ciągu dnia
   never:
     - Obciążenie lub ponowna próba płatności
     - Zwrot pieniędzy
