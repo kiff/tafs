@@ -158,10 +158,12 @@ decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read 
 - **Later** (`POST /v1/brief/decisions/{id}/later`) moves a card to the next brief only once tafs cloud took it; refused, the
   card stays and the alert says why. Never on an urgent decision, whatever was sent (`Decision.laterShown`, and the model
   refuses it too).
-- **Urgent** is tafs cloud's call: a red border, its word on the badge (`words.urgent`), its `now_why`, no Later. A push whose
-  `kind` is `brief` or `urgent` opens the brief (`AlertPayload.BRIEF`) unless it names where it opens (`open`), sounds as its
-  `level` says (the existing channels), and with the app open reads the brief again. A time-sensitive channel of its own is a
-  follow-up.
+- **Urgent** is tafs cloud's call: a red border, its word on the badge (`words.urgent`), its `now_why`, no Later. An alert
+  with `brief_kind` (`brief`: "Your 08:00 brief is ready.", or `urgent`: one that came at once, a held call's with
+  `decision: hold:<id>`) opens where its `open` says (`brief` opens the brief, a held call's Needs you), sounds as its
+  `level` says (the existing channels: a held call's on Needs you's, the brief's quiet one), and with the app open reads the
+  brief again; one brief's alert replaces the last. An earlier draft's `kind: brief|urgent` reads the same. Channels of
+  their own (Briefs, Urgent) are a follow-up with their words.
 - **A mission's log:** Done's Evidence opens the same `MissionLogView` the tafs list's mission row opens (A mission's log,
   above), by the log id Done carries (`log`) under the mission's name. Ask Coach there opens Coach with the mission's name in
   the message box; nothing is sent.

@@ -444,6 +444,25 @@ class BriefTest {
     assertEquals("", urgent.locked().body)
   }
 
+  /**
+   * As tafs cloud sends them (kiff/tafs#1189): `kind: alert` with `brief_kind`. "Your brief is ready" opens the brief, quietly,
+   * one at a time; a held call's alert is `urgent` with its decision, opens Needs you as it says, and reads the brief again.
+   */
+  @Test fun theAlertsBriefKindIsReadAsTafsCloudSendsIt() {
+    val ready = AlertPayload.parse(mapOf("kind" to "alert", "open" to "brief", "brief_kind" to "brief", "title" to "Your brief", "body" to "Your 08:00 brief is ready.", "level" to "quiet", "at" to "2026-11-16T07:00:00Z")) as Alert.Show
+    assertEquals(AlertPayload.BRIEF, ready.open)
+    assertTrue(ready.brief)
+    assertFalse(ready.loud)
+    assertEquals("one brief's alert replaces the last", AlertPayload.BRIEF, ready.tag)
+    val held = AlertPayload.parse(mapOf("kind" to "alert", "open" to "needs-you", "hold_id" to "ce_1", "brief_kind" to "urgent", "decision" to "hold:ce_1", "level" to "interrupt")) as Alert.Show
+    assertEquals(AlertPayload.NEEDS_YOU, held.open)
+    assertTrue("the brief is read again", held.brief)
+    assertTrue(held.loud)
+    assertEquals("ce_1", held.tag)
+    val other = AlertPayload.parse(mapOf("kind" to "alert", "open" to "usage", "brief_kind" to "something-newer")) as Alert.Show
+    assertFalse("a brief_kind it doesn't know is no brief's", other.brief)
+  }
+
   @Test fun aHeldCallsAlertOpensNeedsYouOverTheBriefOnlyWhenThereIsOne() = runTest {
     reads(brief = null)
     val m = model()
