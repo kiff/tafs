@@ -110,6 +110,7 @@
     <string name="approval_turned_off_tafs_open_settings">%1$s est désactivé pour tafs. Ouvrez Réglages et activez %2$s pour tafs.</string>
     <string name="approval_turned_off_tafs_turn_tafs">%1$s est désactivé pour tafs. Activez-le dans les réglages de tafs pour approuver.</string>
     <string name="approval_view_only">Reconnectez-vous sur ce téléphone pour approuver, ou approuvez depuis votre autre téléphone.</string>
+    <string name="approval_view_only_mac">Ce Mac peut seulement consulter. Pour approuver ici, ajoutez-le depuis votre téléphone : Compte › Appareils › Ajouter un appareil.</string>
     <string name="approval_why">Chaque approbation que vous donnez dans tafs, une Card, une connexion ou un paiement au-delà d\'une limite, est signée sur ce téléphone avec une clé que seule votre empreinte déverrouille. Votre code PIN ou votre schéma ne peut pas approuver.</string>
     <string name="approval_without_allows">Sans approbations, vous pouvez toujours vous connecter, consulter, refuser et bloquer.</string>
     <string name="approval_your_passcode">votre code</string>
@@ -873,6 +874,7 @@
     <string name="connect_key_not_given">La clé n\'a pas été donnée. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">Les textes de KIFF pour cette connexion n\'ont pas pu être lus. Rien n\'a été approuvé.</string>
     <string name="connect_last_failed">Dernier échec : %1$s · %2$s</string>
+    <string name="connect_misplaced">Faite pour %1$s, qui n\'utilise pas %2$s.</string>
     <string name="connect_more_apps">Plus d\'apps</string>
     <string name="connect_more_apps_could_not_listed">Les autres apps n\'ont pas pu être listées : %1$s</string>
     <string name="connect_no_confirmation_code">La connexion à %1$s est revenue sans son code de confirmation. Rien n\'a été connecté.</string>
@@ -1364,7 +1366,8 @@
     <string name="needs_you_when_taf_asks_something_outside">Une alerte vous parvient sur cet %1$s, même si tafs est fermé.</string>
     <string name="needs_you_your_step_ended">Cette étape a déjà reçu une réponse ou a pris fin.</string>
     <string name="needs_you_your_step_not_answered">Votre réponse n\'a pas abouti. %1$s</string>
-    <string name="needs_you_your_step_not_answered_unconfirmed">Pas de réponse envoyée : ce n\'a pas été confirmé.</string>
+    <string name="needs_you_your_step_not_answered_unconfirmed">Pas de réponse envoyée : cela n\'a pas été confirmé.</string>
+    <string name="needs_you_your_step_set_up_hello">Configurez Windows Hello (un code PIN suffit) pour répondre ici, ou répondez depuis votre téléphone.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Rien pour l\'instant</string>
     <string name="pair_added">Ce %1$s est ajouté.</string>
@@ -2333,17 +2336,20 @@
     <string name="voice_dictation_could_not_start">La dictée n\'a pas pu démarrer : %1$s</string>
     <string name="voice_dictation_in">Dictée en %1$s. Changer de langue</string>
     <string name="voice_dictation_not_add_keyboard_dictation">La dictée n\'est pas encore disponible sur cet %1$s. Ajoutez un clavier avec la dictée activée dans Réglages › Général › Clavier › Claviers, attendez le téléchargement de sa langue, puis réessayez.</string>
+    <string name="voice_dictation_not_add_keyboard_dictation_mac">La dictée n\'est pas encore activée sur ce Mac. Activez-la dans Réglages Système › Clavier › Dictée (sous macOS 12 : Préférences Système › Clavier › Dictée), attendez le téléchargement de sa langue, puis réessayez.</string>
     <string name="voice_dictation_not_available_right_try">La dictée n\'est pas disponible pour le moment. Réessayez dans un instant.</string>
     <string name="voice_dictation_stopped_tap_mic_start">Dictée arrêtée : %1$s Touchez le micro pour recommencer.</string>
     <string name="voice_downloading">Ce téléphone télécharge le %1$s pour la dictée. Le micro fonctionnera dès qu\'il sera prêt, d\'ici une minute ou deux.</string>
     <string name="voice_listening_in">Écoute en %1$s</string>
     <string name="voice_microphone_off_tafs_turn_settings">Le micro est désactivé pour tafs. Activez-le dans Réglages › tafs › Micro.</string>
+    <string name="voice_microphone_off_tafs_turn_settings_mac">Le micro est désactivé pour tafs. Activez-le dans Réglages Système › Confidentialité et sécurité › Micro (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Micro).</string>
     <string name="voice_no_microphone">Autorisez tafs à utiliser le micro pour dicter. Votre voix devient du texte sur ce téléphone et n\'est envoyée nulle part.</string>
     <string name="voice_not_on_device">Ce téléphone ne peut pas reconnaître la parole sur l\'appareil même : le micro ne fonctionne donc pas ici, car votre voix devrait le quitter. Vous pouvez écrire à la place.</string>
     <string name="voice_open_settings">Ouvrir Réglages</string>
     <string name="voice_puts_message_box_back">Remet le champ de message tel qu\'il était.</string>
     <string name="voice_speech_recognition_not_available_language">La reconnaissance vocale n\'est pas disponible pour cette langue.</string>
     <string name="voice_speech_recognition_off_tafs_turn">La reconnaissance vocale est désactivée pour tafs. Activez-la dans Réglages › Confidentialité et sécurité › Reconnaissance vocale.</string>
+    <string name="voice_speech_recognition_off_tafs_turn_mac">La reconnaissance vocale est désactivée pour tafs. Activez-la dans Réglages Système › Confidentialité et sécurité › Reconnaissance vocale (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Reconnaissance vocale).</string>
     <string name="voice_speech_recognition_restricted_device_dictation">La reconnaissance vocale est restreinte sur cet appareil : la dictée ne peut pas fonctionner.</string>
     <string name="voice_stop">Arrêter la dictée</string>
     <string name="voice_stopped">Dictée arrêtée. Touchez le micro pour recommencer.</string>

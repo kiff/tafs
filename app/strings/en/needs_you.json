@@ -79,5 +79,6 @@
   "needs_you.when_taf_asks_something_outside": "An alert reaches you on this {device}, even with tafs closed.",
   "needs_you.your_step.ended": "This step was already answered or has ended.",
   "needs_you.your_step.not_answered": "Your answer didn't go through. {why}",
-  "needs_you.your_step.not_answered_unconfirmed": "Not answered: it wasn't confirmed."
+  "needs_you.your_step.not_answered_unconfirmed": "Not answered: it wasn't confirmed.",
+  "needs_you.your_step.set_up_hello": "Set up Windows Hello (a PIN is enough) to answer here, or answer on your phone."
 }

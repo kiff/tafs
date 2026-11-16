@@ -79,5 +79,6 @@
   "needs_you.when_taf_asks_something_outside": "Un avviso ti raggiunge su questo {device}, anche con tafs chiusa.",
   "needs_you.your_step.ended": "Questo passo ha già una risposta o è terminato.",
   "needs_you.your_step.not_answered": "La tua risposta non è andata a buon fine. {why}",
-  "needs_you.your_step.not_answered_unconfirmed": "Nessuna risposta: non è stato confermato."
+  "needs_you.your_step.not_answered_unconfirmed": "Nessuna risposta: non è stato confermato.",
+  "needs_you.your_step.set_up_hello": "Configura Windows Hello (basta un PIN) per rispondere qui, oppure rispondi dal tuo telefono."
 }

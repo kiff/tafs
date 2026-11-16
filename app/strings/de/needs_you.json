@@ -79,5 +79,6 @@
   "needs_you.when_taf_asks_something_outside": "Eine Benachrichtigung erreicht dich auf diesem {device}, auch wenn tafs geschlossen ist.",
   "needs_you.your_step.ended": "Dieser Schritt wurde schon beantwortet oder ist beendet.",
   "needs_you.your_step.not_answered": "Deine Antwort ist nicht durchgegangen. {why}",
-  "needs_you.your_step.not_answered_unconfirmed": "Nicht beantwortet: Es wurde nicht bestätigt."
+  "needs_you.your_step.not_answered_unconfirmed": "Nicht beantwortet: Es wurde nicht bestätigt.",
+  "needs_you.your_step.set_up_hello": "Richte Windows Hello ein (eine PIN reicht), um hier zu antworten, oder antworte auf deinem Telefon."
 }

@@ -103,6 +103,7 @@
   "connect.key_not_given": "The key wasn't given. {why}",
   "connect.kiff_words_connection_could_not": "KIFF's words for this connection couldn't be read. Nothing was approved.",
   "connect.last_failed": "Last failed: {title} · {detail}",
+  "connect.misplaced": "Made for {taf}, which doesn't use {app}.",
   "connect.more_apps": "More apps",
   "connect.more_apps_could_not_listed": "More apps couldn't be listed: {why}",
   "connect.no_confirmation_code": "The sign-in at {vendor} came back without its confirmation code. Nothing was connected.",

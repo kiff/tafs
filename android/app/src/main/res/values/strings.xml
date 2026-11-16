@@ -110,6 +110,7 @@
     <string name="approval_turned_off_tafs_open_settings">%1$s is turned off for tafs. Open Settings and turn on %2$s for tafs.</string>
     <string name="approval_turned_off_tafs_turn_tafs">%1$s is turned off for tafs. Turn it on in tafs\' settings to approve.</string>
     <string name="approval_view_only">Sign in again on this phone to approve, or approve from your other phone.</string>
+    <string name="approval_view_only_mac">This Mac can only view. To approve here, add it from your phone: Account › Devices › Add a device.</string>
     <string name="approval_why">Every approval you give in tafs, a Card, a connection or a payment over a limit, is signed on this phone with a key only your fingerprint unlocks. Your PIN or pattern can\'t approve.</string>
     <string name="approval_without_allows">Without approvals you can still sign in, review, refuse and halt.</string>
     <string name="approval_your_passcode">your passcode</string>
@@ -873,6 +874,7 @@
     <string name="connect_key_not_given">The key wasn\'t given. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">KIFF\'s words for this connection couldn\'t be read. Nothing was approved.</string>
     <string name="connect_last_failed">Last failed: %1$s · %2$s</string>
+    <string name="connect_misplaced">Made for %1$s, which doesn\'t use %2$s.</string>
     <string name="connect_more_apps">More apps</string>
     <string name="connect_more_apps_could_not_listed">More apps couldn\'t be listed: %1$s</string>
     <string name="connect_no_confirmation_code">The sign-in at %1$s came back without its confirmation code. Nothing was connected.</string>
@@ -1365,6 +1367,7 @@
     <string name="needs_you_your_step_ended">This step was already answered or has ended.</string>
     <string name="needs_you_your_step_not_answered">Your answer didn\'t go through. %1$s</string>
     <string name="needs_you_your_step_not_answered_unconfirmed">Not answered: it wasn\'t confirmed.</string>
+    <string name="needs_you_your_step_set_up_hello">Set up Windows Hello (a PIN is enough) to answer here, or answer on your phone.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nothing yet</string>
     <string name="pair_added">This %1$s is added.</string>
@@ -2333,17 +2336,20 @@
     <string name="voice_dictation_could_not_start">Dictation couldn\'t start: %1$s</string>
     <string name="voice_dictation_in">Dictation in %1$s. Switch language</string>
     <string name="voice_dictation_not_add_keyboard_dictation">Dictation isn\'t on this %1$s yet. Add a keyboard with dictation on in Settings › General › Keyboard › Keyboards, wait for its language to download, then try again.</string>
+    <string name="voice_dictation_not_add_keyboard_dictation_mac">Dictation isn\'t on for this Mac yet. Turn it on in System Settings › Keyboard › Dictation (on macOS 12: System Preferences › Keyboard › Dictation), wait for its language to download, then try again.</string>
     <string name="voice_dictation_not_available_right_try">Dictation isn\'t available right now. Try again in a moment.</string>
     <string name="voice_dictation_stopped_tap_mic_start">Dictation stopped: %1$s Tap the mic to start again.</string>
     <string name="voice_downloading">This phone is getting %1$s for dictation. The mic works once it\'s ready, in a minute or two.</string>
     <string name="voice_listening_in">Listening in %1$s</string>
     <string name="voice_microphone_off_tafs_turn_settings">The microphone is off for tafs. Turn it on in Settings › tafs › Microphone.</string>
+    <string name="voice_microphone_off_tafs_turn_settings_mac">The microphone is off for tafs. Turn it on in System Settings › Privacy &amp; Security › Microphone (on macOS 12: System Preferences › Security &amp; Privacy › Privacy › Microphone).</string>
     <string name="voice_no_microphone">Allow tafs to use the microphone to dictate. Your voice becomes text on this phone and isn\'t sent anywhere.</string>
     <string name="voice_not_on_device">This phone can\'t recognise speech on the phone itself, so the mic doesn\'t work here: your voice would have to leave it. You can type instead.</string>
     <string name="voice_open_settings">Open Settings</string>
     <string name="voice_puts_message_box_back">Puts the message box back as it was.</string>
     <string name="voice_speech_recognition_not_available_language">Speech recognition isn\'t available for this language.</string>
     <string name="voice_speech_recognition_off_tafs_turn">Speech recognition is off for tafs. Turn it on in Settings › Privacy &amp; Security › Speech Recognition.</string>
+    <string name="voice_speech_recognition_off_tafs_turn_mac">Speech recognition is off for tafs. Turn it on in System Settings › Privacy &amp; Security › Speech Recognition (on macOS 12: System Preferences › Security &amp; Privacy › Privacy › Speech Recognition).</string>
     <string name="voice_speech_recognition_restricted_device_dictation">Speech recognition is restricted on this device, so dictation can\'t run.</string>
     <string name="voice_stop">Stop dictating</string>
     <string name="voice_stopped">Dictation stopped. Tap the mic to start again.</string>

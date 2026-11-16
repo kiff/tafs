@@ -79,5 +79,6 @@
   "needs_you.when_taf_asks_something_outside": "Una alerta te llega en este {device}, aunque tafs esté cerrado.",
   "needs_you.your_step.ended": "Este paso ya se respondió o ha terminado.",
   "needs_you.your_step.not_answered": "Tu respuesta no se completó. {why}",
-  "needs_you.your_step.not_answered_unconfirmed": "Sin responder: no se confirmó."
+  "needs_you.your_step.not_answered_unconfirmed": "Sin responder: no se confirmó.",
+  "needs_you.your_step.set_up_hello": "Configura Windows Hello (basta con un PIN) para responder aquí, o responde desde tu teléfono."
 }

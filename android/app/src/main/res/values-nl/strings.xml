@@ -110,6 +110,7 @@
     <string name="approval_turned_off_tafs_open_settings">%1$s staat uit voor tafs. Open Instellingen en zet %2$s aan voor tafs.</string>
     <string name="approval_turned_off_tafs_turn_tafs">%1$s staat uit voor tafs. Zet het aan in de instellingen van tafs om goed te keuren.</string>
     <string name="approval_view_only">Log opnieuw in op deze telefoon om goed te keuren, of keur goed vanaf je andere telefoon.</string>
+    <string name="approval_view_only_mac">Deze Mac kan alleen bekijken. Om hier goed te keuren, voeg je hem toe vanaf je telefoon: Account › Apparaten › Apparaat toevoegen.</string>
     <string name="approval_why">Elke goedkeuring die je in tafs geeft, een Card, een koppeling of een betaling boven een limiet, wordt op deze telefoon ondertekend met een sleutel die alleen je vingerafdruk ontgrendelt. Je pincode of patroon kan niet goedkeuren.</string>
     <string name="approval_without_allows">Zonder goedkeuringen kun je nog steeds inloggen, bekijken, weigeren en stilzetten.</string>
     <string name="approval_your_passcode">je toegangscode</string>
@@ -873,6 +874,7 @@
     <string name="connect_key_not_given">De sleutel is niet gegeven. %1$s</string>
     <string name="connect_kiff_words_connection_could_not">De woorden van KIFF voor deze koppeling konden niet worden gelezen. Er is niets goedgekeurd.</string>
     <string name="connect_last_failed">Laatst mislukt: %1$s · %2$s</string>
+    <string name="connect_misplaced">Gemaakt voor %1$s, dat %2$s niet gebruikt.</string>
     <string name="connect_more_apps">Meer apps</string>
     <string name="connect_more_apps_could_not_listed">Meer apps konden niet worden getoond: %1$s</string>
     <string name="connect_no_confirmation_code">De login bij %1$s kwam terug zonder bevestigingscode. Er is niets gekoppeld.</string>
@@ -1365,6 +1367,7 @@
     <string name="needs_you_your_step_ended">Deze stap is al beantwoord of is afgelopen.</string>
     <string name="needs_you_your_step_not_answered">Je antwoord is niet doorgekomen. %1$s</string>
     <string name="needs_you_your_step_not_answered_unconfirmed">Niet beantwoord: het is niet bevestigd.</string>
+    <string name="needs_you_your_step_set_up_hello">Stel Windows Hello in (een pincode is genoeg) om hier te antwoorden, of antwoord vanaf je telefoon.</string>
     <string name="overview_hero">%1$s %2$s</string>
     <string name="overview_nothing_yet">Nog niets</string>
     <string name="pair_added">Deze %1$s is toegevoegd.</string>
@@ -2333,17 +2336,20 @@
     <string name="voice_dictation_could_not_start">Dicteren kon niet starten: %1$s</string>
     <string name="voice_dictation_in">Dicteren in het %1$s. Taal wijzigen</string>
     <string name="voice_dictation_not_add_keyboard_dictation">Dicteren staat nog niet aan op deze %1$s. Voeg een toetsenbord met dicteren toe in Instellingen › Algemeen › Toetsenbord › Toetsenborden, wacht tot de taal is gedownload en probeer het opnieuw.</string>
+    <string name="voice_dictation_not_add_keyboard_dictation_mac">Dicteren staat nog niet aan op deze Mac. Zet het aan in Systeeminstellingen › Toetsenbord › Dicteren (op macOS 12: Systeemvoorkeuren › Toetsenbord › Dicteren), wacht tot de taal is gedownload en probeer het opnieuw.</string>
     <string name="voice_dictation_not_available_right_try">Dicteren is nu niet beschikbaar. Probeer het zo opnieuw.</string>
     <string name="voice_dictation_stopped_tap_mic_start">Dicteren gestopt: %1$s Tik op de microfoon om opnieuw te beginnen.</string>
     <string name="voice_downloading">Deze telefoon downloadt %1$s voor dicteren. De microfoon werkt zodra dat klaar is, over een minuut of twee.</string>
     <string name="voice_listening_in">Luistert in het %1$s</string>
     <string name="voice_microphone_off_tafs_turn_settings">De microfoon staat uit voor tafs. Zet hem aan in Instellingen › tafs › Microfoon.</string>
+    <string name="voice_microphone_off_tafs_turn_settings_mac">De microfoon staat uit voor tafs. Zet hem aan in Systeeminstellingen › Privacy en beveiliging › Microfoon (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Microfoon).</string>
     <string name="voice_no_microphone">Sta tafs toe de microfoon te gebruiken om te dicteren. Je stem wordt op deze telefoon tekst en wordt nergens heen gestuurd.</string>
     <string name="voice_not_on_device">Deze telefoon kan spraak niet op het toestel zelf herkennen, dus de microfoon werkt hier niet: je stem zou het toestel moeten verlaten. Je kunt in plaats daarvan typen.</string>
     <string name="voice_open_settings">Instellingen openen</string>
     <string name="voice_puts_message_box_back">Zet het berichtvak terug zoals het was.</string>
     <string name="voice_speech_recognition_not_available_language">Spraakherkenning is niet beschikbaar voor deze taal.</string>
     <string name="voice_speech_recognition_off_tafs_turn">Spraakherkenning staat uit voor tafs. Zet het aan in Instellingen › Privacy en beveiliging › Spraakherkenning.</string>
+    <string name="voice_speech_recognition_off_tafs_turn_mac">Spraakherkenning staat uit voor tafs. Zet het aan in Systeeminstellingen › Privacy en beveiliging › Spraakherkenning (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Spraakherkenning).</string>
     <string name="voice_speech_recognition_restricted_device_dictation">Spraakherkenning is beperkt op dit apparaat, dus dicteren kan niet.</string>
     <string name="voice_stop">Stoppen met dicteren</string>
     <string name="voice_stopped">Dicteren gestopt. Tik op de microfoon om opnieuw te beginnen.</string>

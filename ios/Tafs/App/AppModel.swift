@@ -399,7 +399,10 @@ final class AppModel: ObservableObject {
     /// this phone, or the other phone; KIFF is asked nothing more of it until then.
     @Published private(set) var approvalViewOnly = false
     /// What the person reads while this phone can't approve: the view-only words, or the lost key's.
-    var approvalKeyLostWords: String { approvalViewOnly ? Words.Approval.viewOnly : KIFFClient.approvalKeyLost }
+    /// A view-only Mac says how a Mac is added from a phone; a phone or tablet, to sign in again or use the other phone.
+    var approvalKeyLostWords: String {
+        approvalViewOnly ? (ThisDevice.isMac ? Words.Approval.viewOnlyMac : Words.Approval.viewOnly) : KIFFClient.approvalKeyLost
+    }
     /// A re-link waiting for the person's browser: the code to check there, and the page.
     struct Relink: Equatable { let userCode: String; let url: URL }
     @Published private(set) var relink: Relink?
@@ -765,7 +768,7 @@ final class AppModel: ObservableObject {
             signInNudged = false
             do {
                 let token = try await kiff.pollDeviceToken(deviceCode: start.deviceCode)
-                await useSession(token.accessToken, tenant: token.tenant)
+                await useSession(token.accessToken, tenant: token.tenant, viewOnly: token.viewOnly)
                 return
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue
@@ -822,7 +825,7 @@ final class AppModel: ObservableObject {
             }
             do {
                 let token = try await kiff.claimPairing(nonce: start.offer.nonce, pub: start.offer.pub, proof: start.proof)
-                await useSession(token.accessToken, tenant: token.tenant)
+                await useSession(token.accessToken, tenant: token.tenant, viewOnly: token.viewOnly)
                 return
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue
@@ -848,7 +851,9 @@ final class AppModel: ObservableObject {
     /// Starts using a KIFF session: keeps it in the Keychain, clears what belonged to any
     /// earlier session, and loads this one's Cards and tafs. A session from the device-flow
     /// sign-in names its account (`tenant`) and holds this phone's signing key.
-    func useSession(_ token: String, tenant: String? = nil) async {
+    /// `viewOnly`: KIFF said at sign-in that this session approves nothing (`approval_mode: view`), so
+    /// the app says so from the start and never asks for Face ID or Touch ID for an approval KIFF would refuse.
+    func useSession(_ token: String, tenant: String? = nil, viewOnly: Bool = false) async {
         Keychain.save(token, for: Self.tokenAccount)
         if let tenant {
             Keychain.save(tenant, for: Self.tenantAccount)
@@ -861,6 +866,11 @@ final class AppModel: ObservableObject {
         sessionHasKey = tenant != nil
         Keychain.delete(Self.approvalKeyedAccount)
         forgetApprovalKey()
+        if viewOnly {
+            // As KIFF's `403 view_only` to the approval key does: say so, and ask nothing more of it.
+            approvalKeyLost = true
+            approvalViewOnly = true
+        }
         // An approval window is the last session's: a new sign-in opens its own.
         forgetWindow()
         kiff.token = token
@@ -2353,7 +2363,12 @@ final class AppModel: ObservableObject {
         let request = connectAppsRequest
         let q = connectAppsQuery
         do {
-            let page = try await cloud.connectApps(q, provider: shown.provider, cursor: cursor)
+            // A fresh signed grants read: planque takes each once, and with it the next page's apps say which
+            // tafs need them by their Cards too, and which connections were made under a taf that doesn't.
+            let signer = self.signer
+            planque.tenant = kiffTenant
+            let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let page = try await cloud.connectApps(q, provider: shown.provider, cursor: cursor, proof: proof)
             guard gen == accountGeneration, request == connectAppsRequest,
                   q == connectAppsQuery, connectApps?.nextCursor == cursor else { return }
             var merged = page
@@ -2374,6 +2389,17 @@ final class AppModel: ObservableObject {
         tafs.filter { cloudTaf(for: $0.id) != nil && manages($0.id) }
     }
 
+    /// The tafs one app can be connected for: of those, the ones tafs cloud says need it (`needed_by`), in its
+    /// order. A tafs cloud that doesn't say leaves every one, and "Which taf?" asks among them all.
+    func connectableTafs(for app: TafsCloud.ConnectApps.App) -> [Taf] {
+        Self.connectableTafs(connectableTafs, needed: app.neededBy, cloudID: { self.cloudTaf(for: $0)?.id })
+    }
+
+    static func connectableTafs(_ tafs: [Taf], needed: [TafsCloud.ConnectApps.UsedBy]?, cloudID: (UUID) -> String?) -> [Taf] {
+        guard let needed else { return tafs }
+        return needed.compactMap { n in tafs.first { cloudID($0.id) == n.taf } }
+    }
+
     /// Starts connecting an app from the list for one taf; its approval opens as a sheet over
     /// the list.
     func startConnect(_ app: TafsCloud.ConnectApps.App, for tafID: UUID) async {
@@ -2383,11 +2409,20 @@ final class AppModel: ObservableObject {
         }
         let gen = accountGeneration
         do {
-            let start = try await cloud.startConnect(app.entry, taf: c.id)
+            // A fresh signed grants read, never the list's resent: planque takes each once. With it, tafs cloud
+            // decides this taf needs the app by its Card, as the list did.
+            let signer = self.signer
+            planque.tenant = kiffTenant
+            let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let start = try await cloud.startConnect(app.entry, taf: c.id, proof: proof)
             guard gen == accountGeneration else { return }
             await refreshConnections()
             guard gen == accountGeneration else { return }
             connectStart = start
+        } catch let refused as TafsCloud.CloudError where refused.code == "not_needed" {
+            // This taf doesn't use the app: tafs cloud's words, which send the person to Coach. Nothing started.
+            guard gen == accountGeneration else { return }
+            lastError = refused.words ?? refused.message
         } catch {
             guard gen == accountGeneration else { return }
             lastError = Words.Connect.couldNotConnected(vendor: "\(app.name ?? (app.vendor.isEmpty ? app.title : app.vendor))", why: "\(error.localizedDescription)")
@@ -6271,16 +6306,20 @@ final class AppModel: ObservableObject {
     private func enrolPlanque(tenant: String, gen: Int) async -> Bool {
         // planque's enrolled connector key, while KIFF still takes it, is kept: asked first with no key, it
         // answers `kept`, and no key is minted that would only be left live in KIFF (a phone can't revoke
-        // a connector key). A key is minted only when planque says it needs one (`409 needs_key`). Any other
+        // a connector key). A key is minted only when planque says it needs one (`409 needs_key`). A 2xx that
+        // doesn't say `kept` mints nothing either, and isn't taken as set up: it may mean planque has this phone
+        // but no key, so it stops and says so, as the desktops do, until planque says what it means. Any other
         // answer (not reached, a 5xx, a refused signature, a 400 for a body it couldn't read) mints nothing: a
         // second enrolment would likely fail too and leave the key live. It says why, and the next Start asks again.
         do {
             let standing = try await planque.enrol(deviceKey: signer.publicKeyDER, connectorKey: nil)
             guard gen == accountGeneration else { return false }
-            if standing.kept == true {
-                planqueSetUp(for: tenant)
-                return true
+            guard standing.kept == true else {
+                lastError = Words.Coach.connectingFailed
+                return false
             }
+            planqueSetUp(for: tenant)
+            return true
         } catch PlanqueClient.PlanqueError.needsKey {
         } catch PlanqueClient.PlanqueError.server(409, _, _) where planque.lastRefusalCode == nil {
             // A code-less 409 is an older planque's other device; a coded one (a replayed signature, a changed
@@ -8449,6 +8488,8 @@ final class AppModel: ObservableObject {
 
     private func approveAsked(_ component: SetupComponent, shown: String?, shownDraft: String?) async {
         guard let grantID = component.grant, let s = setupTaf else { return }
+        // A view-only session approves nothing: say why on the card, before any Face ID or Touch ID.
+        if mode == .kiff && approvalViewOnly { cardNotes[component.id] = approvalKeyLostWords; return }
         lastError = nil
         shownTermsChanged = false
         cardNotes[component.id] = nil
@@ -8614,6 +8655,7 @@ final class AppModel: ObservableObject {
     func approveKeyAndCard(_ component: SetupComponent, shown: String?, shownDraft: String?, key: String) async -> KeyAndCard {
         guard let grantID = component.grant, let draftID = component.draft, let shown, let shownDraft, let s = setupTaf,
               planqueReady, sessionHasKey, let tenant = kiffTenant, connecting == nil else { return .notOffered }
+        if approvalViewOnly { cardNotes[component.id] = approvalKeyLostWords; return .failed }
         cardNotes[component.id] = nil
         lastError = nil
         connecting = grantID
