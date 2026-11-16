@@ -248,6 +248,8 @@ fun HomeView(
             if (state.homeLeadsWithRecipes && recipes != null && labels != null) {
               HomeRecipes(recipes, labels, onRecipe, onOwnWords.takeIf { state.mayUseCoach })
             } else {
+              // No taf and no job listed: the owner's board 2, above Home's own line.
+              bot.tafs.app.design.Illustrated(Modifier.padding(bottom = 12.dp)) { bot.tafs.app.design.NoTafsArt(it) }
               Panel {
                 val words = recipes?.home?.words?.takeIf { it.isNotBlank() }
                 if (words != null) {

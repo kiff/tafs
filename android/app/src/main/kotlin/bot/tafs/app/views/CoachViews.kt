@@ -111,13 +111,17 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
           Column(Modifier.weight(1f).fillMaxHeight()) {
             // Not started on this phone: the conversation shows anyway, with what the person brought (a job's words) in its box,
             // and the first Send starts Coach behind one fingerprint. What Coach is, and that it asks once, stay above it.
-            if (state.coachCloudId == null) StartNote(state, chats)
+            if (state.coachCloudId == null) StartNote(state, chats, wide = width >= WIDE_COACH)
             else androidx.compose.animation.AnimatedVisibility(visible = !folded && !keyboard) {
               Column {
                 CoachToolsRow(state) { toolsOpen = true }
                 // Beside the conversation, the plan is in the panel.
                 if (!shaping) CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) }
               }
+            }
+            // Started, with nothing said yet: the owner's board 7, when it isn't about improving a taf and there's at most one.
+            if (state.coachCloudId != null && state.chats[COACH_CHAT].isNullOrEmpty() && coachFirst(state)) {
+              bot.tafs.app.design.Illustrated(Modifier.padding(top = 12.dp), height = 150.dp) { bot.tafs.app.design.CoachStartArt(it) }
             }
             TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f).nestedScroll(folding))
           }
@@ -186,7 +190,12 @@ private fun Note(text: String) {
 
 /** Above a conversation Coach isn't started for yet: what it is, that the first message asks for one fingerprint, and why a Start didn't go. */
 @Composable
-private fun StartNote(state: AppState, chats: CoachChatActions) {
+private fun StartNote(state: AppState, chats: CoachChatActions, wide: Boolean) {
+  // Coach not started here: the owner's board 9 on a wide screen, board 7 on a phone when it's a first taf (as iOS).
+  when {
+    wide -> bot.tafs.app.design.Illustrated(Modifier.padding(top = 12.dp)) { bot.tafs.app.design.CoachLoadingArt(it) }
+    coachFirst(state) -> bot.tafs.app.design.Illustrated(Modifier.padding(top = 12.dp), height = 150.dp) { bot.tafs.app.design.CoachStartArt(it) }
+  }
   val start = state.coachStart
   if (start != null) {
     StartScreen(state, start, chats)
@@ -260,6 +269,8 @@ private fun CoachIntro(state: AppState) {
   val biometry = LocalBiometry.current
   Column(Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
     Text(Words.Coach.title, style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
+    // What Coach is, before it has started: the owner's board 7.
+    bot.tafs.app.design.Illustrated(height = 150.dp) { bot.tafs.app.design.CoachStartArt(it) }
     Text(CoachWords.INTRO, style = scaled(16, color = Theme.soft))
     (state.coachStartError ?: state.chatErrors[COACH_CHAT])?.let { Text(it, style = scaled(13, color = Theme.no)) }
     // Starting issues Coach's own Cards, an approval: before the first taf, say so while this phone can't approve yet.
@@ -925,3 +936,6 @@ private fun DraftNotRead(why: String, retry: suspend () -> Unit) {
 private fun WiderLine(words: String) {
   Text(words, style = scaled(14, FontWeight.Medium, Theme.amberText), modifier = Modifier.testTag("card.wider"))
 }
+
+/** Board 7's moment (as iOS's `SetupChatView.starts`): Coach isn't improving a taf, and there's at most one taf yet. */
+internal fun coachFirst(state: AppState): Boolean = state.coachImproving == null && state.tafs.size <= 1

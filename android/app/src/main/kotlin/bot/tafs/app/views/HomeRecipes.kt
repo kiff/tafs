@@ -6,6 +6,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -147,8 +150,14 @@ internal fun GallerySheet(
       val words = gallery.words
       if (!browsing && canUseCoach && words != null && words.ownWords.isNotBlank()) {
         Panel(modifier = Modifier.fillMaxWidth().tapping(onClick = onOwnWords)) {
-          Text(words.ownWords, style = scaled(16, FontWeight.SemiBold, Theme.amberText))
-          if (words.ownWordsLine.isNotBlank()) Text(words.ownWordsLine, style = scaled(14, color = Theme.soft))
+          // The owner's board 8, small, beside Say it in your own words (as iOS's gallery in its create mode).
+          Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+              Text(words.ownWords, style = scaled(16, FontWeight.SemiBold, Theme.amberText))
+              if (words.ownWordsLine.isNotBlank()) Text(words.ownWordsLine, style = scaled(14, color = Theme.soft))
+            }
+            bot.tafs.app.design.NewTafArt(Modifier.height(64.dp))
+          }
         }
       }
       words?.all?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(17, FontWeight.SemiBold, Theme.ink)) }
