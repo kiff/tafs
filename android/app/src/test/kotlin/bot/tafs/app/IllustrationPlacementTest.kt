@@ -34,8 +34,9 @@ class IllustrationPlacementTest {
     assertFalse("no Text in a drawing", Regex("""\bText\(""").containsMatchIn(drawings))
     assertFalse("no drawn text", drawings.contains("drawText") || drawings.contains("TextMeasurer"))
     assertFalse("no image file", Regex("""painterResource|ImageBitmap|R\.drawable""").containsMatchIn(drawings))
-    // Only code in quotes: no string a person could read.
-    val strings = Regex(""""([^"\\]|\\.)*"""").findAll(drawings.lines().filterNot { it.trim().startsWith("*") || it.trim().startsWith("//") }.joinToString("\n")).map { it.value }.toList()
+    // No string in the code, its comments set aside: nothing a person could read.
+    val code = drawings.replace(Regex("""/\*.*?\*/""", RegexOption.DOT_MATCHES_ALL), "").replace(Regex("""//[^\n]*"""), "")
+    val strings = Regex(""""([^"\\]|\\.)*"""").findAll(code).map { it.value }.toList()
     assertTrue("no string literal in the drawings: $strings", strings.isEmpty())
   }
 }
