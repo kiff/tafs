@@ -52,6 +52,15 @@ object AlertPayload {
   fun tafOf(open: String?): String? =
     open?.let { o -> listOf("$TAF:", "$KNOCK:").firstOrNull { o.startsWith(it) }?.let { o.removePrefix(it) } }?.takeIf { it.isNotEmpty() }
 
+  /**
+   * Where the Wear OS watch's Open on phone goes (docs/watch-wear.md): `tafs://open/needs-you` opens Needs you. Anything else,
+   * or a link that isn't the watch's, opens nothing.
+   */
+  fun openedFromWatch(link: String?): String? = when (link) {
+    "tafs://open/$NEEDS_YOU" -> NEEDS_YOU
+    else -> null
+  }
+
   /** Whether a destination opens its taf on Activity: a door's knock does, as the knocks are answered there. */
   fun opensActivity(open: String?): Boolean = open?.startsWith("$KNOCK:") == true
 

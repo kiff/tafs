@@ -1,5 +1,6 @@
 package bot.tafs.app
 
+import kotlinx.coroutines.sync.withLock
 import android.app.Application
 import android.content.pm.ApplicationInfo
 import bot.tafs.app.billing.NoPlayStore
@@ -80,6 +81,28 @@ class TafsApplication : Application() {
 
   fun changeArrived(change: bot.tafs.app.push.Alert.Changed) {
     changeListener?.invoke(change)
+  }
+
+  /**
+   * The app's one model for the process (docs/watch-wear.md): the screen draws it and the watch's relay reads it, so the
+   * session, its hooks on [kiff] and [cloud], and what was saved are never two models' at once. Owned here, not by an
+   * activity's ViewModelStore, so closing the screen doesn't end it while the relay still answers.
+   */
+  val model: bot.tafs.app.app.AppModel by lazy {
+    bot.tafs.app.app.AppModel(
+      bot.tafs.app.app.SampleStore(java.io.File(filesDir, "sample.json")), signer, kiff, cloud, secrets, deviceName = deviceName,
+      push = push, planque = planque, vendorSignIn = vendorSignIn, purchases = purchases, playBilling = playBilling,
+      openedFiles = java.io.File(cacheDir, "attachments"),
+    )
+  }
+
+  private val restoring = kotlinx.coroutines.sync.Mutex()
+  @Volatile private var restored = false
+
+  /** [model], with where the owner left off restored once for the process, whoever asks first: the screen or the watch. */
+  suspend fun restoredModel(): bot.tafs.app.app.AppModel {
+    restoring.withLock { if (!restored) { model.restore(); restored = true } }
+    return model
   }
 
   /** What KIFF's device list calls this phone, so the owner can tell it from their other devices. */

@@ -56,10 +56,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.viewmodel.compose.viewModel
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.Mode
-import bot.tafs.app.app.SampleStore
 import bot.tafs.app.design.LocalBiometry
 import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.design.Theme
@@ -163,9 +161,8 @@ class MainActivity : FragmentActivity() {
       notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
       answer.await()
     }
-    openFromAlert = intent?.getStringExtra(AlertNotifier.EXTRA_OPEN)
+    openFromAlert = intent?.getStringExtra(AlertNotifier.EXTRA_OPEN) ?: bot.tafs.app.push.AlertPayload.openedFromWatch(intent?.dataString)
     deliverSignIn(intent)
-    val store = SampleStore(File(filesDir, "sample.json"))
     // While Coach drives, the person's input on this window is caught before any view has it (docs/drive.md), and Coach's back
     // is the activity's own: never past the first screen, which would leave the app.
     bot.tafs.app.drive.DriveInput.guard(window)
@@ -174,7 +171,8 @@ class MainActivity : FragmentActivity() {
     }.also { bot.tafs.app.drive.DriveInput.windows.add(0, it) }
     setContent {
       TafsTheme {
-        val model: AppModel = viewModel(factory = AppModel.Factory(store, app.signer, app.kiff, app.cloud, app.secrets, app.deviceName, app.push, app.planque, app.vendorSignIn, app.purchases, app.playBilling, java.io.File(cacheDir, "attachments")))
+        // The process's one model, which the watch's relay reads too (docs/watch-wear.md): it outlives this activity.
+        val model: AppModel = app.model
         // Read again each time the app comes back: a fingerprint enrolled in Settings meanwhile is named at once.
         var biometry by remember { mutableStateOf(Biometry.of(this@MainActivity)) }
         androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) { biometry = Biometry.of(this@MainActivity) }
@@ -273,7 +271,7 @@ class MainActivity : FragmentActivity() {
   /** An alert was tapped while the app was up. */
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
-    openFromAlert = intent.getStringExtra(AlertNotifier.EXTRA_OPEN)
+    openFromAlert = intent.getStringExtra(AlertNotifier.EXTRA_OPEN) ?: bot.tafs.app.push.AlertPayload.openedFromWatch(intent.dataString)
     deliverSignIn(intent)
   }
 
@@ -307,7 +305,9 @@ enum class Tab(private val named: () -> String, val icon: Int) {
 fun RootView(model: AppModel) {
   val state by model.state.collectAsState()
   // Where the owner left off: signed in to KIFF, the saved sample, or the first screen.
-  LaunchedEffect(model) { model.restore() }
+  // Once for the process, whoever asks first: this screen, or the watch's relay with the app closed (TafsApplication).
+  val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as bot.tafs.app.TafsApplication
+  LaunchedEffect(model) { if (app.model === model) app.restoredModel() else model.restore() }
   var signingIn by rememberSaveable { mutableStateOf(false) }
   val rootScope = rememberCoroutineScope()
   // The approval-key line's Sign in again asks first, as Settings' ways out of KIFF do.

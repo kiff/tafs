@@ -80,6 +80,9 @@ dependencies {
 
   // Core Android dependencies
   implementation(libs.androidx.core.ktx)
+  // The Wear OS watch's requests (docs/watch-wear.md): the messages both apps share, and the Data Layer they arrive on.
+  implementation(project(":watchlink"))
+  implementation(libs.play.services.wearable)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.fragment.ktx)
