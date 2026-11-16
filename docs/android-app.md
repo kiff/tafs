@@ -39,6 +39,14 @@ line says what will show there. Nothing is fetched, signed or sent from it, and 
 stay in the conversation; beside it, the plan's line above the thread steps aside, since the panel
 shows it (`SetupShapeTest`).
 
+**Nothing on screen moves while you watch.** A chat screen keeps the order it has already drawn
+(`Chat.steady`, one `Chat.Shown` per open chat): a turn that streams, a card that comes with it, and the thread read again
+when the turn ends leave what's shown where it is. Something new goes after it, in the order it arrived; older than
+everything shown (an earlier page), before it. Your message, once tafs cloud has it under its own id, takes the place of
+the one you sent. Opened again, the thread is in its own order, a card after what Coach wrote with it
+(`CoachWords.items`). Before, a card that came while Coach answered could show above your message, then jump twice as
+Coach's words came in and the turn ended (`ChatSteadyTest`).
+
 A taf's page, under its compact header: the sample's Refunds; a chat opening at its newest, with a
 stranger's knock and a paired sender's message at their times; and the page folded as the chat
 scrolls (the last two drawn by `TafPageScreenTest`, from synthetic data):
