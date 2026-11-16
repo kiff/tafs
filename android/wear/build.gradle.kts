@@ -53,6 +53,8 @@ dependencies {
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.wear.compose.material3)
   implementation(libs.androidx.wear.compose.foundation)
+  implementation(libs.androidx.wear.tiles)
+  implementation(libs.androidx.concurrent.futures)
   implementation(libs.play.services.wearable)
   implementation(libs.androidx.wear.remote.interactions)
   implementation(libs.kotlinx.coroutines.android)

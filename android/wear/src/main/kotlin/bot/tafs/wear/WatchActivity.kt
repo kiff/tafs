@@ -37,7 +37,7 @@ class WatchActivity : ComponentActivity() {
   private val model by lazy {
     val keyguard = getSystemService(android.app.KeyguardManager::class.java)
     // A screen lock set and the watch unlocked now: the confirmation for Refuse and Halt (docs/watch-wear.md).
-    WatchModel(DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked })
+    WatchModel(DataLayerPhone(this), unlocked = { keyguard.isDeviceSecure && !keyguard.isDeviceLocked }, tile = TileCount(PreferencesTileStore(this)))
   }
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,7 +63,11 @@ class WatchActivity : ComponentActivity() {
 
   override fun onStart() {
     super.onStart()
-    lifecycleScope.launch { model.refresh() }
+    lifecycleScope.launch {
+      model.refresh()
+      // The tile shows the count just read, or forgets it if the phone signed out.
+      NeedsYouTileService.update(this@WatchActivity)
+    }
   }
 
   override fun onStop() {
