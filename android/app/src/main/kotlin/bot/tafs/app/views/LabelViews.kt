@@ -49,6 +49,12 @@ internal fun shownLabels(labels: List<HomeLabel>, expanded: Boolean, selected: S
 /** The tafs a label holds, or all of them with none chosen. */
 internal fun onLabel(tafs: List<Taf>, label: String?): List<Taf> = if (label == null) tafs else tafs.filter { label in it.labels }
 
+/**
+ * The labels Home may draw: one tafs cloud sent without an id or a name is left out, so no chip filters on nothing and none is
+ * blank.
+ */
+internal fun usableLabels(labels: List<HomeLabel>?): List<HomeLabel> = labels.orEmpty().filter { it.id.isNotBlank() && it.name.isNotBlank() }
+
 /** A taf's labels by name, in the account's order: at most three. */
 internal fun labelTags(taf: Taf, labels: List<HomeLabel>): List<String> =
   labels.filter { it.id in taf.labels }.map { it.name }.take(3)

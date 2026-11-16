@@ -12,8 +12,10 @@ import bot.tafs.app.views.labelHeadline
 import bot.tafs.app.views.labelTags
 import bot.tafs.app.views.onLabel
 import bot.tafs.app.views.shownLabels
+import bot.tafs.app.views.usableLabels
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** Labels on the tafs list (docs/android-app.md, Labels): tafs cloud lists and counts them; the app only filters by them. */
@@ -63,6 +65,18 @@ class LabelsTest {
   @Test fun allIsTafsCloudsWordElseTheApps() {
     assertEquals("Toutes", allWords("Toutes"))
     assertEquals("All", allWords(null))
+  }
+
+  @Test fun aLabelWithNoIdOrNameIsNoChip() {
+    val good = HomeLabel(id = "l_money", name = "Money", count = 2)
+    val labels = KiffClient.json.decodeFromString<Home>(
+      """{"tafs":[],"others":[],"removing":[],"labels":[{"name":"No id","count":1},{"id":"l_x","count":1},{"id":" ","name":"Blank","count":1},
+         {"id":"l_money","name":"Money","count":2}]}""",
+    ).labels
+    assertEquals(listOf(good), usableLabels(labels))
+    // A tap can only ever filter on a real id.
+    assertTrue(usableLabels(labels).none { it.id.isBlank() })
+    assertEquals(emptyList<HomeLabel>(), usableLabels(null))
   }
 
   @Test fun homeReadsTheLabelsAndEachTafsLabels() {

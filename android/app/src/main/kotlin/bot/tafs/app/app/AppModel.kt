@@ -1469,7 +1469,7 @@ class AppModel(
         coachWaitingClear = read.home.coachWaitingClear?.takeIf { it.words.button.isNotBlank() },
         needsYou = read.home.needsYou,
         headline = read.home.headline?.words?.takeIf { it.isNotBlank() },
-        labels = read.home.labels.orEmpty().filter { it.id.isNotBlank() && it.name.isNotBlank() },
+        labels = bot.tafs.app.views.usableLabels(read.home.labels),
         labelsAll = read.home.labelsWords?.all?.takeIf { it.isNotBlank() },
         // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given on this device.
         record = read.activity?.let { withDecisions(KiffMapping.record(it, holders)) } ?: s.record,
