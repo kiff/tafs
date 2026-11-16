@@ -16,8 +16,10 @@ android {
     minSdk = 30
     // Wear OS 6's level, the newest a watch runs.
     targetSdk = 36
-    // Not uploaded yet: its number on Play's listing beside the phone's is decided before its first upload.
-    versionCode = 1
+    // Its own band under the phone's package (docs/watch-wear.md, Versions): Play wants every versionCode on the listing unique
+    // across the phone's and the watch's builds, and the phone counts up by one from 1, so the watch counts up by one from
+    // 400,000,001 and the two never meet.
+    versionCode = 400_000_001
     versionName = "0.1.0"
   }
 
