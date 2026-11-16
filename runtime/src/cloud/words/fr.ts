@@ -95,6 +95,7 @@ export const fr: Words = {
   approval_cards_not_issued: (why: string) => `KIFF n'a pas émis les Cards du taf : ${why}`,
   approval_connected_card_next: (vendor: string) => `${vendor} est connecté. Ensuite, la Card.`,
   approval_other_app_first: (vendor: string) => `${vendor} attend encore sa propre approbation. Approuvez d'abord ${vendor} ; cette Card vient avec la dernière app.`,
+  approval_with_its_card: (vendor: string) => `${vendor} s'approuve avec sa Card. Coach le montre à nouveau avec la Card.`,
   approval_draft_is: (status: string) => `état du brouillon : ${status}`,
   approval_no_draft: "KIFF n'a pas ce brouillon",
   approval_card_next: "Sa Card : vous l'approuvez ensuite",
