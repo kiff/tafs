@@ -75,15 +75,19 @@ Each mission has a log: what its tafs delivered, newest last, kept 90 days (the 
 ## Your brief
 
 Your brief replaces Needs you: twice a day, at 08:00 and 18:00 in the account's time zone, plus an alert at once for
-what's truly urgent (design v2.1 §7). Its builder is `runtime/src/cloud/brief.ts`; the route (`GET /v1/brief?label=`,
-`POST /v1/brief/decisions/{id}/later`) and its words come next.
+what's truly urgent (design v2.1 §7). Its builder is `runtime/src/cloud/brief.ts`, served at `GET /v1/brief?label=`, with
+Later at `POST /v1/brief/decisions/{id}/later` ([api.md](api.md)).
+
+- **What it's built from**, read as Home reads it: the calls KIFF holds on the tafs the person may see (Approve or Refuse,
+  as equals: KIFF gives no why) and the steps their runs handed their owner (with KIFF's expiry as the deadline). Blocked
+  connections, Coach's proposals, case lines, the credits line and the pushes come next.
 
 - **Urgent** is tafs cloud's rule, never a model's: a deadline before the next brief, money going out today, a halt, a
   blocked connection, or "ask me at once".
 - **Decisions**: the urgent ones first, then by deadline, then the oldest. Every urgent one shows; the others are capped so
   at most 5 show in all, the rest counted (`more`). At
   most one answer is recommended, and only with a why; without one, the answers show as equals.
-- **Later** moves a decision to the next brief. It's offered only for what can wait; one that can't says why
+- **Later** moves a decision to the next brief, in that person's brief only. It's offered only for what can wait; one that can't says why
   (`now_why`). A decision put off comes back early if it turns urgent.
 - **Done** is said per case ("reminder sent Tuesday · waiting for payment · next check Friday"), grouped by mission.
 - **Labels**: the brief narrows to one label's tafs; each label's count and waiting are over the whole account, before

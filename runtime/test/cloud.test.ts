@@ -6922,3 +6922,72 @@ describe("Connect apps: which taf a connection goes to", () => {
     expect(viewer.started).toEqual([]);
   });
 });
+
+// Your brief (docs/missions.md, Your brief; design v2.1 §7.5): built here from Home's reads, so the apps cut and count nothing.
+describe("GET /v1/brief and Later", () => {
+  const setUp = () => {
+    const w = world();
+    w.account.held = [
+      { id: "h1", subject: "rae", kind: "hold", title: "Refund order 1042, €80", created_at: "2026-10-28T09:00:00Z" },
+      // No id: it can't be opened, so it isn't a decision. A Card-unit exception isn't an approval.
+      { subject: "rae", kind: "hold" },
+      { id: "cu1", subject: "rae", kind: "card_unit" },
+      // Another account's taf: never in this brief.
+      { id: "h9", subject: "max", kind: "hold" },
+    ];
+    // A step KIFF stops waiting for in 3 hours, before the next brief (18:00 Paris): urgent.
+    w.agents.runs.unshift({ tenant: "t_acme", id: "run_step", agent: RAE, session: "sess_step", trigger: "schedule", status: "PAUSED", cost_micro_usd: 0, turns: 2,
+      created: "2026-10-29T09:00:00Z", updated: "2026-10-29T09:01:00Z",
+      requirements: [{ call_id: "c1", tool: "your_step", operation: "op-1", exception: "ho_1", expires: "2026-10-29T13:00:00.000Z", input: { what: "Approve 3 supplier payments", why: "Your bank asks" } }] } as never);
+    const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const ask = async (method: string, path: string, opts: { token?: string; query?: string; headers?: Record<string, string> } = {}) => {
+      const r = await handle({ rawPath: path, ...(opts.query ? { rawQueryString: opts.query } : {}), requestContext: { http: { method } }, headers: { Authorization: `Bearer ${opts.token ?? "ana_paris"}`, ...opts.headers } }, deps);
+      return { status: r.statusCode, body: JSON.parse(r.body) };
+    };
+    return { w, ask };
+  };
+
+  it("lists the held calls and steps as decisions, the urgent first, in the account's time zone and the reader's language", async () => {
+    const { ask } = setUp();
+    const r = await ask("GET", "/v1/brief");
+    expect(r.status).toBe(200);
+    // 11:00 in Paris: the brief is this morning's 08:00, the next is 18:00.
+    expect(r.body).toMatchObject({ at: "2026-10-29T07:00:00.000Z", next_at: "2026-10-29T17:00:00.000Z", done: [], rest: { count: 0, words: "Nothing else." },
+      words: { title: "Your brief", decisions: "Decisions", done: "Done", rest: "The rest" } });
+    expect(r.body.decisions).toEqual([
+      { id: "step:ho_1", question: "Approve 3 supplier payments", answers: [{ words: "Done", answer: "done", recommended: false }, { words: "Skip it", answer: "skip", recommended: false }],
+        meanwhile: "Its run waits for this step.", deadline: "2026-10-29T13:00:00.000Z", urgent: true, ref: { kind: "step", id: "ho_1", taf: RAE } },
+      { id: "hold:h1", question: "Refund order 1042, €80", answers: [{ words: "Approve", answer: "approve", recommended: false }, { words: "Refuse", answer: "refuse", recommended: false }],
+        meanwhile: "Nothing is done until you answer.", urgent: false, later: { words: "Later" }, ref: { kind: "hold", id: "h1", taf: RAE } },
+    ]);
+    expect(r.body.more).toBeUndefined();
+    expect(r.body.credits).toBeUndefined();
+    const de = await ask("GET", "/v1/brief", { headers: { "accept-language": "de" } });
+    expect(de.body.words).toEqual({ title: "Dein Briefing", decisions: "Entscheidungen", done: "Erledigt", rest: "Der Rest" });
+    expect(de.body.decisions[1]).toMatchObject({ meanwhile: "Bis du antwortest, passiert nichts.", answers: [{ words: "Genehmigen" }, { words: "Ablehnen" }], later: { words: "Später" } });
+    // A label no taf carries narrows the brief to nothing.
+    expect((await ask("GET", "/v1/brief", { query: "label=lbl_none" })).body).toMatchObject({ decisions: [], rest: { count: 0 } });
+  });
+
+  it("puts a decision off to the next brief in that person's brief alone, where it's back; refuses Later for an urgent one and for one not in the brief", async () => {
+    const { w, ask } = setUp();
+    expect(await ask("POST", "/v1/brief/decisions/hold:h1/later")).toEqual({ status: 200, body: { id: "hold:h1", until: "2026-10-29T17:00:00.000Z" } });
+    expect((await ask("GET", "/v1/brief")).body.decisions.map((d: { id: string }) => d.id)).toEqual(["step:ho_1"]);
+    expect(await ask("POST", "/v1/brief/decisions/step:ho_1/later")).toMatchObject({ status: 409, body: { code: "urgent" } });
+    expect((await ask("POST", "/v1/brief/decisions/hold:nope/later")).status).toBe(404);
+    // The ':' escaped is the same decision; an escape that isn't one is no decision.
+    expect(await ask("POST", "/v1/brief/decisions/hold%3Ah1/later")).toEqual({ status: 200, body: { id: "hold:h1", until: "2026-10-29T17:00:00.000Z" } });
+    expect((await ask("POST", "/v1/brief/decisions/hold%E0%A4%A/later")).status).toBe(404);
+    // It's Ana's brief alone: another person on the account still sees the decision she put off.
+    expect((await ask("GET", "/v1/brief", { token: "owner" })).body.decisions.map((d: { id: string }) => d.id)).toEqual(["step:ho_1", "hold:h1"]);
+    // At 18:00 Paris it's back (the step has expired by then and left).
+    w.now = new Date("2026-10-29T17:00:00Z");
+    expect((await ask("GET", "/v1/brief")).body.decisions.map((d: { id: string }) => d.id)).toContain("hold:h1");
+  });
+
+  it("leaves out a taf being removed, with its calls and steps (M7)", async () => {
+    const { w, ask } = setUp();
+    w.tafs.held.set(`t_acme#${RAE}`, { ...w.tafs.held.get(`t_acme#${RAE}`)!, removing: true } as never);
+    expect((await ask("GET", "/v1/brief")).body).toMatchObject({ decisions: [], rest: { count: 0 } });
+  });
+});

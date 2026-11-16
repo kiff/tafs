@@ -80,7 +80,8 @@ export interface BriefWords {
   later: string;
   more: (n: number) => string;
   restLine: (n: number) => string;
-  credits: string;
+  /** The day's credits line, when the balance could be read. */
+  credits?: string;
 }
 
 /** The brief's two times around `now`: the last one passed (`at`) and the next (`next_at`), as instants. */
@@ -147,7 +148,7 @@ export interface Brief {
   more?: { count: number; words: string };
   done: Array<{ mission?: { id: string; name: string }; cases: Array<{ words: string; state: string; next_check?: string }>; value?: string; log?: string }>;
   rest: { count: number; words: string };
-  credits: { words: string };
+  credits?: { words: string };
   labels: Array<{ id: string; name: string; color: string; count: number; waiting: number }>;
   words: { decisions: string; done: string; rest: string };
 }
@@ -197,10 +198,66 @@ export function buildBrief(input: {
     ...(more > 0 ? { more: { count: more, words: input.words.more(more) } } : {}),
     done: [...groups.values()],
     rest: { count: input.rest, words: input.words.restLine(input.rest) },
-    credits: { words: input.words.credits },
+    ...(input.words.credits ? { credits: { words: input.words.credits } } : {}),
     labels,
     words: { decisions: input.words.decisions, done: input.words.done, rest: input.words.rest },
   };
+}
+
+/** The words a decision made from tafs cloud's own reads is said in. */
+export interface DecisionWords {
+  approve: string;
+  refuse: string;
+  holdQuestion: (taf: string) => string;
+  holdMeanwhile: string;
+  stepMeanwhile: string;
+}
+
+/**
+ * A call KIFF holds for the person's approval, as a decision (§7.5, 2: ref kind hold). Its answers are Approve and Refuse,
+ * as equals: KIFF gives no why, and nothing here makes one up. A held call with no id can't be opened, so it's left out,
+ * and so is a Card-unit exception, which isn't an approval.
+ */
+export function holdDecision(h: { id?: string; kind?: string; title?: string; created_at?: string }, taf: BriefDecisionIn["taf"], w: DecisionWords): BriefDecisionIn | undefined {
+  if (!h.id || (h.kind ?? "hold") !== "hold") return undefined;
+  return {
+    id: `hold:${h.id}`, ref: { kind: "hold", id: h.id, taf: taf.id }, taf,
+    question: h.title?.trim() || w.holdQuestion(taf.name),
+    answers: [{ words: w.approve, answer: "approve" }, { words: w.refuse, answer: "refuse" }],
+    meanwhile: w.holdMeanwhile,
+    ...(h.created_at ? { since: h.created_at } : {}),
+  };
+}
+
+/**
+ * A step a taf handed its owner, as a decision (§7.5, 2: ref kind step): its own words and buttons, with KIFF's expiry
+ * as its deadline, so one that ends before the next brief is urgent.
+ */
+export function stepDecision(s: { handoff: string; what: string; since: string; expires: string; words: { done: string; skip: string } }, taf: BriefDecisionIn["taf"], w: DecisionWords): BriefDecisionIn {
+  return {
+    id: `step:${s.handoff}`, ref: { kind: "step", id: s.handoff, taf: taf.id }, taf,
+    question: s.what,
+    answers: [{ words: s.words.done, answer: "done" }, { words: s.words.skip, answer: "skip" }],
+    meanwhile: w.stepMeanwhile,
+    deadline: s.expires, since: s.since,
+  };
+}
+
+/**
+ * Where the decisions put off with Later are kept: one record per person, {decision id: until}. It's their brief: one
+ * person's Later never moves a decision out of anyone else's, so a member who can't answer a held call can't hide it
+ * from the person who can.
+ */
+export const briefLaterKey = (tenant: string, person: string) => `${tenant}#brief-later#${person}`;
+
+/** The decisions still put off at `now`, from what was kept: anything else (a past time, a value that isn't one) is dropped. */
+export function laterOf(kept: unknown, now: Date): Map<string, string> {
+  const out = new Map<string, string>();
+  if (!kept || typeof kept !== "object" || Array.isArray(kept)) return out;
+  for (const [id, until] of Object.entries(kept as Record<string, unknown>)) {
+    if (typeof until === "string" && Date.parse(until) > now.getTime()) out.set(id, until);
+  }
+  return out;
 }
 
 /** Later (decision 2): the decision moves to the next brief. Refused for one that's urgent or can't wait. */
