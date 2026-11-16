@@ -1,0 +1,1 @@
+- **Wear OS: the watch's signed release bundle, for Play's Wear OS internal track.** CI builds it with the phone's upload key, on a merge that raises the watch's versionCode or by hand, and sends it to `wear:internal` alone once `WEAR_UPLOAD` is on, with its first release notes in 8 languages (docs/watch-wear.md).

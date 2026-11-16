@@ -1797,6 +1797,29 @@ class PlanqueTest {
     assertNull(m.state.value.lastError)
   }
 
+  @Test fun aClosedPromptDiscardsNothingAndSaysSo() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, halfMade)
+    val m = model()
+    m.refresh()
+    auth.fails = bot.tafs.app.signing.PromptClosed()
+    assertFalse(m.discardSetup("inv-1"))
+    assertEquals("Not discarded. Nothing changed.", m.state.value.lastError)
+    assertTrue(transport.requests.none { it.method == "POST" && (it.url.contains("/discard") || it.url.contains("/revoke")) })
+    assertEquals(1, m.state.value.settingUp.size)
+  }
+
+  @Test fun aFingerNotRecognizedDiscardsNothingAndSaysTryAgain() = runTest {
+    reads()
+    transport.answer("GET /v1/home", 200, halfMade)
+    val m = model()
+    m.refresh()
+    auth.confirms = false
+    assertFalse(m.discardSetup("inv-1"))
+    assertEquals(Words.Approval.notRecognized, m.state.value.lastError)
+    assertTrue(transport.requests.none { it.method == "POST" && (it.url.contains("/discard") || it.url.contains("/revoke")) })
+  }
+
   @Test fun withoutTafsCloudsDiscardNothingIsAskedOrSent() = runTest {
     reads()
     transport.answer("GET /v1/home", 200, """{"tafs":[],"others":[],"removing":[],"setting_up":[{"name":"Invoicing day test","kiff_agent":"inv-1","color":2}]}""")

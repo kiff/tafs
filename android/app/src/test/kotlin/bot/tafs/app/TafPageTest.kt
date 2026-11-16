@@ -373,9 +373,17 @@ class TafPageTest {
   // now says so.
   @Test fun aRemovalNobodyConfirmedDoesNothingAndSaysSo() = runTest {
     reads()
-    auth.confirms = false
+    auth.fails = bot.tafs.app.signing.PromptClosed()
     val m = model()
     assertEquals("Not removed. Nothing changed.", m.removeTaf("refunds-1"))
+    assertTrue(transport.requests.none { it.method == "DELETE" || it.url.contains("/mandates/") })
+  }
+
+  @Test fun aRemovalWhoseFingerWasntRecognizedDoesNothingAndSaysTryAgain() = runTest {
+    reads()
+    auth.confirms = false
+    val m = model()
+    assertEquals(bot.tafs.app.model.Words.Approval.notRecognized, m.removeTaf("refunds-1"))
     assertTrue(transport.requests.none { it.method == "DELETE" || it.url.contains("/mandates/") })
   }
 

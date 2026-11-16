@@ -60,6 +60,7 @@
     <string name="approval_biometry_screen_lock">deine Displaysperre</string>
     <string name="approval_biometry_timed_out">Zeitüberschreitung bei %1$s. Versuch es erneut.</string>
     <string name="approval_can_not_used_right_try">%1$s kann gerade nicht verwendet werden. Versuch es gleich noch einmal.</string>
+    <string name="approval_cancelled">Abgebrochen. Nichts wurde geändert.</string>
     <string name="approval_cancelled_nothing_approved_request_kept">Abgebrochen, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
     <string name="approval_cant_approve_none_enrolled">Zum Genehmigen braucht dieses Telefon einen Fingerabdruck.</string>
     <string name="approval_cant_approve_temporarily_unavailable">Der Fingerabdrucksensor kann gerade nicht verwendet werden. Versuch es gleich noch einmal.</string>
@@ -1975,6 +1976,7 @@
     <string name="setup_choose_actions">Aktionen wählen</string>
     <string name="setup_connect_app">Eine App verbinden…</string>
     <string name="setup_connected_apps">Verbundene Apps</string>
+    <string name="setup_discard_not_confirmed">Nicht verworfen. Nichts wurde geändert.</string>
     <string name="setup_doors">Türen</string>
     <string name="setup_edit">Bearbeiten</string>
     <string name="setup_follow_ups">Nachfassen, die er sich selbst gesetzt hat</string>

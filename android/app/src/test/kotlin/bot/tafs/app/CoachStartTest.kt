@@ -249,8 +249,21 @@ class CoachStartTest {
     assertFalse(m.startCoach())
     assertTrue(transport.requestsTo("POST /v1/keys").isEmpty())
     assertTrue(transport.requestsTo("POST /v1/setup").isEmpty())
-    // A closed prompt says what any approval says: try again.
+    // A finger not recognized says what any approval says: try again.
     assertEquals(bot.tafs.app.model.Words.Approval.notRecognized, m.state.value.coachStartError)
+    assertFalse(m.state.value.startingCoach)
+  }
+
+  @Test fun aClosedPromptStartsNothingAndSaysCancelled() = runTest {
+    reads()
+    startAnswers()
+    val m = model()
+    auth.fails = bot.tafs.app.signing.PromptClosed()
+    assertFalse(m.startCoach())
+    assertTrue(transport.requestsTo("POST /v1/keys").isEmpty())
+    assertTrue(transport.requestsTo("POST /v1/setup").isEmpty())
+    // Nothing is waiting on it, so: "Cancelled. Nothing changed."
+    assertEquals("Cancelled. Nothing changed.", m.state.value.coachStartError)
     assertFalse(m.state.value.startingCoach)
   }
 

@@ -125,6 +125,8 @@ enum Words {
         static func biometryTimedOut(biometry: String) -> String { Words.line("approval.biometry_timed_out", biometry) }
         /// {either} can't be used right now. Try again in a moment.
         static func canNotUsedRightTry(either: String) -> String { Words.line("approval.can_not_used_right_try", either) }
+        /// Cancelled. Nothing changed.
+        static var cancelled: String { Words.line("approval.cancelled") }
         /// Cancelled, so nothing was approved. The request is kept: approve again when you're ready.
         static var cancelledNothingApprovedRequestKept: String { Words.line("approval.cancelled_nothing_approved_request_kept") }
         enum CantApprove {
@@ -3915,6 +3917,8 @@ enum Words {
         static var connectApp: String { Words.line("setup.connect_app") }
         /// Connected apps
         static var connectedApps: String { Words.line("setup.connected_apps") }
+        /// Not discarded. Nothing changed.
+        static var discardNotConfirmed: String { Words.line("setup.discard_not_confirmed") }
         /// Doors
         static var doors: String { Words.line("setup.doors") }
         /// Edit
@@ -4888,7 +4892,7 @@ enum Words {
     /// The number is the line's first value, written as the app's language writes it.
     static func count(_ key: String, _ count: Int, _ values: String...) -> String {
         let form = "\(key)|\(pluralForm(count))"
-        let known = Bundle.main.localizedString(forKey: form, value: nil, table: nil) != form
+        let known = bundle.localizedString(forKey: form, value: nil, table: nil) != form
         return filled(known ? form : "\(key)|other", [number(count)] + values)
     }
 
@@ -4896,8 +4900,12 @@ enum Words {
     /// asks the servers for, never a language only Siri's phrases are in.
     static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"]
 
+    /// The catalog the lines are read from: the system's pick for the app, or the language picked
+    /// in the app (`AppLanguage.choose`), so a pick applies at once, with no relaunch.
+    nonisolated(unsafe) static var bundle = Bundle.main
+
     /// The language the app's lines are in, as the catalog names it, never the device's region.
-    static let locale = Locale(identifier: Bundle.main.localizedString(forKey: "_language", value: "en", table: nil))
+    static var locale: Locale { Locale(identifier: bundle.localizedString(forKey: "_language", value: "en", table: nil)) }
 
     /// A count's number as the app's language writes it: 1,000, 1.000, 1 000.
     static func number(_ n: Int) -> String {
@@ -4935,13 +4943,13 @@ enum Words {
 
     /// The plural form a number takes in the app's language: one, few, many, other…
     static func pluralForm(_ count: Int) -> String {
-        let format = Bundle.main.localizedString(forKey: "_plural", value: nil, table: nil)
+        let format = bundle.localizedString(forKey: "_plural", value: nil, table: nil)
         let picked = String(format: format, locale: locale, count)
         return picked.split(separator: "|").last.map(String.init) ?? "other"
     }
 
     private static func filled(_ key: String, _ values: [String]) -> String {
-        let format = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+        let format = bundle.localizedString(forKey: key, value: nil, table: nil)
         return values.isEmpty ? format : String(format: format, locale: locale, arguments: values)
     }
 }

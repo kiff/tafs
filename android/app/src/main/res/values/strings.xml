@@ -60,6 +60,7 @@
     <string name="approval_biometry_screen_lock">your screen lock</string>
     <string name="approval_biometry_timed_out">%1$s timed out. Try again.</string>
     <string name="approval_can_not_used_right_try">%1$s can\'t be used right now. Try again in a moment.</string>
+    <string name="approval_cancelled">Cancelled. Nothing changed.</string>
     <string name="approval_cancelled_nothing_approved_request_kept">Cancelled, so nothing was approved. The request is kept: approve again when you\'re ready.</string>
     <string name="approval_cant_approve_none_enrolled">Approving needs a fingerprint on this phone.</string>
     <string name="approval_cant_approve_temporarily_unavailable">The fingerprint sensor can\'t be used just now. Try again in a moment.</string>
@@ -1975,6 +1976,7 @@
     <string name="setup_choose_actions">Choose actions</string>
     <string name="setup_connect_app">Connect an app…</string>
     <string name="setup_connected_apps">Connected apps</string>
+    <string name="setup_discard_not_confirmed">Not discarded. Nothing changed.</string>
     <string name="setup_doors">Doors</string>
     <string name="setup_edit">Edit</string>
     <string name="setup_follow_ups">Follow-ups it set itself</string>

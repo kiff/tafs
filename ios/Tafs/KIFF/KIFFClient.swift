@@ -1561,7 +1561,8 @@ final class KIFFClient {
     /// resolved to comes first, then the phone's other languages the app ships, at most four;
     /// `acceptLanguage` adds English last.
     nonisolated static var screenLanguages: [String] {
-        screenLanguages(resolved: Bundle.main.preferredLocalizations.first, preferred: Locale.preferredLanguages, shipped: Words.languages)
+        // The lines' own language first: the one picked in the app, else the system's pick for it.
+        screenLanguages(resolved: Words.locale.language.languageCode?.identifier, preferred: Locale.preferredLanguages, shipped: Words.languages)
     }
 
     /// The one language the app's own screens resolved to: what KIFF's pages and kiff.dev's are

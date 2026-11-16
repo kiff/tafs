@@ -1,0 +1,5 @@
+A primeira app tafs para Wear OS, companheira da app tafs no telemóvel.
+- «Precisa de si» e «Os seus tafs» no pulso, lidos a partir do telemóvel.
+- Recuse uma chamada retida ou bloqueie um taf a partir do relógio. Aprovar continua no telemóvel.
+- Um mosaico com quantos precisam de si, mostrado só com o relógio desbloqueado.
+- Fale com o Coach: recebe as suas palavras como texto, nunca a sua voz.

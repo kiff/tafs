@@ -60,6 +60,7 @@
     <string name="approval_biometry_screen_lock">tu bloqueo de pantalla</string>
     <string name="approval_biometry_timed_out">Se agotó el tiempo de %1$s. Vuelve a intentarlo.</string>
     <string name="approval_can_not_used_right_try">Ahora mismo no se puede usar %1$s. Vuelve a intentarlo en un momento.</string>
+    <string name="approval_cancelled">Cancelado. No cambió nada.</string>
     <string name="approval_cancelled_nothing_approved_request_kept">Cancelado, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras.</string>
     <string name="approval_cant_approve_none_enrolled">Para aprobar se necesita una huella en este teléfono.</string>
     <string name="approval_cant_approve_temporarily_unavailable">Ahora mismo no se puede usar el sensor de huellas. Vuelve a intentarlo en un momento.</string>
@@ -1975,6 +1976,7 @@
     <string name="setup_choose_actions">Elegir acciones</string>
     <string name="setup_connect_app">Conectar una app…</string>
     <string name="setup_connected_apps">Apps conectadas</string>
+    <string name="setup_discard_not_confirmed">No se descartó. No cambió nada.</string>
     <string name="setup_doors">Puertas</string>
     <string name="setup_edit">Editar</string>
     <string name="setup_follow_ups">Seguimientos que se programó</string>

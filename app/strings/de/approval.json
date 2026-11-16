@@ -13,6 +13,7 @@
   "approval.biometry.screen_lock": "deine Displaysperre",
   "approval.biometry_timed_out": "Zeitüberschreitung bei {biometry}. Versuch es erneut.",
   "approval.can_not_used_right_try": "{either} kann gerade nicht verwendet werden. Versuch es gleich noch einmal.",
+  "approval.cancelled": "Abgebrochen. Nichts wurde geändert.",
   "approval.cancelled_nothing_approved_request_kept": "Abgebrochen, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.",
   "approval.cant_approve.none_enrolled": "Zum Genehmigen braucht dieses Telefon einen Fingerabdruck.",
   "approval.cant_approve.temporarily_unavailable": "Der Fingerabdrucksensor kann gerade nicht verwendet werden. Versuch es gleich noch einmal.",
