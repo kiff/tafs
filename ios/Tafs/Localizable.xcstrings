@@ -102374,7 +102374,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Reconnectez-vous avec KIFF : cette connexion ne peut pas signer pour l'%1$@."
+            "value": "Reconnectez-vous avec KIFF : cette connexion ne peut pas signer pour %2$@."
           }
         },
         "it": {

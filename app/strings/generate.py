@@ -35,6 +35,8 @@ POSSESSIVE = {"en": ("s", "'", "'s"), "de": ("sßxz", "'", "s")}
 # the first word, any other the second ("cet appareil", "ce Mac"). Only languages whose word for "this"
 # changes with the name are here; any other writes its word in the line ("this {device}"). Both apps'
 # generators read this one table, and the desktop apps keep the same rule (docs/languages.md).
+# The table is right for the device kinds the apps name (Mac, PC, iPad, appareil, écran…): it takes every h as
+# mute and y as a vowel, so a name a person typed ("héros", "yaourt") would need an exception list first.
 THIS = {"fr": ("aeiouyhàâäéèêëîïôöùûüœæ", "cet ", "ce ")}
 SWIFT_WORDS = {"default", "case", "class", "func", "let", "var", "in", "is", "as", "do", "for", "if", "else", "return",
                "self", "true", "false", "nil", "switch", "where", "while", "import", "init", "enum", "struct", "static",

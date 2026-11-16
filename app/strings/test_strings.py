@@ -374,10 +374,11 @@ class This(unittest.TestCase):
         self.assertEqual(sorted(generate.THIS), ["fr"])
 
     def test_french_never_writes_its_own_word_before_a_device(self):
-        # "cet {device}" read "cet Mac" on a Mac, and "ce {device}" "ce appareil" on a phone: the rule picks the word.
+        # "cet {device}" read "cet Mac" on a Mac, "ce {device}" "ce appareil" on a phone, and "l'{device}" "l'Mac":
+        # the rule picks the word.
         for key, line in generate.load("fr").items():
             for text in generate.forms_of(line):
-                self.assertNotRegex(text, r"\b[Cc]e(t|tte)? \{device\}", f"fr {key}: write {{device|this}}")
+                self.assertNotRegex(text, r"(\b([Cc]e(t|tte)?|[Ll][ea]|[Dd]u|[Aa]u) |\b[Ll]')\{device\}", f"fr {key}: write {{device|this}}")
 
     def test_this_is_a_value_after_the_lines_own_and_each_app_says_it(self):
         source = {"a.on_device": "Alerts on this {device} for {taf|possessive} Card"}

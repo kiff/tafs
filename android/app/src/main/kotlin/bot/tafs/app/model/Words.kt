@@ -2171,7 +2171,7 @@ object Words {
   }
   object SignIn {
     val againToSign: String get() = Res.s(R.string.sign_in_again_to_sign)
-    fun againToSignDevice(device: String): String = Res.s(R.string.sign_in_again_to_sign_device, device)
+    fun againToSignDevice(device: String): String = Res.s(R.string.sign_in_again_to_sign_device, device, Words.demonstrative(device))
     fun agree(terms: String, privacy: String): String = Res.s(R.string.sign_in_agree, terms, privacy)
     val checkCode: String get() = Res.s(R.string.sign_in_check_code)
     fun couldNotFinish(why: String): String = Res.s(R.string.sign_in_could_not_finish, why)

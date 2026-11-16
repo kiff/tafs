@@ -1,6 +1,6 @@
 {
   "sign_in.again_to_sign": "Reconnectez-vous avec KIFF : cette connexion ne peut pas signer pour le téléphone.",
-  "sign_in.again_to_sign_device": "Reconnectez-vous avec KIFF : cette connexion ne peut pas signer pour l'{device}.",
+  "sign_in.again_to_sign_device": "Reconnectez-vous avec KIFF : cette connexion ne peut pas signer pour {device|this}.",
   "sign_in.agree": "En vous connectant, vous acceptez les {terms} de KIFF, qui couvrent tafs, et sa {privacy}.",
   "sign_in.check_code": "Vérifiez que KIFF affiche le même code avant d'approuver.",
   "sign_in.could_not_finish": "Impossible de terminer : {why}. Réessayez.",

@@ -2021,7 +2021,7 @@
     <string name="setup_stop">Arrêter</string>
     <string name="setup_title">Configuration</string>
     <string name="sign_in_again_to_sign">Reconnectez-vous avec KIFF : cette connexion ne peut pas signer pour le téléphone.</string>
-    <string name="sign_in_again_to_sign_device">Reconnectez-vous avec KIFF : cette connexion ne peut pas signer pour l\'%1$s.</string>
+    <string name="sign_in_again_to_sign_device">Reconnectez-vous avec KIFF : cette connexion ne peut pas signer pour %2$s.</string>
     <string name="sign_in_agree">En vous connectant, vous acceptez les %1$s de KIFF, qui couvrent tafs, et sa %2$s.</string>
     <string name="sign_in_check_code">Vérifiez que KIFF affiche le même code avant d\'approuver.</string>
     <string name="sign_in_could_not_finish">Impossible de terminer : %1$s. Réessayez.</string>

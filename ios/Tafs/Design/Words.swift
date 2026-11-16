@@ -4014,7 +4014,7 @@ enum Words {
         /// Sign in with KIFF again: this sign-in can't sign for the phone.
         static var againToSign: String { Words.line("sign_in.again_to_sign") }
         /// Sign in with KIFF again: this sign-in can't sign for the {device}.
-        static func againToSignDevice(device: String) -> String { Words.line("sign_in.again_to_sign_device", device) }
+        static func againToSignDevice(device: String) -> String { Words.line("sign_in.again_to_sign_device", device, Words.demonstrative(device)) }
         /// By signing in, you agree to KIFF's {terms}, which cover tafs, and its {privacy}.
         static func agree(terms: String, privacy: String) -> String { Words.line("sign_in.agree", terms, privacy) }
         /// Check that KIFF shows the same code before you approve.
