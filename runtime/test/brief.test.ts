@@ -99,4 +99,30 @@ describe("Your brief (design v2.1 §7)", () => {
     expect(support.decisions.map((d) => d.id)).toEqual(["hold:other"]);
     expect(support.more).toBeUndefined();
   });
+
+  // kiff-qa on #1176: with a label chosen, the other labels keep their waiting, so their dot still says where to look.
+  it("keeps every label's waiting over the whole account when one label is chosen, put-off decisions included", () => {
+    const decisions = [hold("a"), hold("b"), hold("other", { taf: taf("desk", ["support"]), ref: { kind: "step", id: "s1", taf: "desk" } })];
+    const b = buildBrief({
+      now: new Date("2026-11-16T09:30:00Z"), timeZone: "Europe/Paris", decisions, later: new Map([["hold:a", "2026-11-16T17:00:00.000Z"]]),
+      rest: 0, words: W, cases: [], label: "support",
+      labels: [{ id: "money", name: "Money", color: "green" }, { id: "support", name: "Support", color: "blue" }],
+      tafs: [taf("collect", ["money"]), taf("desk", ["support"])],
+    });
+    expect(b.decisions.map((d) => d.id)).toEqual(["hold:other"]);
+    expect(b.labels).toEqual([
+      { id: "money", name: "Money", color: "green", count: 1, waiting: 2 },
+      { id: "support", name: "Support", color: "blue", count: 1, waiting: 1 },
+    ]);
+  });
+
+  it("always shows every urgent decision, capping only the others; reads an unreadable deadline as urgent; refuses a brief with no time", () => {
+    const decisions = [...Array.from({ length: 6 }, (_, i) => hold(`u${i}`, { halt: true })), hold("calm")];
+    const b = buildBrief({ now: new Date("2026-11-16T09:30:00Z"), timeZone: "Europe/Paris", decisions, later: new Map(), rest: 0, words: W, cases: [], labels: [], tafs: [] });
+    expect(b.decisions.filter((d) => d.urgent)).toHaveLength(6);
+    expect(b.more).toEqual({ count: 1, words: "1 more" });
+    expect(isUrgent(hold("x", { deadline: "soon" }), new Date("2026-11-16T17:00:00Z"))).toBe(true);
+    expect(() => briefTimes(new Date(), "Europe/Paris", [])).toThrow();
+    expect(() => briefTimes(new Date(), "Europe/Paris", ["8am"])).toThrow();
+  });
 });

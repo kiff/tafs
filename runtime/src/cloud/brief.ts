@@ -85,6 +85,7 @@ export interface BriefWords {
 
 /** The brief's two times around `now`: the last one passed (`at`) and the next (`next_at`), as instants. */
 export function briefTimes(now: Date, timeZone: string, slots: readonly string[] = BRIEF_SLOTS): { at: Date; next_at: Date } {
+  if (!slots.length || slots.some((s) => !/^([01]\d|2[0-3]):[0-5]\d$/.test(s))) throw new Error("a brief needs at least one time, as HH:MM");
   const zone = validZone(timeZone);
   const day = localDate(now, zone);
   const candidates: Date[] = [];
@@ -98,9 +99,10 @@ export function briefTimes(now: Date, timeZone: string, slots: readonly string[]
   return { at: past[past.length - 1]!, next_at: future[0]! };
 }
 
-/** tafs cloud's urgency rules (§7): never the model's. */
+/** tafs cloud's urgency rules (§7): never the model's. A deadline that can't be read counts as before the next brief. */
 export function isUrgent(d: BriefDecisionIn, nextAt: Date): boolean {
-  const before = !!d.deadline && Date.parse(d.deadline) < nextAt.getTime();
+  const at = d.deadline ? Date.parse(d.deadline) : NaN;
+  const before = !!d.deadline && (Number.isNaN(at) || at < nextAt.getTime());
   return before || !!d.money_today || !!d.halt || !!d.blocked || !!d.ask_at_once;
 }
 
@@ -150,7 +152,11 @@ export interface Brief {
   words: { decisions: string; done: string; rest: string };
 }
 
-/** Builds the brief. `label` narrows decisions and cases to its tafs; the labels' counts are of the whole account. */
+/**
+ * Builds the brief. `label` narrows decisions and cases to its tafs; each label's `count` and `waiting` are of the whole
+ * account, before the label filter, so the other labels' dots still say where to look. A decision put off with Later
+ * still counts as waiting: it's put off, not answered. Every urgent decision is shown; only the others are capped.
+ */
 export function buildBrief(input: {
   now: Date;
   timeZone: string;
@@ -167,7 +173,8 @@ export function buildBrief(input: {
   const { at, next_at } = briefTimes(input.now, input.timeZone, input.slots);
   const inLabel = (t: { labels?: string[] }) => !input.label || (t.labels ?? []).includes(input.label);
   const all = briefDecisions(input.decisions.filter((d) => inLabel(d.taf)), input.now, next_at, input.later, input.words);
-  const shown = all.slice(0, BRIEF_DECISIONS);
+  const urgent = all.filter((d) => d.urgent);
+  const shown = [...urgent, ...all.filter((d) => !d.urgent).slice(0, Math.max(0, BRIEF_DECISIONS - urgent.length))];
   const more = all.length - shown.length;
   const groups = new Map<string, Brief["done"][number]>();
   for (const c of input.cases.filter((x) => inLabel(x.taf))) {
@@ -178,7 +185,7 @@ export function buildBrief(input: {
     groups.set(key, g);
   }
   const waitingByTaf = new Map<string, number>();
-  for (const d of all) waitingByTaf.set(d.ref.taf, (waitingByTaf.get(d.ref.taf) ?? 0) + 1);
+  for (const d of input.decisions) waitingByTaf.set(d.taf.id, (waitingByTaf.get(d.taf.id) ?? 0) + 1);
   const labels = input.labels.map((l) => {
     const tafs = input.tafs.filter((t) => (t.labels ?? []).includes(l.id));
     return { ...l, count: tafs.length, waiting: tafs.reduce((n, t) => n + (waitingByTaf.get(t.id) ?? 0), 0) };
