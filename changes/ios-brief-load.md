@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: Your brief now shows as soon as tafs cloud serves one**, read with every refresh; until now it was read only after a brief's alert ([docs/ios-app.md](docs/ios-app.md)).
