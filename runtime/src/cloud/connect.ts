@@ -24,8 +24,18 @@ export interface CatalogApp {
   /** For `needs_setup`: the line the apps show in place of Connect. */
   words?: string;
   grant?: string;
-  /** When a check connected this app, and where it's recorded (planque's catalog, from its reviewed list): absent until one has. */
-  proved?: { at: string; link?: string };
+  /**
+   * When a check connected this app this way, how (`key` or `oauth`), and where it's recorded (planque's catalog, from
+   * its reviewed list): only on the entry that is the way the app was proved; absent until a check has.
+   */
+  proved?: Proof;
+}
+
+/** A check that connected an app: when, how (`key` or `oauth`, in the entries' own words), and where it's recorded. */
+export interface Proof {
+  at: string;
+  how: "key" | "oauth";
+  link?: string;
 }
 
 /** What an app that needs setting up says in place of Connect. */
@@ -80,6 +90,11 @@ export interface AppsPage {
   skipped?: number;
   /** The catalog read stopped with pages left: an app that isn't here isn't absent. */
   partial?: true;
+  /**
+   * Every app a check connected, by its folded name ("googlecalendar"), planque's whole reviewed list: an app proved by
+   * its key with no key entry in the catalog (Stripe, GitHub…) is only here.
+   */
+  proved?: Record<string, Proof>;
 }
 
 /** One page of the catalog, the account's connections marked, searched by q; page.cursor asks for the next. */
@@ -90,7 +105,7 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
   if (page.cursor && CURSOR.test(page.cursor)) params.set("cursor", page.cursor);
   const query = params.size ? `?${params.toString().replace(/\+/g, "%20")}` : "";
   const got = await call(fetchFn, `${base.replace(/\/$/, "")}/v1/accounts/${encodeURIComponent(tenant)}/catalog${query}`, bearer, { method: "GET" }) as
-    { entries?: unknown; by_key?: unknown; provider?: unknown; next_cursor?: unknown; skipped?: unknown; partial?: unknown };
+    { entries?: unknown; by_key?: unknown; provider?: unknown; next_cursor?: unknown; skipped?: unknown; partial?: unknown; proved?: unknown };
   const entries = Array.isArray(got.entries) ? got.entries : [];
   const apps: CatalogApp[] = [];
   for (const e of entries as Record<string, unknown>[]) {
@@ -111,15 +126,27 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
     ...(typeof got.next_cursor === "string" && CURSOR.test(got.next_cursor) ? { next_cursor: got.next_cursor } : {}),
     ...(Number.isInteger(got.skipped) && (got.skipped as number) > 0 ? { skipped: got.skipped as number } : {}),
     ...(got.partial === true ? { partial: true as const } : {}),
+    ...provedMap(got.proved),
   };
 }
 
-/** planque's `proved` on an entry, kept only when it has a date, and a link only when it's https. */
-function provedOf(v: unknown): { proved?: { at: string; link?: string } } {
+/** planque's top-level `proved`, kept by app name (lower-case letters and digits) with each proof as an entry's. */
+function provedMap(v: unknown): { proved?: Record<string, Proof> } {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return {};
+  const out: Record<string, Proof> = {};
+  for (const [app, p] of Object.entries(v as Record<string, unknown>)) {
+    const proof = provedOf(p).proved;
+    if (/^[a-z0-9]{1,60}$/.test(app) && proof) out[app] = proof;
+  }
+  return Object.keys(out).length ? { proved: out } : {};
+}
+
+/** planque's `proved`, kept only with a date and a `how` that is `key` or `oauth`, and a link only when it's https. */
+function provedOf(v: unknown): { proved?: Proof } {
   if (!v || typeof v !== "object") return {};
-  const p = v as { at?: unknown; link?: unknown };
-  if (typeof p.at !== "string" || Number.isNaN(Date.parse(p.at))) return {};
-  return { proved: { at: p.at, ...(typeof p.link === "string" && p.link.startsWith("https://") ? { link: p.link } : {}) } };
+  const p = v as { at?: unknown; how?: unknown; link?: unknown };
+  if (typeof p.at !== "string" || Number.isNaN(Date.parse(p.at)) || (p.how !== "key" && p.how !== "oauth")) return {};
+  return { proved: { at: p.at, how: p.how, ...(typeof p.link === "string" && p.link.startsWith("https://") ? { link: p.link } : {}) } };
 }
 
 /**

@@ -27,15 +27,18 @@ describe("Connect apps", () => {
     ] });
   });
 
-  it("keeps an entry's proof (planque's proved) only with a date, and its link only when https", async () => {
+  it("keeps a proof (planque's proved) only with a date and a how, and its link only when https: on an entry and in the read's map", async () => {
+    const link = "https://github.com/kiff/tafs/commit/3084c2a2";
     const got = await listApps(fake(200, { entries: [
-      { entry: "connector:composio:typeform", vendor: "typeform", title: "Typeform", how: "oauth", proved: { at: "2026-11-16", link: "https://github.com/kiff/kiff-cloud/issues/1" } },
-      { entry: "connector:composio:googlecalendar", vendor: "googlecalendar", title: "Google Calendar", how: "oauth", proved: { at: "2026-11-16", link: "http://plain/no" } },
-      { entry: "connector:composio:shopify", vendor: "shopify", title: "Shopify", how: "oauth", proved: { at: "not a date" } },
-      { entry: "connector:composio:gorgias", vendor: "gorgias", title: "Gorgias", how: "oauth", proved: "yes" },
-    ] }), BASE, "t1", "s", "");
+      { entry: "connector:composio:typeform", vendor: "typeform", title: "Typeform", how: "oauth", proved: { at: "2026-11-16", how: "oauth", link } },
+      { entry: "connector:composio:googlecalendar", vendor: "googlecalendar", title: "Google Calendar", how: "oauth", proved: { at: "2026-11-16", how: "oauth", link: "http://plain/no" } },
+      { entry: "connector:composio:shopify", vendor: "shopify", title: "Shopify", how: "oauth", proved: { at: "not a date", how: "oauth" } },
+      { entry: "connector:composio:gorgias", vendor: "gorgias", title: "Gorgias", how: "oauth", proved: { at: "2026-11-16" } },
+      { entry: "connector:composio:zendesk", vendor: "zendesk", title: "Zendesk", how: "oauth", proved: "yes" },
+    ], proved: { stripe: { at: "2026-11-13", how: "key", link }, typeform: { at: "2026-11-16", how: "oauth" }, "Not An App": { at: "2026-11-13", how: "key" }, github: { at: "2026-11-13", how: "magic" } } }), BASE, "t1", "s", "");
     const proved = Object.fromEntries(got.apps.map((a) => [a.vendor, a.proved]));
-    expect(proved).toEqual({ typeform: { at: "2026-11-16", link: "https://github.com/kiff/kiff-cloud/issues/1" }, googlecalendar: { at: "2026-11-16" }, shopify: undefined, gorgias: undefined });
+    expect(proved).toEqual({ typeform: { at: "2026-11-16", how: "oauth", link }, googlecalendar: { at: "2026-11-16", how: "oauth" }, shopify: undefined, gorgias: undefined, zendesk: undefined });
+    expect(got.proved).toEqual({ stripe: { at: "2026-11-13", how: "key", link }, typeform: { at: "2026-11-16", how: "oauth" } });
   });
 
   it("puts the account's own connections first, then the apps whose name matches the search", async () => {

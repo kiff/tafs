@@ -161,15 +161,16 @@ function fold(name: string): string {
 export const CONNECTS_TODAY: ReadonlySet<string> = new Set(["stripe", "qonto", "shippo", "intercom", "zendesk", "pipedrive", "github", "gmail", "typeform", "googlecalendar", "googledrive"]);
 
 /**
- * The apps that connect today, read from planque's catalog: each entry a check has connected carries `proved`
- * (rule 13), so a proof is one data change and kiff.dev and the gallery can't disagree. Only when `fromCatalog`
- * (TAFS_PROVED_FROM_CATALOG=on, once planque and kiff.dev read the same flag); and never from a catalog that
- * couldn't be read, or one that marks nothing proved (a planque before the flag): those keep CONNECTS_TODAY, so the
- * gallery is never emptied by a read.
+ * The apps that connect today, read from planque's catalog: every app a check connected (rule 13), from the read's
+ * top-level `proved` (every proof, an app proved by its key with no key entry included) and any entry marked `proved`,
+ * so a proof is one data change and kiff.dev and the gallery can't disagree. Only when `fromCatalog`
+ * (TAFS_PROVED_FROM_CATALOG=on, once planque and kiff.dev read the same mark); and never from a catalog that couldn't
+ * be read, or one that marks nothing proved (a planque before the mark): those keep CONNECTS_TODAY, so the gallery is
+ * never emptied by a read.
  */
-export function connectsOf(catalog: Pick<CatalogApp, "entry" | "vendor" | "proved">[] | undefined, fromCatalog: boolean): ReadonlySet<string> {
-  if (!fromCatalog || !catalog) return CONNECTS_TODAY;
-  const proved = catalog.filter((a) => a.proved).flatMap(vendorOf);
+export function connectsOf(read: { apps: Pick<CatalogApp, "entry" | "vendor" | "proved">[]; proved?: Record<string, unknown> } | undefined, fromCatalog: boolean): ReadonlySet<string> {
+  if (!fromCatalog || !read) return CONNECTS_TODAY;
+  const proved = [...Object.keys(read.proved ?? {}).map(fold), ...read.apps.filter((a) => a.proved).flatMap(vendorOf)];
   return proved.length ? new Set(proved) : CONNECTS_TODAY;
 }
 

@@ -26,7 +26,7 @@ import { handedByOf, requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { type DeadHandoff, deadHandoffs, deliveredLine, deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { allowOffer } from "./allow.js";
-import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
+import { type CatalogApp, ConnectError, listApps, type Proof, startApp } from "./connect.js";
 import { sheetOf, takesKey } from "./sheet.js";
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
 import { connectsOf, galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
@@ -9771,8 +9771,10 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
       ]);
       // Each app's logo as a path on tafs cloud, and never planque's icon URL: no phone loads anything from a third party.
       const [logos, uses, needs] = await Promise.all([nameLogos(deps.coach, page.apps.map((a) => a.icon), new Date()), connectionUses(event, me, deps), needContext(event, me, deps, reads)]);
-      const apps = page.apps.map(({ icon, ...app }) => ({ ...(icon && logos.has(icon) ? { ...app, logo: logos.get(icon)! } : app), ...appRow(app, me, uses, langOf(event)), ...needFields(app, needs) }));
-      return { ...page, apps, removed_tafs: removed };
+      // A proof is tafs cloud's for the gallery (connectsOf), never served to the apps.
+      const apps = page.apps.map(({ icon, proved: _proof, ...app }) => ({ ...(icon && logos.has(icon) ? { ...app, logo: logos.get(icon)! } : app), ...appRow(app, me, uses, langOf(event)), ...needFields(app, needs) }));
+      const { proved: _proved, ...listed } = page;
+      return { ...listed, apps, removed_tafs: removed };
     }
     if (parts.length === 4 && method === "POST") {
       need(me, "cards.manage");
@@ -10044,15 +10046,17 @@ async function suggestionsOf(me: KIFFIdentity, deps: Deps, lang: Lang): Promise<
  * provider's apps, a page at a time. Undefined when it can't be read whole: a catalog longer than the pages
  * read, or planque not answering. A recipe is never hidden for a vendor on a page that wasn't read.
  */
-async function wholeCatalog(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<CatalogApp[] | undefined> {
+async function wholeCatalog(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<{ apps: CatalogApp[]; proved?: Record<string, Proof> } | undefined> {
   if (!deps.planqueBase) return undefined;
   try {
     const apps: CatalogApp[] = [];
+    let proved: Record<string, Proof> | undefined;
     let page: { cursor?: string; provider?: string } = {};
     for (let i = 0; i < CATALOG_PAGES; i++) {
       const got = await listApps(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event), "", page);
       apps.push(...got.apps);
-      if (!got.next_cursor && !got.partial) return apps;
+      if (got.proved) proved = { ...proved, ...got.proved };
+      if (!got.next_cursor && !got.partial) return { apps, ...(proved ? { proved } : {}) };
       if (got.partial) return undefined;
       page = { cursor: got.next_cursor, ...(got.provider ? { provider: got.provider } : {}) };
     }
@@ -10087,8 +10091,9 @@ async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
   // list is empty and the words say why, so the apps draw only what comes.
   const suggestions = await suggestionsOf(me, deps, lang);
   if (suggestions.reason !== "on") return noRecipes(suggestions, lang, manages);
-  const catalog = await wholeCatalog(event, me, deps);
-  const connects = connectsOf(catalog, provedFromCatalog());
+  const read = await wholeCatalog(event, me, deps);
+  const catalog = read?.apps;
+  const connects = connectsOf(read, provedFromCatalog());
   const view = recipesFor(catalog, lang, manages, connects);
   const logos = await nameLogos(deps.coach, iconsFor(view.recipes, catalog), new Date());
   const running = manages ? (await runningRecipes(me, deps)).running : undefined;
@@ -10103,8 +10108,9 @@ async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
 async function gallery(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<GalleryView> {
   const lang = langOf(event);
   const manages = me.capabilities.includes("cards.manage");
-  const [catalog, suggestions, tafs] = await Promise.all([wholeCatalog(event, me, deps), suggestionsOf(me, deps, lang), runningRecipes(me, deps)]);
-  const connects = connectsOf(catalog, provedFromCatalog());
+  const [read, suggestions, tafs] = await Promise.all([wholeCatalog(event, me, deps), suggestionsOf(me, deps, lang), runningRecipes(me, deps)]);
+  const catalog = read?.apps;
+  const connects = connectsOf(read, provedFromCatalog());
   const all = recipesFor(catalog, lang, manages, connects).recipes;
   const logos = await nameLogos(deps.coach, iconsFor(all, catalog), new Date());
   return galleryFor(catalog, lang, { manages, live: tafs.live, suggestions: suggestions.show, ...(manages ? { running: tafs.running } : {}) }, logos, connects);

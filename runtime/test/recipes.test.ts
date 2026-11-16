@@ -278,22 +278,28 @@ Bezahle meine Rechnungen unter 100 EUR.
   // marks nothing proved yet, keeps the list, so no read ever empties the gallery.
   it("reads the apps that connect today from the catalog's proofs, only when asked and only from a catalog that has them", () => {
     const app = (vendor: string, proved?: string): CatalogApp => ({ entry: `connector:p:${vendor}`, vendor, title: vendor, name: vendor, how: "oauth", state: "available",
-      ...(proved ? { proved: { at: proved } } : {}) });
-    const catalog = [app("stripe", "2026-11-13"), app("gmail", "2026-11-13"), app("typeform", "2026-11-16"), app("pipedrive", "2026-11-13"), app("shopify"), app("gorgias")];
-    expect(connectsOf(catalog, false)).toBe(CONNECTS_TODAY);
+      ...(proved ? { proved: { at: proved, how: "oauth" as const } } : {}) });
+    const apps = [app("stripe"), app("gmail", "2026-11-13"), app("typeform", "2026-11-16"), app("pipedrive"), app("shopify"), app("gorgias"), app("github")];
+    // Stripe and Pipedrive were proved by their keys, and no entry here is a key entry: they're only in the read's map.
+    const read = { apps, proved: { stripe: { at: "2026-11-13", how: "key" }, pipedrive: { at: "2026-11-13", how: "key" }, gmail: { at: "2026-11-13", how: "oauth" } } };
+    expect(connectsOf(read, false)).toBe(CONNECTS_TODAY);
     expect(connectsOf(undefined, true)).toBe(CONNECTS_TODAY);
-    expect(connectsOf(catalog.map((a) => ({ ...a, proved: undefined })), true)).toBe(CONNECTS_TODAY);
-    const read = connectsOf(catalog, true);
-    expect([...read].sort()).toEqual(["gmail", "pipedrive", "stripe", "typeform"]);
-    const ids = recipesFor(catalog, "en", true, read).recipes.map((r) => r.id);
-    // Proved: new leads (Typeform, Pipedrive, mail) and refunds (mail, Stripe). Not proved: the store app's jobs.
+    expect(connectsOf({ apps: apps.map((a) => ({ ...a, proved: undefined })) }, true)).toBe(CONNECTS_TODAY);
+    const connects = connectsOf(read, true);
+    expect([...connects].sort()).toEqual(["gmail", "pipedrive", "stripe", "typeform"]);
+    const ids = recipesFor(apps, "en", true, connects).recipes.map((r) => r.id);
+    // Proved: new leads (Typeform, Pipedrive, mail) and refunds (mail, Stripe). Not proved: the store app's jobs, and GitHub's.
     expect(ids).toEqual(expect.arrayContaining(["follow-up-new-leads", "refunds-within-a-limit"]));
     expect(ids).not.toContain("answer-questions-about-orders");
+    expect(ids).not.toContain("ship-when-green");
+    // A key app proved in the map alone lists its job: GitHub, as planque's reviewed list has it.
+    const withGitHub = connectsOf({ ...read, proved: { ...read.proved, github: { at: "2026-11-13", how: "key" } } }, true);
+    expect(recipesFor(apps, "en", true, withGitHub).recipes.map((r) => r.id)).toContain("ship-when-green");
     // A proof added in planque's data alone lists its jobs: no list here changes.
-    const withShopify = connectsOf(catalog.map((a) => (a.vendor === "shopify" ? { ...a, proved: { at: "2026-11-17" } } : a)), true);
-    expect(recipesFor(catalog, "en", true, withShopify).recipes.map((r) => r.id)).toContain("answer-questions-about-orders");
+    const withShopify = connectsOf({ ...read, apps: apps.map((a) => (a.vendor === "shopify" ? { ...a, proved: { at: "2026-11-17", how: "oauth" as const } } : a)) }, true);
+    expect(recipesFor(apps, "en", true, withShopify).recipes.map((r) => r.id)).toContain("answer-questions-about-orders");
     // The app drawn for a connection is one that connects by the same read: Gorgias, listed but not proved, isn't.
-    expect(withApps(recipesFor(catalog, "en", true, read).recipes, catalog, new Map(), undefined, read)
+    expect(withApps(recipesFor(apps, "en", true, connects).recipes, apps, new Map(), undefined, connects)
       .find((r) => r.id === "refunds-within-a-limit")!.apps.map((a) => a.name)).toEqual(["gmail", "stripe"]);
   });
 
