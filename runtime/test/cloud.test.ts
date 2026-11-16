@@ -6975,6 +6975,9 @@ describe("GET /v1/brief and Later", () => {
     expect((await ask("GET", "/v1/brief")).body.decisions.map((d: { id: string }) => d.id)).toEqual(["step:ho_1"]);
     expect(await ask("POST", "/v1/brief/decisions/step:ho_1/later")).toMatchObject({ status: 409, body: { code: "urgent" } });
     expect((await ask("POST", "/v1/brief/decisions/hold:nope/later")).status).toBe(404);
+    // The ':' escaped is the same decision; an escape that isn't one is no decision.
+    expect(await ask("POST", "/v1/brief/decisions/hold%3Ah1/later")).toEqual({ status: 200, body: { id: "hold:h1", until: "2026-10-29T17:00:00.000Z" } });
+    expect((await ask("POST", "/v1/brief/decisions/hold%E0%A4%A/later")).status).toBe(404);
     // It's Ana's brief alone: another person on the account still sees the decision she put off.
     expect((await ask("GET", "/v1/brief", { token: "owner" })).body.decisions.map((d: { id: string }) => d.id)).toEqual(["step:ho_1", "hold:h1"]);
     // At 18:00 Paris it's back (the step has expired by then and left).
