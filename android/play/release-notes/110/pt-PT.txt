@@ -3,4 +3,4 @@
 - Os resumos e os alertas urgentes têm os seus próprios canais.
 - Os Termos e a Privacidade abrem no idioma da app.
 - Com o telemóvel bloqueado, um alerta diz apenas «Um taf precisa de si».
-- Novos jobs: pagamentos com cartão falhados, pagamentos conciliados com o banco, encomendas atrasadas.
+- Novas tarefas: pagamentos com cartão falhados, pagamentos conciliados com o banco, encomendas atrasadas.

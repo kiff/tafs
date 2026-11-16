@@ -2,5 +2,5 @@
 - Des étiquettes sur vos tafs, et l'historique d'une mission.
 - Briefings et alertes urgentes ont leurs propres canaux.
 - Conditions et Confidentialité dans la langue de l'app.
-- Sur un téléphone verrouillé, une alerte affiche seulement « Un taf vous attend ».
-- Nouveaux jobs : paiements par carte échoués, versements rapprochés, colis en retard.
+- Sur un téléphone verrouillé, une alerte n'affiche que « Un taf vous attend ».
+- Nouvelles tâches : paiements par carte échoués, versements rapprochés, colis en retard.

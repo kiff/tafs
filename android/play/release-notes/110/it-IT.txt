@@ -3,4 +3,4 @@
 - Riepiloghi e avvisi urgenti hanno canali propri.
 - Condizioni e Privacy nella lingua dell'app.
 - Con il telefono bloccato, un avviso dice solo «Un taf ti aspetta».
-- Nuovi job: pagamenti con carta non riusciti, accrediti riconciliati con la banca, pacchi in ritardo.
+- Nuovi lavori: pagamenti con carta non riusciti, accrediti riconciliati con la banca, pacchi in ritardo.
