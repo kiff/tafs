@@ -150,7 +150,10 @@ final class WatchRelayTests: XCTestCase {
         let page = try await KeptWatchReading(kiff: kiff, cloud: cloud).needsYou(now: now)
         XCTAssertEqual(page.calls.map(\.id), ["ce_1", "ce_2"], "the soonest to lapse first")
         XCTAssertEqual(page.calls.map(\.taf), [Words.Coach.title, "Rae"], "Coach's own agent is named Coach")
-        XCTAssertEqual(page.calls.map(\.answerBy), ["19:51", "19:58"], "in the account's zone, Tokyo")
+        XCTAssertEqual(page.calls.map { String($0.answerBy.prefix(5)) }, ["19:51", "19:58"], "in the account's zone, Tokyo")
+        let tokyo = try XCTUnwrap(TimeZone(identifier: "Asia/Tokyo"))
+        XCTAssertEqual(page.calls[0].answerBy, HoldNotification.time(now.addingTimeInterval(6 * 60), in: tokyo),
+                       "as the phone's notification writes it, with the zone when the phone's clock differs")
         let hold = try XCTUnwrap(try KIFFClient.decoder.decode([String: [KIFFClient.CardException]].self, from: Data(heldJSON.utf8))["exceptions"]?.last)
         let call = KIFFMapping.held(hold, tafID: UUID())
         XCTAssertEqual(page.calls[0].what, "\(call.proposed.summary), \(try XCTUnwrap(call.proposed.amount).formatted)")
