@@ -71,6 +71,12 @@ jobs:
           if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json; fi
       - name: Unit tests and the debug builds
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace
+      # A release build, unsigned, with the release's shrinking: the watch finds the phone only by a capability no code
+      # reads, which the shrinker dropped from 111 (play/check_watch_link.sh). Debug builds keep every resource.
+      - name: The release build keeps the watch's link
+        run: |
+          ./gradlew :app:assembleRelease --stacktrace
+          play/check_watch_link.sh app/build/outputs/apk/release/app-release-unsigned.apk
       # The Wear OS watch (docs/watch-wear.md): the messages it and the phone exchange, and its debug build.
       - name: The watch's tests and its debug build
         run: ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDebug --stacktrace
@@ -231,6 +237,8 @@ jobs:
           grep -q '^jar verified\.' <<<"$said" || { echo "::error::the bundle isn't signed: $(grep -m1 . <<<"$said")"; exit 1; }
           # Which key signed it, in the log: Play takes only the listing's upload key, and the certificate's hash isn't a secret.
           echo "Signed by the certificate with $("$JAVA_HOME/bin/keytool" -printcert -jarfile "$aab" | grep -m1 'SHA256:' | sed 's/^[[:space:]]*//')"
+          # The watch's link is in it, or the watch can't find the phone (play/check_watch_link.sh).
+          play/check_watch_link.sh "$aab"
       # To Play's internal track, and only that track: signed in with Google's workload identity federation, a token that
       # lasts the run, for the Play Developer API alone. No key file, and no secret holds a key. Off until PLAY_UPLOAD is on.
       - id: google
