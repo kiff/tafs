@@ -13,6 +13,7 @@
   "approval.biometry.screen_lock": "il blocco schermo",
   "approval.biometry_timed_out": "{biometry}: tempo scaduto. Riprova.",
   "approval.can_not_used_right_try": "{either} non può essere usato in questo momento. Riprova tra un attimo.",
+  "approval.cancelled": "Annullato. Non è cambiato nulla.",
   "approval.cancelled_nothing_approved_request_kept": "Annullato, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto.",
   "approval.cant_approve.none_enrolled": "Per approvare serve un'impronta su questo telefono.",
   "approval.cant_approve.temporarily_unavailable": "Il sensore di impronte non può essere usato ora. Riprova tra un attimo.",

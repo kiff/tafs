@@ -160,6 +160,16 @@ class DevicesTest {
     assertTrue(transport.requestsTo("DELETE /v1/me/devices/dev_2").isEmpty())
   }
 
+  @Test fun aClosedPromptSignsNothingOutAndSaysCancelled() = runTest {
+    transport.answer("GET /v1/me/devices", 200, devices)
+    val m = model()
+    m.refreshDevices()
+    auth.fails = bot.tafs.app.signing.PromptClosed()
+    assertFalse(m.removeDevice(m.state.value.devices[1]))
+    assertTrue(transport.requestsTo("DELETE /v1/me/devices/dev_2").isEmpty())
+    assertEquals("Cancelled. Nothing changed.", m.state.value.devicesError)
+  }
+
   @Test fun aRefusalSaysWhatDidntGoThrough() = runTest {
     transport.answer("GET /v1/me/devices", 200, devices)
     transport.answer("DELETE /v1/me/devices/dev_2", 403, """{"error":"forbidden"}""")

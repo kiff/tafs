@@ -13,6 +13,7 @@
   "approval.biometry.screen_lock": "your screen lock",
   "approval.biometry_timed_out": "{biometry} timed out. Try again.",
   "approval.can_not_used_right_try": "{either} can't be used right now. Try again in a moment.",
+  "approval.cancelled": "Cancelled. Nothing changed.",
   "approval.cancelled_nothing_approved_request_kept": "Cancelled, so nothing was approved. The request is kept: approve again when you're ready.",
   "approval.cant_approve.none_enrolled": "Approving needs a fingerprint on this phone.",
   "approval.cant_approve.temporarily_unavailable": "The fingerprint sensor can't be used just now. Try again in a moment.",

@@ -94,6 +94,31 @@ class SigningTest {
     }
   }
 
+  @Test fun aClosedPromptIsPromptClosedNotAFingerToTryAgain() = runTest {
+    val auth = FakeAuthenticator().apply { fails = bot.tafs.app.signing.PromptClosed() }
+    val signer = DeviceSigner(SoftwareKeys(), auth)
+    for (sign in listOf<suspend () -> Unit>({ signer.sign(message, "Answer it") }, { signer.signApproval(message, "Approve it") })) {
+      try {
+        sign()
+        fail("signed with the prompt closed")
+      } catch (e: bot.tafs.app.signing.PromptClosed) {
+        assertEquals("Cancelled. Nothing changed.", e.message)
+      }
+    }
+  }
+
+  @Test fun onlyCancelBackOrTheSystemClosingThePromptCountAsClosed() {
+    val closed = bot.tafs.app.signing.BiometricAuthenticator::closed
+    assertTrue(closed(androidx.biometric.BiometricPrompt.ERROR_USER_CANCELED))
+    assertTrue(closed(androidx.biometric.BiometricPrompt.ERROR_NEGATIVE_BUTTON))
+    assertTrue(closed(androidx.biometric.BiometricPrompt.ERROR_CANCELED))
+    // A lockout, a timeout or the sensor failing is not someone closing it: those keep "Try again…".
+    assertFalse(closed(androidx.biometric.BiometricPrompt.ERROR_LOCKOUT))
+    assertFalse(closed(androidx.biometric.BiometricPrompt.ERROR_LOCKOUT_PERMANENT))
+    assertFalse(closed(androidx.biometric.BiometricPrompt.ERROR_TIMEOUT))
+    assertFalse(closed(androidx.biometric.BiometricPrompt.ERROR_HW_UNAVAILABLE))
+  }
+
   @Test fun aPhoneWithNoScreenLockSignsNothing() = runTest {
     val signer = DeviceSigner(SoftwareKeys(), FakeAuthenticator(available = false))
     try {

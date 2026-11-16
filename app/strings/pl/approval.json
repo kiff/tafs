@@ -13,6 +13,7 @@
   "approval.biometry.screen_lock": "blokada ekranu",
   "approval.biometry_timed_out": "{biometry}: upłynął limit czasu. Spróbuj ponownie.",
   "approval.can_not_used_right_try": "{either} nie może być teraz użyte. Spróbuj ponownie za chwilę.",
+  "approval.cancelled": "Anulowano. Nic się nie zmieniło.",
   "approval.cancelled_nothing_approved_request_kept": "Anulowano, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz.",
   "approval.cant_approve.none_enrolled": "Zatwierdzenie wymaga odcisku palca na tym telefonie.",
   "approval.cant_approve.temporarily_unavailable": "Czytnika linii papilarnych nie można teraz użyć. Spróbuj ponownie za chwilę.",

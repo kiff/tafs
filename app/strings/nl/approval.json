@@ -13,6 +13,7 @@
   "approval.biometry.screen_lock": "je schermvergrendeling",
   "approval.biometry_timed_out": "{biometry} is verlopen. Probeer het opnieuw.",
   "approval.can_not_used_right_try": "{either} kan nu niet worden gebruikt. Probeer het zo opnieuw.",
+  "approval.cancelled": "Geannuleerd. Er is niets veranderd.",
   "approval.cancelled_nothing_approved_request_kept": "Geannuleerd, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent.",
   "approval.cant_approve.none_enrolled": "Goedkeuren vereist een vingerafdruk op deze telefoon.",
   "approval.cant_approve.temporarily_unavailable": "De vingerafdruksensor kan nu niet worden gebruikt. Probeer het zo opnieuw.",

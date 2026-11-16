@@ -60,6 +60,7 @@
     <string name="approval_biometry_screen_lock">votre verrouillage d\'écran</string>
     <string name="approval_biometry_timed_out">%1$s : délai dépassé. Réessayez.</string>
     <string name="approval_can_not_used_right_try">%1$s ne peut pas être utilisé pour le moment. Réessayez dans un instant.</string>
+    <string name="approval_cancelled">Annulé. Rien n\'a changé.</string>
     <string name="approval_cancelled_nothing_approved_request_kept">Annulé : rien n\'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt.</string>
     <string name="approval_cant_approve_none_enrolled">Approuver nécessite une empreinte sur ce téléphone.</string>
     <string name="approval_cant_approve_temporarily_unavailable">Le capteur d\'empreintes ne peut pas être utilisé pour le moment. Réessayez dans un instant.</string>
@@ -1973,6 +1974,7 @@
     <string name="setup_choose_actions">Choisir les actions</string>
     <string name="setup_connect_app">Connecter une app…</string>
     <string name="setup_connected_apps">Apps connectées</string>
+    <string name="setup_discard_not_confirmed">Pas abandonné. Rien n\'a changé.</string>
     <string name="setup_doors">Portes</string>
     <string name="setup_edit">Modifier</string>
     <string name="setup_follow_ups">Relances qu\'il s\'est fixées</string>

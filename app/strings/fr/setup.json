@@ -9,6 +9,7 @@
   "setup.choose_actions": "Choisir les actions",
   "setup.connect_app": "Connecter une app…",
   "setup.connected_apps": "Apps connectées",
+  "setup.discard_not_confirmed": "Pas abandonné. Rien n'a changé.",
   "setup.doors": "Portes",
   "setup.edit": "Modifier",
   "setup.follow_ups": "Relances qu'il s'est fixées",
