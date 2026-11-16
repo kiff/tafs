@@ -61,6 +61,12 @@ this page says what is there now and what each step adds.
 cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDebug
 ```
 
+- **The tile** (`NeedsYouTileService`): Needs you's count, as the watch app last read it, under "Needs you"; tapping it opens
+  the watch app, which reads the phone again. It shows the count only while the watch has a screen lock and is unlocked.
+  Locked (Wear OS locks a watch taken off the wrist) or with no lock, it shows tafs's name, and the count is forgotten. The
+  count and its time are **the only things the watch writes to disk** (`TileCount`, preferences `tafs.tile`); the phone saying
+  it's signed out clears them too (`TileCountTest`).
+
 ## Versions
 
 The watch shares the phone's package, and Play needs every `versionCode` on the listing to be unique across the phone's and
@@ -117,7 +123,6 @@ watch doesn't know is shown as Open on phone, never guessed at.
 
 ## Still to come
 
-1. The tile with Needs you's count.
-2. Talk to Coach by voice.
-3. Screenshots in all 8 languages. A Wear OS build on Play's listing (the internal track first) is a store-listing change,
+1. Talk to Coach by voice.
+2. Screenshots in all 8 languages. A Wear OS build on Play's listing (the internal track first) is a store-listing change,
    so it waits for the owner.

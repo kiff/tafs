@@ -36,6 +36,8 @@ class WatchModel(
    * (`KeyguardManager`). The phone signs what the watch asks, with no prompt of its own, so the watch's unlock is the confirmation.
    */
   private val unlocked: () -> Boolean = { false },
+  /** Needs you's count for the tile, the only thing written to disk; none in a test that doesn't look at it. */
+  private val tile: TileCount? = null,
 ) {
   sealed interface Shown {
     /** Asking the phone, with nothing to show yet. */
@@ -137,8 +139,11 @@ class WatchModel(
     if (_shown.value !is Shown.Read) _shown.value = Shown.Asking
     val needsYou = when (val asked = phone.ask(WatchRequest.NeedsYou(now()))) {
       is Asked.Answered -> when (val reply = asked.reply) {
-        is WatchReply.NeedsYou -> NeedsYouRead(reply.count, reply.words, reply.calls)
-        is WatchReply.SignedOut -> return show(Shown.SignedOut)
+        is WatchReply.NeedsYou -> NeedsYouRead(reply.count, reply.words, reply.calls).also { tile?.saw(reply.count, now()) }
+        is WatchReply.SignedOut -> {
+          tile?.signedOut()
+          return show(Shown.SignedOut)
+        }
         else -> return show(Shown.OpenOnPhone)
       }
       Asked.Unreachable -> return show(Shown.PhoneUnreachable)
