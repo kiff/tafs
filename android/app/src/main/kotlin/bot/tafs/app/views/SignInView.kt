@@ -1,5 +1,6 @@
 package bot.tafs.app.views
 
+import bot.tafs.app.drive.confirms
 import bot.tafs.app.design.tapping
 import bot.tafs.app.model.Words
 import bot.tafs.app.drive.DriveSheet
@@ -218,7 +219,8 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
               if (pairing) {
                 Text(Words.SignIn.withKiff, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
                 Text(Words.SignIn.lead(bot.tafs.app.model.ThisDevice.word), style = scaled(15, color = Theme.soft))
-                PrimaryButton(Words.Common.`continue`, { pairing = false }, Modifier.testTag(KIFF_CONTINUE))
+                // Starts KIFF's sign-in: the person's own tap, never Coach's (docs/drive.md).
+                PrimaryButton(Words.Common.`continue`, { pairing = false }, Modifier.testTag(KIFF_CONTINUE).confirms())
               } else {
                 kiff()
               }
