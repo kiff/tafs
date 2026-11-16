@@ -2027,7 +2027,7 @@
     <string name="sign_in_agree">Ao iniciar sessão, aceita os %1$s do KIFF, que abrangem o tafs, e a sua %2$s.</string>
     <string name="sign_in_check_code">Verifique se o KIFF mostra o mesmo código antes de aprovar.</string>
     <string name="sign_in_connected">Ligação feita.</string>
-    <string name="sign_in_connected_line">Vamos construir grandes coisas juntos.</string>
+    <string name="sign_in_connected_line">Vamos construir grandes coisas em conjunto.</string>
     <string name="sign_in_could_not_finish">Não foi possível concluir: %1$s. Tente novamente.</string>
     <string name="sign_in_could_not_start">Não foi possível começar: %1$s. Tente novamente.</string>
     <string name="sign_in_deletes_every_taf_runs_chats">Elimina todos os tafs, as suas execuções, chats e notas, os seus Cards e as suas ligações. Não pode ser desfeito.</string>
