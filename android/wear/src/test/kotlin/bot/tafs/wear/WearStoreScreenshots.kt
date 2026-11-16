@@ -115,7 +115,9 @@ class WearStoreScreenshots(private val language: String, private val playLocale:
   @Test fun allClear() = shot("4-all-clear") {
     WatchScreen(
       read().copy(needsYou = WatchModel.NeedsYouRead(0, Res.s(R.string.needs_you_nothing), emptyList())), null, confirmingHaltAll = false,
-      talk = null, act = actions, list = rememberScalingLazyListState(initialCenterItemIndex = 2),
+      talk = null, act = actions,
+      // A little further on, so the line above Needs you is off the screen rather than cut at its edge.
+      list = rememberScalingLazyListState(initialCenterItemIndex = 2, initialCenterItemScrollOffset = 28),
     )
   }
 
