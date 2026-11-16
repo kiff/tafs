@@ -12,6 +12,9 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
     /// Something on the account changed (docs/approvals.md, "Live updates"): its kind
     /// (`change`) and tafs cloud's id for the taf, read again with the phone's own session.
     var onChange: (@MainActor (String, String?) async -> Void)?
+    /// A brief's alert, or an urgent one (Missions design v2.1, `brief_kind`), showed with tafs open: read the
+    /// brief again.
+    var onBrief: (@MainActor () async -> Void)?
     /// A hold's alert showed with tafs open: reload until Needs you has that hold.
     var onHoldAlert: (@MainActor (String) async -> Void)?
     /// Opens a screen ("needs-you"). A tap that launched the app waits here until it is set.
@@ -36,6 +39,10 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
         UNUserNotificationCenter.current().delegate = self
         // Approve and Refuse on a hold's notification (kiff/tafs#210).
         UNUserNotificationCenter.current().setNotificationCategories(AlertAnswers.categories())
+        #if canImport(WatchConnectivity) && !targetEnvironment(macCatalyst)
+        // The watch's requests (docs/watch-app.md): answered even when its message launched tafs.
+        WatchLink.shared.start()
+        #endif
         return true
     }
 
@@ -67,6 +74,9 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
             target = AlertAnswers.destination(hold: hold, answer: AlertAnswers.approve)
         } else if let hold, destination == "needs-you" {
             target = AlertAnswers.destination(hold: hold)
+        } else if destination == nil, let brief = Self.briefDestination(info) {
+            // The brief's alert, or an urgent one: the brief, whose urgent card leads it.
+            target = brief
         } else if let handoff = info["handoff"] as? String, !handoff.isEmpty {
             // A step a taf handed its owner (docs/api.md › Your step): where it's answered.
             target = "step:" + handoff
@@ -75,6 +85,14 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
         }
         guard let target else { return }
         Task { @MainActor in self.open(target) }
+    }
+
+    /// Where a brief's alert or an urgent one opens (`brief_kind: brief|urgent`, Missions design v2.1, as
+    /// tafs cloud sends it): the brief, in Needs you's place. It isn't `kind`, which already names an
+    /// alert's other sorts. Anything else is nil, and the alert opens as it says.
+    nonisolated static func briefDestination(_ info: [AnyHashable: Any]) -> String? {
+        guard let kind = info["brief_kind"] as? String, kind == "brief" || kind == "urgent" else { return nil }
+        return "needs-you"
     }
 
     /// iOS's completion handler, handed to the main actor once the answer is sent.
@@ -91,8 +109,10 @@ final class PushDelegate: UIResponder, UIApplicationDelegate, UNUserNotification
         completionHandler(content.categoryIdentifier == AlertAnswers.haltCategory || content.interruptionLevel == .passive
                           ? [.list] : [.banner, .list, .sound])
         let hold = content.userInfo["hold_id"] as? String
+        let brief = Self.briefDestination(content.userInfo) != nil
         Task { @MainActor in
             DriveWaits.emit("notification_shown")
+            if brief { await self.onBrief?() }
             // The alert can come before KIFF's list of held calls has the hold: Needs you then
             // said "Nothing is waiting" under it (the 755 retest). It reads again until it's there.
             if let hold, let onHoldAlert = self.onHoldAlert { await onHoldAlert(hold) } else { await self.onHeldChanged?() }

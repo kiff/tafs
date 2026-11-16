@@ -35,7 +35,7 @@ WEAR_RES = "android/wear/src/main/res"
 WEAR_WORDS_KT = "android/wear/src/main/kotlin/bot/tafs/wear/Words.kt"
 # The watch's lines: its own area, and the phone's lines it shows as they are, so a fix to one is a fix to both.
 WEAR_AREAS = ("watch",)
-WEAR_KEYS = ("alert.needs_you", "alert.not_refused", "coach.ask", "common.loading", "common.try_again", "halt.all_now",
+WEAR_KEYS = ("alert.needs_you", "alert.not_refused", "coach.ask", "common.cancel", "common.loading", "common.try_again", "halt.all_now", "halt_all.title",
              "home.your_tafs", "taf.state.halted",
              "halt.now", "needs_you.nothing", "needs_you.refuse", "needs_you.title")
 

@@ -1,0 +1,1 @@
+- **iPhone and iPad: Your brief, label chips and a mission's log (Missions v2.1)**, drawn from tafs cloud's brief once it serves one; until then Needs you is as today. An answer opens where its own signed answer is given, never answered from the brief ([docs/ios-app.md](docs/ios-app.md)).

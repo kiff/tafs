@@ -32,6 +32,21 @@ final class ReceiptCheckTests: XCTestCase {
         XCTAssertNil(RawJSON.value(of: "missing", in: Data(Self.signed.utf8)))
     }
 
+    /// A receipt with a key written twice isn't one KIFF wrote: the chain hashed (the first copy) could
+    /// differ from the one another reader shows (often the last). Refused, at its top and in its attestation.
+    func testAReceiptThatRepeatsAKeyIsRefused() {
+        XCTAssertEqual(RawJSON.keys(of: Data(#"{"a":1,"b":{"a":2},"c":[{"a":3}]}"#.utf8)), ["a", "b", "c"], "an object's own keys only")
+        XCTAssertTrue(RawJSON.keysAreUnique(in: Data(Self.signed.utf8)))
+        let shown = #","causal_chain":[{"sequence":1,"kind":"decision","message":"refund €5"}]}"#
+        let twice = String(Self.signed.dropLast()) + shown
+        XCTAssertEqual(ReceiptCheck.check(Data(twice.utf8), signer: Self.testSigner), .failed("The receipt couldn't be read."))
+        let signer = Self.signed.replacingOccurrences(of: #""algorithm":"secp256k1+keccak256","#,
+                                                      with: #""algorithm":"secp256k1+keccak256","wallet_address":"0x0","#)
+        XCTAssertNotEqual(signer, Self.signed)
+        XCTAssertEqual(ReceiptCheck.check(Data(signer.utf8), signer: Self.testSigner), .failed("The receipt couldn't be read."))
+        XCTAssertEqual(ReceiptCheck.check(Data(Self.signed.utf8), signer: Self.testSigner), .verified(signer: Self.testSigner), "one copy each still checks out")
+    }
+
     func testAChangedByteInTheChainFails() {
         let changed = Self.signed.replacingOccurrences(of: #""data_hash":"bb""#, with: #""data_hash":"bc""#)
         XCTAssertNotEqual(changed, Self.signed)
