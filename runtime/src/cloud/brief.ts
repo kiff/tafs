@@ -334,3 +334,16 @@ function parts(at: Date, zone: string): { year: number; month: number; day: numb
   for (const p of f.formatToParts(at)) if (p.type !== "literal") o[p.type] = Number(p.value);
   return { year: o.year!, month: o.month!, day: o.day!, hour: o.hour!, minute: o.minute! };
 }
+
+/** Where the zone of the account's last brief read is kept, for the brief's push (the sweep has no person's session). */
+export const briefZoneKey = (tenant: string) => `${tenant}#brief-zone`;
+/** How long after a brief's time its push may still go: the sweep runs every 5 minutes. */
+export const BRIEF_PUSH_WINDOW_MS = 10 * 60_000;
+
+/** The brief whose time has just come at `now` in `timeZone` (within `windowMs`), else undefined. */
+export function briefDue(now: Date, timeZone: string, windowMs = BRIEF_PUSH_WINDOW_MS, slots: readonly string[] = BRIEF_SLOTS): { at: Date; next_at: Date; hm: string } | undefined {
+  const t = briefTimes(now, timeZone, slots);
+  if (now.getTime() - t.at.getTime() >= windowMs) return undefined;
+  const p = parts(t.at, validZone(timeZone));
+  return { ...t, hm: `${String(p.hour).padStart(2, "0")}:${String(p.minute).padStart(2, "0")}` };
+}

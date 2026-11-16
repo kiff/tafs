@@ -283,6 +283,7 @@ export const pl: Words = {
   home_needs_you_none: "Nic nie czeka na Ciebie.",
   labels_all: "Wszystkie",
   brief_title: "Twój przegląd",
+  brief_ready: (hm) => `Twój przegląd z ${hm} jest gotowy.`,
   brief_decisions: "Decyzje",
   brief_done: "Gotowe",
   brief_rest: "Pozostałe",

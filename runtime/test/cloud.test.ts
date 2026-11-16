@@ -1,8 +1,9 @@
+import { fcmMessage } from "../src/cloud/fcm.js";
 import { balanceView } from "../src/cloud/credits.js";
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
-import { approvalWaits, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
+import { sweepBriefs, approvalWaits, atMostHourly, calmEnough, coachTool, countedLine, type Deps, FAILING_WORDS, WAITED_WORDS, handle, type HTTPEvent, jobOf, oneLine, withDisclose, SETUP_JOB, sweepDeletions, sweepFailingSchedules, sweepHandOvers, sweepHealth, sweepLate, sweepYourSteps, sweepFirstRuns, sweepStaleCoach, type Taf, trialView, upgradeDefinitions, versionBy } from "../src/cloud/handler.js";
 import { type Deletion, PeerError } from "../src/cloud/deletion.js";
 import { setupDefinition } from "../src/cloud/setupdef.js";
 import { COACH_CARDS, keys as coachKeys, REPLACES_LINE, TOOLS } from "../src/cloud/coach.js";
@@ -7026,6 +7027,40 @@ describe("GET /v1/brief and Later", () => {
     const down = await get();
     expect(down.credits).toBeUndefined();
     expect(down.at).toBe("2026-10-29T07:00:00.000Z");
+  });
+
+  it("pushes 'your brief is ready' at its time, once, to the phones of people who may answer, in each phone's language, behind its flag", async () => {
+    const before = process.env.TAFS_BRIEF_PUSH;
+    try {
+      const w = world();
+      const deps = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+      w.phones.push({ token: "a".repeat(64), environment: "production", subject: "u_ana", answers: true, lang: "fr", at: "" },
+        { token: "b".repeat(64), environment: "production", subject: "u_vic", answers: false, at: "" });
+      // No brief read yet: no zone kept, no push.
+      process.env.TAFS_BRIEF_PUSH = "on";
+      w.now = new Date("2026-10-29T07:03:00Z");
+      expect(await sweepBriefs(deps)).toEqual([]);
+      // A brief read in Paris keeps the account's zone.
+      await handle({ rawPath: "/v1/brief", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_paris" } }, deps);
+      // 08:03 in Paris (winter): the 08:00 brief is ready, said once, to Ana's phone only, in French, with no content.
+      expect(await sweepBriefs(deps)).toEqual([{ tenant: "t_acme", at: "2026-10-29T07:00:00.000Z", sent: 1 }]);
+      expect(w.pushed).toHaveLength(1);
+      expect(w.pushed[0]!.token).toBe("a".repeat(64));
+      expect(w.pushed[0]!.n.payload).toMatchObject({ aps: { alert: { title: "Votre briefing", body: "Votre briefing de 08:00 est prêt." }, "thread-id": "brief" }, open: "brief", brief_kind: "brief", at: "2026-10-29T07:00:00.000Z" });
+      expect(fcmMessage(w.pushed[0]!.n, w.now).data).toMatchObject({ brief_kind: "brief", at: "2026-10-29T07:00:00.000Z", open: "brief" });
+      expect(await sweepBriefs(deps)).toEqual([]);
+      // Past its 10 minutes, the sweep says nothing more; the 18:00 brief goes at its time.
+      w.now = new Date("2026-10-29T07:20:00Z");
+      expect(await sweepBriefs(deps)).toEqual([]);
+      w.now = new Date("2026-10-29T17:01:00Z");
+      expect((await sweepBriefs(deps))[0]).toMatchObject({ at: "2026-10-29T17:00:00.000Z", sent: 1 });
+      // Flag off: none.
+      delete process.env.TAFS_BRIEF_PUSH;
+      w.now = new Date("2026-10-30T07:01:00Z");
+      expect(await sweepBriefs(deps)).toEqual([]);
+    } finally {
+      if (before === undefined) delete process.env.TAFS_BRIEF_PUSH; else process.env.TAFS_BRIEF_PUSH = before;
+    }
   });
 
   it("leaves out a taf being removed, with its calls and steps (M7)", async () => {

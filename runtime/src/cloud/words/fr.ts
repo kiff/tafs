@@ -283,6 +283,7 @@ export const fr: Words = {
   home_needs_you_none: "Rien ne vous attend.",
   labels_all: "Tous",
   brief_title: "Votre briefing",
+  brief_ready: (hm) => `Votre briefing de ${hm} est prêt.`,
   brief_decisions: "Décisions",
   brief_done: "Terminé",
   brief_rest: "Le reste",
