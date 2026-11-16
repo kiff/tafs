@@ -142,6 +142,13 @@ class PairingTest {
     assertTrue(bot.tafs.app.views.pairGives(PairQr.read(qrText(approvalPub = null))!!).endsWith("with a passkey."))
   }
 
+  // The title names no device: whatever the other device calls itself never comes before the code (qa-kiff, as on iOS).
+  @Test fun theApproveSheetsTitleNamesNoDevice() {
+    val qr = PairQr.read(qrText())!!
+    assertEquals("Add a device", bot.tafs.app.views.pairTitle())
+    assertFalse(bot.tafs.app.views.pairTitle().contains(qr.name))
+  }
+
   // The name is only what the other device says it is; the check code on its screen is what binds the yes, so it comes first.
   @Test fun theApproveSheetShowsTheCheckCodeFirstThenTheOwnersLineAndTheNameAsAClaim() {
     val qr = PairQr.read(qrText())!!

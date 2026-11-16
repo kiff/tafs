@@ -1266,8 +1266,8 @@ pair one; without it, Devices says approving needs a new sign-in and sends nothi
    RFC 4648 with no padding. A computer's own platform passkey (Windows Hello, §2.6), which a
    `kind: "passkey"` QR carries as `credential {id, public_key}`, takes the approval key's place,
    so the code covers the passkey the pairing registers; with neither, or for a computer whose device
-   key is in software (`key_store: "software"`), the device key alone. The alert asks
-   "Pair {name}?", and its first line is the code to compare, "Does your computer show {code}?": the name
+   key is in software (`key_store: "software"`), the device key alone. The alert's title is
+   "Add a device", naming no device (`pairTitle`), and its first line is the code to compare, "Does your computer show {code}?": the name
    is only what the other device says it is, so the code is what binds the yes to the device in front of
    the person (`pairLines`). Then, as on iOS, "Add this device to your account. Only this device; nothing else changes."
    and "It calls itself {name}.", the name as the device's own claim. Then it says what yes gives ("{name} will be able to approve your tafs' actions

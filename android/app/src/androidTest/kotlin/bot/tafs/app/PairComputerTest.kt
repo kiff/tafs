@@ -3,7 +3,9 @@ package bot.tafs.app
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -74,9 +76,12 @@ class PairComputerTest {
     shown = base.copy(pairAsking = PairQr.read(qr))
     open()
     val code = PairQr.read(qr)!!.checkCode!!
-    rule.onNodeWithText("Pair tafs on this Windows PC?").assertIsDisplayed()
+    // The title names no device: its name is only its claim, shown after the code.
+    rule.onNodeWithText("Add a device").assertIsDisplayed()
+    rule.onAllNodesWithText("Pair tafs on this Windows PC?").assertCountEquals(0)
     rule.onNodeWithTag(PAIR_CHECK).assertIsDisplayed()
     rule.onNodeWithText("Does your computer show $code?").assertIsDisplayed()
+    rule.onNodeWithText("It calls itself tafs on this Windows PC.").assertIsDisplayed()
     rule.onNodeWithText("tafs on this Windows PC will be able to approve your tafs' actions with Windows Hello.").assertIsDisplayed()
     rule.onNodeWithText("Only pair a computer you're using right now.").assertIsDisplayed()
     rule.onNodeWithText("Yes, pair it").performClick()

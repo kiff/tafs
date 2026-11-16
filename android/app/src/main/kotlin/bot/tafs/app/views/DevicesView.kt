@@ -182,7 +182,8 @@ fun DevicesSheet(
     // The check code, before the fingerprint: a page showing its own QR can't get this phone to pair another key unnoticed.
     DriveAlert(
       onDismissRequest = cancelPair,
-      title = { Text(Words.Settings.Devices.pairNamed(device = qr.name)) },
+      // "Add a device", never its name: the name is only what it says it is, so it comes after the code (qa-kiff, as on iOS).
+      title = { Text(pairTitle()) },
       text = {
         // The check code first: the name is only what the other device says it is, so the code on its screen is what binds this
         // yes to the device in front of the person (qa-kiff, 16 Nov). Then the owner's line, the name as its claim, what yes gives.
@@ -199,6 +200,9 @@ fun DevicesSheet(
     )
   }
 }
+
+/** The approve-pairing sheet's title: what's being done, with no name, so nothing the other device claims comes before the code. */
+internal fun pairTitle(): String = Words.Settings.Devices.pair
 
 /**
  * The approve-pairing sheet's lines, in order, as on iOS: the check code to compare; that it adds only this device and nothing
