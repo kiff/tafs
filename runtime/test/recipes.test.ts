@@ -253,6 +253,19 @@ Bezahle meine Rechnungen unter 100 EUR.
     expect(ids).toEqual(expect.arrayContaining(["returns-by-email", "answer-questions-about-orders", "chargebacks-with-evidence"]));
   });
 
+  // The store app has no read of a return's state, so the taf can't see that an item came back: no refund in this
+  // job is ever its own to make. Every refund is held for the owner; only the replies with the return steps go out alone.
+  it("holds every refund in returns by email, in every language", () => {
+    const returns = RECIPES.find((r) => r.id === "returns-by-email")!;
+    expect(returns.card.allows).toEqual(["Replies with the return steps, up to 30 a day"]);
+    expect(returns.card.holds[0]).toBe("Every refund, back to the original payment, for your approval");
+    for (const [lang, w] of Object.entries(returns.languages)) {
+      expect(w.card.allows, lang).toHaveLength(1);
+      expect(w.card.holds, lang).toHaveLength(2);
+      expect(w.card.allows[0], lang).not.toMatch(/EUR/);
+    }
+  });
+
   // dev-android's read of the four key jobs (13 Nov): refunds drew Gorgias, which can't connect yet, ahead of Intercom.
   it("draws, for a connection, an app that connects today ahead of one that can't, unless one is connected", () => {
     const app = (entry: string, vendor: string, state: CatalogApp["state"] = "available"): CatalogApp => ({ entry, vendor, title: vendor, how: "oauth", state });
