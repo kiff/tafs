@@ -1513,8 +1513,12 @@ describe("the app that waits is named so it differs from this one (other_app_fir
     expect(r.body).toMatchObject({ outcome: "answered" });
     const answer = String(r.body.answer);
     expect(answer).toContain("desk.example.com (Send an email)'s tools (grant g_2)");
-    expect(answer).toContain("this one (desk.example.com (Append a row), grant g_1)");
+    expect(answer).toContain("desk.example.com (Append a row) (grant g_1) is connected already: never show its approval again");
     expect(answer).not.toMatch(/show desk\.example\.com's approval/);
+    // Eval 19, intros: the Card comes with the waiting app's approval, with the same draft; this one, connected, is never
+    // asked again (told "then show this one again: it carries the Card", Coach showed the sheet's approval twice).
+    expect(answer).toContain("The Card comes with the last app's approval: show desk.example.com (Send an email)'s approval with this same draft: it carries the Card.");
+    expect(answer).not.toMatch(/again: it carries the Card|then show this one/);
     // The person reads the waiting app's name with its tools, never two apps called the same.
     expect(String(r.body.note)).toContain("desk.example.com (Send an email)");
   });
@@ -1526,7 +1530,7 @@ describe("the app that waits is named so it differs from this one (other_app_fir
     const w = await world(s, { draft: "drf_1" });
     const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sheet({ status: "connected" }).digest, draft: "drf_1", shown_draft: "v3" });
     expect(r.body).toMatchObject({ outcome: "answered" });
-    expect(String(r.body.answer)).toContain("show Mail · Demo Shop's approval first");
+    expect(String(r.body.answer)).toContain("show Mail · Demo Shop's approval with this same draft: it carries the Card");
     expect(String(r.body.note)).not.toContain("(");
   });
 });
