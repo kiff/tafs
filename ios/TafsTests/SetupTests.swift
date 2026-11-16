@@ -2011,6 +2011,27 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// tafs cloud's mark that an app's sign-in is wider than the job (`wider: {words}`) is drawn above an approval's
+    /// and a sign-in card's buttons, in its words, as Android's tafs#1221. Read leniently: a mark of another shape,
+    /// or blank words, is no mark, and the card is read as before.
+    func testAWiderSignInIsSaidAboveTheCardsButtons() throws {
+        let line = "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses."
+        let wide = try SetupTests.component(#"{"type":"approval","id":"connect","grant":"g_01","wider":{"words":"\#(line)"}}"#)
+        XCTAssertEqual(wide.widerWords, line)
+        let signIn = try SetupTests.component(#"{"type":"sign_in","id":"in","grant":"g_01","wider":{"words":"\#(line)"}}"#)
+        XCTAssertEqual(signIn.widerWords, line)
+        for odd in [#""wider":"yes""#, #""wider":{"words":"  "}"#, #""wider":{"words":3}"#, #""wider":null"#] {
+            let card = try SetupTests.component(#"{"type":"approval","id":"connect","grant":"g_01",\#(odd)}"#)
+            XCTAssertNil(card.widerWords, odd)
+            XCTAssertEqual(card.grant, "g_01", "the card is read as before")
+        }
+        XCTAssertNil(try SetupTests.component(#"{"type":"approval","id":"connect","grant":"g_01"}"#).widerWords)
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let chat = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(chat.contains("if !replaced, let wider = component.widerWords { WiderLine(words: wider) }"), "the approval card")
+        XCTAssertTrue(chat.contains("if let wider = c.widerWords { WiderLine(words: wider) }"), "the sign-in card")
+    }
+
     /// A new conversation (#73): the thread is empty and nothing is read until the
     /// first message, which asks for a new chat; that chat is the one shown from then on.
     func testANewConversationStartsItsOwnChat() async throws {
