@@ -91,12 +91,12 @@ Later at `POST /v1/brief/decisions/{id}/later` ([api.md](api.md)).
   - It's claimed before it's sent, once per account and brief: if every phone's send fails (APNs or FCM down at that
     minute), that brief's push isn't tried again. A passive "ready" alert can live with that; the brief is still there.
   - A held call's alert, which comes at once, is `urgent`, with `decision: hold:<id>`.
-- **Held calls that can wait** (`TAFS_BRIEF_HELD_WAIT=on`, off until the owner turns it on): a held call goes in the
-  brief instead of on the phones at once when the account's brief times are known, it expires at or after the next
-  brief, and KIFF's alert doesn't say it's urgent, money going out today or "ask me at once" (`hold.urgent`,
-  `hold.money_today`, `hold.ask_at_once`). Anything else alerts at once, as today: no readable expiry, an account whose
-  brief was never read, or KIFF's word. Its answer still reaches the phones. KIFF's alert carries no call's arguments, so
-  "money out today" is only known when KIFF says it; until it does, turn the switch on knowing that.
+- **Held calls that can wait** (`TAFS_BRIEF_HELD_WAIT=on`, off until the owner turns it on). Fail closed: a held call
+  goes in the brief instead of on the phones at once only when it's positively known that it can, which is all of these:
+  the account's brief times are known, it expires at or after the next brief, and KIFF's alert says it moves no money
+  (`hold.money_out: false`). Anything else alerts at once, as today: a field KIFF doesn't send (today's alerts send none,
+  so nothing waits until KIFF does), no readable expiry, or an account whose brief was never read. Its answer still
+  reaches the phones. "Ask me at once" is a taf's own setting in tafs cloud, next to the brief times, not KIFF's.
 
 - **Urgent** is tafs cloud's rule, never a model's: a deadline before the next brief, money going out today, a halt, a
   blocked connection, or "ask me at once".

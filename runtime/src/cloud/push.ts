@@ -186,8 +186,8 @@ interface AlertBody {
   outcome?: unknown;
   action?: unknown;
   entity_id?: unknown;
-  /** `urgent`, `money_today`, `ask_at_once`: KIFF's word that a held call can't wait for the brief, when it says so. */
-  hold?: { id?: unknown; expires_at?: unknown; urgent?: unknown; money_today?: unknown; ask_at_once?: unknown } | null;
+  /** `money_out`: KIFF's word whether the held call moves money when approved (its Card counts an amount in a currency). */
+  hold?: { id?: unknown; expires_at?: unknown; money_out?: unknown } | null;
   /** On a pack request's alerts: the request, who asked (their sign-in subject) and an admin's note. */
   request?: { id?: unknown; kind?: unknown; pack?: unknown; status?: unknown; asked_by?: unknown; note?: unknown } | null;
   /** On a credits warning: the share ("80" or "100") and, at 100, why the tafs wait. */
@@ -229,14 +229,15 @@ export interface AlertDeps {
 
 /**
  * Whether a held call can wait for the next brief by tafs cloud's rules (design v2.1 §7: only the truly urgent alert at
- * once), from what KIFF's alert carries. It waits only when all of these hold: the account's brief times are known
- * (`zone`), the call expires at or after the next brief, and KIFF doesn't say it's urgent, money going out today or
- * "ask me at once". A call with no readable expiry, or on an account whose brief was never read, alerts at once: never a
- * held call missed on a guess. A halted taf or a blocked connection holds no call, so those rules don't arise here.
+ * once), from what KIFF's alert carries. Fail closed: it waits only when it's positively known that it can, which is
+ * all of these: the account's brief times are known (`zone`), the call expires at or after the next brief, and KIFF says
+ * it moves no money (`hold.money_out === false`). A field KIFF doesn't send, an unreadable expiry, or an account whose
+ * brief was never read: at once, never a held call missed on a guess. "Ask me at once" is a taf's own setting in tafs
+ * cloud, not KIFF's; a halted taf or a blocked connection holds no call, so those rules don't arise here.
  */
 export function heldWaitsForBrief(hold: AlertBody["hold"], zone: string | undefined, now: Date): boolean {
   if (!hold || !zone) return false;
-  if (hold.urgent === true || hold.money_today === true || hold.ask_at_once === true) return false;
+  if (hold.money_out !== false) return false;
   const expires = typeof hold.expires_at === "string" ? Date.parse(hold.expires_at) : Number.NaN;
   if (Number.isNaN(expires)) return false;
   return expires >= briefTimes(now, zone).next_at.getTime();

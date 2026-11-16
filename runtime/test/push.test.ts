@@ -845,18 +845,20 @@ describe("phone alert choices and unregistering", () => {
 // wait for the next brief goes in it; the owner turns it on.
 describe("a held call that can wait for the brief (TAFS_BRIEF_HELD_WAIT)", () => {
   const at = new Date("2026-10-15T09:00:00Z"); // 11:00 in Paris (summer): the next brief is 18:00 Paris, 16:00 UTC.
-  it("waits only when the brief's times are known, it expires at or after the next brief, and KIFF says nothing urgent", () => {
-    const later = { id: "h", expires_at: "2026-10-16T09:00:00Z" };
+  it("fails closed: waits only when the brief's times are known, it expires at or after the next brief, and KIFF says it moves no money", () => {
+    const later = { id: "h", expires_at: "2026-10-16T09:00:00Z", money_out: false };
     expect(heldWaitsForBrief(later, "Europe/Paris", at)).toBe(true);
     expect(heldWaitsForBrief({ ...later, expires_at: "2026-10-15T16:00:00Z" }, "Europe/Paris", at)).toBe(true);
     // Expires before the next brief: urgent, at once.
     expect(heldWaitsForBrief({ ...later, expires_at: "2026-10-15T15:59:00Z" }, "Europe/Paris", at)).toBe(false);
-    // KIFF's word that it can't wait.
-    for (const k of ["urgent", "money_today", "ask_at_once"]) expect(heldWaitsForBrief({ ...later, [k]: true }, "Europe/Paris", at)).toBe(false);
+    // Money goes out when it's approved, or KIFF doesn't say (today's alert, with no field): at once.
+    expect(heldWaitsForBrief({ ...later, money_out: true }, "Europe/Paris", at)).toBe(false);
+    expect(heldWaitsForBrief({ id: "h", expires_at: "2026-10-16T09:00:00Z" }, "Europe/Paris", at)).toBe(false);
+    expect(heldWaitsForBrief({ ...later, money_out: "false" }, "Europe/Paris", at)).toBe(false);
     // Not known: at once, never missed on a guess.
     expect(heldWaitsForBrief(later, undefined, at)).toBe(false);
-    expect(heldWaitsForBrief({ id: "h" }, "Europe/Paris", at)).toBe(false);
-    expect(heldWaitsForBrief({ id: "h", expires_at: "soon" }, "Europe/Paris", at)).toBe(false);
+    expect(heldWaitsForBrief({ id: "h", money_out: false }, "Europe/Paris", at)).toBe(false);
+    expect(heldWaitsForBrief({ ...later, expires_at: "soon" }, "Europe/Paris", at)).toBe(false);
     expect(heldWaitsForBrief(null, "Europe/Paris", at)).toBe(false);
   });
 
