@@ -24,7 +24,7 @@ class WatchModelTest {
 
   @Test fun showsNeedsYouAndYourTafsInThePhonesWords() = runTest {
     val phone = Phone { if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Answered(tafs) }
-    val model = WatchModel(phone) { t }
+    val model = WatchModel(phone, now = { t })
     model.refresh()
     assertEquals(WatchModel.Shown.Read(WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call)), WatchModel.TafsRead(tafs.tafs, false)), model.shown.value)
     // Reads only, each made now: nothing on this screen asks the phone to sign.
@@ -32,14 +32,14 @@ class WatchModelTest {
   }
 
   @Test fun needsYouStaysWhenYourTafsDoesntAnswer() = runTest {
-    val model = WatchModel(Phone { if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Unreachable }) { t }
+    val model = WatchModel(Phone { if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Unreachable }, now = { t })
     model.refresh()
     assertEquals(WatchModel.Shown.Read(WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call)), null), model.shown.value)
   }
 
   @Test fun aSignedOutPhoneShowsNothingKept() = runTest {
     var signedIn = true
-    val model = WatchModel(Phone { if (!signedIn) Asked.Answered(WatchReply.SignedOut) else if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Answered(tafs) }) { t }
+    val model = WatchModel(Phone { if (!signedIn) Asked.Answered(WatchReply.SignedOut) else if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Answered(tafs) }, now = { t })
     model.refresh()
     assertTrue(model.shown.value is WatchModel.Shown.Read)
     signedIn = false
@@ -48,23 +48,86 @@ class WatchModelTest {
   }
 
   @Test fun noPhoneSaysSo() = runTest {
-    val model = WatchModel(Phone { Asked.Unreachable }) { t }
+    val model = WatchModel(Phone { Asked.Unreachable }, now = { t })
     model.refresh()
     assertEquals(WatchModel.Shown.PhoneUnreachable, model.shown.value)
   }
 
   @Test fun whatTheWatchCantDrawOpensOnThePhone() = runTest {
     for (answer in listOf(Asked.NotUnderstood, Asked.Answered(WatchReply.Refused(NotAccepted.TOO_OLD)), Asked.Answered(WatchReply.Done("Refused")))) {
-      val model = WatchModel(Phone { answer }) { t }
+      val model = WatchModel(Phone { answer }, now = { t })
       model.refresh()
       assertEquals(answer.toString(), WatchModel.Shown.OpenOnPhone, model.shown.value)
     }
   }
 
   @Test fun putAwayItForgetsWhatItShowed() = runTest {
-    val model = WatchModel(Phone { if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Answered(tafs) }) { t }
+    val model = WatchModel(Phone { if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Answered(tafs) }, now = { t })
     model.refresh()
     model.forget()
     assertEquals(WatchModel.Shown.Asking, model.shown.value)
+  }
+
+  // MARK: Refuse and Halt
+
+  private fun reads(r: WatchRequest): Asked = if (r is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Answered(tafs)
+
+  @Test fun aLockedWatchOrOneWithNoLockSendsNothing() = runTest {
+    val phone = Phone(::reads)
+    val model = WatchModel(phone, now = { t }, unlocked = { false })
+    model.refuse("hold_1")
+    model.halt("taf_1")
+    model.askHaltAll()
+    model.confirmHaltAll()
+    assertEquals(WatchModel.Outcome.NeedsLock, model.outcome.value)
+    assertTrue("nothing reached the phone", phone.asked.isEmpty())
+  }
+
+  @Test fun aRefusalShowsThePhonesResultThenTheListsAsTheyStand() = runTest {
+    val phone = Phone { if (it is WatchRequest.Refuse) Asked.Answered(WatchReply.Done("Refused")) else reads(it) }
+    val model = WatchModel(phone, now = { t }, unlocked = { true })
+    model.refuse("hold_1")
+    assertEquals(WatchModel.Outcome.Done("Refused"), model.outcome.value)
+    assertEquals(listOf(WatchRequest.Refuse(t, "hold_1"), WatchRequest.NeedsYou(t), WatchRequest.Tafs(t)), phone.asked)
+  }
+
+  @Test fun haltAllIsAskedOnTheWatchBeforeAnythingIsSent() = runTest {
+    val phone = Phone { if (it is WatchRequest.Halt) Asked.Answered(WatchReply.Done("All your tafs halted")) else reads(it) }
+    val model = WatchModel(phone, now = { t }, unlocked = { true })
+    model.confirmHaltAll()
+    model.askHaltAll()
+    assertTrue(model.confirmingHaltAll.value)
+    model.cancelHaltAll()
+    model.confirmHaltAll()
+    assertTrue("not asked, or cancelled: nothing sent", phone.asked.none { it is WatchRequest.Halt })
+    model.askHaltAll()
+    model.confirmHaltAll()
+    assertEquals(listOf(WatchRequest.Halt(t, null)), phone.asked.filterIsInstance<WatchRequest.Halt>())
+    assertEquals(false, model.confirmingHaltAll.value)
+  }
+
+  @Test fun haltOneAndHaltAllNameWhatTheyHalt() = runTest {
+    val phone = Phone { if (it is WatchRequest.Halt) Asked.Answered(WatchReply.Done("Halted")) else reads(it) }
+    val model = WatchModel(phone, now = { t }, unlocked = { true })
+    model.halt("taf_1")
+    model.askHaltAll()
+    model.confirmHaltAll()
+    assertEquals(listOf(WatchRequest.Halt(t, "taf_1"), WatchRequest.Halt(t, null)), phone.asked.filterIsInstance<WatchRequest.Halt>())
+    assertEquals(WatchModel.Outcome.Done("Halted"), model.outcome.value)
+  }
+
+  @Test fun whatDidntGoThroughSaysSo() = runTest {
+    val cases = mapOf<Asked, WatchModel.Outcome>(
+      Asked.Answered(WatchReply.AlreadyAnswered) to WatchModel.Outcome.AlreadyAnswered,
+      Asked.Answered(WatchReply.Failed("Not refused: KIFF didn't answer.")) to WatchModel.Outcome.NotDone("Not refused: KIFF didn't answer."),
+      Asked.Answered(WatchReply.Refused(NotAccepted.TOO_OLD)) to WatchModel.Outcome.NotDone(null),
+      Asked.Unreachable to WatchModel.Outcome.PhoneUnreachable,
+      Asked.NotUnderstood to WatchModel.Outcome.NotDone(null),
+    )
+    for ((answer, outcome) in cases) {
+      val model = WatchModel(Phone { if (it is WatchRequest.Refuse) answer else reads(it) }, now = { t }, unlocked = { true })
+      model.refuse("hold_1")
+      assertEquals(answer.toString(), outcome, model.outcome.value)
+    }
   }
 }
