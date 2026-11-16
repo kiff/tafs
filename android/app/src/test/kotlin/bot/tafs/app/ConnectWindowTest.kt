@@ -1,6 +1,9 @@
 package bot.tafs.app
 
 import bot.tafs.app.app.AppModel
+import bot.tafs.app.kiff.ApprovalWindow
+import bot.tafs.app.kiff.PlanqueClient
+import bot.tafs.app.kiff.TafsCloud
 import bot.tafs.app.kiff.InMemorySecretStore
 import bot.tafs.app.kiff.Jcs
 import bot.tafs.app.kiff.KiffClient
@@ -27,7 +30,10 @@ class ConnectWindowTest {
   }
   private val transport = FakeTransport()
   private val secrets = InMemorySecretStore()
-  private val signer = softwareSigner()
+  private val auth = FakeAuthenticator()
+  private val signer = softwareSigner(auth)
+  /** KIFF's client, kept by the test so a window held from an earlier approval can be set up. */
+  private val kiff = KiffClient(transport)
   private val grants = "GET /v1/accounts/t_01/grants"
   private val approve = "POST /v1/accounts/t_01/grants/g1/approve"
   private val confirm = "POST /v1/accounts/t_01/grants/g1/confirm"
@@ -62,7 +68,10 @@ class ConnectWindowTest {
     secrets.save("1", AppModel.KEYED)
     secrets.save(KiffClient.fingerprint(signer.approvalPublicKeyDER), AppModel.APPROVAL_KEYED)
     val signIn = FakeSignIn("tafs://planque/signed-in?tenant=t_01&grant=g1&confirm=c0de")
-    return testModel(transport = transport, secrets = secrets, signer = signer, clock = { t0 }, start = false, vendorSignIn = signIn).also {
+    return AppModel(
+      null, signer, kiff, TafsCloud(transport), secrets, clock = { t0 }, sampleReplyDelayMs = 0,
+      planque = PlanqueClient(transport), vendorSignIn = signIn, openedFiles = java.nio.file.Files.createTempDirectory("opened").toFile(),
+    ).also {
       it.restore()
       it.refresh()
       it.loadTafSetup("mail-1")
@@ -70,6 +79,13 @@ class ConnectWindowTest {
   }
 
   private fun signatureOf(route: String, n: Int = 0) = transport.requestsTo(route)[n].headers["Planque-Device-Signature"]!!
+  private fun signaturesTo(route: String) = transport.requestsTo(route).map { it.headers["Planque-Device-Signature"]!! }
+
+  /** Connected, as planque and tafs cloud say once the sign-in is confirmed. */
+  private fun connectedAfter() {
+    transport.answer(grants, 200, """{"grants":[${grant("connected")}]}""")
+    transport.answer(setup, 200, "{}")
+  }
 
   @Test fun approveAndConfirmAreTapsInsideTheWindowTheFingerprintOpened() = runTest {
     transport.answer(open, 201, windowOpened())
@@ -80,10 +96,31 @@ class ConnectWindowTest {
     transport.answer(setup, 200, "{}")
     m.connectAgain("mail-1")
     assertEquals("one fingerprint, one window", 1, transport.requestsTo(open).size)
+    // The window is opened at KIFF signed by the approval key, behind that one fingerprint; nothing else asked for one.
+    assertEquals(1, auth.fingerprints.size)
+    assertTrue(transport.requestsTo(open).single().headers["KIFF-Device-Signature"]?.contains(",v1=") == true)
     val inWindow = Regex("^t=[^,]+,v2=[^,]+,w=$window,d=dev_1$")
     assertTrue(signatureOf(approve), inWindow.matches(signatureOf(approve)))
     assertTrue(signatureOf(confirm), inWindow.matches(signatureOf(confirm)))
     assertEquals("Gmail is connected again.", m.state.value.connectedAgain["mail-1"])
+    // The connection's window ends with it: closed at KIFF, and the approvals after it ask for their own fingerprint.
+    assertEquals(1, transport.requestsTo("POST /v1/me/window/$window/close").size)
+    assertEquals(null, kiff.window)
+  }
+
+  @Test fun aWindowHeldFromAnEarlierApprovalIsClosedAndTheConnectionsOwnFingerprintOpensAFreshOne() = runTest {
+    transport.answer(open, 201, windowOpened())
+    transport.answer(confirm, 200, grant("connected"))
+    val m = model()
+    connectedAfter()
+    val earlier = "win_heldfromanearlierapproval"
+    kiff.window = ApprovalWindow(earlier, open = true)
+    m.connectAgain("mail-1")
+    assertEquals("the held window is closed first", 1, transport.requestsTo("POST /v1/me/window/$earlier/close").size)
+    assertEquals("the connection asks for its own fingerprint", 1, auth.fingerprints.size)
+    assertEquals(1, transport.requestsTo(open).size)
+    assertTrue(signatureOf(approve), signatureOf(approve).contains(",w=$window,"))
+    assertTrue((signaturesTo(approve) + signaturesTo(confirm)).none { it.contains(earlier) })
   }
 
   @Test fun aWindowThatEndedDuringTheVendorsSignInIsOpenedAgainAndOnlyTheConfirmIsMadeAgain() = runTest {
@@ -99,8 +136,38 @@ class ConnectWindowTest {
     assertEquals("a second fingerprint, for a new window", 2, transport.requestsTo(open).size)
     assertEquals("the approval isn't made again", 1, transport.requestsTo(approve).size)
     assertEquals(2, transport.requestsTo(confirm).size)
+    // Each in the window this phone opened at KIFF, the one KIFF named in its answer, and none ever as `v1`, the retry included.
+    assertTrue(signatureOf(approve), signatureOf(approve).contains(",v2=") && signatureOf(approve).contains(",w=$window,"))
+    assertTrue(signatureOf(confirm, 0), signatureOf(confirm, 0).contains(",w=$window,"))
     assertTrue(signatureOf(confirm, 1), signatureOf(confirm, 1).contains(",w=win_zyxwvutsrqponmlkjihgfedcba,"))
+    assertTrue((signaturesTo(approve) + signaturesTo(confirm)).none { it.contains(",v1=") })
     assertEquals("Gmail is connected again.", m.state.value.connectedAgain["mail-1"])
+  }
+
+  @Test fun anyOtherRefusalToOpenTheWindowStopsTheConnectionWithNothingSentToPlanque() = runTest {
+    // Only a KIFF without the route (404, 405) leaves the phone's own fingerprint and `v1`; a 500 or a 403 is no such KIFF.
+    for (status in listOf(500, 403)) {
+      transport.answer(open, status, """{"error":"no"}""")
+      val m = model()
+      m.connectAgain("mail-1")
+      assertTrue("$status: nothing approved", transport.requestsTo(approve).isEmpty())
+      assertTrue("$status: nothing confirmed", transport.requestsTo(confirm).isEmpty())
+      assertEquals(null, m.state.value.connectedAgain["mail-1"])
+    }
+  }
+
+  @Test fun aRefusedFingerprintForTheNewWindowStopsThereWithNothingSentAgain() = runTest {
+    transport.answer(open, 201, windowOpened())
+    transport.answer(open, 201, windowOpened("win_zyxwvutsrqponmlkjihgfedcba"))
+    transport.answer(confirm, 403, """{"error":"Your approval window has ended.","code":"window_required"}""")
+    // The first fingerprint opens the window; the second, for a new one, isn't given.
+    auth.whilePrompted = { if (auth.fingerprints.size >= 1) auth.confirms = false }
+    val m = model()
+    m.connectAgain("mail-1")
+    assertEquals(1, transport.requestsTo(open).size)
+    assertEquals(1, transport.requestsTo(approve).size)
+    assertEquals("the refused confirm isn't sent again", 1, transport.requestsTo(confirm).size)
+    assertEquals(null, m.state.value.connectedAgain["mail-1"])
   }
 
   @Test fun aKiffWithNoWindowsSignsAsBeforeWithTheDeviceKeyAlone() = runTest {

@@ -4760,6 +4760,8 @@ class AppModel(
     }
     _state.update { it.copy(connecting = grantId, coachNotes = it.coachNotes - cardId) }
     val generation = accountGeneration
+    // Whether this connection opened KIFF's window, which it closes when it ends.
+    var ownWindow = false
     planque.tenant = tenant
     planque.deviceLoader = { kiff.thisDeviceId() }
     val signer = signer
@@ -4829,9 +4831,17 @@ class AppModel(
       // as taps that KIFF says are inside it (`v2`, the window's id), as Coach's step does. Where KIFF opens none (a KIFF from
       // before windows, no approval key, a drive), the phone asks for the fingerprint itself and the device key signs as before.
       val prompt = bot.tafs.app.model.ConnectionWords.connectPrompt(grant, _state.value.connectApps) { _state.value.taf(it)?.name }
+      // KIFF's window is opened signed: the approval key, behind the fingerprint, as KiffClient signs what grants authority.
+      kiff.setupSigner = sign
+      // A connection's own fingerprint opens its own window: one held from an earlier approval is closed first, so connecting is
+      // never a tap riding on it, and the connection's window doesn't outlive it (closed in `finally`).
+      if (kiff.window != null) closeWindow()
+      windowAsked = false
       val windowed = try {
-        holdWindow(prompt) || run {
-          signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), prompt)
+        holdWindow(prompt).also { ownWindow = it } || run {
+          // No window: the phone asks for the fingerprint itself, unless the window's prompt just came up (a KIFF from before
+          // windows answers 404 only after it), so the person is asked once.
+          if (!windowAsked) signer.sign("tafs.connect.v1|$tenant|${grant.id}|${grant.digest}".toByteArray(), prompt)
           false
         }
       } catch (e: SignerException) {
@@ -4850,6 +4860,8 @@ class AppModel(
         call()
       } catch (e: PlanqueError.WindowRequired) {
         if (!windowed) throw e
+        // planque said this window ended, so it's forgotten before a new one is opened. Nothing else holds it meanwhile: one
+        // connection runs at a time (`connecting`), and Coach's step makes its calls through this same model.
         kiff.window = null
         if (!holdWindow(prompt)) throw e
         if (generation != accountGeneration) null else {
@@ -4915,7 +4927,9 @@ class AppModel(
       planque.window = null
       kiff.setupSigner = null
       if (generation == accountGeneration) _state.update { it.copy(connecting = null, connectStep = null) }
-      if (generation == accountGeneration) readWindowWords()
+      // The connection's own window ends with it, so the approvals after it each ask for their own fingerprint.
+      if (ownWindow) kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) { closeWindow() }
+      else if (generation == accountGeneration) readWindowWords()
     }
   }
 
@@ -5295,12 +5309,17 @@ class AppModel(
    * key, with [reason]'s words) opens one for five minutes. False where it can't: no approval key in KIFF, or a KIFF without
    * windows; the step then signs as it did. Whether the window is open is KIFF's to say, at each call.
    */
+  /** Whether the last [holdWindow] asked for the fingerprint (the approval key signs the window's opening), held or not. */
+  private var windowAsked = false
+
   private suspend fun holdWindow(reason: String): Boolean {
     // While Coach drives, the approval window is suspended: every confirming signature asks for the fingerprint (docs/drive.md).
     if (drive.on) return false
     if (!sessionHasApprovalKey || kiff.approvalSigner == null) return false
     if (kiff.window != null) return true
     approvalReason = reason
+    // The approval key's prompt comes up as the window is opened, whatever KIFF answers.
+    windowAsked = true
     val expires = DateTimeFormatter.ISO_INSTANT.format(clock().plusSeconds(WINDOW_SECONDS).truncatedTo(ChronoUnit.SECONDS))
     val nonce = ByteArray(16).also { java.security.SecureRandom().nextBytes(it) }.joinToString("") { "%02x".format(it) }
     return try {

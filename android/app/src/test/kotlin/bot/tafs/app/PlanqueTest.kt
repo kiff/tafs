@@ -618,7 +618,8 @@ class PlanqueTest {
     auth.confirms = false
     assertEquals(AppModel.Connected.Stopped, m.connect("a1", "g1", digest))
     assertTrue(transport.requestsTo(approve).isEmpty())
-    assertEquals("Not done: it wasn't confirmed.", m.state.value.coachNotes["a1"])
+    // The fingerprint is the approval key's, for KIFF's window: a refused one says so in the approval key's words.
+    assertEquals(bot.tafs.app.signing.DeviceSigner.NOT_RECOGNIZED, m.state.value.coachNotes["a1"])
     assertNull(m.state.value.connecting)
   }
 

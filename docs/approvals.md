@@ -195,6 +195,10 @@ never the app's. On Android (`KiffClient.window`, `AppModel.holdWindow`) and on 
   connection approved outside Coach's step (Connect apps, a taf's Connect again, an approval
   card's Connect: `AppModel.connect`) has no ask from tafs cloud, so the connection's own
   fingerprint opens the window there, and planque's approve and confirm go as `v2` inside it.
+  It's the connection's alone: a window held from an earlier approval is closed first, so a
+  connection is never a tap, and the connection's window is closed when it ends. With a KIFF
+  that has no window route, the window's fingerprint stands as the connection's, so the person
+  is asked once.
   planque then holds them to an open window (`PLANQUE_WINDOW_REQUIRED`), where before they went
   as `v1` with the device key alone. Without a window (a KIFF without the route, no approval key,
   a drive), the phone asks for the fingerprint itself and signs `v1`, as before. iPhone and iPad
