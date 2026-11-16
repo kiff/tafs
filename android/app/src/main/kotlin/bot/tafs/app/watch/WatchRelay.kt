@@ -7,6 +7,7 @@ import bot.tafs.app.model.Answer
 import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.Words
 import bot.tafs.watchlink.AskLine
+import bot.tafs.watchlink.DecisionLine
 import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
 import bot.tafs.watchlink.WatchLink
@@ -40,13 +41,19 @@ class WatchRelay(
       is WatchLink.Accepted.Yes -> accepted.request
     }
     return when (request) {
-      is WatchRequest.NeedsYou, is WatchRequest.Tafs -> {
+      is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief -> {
         val model = signedIn() ?: return WatchReply.SignedOut
         // Read again now: the watch shows what tafs cloud and KIFF say, not what the phone last drew. Within the floor of the
-        // last read, that read stands.
-        if (request is WatchRequest.NeedsYou && floor.due(now())) model.refresh()
+        // last read, that read stands. The brief is the one the phone holds, read with Needs you (`AppModel.refresh`): no read
+        // of its own.
+        if (request !is WatchRequest.Tafs && floor.due(now())) model.refresh()
         val state = model.state.value
-        if (state.mode != Mode.kiff) WatchReply.SignedOut else if (request is WatchRequest.NeedsYou) needsYou(state) else tafs(state)
+        when {
+          state.mode != Mode.kiff -> WatchReply.SignedOut
+          request is WatchRequest.NeedsYou -> needsYou(state)
+          request is WatchRequest.Brief -> brief(state)
+          else -> tafs(state)
+        }
       }
       is WatchRequest.Refuse -> refuse(request.holdId)
       is WatchRequest.Halt -> halt(request.tafId)
@@ -229,6 +236,42 @@ class WatchRelay(
         )
       },
     )
+
+    /**
+     * Your brief as the phone shows it in Needs you's place (`AppState.brief`), in tafs cloud's words: the decisions still to answer
+     * here (one set aside on the phone isn't), in tafs cloud's order; Done's heading with its first two cases by name; the rest line,
+     * and the phone's own count of what Needs you holds beyond the brief. A decision about a held call the phone holds names it as
+     * Needs you does ([HeldLine.holdId]), so the watch's Refuse is Needs you's own. No brief: [WatchReply.NoBrief], and the watch
+     * shows Needs you.
+     */
+    fun brief(state: AppState): WatchReply {
+      val brief = state.brief ?: return WatchReply.NoBrief
+      val cases = brief.done.flatMap { it.cases }.map { it.name.ifEmpty { it.words } }.filter { it.isNotEmpty() }
+      return WatchReply.Brief(
+        title = brief.words.titleShown,
+        whenLine = brief.words.`when`.takeIf { it.isNotBlank() },
+        decisions = state.briefDecisions.map { d ->
+          val call = if (d.ref.kind == "hold" && d.ref.id.isNotEmpty()) state.held.firstOrNull { it.kiffId == d.ref.id } else null
+          DecisionLine(
+            id = d.id,
+            question = d.question,
+            taf = state.tafs.firstOrNull { it.cloudId != null && it.cloudId == d.ref.taf }?.name ?: call?.let { state.taf(it.tafId)?.name },
+            deadline = d.deadline,
+            urgent = d.urgent,
+            cantWait = d.cantWait,
+            refKind = d.ref.kind,
+            refId = d.ref.id,
+            holdId = call?.id,
+          )
+        },
+        more = brief.more?.words,
+        urgent = brief.words.urgentShown,
+        done = if (cases.isEmpty()) null else brief.words.doneShown,
+        doneCases = cases.take(2),
+        rest = brief.rest?.words,
+        needsYou = state.briefNeedsYouLine,
+      )
+    }
 
     /** Each taf in one line, in tafs cloud's words, and whether it, or the whole account, is halted. */
     fun tafs(state: AppState): WatchReply.Tafs = WatchReply.Tafs(

@@ -121,6 +121,35 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
   - Tests: `WatchModelTest` (sent on stopping, retry with the same id, the result card, Reply, the timing, Halt pending),
     `WatchAskTest` (the device key and no prompt, the body, consent, `unsure`, the push), `WatchLinkTest`.
 
+## Your brief (behind a switch)
+
+Where the phone shows Your brief in Needs you's place, the watch can show it too, in tafs cloud's words. It's built and **off**:
+`BRIEF_ON_WATCH` (`wear/…/WatchModel.kt`) is `false`, and turns on with the owner's yes, as that one line. Off, the watch asks and
+draws exactly what it did before (the same requests, the same screens, the same store screenshots, `WatchModelTest`).
+
+With it on (`WatchModel(briefOn = true)` in the tests):
+- **The read.** After Needs you, the watch asks `brief`; then Your tafs. The phone answers from the brief it already holds
+  (`AppState.brief`, read with Needs you by `AppModel.refresh`, behind the same 10 s `RefreshFloor`): no read of its own, and
+  nothing new goes to tafs cloud or KIFF. The phone answers `brief` whatever the watch's switch, as answering a read is harmless.
+  No brief on the account is `no_brief`, and a phone that doesn't know the path refuses it: either way the watch shows Needs you.
+- **What's sent** (`WatchReply.Brief`, `WatchRelay.brief`): the title and its `when` line ("Morning brief · 08:00 · next at
+  18:00"); the decisions still to answer on the phone (one set aside there isn't), in tafs cloud's order, which puts the urgent
+  first, each with its question, its taf, its deadline in words, why it can't wait, and what it's about (`ref` kind and id); the
+  line for more decisions; tafs cloud's word for urgent; Done's heading and its first two cases by name; the rest line; and the
+  phone's own line for what Needs you holds beyond the brief, so nothing waiting is out of reach.
+- **What's drawn:** the brief in Needs you's place, then Your tafs with Halt, unchanged. Each decision is a card with **Open on
+  phone** (`tafs://open/needs-you`, the one destination the phone takes from the watch: Needs you's list, opened over the brief),
+  and no answer buttons: decisions are answered on the phone. The rest is one card that opens Needs you on the phone.
+- **Refuse, as Needs you has it.** A decision about a held call (`ref` kind `hold`) carries the call's id as Needs you lists it
+  (`hold_id`, the phone matching KIFF's id in `ref`); the watch offers **Refuse** only when its own Needs you read lists that
+  same id as refusable (`Shown.Read.refusable`). It's the same request, sent only with a screen lock set and the watch unlocked.
+- **Unchanged:** the tile (Needs you's count, only while unlocked); a locked watch shows only "A taf needs you"; the brief is
+  kept in memory and forgotten when the watch is put away. No new words: the brief's are tafs cloud's, and Open on phone and
+  Refuse are the watch's own (`WatchBriefScreenTest`, `WatchBriefTest`).
+- **Unlocked only, if it ever leaves the app.** A decision's question and Done's cases can name a person or an amount. They're
+  drawn only inside the app's screen today, so only on an unlocked watch; a tile or complication for the brief would follow the
+  tile's rule: nothing but a count, and only while the watch is unlocked.
+
 ## Versions
 
 The watch shares the phone's package, and Play needs every `versionCode` on the listing to be unique across the phone's and
@@ -169,7 +198,7 @@ The watch holds **no keys, no session and no KIFF client**. It sends the phone a
 reads or signs with its own session and keys, and the watch draws the answer in the phone's words. A lost watch can read
 and stop things, never approve.
 
-The watch may ask seven things (`WatchRequest`), each a path under `/tafs/watch/v1/`:
+The watch may ask eight things (`WatchRequest`), each a path under `/tafs/watch/v1/`:
 
 | Path | What the phone does |
 | --- | --- |
@@ -180,6 +209,7 @@ The watch may ask seven things (`WatchRequest`), each a path under `/tafs/watch/
 | `coach` | Sends Coach a message as text (a watch from before Ask tafs; this one never sends it) |
 | `ask` | Ask tafs: `client_id`, `text`, `reply_to`; signed with the device key and sent to tafs cloud, which answers its receipt |
 | `asks` | Reads the watch's asks as tafs cloud has them, updated after `since` (or in the last day) |
+| `brief` | Reads Your brief as the phone shows it, or says there's none (`no_brief`); asked only with the watch's switch on (below) |
 
 And the phone sends the watch one message, never a request it answers: **`ask-result`**, an ask's new state, when tafs
 cloud's push says it changed.
@@ -189,7 +219,7 @@ the phone's approval key behind its fingerprint, so on the watch each says **App
 
 **What the phone refuses before reading or signing anything** (`WatchLink.accept`, `NotAccepted`):
 
-- a path that isn't one of the seven (an approval, a newer version, `ask-result`): `UNKNOWN_PATH`;
+- a path that isn't one of the eight (an approval, a newer version, `ask-result`): `UNKNOWN_PATH`;
 - a body that isn't exactly what its path takes, a field missing, extra (`"answer": "approve_once"` on a refusal) or blank,
   or a Coach message or an ask that's empty or over 2,000 characters, or an ask whose id isn't 8 to 64 letters, digits, `_`
   or `-`: `MALFORMED`. An ask can't name its taf or mark itself: a field it doesn't take is refused;

@@ -1,6 +1,7 @@
 package bot.tafs.wear
 
 import bot.tafs.watchlink.AskLine
+import bot.tafs.watchlink.DecisionLine
 import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.NotAccepted
 import bot.tafs.watchlink.TafLine
@@ -9,6 +10,7 @@ import bot.tafs.watchlink.WatchRequest
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -272,5 +274,100 @@ class WatchModelTest {
     model.halt("taf_1")
     assertEquals(WatchModel.Outcome.Halting("Refunds"), during)
     assertEquals(WatchModel.Outcome.Done("Halted"), model.outcome.value)
+  }
+
+  // MARK: Your brief (behind a switch)
+
+  private val payDecision = DecisionLine("d-pay", "Pay bill 0412?", "Bill pay", "by Fri 12:00", refKind = "hold", refId = "ce_1", holdId = "hold_1")
+  private val signIn = DecisionLine("d-bank", "Sign in to the bank again?", urgent = true, cantWait = "Bill pay can't run until then.", refKind = "connection", refId = "bank")
+  private val brief = WatchReply.Brief(
+    title = "Your brief",
+    whenLine = "Morning brief · 08:00 · next at 18:00",
+    decisions = listOf(signIn, payDecision),
+    urgent = "Urgent",
+    done = "Done since last evening",
+    doneCases = listOf("Atelier Dubois", "Brio"),
+    rest = "14 more wait and need nothing now",
+  )
+
+  private fun briefReads(r: WatchRequest): Asked = when (r) {
+    is WatchRequest.NeedsYou -> Asked.Answered(needsYou)
+    is WatchRequest.Brief -> Asked.Answered(brief)
+    else -> Asked.Answered(tafs)
+  }
+
+  /** The switch is off, and a model told nothing about it is off too: the watch asks and shows exactly what it did before. */
+  @Test fun withTheSwitchOffNothingChanges() = runTest {
+    assertFalse("Your brief on the watch waits for the owner's yes", BRIEF_ON_WATCH)
+    for (model in listOf<(PhoneLink) -> WatchModel>({ WatchModel(it, now = { t }) }, { WatchModel(it, now = { t }, briefOn = false) })) {
+      val phone = Phone(::briefReads)
+      val watch = model(phone)
+      watch.refresh()
+      assertEquals(listOf(WatchRequest.NeedsYou(t), WatchRequest.Tafs(t)), phone.asked)
+      assertEquals(WatchModel.Shown.Read(WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call)), WatchModel.TafsRead(tafs.tafs, false)), watch.shown.value)
+    }
+  }
+
+  @Test fun withTheSwitchOnTheBriefIsReadAndShownInNeedsYousPlace() = runTest {
+    val phone = Phone(::briefReads)
+    val model = WatchModel(phone, now = { t }, briefOn = true)
+    model.refresh()
+    // Reads only: Needs you (for the tile and Refuse), the brief, then Your tafs.
+    assertEquals(listOf(WatchRequest.NeedsYou(t), WatchRequest.Brief(t), WatchRequest.Tafs(t)), phone.asked)
+    val shown = model.shown.value as WatchModel.Shown.Read
+    assertEquals(brief, shown.brief)
+    assertEquals(WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call)), shown.needsYou)
+    // In memory only: put away, it's forgotten.
+    model.forget()
+    assertEquals(WatchModel.Shown.Asking, model.shown.value)
+  }
+
+  /** No brief, or a phone that can't say (an older one refuses the path), and Needs you shows as today. */
+  @Test fun withNoBriefNeedsYouStays() = runTest {
+    for (answer in listOf(Asked.Answered(WatchReply.NoBrief), Asked.Answered(WatchReply.Refused(NotAccepted.UNKNOWN_PATH)), Asked.Unreachable, Asked.NotUnderstood)) {
+      val model = WatchModel(Phone { if (it is WatchRequest.Brief) answer else reads(it) }, now = { t }, briefOn = true)
+      model.refresh()
+      assertEquals(answer.toString(), WatchModel.Shown.Read(WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call)), WatchModel.TafsRead(tafs.tafs, false)), model.shown.value)
+    }
+  }
+
+  /** A signed-out phone shows nothing kept, brief or not; the brief isn't asked for then. */
+  @Test fun aSignedOutPhoneIsNotAskedForTheBrief() = runTest {
+    val phone = Phone { Asked.Answered(WatchReply.SignedOut) }
+    val model = WatchModel(phone, now = { t }, briefOn = true)
+    model.refresh()
+    assertEquals(WatchModel.Shown.SignedOut, model.shown.value)
+    assertEquals(listOf(WatchRequest.NeedsYou(t)), phone.asked)
+  }
+
+  /** Refuse on a decision only where Needs you's own read offers it, matched by hold id; every other decision is Open on phone. */
+  @Test fun refuseIsOfferedOnlyWhereNeedsYouOffersIt() {
+    val read = WatchModel.Shown.Read(WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call)), null, brief)
+    assertEquals("hold_1", read.refusable(payDecision))
+    assertNull("not a held call", read.refusable(signIn))
+    // The phone said the same call can't be refused from the wrist: no Refuse.
+    val notRefusable = read.copy(needsYou = WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call.copy(refusable = false))))
+    assertNull(notRefusable.refusable(payDecision))
+    // A held call Needs you doesn't list (answered meanwhile): no Refuse.
+    assertNull(read.refusable(payDecision.copy(holdId = "hold_2")))
+    assertNull(read.refusable(payDecision.copy(holdId = null)))
+  }
+
+  /** The brief's Refuse is Needs you's own: the same request, sent only from a watch with a lock, unlocked. */
+  @Test fun theBriefsRefuseIsNeedsYousOwn() = runTest {
+    val locked = Phone(::briefReads)
+    val lockedModel = WatchModel(locked, now = { t }, unlocked = { false }, briefOn = true)
+    lockedModel.refresh()
+    lockedModel.refuse((lockedModel.shown.value as WatchModel.Shown.Read).refusable(payDecision)!!)
+    assertEquals(WatchModel.Outcome.NeedsLock, lockedModel.outcome.value)
+    assertTrue("nothing to refuse sent", locked.asked.none { it is WatchRequest.Refuse })
+
+    val phone = Phone { if (it is WatchRequest.Refuse) Asked.Answered(WatchReply.Done("Refused")) else briefReads(it) }
+    val model = WatchModel(phone, now = { t }, unlocked = { true }, briefOn = true)
+    model.refresh()
+    phone.asked.clear()
+    model.refuse((model.shown.value as WatchModel.Shown.Read).refusable(payDecision)!!)
+    assertEquals(WatchModel.Outcome.Done("Refused"), model.outcome.value)
+    assertEquals(listOf(WatchRequest.Refuse(t, "hold_1"), WatchRequest.NeedsYou(t), WatchRequest.Brief(t), WatchRequest.Tafs(t)), phone.asked)
   }
 }
