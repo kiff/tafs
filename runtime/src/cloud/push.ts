@@ -186,8 +186,12 @@ interface AlertBody {
   outcome?: unknown;
   action?: unknown;
   entity_id?: unknown;
-  /** `money_out`: KIFF's word whether the held call moves money when approved (its Card counts an amount in a currency). */
-  hold?: { id?: unknown; expires_at?: unknown; money_out?: unknown } | null;
+  /**
+   * KIFF's word, from the operation's owner-approved profile, whether the held call moves money (`money_out`) and whether it
+   * may wait to be read with others (`can_wait`: true only for a read, a draft, a write or bookkeeping; false when it moves
+   * money or sends outside the company). Each is left out when KIFF can't tell.
+   */
+  hold?: { id?: unknown; expires_at?: unknown; money_out?: unknown; can_wait?: unknown } | null;
   /** On a pack request's alerts: the request, who asked (their sign-in subject) and an admin's note. */
   request?: { id?: unknown; kind?: unknown; pack?: unknown; status?: unknown; asked_by?: unknown; note?: unknown } | null;
   /** On a credits warning: the share ("80" or "100") and, at 100, why the tafs wait. */
@@ -231,13 +235,14 @@ export interface AlertDeps {
  * Whether a held call can wait for the next brief by tafs cloud's rules (design v2.1 §7: only the truly urgent alert at
  * once), from what KIFF's alert carries. Fail closed: it waits only when it's positively known that it can, which is
  * all of these: the account's brief times are known (`zone`), the call expires at or after the next brief, and KIFF says
- * it moves no money (`hold.money_out === false`). A field KIFF doesn't send, an unreadable expiry, or an account whose
+ * it may wait (`hold.can_wait === true`: never a call that moves money or sends to someone outside, which is time-sensitive).
+ * A field KIFF doesn't send, an unreadable expiry, or an account whose
  * brief was never read: at once, never a held call missed on a guess. "Ask me at once" is a taf's own setting in tafs
  * cloud, not KIFF's; a halted taf or a blocked connection holds no call, so those rules don't arise here.
  */
 export function heldWaitsForBrief(hold: AlertBody["hold"], zone: string | undefined, now: Date): boolean {
   if (!hold || !zone) return false;
-  if (hold.money_out !== false) return false;
+  if (hold.can_wait !== true || hold.money_out === true) return false;
   const expires = typeof hold.expires_at === "string" ? Date.parse(hold.expires_at) : Number.NaN;
   if (Number.isNaN(expires)) return false;
   return expires >= briefTimes(now, zone).next_at.getTime();
