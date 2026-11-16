@@ -1220,6 +1220,189 @@ export const RECIPES = [
     }
   },
   {
+    "id": "returns-by-email",
+    "title": "Returns by email",
+    "category": "customers",
+    "order": 4,
+    "line": "Answers return requests with your return steps, and refunds a return once you've marked it received, within the Card.",
+    "headline": "No return request waits in the inbox.",
+    "today": "Each return is an email, a check and a refund by hand, and the customer waits days to hear back.",
+    "say": "Handle return requests from my inbox or help desk. Reply with my return steps, up to 30 a day. Once I mark a return received in my shop, refund it up to 80 EUR each and 400 EUR a day, only back to the original payment. Anything bigger, or a return I haven't marked received, waits for me. Never change or cancel an order.",
+    "connections": [
+      [
+        "gmail",
+        "intercom",
+        "zendesk"
+      ],
+      [
+        "shopify"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Replies with the return steps, up to 30 a day",
+        "Refunds up to 80 EUR each and 400 EUR a day, back to the original payment, once a return is marked received"
+      ],
+      "holds": [
+        "A refund over 80 EUR, or past 400 EUR in a day",
+        "A refund for a return not marked received"
+      ],
+      "never": [
+        "A refund to another payment method",
+        "An order edit or cancellation"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Rücksendungen per E-Mail",
+        "headline": "Keine Rücksendeanfrage wartet im Posteingang.",
+        "today": "Jede Rücksendung ist eine E-Mail, eine Prüfung und eine Erstattung von Hand, und die Kundschaft wartet tagelang auf Antwort.",
+        "line": "Beantwortet Rücksendeanfragen mit deinen Rücksendeschritten und erstattet eine Rücksendung, sobald du sie als eingegangen markiert hast, im Rahmen der Card.",
+        "say": "Bearbeite Rücksendeanfragen aus meinem Posteingang oder Helpdesk. Antworte mit meinen Rücksendeschritten, bis zu 30 Mal am Tag. Sobald ich eine Rücksendung in meinem Shop als eingegangen markiere, erstatte sie bis 80 EUR pro Stück und 400 EUR am Tag, nur auf die ursprüngliche Zahlung. Alles Größere, oder eine Rücksendung, die ich nicht als eingegangen markiert habe, wartet auf mich. Ändere oder storniere nie eine Bestellung.",
+        "card": {
+          "allows": [
+            "Antworten mit den Rücksendeschritten, bis zu 30 am Tag",
+            "Erstattungen bis 80 EUR pro Stück und 400 EUR am Tag, auf die ursprüngliche Zahlung, sobald eine Rücksendung als eingegangen markiert ist"
+          ],
+          "holds": [
+            "Eine Erstattung über 80 EUR oder über 400 EUR an einem Tag",
+            "Eine Erstattung für eine Rücksendung, die nicht als eingegangen markiert ist"
+          ],
+          "never": [
+            "Eine Erstattung auf eine andere Zahlungsart",
+            "Eine Bestellung ändern oder stornieren"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Retours par e-mail",
+        "headline": "Aucune demande de retour n'attend dans la boîte de réception.",
+        "today": "Chaque retour, c'est un e-mail, une vérification et un remboursement à la main, et le client attend des jours une réponse.",
+        "line": "Répond aux demandes de retour avec vos étapes de retour, et rembourse un retour une fois que vous l'avez marqué reçu, dans les limites de la Card.",
+        "say": "Gère les demandes de retour de ma boîte de réception ou de mon support. Réponds avec mes étapes de retour, jusqu'à 30 par jour. Une fois que je marque un retour reçu dans ma boutique, rembourse-le jusqu'à 80 EUR chacun et 400 EUR par jour, seulement vers le paiement d'origine. Tout montant plus élevé, ou un retour que je n'ai pas marqué reçu, attend mon accord. Ne modifie ni n'annule jamais une commande.",
+        "card": {
+          "allows": [
+            "Des réponses avec les étapes de retour, jusqu'à 30 par jour",
+            "Remboursements jusqu'à 80 EUR chacun et 400 EUR par jour, vers le paiement d'origine, une fois un retour marqué reçu"
+          ],
+          "holds": [
+            "Un remboursement de plus de 80 EUR, ou au-delà de 400 EUR dans la journée",
+            "Un remboursement pour un retour non marqué reçu"
+          ],
+          "never": [
+            "Un remboursement vers un autre moyen de paiement",
+            "Une modification ou une annulation de commande"
+          ]
+        }
+      },
+      "es": {
+        "title": "Devoluciones por email",
+        "headline": "Ninguna solicitud de devolución espera en la bandeja de entrada.",
+        "today": "Cada devolución es un email, una revisión y un reembolso a mano, y el cliente espera días una respuesta.",
+        "line": "Responde las solicitudes de devolución con tus pasos de devolución y reembolsa una devolución cuando la marcas como recibida, dentro de la Card.",
+        "say": "Gestiona las solicitudes de devolución de mi bandeja de entrada o mi servicio de atención. Responde con mis pasos de devolución, hasta 30 al día. Cuando marque una devolución como recibida en mi tienda, reembólsala hasta 80 EUR cada una y 400 EUR al día, solo al pago original. Cualquier cosa mayor, o una devolución que no he marcado como recibida, me espera. Nunca modifiques ni canceles un pedido.",
+        "card": {
+          "allows": [
+            "Respuestas con los pasos de devolución, hasta 30 al día",
+            "Reembolsos de hasta 80 EUR cada uno y 400 EUR al día, al pago original, cuando una devolución está marcada como recibida"
+          ],
+          "holds": [
+            "Un reembolso de más de 80 EUR, o por encima de 400 EUR en un día",
+            "Un reembolso de una devolución no marcada como recibida"
+          ],
+          "never": [
+            "Un reembolso a otro método de pago",
+            "Modificar o cancelar un pedido"
+          ]
+        }
+      },
+      "it": {
+        "title": "Resi via email",
+        "headline": "Nessuna richiesta di reso aspetta nella casella di posta.",
+        "today": "Ogni reso è un'email, un controllo e un rimborso a mano, e il cliente aspetta giorni una risposta.",
+        "line": "Risponde alle richieste di reso con i tuoi passaggi di reso e rimborsa un reso quando l'hai segnato come ricevuto, nei limiti della Card.",
+        "say": "Gestisci le richieste di reso dalla mia casella di posta o dalla mia assistenza. Rispondi con i miei passaggi di reso, fino a 30 al giorno. Quando segno un reso come ricevuto nel mio negozio, rimborsalo fino a 80 EUR ciascuno e 400 EUR al giorno, solo sul pagamento originale. Qualsiasi importo maggiore, o un reso che non ho segnato come ricevuto, aspetta me. Non modificare né annullare mai un ordine.",
+        "card": {
+          "allows": [
+            "Risposte con i passaggi di reso, fino a 30 al giorno",
+            "Rimborsi fino a 80 EUR ciascuno e 400 EUR al giorno, sul pagamento originale, quando un reso è segnato come ricevuto"
+          ],
+          "holds": [
+            "Un rimborso oltre 80 EUR, o oltre 400 EUR in un giorno",
+            "Un rimborso per un reso non segnato come ricevuto"
+          ],
+          "never": [
+            "Un rimborso su un altro metodo di pagamento",
+            "Modificare o annullare un ordine"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Devoluções por email",
+        "headline": "Nenhum pedido de devolução espera na caixa de entrada.",
+        "today": "Cada devolução é um email, uma verificação e um reembolso à mão, e o cliente espera dias por uma resposta.",
+        "line": "Responde aos pedidos de devolução com os seus passos de devolução e reembolsa uma devolução depois de a marcar como recebida, dentro da Card.",
+        "say": "Trata dos pedidos de devolução da minha caixa de entrada ou do meu apoio ao cliente. Responde com os meus passos de devolução, até 30 por dia. Quando eu marcar uma devolução como recebida na minha loja, reembolsa-a até 80 EUR cada e 400 EUR por dia, só para o pagamento original. Qualquer valor maior, ou uma devolução que eu não marquei como recebida, espera por mim. Nunca alteres nem canceles uma encomenda.",
+        "card": {
+          "allows": [
+            "Respostas com os passos de devolução, até 30 por dia",
+            "Reembolsos até 80 EUR cada e 400 EUR por dia, para o pagamento original, depois de uma devolução estar marcada como recebida"
+          ],
+          "holds": [
+            "Um reembolso acima de 80 EUR, ou acima de 400 EUR num dia",
+            "Um reembolso de uma devolução não marcada como recebida"
+          ],
+          "never": [
+            "Um reembolso para outro meio de pagamento",
+            "Alterar ou cancelar uma encomenda"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Retouren per e-mail",
+        "headline": "Geen retourverzoek wacht in de inbox.",
+        "today": "Elke retour is een e-mail, een controle en een terugbetaling met de hand, en de klant wacht dagen op antwoord.",
+        "line": "Beantwoordt retourverzoeken met jouw retourstappen en betaalt een retour terug zodra je die als ontvangen hebt gemarkeerd, binnen de Card.",
+        "say": "Handel retourverzoeken uit mijn inbox of helpdesk af. Antwoord met mijn retourstappen, tot 30 per dag. Zodra ik een retour in mijn winkel als ontvangen markeer, betaal die terug tot 80 EUR per stuk en 400 EUR per dag, alleen naar de oorspronkelijke betaling. Alles wat groter is, of een retour die ik niet als ontvangen heb gemarkeerd, wacht op mij. Wijzig of annuleer nooit een bestelling.",
+        "card": {
+          "allows": [
+            "Antwoorden met de retourstappen, tot 30 per dag",
+            "Terugbetalingen tot 80 EUR per stuk en 400 EUR per dag, naar de oorspronkelijke betaling, zodra een retour als ontvangen is gemarkeerd"
+          ],
+          "holds": [
+            "Een terugbetaling boven 80 EUR, of boven 400 EUR op één dag",
+            "Een terugbetaling voor een retour die niet als ontvangen is gemarkeerd"
+          ],
+          "never": [
+            "Een terugbetaling naar een ander betaalmiddel",
+            "Een bestelling wijzigen of annuleren"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Zwroty przez e-mail",
+        "headline": "Żadna prośba o zwrot nie czeka w skrzynce.",
+        "today": "Każdy zwrot to e-mail, sprawdzenie i zwrot pieniędzy ręcznie, a klient czeka dniami na odpowiedź.",
+        "line": "Odpowiada na prośby o zwrot, podając twoje kroki zwrotu, i zwraca pieniądze, gdy oznaczysz zwrot jako otrzymany, w ramach Card.",
+        "say": "Obsługuj prośby o zwrot z mojej skrzynki lub helpdesku. Odpowiadaj, podając moje kroki zwrotu, do 30 razy dziennie. Gdy oznaczę zwrot jako otrzymany w moim sklepie, zwróć pieniądze do 80 EUR każdy i 400 EUR dziennie, tylko na pierwotną płatność. Wszystko większe, albo zwrot, którego nie oznaczyłem jako otrzymany, czeka na mnie. Nigdy nie zmieniaj ani nie anuluj zamówienia.",
+        "card": {
+          "allows": [
+            "Odpowiedzi z krokami zwrotu, do 30 dziennie",
+            "Zwroty pieniędzy do 80 EUR każdy i 400 EUR dziennie, na pierwotną płatność, gdy zwrot jest oznaczony jako otrzymany"
+          ],
+          "holds": [
+            "Zwrot pieniędzy powyżej 80 EUR lub powyżej 400 EUR w ciągu dnia",
+            "Zwrot pieniędzy za zwrot nieoznaczony jako otrzymany"
+          ],
+          "never": [
+            "Zwrot pieniędzy na inną metodę płatności",
+            "Zmiana lub anulowanie zamówienia"
+          ]
+        }
+      }
+    }
+  },
+  {
     "id": "book-and-move-appointments",
     "title": "Book and move appointments",
     "category": "operations",
