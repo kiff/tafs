@@ -211,6 +211,9 @@ export interface DecisionWords {
   holdQuestion: (taf: string) => string;
   holdMeanwhile: string;
   stepMeanwhile: string;
+  connectionQuestion: (vendor: string) => string;
+  signInAgain: string;
+  connectionMeanwhile: (taf: string, vendor: string) => string;
 }
 
 /**
@@ -240,6 +243,22 @@ export function stepDecision(s: { handoff: string; what: string; since: string; 
     answers: [{ words: s.words.done, answer: "done" }, { words: s.words.skip, answer: "skip" }],
     meanwhile: w.stepMeanwhile,
     deadline: s.expires, since: s.since,
+  };
+}
+
+/**
+ * A taf's connection that needs its owner to sign in again, as a decision (§7.5, 2: ref kind connection). It blocks the
+ * taf's work with that app, so it's urgent (tafs cloud's rule: a blocked connection). One per taf and app; any other
+ * status isn't a decision.
+ */
+export function connectionDecision(c: { vendor: string; status: string }, taf: BriefDecisionIn["taf"], w: DecisionWords): BriefDecisionIn | undefined {
+  if (c.status !== "needs_reconnect" || !c.vendor) return undefined;
+  return {
+    id: `connection:${taf.id}:${c.vendor}`, ref: { kind: "connection", id: c.vendor, taf: taf.id }, taf,
+    question: w.connectionQuestion(c.vendor),
+    answers: [{ words: w.signInAgain, answer: "sign_in" }],
+    meanwhile: w.connectionMeanwhile(taf.name, c.vendor),
+    blocked: true,
   };
 }
 

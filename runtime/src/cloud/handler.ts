@@ -61,7 +61,7 @@ import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
 import { findLabel, LabelRefusal, labelName, labelsView, readLabels, saveLabels, withLabelChanged, withTafLabels } from "./labels.js";
 import { BusinessRefusal, businessView, readBusiness, saveBusiness } from "./business.js";
 import { MissionRefusal, planMission, readMissions, saveMissions } from "./missions.js";
-import { briefLaterKey, buildBrief, type BriefDecisionIn, type DecisionWords, holdDecision, laterOf, putOff, stepDecision } from "./brief.js";
+import { briefLaterKey, buildBrief, connectionDecision, type BriefDecisionIn, type DecisionWords, holdDecision, laterOf, putOff, stepDecision } from "./brief.js";
 import { logDelivered, logPage, readLog } from "./missionlog.js";
 
 /**
@@ -7399,14 +7399,17 @@ async function briefInputs(event: HTTPEvent, me: KIFFIdentity, deps: Deps, now: 
   ]);
   // A taf being removed, or one whose removal finished, is gone from the brief with its calls and steps (M7).
   const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent));
-  const [recent, labelSet, kept] = await Promise.all([
+  // The account's connections, from planque, for the ones that need signing in again: a list that can't be read adds none.
+  const [recent, labelSet, kept, conns] = await Promise.all([
     Promise.all(tafs.map((t) => deps.agents.runs(me.tenantID, t.id, false, 20).catch(() => [] as Run[]))),
     deps.coach ? readLabels(deps.coach, me.tenantID).catch(() => undefined) : undefined,
     deps.coach ? deps.coach.get(briefLaterKey(me.tenantID, me.subject)).catch(() => undefined) : undefined,
+    deps.planqueBase ? accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => []) : [],
   ]);
   const known = new Set(labelSet?.labels.map((l) => l.id) ?? []);
   const tafOf = (t: Taf) => ({ id: t.id, name: t.name, labels: (t.labels ?? []).filter((id) => known.has(id)) });
-  const dw: DecisionWords = { approve: w.brief_approve, refuse: w.brief_refuse, holdQuestion: w.brief_hold_question, holdMeanwhile: w.brief_hold_meanwhile, stepMeanwhile: w.brief_step_meanwhile };
+  const dw: DecisionWords = { approve: w.brief_approve, refuse: w.brief_refuse, holdQuestion: w.brief_hold_question, holdMeanwhile: w.brief_hold_meanwhile, stepMeanwhile: w.brief_step_meanwhile,
+    connectionQuestion: w.brief_connection_question, signInAgain: w.brief_sign_in_again, connectionMeanwhile: w.brief_connection_meanwhile };
   const byAgent = new Map(tafs.map((t) => [t.kiffAgent, t]));
   const decisions: BriefDecisionIn[] = [
     ...kiff.held.flatMap((h) => {
@@ -7415,6 +7418,12 @@ async function briefInputs(event: HTTPEvent, me: KIFFIdentity, deps: Deps, now: 
       return d ? [d] : [];
     }),
     ...tafs.flatMap((t, i) => (recent[i] ?? []).flatMap((r) => yourStepsOf(r, lang).map((st) => stepDecision(st, tafOf(t), dw)))),
+    // One per taf and app, however many connections planque lists for them.
+    ...[...new Map(conns.flatMap((c) => {
+      const t = byAgent.get(c.agent);
+      const d = t ? connectionDecision(c, tafOf(t), dw) : undefined;
+      return d ? [[d.id, d] as const] : [];
+    })).values()],
   ];
   return { lang, w, tafs: tafs.map(tafOf), decisions, labelSet, later: laterOf(kept, now) };
 }
