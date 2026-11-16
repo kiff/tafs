@@ -1,0 +1,1 @@
+- Conta e os outros painéis ficam parados após um deslize rápido, e «Terminar sessão» vê-se por inteiro.

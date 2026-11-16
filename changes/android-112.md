@@ -1,0 +1,1 @@
+- **Android 1.33.1 (112): Account no longer bounces after a fast swipe.** Every sheet stays still once a fling reaches the end of its list, and Account's last row (Sign out) shows in full (docs/android-app.md).

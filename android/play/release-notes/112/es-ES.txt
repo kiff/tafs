@@ -1,0 +1,1 @@
+- Cuenta y las demás hojas ya no se mueven tras un deslizamiento rápido, y «Cerrar sesión» se ve entero.
