@@ -1193,7 +1193,11 @@ final class AppModel: ObservableObject {
             prepared = try kiff.prepareRemoveDevice(device.id, signedAt: signedAt)
             let named = device.name ?? Words.Settings.Devices.thisDevice
             signature = try await signer.signApproval(prepared.message, reason: PromptReason.pick(what, mac: Words.Settings.Devices.signOutPromptMac(device: named)))
-        } catch { return false }
+        } catch {
+            // Said, never silent: not confirmed, or why it couldn't be signed.
+            if gen == accountGeneration { devicesError = ApprovalReadiness.notDone(error, what: what) }
+            return false
+        }
         guard gen == accountGeneration else { return false }
         do {
             try await kiff.removeDevice(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
@@ -1319,10 +1323,8 @@ final class AppModel: ObservableObject {
             prepared = try kiff.preparePasskeyRemoval(id, signedAt: signedAt)
             signature = try await signer.signApproval(prepared.message, reason: reason)
         } catch {
-            // The person's own cancel says nothing; a key that couldn't sign says why.
-            if gen == accountGeneration, ApprovalReadiness.cancelled(error) == nil {
-                passkeysError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
-            }
+            // A closed prompt says it wasn't confirmed; a key that couldn't sign says why.
+            if gen == accountGeneration { passkeysError = ApprovalReadiness.notDone(error, what: reason) }
             return false
         }
         guard gen == accountGeneration else { return false }
@@ -3447,7 +3449,11 @@ final class AppModel: ObservableObject {
         let signature: String
         do {
             signature = try await signer.signApproval(message, reason: Words.Taf.Remove.prompt(taf: "\(taf.name)"))
-        } catch { return nil }
+        } catch {
+            // A closed prompt or a face not recognised says so, never a button that just comes back.
+            guard gen == accountGeneration else { return nil }
+            return ApprovalReadiness.notDone(error, what: Words.Taf.Remove.button, unconfirmedWords: Words.Taf.Remove.notConfirmed)
+        }
         guard gen == accountGeneration else { return nil }
 
         var cardsLeft = 0
@@ -3507,7 +3513,10 @@ final class AppModel: ObservableObject {
         let signature: String
         do {
             signature = try await signer.signApproval(message, reason: words.title.isEmpty ? words.button : words.title)
-        } catch { return nil }
+        } catch {
+            guard gen == accountGeneration else { return nil }
+            return ApprovalReadiness.notDone(error, what: words.button, unconfirmedWords: Words.Taf.Remove.notConfirmed)
+        }
         guard gen == accountGeneration else { return nil }
         var cardsLeft = 0
         // Home's Cards, and any a refused Discard named that Home didn't.

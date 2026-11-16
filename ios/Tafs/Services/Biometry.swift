@@ -122,6 +122,18 @@ enum ApprovalReadiness: Equatable {
         }
     }
 
+    /// A prompt the person closed, or a face or finger not recognised: nothing was confirmed.
+    static func unconfirmed(_ error: Error) -> Bool {
+        cancelled(error) != nil || (error as? LAError)?.code == .authenticationFailed
+    }
+
+    /// What a destructive action says when its prompt didn't confirm it, never silence: not confirmed,
+    /// in `unconfirmed`'s words (a closed prompt, a face or finger not recognised), else why.
+    static func notDone(_ error: Error, what: String, unconfirmedWords: String? = nil) -> String {
+        unconfirmed(error) ? unconfirmedWords ?? Words.Common.didntGoThroughUnconfirmed(what: "\(what)")
+                           : Words.Common.didntGoThrough(what: "\(what)", why: "\(error.localizedDescription)")
+    }
+
     /// Why an approval didn't go through, from the prompt's error: cancelled, not recognised,
     /// or the device's state. The request is kept.
     static func notApproved(_ error: Error, kind: String?) -> String {

@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: a removal you didn't confirm says so**: closing Face ID or Touch ID on Remove for good, Discard, signing a device out or removing a passkey says nothing changed, instead of the button just coming back ([docs/ios-app.md](docs/ios-app.md)).

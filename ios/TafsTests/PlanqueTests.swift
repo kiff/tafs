@@ -1,4 +1,5 @@
 import CryptoKit
+import LocalAuthentication
 import XCTest
 @testable import Tafs
 
@@ -8,10 +9,13 @@ final class FaceIDSigner: ApprovalSigning {
     var prompts: [String] = []
     var quiet: [String] = []
     var refuse = false
+    /// The prompt's own error, such as `LAError(.userCancel)` for a prompt the person closed.
+    var throwing: Error?
 
     var publicKeyDER: Data { Data([0x30, 0x59, 0x01]) }
 
     func sign(_ message: Data, reason: String) async throws -> String {
+        if let throwing { throw throwing }
         if refuse { throw ApprovalSigner.SignerError.notAuthenticated }
         prompts.append(String(decoding: message, as: UTF8.self))
         return "signature"
@@ -753,6 +757,27 @@ final class PlanqueTests: XCTestCase {
             XCTAssertFalse(words.contains("Kept"), words)
             Keychain.delete(AppModel.planqueAccount)
         }
+    }
+
+    /// Remove for good with Face ID closed, or a face not recognised, says so and changes nothing:
+    /// never a button that just comes back. A key that couldn't sign says why.
+    func testARemovalNobodyConfirmedSaysSoAndChangesNothing() async throws {
+        let (model, refunds, signer) = try await sharedModel(withChargebacks: false)
+        StubProtocol.sent = []
+        for error: Error in [LAError(.userCancel), LAError(.authenticationFailed)] {
+            signer.throwing = error
+            let said = await model.removeTaf(refunds)
+            XCTAssertEqual(said, "Not removed. Nothing changed.")
+            XCTAssertEqual(said, Words.Taf.Remove.notConfirmed)
+        }
+        signer.throwing = nil
+        signer.refuse = true
+        let failed = try XCTUnwrap(await model.removeTaf(refunds))
+        XCTAssertTrue(failed.hasPrefix("Remove didn't go through."), failed)
+        XCTAssertTrue(sent("DELETE", "cloud.test", "/v1/tafs/depl_1").isEmpty, "nothing is removed")
+        XCTAssertTrue(sent("POST", "api.test", "/v1/me/mandates/refunds-card/revoke").isEmpty, "no Card is revoked")
+        XCTAssertNotNil(model.taf(refunds))
+        Keychain.delete(AppModel.planqueAccount)
     }
 
     /// The words say only what tafs cloud did: connections it ended are said once, ones it
