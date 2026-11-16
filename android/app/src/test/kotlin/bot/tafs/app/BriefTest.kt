@@ -7,6 +7,7 @@ import bot.tafs.app.app.AppState
 import bot.tafs.app.app.BriefRoutes
 import bot.tafs.app.app.Mode
 import bot.tafs.app.kiff.Brief
+import bot.tafs.app.kiff.TafsCloud
 import bot.tafs.app.kiff.InMemorySecretStore
 import bot.tafs.app.kiff.KiffClient
 import bot.tafs.app.kiff.MissionLogPage
@@ -215,6 +216,19 @@ class BriefTest {
     assertTrue("taken: it moves to the next brief", m.state.value.briefDecisions.isEmpty())
     assertEquals(listOf("/v1/brief/decisions/d1/later", "/v1/brief/decisions/d1/later"), transport.requestsTo("POST /v1/brief/decisions/d1/later").map { java.net.URI(it.url).path })
     assertTrue("Later signs nothing", auth.asked.isEmpty())
+  }
+
+  /** The route's ids are `hold:<id>` and `step:<handoff>`, read raw: the `:` goes as is, anything else is escaped. */
+  @Test fun laterSendsTheDecisionsColonAsIs() = runTest {
+    transport.answer("POST /v1/brief/decisions/hold:ce_1/later", 200, "{}")
+    transport.answer("POST /v1/brief/decisions/step:a b/later", 200, "{}")
+    val cloud = TafsCloud(transport, token = "at_1")
+    cloud.briefLater("hold:ce_1")
+    cloud.briefLater("step:a b")
+    assertEquals(
+      listOf("/v1/brief/decisions/hold:ce_1/later", "/v1/brief/decisions/step:a%20b/later"),
+      transport.requests.filter { it.method == "POST" }.map { java.net.URI(it.url).rawPath },
+    )
   }
 
   @Test fun laterIsNeverOfferedOnAnUrgentDecision() = runTest {

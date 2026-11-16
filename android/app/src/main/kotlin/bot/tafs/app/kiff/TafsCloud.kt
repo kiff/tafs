@@ -421,9 +421,12 @@ class TafsCloud(
     Brief.parse(String(send("GET", "/v1/brief" + (label?.let { "?label=${escaped(it)}" } ?: ""))))
   }
 
-  /** "Later": the decision moves to the next brief (§7.5). Throws when tafs cloud didn't take it, so the card stays. */
+  /**
+   * "Later": the decision moves to the next brief (§7.5). Throws when tafs cloud didn't take it, so the card stays. The id's `:`
+   * (`hold:<id>`, `step:<handoff>`) goes as is, as iOS sends it: a path may carry it, and the route reads the id raw.
+   */
   suspend fun briefLater(decision: String) {
-    send("POST", "/v1/brief/decisions/${escaped(decision)}/later", "{}".toByteArray())
+    send("POST", "/v1/brief/decisions/${escaped(decision).replace("%3A", ":")}/later", "{}".toByteArray())
   }
 
 
