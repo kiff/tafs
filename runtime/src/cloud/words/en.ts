@@ -314,6 +314,7 @@ export const en = {
   brief_hold_question: (taf: string) => `${taf} waits for your approval`,
   brief_hold_meanwhile: "Nothing is done until you answer.",
   brief_step_meanwhile: "Its run waits for this step.",
+  brief_by: (t: When) => `by ${bare(t)}`,
   brief_connection_question: (vendor: string) => `${vendor} needs you to sign in again`,
   brief_sign_in_again: "Sign in again",
   brief_connection_meanwhile: (taf: string, vendor: string) => `${taf} can't reach ${vendor} until then.`,

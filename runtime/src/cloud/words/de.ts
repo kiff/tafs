@@ -295,6 +295,7 @@ export const de: Words = {
   brief_hold_question: (taf) => `${taf} wartet auf deine Genehmigung`,
   brief_hold_meanwhile: "Bis du antwortest, passiert nichts.",
   brief_step_meanwhile: "Sein Lauf wartet auf diesen Schritt.",
+  brief_by: (t) => `bis ${t.day ? `${t.day} ` : ""}${t.hm}`,
   brief_connection_question: (vendor) => `${vendor}: bitte erneut anmelden`,
   brief_sign_in_again: "Erneut anmelden",
   brief_connection_meanwhile: (taf, vendor) => `${taf} erreicht ${vendor} bis dahin nicht.`,

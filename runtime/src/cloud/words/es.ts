@@ -295,6 +295,7 @@ export const es: Words = {
   brief_hold_question: (taf) => `${taf} espera tu aprobación`,
   brief_hold_meanwhile: "No se hace nada hasta que respondas.",
   brief_step_meanwhile: "Su ejecución espera este paso.",
+  brief_by: (t) => `antes de ${t.day ? `el ${t.day} a ` : ""}las ${t.hm}`,
   brief_connection_question: (vendor) => `${vendor}: vuelve a iniciar sesión`,
   brief_sign_in_again: "Volver a iniciar sesión",
   brief_connection_meanwhile: (taf, vendor) => `${taf} no puede acceder a ${vendor} hasta entonces.`,
