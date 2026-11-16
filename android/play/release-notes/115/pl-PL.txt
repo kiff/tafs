@@ -1,0 +1,2 @@
+- Pytaj swoje tafs z zegarka z Wear OS: mów i odsłuchaj wynik. Ten telefon przekazuje pytania zegarka do tafs, podpisane własnym kluczem, i sam niczego nie pokazuje.
+- Poprawione teksty po francusku, włosku, portugalsku i polsku.

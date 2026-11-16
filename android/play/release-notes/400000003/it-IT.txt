@@ -1,0 +1,6 @@
+L'app tafs per Wear OS, compagna dell'app tafs sul telefono.
+- Chiedi ai tuoi tafs dall'orologio: parla e ascolta il risultato.
+- «Ti aspetta» e «I tuoi tafs» al polso, letti dal telefono.
+- Rifiuta una chiamata trattenuta o blocca un taf dall'orologio. Approvare resta sul telefono.
+- Quando niente ti aspetta, un segno di spunta verde te lo dice.
+- Una scheda per chiedere, con quanti ti aspettano a orologio sbloccato.

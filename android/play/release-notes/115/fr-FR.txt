@@ -1,0 +1,2 @@
+- Demandez à vos tafs depuis votre montre Wear OS : parlez, et écoutez le résultat. Ce téléphone transmet les demandes de la montre à tafs, signées avec sa propre clé, et n'affiche rien lui-même.
+- Textes corrigés en français, italien, portugais et polonais.

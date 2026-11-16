@@ -1,0 +1,2 @@
+- Ask your tafs from your Wear OS watch: speak, and hear the result. This phone passes the watch's requests to tafs, signed with its own key, and shows nothing itself.
+- Words fixed in French, Italian, Portuguese and Polish.

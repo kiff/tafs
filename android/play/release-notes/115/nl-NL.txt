@@ -1,0 +1,2 @@
+- Vraag je tafs iets vanaf je Wear OS-horloge: spreek, en hoor het resultaat. Deze telefoon geeft de vragen van het horloge door aan tafs, ondertekend met zijn eigen sleutel, en toont zelf niets.
+- Teksten verbeterd in het Frans, Italiaans, Portugees en Pools.
