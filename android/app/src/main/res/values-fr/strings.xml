@@ -2140,6 +2140,7 @@
     </plurals>
     <string name="taf_remove_done">Son planning, ses chats, ses rapports d\'exécution, sa mémoire et sa clé sont supprimés, et le nom %1$s redevient libre. Les reçus de KIFF restent.</string>
     <string name="taf_remove_finishes_on_refresh">Si la suppression a commencé, tafs la termine à la prochaine actualisation.</string>
+    <string name="taf_remove_not_confirmed">Pas supprimé. Rien n\'a changé.</string>
     <string name="taf_remove_not_finished">Non terminé : éléments non supprimés : %1$s. tafs réessaie à chaque actualisation.</string>
     <string name="taf_remove_not_finished_after">%1$s Non terminé : éléments non supprimés : %2$s. tafs réessaie à chaque actualisation.</string>
     <string name="taf_remove_prompt">Supprimer définitivement %1$s</string>

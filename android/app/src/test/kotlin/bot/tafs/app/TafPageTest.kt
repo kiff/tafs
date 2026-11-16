@@ -369,11 +369,13 @@ class TafPageTest {
     assertTrue(transport.requests.none { it.method == "DELETE" || it.url.contains("/mandates/") })
   }
 
-  @Test fun aRemovalNobodyConfirmedDoesNothing() = runTest {
+  // The owner's phone, 16 Nov: a closed prompt dimmed the button, which came back with no word. It still removes nothing, and
+  // now says so.
+  @Test fun aRemovalNobodyConfirmedDoesNothingAndSaysSo() = runTest {
     reads()
     auth.confirms = false
     val m = model()
-    assertNull(m.removeTaf("refunds-1"))
+    assertEquals("Not removed. Nothing changed.", m.removeTaf("refunds-1"))
     assertTrue(transport.requests.none { it.method == "DELETE" || it.url.contains("/mandates/") })
   }
 

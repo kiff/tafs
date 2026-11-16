@@ -77,6 +77,7 @@
   },
   "taf.remove.done": "Sein Zeitplan, seine Chats, Laufberichte, sein Gedächtnis und sein Schlüssel sind gelöscht, und der Name {taf} ist frei. KIFFs Belege bleiben.",
   "taf.remove.finishes_on_refresh": "Falls das Entfernen begonnen hat, schließt tafs es bei der nächsten Aktualisierung ab.",
+  "taf.remove.not_confirmed": "Nicht entfernt. Nichts wurde geändert.",
   "taf.remove.not_finished": "Nicht abgeschlossen, nicht entfernt: {steps}. tafs versucht es bei jeder Aktualisierung erneut.",
   "taf.remove.not_finished_after": "{cards} Nicht abgeschlossen, nicht entfernt: {failed}. tafs versucht es bei jeder Aktualisierung erneut.",
   "taf.remove.prompt": "{taf} endgültig entfernen",

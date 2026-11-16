@@ -77,6 +77,7 @@
   },
   "taf.remove.done": "Its schedule, chats, run reports, memory and key are deleted, and the name {taf} is free. KIFF's receipts stay.",
   "taf.remove.finishes_on_refresh": "If the removal began, tafs finishes it the next time it refreshes.",
+  "taf.remove.not_confirmed": "Not removed. Nothing changed.",
   "taf.remove.not_finished": "Not finished: its {steps} couldn't be removed. tafs tries again each time it refreshes.",
   "taf.remove.not_finished_after": "{cards} Not finished: its {failed} couldn't be removed. tafs tries again each time it refreshes.",
   "taf.remove.prompt": "Remove {taf} for good",

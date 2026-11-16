@@ -2140,6 +2140,7 @@
     </plurals>
     <string name="taf_remove_done">De planning, chats, runrapporten, het geheugen en de sleutel zijn verwijderd, en de naam %1$s is vrij. De ontvangstbewijzen van KIFF blijven.</string>
     <string name="taf_remove_finishes_on_refresh">Als het verwijderen is begonnen, rondt tafs het af bij de volgende vernieuwing.</string>
+    <string name="taf_remove_not_confirmed">Niet verwijderd. Er is niets veranderd.</string>
     <string name="taf_remove_not_finished">Niet afgerond: %1$s kon niet worden verwijderd. tafs probeert het bij elke vernieuwing opnieuw.</string>
     <string name="taf_remove_not_finished_after">%1$s Niet afgerond: %2$s kon niet worden verwijderd. tafs probeert het bij elke vernieuwing opnieuw.</string>
     <string name="taf_remove_prompt">%1$s definitief verwijderen</string>

@@ -81,6 +81,7 @@
   },
   "taf.remove.done": "Jego harmonogram, czaty, raporty z uruchomień, pamięć i klucz zostały usunięte, a nazwa {taf} jest wolna. Potwierdzenia KIFF zostają.",
   "taf.remove.finishes_on_refresh": "Jeśli usuwanie się zaczęło, tafs dokończy je przy następnym odświeżeniu.",
+  "taf.remove.not_confirmed": "Nie usunięto. Nic się nie zmieniło.",
   "taf.remove.not_finished": "Nie ukończono: nie udało się usunąć: {steps}. tafs próbuje ponownie przy każdym odświeżeniu.",
   "taf.remove.not_finished_after": "{cards} Nie ukończono: nie udało się usunąć: {failed}. tafs próbuje ponownie przy każdym odświeżeniu.",
   "taf.remove.prompt": "Usuń {taf} na zawsze",

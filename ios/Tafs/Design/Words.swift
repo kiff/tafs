@@ -4256,6 +4256,8 @@ enum Words {
             static func done(taf: String) -> String { Words.line("taf.remove.done", taf) }
             /// If the removal began, tafs finishes it the next time it refreshes.
             static var finishesOnRefresh: String { Words.line("taf.remove.finishes_on_refresh") }
+            /// Not removed. Nothing changed.
+            static var notConfirmed: String { Words.line("taf.remove.not_confirmed") }
             /// Not finished: its {steps} couldn't be removed. tafs tries again each time it refreshes.
             static func notFinished(steps: String) -> String { Words.line("taf.remove.not_finished", steps) }
             /// {cards} Not finished: its {failed} couldn't be removed. tafs tries again each time it refreshes.
