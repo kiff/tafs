@@ -1547,10 +1547,10 @@ export const RECIPES = [
     "title": "Returns by email",
     "category": "customers",
     "order": 4,
-    "line": "Answers return requests with your return steps, and refunds a return once you've marked it received, within the Card.",
+    "line": "Answers return requests with your return steps, and asks you to approve each refund once the return is back.",
     "headline": "No return request waits in the inbox.",
     "today": "Each return is an email, a check and a refund by hand, and the customer waits days to hear back.",
-    "say": "Handle return requests from my inbox or help desk. Reply with my return steps, up to 30 a day. Once I mark a return received in my shop, refund it up to 80 EUR each and 400 EUR a day, only back to the original payment. Anything bigger, or a return I haven't marked received, waits for me. Never change or cancel an order.",
+    "say": "Handle return requests from my inbox or help desk. Reply with my return steps, up to 30 a day. When a returned item is back with me, ask me to approve its refund, only back to the original payment: every refund waits for my yes, because you can't see what has arrived. Never change or cancel an order.",
     "connections": [
       [
         "gmail",
@@ -1563,11 +1563,11 @@ export const RECIPES = [
     ],
     "card": {
       "allows": [
-        "Replies with the return steps, up to 30 a day",
-        "Refunds up to 80 EUR each and 400 EUR a day, back to the original payment"
+        "Replies with the return steps, up to 30 a day"
       ],
       "holds": [
-        "A refund over 80 EUR, or past 400 EUR in a day"
+        "Every refund, back to the original payment, for your approval",
+        "A reply past 30 in a day"
       ],
       "never": [
         "A refund to another payment method",
@@ -1579,15 +1579,15 @@ export const RECIPES = [
         "title": "Rücksendungen per E-Mail",
         "headline": "Keine Rücksendeanfrage wartet im Posteingang.",
         "today": "Jede Rücksendung ist eine E-Mail, eine Prüfung und eine Erstattung von Hand, und die Kundschaft wartet tagelang auf Antwort.",
-        "line": "Beantwortet Rücksendeanfragen mit deinen Rücksendeschritten und erstattet eine Rücksendung, sobald du sie als eingegangen markiert hast, im Rahmen der Card.",
-        "say": "Bearbeite Rücksendeanfragen aus meinem Posteingang oder Helpdesk. Antworte mit meinen Rücksendeschritten, bis zu 30 Mal am Tag. Sobald ich eine Rücksendung in meinem Shop als eingegangen markiere, erstatte sie bis 80 EUR pro Stück und 400 EUR am Tag, nur auf die ursprüngliche Zahlung. Alles Größere, oder eine Rücksendung, die ich nicht als eingegangen markiert habe, wartet auf mich. Ändere oder storniere nie eine Bestellung.",
+        "line": "Beantwortet Rücksendeanfragen mit deinen Rücksendeschritten und bittet dich, jede Erstattung freizugeben, sobald die Rücksendung da ist.",
+        "say": "Bearbeite Rücksendeanfragen aus meinem Posteingang oder Helpdesk. Antworte mit meinen Rücksendeschritten, bis zu 30 Mal am Tag. Wenn ein zurückgeschickter Artikel bei mir angekommen ist, bitte mich, seine Erstattung freizugeben, nur auf die ursprüngliche Zahlung: Jede Erstattung wartet auf mein Ja, weil du nicht sehen kannst, was angekommen ist. Ändere oder storniere nie eine Bestellung.",
         "card": {
           "allows": [
-            "Antworten mit den Rücksendeschritten, bis zu 30 am Tag",
-            "Erstattungen bis 80 EUR pro Stück und 400 EUR am Tag, auf die ursprüngliche Zahlung"
+            "Antworten mit den Rücksendeschritten, bis zu 30 am Tag"
           ],
           "holds": [
-            "Eine Erstattung über 80 EUR oder über 400 EUR an einem Tag"
+            "Jede Erstattung, auf die ursprüngliche Zahlung, zu deiner Freigabe",
+            "Eine Antwort über 30 an einem Tag"
           ],
           "never": [
             "Eine Erstattung auf eine andere Zahlungsart",
@@ -1599,15 +1599,15 @@ export const RECIPES = [
         "title": "Retours par e-mail",
         "headline": "Aucune demande de retour n'attend dans la boîte de réception.",
         "today": "Chaque retour, c'est un e-mail, une vérification et un remboursement à la main, et le client attend des jours une réponse.",
-        "line": "Répond aux demandes de retour avec vos étapes de retour, et rembourse un retour une fois que vous l'avez marqué reçu, dans les limites de la Card.",
-        "say": "Gère les demandes de retour de ma boîte de réception ou de mon support. Réponds avec mes étapes de retour, jusqu'à 30 par jour. Une fois que je marque un retour reçu dans ma boutique, rembourse-le jusqu'à 80 EUR chacun et 400 EUR par jour, seulement vers le paiement d'origine. Tout montant plus élevé, ou un retour que je n'ai pas marqué reçu, attend mon accord. Ne modifie ni n'annule jamais une commande.",
+        "line": "Répond aux demandes de retour avec vos étapes de retour, et vous demande d'approuver chaque remboursement une fois le retour arrivé.",
+        "say": "Gère les demandes de retour de ma boîte de réception ou de mon support. Réponds avec mes étapes de retour, jusqu'à 30 par jour. Quand un article retourné m'est revenu, demande-moi d'approuver son remboursement, seulement vers le paiement d'origine : chaque remboursement attend mon accord, car tu ne peux pas voir ce qui est arrivé. Ne modifie ni n'annule jamais une commande.",
         "card": {
           "allows": [
-            "Des réponses avec les étapes de retour, jusqu'à 30 par jour",
-            "Remboursements jusqu'à 80 EUR chacun et 400 EUR par jour, vers le paiement d'origine"
+            "Des réponses avec les étapes de retour, jusqu'à 30 par jour"
           ],
           "holds": [
-            "Un remboursement de plus de 80 EUR, ou au-delà de 400 EUR dans la journée"
+            "Chaque remboursement, vers le paiement d'origine, pour votre accord",
+            "Une réponse au-delà de 30 dans la journée"
           ],
           "never": [
             "Un remboursement vers un autre moyen de paiement",
@@ -1619,15 +1619,15 @@ export const RECIPES = [
         "title": "Devoluciones por email",
         "headline": "Ninguna solicitud de devolución espera en la bandeja de entrada.",
         "today": "Cada devolución es un email, una revisión y un reembolso a mano, y el cliente espera días una respuesta.",
-        "line": "Responde las solicitudes de devolución con tus pasos de devolución y reembolsa una devolución cuando la marcas como recibida, dentro de la Card.",
-        "say": "Gestiona las solicitudes de devolución de mi bandeja de entrada o mi servicio de atención. Responde con mis pasos de devolución, hasta 30 al día. Cuando marque una devolución como recibida en mi tienda, reembólsala hasta 80 EUR cada una y 400 EUR al día, solo al pago original. Cualquier cosa mayor, o una devolución que no he marcado como recibida, me espera. Nunca modifiques ni canceles un pedido.",
+        "line": "Responde las solicitudes de devolución con tus pasos de devolución y te pide aprobar cada reembolso cuando la devolución ha llegado.",
+        "say": "Gestiona las solicitudes de devolución de mi bandeja de entrada o mi servicio de atención. Responde con mis pasos de devolución, hasta 30 al día. Cuando un artículo devuelto me haya llegado, pídeme que apruebe su reembolso, solo al pago original: cada reembolso espera mi sí, porque no puedes ver lo que ha llegado. Nunca modifiques ni canceles un pedido.",
         "card": {
           "allows": [
-            "Respuestas con los pasos de devolución, hasta 30 al día",
-            "Reembolsos de hasta 80 EUR cada uno y 400 EUR al día, al pago original"
+            "Respuestas con los pasos de devolución, hasta 30 al día"
           ],
           "holds": [
-            "Un reembolso de más de 80 EUR, o por encima de 400 EUR en un día"
+            "Cada reembolso, al pago original, para tu aprobación",
+            "Una respuesta por encima de 30 en un día"
           ],
           "never": [
             "Un reembolso a otro método de pago",
@@ -1639,15 +1639,15 @@ export const RECIPES = [
         "title": "Resi via email",
         "headline": "Nessuna richiesta di reso aspetta nella casella di posta.",
         "today": "Ogni reso è un'email, un controllo e un rimborso a mano, e il cliente aspetta giorni una risposta.",
-        "line": "Risponde alle richieste di reso con i tuoi passaggi di reso e rimborsa un reso quando l'hai segnato come ricevuto, nei limiti della Card.",
-        "say": "Gestisci le richieste di reso dalla mia casella di posta o dalla mia assistenza. Rispondi con i miei passaggi di reso, fino a 30 al giorno. Quando segno un reso come ricevuto nel mio negozio, rimborsalo fino a 80 EUR ciascuno e 400 EUR al giorno, solo sul pagamento originale. Qualsiasi importo maggiore, o un reso che non ho segnato come ricevuto, aspetta me. Non modificare né annullare mai un ordine.",
+        "line": "Risponde alle richieste di reso con i tuoi passaggi di reso e ti chiede di approvare ogni rimborso quando il reso è arrivato.",
+        "say": "Gestisci le richieste di reso dalla mia casella di posta o dalla mia assistenza. Rispondi con i miei passaggi di reso, fino a 30 al giorno. Quando un articolo reso mi è tornato, chiedimi di approvare il suo rimborso, solo sul pagamento originale: ogni rimborso aspetta il mio sì, perché non puoi vedere cosa è arrivato. Non modificare né annullare mai un ordine.",
         "card": {
           "allows": [
-            "Risposte con i passaggi di reso, fino a 30 al giorno",
-            "Rimborsi fino a 80 EUR ciascuno e 400 EUR al giorno, sul pagamento originale"
+            "Risposte con i passaggi di reso, fino a 30 al giorno"
           ],
           "holds": [
-            "Un rimborso oltre 80 EUR, o oltre 400 EUR in un giorno"
+            "Ogni rimborso, sul pagamento originale, per la tua approvazione",
+            "Una risposta oltre 30 in un giorno"
           ],
           "never": [
             "Un rimborso su un altro metodo di pagamento",
@@ -1659,15 +1659,15 @@ export const RECIPES = [
         "title": "Devoluções por email",
         "headline": "Nenhum pedido de devolução espera na caixa de entrada.",
         "today": "Cada devolução é um email, uma verificação e um reembolso à mão, e o cliente espera dias por uma resposta.",
-        "line": "Responde aos pedidos de devolução com os seus passos de devolução e reembolsa uma devolução depois de a marcar como recebida, dentro da Card.",
-        "say": "Trata dos pedidos de devolução da minha caixa de entrada ou do meu apoio ao cliente. Responde com os meus passos de devolução, até 30 por dia. Quando eu marcar uma devolução como recebida na minha loja, reembolsa-a até 80 EUR cada e 400 EUR por dia, só para o pagamento original. Qualquer valor maior, ou uma devolução que eu não marquei como recebida, espera por mim. Nunca alteres nem canceles uma encomenda.",
+        "line": "Responde aos pedidos de devolução com os seus passos de devolução e pede-lhe que aprove cada reembolso quando a devolução chegar.",
+        "say": "Trata dos pedidos de devolução da minha caixa de entrada ou do meu apoio ao cliente. Responde com os meus passos de devolução, até 30 por dia. Quando um artigo devolvido me chegar, pede-me que aprove o seu reembolso, só para o pagamento original: cada reembolso espera pelo meu sim, porque não consegues ver o que chegou. Nunca alteres nem canceles uma encomenda.",
         "card": {
           "allows": [
-            "Respostas com os passos de devolução, até 30 por dia",
-            "Reembolsos até 80 EUR cada e 400 EUR por dia, para o pagamento original"
+            "Respostas com os passos de devolução, até 30 por dia"
           ],
           "holds": [
-            "Um reembolso acima de 80 EUR, ou acima de 400 EUR num dia"
+            "Cada reembolso, para o pagamento original, para a sua aprovação",
+            "Uma resposta acima de 30 num dia"
           ],
           "never": [
             "Um reembolso para outro meio de pagamento",
@@ -1679,15 +1679,15 @@ export const RECIPES = [
         "title": "Retouren per e-mail",
         "headline": "Geen retourverzoek wacht in de inbox.",
         "today": "Elke retour is een e-mail, een controle en een terugbetaling met de hand, en de klant wacht dagen op antwoord.",
-        "line": "Beantwoordt retourverzoeken met jouw retourstappen en betaalt een retour terug zodra je die als ontvangen hebt gemarkeerd, binnen de Card.",
-        "say": "Handel retourverzoeken uit mijn inbox of helpdesk af. Antwoord met mijn retourstappen, tot 30 per dag. Zodra ik een retour in mijn winkel als ontvangen markeer, betaal die terug tot 80 EUR per stuk en 400 EUR per dag, alleen naar de oorspronkelijke betaling. Alles wat groter is, of een retour die ik niet als ontvangen heb gemarkeerd, wacht op mij. Wijzig of annuleer nooit een bestelling.",
+        "line": "Beantwoordt retourverzoeken met jouw retourstappen en vraagt je elke terugbetaling goed te keuren zodra de retour binnen is.",
+        "say": "Handel retourverzoeken uit mijn inbox of helpdesk af. Antwoord met mijn retourstappen, tot 30 per dag. Als een geretourneerd artikel bij mij binnen is, vraag me de terugbetaling goed te keuren, alleen naar de oorspronkelijke betaling: elke terugbetaling wacht op mijn ja, omdat jij niet kunt zien wat er binnen is. Wijzig of annuleer nooit een bestelling.",
         "card": {
           "allows": [
-            "Antwoorden met de retourstappen, tot 30 per dag",
-            "Terugbetalingen tot 80 EUR per stuk en 400 EUR per dag, naar de oorspronkelijke betaling"
+            "Antwoorden met de retourstappen, tot 30 per dag"
           ],
           "holds": [
-            "Een terugbetaling boven 80 EUR, of boven 400 EUR op één dag"
+            "Elke terugbetaling, naar de oorspronkelijke betaling, ter goedkeuring",
+            "Een antwoord boven 30 op één dag"
           ],
           "never": [
             "Een terugbetaling naar een ander betaalmiddel",
@@ -1699,15 +1699,15 @@ export const RECIPES = [
         "title": "Zwroty przez e-mail",
         "headline": "Żadna prośba o zwrot nie czeka w skrzynce.",
         "today": "Każdy zwrot to e-mail, sprawdzenie i zwrot pieniędzy ręcznie, a klient czeka dniami na odpowiedź.",
-        "line": "Odpowiada na prośby o zwrot, podając twoje kroki zwrotu, i zwraca pieniądze, gdy oznaczysz zwrot jako otrzymany, w ramach Card.",
-        "say": "Obsługuj prośby o zwrot z mojej skrzynki lub helpdesku. Odpowiadaj, podając moje kroki zwrotu, do 30 razy dziennie. Gdy oznaczę zwrot jako otrzymany w moim sklepie, zwróć pieniądze do 80 EUR każdy i 400 EUR dziennie, tylko na pierwotną płatność. Wszystko większe, albo zwrot, którego nie oznaczyłem jako otrzymany, czeka na mnie. Nigdy nie zmieniaj ani nie anuluj zamówienia.",
+        "line": "Odpowiada na prośby o zwrot, podając twoje kroki zwrotu, i prosi cię o zatwierdzenie każdego zwrotu pieniędzy, gdy przesyłka wróci.",
+        "say": "Obsługuj prośby o zwrot z mojej skrzynki lub helpdesku. Odpowiadaj, podając moje kroki zwrotu, do 30 razy dziennie. Gdy zwrócony towar do mnie wróci, poproś mnie o zatwierdzenie zwrotu pieniędzy, tylko na pierwotną płatność: każdy zwrot pieniędzy czeka na moje tak, bo nie widzisz, co dotarło. Nigdy nie zmieniaj ani nie anuluj zamówienia.",
         "card": {
           "allows": [
-            "Odpowiedzi z krokami zwrotu, do 30 dziennie",
-            "Zwroty pieniędzy do 80 EUR każdy i 400 EUR dziennie, na pierwotną płatność"
+            "Odpowiedzi z krokami zwrotu, do 30 dziennie"
           ],
           "holds": [
-            "Zwrot pieniędzy powyżej 80 EUR lub powyżej 400 EUR w ciągu dnia"
+            "Każdy zwrot pieniędzy, na pierwotną płatność, do twojego zatwierdzenia",
+            "Odpowiedź powyżej 30 w ciągu dnia"
           ],
           "never": [
             "Zwrot pieniędzy na inną metodę płatności",
