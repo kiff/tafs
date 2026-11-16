@@ -119,7 +119,7 @@ fun ReceiptSheet(entry: RecordEntry, state: AppState, onClose: () -> Unit) {
         entry.reason?.let { Fact(Words.Receipt.Fact.why, it) }
         Fact(Words.Receipt.Fact.decidedBy, ReceiptWords.decidedBy(entry, state.mode == Mode.kiff))
       }
-      if (steps.isNotEmpty()) {
+      if (steps.isNotEmpty() && ReceiptSteps.showsWhatHappened(check, entry, steps)) {
         Eyebrow(Words.Receipt.whatHappened)
         Column {
           steps.forEach { step ->

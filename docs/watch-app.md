@@ -21,6 +21,34 @@ drawn smaller, and has no sign-in of its own.
 - **No keys and no tokens on the watch.** A lost watch can read and stop things, never approve.
 - **Standalone** (a cellular watch with its phone away) isn't in v1.
 
+## The relay
+
+What the watch asks and the phone answers is `ios/WatchShared/WatchMessage.swift`, which both
+apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the watch's is
+`ios/TafsWatch/PhoneLink.swift`.
+
+- **Six requests:** Needs you, your tafs, Refuse (naming its held call), Halt (naming its
+  taf), Halt all, and Coach (the words dictated on the watch, never audio). Nothing else
+  decodes, so an approval can't even be asked for.
+- **Refused before anything is read:** an unknown or malformed request, or one missing what
+  it names. Nothing on this path signs.
+- **Live only:** each request goes with WatchConnectivity's message data and a reply, never
+  queued. It carries the time it was made, and the phone drops one more than 30 seconds old,
+  either way.
+- **Signed out:** the phone answers only that, and the watch shows nothing of the account.
+- **With tafs closed:** the phone answers with the session it keeps, as a hold's notification
+  is filled in (`HoldNotification`), so the phone can be locked in a pocket.
+- **Today:** Needs you is answered. Your tafs, Refuse, Halt, Halt all and Coach come next.
+
+## What the watch keeps
+
+- **In memory only:** the list, the amounts and Coach's answers. They go when the app leaves the
+  screen, and are read again when it's back.
+- **On disk:** only the Needs you count and when it was read, for the complication. It's cleared
+  when the phone says it's signed out. (This comes with the complication.)
+- **Never:** a token, a key, or an amount, a merchant or a person's name in a log, on the watch
+  or in the relay.
+
 ## Before the watch app: what the phone's notifications already do
 
 The iPhone's notifications show on the watch by themselves. On a held call's notification:

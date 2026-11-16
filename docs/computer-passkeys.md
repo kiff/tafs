@@ -34,6 +34,8 @@ The PIN sheet's words are the shared `approval.security_key.*` lines: the PIN, t
 left, and why the key gave no answer (none plugged in, more than one, a key that can't check a PIN, no PIN set,
 a wrong PIN, three in a row, locked, another key, not touched in time, not allowed, unplugged).
 Each failure says nothing was approved.
+When the computer is paired, the same sheet adds the key instead (`add_title`, `add_enter_pin`, `add`), and
+`pair_without` pairs the computer without one, as closing the sheet does.
 
 ## What a passkey approval carries
 

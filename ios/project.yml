@@ -31,7 +31,8 @@ targets:
   Tafs:
     type: application
     platform: iOS
-    sources: [Tafs, Shared]
+    # WatchShared: what the watch asks and the phone answers (docs/watch-app.md).
+    sources: [Tafs, Shared, WatchShared]
     dependencies:
       # iPhone and iPad only: a Mac has no lock screen Live Activity to draw.
       - target: TafsWidgets
@@ -215,6 +216,7 @@ targets:
     deploymentTarget: "10.0"
     sources:
       - TafsWatch
+      - WatchShared
       - Tafs/Design/Words.swift
       - Tafs/Localizable.xcstrings
     info:
