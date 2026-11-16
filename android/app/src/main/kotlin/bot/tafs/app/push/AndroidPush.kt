@@ -51,10 +51,22 @@ class AlertNotifier(private val context: Context) {
       .setCategory(if (alert.loud) NotificationCompat.CATEGORY_MESSAGE else NotificationCompat.CATEGORY_STATUS)
       .setPriority(if (alert.loud) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_LOW)
       .apply { alert.expiresAt?.let { setTimeoutAfter(maxOf(1L, it.toEpochMilli() - System.currentTimeMillis())) } }
+      // Locked, the phone and any watch it bridges to show only the public version: tafs cloud's words can name an amount, a
+      // merchant or a person, so they wait for the unlock. Every channel, as iOS's hidden previews.
+      .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+      .setPublicVersion(lockedVersion(alert.locked()))
       .build()
     // A later alert for the same call replaces this one.
     manager.notify(alert.tag, 0, notification)
   }
+
+  /** What a locked phone or watch shows instead of [show]'s notification: [Alert.Show.locked]'s words, and nothing to open. */
+  private fun lockedVersion(locked: Alert.Show) =
+    NotificationCompat.Builder(context, if (locked.loud) HOLDS else QUIET)
+      .setSmallIcon(R.drawable.ic_bell)
+      .setContentTitle(locked.title)
+      .setCategory(if (locked.loud) NotificationCompat.CATEGORY_MESSAGE else NotificationCompat.CATEGORY_STATUS)
+      .build()
 
   fun clear(tag: String) {
     NotificationManagerCompat.from(context).cancel(tag, 0)

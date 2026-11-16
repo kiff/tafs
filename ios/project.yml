@@ -205,6 +205,47 @@ targets:
         TEST_TARGET_NAME: Tafs
         # iPhone and iPad only: these tests press the Home button, which a Mac lacks.
         SUPPORTS_MACCATALYST: NO
+  # tafs on Apple Watch (docs/watch-app.md): a watchOS app with a single target, a companion to
+  # the iPhone app with no sign-in of its own. It draws the phone's words, so it compiles the
+  # generated Words.swift and its catalog, as TafsNotify does. Built by the TafsWatch scheme
+  # only: the phone's scheme (Tafs) doesn't build it, so the phone's jobs don't pay for it.
+  TafsWatch:
+    type: application
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - TafsWatch
+      - Tafs/Design/Words.swift
+      - Tafs/Localizable.xcstrings
+    info:
+      path: TafsWatch/Info.plist
+      properties:
+        CFBundleDisplayName: tafs
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        # A watch app with a single target, installed with the iPhone app it belongs to.
+        WKApplication: true
+        WKCompanionAppBundleIdentifier: bot.tafs.app
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.watchkitapp
+        TARGETED_DEVICE_FAMILY: "4"
+        SUPPORTS_MACCATALYST: NO
+        PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_WATCH)
+  TafsWatchTests:
+    type: bundle.unit-test
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - TafsWatchTests
+    dependencies:
+      - target: TafsWatch
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/TafsWatch.app/TafsWatch
+        BUNDLE_LOADER: $(TEST_HOST)
+        SUPPORTS_MACCATALYST: NO
 schemes:
   Tafs:
     build:
@@ -230,3 +271,11 @@ schemes:
     test:
       targets: [TafsTests]
       storeKitConfiguration: Tafs.storekit
+  # The watch app and its tests (CI's watch job), apart from the phone's.
+  TafsWatch:
+    build:
+      targets:
+        TafsWatch: all
+        TafsWatchTests: [test]
+    test:
+      targets: [TafsWatchTests]

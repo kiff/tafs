@@ -14,18 +14,21 @@
     <string name="needs_you_refuse">Recusar</string>
     <string name="needs_you_title">Precisa de si</string>
     <string name="taf_state_halted">Bloqueado</string>
-    <string name="watch_already_answered">Já respondida.</string>
-    <string name="watch_answer_longer">A resposta do Coach é mais longa. Abra-a no telemóvel.</string>
+    <string name="watch_already_answered">Já respondido, ou terminado.</string>
     <string name="watch_approve_on_phone">Aprove no telemóvel</string>
+    <string name="watch_as_of">Atualizado às %1$s</string>
     <string name="watch_asking_phone">A perguntar ao telemóvel…</string>
-    <string name="watch_coach_consent_on_phone">O Coach precisa primeiro do seu sim no telemóvel.</string>
+    <string name="watch_coach_needs_consent">Antes de falar com o Coach, permita a utilização de IA no tafs no telemóvel.</string>
+    <string name="watch_glance_description">Quantos precisam de si, nunca o quê nem quem.</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s chamada retida precisa de si</item>
         <item quantity="other">%1$s chamadas retidas precisam de si</item>
     </plurals>
+    <string name="watch_more_on_phone">O resto está no telemóvel.</string>
     <string name="watch_needs_lock">Para recusar ou bloquear a partir deste relógio, defina um bloqueio de ecrã e desbloqueie-o.</string>
     <string name="watch_open_on_phone">Abrir no telemóvel</string>
-    <string name="watch_phone_not_reachable">Não é possível contactar o telemóvel. Mantenha-o por perto e tente novamente.</string>
-    <string name="watch_sign_in_on_phone">Primeiro inicie sessão no tafs no telemóvel.</string>
+    <string name="watch_phone_not_reachable">O telemóvel não está ao alcance. Aproxime-o e tente novamente.</string>
+    <string name="watch_refused">Recusado. Nada foi enviado.</string>
+    <string name="watch_sign_in_on_phone">Primeiro, inicie sessão no tafs no telemóvel.</string>
     <string name="watch_voice_text_only">O Coach recebe as suas palavras como texto, nunca a sua voz.</string>
 </resources>

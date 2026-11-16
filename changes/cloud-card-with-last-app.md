@@ -1,0 +1,1 @@
+- **tafs cloud: when a Card over two apps waits for the other app, Coach hears that the Card comes with that app's approval.** It shows that approval with the same draft, and never shows the connected app's approval again, as the person reads it ("this Card comes with the last app").

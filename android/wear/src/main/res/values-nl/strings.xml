@@ -14,18 +14,21 @@
     <string name="needs_you_refuse">Weigeren</string>
     <string name="needs_you_title">Wacht op jou</string>
     <string name="taf_state_halted">Stilgezet</string>
-    <string name="watch_already_answered">Al beantwoord.</string>
-    <string name="watch_answer_longer">Het antwoord van Coach is langer. Open het op je telefoon.</string>
+    <string name="watch_already_answered">Al beantwoord, of beëindigd.</string>
     <string name="watch_approve_on_phone">Keur goed op je telefoon</string>
+    <string name="watch_as_of">Bijgewerkt om %1$s</string>
     <string name="watch_asking_phone">Je telefoon vragen…</string>
-    <string name="watch_coach_consent_on_phone">Coach heeft eerst je ja op je telefoon nodig.</string>
+    <string name="watch_coach_needs_consent">Sta eerst AI-gebruik toe in tafs op je telefoon voordat je met Coach praat.</string>
+    <string name="watch_glance_description">Hoeveel er op je wachten, nooit wat of wie.</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s vastgehouden aanroep wacht op jou</item>
         <item quantity="other">%1$s vastgehouden aanroepen wachten op jou</item>
     </plurals>
+    <string name="watch_more_on_phone">De rest staat op je telefoon.</string>
     <string name="watch_needs_lock">Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te weigeren of stil te zetten.</string>
     <string name="watch_open_on_phone">Openen op telefoon</string>
-    <string name="watch_phone_not_reachable">Je telefoon is niet bereikbaar. Houd hem in de buurt en probeer het opnieuw.</string>
+    <string name="watch_phone_not_reachable">Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.</string>
+    <string name="watch_refused">Geweigerd. Er is niets verstuurd.</string>
     <string name="watch_sign_in_on_phone">Log eerst in bij tafs op je telefoon.</string>
     <string name="watch_voice_text_only">Coach krijgt je woorden als tekst, nooit je stem.</string>
 </resources>

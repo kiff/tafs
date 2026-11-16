@@ -14,18 +14,21 @@
     <string name="needs_you_refuse">Rifiuta</string>
     <string name="needs_you_title">Ti aspetta</string>
     <string name="taf_state_halted">Bloccato</string>
-    <string name="watch_already_answered">Già risposta.</string>
-    <string name="watch_answer_longer">La risposta di Coach è più lunga. Aprila sul telefono.</string>
+    <string name="watch_already_answered">Ha già una risposta, o è terminata.</string>
     <string name="watch_approve_on_phone">Approva sul telefono</string>
+    <string name="watch_as_of">Aggiornato alle %1$s</string>
     <string name="watch_asking_phone">Chiedo al telefono…</string>
-    <string name="watch_coach_consent_on_phone">Coach ha prima bisogno del tuo sì sul telefono.</string>
+    <string name="watch_coach_needs_consent">Prima di parlare con Coach, consenti l\'uso dell\'IA in tafs sul telefono.</string>
+    <string name="watch_glance_description">Quanti ti aspettano, mai cosa né chi.</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s chiamata trattenuta ti aspetta</item>
         <item quantity="other">%1$s chiamate trattenute ti aspettano</item>
     </plurals>
+    <string name="watch_more_on_phone">Il resto è sul telefono.</string>
     <string name="watch_needs_lock">Per rifiutare o bloccare da questo orologio, imposta un blocco schermo e sbloccalo.</string>
     <string name="watch_open_on_phone">Apri sul telefono</string>
-    <string name="watch_phone_not_reachable">Il telefono non è raggiungibile. Tienilo vicino e riprova.</string>
+    <string name="watch_phone_not_reachable">Il telefono non è raggiungibile. Avvicinalo, poi riprova.</string>
+    <string name="watch_refused">Rifiutata. Non è stato inviato nulla.</string>
     <string name="watch_sign_in_on_phone">Prima accedi a tafs sul telefono.</string>
     <string name="watch_voice_text_only">Coach riceve le tue parole come testo, mai la tua voce.</string>
 </resources>
