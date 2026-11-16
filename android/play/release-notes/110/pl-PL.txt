@@ -1,0 +1,6 @@
+- Twój przegląd: dwa razy dziennie decyzje, które na Ciebie czekają, i to, co zrobiono, zamiast Czeka na Ciebie, gdy Twoje konto go ma.
+- Etykiety na liście tafs i historia misji.
+- Przeglądy i pilne alerty mają własne kanały powiadomień.
+- Warunki i Prywatność otwierają się w języku aplikacji.
+- Na zablokowanym telefonie alert mówi tylko „Taf czeka na Ciebie”.
+- Na tablecie „Nabiera kształtu” jest obok rozmowy z Coachem, a udostępnione tafs są w „Udostępnione Tobie”.

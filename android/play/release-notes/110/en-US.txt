@@ -1,0 +1,6 @@
+- Your brief: twice a day, the decisions waiting for you and what was done, in Needs you's place once your account has one.
+- Label chips on your tafs list, and a mission's log.
+- Briefs and urgent alerts get their own notification channels.
+- Terms and Privacy open in the app's language.
+- On a locked phone, an alert says only "A taf needs you".
+- On a tablet, “Taking shape” sits beside Coach's conversation, and tafs shared with you are listed under “Shared with you”.

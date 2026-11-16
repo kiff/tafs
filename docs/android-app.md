@@ -183,7 +183,8 @@ decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read 
 - **Urgent** is tafs cloud's call: a red border, its word on the badge (`words.urgent`), its `now_why`, no Later. An alert
   with `brief_kind` (`brief`: "Your 08:00 brief is ready.", or `urgent`: one that came at once, a held call's with
   `decision: hold:<id>`) opens where its `open` says (`brief` opens the brief, a held call's Needs you), sounds as its
-  `level` says, and with the app open reads the brief again; one brief's alert replaces the last. An earlier draft's
+  channel does (below; on Android 8 and later the channel, not `level`, decides: an urgent alert interrupts even when sent
+  `level: quiet`), and with the app open reads the brief again; one brief's alert replaces the last. An earlier draft's
   `kind: brief|urgent` reads the same. **Channels** (`AlertChannel`), each set apart in the phone's settings: a held call
   stays on Needs you's, interrupting, even when tafs cloud marks it urgent, so the settings an owner gave it hold (Android
   never carries a channel's settings over); an urgent alert that isn't a held call goes on **Urgent**, interrupting, with
