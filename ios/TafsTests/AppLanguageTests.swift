@@ -39,7 +39,8 @@ final class AppLanguageTests: XCTestCase {
         AppLanguage.choose("fr", defaults: defaults)
         AppLanguage.choose(nil, defaults: defaults)
         XCTAssertNil(AppLanguage.chosen(defaults))
-        XCTAssertNil(defaults.object(forKey: "AppleLanguages"))
+        // The app's own entry is gone; reading the key would fall through to the device's languages.
+        XCTAssertNil(defaults.persistentDomain(forName: suite)?["AppleLanguages"])
         AppLanguage.choose("ja", defaults: defaults)
         XCTAssertNil(AppLanguage.chosen(defaults), "not one of the 8: the device's language")
         defaults.set("ja", forKey: AppLanguage.key)
