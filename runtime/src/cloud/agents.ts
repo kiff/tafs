@@ -143,7 +143,7 @@ export interface AgentDefinition {
    * Skills the agent may read (kiff/agents#101), each a stored version: the context carries their names
    * and descriptions, read_skill their text, and a run's `skills` (RunAt) loads bodies for its session.
    */
-  skills?: { name: string; version: string }[];
+  skills?: { name: string; version: string; named_only?: boolean }[];
   /**
    * Every gateway tool that isn't KIFF's own (kiff_*) kept out of the prompt until the model searches
    * for it, so a Card that adds a vendor's tools mid-conversation keeps the cache (kiff/agents#197).
@@ -391,6 +391,12 @@ export interface RunAt {
    * definition's order (the Coach skills design, §4). Ignored on a session that exists.
    */
   skills?: string[];
+  /**
+   * A new session held to what it was opened with (kiff/agents' session `only`): with `skills`, read_skill
+   * reads only the session's own skills and none is added later; with `tools`, the model is offered only
+   * those. The watch's request (docs/watch-ask.md). Ignored on a session that exists, as `skills` is.
+   */
+  only?: { skills?: boolean; tools?: string[] };
   requester?: Requester;
   live?: boolean;
   /** The account's run grant for a member's run: kiff/agents takes the requester from it. */
@@ -462,6 +468,7 @@ function runAt(at: RunAt): Record<string, unknown> {
     ...(at.dedupKey ? { dedup_key: at.dedupKey, ...(at.source ? { source: at.source } : {}) } : {}),
     // A new session's skills (the Coach skills design, way 1); a session that exists keeps its own.
     ...(at.skills?.length && !at.session ? { skills: at.skills } : {}),
+    ...(at.only && !at.session ? { only: at.only } : {}),
   };
 }
 

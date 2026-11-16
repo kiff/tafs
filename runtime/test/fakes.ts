@@ -366,7 +366,7 @@ export function fakeAgents(now: () => Date = () => new Date("2026-10-16T12:00:00
       return { ...f.ref, created: now().toISOString(), sent: f.sent, url: `https://s3.test/${id}?signed`, url_expires: now().toISOString() };
     },
     async startRun(tenant, agent, input, at = {}, ai, notify) {
-      calls.push(`startRun ${agent} ${at.session ?? (at.live ? "live" : "new")}${at.skills?.length ? ` skills=${at.skills.join(",")}` : ""}`);
+      calls.push(`startRun ${agent} ${at.session ?? (at.live ? "live" : "new")}${at.skills?.length ? ` skills=${at.skills.join(",")}` : ""}${at.only ? ` only=${JSON.stringify(at.only)}` : ""}`);
       failing("startRun");
       const waiting = credits.get(tenant);
       if (waiting) throw new AgentsError(409, `${waiting}: the account's tafs wait for credits`, undefined, waiting);

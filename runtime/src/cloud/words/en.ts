@@ -955,6 +955,8 @@ export const en = {
   ai_consent_paused_no_one: "Paused: no one has allowed AI use for this taf's runs yet. It goes on once someone who manages tafs allows it in Account.",
   ai_consent_paused_not_given: "Paused: AI use for this taf's runs was withdrawn. It goes on once it's allowed again, or someone who manages tafs takes it over.",
   ai_consent_paused_left: "Paused: the person whose AI consent its runs used is no longer on the account. It goes on once someone who manages tafs takes it over.",
+  // A request from the watch, by its state (docs/watch-ask.md): the watch shows and says these.
+  watch_ask: { accepted: "Sent", working: "Working", done: "Done", no_taf: "No taf took it", failed: "That didn't work" },
 };
 
 export type Words = typeof en;

@@ -1,4 +1,5 @@
 import { COACH_SKILLS } from "../coach-skills.js";
+import { NAMED_ONLY } from "./coach-skills.js";
 import { type AgentDefinition, type Effort } from "./agents.js";
 import { TOOLS } from "./coach.js";
 import { HISTORY, HISTORY_TOKENS, KIFF_GATEWAY, keepRules, keyRef, MAX_TOKENS, THINKING } from "./tafdef.js";
@@ -187,7 +188,7 @@ export const CORE_RULES: readonly string[] = [
 ];
 
 /** The map of Coach's skills in the core: one line each, "name: when it applies". */
-export const SKILLS_MAP = COACH_SKILLS.map((s) => `  - ${s.name}: ${s.description}`).join("\n");
+export const SKILLS_MAP = COACH_SKILLS.filter((s) => !NAMED_ONLY.includes(s.name)).map((s) => `  - ${s.name}: ${s.description}`).join("\n");
 
 /** Coach's core instructions: who it is, how it talks, how a conversation works, the map of its skills, and the rules that hold whatever skill is loaded. */
 export const SETUP_CORE = SETUP_INSTRUCTIONS_HEAD + SETUP_INSTRUCTIONS_TAIL.replace("@@MAP@@", SKILLS_MAP);
@@ -202,7 +203,8 @@ export function setupDefinition(id: string): AgentDefinition {
     instructions: SETUP_CORE,
     // Its skills, each a stored version in kiff/agents (cloud/coach-skills.ts): the ones a conversation
     // needs are loaded by tafs cloud, the rest read_skill reads by name.
-    skills: COACH_SKILLS.map((s) => ({ name: s.name, version: s.version })),
+    // A named-only skill (the watch's) loads only where a conversation's start names it: read_skill never reads it.
+    skills: COACH_SKILLS.map((s) => ({ name: s.name, version: s.version, ...(NAMED_ONLY.includes(s.name) ? { named_only: true } : {}) })),
     model: SETUP_MODEL,
     price: { ...SETUP_PRICE },
     speed: SETUP_SPEED,

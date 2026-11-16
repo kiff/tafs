@@ -1,0 +1,237 @@
+import { describe, expect, it } from "vitest";
+import { type CoachCall, newRef } from "../src/cloud/coach.js";
+import { coachTool, type Deps, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { watchAskOn } from "../src/cloud/watch-ask.js";
+import { setupDefinition } from "../src/cloud/setupdef.js";
+import { type Ask, checkedLine, LINE_MAX, watchKeys } from "../src/cloud/watch-ask.js";
+import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
+
+/**
+ * A request from the watch (docs/watch-ask.md): the paired phone signs it with its device key, and only this
+ * route marks a Coach conversation as the watch's. The conversation has the watch's one skill and is held to
+ * reading the tafs and handing one of them the request; the taf's result comes back as one checked line.
+ */
+
+const T = "t_acme";
+const ANA = "u_ana";
+const BO = "u_bo";
+const NOW = new Date("2026-11-16T19:00:00Z");
+const COACH = "taf-cccc0000000000000000";
+const CAL = "taf-ca100000000000000000";
+const INBOX = "taf-1b0x0000000000000000";
+const SIGNED = { "kiff-device-signature": "t=2026-11-16T19:00:00Z,v1=sig" };
+
+function world(opts: { on?: boolean | string[]; signed?: boolean } = {}) {
+  let clock = NOW;
+  const agents = fakeAgents(() => clock);
+  const tafs = memoryTafs();
+  for (const taf of [
+    { id: COACH, name: "Coach", job: "setup", kiffAgent: "agent_coach", nameClaim: "c0", created: "2026-11-01T09:00:00Z" },
+    { id: CAL, name: "Calendar", job: "custom", kiffAgent: "agent_cal", nameClaim: "c1", created: "2026-11-01T09:00:00Z", summary: "Moves and books the owner's meetings", tools: ["calendar.events_update"] },
+    { id: INBOX, name: "Inbox", job: "custom", kiffAgent: "agent_inbox", nameClaim: "c2", created: "2026-11-01T09:00:00Z", summary: "Answers routine email", tools: ["mail.send"] },
+  ] as Taf[]) {
+    tafs.held.set(`${T}#${taf.id}`, taf);
+    void agents.api.putAgent(T, taf.id, taf.id === COACH ? setupDefinition(COACH) : ({} as never));
+  }
+  const coach = memoryCoach(() => clock);
+  const pushed: Array<{ token: string; payload: Record<string, unknown> }> = [];
+  const devices = [
+    { token: "fcm-ana", platform: "android" as const, environment: "production" as const, subject: ANA, answers: true, at: "" },
+    { token: "a".repeat(64), platform: "ios" as const, environment: "production" as const, subject: ANA, answers: true, at: "" },
+    { token: "fcm-bo", platform: "android" as const, environment: "production" as const, subject: BO, answers: true, at: "" },
+  ];
+  const signs: string[] = [];
+  const deps: Deps = {
+    agents: agents.api, keys: memoryKeys(), accounts: memoryAccounts(), tafs, names: memoryNames(), slots: memorySlots(), claims: memoryClaims(),
+    removals: memoryRemovals(), archived: memoryArchived(), aiConsent: false, watchAsk: opts.on ?? true,
+    push: { get: async () => ({ devices, secrets: [] }), addDevice: async () => undefined, removeDevice: async () => undefined, addSecret: async () => undefined },
+    apns: { send: async (d, n) => { pushed.push({ token: d.token, payload: n.payload }); return "sent" as const; } },
+    forward: async () => undefined, coach, kiffBase: "https://api.test", publicURL: "https://tafs.test", now: () => clock,
+    fetch: (async (url: string, init?: RequestInit) => {
+      const who = String(((init?.headers ?? {}) as Record<string, string>).authorization ?? "").replace("Bearer ", "");
+      const subject = who === "bo" ? BO : ANA;
+      if (url.endsWith("/v1/me")) return new Response(JSON.stringify({ tenant_id: T, subject, api_key: false, capabilities: ["read"] }));
+      if (url.endsWith("/v1/me/device-signature")) {
+        signs.push(JSON.parse(String(init?.body)).signature);
+        return opts.signed === false ? new Response(JSON.stringify({ error: { code: "signature_invalid" } }), { status: 403 }) : new Response(JSON.stringify({ signed: true, key: "device" }));
+      }
+      if (url.endsWith("/v1/me/run-grants")) return new Response(JSON.stringify({ grant: `krg_${subject}` }));
+      if (url.endsWith("/v1/coach/act")) {
+        const body = JSON.parse(String(init?.body)) as { agent?: string };
+        const may = { use: true, oversee: false, manage: false, grant: `krg_${ANA}` };
+        return new Response(JSON.stringify(body.agent ? may : { agents: { agent_cal: may, agent_inbox: may } }));
+      }
+      return new Response("{}", { status: 404 });
+    }) as unknown as typeof fetch,
+  };
+  const call = async (method: string, path: string, body?: unknown, headers: Record<string, string> = SIGNED, who = "ana") => {
+    const [rawPath, rawQueryString] = path.split("?");
+    const event: HTTPEvent = {
+      rawPath: rawPath!, ...(rawQueryString ? { rawQueryString } : {}), requestContext: { http: { method } },
+      headers: { authorization: `Bearer ${who}`, "accept-language": "en", ...headers },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    };
+    const r = await handle(event, deps);
+    return { status: r.statusCode, body: JSON.parse(r.body || "{}") as Record<string, unknown> };
+  };
+  /** A Coach tool call from a conversation, as kiff/agents names it (SESSION_ARG). */
+  const tool = (name: string, args: Record<string, unknown>, session?: string, subject = ANA) => {
+    const c: CoachCall = { tenant: T, coach: "agent_coach", notify: () => ({ url: "https://tafs.test/v1/runs/ended", ref: newRef(T) }), person: { subject, permit: "e30.eyJhY3QiOnsic3ViIjoidV9hbmEifX0.x" }, ...(session ? { session } : {}) };
+    return coachTool(name, args, c, deps);
+  };
+  const ended = (ref: string, run: string, agent: string, status: string) => handle({
+    rawPath: "/v1/runs/ended", requestContext: { http: { method: "POST" } }, headers: {}, body: JSON.stringify({ ref, run, agent, status }),
+  }, deps);
+  const askOf = async (id: string) => (await coach.get(watchKeys.ask(T, id))) as Ask;
+  return { agents, deps, coach, call, tool, ended, pushed, signs, askOf, tick: (ms: number) => { clock = new Date(clock.getTime() + ms); } };
+}
+
+const ASK = { client_id: "c_watch_0001", text: "Move my four o'clock call to six" };
+
+describe("a request from the watch", () => {
+  it("is off until tafs cloud's switch is on", async () => {
+    const w = world({ on: false });
+    expect(await w.call("POST", "/v1/watch/asks", ASK)).toMatchObject({ status: 404 });
+    expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([]);
+  });
+
+  it("can be on for some accounts alone, as for the owner's test on a real watch", async () => {
+    expect((await world({ on: ["t_other"] }).call("POST", "/v1/watch/asks", ASK)).status).toBe(404);
+    expect((await world({ on: [T] }).call("POST", "/v1/watch/asks", ASK)).status).toBe(200);
+    expect([watchAskOn("on"), watchAskOn(""), watchAskOn(undefined), watchAskOn("off"), watchAskOn(" t_acme, t_b ")]).toEqual([true, false, false, false, ["t_acme", "t_b"]]);
+  });
+
+  it("needs the phone's device signature, checked by KIFF, not the bearer alone (checks 2 and 5)", async () => {
+    expect((await world().call("POST", "/v1/watch/asks", ASK, {})).status).toBe(403);
+    const removed = world({ signed: false });
+    expect((await removed.call("POST", "/v1/watch/asks", ASK)).status).toBe(403);
+    expect(removed.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([]);
+  });
+
+  it("takes exactly {client_id, text, reply_to?}: no field, header or word marks it the watch's", async () => {
+    const w = world();
+    for (const body of [{ ...ASK, entry: "watch" }, { ...ASK, client_id: "short" }, { ...ASK, text: "" }, { ...ASK, text: "x".repeat(2001) }, { client_id: ASK.client_id }]) {
+      expect((await w.call("POST", "/v1/watch/asks", body)).status, JSON.stringify(body).slice(0, 60)).toBe(400);
+    }
+  });
+
+  it("opens a conversation of its own with the watch's one skill, held to reading the tafs and handing one over, and answers with a receipt", async () => {
+    const w = world();
+    const r = await w.call("POST", "/v1/watch/asks", ASK);
+    expect(r.status).toBe(200);
+    expect(r.body.ask).toMatchObject({ client_id: ASK.client_id, state: "accepted", words: "Sent" });
+    expect(JSON.stringify(r.body)).not.toMatch(/session|coach_run|person/);
+    expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toEqual([
+      `startRun ${COACH} new skills=ask-a-taf@1 only={"skills":true,"tools":["tafs_state","taf_task","read_skill"]}`,
+    ]);
+    // The run is the person's own, under KIFF's run grant.
+    expect(w.agents.runs.at(-1)?.requester).toEqual({ kind: "member", id: ANA });
+  });
+
+  it("is idempotent on the client's id: a retry gets the same request and starts nothing (check 4)", async () => {
+    const w = world();
+    const a = await w.call("POST", "/v1/watch/asks", ASK);
+    const b = await w.call("POST", "/v1/watch/asks", ASK);
+    expect(b.body.ask).toEqual(a.body.ask);
+    expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toHaveLength(1);
+    // Another person's same client id is their own request.
+    await w.call("POST", "/v1/watch/asks", ASK, SIGNED, "bo");
+    expect(w.agents.calls.filter((c) => c.startsWith("startRun"))).toHaveLength(2);
+  });
+
+  it("reads back only the person's own requests", async () => {
+    const w = world();
+    const a = await w.call("POST", "/v1/watch/asks", ASK);
+    const id = (a.body.ask as { id: string }).id;
+    expect((await w.call("GET", `/v1/watch/asks/${id}`, undefined, {}, "bo")).status).toBe(404);
+    expect((await w.call("GET", "/v1/watch/asks", undefined, {}, "bo")).body).toEqual({ asks: [] });
+    expect(((await w.call("GET", "/v1/watch/asks", undefined, {})).body.asks as unknown[]).length).toBe(1);
+    // A reply goes on only in one's own request's conversation.
+    expect((await w.call("POST", "/v1/watch/asks", { client_id: "c_bo_reply_01", text: "and at seven", reply_to: id }, SIGNED, "bo")).status).toBe(404);
+  });
+});
+
+describe("the watch's conversation", () => {
+  async function asked() {
+    const w = world();
+    const r = await w.call("POST", "/v1/watch/asks", ASK);
+    const id = (r.body.ask as { id: string }).id;
+    const ask = await w.askOf(id);
+    return { w, id, session: ask.session!, coachRun: ask.coach_run! };
+  }
+
+  it("reads each taf's `can`, from its own data, and only the tafs the person may use", async () => {
+    const { w, session } = await asked();
+    const out = (await w.tool("tafs_state", {}, session)) as { tafs: Array<{ name: string; can: { does: string; tools: string[] } }> };
+    expect(out.tafs).toEqual([
+      { id: CAL, name: "Calendar", can: { does: "Moves and books the owner's meetings", tools: ["calendar.events_update"] } },
+      { id: INBOX, name: "Inbox", can: { does: "Answers routine email", tools: ["mail.send"] } },
+    ]);
+    // A phone conversation reads tafs_state as before: no `can`.
+    expect(JSON.stringify(await w.tool("tafs_state", {}, "s_phone_chat"))).not.toContain("\"can\"");
+  });
+
+  it("hands the request to one taf, once: a second taf is refused (checks 1 and 3)", async () => {
+    const { w, id, session } = await asked();
+    const first = (await w.tool("taf_task", { taf: CAL, text: ASK.text }, session)) as { taf: string };
+    expect(first.taf).toBe("Calendar");
+    await expect(w.tool("taf_task", { taf: INBOX, text: ASK.text }, session)).rejects.toThrow(/one taf per request/);
+    await expect(w.tool("taf_task", { taf: CAL, text: "again" }, session)).rejects.toThrow(/one taf per request/);
+    expect(await w.askOf(id)).toMatchObject({ state: "working", taf: { id: CAL, name: "Calendar" } });
+    // In a new run of the person's own, never into one at work or the phone's live chat with the taf.
+    expect(w.agents.calls.filter((c) => c.startsWith(`startRun ${CAL}`))).toEqual([`startRun ${CAL} new`]);
+  });
+
+  it("tells only the person's Android phone, with the request's id alone", async () => {
+    const { w, session } = await asked();
+    await w.tool("taf_task", { taf: CAL, text: ASK.text }, session);
+    expect(w.pushed.map((p) => p.token)).toEqual(["fcm-ana"]);
+    expect(Object.keys(w.pushed[0]!.payload).sort()).toEqual(["aps", "ask_id", "change"]);
+  });
+
+  it("is someone else's to nobody: another person can't hand it over", async () => {
+    const { w, session } = await asked();
+    await expect(w.tool("taf_task", { taf: CAL, text: ASK.text }, session, BO)).rejects.toThrow(/isn't this person's/);
+  });
+
+  it("ends as no taf took it when Coach hands over nothing, with Coach's own sentence, checked", async () => {
+    const { w, id, coachRun } = await asked();
+    const run = w.agents.runs.find((r) => r.id === coachRun)!;
+    Object.assign(run, { status: "COMPLETED", output: "**Calendar** and **Inbox** could both do that: say which one." });
+    const ref = [...w.agents.notified.entries()].find(([r]) => r === coachRun)![1].ref;
+    await w.ended(ref, coachRun, COACH, "COMPLETED");
+    expect(await w.askOf(id)).toMatchObject({ state: "no_taf", line: "Calendar and Inbox could both do that: say which one." });
+  });
+
+  it("turns the taf's result into Coach's one line, and never into the phone's Coach chat or its alerts", async () => {
+    const { w, id, session } = await asked();
+    await w.tool("taf_task", { taf: CAL, text: ASK.text }, session);
+    const tafRun = w.agents.runs.find((r) => r.agent === CAL)!;
+    Object.assign(tafRun, { status: "COMPLETED", output: "Moved the 16:00 call to 18:00 and told the guests.", stop: "answered" });
+    const tafRef = w.agents.notified.get(tafRun.id)!.ref;
+    w.pushed.length = 0;
+    await w.ended(tafRef, tafRun.id, CAL, "COMPLETED");
+    // Coach's watch conversation gets a turn to write the line.
+    const coachRuns = w.agents.runs.filter((r) => r.agent === COACH);
+    expect(coachRuns).toHaveLength(2);
+    const lineRun = coachRuns.at(-1)!;
+    expect(lineRun.session).toBe(session);
+    expect(await w.coach.take(`${T}#coach-notes#${ANA}`)).toEqual([]);
+    Object.assign(lineRun, { status: "COMPLETED", output: "Moved your call to 18:00." });
+    await w.ended(w.agents.notified.get(lineRun.id)!.ref, lineRun.id, COACH, "COMPLETED");
+    expect(await w.askOf(id)).toMatchObject({ state: "done", line: "Moved your call to 18:00." });
+    expect(w.pushed.map((p) => p.token)).toEqual(["fcm-ana"]);
+  });
+});
+
+describe("the line the watch shows and says", () => {
+  it("is one line of plain text, at most 140 characters, cut at a word", () => {
+    expect(checkedLine("Moved your call to **18:00**.\nTold the [guests](https://x.test).")).toBe("Moved your call to 18:00. Told the guests.");
+    const long = checkedLine("word ".repeat(60))!;
+    expect([...long].length).toBeLessThanOrEqual(LINE_MAX);
+    expect(long.endsWith("…")).toBe(true);
+    expect(checkedLine("   ")).toBeUndefined();
+    expect(checkedLine(undefined)).toBeUndefined();
+    expect(checkedLine("a‮bc\u0007d")).toBe("a bc d");
+  });
+});

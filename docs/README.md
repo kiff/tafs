@@ -35,6 +35,7 @@ A page that no longer matches the code is a bug (see [AGENTS.md](../AGENTS.md)).
 | [watch-app.md](watch-app.md) | The Apple Watch companion (watchOS 10 and later): what it does in v1, how it reaches tafs cloud and KIFF through the iPhone, and where its code is |
 | [computer-passkeys.md](computer-passkeys.md) | How a computer approves with a passkey: a Mac with Touch ID, Windows Hello, and a USB security key or the phone for a Mac without Touch ID and Linux; what a passkey approval carries |
 | [android-app.md](android-app.md) | The Android app's code: building and testing it, its packages, signing, releases |
+| [watch-ask.md](watch-ask.md) | Asking from the watch: tafs cloud's signed route, Coach's watch-only conversation that hands the request to one taf, and the checked result line |
 | [watch-wear.md](watch-wear.md) | The Wear OS watch (Wear OS 3 or later): a companion to the Android app that asks the phone, holds no keys, and what it may and may not do |
 | [data.md](data.md) | Where every piece of data lives, for how long, and who deletes it |
 | [kiff-decides.md](kiff-decides.md) | How KIFF decides every taf action, with the first held calls on a phone |

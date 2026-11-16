@@ -1,3 +1,4 @@
+import { watchAskOn } from "./watch-ask.js";
 import { type AttributeValue, ConditionalCheckFailedException, DeleteItemCommand, DynamoDBClient, GetItemCommand, PutItemCommand, ScanCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { CreateSecretCommand, DeleteSecretCommand, GetSecretValueCommand, PutSecretValueCommand, ResourceExistsException, ResourceNotFoundException, SecretsManagerClient } from "@aws-sdk/client-secrets-manager";
 import { accountItems, accountPrefixes, isAccountItem } from "./account.js";
@@ -672,7 +673,8 @@ const deletionPeers = {
 
 function deps(): Deps {
   // aiConsent: always on here; nothing a person writes reaches the model before they allow it (consent.ts).
-  return { agents: agents(), aiConsent: true, keys, accounts, tafs, forward, names, slots, claims, push, apns, androidPush: Boolean(fcm), removals, archived, accountData, deletions, deletionPeers, coach, events, reports, planqueBase: process.env.PLANQUE_URL ?? PLANQUE, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
+  // Requests from the watch stay off until kiff/agents holds a session to its `only` (docs/watch-ask.md).
+  return { agents: agents(), aiConsent: true, watchAsk: watchAskOn(process.env.TAFS_WATCH_ASK), keys, accounts, tafs, forward, names, slots, claims, push, apns, androidPush: Boolean(fcm), removals, archived, accountData, deletions, deletionPeers, coach, events, reports, planqueBase: process.env.PLANQUE_URL ?? PLANQUE, ...(doors ? { doors } : {}), ...(publicURL ? { publicURL } : {}) };
 }
 
 /**
@@ -750,3 +752,4 @@ async function streamed(event: HTTPEvent, out: ResponseStream): Promise<void> {
  * (kiff/tafs#285).
  */
 export const stream = typeof awslambda === "undefined" ? streamed : awslambda.streamifyResponse(streamed);
+
