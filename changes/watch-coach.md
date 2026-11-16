@@ -1,1 +1,1 @@
-- **Apple Watch: talk to Coach from the wrist.** Dictate or write, read your words, send; Coach's answer shows short, and anything to approve says "Approve on your phone" ([docs/watch-app.md](docs/watch-app.md)).
+- **Apple Watch: talk to Coach from the wrist.** Dictate or write, read your words, send; Coach's answer shows short, and anything to approve says "Approve on your phone". Refuse, Halt and Coach send only from a watch with a passcode ([docs/watch-app.md](docs/watch-app.md)).

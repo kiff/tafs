@@ -19,7 +19,7 @@ final class CoachModelTests: XCTestCase {
     func testTheWordsShownAreTheWordsSent() async {
         let answer = WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false)
         let phone = Phone(WatchReply(.ok, coach: answer))
-        let model = CoachModel(phone: phone, clock: { self.now })
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked())
         model.draft = "  Pause Rae \n"
         await model.send()
         XCTAssertEqual(phone.asked, [WatchRequest(.coach, made: now, text: "Pause Rae")])
@@ -29,7 +29,7 @@ final class CoachModelTests: XCTestCase {
 
     func testNothingIsSentWithoutWords() async {
         let phone = Phone(nil)
-        let model = CoachModel(phone: phone, clock: { self.now })
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked())
         model.draft = "   "
         await model.send()
         XCTAssertTrue(phone.asked.isEmpty)
@@ -38,7 +38,7 @@ final class CoachModelTests: XCTestCase {
 
     func testWordsOverTheLimitCantBeSent() async {
         let phone = Phone(nil)
-        let model = CoachModel(phone: phone, clock: { self.now })
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: Unlocked())
         model.draft = String(repeating: "a", count: WatchRequest.coachLimit + 1)
         XCTAssertFalse(model.canSend)
         await model.send()
@@ -46,7 +46,7 @@ final class CoachModelTests: XCTestCase {
     }
 
     func testARefusalKeepsTheWordsAndSaysWhy() async {
-        let model = CoachModel(phone: Phone(WatchReply(.failed, line: "Before you talk to Coach, allow AI use in tafs on your phone.")), clock: { self.now })
+        let model = CoachModel(phone: Phone(WatchReply(.failed, line: "Before you talk to Coach, allow AI use in tafs on your phone.")), clock: { self.now }, lock: Unlocked())
         model.draft = "Pause Rae"
         await model.send()
         XCTAssertEqual(model.state, .failed("Before you talk to Coach, allow AI use in tafs on your phone."))
@@ -54,7 +54,7 @@ final class CoachModelTests: XCTestCase {
     }
 
     func testTheWordsAndTheAnswerGoWhenTheAppLeavesTheScreen() async {
-        let model = CoachModel(phone: Phone(WatchReply(.ok, line: "The rest is on your phone.")), clock: { self.now })
+        let model = CoachModel(phone: Phone(WatchReply(.ok, line: "The rest is on your phone.")), clock: { self.now }, lock: Unlocked())
         model.draft = "Pause Rae"
         await model.send()
         XCTAssertEqual(model.state, .answered(nil))
@@ -62,5 +62,16 @@ final class CoachModelTests: XCTestCase {
         model.leave()
         XCTAssertEqual(model.draft, "")
         XCTAssertEqual(model.state, .writing)
+    }
+
+    /// With no passcode, nothing goes to Coach, and the words stay to send once one is set.
+    func testWithNoPasscodeCoachSendsNothing() async {
+        let phone = Phone(WatchReply(.ok, line: "The rest is on your phone."))
+        let model = CoachModel(phone: phone, clock: { self.now }, lock: NoPasscode())
+        model.draft = "Pause Rae until Monday"
+        await model.send()
+        XCTAssertTrue(phone.asked.isEmpty, "nothing reaches the phone")
+        XCTAssertEqual(model.state, .failed(Words.Watch.needsLock))
+        XCTAssertEqual(model.draft, "Pause Rae until Monday")
     }
 }

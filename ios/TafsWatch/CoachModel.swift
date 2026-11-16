@@ -17,10 +17,13 @@ final class CoachModel: ObservableObject {
     @Published private(set) var state: State = .writing
     private let phone: PhoneAsking
     private let clock: () -> Date
+    /// Sending needs a passcode on this watch (`WristLock`).
+    private let lock: WristLock
 
-    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init) {
+    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock()) {
         self.phone = phone
         self.clock = clock
+        self.lock = lock
     }
 
     var canSend: Bool { state != .sending && !words.isEmpty && words.count <= WatchRequest.coachLimit }
@@ -29,6 +32,8 @@ final class CoachModel: ObservableObject {
     /// Sends the words the person sees, through the phone.
     func send() async {
         guard canSend else { return }
+        // No passcode on this watch: nothing is sent, and the words stay to send once one is set.
+        guard lock.isSecure else { state = .failed(Words.Watch.needsLock); return }
         let text = words
         state = .sending
         let reply = await phone.ask(WatchRequest(.coach, made: clock(), text: text))

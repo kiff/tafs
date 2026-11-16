@@ -21,10 +21,13 @@ final class NeedsYouModel: ObservableObject {
     @Published private(set) var answers: [String: WatchAnswer] = [:]
     private let phone: PhoneAsking
     private let clock: () -> Date
+    /// Sending needs a passcode on this watch (`WristLock`).
+    private let lock: WristLock
 
-    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init) {
+    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock()) {
         self.phone = phone
         self.clock = clock
+        self.lock = lock
     }
 
     private var asking = false
@@ -57,6 +60,8 @@ final class NeedsYouModel: ObservableObject {
     /// at a time per call; the result is the phone's.
     func refuse(_ hold: String) async {
         guard answers[hold]?.isSending != true else { return }
+        // No passcode on this watch: nothing is asked of the phone.
+        guard lock.isSecure else { answers[hold] = .failed(Words.Watch.needsLock); return }
         answers[hold] = .sending
         let reply = await phone.ask(WatchRequest(.refuse, made: clock(), hold: hold))
         if reply?.outcome == .signedOut { state = .signedOut; answers = [:]; return }
