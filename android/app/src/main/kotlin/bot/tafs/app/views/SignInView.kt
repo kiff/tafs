@@ -145,7 +145,8 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
     containerColor = Theme.background,
   ) {
     Column(Modifier.fillMaxWidth().navigationBarsPadding()) {
-      Text(
+      // Once connected, Let's go is the one way on: no Cancel above it.
+      if (!connected) Text(
         Words.Common.cancel,
         style = scaled(17, color = Theme.amber),
         modifier = Modifier.padding(horizontal = 24.dp).heightIn(min = 44.dp).tapping(onClick = close).padding(top = 8.dp),
