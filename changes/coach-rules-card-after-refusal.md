@@ -1,0 +1,1 @@
+- **After a refusal for rules not agreed, Coach shows the rules itself (tafs cloud).** When tafs cloud refuses an approval because the owner hasn't agreed the rules yet, its answer now tells Coach that nothing waits for the owner and to show the rules' confirm in the same turn. Before, Coach could end its turn on "waiting for you to approve" with no card to tap (docs/coach.md).

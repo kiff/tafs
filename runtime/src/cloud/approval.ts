@@ -73,6 +73,13 @@ export interface ApprovalGrant {
 export const REDRAFT_CODES: ReadonlySet<string> = new Set(["no_card", "vendor_name", "stray", "uncovered", "uncovered_elsewhere", "on_demand", "lifetime_cap", "lifetime_sum", "day_total_twice", "count_on_amount",
   "rules_on_exceed", "rules_missing", "rules_figures", "rules_unagreed", "rules_required"]);
 /** The refusals Coach mends by having the owner agree to the rules first, then drafting again. */
+/**
+ * Said with every refusal for rules not agreed: nothing waits for the owner until Coach shows the rules, so Coach shows
+ * them in the same turn. 16 Nov: after this refusal, Coach ended its turn on "waiting for you to approve" with nothing
+ * on screen to tap, and showed the rules card only when nudged.
+ */
+export const SHOW_NOW = "Nothing is waiting for the owner now: this approval is over, and there is no card for them to tap until you show one. Show the rules' confirm in this turn, before you end it, and never end a turn saying you're waiting for their approval with no card on screen.";
+
 const AGREE_FIRST_CODES: ReadonlySet<string> = new Set(["rules_unagreed", "rules_required"]);
 
 /**
@@ -111,7 +118,7 @@ async function cardsReady(ask: ApprovalAsk, draftID: string, grant: ApprovalGran
       : takesKey(grant) ? " Its key wasn't approved either: the new approval carries it with the Card."
       : " Its tools weren't approved either: the new approval carries them with the Card.";
     const count = checked.code === "count_on_amount" ? ` ${COUNT_NEVER_A_RULE}` : "";
-    const next = AGREE_FIRST_CODES.has(checked.code) ? AGREE_FIRST : DRAW_AGAIN;
+    const next = AGREE_FIRST_CODES.has(checked.code) ? `${AGREE_FIRST} ${SHOW_NOW}` : DRAW_AGAIN;
     return { ...checked, answer: `${checked.answer.replace(/\s+$/, "")} ${REFUSAL_CLOSED}${carried}${count} ${next} ${KEEP_THE_REST}` };
   }
   return checked;
