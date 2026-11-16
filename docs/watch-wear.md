@@ -115,6 +115,9 @@ With it on (`WatchModel(briefOn = true)` in the tests):
 - **Unchanged:** the tile (Needs you's count, only while unlocked); a locked watch shows only "A taf needs you"; the brief is
   kept in memory and forgotten when the watch is put away. No new words: the brief's are tafs cloud's, and Open on phone and
   Refuse are the watch's own (`WatchBriefScreenTest`, `WatchBriefTest`).
+- **Unlocked only, if it ever leaves the app.** A decision's question and Done's cases can name a person or an amount. They're
+  drawn only inside the app's screen today, so only on an unlocked watch; a tile or complication for the brief would follow the
+  tile's rule: nothing but a count, and only while the watch is unlocked.
 
 ## Versions
 
