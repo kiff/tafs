@@ -1,0 +1,6 @@
+- Votre briefing : deux fois par jour, les décisions qui vous attendent et ce qui a été fait, à la place de Vous attend.
+- Des étiquettes sur votre liste de tafs, et le journal d'une mission.
+- Les briefings et les alertes urgentes ont leurs propres canaux.
+- Les Conditions et la Confidentialité s'ouvrent dans la langue de l'app.
+- Verrouillé, une alerte dit seulement « Un taf vous attend ».
+- Nouveaux jobs : paiements par carte échoués, versements rapprochés de la banque, colis en retard.

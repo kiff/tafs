@@ -1,0 +1,6 @@
+- Twój przegląd: dwa razy dziennie decyzje, które na Ciebie czekają, i to, co zrobiono, zamiast Czeka na Ciebie, gdy Twoje konto go ma.
+- Etykiety na liście tafs i dziennik misji.
+- Przeglądy i pilne alerty mają własne kanały powiadomień.
+- Warunki i Prywatność otwierają się w języku aplikacji.
+- Na zablokowanym telefonie alert mówi tylko „Taf czeka na Ciebie”.
+- Nowe joby: nieudane płatności kartą, wypłaty uzgodnione z bankiem, spóźnione paczki.
