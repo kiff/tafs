@@ -51,6 +51,8 @@ internal fun ConnectedToolsRing(taf: Taf, state: AppState, actions: TafActions, 
   LaunchedEffect(chosen) { if (chosen != null) actions.loadSetup(taf.id) }
   var showJob by remember { mutableStateOf(false) }
   var workflowOpen by rememberSaveable(taf.id) { mutableStateOf(false) }
+  // Asked for by its route (AppModel.open).
+  LaunchedEffect(state.requestedRoute) { if (state.requested(bot.tafs.app.model.AppRoute.TafWorkflow, taf.id)) { workflowOpen = true; actions.routeTaken() } }
   val scope = rememberCoroutineScope()
   val improve = LocalImproveInCoach.current
   // The taf's own Connect again, in tafs cloud's words: one tap signs that connection in again, here on the taf.
@@ -297,6 +299,7 @@ private fun RetainedRuns(taf: Taf, state: AppState, actions: TafActions) {
 @Composable
 internal fun MemorySummaryPanel(taf: Taf, state: AppState, actions: TafActions) {
   var all by rememberSaveable(taf.id) { mutableStateOf(false) }
+  LaunchedEffect(state.requestedRoute) { if (state.requested(bot.tafs.app.model.AppRoute.TafMemory, taf.id)) { all = true; actions.routeTaken() } }
   val summary = state.tafSetups[taf.id]?.memory
   val scope = rememberCoroutineScope()
   Panel {
