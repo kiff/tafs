@@ -4,12 +4,14 @@ import bot.tafs.app.TafsApplication
 import bot.tafs.watchlink.WatchLink
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.TaskCompletionSource
+import com.google.android.gms.wearable.Wearable
 import com.google.android.gms.wearable.WearableListenerService
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 /**
  * Where the Wear OS watch's requests reach the phone (docs/watch-wear.md): live `MessageClient` requests only, which the Data
@@ -25,7 +27,10 @@ class WearRelayService : WearableListenerService() {
     val app = application as TafsApplication
     val answer = TaskCompletionSource<ByteArray>()
     scope.launch {
-      val reply = runCatching { WatchRelay(model = { app.restoredModel() }).answer(path, request) }
+      // Only a watch connected to this phone now: the Data Layer names the node it came from, and it must be one of them.
+      val connected = runCatching { Wearable.getNodeClient(this@WearRelayService).connectedNodes.await().any { it.id == nodeId } }.getOrDefault(false)
+      val reply = if (!connected) bot.tafs.watchlink.WatchReply.Refused(bot.tafs.watchlink.NotAccepted.UNKNOWN_PATH)
+      else runCatching { WatchRelay(model = { app.restoredModel() }).answer(path, request) }
         .getOrElse { bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone) }
       answer.trySetResult(WatchLink.encodeReply(reply))
     }

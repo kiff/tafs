@@ -26,8 +26,18 @@ this page says what is there now and what each step adds.
   (`res/values/wear.xml`) and answers requests under `/tafs/watch/v1/` only. Each passes `WatchLink.accept` first; then
   Needs you is read again (`refresh`) and answered as the phone shows it: tafs cloud's count and words, and each held call's
   taf, summary, KIFF's amount and reason. Your tafs is each taf's line (`Taf.now`), or Halted. With no KIFF session (signed
-  out, or the sample) the watch is told `signed_out`. Refuse, Halt and Coach are answered Open on phone for now, with
-  nothing read, signed or sent (`WatchRelayTest`).
+  out, or the sample) the watch is told `signed_out`. Coach is answered Open on phone for now, with nothing sent
+  (`WatchRelayTest`). The phone answers only a watch connected to it now (`NodeClient.connectedNodes`).
+- **Refuse and Halt from the wrist.** A held call the phone can answer shows **Refuse**; each taf not halted shows
+  **Halt now**, and the list ends with **Halt all now**. The watch sends one only while a screen lock is set and it's unlocked
+  (`KeyguardManager.isDeviceSecure` and not `isDeviceLocked`); otherwise it sends nothing and says `watch.needs_lock`, with
+  Open on phone. The phone then:
+  - **Refuse:** reads Needs you again; a call answered or gone meanwhile is `already_answered`, and nothing goes to KIFF. Else
+    it answers it as its own Refuse does (`AppModel.answer`, `confirmed`), signed with the **signing key** and no prompt of its
+    own, the watch's unlock being the confirmation. The approval key is never asked on this path.
+  - **Halt** (`AppModel.halt`): one taf, or every taf; no confirmation, as on the phone.
+  - The watch shows the result only once the phone has KIFF's or tafs cloud's answer: "Refused", "Halted", "All your tafs
+    halted", tafs cloud's halting line, or what went wrong with Open on phone (`WatchRefuseHaltTest`, `WatchModelTest`).
 - **One model for the process.** The relay reads the app's own `AppModel`, which `TafsApplication` now owns
   (`TafsApplication.model`) and `MainActivity` draws. It isn't an activity's ViewModel any more, so closing the screen doesn't
   end it while the watch asks, and the session's hooks on the KIFF and tafs cloud clients are never two models'. Where the
@@ -88,7 +98,6 @@ watch doesn't know is shown as Open on phone, never guessed at.
 ## Still to come
 
 1. The tile with Needs you's count.
-2. Refuse and Halt (one taf, every taf) from the wrist.
 3. Talk to Coach by voice.
 4. Screenshots in all 8 languages. A Wear OS build on Play's listing (the internal track first) is a store-listing change,
    so it waits for the owner.

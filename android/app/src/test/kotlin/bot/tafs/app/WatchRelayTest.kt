@@ -33,15 +33,19 @@ class WatchRelayTest {
     assertEquals(0, asked)
   }
 
-  @Test fun refuseHaltAndCoachFromTheWristAreNotYetTheWatchs() = runTest {
+  @Test fun coachFromTheWristIsNotYetTheWatchs() = runTest {
     var asked = 0
     val relay = WatchRelay(model = { asked++; testModel() }, now = { now })
-    for (r in listOf(WatchRequest.Refuse(now, "hold_1"), WatchRequest.Halt(now, null), WatchRequest.Halt(now, "taf_1"), WatchRequest.Coach(now, "Pause refunds"))) {
-      val (path, data) = request(r)
-      assertEquals(r.toString(), WatchReply.Failed("Open on phone"), relay.answer(path, data))
-    }
-    // Nothing read, so nothing signed or sent.
+    val (path, data) = request(WatchRequest.Coach(now, "Pause refunds"))
+    assertEquals(WatchReply.Failed("Open on phone"), relay.answer(path, data))
     assertEquals(0, asked)
+  }
+
+  @Test fun theSampleCantRefuseOrHaltFromTheWrist() = runTest {
+    for (r in listOf(WatchRequest.Refuse(now, "hold_1"), WatchRequest.Halt(now, null))) {
+      val (path, data) = request(r)
+      assertEquals(WatchReply.SignedOut, WatchRelay(model = { testModel() }, now = { now }).answer(path, data))
+    }
   }
 
   @Test fun withNoSessionTheWatchIsToldSignedOut() = runTest {
@@ -65,8 +69,7 @@ class WatchRelayTest {
       assertEquals(call.proposed.summary, line.wants)
       assertEquals(call.proposed.amount?.formatted, line.amount)
       assertEquals(call.reason, line.reason)
-      // Not from the wrist yet: Refuse comes with its own review.
-      assertFalse(line.refusable)
+      assertEquals(state.canAnswer(call), line.refusable)
     }
   }
 
