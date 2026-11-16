@@ -8735,12 +8735,36 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const r = await agentsCall(() => deps.agents.getRun(tenant, task.taf, task.run));
   const ended = r.status === "COMPLETED" || r.status === "ERROR" || r.status === "CANCELLED";
   if (!ended && r.status !== "PAUSED") return { taken: false };
+  // kiff/agents sends a note at least once: the same note again, or two at once, acts once. The claim is the run's
+  // state as read back, so a run that pauses again on something else is told again.
+  const claim = noteClaim(tenant, note.ref, r);
+  const at = deps.now?.() ?? new Date();
+  if (!(await deps.coach.once(claim, new Date(at.getTime() + TASK_KEPT_MS)))) return { taken: true };
+  try {
+    return await tellRunEnded(tenant, key, task, r, ended, at, deps);
+  } catch (err) {
+    // Nothing was said: the next note, or a retry of this one, says it.
+    await deps.coach.remove(claim).catch(() => undefined);
+    throw err;
+  }
+}
+
+/**
+ * The key a run's note is acted on under: the run and its state, read back from kiff/agents. An ended run's status;
+ * a paused run's status and the calls it waits on, so a second pause on another card or call is its own.
+ */
+export function noteClaim(tenant: string, ref: string, r: Pick<Run, "id" | "status" | "requirements">): string {
+  const waits = r.status === "PAUSED" ? (r.requirements ?? []).filter((q) => !q.answered).map((q) => q.call_id).sort().join(",") : "";
+  return `${tenant}#run-note#${ref}#${r.id}#${r.status}${waits ? `#${waits}` : ""}`;
+}
+
+/** What a run's note says, once: Coach told at work, or a note kept for the person's chat, the phones, and the task forgotten once it ended. */
+async function tellRunEnded(tenant: string, key: string, task: Task, r: Run, ended: boolean, at: Date, deps: Deps): Promise<{ taken: boolean }> {
   const taf = await deps.tafs.get(tenant, task.taf);
   const name = taf?.name ?? task.taf;
   const { line, said } = coachLine(name, task, r);
   // Its level (kiff/tafs#210): quiet while the owner is around, kept for "While you
   // were away" otherwise. A paused run is a hold, which KIFF's alert interrupts for.
-  const at = deps.now?.() ?? new Date();
   const level = ended ? levelOf("run_ended", !(await deps.slots.held(presenceKey(tenant)))) : undefined;
   const tafs = await deps.tafs.list(tenant);
   const setup = tafs.find((t) => t.job === SETUP_JOB && !t.removing);
@@ -8752,11 +8776,11 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (!told && task.person && taf && !taf.removing) {
     // The person reads the taf and how it went; their Coach reads the whole line. A task
     // with no person behind it is told to no one's Coach.
-    await deps.coach.append(coachKeys.notes(tenant, task.person), { at: at.toISOString(), text: line, taf: name, taf_id: taf.id, said, ...(level === "later" ? { away: true } : {}) },
+    await deps.coach!.append(coachKeys.notes(tenant, task.person), { at: at.toISOString(), text: line, taf: name, taf_id: taf.id, said, ...(level === "later" ? { away: true } : {}) },
       new Date(at.getTime() + TASK_KEPT_MS));
   }
   if (level === "quiet") await tellPhones(deps, tenant, (lang) => endedNotification(name, r, lang));
-  if (ended) await deps.coach.remove(key);
+  if (ended) await deps.coach!.remove(key);
   return { taken: true };
 }
 

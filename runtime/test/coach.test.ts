@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { COACH_CARDS, COACH_TOOL_GROUPS, coachCardsDraft, coachToolsStep, OP_ARG, SESSION_ARG, TOOLS } from "../src/cloud/coach.js";
 import { startDrive } from "../src/cloud/drive.js";
 import { AgentsError } from "../src/cloud/agents.js";
-import { CHAT, type Deps, handle, type HTTPEvent, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
+import { CHAT, type Deps, handle, type HTTPEvent, noteClaim, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { readLabels, saveLabels } from "../src/cloud/labels.js";
 import { readMissions } from "../src/cloud/missions.js";
@@ -790,6 +790,77 @@ describe("Coach's tools (kiff/tafs#206)", () => {
     const lines = (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines;
     expect(lines[0]).toMatchObject({ taf: "Refunds", said: "Waits for your answer." });
     expect([...w.coach.held.keys()].some((k) => k.startsWith(`${T}#coach-task#`))).toBe(true);
+  });
+});
+
+describe("a run's note acts at most once (kiff/agents sends it at least once)", () => {
+  const PAUSE = (call: string) => ({ status: "PAUSED", requirements: [{ call_id: call, tool: "stripe_refund", input: {}, operation: "op", expires: "2026-10-16T13:00:00Z" }] });
+
+  it("two identical end notes at the same moment tell Coach, the chat and the phones once", async () => {
+    const w = world();
+    const coachRun = await w.agents.api.startRun(T, SETUP, "Have Refunds refund order 42", { requester: { kind: "member", id: "u_ana" } });
+    w.agents.runs.find((r) => r.id === coachRun.id)!.status = "RUNNING";
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "COMPLETED", output: "Refunded order 42." });
+    (w.deps.slots as ReturnType<typeof memorySlots>).taken.add(`present#${T}`);
+    const note = { run: task.json.run, agent: RAE, status: "COMPLETED", ref };
+    const [a, b] = await Promise.all([w.send("POST", "/v1/runs/ended", note), w.send("POST", "/v1/runs/ended", note)]);
+    expect([a.status, b.status]).toEqual([200, 200]);
+    expect(w.agents.runs.find((r) => r.id === coachRun.id)!.steering!.filter((x) => x.text.includes(task.json.run))).toHaveLength(1);
+    expect(w.pushed).toHaveLength(1);
+  });
+
+  it("a repeated end note, later, acts once", async () => {
+    const w = world();
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "ERROR", error: "Stripe said no." });
+    (w.deps.slots as ReturnType<typeof memorySlots>).taken.add(`present#${T}`);
+    const note = { run: task.json.run, agent: RAE, status: "ERROR", ref };
+    await w.send("POST", "/v1/runs/ended", note);
+    await w.send("POST", "/v1/runs/ended", note);
+    expect(w.pushed).toHaveLength(1);
+    expect((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines).toHaveLength(1);
+  });
+
+  it("a repeated PAUSED note adds its line once; a second pause on another call is told again", async () => {
+    const w = world();
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    const run = w.agents.runs.find((r) => r.id === task.json.run)!;
+    Object.assign(run, PAUSE("c1"));
+    const note = { run: task.json.run, agent: RAE, status: "PAUSED", ref };
+    await Promise.all([w.send("POST", "/v1/runs/ended", note), w.send("POST", "/v1/runs/ended", note)]);
+    await w.send("POST", "/v1/runs/ended", note);
+    const lines = async () => (await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines as unknown[];
+    expect(await lines()).toHaveLength(1);
+    // The owner answered; the run went on and paused again on another call: that pause is its own note.
+    Object.assign(run, PAUSE("c2"));
+    expect((await w.send("POST", "/v1/runs/ended", note)).body).toEqual({ taken: true });
+    expect(await lines()).toHaveLength(2);
+  });
+
+  it("a note that fails before it said anything is acted on when it comes again", async () => {
+    const w = world();
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    Object.assign(w.agents.runs.find((r) => r.id === task.json.run)!, { status: "ERROR", error: "Stripe said no." });
+    const append = w.coach.append;
+    w.coach.append = async () => { throw new Error("the store is down"); };
+    const note = { run: task.json.run, agent: RAE, status: "ERROR", ref };
+    expect((await w.send("POST", "/v1/runs/ended", note)).status).toBeGreaterThanOrEqual(500);
+    w.coach.append = append;
+    expect((await w.send("POST", "/v1/runs/ended", note)).body).toEqual({ taken: true });
+    expect((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines).toHaveLength(1);
+  });
+
+  it("claims a run's state as read back: an ended run by its status, a paused one by what it waits on", () => {
+    const run = { id: "run_1", status: "PAUSED" as const, requirements: [
+      { call_id: "c2", tool: "t", input: {}, operation: "o", expires: "" }, { call_id: "c1", tool: "t", input: {}, operation: "o", expires: "" },
+      { call_id: "c0", tool: "t", input: {}, operation: "o", expires: "", answered: "2026-10-16T12:00:00Z" }] };
+    expect(noteClaim("t_acme", "ref1", run)).toBe("t_acme#run-note#ref1#run_1#PAUSED#c1,c2");
+    expect(noteClaim("t_acme", "ref1", { id: "run_1", status: "COMPLETED", requirements: run.requirements })).toBe("t_acme#run-note#ref1#run_1#COMPLETED");
   });
 });
 

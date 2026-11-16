@@ -217,7 +217,7 @@ See [doors.md](doors.md). Reading and changing both need managing the taf: someo
 | Route | Who | What |
 |---|---|---|
 | `POST /v1/mcp` | Coach, through KIFF's gateway | Coach's tools. Each call's KIFF permit is checked: signature, issuer, audience, tool, the exact arguments' hash and lifetime ([coach.md](coach.md#coachs-own-tools)) |
-| `POST /v1/runs/ended` | kiff/agents | A run Coach handed a taf paused or ended. Unsigned: an unknown ref is dropped, and the run is read back from kiff/agents. A pause note's `waits` (the vendor events the run waits on, by grant, event and key) are matched against events kept by `POST /v1/events/planque` that came before the pause, and answered |
+| `POST /v1/runs/ended` | kiff/agents | A run Coach handed a taf paused or ended. Unsigned: an unknown ref is dropped, and the run is read back from kiff/agents. Acted on at most once per run state (the same note again, or two at once, answer `taken: true` and do nothing more; a pause on another call is told again). A pause note's `waits` (the vendor events the run waits on, by grant, event and key) are matched against events kept by `POST /v1/events/planque` that came before the pause, and answered |
 | `POST /v1/doors/email`, `POST /v1/doors/whatsapp` | the providers | The doors' webhooks, each checked by the provider's signature |
 | `GET /doors/whatsapp/connect` | the owner's browser | The page WhatsApp's signup runs in |
 

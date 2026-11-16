@@ -652,6 +652,12 @@ tools are `to_give` (`coachToolsStep` in `coach.ts`):
 When a run Coach handed a taf pauses or ends, kiff/agents tells tafs cloud
 (`POST /v1/runs/ended`). tafs cloud reads the run back from kiff/agents rather than
 trust the note, and Coach hears it in its run at work, or at its next turn. kiff/agents
+sends a note at least once, so tafs cloud acts on each at most once: before it tells Coach, keeps
+the chat's line or notifies the phones, it claims the run's state as read back (an ended run by its
+status, a paused one by the calls it waits on, `noteClaim`). The same note again, or two at once, is
+answered `taken: true` and does nothing more. A pause on another call is told again, and a note
+whose telling fails is released, so it's told when it comes again. A result card's hand-over and a
+door's reply claim their own keys the same way. kiff/agents
 announces only to URLs it is set to allow (`AGENTS_NOTIFY_URLS`), so tafs cloud's public
 `/v1/runs/ended` must be among them: when it isn't, kiff/agents refuses the run and
 `taf_task` fails with "notify.url is not one this server announces runs to". Moving tafs
