@@ -184,6 +184,11 @@ struct RootView: View {
                 }
             }
         }
+        // Signed in just now, by KIFF or by pairing: the celebration, once, over the home screen.
+        .fullScreenCover(isPresented: Binding(get: { model.justConnected && model.mode == .kiff && !Screenshots.enabled },
+                                              set: { if !$0 { model.justConnected = false } })) {
+            ConnectedView { model.justConnected = false }
+        }
         // The keyboard's shortcuts on every screen (kiff/tafs#210).
         // Off while Coach drives the app: a key the person presses then isn't a shortcut.
         // On the Mac they're the menu bar's (MacCommands), so they aren't here as well.
