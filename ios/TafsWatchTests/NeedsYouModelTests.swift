@@ -59,6 +59,32 @@ final class NeedsYouModelTests: XCTestCase {
         XCTAssertEqual(model.state, .loading)
     }
 
+    func testRefusedShowsOnlyOnceThePhoneSaysSo() async {
+        let phone = Phone(WatchReply(.ok, needsYou: page))
+        let model = NeedsYouModel(phone: phone, clock: { self.now })
+        await model.load()
+        phone.reply = WatchReply(.ok, line: "Refused. Nothing was sent.")
+        await model.refuse("ce_1")
+        XCTAssertEqual(phone.asked.last, WatchRequest(.refuse, made: now, hold: "ce_1"))
+        XCTAssertEqual(model.answers["ce_1"], .done("Refused. Nothing was sent."))
+    }
+
+    func testARefuseThatDidntGoSaysNotRefusedAndWhy() async {
+        let phone = Phone(WatchReply(.failed, line: "KIFF didn't take the refusal."))
+        let model = NeedsYouModel(phone: phone, clock: { self.now })
+        await model.refuse("ce_1")
+        XCTAssertEqual(model.answers["ce_1"], .failed(Words.Alert.notRefused + "\nKIFF didn't take the refusal."))
+        phone.reply = nil
+        await model.refuse("ce_1")
+        XCTAssertEqual(model.answers["ce_1"], .failed(Words.Alert.notRefused + "\n" + Words.Watch.phoneNotReachable))
+    }
+
+    func testAlreadyAnsweredIsSaid() async {
+        let model = NeedsYouModel(phone: Phone(WatchReply(.answered, line: "Already answered, or it ended.")), clock: { self.now })
+        await model.refuse("ce_1")
+        XCTAssertEqual(model.answers["ce_1"], .done("Already answered, or it ended."))
+    }
+
     func testTheWatchNeverAsksToApprove() {
         // The contract has no approval to ask for: only these six kinds decode on either side.
         let kinds = ["needs_you", "tafs", "refuse", "halt", "halt_all", "coach"]

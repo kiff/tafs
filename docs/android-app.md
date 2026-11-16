@@ -28,6 +28,17 @@ working and waiting for you ([coach.md](coach.md), [chat.md](chat.md#the-answer-
   <img src="screenshots/android/coach-live-waiting.png" width="180" alt="The live line: Waiting for you">
 </p>
 
+Where Coach's screen is 600 dp wide or more (a tablet, beside the tafs list or with it folded
+away), Coach's conversation has "Taking shape" beside it, as on an iPad (`SetupShapePanel`, from `AppState.setupShape`): what Coach
+has made so far, read only from what the app already holds. The taf's name once it's handed over,
+else the plan's title; the plan's steps, each done, needing you, at work, to do, failed or skipped
+(with no plan, what Coach asked of the person and where each stands); the tools its cards connect,
+each connected (with what the taf calls through it), signed in, waiting for you, or not connected
+with planque's reason; and the Card KIFF drafted, dashed until it's confirmed. Before anything, one
+line says what will show there. Nothing is fetched, signed or sent from it, and the cards to answer
+stay in the conversation; beside it, the plan's line above the thread steps aside, since the panel
+shows it (`SetupShapeTest`).
+
 A taf's page, under its compact header: the sample's Refunds; a chat opening at its newest, with a
 stranger's knock and a paired sender's message at their times; and the page folded as the chat
 scrolls (the last two drawn by `TafPageScreenTest`, from synthetic data):
@@ -112,6 +123,16 @@ them; tafs cloud lists them, counts them and words the filtered headline.
 - **A mission's row** (§3, a draft until tafs cloud sends it): filtered to a label that is a mission's (`labels[].mission:
   {id, name, goal}`), the list shows its goal in the person's words and **Log** (`MissionRow`).
 
+## Shared with you
+
+Home lists the person's own tafs first, then the tafs being set up, then, under **Shared with you**
+(`home.shared_you`), the tafs shared with them to use but not to manage, as on iPhone and iPad (kiff/tafs#306). A taf is
+shared when KIFF's access answer for it says use without manage (`AppState.sharedWithMe`). Until KIFF has answered for a
+taf, it stays among the person's own; it moves under Shared with you only once that answer says so. Home splits its ordered,
+filtered list with one function (`AppState.sections`), so both lists keep the list's order (waiting first, then the one used
+most recently), and a label filters both. The sample has nothing shared
+(`SharedUseTest`).
+
 ## A mission's log
 
 Missions v2.1 §6, a draft until tafs cloud's log route and its words land: **Log** opens `GET /v1/missions/{id}/log` over the
@@ -149,7 +170,8 @@ decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read 
 - **An answer is never given from the brief** (`BriefRoutes.destination`). A tap opens where the decision's own signed answer
   is given, over the brief with a way back: a held call (`ref.kind: hold`) on its own card in Needs you (`HeldCallCard`), with
   **no answer chosen**, so the person approves there, with the fingerprint asked there and a fresh signature; a step
-  (`step`) on its own panel; anything else (a connection, a proposal, no id) Needs you's list. The answer tapped isn't part of
+  (`step`) on its own panel; a taf whose scheduled check couldn't read (`check`, "Open the taf") the taf's page on the tafs tab,
+  by tafs cloud's id in `ref.taf`, where the owner sees why; anything else (a connection, a proposal, no id) Needs you's list. The answer tapped isn't part of
   the destination; the brief's code signs and sends nothing (`BriefTest`). Answered there, the card goes back to the brief.
 - **Needs you stays reachable.** The rest line (`rest`) opens today's Needs you list; whenever Needs you holds something the brief
   doesn't show, that count shows there too, with the same link, even when tafs cloud sent no `rest`

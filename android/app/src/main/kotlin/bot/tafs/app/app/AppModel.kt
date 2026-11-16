@@ -657,6 +657,18 @@ data class AppState(
    */
   fun manages(tafId: String): Boolean = access[tafId]?.manage ?: false
 
+  /**
+   * Whether the taf was shared with this person to use, not theirs to manage (as iPhone's `sharedWithMe`): KIFF's answer for
+   * it says use without manage. No answer yet isn't "shared", so a taf never jumps to Shared with you before KIFF has said.
+   */
+  fun sharedWithMe(tafId: String): Boolean = mode == Mode.kiff && access[tafId]?.let { !it.manage } ?: false
+
+  /**
+   * [tafs], in Home's order and filter, split as Home lists them (as iPhone's `tafSections`): the person's own, then those shared
+   * with them to use. Home draws from this, so the rule is in one place.
+   */
+  fun sections(tafs: List<Taf>): Pair<List<Taf>, List<Taf>> = tafs.partition { !sharedWithMe(it.id) }
+
   /** The taf's connected Slack bot connections, which a Slack door listens through. */
   fun slackBots(tafId: String): List<bot.tafs.app.kiff.Grant> = grants.filter { it.connected && it.isSlackBot && it.request.agent == tafId }
 
@@ -5542,15 +5554,23 @@ class AppModel(
 
   /**
    * One tap on an answer opens its decision where its own signed answer is given ([BriefRoutes.destination]): a held call on its own
-   * card with no answer chosen, a step, else Needs you's list. Nothing is answered, signed or sent from the brief; the person answers
-   * there, with the fingerprint asked there. The sample's card is set aside, as there is nothing to open.
+   * card with no answer chosen, a step, a taf's page (on the tafs tab, as a door's alert opens it), else Needs you's list. Nothing is
+   * answered, signed or sent from the brief; the person answers there, with the fingerprint asked there. The sample's card is set
+   * aside, as there is nothing to open.
    */
   fun answerBrief(decision: bot.tafs.app.kiff.Brief.Decision, answer: bot.tafs.app.kiff.Brief.Answer) {
     if (_state.value.mode != Mode.kiff) {
       _state.update { it.copy(briefSetAside = it.briefSetAside + decision.id) }
       return
     }
-    _state.update { it.copy(briefOpen = BriefRoutes.destination(decision, answer)) }
+    val open = BriefRoutes.destination(decision, answer)
+    // A taf's page isn't drawn over the brief: it opens on the tafs tab, as a door's alert does.
+    BriefRoutes.tafOf(open)?.let { cloudId ->
+      _state.update { it.copy(briefOpen = null) }
+      requestOpen(bot.tafs.app.push.AlertPayload.taf(cloudId))
+      return
+    }
+    _state.update { it.copy(briefOpen = open) }
   }
 
   /** Needs you's list, opened from the brief's line for it, or from a held call's alert: over the brief, when there is one. */

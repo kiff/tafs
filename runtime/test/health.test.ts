@@ -216,12 +216,19 @@ describe("a taf's health", () => {
   });
 
   it("says each reason in words: what happened, then what the owner can do", () => {
-    const view = (runs: Run[], f: Fired[] = []) => healthView(healthOf(runs, f, NOW)).lines;
+    const view = (runs: Run[], f: Fired[] = []) => healthView(healthOf(runs, f, NOW), "en", {}, "UTC", NOW).lines;
     const eight = Array.from({ length: 8 }, (_, i) => ok(30 + i * 10));
     expect(view([], firings("failed_unworked", "failed_unworked", "run"))).toEqual(["Its last 2 scheduled runs couldn't start. Open one to see why."]);
     expect(view([], firings("failed_unworked", "run"))).toEqual(["Its last scheduled run couldn't start. It tries again at its next time."]);
-    expect(view([], firings("failed_check", "failed_check", "run"))).toEqual(["Its check couldn't read the app 2 times in a row. Check the app's connection."]);
-    expect(view([], firings("failed_check", "run"))).toEqual(["Its last check couldn't read the app. It tries again at its next time."]);
+    // A check that couldn't read says when, in the account's zone, and names the app by its connection's name when it's told.
+    expect(view([], firings("failed_check", "failed_check", "run"))).toEqual(["The scheduled check couldn't read the app 2 times in a row, since 09:30. Check the app's connection."]);
+    expect(view([], firings("failed_check", "run"))).toEqual(["The scheduled check couldn't read the app at 09:45. It tries again at its next time."]);
+    expect(healthView(healthOf([], firings("failed_check", "failed_check", "run"), NOW), "en", {}, "Europe/Paris", NOW, "Gmail").lines)
+      .toEqual(["The scheduled check couldn't read Gmail 2 times in a row, since 10:30. Check the app's connection."]);
+    expect(healthView(healthOf([], firings("failed_check", "run"), NOW), "fr", {}, "Europe/Paris", NOW, "Gmail").lines[0]).toMatch(/^La vérification prévue n'a pas pu lire Gmail à 10:45\./);
+    expect(healthView(healthOf([], firings("failed_check", "run"), NOW), "pl", {}, "Europe/Paris", NOW, "Gmail").lines[0]).toMatch(/odczytać aplikacji Gmail o 10:45\./);
+    // A version switch between two failed checks neither fails nor recovers: still 2 in a row.
+    expect(codes([], firings("failed_check", "skipped_switching", "failed_check", "run"))).toEqual(["check_failing"]);
     expect(view([], firings("failed_unfinished", "run"))).toEqual(["A scheduled run stopped part-way, and what it was working on won't be tried again. Open that run to see what it did."]);
     expect(view([bad(10), bad(15), bad(18)])).toEqual(["Its last 3 runs failed. Open one to see why."]);
     expect(view([bad(10), ok(12), bad(18), ...eight])).toEqual(["2 of its last 10 runs failed. Open one to see why."]);

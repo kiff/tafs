@@ -4,7 +4,7 @@ import { AgentsError } from "../src/cloud/agents.js";
 import { providerToken } from "../src/cloud/apns.js";
 import { NotPausedYet, type ReadyRun } from "../src/cloud/forward.js";
 import { FORWARD_TRIES, handle, type HTTPEvent, type Slots } from "../src/cloud/handler.js";
-import { type Device, type Notification, type PushStore, quietFor, registration, routing, signedByKIFF, silencing } from "../src/cloud/push.js";
+import { type Device, heldWaitsForBrief, type Notification, type PushStore, quietFor, receiveAlert, registration, routing, signedByKIFF, silencing } from "../src/cloud/push.js";
 
 const NOW = new Date("2026-10-15T09:00:00Z");
 const T = Math.floor(NOW.getTime() / 1000);
@@ -840,3 +840,54 @@ describe("phone alert choices and unregistering", () => {
     expect((await call("DELETE", "/v1/push", { push, headers: { authorization: "Bearer ana" }, body })).body.removed).toBe(false);
   });
 });
+
+// Your brief (design v2.1 §7): only the truly urgent alert at once. Behind TAFS_BRIEF_HELD_WAIT, a held call that can
+// wait for the next brief goes in it; the owner turns it on.
+describe("a held call that can wait for the brief (TAFS_BRIEF_HELD_WAIT)", () => {
+  const at = new Date("2026-10-15T09:00:00Z"); // 11:00 in Paris (summer): the next brief is 18:00 Paris, 16:00 UTC.
+  it("fails closed: waits only when the brief's times are known, it expires at or after the next brief, and KIFF says it may wait", () => {
+    const later = { id: "h", expires_at: "2026-10-16T09:00:00Z", money_out: false, can_wait: true };
+    expect(heldWaitsForBrief(later, "Europe/Paris", at)).toBe(true);
+    expect(heldWaitsForBrief({ ...later, expires_at: "2026-10-15T16:00:00Z" }, "Europe/Paris", at)).toBe(true);
+    // Expires before the next brief: urgent, at once.
+    expect(heldWaitsForBrief({ ...later, expires_at: "2026-10-15T15:59:00Z" }, "Europe/Paris", at)).toBe(false);
+    // A message to a customer moves no money but is time-sensitive (can_wait false): at once.
+    expect(heldWaitsForBrief({ ...later, can_wait: false }, "Europe/Paris", at)).toBe(false);
+    // Money going out: at once, even if can_wait were ever said with it.
+    expect(heldWaitsForBrief({ ...later, money_out: true }, "Europe/Paris", at)).toBe(false);
+    // KIFF doesn't say (today's alert, no fields), or says it oddly: at once.
+    expect(heldWaitsForBrief({ id: "h", expires_at: "2026-10-16T09:00:00Z" }, "Europe/Paris", at)).toBe(false);
+    expect(heldWaitsForBrief({ id: "h", expires_at: "2026-10-16T09:00:00Z", money_out: false }, "Europe/Paris", at)).toBe(false);
+    expect(heldWaitsForBrief({ ...later, can_wait: "true" }, "Europe/Paris", at)).toBe(false);
+    // Not known: at once, never missed on a guess.
+    expect(heldWaitsForBrief(later, undefined, at)).toBe(false);
+    expect(heldWaitsForBrief({ id: "h", can_wait: true }, "Europe/Paris", at)).toBe(false);
+    expect(heldWaitsForBrief({ ...later, expires_at: "soon" }, "Europe/Paris", at)).toBe(false);
+    expect(heldWaitsForBrief(null, "Europe/Paris", at)).toBe(false);
+  });
+
+  it("sends no alert for a held call that waits, answers KIFF 200, and still sends its answer's background push", async () => {
+    const push = account();
+    const sent: string[] = [];
+    const keys = new Map<string, number>();
+    const deps = {
+      push, apns: { send: async (d: Device, n: Notification) => { sent.push(`${d.token}:${n.kind}`); return "sent" as const; } },
+      claim: async (k: string, until: Date) => (keys.has(k) ? false : (keys.set(k, until.getTime()), true)),
+      held: async (k: string) => keys.has(k), keep: async (k: string, until: Date) => { keys.set(k, until.getTime()); }, release: async (k: string) => { keys.delete(k); },
+      now: NOW,
+    };
+    const body = held();
+    const waits = await receiveAlert(sig(body), body, { ...deps, heldWaits: async () => true });
+    expect(waits).toEqual({ waiting_for_brief: "hold_1" });
+    expect(sent).toEqual([]);
+    // Without the switch (or false), at once, as always.
+    expect(await receiveAlert(sig(body), body, { ...deps, heldWaits: async () => false })).toEqual({ sent: 2 });
+    // Its answer still reaches the phones, so one that showed it drops it.
+    const answered = held({ outcome: "hold_answered", event_id: "evt_2" });
+    sent.length = 0;
+    await receiveAlert(sig(answered), answered, { ...deps, heldWaits: async () => true });
+    expect(sent.every((x) => x.endsWith(":background"))).toBe(true);
+    expect(sent.length).toBeGreaterThan(0);
+  });
+});
+

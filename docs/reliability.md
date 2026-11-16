@@ -110,7 +110,11 @@ A taf on a schedule checks its work first (kiff/agents' `check`, `Taf.check`): e
 reads the taf's work list through one of its apps' read tools, without the model, and a
 run starts only when the read lists something new, those items handed to it as data. A
 firing that found nothing is `quiet`: it's healthy, and never shown as skipped or failed.
-One that couldn't read the app is `failed_check`, and counts toward the taf's health.
+One that couldn't read the app is `failed_check`, and counts toward the taf's health. Its lines say when (the account's
+zone) and name the app the check reads by its connection's name in planque, when the taf has exactly one app connected
+(else "the app"; planque's list is read only when a check failed): "The 09:00 check couldn't read Gmail", "The scheduled
+check couldn't read Gmail 2 times in a row, since Tue 09:00". Two in a row also put the taf in the owner's brief as an
+urgent decision ([missions.md](missions.md#your-brief)) until a check reads again.
 
 ## Where results go
 

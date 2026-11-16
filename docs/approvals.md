@@ -424,7 +424,10 @@ credits, say), and hands the same items to the next run, but it can't reach a ph
 phones that answer holds, once for each run of failures, opening the taf:
 - **a recurring schedule:** once two firings in a row failed, or one failed six hours ago with none working
   since. "Its last 2 scheduled runs couldn't start. It tries again at each scheduled time. Open it to see
-  why." Not for one its owner turned off.
+  why." Not for one its owner turned off. A lone failure said after six hours is said once more when the next
+  firing fails too (as two in a row), then nothing more for that run of failures. A check that couldn't read
+  the app (`failing.outcome` is `failed_check`) says so in its own words, never that a run couldn't start:
+  "Its scheduled check couldn't read the app 2 times in a row. …"
 - **a run that stopped part-way with its work dropped** (kiff/agents' `failing.outcome` is
   `failed_unfinished`): at once, since the next run that works ends the run of failures, and even when
   that run of failures was already said as one that couldn't start. An app check's

@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
@@ -60,6 +62,7 @@ import bot.tafs.app.model.ChatMessage
 import bot.tafs.app.model.CoachWords
 import bot.tafs.app.model.QuestionAnswers
 import bot.tafs.app.model.QuestionSelection
+import bot.tafs.app.model.setupShape
 
 /**
  * Coach: where tafs are made, connected and changed (docs/coach.md). Its conversation is the taf's chat screen on Coach's own
@@ -98,17 +101,30 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
       }
       // A phone that can't approve yet can't start Coach: it says why, as before.
       state.coachCloudId == null && LocalApprovalReadiness.current != bot.tafs.app.model.ApprovalReadiness.Ready -> CoachIntro(state)
-      else -> {
-        // Not started on this phone: the conversation shows anyway, with what the person brought (a job's words) in its box,
-        // and the first Send starts Coach behind one fingerprint. What Coach is, and that it asks once, stay above it.
-        if (state.coachCloudId == null) StartNote(state, chats)
-        else androidx.compose.animation.AnimatedVisibility(visible = !folded && !keyboard) {
-          Column {
-            CoachToolsRow(state) { toolsOpen = true }
-            CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) }
+      else -> androidx.compose.foundation.layout.BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+        // On a wide screen, what Coach has made so far stands beside the conversation (as iPad's), once Coach is started here
+        // and planque has answered: the cards to answer stay in the conversation.
+        val width = maxWidth
+        val shaping = state.coachCloudId != null && state.planqueReady && width >= WIDE_COACH
+        Row(Modifier.fillMaxSize()) {
+          Column(Modifier.weight(1f).fillMaxHeight()) {
+            // Not started on this phone: the conversation shows anyway, with what the person brought (a job's words) in its box,
+            // and the first Send starts Coach behind one fingerprint. What Coach is, and that it asks once, stay above it.
+            if (state.coachCloudId == null) StartNote(state, chats)
+            else androidx.compose.animation.AnimatedVisibility(visible = !folded && !keyboard) {
+              Column {
+                CoachToolsRow(state) { toolsOpen = true }
+                // Beside the conversation, the plan is in the panel.
+                if (!shaping) CoachWords.plan(state.coachComponents)?.let { PlanPanel(it.component, Modifier.padding(horizontal = 12.dp, vertical = 2.dp)) }
+              }
+            }
+            TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f).nestedScroll(folding))
+          }
+          if (shaping) {
+            Box(Modifier.width(1.dp).fillMaxHeight().background(Theme.line))
+            SetupShapePanel(state.setupShape, Modifier.width((width * 0.4f).coerceIn(SHAPE_MIN, SHAPE_MAX)).fillMaxHeight())
           }
         }
-        TafChatView(COACH_CHAT, state, actions, Modifier.weight(1f).nestedScroll(folding))
       }
     }
   }
@@ -118,6 +134,13 @@ fun CoachScreen(state: AppState, actions: TafActions, loadCoach: suspend () -> U
     if (state.coachToolsAsked) chats.notNowTools()
   }
 }
+
+/** From this width Coach's screen shows what Coach has made so far beside the conversation, as the brief's two columns do. */
+internal val WIDE_COACH = 600.dp
+
+/** The "Taking shape" panel's width beside the conversation: two fifths of the screen, from 240 dp up to iPad's 420. */
+private val SHAPE_MIN = 240.dp
+private val SHAPE_MAX = 420.dp
 
 /** Whether the keyboard is open, where a screen test says so; else read from the keyboard's own inset. */
 val LocalKeyboardOpen = androidx.compose.runtime.compositionLocalOf<Boolean?> { null }
@@ -275,7 +298,7 @@ fun PlanPanel(plan: SetupComponent, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun StepMark(status: String) {
+internal fun StepMark(status: String) {
   Text(
     CoachWords.stepMark(status),
     style = scaled(14, FontWeight.SemiBold, when (status) {

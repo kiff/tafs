@@ -1,3 +1,4 @@
+import { wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it } from "vitest";
 import { BRIEF_DECISIONS, briefDecisions, briefTimes, buildBrief, isUrgent, laterOf, putOff, type BriefDecisionIn, type BriefWords } from "../src/cloud/brief.js";
 
@@ -130,5 +131,12 @@ describe("Your brief (design v2.1 §7)", () => {
     const now = new Date("2026-11-16T09:30:00Z");
     expect([...laterOf({ "hold:a": "2026-11-16T17:00:00.000Z", "hold:b": "2026-11-16T07:00:00.000Z", "hold:c": 5, "hold:d": "soon" }, now)]).toEqual([["hold:a", "2026-11-16T17:00:00.000Z"]]);
     for (const kept of [undefined, null, "x", ["hold:a"]]) expect(laterOf(kept, now).size).toBe(0);
+  });
+
+  it("says a deadline in each language's own words, with Spanish's \"del\" before a weekday", () => {
+    expect(wordsIn("es").brief_by({ hm: "12:00", day: "vie." })).toBe("antes del vie. a las 12:00");
+    expect(wordsIn("es").brief_by({ hm: "14:00" })).toBe("antes de las 14:00");
+    expect(wordsIn("en").brief_by({ hm: "12:00", day: "Fri" })).toBe("by Fri 12:00");
+    expect(wordsIn("de").brief_by({ hm: "14:00" })).toBe("bis 14:00");
   });
 });

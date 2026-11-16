@@ -62,19 +62,37 @@ struct WatchReply: Codable, Equatable, Sendable {
         case signedOut = "signed_out"
         /// The phone couldn't read or do it: `line` says why, in the phone's words.
         case failed
+        /// Refuse: the held call was already answered elsewhere, or lapsed. Nothing was sent.
+        case answered = "already_answered"
         /// A request this version of the phone doesn't answer from the watch yet.
         case notYet = "not_yet"
     }
 
     var outcome: Outcome
     var needsYou: WatchNeedsYou?
+    var tafs: [WatchTaf]?
+    /// What happened, or why not, in the phone's words: shown only once the phone has KIFF's
+    /// or tafs cloud's answer.
     var line: String?
 
-    init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, line: String? = nil) {
+    init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, line: String? = nil) {
         self.outcome = outcome
         self.needsYou = needsYou
+        self.tafs = tafs
         self.line = line
     }
+}
+
+/// A taf on the wrist: its name, its state in one line, and whether it's halted.
+struct WatchTaf: Codable, Equatable, Sendable, Identifiable {
+    /// tafs cloud's id: what Halt names.
+    var id: String
+    var name: String
+    /// Its state in the phone's words ("Halted", "Paused", its next run); nil when there's
+    /// nothing to say.
+    var line: String?
+    /// Halted, or halting: Halt isn't offered again.
+    var halted: Bool
 }
 
 /// Needs you, as the phone reads it: the count, and each held call in the phone's words.

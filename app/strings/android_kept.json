@@ -203,5 +203,10 @@
     "invoice 0142": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
     "3 quotes drafted for new clients.": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)",
     "Quotes": "the sample brief's stand-in for tafs cloud's words (Missions draft, the store's screenshots with the `brief` extra only)"
+  },
+  "model/SetupShape.kt": {
+    " · it didn't go through: ": "kiff/agents' recorded answer, read as data, never shown",
+    "signed in": "a card's answer in the form the cards read, data, never shown",
+    "not now": "a card's answer in the form the cards read, data, never shown"
   }
 }

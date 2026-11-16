@@ -1,0 +1,1 @@
+- **iPhone and iPad: Your brief's headings and a mission's log use the shared words** (`brief.*`, `mission.*`) in the person's language whenever tafs cloud doesn't send its own, so no heading is ever blank; the log is titled "Log", says it reads newest first, and marks a removed taf's entries ([docs/ios-app.md](docs/ios-app.md)).
