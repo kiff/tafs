@@ -2,11 +2,18 @@
   "watch.already_answered": "Already answered, or it ended.",
   "watch.approve_on_phone": "Approve on your phone",
   "watch.as_of": "As of {time}",
+  "watch.asking_phone": "Asking your phone…",
   "watch.coach_needs_consent": "Before you talk to Coach, allow AI use in tafs on your phone.",
   "watch.glance_description": "How many need you, never what or who.",
+  "watch.held_calls": {
+    "one": "{count} held call needs you",
+    "other": "{count} held calls need you"
+  },
   "watch.more_on_phone": "The rest is on your phone.",
+  "watch.needs_lock": "To refuse or halt from this watch, set a screen lock on it and unlock it.",
   "watch.open_on_phone": "Open on phone",
   "watch.phone_not_reachable": "Your phone isn't in reach. Bring it closer, then try again.",
   "watch.refused": "Refused. Nothing was sent.",
-  "watch.sign_in_on_phone": "Sign in to tafs on your phone first."
+  "watch.sign_in_on_phone": "Sign in to tafs on your phone first.",
+  "watch.voice_text_only": "Coach gets your words as text, never your voice."
 }
