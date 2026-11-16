@@ -12,7 +12,11 @@ import { dayIn } from "./knob.js";
 import { type Lang, wordsIn } from "./words/index.js";
 
 /** A taf as the Record names its calls: the KIFF agent that makes them, and the name people know it by. */
-export interface RecordTaf { id: string; name: string; kiffAgent: string }
+export interface RecordTaf {
+  id: string; name: string; kiffAgent: string;
+  /** The reader manages it, so its rows may quote an app's short plain reason (activity.ts quotable). */
+  manages?: boolean;
+}
 
 /**
  * A removed taf, kept at its removal so the Record still shows its calls (KIFF keeps them under its archived agent):
@@ -100,7 +104,7 @@ function dateOf(raw: string | null): string | undefined {
 }
 
 function entryOf(c: ActivityCall, taf: RecordTaf, zone: string, now: Date, lang: Lang): RecordEntry {
-  return { ...activityEntry(c, zone, now, taf.name, lang), taf: { id: taf.id, name: taf.name }, ...(typeof c.about === "string" && c.about ? { about: c.about } : {}) };
+  return { ...activityEntry(c, zone, now, taf.name, lang, taf.manages === true), taf: { id: taf.id, name: taf.name }, ...(typeof c.about === "string" && c.about ? { about: c.about } : {}) };
 }
 
 /**

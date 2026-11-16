@@ -838,7 +838,7 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
       catch { unitExceptionsNotice = cardUnitNotice(langOf(event)); }
       return conditionalPage(event, await activityPage({ token: bearer(event), tenant: me.tenantID, subject: me.subject,
         taf: taf.id, tafName: taf.name, agent: taf.kiffAgent, zone: me.timeZone ?? "UTC", now: deps.now?.() ?? new Date(), query: new URLSearchParams(event.rawQueryString ?? ""),
-        unitExceptions, unitExceptionsNotice, lang: langOf(event) }, deps.fetch, deps.kiffBase));
+        unitExceptions, unitExceptionsNotice, lang: langOf(event), manages: access.get(taf.kiffAgent)?.manage === true }, deps.fetch, deps.kiffBase));
     }
     if (action === "work") return runsPage(event, me, taf, deps, access.get(taf.kiffAgent)?.manage === true);
     return setupPage(event, me, taf, deps);
@@ -6979,7 +6979,7 @@ async function recordRoute(event: HTTPEvent, parts: string[], me: KIFFIdentity, 
   // be read back. An unreadable list leaves them out.
   const removed = me.capabilities.includes("cards.manage") && deps.coach
     ? removedRecordTafs(await deps.coach.get(removedTafsKey(me.tenantID)).catch(() => undefined), new Set(all.map((t) => t.kiffAgent)), lang) : [];
-  const tafs: RecordTaf[] = [...all.filter((t) => listable(access, t.kiffAgent)).map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent })), ...removed];
+  const tafs: RecordTaf[] = [...all.filter((t) => listable(access, t.kiffAgent)).map((t) => ({ id: t.id, name: t.name, kiffAgent: t.kiffAgent, manages: access.get(t.kiffAgent)?.manage === true })), ...removed];
   const q = new URLSearchParams(event.rawQueryString ?? "");
   if (parts.length === 2) {
     return conditionalPage(event, await recordPage({ token: bearer(event), scope: `${me.tenantID}#${me.subject}`, tafs, zone, now, query: q, lang }, deps.fetch, deps.kiffBase));

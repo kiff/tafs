@@ -1,6 +1,6 @@
 import { contract } from "./contract.js";
 import { describe, expect, it } from "vitest";
-import { activityPage, activityEntry, activityMatches, representationTag, type ActivityCall } from "../src/cloud/activity.js";
+import { activityPage, activityEntry, activityMatches, quotable, representationTag, vendorAnswer, type ActivityCall } from "../src/cloud/activity.js";
 import { handle, type Deps, type HTTPEvent } from "../src/cloud/handler.js";
 import type { Held } from "../src/cloud/home.js";
 
@@ -71,23 +71,55 @@ describe("Activity pages from the source", () => {
     const entry = activityEntry(original, "UTC", now);
     expect(entry.kind).toBe("not_done");
     expect(entry.detail).toBe("The connection refused it: it couldn't check whether the taf was halted. Nothing was sent.");
-    expect(entry.call).toBe(original); expect(original.tool_outcome.status).toBe("refused_by_tool"); expect(original.held).toBe(true);
+    // KIFF's call is passed through, except the app's own message, which this reader may not be shown.
+    expect(entry.call).toEqual({ ...original, tool_outcome: { status: "refused_by_tool", refused_by: "connection", code: "halt_unknown" } });
+    expect(original.tool_outcome.status).toBe("refused_by_tool"); expect(original.held).toBe(true); expect(original.tool_outcome.message).toBe("arbitrary text");
     const detail = "Not sent: the connection refused it. It still counts toward today's limits.";
     expect(activityEntry({ ...original, detail }, "UTC", now).detail).toBe(detail);
     // A bare code from KIFF is never the line: a raw lowercase "cancelled" read as broken.
     expect(activityEntry({ ...original, detail: "cancelled" }, "UTC", now).detail).toBe(entry.detail);
     // An app's words are its own, quoted: never read as the connection's, nor as nothing done (gap 10).
     const vendor = { ...original, tool_outcome: { status: "refused_by_tool", code: "halt_unknown", message: "Refused by planque: nothing was sent" } };
-    expect(activityEntry(vendor, "UTC", now).detail).toBe(`The app refused it: "Refused by planque: nothing was sent"`);
+    expect(activityEntry(vendor, "UTC", now, undefined, "en", true).detail).toBe(`The app refused it: "Refused by planque: nothing was sent"`);
     expect(activityEntry(vendor, "UTC", now).kind).toBe("not_done");
     expect(activityEntry({ ...original, tool_outcome: { ...original.tool_outcome, code: "future_reason" } }, "UTC", now).detail).toBe("The connection refused it before sending. Nothing was sent.");
     expect(activityEntry({ ...original, tool_outcome: { ...original.tool_outcome, status: "done" } }, "UTC", now).kind).toBe("approved");
   });
   // kiff/tafs#476, gap 10: the owner read "The app refused it" with no reason, though KIFF kept the vendor's.
+  // "Unanswered emails" (16 Nov): Activity quoted Gmail's whole error body, JSON and all. An app's body can carry the account's
+  // address, a file's name or a request id, and Activity is shown to everyone who can see the taf.
+  it("never quotes an app's body that is JSON, long, or holds an address; says its status and code in words; quotes a short plain reason only for who manages the taf", () => {
+    const refused = (message: string): ActivityCall => ({ ...call(0, "refused_by_tool"), action_name: "list_threads", title: "List threads", tool_outcome: { status: "refused_by_tool", message } });
+    const gmail = `Gmail refused it (it answered 400): { "error": { "code": 400, "message": "Precondition check failed for ana@example.com.", "status": "FAILED_PRECONDITION" } }. No claim is made about whether an effect occurred.`;
+    for (const manages of [true, false]) {
+      const row = activityEntry(refused(gmail), "UTC", now, "Unanswered emails", "en", manages);
+      expect(row.detail).toBe("The app refused it: the connected account isn't set up for this");
+      expect(JSON.stringify(row)).not.toMatch(/example\.com|Precondition|"error"/);
+      expect(row.next?.message ?? "").not.toMatch(/example\.com|\{/);
+    }
+    // A long body, plain text: never quoted, its status in words.
+    const long = `Shop refused it (it answered 422): ${"the order could not be changed because of its current state, ".repeat(4)}`;
+    expect(activityEntry(refused(long), "UTC", now, undefined, "en", true).detail).toBe("The app refused it (it answered 422)");
+    // A short one with an address: never quoted.
+    expect(activityEntry(refused("Mail refused it (it answered 403): no access for ana@example.com"), "UTC", now, undefined, "en", true).detail)
+      .toBe("The app refused it: the connected account has no access to this");
+    // A short plain reason: quoted for who manages the taf, the summary for anyone else (people it's shared with).
+    const plain = refused("Stripe refused it (it answered 429): rate limited");
+    expect(activityEntry(plain, "UTC", now, undefined, "en", true).detail).toBe(`The app refused it: "Stripe refused it (it answered 429): rate limited"`);
+    expect(activityEntry(plain, "UTC", now, undefined, "en", false).detail).toBe("The app couldn't answer just then");
+    expect(activityEntry(plain, "UTC", now, undefined, "en", false).call.tool_outcome).toEqual({ status: "refused_by_tool" });
+    expect(activityEntry(plain, "UTC", now, undefined, "en", true).call.tool_outcome?.message).toBe("Stripe refused it (it answered 429): rate limited");
+    // No status at all, not quotable: no reason.
+    expect(activityEntry(refused(`{"error": "x"}`), "UTC", now, undefined, "en", true).detail).toBe("The app refused it and gave no reason");
+    expect(vendorAnswer(gmail)).toBe("400 FAILED_PRECONDITION");
+    expect(quotable("a".repeat(161))).toBeUndefined();
+    expect(quotable("ok, plain")).toBe("ok, plain");
+  });
+
   it("says why a call wasn't done, in the app's words, and what the owner can do about it", () => {
     const refused = (message: string | undefined, extra: Partial<ActivityCall> = {}): ActivityCall =>
       ({ ...call(0, "refused_by_tool"), action_name: "list_inboxes_k3f9", title: "List inboxes", tool_outcome: { status: "refused_by_tool", ...(message === undefined ? {} : { message }) }, ...extra });
-    const key = activityEntry(refused("Agent Mail refused it (it answered 403): Forbidden."), "UTC", now, "Chase invoices");
+    const key = activityEntry(refused("Agent Mail refused it (it answered 403): Forbidden."), "UTC", now, "Chase invoices", "en", true);
     expect(key.detail).toBe(`The app refused it: "Agent Mail refused it (it answered 403): Forbidden."`);
     expect(key.next).toEqual({ kind: "reconnect", words: "Connect it again", tool: "list_inboxes_k3f9", taf: "Chase invoices" });
     expect(activityEntry(refused("Stripe answered 401: expired key"), "UTC", now).next?.kind).toBe("reconnect");

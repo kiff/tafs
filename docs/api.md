@@ -372,11 +372,16 @@ setup view; the phones do not identify apps from tool names.
 A connection refusal is typed by KIFF as `tool_outcome.status: refused_by_tool`,
 `refused_by: connection` and a machine `code`. Its `detail` is drawn as supplied,
 or composed from that code if absent. Text prefixes never establish provenance.
-A vendor's refusal shows the words KIFF recorded for it, quoted as the app's:
-`The app refused it: "Agent Mail refused it (it answered 403): Forbidden."`, or
-"The app refused it and gave no reason". Those words never decide whether
-anything was done. The call's status, amounts, approval flags, receipts and
-counting remain KIFF's unchanged evidence.
+A vendor's refusal quotes the words KIFF recorded for it, as the app's, only when they're one plain short
+sentence (at most 160 characters, nothing that looks like JSON or markup, no email address) and the reader
+manages the taf: `The app refused it: "Agent Mail refused it (it answered 403): Forbidden."`. Otherwise, people
+the taf is shared with included, the line says what the app's status and code ask, in tafs cloud's words: "The
+app refused it: the connected account has no access to this" (401, 403), "… isn't set up for this"
+(`FAILED_PRECONDITION`), "The app couldn't answer just then" (429, 5xx), "The app refused it (it answered 422)",
+or "The app refused it and gave no reason" (`activity.ts` `quotable`, `vendorAnswer`). An app's error body can
+carry the connected account's address, a file's name or a request id, so it is never shown. The `call` passed
+through drops `tool_outcome.message` unless the line quotes it. Those words never decide whether anything was
+done. The call's status, amounts, approval flags, receipts and counting remain KIFF's unchanged evidence.
 
 A `not_done` entry may carry `next`, what the owner can do about it
 (kiff/tafs#476, gap 10): `{kind, words, tool, taf?, message?}`.
