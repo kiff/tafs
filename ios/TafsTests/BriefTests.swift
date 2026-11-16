@@ -43,6 +43,27 @@ final class BriefTests: XCTestCase {
         return model
     }
 
+    /// The route's own shape (docs/api.md, `GET /v1/brief`): the tab's name in `words.title`, why a
+    /// decision can't wait in `now_why`, and a held call's and a step's `ref`.
+    func testTheRoutesShapeAsTafsCloudServesIt() throws {
+        let b = try brief(#"""
+        {"at":"2026-11-16T07:00:00Z","next_at":"2026-11-16T17:00:00Z",
+         "decisions":[{"id":"hold:ce_1","question":"Refund order 4502, €480.00?","answers":[{"words":"Approve","answer":"approve","recommended":false},{"words":"Refuse","answer":"refuse","recommended":false}],
+                       "meanwhile":"Nothing is sent.","urgent":true,"now_why":"It lapses at 08:30, before the next brief.","ref":{"kind":"hold","id":"ce_1","taf":"depl_1"}},
+                      {"id":"step:h1","question":"Sign the delivery note","answers":[{"words":"Done","answer":"done","recommended":false}],
+                       "meanwhile":"Rae waits.","urgent":false,"later":{"words":"Later"},"ref":{"kind":"step","id":"h1","taf":"depl_1"}}],
+         "done":[],"rest":{"count":3,"words":"3 things wait that need nothing from you now"},"labels":[],
+         "words":{"title":"Your brief","decisions":"Decisions · 2","done":"Done","rest":"The rest"}}
+        """#)
+        XCTAssertEqual(b.words.tab, "Your brief", "the tab's name, from `title`")
+        XCTAssertEqual(b.decisions.map(\.id), ["hold:ce_1", "step:h1"])
+        XCTAssertEqual(b.decisions[0].cantWait, "It lapses at 08:30, before the next brief.")
+        XCTAssertNil(b.decisions[0].later, "urgent: no Later")
+        XCTAssertEqual(b.decisions[1].later, "Later")
+        XCTAssertEqual(AppModel.destination(of: b.decisions[0], answer: b.decisions[0].answers[0]), "hold:ce_1")
+        XCTAssertEqual(AppModel.destination(of: b.decisions[1], answer: b.decisions[1].answers[0]), "step:h1")
+    }
+
     func testNoRouteYetMeansNoBriefAndNeedsYouAsToday() async {
         let model = await kiffModel()
         StubProtocol.responses["GET /v1/brief"] = (404, #"{"error":"not found"}"#)

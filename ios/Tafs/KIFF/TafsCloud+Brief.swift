@@ -19,6 +19,8 @@ extension TafsCloud {
                 guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
                 func text(_ k: CodingKeys) -> String { Brief.text(c, k) ?? "" }
                 tab = text(.tab); title = text(.title); when = text(.when); decisions = text(.decisions); done = text(.done)
+                // tafs cloud's route sends the tab's name as `title` ("Your brief", the glossary's words).
+                if tab.isEmpty { tab = title }
                 nextMove = text(.nextMove); recommends = text(.recommends); meanwhile = text(.meanwhile)
                 evidence = text(.evidence); all = text(.all); urgent = text(.urgent)
             }
@@ -73,7 +75,7 @@ extension TafsCloud {
             var ref = Ref()
             enum CodingKeys: String, CodingKey {
                 case id, question, answers, why, meanwhile, deadline, urgent, later, note, ref
-                case cantWait = "cant_wait"
+                case cantWait = "cant_wait", nowWhy = "now_why"
             }
             private struct LaterWords: Decodable { var words: String? }
             init() {}
@@ -84,7 +86,8 @@ extension TafsCloud {
                 why = Brief.text(c, .why); meanwhile = Brief.text(c, .meanwhile) ?? ""; deadline = Brief.text(c, .deadline)
                 urgent = ((try? c.decodeIfPresent(Bool.self, forKey: .urgent)) ?? nil) ?? false
                 later = ((try? c.decodeIfPresent(LaterWords.self, forKey: .later)) ?? nil)?.words.flatMap { $0.isEmpty ? nil : $0 }
-                cantWait = Brief.text(c, .cantWait); note = Brief.text(c, .note)
+                // tafs cloud's route says why it can't wait as `now_why`.
+                cantWait = Brief.text(c, .cantWait) ?? Brief.text(c, .nowWhy); note = Brief.text(c, .note)
                 ref = ((try? c.decodeIfPresent(Ref.self, forKey: .ref)) ?? nil) ?? Ref()
             }
             /// Coach's pick, drawn first and filled; only with its why.
