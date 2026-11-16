@@ -1869,8 +1869,10 @@
     <string name="settings_devices_note">Disconnettere un dispositivo termina subito il suo accesso a questo account. Per disconnettere questo telefono, usa Esci in Account.</string>
     <string name="settings_devices_note_device">Disconnettere un dispositivo termina subito il suo accesso a questo account. Per disconnettere questo %1$s, usa Esci da KIFF.</string>
     <string name="settings_devices_pair">Aggiungi un dispositivo</string>
+    <string name="settings_devices_pair_add_only">Aggiungi questo dispositivo al tuo account. Solo questo dispositivo; nient\'altro cambia.</string>
     <string name="settings_devices_pair_check">Il tuo computer mostra %1$s?</string>
     <string name="settings_devices_pair_check_phone">Il tuo nuovo telefono o tablet mostra %1$s?</string>
+    <string name="settings_devices_pair_claims">Dice di chiamarsi %1$s.</string>
     <string name="settings_devices_pair_code_differs">KIFF ha associato %1$s con il codice %2$s, non %3$s come verificato. Se non è il tuo computer, disconnettilo qui.</string>
     <string name="settings_devices_pair_done">%1$s è associato. Mostrava %2$s.</string>
     <string name="settings_devices_pair_expired">Il codice sul tuo computer è scaduto. Mostrane uno nuovo e scansionalo di nuovo.</string>
@@ -2024,6 +2026,8 @@
     <string name="sign_in_again_to_sign_device">Accedi di nuovo con KIFF: questo accesso non può firmare per il %1$s.</string>
     <string name="sign_in_agree">Accedendo, accetti le %1$s di KIFF, che valgono anche per tafs, e la sua %2$s.</string>
     <string name="sign_in_check_code">Verifica che KIFF mostri lo stesso codice prima di approvare.</string>
+    <string name="sign_in_connected">Connessione riuscita.</string>
+    <string name="sign_in_connected_line">Costruiamo insieme grandi cose.</string>
     <string name="sign_in_could_not_finish">Impossibile completare: %1$s. Riprova.</string>
     <string name="sign_in_could_not_start">Impossibile avviare: %1$s. Riprova.</string>
     <string name="sign_in_deletes_every_taf_runs_chats">Elimina ogni taf, le sue esecuzioni, chat e note, le tue Card e i tuoi collegamenti. Non si può annullare.</string>
@@ -2032,6 +2036,7 @@
     <string name="sign_in_how_works">Come funziona</string>
     <string name="sign_in_ios_did_not_open_sign">iOS non ha aperto la pagina di accesso (errore %1$s; %2$s). Riprova con tafs aperta.</string>
     <string name="sign_in_lead">I tuoi tafs agiscono con le Card di KIFF. Approva questo %1$s in KIFF, e le Card che hai emesso compaiono qui.</string>
+    <string name="sign_in_lets_go">Andiamo</string>
     <string name="sign_in_not_signed_out">Non ancora disconnesso da KIFF. Riprova, o disconnetti questo telefono da Dispositivi su un altro dispositivo.</string>
     <string name="sign_in_not_signed_out_device">Non ancora disconnesso da KIFF: %1$s. Riprova, o disconnetti questo %2$s da Dispositivi su un altro dispositivo.</string>
     <string name="sign_in_open_kiff">Apri KIFF per approvare</string>
@@ -2051,6 +2056,8 @@
     <string name="sign_in_relink_no_connection">Nessuna connessione. Riprova.</string>
     <string name="sign_in_relink_not_approved_in_browser">Non è stato approvato nel browser.</string>
     <string name="sign_in_relink_prompt">Approva di nuovo con questa impronta</string>
+    <string name="sign_in_scan_with_tafs">Scansiona con tafs</string>
+    <string name="sign_in_show_code">Mostra il codice</string>
     <string name="sign_in_sign_did_not_come_back">L\'accesso non è tornato a tafs.</string>
     <string name="sign_in_tafs_had_no_window_screen">tafs non aveva una finestra sullo schermo su cui aprire l\'accesso. Apri tafs e riprova.</string>
     <string name="sign_in_waiting">In attesa della tua approvazione…</string>
@@ -2064,6 +2071,7 @@
     <string name="sign_in_welcome_revoked_rest">nessuna nuova azione va a buon fine.</string>
     <string name="sign_in_welcome_title">tafs</string>
     <string name="sign_in_with_kiff">Accedi con KIFF</string>
+    <string name="sign_in_with_phone">Accedi con il tuo telefono</string>
     <string name="sign_in_your_code">Il tuo codice</string>
     <string name="taf_activity_all_apps">Tutte le app</string>
     <string name="taf_activity_checking_waits">Controllo di cosa ti aspetta…</string>
