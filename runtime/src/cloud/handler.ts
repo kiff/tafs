@@ -54,7 +54,7 @@ import { appCalls, type GrantView, runningTool, setupGrants, setupView } from ".
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, stepFor, takesOf } from "./approval.js";
+import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, splitApproval, stepFor, takesOf, WAITING_DRAFT_KEPT_MS, waitingDraftKey } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
@@ -3242,6 +3242,7 @@ const SIGNS_READ_MS = 1500;
  * the connections can't be read in time, the cards are left as they were.
  */
 async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps): Promise<void> {
+  await refuseSplitApprovals(event, me, taf, components, deps).catch((err) => console.error(`split approval: ${(err as Error).message}`));
   const proof = event.headers?.["planque-device-signature"] ?? "";
   if (!proof || !deps.planqueBase) return;
   const waiting = components.filter((c) => !c.answer && (c.component as { type?: unknown; grant?: unknown } | undefined)?.type === "approval" &&
@@ -3276,6 +3277,55 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     }
     const takes = takesOf(step, confirmKey);
     c.component = { ...card, signs: { ...signsOf(step, draft, lang, grant), ...(takes ? { takes } : {}) } };
+  }
+}
+
+const splitKeys = {
+  claim: (tenant: string, session: string, component: string) => `${tenant}#split-approval#${session}#${component}`,
+  told: (tenant: string, session: string, component: string) => `${tenant}#split-approval-told#${session}#${component}`,
+};
+
+/**
+ * An approval card shown, with no draft, for an app whose approval must carry a waiting Card draft (approval.ts
+ * splitApproval, kept when tafs cloud answered `other_app_first`): answered to Coach on the chat's read, before the
+ * person is shown Approve, so that app's key or tools are never approved apart from its Card (Eval 20b, intros run 1).
+ * Coach shows it again with the draft. Once per card, across phones and reads (a claim, then the answer kept), as the
+ * precheck is; a person whose role can't manage Cards or who hasn't agreed to AI use sees the card as before, and so
+ * does a read that can't reach the store.
+ */
+async function refuseSplitApprovals(event: HTTPEvent, me: KIFFIdentity, taf: Taf, components: ThreadComponent[], deps: Deps): Promise<void> {
+  if (!deps.coach || !me.capabilities.includes("cards.manage")) return;
+  const lang = langOf(event);
+  const shown = (t: PrecheckTold): CardAnswer => ({ state: "answered", words: approvalAnswerWords({ type: "approval", answer: t.answer }, lang) ?? "", at: t.at });
+  for (const c of components) {
+    const card = c.component as { type?: unknown; grant?: unknown; draft?: unknown; id?: unknown } | undefined;
+    if (c.answer || card?.type !== "approval" || typeof card.grant !== "string" || (typeof card.draft === "string" && card.draft)) continue;
+    const component = String(card.id ?? "");
+    if (!component) continue;
+    const answer = splitApproval(card, await deps.coach.get(waitingDraftKey(me.tenantID, card.grant)).catch(() => undefined));
+    if (!answer) continue;
+    const now = nowOf(deps);
+    const toldKey = splitKeys.told(me.tenantID, c.session, component);
+    const claim = splitKeys.claim(me.tenantID, c.session, component);
+    const kept = new Date(now.getTime() + WAITING_DRAFT_KEPT_MS);
+    if (!(await deps.coach.once(claim, kept).catch(() => false))) {
+      const told = (await deps.coach.get(toldKey).catch(() => undefined)) as PrecheckTold | undefined;
+      if (told && typeof told.answer === "string" && typeof told.at === "string") c.answer = shown(told);
+      continue;
+    }
+    const release = () => deps.coach!.remove(claim).catch(() => undefined);
+    try {
+      await requireAIConsent(event, me, deps);
+      await tellCoach(me, taf, { session: c.session, run: c.run }, component, answer, deps);
+    } catch (err) {
+      // The card stopped waiting (answered meanwhile, or its run went on): nothing to tell. Anything else, the next read tries again.
+      if (!(err instanceof HTTPError && err.status === 409)) await release();
+      continue;
+    }
+    console.log("approval shown without its waiting draft: answered");
+    const told: PrecheckTold = { answer, at: now.toISOString() };
+    await deps.coach.put(toldKey, told, kept).catch(() => undefined);
+    c.answer = shown(told);
   }
 }
 

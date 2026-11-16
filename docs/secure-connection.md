@@ -178,6 +178,8 @@ then the Card, as before.
 
 **A Card over two apps (14 Nov).** One signature carries one connection's approve. So while a Card's draft also covers another app of the same taf that isn't connected yet, the Card isn't signed. A card that would carry this app's tools with the Card (`tools_and_cards` or `key_and_cards`) becomes this app's own `connect`, so whichever card the person taps first moves forward, and the last app carries the Card. A Card alone (`cards`) for a connected app is refused, naming the app that waits ("Approve Stripe first; this Card comes with the last app"). A report is "approved" only when every app the Card covers is connected, never while another app's tools still wait. Signing every app's approve in one signature, with N+1 hashes, is the follow-up, and it needs the phones.
 
+**The waiting app's approval carries the draft (Eval 20b).** When tafs cloud refuses a Card because another app waits (`other_app_first`), it keeps, for a day, the draft that the waiting app's approval must carry. If that app's approval is then shown with no draft, the next read of the chat answers it to Coach (`failed: …`, show it again with draft `<id>`) and draws it answered, so the person never sees Approve on it. A tap on it is refused the same way, so the key or tools are never approved apart from the Card. An approval that carries a draft, a redraft's included, is unaffected, and so is the first app's own approval.
+
 **A connection's added tools and its Card together (`tools_and_cards`).** The same shape, for an app already
 signed in: Coach adds the taf's tools to a connected grant (the addition waits as `pending`, with what it had in
 `connected`), drafts the Card over them, and shows one approval with the grant and the draft. With
