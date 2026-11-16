@@ -12,6 +12,20 @@ enum SampleScreens {
         return try? KIFFClient.decoder.decode(T.self, from: data)
     }
 
+    /// One of `Samples/`' answers as it is.
+    static func data(_ name: String, in bundle: Bundle = .main) -> Data? {
+        bundle.url(forResource: name, withExtension: "json").flatMap { try? Data(contentsOf: $0) }
+    }
+
+    /// planque's connections behind Connect apps: Stripe for Refunds and Chargebacks, Gmail for Refunds.
+    static var grants: [PlanqueClient.Grant]? { fixture("grants") }
+
+    /// Each sample connection's KIFF agent, and the sample taf it's for, by its template.
+    static let grantAgents = ["sample-refunds": "refunds", "sample-chargebacks": "chargebacks"]
+
+    /// Coach mid-conversation: setting up a refunds taf, as tafs cloud's conversation sends it.
+    static var coachThread: SetupThread? { data("coach-chat").flatMap { try? TafsCloud.setupThread(decoding: $0) } }
+
     /// Connect apps: two of the person's own, then apps to connect.
     static var connectApps: TafsCloud.ConnectApps? { fixture("connect-apps") }
 

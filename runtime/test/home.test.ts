@@ -75,7 +75,7 @@ describe("each Card on its own (kiff/tafs#211)", () => {
     const v = cardView(reminders);
     expect(v.calls).toEqual({ limit: 20, used: 3, window: "calendar_day", window_words: { each: "a day", now: "today" } });
     expect(v.total).toBeNull();
-    expect(v.each_item).toEqual(["1 call in any 7 days for each invoice id", "€100.00 in total a day for each customer"]);
+    expect(v.each_item).toEqual(["1 call in any 7 days for each invoice", "€100.00 in total a day for each customer"]);
     expect(v.rules[0].count_per_window).toBe(20);
     expect(cardView(reads).each_item).toBeUndefined();
     expect(windowWords("rolling_7d")).toEqual({ each: "in any 7 days", now: "in the last 7 days" });

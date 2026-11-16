@@ -1,0 +1,1 @@
+- **The check route says the agreed rules went unchecked.** `POST /v1/connect/grants/{grant}/check` adds `rules_unchecked: true` to every answer: it has no conversation to read the owner's rules from, so its `ok` never means they hold (docs/api.md).

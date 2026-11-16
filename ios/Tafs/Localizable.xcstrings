@@ -5060,6 +5060,1216 @@
         }
       }
     },
+    "approval.security_key.enter_pin": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib die PIN deines Sicherheitsschlüssels ein. tafs fragt jedes Mal danach und speichert sie nie."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter your security key's PIN. tafs asks for it each time and never stores it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce el PIN de tu llave de seguridad. tafs lo pide cada vez y nunca lo guarda."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez le code PIN de votre clé de sécurité. tafs le demande à chaque fois et ne l'enregistre jamais."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisci il PIN della tua chiave di sicurezza. tafs lo chiede ogni volta e non lo salva mai."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer de pincode van je beveiligingssleutel in. tafs vraagt er elke keer om en bewaart hem nooit."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wpisz PIN swojego klucza bezpieczeństwa. tafs pyta o niego za każdym razem i nigdy go nie zapisuje."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduza o PIN da sua chave de segurança. O tafs pede-o sempre e nunca o guarda."
+          }
+        }
+      }
+    },
+    "approval.security_key.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Sicherheitsschlüssel konnte nicht signieren, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The security key couldn't sign, so nothing was approved. The request is kept: approve again when you're ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La llave de seguridad no pudo firmar, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé de sécurité n'a pas pu signer : rien n'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chiave di sicurezza non è riuscita a firmare, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De beveiligingssleutel kon niet ondertekenen, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz bezpieczeństwa nie mógł podpisać, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave de segurança não conseguiu assinar, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto."
+          }
+        }
+      }
+    },
+    "approval.security_key.locked": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Sicherheitsschlüssel ist nach zu vielen falschen PINs gesperrt und kann nicht genehmigen. Genehmige auf deinem Telefon. Beim Zurücksetzen wird der Schlüssel gelöscht. Um wieder mit einem Schlüssel zu genehmigen, kopple diesen Computer erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This security key is locked after too many wrong PINs, so it can't approve. Approve on your phone. Resetting the key erases it, so to approve with a key again, pair this computer again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta llave de seguridad está bloqueada tras demasiados PIN incorrectos, así que no puede aprobar. Aprueba en tu teléfono. Restablecer la llave la borra, así que para volver a aprobar con una llave, vuelve a vincular este ordenador."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette clé de sécurité est verrouillée après trop de codes PIN incorrects : elle ne peut pas approuver. Approuvez sur votre téléphone. Réinitialiser la clé l'efface : pour approuver de nouveau avec une clé, associez de nouveau cet ordinateur."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa chiave di sicurezza è bloccata dopo troppi PIN errati, quindi non può approvare. Approva sul telefono. Ripristinare la chiave la cancella, quindi per approvare di nuovo con una chiave, associa di nuovo questo computer."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze beveiligingssleutel is vergrendeld na te veel verkeerde pincodes, dus hij kan niet goedkeuren. Keur goed op je telefoon. Als je de sleutel herstelt, wordt hij gewist. Om weer met een sleutel goed te keuren, koppel je deze computer opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten klucz bezpieczeństwa jest zablokowany po zbyt wielu złych PIN-ach, więc nie może zatwierdzać. Zatwierdź na telefonie. Zresetowanie klucza go wymazuje, więc aby znów zatwierdzać kluczem, sparuj ten komputer ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta chave de segurança está bloqueada após demasiados PIN errados, por isso não pode aprovar. Aprove no seu telefone. Repor a chave apaga-a, por isso, para voltar a aprovar com uma chave, associe novamente este computador."
+          }
+        }
+      }
+    },
+    "approval.security_key.no_key": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steck deinen Sicherheitsschlüssel ein und versuch es dann erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plug in your security key, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conecta tu llave de seguridad y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Branchez votre clé de sécurité, puis réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collega la tua chiave di sicurezza, poi riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steek je beveiligingssleutel erin en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podłącz swój klucz bezpieczeństwa i spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ligue a sua chave de segurança e tente novamente."
+          }
+        }
+      }
+    },
+    "approval.security_key.no_pin_set": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Sicherheitsschlüssel hat keine PIN und kann nicht genehmigen. Steck den Schlüssel ein, der zu diesem Computer gehört. Wurde er zurückgesetzt, genehmige auf deinem Telefon und kopple diesen Computer erneut, um mit einem Schlüssel zu genehmigen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This security key has no PIN, so it can't approve. Plug in the one that goes with this computer. If it was reset, approve on your phone, and pair this computer again to approve with a key."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta llave de seguridad no tiene PIN, así que no puede aprobar. Conecta la que va con este ordenador. Si se restableció, aprueba en tu teléfono y vuelve a vincular este ordenador para aprobar con una llave."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette clé de sécurité n'a pas de code PIN : elle ne peut pas approuver. Branchez celle liée à cet ordinateur. Si elle a été réinitialisée, approuvez sur votre téléphone, et associez de nouveau cet ordinateur pour approuver avec une clé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa chiave di sicurezza non ha un PIN, quindi non può approvare. Collega quella che va con questo computer. Se è stata ripristinata, approva sul telefono e associa di nuovo questo computer per approvare con una chiave."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze beveiligingssleutel heeft geen pincode, dus hij kan niet goedkeuren. Steek de sleutel erin die bij deze computer hoort. Is hij hersteld, keur dan goed op je telefoon en koppel deze computer opnieuw om met een sleutel goed te keuren."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten klucz bezpieczeństwa nie ma PIN-u, więc nie może zatwierdzać. Podłącz klucz powiązany z tym komputerem. Jeśli został zresetowany, zatwierdź na telefonie i sparuj ten komputer ponownie, aby zatwierdzać kluczem."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta chave de segurança não tem PIN, por isso não pode aprovar. Ligue a que vai com este computador. Se foi reposta, aprove no seu telefone e associe novamente este computador para aprovar com uma chave."
+          }
+        }
+      }
+    },
+    "approval.security_key.not_allowed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Sicherheitsschlüssel hat es nicht zugelassen, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The security key didn't allow it, so nothing was approved. The request is kept: approve again when you're ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La llave de seguridad no lo permitió, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé de sécurité ne l'a pas autorisé : rien n'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chiave di sicurezza non l'ha consentito, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De beveiligingssleutel stond het niet toe, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz bezpieczeństwa na to nie pozwolił, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave de segurança não o permitiu, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto."
+          }
+        }
+      }
+    },
+    "approval.security_key.not_fido2": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Sicherheitsschlüssel kann keine PIN prüfen und daher nicht genehmigen. Steck den Schlüssel ein, der zu diesem Computer gehört."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This security key can't check a PIN, so it can't approve. Plug in the one that goes with this computer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta llave de seguridad no puede comprobar un PIN, así que no puede aprobar. Conecta la que va con este ordenador."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette clé de sécurité ne peut pas vérifier un code PIN : elle ne peut pas approuver. Branchez celle liée à cet ordinateur."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa chiave di sicurezza non può verificare un PIN, quindi non può approvare. Collega quella che va con questo computer."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze beveiligingssleutel kan geen pincode controleren, dus hij kan niet goedkeuren. Steek de sleutel erin die bij deze computer hoort."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten klucz bezpieczeństwa nie umie sprawdzić PIN-u, więc nie może zatwierdzać. Podłącz klucz powiązany z tym komputerem."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta chave de segurança não consegue verificar um PIN, por isso não pode aprovar. Ligue a que vai com este computador."
+          }
+        }
+      }
+    },
+    "approval.security_key.not_this_key": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist nicht der Sicherheitsschlüssel, der zu diesem Computer gehört. Steck diesen ein und versuch es erneut, oder genehmige auf deinem Telefon."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This isn't the security key that goes with this computer. Plug that one in and try again, or approve on your phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta no es la llave de seguridad que va con este ordenador. Conecta esa y vuelve a intentarlo, o aprueba en tu teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce n'est pas la clé de sécurité liée à cet ordinateur. Branchez celle-ci et réessayez, ou approuvez sur votre téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa non è la chiave di sicurezza che va con questo computer. Collega quella e riprova, oppure approva sul telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit is niet de beveiligingssleutel die bij deze computer hoort. Steek die erin en probeer het opnieuw, of keur goed op je telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To nie jest klucz bezpieczeństwa powiązany z tym komputerem. Podłącz tamten i spróbuj ponownie albo zatwierdź na telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta não é a chave de segurança que vai com este computador. Ligue essa e tente novamente, ou aprove no seu telefone."
+          }
+        }
+      }
+    },
+    "approval.security_key.pin": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code PIN"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pincode"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        }
+      }
+    },
+    "approval.security_key.pin_paused": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das sind drei falsche PINs hintereinander. Zieh den Schlüssel ab, steck ihn wieder ein und versuch es dann erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That's three wrong PINs in a row. Unplug the key, plug it in again, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son tres PIN incorrectos seguidos. Desconecta la llave, vuelve a conectarla y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trois codes PIN incorrects de suite. Débranchez la clé, rebranchez-la, puis réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sono tre PIN errati di fila. Scollega la chiave, ricollegala, poi riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dat zijn drie verkeerde pincodes achter elkaar. Haal de sleutel eruit, steek hem er weer in en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To trzy złe PIN-y z rzędu. Odłącz klucz, podłącz go ponownie i spróbuj jeszcze raz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "São três PIN errados seguidos. Desligue a chave, volte a ligá-la e tente novamente."
+          }
+        }
+      }
+    },
+    "approval.security_key.pin_too_long": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese PIN ist für einen Sicherheitsschlüssel zu lang."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That PIN is too long for a security key."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese PIN es demasiado largo para una llave de seguridad."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce code PIN est trop long pour une clé de sécurité."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo PIN è troppo lungo per una chiave di sicurezza."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die pincode is te lang voor een beveiligingssleutel."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten PIN jest za długi dla klucza bezpieczeństwa."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esse PIN é demasiado longo para uma chave de segurança."
+          }
+        }
+      }
+    },
+    "approval.security_key.pin_too_short": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die PIN eines Sicherheitsschlüssels hat mindestens 4 Zeichen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A security key's PIN has at least 4 characters."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El PIN de una llave de seguridad tiene al menos 4 caracteres."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le code PIN d'une clé de sécurité compte au moins 4 caractères."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il PIN di una chiave di sicurezza ha almeno 4 caratteri."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De pincode van een beveiligingssleutel heeft minstens 4 tekens."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN klucza bezpieczeństwa ma co najmniej 4 znaki."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O PIN de uma chave de segurança tem pelo menos 4 caracteres."
+          }
+        }
+      }
+    },
+    "approval.security_key.several_keys": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es ist mehr als ein Sicherheitsschlüssel eingesteckt. Zieh die anderen ab, lass den Schlüssel stecken, der zu diesem Computer gehört, und versuch es dann erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More than one security key is plugged in. Unplug the others, keep the one that goes with this computer, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay más de una llave de seguridad conectada. Desconecta las demás, deja la que va con este ordenador y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plusieurs clés de sécurité sont branchées. Débranchez les autres, gardez celle liée à cet ordinateur, puis réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "È collegata più di una chiave di sicurezza. Scollega le altre, tieni quella che va con questo computer, poi riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er zit meer dan één beveiligingssleutel in. Haal de andere eruit, laat de sleutel zitten die bij deze computer hoort en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podłączono więcej niż jeden klucz bezpieczeństwa. Odłącz pozostałe, zostaw klucz powiązany z tym komputerem i spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Há mais de uma chave de segurança ligada. Desligue as outras, mantenha a que vai com este computador e tente novamente."
+          }
+        }
+      }
+    },
+    "approval.security_key.timed_out": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Sicherheitsschlüssel wurde nicht rechtzeitig berührt, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The security key wasn't touched in time, so nothing was approved. The request is kept: approve again when you're ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La llave de seguridad no se tocó a tiempo, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé de sécurité n'a pas été touchée à temps : rien n'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chiave di sicurezza non è stata toccata in tempo, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De beveiligingssleutel is niet op tijd aangeraakt, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucza bezpieczeństwa nie dotknięto na czas, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave de segurança não foi tocada a tempo, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto."
+          }
+        }
+      }
+    },
+    "approval.security_key.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit deinem Sicherheitsschlüssel genehmigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve with your security key"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobar con tu llave de seguridad"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approuver avec votre clé de sécurité"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approva con la tua chiave di sicurezza"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goedkeuren met je beveiligingssleutel"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatwierdź kluczem bezpieczeństwa"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprovar com a sua chave de segurança"
+          }
+        }
+      }
+    },
+    "approval.security_key.touch": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berühre deinen Sicherheitsschlüssel."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touch your security key."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca tu llave de seguridad."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez votre clé de sécurité."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca la tua chiave di sicurezza."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raak je beveiligingssleutel aan."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dotknij swojego klucza bezpieczeństwa."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toque na sua chave de segurança."
+          }
+        }
+      }
+    },
+    "approval.security_key.tries_left|few": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostały %1$@ próby, zanim klucz się zablokuje."
+          }
+        }
+      }
+    },
+    "approval.security_key.tries_left|many": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostało %1$@ prób, zanim klucz się zablokuje."
+          }
+        }
+      }
+    },
+    "approval.security_key.tries_left|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch %1$@ Versuch, bevor der Schlüssel gesperrt wird."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ try left before the key locks."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queda %1$@ intento antes de que la llave se bloquee."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encore %1$@ essai avant que la clé ne se verrouille."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resta %1$@ tentativo prima che la chiave si blocchi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog %1$@ poging voordat de sleutel vergrendelt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Została %1$@ próba, zanim klucz się zablokuje."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resta %1$@ tentativa antes de a chave bloquear."
+          }
+        }
+      }
+    },
+    "approval.security_key.tries_left|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch %1$@ Versuche, bevor der Schlüssel gesperrt wird."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ tries left before the key locks."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quedan %1$@ intentos antes de que la llave se bloquee."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encore %1$@ essais avant que la clé ne se verrouille."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restano %1$@ tentativi prima che la chiave si blocchi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog %1$@ pogingen voordat de sleutel vergrendelt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostało %1$@ próby, zanim klucz się zablokuje."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restam %1$@ tentativas antes de a chave bloquear."
+          }
+        }
+      }
+    },
+    "approval.security_key.unplugged": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Sicherheitsschlüssel wurde abgezogen, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The security key was unplugged, so nothing was approved. The request is kept: approve again when you're ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La llave de seguridad se desconectó, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé de sécurité a été débranchée : rien n'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chiave di sicurezza è stata scollegata, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De beveiligingssleutel is eruit gehaald, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz bezpieczeństwa został odłączony, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave de segurança foi desligada, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto."
+          }
+        }
+      }
+    },
+    "approval.security_key.wrong_pin_no_count": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falsche PIN. Versuch es erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong PIN. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN incorrecto. Vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code PIN incorrect. Réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN errato. Riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verkeerde pincode. Probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zły PIN. Spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN errado. Tente novamente."
+          }
+        }
+      }
+    },
+    "approval.security_key.wrong_pin|few": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zły PIN. Zostały %1$@ próby, zanim klucz się zablokuje."
+          }
+        }
+      }
+    },
+    "approval.security_key.wrong_pin|many": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zły PIN. Zostało %1$@ prób, zanim klucz się zablokuje."
+          }
+        }
+      }
+    },
+    "approval.security_key.wrong_pin|one": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falsche PIN. Noch %1$@ Versuch, bevor der Schlüssel gesperrt wird."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong PIN. %1$@ try left before the key locks."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN incorrecto. Queda %1$@ intento antes de que la llave se bloquee."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code PIN incorrect. Encore %1$@ essai avant que la clé ne se verrouille."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN errato. Resta %1$@ tentativo prima che la chiave si blocchi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verkeerde pincode. Nog %1$@ poging voordat de sleutel vergrendelt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zły PIN. Została %1$@ próba, zanim klucz się zablokuje."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN errado. Resta %1$@ tentativa antes de a chave bloquear."
+          }
+        }
+      }
+    },
+    "approval.security_key.wrong_pin|other": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falsche PIN. Noch %1$@ Versuche, bevor der Schlüssel gesperrt wird."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong PIN. %1$@ tries left before the key locks."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN incorrecto. Quedan %1$@ intentos antes de que la llave se bloquee."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code PIN incorrect. Encore %1$@ essais avant que la clé ne se verrouille."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN errato. Restano %1$@ tentativi prima che la chiave si blocchi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verkeerde pincode. Nog %1$@ pogingen voordat de sleutel vergrendelt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zły PIN. Zostało %1$@ próby, zanim klucz się zablokuje."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN errado. Restam %1$@ tentativas antes de a chave bloquear."
+          }
+        }
+      }
+    },
     "approval.set_a_screen_lock": {
       "extractionState": "manual",
       "localizations": {
@@ -5215,6 +6425,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Definições → Face ID e código"
+          }
+        }
+      }
+    },
+    "approval.settings_path.mac_touch_id": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemeinstellungen → Touch ID & Passwort"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System Settings → Touch ID & Password"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes del Sistema → Touch ID y contraseña"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réglages Système → Touch ID et mot de passe"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impostazioni di Sistema → Touch ID e password"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systeeminstellingen → Touch ID en wachtwoord"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ustawienia systemowe → Touch ID i hasło"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Definições do Sistema → Touch ID e palavra-passe"
           }
         }
       }
@@ -5798,6 +7061,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Inicie sessão novamente neste telefone para aprovar, ou aprove a partir do seu outro telefone."
+          }
+        }
+      }
+    },
+    "approval.view_only_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Mac kann nur ansehen. Um hier zu genehmigen, füge ihn auf deinem Telefon hinzu: Konto › Geräte › Gerät hinzufügen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Mac can only view. To approve here, add it from your phone: Account › Devices › Add a device."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este Mac solo puede ver. Para aprobar aquí, añádelo desde tu teléfono: Cuenta › Dispositivos › Añadir un dispositivo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce Mac peut seulement consulter. Pour approuver ici, ajoutez-le depuis votre téléphone : Compte › Appareils › Ajouter un appareil."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo Mac può solo visualizzare. Per approvare qui, aggiungilo dal tuo telefono: Account › Dispositivi › Aggiungi un dispositivo."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze Mac kan alleen bekijken. Om hier goed te keuren, voeg je hem toe vanaf je telefoon: Account › Apparaten › Apparaat toevoegen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten Mac może tylko wyświetlać. Aby zatwierdzać tutaj, dodaj go na telefonie: Konto › Urządzenia › Dodaj urządzenie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este Mac só pode ver. Para aprovar aqui, adicione-o a partir do seu telefone: Conta › Dispositivos › Adicionar um dispositivo."
           }
         }
       }
@@ -32516,6 +33832,271 @@
         }
       }
     },
+    "coach.plan.step_active": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Arbeit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In progress"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En curso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En cours"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In corso"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezig"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "W toku"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Em curso"
+          }
+        }
+      }
+    },
+    "coach.plan.step_done": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erledigt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hecho"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminé"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fatto"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klaar"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gotowe"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concluído"
+          }
+        }
+      }
+    },
+    "coach.plan.step_failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlgeschlagen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falló"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non riuscito"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mislukt"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie powiodło się"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falhou"
+          }
+        }
+      }
+    },
+    "coach.plan.step_pending": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Offen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To do"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pendiente"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "À faire"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Da fare"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te doen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Do zrobienia"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Por fazer"
+          }
+        }
+      }
+    },
+    "coach.plan.step_skipped": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Übersprungen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skipped"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omitido"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignoré"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saltato"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overgeslagen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pominięte"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorado"
+          }
+        }
+      }
+    },
     "coach.plan_title": {
       "extractionState": "manual",
       "localizations": {
@@ -32618,6 +34199,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ligar as suas apps"
+          }
+        }
+      }
+    },
+    "coach.prompt.connect_tools_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "deine Apps zu verbinden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "connect your apps"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "conectar tus apps"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "connecter vos apps"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "collegare le tue app"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "je apps te koppelen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "połączyć Twoje aplikacje"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ligar as suas apps"
           }
         }
       }
@@ -42899,6 +44533,59 @@
         }
       }
     },
+    "connect.misplaced": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für %1$@ angelegt, das %2$@ nicht nutzt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Made for %1$@, which doesn't use %2$@."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hecha para %1$@, que no usa %2$@."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faite pour %1$@, qui n'utilise pas %2$@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fatta per %1$@, che non usa %2$@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gemaakt voor %1$@, dat %2$@ niet gebruikt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utworzone dla %1$@, który nie używa %2$@."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feita para %1$@, que não usa %2$@."
+          }
+        }
+      }
+    },
     "connect.more_apps": {
       "extractionState": "manual",
       "localizations": {
@@ -43955,6 +45642,112 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ligar %1$@"
+          }
+        }
+      }
+    },
+    "connect.prompt.connect_app_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ zu verbinden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "connect %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "conectar %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "connecter %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "collegare %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ te koppelen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "połączyć %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ligar %1$@"
+          }
+        }
+      }
+    },
+    "connect.prompt.connect_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ mit %2$@ zu verbinden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "connect %1$@ to %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "conectar %1$@ a %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "connecter %1$@ à %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "collegare %1$@ a %2$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ aan %2$@ te koppelen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "połączyć %1$@ z %2$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ligar %1$@ a %2$@"
           }
         }
       }
@@ -66240,6 +68033,59 @@
         }
       }
     },
+    "needs_you.prompt.answer_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ zu beantworten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "answer %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "responder %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "répondre à %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "rispondere a %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ te beantwoorden"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "odpowiedzieć: %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "responder %1$@"
+          }
+        }
+      }
+    },
     "needs_you.prompt.did_not_happen": {
       "extractionState": "manual",
       "localizations": {
@@ -67695,7 +69541,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pas de réponse envoyée : ce n'a pas été confirmé."
+            "value": "Pas de réponse envoyée : cela n'a pas été confirmé."
           }
         },
         "it": {
@@ -67720,6 +69566,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sem resposta: não foi confirmado."
+          }
+        }
+      }
+    },
+    "needs_you.your_step.set_up_hello": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richte Windows Hello ein (eine PIN reicht), um hier zu antworten, oder antworte auf deinem Telefon."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set up Windows Hello (a PIN is enough) to answer here, or answer on your phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configura Windows Hello (basta con un PIN) para responder aquí, o responde desde tu teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configurez Windows Hello (un code PIN suffit) pour répondre ici, ou répondez depuis votre téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configura Windows Hello (basta un PIN) per rispondere qui, oppure rispondi dal tuo telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stel Windows Hello in (een pincode is genoeg) om hier te antwoorden, of antwoord vanaf je telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skonfiguruj Windows Hello (wystarczy PIN), aby odpowiadać tutaj, lub odpowiedz na telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configure o Windows Hello (basta um PIN) para responder aqui, ou responda a partir do seu telefone."
           }
         }
       }
@@ -68197,6 +70096,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Já usa o tafs no telemóvel? Adicione este %1$@ com ele."
+          }
+        }
+      }
+    },
+    "pair.keychain_refused": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Mac konnte seine Anmeldung nicht im Schlüsselbund sichern (Fehler %1$@) und wurde nicht hinzugefügt. Zeig einen neuen Code und versuch es noch einmal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This Mac couldn't save its sign-in to the Keychain (error %1$@), so it wasn't added. Show a new code and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este Mac no pudo guardar su inicio de sesión en el llavero (error %1$@), así que no se añadió. Muestra un código nuevo y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce Mac n'a pas pu enregistrer sa connexion dans le trousseau (erreur %1$@), il n'a donc pas été ajouté. Affichez un nouveau code et réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo Mac non è riuscito a salvare l'accesso nel portachiavi (errore %1$@), quindi non è stato aggiunto. Mostra un nuovo codice e riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze Mac kon zijn login niet in de sleutelhanger bewaren (fout %1$@) en is dus niet toegevoegd. Toon een nieuwe code en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten Mac nie mógł zapisać logowania w pęku kluczy (błąd %1$@), więc nie został dodany. Pokaż nowy kod i spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este Mac não conseguiu guardar o início de sessão no porta-chaves (erro %1$@), por isso não foi adicionado. Mostre um código novo e tente outra vez."
           }
         }
       }
@@ -92342,6 +94294,801 @@
         }
       }
     },
+    "settings.devices.passkey_add": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey auf diesem Telefon hinzufügen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a passkey on this phone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir una llave de acceso en este teléfono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter une clé d'accès sur ce téléphone"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi una passkey su questo telefono"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey op deze telefoon toevoegen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj klucz dostępu na tym telefonie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicionar uma chave de acesso neste telefone"
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_added": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Passkey dieses Telefons ist hinzugefügt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This phone's passkey is added."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La llave de acceso de este teléfono está añadida."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé d'accès de ce téléphone est ajoutée."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La passkey di questo telefono è stata aggiunta."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De passkey van deze telefoon is toegevoegd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz dostępu tego telefonu został dodany."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave de acesso deste telefone foi adicionada."
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_admins_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur Inhaber und Admins des Kontos können einen Passkey hinzufügen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only the account's owners and admins can add a passkey."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo los propietarios y administradores de la cuenta pueden añadir una llave de acceso."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seuls les propriétaires et les administrateurs du compte peuvent ajouter une clé d'accès."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo i proprietari e gli amministratori dell'account possono aggiungere una passkey."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alleen eigenaars en beheerders van het account kunnen een passkey toevoegen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tylko właściciele i administratorzy konta mogą dodać klucz dostępu."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Só os proprietários e administradores da conta podem adicionar uma chave de acesso."
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_needs_approver": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um einen Passkey hinzuzufügen, nutze ein Gerät, das genehmigen kann."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To add a passkey, use a device that can approve."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para añadir una llave de acceso, usa un dispositivo que pueda aprobar."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour ajouter une clé d'accès, utilisez un appareil qui peut approuver."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per aggiungere una passkey, usa un dispositivo che può approvare."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gebruik een apparaat dat kan goedkeuren om een passkey toe te voegen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aby dodać klucz dostępu, użyj urządzenia, które może zatwierdzać."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para adicionar uma chave de acesso, use um dispositivo que possa aprovar."
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_not_made": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Telefon konnte keinen Passkey erstellen. %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This phone couldn't make a passkey. %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este teléfono no pudo crear una llave de acceso. %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce téléphone n'a pas pu créer de clé d'accès. %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo telefono non è riuscito a creare una passkey. %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze telefoon kon geen passkey maken. %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten telefon nie mógł utworzyć klucza dostępu. %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este telefone não conseguiu criar uma chave de acesso. %1$@"
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_not_registered": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Passkey wurde auf diesem Telefon erstellt, aber nicht zu deinem Konto hinzugefügt. Du kannst ihn aus den gespeicherten Passwörtern und Passkeys dieses Telefons entfernen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The passkey was made on this phone but not added to your account. You can remove it from this phone's saved passwords and passkeys."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La llave de acceso se creó en este teléfono, pero no se añadió a tu cuenta. Puedes quitarla de las contraseñas y llaves de acceso guardadas en este teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé d'accès a été créée sur ce téléphone, mais pas ajoutée à votre compte. Vous pouvez la supprimer des mots de passe et clés d'accès enregistrés sur ce téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La passkey è stata creata su questo telefono, ma non è stata aggiunta al tuo account. Puoi rimuoverla dalle password e passkey salvate su questo telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De passkey is op deze telefoon gemaakt, maar niet aan je account toegevoegd. Je kunt hem verwijderen uit de opgeslagen wachtwoorden en passkeys van deze telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz dostępu został utworzony na tym telefonie, ale nie dodano go do konta. Możesz usunąć go z haseł i kluczy dostępu zapisanych na tym telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave de acesso foi criada neste telefone, mas não foi adicionada à sua conta. Pode removê-la das palavras-passe e chaves de acesso guardadas neste telefone."
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_note": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit einem Passkey auf diesem Telefon kann ein Computer darüber genehmigen: Der Computer zeigt einen QR-Code, und du scannst ihn mit diesem Telefon."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With a passkey on this phone, a computer can approve through it: the computer shows a QR code, and you scan it with this phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con una llave de acceso en este teléfono, un ordenador puede aprobar a través de él: el ordenador muestra un código QR y tú lo escaneas con este teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avec une clé d'accès sur ce téléphone, un ordinateur peut approuver par son biais : l'ordinateur affiche un code QR, et vous le scannez avec ce téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con una passkey su questo telefono, un computer può approvare tramite esso: il computer mostra un codice QR e tu lo scansioni con questo telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Met een passkey op deze telefoon kan een computer via deze telefoon goedkeuren: de computer toont een QR-code en jij scant die met deze telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Z kluczem dostępu na tym telefonie komputer może zatwierdzać przez niego: komputer pokazuje kod QR, a Ty skanujesz go tym telefonem."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Com uma chave de acesso neste telefone, um computador pode aprovar através dele: o computador mostra um código QR, que lê com este telefone."
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_prompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einen Passkey auf diesem Telefon zu deinem Konto hinzufügen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a passkey on this phone to your account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Añadir a tu cuenta una llave de acceso en este teléfono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajouter à votre compte une clé d'accès sur ce téléphone"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiungi al tuo account una passkey su questo telefono"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een passkey op deze telefoon aan je account toevoegen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dodaj do konta klucz dostępu na tym telefonie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adicionar à sua conta uma chave de acesso neste telefone"
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_remove": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwijderen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuń"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover"
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_remove_named": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ entfernen?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove %1$@?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Quitar %1$@?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer %1$@ ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovere %1$@?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ verwijderen?"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usunąć %1$@?"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover %1$@?"
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_remove_prompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den Passkey %1$@ aus deinem Konto entfernen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the passkey %1$@ from your account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar la llave de acceso %1$@ de tu cuenta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Supprimer la clé d'accès %1$@ de votre compte"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rimuovi la passkey %1$@ dal tuo account"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De passkey %1$@ uit je account verwijderen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usuń klucz dostępu %1$@ z konta"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remover a chave de acesso %1$@ da sua conta"
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_too_slow": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das hat zu lange gedauert. Versuche es noch einmal."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That took too long. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha tardado demasiado. Inténtalo de nuevo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cela a pris trop de temps. Réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ci è voluto troppo tempo. Riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dat duurde te lang. Probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trwało to zbyt długo. Spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demorou demasiado. Tente novamente."
+          }
+        }
+      }
+    },
+    "settings.devices.passkey_with_computer": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gehört zu seinem Computer"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goes with its computer"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Va con su ordenador"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Liée à son ordinateur"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Va con il suo computer"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoort bij zijn computer"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Powiązany z komputerem"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vai com o seu computador"
+          }
+        }
+      }
+    },
+    "settings.devices.passkeys_not_loaded": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Passkeys konnten nicht geladen werden. %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't load your passkeys. %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron cargar tus llaves de acceso. %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de charger vos clés d'accès. %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile caricare le tue passkey. %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kon je passkeys niet laden. %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się wczytać Twoich kluczy dostępu. %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível carregar as suas chaves de acesso. %1$@"
+          }
+        }
+      }
+    },
+    "settings.devices.passkeys_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkeys"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkeys"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Llaves de acceso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clés d'accès"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkeys"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucze dostępu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaves de acesso"
+          }
+        }
+      }
+    },
     "settings.devices.sign_out": {
       "extractionState": "manual",
       "localizations": {
@@ -92497,6 +95244,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "Terminar a sessão de %1$@ na sua conta"
+          }
+        }
+      }
+    },
+    "settings.devices.sign_out_prompt_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ von deinem Konto abzumelden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sign %1$@ out of your account"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "cerrar la sesión de %1$@ en tu cuenta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "déconnecter %1$@ de votre compte"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "disconnettere %1$@ dal tuo account"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ uit te loggen van je account"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wylogować %1$@ z Twojego konta"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "terminar a sessão de %1$@ na sua conta"
           }
         }
       }
@@ -116951,6 +119751,59 @@
         }
       }
     },
+    "voice.dictation_not_add_keyboard_dictation_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diktieren ist auf diesem Mac noch nicht aktiviert. Aktiviere es unter Systemeinstellungen › Tastatur › Diktieren (unter macOS 12: Systemeinstellungen › Tastatur › Diktieren), warte, bis die Sprache geladen ist, und versuch es dann erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dictation isn't on for this Mac yet. Turn it on in System Settings › Keyboard › Dictation (on macOS 12: System Preferences › Keyboard › Dictation), wait for its language to download, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El dictado aún no está activado en este Mac. Actívalo en Ajustes del Sistema › Teclado › Dictado (en macOS 12: Preferencias del Sistema › Teclado › Dictado), espera a que se descargue su idioma y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La dictée n'est pas encore activée sur ce Mac. Activez-la dans Réglages Système › Clavier › Dictée (sous macOS 12 : Préférences Système › Clavier › Dictée), attendez le téléchargement de sa langue, puis réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La dettatura non è ancora attiva su questo Mac. Attivala in Impostazioni di Sistema › Tastiera › Dettatura (su macOS 12: Preferenze di Sistema › Tastiera › Dettatura), attendi che la sua lingua venga scaricata, poi riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dicteren staat nog niet aan op deze Mac. Zet het aan in Systeeminstellingen › Toetsenbord › Dicteren (op macOS 12: Systeemvoorkeuren › Toetsenbord › Dicteren), wacht tot de taal is gedownload en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dyktowanie nie jest jeszcze włączone na tym Macu. Włącz je w Ustawienia systemowe › Klawiatura › Dyktowanie (w macOS 12: Preferencje systemowe › Klawiatura › Dyktowanie), poczekaj na pobranie jego języka, a potem spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O ditado ainda não está ativado neste Mac. Ative-o em Definições do Sistema › Teclado › Ditado (no macOS 12: Preferências do Sistema › Teclado › Ditado), aguarde que o idioma seja descarregado e tente novamente."
+          }
+        }
+      }
+    },
     "voice.dictation_not_available_right_try": {
       "extractionState": "manual",
       "localizations": {
@@ -117212,6 +120065,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "O microfone está desativado para o tafs. Ative-o em Definições › tafs › Microfone."
+          }
+        }
+      }
+    },
+    "voice.microphone_off_tafs_turn_settings_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Mikrofon ist für tafs ausgeschaltet. Schalte es unter Systemeinstellungen › Datenschutz & Sicherheit › Mikrofon ein (unter macOS 12: Systemeinstellungen › Sicherheit › Datenschutz › Mikrofon)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The microphone is off for tafs. Turn it on in System Settings › Privacy & Security › Microphone (on macOS 12: System Preferences › Security & Privacy › Privacy › Microphone)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El micrófono está desactivado para tafs. Actívalo en Ajustes del Sistema › Privacidad y seguridad › Micrófono (en macOS 12: Preferencias del Sistema › Seguridad y privacidad › Privacidad › Micrófono)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le micro est désactivé pour tafs. Activez-le dans Réglages Système › Confidentialité et sécurité › Micro (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Micro)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il microfono è disattivato per tafs. Attivalo in Impostazioni di Sistema › Privacy e sicurezza › Microfono (su macOS 12: Preferenze di Sistema › Sicurezza e privacy › Privacy › Microfono)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De microfoon staat uit voor tafs. Zet hem aan in Systeeminstellingen › Privacy en beveiliging › Microfoon (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Microfoon)."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon jest wyłączony dla tafs. Włącz go w Ustawienia systemowe › Prywatność i ochrona › Mikrofon (w macOS 12: Preferencje systemowe › Ochrona i prywatność › Prywatność › Mikrofon)."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O microfone está desativado para o tafs. Ative-o em Definições do Sistema › Privacidade e segurança › Microfone (no macOS 12: Preferências do Sistema › Segurança e privacidade › Privacidade › Microfone)."
           }
         }
       }
@@ -117530,6 +120436,59 @@
           "stringUnit": {
             "state": "translated",
             "value": "O reconhecimento de fala está desativado para o tafs. Ative-o em Definições › Privacidade e segurança › Reconhecimento de fala."
+          }
+        }
+      }
+    },
+    "voice.speech_recognition_off_tafs_turn_mac": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Spracherkennung ist für tafs ausgeschaltet. Schalte sie unter Systemeinstellungen › Datenschutz & Sicherheit › Spracherkennung ein (unter macOS 12: Systemeinstellungen › Sicherheit › Datenschutz › Spracherkennung)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speech recognition is off for tafs. Turn it on in System Settings › Privacy & Security › Speech Recognition (on macOS 12: System Preferences › Security & Privacy › Privacy › Speech Recognition)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reconocimiento de voz está desactivado para tafs. Actívalo en Ajustes del Sistema › Privacidad y seguridad › Reconocimiento de voz (en macOS 12: Preferencias del Sistema › Seguridad y privacidad › Privacidad › Reconocimiento de voz)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La reconnaissance vocale est désactivée pour tafs. Activez-la dans Réglages Système › Confidentialité et sécurité › Reconnaissance vocale (sous macOS 12 : Préférences Système › Sécurité et confidentialité › Confidentialité › Reconnaissance vocale)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il riconoscimento vocale è disattivato per tafs. Attivalo in Impostazioni di Sistema › Privacy e sicurezza › Riconoscimento vocale (su macOS 12: Preferenze di Sistema › Sicurezza e privacy › Privacy › Riconoscimento vocale)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spraakherkenning staat uit voor tafs. Zet het aan in Systeeminstellingen › Privacy en beveiliging › Spraakherkenning (op macOS 12: Systeemvoorkeuren › Beveiliging en privacy › Privacy › Spraakherkenning)."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rozpoznawanie mowy jest wyłączone dla tafs. Włącz je w Ustawienia systemowe › Prywatność i ochrona › Rozpoznawanie mowy (w macOS 12: Preferencje systemowe › Ochrona i prywatność › Prywatność › Rozpoznawanie mowy)."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O reconhecimento de fala está desativado para o tafs. Ative-o em Definições do Sistema › Privacidade e segurança › Reconhecimento de fala (no macOS 12: Preferências do Sistema › Segurança e privacidade › Privacidade › Reconhecimento de fala)."
           }
         }
       }
@@ -117901,6 +120860,536 @@
           "stringUnit": {
             "state": "translated",
             "value": "O que disse fica na caixa de mensagem, por enviar."
+          }
+        }
+      }
+    },
+    "watch.already_answered": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schon beantwortet oder beendet."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already answered, or it ended."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya respondida, o terminada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déjà répondu, ou terminé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ha già una risposta, o è terminata."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al beantwoord, of beëindigd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Już odpowiedziano albo zakończono."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já respondido, ou terminado."
+          }
+        }
+      }
+    },
+    "watch.approve_on_phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genehmige auf deinem Handy"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve on your phone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprueba en tu teléfono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approuvez sur votre téléphone"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approva sul telefono"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keur goed op je telefoon"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatwierdź na telefonie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprove no telemóvel"
+          }
+        }
+      }
+    },
+    "watch.as_of": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stand: %1$@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "As of %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizado a las %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mis à jour à %1$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiornato alle %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bijgewerkt om %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stan na %1$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atualizado às %1$@"
+          }
+        }
+      }
+    },
+    "watch.coach_needs_consent": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bevor du mit Coach sprichst, erlaube die KI-Nutzung in tafs auf deinem Handy."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Before you talk to Coach, allow AI use in tafs on your phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes de hablar con Coach, permite el uso de IA en tafs en tu teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avant de parler à Coach, autorisez l'utilisation de l'IA dans tafs sur votre téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima di parlare con Coach, consenti l'uso dell'IA in tafs sul telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sta eerst AI-gebruik toe in tafs op je telefoon voordat je met Coach praat."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zanim porozmawiasz z Coachem, zezwól na użycie AI w tafs na telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Antes de falar com o Coach, permita a utilização de IA no tafs no telemóvel."
+          }
+        }
+      }
+    },
+    "watch.glance_description": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie viele dich brauchen, nie was oder wer."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How many need you, never what or who."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuántos te necesitan, nunca qué ni quién."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Combien vous attendent, jamais quoi ni qui."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quanti ti aspettano, mai cosa né chi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoeveel er op je wachten, nooit wat of wie."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ile czeka na Ciebie, nigdy co ani kto."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quantos precisam de si, nunca o quê nem quem."
+          }
+        }
+      }
+    },
+    "watch.more_on_phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Rest ist auf deinem Handy."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The rest is on your phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El resto está en tu teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La suite est sur votre téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il resto è sul telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De rest staat op je telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reszta jest na telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O resto está no telemóvel."
+          }
+        }
+      }
+    },
+    "watch.open_on_phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf dem Handy öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open on phone"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir en el teléfono"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ouvrir sur le téléphone"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apri sul telefono"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Openen op telefoon"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otwórz na telefonie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir no telemóvel"
+          }
+        }
+      }
+    },
+    "watch.phone_not_reachable": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Handy ist nicht in Reichweite. Bring es näher und versuch es dann erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your phone isn't in reach. Bring it closer, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu teléfono no está al alcance. Acércalo y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre téléphone est hors de portée. Rapprochez-le, puis réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il telefono non è raggiungibile. Avvicinalo, poi riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Telefon jest poza zasięgiem. Przybliż go i spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O telemóvel não está ao alcance. Aproxime-o e tente novamente."
+          }
+        }
+      }
+    },
+    "watch.refused": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abgelehnt. Nichts wurde gesendet."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refused. Nothing was sent."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechazada. No se envió nada."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refusé. Rien n'a été envoyé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rifiutata. Non è stato inviato nulla."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geweigerd. Er is niets verstuurd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odrzucono. Nic nie zostało wysłane."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recusado. Nada foi enviado."
+          }
+        }
+      }
+    },
+    "watch.sign_in_on_phone": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Melde dich zuerst auf deinem Handy bei tafs an."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to tafs on your phone first."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primero inicia sesión en tafs en tu teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectez-vous d'abord à tafs sur votre téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prima accedi a tafs sul telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log eerst in bij tafs op je telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Najpierw zaloguj się do tafs na telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Primeiro, inicie sessão no tafs no telemóvel."
           }
         }
       }

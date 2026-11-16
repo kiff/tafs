@@ -1,0 +1,1 @@
+- **tafs cloud: a Card over two apps names the app that waits so it differs from the one asked.** Two apps on one host were both called by the host ("show desk.example.com's approval first"), so Coach couldn't tell which went first. Now the waiting app is named by planque's title, with its tools beside it when two apps share a name, and Coach hears both apps' grant ids.

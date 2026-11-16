@@ -68,4 +68,11 @@ final class MacMenuTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(MacWindow.minimumSize.width, 744)
         XCTAssertGreaterThanOrEqual(MacWindow.minimumSize.height, 600)
     }
+
+    /// The View menu reads Tafs, Needs you, Record, Coach mode (⌘1, ⌘2, ⌘3, ⌘K), top to bottom.
+    /// Its group is given last first, because macOS shows it reversed (seen on a Mac).
+    func testTheViewMenuReadsInShortcutOrder() {
+        XCTAssertEqual(MacMenu.view, [.tafs, .needsYou, .record, .coach])
+        XCTAssertEqual(Array(MacMenu.viewInPlacementOrder.reversed()), MacMenu.view)
+    }
 }

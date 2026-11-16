@@ -51,6 +51,7 @@
   "needs_you.over_total": "Het gaat boven een totaal van de Card, zoals dat van een dag. Iemand die de Cards beheert, kan het extra ruimte geven, of je kunt het weigeren.",
   "needs_you.over_total_manager": "Het gaat boven een totaal van de Card, zoals dat van een dag. Extra ruimte laat alleen deze aanroep door.",
   "needs_you.prompt.answer": "{summary} beantwoorden",
+  "needs_you.prompt.answer_mac": "{summary} te beantwoorden",
   "needs_you.prompt.did_not_happen": "Zeggen dat het niet is gebeurd: {title}",
   "needs_you.prompt.happened": "Zeggen dat het is gebeurd: {title}",
   "needs_you.refuse": "Weigeren",
@@ -78,5 +79,6 @@
   "needs_you.when_taf_asks_something_outside": "Een melding bereikt je op deze {device}, ook als tafs gesloten is.",
   "needs_you.your_step.ended": "Deze stap is al beantwoord of is afgelopen.",
   "needs_you.your_step.not_answered": "Je antwoord is niet doorgekomen. {why}",
-  "needs_you.your_step.not_answered_unconfirmed": "Niet beantwoord: het is niet bevestigd."
+  "needs_you.your_step.not_answered_unconfirmed": "Niet beantwoord: het is niet bevestigd.",
+  "needs_you.your_step.set_up_hello": "Stel Windows Hello in (een pincode is genoeg) om hier te antwoorden, of antwoord vanaf je telefoon."
 }

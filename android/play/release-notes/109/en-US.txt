@@ -1,0 +1,2 @@
+- "Which taf is this for?" lists only the tafs that use the app. An app none of your tafs uses offers Ask Coach instead.
+- A connection made for a taf that doesn't use the app says so, and can be ended from its row.

@@ -6,6 +6,7 @@
   "pair.device_name": "tafs su questo {device}",
   "pair.failed": "Questo {device} non è stato aggiunto: {why}. Mostra un nuovo codice e riprova.",
   "pair.from_sign_in": "Usi già tafs sul telefono? Aggiungi questo {device} con il telefono.",
+  "pair.keychain_refused": "Questo Mac non è riuscito a salvare l'accesso nel portachiavi (errore {code}), quindi non è stato aggiunto. Mostra un nuovo codice e riprova.",
   "pair.new_code": "Mostra un nuovo codice",
   "pair.steps": "Sul telefono, apri tafs, poi {account}, {devices}, {pair}. Scansiona questo codice.",
   "pair.title": "Aggiungi questo {device} con il telefono",

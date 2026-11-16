@@ -264,6 +264,7 @@ final class AppModel: ObservableObject {
     let planque: PlanqueClient
     /// The vendor's sign-in page, opened for a connection the owner approved.
     private let vendorSignIn: VendorSigningIn
+    private let passkeyMaker: PasskeyMaking
     /// The KIFF account this phone signed in to; part of every signed answer.
     var kiffTenant: String?
     /// The KIFF account signed in to, as KIFF says (kiff/tafs#73): what Settings shows.
@@ -398,7 +399,10 @@ final class AppModel: ObservableObject {
     /// this phone, or the other phone; KIFF is asked nothing more of it until then.
     @Published private(set) var approvalViewOnly = false
     /// What the person reads while this phone can't approve: the view-only words, or the lost key's.
-    var approvalKeyLostWords: String { approvalViewOnly ? Words.Approval.viewOnly : KIFFClient.approvalKeyLost }
+    /// A view-only Mac says how a Mac is added from a phone; a phone or tablet, to sign in again or use the other phone.
+    var approvalKeyLostWords: String {
+        approvalViewOnly ? (ThisDevice.isMac ? Words.Approval.viewOnlyMac : Words.Approval.viewOnly) : KIFFClient.approvalKeyLost
+    }
     /// A re-link waiting for the person's browser: the code to check there, and the page.
     struct Relink: Equatable { let userCode: String; let url: URL }
     @Published private(set) var relink: Relink?
@@ -467,7 +471,8 @@ final class AppModel: ObservableObject {
          store: SampleStore? = nil,
          remembered: UserDefaults? = nil,
          purchases: Purchases? = nil,
-         clock: @escaping () -> Date = Date.init) {
+         clock: @escaping () -> Date = Date.init,
+         passkeyMaker: PasskeyMaking = PasskeyMaker()) {
         self.purchases = purchases ?? Purchases()
         self.ownerName = ownerName
         self.signer = signer
@@ -475,6 +480,7 @@ final class AppModel: ObservableObject {
         self.cloud = cloud
         self.planque = planque
         self.vendorSignIn = vendorSignIn
+        self.passkeyMaker = passkeyMaker
         self.store = store
         self.remembered = remembered
         self.clock = clock
@@ -762,7 +768,7 @@ final class AppModel: ObservableObject {
             signInNudged = false
             do {
                 let token = try await kiff.pollDeviceToken(deviceCode: start.deviceCode)
-                await useSession(token.accessToken, tenant: token.tenant)
+                await useSession(token.accessToken, tenant: token.tenant, viewOnly: token.viewOnly)
                 return
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue
@@ -819,7 +825,7 @@ final class AppModel: ObservableObject {
             }
             do {
                 let token = try await kiff.claimPairing(nonce: start.offer.nonce, pub: start.offer.pub, proof: start.proof)
-                await useSession(token.accessToken, tenant: token.tenant)
+                await useSession(token.accessToken, tenant: token.tenant, viewOnly: token.viewOnly)
                 return
             } catch KIFFClient.KIFFError.authorizationPending {
                 continue
@@ -845,7 +851,9 @@ final class AppModel: ObservableObject {
     /// Starts using a KIFF session: keeps it in the Keychain, clears what belonged to any
     /// earlier session, and loads this one's Cards and tafs. A session from the device-flow
     /// sign-in names its account (`tenant`) and holds this phone's signing key.
-    func useSession(_ token: String, tenant: String? = nil) async {
+    /// `viewOnly`: KIFF said at sign-in that this session approves nothing (`approval_mode: view`), so
+    /// the app says so from the start and never asks for Face ID or Touch ID for an approval KIFF would refuse.
+    func useSession(_ token: String, tenant: String? = nil, viewOnly: Bool = false) async {
         Keychain.save(token, for: Self.tokenAccount)
         if let tenant {
             Keychain.save(tenant, for: Self.tenantAccount)
@@ -858,6 +866,11 @@ final class AppModel: ObservableObject {
         sessionHasKey = tenant != nil
         Keychain.delete(Self.approvalKeyedAccount)
         forgetApprovalKey()
+        if viewOnly {
+            // As KIFF's `403 view_only` to the approval key does: say so, and ask nothing more of it.
+            approvalKeyLost = true
+            approvalViewOnly = true
+        }
         // An approval window is the last session's: a new sign-in opens its own.
         forgetWindow()
         kiff.token = token
@@ -1177,7 +1190,8 @@ final class AppModel: ObservableObject {
         let signature: String
         do {
             prepared = try kiff.prepareRemoveDevice(device.id, signedAt: signedAt)
-            signature = try await signer.signApproval(prepared.message, reason: what)
+            let named = device.name ?? Words.Settings.Devices.thisDevice
+            signature = try await signer.signApproval(prepared.message, reason: PromptReason.pick(what, mac: Words.Settings.Devices.signOutPromptMac(device: named)))
         } catch { return false }
         guard gen == accountGeneration else { return false }
         do {
@@ -1188,6 +1202,137 @@ final class AppModel: ObservableObject {
             return false
         }
         await refreshDevices()
+        return true
+    }
+
+    // MARK: Passkeys
+
+    /// The account's passkeys, as KIFF lists them, and why they couldn't be read.
+    @Published private(set) var passkeys: [KIFFClient.Passkey] = []
+    @Published private(set) var passkeysError: String?
+
+    /// Whether this person may add a passkey to the account: an owner or admin, on a session that approves.
+    var canAddPasskey: Bool {
+        mode == .kiff && sessionHasApprovalKey && !approvalViewOnly && ["owner", "admin"].contains(me?.role ?? "")
+    }
+
+    func refreshPasskeys() async {
+        guard mode == .kiff else { return }
+        let gen = accountGeneration
+        do {
+            let list = try await kiff.passkeys()
+            guard gen == accountGeneration else { return }
+            passkeys = list
+            passkeysError = nil
+        } catch {
+            guard gen == accountGeneration else { return }
+            passkeysError = Words.Settings.Devices.passkeysNotLoaded(why: "\(error.localizedDescription)")
+        }
+    }
+
+    /// How adding a passkey ended. The view says each in its words.
+    enum PasskeyOutcome: Equatable {
+        case added
+        /// The same passkey is registered already (`409 passkey_registered`): done, not a failure.
+        case alreadyThere
+        /// The person closed the platform's sheet: nothing was made or sent.
+        case cancelled
+        /// A name KIFF wouldn't take: 1 to 64 characters, no control character.
+        case badName
+        /// Not an owner or admin, or a session that doesn't approve.
+        case notAllowed
+        /// The platform couldn't make one: nothing was sent.
+        case failed(String)
+        /// The platform made a passkey, but KIFF didn't register it: why, nil when the person cancelled the
+        /// approval's Face ID. The passkey stays in their Passwords for kiff.dev, where KIFF never trusts it,
+        /// so the view says they can remove it there. It can't be ordered away: the body needs its bytes.
+        case notRegistered(String?)
+        /// KIFF took longer than its ten minutes from `issued_at` (`400 registration_invalid`, `issued_at`):
+        /// the platform's sheet stayed open too long. Try again; the one made is left as `notRegistered` says.
+        case tooSlow
+    }
+
+    /// Adds a passkey for the account at kiff.dev (KIFF's pairing contract, "Registering one"). The platform
+    /// makes it, asking Face ID or Touch ID itself. Then this session's approval key signs its registration
+    /// behind Face ID again, saying `reason`, never inside a window, and KIFF checks the creation's own
+    /// bytes. `409 passkey_registered` is the same passkey again: done.
+    func addPasskey(name: String, reason: String) async -> PasskeyOutcome {
+        guard canAddPasskey, let tenant = kiffTenant, let me else { return .notAllowed }
+        guard let named = PasskeyRegistration.name(name) else { return .badName }
+        let gen = accountGeneration
+        let issuedAt = PasskeyRegistration.issuedAt(clock())
+        let made: MadePasskey
+        do {
+            made = try await passkeyMaker.create(challenge: PasskeyRegistration.challenge(tenant: tenant, subject: me.subject, issuedAt: issuedAt),
+                                                 userName: me.email ?? me.subject, userID: PasskeyRegistration.userID(subject: me.subject))
+        } catch PasskeyMaker.MakeError.cancelled {
+            return .cancelled
+        } catch {
+            return .failed("\(error.localizedDescription)")
+        }
+        guard gen == accountGeneration else { return .cancelled }
+        guard let body = PasskeyRegistration.body(name: named, issuedAt: issuedAt, clientDataJSON: made.clientDataJSON,
+                                                  attestationObject: made.attestationObject) else { return .badName }
+        kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let signature: String
+        do {
+            prepared = try kiff.preparePasskeyRegistration(body, signedAt: signedAt)
+        } catch {
+            return .notRegistered("\(error.localizedDescription)")
+        }
+        do {
+            signature = try await signer.signApproval(prepared.message, reason: reason)
+        } catch {
+            // Only the person's own cancel reads as one; a key that couldn't sign says why.
+            return .notRegistered(ApprovalReadiness.cancelled(error) == nil ? "\(error.localizedDescription)" : nil)
+        }
+        guard gen == accountGeneration else { return .cancelled }
+        do {
+            _ = try await kiff.registerPasskey(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
+        } catch KIFFClient.KIFFError.server(409, "passkey_registered", _) {
+            await refreshPasskeys()
+            return .alreadyThere
+        } catch KIFFClient.KIFFError.server(403, _, _) {
+            return .notAllowed
+        } catch KIFFClient.KIFFError.server(400, "registration_invalid", "issued_at") {
+            return .tooSlow
+        } catch {
+            return .notRegistered("\(error.localizedDescription)")
+        }
+        await refreshPasskeys()
+        return .added
+    }
+
+    /// Removes one of the account's passkeys: the approval key signs it behind Face ID, saying `reason`,
+    /// never the device key alone. A computer's own passkey goes with its computer and isn't removed here.
+    func removePasskey(_ passkey: KIFFClient.Passkey, reason: String) async -> Bool {
+        guard mode == .kiff, let tenant = kiffTenant, passkey.removable, let id = passkey.passkeyID else { return false }
+        let gen = accountGeneration
+        kiff.tenant = tenant
+        let signedAt = SigningTime.next()
+        let prepared: KIFFClient.Prepared
+        let signature: String
+        do {
+            prepared = try kiff.preparePasskeyRemoval(id, signedAt: signedAt)
+            signature = try await signer.signApproval(prepared.message, reason: reason)
+        } catch {
+            // The person's own cancel says nothing; a key that couldn't sign says why.
+            if gen == accountGeneration, ApprovalReadiness.cancelled(error) == nil {
+                passkeysError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+            }
+            return false
+        }
+        guard gen == accountGeneration else { return false }
+        do {
+            try await kiff.removePasskey(prepared, signatureHeader: "t=\(signedAt),v1=\(signature)")
+        } catch {
+            guard gen == accountGeneration else { return false }
+            passkeysError = Words.Common.didntGoThrough(what: "\(reason)", why: "\(error.localizedDescription)")
+            return false
+        }
+        await refreshPasskeys()
         return true
     }
 
@@ -2073,7 +2218,8 @@ final class AppModel: ObservableObject {
             purchases.showSample(Screenshots.products)
             await refreshUsage()
         }
-        // `-screen coach`: Coach open over the sample, empty, for the reference set.
+        // `-screen coach`: Coach open over the sample, empty, for the reference set; `coach-chat`, mid-conversation.
+        if Screenshots.coachChat, let thread = SampleScreens.coachThread { setupThread = thread }
         if Screenshots.coach { coachOpen = true }
     }
 
@@ -2180,7 +2326,10 @@ final class AppModel: ObservableObject {
     func loadConnectApps(_ q: String = "") async {
         guard mode == .kiff else {
             // The reference set's Connect apps over the sample (`-screenshots YES`).
-            if mode == .sample, Screenshots.enabled, q.isEmpty { connectApps = SampleScreens.connectApps }
+            if mode == .sample, Screenshots.enabled, q.isEmpty {
+                connectApps = SampleScreens.connectApps
+                useSampleConnections()
+            }
             return
         }
         // The account's connections too, so a connected app lists each one, with its taf and
@@ -2214,7 +2363,12 @@ final class AppModel: ObservableObject {
         let request = connectAppsRequest
         let q = connectAppsQuery
         do {
-            let page = try await cloud.connectApps(q, provider: shown.provider, cursor: cursor)
+            // A fresh signed grants read: planque takes each once, and with it the next page's apps say which
+            // tafs need them by their Cards too, and which connections were made under a taf that doesn't.
+            let signer = self.signer
+            planque.tenant = kiffTenant
+            let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let page = try await cloud.connectApps(q, provider: shown.provider, cursor: cursor, proof: proof)
             guard gen == accountGeneration, request == connectAppsRequest,
                   q == connectAppsQuery, connectApps?.nextCursor == cursor else { return }
             var merged = page
@@ -2235,6 +2389,17 @@ final class AppModel: ObservableObject {
         tafs.filter { cloudTaf(for: $0.id) != nil && manages($0.id) }
     }
 
+    /// The tafs one app can be connected for: of those, the ones tafs cloud says need it (`needed_by`), in its
+    /// order. A tafs cloud that doesn't say leaves every one, and "Which taf?" asks among them all.
+    func connectableTafs(for app: TafsCloud.ConnectApps.App) -> [Taf] {
+        Self.connectableTafs(connectableTafs, needed: app.neededBy, cloudID: { self.cloudTaf(for: $0)?.id })
+    }
+
+    static func connectableTafs(_ tafs: [Taf], needed: [TafsCloud.ConnectApps.UsedBy]?, cloudID: (UUID) -> String?) -> [Taf] {
+        guard let needed else { return tafs }
+        return needed.compactMap { n in tafs.first { cloudID($0.id) == n.taf } }
+    }
+
     /// Starts connecting an app from the list for one taf; its approval opens as a sheet over
     /// the list.
     func startConnect(_ app: TafsCloud.ConnectApps.App, for tafID: UUID) async {
@@ -2244,11 +2409,20 @@ final class AppModel: ObservableObject {
         }
         let gen = accountGeneration
         do {
-            let start = try await cloud.startConnect(app.entry, taf: c.id)
+            // A fresh signed grants read, never the list's resent: planque takes each once. With it, tafs cloud
+            // decides this taf needs the app by its Card, as the list did.
+            let signer = self.signer
+            planque.tenant = kiffTenant
+            let proof = try? await planque.grantsReadProof(signedBy: { try signer.signConfirmed($0) })
+            let start = try await cloud.startConnect(app.entry, taf: c.id, proof: proof)
             guard gen == accountGeneration else { return }
             await refreshConnections()
             guard gen == accountGeneration else { return }
             connectStart = start
+        } catch let refused as TafsCloud.CloudError where refused.code == "not_needed" {
+            // This taf doesn't use the app: tafs cloud's words, which send the person to Coach. Nothing started.
+            guard gen == accountGeneration else { return }
+            lastError = refused.words ?? refused.message
         } catch {
             guard gen == accountGeneration else { return }
             lastError = Words.Connect.couldNotConnected(vendor: "\(app.name ?? (app.vendor.isEmpty ? app.title : app.vendor))", why: "\(error.localizedDescription)")
@@ -2939,7 +3113,8 @@ final class AppModel: ObservableObject {
             lastError = approvalKeyLostWords
             return
         }
-        let reason = Words.NeedsYou.Prompt.answer(summary: call.proposed.summary)
+        let reason = PromptReason.pick(Words.NeedsYou.Prompt.answer(summary: call.proposed.summary),
+                                       mac: Words.NeedsYou.Prompt.answerMac(summary: call.proposed.summary))
         let signature: String
         var signed: KIFFClient.AnswerSignature?
         do {
@@ -6129,6 +6304,33 @@ final class AppModel: ObservableObject {
     /// owner just confirmed with Face ID: the caller has set `kiff.setupSigner` and
     /// `planque.signer`. Sets `lastError` and returns false when it can't.
     private func enrolPlanque(tenant: String, gen: Int) async -> Bool {
+        // planque's enrolled connector key, while KIFF still takes it, is kept: asked first with no key, it
+        // answers `kept`, and no key is minted that would only be left live in KIFF (a phone can't revoke
+        // a connector key). A key is minted only when planque says it needs one (`409 needs_key`). A 2xx that
+        // doesn't say `kept` mints nothing either, and isn't taken as set up: it may mean planque has this phone
+        // but no key, so it stops and says so, as the desktops do, until planque says what it means. Any other
+        // answer (not reached, a 5xx, a refused signature, a 400 for a body it couldn't read) mints nothing: a
+        // second enrolment would likely fail too and leave the key live. It says why, and the next Start asks again.
+        do {
+            let standing = try await planque.enrol(deviceKey: signer.publicKeyDER, connectorKey: nil)
+            guard gen == accountGeneration else { return false }
+            guard standing.kept == true else {
+                lastError = Words.Coach.connectingFailed
+                return false
+            }
+            planqueSetUp(for: tenant)
+            return true
+        } catch PlanqueClient.PlanqueError.needsKey {
+        } catch PlanqueClient.PlanqueError.server(409, _, _) where planque.lastRefusalCode == nil {
+            // A code-less 409 is an older planque's other device; a coded one (a replayed signature, a changed
+            // enrolment) says why below, never "another device".
+            lastError = Words.Coach.connectOtherDevice
+            return false
+        } catch {
+            lastError = Words.Coach.connectingNotSetUp(why: "\(error.localizedDescription)")
+            return false
+        }
+        guard gen == accountGeneration else { return false }
         do {
             let key = try await kiff.mintConnectorKey()
             guard gen == accountGeneration else { return false }
@@ -6136,7 +6338,9 @@ final class AppModel: ObservableObject {
         } catch KIFFClient.KIFFError.server(403, _, _) {
             lastError = Words.Coach.connectAdminOnly
             return false
-        } catch PlanqueClient.PlanqueError.server(409, _, _) {
+        } catch PlanqueClient.PlanqueError.server(409, _, _) where planque.lastRefusalCode == nil {
+            // A code-less 409 is an older planque's other device; a coded one (a replayed signature, a changed
+            // enrolment) says why below, never "another device".
             lastError = Words.Coach.connectOtherDevice
             return false
         } catch {
@@ -6499,7 +6703,9 @@ final class AppModel: ObservableObject {
         let signer = self.signer
         planque.tenant = tenant
         planque.signer = { try signer.signConfirmed($0) }
-        defer { planque.signer = nil }
+        // Connect apps' row says it's being removed until planque answered and the list was read again.
+        removingGrants.insert(grantID)
+        defer { planque.signer = nil; removingGrants.remove(grantID) }
         do {
             _ = try await planque.disconnect(grantID: grantID)
         } catch {
@@ -6507,8 +6713,14 @@ final class AppModel: ObservableObject {
             return false
         }
         await refreshConnections()
+        guard gen == accountGeneration else { return true }
+        if connectApps != nil { await loadConnectApps() }
         return true
     }
+
+    /// The connections being removed now (`disconnect`), from Face ID until planque answered and Connect
+    /// apps was read again.
+    @Published private(set) var removingGrants: Set<String> = []
 
     // MARK: Setup (kiff/agents#91)
 
@@ -6932,8 +7144,11 @@ final class AppModel: ObservableObject {
     /// when no taf is named yet, never "to a taf" (as Android's `connectPrompt`).
     func connectPrompt(_ grant: PlanqueClient.Grant) -> String {
         let app = Self.promptApp(grant)
-        guard let taf = namedTaf(grant.request.agent, grant: grant) else { return Words.Connect.Prompt.connectApp(vendor: "\(app)") }
-        return Words.Connect.Prompt.connect(vendor: "\(app)", agent: "\(taf)")
+        guard let taf = namedTaf(grant.request.agent, grant: grant) else {
+            return PromptReason.pick(Words.Connect.Prompt.connectApp(vendor: "\(app)"), mac: Words.Connect.Prompt.connectAppMac(vendor: "\(app)"))
+        }
+        return PromptReason.pick(Words.Connect.Prompt.connect(vendor: "\(app)", agent: "\(taf)"),
+                                 mac: Words.Connect.Prompt.connectMac(vendor: "\(app)", agent: "\(taf)"))
     }
 
     /// The same, for a connection by key: "Give Stripe its key for Disputes", or "Give Stripe its key".
@@ -7223,6 +7438,16 @@ final class AppModel: ObservableObject {
 
     /// Reads the gallery of ready-made jobs. A read that fails keeps what was read; a tafs
     /// cloud without the route leaves none, so + New opens Coach as before.
+    /// The reference set's connections over the sample: planque's, each under the sample taf its agent
+    /// stands for, so one app's screen lists them by taf.
+    private func useSampleConnections() {
+        guard let sample = SampleScreens.grants else { return }
+        for (agent, key) in SampleScreens.grantAgents {
+            if let taf = tafs.first(where: { templateOf[$0.id] == key }) { holderIDs[agent] = taf.id }
+        }
+        grants = sample
+    }
+
     func loadGallery() async {
         guard mode == .kiff else {
             // The reference set's job gallery over the sample (`-screenshots YES`).
@@ -7385,7 +7610,7 @@ final class AppModel: ObservableObject {
         defer { startingSetup = false }
         let gen = accountGeneration
         do {
-            _ = try await signer.sign(Data("tafs.setup.v1|\(tenant)".utf8), reason: Words.Coach.Prompt.connectTools, grants: true)
+            _ = try await signer.sign(Data("tafs.setup.v1|\(tenant)".utf8), reason: PromptReason.pick(Words.Coach.Prompt.connectTools, mac: Words.Coach.Prompt.connectToolsMac), grants: true)
         } catch { return false }
         guard gen == accountGeneration else { return false }
         let signer = self.signer
@@ -8050,9 +8275,21 @@ final class AppModel: ObservableObject {
             if setupLive != nil { continue }
             let mine = setupThread.messages.last(where: { $0.from == .owner })?.id
             if mine != lastOwner { lastOwner = mine; polls = 0 }
-            guard polls < setupPollBudget else { continue }
+            // A card whose grant planque hasn't listed yet keeps the thread read, so its grant is read again
+            // and the card leaves "Reading the request…", however long ago the owner last wrote.
+            guard polls < setupPollBudget || cardWaitsOnItsGrant else { continue }
             polls += 1
             await loadSetupThread()
+        }
+    }
+
+    /// An unanswered approval or sign-in card whose grant this phone hasn't read yet, shown in the last ten
+    /// minutes: the thread is read again while it waits, past the poll budget, so the grant is read too.
+    var cardWaitsOnItsGrant: Bool {
+        setupThread.components.contains { shown in
+            let c = shown.component
+            guard c.type == .approval || c.type == .signIn, let g = c.grant, setupThread.answer(to: c.id) == nil else { return false }
+            return !grants.contains { $0.id == g } && clock().timeIntervalSince(shown.firstAt) < 600
         }
     }
 
@@ -8251,6 +8488,8 @@ final class AppModel: ObservableObject {
 
     private func approveAsked(_ component: SetupComponent, shown: String?, shownDraft: String?) async {
         guard let grantID = component.grant, let s = setupTaf else { return }
+        // A view-only session approves nothing: say why on the card, before any Face ID or Touch ID.
+        if mode == .kiff && approvalViewOnly { cardNotes[component.id] = approvalKeyLostWords; return }
         lastError = nil
         shownTermsChanged = false
         cardNotes[component.id] = nil
@@ -8416,6 +8655,7 @@ final class AppModel: ObservableObject {
     func approveKeyAndCard(_ component: SetupComponent, shown: String?, shownDraft: String?, key: String) async -> KeyAndCard {
         guard let grantID = component.grant, let draftID = component.draft, let shown, let shownDraft, let s = setupTaf,
               planqueReady, sessionHasKey, let tenant = kiffTenant, connecting == nil else { return .notOffered }
+        if approvalViewOnly { cardNotes[component.id] = approvalKeyLostWords; return .failed }
         cardNotes[component.id] = nil
         lastError = nil
         connecting = grantID
@@ -9041,6 +9281,10 @@ extension AppModel {
 
 enum Screenshots {
     static var enabled: Bool { UserDefaults.standard.bool(forKey: "screenshots") }
+    /// `-reduceMotion YES`, with `-screenshots YES`: the app moves as with Reduce Motion on (`Motion.reduced`), and
+    /// UIKit's own animations are off. The UI tests pass it: an endless animation (a door's rim, the dial's
+    /// breathing) kept the app from ever going idle, and XCTest waited a minute before each step.
+    static var reduceMotion: Bool { enabled && UserDefaults.standard.bool(forKey: "reduceMotion") }
     /// `-screen taf` opens a taf's page, `-screen card` its Cards; `-screen new` the new-taf flow; `-screen solo` and
     /// `-screen add-tasks` the purchase screens, for the products in App Store Connect.
     static var screen: String? { UserDefaults.standard.string(forKey: "screen") }
@@ -9067,13 +9311,16 @@ enum Screenshots {
     /// is read from KIFF, and the screens it lists aren't opened.
     static var signedIn: Bool { enabled && UserDefaults.standard.bool(forKey: "signedIn") }
     /// `-screen coach`: Coach mode open over the sample, as the reference set shows it.
-    static var coach: Bool { enabled && screen == "coach" }
+    static var coach: Bool { enabled && (screen == "coach" || screen == "coach-chat") }
+    /// `-screen coach-chat`: Coach open over the sample mid-conversation, its thread drawn though the sample
+    /// starts no Coach (`SetupChatView` shows the thread, not the intro).
+    static var coachChat: Bool { enabled && screen == "coach-chat" }
     /// The iPad sidebar's screen a `-screen` opens beside it: `usage` (Plan & usage), `connect-apps`.
     static var sidebarScreen: HomeSelection? {
         guard enabled else { return nil }
         switch screen {
         case "usage": return .usage
-        case "connect-apps": return .connectApps
+        case "connect-apps", "connect-app": return .connectApps
         default: return nil
         }
     }
