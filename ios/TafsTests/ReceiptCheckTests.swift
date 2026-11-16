@@ -81,6 +81,27 @@ final class ReceiptCheckTests: XCTestCase {
         XCTAssertEqual(ReceiptCheck.check(Data(short.utf8), signer: Self.testSigner), .failed("The signature is malformed."))
     }
 
+    /// A recovery id outside 0–3, after 27 is taken off a v of 27 or more, is refused before
+    /// libsecp256k1 is called: the library aborts the app on an illegal id. v = 4, 26 and 31
+    /// are the edges either side of 0–3 and 27–30; 28 (27 + 1) is the same signature, written
+    /// the Ethereum way, and still checks out.
+    func testARecoveryIdOutsideZeroToThreeIsRefusedBeforeTheLibrary() {
+        let signature = #/"signature":"([0-9a-f]{128})01"/#
+        func receipt(v: String) -> Data {
+            Data(Self.signed.replacing(signature) { #""signature":"\#($0.1)\#(v)""# }.utf8)
+        }
+        for v in ["04", "1a", "1f"] {
+            XCTAssertEqual(ReceiptCheck.check(receipt(v: v), signer: Self.testSigner),
+                           .failed(Words.Receipt.Check.signatureMismatch), "v = 0x\(v)")
+        }
+        XCTAssertEqual(ReceiptCheck.check(receipt(v: "1c"), signer: Self.testSigner), .verified(signer: Self.testSigner))
+        for v: UInt8 in [4, 26, 31] {
+            var raw = Data(repeating: 1, count: 65)
+            raw[64] = v
+            XCTAssertNil(ReceiptCheck.recoverAddress(digest: Data(repeating: 1, count: 32), signature: raw), "v = \(v)")
+        }
+    }
+
     /// The line's amount and the receipt's signed amount match as numbers in the same unit: "150.00" and
     /// "150" are one amount, never a false mismatch (win-dev's find on Windows #56, the iPad's too).
     func testAmountsMatchAsNumbersInTheSameUnit() {
