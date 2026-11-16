@@ -151,6 +151,7 @@ final class BriefTests: XCTestCase {
         XCTAssertEqual(bare.words.evidence, Words.Brief.evidence)
         XCTAssertEqual(bare.words.urgent, Words.Brief.urgent)
         XCTAssertEqual(bare.words.when, "", "no shared word for when: it's tafs cloud's or nothing")
+        XCTAssertEqual(try brief(#"{"decisions":[],"words":"Your brief"}"#).words, .shared, "words of another shape are as none")
         let sent = try brief(#"{"decisions":[],"words":{"title":"Morning brief","decisions":"Decisions · 2","urgent":" "}}"#)
         XCTAssertEqual(sent.words.title, "Morning brief")
         XCTAssertEqual(sent.words.tab, "Morning brief")
