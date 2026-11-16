@@ -23,6 +23,20 @@ struct ReadinessReader<Content: View>: View {
     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
 }
 
+/// Where tafs's language is changed: on an iPhone or iPad, Settings › tafs › Language. A Mac has no
+/// page of tafs's own in its settings (that URL opens nothing there), so it opens System Settings ›
+/// Language & Region, whose Applications list sets each app's language.
+@MainActor func openLanguageSettings() {
+    #if targetEnvironment(macCatalyst)
+    if let url = URL(string: macLanguageSettings) { UIApplication.shared.open(url) }
+    #else
+    openTafsSettings()
+    #endif
+}
+
+/// System Settings › General › Language & Region, on macOS 13 and later.
+let macLanguageSettings = "x-apple.systempreferences:com.apple.Localization-Settings.extension"
+
 /// An approval's button, or, while this device can't approve, the state's words and what to
 /// do in its place: the person learns why before the prompt, not from a failure after it.
 /// In sample mode nothing is signed for real, so the button always shows.

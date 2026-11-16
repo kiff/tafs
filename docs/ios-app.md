@@ -315,8 +315,10 @@ the app in sample mode.
   for want of it goes back where it was (the composer, with its files; the card, as chosen), with no Not sent row.
 - **Account › Language:** the language tafs's lines are in, by its own name ("Français", "Polski",
   `AppLanguage.name`), so someone in a language they don't read still finds theirs, and **Change
-  language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. No picker
-  of the app's own, as on Android (`settings.language_title`, `settings.change_language`).
+  language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. On a Mac,
+  which has no such page, it opens System Settings › Language & Region, whose Applications list sets
+  tafs's language (`openLanguageSettings`). No picker of the app's own, as on Android
+  (`settings.language_title`, `settings.change_language`).
 - **Account says who is signed in once** (`AccountLines`): the account's name, then "Signed in as" only when the
   email differs from it (a Solo account is named after its owner's email). The account's id is on the account's
   own screen only. People & groups' first line is the count alone for such an account.

@@ -172,7 +172,7 @@ struct SettingsView: View {
                 Section(Words.Settings.languageTitle) {
                     LabeledContent(Words.Settings.languageTitle, value: AppLanguage.name())
                         .accessibilityIdentifier("settings.language")
-                    Button(Words.Settings.changeLanguage) { openTafsSettings() }
+                    Button(Words.Settings.changeLanguage) { openLanguageSettings() }
                         .foregroundColor(Theme.amberText)
                 }
                 // The AI-data consent: given, with Withdraw; not given, its screen. tafs cloud's words.

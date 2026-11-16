@@ -172,4 +172,14 @@ final class SignInTests: XCTestCase {
         let client = KIFFClient(baseURL: URL(string: "https://api.test")!, webURL: URL(string: "https://app.test")!, token: nil)
         XCTAssertEqual(client.answerPage(for: "ce_1", language: "fr").absoluteString, "https://app.test/needs-you/ce_1?lang=fr")
     }
+
+    /// Account › Change language: Settings › tafs on an iPhone or iPad; on a Mac, which has no such page
+    /// (the owner's Mac build 7: the tap did nothing), System Settings › Language & Region.
+    func testChangeLanguageOpensWhereThisDeviceSetsIt() throws {
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let account = try String(contentsOf: views.appendingPathComponent("SignInView.swift"), encoding: .utf8)
+        XCTAssertTrue(account.contains("Button(Words.Settings.changeLanguage) { openLanguageSettings() }"))
+        XCTAssertEqual(macLanguageSettings, "x-apple.systempreferences:com.apple.Localization-Settings.extension")
+        XCTAssertNotNil(URL(string: macLanguageSettings))
+    }
 }

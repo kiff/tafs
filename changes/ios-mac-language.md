@@ -1,0 +1,1 @@
+- **Mac: Account › Change language opens System Settings › Language & Region**, where macOS sets tafs's language; it did nothing before ([docs/ios-app.md](docs/ios-app.md)).
