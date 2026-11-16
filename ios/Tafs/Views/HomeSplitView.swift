@@ -83,6 +83,8 @@ struct HomeSplitView: View {
     /// do, the first taf in the list is the one open (the 859 test).
     @State private var opened: HomeSelection?
     @State private var chosen = false
+    /// The pointer is over the sidebar's Coach button (the Mac's, `Hover`).
+    @State private var coachHovered = false
     /// A recipe's sheet, opened from the detail pane with no taf, or from the strip in the sidebar.
     @State private var openRecipe: TafsCloud.Recipes.Recipe?
     /// + New's gallery of every ready-made job, and what was chosen in it: acted on once it closes.
@@ -103,7 +105,7 @@ struct HomeSplitView: View {
             NavigationStack {
                 switch selection {
                 case .needsYou?:
-                    NeedsYouView()
+                    BriefView()
                 case .usage?:
                     UsageView()
                 case .connectApps?:
@@ -133,7 +135,12 @@ struct HomeSplitView: View {
                     .screenBackground()
                 case nil:
                     VStack(spacing: 12) {
-                        Mascot(size: 72)
+                        // Board 2, no tafs yet (docs/ios-app.md › Illustrations), where the line says so.
+                        if !model.loadingList, !model.listUnread, model.tafs.isEmpty {
+                            Illustration.noTafs
+                        } else {
+                            Mascot(size: 72)
+                        }
                         Text(model.loadingList ? Words.Home.loading : model.listUnread ? Words.Home.notLoaded
                              : model.tafs.isEmpty ? Words.Home.noTafs : Words.Home.chooseTaf)
                             .scaledFont(16).foregroundColor(Theme.dim)
@@ -196,6 +203,7 @@ struct HomeSplitView: View {
             // A cross-fade, as iOS moves between a list's items, not a cut (the 755 retest).
             withMotion(.easeInOut(duration: 0.25)) { selection = .taf(id) }
             model.requestedTaf = nil
+            model.requestedTafPage = nil
         }
         // Something open from the start: the first taf in the list, which is the one used
         // last, a call waiting on it first (CI's screenshots open Refunds, as on the phone).
@@ -213,9 +221,18 @@ struct HomeSplitView: View {
             let onList = tab != nil && !(Screenshots.enabled && Screenshots.screen != nil)
             opened = onList ? .overview : Self.opening(model.listedTafs, screenshot: Screenshots.enabled && !Screenshots.listSettlesOnReturn)
             // `-screen calendar` and `calendar-week` select Calendar, the sidebar's item (Screenshots.calendar).
+            // `-screen usage` and `connect-apps` select their sidebar item, for the reference set.
+            if let screen = Screenshots.sidebarScreen { opened = screen }
             if Screenshots.calendar != nil { opened = .calendar }
             chosen = false
-            selection = opened
+            // A tab asked for before the sidebar drew (an alert that opened the app on Needs you, a route, a
+            // screenshot's `-tab`) opens its screen: the tafs list only when none was.
+            selection = tab.flatMap { HomeSelection.of($0.wrappedValue) } ?? opened
+            // `-screen new-taf`: + New's job gallery over the sample, as the reference set shows it.
+            if Screenshots.enabled, Screenshots.screen == "new-taf", showingGallery == nil {
+                await model.loadGallery()
+                if model.gallery != nil { showingGallery = .create }
+            }
         }
     }
 
@@ -264,7 +281,7 @@ struct HomeSplitView: View {
             if tab != nil {
                 // The app's screens, each an item, opened beside the sidebar.
                 Section {
-                    screenItem(.needsYou, Words.NeedsYou.title, "bell", badge: model.needsYouCount)
+                    screenItem(.needsYou, model.needsYouTabTitle, "bell", badge: model.needsYouCount)
                     screenItem(.record, Words.Record.title, "list.bullet")
                     if signedInLayout {
                         screenItem(.calendar, Words.Calendar.heading, "calendar")
@@ -540,10 +557,11 @@ struct HomeSplitView: View {
                 .scaledFont(15, weight: .semibold).lineLimit(1)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .foregroundColor(Theme.onFill)
-                .background(drive.isOn ? Theme.amber : Theme.ink)
+                .background((drive.isOn ? Theme.amber : Theme.ink).opacity(Hover.primaryOpacity(pressed: false, hovered: coachHovered)))
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
+        .onHover { coachHovered = Hover.shows($0) }
         // In the drive's registry with no action: Coach can't use it, and the person's tap on it stops the drive.
         .drivable(Words.Coach.title, id: DriveSession.coachButtonID)
         .accessibilityLabel(Words.Coach.coachMode)

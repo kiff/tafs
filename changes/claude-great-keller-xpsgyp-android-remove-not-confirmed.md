@@ -1,0 +1,1 @@
+- **Android: Remove for good says when nothing was removed.** With the fingerprint prompt closed or the finger not recognized, the taf's screen says "Not removed. Nothing changed." instead of the button coming back with no word (docs/android-app.md).

@@ -1,0 +1,10 @@
+{
+  "about": "GET /v1/tafs/{id}/runs/{session} for a run that stopped on an error: terminated, with no answer. Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "session": "sess1",
+    "report": {
+      "status": "terminated",
+      "text": ""
+    }
+  }
+}

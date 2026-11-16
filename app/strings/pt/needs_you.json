@@ -51,6 +51,7 @@
   "needs_you.over_total": "Excede um total do Card, como o de um dia. Alguém que gere os Cards pode dar-lhe margem extra, ou pode recusar.",
   "needs_you.over_total_manager": "Excede um total do Card, como o de um dia. A margem extra deixa passar só esta chamada.",
   "needs_you.prompt.answer": "Responder {summary}",
+  "needs_you.prompt.answer_mac": "responder {summary}",
   "needs_you.prompt.did_not_happen": "Dizer que não aconteceu: {title}",
   "needs_you.prompt.happened": "Dizer que aconteceu: {title}",
   "needs_you.refuse": "Recusar",
@@ -78,5 +79,6 @@
   "needs_you.when_taf_asks_something_outside": "Um alerta chega-lhe neste {device}, mesmo com o tafs fechado.",
   "needs_you.your_step.ended": "Este passo já teve resposta ou terminou.",
   "needs_you.your_step.not_answered": "A sua resposta não chegou. {why}",
-  "needs_you.your_step.not_answered_unconfirmed": "Sem resposta: não foi confirmado."
+  "needs_you.your_step.not_answered_unconfirmed": "Sem resposta: não foi confirmado.",
+  "needs_you.your_step.set_up_hello": "Configure o Windows Hello (basta um PIN) para responder aqui, ou responda a partir do seu telefone."
 }

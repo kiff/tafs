@@ -1,0 +1,6 @@
+Die erste tafs-App für Wear OS, als Begleiter der tafs-App auf dem Handy.
+- „Braucht dich“ und „Deine tafs“ am Handgelenk, von deinem Handy gelesen.
+- Einen zurückgehaltenen Aufruf ablehnen oder einen taf anhalten, direkt von der Uhr. Genehmigen bleibt auf dem Handy.
+- Wenn dich nichts braucht, zeigt es ein grünes Häkchen.
+- Eine Ansicht mit der Zahl, die dich braucht, nur solange die Uhr entsperrt ist.
+- Mit Coach sprechen: Coach bekommt deine Worte als Text, nie deine Stimme.

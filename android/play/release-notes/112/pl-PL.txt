@@ -1,0 +1,1 @@
+- Konto i inne panele nie skaczą już po szybkim przesunięciu, a „Wyloguj” widać w całości.

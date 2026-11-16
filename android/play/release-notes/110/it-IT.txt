@@ -1,0 +1,6 @@
+- Il tuo riepilogo: due volte al giorno, le decisioni che ti aspettano e ciò che è stato fatto, al posto di Ti aspetta quando il tuo account ne ha uno.
+- Etichette nella lista dei tuoi tafs e la cronologia di una missione.
+- Riepiloghi e avvisi urgenti hanno canali propri.
+- Condizioni e Privacy nella lingua dell'app.
+- Con il telefono bloccato, un avviso dice solo «Un taf ti aspetta».
+- Su un tablet, «Prende forma» sta accanto a Coach, e i tafs condivisi sono in «Condivisi con te».

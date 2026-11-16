@@ -23,7 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.design.Dot
-import bot.tafs.app.design.Mascot
 import bot.tafs.app.design.OutlineButton
 import bot.tafs.app.design.PrimaryButton
 import bot.tafs.app.design.Theme
@@ -41,7 +40,8 @@ fun OnboardingView(onSignIn: () -> Unit, onSample: () -> Unit, modifier: Modifie
     verticalArrangement = Arrangement.spacedBy(24.dp),
   ) {
     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-      Mascot(96.dp)
+      // The owner's board 1, in place of the mascot: both don't fit on a small phone (as iOS).
+      bot.tafs.app.design.Illustrated { bot.tafs.app.design.FirstRunArt(it) }
       Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(Words.SignIn.Welcome.title, style = scaled(48, FontWeight.Bold, Theme.ink, display = true))
         Text(Words.SignIn.Welcome.lead, style = scaled(16, color = Theme.soft))

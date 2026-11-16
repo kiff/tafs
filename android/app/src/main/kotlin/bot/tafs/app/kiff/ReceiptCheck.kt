@@ -42,6 +42,13 @@ sealed interface ReceiptCheck {
     fun check(response: ByteArray, signer: String = KIFF_SIGNER): ReceiptCheck {
       val receipt = runCatching { KiffClient.json.parseToJsonElement(String(response)) as? JsonObject }.getOrNull()
         ?: return Failed(Words.Receipt.Check.unreadable)
+      // A key written twice is read as one copy here and maybe the other elsewhere: the chain hashed could differ from the
+      // one another reader shows. KIFF's encoder never repeats a key, so a receipt that does, at its top or in its
+      // attestation, isn't one KIFF wrote. An attestation that isn't an object yet (null: not signed yet) has no keys.
+      val attestationKeys = RawJson.valueOf("attestation", response)?.let(RawJson::keysOf).orEmpty()
+      if (!RawJson.keysAreUnique(response) || attestationKeys.toSet().size != attestationKeys.size) {
+        return Failed(Words.Receipt.Check.unreadable)
+      }
       val attestation = receipt["attestation"] as? JsonObject ?: return NotSignedYet
       if (attestation["algorithm"]?.jsonPrimitive?.contentOrNull != ALGORITHM) return Failed(Words.Receipt.Check.unknownSignature)
       val chain = RawJson.valueOf("causal_chain", response) ?: return Failed(Words.Receipt.Check.noSteps)
@@ -134,6 +141,32 @@ object RawJson {
     }
   }
 
+  /** An object's own keys, in the order written (not those of objects inside it); null when [data] isn't an object. */
+  fun keysOf(data: ByteArray): List<String>? {
+    var i = skipSpace(data, 0)
+    if (i >= data.size || data[i] != '{'.code.toByte()) return null
+    i = skipSpace(data, i + 1)
+    val out = mutableListOf<String>()
+    if (i < data.size && data[i] == '}'.code.toByte()) return out
+    while (true) {
+      if (i >= data.size || data[i] != '"'.code.toByte()) return null
+      val keyEnd = endOfString(data, i) ?: return null
+      out += runCatching { KiffClient.json.parseToJsonElement(String(data, i, keyEnd - i)).jsonPrimitive.content }.getOrNull() ?: return null
+      i = skipSpace(data, keyEnd)
+      if (i >= data.size || data[i] != ':'.code.toByte()) return null
+      i = skipSpace(data, i + 1)
+      val valueEnd = endOfValue(data, i) ?: return null
+      i = skipSpace(data, valueEnd)
+      if (i >= data.size) return null
+      if (data[i] == '}'.code.toByte()) return out
+      if (data[i] != ','.code.toByte()) return null
+      i = skipSpace(data, i + 1)
+    }
+  }
+
+  /** No key of the object written twice. An object it can't read isn't unique. */
+  fun keysAreUnique(data: ByteArray): Boolean = keysOf(data)?.let { it.toSet().size == it.size } ?: false
+
   private fun isSpace(b: Byte) = b == 0x20.toByte() || b == 0x09.toByte() || b == 0x0A.toByte() || b == 0x0D.toByte()
 
   private fun skipSpace(b: ByteArray, from: Int): Int {
@@ -207,6 +240,14 @@ data class ReceiptStep(
 )
 
 object ReceiptSteps {
+  /**
+   * "What happened" is what KIFF signed for this line: drawn only once this phone checked KIFF's signature and the
+   * receipt matches the line. Not signed yet, or not checking out, its steps aren't drawn as what happened (the full
+   * receipt still shows them, under what didn't check out).
+   */
+  fun showsWhatHappened(check: ReceiptCheck?, entry: bot.tafs.app.model.RecordEntry, steps: List<ReceiptStep>): Boolean =
+    check is ReceiptCheck.Verified && mismatch(entry, steps) == null
+
   /** The signed chain's steps, from the receipt as KIFF wrote it; none when it can't be read. */
   fun of(raw: ByteArray): List<ReceiptStep> {
     val chain = RawJson.valueOf("causal_chain", raw) ?: return emptyList()

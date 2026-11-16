@@ -1,0 +1,1 @@
+- **Mac: screenshots of the Mac app in CI.** The Mac workflow takes the iPad's reference screens on the Mac build, light and dark, and the menu bar, so the two can be compared (docs/mac-app.md).

@@ -1,0 +1,3 @@
+- Una tarjeta de aprobación ya no se queda en “Leyendo lo que pide…” cuando la solicitud tarda un poco en llegar.
+- “Abrir de nuevo el inicio de sesión” ahora vuelve a pedir tu aprobación, con una huella, en lugar de reabrir un enlace ya usado.
+- Mientras se quita el acceso de una app, Conectar apps dice “Quitando el acceso…”.

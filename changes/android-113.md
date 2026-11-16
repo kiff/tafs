@@ -1,0 +1,1 @@
+- **Android 1.34.0 (113): the production build.** The sign-in redesign (a tablet's two halves, "You're connected.", the check code first), the Wear OS watch finding the phone again (the release build kept its link), and Account staying still after a fast swipe (docs/android-app.md, docs/watch-wear.md).

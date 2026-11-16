@@ -4,6 +4,8 @@ struct HomeView: View {
     @EnvironmentObject private var model: AppModel
     @Binding var tab: Tab
     @State private var showingBuyCredits = false
+    /// A taf's page a route asked for (`AppModel.requestedTafPage`), pushed here.
+    @State private var pushedTaf: UUID?
     @State private var showingSolo = false
     @State private var showingExport = false
     @State private var openingFirst = false
@@ -41,8 +43,13 @@ struct HomeView: View {
                         .buttonStyle(.drivablePlain)
                 }
 
+                // The labels' chips (Missions draft): All, two labels, then "+N"; a chip filters the list,
+                // whose order never changes.
+                if !model.listLabels.isEmpty { LabelChips(labels: model.listLabels, selected: model.listLabel, all: model.labelsAllWords) { model.filterList($0) } }
+
                 // Theirs, then the ones shared with them (kiff/tafs#306).
-                let sections = model.tafSections
+                let all = model.tafSections
+                let sections = (own: model.filtered(all.own), shared: model.filtered(all.shared))
                 VStack(spacing: 10) {
                     ForEach(sections.own) { taf in tafLinks(taf) }
                     // A taf being set up, among the tafs: by its name, with no state; its Coach chat
@@ -107,6 +114,8 @@ struct HomeView: View {
                     if let recipes = model.recipes, recipes.homeListsRecipes {
                         HomeRecipes(recipes: recipes, logo: { model.cloud.logoURL($0) }, ownWords: ownWords) { openRecipe = $0 }
                     } else {
+                        // Board 2, no tafs yet (docs/ios-app.md › Illustrations), above the empty line.
+                        Illustration.noTafs.frame(maxWidth: .infinity)
                         Panel {
                             if let words = model.recipes?.homeWords {
                                 // tafs cloud's empty line, whoever reads it: no words of the app's.
@@ -154,6 +163,16 @@ struct HomeView: View {
                 openRecipe = nil
                 model.handRecipeToCoach(recipe)
             }
+        }
+        // A taf's page a route asked for (the brief's "Open the taf").
+        .navigationDestination(isPresented: Binding(get: { pushedTaf != nil }, set: { if !$0 { pushedTaf = nil } })) {
+            if let pushedTaf { TafDetailView(tafID: pushedTaf) }
+        }
+        .onChange(of: model.requestedTafPage) { id in
+            guard let id else { return }
+            pushedTaf = id
+            model.requestedTafPage = nil
+            model.requestedTaf = nil
         }
         .navigationDestination(for: UUID.self) { id in
             if let tafID = model.tafOfTrialChat(id) { TrialScreen(chatID: id, tafID: tafID) } else { TafDetailView(tafID: id) }
@@ -295,7 +314,7 @@ struct HomeView: View {
                 // With no taf and the recipes listed, tafs cloud's line leads: no "0 tafs
                 // working" above them (as on Android).
                 // tafs cloud's line as sent; the app's own count only when it sent none.
-                Text(model.workingWords)
+                Text(model.listHeadline)
                     .foregroundColor(Theme.ink)
                 Text(model.needsYouWords)
                     .foregroundColor(Theme.dim)
@@ -375,6 +394,7 @@ struct TafRow: View {
                     StateChip(state: taf.state)
                 }
             }
+            TafLabels(taf: taf)
             if let rule = taf.card.rules.first(where: { $0.perWindow != nil }), let limit = rule.perWindow {
                 let used = taf.used[rule.action] ?? .zero
                 // KIFF couldn't read the use: say so, never show an empty meter.

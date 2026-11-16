@@ -1,0 +1,1 @@
+- Account, and every other sheet, stays still after a fast swipe, and Sign out shows in full.

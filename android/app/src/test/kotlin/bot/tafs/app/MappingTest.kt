@@ -555,6 +555,33 @@ class MappingTest {
     assertNotNull(KiffMapping.executed(null, approved = true))
   }
 
+  // KIFF passes the app's answer through as tool_outcome.message. Only a short, plain, one-line reason is quoted: an app's JSON
+  // body, a long one, one over several lines or one holding an address leaves the plain line, which already names the app.
+  @Test fun theRecordQuotesOnlyAShortPlainReasonNeverTheAppsRawAnswer() {
+    fun refused(message: String?) =
+      KiffMapping.executed(ToolOutcome("refused_by_tool", message = message), approved = false, vendor = "Gmail").second
+    fun notSent(message: String?) = KiffMapping.executed(ToolOutcome("not_sent", message = message), approved = false).second
+    val plain = refused(null)
+    val gmail = """Gmail refused it (it answered 400): { "error": { "code": 400, "message": "Mail service not enabled", "status": "FAILED_PRECONDITION" } }"""
+    // Gmail's answer on a live taf (16 Nov): JSON, never quoted.
+    assertEquals(plain, refused(gmail))
+    assertEquals(plain, refused("""[{"reason":"failedPrecondition"}]"""))
+    // An address, a long body, or one over several lines: never quoted.
+    assertEquals(plain, refused("Gmail refused it (it answered 403): someone@example.com can't read this mailbox."))
+    assertEquals(plain, refused("Gmail refused it (it answered 500): " + "x".repeat(KiffMapping.QUOTABLE_MAX)))
+    assertEquals(plain, refused("Gmail refused it (it answered 500):\nat com.google.api.Server"))
+    // A short, plain reason still is, as before.
+    assertEquals("$plain: Agent Mail refused it (it answered 403): Forbidden.", refused("Agent Mail refused it (it answered 403): Forbidden."))
+    // Only spaces: the plain line.
+    assertEquals(plain, refused("   "))
+    // The same for a call that couldn't be sent.
+    val notSentPlain = notSent(null)
+    assertEquals(notSentPlain, notSent(gmail))
+    assertEquals("$notSentPlain: Timed out.", notSent("Timed out."))
+    assertNull(KiffMapping.quotable(gmail))
+    assertEquals("Forbidden.", KiffMapping.quotable("  Forbidden. "))
+  }
+
   @Test fun aRefusalKiffTypesAsTheConnectionsSaysSoInKiffsWords() {
     fun call(detail: String?, code: String? = "halt_unavailable", by: String? = "connection") = ActivityCall("p", "list_subscriptions", actorId = "a1",
       outcome = "allowed", createdAt = Instant.EPOCH, toolOutcome = ToolOutcome("refused_by_tool", message = "planque: halt unavailable", refusedBy = by, code = code),

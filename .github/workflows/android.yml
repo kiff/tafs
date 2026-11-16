@@ -5,16 +5,24 @@ name: Android
 # that raises versionCode, it also builds the signed release bundle for Play (the release
 # job), with the upload key from Secrets Manager, and, once PLAY_UPLOAD is on, uploads it to
 # Play's internal track with its release notes (play/play_internal.py; docs/android-app.md).
+# The Wear OS watch has its own release job, on a merge that raises the watch's versionCode or by
+# hand, and goes to the watch's own internal track once WEAR_UPLOAD is on (docs/watch-wear.md).
 
 on:
   push:
     branches: [main]
-    paths: ["android/**", "contracts/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "contracts/**", "vectors/**", ".github/workflows/android.yml"]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    paths: ["android/**", "contracts/**", ".github/workflows/android.yml"]
-  # The signed release bundle for Play, on demand (the release job).
+    paths: ["android/**", "contracts/**", "vectors/**", ".github/workflows/android.yml"]
+  # The signed release bundle for Play, on demand: the phone's (the release job) or the watch's (wear-release).
   workflow_dispatch:
+    inputs:
+      form:
+        description: Which app to build for Play
+        type: choice
+        options: [phone, wear]
+        default: phone
 
 permissions:
   contents: read
@@ -44,6 +52,11 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        # Gradle's cache is saved by this job alone, on main (the action's default is
+        # read-only elsewhere), after its own clean-up of stale entries: one current
+        # copy, where three jobs each saved theirs on every run (10 GB, 14 Nov).
+        with:
+          cache-cleanup: on-success
       - run: chmod +x gradlew
       # The Android SDK is on the runner; its licences are accepted so Gradle can fetch
       # the platform the app compiles against.
@@ -58,17 +71,30 @@ jobs:
           if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json; fi
       - name: Unit tests and the debug builds
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace
+      # A release build, unsigned, with the release's shrinking: the watch finds the phone only by a capability no code
+      # reads, which the shrinker dropped from 111 (play/check_watch_link.sh). Debug builds keep every resource.
+      - name: The release build keeps the watch's link
+        run: |
+          ./gradlew :app:assembleRelease --stacktrace
+          play/check_watch_link.sh app/build/outputs/apk/release/app-release-unsigned.apk
+      # The Wear OS watch (docs/watch-wear.md): the messages it and the phone exchange, and its debug build.
+      - name: The watch's tests and its debug build
+        run: ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDebug --stacktrace
       # The current versionCode's Play release notes, when there are any: all eight languages, each short enough.
       - name: Play release notes, and the upload's own tests
         run: |
           python3 play/play_internal.py --check
+          python3 play/play_internal.py --wear --check
           python3 -m unittest play/test_play_internal.py
       # What the tests saw, when one fails.
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: android-unit-test-results
-          path: android/app/build/reports/tests
+          path: |
+            android/app/build/reports/tests
+            android/watchlink/build/reports/tests
+            android/wear/build/reports/tests
 
   # The screens' UI tests (the held call's card) on an emulator: KVM makes it fast enough.
   ui:
@@ -86,6 +112,9 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        # Read-only: the test job saves the cache, on main; this one restores it.
+        with:
+          cache-read-only: true
       - run: chmod +x gradlew
       - name: Accept the SDK licences
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
@@ -110,13 +139,15 @@ jobs:
           name: android-ui-test-results
           path: android/app/build/reports/androidTests
 
-  # Whether this push to main raised versionCode: a release, built and sent to Play's internal track.
+  # Whether this push to main raised versionCode: a release, built and sent to Play's internal track. The phone's and the
+  # watch's are compared each on their own, so either one ships without the other.
   version:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
       raised: ${{ steps.compare.outputs.raised }}
+      wear_raised: ${{ steps.compare.outputs.wear_raised }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -125,22 +156,31 @@ jobs:
       - id: compare
         run: |
           set -euo pipefail
-          code() { sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9]+)[[:space:]]*$/\1/p' | head -1; }
-          now=$(code < app/build.gradle.kts)
-          before=$(git show HEAD^:android/app/build.gradle.kts 2>/dev/null | code || true)
-          echo "versionCode ${before:-none} -> $now"
-          if [ -n "$before" ] && [ "$now" -gt "$before" ]; then echo "raised=true" >> "$GITHUB_OUTPUT"; else echo "raised=false" >> "$GITHUB_OUTPUT"; fi
+          # Kotlin may write it with underscores (the watch's 400_000_001): they're dropped before comparing.
+          code() { sed -nE 's/^[[:space:]]*versionCode[[:space:]]*=[[:space:]]*([0-9_]+)[[:space:]]*$/\1/p' | head -1 | tr -d _; }
+          raised() {
+            local now before
+            now=$(code < "$1/build.gradle.kts")
+            before=$(git show "HEAD^:android/$1/build.gradle.kts" 2>/dev/null | code || true)
+            echo "$1: versionCode ${before:-none} -> $now" >&2
+            if [ -n "$before" ] && [ "$now" -gt "$before" ]; then echo true; else echo false; fi
+          }
+          echo "raised=$(raised app)" >> "$GITHUB_OUTPUT"
+          echo "wear_raised=$(raised wear)" >> "$GITHUB_OUTPUT"
 
   # The signed release bundle for Play's internal testing, by hand or on a merge to main that raised versionCode. The
   # upload key comes from Secrets Manager (the UPLOAD_KEY_SECRET_ID secret names it) through the deploy role, which may read
-  # that one secret, and is written to the runner's temporary directory for the build only. The bundle is kept one day.
+  # that one secret, and is written to the runner's temporary directory for the build only. The bundle isn't kept as a run
+  # artifact: the repository is public, so Play holds the only copy.
   release:
     # By hand, or on a merge to main that raised versionCode, once the tests and the UI tests passed.
     needs: [test, ui, version]
     if: >-
       !cancelled() && needs.test.result == 'success' && needs.ui.result == 'success' &&
-      (github.event_name == 'workflow_dispatch' || needs.version.outputs.raised == 'true')
-    # The owner approves each release here; the release role trusts only this environment.
+      ((github.event_name == 'workflow_dispatch' && inputs.form != 'wear') || needs.version.outputs.raised == 'true')
+    # An internal release goes out on a merge to main that raises versionCode (or a manual run), with no reviewer to wait on:
+    # CI, the reviews and the internal track are the guardrails. Promotion beyond internal (Play review) is the owner's, in Play.
+    # The release role trusts only this environment.
     environment: android-release
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -156,6 +196,9 @@ jobs:
           distribution: temurin
           java-version: 17
       - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        # Read-only: the test job saves the cache, on main; this one restores it.
+        with:
+          cache-read-only: true
       - run: chmod +x gradlew
       - name: Accept the SDK licences
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
@@ -175,6 +218,8 @@ jobs:
         run: |
           set -euo pipefail
           key="$RUNNER_TEMP/upload.jks"
+          # Gone however the step ends, a failed build included.
+          trap 'rm -f "$key"' EXIT
           secret=$(aws secretsmanager get-secret-value --secret-id "$UPLOAD_KEY_SECRET_ID" --query SecretString --output text)
           python3 -c 'import base64,json,sys; d=json.loads(sys.stdin.read()); open(sys.argv[1],"wb").write(base64.b64decode(d["keystore"]))' "$key" <<<"$secret"
           for f in store_password key_password alias; do
@@ -185,13 +230,15 @@ jobs:
           unset secret
           TAFS_UPLOAD_KEYSTORE="$key" ./gradlew :app:bundleRelease --stacktrace
           rm -f "$key"
-          # Signed with the upload key, or Play refuses it.
-          "$JAVA_HOME/bin/jarsigner" -verify app/build/outputs/bundle/release/app-release.aab >/dev/null
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: tafs-android-release-${{ github.run_number }}
-          path: android/app/build/outputs/bundle/release/app-release.aab
-          retention-days: 1
+          # Signed, or CI stops here, before Play: `jarsigner -verify` exits 0 on an unsigned bundle too, so its own words are
+          # read ("jar verified."). Not -strict, which fails every upload-key build on the self-signed certificate's warnings.
+          aab=app/build/outputs/bundle/release/app-release.aab
+          said=$("$JAVA_HOME/bin/jarsigner" -verify "$aab")
+          grep -q '^jar verified\.' <<<"$said" || { echo "::error::the bundle isn't signed: $(grep -m1 . <<<"$said")"; exit 1; }
+          # Which key signed it, in the log: Play takes only the listing's upload key, and the certificate's hash isn't a secret.
+          echo "Signed by the certificate with $("$JAVA_HOME/bin/keytool" -printcert -jarfile "$aab" | grep -m1 'SHA256:' | sed 's/^[[:space:]]*//')"
+          # The watch's link is in it, or the watch can't find the phone (play/check_watch_link.sh).
+          play/check_watch_link.sh "$aab"
       # To Play's internal track, and only that track: signed in with Google's workload identity federation, a token that
       # lasts the run, for the Play Developer API alone. No key file, and no secret holds a key. Off until PLAY_UPLOAD is on.
       - id: google
@@ -208,3 +255,77 @@ jobs:
         env:
           PLAY_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
         run: python3 play/play_internal.py --upload app/build/outputs/bundle/release/app-release.aab
+
+  # The watch's signed release bundle, by hand (form: wear) or on a merge to main that raised the watch's versionCode, once
+  # the tests passed (they run the watch's own). Signed with the phone's upload key, as the Data Layer needs, in the same
+  # environment and role. The bundle isn't kept as a run artifact: Play holds the only copy. To Play's Wear OS internal track (`wear:internal`) alone, once
+  # WEAR_UPLOAD is on: that needs the Wear OS form factor on the listing first, which is the owner's (docs/watch-wear.md).
+  wear-release:
+    needs: [test, version]
+    if: >-
+      !cancelled() && needs.test.result == 'success' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.form == 'wear') || needs.version.outputs.wear_raised == 'true')
+    environment: android-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@77dd5b2ce225ea11469928ac317850245a74ae78 # v6.2.0
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-read-only: true
+      - run: chmod +x gradlew
+      - name: Accept the SDK licences
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.AWS_ANDROID_RELEASE_ROLE }}
+          aws-region: eu-west-1
+      - name: The signed watch bundle
+        env:
+          UPLOAD_KEY_SECRET_ID: ${{ secrets.UPLOAD_KEY_SECRET_ID }}
+        run: |
+          set -euo pipefail
+          key="$RUNNER_TEMP/upload.jks"
+          # Gone however the step ends, a failed build included.
+          trap 'rm -f "$key"' EXIT
+          secret=$(aws secretsmanager get-secret-value --secret-id "$UPLOAD_KEY_SECRET_ID" --query SecretString --output text)
+          python3 -c 'import base64,json,sys; d=json.loads(sys.stdin.read()); open(sys.argv[1],"wb").write(base64.b64decode(d["keystore"]))' "$key" <<<"$secret"
+          for f in store_password key_password alias; do
+            v=$(python3 -c 'import json,sys; print(json.loads(sys.stdin.read()).get(sys.argv[1], "upload"))' "$f" <<<"$secret")
+            [ "$f" != alias ] && echo "::add-mask::$v"
+            case $f in store_password) export TAFS_UPLOAD_STORE_PASSWORD="$v";; key_password) export TAFS_UPLOAD_KEY_PASSWORD="$v";; alias) export TAFS_UPLOAD_KEY_ALIAS="$v";; esac
+          done
+          unset secret
+          TAFS_UPLOAD_KEYSTORE="$key" ./gradlew :wear:bundleRelease --stacktrace
+          rm -f "$key"
+          # Signed, or CI stops here, before Play: `jarsigner -verify` exits 0 on an unsigned bundle too, so its own words are
+          # read ("jar verified."). Not -strict, which fails every upload-key build on the self-signed certificate's warnings.
+          aab=wear/build/outputs/bundle/release/wear-release.aab
+          said=$("$JAVA_HOME/bin/jarsigner" -verify "$aab")
+          grep -q '^jar verified\.' <<<"$said" || { echo "::error::the bundle isn't signed: $(grep -m1 . <<<"$said")"; exit 1; }
+          # Which key signed it, in the log: Play takes only the listing's upload key, and the certificate's hash isn't a secret.
+          echo "Signed by the certificate with $("$JAVA_HOME/bin/keytool" -printcert -jarfile "$aab" | grep -m1 'SHA256:' | sed 's/^[[:space:]]*//')"
+      # The same sign-in as the phone's: workload identity federation, a token for the Play Developer API that lasts the run.
+      - id: google
+        if: vars.WEAR_UPLOAD == 'on'
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.PLAY_WIF_PROVIDER }}
+          service_account: ${{ vars.PLAY_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/androidpublisher
+          create_credentials_file: false
+      - name: To Play's Wear OS internal track
+        if: vars.WEAR_UPLOAD == 'on'
+        env:
+          PLAY_ACCESS_TOKEN: ${{ steps.google.outputs.access_token }}
+        run: python3 play/play_internal.py --wear --upload wear/build/outputs/bundle/release/wear-release.aab

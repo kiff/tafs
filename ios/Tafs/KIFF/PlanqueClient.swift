@@ -20,6 +20,12 @@ final class PlanqueClient {
         /// `words`: planque's own line for the person, in their language, when it sends one ("You signed in
         /// as another account…"): shown as it is, before any line of the app's own.
         case server(status: Int, message: String, words: String? = nil)
+        /// Signed in an approval window that has ended (kiff/tafs#494): nothing was done; a new
+        /// window, then the same call again.
+        case windowRequired
+        /// Asked with no connector key, planque holds none that still stands (`409 needs_key`): the one answer
+        /// on which the phone mints a key.
+        case needsKey
 
         var errorDescription: String? {
             switch self {
@@ -31,6 +37,9 @@ final class PlanqueClient {
             // "changed" over "you signed in as another account" read as "try again"). Its reason is for the
             // code and the diagnostics; without words, the person reads a plain line by what happened.
             case .server(let status, _, let words): return words ?? PlainError.words(status: status)
+            // The app's own words: planque's `error` is for the log, never the person.
+            case .windowRequired: return Words.Error.approvalWindowEnded
+            case .needsKey: return PlainError.words(status: 409)
             }
         }
     }
@@ -48,6 +57,13 @@ final class PlanqueClient {
     /// Reads `deviceID` from KIFF when it isn't known yet, right before a signature: planque
     /// refuses one without it (kiff/planque#12).
     var deviceLoader: (@MainActor () async -> String?)?
+    /// The approval window `signer` signs in (kiff/tafs#494): set only while an approval step that
+    /// takes one runs, so its calls go as a tap (`v2`, with the window's id); planque asks KIFF
+    /// whether it is open. Nil signs as before.
+    var window: String?
+    /// planque's `code` on the last refusal, or nil when it sent none: a 409 an older planque sent with no code at
+    /// enrolment is another device's; today's planque names each of its own (`signature_replayed`, …).
+    private(set) var lastRefusalCode: String?
     private let session: URLSession
 
     init(baseURL: URL = URL(string: "https://planque.kiff.dev")!, session: URLSession = .shared) {
@@ -63,19 +79,35 @@ final class PlanqueClient {
         return Data(["planque.request.v1", b, tenant, method, uri, bodyHash, signedAt].joined(separator: "\n").utf8)
     }
 
+    /// What the phone signs inside an approval window (planque's `device.MessageWindow`): `message`'s
+    /// lines under `planque.request.v2`, with the window's id last. With no window, `message`.
+    static func messageWindow(base: URL, tenant: String, method: String, uri: String, body: Data, signedAt: String, window: String?) -> Data {
+        guard let window else { return message(base: base, tenant: tenant, method: method, uri: uri, body: body, signedAt: signedAt) }
+        var b = base.absoluteString
+        while b.hasSuffix("/") { b.removeLast() }
+        let bodyHash = SHA256.hash(data: body).map { String(format: "%02x", $0) }.joined()
+        return Data(["planque.request.v2", b, tenant, method, uri, bodyHash, signedAt, window].joined(separator: "\n").utf8)
+    }
+
     // MARK: Enrolment
 
     struct Enrolment: Decodable, Equatable {
         let tenant: String
         /// The phone key's fingerprint, as planque shows it in its record.
         let device: String
+        /// The connector key planque holds still stands, so it kept it and took no new one.
+        var kept: Bool?
     }
 
     /// Hands planque the KIFF connector key it keeps to register tools. Signed with
     /// `deviceID`, any of the owner's devices may (kiff/planque#10). The device's key goes
-    /// too, for a planque from before that, which enrols one phone by its key.
-    func enrol(deviceKey: Data, connectorKey: String) async throws -> Enrolment {
-        try await send("POST", "enrolment", body: ["device_key": deviceKey.base64EncodedString(), "connector_key": connectorKey])
+    /// too, for a planque from before that, which enrols one phone by its key. With no
+    /// `connectorKey`, it only asks whether the enrolled key still stands: planque answers
+    /// `kept`, or refuses (`needs_key`) and keeps nothing.
+    func enrol(deviceKey: Data, connectorKey: String?) async throws -> Enrolment {
+        var body = ["device_key": deviceKey.base64EncodedString()]
+        if let connectorKey { body["connector_key"] = connectorKey }
+        return try await send("POST", "enrolment", body: body)
     }
 
     // MARK: Grants
@@ -315,8 +347,15 @@ final class PlanqueClient {
         var grants = try KIFFClient.decoder.decode(Response.self, from: data).grants
         // The request as planque sent it, numbers as written, so the digest is planque's.
         let raws = (try? JCS.parse(data))?["grants"]?.array ?? []
+        // Each grant with planque's entry at its own position, never looked up by id: two entries with one id
+        // (one request, then another carrying the first's digest) would mark the second as matching from the
+        // first's bytes, and approving it would sign what wasn't shown. An id that repeats, or a list of
+        // another length, pairs nothing: no grant matches, and nothing is signed.
+        let ids = grants.map(\.id)
+        let paired = raws.count == grants.count && Set(ids).count == ids.count
         for i in grants.indices {
-            guard let raw = raws.first(where: { $0["id"]?.string == grants[i].id }), let request = raw["request"] else { continue }
+            guard paired, raws[i]["id"]?.string == grants[i].id, let request = raws[i]["request"] else { continue }
+            let raw = raws[i]
             grants[i].profile = request["profile"]
             guard let covered = Self.digestCovers(raw), let canonical = try? JCS.canonical(covered) else { continue }
             let hash = SHA256.hash(data: canonical).map { String(format: "%02x", $0) }.joined()
@@ -579,6 +618,11 @@ final class PlanqueClient {
         return (line("error"), line("words"))
     }
 
+    /// planque's machine-readable `code` on a refusal, when it sends one as text.
+    nonisolated static func refusalCode(_ data: Data) -> String? {
+        ((try? JSONSerialization.jsonObject(with: data)) as? [String: Any])?["code"] as? String
+    }
+
     private func escaped(_ s: String) -> String {
         s.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? s
     }
@@ -618,6 +662,8 @@ final class PlanqueClient {
         // planque asks KIFF whether this device signed (kiff/planque#12): never a key alone.
         if deviceID == nil, let load = deviceLoader { deviceID = await load() }
         guard let device = deviceID else { throw PlanqueError.noDevice }
+        // Inside an approval window, the device key signs with the window's id: only the calls of a step that takes one.
+        let held = override == nil && together == nil ? window : nil
         if let together {
             request.setValue("\(RequestsTogether.header(signedAt: together.signedAt, signature: together.signature, with: together.with)),d=\(device)",
                              forHTTPHeaderField: "Planque-Device-Signature")
@@ -625,13 +671,22 @@ final class PlanqueClient {
             let signedAt = SigningTime.next()
             // Signed as planque reads it: the path and query as sent, percent-encoded.
             let uri = url.path(percentEncoded: true) + (url.query(percentEncoded: true).map { "?" + $0 } ?? "")
-            let message = Self.message(base: baseURL, tenant: tenant, method: method, uri: uri, body: body ?? Data(), signedAt: signedAt)
-            request.setValue("t=\(signedAt),v1=\(try signer(message)),d=\(device)", forHTTPHeaderField: "Planque-Device-Signature")
+            let message = Self.messageWindow(base: baseURL, tenant: tenant, method: method, uri: uri, body: body ?? Data(), signedAt: signedAt, window: held)
+            let signature = try signer(message)
+            request.setValue(held.map { "t=\(signedAt),v2=\(signature),w=\($0),d=\(device)" } ?? "t=\(signedAt),v1=\(signature),d=\(device)",
+                             forHTTPHeaderField: "Planque-Device-Signature")
         }
 
         let (data, response) = try await session.data(for: request)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         guard (200..<300).contains(status) else {
+            // Signed in a window that has ended: forgotten, and said in the app's own words.
+            if status == 403, let held, Self.refusalCode(data) == KIFFClient.windowRequired {
+                if window == held { window = nil }
+                throw PlanqueError.windowRequired
+            }
+            lastRefusalCode = Self.refusalCode(data)
+            if status == 409, lastRefusalCode == "needs_key" { throw PlanqueError.needsKey }
             let said = Self.refusal(data)
             throw PlanqueError.server(status: status, message: said.error ?? Words.Error.connectionAnswered(status: "\(status)"), words: said.words)
         }

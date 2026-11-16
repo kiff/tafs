@@ -1,0 +1,120 @@
+name: Mac installer certificate
+
+# Makes the Mac Installer Distribution certificate the Mac TestFlight upload
+# signs its package with (docs/mac-app.md, Signing), once, by hand. Its private
+# key is made inside this run and leaves it only encrypted to the public key an
+# admin gives as input: the .p12 and its password, under AES-256, whose key is
+# under RSA-OAEP (SHA-256). The admin decrypts it on their own machine and stores
+# MAC_INSTALLER_P12 and MAC_INSTALLER_P12_PASSWORD as Actions secrets, then
+# deletes the artifact. Nothing readable is printed, kept in the repo, or
+# uploaded: this repository is public, so its logs and artifacts are too.
+#
+# It runs from main only, in the `mac-signing` environment, whose reviewer must
+# approve each time: made before its first run, with a required reviewer and
+# deployment branches limited to main (a run from another branch runs that
+# branch's copy of this file), so nobody with push can mint certificates. If anything
+# readable ever reaches a log, the certificate is revoked in App Store Connect
+# at once and a new one made.
+
+on:
+  workflow_dispatch:
+    inputs:
+      public_key:
+        description: "The admin's RSA public key (PEM, base64 of the whole file on one line)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  certificate:
+    if: github.ref == 'refs/heads/main'
+    environment: mac-signing
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+    steps:
+      - name: Read the public key
+        env:
+          PUBLIC_KEY: ${{ inputs.public_key }}
+        run: |
+          umask 077
+          printf '%s' "$PUBLIC_KEY" | base64 --decode > "$RUNNER_TEMP/admin.pub.pem"
+          bits=$(openssl rsa -pubin -in "$RUNNER_TEMP/admin.pub.pem" -noout -text 2>/dev/null | sed -n 's/.*Public-Key: (\([0-9]*\) bit).*/\1/p')
+          if [ -z "$bits" ] || [ "$bits" -lt 3072 ]; then echo "::error::public_key isn't an RSA public key of 3072 bits or more"; exit 1; fi
+          echo "an RSA public key of $bits bits"
+
+      - name: Write the App Store Connect key
+        env:
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+        run: |
+          umask 077
+          printf '%s\n' "$ASC_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
+
+      - name: Make the certificate
+        env:
+          ASC_KEY_PATH: ${{ runner.temp }}/AuthKey.p8
+        run: |
+          umask 077
+          cd "$RUNNER_TEMP"
+          openssl genrsa -out installer.key 2048 2>/dev/null
+          openssl req -new -key installer.key -subj "/CN=tafs Mac Installer CI" -outform DER -out installer.csr.der
+          ruby -ropenssl -rjson -rbase64 -rnet/http -e '
+            b64 = ->(s) { Base64.urlsafe_encode64(s, padding: false) }
+            key = OpenSSL::PKey::EC.new(File.read(ENV["ASC_KEY_PATH"]))
+            now = Time.now.to_i
+            head = b64.(JSON.generate(alg: "ES256", kid: ENV["ASC_KEY_ID"], typ: "JWT"))
+            body = b64.(JSON.generate(iss: ENV["ASC_ISSUER_ID"], iat: now, exp: now + 600, aud: "appstoreconnect-v1"))
+            asn = OpenSSL::ASN1.decode(key.sign(OpenSSL::Digest::SHA256.new, "#{head}.#{body}"))
+            sig = asn.value.map { |i| i.value.to_s(2).rjust(32, "\x00".b)[-32..] }.join
+            jwt = "#{head}.#{body}.#{b64.(sig)}"
+            uri = URI("https://api.appstoreconnect.apple.com/v1/certificates")
+            req = Net::HTTP::Post.new(uri)
+            req["Authorization"] = "Bearer #{jwt}"
+            req["Content-Type"] = "application/json"
+            req.body = JSON.generate(data: { type: "certificates", attributes: {
+              certificateType: "MAC_INSTALLER_DISTRIBUTION", csrContent: Base64.strict_encode64(File.binread("installer.csr.der")) } })
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |h| h.request(req) }
+            j = JSON.parse(res.body) rescue {}
+            unless res.code.start_with?("2")
+              (j["errors"] || []).each { |e| puts "  #{e["code"]}: #{e["detail"]}" }
+              abort "App Store Connect answered #{res.code}"
+            end
+            a = j.dig("data", "attributes")
+            puts "certificate #{j.dig("data", "id")} (#{a["name"]}), expires #{a["expirationDate"]}"
+            File.binwrite("installer.cer", Base64.decode64(a["certificateContent"]))
+          '
+
+      - name: Pack and encrypt it
+        run: |
+          umask 077
+          cd "$RUNNER_TEMP"
+          mkdir out
+          # A password for the .p12, and the legacy algorithms the macOS keychain imports.
+          openssl rand -hex 24 > out/password.txt
+          echo "::add-mask::$(cat out/password.txt)"
+          openssl x509 -inform DER -in installer.cer -out installer.cer.pem
+          openssl pkcs12 -export -inkey installer.key -in installer.cer.pem -name "tafs Mac Installer CI" \
+            -keypbe PBE-SHA1-3DES -certpbe PBE-SHA1-3DES -macalg sha1 \
+            -passout file:out/password.txt -out out/installer.p12
+          tar -C out -cf bundle.tar installer.p12 password.txt
+          # Hex, one line: -pass file: reads the first line only, so binary would be cut at a newline or NUL.
+          openssl rand -hex 32 > aes.key
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in bundle.tar -out mac-installer.tar.enc -pass file:aes.key
+          openssl pkeyutl -encrypt -pubin -inkey admin.pub.pem -in aes.key -out mac-installer.key.enc \
+            -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256
+          mkdir sealed && mv mac-installer.tar.enc mac-installer.key.enc sealed/
+          rm -rf out bundle.tar aes.key installer.key installer.cer installer.cer.pem installer.csr.der
+          ls -la sealed
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mac-installer-sealed
+          path: ${{ runner.temp }}/sealed
+          retention-days: 1
+
+      - name: Remove the key
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/AuthKey.p8" "$RUNNER_TEMP/out" "$RUNNER_TEMP/installer.key" "$RUNNER_TEMP/aes.key" "$RUNNER_TEMP/bundle.tar"

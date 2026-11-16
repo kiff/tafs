@@ -8,7 +8,7 @@ final class SignInTests: XCTestCase {
     private static let start = #"{"device_code":"dc_1","user_code":"WXYZ-1234","verification_uri":"https://app.kiff.dev/auth/device","verification_uri_complete":"https://app.kiff.dev/auth/device?code=WXYZ-1234","expires_in":600,"interval":5}"#
     private static let token = #"{"access_token":"kiff_dev_new","expires_in":7776000,"tenant":"t_01","subject":"u_1"}"#
 
-    private func model() -> AppModel {
+    private func model(signer: ApprovalSigning = FaceIDSigner()) -> AppModel {
         StubProtocol.responses = [:]
         StubProtocol.thenRespond = [:]
         StubProtocol.dropped = [:]
@@ -20,7 +20,7 @@ final class SignInTests: XCTestCase {
         let kiff = KIFFClient(baseURL: URL(string: "https://api.test")!, gatewayURL: URL(string: "https://mcp.test")!, token: nil, session: session)
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: nil, session: session)
         let planque = PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: session)
-        let model = AppModel(signer: FaceIDSigner(), kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: StubVendor())
+        let model = AppModel(signer: signer, kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: StubVendor())
         // What a new session loads.
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
@@ -123,22 +123,73 @@ final class SignInTests: XCTestCase {
     }
 
     /// Terms and Privacy open tafs's own pages, the ones Google's consent screen names, never
-    /// KIFF's (`/terms#tafs`), in every language, as Android 1.27.8 does.
-    func testTheLegalLinksOpenTafssOwnPages() {
-        XCTAssertEqual(Legal.terms.absoluteString, "https://kiff.dev/tafs/terms")
-        XCTAssertEqual(Legal.privacy.absoluteString, "https://kiff.dev/tafs/privacy")
+    /// KIFF's (`/terms#tafs`): in the app's language where kiff.dev serves it, else in English.
+    func testTheLegalLinksOpenTafssOwnPagesInTheAppsLanguage() {
+        XCTAssertEqual(Legal.page("terms", language: "en").absoluteString, "https://kiff.dev/tafs/terms")
+        XCTAssertEqual(Legal.page("privacy", language: "en").absoluteString, "https://kiff.dev/tafs/privacy", "English has no /en/")
+        for language in ["de", "es", "fr", "it", "nl", "pl", "pt"] {
+            XCTAssertEqual(Legal.page("terms", language: language).absoluteString, "https://kiff.dev/\(language)/tafs/terms")
+            XCTAssertEqual(Legal.page("privacy", language: language).absoluteString, "https://kiff.dev/\(language)/tafs/privacy")
+        }
+        XCTAssertEqual(Legal.page("terms", language: "ja").absoluteString, "https://kiff.dev/tafs/terms", "a language kiff.dev doesn't serve opens English")
+        XCTAssertEqual(Legal.terms, Legal.page("terms", language: Legal.language))
         XCTAssertTrue(Words.languages.contains(Legal.language))
+        XCTAssertEqual(Set(Words.languages).subtracting(["en"]), Legal.translated, "every language the app ships has its page")
     }
 
-    /// The pages are in English only: a row in another language says so, as kiff.dev does.
-    func testALegalRowOutsideEnglishSaysThePageIsInEnglish() {
+    /// A row says the page is in English only when it opens in English from another language.
+    func testALegalRowSaysInEnglishOnlyWhenThePageIs() {
         XCTAssertEqual(Legal.label("Terms", language: "en"), "Terms")
         for language in Words.languages where language != "en" {
+            XCTAssertEqual(Legal.label("Conditions", language: language), "Conditions", "\(language) has its own page: no suffix")
+        }
+        for language in ["ja"] {
             let label = Legal.label("Terms", language: language)
             XCTAssertEqual(label, Words.Settings.legalInEnglish(label: "Terms"))
             XCTAssertTrue(label.hasPrefix("Terms"), "the row's own words first")
             XCTAssertNotEqual(label, "Terms")
         }
+    }
+
+    /// The pairing QR shows at once: its claim is signed with the device key, with no Face ID or Touch ID,
+    /// as on Android and Windows, and a renewed code asks nothing either. The phone's approval, behind its
+    /// own Face ID after comparing the check code, is what adds the device.
+    func testThePairingClaimIsSignedWithNoPrompt() async throws {
+        let signer = TwoKeySigner()
+        let model = model(signer: signer)
+        let first = try await model.startPairingSignIn()
+        let renewed = try await model.startPairingSignIn()
+        XCTAssertTrue(signer.currentPrompted.isEmpty, "no Face ID or Touch ID")
+        XCTAssertTrue(signer.approvalPrompted.isEmpty)
+        XCTAssertEqual(signer.current, [first, renewed].map { String(decoding: $0.offer.claimMessage, as: UTF8.self) })
+        XCTAssertEqual(first.proof, "current")
+    }
+
+    /// An iPhone offers only "Sign in with KIFF": any phone can open KIFF's own sign-in. An iPad or a Mac
+    /// offers both halves, "Sign in with your phone" beside it.
+    func testOnlyAnIPhoneLeavesOutSignInWithYourPhone() {
+        XCTAssertFalse(SignInView.offersPhone(isPhone: true))
+        XCTAssertTrue(SignInView.offersPhone(isPhone: false))
+    }
+
+    /// The redesign's words are the shared keys, and the approve-pairing sheet puts the check code first:
+    /// it, not the device's claimed name, binds the yes to the device in front of the person.
+    func testTheSignInsWordsAndTheApprovalSheetsOrder() throws {
+        XCTAssertEqual(Words.SignIn.withPhone, "Sign in with your phone")
+        XCTAssertEqual(Words.SignIn.scanWithTafs, "Scan with tafs")
+        XCTAssertEqual(Words.SignIn.connected, "You're connected.")
+        XCTAssertEqual(Words.SignIn.connectedLine, "Let's build great things together.")
+        XCTAssertEqual(Words.SignIn.letsGo, "Let's go")
+        XCTAssertEqual(Words.Settings.Devices.pairClaims(name: "MacBook Pro"), "It calls itself MacBook Pro.")
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let sheet = try String(contentsOf: views.appendingPathComponent("PairComputerView.swift"), encoding: .utf8)
+        let code = try XCTUnwrap(sheet.range(of: "Text(request.checkCode)"))
+        let only = try XCTUnwrap(sheet.range(of: "Text(Words.Settings.Devices.pairAddOnly)"))
+        let claim = try XCTUnwrap(sheet.range(of: "Text(Words.Settings.Devices.pairClaims(name: request.name))"))
+        XCTAssertTrue(code.lowerBound < only.lowerBound && only.lowerBound < claim.lowerBound, "the code, then only this device, then its claimed name")
+        XCTAssertFalse(sheet.contains("Words.Settings.Devices.pairNamed(device: request.name)"), "the name is never the heading")
+        let signIn = try String(contentsOf: views.appendingPathComponent("SignInView.swift"), encoding: .utf8)
+        XCTAssertTrue(signIn.contains("model.justConnected = true"), "either way ends on the celebration")
     }
 
     /// Account › Legal draws its two rows from `Legal`, with the same words as Android's.
@@ -161,5 +212,48 @@ final class SignInTests: XCTestCase {
         XCTAssertEqual(bare.inAppLanguage("pl").verificationURIComplete, "https://app.kiff.dev/auth/device?lang=pl")
         let client = KIFFClient(baseURL: URL(string: "https://api.test")!, webURL: URL(string: "https://app.test")!, token: nil)
         XCTAssertEqual(client.answerPage(for: "ce_1", language: "fr").absoluteString, "https://app.test/needs-you/ce_1?lang=fr")
+    }
+
+    /// One way at a time, as on every computer: the phone's pairing runs at first, Continue stops it and starts
+    /// KIFF's code, and "Show the code" goes back. Never both, so two approvals can't race into two accounts.
+    func testTheSignInRunsOneWayAtATime() {
+        var ways = SignInWays()
+        XCTAssertTrue(ways.phoneRuns)
+        XCTAssertFalse(ways.kiffRuns)
+        ways.continueWithKiff()
+        XCTAssertTrue(ways.kiffRuns)
+        XCTAssertFalse(ways.phoneRuns, "Continue stops the phone's pairing")
+        ways.showPhone()
+        XCTAssertTrue(ways.phoneRuns)
+        XCTAssertFalse(ways.kiffRuns, "the QR again stops KIFF's code")
+    }
+
+    /// A session KIFF hands over just after the person stopped that way (Continue, or Show the code) is never
+    /// kept: it's ended at KIFF with its own token, so only the way the person chose can land.
+    func testASessionHandedOverAfterTheWayStoppedIsEndedAtKiff() async throws {
+        let model = model()
+        StubProtocol.responses["POST /v1/auth/device/logout"] = (200, "{}")
+        let token = try JSONDecoder().decode(KIFFClient.DeviceToken.self, from: Data(Self.token.utf8))
+        do {
+            try await model.takeSession(token, stopped: true)
+            XCTFail("a stopped way keeps nothing")
+        } catch is CancellationError {}
+        let logout = StubProtocol.sent.filter { $0.httpMethod == "POST" && $0.url?.path == "/v1/auth/device/logout" }
+        XCTAssertEqual(logout.count, 1, "ended at KIFF")
+        XCTAssertEqual(logout.first?.value(forHTTPHeaderField: "Authorization"), "Bearer kiff_dev_new", "with its own token")
+        XCTAssertEqual(model.mode, .signedOut)
+        XCTAssertNil(model.kiff.token)
+        XCTAssertNil(Keychain.load(AppModel.tokenAccount))
+    }
+
+    /// The way still running keeps its session, as before.
+    func testASessionOnTheWayStillRunningIsKept() async throws {
+        let model = model()
+        let token = try JSONDecoder().decode(KIFFClient.DeviceToken.self, from: Data(Self.token.utf8))
+        try await model.takeSession(token, stopped: false)
+        XCTAssertEqual(model.mode, .kiff)
+        XCTAssertEqual(model.kiff.token, "kiff_dev_new")
+        XCTAssertFalse(StubProtocol.sent.contains { $0.url?.path == "/v1/auth/device/logout" })
+        Keychain.delete(AppModel.tokenAccount)
     }
 }

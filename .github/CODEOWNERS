@@ -1,3 +1,64 @@
 # Either listed maintainer can be requested to review a change.
 # CODEOWNERS requests review; branch protection/rulesets enforce approval.
 * @gabosarmiento @agentgabo
+
+# The two apps' lanes, the ones the merge bot can take (.github/automerge.json):
+# no default owner, so a pull request there waits only for the reviewers its
+# author asks, and for @kiff-qa on the files below.
+/ios/
+/android/
+/docs/ios-app.md
+/docs/android-app.md
+/changes/
+
+# The paths that sign, hold a key, pair a device, check a receipt, or release a
+# build or a deploy: a change to one asks @kiff-qa to review it. The last line
+# that matches a file wins, so these replace the line above for their files,
+# and @kiff-qa is their only code owner (docs/maintaining.md).
+
+# iOS and the Mac
+/ios/Tafs/KIFF/JCS.swift @kiff-qa
+/ios/Tafs/KIFF/KIFFClient.swift @kiff-qa
+/ios/Tafs/KIFF/Keccak.swift @kiff-qa
+/ios/Tafs/KIFF/Keychain.swift @kiff-qa
+/ios/Tafs/KIFF/Pairing.swift @kiff-qa
+/ios/Tafs/KIFF/PairingOffer.swift @kiff-qa
+/ios/Tafs/KIFF/PasskeyRegistration.swift @kiff-qa
+/ios/Tafs/KIFF/ReceiptCheck.swift @kiff-qa
+/ios/Tafs/KIFF/SigningTime.swift @kiff-qa
+/ios/Tafs/Services/ApprovalSigner.swift @kiff-qa
+/ios/Tafs/Services/PasskeyMaker.swift @kiff-qa
+*.entitlements @kiff-qa
+/ios/scripts/asc-*.rb @kiff-qa
+
+# Android
+/android/app/src/main/kotlin/bot/tafs/app/signing/ @kiff-qa
+/android/app/src/main/kotlin/bot/tafs/app/kiff/Jcs.kt @kiff-qa
+/android/app/src/main/kotlin/bot/tafs/app/kiff/KiffClient.kt @kiff-qa
+/android/app/src/main/kotlin/bot/tafs/app/kiff/Pairing.kt @kiff-qa
+/android/app/src/main/kotlin/bot/tafs/app/kiff/Passkeys.kt @kiff-qa
+/android/app/src/main/kotlin/bot/tafs/app/kiff/ReceiptCheck.kt @kiff-qa
+/android/app/src/main/kotlin/bot/tafs/app/kiff/SecretStore.kt @kiff-qa
+/android/app/src/main/kotlin/bot/tafs/app/kiff/SigningTime.kt @kiff-qa
+/android/app/src/main/kotlin/bot/tafs/app/app/PairScan.kt @kiff-qa
+/android/app/src/main/kotlin/bot/tafs/app/app/PasskeyMake.kt @kiff-qa
+/android/app/build.gradle.kts @kiff-qa
+/android/play/*.py @kiff-qa
+
+# tafs cloud, the shared test vectors, and the cloud's secrets
+/runtime/src/cloud/approval.ts @kiff-qa
+/runtime/src/cloud/doors/sign.ts @kiff-qa
+/vectors/ @kiff-qa
+/infra/aws.sh @kiff-qa
+
+# Release and deploy workflows, and what decides a merge
+/.github/workflows/ios.yml @kiff-qa
+/.github/workflows/android.yml @kiff-qa
+/.github/workflows/mac-testflight.yml @kiff-qa
+/.github/workflows/mac-installer-cert.yml @kiff-qa
+/.github/workflows/runtime.yml @kiff-qa
+/.github/workflows/upgrade.yml @kiff-qa
+/.github/workflows/automerge.yml @kiff-qa
+/.github/automerge.json @kiff-qa
+/scripts/automerge.py @kiff-qa
+/.github/CODEOWNERS @kiff-qa

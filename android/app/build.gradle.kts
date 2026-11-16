@@ -12,8 +12,8 @@ android {
     applicationId = "dev.kiff.tafs"
     minSdk = 30
     targetSdk = 37
-    versionCode = 98
-    versionName = "1.27.10"
+    versionCode = 114
+    versionName = "1.35.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
@@ -49,6 +49,10 @@ android {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
+  // The store screenshots render the real screens with their resources under Robolectric (PhoneStoreScreenshots).
+  testOptions {
+    unitTests.isIncludeAndroidResources = true
+  }
   buildFeatures {
     compose = true
     aidl = false
@@ -80,6 +84,10 @@ dependencies {
 
   // Core Android dependencies
   implementation(libs.androidx.core.ktx)
+  // The Wear OS watch's requests (docs/watch-wear.md): the messages both apps share, and the Data Layer they arrive on.
+  implementation(project(":watchlink"))
+  implementation(libs.play.services.wearable)
+  implementation(libs.kotlinx.coroutines.play.services)
   implementation(libs.androidx.lifecycle.runtime.ktx)
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.fragment.ktx)
@@ -101,6 +109,11 @@ dependencies {
   // Local tests: jUnit, coroutines, Android runner
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.coroutines.test)
+  // The phone's store screenshots, the real screens drawn on the JVM (PhoneStoreScreenshots): test-only.
+  testImplementation(libs.robolectric)
+  testImplementation(libs.roborazzi)
+  testImplementation(libs.roborazzi.compose)
+  testImplementation(libs.androidx.compose.ui.test.junit4)
 
   // Instrumented tests: jUnit rules and runners
   androidTestImplementation(libs.androidx.test.core)
@@ -123,6 +136,13 @@ dependencies {
   implementation(libs.firebase.messaging)
   // Play's flexible in-app update: a new version on the track is offered in one tap, then a restart.
   implementation(libs.play.app.update.ktx)
+  // Pairing a computer: Google's code scanner reads its QR in its own screen, so the app asks for no camera permission.
+  implementation(libs.play.services.code.scanner)
+  // Signing in with your other phone: this phone draws its own pairing QR. The encoder alone, pure Java.
+  implementation(libs.zxing.core)
+  // A kiff.dev passkey made on the phone, through Android's Credential Manager; Play services carries it on Android 11 to 13.
+  implementation(libs.androidx.credentials)
+  implementation(libs.androidx.credentials.play.services.auth)
 
   // Navigation
   implementation(libs.androidx.navigation3.ui)
@@ -132,4 +152,10 @@ dependencies {
 
 // Unit tests run in UTC, as CI does, so a developer's own time zone never changes what they read; a test that needs a phone in
 // another zone sets it itself.
-tasks.withType<Test>().configureEach { systemProperty("user.timezone", "UTC") }
+tasks.withType<Test>().configureEach {
+  systemProperty("user.timezone", "UTC")
+  // The store screenshots are drawn only when asked (`-PphoneScreenshots`), into android/play/phone-screenshots; the test runs
+  // either way, so a screen that no longer draws fails CI.
+  systemProperty("roborazzi.test.record", if (project.hasProperty("phoneScreenshots")) "true" else "false")
+  systemProperty("tafs.repo", rootProject.projectDir.parentFile.absolutePath)
+}

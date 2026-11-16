@@ -1,0 +1,5 @@
+La première app tafs pour Wear OS, compagne de l'app tafs sur votre téléphone.
+- « Vous attend » et « Vos tafs » à votre poignet, lus depuis votre téléphone.
+- Refusez un appel en attente ou bloquez un taf depuis la montre. L'approbation reste sur votre téléphone.
+- Une tuile avec le nombre qui vous attend, affichée seulement quand la montre est déverrouillée.
+- Parlez à Coach : il reçoit vos mots en texte, jamais votre voix.

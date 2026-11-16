@@ -1,0 +1,6 @@
+- A Card says when an app's sign-in asks for more than the job needs.
+- Coach: nothing in the chat moves while it answers.
+- The Record never shows an app's raw error.
+- Closing the fingerprint prompt says "Cancelled. Nothing changed."
+- A Card draft that couldn't be read says why, with Try again.
+- Account › Time zone offers the phone's zone only when it's different.

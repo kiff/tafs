@@ -6,6 +6,21 @@ import XCTest
 /// thread of messages and components, and the owner's answers.
 @MainActor
 final class SetupTests: XCTestCase {
+    /// A plan step's mark reads its words to VoiceOver, never tafs cloud's raw status ("done").
+    func testAStepsMarkReadsTheWordsNotTheStatus() throws {
+        XCTAssertEqual(StepMark.words("done"), Words.Coach.Plan.stepDone)
+        XCTAssertEqual(StepMark.words("failed"), Words.Coach.Plan.stepFailed)
+        XCTAssertEqual(StepMark.words("active"), Words.Coach.Plan.stepActive)
+        XCTAssertEqual(StepMark.words("skipped"), Words.Coach.Plan.stepSkipped)
+        XCTAssertEqual(StepMark.words("pending"), Words.Coach.Plan.stepPending)
+        XCTAssertEqual(StepMark.words("something new"), Words.Coach.Plan.stepPending, "a status this app doesn't know reads as to do")
+        XCTAssertEqual(Words.Coach.Plan.stepDone, "Done")
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let file = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(file.contains(".accessibilityLabel(Self.words(status))"))
+        XCTAssertFalse(file.contains(".accessibilityLabel(status)"))
+    }
+
     func testAConversationReadCannotOverwriteANewCoachConversation() async throws {
         let model = await model(signer: FaceIDSigner())
         StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
@@ -110,6 +125,8 @@ final class SetupTests: XCTestCase {
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: session)
         let planque = PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: session)
         let model = AppModel(signer: signer, kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: vendor, remembered: remembered)
+        // Ready whatever runs the tests: a Mac with no Touch ID isn't, and the signer here is a stub.
+        model.readApprovalReadiness = { .ready }; model.checkApprovalReadiness()
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
         StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
@@ -130,13 +147,14 @@ final class SetupTests: XCTestCase {
         StubProtocol.sent.filter { $0.httpMethod == method && $0.url?.host == host && $0.url?.path == path }
     }
 
-    /// One Face ID starts it all, once: planque gets the phone's key and a connector key,
-    /// and Setup starts from a no-tools draft whose key tafs cloud claims.
+    /// One Face ID starts it all, once: planque gets the phone's key and, as it needs one (`needs_key`), a
+    /// connector key, and Setup starts from a no-tools draft whose key tafs cloud claims.
     func testStartSetupOnce() async throws {
         let signer = FaceIDSigner()
         let model = await model(signer: signer)
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (409, #"{"error":"no connector key stands for this account","code":"needs_key"}"#)
+        StubProtocol.thenRespond["POST /v1/accounts/t_01/enrolment"] = ["POST /v1/accounts/t_01/enrolment": (201, #"{"tenant":"t_01","device":"ab12"}"#)]
         StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","no_tools":true,"cards":[]}"#)
         StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
 
@@ -210,7 +228,7 @@ final class SetupTests: XCTestCase {
         XCTAssertEqual(model.coachStart?.startable, true)
         XCTAssertEqual(model.coachTools?.toGive, true, "drawn as the tools step")
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12","kept":true}"#)
         StubProtocol.responses["POST /v1/connections/batch"] = (200, "{}")
         StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","cards":[]}"#)
         StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
@@ -280,7 +298,7 @@ final class SetupTests: XCTestCase {
         await model.loadSetup()
         XCTAssertEqual(model.coachStart?.oneScreen, true)
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12","kept":true}"#)
         StubProtocol.responses["POST /v1/connections/batch"] = (200, "{}")
         StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","cards":[]}"#)
         StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
@@ -371,7 +389,7 @@ final class SetupTests: XCTestCase {
         let fingerprint = KIFFClient.fingerprint(signer.approvalPublicKeyDER)
         StubProtocol.responses["POST /v1/me/device/approval-key"] = (201, #"{"fingerprint":"\#(fingerprint)"}"#)
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12","kept":true}"#)
         StubProtocol.responses["POST /v1/connections/batch"] = (200, "{}")
         StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","cards":[]}"#)
         StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
@@ -500,7 +518,7 @@ final class SetupTests: XCTestCase {
         StubProtocol.responses["GET /v1/setup"] = (200, Self.startJSON(pair: false))
         await model.loadSetup()
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12","kept":true}"#)
         StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","cards":[]}"#)
         StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
         StubProtocol.sent = []
@@ -522,7 +540,7 @@ final class SetupTests: XCTestCase {
         await model.loadSetup()
         XCTAssertNil(model.coachTools, "nothing drawn as the step")
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12","kept":true}"#)
         StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","no_tools":true,"cards":[]}"#)
         StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
         StubProtocol.sent = []
@@ -540,7 +558,7 @@ final class SetupTests: XCTestCase {
         let signer = FaceIDSigner()
         let model = await model(signer: signer)
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12","kept":true}"#)
         StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","no_tools":true,"cards":[]}"#)
         StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
         StubProtocol.responses["GET /v1/alerts"] = (200, #"{"alerts":false}"#)
@@ -559,7 +577,7 @@ final class SetupTests: XCTestCase {
         // An account whose alerts are kept already registers nothing.
         let other = await self.model(signer: FaceIDSigner())
         StubProtocol.responses["POST /v1/keys"] = (201, #"{"id":"key_c","plaintext":"kiff_live_connector","roles":["connector"]}"#)
-        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12"}"#)
+        StubProtocol.responses["POST /v1/accounts/t_01/enrolment"] = (201, #"{"tenant":"t_01","device":"ab12","kept":true}"#)
         StubProtocol.responses["POST /v1/me/agent-drafts"] = (201, #"{"id":"drf_s","agent_id":"setup","status":"confirmed","version":"v1","claim_secret":"kiff_claim_x","no_tools":true,"cards":[]}"#)
         StubProtocol.responses["POST /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
         StubProtocol.responses["GET /v1/alerts"] = (200, #"{"alerts":true}"#)
@@ -1855,6 +1873,48 @@ final class SetupTests: XCTestCase {
         Keychain.delete(AppModel.planqueAccount)
     }
 
+    /// A connect card whose grant planque hasn't listed yet keeps the thread read past the poll budget,
+    /// so the card doesn't stay on "Reading the request…" until the chat is opened again: only while it's
+    /// unanswered, its grant unread, and for its first ten minutes.
+    func testACardWaitingOnItsGrantKeepsTheThreadRead() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        func at(_ ago: TimeInterval) -> String { iso.string(from: Date().addingTimeInterval(-ago)) }
+        func thread(cardAgo: TimeInterval, answered: Bool = false) -> String {
+            let card = #"{"at":"\#(at(cardAgo))","session":"s1","run":"r1","seq":2,"component":{"type":"approval","id":"connect","grant":"g_01"}}"#
+            let answer = answered ? #",{"at":"\#(at(1))","from":"owner","kind":"message","text":"[approval connect] approved, signed in","session":"s1"}"# : ""
+            return #"{"messages":[{"at":"\#(at(cardAgo + 600))","from":"owner","kind":"message","text":"Refunds, please","session":"s1"}\#(answer)],"components":[\#(card)]}"#
+        }
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread(cardAgo: 30))
+        await model.loadSetup()
+        XCTAssertTrue(model.grants.isEmpty, "planque hasn't listed the grant yet")
+        XCTAssertTrue(model.cardWaitsOnItsGrant)
+
+        // planque lists it: the next read of the thread reads it, and the wait ends.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "pending"))]}"#)
+        await model.loadSetupThread()
+        XCTAssertEqual(model.grants.first?.id, "g_01")
+        XCTAssertFalse(model.cardWaitsOnItsGrant)
+
+        // Not for an answered card, nor past ten minutes.
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[]}"#)
+        await model.refreshConnections()
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread(cardAgo: 30, answered: true))
+        await model.loadSetupThread()
+        XCTAssertFalse(model.cardWaitsOnItsGrant, "answered")
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, thread(cardAgo: 660))
+        await model.loadSetupThread()
+        XCTAssertFalse(model.cardWaitsOnItsGrant, "older than ten minutes")
+
+        let file = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/App/AppModel.swift"), encoding: .utf8)
+        XCTAssertTrue(file.contains("guard polls < setupPollBudget || cardWaitsOnItsGrant else { continue }"))
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
     /// A sent message is found again by its words (kiff/tafs#138, review on #154): as stored,
     /// and as the end of a queued message it was joined to; never a different message.
     func testASentMessageIsFoundByItsWords() {
@@ -1907,6 +1967,69 @@ final class SetupTests: XCTestCase {
         await model.refreshConnections()
         XCTAssertFalse(model.requestRefused(try SetupTests.component(#"{"type":"approval","id":"read","grant":"g_01"}"#)), "a pending request can be approved")
         Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// A card waiting on KIFF's draft of its Card that KIFF won't give says KIFF's reason, with Try
+    /// again, never "Reading…" for good with Approve off. It keeps the
+    /// thread read while it waits, so the draft is read again, and once KIFF gives it the card has its Card.
+    func testACardDraftKIFFDidntGiveSaysWhyAndIsReadAgain() async throws {
+        let model = await model(signer: FaceIDSigner())
+        model.planqueSetUp(for: "t_01")
+        let iso = ISO8601DateFormatter()
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let card = #"{"at":"\#(iso.string(from: Date().addingTimeInterval(-30)))","session":"s1","run":"r1","seq":2,"component":{"type":"approval","id":"card","grant":"g_01","draft":"d_01"}}"#
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation"] = (200, #"{"messages":[],"components":[\#(card)]}"#)
+        StubProtocol.responses["GET /v1/accounts/t_01/grants"] = (200, #"{"grants":[\#(PlanqueTests.grantJSONFor(status: "connected"))]}"#)
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (404, #"{"error":"draft not found"}"#)
+        await model.loadSetup()
+        XCTAssertEqual(model.grants.first?.id, "g_01", "the grant is read")
+        XCTAssertNil(model.setupDrafts["d_01"])
+        let why = try XCTUnwrap(model.setupDraftErrors["d_01"], "KIFF's refusal is kept for the card")
+        XCTAssertFalse(why.isEmpty)
+        XCTAssertEqual(Words.Coach.cardDraftNotRead(why: why), "KIFF's draft of this Card couldn't be read. \(why)")
+        XCTAssertTrue(model.cardWaitsOnItsGrant, "the thread is read again while the card waits on its Card")
+
+        // KIFF gives it on the next read: the card has its Card, the reason goes, and so does the wait.
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (200, #"{"id":"d_01","agent_id":"refunds","status":"draft","version":"v3"}"#)
+        await model.loadSetupThread()
+        XCTAssertEqual(model.setupDrafts["d_01"]?.version, "v3")
+        XCTAssertNil(model.setupDraftErrors["d_01"])
+        XCTAssertFalse(model.cardWaitsOnItsGrant)
+
+        // Try again reads it at once, and a draft read before stays drawn if a read fails.
+        StubProtocol.responses["GET /v1/me/agent-drafts/d_01"] = (503, #"{"error":"down"}"#)
+        let read = await model.readCardDraft("d_01")
+        XCTAssertFalse(read)
+        XCTAssertEqual(model.setupDrafts["d_01"]?.version, "v3")
+        XCTAssertFalse(model.cardWaitsOnItsGrant)
+
+        let view = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/Views/SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(view.contains("Text(Words.Coach.cardDraftNotRead(why: why))"))
+        XCTAssertTrue(view.contains("Button(Words.Common.tryAgain) { Task { await model.readCardDraft(id) } }"))
+        Keychain.delete(AppModel.planqueAccount)
+    }
+
+    /// tafs cloud's mark that an app's sign-in is wider than the job (`wider: {words}`) is drawn above an approval's
+    /// and a sign-in card's buttons, in its words, as Android's tafs#1221. Read leniently: a mark of another shape,
+    /// or blank words, is no mark, and the card is read as before.
+    func testAWiderSignInIsSaidAboveTheCardsButtons() throws {
+        let line = "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses."
+        let wide = try SetupTests.component(#"{"type":"approval","id":"connect","grant":"g_01","wider":{"words":"\#(line)"}}"#)
+        XCTAssertEqual(wide.widerWords, line)
+        let signIn = try SetupTests.component(#"{"type":"sign_in","id":"in","grant":"g_01","wider":{"words":"\#(line)"}}"#)
+        XCTAssertEqual(signIn.widerWords, line)
+        for odd in [#""wider":"yes""#, #""wider":{"words":"  "}"#, #""wider":{"words":3}"#, #""wider":null"#] {
+            let card = try SetupTests.component(#"{"type":"approval","id":"connect","grant":"g_01",\#(odd)}"#)
+            XCTAssertNil(card.widerWords, odd)
+            XCTAssertEqual(card.grant, "g_01", "the card is read as before")
+        }
+        XCTAssertNil(try SetupTests.component(#"{"type":"approval","id":"connect","grant":"g_01"}"#).widerWords)
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let chat = try String(contentsOf: views.appendingPathComponent("SetupChatView.swift"), encoding: .utf8)
+        XCTAssertTrue(chat.contains("if !replaced, let wider = component.widerWords { WiderLine(words: wider) }"), "the approval card")
+        XCTAssertTrue(chat.contains("if let wider = c.widerWords { WiderLine(words: wider) }"), "the sign-in card")
     }
 
     /// A new conversation (#73): the thread is empty and nothing is read until the

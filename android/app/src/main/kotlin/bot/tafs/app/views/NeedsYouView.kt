@@ -78,6 +78,9 @@ val LocalImproveInCoach = staticCompositionLocalOf<((String) -> Unit)?> { null }
 /** Signs in again with KIFF, which registers a new approval key: where the phone can't approve, it's offered in place of a button that would fail. */
 val LocalSignInAgain = staticCompositionLocalOf<(() -> Unit)?> { null }
 
+/** KIFF keeps this session view-only: the key line says to sign in again on this phone, or approve from the other one. */
+val LocalViewOnly = compositionLocalOf { false }
+
 /**
  * Approve again in your browser, where KIFF can re-link this phone: what it's waiting for, and its actions. Null where it isn't
  * offered (the sample, previews, a KIFF without it), which leaves Sign in again.
@@ -103,7 +106,7 @@ fun ApprovalKeyLine(modifier: Modifier = Modifier) {
   val again = LocalApproveAgain.current
   Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
     if (again == null) {
-      Text(bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, style = scaled(14, color = Theme.amberText))
+      Text(if (LocalViewOnly.current) Words.Approval.viewOnly else bot.tafs.app.signing.ApprovalKeyRenewed.WORDS, style = scaled(14, color = Theme.amberText))
       signInAgain?.let { OutlineButton(Words.Connect.signInAgain, it, Modifier.fillMaxWidth(), color = Theme.amberText) }
       return@Column
     }
@@ -226,6 +229,8 @@ fun NeedsYouView(
     // Cards asked to take another currency: tafs cloud's rows, apart from the held calls, with no Approve once.
     items(state.cardUnitExceptions, key = { "cu|" + it.id }) { ask -> CardUnitExceptionPanel(ask, state) }
     if (state.held.isEmpty() && state.unsure.isEmpty() && state.cardUnitExceptions.isEmpty() && state.yourSteps.isEmpty() && state.coachWaiting.isEmpty()) {
+      // Nothing waiting: the owner's board 6, above the screen's own line.
+      item { bot.tafs.app.design.Illustrated(Modifier.padding(bottom = 12.dp)) { bot.tafs.app.design.NeedsYouClearArt(it) } }
       item {
         Panel {
           Text(Words.NeedsYou.nothingWaiting, style = scaled(15, FontWeight.SemiBold, Theme.ink))

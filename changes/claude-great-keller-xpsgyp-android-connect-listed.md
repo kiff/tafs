@@ -1,0 +1,1 @@
+- **Android: a declined sign-in can be ended from Connect apps.** An app whose sign-in was kept but never approved now opens its connections from its row, with Disconnect, though it isn't marked connected (docs/android-app.md, Connect apps).

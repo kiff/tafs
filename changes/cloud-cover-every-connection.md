@@ -1,0 +1,1 @@
+- A Card draft is signed only when every tool the taf will hold is covered, the draft's Cards or Cards in force: each of the taf's other connected apps is checked too, not only the app being approved. A taf no longer holds a read KIFF refuses, which stopped its session before an allowed write.

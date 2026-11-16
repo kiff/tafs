@@ -116,14 +116,15 @@ final class RemoveTafTests: XCTestCase {
     }
 
     /// No face or finger recognized for the approval key: nothing is revoked, disconnected or
-    /// sent to tafs cloud.
+    /// sent to tafs cloud, and the removal says why.
     func testNoDeleteWithoutTheApprovalKeysFaceID() async throws {
         let signer = TwoKeySigner()
         let (model, rae) = try await signedIn(signer: signer)
         signer.approvalUnrecognized = true
         StubProtocol.sent = []
         let message = await model.removeTaf(rae)
-        XCTAssertNil(message)
+        // Never silent: a key that couldn't sign says why.
+        XCTAssertEqual(message?.hasPrefix(Words.Taf.Remove.button + " didn't go through."), true, message ?? "")
         XCTAssertTrue(sent("DELETE", "/v1/tafs/depl_1").isEmpty)
         XCTAssertTrue(StubProtocol.sent.filter { $0.url?.path.hasSuffix("/revoke") == true }.isEmpty)
     }
@@ -132,7 +133,7 @@ final class RemoveTafTests: XCTestCase {
         let (model, rae) = try await signedIn(signer: RefusingSigner())
         StubProtocol.sent = []
         let message = await model.removeTaf(rae)
-        XCTAssertNil(message)
+        XCTAssertNotNil(message, "never silent: the person is told nothing was removed, or why")
         XCTAssertTrue(StubProtocol.sent.isEmpty)
     }
 

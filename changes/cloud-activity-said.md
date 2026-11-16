@@ -1,0 +1,1 @@
+- **tafs cloud: Activity never shows an app's raw error.** A refused call quotes the app's reason only when it's one short plain sentence with no address, and only to someone who manages the taf; otherwise it says what the app's answer means ("the connected account isn't set up for this"). The Record's rows, and the call they carry, follow the same rule (docs/api.md).

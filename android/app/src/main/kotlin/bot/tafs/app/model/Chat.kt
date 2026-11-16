@@ -245,6 +245,41 @@ object Chat {
   /** Under an owner's message that answered a card they wrote it while (`answers`). */
   val ANSWERED_CARD get() = Words.Chat.answeredCardAbove
 
+  /**
+   * [now] in the order the screen already shows ([shown], by id), so nothing moves while the person watches: a turn that streams,
+   * a card that comes with it, and the thread read again when the turn ends all leave what's on screen where it is. Something
+   * new goes after what's shown, in its own order, as it arrived. Older than everything shown (an earlier page), it goes before
+   * it. Anything no longer in [now] goes. With nothing shown yet, it's [now] as read: the thread in order, a card after what
+   * Coach wrote with it (`CoachWords.items`). The owner saw a card jump twice while Coach answered on Android 110 (16 Nov).
+   */
+  fun steady(shown: List<ChatItem>, now: List<ChatItem>): List<ChatItem> {
+    if (shown.isEmpty()) return now
+    val byId = now.associateBy { it.id }
+    val shownIds = shown.mapTo(HashSet()) { it.id }
+    // What's new to the screen, each taken once.
+    val fresh = now.filterNot { it.id in shownIds }.toMutableList()
+    val kept = shown.mapNotNull { s ->
+      byId[s.id] ?: s.ownerWords()?.let { words ->
+        // The owner's message as sent comes back as tafs cloud's copy, under tafs cloud's id: it takes the sent one's place.
+        fresh.firstOrNull { it.ownerWords() == words }?.also { fresh.remove(it) }
+      }
+    }
+    if (kept.isEmpty()) return now
+    val first = kept.minOf { it.at }
+    val (earlier, later) = fresh.partition { it.at < first }
+    return earlier + kept + later
+  }
+
+  private fun ChatItem.ownerWords(): String? = (this as? ChatItem.Message)?.message?.takeIf { it.from == ChatMessage.From.owner }?.text
+
+  /** What a chat screen last showed, for [steady]: one per open chat, and forgotten when the chat closes. */
+  class Shown {
+    private var items: List<ChatItem> = emptyList()
+
+    /** [now] in the order already shown, and the order it shows from here. */
+    fun order(now: List<ChatItem>): List<ChatItem> = steady(items, now).also { items = it }
+  }
+
   /** A row of a taf's work: a request, or a scheduled run that was skipped. */
   sealed interface WorkRow {
     val at: java.time.Instant

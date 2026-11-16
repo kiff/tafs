@@ -1,0 +1,3 @@
+- Eine Genehmigungskarte bleibt nicht mehr auf „Liest, worum es bittet…“ stehen, wenn die Anfrage etwas später ankommt.
+- „Anmeldung erneut öffnen“ fragt jetzt erneut nach deiner Genehmigung, mit einem Fingerabdruck, statt einen bereits benutzten Link wieder zu öffnen.
+- Solange der Zugriff einer App entfernt wird, zeigt „Apps verbinden“ „Zugriff wird entfernt…“.

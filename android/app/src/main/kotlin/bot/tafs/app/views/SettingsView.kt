@@ -51,6 +51,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import bot.tafs.app.app.AppState
@@ -102,6 +104,7 @@ fun SettingsSheet(
   val scroll = rememberScrollState()
   var confirming by remember { mutableStateOf<SignOut?>(null) }
   var zonePicker by remember { mutableStateOf(false) }
+  var languagePicker by remember { mutableStateOf(false) }
   var zoneQuery by remember { mutableStateOf("") }
   var answeringTafs by remember { mutableStateOf(false) }
   val version = remember(context) { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).let { versionWords(androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it), it.versionName) } }.getOrNull() ?: "–" }
@@ -198,24 +201,23 @@ fun SettingsSheet(
               }
             }
           }
-          // The language tafs's lines are in, and the phone's own setting to change it: Android 13+'s per-app language
-          // (tafs lists its 8 in locales_config), else the phone's languages. No picker of the app's own.
+          // The language tafs's lines are in, as the resources resolved them, and the app's own picker to change it: the phone's
+          // language or one of the 8, applied at once (AppLocale: Android 13+'s per-app language, else kept by the app).
           Section(Words.Settings.languageTitle) {
             Value(Words.Settings.languageTitle, bot.tafs.app.model.AppLanguage.name())
-            Action(Words.Settings.changeLanguage, Theme.amberText) {
-              val intent = if (android.os.Build.VERSION.SDK_INT >= 33) {
-                android.content.Intent(android.provider.Settings.ACTION_APP_LOCALE_SETTINGS, android.net.Uri.fromParts("package", context.packageName, null))
-              } else {
-                android.content.Intent(android.provider.Settings.ACTION_LOCALE_SETTINGS)
-              }
-              runCatching { context.startActivity(intent) }
-            }
+            Action(Words.Settings.changeLanguage, Theme.amberText) { languagePicker = true }
           }
           if (state.mode == Mode.kiff) Section(Words.Settings.timeZoneTitle) {
+            val deviceZone = java.time.ZoneId.systemDefault().id
             Value(Words.Settings.timeZoneTitle, state.kiffAccount?.timeZone ?: "UTC")
             Action(Words.Settings.chooseTimeZone, Theme.amberText) { zonePicker = true }
-            Action(Words.Settings.useDeviceZone(bot.tafs.app.model.ThisDevice.word, java.time.ZoneId.systemDefault().id), Theme.amberText, onUseDeviceZone)
+            // Offered only where it would change something, as on the iPad: the account's zone isn't already this phone's.
+            if (offersDeviceZone(state.kiffAccount?.timeZone, deviceZone)) {
+              Action(Words.Settings.useDeviceZone(bot.tafs.app.model.ThisDevice.word, deviceZone), Theme.amberText, onUseDeviceZone)
+            }
             state.timeZoneError?.let { Text(it, style = scaled(13, color = Theme.no), modifier = Modifier.padding(12.dp)) }
+            // What the zone is for, under it, as the iPad's footer says it.
+            Text(Words.Settings.TimeZone.usesThis, style = scaled(13, color = Theme.dim), modifier = Modifier.padding(12.dp))
           }
           if (state.mode == Mode.kiff) Section(Words.Settings.yourChats) { ExportChatsRow(onExport) }
           Section(Words.Settings.legal) {
@@ -245,6 +247,19 @@ fun SettingsSheet(
       } }
     } }, confirmButton = { TextButton({ zonePicker = false }) { Text(Words.Common.done, color = Theme.amberText) } },
   )
+  if (languagePicker) {
+    val chosen = remember { bot.tafs.app.design.AppLocale.current(context) }
+    DriveAlert(
+      onDismissRequest = { languagePicker = false }, title = { Text(Words.Settings.languageTitle) }, containerColor = Theme.panel,
+      text = { Column(Modifier.verticalScroll(rememberScrollState())) { bot.tafs.app.design.AppLocale.choices().forEach { choice ->
+        LanguageRow(choice.title, choice.tag == chosen) {
+          languagePicker = false
+          context.activity()?.let { bot.tafs.app.design.AppLocale.choose(it, choice.tag) }
+        }
+      } } },
+      confirmButton = { TextButton({ languagePicker = false }) { Text(Words.Common.done, color = Theme.amberText) } },
+    )
+  }
   if (answeringTafs) DriveAlert(onDismissRequest = { answeringTafs = false }, title = { Text(AlertWords.ANSWERED) }, containerColor = Theme.panel,
     text = { Column { state.phoneAlerts?.answering?.tafs?.forEach { taf -> TextButton({ answeringTafs = false; onClose(); onOpenAlertTaf(taf.id) }) { Text(taf.name, color = Theme.amberText) } } } },
     confirmButton = { TextButton({ answeringTafs = false }) { Text(Words.Common.done, color = Theme.amberText) } })
@@ -255,6 +270,34 @@ fun SettingsSheet(
       SignOut.SignInAgain -> if (onSignInAgain()) onClose()
     } }
   } }
+}
+
+/** A language in the picker, marked when it's the one chosen, as the app's other single choices are. */
+@Composable
+private fun LanguageRow(title: String, chosen: Boolean, onClick: () -> Unit) {
+  Row(
+    Modifier.fillMaxWidth().heightIn(min = 48.dp).clip(RoundedCornerShape(10.dp))
+      .tapping(role = androidx.compose.ui.semantics.Role.RadioButton, onClick = onClick)
+      .semantics { selected = chosen }
+      .padding(horizontal = 8.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(12.dp),
+  ) {
+    Box(Modifier.size(18.dp).clip(CircleShape).border(BorderStroke(2.dp, if (chosen) Theme.amber else Theme.dim), CircleShape), contentAlignment = Alignment.Center) {
+      if (chosen) Box(Modifier.size(8.dp).clip(CircleShape).background(Theme.amber))
+    }
+    Text(title, style = scaled(16, if (chosen) FontWeight.SemiBold else FontWeight.Normal, Theme.ink))
+  }
+}
+
+/** The activity a composable's context belongs to: a sheet's or a dialog's context wraps it. */
+private fun android.content.Context.activity(): android.app.Activity? {
+  var c: android.content.Context? = this
+  while (c is android.content.ContextWrapper) {
+    if (c is android.app.Activity) return c
+    c = c.baseContext
+  }
+  return null
 }
 
 @Composable
@@ -346,3 +389,9 @@ private fun Action(label: String, color: Color, onClick: () -> Unit) {
 
 /** The build, as Account shows it: "1.0 (26)", the version and then the build number. */
 internal fun versionWords(build: Long, version: String?): String = "${version ?: "–"} ($build)"
+
+/**
+ * Whether Account offers "Use this phone's time zone": only when the account's zone (UTC when KIFF names none, as the row shows
+ * it) isn't the phone's already, so the button never sends a change that changes nothing.
+ */
+internal fun offersDeviceZone(accountZone: String?, deviceZone: String): Boolean = (accountZone ?: "UTC") != deviceZone

@@ -24,6 +24,12 @@ class TafDetailTest {
 
   // MARK: The Card's face
 
+  /** A template is read in the app's language each time, and is still the same template: its rules keep their ids. */
+  @Test fun aTemplateReadAgainIsTheSameTemplate() {
+    for (t in TafTemplates.all) assertEquals(t, TafTemplates.template(t.key))
+    assertEquals(TafTemplates.all.flatMap { it.rules }.size, TafTemplates.all.flatMap { it.rules }.map { it.id }.toSet().size)
+  }
+
   @Test fun theFaceShowsWhatIsLeftOfTheMoneyTotal() {
     val card = TafCard.merged("c", "Refunds", refunds.rules, null, used = mapOf("refund" to Money.eur(40.0)))
     val hero = card.hero!!

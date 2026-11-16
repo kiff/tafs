@@ -1,0 +1,4 @@
+- Su tablet, «Accedi con KIFF» e «Accedi con il tuo telefono» affiancati, poi «Connessione riuscita.»
+- Un telefono accede con KIFF. «Aggiungi un dispositivo» mostra prima il codice.
+- L'orologio Wear OS ritrova il telefono.
+- Account resta fermo dopo uno scorrimento veloce, ed «Esci» si vede per intero.

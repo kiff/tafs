@@ -99,6 +99,41 @@ final class ConnectAppsTests: XCTestCase {
         XCTAssertEqual(json["taf"] as? String, "taf_01")
     }
 
+    /// The start carries this phone's signed grants read, so tafs cloud decides the taf needs the app by its Card.
+    func testStartSendsItsOwnSignedRead() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: "kiff_dev_x", session: URLSession(configuration: config))
+        StubProtocol.responses["POST /v1/connect/apps/holded@1"] = (200, #"{"grant":"g_4"}"#)
+        _ = try await cloud.startConnect("holded@1", taf: "taf_01", proof: "t=1,v1=read")
+        XCTAssertEqual(StubProtocol.sent.last?.value(forHTTPHeaderField: "Planque-Device-Signature"), "t=1,v1=read")
+    }
+
+    /// `needed_by` and `misplaced` read as tafs cloud sends them; none sent is every taf, never an empty list.
+    func testNeededByAndMisplacedReadAsSent() throws {
+        let json = #"{"apps":[{"entry":"stripe@3","needed_by":[{"taf":"taf-a","name":"Refunds"}],"misplaced":[{"grant":"g9","taf":"taf-b","name":"Unanswered emails"}]},{"entry":"qonto@2","needed_by":[]},{"entry":"gmail"}],"by_key":false}"#
+        let apps = try JSONDecoder().decode(TafsCloud.ConnectApps.self, from: Data(json.utf8)).apps
+        XCTAssertEqual(apps[0].neededBy, [TafsCloud.ConnectApps.UsedBy(taf: "taf-a", name: "Refunds")])
+        XCTAssertEqual(apps[0].misplaced, [TafsCloud.ConnectApps.Misplaced(grant: "g9", taf: "taf-b", name: "Unanswered emails")])
+        XCTAssertEqual(apps[1].neededBy, [], "none needs it: Ask Coach")
+        XCTAssertNil(apps[2].neededBy, "a tafs cloud that doesn't say: every taf you manage")
+        XCTAssertEqual(apps[2].misplaced, [])
+    }
+
+    /// The tafs an app is offered for are those tafs cloud says need it, matched by tafs cloud's id, in its order.
+    func testAnAppIsOfferedOnlyForTheTafsThatNeedIt() {
+        let refunds = Taf(name: "Refunds", job: "Refunds", tools: [], colorIndex: 0, card: Card(rules: [], issuedBy: "You"))
+        let emails = Taf(name: "Unanswered emails", job: "Emails", tools: [], colorIndex: 1, card: Card(rules: [], issuedBy: "You"))
+        let ids = [refunds.id: "taf-a", emails.id: "taf-b"]
+        let needed = [TafsCloud.ConnectApps.UsedBy(taf: "taf-a", name: "Refunds")]
+        XCTAssertEqual(AppModel.connectableTafs([emails, refunds], needed: needed, cloudID: { ids[$0] }).map(\.name), ["Refunds"])
+        XCTAssertEqual(AppModel.connectableTafs([emails, refunds], needed: [], cloudID: { ids[$0] }), [])
+        XCTAssertEqual(AppModel.connectableTafs([emails, refunds], needed: nil, cloudID: { ids[$0] }).count, 2)
+    }
+
     /// The key goes in its header. What the device signs is the grant's digest and the key's
     /// SHA-256, never the key, and nothing is sent for a grant whose digest doesn't match.
     func testAKeyIsGivenByItsHashInWhatsSigned() async throws {

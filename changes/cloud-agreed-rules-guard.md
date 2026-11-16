@@ -1,0 +1,1 @@
+- **tafs cloud:** a Card's draft is checked against the rules the owner agreed, as data on the rules notice: what happens past each tool's limit (asked or refused) must be what the owner agreed, a write needs a rule, and rules not agreed yet block the draft ([coach.md](../docs/coach.md)).

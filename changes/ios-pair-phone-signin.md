@@ -1,0 +1,1 @@
+- **iPhone and iPad:** Sign in with your other phone: a new iPhone or iPad shows a code that the phone you already use with tafs scans and approves, and it signs in able to approve too ([ios-app.md](../docs/ios-app.md#signing-in-from-another-phone)).

@@ -99,7 +99,7 @@ describe("one case", () => {
     const view = await caseView({ token: "session", about: "Order 1042", tafs, zone: "Europe/Paris", now }, kiff(calls).net, "https://kiff.test");
     expect(view?.steps.map((s) => s.title)).toEqual(["Read a ticket", "Read a charge", "Refund a payment", "Reply to the customer"]);
     expect(view?.steps[2]?.call.receipt).toEqual({ trace_id: "tr-3", status: "anchored" });
-    expect(view?.failed).toMatchObject({ id: view?.steps[3]?.id, words: 'Reply to the customer didn\'t go through: The app refused it: "it answered 422: mailbox full"' });
+    expect(view?.failed).toMatchObject({ id: view?.steps[3]?.id, words: "Reply to the customer didn't go through: The app refused it (it answered 422)" });
     // The retry is the step's own next step, through the taf: never a re-send from the Record.
     expect(view?.failed?.next?.kind).toBe("ask_coach");
     expect(view?.failed?.next?.taf).toBe("Refunds");

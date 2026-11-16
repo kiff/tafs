@@ -21,7 +21,8 @@ import java.lang.ref.WeakReference
  * left unfinished for 15 minutes (how long planque takes the confirmation) is closed. The app back in front with no link from the
  * vendor ([resumed]) is [left]: the owner may have closed the tab, or gone to another app for a code and come back to tafs from the
  * launcher, which closes the tab with Google's page still waiting (the owner on Android 97). Nothing is dropped: the card offers
- * the same page again ([reopen]) and Cancel.
+ * to open it again and Cancel. Opening it again runs the card's approval once more ([replace]), since a vendor's link is single-use
+ * once its sign-in reached planque; [reopen] opens the same page only where no new approval can run.
  *
  * The tab opens from the app's own screen ([attach]), in tafs's task: an owner who leaves for another app mid-way (an
  * authenticator for a code) and comes back to tafs from the launcher comes back to the vendor's tab, not to tafs's screen, which
@@ -31,11 +32,15 @@ class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
   private val wait = VendorWait()
   @Volatile private var url: String? = null
   @Volatile private var screen: WeakReference<Activity>? = null
+  @Volatile private var launch: ((Intent) -> Unit)? = null
 
-  /** The screen the vendor's tab opens from, so it stays in tafs's task. */
-  fun attach(activity: Activity) { screen = WeakReference(activity) }
+  /**
+   * The screen the vendor's tab opens from, so it stays in tafs's task; [forResult] opens it for a result, which comes back once
+   * the tab is gone ([closed]), never while it's still there behind another app.
+   */
+  fun attach(activity: Activity, forResult: ((Intent) -> Unit)? = null) { screen = WeakReference(activity); launch = forResult }
 
-  fun detach(activity: Activity) { if (screen?.get() === activity) screen = null }
+  fun detach(activity: Activity) { if (screen?.get() === activity) { screen = null; launch = null } }
 
   override suspend fun signIn(url: String): String {
     // Only a vendor's secure page is opened.
@@ -62,10 +67,14 @@ class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
     open(again)
   }
 
+  override fun replace() = wait.replace()
+
   private fun open(url: String) {
     val tab = CustomTabsIntent.Builder().build()
     val from = screen?.get()?.takeIf { !it.isFinishing && !it.isDestroyed }
-    if (from != null) tab.launchUrl(from, Uri.parse(url))
+    val forResult = launch
+    if (from != null && forResult != null) forResult(tab.intent.setData(Uri.parse(url)))
+    else if (from != null) tab.launchUrl(from, Uri.parse(url))
     else {
       tab.intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
       tab.launchUrl(context, Uri.parse(url))
@@ -83,6 +92,9 @@ class BrowserVendorSignIn(private val context: Context) : VendorSignIn {
 
   /** The app is back in front: with no link from the vendor by then, the sign-in was left, and it lets go. */
   fun resumed(scope: CoroutineScope) = wait.resumed(scope)
+
+  /** The vendor's tab is gone (its result came back): with no link by then, the sign-in is [left], with Open again and Cancel. */
+  fun closed(scope: CoroutineScope) = wait.closed(scope)
 
   /** Whether a sign-in is waiting on the vendor's page. */
   val isWaiting: Boolean get() = wait.isWaiting
@@ -123,6 +135,11 @@ class VendorWait {
     waiting?.completeExceptionally(VendorSignInCancelled())
   }
 
+  /** The sign-in left is given up for a new approval: the wait ends with [VendorSignInReplaced]. */
+  fun replace() {
+    waiting?.completeExceptionally(VendorSignInReplaced())
+  }
+
   fun paused() {
     if (waiting != null) away = true
   }
@@ -130,6 +147,21 @@ class VendorWait {
   fun resumed(scope: CoroutineScope) {
     val of = waiting ?: return
     if (!away) return
+    away = false
+    scope.launch {
+      delay(RETURN_GRACE_MS)
+      if (waiting === of && !of.isCompleted) _left.value = true
+    }
+  }
+
+  /**
+   * The vendor's tab is gone: closed with back or its ✕, or above tafs's `singleTask` screen when the owner came back from the
+   * launcher. The link may still arrive within [RETURN_GRACE_MS]; with none, the sign-in is marked [left] whether or not a resume
+   * was seen, so the card or sheet offers Open again and Cancel and is never left on "Approving…" with no way back. Nothing is
+   * dropped: the launcher's case is one where Google's page was still waiting (the owner on Android 97).
+   */
+  fun closed(scope: CoroutineScope) {
+    val of = waiting ?: return
     away = false
     scope.launch {
       delay(RETURN_GRACE_MS)

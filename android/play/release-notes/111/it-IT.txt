@@ -1,0 +1,6 @@
+- Una Card avvisa quando l'accesso di un'app chiede più di quanto serve al lavoro.
+- Coach: nella chat non si sposta più nulla mentre risponde.
+- Il Registro non mostra mai l'errore grezzo di un'app.
+- Chiudere la richiesta dell'impronta mostra «Annullato. Non è cambiato nulla.»
+- Una bozza di Card non leggibile dice perché, con Riprova.
+- Account › Fuso orario propone quello del telefono solo se è diverso.

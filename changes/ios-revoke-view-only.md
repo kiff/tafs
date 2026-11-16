@@ -1,0 +1,1 @@
+- **iPhone and iPad: a view-only session isn't offered Revoke.** Where Revoke would be on a taf's Card tab, a session KIFF keeps view-only reads "To revoke this Card, use a device that can approve.", as on Android; the sample keeps its Revoke (docs/approvals.md).

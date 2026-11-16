@@ -91,6 +91,26 @@ enum HaltAll {
         return said(h, count: count)
     }
 
+    /// One taf, halted as `run` halts them all (the watch's Halt, docs/watch-app.md): the same
+    /// request with its id, the same confirming, in that taf's words.
+    static func runOne(_ id: String, cloud: TafsCloud, wait: () async -> Void = { try? await Task.sleep(nanoseconds: 1_000_000_000) }) async -> Outcome {
+        var h: TafsCloud.Halt
+        do { h = try await cloud.halt(id) } catch {
+            return .needsApp(Words.Taf.Halt.notHalted(why: error.localizedDescription))
+        }
+        var tries = 0
+        while h.state == .halting, tries < confirmTries {
+            await wait()
+            if let read = try? await cloud.halted(id) { h = read }
+            tries += 1
+        }
+        switch h.state {
+        case .halted: return .done(Words.Halt.Explain.halted)
+        case .halting: return .done(Words.Taf.Halt.haltingWait)
+        case .running: return .needsApp(Words.Taf.Halt.notHalted(why: "").trimmingCharacters(in: .whitespaces))
+        }
+    }
+
     static func said(_ h: TafsCloud.Halt, count: Int?) -> Outcome {
         switch h.state {
         case .halted: return .done(count.map { Words.HaltAll.halted(count: $0) } ?? Words.HaltAll.haltedAll)

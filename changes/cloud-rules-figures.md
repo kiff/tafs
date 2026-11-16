@@ -1,0 +1,3 @@
+- **tafs cloud:** a Card's draft is held to the figures the owner agreed, carried as data on the rules notice ([coach.md](../docs/coach.md)).
+  - Each call's figure and the day's total must be on the Card exactly. A different figure, looser or stricter, isn't signed, and Coach drafts it again (`rules_figures`).
+  - A figure the rules don't name, or one the notice's words don't say, is only logged for now.

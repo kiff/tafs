@@ -59,6 +59,25 @@ class ConnectionSheetTest {
     assertEquals(listOf("g1", "g2", "g5", "g6"), bot.tafs.app.views.connectionsOf(state, stripe.copy(grant = "g6")).map { it.id })
   }
 
+  // The owner's phone, 16 Nov: a sign-in kept but declined (`listed`) gives no access and its app isn't connected, yet the
+  // owner must be able to end it: its row opens the connections, where it says Disconnect, and it's never counted as connected.
+  @Test fun aSignInKeptButNotApprovedOpensItsConnectionsToBeEnded() {
+    val entry = "connector:composio:googlesheets"
+    val listed = KiffClient.json.decodeFromString<Grant>(
+      """{"id":"g1","status":"listed","signed_in":true,"entry":"$entry","request":{"server":"https://backend.composio.dev/api/v3.1","agent":"row-counter","tools":[]}}""",
+    )
+    val sheets = bot.tafs.app.kiff.ConnectApps.App(entry = entry, vendor = "Google Sheets", title = "Google Sheets")
+    val state = bot.tafs.app.app.AppState(grants = listOf(listed))
+    assertFalse("it gives no access", listed.connected)
+    assertFalse("tafs cloud doesn't count it as connected", sheets.connected)
+    assertEquals(listOf("g1"), bot.tafs.app.views.connectionsOf(state, sheets).map { it.id })
+    assertTrue("its row opens its connections", bot.tafs.app.views.opensConnections(state, sheets))
+    assertEquals(bot.tafs.app.model.Words.Connect.disconnectButton, ConnectionWords.endButton(listed))
+    // An app with nothing on the phone, and not connected, still opens nothing.
+    assertFalse(bot.tafs.app.views.opensConnections(bot.tafs.app.app.AppState(), sheets))
+    assertTrue(bot.tafs.app.views.opensConnections(bot.tafs.app.app.AppState(), sheets.copy(state = "connected")))
+  }
+
   @Test fun aKeyConnectionIsFixedWithANewKeyAndASignInOneBySigningInAgain() {
     assertTrue(grant("g1", "chase-1", kind = "api_key").takesKey)
     assertFalse(grant("g2", "chase-1").takesKey)
@@ -80,6 +99,15 @@ class ConnectionSheetTest {
     assertTrue(other, record.single { it.at.toString().startsWith("2026-11-06T12") }.detail in other)
     // None through its tools: no line.
     assertNull(ConnectionWords.lastFailure(grant("g5", "chase-1", tools = """[{"tool":"get_contact"}]"""), record))
+  }
+
+  /** "Last failed" is built from the Record's line, so the app's raw answer never reaches it either: JSON leaves the plain line. */
+  @Test fun itsLastFailedLineNeverQuotesTheAppsRawAnswer() {
+    val calls = KiffClient.json.decodeFromString<ActivityCalls>("""{"calls":[
+      ${call("p1", "chase-1", "list_inboxes_k3f9", "2026-11-06T10:00:00Z", "refused_by_tool", "Gmail refused it (it answered 400): { error: { code: 400, status: FAILED_PRECONDITION } }")}]}""").calls
+    val line = ConnectionWords.lastFailure(grant("g1", "chase-1"), KiffMapping.record(calls, setOf("chase-1")))!!
+    assertTrue(line, line.startsWith("Last failed: List inboxes · "))
+    assertFalse(line, line.contains("{") || line.contains("FAILED_PRECONDITION"))
   }
 
   /** A sign-in that never came back (an approved grant, not signed in) is listed, and cancelled rather than disconnected. */

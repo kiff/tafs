@@ -1,0 +1,1 @@
+- **Coach copies no number into a Card:** `draft-the-card@24` puts reads on a Card of their own, with KIFF's required count shown as kept by KIFF, never as the owner's limit, and a write never gets a count beside an amount. The read example has no number left to copy. Approve's `uncovered` refusal says the same (docs/coach.md).

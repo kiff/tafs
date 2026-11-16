@@ -1,0 +1,1 @@
+- **tafs cloud: each agreed limit can say what happens past it.** "Ask past €5 a refund, refuse past €50 a day" is now one rule, and Approve holds each Card to the answer for the figure it carries. One Card with both answers is refused, and Coach puts each limit on its own Card ([coach.md](../docs/coach.md)).

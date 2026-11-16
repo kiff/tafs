@@ -250,6 +250,10 @@ class TafsCloud(
   /** The taf's chats, newest first. */
   suspend fun chats(id: String): List<Chat> = get<Chats>("/v1/tafs/${escaped(id)}/chats").chats
 
+  /** A mission's log, newest first, a page at a time (Missions v2.1 §6): [before] is the previous page's `before`. */
+  suspend fun missionLog(id: String, before: String? = null): MissionLogPage =
+    get("/v1/missions/${escaped(id)}/log" + (before?.let { "?before=" + escaped(it) } ?: ""))
+
   /** The chats the owner archived, to find and reopen one. */
   suspend fun archivedChats(id: String): List<Chat> = get<Chats>("/v1/tafs/${escaped(id)}/chats/archived").chats
 
@@ -409,6 +413,22 @@ class TafsCloud(
   }
 
   private inline fun <T> orNone(read: () -> T): T? = try { read() } catch (e: CloudError) { if (e.status == 404) null else throw e }
+
+  // MARK: Your brief (Missions design v2.1 §7)
+
+  /** The brief, filtered to [label] (none is All); null while tafs cloud doesn't serve it (404). Read leniently ([Brief.parse]). */
+  suspend fun brief(label: String? = null): Brief? = orNone {
+    Brief.parse(String(send("GET", "/v1/brief" + (label?.let { "?label=${escaped(it)}" } ?: ""))))
+  }
+
+  /**
+   * "Later": the decision moves to the next brief (§7.5). Throws when tafs cloud didn't take it, so the card stays. The id's `:`
+   * (`hold:<id>`, `step:<handoff>`) goes as is, as iOS sends it: a path may carry it, and the route reads the id raw.
+   */
+  suspend fun briefLater(decision: String) {
+    send("POST", "/v1/brief/decisions/${escaped(decision).replace("%3A", ":")}/later", "{}".toByteArray())
+  }
+
 
   // MARK: Halt
 
@@ -615,8 +635,19 @@ class TafsCloud(
   /** A taf's dial (the knob API). */
   suspend fun knob(id: String, version: Int? = null): KnobWire = get("/v1/tafs/${escaped(id)}/knob" + (version?.let { "?version=$it" } ?: ""))
 
-  /** Starts connecting [entry] for the taf [taf] (its tafs cloud id; `cards.manage`): its grant, waiting for the owner's approval. */
-  suspend fun startConnect(entry: String, taf: String): ConnectStart = post("/v1/connect/apps/${escaped(entry)}", mapOf("taf" to taf))
+  /**
+   * Starts connecting [entry] for the taf [taf] (its tafs cloud id; `cards.manage`): its grant, waiting for the owner's approval.
+   * With [proof], this phone's signed grants read, tafs cloud decides `needed_by` as the list did; a taf not in it is `409 not_needed`.
+   */
+  suspend fun startConnect(entry: String, taf: String, proof: String? = null): ConnectStart {
+    val payload = KiffClient.json.encodeToString(
+      kotlinx.serialization.json.JsonObject.serializer(),
+      kotlinx.serialization.json.JsonObject(mapOf("taf" to kotlinx.serialization.json.JsonPrimitive(taf))),
+    ).toByteArray()
+    return KiffClient.json.decodeFromString(
+      String(send("POST", "/v1/connect/apps/${escaped(entry)}", payload, proof?.let { mapOf("Planque-Device-Signature" to it) } ?: emptyMap())),
+    )
+  }
 
   /**
    * Connect apps: the catalog, filtered by [q] when given. With [proof], this phone's signed grants read, tafs cloud also lists each

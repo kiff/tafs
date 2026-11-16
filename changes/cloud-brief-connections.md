@@ -1,0 +1,1 @@
+- **tafs cloud: blocked connections in Your brief:** a taf's connection that needs signing in again shows as an urgent decision ("Gmail needs you to sign in again"), once per taf and app, in the person's 8 languages ([api.md](../docs/api.md)).

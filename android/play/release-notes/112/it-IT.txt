@@ -1,0 +1,1 @@
+- Account e gli altri pannelli restano fermi dopo uno scorrimento veloce, ed «Esci» si vede per intero.

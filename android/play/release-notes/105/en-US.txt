@@ -1,0 +1,3 @@
+- An approval card no longer stays on “Reading what it asks for…” when the request takes a moment to arrive.
+- “Open the sign-in again” now asks for your approval again, with one fingerprint, instead of reopening a link that was already used.
+- While access to an app is being removed, Connect apps says “Removing access…”.

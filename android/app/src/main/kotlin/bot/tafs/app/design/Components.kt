@@ -103,6 +103,9 @@ fun ScreenTitle(text: String) {
   Text(text, style = scaled(34, FontWeight.Bold, Theme.ink, display = true))
 }
 
+/** How many lines a main button's words may take before they're cut. */
+internal const val PRIMARY_BUTTON_LINES = 2
+
 /** The main button: the brand's sweep, white text; a neutral fill while it can't be pressed. */
 @Composable
 fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
@@ -115,15 +118,20 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
       .then(if (enabled) Modifier.brandBackground() else Modifier.background(Theme.dim.copy(alpha = 0.22f)))
       // Every button press taps, once, here: each new button gets it (docs/android-app.md, "Haptics").
       .clickable(enabled = enabled) { Haptics.tap(); onClick() }
-      .padding(horizontal = 14.dp),
+      .padding(horizontal = 14.dp, vertical = 8.dp),
     contentAlignment = Alignment.Center,
   ) {
+    // Two lines before anything is cut: a long language's main action, as French's "Approuver une fois avec votre empreinte
+    // digitale" on a 360 dp phone, reads whole rather than "…digit…" (PrimaryButtonTest).
     Text(
       text,
       style = scaled(16, FontWeight.SemiBold, if (enabled) Theme.onBrand else Theme.soft),
-      maxLines = 1,
+      maxLines = PRIMARY_BUTTON_LINES,
       overflow = TextOverflow.Ellipsis,
       textAlign = TextAlign.Center,
+      // The button's whole width, centred: with more than one line and an ellipsis, the words are laid out that wide, so a
+      // label measured narrower ("Send") would read as overflowing though nothing is cut.
+      modifier = Modifier.fillMaxWidth(),
     )
   }
 }

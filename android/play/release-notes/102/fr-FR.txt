@@ -1,0 +1,1 @@
+- Appareils : sur un téléphone qui ne peut pas approuver, déconnecter un autre appareil indique : « Pour déconnecter un autre appareil, utilisez un appareil qui peut approuver. »

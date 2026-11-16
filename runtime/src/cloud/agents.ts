@@ -205,6 +205,12 @@ export interface Fired {
    */
   outcome: string;
   run?: string;
+  /**
+   * A `failed_check`'s cause, from kiff/agents: `reason`, why the read couldn't be used, and `vendor`, how the app answered a
+   * read it refused, its HTTP status and canonical code only ("400 FAILED_PRECONDITION"), never its words.
+   */
+  reason?: string;
+  vendor?: string;
 }
 
 export interface Run {

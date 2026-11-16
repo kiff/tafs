@@ -1,0 +1,1 @@
+- **A taf's Setup page speaks the person's language:** each action's limits ("20 calls a day", "€5.00 per action", "Needs your approval for every call"), its steps ("Step 2", "Not used by the current workflow"), "See its Card" and "App action", and a Card's each-item totals, in all eight languages. English reads the same, except a count of 1 now says "1 call" (docs/api.md).

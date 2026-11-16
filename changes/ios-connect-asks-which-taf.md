@@ -1,0 +1,1 @@
+- **iPhone and iPad: Connect apps asks which taf a connection is for, even when you have only one.** It used to connect the app for your only taf without asking, so an app could land on a taf whose Card never asked for it. Opened from a taf, it's still for that taf.

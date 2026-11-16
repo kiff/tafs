@@ -1,0 +1,1 @@
+- **Android: Shared with you on Home.** The tafs shared with the person to use, not to manage, are listed apart under "Shared with you", after their own and those being set up, as on iPhone and iPad (docs/android-app.md, Shared with you).

@@ -121,7 +121,7 @@
   "door.stamp.goes_back": "REPART PAR {app} UNE FOIS TERMINÉ",
   "door.stamp.not_sent_back": "NON RENVOYÉ",
   "door.stamp.sent_back": "↩ RENVOYÉ PAR {app} · MÊME FIL",
-  "door.start_connected_tools_first_slack": "Commencez d'abord depuis Apps connectées sur cet {device}. L'abonnement Slack doit être arrêté avant de supprimer sa porte.",
+  "door.start_connected_tools_first_slack": "Commencez d'abord depuis Apps connectées sur {device|this}. L'abonnement Slack doit être arrêté avant de supprimer sa porte.",
   "door.status.closed": "Fermée",
   "door.status.open": "Ouverte",
   "door.status.resting": "Au repos jusqu'à demain",

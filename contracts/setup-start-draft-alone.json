@@ -256,6 +256,80 @@
                     "window": "calendar_day"
                   }
                 ]
+              },
+              {
+                "id": "coach-labels",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "taf_labels"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 100,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-business",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "owner",
+                "hold_expiry": "10m",
+                "grants": [
+                  {
+                    "action": "business_context"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 0,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-missions",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "refuse",
+                "grants": [
+                  {
+                    "action": "mission"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 50,
+                    "window": "calendar_day"
+                  }
+                ]
+              },
+              {
+                "id": "coach-mission-create",
+                "subject": "setup",
+                "domain": "gateway",
+                "on_exceed": "owner",
+                "hold_expiry": "10m",
+                "grants": [
+                  {
+                    "action": "mission_create"
+                  }
+                ],
+                "aggregates": [
+                  {
+                    "quantity": "count",
+                    "limit": 0,
+                    "window": "calendar_day"
+                  }
+                ]
               }
             ]
           },
@@ -338,6 +412,30 @@
               "lines": [
                 "KIFF's line for coach-web-reads"
               ]
+            },
+            {
+              "id": "coach-labels",
+              "lines": [
+                "KIFF's line for coach-labels"
+              ]
+            },
+            {
+              "id": "coach-business",
+              "lines": [
+                "KIFF's line for coach-business"
+              ]
+            },
+            {
+              "id": "coach-missions",
+              "lines": [
+                "KIFF's line for coach-missions"
+              ]
+            },
+            {
+              "id": "coach-mission-create",
+              "lines": [
+                "KIFF's line for coach-mission-create"
+              ]
             }
           ]
         }
@@ -410,6 +508,26 @@
                 "name": "Read a public page",
                 "does": "Read one public web page, such as an app's documentation or its published API description, to connect it the right way. Only public pages, with nothing signed in. Up to 50 a day.",
                 "why": "It reads only what anyone can open on the web."
+              },
+              {
+                "name": "Label tafs",
+                "does": "Put labels on your tafs, such as Money or Customers, so you can filter the list. A label is only a name: it changes nothing a taf may do. Up to 100 a day.",
+                "why": "It changes only how your list is filtered."
+              },
+              {
+                "name": "Gather tafs into a mission",
+                "does": "Gather tafs that work toward one goal into a mission, such as running the money side. Each taf keeps its own job, apps and Card. Each one waits for your approval.",
+                "why": "It changes nothing a taf may do."
+              },
+              {
+                "name": "Change a mission's tafs",
+                "does": "Add a taf to a mission or take one out, or end a mission. Each taf keeps its own job, apps and Card. Up to 50 a day.",
+                "why": "It changes nothing a taf may do."
+              },
+              {
+                "name": "Keep your business description",
+                "does": "Keep a short description of your business that you confirmed: what you sell, to whom, your tone and your contact rules. Each one waits for your approval.",
+                "why": "It's words only, and you see it in Account."
               },
               {
                 "name": "Try a version",

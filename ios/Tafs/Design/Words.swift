@@ -27,7 +27,7 @@ enum Words {
             /// Alerts go to the people who may answer held calls. Your role on this account can't.
             static var cantAnswerHolds: String { Words.line("alert.foot.cant_answer_holds") }
             /// When a taf needs you, this {device} tells you, even with tafs closed.
-            static func tellsYouDevice(device: String) -> String { Words.line("alert.foot.tells_you_device", device) }
+            static func tellsYouDevice(device: String) -> String { Words.line("alert.foot.tells_you_device", device, Words.demonstrative(device)) }
         }
         /// Haptics
         static var haptics: String { Words.line("alert.haptics") }
@@ -40,7 +40,7 @@ enum Words {
         /// A taf needs you
         static var needsYou: String { Words.line("alert.needs_you") }
         /// This {device} didn't give tafs a push token. Try again in a moment.
-        static func noPushTokenDevice(device: String) -> String { Words.line("alert.no_push_token_device", device) }
+        static func noPushTokenDevice(device: String) -> String { Words.line("alert.no_push_token_device", device, Words.demonstrative(device, capital: true)) }
         /// Alerts aren't set up in this build of tafs.
         static var notInBuild: String { Words.line("alert.not_in_build") }
         /// Alerts aren't on. {why}
@@ -52,7 +52,7 @@ enum Words {
         /// A reply wasn't sent
         static var notSent: String { Words.line("alert.not_sent") }
         /// Alerts on this {device}
-        static func onThisDevice(device: String) -> String { Words.line("alert.on_this_device", device) }
+        static func onThisDevice(device: String) -> String { Words.line("alert.on_this_device", device, Words.demonstrative(device)) }
         /// Open tafs to answer it: KIFF didn't say which version of it you saw.
         static var openTafsAnswerKiffDid: String { Words.line("alert.open_tafs_answer_kiff_did") }
         /// Open tafs to answer it: this phone can't sign it from the notification.
@@ -96,19 +96,19 @@ enum Words {
     }
     enum Approval {
         /// Add Face ID or a fingerprint in Settings first: this {device} approves with one.
-        static func addFaceIdFirst(device: String) -> String { Words.line("approval.add_face_id_first", device) }
+        static func addFaceIdFirst(device: String) -> String { Words.line("approval.add_face_id_first", device, Words.demonstrative(device)) }
         /// Adding a face or fingerprint later ends this device's approval key, so you approve this device again then.
         static var addingFaceFingerprintLaterEnds: String { Words.line("approval.adding_face_fingerprint_later_ends") }
         /// Approve
         static var approve: String { Words.line("approval.approve") }
         /// Approve with this {device} again
-        static func approveAgainOnDevice(device: String) -> String { Words.line("approval.approve_again_on_device", device) }
+        static func approveAgainOnDevice(device: String) -> String { Words.line("approval.approve_again_on_device", device, Words.demonstrative(device)) }
         /// Approve with {biometry}
         static func approveWith(biometry: String) -> String { Words.line("approval.approve_with", biometry) }
         /// Approving…
         static var approving: String { Words.line("approval.approving") }
         /// Approving asks for {either}, and none is set up on this {device} yet. Set it up in {kind}, then come back.
-        static func approvingAsksNoneSetUp(either: String, device: String, kind: String) -> String { Words.line("approval.approving_asks_none_set_up", either, device, kind) }
+        static func approvingAsksNoneSetUp(either: String, device: String, kind: String) -> String { Words.line("approval.approving_asks_none_set_up", either, device, kind, Words.demonstrative(device)) }
         /// Approving needs {either}, and none is set up. Set it up in {kind}.
         static func approvingNeedsNoneSetUp(either: String, kind: String) -> String { Words.line("approval.approving_needs_none_set_up", either, kind) }
         /// Approving needs a passcode and {either}. Set a passcode in {kind}, then add {either_2}.
@@ -125,6 +125,8 @@ enum Words {
         static func biometryTimedOut(biometry: String) -> String { Words.line("approval.biometry_timed_out", biometry) }
         /// {either} can't be used right now. Try again in a moment.
         static func canNotUsedRightTry(either: String) -> String { Words.line("approval.can_not_used_right_try", either) }
+        /// Cancelled. Nothing changed.
+        static var cancelled: String { Words.line("approval.cancelled") }
         /// Cancelled, so nothing was approved. The request is kept: approve again when you're ready.
         static var cancelledNothingApprovedRequestKept: String { Words.line("approval.cancelled_nothing_approved_request_kept") }
         enum CantApprove {
@@ -152,9 +154,9 @@ enum Words {
         /// Setting up a taf needs approvals: Coach asks you to approve its tools and the taf's Card.
         static var firstTaf: String { Words.line("approval.first_taf") }
         /// This {device} has no Face ID or Touch ID, so it can't approve. Approve on another iPhone, iPad or Android phone signed in to your account.
-        static func hasNoFaceIdTouch(device: String) -> String { Words.line("approval.has_no_face_id_touch", device) }
+        static func hasNoFaceIdTouch(device: String) -> String { Words.line("approval.has_no_face_id_touch", device, Words.demonstrative(device, capital: true)) }
         /// This {device} has no passcode, and {either} needs one. Set a passcode in {kind}, then add {either_2}, then come back.
-        static func hasNoPasscodeNeedsOne(device: String, either: String, kind: String, either2: String) -> String { Words.line("approval.has_no_passcode_needs_one", device, either, kind, either2) }
+        static func hasNoPasscodeNeedsOne(device: String, either: String, kind: String, either2: String) -> String { Words.line("approval.has_no_passcode_needs_one", device, either, kind, either2, Words.demonstrative(device, capital: true)) }
         /// It's kept in Needs you.
         static var kept: String { Words.line("approval.kept") }
         /// The key could not sign
@@ -172,7 +174,7 @@ enum Words {
         /// Still not working? Write to support@kiff.dev.
         static var keyNotAcceptedSupport: String { Words.line("approval.key_not_accepted_support") }
         /// {either} is locked after too many tries. Lock this {device}, unlock it with its passcode, then check again.
-        static func lockedAfterTooManyTries(either: String, device: String) -> String { Words.line("approval.locked_after_too_many_tries", either, device) }
+        static func lockedAfterTooManyTries(either: String, device: String) -> String { Words.line("approval.locked_after_too_many_tries", either, device, Words.demonstrative(device)) }
         /// {either} is locked after too many tries. Unlock this device with its passcode, then try again.
         static func lockedUnlockDevice(either: String) -> String { Words.line("approval.locked_unlock_device", either) }
         /// If you add another fingerprint later, approving on this phone stops until you approve it again.
@@ -196,9 +198,59 @@ enum Words {
             static var approveOnKiff: String { Words.line("approval.prompt.approve_on_kiff") }
         }
         /// This {device} is ready to approve with {either}.
-        static func readyApprove(device: String, either: String) -> String { Words.line("approval.ready_approve", device, either) }
+        static func readyApprove(device: String, either: String) -> String { Words.line("approval.ready_approve", device, either, Words.demonstrative(device, capital: true)) }
         ///  The request is kept.
         static var requestKept: String { Words.line("approval.request_kept") }
+        enum SecurityKey {
+            /// Add key
+            static var add: String { Words.line("approval.security_key.add") }
+            /// Enter your security key's PIN to add it. tafs asks for it each time and never stores it.
+            static var addEnterPin: String { Words.line("approval.security_key.add_enter_pin") }
+            /// Add your security key to this computer
+            static var addTitle: String { Words.line("approval.security_key.add_title") }
+            /// Enter your security key's PIN. tafs asks for it each time and never stores it.
+            static var enterPin: String { Words.line("approval.security_key.enter_pin") }
+            /// The security key couldn't sign, so nothing was approved. The request is kept: approve again when you're ready.
+            static var failed: String { Words.line("approval.security_key.failed") }
+            /// This security key is locked after too many wrong PINs, so it can't approve. Approve on your phone. Resetting the key erases it, so to approve with a key again, pair this computer again.
+            static var locked: String { Words.line("approval.security_key.locked") }
+            /// Plug in your security key, then try again.
+            static var noKey: String { Words.line("approval.security_key.no_key") }
+            /// This security key has no PIN, so it can't approve. Plug in the one that goes with this computer. If it was reset, approve on your phone, and pair this computer again to approve with a key.
+            static var noPinSet: String { Words.line("approval.security_key.no_pin_set") }
+            /// The security key didn't allow it, so nothing was approved. The request is kept: approve again when you're ready.
+            static var notAllowed: String { Words.line("approval.security_key.not_allowed") }
+            /// This security key can't check a PIN, so it can't approve. Plug in the one that goes with this computer.
+            static var notFido2: String { Words.line("approval.security_key.not_fido2") }
+            /// This isn't the security key that goes with this computer. Plug that one in and try again, or approve on your phone.
+            static var notThisKey: String { Words.line("approval.security_key.not_this_key") }
+            /// Pair without a key
+            static var pairWithout: String { Words.line("approval.security_key.pair_without") }
+            /// PIN
+            static var pin: String { Words.line("approval.security_key.pin") }
+            /// That's three wrong PINs in a row. Unplug the key, plug it in again, then try again.
+            static var pinPaused: String { Words.line("approval.security_key.pin_paused") }
+            /// That PIN is too long for a security key.
+            static var pinTooLong: String { Words.line("approval.security_key.pin_too_long") }
+            /// A security key's PIN has at least 4 characters.
+            static var pinTooShort: String { Words.line("approval.security_key.pin_too_short") }
+            /// More than one security key is plugged in. Unplug the others, keep the one that goes with this computer, then try again.
+            static var severalKeys: String { Words.line("approval.security_key.several_keys") }
+            /// The security key wasn't touched in time, so nothing was approved. The request is kept: approve again when you're ready.
+            static var timedOut: String { Words.line("approval.security_key.timed_out") }
+            /// Approve with your security key
+            static var title: String { Words.line("approval.security_key.title") }
+            /// Touch your security key.
+            static var touch: String { Words.line("approval.security_key.touch") }
+            /// {count} tries left before the key locks.
+            static func triesLeft(count: Int) -> String { Words.count("approval.security_key.tries_left", count) }
+            /// The security key was unplugged, so nothing was approved. The request is kept: approve again when you're ready.
+            static var unplugged: String { Words.line("approval.security_key.unplugged") }
+            /// Wrong PIN. {count} tries left before the key locks.
+            static func wrongPin(count: Int) -> String { Words.count("approval.security_key.wrong_pin", count) }
+            /// Wrong PIN. Try again.
+            static var wrongPinNoCount: String { Words.line("approval.security_key.wrong_pin_no_count") }
+        }
         /// Set a screen lock on this phone to approve
         static var setAScreenLock: String { Words.line("approval.set_a_screen_lock") }
         /// Settings → Face ID & Passcode (Touch ID & Passcode on a device with Touch ID)
@@ -206,6 +258,8 @@ enum Words {
         enum SettingsPath {
             /// Settings → Face ID & Passcode
             static var faceId: String { Words.line("approval.settings_path.face_id") }
+            /// System Settings → Touch ID & Password
+            static var macTouchId: String { Words.line("approval.settings_path.mac_touch_id") }
             /// Settings → Touch ID & Passcode
             static var touchId: String { Words.line("approval.settings_path.touch_id") }
         }
@@ -229,6 +283,10 @@ enum Words {
         static func turnedOffTafsOpenSettings(either: String, either2: String) -> String { Words.line("approval.turned_off_tafs_open_settings", either, either2) }
         /// {either} is turned off for tafs. Turn it on in tafs' settings to approve.
         static func turnedOffTafsTurnTafs(either: String) -> String { Words.line("approval.turned_off_tafs_turn_tafs", either) }
+        /// Sign in again on this phone to approve, or approve from your other phone.
+        static var viewOnly: String { Words.line("approval.view_only") }
+        /// This Mac can only view. To approve here, add it from your phone: Account › Devices › Add a device.
+        static var viewOnlyMac: String { Words.line("approval.view_only_mac") }
         /// Every approval you give in tafs, a Card, a connection or a payment over a limit, is signed on this phone with a key only your fingerprint unlocks. Your PIN or pattern can't approve.
         static var why: String { Words.line("approval.why") }
         /// Without approvals you can still sign in, review, refuse and halt.
@@ -391,6 +449,24 @@ enum Words {
         static func tryFree(trial: String) -> String { Words.line("billing.try_free", trial) }
         /// What the credits are for
         static var whatCredits: String { Words.line("billing.what_credits") }
+    }
+    enum Brief {
+        /// Decisions
+        static var decisions: String { Words.line("brief.decisions") }
+        /// Done since the last brief
+        static var done: String { Words.line("brief.done") }
+        /// Evidence
+        static var evidence: String { Words.line("brief.evidence") }
+        /// Meanwhile:
+        static var meanwhile: String { Words.line("brief.meanwhile") }
+        /// Next move
+        static var nextMove: String { Words.line("brief.next_move") }
+        /// Coach recommends
+        static var recommends: String { Words.line("brief.recommends") }
+        /// Your brief
+        static var title: String { Words.line("brief.title") }
+        /// Urgent
+        static var urgent: String { Words.line("brief.urgent") }
     }
     enum Calendar {
         /// Agenda
@@ -786,7 +862,7 @@ enum Words {
         /// Your chats in tafs, exported {at}.\n\n
         static func chatsTafsExported(at: String) -> String { Words.line("chat.chats_tafs_exported", at) }
         /// Your chats weren't exported: this {device} couldn't save the files.
-        static func chatsWereNotExportedCould(device: String) -> String { Words.line("chat.chats_were_not_exported_could", device) }
+        static func chatsWereNotExportedCould(device: String) -> String { Words.line("chat.chats_were_not_exported_could", device, Words.demonstrative(device)) }
         /// Delete
         static var delete: String { Words.line("chat.delete") }
         /// Edit
@@ -1087,6 +1163,8 @@ enum Words {
         static var backWidth: String { Words.line("coach.back_width") }
         /// Your answer wasn't sent. {why}
         static func cardAnswerNotSent(why: String) -> String { Words.line("coach.card_answer_not_sent", why) }
+        /// KIFF's draft of this Card couldn't be read. {why}
+        static func cardDraftNotRead(why: String) -> String { Words.line("coach.card_draft_not_read", why) }
         /// {owner|possessive} Card
         static func cardOf(owner: String) -> String { Words.line("coach.card_of", owner, Words.possessive(owner)) }
         enum Chats {
@@ -1187,7 +1265,7 @@ enum Words {
         static var kiffCountsWay: String { Words.line("coach.kiff_counts_way") }
         /// Making it live…
         static var makingLive: String { Words.line("coach.making_live") }
-        /// Name an app for your taf, like your payment provider. No taf sees your sign-in. You approve with {biometry}.
+        /// Name an app for your taf, like your payment provider. You approve with {biometry}.
         static func nameToolTafShouldWork(biometry: String) -> String { Words.line("coach.name_tool_taf_should_work", biometry) }
         /// Needs you · approve
         static var needsYouApprove: String { Words.line("coach.needs_you_approve") }
@@ -1232,12 +1310,24 @@ enum Words {
             static func progress(done: String, total: String) -> String { Words.line("coach.plan.progress", done, total) }
             /// Show the whole plan
             static var show: String { Words.line("coach.plan.show") }
+            /// In progress
+            static var stepActive: String { Words.line("coach.plan.step_active") }
+            /// Done
+            static var stepDone: String { Words.line("coach.plan.step_done") }
+            /// Failed
+            static var stepFailed: String { Words.line("coach.plan.step_failed") }
+            /// To do
+            static var stepPending: String { Words.line("coach.plan.step_pending") }
+            /// Skipped
+            static var stepSkipped: String { Words.line("coach.plan.step_skipped") }
         }
         /// Plan
         static var planTitle: String { Words.line("coach.plan_title") }
         enum Prompt {
             /// Connect your apps
             static var connectTools: String { Words.line("coach.prompt.connect_tools") }
+            /// connect your apps
+            static var connectToolsMac: String { Words.line("coach.prompt.connect_tools_mac") }
             /// Give Coach its Card
             static var giveCard: String { Words.line("coach.prompt.give_card") }
             /// Start Coach
@@ -1637,6 +1727,8 @@ enum Words {
         static var kiffWordsConnectionCouldNot: String { Words.line("connect.kiff_words_connection_could_not") }
         /// Last failed: {title} · {detail}
         static func lastFailed(title: String, detail: String) -> String { Words.line("connect.last_failed", title, detail) }
+        /// Made for {taf}, which doesn't use {app}.
+        static func misplaced(taf: String, app: String) -> String { Words.line("connect.misplaced", taf, app) }
         /// More apps
         static var moreApps: String { Words.line("connect.more_apps") }
         /// More apps couldn't be listed: {why}
@@ -1678,6 +1770,10 @@ enum Words {
             static func connect(vendor: String, agent: String) -> String { Words.line("connect.prompt.connect", vendor, agent) }
             /// Connect {vendor}
             static func connectApp(vendor: String) -> String { Words.line("connect.prompt.connect_app", vendor) }
+            /// connect {vendor}
+            static func connectAppMac(vendor: String) -> String { Words.line("connect.prompt.connect_app_mac", vendor) }
+            /// connect {vendor} to {agent}
+            static func connectMac(vendor: String, agent: String) -> String { Words.line("connect.prompt.connect_mac", vendor, agent) }
             /// Give {agent} its Card
             static func giveCard(agent: String) -> String { Words.line("connect.prompt.give_card", agent) }
             /// Give {vendor} its key for {agent}
@@ -1722,7 +1818,7 @@ enum Words {
         /// Signed in · choose its actions
         static var signedInRow: String { Words.line("connect.signed_in_row") }
         /// Start from Connected apps on this {device} first.
-        static func startConnectedToolsFirst(device: String) -> String { Words.line("connect.start_connected_tools_first", device) }
+        static func startConnectedToolsFirst(device: String) -> String { Words.line("connect.start_connected_tools_first", device, Words.demonstrative(device)) }
         /// Start from Connected apps on this iPhone first.
         static var startConnectedToolsIphoneFirst: String { Words.line("connect.start_connected_tools_iphone_first") }
         enum Status {
@@ -1757,10 +1853,16 @@ enum Words {
         static func wordsMismatch(what: String) -> String { Words.line("connect.words_mismatch", what) }
     }
     enum Device {
+        /// computer
+        static var linux: String { Words.line("device.linux") }
+        /// Mac
+        static var mac: String { Words.line("device.mac") }
         /// phone
         static var phone: String { Words.line("device.phone") }
         /// tablet
         static var tablet: String { Words.line("device.tablet") }
+        /// Windows PC
+        static var windows: String { Words.line("device.windows") }
     }
     enum Door {
         /// Add a door
@@ -1990,7 +2092,7 @@ enum Words {
             static func sentBack(app: String) -> String { Words.line("door.stamp.sent_back", app) }
         }
         /// Start from Connected apps on this {device} first. Slack's subscription must be stopped before removing its door.
-        static func startConnectedToolsFirstSlack(device: String) -> String { Words.line("door.start_connected_tools_first_slack", device) }
+        static func startConnectedToolsFirstSlack(device: String) -> String { Words.line("door.start_connected_tools_first_slack", device, Words.demonstrative(device)) }
         enum Status {
             /// Closed
             static var closed: String { Words.line("door.status.closed") }
@@ -2168,7 +2270,7 @@ enum Words {
         /// Sign in with KIFF first.
         static var signInFirst: String { Words.line("error.sign_in_first") }
         /// Sign in with KIFF on this {device} first.
-        static func signInFirstOnDevice(device: String) -> String { Words.line("error.sign_in_first_on_device", device) }
+        static func signInFirstOnDevice(device: String) -> String { Words.line("error.sign_in_first_on_device", device, Words.demonstrative(device)) }
         /// Waiting for you to approve the sign-in.
         static var signInPending: String { Words.line("error.sign_in_pending") }
         /// Signed out of KIFF. Sign in again.
@@ -2267,6 +2369,8 @@ enum Words {
         static var footer: String { Words.line("home.footer") }
         /// Halted. Open Halt
         static var haltedOpenHalt: String { Words.line("home.halted_open_halt") }
+        /// All
+        static var labelsAll: String { Words.line("home.labels_all") }
         /// Loading your tafs…
         static var loading: String { Words.line("home.loading") }
         /// New taf
@@ -2338,7 +2442,7 @@ enum Words {
         /// It didn't reach KIFF. Try again.
         static var didNotReachKiffTry: String { Words.line("kiff.did_not_reach_kiff_try") }
         /// KIFF can't do this yet: sign in again from Settings to approve from this {device}.
-        static func kiffCanNotDoSign(device: String) -> String { Words.line("kiff.kiff_can_not_do_sign", device) }
+        static func kiffCanNotDoSign(device: String) -> String { Words.line("kiff.kiff_can_not_do_sign", device, Words.demonstrative(device)) }
         /// KIFF didn't answer as expected. Try again.
         static var kiffDidNotAnswerExpected: String { Words.line("kiff.kiff_did_not_answer_expected") }
         /// KIFF's words don't match their check. Nothing can be approved.
@@ -2442,6 +2546,14 @@ enum Words {
         /// {name} · {count} stops
         static func withStops(count: Int, name: String) -> String { Words.count("knob.with_stops", count, name) }
     }
+    enum Mission {
+        /// Log
+        static var log: String { Words.line("mission.log") }
+        /// Read only · newest first
+        static var readOnly: String { Words.line("mission.read_only") }
+        /// removed
+        static var removed: String { Words.line("mission.removed") }
+    }
     enum NeedsYou {
         /// A taf
         static var aTaf: String { Words.line("needs_you.a_taf") }
@@ -2538,6 +2650,8 @@ enum Words {
         enum Prompt {
             /// Answer {summary}
             static func answer(summary: String) -> String { Words.line("needs_you.prompt.answer", summary) }
+            /// answer {summary}
+            static func answerMac(summary: String) -> String { Words.line("needs_you.prompt.answer_mac", summary) }
             /// Say it didn't happen: {title}
             static func didNotHappen(title: String) -> String { Words.line("needs_you.prompt.did_not_happen", title) }
             /// Say it happened: {title}
@@ -2592,7 +2706,7 @@ enum Words {
         /// Waiting for your browser…
         static var waitingForBrowser: String { Words.line("needs_you.waiting_for_browser") }
         /// An alert reaches you on this {device}, even with tafs closed.
-        static func whenTafAsksSomethingOutside(device: String) -> String { Words.line("needs_you.when_taf_asks_something_outside", device) }
+        static func whenTafAsksSomethingOutside(device: String) -> String { Words.line("needs_you.when_taf_asks_something_outside", device, Words.demonstrative(device)) }
         enum YourStep {
             /// This step was already answered or has ended.
             static var ended: String { Words.line("needs_you.your_step.ended") }
@@ -2600,6 +2714,8 @@ enum Words {
             static func notAnswered(why: String) -> String { Words.line("needs_you.your_step.not_answered", why) }
             /// Not answered: it wasn't confirmed.
             static var notAnsweredUnconfirmed: String { Words.line("needs_you.your_step.not_answered_unconfirmed") }
+            /// Set up Windows Hello (a PIN is enough) to answer here, or answer on your phone.
+            static var setUpHello: String { Words.line("needs_you.your_step.set_up_hello") }
         }
     }
     enum Overview {
@@ -2607,6 +2723,40 @@ enum Words {
         static func hero(figure: String, words: String) -> String { Words.line("overview.hero", figure, words) }
         /// Nothing yet
         static var nothingYet: String { Words.line("overview.nothing_yet") }
+    }
+    enum Pair {
+        /// This {device} is added.
+        static func added(device: String) -> String { Words.line("pair.added", device, Words.demonstrative(device, capital: true)) }
+        /// This {device} can't sign approvals itself. Approve on your phone, or with a passkey.
+        static func addedPasskey(device: String) -> String { Words.line("pair.added_passkey", device, Words.demonstrative(device, capital: true)) }
+        /// Your phone asks if your {device} shows this code:
+        static func checkCodeLead(device: String) -> String { Words.line("pair.check_code_lead", device) }
+        /// This code expired.
+        static var codeExpired: String { Words.line("pair.code_expired") }
+        /// tafs on this {device}
+        static func deviceName(device: String) -> String { Words.line("pair.device_name", device, Words.demonstrative(device)) }
+        /// This {device} wasn't added: {why}. Show a new code and try again.
+        static func failed(device: String, why: String) -> String { Words.line("pair.failed", device, why, Words.demonstrative(device, capital: true)) }
+        /// Already use tafs on your phone? Add this {device} with it.
+        static func fromSignIn(device: String) -> String { Words.line("pair.from_sign_in", device, Words.demonstrative(device)) }
+        /// This Mac couldn't save its sign-in to the Keychain (error {code}), so it wasn't added. Show a new code and try again.
+        static func keychainRefused(code: String) -> String { Words.line("pair.keychain_refused", code) }
+        /// Show a new code
+        static var newCode: String { Words.line("pair.new_code") }
+        /// On your phone, open tafs, then {account}, {devices}, {pair}. Scan this code.
+        static func steps(account: String, devices: String, pair: String) -> String { Words.line("pair.steps", account, devices, pair) }
+        /// Add this {device} with your phone
+        static func title(device: String) -> String { Words.line("pair.title", device, Words.demonstrative(device)) }
+        enum ViewOnly {
+            /// Add this {device}
+            static func add(device: String) -> String { Words.line("pair.view_only.add", device, Words.demonstrative(device)) }
+            /// This {device} shows your tafs, Needs you and the Record. It can't approve until you add it with your phone.
+            static func lead(device: String) -> String { Words.line("pair.view_only.lead", device, Words.demonstrative(device, capital: true)) }
+            /// View only
+            static var title: String { Words.line("pair.view_only.title") }
+        }
+        /// Waiting for your phone…
+        static var waiting: String { Words.line("pair.waiting") }
     }
     enum People {
         /// THE ACCOUNT'S PEOPLE
@@ -2768,12 +2918,18 @@ enum Words {
     }
     enum Push {
         enum Channel {
+            /// Briefs
+            static var briefs: String { Words.line("push.channel.briefs") }
+            /// Your brief at its set times, with no sound.
+            static var briefsDescription: String { Words.line("push.channel.briefs_description") }
             /// A call is held for your answer. Nothing is sent until you approve it.
             static var holdsDescription: String { Words.line("push.channel.holds_description") }
             /// Other alerts
             static var other: String { Words.line("push.channel.other") }
             /// Requests for tasks and their answers, with no sound.
             static var otherDescription: String { Words.line("push.channel.other_description") }
+            /// What can't wait for your next brief, with sound.
+            static var urgentDescription: String { Words.line("push.channel.urgent_description") }
         }
         /// Open Needs you to answer.
         static var openNeedsYou: String { Words.line("push.open_needs_you") }
@@ -2812,11 +2968,11 @@ enum Words {
         /// ✓ KIFF's receipt · checked
         static var checked: String { Words.line("receipt.checked") }
         /// KIFF's receipt · checked on this {device}
-        static func checkedOnDevice(device: String) -> String { Words.line("receipt.checked_on_device", device) }
+        static func checkedOnDevice(device: String) -> String { Words.line("receipt.checked_on_device", device, Words.demonstrative(device)) }
         /// Signed by KIFF, unchanged since.
         static var checkedWhy: String { Words.line("receipt.checked_why") }
         /// Checking KIFF's receipt on this {device}…
-        static func checkingOnDevice(device: String) -> String { Words.line("receipt.checking_on_device", device) }
+        static func checkingOnDevice(device: String) -> String { Words.line("receipt.checking_on_device", device, Words.demonstrative(device)) }
         /// Copy receipt
         static var copy: String { Words.line("receipt.copy") }
         enum DecidedBy {
@@ -3150,7 +3306,7 @@ enum Words {
         /// Shows the receipt
         static var showsReceipt: String { Words.line("record.shows_receipt") }
         /// Signed on this {device}
-        static func signedOnDevice(device: String) -> String { Words.line("record.signed_on_device", device) }
+        static func signedOnDevice(device: String) -> String { Words.line("record.signed_on_device", device, Words.demonstrative(device)) }
         /// {taf} started
         static func started(taf: String) -> String { Words.line("record.started", taf) }
         /// The connection
@@ -3273,6 +3429,90 @@ enum Words {
             /// Email from a new address asked for it
             static var updateBankWhy: String { Words.line("sample.bill_pay.update_bank_why") }
         }
+        enum Brief {
+            enum Case {
+                /// 12 bills sorted, 2 didn't match their order: Mercier 0412, Lumio 0415
+                static var billsLine: String { Words.line("sample.brief.case.bills_line") }
+                /// Brio Bikes, invoice 0139
+                static var brio: String { Words.line("sample.brief.case.brio") }
+                /// paid Thursday · closed
+                static var brioLine: String { Words.line("sample.brief.case.brio_line") }
+                /// Atelier Dubois, invoice 0142
+                static var dubois: String { Words.line("sample.brief.case.dubois") }
+                /// reminder sent Tuesday · waiting for payment · next check Friday
+                static var duboisLine: String { Words.line("sample.brief.case.dubois_line") }
+                /// Friday
+                static var duboisNext: String { Words.line("sample.brief.case.dubois_next") }
+                /// Fern & Co, invoice 0137
+                static var fern: String { Words.line("sample.brief.case.fern") }
+                /// promised Friday · waiting for payment · last checked Monday 14:00
+                static var fernLine: String { Words.line("sample.brief.case.fern_line") }
+                /// Support replies
+                static var support: String { Words.line("sample.brief.case.support") }
+                /// 9 tickets answered · 1 waits for a refund check · next check 13:00
+                static var supportLine: String { Words.line("sample.brief.case.support_line") }
+            }
+            /// Today: 38 credits, the lead's runs included.
+            static var credits: String { Words.line("sample.brief.credits") }
+            enum Expires {
+                /// Pay €2,100
+                static var answer: String { Words.line("sample.brief.expires.answer") }
+                /// This can't wait: it expires at 12:00, before the next brief.
+                static var cantWait: String { Words.line("sample.brief.expires.cant_wait") }
+                /// Don't pay
+                static var decline: String { Words.line("sample.brief.expires.decline") }
+                /// the payment stays held; nothing is sent.
+                static var meanwhile: String { Words.line("sample.brief.expires.meanwhile") }
+                /// Pay Mercier Textiles €2,100 before the payment expires at 12:00?
+                static var question: String { Words.line("sample.brief.expires.question") }
+                /// It matches order 0388, and {taf} checked it this morning.
+                static func why(taf: String) -> String { Words.line("sample.brief.expires.why", taf) }
+            }
+            enum Label {
+                /// Clients
+                static var clients: String { Words.line("sample.brief.label.clients") }
+                /// Money
+                static var money: String { Words.line("sample.brief.label.money") }
+                /// Support
+                static var support: String { Words.line("sample.brief.label.support") }
+            }
+            /// Later
+            static var later: String { Words.line("sample.brief.later") }
+            /// €3,400 due back
+            static var moneyValue: String { Words.line("sample.brief.money_value") }
+            /// Prepare an escalation summary for these 3 invoices past 30 days?
+            static var nextMove: String { Words.line("sample.brief.next_move") }
+            /// Dismiss
+            static var nextMoveDismiss: String { Words.line("sample.brief.next_move_dismiss") }
+            enum Pay {
+                /// Pay the 3
+                static var answer: String { Words.line("sample.brief.pay.answer") }
+                /// by Fri 12:00
+                static var deadline: String { Words.line("sample.brief.pay.deadline") }
+                /// other payouts carry on; these three wait.
+                static var meanwhile: String { Words.line("sample.brief.pay.meanwhile") }
+                /// Pay the 3 opens three approvals, one after the other.
+                static var note: String { Words.line("sample.brief.pay.note") }
+                /// Pay 3 supplier bills due Friday, €1,240?
+                static var question: String { Words.line("sample.brief.pay.question") }
+                /// All three match their orders and were checked by {taf}.
+                static func why(taf: String) -> String { Words.line("sample.brief.pay.why", taf) }
+            }
+            enum Remind {
+                /// Don't send
+                static var decline: String { Words.line("sample.brief.remind.decline") }
+                /// the reminder is held; nothing is sent.
+                static var meanwhile: String { Words.line("sample.brief.remind.meanwhile") }
+                /// Send the first reminder to Atelier Dubois (invoice 0142, €860, 21 days late)?
+                static var question: String { Words.line("sample.brief.remind.question") }
+                /// No reply to the invoice, and no dispute in the log.
+                static var why: String { Words.line("sample.brief.remind.why") }
+            }
+            /// {count} things wait that need nothing from you now
+            static func rest(count: Int) -> String { Words.count("sample.brief.rest", count) }
+            /// Morning brief · 08:00 · next at 18:00
+            static var when: String { Words.line("sample.brief.when") }
+        }
         enum Card {
             /// Read Stripe
             static var readStripe: String { Words.line("sample.card.read_stripe") }
@@ -3306,6 +3546,38 @@ enum Words {
         enum Chat {
             /// How did this morning go?
             static var question: String { Words.line("sample.chat.question") }
+        }
+        enum Coach {
+            /// Agree
+            static var agree: String { Words.line("sample.coach.agree") }
+            /// Set up refunds for my online shop
+            static var ask: String { Words.line("sample.coach.ask") }
+            /// Change them
+            static var change: String { Words.line("sample.coach.change") }
+            /// I'll connect your payments first.
+            static var connectFirst: String { Words.line("sample.coach.connect_first") }
+            /// Connected. Here are the rules I'd use.
+            static var connected: String { Words.line("sample.coach.connected") }
+            /// Read your payments and refund one.
+            static var grant: String { Words.line("sample.coach.grant") }
+            /// Step 3 of 6 · Your rules
+            static var planLine: String { Words.line("sample.coach.plan_line") }
+            /// Refund up to €50 each, €200 a day. Anything over waits for you.
+            static var rules: String { Words.line("sample.coach.rules") }
+            /// Use these rules?
+            static var rulesTitle: String { Words.line("sample.coach.rules_title") }
+            enum Step {
+                /// Your Card
+                static var card: String { Words.line("sample.coach.step.card") }
+                /// Connect your payments
+                static var connect: String { Words.line("sample.coach.step.connect") }
+                /// Read your payments
+                static var read: String { Words.line("sample.coach.step.read") }
+                /// Your rules
+                static var rules: String { Words.line("sample.coach.step.rules") }
+                /// Start Refunds
+                static var start: String { Words.line("sample.coach.step.start") }
+            }
         }
         enum Credits {
             /// Then 900 in packs, which never expire
@@ -3473,7 +3745,7 @@ enum Words {
             /// They went off when this phone signed out. Turn them on to get an alert when a taf needs you.
             static var text: String { Words.line("settings.alerts_off.text") }
             /// Alerts are off on this {device}
-            static func titleDevice(device: String) -> String { Words.line("settings.alerts_off.title_device", device) }
+            static func titleDevice(device: String) -> String { Words.line("settings.alerts_off.title_device", device, Words.demonstrative(device)) }
             /// Turn on
             static var turnOn: String { Words.line("settings.alerts_off.turn_on") }
         }
@@ -3531,15 +3803,97 @@ enum Words {
             /// Signing a device out ends its sign-in on this account at once. To sign out this phone, use Sign out in Account.
             static var note: String { Words.line("settings.devices.note") }
             /// Signing a device out ends its sign-in on this account at once. To sign out this {device}, use Sign out of KIFF.
-            static func noteDevice(device: String) -> String { Words.line("settings.devices.note_device", device) }
+            static func noteDevice(device: String) -> String { Words.line("settings.devices.note_device", device, Words.demonstrative(device)) }
+            /// Add a device
+            static var pair: String { Words.line("settings.devices.pair") }
+            /// Add this device to your account. Only this device; nothing else changes.
+            static var pairAddOnly: String { Words.line("settings.devices.pair_add_only") }
+            /// Does your computer show {code}?
+            static func pairCheck(code: String) -> String { Words.line("settings.devices.pair_check", code) }
+            /// Does your new phone or tablet show {code}?
+            static func pairCheckPhone(code: String) -> String { Words.line("settings.devices.pair_check_phone", code) }
+            /// It calls itself {name}.
+            static func pairClaims(name: String) -> String { Words.line("settings.devices.pair_claims", name) }
+            /// KIFF paired {device} with the code {kiff}, not {shown} as checked. If that isn't your computer, sign it out here.
+            static func pairCodeDiffers(device: String, kiff: String, shown: String) -> String { Words.line("settings.devices.pair_code_differs", device, kiff, shown) }
+            /// {device} is paired. It showed {code}.
+            static func pairDone(device: String, code: String) -> String { Words.line("settings.devices.pair_done", device, code) }
+            /// The code on your computer expired. Show a new one and scan it again.
+            static var pairExpired: String { Words.line("settings.devices.pair_expired") }
+            /// {device} will be able to approve your tafs' actions with Touch ID.
+            static func pairGivesEnclave(device: String) -> String { Words.line("settings.devices.pair_gives_enclave", device) }
+            /// {device} will be able to approve your tafs' actions with Windows Hello.
+            static func pairGivesHello(device: String) -> String { Words.line("settings.devices.pair_gives_hello", device) }
+            /// {device} will be able to approve your tafs' actions with a passkey.
+            static func pairGivesPasskey(device: String) -> String { Words.line("settings.devices.pair_gives_passkey", device) }
+            /// {device} will be able to approve your tafs' actions.
+            static func pairGivesPhone(device: String) -> String { Words.line("settings.devices.pair_gives_phone", device) }
+            /// {device} will show your tafs and send approvals to this phone.
+            static func pairGivesView(device: String) -> String { Words.line("settings.devices.pair_gives_view", device) }
+            /// KIFF couldn't read that code. Show a new one on your computer and scan it again.
+            static var pairInvalid: String { Words.line("settings.devices.pair_invalid") }
+            /// That computer is already paired.
+            static var pairKeyRegistered: String { Words.line("settings.devices.pair_key_registered") }
+            /// Pair {device}?
+            static func pairNamed(device: String) -> String { Words.line("settings.devices.pair_named", device) }
+            /// That QR code isn't a computer asking to be paired.
+            static var pairNotAPairing: String { Words.line("settings.devices.pair_not_a_pairing") }
+            /// Only pair a computer you're using right now.
+            static var pairOnlyNow: String { Words.line("settings.devices.pair_only_now") }
+            /// Only add a phone or tablet you're holding right now.
+            static var pairOnlyNowPhone: String { Words.line("settings.devices.pair_only_now_phone") }
+            /// Pair {device}: it can approve actions
+            static func pairPrompt(device: String) -> String { Words.line("settings.devices.pair_prompt", device) }
+            /// Couldn't open the scanner. {why}
+            static func pairScannerFailed(why: String) -> String { Words.line("settings.devices.pair_scanner_failed", why) }
+            /// This computer approves only through your phone or a passkey.
+            static var pairSoftwareKey: String { Words.line("settings.devices.pair_software_key") }
+            /// That code was used already. Show a new one on your computer.
+            static var pairUsed: String { Words.line("settings.devices.pair_used") }
+            /// Yes, pair it
+            static var pairYes: String { Words.line("settings.devices.pair_yes") }
+            /// Add a passkey on this phone
+            static var passkeyAdd: String { Words.line("settings.devices.passkey_add") }
+            /// This phone's passkey is added.
+            static var passkeyAdded: String { Words.line("settings.devices.passkey_added") }
+            /// Only the account's owners and admins can add a passkey.
+            static var passkeyAdminsOnly: String { Words.line("settings.devices.passkey_admins_only") }
+            /// To add a passkey, use a device that can approve.
+            static var passkeyNeedsApprover: String { Words.line("settings.devices.passkey_needs_approver") }
+            /// This phone couldn't make a passkey. {why}
+            static func passkeyNotMade(why: String) -> String { Words.line("settings.devices.passkey_not_made", why) }
+            /// The passkey was made on this phone but not added to your account. You can remove it from this phone's saved passwords and passkeys.
+            static var passkeyNotRegistered: String { Words.line("settings.devices.passkey_not_registered") }
+            /// With a passkey on this phone, a computer can approve through it: the computer shows a QR code, and you scan it with this phone.
+            static var passkeyNote: String { Words.line("settings.devices.passkey_note") }
+            /// Add a passkey on this phone to your account
+            static var passkeyPrompt: String { Words.line("settings.devices.passkey_prompt") }
+            /// Remove
+            static var passkeyRemove: String { Words.line("settings.devices.passkey_remove") }
+            /// Remove {name}?
+            static func passkeyRemoveNamed(name: String) -> String { Words.line("settings.devices.passkey_remove_named", name) }
+            /// Remove the passkey {name} from your account
+            static func passkeyRemovePrompt(name: String) -> String { Words.line("settings.devices.passkey_remove_prompt", name) }
+            /// That took too long. Try again.
+            static var passkeyTooSlow: String { Words.line("settings.devices.passkey_too_slow") }
+            /// Goes with its computer
+            static var passkeyWithComputer: String { Words.line("settings.devices.passkey_with_computer") }
+            /// Couldn't load your passkeys. {why}
+            static func passkeysNotLoaded(why: String) -> String { Words.line("settings.devices.passkeys_not_loaded", why) }
+            /// Passkeys
+            static var passkeysTitle: String { Words.line("settings.devices.passkeys_title") }
             /// Sign out
             static var signOut: String { Words.line("settings.devices.sign_out") }
             /// Sign {device} out?
             static func signOutNamed(device: String) -> String { Words.line("settings.devices.sign_out_named", device) }
             /// Sign {device} out of your account
             static func signOutPrompt(device: String) -> String { Words.line("settings.devices.sign_out_prompt", device) }
+            /// sign {device} out of your account
+            static func signOutPromptMac(device: String) -> String { Words.line("settings.devices.sign_out_prompt_mac", device) }
             /// Sign this device out?
             static var signOutThis: String { Words.line("settings.devices.sign_out_this") }
+            /// To sign another device out, use a device that can approve.
+            static var signoutNeedsApprover: String { Words.line("settings.devices.signout_needs_approver") }
             /// this device
             static var thisDevice: String { Words.line("settings.devices.this_device") }
             /// tafs on {device}
@@ -3561,6 +3915,8 @@ enum Words {
         static var findTimeZone: String { Words.line("settings.find_time_zone") }
         /// KIFF account
         static var kiffAccount: String { Words.line("settings.kiff_account") }
+        /// This {device|possessive} language
+        static func languageDevice(device: String) -> String { Words.line("settings.language_device", device, Words.possessive(device), Words.demonstrative(device)) }
         /// Language
         static var languageTitle: String { Words.line("settings.language_title") }
         /// Legal
@@ -3595,7 +3951,7 @@ enum Words {
         static var showSuggestions: String { Words.line("settings.show_suggestions") }
         enum SignInAgainConfirm {
             /// This {device} signs out of KIFF first, then you sign in again in your browser.
-            static func bodyDevice(device: String) -> String { Words.line("settings.sign_in_again_confirm.body_device", device) }
+            static func bodyDevice(device: String) -> String { Words.line("settings.sign_in_again_confirm.body_device", device, Words.demonstrative(device, capital: true)) }
             /// Sign out and sign in
             static var confirm: String { Words.line("settings.sign_in_again_confirm.confirm") }
             /// Sign in again?
@@ -3607,7 +3963,7 @@ enum Words {
         static var signOut: String { Words.line("settings.sign_out") }
         enum SignOutOfKiff {
             /// This {device} stops working for your account until you sign in again. Your tafs keep working.
-            static func bodyDevice(device: String) -> String { Words.line("settings.sign_out_of_kiff.body_device", device) }
+            static func bodyDevice(device: String) -> String { Words.line("settings.sign_out_of_kiff.body_device", device, Words.demonstrative(device, capital: true)) }
             /// Sign out of KIFF?
             static var title: String { Words.line("settings.sign_out_of_kiff.title") }
         }
@@ -3637,7 +3993,7 @@ enum Words {
         }
         enum TimeZoneOffer {
             /// Holds' deadlines, Activity, the Record and what your tafs write would use this {device|possessive} time zone. Your account uses {zone} now.
-            static func textDevice(device: String, zone: String) -> String { Words.line("settings.time_zone_offer.text_device", device, zone, Words.possessive(device)) }
+            static func textDevice(device: String, zone: String) -> String { Words.line("settings.time_zone_offer.text_device", device, zone, Words.possessive(device), Words.demonstrative(device)) }
             /// Use {zone} for times in tafs?
             static func title(zone: String) -> String { Words.line("settings.time_zone_offer.title", zone) }
             /// Use {zone}
@@ -3648,7 +4004,7 @@ enum Words {
         /// Account
         static var title: String { Words.line("settings.title") }
         /// Use this {device|possessive}: {identifier}
-        static func useDeviceZone(device: String, identifier: String) -> String { Words.line("settings.use_device_zone", device, identifier, Words.possessive(device)) }
+        static func useDeviceZone(device: String, identifier: String) -> String { Words.line("settings.use_device_zone", device, identifier, Words.possessive(device), Words.demonstrative(device)) }
         /// Version
         static var version: String { Words.line("settings.version") }
         /// Your account
@@ -3677,6 +4033,8 @@ enum Words {
         static var connectApp: String { Words.line("setup.connect_app") }
         /// Connected apps
         static var connectedApps: String { Words.line("setup.connected_apps") }
+        /// Not discarded. Nothing changed.
+        static var discardNotConfirmed: String { Words.line("setup.discard_not_confirmed") }
         /// Doors
         static var doors: String { Words.line("setup.doors") }
         /// Edit
@@ -3776,11 +4134,15 @@ enum Words {
         /// Sign in with KIFF again: this sign-in can't sign for the phone.
         static var againToSign: String { Words.line("sign_in.again_to_sign") }
         /// Sign in with KIFF again: this sign-in can't sign for the {device}.
-        static func againToSignDevice(device: String) -> String { Words.line("sign_in.again_to_sign_device", device) }
+        static func againToSignDevice(device: String) -> String { Words.line("sign_in.again_to_sign_device", device, Words.demonstrative(device)) }
         /// By signing in, you agree to KIFF's {terms}, which cover tafs, and its {privacy}.
         static func agree(terms: String, privacy: String) -> String { Words.line("sign_in.agree", terms, privacy) }
         /// Check that KIFF shows the same code before you approve.
         static var checkCode: String { Words.line("sign_in.check_code") }
+        /// You're connected.
+        static var connected: String { Words.line("sign_in.connected") }
+        /// Let's build great things together.
+        static var connectedLine: String { Words.line("sign_in.connected_line") }
         /// Couldn't finish: {why}. Try again.
         static func couldNotFinish(why: String) -> String { Words.line("sign_in.could_not_finish", why) }
         /// Couldn't start: {why}. Try again.
@@ -3790,21 +4152,37 @@ enum Words {
         /// Signing in didn't work.
         static var didntWork: String { Words.line("sign_in.didnt_work") }
         /// Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your answers are signed on this {device}.
-        static func everyActionTafTakesGoes(device: String) -> String { Words.line("sign_in.every_action_taf_takes_goes", device) }
+        static func everyActionTafTakesGoes(device: String) -> String { Words.line("sign_in.every_action_taf_takes_goes", device, Words.demonstrative(device)) }
         /// How it works
         static var howWorks: String { Words.line("sign_in.how_works") }
         /// iOS didn't open the sign-in page (error {code}; {context}). Try again with tafs open.
         static func iosDidNotOpenSign(code: String, context: String) -> String { Words.line("sign_in.ios_did_not_open_sign", code, context) }
         /// Your tafs act under KIFF Cards. Approve this {device} in KIFF, and the Cards you issued show up here.
-        static func lead(device: String) -> String { Words.line("sign_in.lead", device) }
+        static func lead(device: String) -> String { Words.line("sign_in.lead", device, Words.demonstrative(device)) }
+        /// Let's go
+        static var letsGo: String { Words.line("sign_in.lets_go") }
         /// Not signed out at KIFF yet. Try again, or sign this phone out from another device's Devices.
         static var notSignedOut: String { Words.line("sign_in.not_signed_out") }
         /// Not signed out at KIFF yet: {why}. Try again, or sign this {device} out from another device's Devices.
-        static func notSignedOutDevice(why: String, device: String) -> String { Words.line("sign_in.not_signed_out_device", why, device) }
+        static func notSignedOutDevice(why: String, device: String) -> String { Words.line("sign_in.not_signed_out_device", why, device, Words.demonstrative(device)) }
         /// Open KIFF to approve
         static var openKiff: String { Words.line("sign_in.open_kiff") }
         /// Or open this link in another browser:
         static var otherBrowser: String { Words.line("sign_in.other_browser") }
+        /// It will ask whether this {device} shows {code}.
+        static func pairCheck(device: String, code: String) -> String { Words.line("sign_in.pair_check", device, code, Words.demonstrative(device)) }
+        /// On the phone you already use with tafs, open {account} → {devices} → {add}, and scan this code.
+        static func pairHow(account: String, devices: String, add: String) -> String { Words.line("sign_in.pair_how", account, devices, add) }
+        /// That code expired, so here's a new one.
+        static var pairNewCode: String { Words.line("sign_in.pair_new_code") }
+        /// This {device} can't hold a key, so it can't be paired. Sign in with KIFF instead.
+        static func pairNoKey(device: String) -> String { Words.line("sign_in.pair_no_key", device, Words.demonstrative(device, capital: true)) }
+        /// Pair this {device} with your other phone
+        static func pairPrompt(device: String) -> String { Words.line("sign_in.pair_prompt", device, Words.demonstrative(device)) }
+        /// Sign in with your other phone
+        static var pairStart: String { Words.line("sign_in.pair_start") }
+        /// Waiting for your other phone…
+        static var pairWaiting: String { Words.line("sign_in.pair_waiting") }
         enum Relink {
             /// The code expired before it was approved in your browser. Try again.
             static var codeExpired: String { Words.line("sign_in.relink.code_expired") }
@@ -3823,6 +4201,10 @@ enum Words {
             /// Approve again with this fingerprint
             static var prompt: String { Words.line("sign_in.relink.prompt") }
         }
+        /// Scan with tafs
+        static var scanWithTafs: String { Words.line("sign_in.scan_with_tafs") }
+        /// Show the code
+        static var showCode: String { Words.line("sign_in.show_code") }
         /// The sign-in didn't come back to tafs.
         static var signDidNotComeBack: String { Words.line("sign_in.sign_did_not_come_back") }
         /// tafs had no window on screen to open the sign-in over. Open tafs and try again.
@@ -3830,7 +4212,7 @@ enum Words {
         /// Waiting for your approval…
         static var waiting: String { Words.line("sign_in.waiting") }
         /// Waiting for your browser… Check that it shows {user_code}, and approve only with this {device} in your hands.
-        static func waitingForBrowser(userCode: String, device: String) -> String { Words.line("sign_in.waiting_for_browser", userCode, device) }
+        static func waitingForBrowser(userCode: String, device: String) -> String { Words.line("sign_in.waiting_for_browser", userCode, device, Words.demonstrative(device)) }
         enum Welcome {
             /// Inside the Card
             static var insideLead: String { Words.line("sign_in.welcome.inside_lead") }
@@ -3851,6 +4233,8 @@ enum Words {
         }
         /// Sign in with KIFF
         static var withKiff: String { Words.line("sign_in.with_kiff") }
+        /// Sign in with your phone
+        static var withPhone: String { Words.line("sign_in.with_phone") }
         /// Your code
         static var yourCode: String { Words.line("sign_in.your_code") }
     }
@@ -4010,6 +4394,8 @@ enum Words {
             static func done(taf: String) -> String { Words.line("taf.remove.done", taf) }
             /// If the removal began, tafs finishes it the next time it refreshes.
             static var finishesOnRefresh: String { Words.line("taf.remove.finishes_on_refresh") }
+            /// Not removed. Nothing changed.
+            static var notConfirmed: String { Words.line("taf.remove.not_confirmed") }
             /// Not finished: its {steps} couldn't be removed. tafs tries again each time it refreshes.
             static func notFinished(steps: String) -> String { Words.line("taf.remove.not_finished", steps) }
             /// {cards} Not finished: its {failed} couldn't be removed. tafs tries again each time it refreshes.
@@ -4055,6 +4441,8 @@ enum Words {
         static var revokeAndStop: String { Words.line("taf.revoke_and_stop") }
         /// No new action goes through. Anything already done stays done.
         static var revokeBody: String { Words.line("taf.revoke_body") }
+        /// To revoke this Card, use a device that can approve.
+        static var revokeNeedsApprover: String { Words.line("taf.revoke_needs_approver") }
         /// Revoke {taf|possessive} Card?
         static func revokeTitle(taf: String) -> String { Words.line("taf.revoke_title", taf, Words.possessive(taf)) }
         /// The run didn't start. {why}
@@ -4492,7 +4880,9 @@ enum Words {
         /// Dictation in {language}. Switch language
         static func dictationIn(language: String) -> String { Words.line("voice.dictation_in", language) }
         /// Dictation isn't on this {device} yet. Add a keyboard with dictation on in Settings › General › Keyboard › Keyboards, wait for its language to download, then try again.
-        static func dictationNotAddKeyboardDictation(device: String) -> String { Words.line("voice.dictation_not_add_keyboard_dictation", device) }
+        static func dictationNotAddKeyboardDictation(device: String) -> String { Words.line("voice.dictation_not_add_keyboard_dictation", device, Words.demonstrative(device)) }
+        /// Dictation isn't on for this Mac yet. Turn it on in System Settings › Keyboard › Dictation (on macOS 12: System Preferences › Keyboard › Dictation), wait for its language to download, then try again.
+        static var dictationNotAddKeyboardDictationMac: String { Words.line("voice.dictation_not_add_keyboard_dictation_mac") }
         /// Dictation isn't available right now. Try again in a moment.
         static var dictationNotAvailableRightTry: String { Words.line("voice.dictation_not_available_right_try") }
         /// Dictation stopped: {why} Tap the mic to start again.
@@ -4503,6 +4893,8 @@ enum Words {
         static func listeningIn(name: String) -> String { Words.line("voice.listening_in", name) }
         /// The microphone is off for tafs. Turn it on in Settings › tafs › Microphone.
         static var microphoneOffTafsTurnSettings: String { Words.line("voice.microphone_off_tafs_turn_settings") }
+        /// The microphone is off for tafs. Turn it on in System Settings › Privacy & Security › Microphone (on macOS 12: System Preferences › Security & Privacy › Privacy › Microphone).
+        static var microphoneOffTafsTurnSettingsMac: String { Words.line("voice.microphone_off_tafs_turn_settings_mac") }
         /// Allow tafs to use the microphone to dictate. Your voice becomes text on this phone and isn't sent anywhere.
         static var noMicrophone: String { Words.line("voice.no_microphone") }
         /// This phone can't recognise speech on the phone itself, so the mic doesn't work here: your voice would have to leave it. You can type instead.
@@ -4515,6 +4907,8 @@ enum Words {
         static var speechRecognitionNotAvailableLanguage: String { Words.line("voice.speech_recognition_not_available_language") }
         /// Speech recognition is off for tafs. Turn it on in Settings › Privacy & Security › Speech Recognition.
         static var speechRecognitionOffTafsTurn: String { Words.line("voice.speech_recognition_off_tafs_turn") }
+        /// Speech recognition is off for tafs. Turn it on in System Settings › Privacy & Security › Speech Recognition (on macOS 12: System Preferences › Security & Privacy › Privacy › Speech Recognition).
+        static var speechRecognitionOffTafsTurnMac: String { Words.line("voice.speech_recognition_off_tafs_turn_mac") }
         /// Speech recognition is restricted on this device, so dictation can't run.
         static var speechRecognitionRestrictedDeviceDictation: String { Words.line("voice.speech_recognition_restricted_device_dictation") }
         /// Stop dictating
@@ -4529,6 +4923,36 @@ enum Words {
         static var voiceBecomesTextDeviceNot: String { Words.line("voice.voice_becomes_text_device_not") }
         /// What you said stays in the message box, unsent.
         static var whatYouSaidStaysMessage: String { Words.line("voice.what_you_said_stays_message") }
+    }
+    enum Watch {
+        /// Already answered, or it ended.
+        static var alreadyAnswered: String { Words.line("watch.already_answered") }
+        /// Approve on your phone
+        static var approveOnPhone: String { Words.line("watch.approve_on_phone") }
+        /// As of {time}
+        static func asOf(time: String) -> String { Words.line("watch.as_of", time) }
+        /// Asking your phone…
+        static var askingPhone: String { Words.line("watch.asking_phone") }
+        /// Before you talk to Coach, allow AI use in tafs on your phone.
+        static var coachNeedsConsent: String { Words.line("watch.coach_needs_consent") }
+        /// How many need you, never what or who.
+        static var glanceDescription: String { Words.line("watch.glance_description") }
+        /// {count} held calls need you
+        static func heldCalls(count: Int) -> String { Words.count("watch.held_calls", count) }
+        /// The rest is on your phone.
+        static var moreOnPhone: String { Words.line("watch.more_on_phone") }
+        /// To refuse or halt from this watch, set a screen lock on it and unlock it.
+        static var needsLock: String { Words.line("watch.needs_lock") }
+        /// Open on phone
+        static var openOnPhone: String { Words.line("watch.open_on_phone") }
+        /// Your phone isn't in reach. Bring it closer, then try again.
+        static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
+        /// Refused. Nothing was sent.
+        static var refused: String { Words.line("watch.refused") }
+        /// Sign in to tafs on your phone first.
+        static var signInOnPhone: String { Words.line("watch.sign_in_on_phone") }
+        /// Coach gets your words as text, never your voice.
+        static var voiceTextOnly: String { Words.line("watch.voice_text_only") }
     }
     enum Work {
         /// Answer within
@@ -4584,7 +5008,7 @@ enum Words {
     /// The number is the line's first value, written as the app's language writes it.
     static func count(_ key: String, _ count: Int, _ values: String...) -> String {
         let form = "\(key)|\(pluralForm(count))"
-        let known = Bundle.main.localizedString(forKey: form, value: nil, table: nil) != form
+        let known = bundle.localizedString(forKey: form, value: nil, table: nil) != form
         return filled(known ? form : "\(key)|other", [number(count)] + values)
     }
 
@@ -4592,8 +5016,12 @@ enum Words {
     /// asks the servers for, never a language only Siri's phrases are in.
     static let languages = ["en", "de", "fr", "es", "it", "pt", "nl", "pl"]
 
+    /// The catalog the lines are read from: the system's pick for the app, or the language picked
+    /// in the app (`AppLanguage.choose`), so a pick applies at once, with no relaunch.
+    nonisolated(unsafe) static var bundle = Bundle.main
+
     /// The language the app's lines are in, as the catalog names it, never the device's region.
-    static let locale = Locale(identifier: Bundle.main.localizedString(forKey: "_language", value: "en", table: nil))
+    static var locale: Locale { Locale(identifier: bundle.localizedString(forKey: "_language", value: "en", table: nil)) }
 
     /// A count's number as the app's language writes it: 1,000, 1.000, 1 000.
     static func number(_ n: Int) -> String {
@@ -4629,15 +5057,27 @@ enum Words {
         }
     }
 
+    /// "This name" in the lines' language (app/strings/generate.py, THIS): "ce Mac", "cet appareil";
+    /// `capital` opens a sentence. A language with no rule keeps the name: its lines write their own word.
+    static func demonstrative(_ name: String, capital: Bool = false) -> String {
+        guard let first = name.lowercased().first else { return name }
+        let word: String
+        switch locale.language.languageCode?.identifier ?? "en" {
+        case "fr": word = "aeiouyhàâäéèêëîïôöùûüœæ".contains(first) ? "cet " : "ce "
+        default: return name
+        }
+        return (capital ? word.prefix(1).uppercased() + word.dropFirst() : word) + name
+    }
+
     /// The plural form a number takes in the app's language: one, few, many, other…
     static func pluralForm(_ count: Int) -> String {
-        let format = Bundle.main.localizedString(forKey: "_plural", value: nil, table: nil)
+        let format = bundle.localizedString(forKey: "_plural", value: nil, table: nil)
         let picked = String(format: format, locale: locale, count)
         return picked.split(separator: "|").last.map(String.init) ?? "other"
     }
 
     private static func filled(_ key: String, _ values: [String]) -> String {
-        let format = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+        let format = bundle.localizedString(forKey: key, value: nil, table: nil)
         return values.isEmpty ? format : String(format: format, locale: locale, arguments: values)
     }
 }

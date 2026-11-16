@@ -113,9 +113,12 @@ class DriveEmulatorTest {
   }
 
   @After fun stop() {
+    // A test whose back closed the screen (thePersonsBackTakesOver accepts that) leaves no activity to read: its window went
+    // with it, so there's nothing to unguard, and reading rule.activity then throws and fails the test after it passed.
+    val window = runCatching { rule.activity.window }.getOrNull()
     instrumentation.runOnMainSync {
       DriveInput.turn(false)
-      DriveInput.unguard(rule.activity.window)
+      if (window != null) DriveInput.unguard(window)
     }
     DriveInput.personsInput = {}
     DriveInput.personsTouch = {}
@@ -337,7 +340,8 @@ class DriveEmulatorTest {
       instrumentation.sendKeyDownUpSync(KeyEvent.KEYCODE_BACK)
       rule.waitForIdle()
       assertEquals(listOf("owner_took_over"), ends.distinct())
-      assertTrue("the back was the person's: it went back", wentBack || rule.activity.isFinishing)
+      // Either the back was recorded, or it closed the screen: finishing, or already destroyed (no activity left to read).
+      assertTrue("the back was the person's: it went back", wentBack || runCatching { rule.activity.isFinishing }.getOrDefault(true))
     } finally {
       DriveInput.personsBack = {}
     }

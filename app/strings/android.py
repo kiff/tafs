@@ -4,7 +4,9 @@ Writes, from the languages' JSON files:
 - android/app/src/main/res/values{,-xx}/strings.xml, with <plurals> for counts;
 - android/app/src/main/res/xml/locales_config.xml, the languages Android 13+ offers in tafs's settings;
 - android/app/src/main/kotlin/bot/tafs/app/model/Words.kt, typed accessors: a missing key, a wrong argument or a wrong name
-  fails the Kotlin build.
+  fails the Kotlin build;
+- the Wear OS watch's own (docs/watch-wear.md): android/wear/src/main/res/values{,-xx}/strings.xml and
+  android/wear/src/main/kotlin/bot/tafs/wear/Words.kt, for the keys the watch shows only (WEAR_KEYS).
 
 Nobody edits those files by hand. `generate.py` calls `generated(source, lines, languages)` and writes what it returns, for
 the shipped languages only. Run alone (`python app/strings/android.py`), it reads the JSON files itself; `--check` writes
@@ -29,6 +31,18 @@ KOTLIN_KEYWORDS = {"as", "break", "class", "continue", "do", "else", "false", "f
 
 RES = "android/app/src/main/res"
 WORDS_KT = "android/app/src/main/kotlin/bot/tafs/app/model/Words.kt"
+WEAR_RES = "android/wear/src/main/res"
+WEAR_WORDS_KT = "android/wear/src/main/kotlin/bot/tafs/wear/Words.kt"
+# The watch's lines: its own area, and the phone's lines it shows as they are, so a fix to one is a fix to both.
+WEAR_AREAS = ("watch",)
+WEAR_KEYS = ("alert.needs_you", "alert.not_refused", "coach.ask", "common.cancel", "common.close", "common.done", "common.loading", "common.send", "common.try_again", "halt.all_now", "halt_all.title",
+             "home.your_tafs", "taf.state.halted",
+             "halt.now", "needs_you.nothing", "needs_you.refuse", "needs_you.title")
+
+
+def wear_subset(lines):
+    """The lines the watch carries, of one language's (or English's) lines."""
+    return {k: v for k, v in lines.items() if k.split(".", 1)[0] in WEAR_AREAS or k in WEAR_KEYS}
 
 
 def res_name(key):
@@ -42,8 +56,8 @@ def folder(lang):
 
 def values(key, source, lines):
     """A line's values, in the order every language and both apps give them (generate.py): its names, a count's number
-    first, then the possessive of each name some language writes as `{name|possessive}`."""
-    return generate.arguments(key, source), generate.possessives(key, source, lines)
+    first, then each derived value some language writes, `{name|possessive}`, `{name|this}` or `{name|This}`."""
+    return generate.arguments(key, source), generate.derived(key, source, lines)
 
 
 def escape(text, formatted):
@@ -61,16 +75,10 @@ def escape(text, formatted):
 
 
 def android_text(text, base, derived, formatted):
-    """A line with each value by its position: `{name}` the name's, `{name|possessive}` its possessive's after the names.
-    Every value is text, a count's number too, written in the lines' language (`Res.number`)."""
+    """A line with each value by its position: `{name}` the name's, a derived value (`{name|possessive}`, `{name|this}`)
+    after the names. Every value is text, a count's number too, written in the lines' language (`Res.number`)."""
     out = escape(text, formatted)
-
-    def to_arg(m):
-        name, possessive = m.group(1), m.group(2)
-        i = len(base) + derived.index(name) + 1 if possessive else base.index(name) + 1
-        return f"%{i}$s"
-
-    return PLACEHOLDER.sub(to_arg, out)
+    return PLACEHOLDER.sub(lambda m: f"%{generate.position(m, base, derived) + 1}$s", out)
 
 
 def strings_xml(lang, words, english, all_lines):
@@ -118,11 +126,21 @@ def possessive_kt():
            "  fun possessive(name: String): String = if (name.isEmpty()) name else when (Res.language) {"]
     for lang, (ends, after, other) in generate.POSSESSIVE.items():
         out.append(f'    "{lang}" -> name + if (name.last().lowercaseChar() in "{ends}") "{after}" else "{other}"')
-    out += ["    else -> name", "  }"]
+    out += ["    else -> name", "  }", "",
+            "  /** \"This name\" in the lines' language (app/strings/generate.py's THIS): \"ce Mac\", \"cet appareil\"; `capital` opens",
+            "   * a sentence. As it is in a language with no rule: its lines write their own word. */",
+            "  fun demonstrative(name: String, capital: Boolean = false): String {",
+            "    if (name.isEmpty()) return name",
+            "    val word = when (Res.language) {"]
+    for lang, (starts, before, other) in generate.THIS.items():
+        out.append(f'      "{lang}" -> if (name.first().lowercaseChar() in "{starts}") "{before}" else "{other}"')
+    out += ["      else -> return name", "    }",
+            "    return (if (capital) word.replaceFirstChar { it.uppercaseChar() } else word) + name", "  }"]
     return out
 
 
-def words_kt(english, all_lines):
+def words_kt(english, all_lines, package="bot.tafs.app.model", r_class="bot.tafs.app.R",
+             about="Every line the app shows"):
     tree = {}
     for key in sorted(english):
         *path, leaf = key.split(".")
@@ -135,14 +153,15 @@ def words_kt(english, all_lines):
         if leaf in node:
             raise SystemExit(f"{key}: is a line and an area")
         node[leaf] = key
-    if "possessive" in tree:
-        raise SystemExit("possessive is Words.possessive on Android: no area may take the name")
+    for taken in ("possessive", "demonstrative"):
+        if taken in tree:
+            raise SystemExit(f"{taken} is Words.{taken} on Android: no area may take the name")
 
     out = ["// Generated by app/strings from app/strings/en/. Don't edit: change the JSON and generate.",
            "@file:Suppress(\"ClassName\", \"unused\")", "",
-           "package bot.tafs.app.model", "",
-           "import bot.tafs.app.R", "",
-           "/** Every line the app shows, by its shared key (docs/languages.md), in the app's language through [Res]. */"]
+           f"package {package}", "",
+           f"import {r_class}", "",
+           f"/** {about}, by its shared key (docs/languages.md), in the app's language through [Res]. */"]
 
     def emit(node, name, depth):
         pad = "  " * depth
@@ -160,7 +179,9 @@ def words_kt(english, all_lines):
             counted = isinstance(value, dict)
             params = ", ".join(f"{camel(a, False)}: {'Int' if counted and a == 'count' else 'String'}" for a in base)
             call = ", ".join(["Res.number(count)" if counted and a == "count" else camel(a, False) for a in base] +
-                             [f"Words.possessive({camel(a, False)})" for a in derived])
+                             [f"Words.possessive({camel(a, False)})" if form == "possessive" else
+                              f"Words.demonstrative({camel(a, False)}{', capital = true' if form == 'This' else ''})"
+                              for a, form in derived])
             if counted:
                 out.append(f"{ipad}fun {member}({params}): String = Res.p(R.plurals.{r}, count, {call})")
             elif base:
@@ -197,6 +218,12 @@ def generated(source, lines, languages):
         files[str(REPO / RES / folder(lang) / "strings.xml")] = strings_xml(lang, lines[lang], source, lines)
     files[str(REPO / RES / "xml" / "locales_config.xml")] = locales_xml(shipped)
     files[str(REPO / WORDS_KT)] = words_kt(source, lines)
+    # A key in WEAR_KEYS that isn't here is left out, and the watch's build fails where it's used; the strings tests also
+    # check that every one is in app/strings/en/.
+    for lang in shipped:
+        files[str(REPO / WEAR_RES / folder(lang) / "strings.xml")] = strings_xml(lang, wear_subset(lines[lang]), source, lines)
+    files[str(REPO / WEAR_WORDS_KT)] = words_kt(wear_subset(source), lines, package="bot.tafs.wear", r_class="bot.tafs.wear.R",
+                                                about="Every line the watch shows")
     return files
 
 

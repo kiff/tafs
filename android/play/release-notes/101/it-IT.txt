@@ -1,0 +1,2 @@
+- Accedi con l'altro telefono: mostra il codice di questo telefono, scansionalo da quello che usi già in Account, Dispositivi, Aggiungi un dispositivo, ed è fatta.
+- Dispositivi si apre a schermo intero, Fatto torna ad Account, e un codice scansionato che non è un dispositivo ora lo dice e resta visibile.
