@@ -1,0 +1,1 @@
+- **tafs cloud: one approval for a waiting app and its Card:** after a Card is refused because another app waits for its approval, that app's approval shown without the Card's draft is answered to Coach before you see it, and refused if tapped, so its key is never approved apart from the Card ([secure-connection.md](../docs/secure-connection.md)).

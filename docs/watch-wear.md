@@ -24,11 +24,11 @@ this page says what is there now and what each step adds.
 
 - **The phone's relay** (`app/…/watch/WearRelayService`, `WatchRelay`). The phone app declares `tafs_phone_relay`
   (`res/values/wear.xml`) and answers requests under `/tafs/watch/v1/` only. Each passes `WatchLink.accept` first; then
-  Needs you is read again (`refresh`) and answered as the phone shows it: tafs cloud's count and words, and each held call's
+  Needs you is read again (`refresh`), at most once every 10 s for the watch (`RefreshFloor`), and answered as the phone shows it: tafs cloud's count and words, and each held call's
   taf, summary, KIFF's amount and reason. Your tafs is each taf's line (`Taf.now`), or Halted. With no KIFF session (signed
   out, or the sample) the watch is told `signed_out`. Coach is answered Open on phone for now, with nothing sent
   (`WatchRelayTest`). The phone answers only a watch connected to it now (`NodeClient.connectedNodes`).
-- **Refuse and Halt from the wrist.** A held call the phone can answer shows **Refuse**; each taf not halted shows
+- **Refuse and Halt from the wrist.** A held call KIFF holds that the phone can answer shows **Refuse** (one tafs cloud holds alone is signed behind the phone's own prompt, so it's the phone's to answer); each taf not halted shows
   **Halt now**, and the list ends with **Halt all now**. The watch sends one only while a screen lock is set and it's unlocked
   (`KeyguardManager.isDeviceSecure` and not `isDeviceLocked`); otherwise it sends nothing and says `watch.needs_lock`, with
   Open on phone. The phone then:
@@ -48,8 +48,10 @@ this page says what is there now and what each step adds.
   (`TafsApplication.model`) and `MainActivity` draws. It isn't an activity's ViewModel any more, so closing the screen doesn't
   end it while the watch asks, and the session's hooks on the KIFF and tafs cloud clients are never two models'. Where the
   owner left off is restored once per process (`restoredModel`, `RestoreOnce`), by the screen or by the relay with the app
-  closed; restoring from the relay asks for nothing (no prompt: with no activity up, the fingerprint prompt answers no at
-  once). **Visible on the phone:** what the screen holds in memory now lasts while the process does, so backing out of the
+  closed. Restoring from the relay asks the person nothing: what needs them (the approval key's registration for a session
+  from before it, behind the fingerprint) and Play's purchases are left for the screen, whose first ask afterwards does them
+  once (`finishRestoreOnScreen`), so a watch read never uses them up. A request the service can't finish, even one cancelled
+  before it began, answers Open on phone. **Visible on the phone:** what the screen holds in memory now lasts while the process does, so backing out of the
   app and opening it again comes back to it, where it used to start afresh (`SharedModelSourceTest`, and `SharedModelTest`
   on an emulator).
 - **`tafs://open/needs-you`** opens Needs you on the phone (`AlertPayload.openedFromWatch`); any other `tafs://open/` link

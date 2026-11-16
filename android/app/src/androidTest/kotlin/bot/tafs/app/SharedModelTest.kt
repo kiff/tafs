@@ -24,7 +24,7 @@ class SharedModelTest {
     val model = app.model
     ActivityScenario.launch(MainActivity::class.java).use { scenario ->
       scenario.onActivity { }
-      runBlocking { assertSame(model, app.restoredModel()) }
+      runBlocking { assertSame(model, app.restoredModel(onScreen = true)) }
     }
   }
 

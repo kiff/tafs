@@ -123,17 +123,27 @@ final class SignInTests: XCTestCase {
     }
 
     /// Terms and Privacy open tafs's own pages, the ones Google's consent screen names, never
-    /// KIFF's (`/terms#tafs`), in every language, as Android 1.27.8 does.
-    func testTheLegalLinksOpenTafssOwnPages() {
-        XCTAssertEqual(Legal.terms.absoluteString, "https://kiff.dev/tafs/terms")
-        XCTAssertEqual(Legal.privacy.absoluteString, "https://kiff.dev/tafs/privacy")
+    /// KIFF's (`/terms#tafs`): in the app's language where kiff.dev serves it, else in English.
+    func testTheLegalLinksOpenTafssOwnPagesInTheAppsLanguage() {
+        XCTAssertEqual(Legal.page("terms", language: "en").absoluteString, "https://kiff.dev/tafs/terms")
+        XCTAssertEqual(Legal.page("privacy", language: "en").absoluteString, "https://kiff.dev/tafs/privacy", "English has no /en/")
+        for language in ["de", "es", "fr", "it", "nl", "pl", "pt"] {
+            XCTAssertEqual(Legal.page("terms", language: language).absoluteString, "https://kiff.dev/\(language)/tafs/terms")
+            XCTAssertEqual(Legal.page("privacy", language: language).absoluteString, "https://kiff.dev/\(language)/tafs/privacy")
+        }
+        XCTAssertEqual(Legal.page("terms", language: "ja").absoluteString, "https://kiff.dev/tafs/terms", "a language kiff.dev doesn't serve opens English")
+        XCTAssertEqual(Legal.terms, Legal.page("terms", language: Legal.language))
         XCTAssertTrue(Words.languages.contains(Legal.language))
+        XCTAssertEqual(Set(Words.languages).subtracting(["en"]), Legal.translated, "every language the app ships has its page")
     }
 
-    /// The pages are in English only: a row in another language says so, as kiff.dev does.
-    func testALegalRowOutsideEnglishSaysThePageIsInEnglish() {
+    /// A row says the page is in English only when it opens in English from another language.
+    func testALegalRowSaysInEnglishOnlyWhenThePageIs() {
         XCTAssertEqual(Legal.label("Terms", language: "en"), "Terms")
         for language in Words.languages where language != "en" {
+            XCTAssertEqual(Legal.label("Conditions", language: language), "Conditions", "\(language) has its own page: no suffix")
+        }
+        for language in ["ja"] {
             let label = Legal.label("Terms", language: language)
             XCTAssertEqual(label, Words.Settings.legalInEnglish(label: "Terms"))
             XCTAssertTrue(label.hasPrefix("Terms"), "the row's own words first")

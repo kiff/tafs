@@ -95,11 +95,17 @@ class TafsApplication : Application() {
     )
   }
 
-  private val restoring = bot.tafs.app.app.RestoreOnce { model.restore() }
+  private val restoring = bot.tafs.app.app.RestoreOnce(
+    restore = { onScreen -> model.restore(onScreen) },
+    finishOnScreen = { model.finishRestoreOnScreen() },
+  )
 
-  /** [model], with where the owner left off restored once for the process, whoever asks first: the screen or the watch. */
-  suspend fun restoredModel(): bot.tafs.app.app.AppModel {
-    restoring.run()
+  /**
+   * [model], with where the owner left off restored once for the process, whoever asks first: the screen ([onScreen]) or the
+   * watch. The watch's restore asks the person nothing; the screen's first ask after it finishes what needs them.
+   */
+  suspend fun restoredModel(onScreen: Boolean): bot.tafs.app.app.AppModel {
+    restoring.run(onScreen)
     return model
   }
 

@@ -307,7 +307,7 @@ fun RootView(model: AppModel) {
   // Where the owner left off: signed in to KIFF, the saved sample, or the first screen.
   // Once for the process, whoever asks first: this screen, or the watch's relay with the app closed (TafsApplication).
   val app = androidx.compose.ui.platform.LocalContext.current.applicationContext as bot.tafs.app.TafsApplication
-  LaunchedEffect(model) { if (app.model === model) app.restoredModel() else model.restore() }
+  LaunchedEffect(model) { if (app.model === model) app.restoredModel(onScreen = true) else model.restore() }
   var signingIn by rememberSaveable { mutableStateOf(false) }
   val rootScope = rememberCoroutineScope()
   // The approval-key line's Sign in again asks first, as Settings' ways out of KIFF do.
