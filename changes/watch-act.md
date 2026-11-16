@@ -1,0 +1,1 @@
+- **Apple Watch: Refuse a held call, Halt a taf and Halt all from the wrist**, through the iPhone, with a Your tafs page. Refuse is signed on the phone with the same key as from its notification, and approving stays on the phone ([docs/watch-app.md](docs/watch-app.md)).

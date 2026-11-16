@@ -265,6 +265,14 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(tafs, [WatchTaf(id: "depl_1", name: "Rae", line: Words.Taf.State.halted, halted: true)])
     }
 
+    func testATafsOwnHaltIsReadWhenTheAccountsCantBe() async throws {
+        let reading = kept(CurrentKeyOnly())
+        StubProtocol.responses["GET /v1/halt"] = (500, #"{"error":"unavailable"}"#)
+        StubProtocol.responses["GET /v1/tafs/depl_1/halt"] = (200, #"{"halt":{"state":"halted","halted_at":"2026-10-24T12:00:00Z","runtime":true,"kiff":true,"planque":true,"account":false,"stopped":1}}"#)
+        let tafs = try await reading.tafs()
+        XCTAssertEqual(tafs.first?.halted, true, "a taf halted on its own isn't offered Halt again")
+    }
+
     func testTheReadsUseTheSessionTheAppKeeps() {
         XCTAssertEqual(HoldNotification.sessionAccount, AppModel.tokenAccount)
     }

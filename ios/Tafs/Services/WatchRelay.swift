@@ -124,7 +124,8 @@ struct KeptWatchReading: WatchReading {
         let all = try? await cloud.halted(nil)
         var tafs: [WatchTaf] = []
         for taf in listed {
-            let halt = all?.state == .running ? (try? await cloud.halted(taf.id)) : all
+            // Its own halt, unless the account's covers it: also when the account's couldn't be read.
+            let halt = all == nil || all?.state == .running ? (try? await cloud.halted(taf.id)) : all
             let line: String?
             switch halt?.state {
             case .halted: line = Words.Taf.State.halted
