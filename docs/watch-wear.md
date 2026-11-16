@@ -6,14 +6,26 @@ this page says what is there now and what each step adds.
 
 ## What's there now
 
-- **`android/wear`**, the watch app: one screen with tafs's name. It has the phone's package (`dev.kiff.tafs`), as the
-  Wearable Data Layer joins a watch app only to a phone app with the same package and signing key. It isn't standalone
+- **`android/wear`**, the watch app. It has the phone's package (`dev.kiff.tafs`), as the Wearable Data Layer joins a watch
+  app only to a phone app with the same package and signing key. It isn't standalone
   (`com.google.android.wearable.standalone` is false): it needs the phone app.
+- **Its one screen** (`WatchActivity`): **Needs you**, with tafs cloud's count in its words and each held call as the phone
+  words it (its taf, what it wants, KIFF's amount, the reason), each with **Approve on your phone**; then **Your tafs**, each
+  taf's name and state. It's read from the phone each time the watch shows it (`WatchModel.refresh`) and forgotten when it's put
+  away (`forget`). Without a phone it says so (`watch.phone_not_reachable`, Try again); with the phone signed out,
+  `watch.sign_in_on_phone`; with an answer it can't draw, **Open on phone**, never a guess (`WatchModelTest`).
+- **Open on phone** opens `tafs://open/needs-you` on the phone (`RemoteActivityHelper`).
+- **`DataLayerPhone`** finds the reachable phone that declares `tafs_phone_relay` and sends it a live request, 10 s at most.
 - **`android/watchlink`**, the messages the watch and the phone exchange, in plain Kotlin that both apps build on, with its
-  tests on the JVM (`WatchLinkTest`). Nothing calls it yet.
+  tests on the JVM (`WatchLinkTest`).
+- **Its words** are generated with the phone's from `app/strings` (`android.py`): the `watch` area and the phone's lines it
+  shows as they are (`WEAR_KEYS`), into `wear/src/main/res/values*/strings.xml` and `wear/…/Words.kt`, read through the
+  watch's own `Res`. A strings test fails if `WEAR_KEYS` names a line that isn't there.
+
+The phone doesn't answer yet: its relay is the next step, so on a real watch this screen says it can't reach the phone.
 
 ```bash
-cd android && ./gradlew :watchlink:test :wear:assembleDebug
+cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDebug
 ```
 
 ## How the watch talks to KIFF and tafs cloud: through the phone
@@ -64,7 +76,8 @@ watch doesn't know is shown as Open on phone, never guessed at.
 
 ## Still to come
 
-1. The phone's relay for Needs you and Your tafs, the watch's Needs you screen and its tile.
+1. The phone's relay for Needs you and Your tafs (answering `tafs_phone_relay`), the phone's `tafs://open/` link, and the
+   tile with Needs you's count.
 2. Refuse and Halt (one taf, every taf) from the wrist.
 3. Talk to Coach by voice.
 4. Screenshots in all 8 languages. A Wear OS build on Play's listing (the internal track first) is a store-listing change,

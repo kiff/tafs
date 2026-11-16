@@ -1,0 +1,70 @@
+package bot.tafs.wear
+
+import bot.tafs.watchlink.HeldLine
+import bot.tafs.watchlink.NotAccepted
+import bot.tafs.watchlink.TafLine
+import bot.tafs.watchlink.WatchReply
+import bot.tafs.watchlink.WatchRequest
+import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+/** What the watch shows from the phone's answers: its words as they come, and nothing it can't draw guessed at. */
+class WatchModelTest {
+  private val t = 1_763_244_000_000L
+  private val call = HeldLine("hold_1", "Refunds", "Refund order 1042", "€64.00", "Over €50 each", refusable = true)
+  private val needsYou = WatchReply.NeedsYou(1, "1 held call needs you", listOf(call))
+  private val tafs = WatchReply.Tafs(listOf(TafLine("taf_1", "Refunds", "Waiting for you", halted = false)), allHalted = false)
+
+  private class Phone(val answers: (WatchRequest) -> Asked) : PhoneLink {
+    val asked = mutableListOf<WatchRequest>()
+    override suspend fun ask(request: WatchRequest): Asked = answers(request).also { asked += request }
+  }
+
+  @Test fun showsNeedsYouAndYourTafsInThePhonesWords() = runTest {
+    val phone = Phone { if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Answered(tafs) }
+    val model = WatchModel(phone) { t }
+    model.refresh()
+    assertEquals(WatchModel.Shown.Read(WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call)), WatchModel.TafsRead(tafs.tafs, false)), model.shown.value)
+    // Reads only, each made now: nothing on this screen asks the phone to sign.
+    assertEquals(listOf(WatchRequest.NeedsYou(t), WatchRequest.Tafs(t)), phone.asked)
+  }
+
+  @Test fun needsYouStaysWhenYourTafsDoesntAnswer() = runTest {
+    val model = WatchModel(Phone { if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Unreachable }) { t }
+    model.refresh()
+    assertEquals(WatchModel.Shown.Read(WatchModel.NeedsYouRead(1, "1 held call needs you", listOf(call)), null), model.shown.value)
+  }
+
+  @Test fun aSignedOutPhoneShowsNothingKept() = runTest {
+    var signedIn = true
+    val model = WatchModel(Phone { if (!signedIn) Asked.Answered(WatchReply.SignedOut) else if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Answered(tafs) }) { t }
+    model.refresh()
+    assertTrue(model.shown.value is WatchModel.Shown.Read)
+    signedIn = false
+    model.refresh()
+    assertEquals(WatchModel.Shown.SignedOut, model.shown.value)
+  }
+
+  @Test fun noPhoneSaysSo() = runTest {
+    val model = WatchModel(Phone { Asked.Unreachable }) { t }
+    model.refresh()
+    assertEquals(WatchModel.Shown.PhoneUnreachable, model.shown.value)
+  }
+
+  @Test fun whatTheWatchCantDrawOpensOnThePhone() = runTest {
+    for (answer in listOf(Asked.NotUnderstood, Asked.Answered(WatchReply.Refused(NotAccepted.TOO_OLD)), Asked.Answered(WatchReply.Done("Refused")))) {
+      val model = WatchModel(Phone { answer }) { t }
+      model.refresh()
+      assertEquals(answer.toString(), WatchModel.Shown.OpenOnPhone, model.shown.value)
+    }
+  }
+
+  @Test fun putAwayItForgetsWhatItShowed() = runTest {
+    val model = WatchModel(Phone { if (it is WatchRequest.NeedsYou) Asked.Answered(needsYou) else Asked.Answered(tafs) }) { t }
+    model.refresh()
+    model.forget()
+    assertEquals(WatchModel.Shown.Asking, model.shown.value)
+  }
+}
