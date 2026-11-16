@@ -4003,12 +4003,15 @@ function checkContext(event: HTTPEvent, me: KIFFIdentity, deps: Deps): import(".
 
 /**
  * The rules the owner agreed in the card's conversation (rules.ts), read with their own access when a draft is checked,
- * and whether a draft with none is refused too (TAFS_RULES_REQUIRED=on, once every Coach run sends them).
+ * whether a draft with none is refused too (TAFS_RULES_REQUIRED=on, once every Coach run sends them), and whether a
+ * total for each item is held to the agreed figures on a rule that names none too (TAFS_RULES_PER=on, once Coach's
+ * rules carry them).
  */
 function withRules(ctx: import("./approval.js").DecideContext, me: KIFFIdentity, session: string, deps: Deps): import("./approval.js").DecideContext {
   return {
     ...ctx,
     rulesRequired: process.env.TAFS_RULES_REQUIRED === "on",
+    rulesPerToTheLetter: process.env.TAFS_RULES_PER === "on",
     rulesAgreement: async () => rulesAgreement((await deps.agents.session(me.tenantID, session, ownerKey(me))).events),
   };
 }

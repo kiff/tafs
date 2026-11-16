@@ -128,7 +128,9 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
       Array.from({ length: LIMITS_MAX + 1 }, (_, i) => ({ quantity: `sum(a${i})`, window: "call", limit: 1 })),
       [EACH, { ...EACH, limit: 600 }], // the same quantity and window twice
       [{ ...EACH, limit: -1 }], [{ ...EACH, limit: 1.5 }], [{ ...EACH, limit: 2 ** 53 }], [{ ...EACH, limit: "500" }], [{ quantity: "sum(amount)", window: "call" }],
-      [{ ...EACH, window: "lifetime" }], [{ ...EACH, quantity: "sum( amount )" }], [{ ...EACH, quantity: "SUM(amount)" }], [{ ...EACH, quantity: "amount" }], [{ ...EACH, quantity: "sum()" }], [{ ...EACH, quantity: `sum(${"a".repeat(65)})` }],
+      [{ ...EACH, window: "lifetime" }], [{ ...EACH, per: "order_id" }], [{ ...DAY, per: "order id" }], [{ ...DAY, per: "" }], [{ ...DAY, per: 7 }], [{ ...DAY, window: "ROLLING_7D", per: "order_id" }],
+      [{ ...DAY, window: "lifetime", per: "order_id" }, { ...DAY, window: "lifetime", per: "order_id", limit: 1 }], // the same quantity, window and per twice
+      [{ ...EACH, quantity: "sum( amount )" }], [{ ...EACH, quantity: "SUM(amount)" }], [{ ...EACH, quantity: "amount" }], [{ ...EACH, quantity: "sum()" }], [{ ...EACH, quantity: `sum(${"a".repeat(65)})` }],
       "500",
     ];
     for (const limits of bad) {
@@ -191,12 +193,12 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     const count = { quantity: "count", window: "calendar_day", limit: 100 };
     const cards = [refund(500, [day(5000), count, day(9, { per: "customer" })])];
     expect(rulesMismatch([stripe], cards, rule())).toBeUndefined();
-    expect(rulesUnnamedFigures([stripe], cards, rule())).toEqual([{ tool: "refund charge", quantity: "count", window: "calendar_day", limit: 100 }]);
+    expect(rulesUnnamedFigures([stripe], cards, rule())).toEqual([{ tool: "refund charge", quantity: "count", window: "calendar_day", per: "", limit: 100 }]);
     // The Eval's draft: the agreed figures, plus an hour's total on the held Card.
     const split = [{ tool: "refund_charge", over: "refuse" as const, limits: [{ ...EACH, over: "ask" as const }, DAY] }];
     const hour = [refund(500, [{ quantity: "sum(amount)", window: "rolling_1h", limit: 5000 }], "owner"), refund(undefined, [day(5000)])];
     expect(rulesMismatch([stripe], hour, split)).toBeUndefined();
-    expect(rulesUnnamedFigures([stripe], hour, split)).toEqual([{ tool: "refund charge", quantity: "sum(amount)", window: "rolling_1h", limit: 5000 }]);
+    expect(rulesUnnamedFigures([stripe], hour, split)).toEqual([{ tool: "refund charge", quantity: "sum(amount)", window: "rolling_1h", per: "", limit: 5000 }]);
     for (const window of ["rolling_24h", "rolling_7d", "lifetime", "ROLLING_1H"]) {
       expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000), { quantity: "sum(amount)", window, limit: 1 }])], rule())).toHaveLength(1);
     }
@@ -205,6 +207,32 @@ describe("the figures the owner agreed (each call's, the day's total)", () => {
     expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000), day(9, { per: "customer" }), { quantity: "count", window: "calendar_day", limit: 0 }])], rule())).toEqual([]);
     // A rule with no figures names none to compare: nothing is named.
     expect(rulesUnnamedFigures([stripe], cards, [{ tool: "refund_charge", over: "refuse" }])).toEqual([]);
+  });
+
+  // Kiff Admin Worker's edge on #1267: a total for each item is a figure the owner agrees like the others.
+  it("a total for each item is agreed as (quantity, window, per), and held to it on a rule that names one", () => {
+    const PER = { quantity: "count", window: "lifetime", per: "charge", limit: 1 };
+    const once = { quantity: "count", window: "lifetime", per: "charge", limit: 1 };
+    // Read with the rules, and the same figure with another per is other rules.
+    const agreed = [notice("n1", rule([EACH, DAY, PER])), confirm("c1", "n1"), answered("c1", "agree")];
+    expect(rulesAgreement(agreed)).toMatchObject({ state: "agreed", rules: [{ limits: [EACH, DAY, PER] }] });
+    expect(rulesAgreement([...agreed, notice("n1", rule([EACH, DAY, { ...PER, per: "customer" }]))]).state).toBe("unagreed");
+    // On the Cards as agreed (per in any case): signed, and nothing unnamed.
+    const cards = [refund(500, [day(5000), { ...once, per: " Charge" }])];
+    expect(rulesMismatch([stripe], cards, rule([EACH, DAY, PER]))).toBeUndefined();
+    expect(rulesUnnamedFigures([stripe], cards, rule([EACH, DAY, PER]))).toEqual([]);
+    // Missing, or another limit: the agreed figure isn't what's signed.
+    expect(rulesMismatch([stripe], [refund(500, [day(5000)])], rule([EACH, DAY, PER]))).toMatchObject({ kind: "figure", window: "lifetime", per: "charge", agreed: 1 });
+    expect(rulesMismatch([stripe], [refund(500, [day(5000), { ...once, limit: 3 }])], rule([EACH, DAY, PER]))).toMatchObject({ kind: "figure", per: "charge", agreed: 1, drafted: 3 });
+    // A per total the rule doesn't name, beside one it does: another per, window or quantity.
+    for (const extra of [{ ...once, per: "customer" }, { ...once, window: "rolling_7d" }, { ...once, quantity: "sum(amount)", limit: 5000 }]) {
+      expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000), once, extra])], rule([EACH, DAY, PER]))).toEqual([{ tool: "refund charge", ...extra, limit: extra.limit }]);
+    }
+    // A per total for the day isn't the day's total: the rule's day figure doesn't name it.
+    expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000), once, day(5000, { per: "customer" })])], rule([EACH, DAY, PER]))).toEqual([{ tool: "refund charge", quantity: "sum(amount)", window: "calendar_day", per: "customer", limit: 5000 }]);
+    // On a rule that names no per total: left to the shape checks, until TAFS_RULES_PER holds it to the letter.
+    expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000), once])], rule())).toEqual([]);
+    expect(rulesUnnamedFigures([stripe], [refund(500, [day(5000), once])], rule(), true)).toEqual([{ tool: "refund charge", ...once }]);
   });
 
   it("figures the notice's words don't say are listed for the log, in the Card's units or major units", () => {

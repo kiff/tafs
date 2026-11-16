@@ -16,7 +16,10 @@
  * A rule may also carry the figures the owner read, `limits: [{quantity, window, limit}]`: each call's (`window: "call"`)
  * and the day's total (`"calendar_day"`), in the Card's own units (minor units of the connection's currency, as
  * `per_action_max.max` and `aggregates[].limit` are). Each is on a Card covering the tool with exactly that figure, and
- * no Card covering it has another figure for the same quantity and window, stricter or looser.
+ * no Card covering it has another figure for the same quantity and window, stricter or looser. A figure with `per` is a
+ * total for each item ("one invoice per order, ever": `count`, `lifetime`, `per: order_id`), in any of an aggregate's
+ * windows, matched on its quantity, window and per alike. A tool's per totals are held to its rule's when the rule names
+ * one, and to the letter, on a rule that names none too, once `TAFS_RULES_PER=on` (when Coach's rules carry them).
  *
  * A figure may say what happens past it (`over`), when it isn't the tool's: "ask past €5 a refund, refuse past €50 a
  * day" is one tool, `over: refuse`, whose call figure says `over: ask`. A Card's `on_exceed` is then the `over` of the
@@ -25,7 +28,7 @@
  */
 import type { ApprovalGrant } from "./approval.js";
 
-export interface AgreedLimit { quantity: string; window: "call" | "calendar_day"; limit: number; over?: "ask" | "refuse" }
+export interface AgreedLimit { quantity: string; window: string; limit: number; over?: "ask" | "refuse"; per?: string }
 export interface AgreedRule { tool: string; over: "ask" | "refuse"; limits?: AgreedLimit[] }
 
 /** What the conversation says of the rules: none shown, agreed (the newest agreement's), or shown and not agreed. */
@@ -40,6 +43,10 @@ export const RULES_MAX = 64;
 export const LIMITS_MAX = 4;
 /** A figure's quantity, as a Card writes it and kiff/agents' schema takes it: a count of calls, or the sum of one argument. */
 const QUANTITY = /^(count|sum\([A-Za-z0-9_.]{1,64}\))$/;
+/** A total for each item's `per`, as a Card's aggregate writes it: the argument each item is counted by. */
+const PER = /^[A-Za-z0-9_.]{1,64}$/;
+/** The windows of a Card's aggregate, as kiff/agents' drafts take them: a total for each item may be over any of them. */
+const PER_WINDOWS: ReadonlySet<string> = new Set(["calendar_day", "rolling_1h", "rolling_24h", "rolling_7d", "lifetime"]);
 /** The value of the confirm's option by which the owner agrees. */
 export const AGREE = "agree";
 
@@ -69,20 +76,21 @@ function rulesOf(c: Record<string, unknown>): AgreedRule[] | undefined {
 
 /**
  * A rule's figures, read whole or not at all: 1 to 4, each with a quantity as a Card writes it (`count`, `sum(<arg>)`,
- * matched exactly), a window of `call` or `calendar_day`, a whole limit from 0 (never) to 2^53−1, and, if it says
- * one, an `over` of ask or refuse, with no quantity and window twice. An empty list is no figures read, never figures agreed, so the notice carries no rules.
+ * matched exactly), a window of `call` or `calendar_day` (with a `per`, any of an aggregate's windows), a whole limit
+ * from 0 (never) to 2^53−1, and, if it says one, an `over` of ask or refuse, with no quantity, window and per twice. An empty list is no figures read, never figures agreed, so the notice carries no rules.
  */
 function limitsOf(given: unknown): AgreedLimit[] | undefined {
   if (!Array.isArray(given) || given.length === 0 || given.length > LIMITS_MAX) return undefined;
   const out: AgreedLimit[] = [];
   for (const l of given as unknown[]) {
-    const { quantity, window, limit, over } = (l ?? {}) as { quantity?: unknown; window?: unknown; limit?: unknown; over?: unknown };
+    const { quantity, window, limit, over, per } = (l ?? {}) as { quantity?: unknown; window?: unknown; limit?: unknown; over?: unknown; per?: unknown };
     if (typeof quantity !== "string" || !QUANTITY.test(quantity)) return undefined;
-    if (window !== "call" && window !== "calendar_day") return undefined;
+    if (per !== undefined && (typeof per !== "string" || !PER.test(per))) return undefined;
+    if (typeof window !== "string" || (per === undefined ? window !== "call" && window !== "calendar_day" : !PER_WINDOWS.has(window))) return undefined;
     if (typeof limit !== "number" || !Number.isSafeInteger(limit) || limit < 0) return undefined;
     if (over !== undefined && over !== "ask" && over !== "refuse") return undefined;
-    if (out.some((x) => x.quantity === quantity && x.window === window)) return undefined;
-    out.push({ quantity, window, limit, ...(over === undefined ? {} : { over }) });
+    if (out.some((x) => x.quantity === quantity && x.window === window && x.per === per)) return undefined;
+    out.push({ quantity, window, limit, ...(over === undefined ? {} : { over }), ...(per === undefined ? {} : { per }) });
   }
   return out;
 }
@@ -131,7 +139,7 @@ function sameRules(a: AgreedRule[], b: AgreedRule[]): boolean {
 
 /** The same figures, in any order: a rule shown again with another figure is other rules. */
 function sameLimits(a: AgreedLimit[] | undefined, b: AgreedLimit[] | undefined): boolean {
-  const key = (l: AgreedLimit[] | undefined) => (l ?? []).map((x) => `${x.quantity}|${x.window}|${x.limit}|${x.over ?? ""}`).sort().join(",");
+  const key = (l: AgreedLimit[] | undefined) => (l ?? []).map((x) => `${x.quantity}|${x.window}|${x.limit}|${x.over ?? ""}|${x.per ?? ""}`).sort().join(",");
   return key(a) === key(b);
 }
 
@@ -139,7 +147,7 @@ export type RulesMismatch =
   | { kind: "on_exceed"; tool: string; over: "ask" | "refuse"; onExceed: "owner" | "refuse" }
   | { kind: "mixed"; tool: string }
   | { kind: "missing"; tool: string }
-  | { kind: "figure"; tool: string; quantity: string; window: "call" | "calendar_day"; agreed: number; drafted?: number };
+  | { kind: "figure"; tool: string; quantity: string; window: string; per?: string; agreed: number; drafted?: number };
 
 /**
  * The first tool the draft's Cards cover against the agreed rules: a Card whose `on_exceed` isn't its rule's (ask is
@@ -168,7 +176,7 @@ export function rulesMismatch(grants: readonly ApprovalGrant[], cards: readonly 
       for (const raw of covering) {
         // What happens past this Card's limits: the `over` of the agreed figures it carries, else the tool's.
         const carried = new Set(figuresOn([raw], name)
-          .map((f) => rule.limits?.find((l) => l.quantity === f.quantity && l.window === f.window))
+          .map((f) => rule.limits?.find((l) => sameFigure(l, f)))
           .filter((l): l is AgreedLimit => l !== undefined)
           .map((l) => l.over ?? rule.over));
         if (carried.size > 1) return { kind: "mixed", tool: shown };
@@ -177,23 +185,30 @@ export function rulesMismatch(grants: readonly ApprovalGrant[], cards: readonly 
         if (onExceed !== (over === "ask" ? "owner" : "refuse")) return { kind: "on_exceed", tool: shown, over, onExceed };
       }
       for (const l of rule.limits ?? []) {
-        const drafted = figuresOn(covering, name).filter((f) => f.quantity === l.quantity && f.window === l.window).map((f) => f.limit);
+        const drafted = figuresOn(covering, name).filter((f) => sameFigure(l, f)).map((f) => f.limit);
         // Missing on every Card, or another figure on any of them: what the owner read isn't what's signed.
         const other = drafted.find((d) => d !== l.limit);
-        if (!drafted.length) return { kind: "figure", tool: shown, quantity: l.quantity, window: l.window, agreed: l.limit };
-        if (other !== undefined) return { kind: "figure", tool: shown, quantity: l.quantity, window: l.window, agreed: l.limit, drafted: other };
+        const per = l.per ? { per: l.per } : {};
+        if (!drafted.length) return { kind: "figure", tool: shown, quantity: l.quantity, window: l.window, ...per, agreed: l.limit };
+        if (other !== undefined) return { kind: "figure", tool: shown, quantity: l.quantity, window: l.window, ...per, agreed: l.limit, drafted: other };
       }
     }
   }
   return undefined;
 }
 
-interface Figure { quantity: string; window: "call" | "calendar_day"; limit: number }
+/** A figure on the Cards: `per` is "" on each call's and on a total over all items, else folded. */
+interface Figure { quantity: string; window: string; per: string; limit: number }
+
+/** An agreed figure and a drafted one are the same limit: the same quantity, window and per (folded). */
+const sameFigure = (l: AgreedLimit, f: { quantity: string; window: string; per: string }) =>
+  l.quantity === f.quantity && l.window === f.window && fold(l.per) === f.per;
 
 /**
- * The figures the Cards set on one tool (its KIFF name, folded): each call's, from its grants' `per_action_max`, and
- * the day's totals, from the Cards' `aggregates` with `window: calendar_day` and no `per` (a total for each recipient
- * or customer is another total, never the day's). Quantities are as written, trimmed, never folded further, so
+ * The figures the Cards set on one tool (its KIFF name, folded): each call's, from its grants' `per_action_max`, the
+ * day's totals, from the Cards' `aggregates` with `window: calendar_day` and no `per`, and the totals for each item,
+ * from those with a `per`, in the window they name (a total for each recipient or customer is another total, never
+ * the day's). Quantities are as written, trimmed, never folded further, so
  * `sum( amount )` is another quantity than `sum(amount)`. A figure that isn't a number is read as -1, which no
  * agreed figure equals.
  */
@@ -208,29 +223,31 @@ function figuresOn(cards: readonly unknown[], name: string): Figure[] {
     if (!mine.length) continue;
     for (const g of mine) {
       for (const m of (Array.isArray(g.per_action_max) ? g.per_action_max : []) as Array<{ quantity?: unknown; max?: unknown }>) {
-        out.push({ quantity: trim(m.quantity), window: "call", limit: num(m.max) });
+        out.push({ quantity: trim(m.quantity), window: "call", per: "", limit: num(m.max) });
       }
     }
     for (const a of (Array.isArray(card.aggregates) ? card.aggregates : []) as Array<{ quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown }>) {
-      if (fold(a.window) !== "calendar_day" || fold(a.per)) continue;
-      out.push({ quantity: trim(a.quantity), window: "calendar_day", limit: num(a.limit) });
+      if (fold(a.per)) out.push({ quantity: trim(a.quantity), window: fold(a.window), per: fold(a.per), limit: num(a.limit) });
+      else if (fold(a.window) === "calendar_day") out.push({ quantity: trim(a.quantity), window: "calendar_day", per: "", limit: num(a.limit) });
     }
   }
   return out;
 }
 
-/** A figure a Card adds on a tool the rules don't name: its quantity, its window as the Card writes it, and its limit. */
-export interface UnnamedFigure { tool: string; quantity: string; window: string; limit: number }
+/** A figure a Card adds on a tool the rules don't name: its quantity, its window as the Card writes it, its per ("" for none), and its limit. */
+export interface UnnamedFigure { tool: string; quantity: string; window: string; per: string; limit: number }
 
 /**
  * The figures the Cards add that the agreed rules don't name: on a tool whose rule has figures, each call's or a total
  * over any window (a day's, an hour's, a week's, a lifetime's) on a quantity and window the rule doesn't give. Refused at
  * Approve (Eval 43927756622: after a refused draft, Coach signed a rolling hour's €50 on refunds beside the agreed €5 a
- * refund and €50 a day, and held past it where the rules said refuse). Not named: a total for each item (`per`), whose
- * shapes the checks before this one judge; and a count of 0 (each call asks), which only asks. The tool is named as the
- * connection titles it.
+ * refund and €50 a day, and held past it where the rules said refuse). A total for each item (`per`) is named by a figure
+ * with the same quantity, window and per: on a rule that names a per total, every one is held to it; on a rule that names
+ * none, only with `perToTheLetter` (TAFS_RULES_PER=on, once Coach's rules carry them; until then the shape checks before
+ * this one judge them). Not named: a count of 0 (each call asks), which only asks. The tool is named as the connection
+ * titles it.
  */
-export function rulesUnnamedFigures(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[]): UnnamedFigure[] {
+export function rulesUnnamedFigures(grants: readonly ApprovalGrant[], cards: readonly unknown[], rules: readonly AgreedRule[], perToTheLetter = false): UnnamedFigure[] {
   const out: UnnamedFigure[] = [];
   for (const g of grants) {
     for (const t of g.request.tools ?? []) {
@@ -239,9 +256,11 @@ export function rulesUnnamedFigures(grants: readonly ApprovalGrant[], cards: rea
       const before = fold(t.tool || t.name);
       const rule = rules.find((r) => fold(r.tool) === before) ?? rules.find((r) => fold(r.tool) === name);
       if (!rule?.limits) continue;
+      const namesPer = rule.limits.some((l) => l.per);
       for (const f of figuresInAnyWindow(cards, name)) {
         if (f.quantity === "count" && f.limit === 0) continue;
-        if (!rule.limits.some((l) => l.quantity === f.quantity && l.window === f.window)) {
+        if (f.per && !namesPer && !perToTheLetter) continue;
+        if (!rule.limits.some((l) => sameFigure(l, f))) {
           out.push({ tool: t.title || t.name || t.tool || name, ...f });
         }
       }
@@ -252,11 +271,11 @@ export function rulesUnnamedFigures(grants: readonly ApprovalGrant[], cards: rea
 
 /**
  * The figures the Cards set on one tool (its KIFF name, folded), in every window: each call's, from its grants'
- * `per_action_max` (`call`), and each total with no `per`, from the Cards' `aggregates`, in the window it names, folded
- * (`calendar_day`, `rolling_1h`, `lifetime`…; none written reads as ""). Quantities as `figuresOn` reads them.
+ * `per_action_max` (`call`), and each total from the Cards' `aggregates`, in the window it names, folded (`calendar_day`,
+ * `rolling_1h`, `lifetime`…; none written reads as ""), with its `per`, folded. Quantities as `figuresOn` reads them.
  */
-function figuresInAnyWindow(cards: readonly unknown[], name: string): Array<{ quantity: string; window: string; limit: number }> {
-  const out: Array<{ quantity: string; window: string; limit: number }> = figuresOn(cards, name).filter((f) => f.window === "call");
+function figuresInAnyWindow(cards: readonly unknown[], name: string): Figure[] {
+  const out: Figure[] = figuresOn(cards, name).filter((f) => f.window === "call");
   const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : -1);
   const trim = (v: unknown) => (typeof v === "string" ? v.trim() : "");
   for (const raw of cards) {
@@ -264,8 +283,7 @@ function figuresInAnyWindow(cards: readonly unknown[], name: string): Array<{ qu
     const grants = (Array.isArray(card.grants) ? card.grants : []) as Array<{ action?: unknown }>;
     if (!grants.some((g) => fold(g.action) === name)) continue;
     for (const a of (Array.isArray(card.aggregates) ? card.aggregates : []) as Array<{ quantity?: unknown; window?: unknown; per?: unknown; limit?: unknown }>) {
-      if (fold(a.per)) continue;
-      out.push({ quantity: trim(a.quantity), window: fold(a.window), limit: num(a.limit) });
+      out.push({ quantity: trim(a.quantity), window: fold(a.window), per: fold(a.per), limit: num(a.limit) });
     }
   }
   return out;
