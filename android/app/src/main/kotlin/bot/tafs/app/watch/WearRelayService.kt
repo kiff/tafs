@@ -24,10 +24,15 @@ class WearRelayService : WearableListenerService() {
     if (!path.startsWith(WatchLink.PREFIX)) return null
     val app = application as TafsApplication
     val answer = TaskCompletionSource<ByteArray>()
+    val failed = { WatchLink.encodeReply(bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone)) }
     scope.launch {
-      val reply = runCatching { WatchRelay(model = { app.restoredModel() }).answer(path, request) }
+      val reply = runCatching { WatchRelay(model = { app.restoredModel(onScreen = false) }).answer(path, request) }
         .getOrElse { bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone) }
       answer.trySetResult(WatchLink.encodeReply(reply))
+    }.invokeOnCompletion {
+      // Cancelled before it answered (the service went away, even before the work began): the watch hears Open on phone,
+      // never silence until its own limit.
+      answer.trySetResult(failed())
     }
     return answer.task
   }
