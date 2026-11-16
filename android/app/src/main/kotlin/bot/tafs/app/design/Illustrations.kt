@@ -3,6 +3,9 @@ package bot.tafs.app.design
 import android.graphics.BlurMaskFilter
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -430,4 +433,15 @@ fun OverviewArt(modifier: Modifier = Modifier) = Art(modifier, Frame(127f, 135f,
   disc(1382f, 822f, 37f, Ink.blue)
   pill(1344f, 900f, 1604f, 920f, ink(0.75f))
   pill(1344f, 940f, 1524f, 960f, ink(0.15f))
+}
+
+/**
+ * Where a board goes on a screen: centred, above the screen's own words, and scaled to the room it gets, at most [height] tall,
+ * so a short screen gets a smaller drawing rather than a scroll (as iOS's `Board`).
+ */
+@Composable
+fun Illustrated(modifier: Modifier = Modifier, height: androidx.compose.ui.unit.Dp = 180.dp, art: @Composable (Modifier) -> Unit) {
+  androidx.compose.foundation.layout.Box(modifier.fillMaxWidth(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+    art(Modifier.heightIn(max = height))
+  }
 }
