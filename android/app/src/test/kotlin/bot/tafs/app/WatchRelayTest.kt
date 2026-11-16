@@ -35,14 +35,6 @@ class WatchRelayTest {
     assertEquals(0, asked)
   }
 
-  @Test fun coachFromTheWristIsNotYetTheWatchs() = runTest {
-    var asked = 0
-    val relay = WatchRelay(model = { asked++; testModel() }, now = { now })
-    val (path, data) = request(WatchRequest.Coach(now, "Pause refunds"))
-    assertEquals(WatchReply.Failed("Open on phone"), relay.answer(path, data))
-    assertEquals(0, asked)
-  }
-
   @Test fun theSampleCantRefuseOrHaltFromTheWrist() = runTest {
     for (r in listOf(WatchRequest.Refuse(now, "hold_1"), WatchRequest.Halt(now, null))) {
       val (path, data) = request(r)

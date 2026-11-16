@@ -34,6 +34,19 @@ import kotlinx.coroutines.launch
  * read from the phone each time the watch shows it, and forgotten when it's put away (docs/watch-wear.md).
  */
 class WatchActivity : ComponentActivity() {
+  /** The watch's own speech input: it turns what's said into text on the watch's side, and only the text comes back here. */
+  private val speech = registerForActivityResult(androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()) { result ->
+    val heard = result.data?.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
+    if (heard != null) model.heard(heard)
+  }
+
+  private fun listen() {
+    val intent = Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+      .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+      .putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, Words.Coach.ask)
+    runCatching { speech.launch(intent) }
+  }
+
   private val model by lazy {
     val keyguard = getSystemService(android.app.KeyguardManager::class.java)
     // A screen lock set and the watch unlocked now: the confirmation for Refuse and Halt (docs/watch-wear.md).
@@ -47,10 +60,12 @@ class WatchActivity : ComponentActivity() {
         val shown by model.shown.collectAsState()
         val outcome by model.outcome.collectAsState()
         val confirmingHaltAll by model.confirmingHaltAll.collectAsState()
+        val talk by model.talk.collectAsState()
         WatchScreen(
           shown,
           outcome,
           confirmingHaltAll,
+          talk,
           Actions(
             openOnPhone = ::openOnPhone,
             tryAgain = { lifecycleScope.launch { model.refresh() } },
@@ -59,6 +74,9 @@ class WatchActivity : ComponentActivity() {
             askHaltAll = model::askHaltAll,
             confirmHaltAll = { lifecycleScope.launch { model.confirmHaltAll() } },
             cancelHaltAll = model::cancelHaltAll,
+            askCoach = ::listen,
+            sendToCoach = { lifecycleScope.launch { model.sendToCoach() } },
+            closeTalk = model::closeTalk,
             dismiss = model::dismissOutcome,
           ),
         )
@@ -98,13 +116,18 @@ private class Actions(
   val askHaltAll: () -> Unit,
   val confirmHaltAll: () -> Unit,
   val cancelHaltAll: () -> Unit,
+  /** Talk to Coach: the watch's speech input, then the words shown, then Send. */
+  val askCoach: () -> Unit,
+  val sendToCoach: () -> Unit,
+  val closeTalk: () -> Unit,
   val dismiss: () -> Unit,
 )
 
 @Composable
-private fun WatchScreen(shown: WatchModel.Shown, outcome: WatchModel.Outcome?, confirmingHaltAll: Boolean, act: Actions) {
+private fun WatchScreen(shown: WatchModel.Shown, outcome: WatchModel.Outcome?, confirmingHaltAll: Boolean, talk: WatchModel.Talk?, act: Actions) {
   ScalingLazyColumn(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
     outcome?.let { item { OutcomeCard(it, act) } }
+    talk?.let { item { TalkCard(it, act) } }
     when (shown) {
       WatchModel.Shown.Asking -> line(Words.Watch.askingPhone)
       WatchModel.Shown.SignedOut -> line(Words.Watch.signInOnPhone)
@@ -116,6 +139,12 @@ private fun WatchScreen(shown: WatchModel.Shown, outcome: WatchModel.Outcome?, c
         Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) }
       }
       is WatchModel.Shown.Read -> {
+        if (talk == null) item {
+          Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Button(onClick = act.askCoach, modifier = Modifier.fillMaxWidth()) { Text(Words.Coach.ask) }
+            Text(Words.Watch.voiceTextOnly, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+          }
+        }
         item { ListHeader { Text(Words.NeedsYou.title) } }
         line(shown.needsYou.words)
         for (call in shown.needsYou.calls) item { HeldCallCard(call, act) }
@@ -144,6 +173,37 @@ private fun WatchScreen(shown: WatchModel.Shown, outcome: WatchModel.Outcome?, c
 
 private fun ScalingLazyListScope.line(words: String) = item {
   Text(words, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp))
+}
+
+/** Coach from the wrist: the words heard, shown before they're sent; Coach's answer, short; anything more on the phone. */
+@Composable
+private fun TalkCard(talk: WatchModel.Talk, act: Actions) {
+  Card(onClick = {}, modifier = Modifier.fillMaxWidth()) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+      when (talk) {
+        is WatchModel.Talk.Heard -> {
+          Text(talk.text)
+          Button(onClick = act.sendToCoach, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.send) }
+          Button(onClick = act.closeTalk, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.cancel) }
+        }
+        WatchModel.Talk.Sending -> Text(Words.Watch.askingPhone)
+        is WatchModel.Talk.Answered -> {
+          Text(talk.text)
+          if (talk.long) Button(onClick = { act.openOnPhone("") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) }
+          Button(onClick = act.closeTalk, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.done) }
+        }
+        WatchModel.Talk.NeedsLock -> {
+          Text(Words.Watch.needsLock)
+          Button(onClick = act.closeTalk, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.close) }
+        }
+        is WatchModel.Talk.NotSent -> {
+          talk.words?.let { Text(it) }
+          Button(onClick = { act.openOnPhone("") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) }
+          Button(onClick = act.closeTalk, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.close) }
+        }
+      }
+    }
+  }
 }
 
 /** What came of a Refuse or a Halt, in the phone's words; anything that didn't go through offers Open on phone. */

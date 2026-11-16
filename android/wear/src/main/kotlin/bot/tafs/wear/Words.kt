@@ -16,7 +16,10 @@ object Words {
   }
   object Common {
     val cancel: String get() = Res.s(R.string.common_cancel)
+    val close: String get() = Res.s(R.string.common_close)
+    val done: String get() = Res.s(R.string.common_done)
     val loading: String get() = Res.s(R.string.common_loading)
+    val send: String get() = Res.s(R.string.common_send)
     val tryAgain: String get() = Res.s(R.string.common_try_again)
   }
   object Halt {
