@@ -46,8 +46,9 @@ final class NeedsYouModel: ObservableObject {
             state = .signedOut
         case .failed:
             state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
-        case .refused, .stale, .notYet:
-            // The phone dropped it, or is an older version: ask again from the screen.
+        case .refused, .stale, .notYet, .answered:
+            // The phone dropped it, is an older version, or answered as if to a Refuse: ask again
+            // from the screen.
             state = .unreachable
         }
     }
