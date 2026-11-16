@@ -1334,7 +1334,7 @@ and "Scan with tafs". KIFF's code is made only once Continue is tapped, which st
 brings the QR back and forgets that code, so one sign-in runs at a time. A token that lands just as the
 person switches ways, or leaves, is ended at KIFF with its own bearer and never kept (`AppModel.takeSession`), on both ways. Signed in either way, the sheet shows
 **You're connected.**, "Let's build great things together." and **Let's go**, under the mascot (no words in the
-image), before it closes onto the app (`SignedInCelebration`).
+image), before it closes onto the app (`SignedInCelebration`). Let's go is then the one way on: the sheet's Cancel is gone.
 
 1. **The offer** (`kiff/Pairing.kt`, `PairOffer.make`): the same `kiff.pair.v1` QR as a computer, with
    `platform: "android"`, `kind: "keystore"`, `device_kind` (`android_phone` or `android_tablet`),
