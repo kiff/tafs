@@ -5583,10 +5583,6 @@ class AppModel(
     _state.update { it.copy(coachRequested = true) }
   }
 
-  /** A mission's log, newest first: the sample's for the screenshots, else tafs cloud's; null when it couldn't be read. */
-  suspend fun missionLog(mission: String): bot.tafs.app.kiff.MissionLog? =
-    if (_state.value.mode == Mode.sample) bot.tafs.app.model.SampleBrief.log() else attempt { cloud.missionLog(mission) }
-
   /** The owner's answer to one of Coach's cards. */
   fun answerCoach(type: String, id: String, answer: String) {
     viewModelScope.launch { answerCard(type, id, answer) }
@@ -7363,6 +7359,16 @@ class AppModel(
     _state.update { it.copy(halts = it.halts + ((tafId.orEmpty()) to halt)) }
     // The list reads it halted at once, not at its next read; the halt sheet doesn't wait for the whole list to show its own.
     scope.launch { refresh() }
+  }
+
+  /**
+   * A page of a mission's log (Missions v2.1 §6), read only; null when it can't be read now. Signed in, tafs cloud's; on the sample
+   * with its brief shown (the store's screenshots), the sample's own log, one page; else none.
+   */
+  suspend fun missionLog(mission: String, before: String? = null): bot.tafs.app.kiff.MissionLogPage? = when {
+    _state.value.mode == Mode.kiff -> attempt { cloud.missionLog(mission, before) }
+    _state.value.mode == Mode.sample && sampleBrief && _state.value.brief != null && before == null -> bot.tafs.app.model.SampleBrief.log()
+    else -> null
   }
 
   /** Reads where a halt stands. */

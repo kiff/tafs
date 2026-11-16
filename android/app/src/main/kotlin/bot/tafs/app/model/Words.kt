@@ -246,7 +246,6 @@ object Words {
     val decisions: String get() = Res.s(R.string.brief_decisions)
     val done: String get() = Res.s(R.string.brief_done)
     val evidence: String get() = Res.s(R.string.brief_evidence)
-    val logUnread: String get() = Res.s(R.string.brief_log_unread)
     val meanwhile: String get() = Res.s(R.string.brief_meanwhile)
     val nextMove: String get() = Res.s(R.string.brief_next_move)
     val recommends: String get() = Res.s(R.string.brief_recommends)
@@ -1368,6 +1367,11 @@ object Words {
     val useSize: String get() = Res.s(R.string.knob_use_size)
     val why: String get() = Res.s(R.string.knob_why)
     fun withStops(count: Int, name: String): String = Res.p(R.plurals.knob_with_stops, count, Res.number(count), name)
+  }
+  object Mission {
+    val log: String get() = Res.s(R.string.mission_log)
+    val readOnly: String get() = Res.s(R.string.mission_read_only)
+    val removed: String get() = Res.s(R.string.mission_removed)
   }
   object NeedsYou {
     val aTaf: String get() = Res.s(R.string.needs_you_a_taf)

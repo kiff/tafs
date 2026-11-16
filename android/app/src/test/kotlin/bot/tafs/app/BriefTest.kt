@@ -9,7 +9,8 @@ import bot.tafs.app.app.Mode
 import bot.tafs.app.kiff.Brief
 import bot.tafs.app.kiff.InMemorySecretStore
 import bot.tafs.app.kiff.KiffClient
-import bot.tafs.app.kiff.MissionLog
+import bot.tafs.app.kiff.MissionLogPage
+import bot.tafs.app.kiff.MissionLogs
 import bot.tafs.app.model.SampleBrief
 import bot.tafs.app.model.Words
 import bot.tafs.app.push.Alert
@@ -146,7 +147,8 @@ class BriefTest {
     val forbidden = listOf("signer", "sign(", "presigned", "answerNow(", "answer(call", "Answer.ApproveOnce", "Answer.Refuse", "approvalWindow", "kiff.answer")
     fun code(text: String) = text.lines().filterNot { it.trim().startsWith("*") || it.trim().startsWith("//") || it.trim().startsWith("/**") }.joinToString("\n")
     val app = File("src/main/kotlin/bot/tafs/app/app/AppModel.kt").readText()
-    val section = app.substring(app.indexOf("// MARK: Your brief"), app.indexOf("suspend fun missionLog("))
+    val start = app.indexOf("// MARK: Your brief")
+    val section = app.substring(start, app.indexOf("fun askCoachAboutMission(", start))
     val routes = File("src/main/kotlin/bot/tafs/app/app/BriefRoutes.kt").readText()
     val view = File("src/main/kotlin/bot/tafs/app/views/BriefView.kt").readText()
     for ((name, text) in listOf("AppModel's brief" to section, "BriefRoutes" to routes, "BriefView" to view)) {
@@ -313,47 +315,56 @@ class BriefTest {
     assertTrue("each with Coach's pick and its why", all.decisions.all { it.recommended != null })
   }
 
-  // MARK: A mission's log
+  // MARK: A mission's log: the one the tafs list opens (MissionLogView), from Done's Evidence
 
-  /** A mission's log reads `{at, by, kind, words, evidence, value?}`; a removed taf's entry stays, marked. */
+  /** A page reads `{items, before}` leniently; what says nothing is left out, and a removed taf's entry stays, marked. */
   @Test fun theLogReadsItsItemsAndKeepsARemovedTafsEntries() {
-    val log = MissionLog.parse(
-      """{"items":[{"at":"2026-11-14T07:02:00+01:00","by":"taf","kind":"delivered","words":"12 bills sorted.","evidence":[{"kind":"run","id":"r1","words":"run"},{"kind":"x"}],"value":"€4,120 sorted"},
-                {"at":"2026-11-13T09:12:00+01:00","by":"taf","kind":"delivered","words":"3 quotes drafted.","removed":true},{"words":""}],
+    val page = KiffClient.json.decodeFromString(
+      MissionLogPage.serializer(),
+      """{"items":[{"id":"l2","at":"2026-11-14T06:02:00Z","by":{"kind":"taf","name":"Bill pay"},"kind":"delivered","words":"12 bills sorted.",
+                   "evidence":[{"kind":"run","id":"r1","words":"run"},{"kind":"hold","id":"h1"}],"value":"€4,120 sorted"},
+                  {"id":"l1","at":"2026-11-13T08:12:00Z","by":{"kind":"taf"},"kind":"delivered","words":"3 quotes drafted.","removed":true},{"id":"l0","words":""}],
        "before":"c1"}""",
     )
-    assertEquals(2, log.items.size)
-    assertEquals(listOf("run"), log.items[0].evidence.map { it.words })
-    assertEquals("€4,120 sorted", log.items[0].value)
-    assertTrue(log.items[1].removed)
-    assertEquals("c1", log.before)
-    assertTrue(SampleBrief.log().items.any { it.removed })
+    val drawn = MissionLogs.drawn(listOf(page))
+    assertEquals(listOf("l2", "l1"), drawn.map { it.id })
+    assertEquals("tafs cloud's words, else the evidence's kind", listOf("run", "hold"), drawn[0].evidence.map { MissionLogs.evidenceWords(it) })
+    assertEquals("€4,120 sorted", drawn[0].value)
+    assertTrue(drawn[1].removed)
+    assertNull("a removed taf has no name", MissionLogs.byName(drawn[1]))
+    assertEquals("c1", page.before)
   }
 
-  /** The log as tafs cloud serves it: `{items, before?}`, each item `{id, at, by: {kind, name?}, kind, words, evidence: [{kind, id}], removed?}`. */
-  @Test fun theLogReadsTafsCloudsShape() {
-    val log = MissionLog.parse(
-      """{"items":[
-        {"id":"log_r2","at":"2026-11-16T07:10:00Z","by":{"kind":"taf","name":"Bill pay"},"kind":"delivered","words":"6 done · 1 held for you","evidence":[{"kind":"run","id":"r2"},{"kind":"item","id":"inv_0412"}]},
-        {"id":"log_r1","at":"2026-11-16T06:10:00Z","by":{"kind":"taf"},"kind":"delivered","words":"3 done","evidence":[{"kind":"run","id":"r1"}],"removed":true},
-        {"id":"log_n1","at":"2026-11-16T06:00:00Z","by":{"kind":"lead"},"kind":"note","words":"Started the month's close.","evidence":[]}
-      ],"before":"log_n1"}""",
-    )
-    assertEquals(listOf("log_r2", "log_r1", "log_n1"), log.items.map { it.key })
-    assertEquals("a removed taf has no name; the lead is Coach", listOf("Bill pay", Words.NeedsYou.aTaf, Words.Coach.title), log.items.map { it.byWords })
-    assertEquals(listOf(false, true, false), log.items.map { it.removed })
-    assertTrue("refs only, never shown as data", log.items[0].evidence.isEmpty())
-    assertEquals("log_n1", log.before)
+  /** The sample's log, for the screenshots' Evidence: one page of the same shape, newest first, a removed taf's entry kept. */
+  @Test fun theSamplesLogIsAPageOfTheMissionsLog() = runTest {
+    val log = SampleBrief.log()
+    assertEquals(5, MissionLogs.drawn(listOf(log)).size)
+    assertTrue(log.items.any { it.removed })
+    assertEquals(listOf("Coach", "Bill pay → Refunds", "Bill pay", "You", "Quotes"), log.items.map { MissionLogs.byName(it) })
+    assertNull("one page, no more", log.before)
+    val m = testModel()
+    assertNull("the sample walk has no log", m.missionLog(SampleBrief.MONEY))
+    m.showBriefForScreenshots()
+    assertEquals(log, m.missionLog(SampleBrief.MONEY))
+    assertNull(m.missionLog(SampleBrief.MONEY, before = "s1"))
   }
 
-  @Test fun theLogIsReadFromTafsCloudAndItsDaysKeepItsOrder() = runTest {
+  @Test fun doneOpensTheMissionsOwnLogByItsId() = runTest {
     reads()
-    transport.answer("GET /v1/missions/m 1/log", 200, """{"items":[{"at":"2026-11-14T07:10:00+01:00","by":"taf","words":"a"},{"at":"2026-11-14T07:00:00+01:00","by":"taf","words":"b"}]}""")
+    transport.answer("GET /v1/missions/m 1/log", 200, """{"items":[{"id":"a","at":"2026-11-14T06:10:00Z","by":{"kind":"taf","name":"Bill pay"},"words":"a"}]}""")
     val m = model()
-    val log = m.missionLog("m 1")!!
+    assertEquals(listOf("a"), m.missionLog("m 1")!!.items.map { it.id })
     assertTrue(transport.requestsTo("GET /v1/missions/m 1/log").single().url.endsWith("/v1/missions/m%201/log"))
-    assertEquals(listOf(listOf("a", "b")), bot.tafs.app.views.logDays(log.items).map { (_, items) -> items.map { it.words } })
-    assertNull("a log that can't be read is none", m.missionLog("gone"))
+    assertNull("a log that can't be read is none: the view offers Try again", m.missionLog("gone"))
+    val view = File("src/main/kotlin/bot/tafs/app/views/BriefView.kt").readText()
+    assertTrue("one log view, the tafs list's", view.contains("MissionLogView(HomeLabelMission(id = shownLog[0], name = shownLog[1])"))
+    assertFalse(view.contains("fun MissionLogView"))
+  }
+
+  @Test fun theBriefsLabelsCarryTheirMission() {
+    val label = brief("""{"labels":[{"id":"money","name":"Money","mission":{"id":"m_1","name":"Money","goal":"Run the money side"}},{"id":"ops","name":"Ops","mission":{"name":"x"}}]}""").labels
+    assertEquals("m_1", label[0].mission?.id)
+    assertNull("a mission with no id is none", label[1].mission)
   }
 
   // MARK: Alerts

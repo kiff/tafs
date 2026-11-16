@@ -156,6 +156,7 @@ data class Brief(
       count = c.int("count") ?: 0,
       waiting = c.int("waiting") ?: if (c.bool("waiting") == true) 1 else 0,
       headline = c.obj("headline")?.text("words")?.let { HomeHeadline(it) },
+      mission = c.obj("mission")?.let { m -> HomeLabelMission(m.text("id").orEmpty(), m.text("name").orEmpty(), m.text("goal")) }?.takeIf { it.id.isNotEmpty() },
     )
 
     private fun briefWords(c: JsonObject) = BriefWords(
@@ -193,64 +194,6 @@ data class BriefWords(
   val meanwhileShown: String get() = meanwhile.ifEmpty { Words.Brief.meanwhile }
   val evidenceShown: String get() = evidence.ifEmpty { Words.Brief.evidence }
   val urgentShown: String get() = urgent.ifEmpty { Words.Brief.urgent }
-}
-
-/**
- * A mission's log (design v2.1 §6): read only, newest first. Each entry says when, by whom (a taf, the lead Coach, or the person),
- * its kind and one or two sentences, with evidence and a value when there is one. A removed taf's entries stay, marked removed.
- */
-data class MissionLog(val items: List<Item> = emptyList(), val before: String? = null) {
-  data class Evidence(val kind: String = "", val id: String = "", val words: String = "")
-
-  data class Item(
-    val at: String = "",
-    val by: String = "",
-    val kind: String = "",
-    val words: String = "",
-    /** The kind in the person's words ("delivered", "handed", "stuck", "decided", "note"). */
-    val kindWords: String = "",
-    /** Who wrote it, or who handed it on to whom ("Bills in → Payouts"). */
-    val byWords: String = "",
-    val evidence: List<Evidence> = emptyList(),
-    val value: String? = null,
-    val removed: Boolean = false,
-    /** tafs cloud's id for the entry, when it sends one. */
-    val serverId: String? = null,
-  ) {
-    val key: String get() = serverId ?: "$at|$by|$words"
-  }
-
-  companion object {
-    fun parse(raw: String): MissionLog {
-      val c = KiffClient.json.parseToJsonElement(raw) as? JsonObject ?: throw IllegalArgumentException("log")
-      return MissionLog(c.objects("items").map(::item).filter { it.words.isNotEmpty() }, c.text("before"))
-    }
-
-    private fun item(c: JsonObject): Item {
-      var by = c.text("by").orEmpty()
-      var byWords = c.text("by_words").orEmpty()
-      // tafs cloud sends `by` as an object: the taf by its name (none once it's removed), the mission's lead, or the person.
-      val who = c.obj("by")
-      if (by.isEmpty() && who != null) {
-        by = who.text("kind").orEmpty()
-        if (byWords.isEmpty()) {
-          val name = who.text("name")
-          byWords = name ?: when (by) {
-            "lead" -> Words.Coach.title
-            "person" -> Words.Common.you
-            else -> Words.NeedsYou.aTaf
-          }
-        }
-      }
-      return Item(
-        at = c.text("at").orEmpty(), by = by, kind = c.text("kind").orEmpty(), words = c.text("words").orEmpty(),
-        kindWords = c.text("kind_words").orEmpty(), byWords = byWords,
-        evidence = c.objects("evidence").map { Evidence(it.text("kind").orEmpty(), it.text("id").orEmpty(), it.text("words").orEmpty()) }
-          .filter { it.words.isNotEmpty() },
-        value = c.text("value"), removed = c.bool("removed") ?: false, serverId = c.text("id"),
-      )
-    }
-  }
 }
 
 /** A line of text, trimmed; none when absent, blank or of another shape. */

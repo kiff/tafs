@@ -227,7 +227,6 @@
     <string name="brief_decisions">Entscheidungen</string>
     <string name="brief_done">Erledigt seit dem letzten Briefing</string>
     <string name="brief_evidence">Belege</string>
-    <string name="brief_log_unread">Der Verlauf der Mission konnte nicht gelesen werden.</string>
     <string name="brief_meanwhile">Inzwischen:</string>
     <string name="brief_next_move">Nächster Schritt</string>
     <string name="brief_recommends">Coach empfiehlt</string>
@@ -1322,6 +1321,9 @@
         <item quantity="one">%2$s · %1$s Stopp</item>
         <item quantity="other">%2$s · %1$s Stopps</item>
     </plurals>
+    <string name="mission_log">Protokoll</string>
+    <string name="mission_read_only">Nur lesen · neueste zuerst</string>
+    <string name="mission_removed">entfernt</string>
     <string name="needs_you_a_taf">Ein taf</string>
     <string name="needs_you_allow_from_now_on">Ab jetzt erlauben</string>
     <string name="needs_you_allow_not_offered">Diese Änderung ist nicht die angebotene.</string>

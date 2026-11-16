@@ -3,7 +3,10 @@ package bot.tafs.app.model
 import bot.tafs.app.kiff.Brief
 import bot.tafs.app.kiff.BriefWords
 import bot.tafs.app.kiff.HomeLabel
-import bot.tafs.app.kiff.MissionLog
+import bot.tafs.app.kiff.MissionLogBy
+import bot.tafs.app.kiff.MissionLogEvidence
+import bot.tafs.app.kiff.MissionLogItem
+import bot.tafs.app.kiff.MissionLogPage
 
 /**
  * The sample's brief (Missions design v2.1, the validated "Money" mockups): a morning brief over the sample's own tafs, so the store's
@@ -81,28 +84,28 @@ object SampleBrief {
     )
   }
 
-  /** The sample mission's log, newest first, with a removed taf's entry greyed and marked. */
-  fun log(): MissionLog = MissionLog(
+  /** The sample mission's log, as tafs cloud sends a page of it: newest first, with a removed taf's entry greyed and marked. */
+  fun log(): MissionLogPage = MissionLogPage(
     listOf(
-      MissionLog.Item(
-        "2026-11-14T07:10:00+01:00", "coach", "stuck", "Bill pay didn't run at 07:00: its bank sign-in needs you.", "stuck", "Coach",
-        listOf(MissionLog.Evidence("run", "r1", "run"), MissionLog.Evidence("hold", "h1", "hold")),
+      MissionLogItem(
+        "s5", "2026-11-14T06:10:00Z", MissionLogBy("lead"), "Coach", "stuck", "stuck", "Bill pay didn't run at 07:00: its bank sign-in needs you.",
+        listOf(MissionLogEvidence("run", "r1", "run"), MissionLogEvidence("hold", "h1", "hold")),
       ),
-      MissionLog.Item(
-        "2026-11-14T07:03:00+01:00", "taf", "handed", "Bill 0412, for payment. A reference, not its data.", "handed", "Bill pay → Refunds",
-        listOf(MissionLog.Evidence("item", "0412", "bill 0412")),
+      MissionLogItem(
+        "s4", "2026-11-14T06:03:00Z", MissionLogBy("taf", "Bill pay"), "Bill pay → Refunds", "handed", "handed", "Bill 0412, for payment. A reference, not its data.",
+        listOf(MissionLogEvidence("item", "0412", "bill 0412")),
       ),
-      MissionLog.Item(
-        "2026-11-14T07:02:00+01:00", "taf", "delivered", "12 bills sorted, 2 didn't match their order.", "delivered", "Bill pay",
-        listOf(MissionLog.Evidence("run", "r2", "run"), MissionLog.Evidence("record", "rec", "12 record lines")), value = "€4,120 sorted",
+      MissionLogItem(
+        "s3", "2026-11-14T06:02:00Z", MissionLogBy("taf", "Bill pay"), null, "delivered", "delivered", "12 bills sorted, 2 didn't match their order.",
+        listOf(MissionLogEvidence("run", "r2", "run"), MissionLogEvidence("record", "rec", "12 record lines")), value = "€4,120 sorted",
       ),
-      MissionLog.Item(
-        "2026-11-13T18:28:00+01:00", "you", "decided", "Sent the reminder to Atelier Dubois.", "decided", "You",
-        listOf(MissionLog.Evidence("item", "0142", "invoice 0142"), MissionLog.Evidence("hold", "h2", "hold")),
+      MissionLogItem(
+        "s2", "2026-11-13T17:28:00Z", MissionLogBy("person"), "You", "decided", "decided", "Sent the reminder to Atelier Dubois.",
+        listOf(MissionLogEvidence("item", "0142", "invoice 0142"), MissionLogEvidence("hold", "h2", "hold")),
       ),
-      MissionLog.Item(
-        "2026-11-13T09:12:00+01:00", "taf", "delivered", "3 quotes drafted for new clients.", "delivered", "Quotes",
-        listOf(MissionLog.Evidence("run", "r3", "run")), removed = true,
+      MissionLogItem(
+        "s1", "2026-11-13T08:12:00Z", MissionLogBy("taf"), "Quotes", "delivered", "delivered", "3 quotes drafted for new clients.",
+        listOf(MissionLogEvidence("run", "r3", "run")), removed = true,
       ),
     ),
   )

@@ -241,7 +241,6 @@
     <string name="brief_decisions">Decyzje</string>
     <string name="brief_done">Gotowe od ostatniego przeglądu</string>
     <string name="brief_evidence">Dowody</string>
-    <string name="brief_log_unread">Nie udało się odczytać historii misji.</string>
     <string name="brief_meanwhile">W międzyczasie:</string>
     <string name="brief_next_move">Następny krok</string>
     <string name="brief_recommends">Coach poleca</string>
@@ -1422,6 +1421,9 @@
         <item quantity="many">%2$s · %1$s pozycji</item>
         <item quantity="other">%2$s · %1$s pozycji</item>
     </plurals>
+    <string name="mission_log">Dziennik</string>
+    <string name="mission_read_only">Tylko do odczytu · najnowsze najpierw</string>
+    <string name="mission_removed">usunięty</string>
     <string name="needs_you_a_taf">Taf</string>
     <string name="needs_you_allow_from_now_on">Zezwalaj od teraz</string>
     <string name="needs_you_allow_not_offered">Ta zmiana nie jest tą, którą zaproponowano.</string>

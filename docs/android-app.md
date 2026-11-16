@@ -94,7 +94,7 @@ person's language.
 
 ## Labels
 
-Missions v2.1 §3 (a draft until tafs cloud serves labels): Coach-managed chips on the flat tafs list. The app only filters by
+Missions v2.1 §3: Coach-managed chips on the flat tafs list. The app only filters by
 them; tafs cloud lists them, counts them and words the filtered headline.
 
 - **What Home sends** ([labels.md](labels.md), "What the apps get"): `labels: [{id, name, color, count, waiting,
@@ -109,6 +109,23 @@ them; tafs cloud lists them, counts them and words the filtered headline.
   Money"), else the label's name (`labelHeadline`). The tafs still being set up and the other agents aren't shown.
 - **On each row:** its labels by name, at most three, under its line (`LabelTags`).
 - **"All"** is tafs cloud's word (`labels_words.all`), else the app's (`home.labels_all`).
+- **A mission's row** (§3, a draft until tafs cloud sends it): filtered to a label that is a mission's (`labels[].mission:
+  {id, name, goal}`), the list shows its goal in the person's words and **Log** (`MissionRow`).
+
+## A mission's log
+
+Missions v2.1 §6, a draft until tafs cloud's log route and its words land: **Log** opens `GET /v1/missions/{id}/log` over the
+tafs list (`MissionLogView`), read only, newest first, a page at a time (`before`), More for the next.
+
+- **Each entry**, drawn as tafs cloud words it (`MissionLogItem`): who wrote it (a taf by name; the lead and the person by
+  tafs cloud's words), its kind in tafs cloud's words (`kind_words`), coloured by kind (delivered green, handed blue, stuck
+  amber, decided ink, a note grey), its sentence, what it refers to (tafs cloud's words for each, else its kind: "run",
+  "hold") and its value ("€4,120 sorted"). The time is the phone's own ("14 Nov, 07:10").
+- **A removed taf's entries stay**, greyed and marked `mission.removed`, so the history is whole.
+- **Nothing in it acts:** it reads only. An entry with no words isn't drawn, and a page read twice shows once
+  (`MissionLogs.drawn`, `MissionLogTest`).
+- **Ask Coach** under the title, for whoever may use Coach: Coach opens with the mission's name in the message box, and
+  nothing is sent (`AppModel.askCoachAboutMission`). Your brief's Evidence opens this same view.
 
 ## Your brief
 
@@ -144,11 +161,12 @@ decision, nothing done and no next move is no brief (`AppModel.loadBrief`, read 
   `kind` is `brief` or `urgent` opens the brief (`AlertPayload.BRIEF`) unless it names where it opens (`open`), sounds as its
   `level` says (the existing channels), and with the app open reads the brief again. A time-sensitive channel of its own is a
   follow-up.
-- **A mission's log** (`GET /v1/missions/{id}/log`): read only, newest first, by day; each entry's taf, Coach or You, its kind
-  in colour and word, its evidence and value; a removed taf's entries greyed and marked. Ask Coach opens Coach on the mission.
+- **A mission's log:** Done's Evidence opens the same `MissionLogView` the tafs list's mission row opens (A mission's log,
+  above), by the log id Done carries (`log`) under the mission's name. Ask Coach there opens Coach with the mission's name in
+  the message box; nothing is sent.
 - **The sample's brief** (`SampleBrief`, English stand-ins for tafs cloud's words) shows only for the store's screenshots: a debug
-  build opened with `--ez screenshots true --ez brief true` (and `--es briefLabel money`, `--ez briefUrgent true`). The
-  sample walk keeps Needs you.
+  build opened with `--ez screenshots true --ez brief true` (and `--es briefLabel money`, `--ez briefUrgent true`), with its
+  mission's log as one page (`SampleBrief.log`, `AppModel.missionLog`). The sample walk keeps Needs you, and has no log.
 
 ## Building and testing
 

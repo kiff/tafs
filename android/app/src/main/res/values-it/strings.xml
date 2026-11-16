@@ -227,7 +227,6 @@
     <string name="brief_decisions">Decisioni</string>
     <string name="brief_done">Fatto dall\'ultimo riepilogo</string>
     <string name="brief_evidence">Prove</string>
-    <string name="brief_log_unread">Impossibile leggere la cronologia della missione.</string>
     <string name="brief_meanwhile">Nel frattempo:</string>
     <string name="brief_next_move">Prossima mossa</string>
     <string name="brief_recommends">Coach consiglia</string>
@@ -1322,6 +1321,9 @@
         <item quantity="one">%2$s · %1$s tappa</item>
         <item quantity="other">%2$s · %1$s tappe</item>
     </plurals>
+    <string name="mission_log">Registro</string>
+    <string name="mission_read_only">Sola lettura · prima i più recenti</string>
+    <string name="mission_removed">rimosso</string>
     <string name="needs_you_a_taf">Un taf</string>
     <string name="needs_you_allow_from_now_on">Consenti d\'ora in poi</string>
     <string name="needs_you_allow_not_offered">Questa modifica non è quella proposta.</string>

@@ -447,8 +447,6 @@ enum Words {
         static var done: String { Words.line("brief.done") }
         /// Evidence
         static var evidence: String { Words.line("brief.evidence") }
-        /// The mission's history couldn't be read.
-        static var logUnread: String { Words.line("brief.log_unread") }
         /// Meanwhile:
         static var meanwhile: String { Words.line("brief.meanwhile") }
         /// Next move
@@ -2535,6 +2533,14 @@ enum Words {
         static var why: String { Words.line("knob.why") }
         /// {name} · {count} stops
         static func withStops(count: Int, name: String) -> String { Words.count("knob.with_stops", count, name) }
+    }
+    enum Mission {
+        /// Log
+        static var log: String { Words.line("mission.log") }
+        /// Read only · newest first
+        static var readOnly: String { Words.line("mission.read_only") }
+        /// removed
+        static var removed: String { Words.line("mission.removed") }
     }
     enum NeedsYou {
         /// A taf

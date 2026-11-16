@@ -2,44 +2,36 @@ package bot.tafs.app.views
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
@@ -63,16 +55,12 @@ import bot.tafs.app.design.scaled
 import bot.tafs.app.design.tapping
 import bot.tafs.app.kiff.Brief
 import bot.tafs.app.kiff.BriefWords
-import bot.tafs.app.kiff.MissionLog
+import bot.tafs.app.kiff.HomeLabelMission
+import bot.tafs.app.kiff.MissionLogPage
 import bot.tafs.app.model.Answer
 import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.Taf
 import bot.tafs.app.model.Words
-import bot.tafs.app.model.dayTitle
-import bot.tafs.app.model.localDate
-import bot.tafs.app.model.shortTime
-import java.time.Instant
-import java.time.OffsetDateTime
 import kotlinx.coroutines.launch
 
 /**
@@ -89,7 +77,8 @@ class BriefActions(
   val dismissNextMove: () -> Unit,
   val openNeedsYou: () -> Unit,
   val close: () -> Unit,
-  val missionLog: suspend (String) -> MissionLog?,
+  /** A page of a mission's log ([MissionLogView]). */
+  val missionLog: suspend (String, String?) -> MissionLogPage?,
   /** Ask Coach about a mission, from its log; null where Coach isn't there. */
   val askCoach: ((String) -> Unit)?,
   val refresh: suspend () -> Unit,
@@ -117,7 +106,8 @@ fun BriefTab(state: AppState, actions: BriefActions, onAnswerHold: suspend (Held
     }
     shownLog != null -> {
       BackHandler { log = null }
-      MissionLogView(shownLog[0], shownLog[1], brief.words, actions) { log = null }
+      // The mission's own log, as from its row on the tafs list: by the log id Done carries, under the mission's name.
+      MissionLogView(HomeLabelMission(id = shownLog[0], name = shownLog[1]), load = actions.missionLog, onBack = { log = null }, askCoach = actions.askCoach)
     }
     else -> BriefScreen(state, brief, actions) { done -> done.log?.let { log = listOf(it, done.mission.orEmpty()) } }
   }
@@ -382,101 +372,6 @@ private fun Rest(state: AppState, brief: Brief, actions: BriefActions) {
         count?.let { Text(it, style = scaled(13, FontWeight.SemiBold, if (rest == null) Theme.ink else Theme.dim)) }
       }
       Text("›", style = scaled(18, FontWeight.SemiBold, Theme.dim))
-    }
-  }
-}
-
-// MARK: A mission's log
-
-private sealed interface LogRead {
-  data object Loading : LogRead
-  data object Unread : LogRead
-  data class Read(val log: MissionLog) : LogRead
-}
-
-/**
- * A mission's log (design v2.1 §6): read only, newest first, by day. Each entry says when, by whom, its kind and its words, with its
- * evidence and value; a removed taf's entries stay, greyed and marked.
- */
-@Composable
-private fun MissionLogView(mission: String, title: String, words: BriefWords, actions: BriefActions, onBack: () -> Unit) {
-  val read by produceState<LogRead>(LogRead.Loading, mission) { value = actions.missionLog(mission)?.let { LogRead.Read(it) } ?: LogRead.Unread }
-  Column(Modifier.fillMaxSize().testTag("mission.log")) {
-    BackToBrief(words, onBack)
-    Column(
-      Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 4.dp),
-      verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-      if (title.isNotEmpty()) Text(title, style = scaled(30, FontWeight.Bold, Theme.ink, display = true))
-      actions.askCoach?.let { ask -> OutlineButton(Words.Coach.ask, { ask(title) }, Modifier.fillMaxWidth(), color = Theme.blue) }
-      when (val r = read) {
-        LogRead.Loading -> CircularProgressIndicator(Modifier.size(24.dp).align(Alignment.CenterHorizontally), color = Theme.amber, strokeWidth = 2.dp)
-        LogRead.Unread -> Text(Words.Brief.logUnread, style = scaled(14, color = Theme.soft))
-        is LogRead.Read -> logDays(r.log.items).forEach { (day, items) ->
-          Eyebrow(day)
-          items.forEach { LogRow(it) }
-        }
-      }
-    }
-  }
-}
-
-/** When an entry was, as tafs cloud writes it (an ISO time, with its offset or Z); null for anything else. */
-internal fun logTime(at: String): Instant? =
-  runCatching { OffsetDateTime.parse(at).toInstant() }.getOrNull() ?: runCatching { Instant.parse(at) }.getOrNull()
-
-/** The log's entries by day, in the order sent (newest first). */
-internal fun logDays(items: List<MissionLog.Item>, now: Instant = Instant.now()): List<Pair<String, List<MissionLog.Item>>> {
-  val out = mutableListOf<Pair<String, MutableList<MissionLog.Item>>>()
-  for (item in items) {
-    val title = dayTitle(localDate(logTime(item.at) ?: now))
-    if (out.lastOrNull()?.first == title) out.last().second += item else out += title to mutableListOf(item)
-  }
-  return out
-}
-
-/** One log entry: who, its kind as a coloured word, the time, its words, its evidence and value. */
-@Composable
-private fun LogRow(item: MissionLog.Item) {
-  val tint = when (item.kind) {
-    "delivered" -> Theme.ok
-    "handed" -> Theme.blue
-    "stuck" -> Theme.amber
-    "decided" -> Theme.ink
-    else -> Theme.dim
-  }
-  val shape = RoundedCornerShape(12.dp)
-  Row(
-    Modifier.fillMaxWidth().height(IntrinsicSize.Min).alpha(if (item.removed) 0.5f else 1f).clip(shape).background(Theme.panel)
-      .border(1.dp, Theme.line, shape),
-  ) {
-    Box(Modifier.width(3.dp).fillMaxHeight().background(if (item.removed) Theme.line else tint))
-    Column(Modifier.weight(1f).padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-      Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(item.byWords.ifEmpty { item.by }, style = scaled(14, FontWeight.SemiBold, Theme.ink))
-        if (item.kindWords.isNotEmpty()) {
-          Text(
-            item.kindWords,
-            style = scaled(11, FontWeight.Medium, tint),
-            modifier = Modifier.clip(CircleShape).background(tint.copy(alpha = 0.12f)).padding(horizontal = 6.dp, vertical = 2.dp),
-          )
-        }
-        Box(Modifier.weight(1f))
-        logTime(item.at)?.let { Text(shortTime(it), style = scaled(12, color = Theme.dim, mono = true)) }
-      }
-      Text(item.words, style = scaled(14, color = Theme.ink))
-      if (item.evidence.isNotEmpty() || item.value != null) {
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-          item.evidence.forEach { e ->
-            Text(
-              e.words,
-              style = scaled(11, color = Theme.blue, mono = true),
-              modifier = Modifier.clip(CircleShape).background(Theme.blue.copy(alpha = 0.08f)).padding(horizontal = 6.dp, vertical = 2.dp),
-            )
-          }
-          item.value?.let { Text(it, style = scaled(12, FontWeight.SemiBold, Theme.ink)) }
-        }
-      }
     }
   }
 }
