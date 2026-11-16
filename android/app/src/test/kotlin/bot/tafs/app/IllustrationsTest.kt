@@ -36,7 +36,7 @@ import org.robolectric.annotation.GraphicsMode
  * The illustrations (Illustrations.kt), each drawn on the ground in light and in dark, so one that no longer draws fails here.
  * Each is drawn at its board's own pixels (its frame's width at 2x), with 20 px of ground around it, so a picture can be laid
  * beside its board. The pictures are written only when asked (`-PphoneScreenshots`), into the directory the
- * `tafs.illustrations` property names (the scratchpad's illus/ by default), never into the repository.
+ * `tafs.illustrations` property names (the module's build/illustrations by default), never into the repository.
  */
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
@@ -67,7 +67,7 @@ class IllustrationsTest(private val board: String, private val dark: Boolean) {
   }
 
   companion object {
-    private const val OUT = "/tmp/claude-0/-home-user/a0482b3f-d3c9-5118-9105-3ed43f306b5b/scratchpad/illus"
+    private const val OUT = "build/illustrations"
 
     /** Each board's art and its frame's width in the board's pixels. */
     private val ARTS: Map<String, Pair<Int, @Composable (Modifier) -> Unit>> = mapOf(
