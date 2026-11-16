@@ -15,6 +15,11 @@ this page says what is there now and what each step adds.
   away (`forget`). Without a phone it says so (`watch.phone_not_reachable`, Try again); with the phone signed out,
   `watch.sign_in_on_phone`; with an answer it can't draw, **Open on phone**, never a guess (`WatchModelTest`).
 - **Open on phone** opens `tafs://open/needs-you` on the phone (`RemoteActivityHelper`).
+- **The all-clear** (the owner's illustration board 12): when nothing waits, no count and no held call
+  (`NeedsYouRead.allClear`), Needs you shows a green disc with a white check above its own words. It's drawn as shapes in
+  `Illustrations.kt` (`AllClearIllustration`), never an image file, and has no text in it. The words under it are the
+  screen's, in the watch's language. The disc is 0.38 of the screen's width, in the board's green (`#2E9E5B`), and the check's
+  points and stroke are shares of the disc, measured from the board. It's hidden from TalkBack, which reads the words.
 - **`DataLayerPhone`** finds the reachable phone that declares `tafs_phone_relay` and sends it a live request, 10 s at most.
 - **`android/watchlink`**, the messages the watch and the phone exchange, in plain Kotlin that both apps build on, with its
   tests on the JVM (`WatchLinkTest`).
@@ -109,10 +114,11 @@ counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the tw
 **The store screenshots** (`WearStoreScreenshots`): the watch's real screen, drawn on the JVM (Robolectric and Roborazzi,
 test-only) in each of the 8 languages, round, 384 × 384 px, the smallest size Play takes for Wear OS. They're filled with the
 phone app's own sample tafs and words (`app/strings/<lang>/sample.json`, `taf.json`) and the watch's own strings, with
-nothing drawn over them. The amount is written as the phone sends it (`Money.formatted`: a whole amount has no cents). Three per language, into `android/play/wear-screenshots/<locale>/`:
+nothing drawn over them. The amount is written as the phone sends it (`Money.formatted`: a whole amount has no cents). Four per language, into `android/play/wear-screenshots/<locale>/`:
 - `1-needs-you`: a held refund, with Refuse and Approve on your phone;
 - `2-refused`: what the wrist says once it's refused;
 - `3-halt-all`: Halt all, asked once more.
+- `4-all-clear`: nothing needs you, with the all-clear above the words.
 
 They're redrawn only when asked:
 

@@ -1,0 +1,1 @@
+- **Wear OS: an all-clear when nothing needs you.** Needs you shows a green disc with a white check above its words when nothing waits, the owner's illustration for the watch, drawn as shapes with no text (docs/watch-wear.md).

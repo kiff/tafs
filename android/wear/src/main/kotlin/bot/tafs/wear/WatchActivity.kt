@@ -156,6 +156,8 @@ internal fun WatchScreen(
           }
         }
         item { ListHeader { Text(Words.NeedsYou.title) } }
+        // Nothing waits: the owner's all-clear (board 12) above Needs you's own words.
+        if (shown.needsYou.allClear) item { AllClearIllustration() }
         line(shown.needsYou.words)
         for (call in shown.needsYou.calls) item { HeldCallCard(call, act) }
         shown.tafs?.let { read ->

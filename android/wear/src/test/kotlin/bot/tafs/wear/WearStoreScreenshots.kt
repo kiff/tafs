@@ -102,10 +102,19 @@ class WearStoreScreenshots(private val language: String, private val playLocale:
 
   /** Halt all, asked once more on the wrist. */
   @Test fun haltAll() = shot("3-halt-all") {
-    // Nothing needs you here, so the list is Ask Coach 0, Needs you 1, its line 2, Your tafs 3, two tafs 4-5, then Halt all 6.
+    // Nothing needs you here, so the list is Ask Coach 0, Needs you 1, the all-clear 2, its line 3, Your tafs 4, two tafs 5-6,
+    // then Halt all 7.
     WatchScreen(
       read().copy(needsYou = WatchModel.NeedsYouRead(0, Res.s(R.string.needs_you_nothing), emptyList())), null, confirmingHaltAll = true,
-      talk = null, act = actions, list = rememberScalingLazyListState(initialCenterItemIndex = 6),
+      talk = null, act = actions, list = rememberScalingLazyListState(initialCenterItemIndex = 7),
+    )
+  }
+
+  /** Nothing needs you: the owner's all-clear (board 12) above Needs you's words. The list is Ask Coach 0, Needs you 1, the all-clear 2. */
+  @Test fun allClear() = shot("4-all-clear") {
+    WatchScreen(
+      read().copy(needsYou = WatchModel.NeedsYouRead(0, Res.s(R.string.needs_you_nothing), emptyList())), null, confirmingHaltAll = false,
+      talk = null, act = actions, list = rememberScalingLazyListState(initialCenterItemIndex = 2),
     )
   }
 
