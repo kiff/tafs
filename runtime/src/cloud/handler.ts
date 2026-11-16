@@ -36,7 +36,7 @@ import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAp
 import { calendarOf, dateOf, eventsOf, MAX_DAYS, plusDays } from "./calendar.js";
 
 /** A version's dial: its triggers, what a busy taf does, and where results go. */
-import { type AccountConnection, type AppGuide, accountConnections, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections } from "./connections.js";
+import { type AccountConnection, type AppGuide, accountConnections, checkAppOf, connectionAgents, connectionLines, type EndedConnections, endConnections, heldGuides, leftoverAgents, removedAgent, withConnections } from "./connections.js";
 import { COACH_CARDS, COACH_LINES, coachCardsDraft, coachConnect, coachToolsPlan, coachToolsStep, type CoachCall, type CoachStore, keys as coachKeys, newRef, parseNote, refTenant, Rich, serveMCP, type Task, TASK_KEPT_MS, type ToolAnswer, ToolRefusal } from "./coach.js";
 import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_WAIT_GRANT, driveWait, driveWaitKey, DriveError, drivePaused, type DriveRecap, driveRecaps, DriveRefusal, driveSteps, driveStream, type DriveTool, endDrive, endSaid, endWhyOf, END_WORDS, pauseDrive, putResult, resumeDrive, startDrive } from "./drive.js";
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
@@ -61,7 +61,7 @@ import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
 import { findLabel, LabelRefusal, labelName, labelsView, readLabels, saveLabels, withLabelChanged, withTafLabels } from "./labels.js";
 import { BusinessRefusal, businessView, readBusiness, saveBusiness } from "./business.js";
 import { MissionRefusal, planMission, readMissions, saveMissions } from "./missions.js";
-import { briefDue, briefLaterKey, briefZoneKey, buildBrief, connectionDecision, type BriefDecisionIn, type DecisionWords, holdDecision, laterOf, putOff, stepDecision } from "./brief.js";
+import { briefDue, briefLaterKey, briefZoneKey, buildBrief, checkDecision, connectionDecision, type BriefDecisionIn, type DecisionWords, holdDecision, laterOf, putOff, stepDecision } from "./brief.js";
 import { logDelivered, logPage, readLog } from "./missionlog.js";
 
 /**
@@ -913,11 +913,12 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
     ]);
     const health = fired ? healthOf(runs, fired, now) : undefined;
     const zone = me.timeZone ?? "UTC";
+    const checkApp = checkAppOf(await checkConnections(event, me, deps, [fired]), taf.kiffAgent);
     const notSent = [...new Set(sent.filter((s) => s.status === "not_sent").map((s) => s.run))];
     const again = deps.doors ? await unsentOf(deps.doors.store, me.tenantID, taf.id, notSent).catch(() => new Set<string>()) : new Set<string>();
     // The taf's own places (delivery.ts): settled on this read (a manager's read acts; a viewer's starts nothing), then shown under each request.
     const own = await ownDeliveries(me.tenantID, taf, runs, deps, now, zone, await managesTaf(event, me, taf, deps).catch(() => false), langOf(event));
-    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, fired: fired ?? [], halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health, deadLines(await deadOf(deps, me.tenantID, taf.id, now), taf.name, langOf(event))), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event), credits), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now) } : {}),
+    return { taf: taf.id, time_zone: zone, summary: summaryOf(runs, { paused: v.status === "paused", unscheduled: taf.unscheduled === true, next: v.next_run, fired: fired ?? [], checkApp, halted: await deps.agents.halted(me.tenantID, taf.id).then((h) => h.halted, () => false) }, zone, now, langOf(event), health, deadLines(await deadOf(deps, me.tenantID, taf.id, now), taf.name, langOf(event))), next_run: v.next_run, ...workOf(runs, zone, now, sent, again, own, langOf(event), credits), skipped: skippedOf(fired ?? [], zone, now, langOf(event)), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, zone, now, checkApp) } : {}),
       ...waitingOf(runs, fired, taf, now, langOf(event)) };
   }
   if (parts.length === 5 && method === "GET" && action === "requests") {
@@ -7080,6 +7081,8 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     Promise.all(tafs.map((t) => deps.agents.runs(me.tenantID, t.id, false, 20).catch(() => undefined))),
     Promise.all(tafs.map((t) => firingsFor(deps, me.tenantID, t))),
   ]);
+  // A check that couldn't read names the app it reads, by its connection's name: planque's list, read only when one did.
+  const checkConns = await checkConnections(event, me, deps, fired);
   const views = await Promise.all(tafs.map((t, i) => view(t, me, deps, undefined, { runs: recent[i] }, langOf(event))));
   // Each taf's open trial, its own entry in the app's menu (kiff/tafs#173). One that can't
   // be read leaves that entry out, never the list.
@@ -7111,7 +7114,7 @@ async function home(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     const state = halts[i] && card.active ? "halted" : stateOf(card, held, v.status === "paused" ? "paused" : "active");
     const runs = recent[i];
     const health = runs && fired[i] ? healthOf(runs, fired[i]!, now) : undefined;
-    const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run, fired: fired[i] ?? [] }, me.timeZone ?? "UTC", now, langOf(event), health, deadLines(dead[i] ?? [], t.name, langOf(event))) : undefined;
+    const work = runs ? summaryOf(runs, { paused: v.status === "paused", halted: halts[i] === true, unscheduled: t.unscheduled === true, next: v.next_run, fired: fired[i] ?? [], checkApp: checkAppOf(checkConns, t.kiffAgent) }, me.timeZone ?? "UTC", now, langOf(event), health, deadLines(dead[i] ?? [], t.name, langOf(event))) : undefined;
     return { ...v, ...(words ? { job_summary: words } : {}), ...(labelsOf.get(t.id)!.length ? { labels: labelsOf.get(t.id) } : {}), ...(trial ? { trial } : {}), ...(lastChange ? { last_change: lastChange } : {}), color: t.color ?? colors.get(t.id) ?? 0, state, waiting: held, card, ...(lights[i]!.length ? { doors: lights[i], avatar_rim: avatarRim(lights[i]!) } : {}), ...(work ? { work } : {}), ...(health ? { health: healthView(health, langOf(event), { billing: me.capabilities.includes("billing.manage") }, me.timeZone ?? "UTC", now) } : {}),
       // The promise is a setting: said even when the runs couldn't be read, so the apps' "Answer within" holds.
       ...(runs ? waitingOf(runs, fired[i], t, now, langOf(event)) : (t.respondWithin ? { promise: { hours: t.respondWithin } } : {})) };
@@ -7407,8 +7410,10 @@ async function briefInputs(event: HTTPEvent, me: KIFFIdentity, deps: Deps, now: 
   // A taf being removed, or one whose removal finished, is gone from the brief with its calls and steps (M7).
   const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent));
   // The account's connections, from planque, for the ones that need signing in again: a list that can't be read adds none.
-  const [recent, labelSet, kept, conns] = await Promise.all([
+  const [recent, fired, labelSet, kept, conns] = await Promise.all([
     Promise.all(tafs.map((t) => deps.agents.runs(me.tenantID, t.id, false, 20).catch(() => [] as Run[]))),
+    // Its schedule's last firings, as Home reads them, for a check that keeps failing: a slow or failed read adds no decision.
+    Promise.all(tafs.map((t) => firingsFor(deps, me.tenantID, t))),
     deps.coach ? readLabels(deps.coach, me.tenantID).catch(() => undefined) : undefined,
     deps.coach ? deps.coach.get(briefLaterKey(me.tenantID, me.subject)).catch(() => undefined) : undefined,
     deps.planqueBase ? accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => []) : [],
@@ -7416,7 +7421,9 @@ async function briefInputs(event: HTTPEvent, me: KIFFIdentity, deps: Deps, now: 
   const known = new Set(labelSet?.labels.map((l) => l.id) ?? []);
   const tafOf = (t: Taf) => ({ id: t.id, name: t.name, labels: (t.labels ?? []).filter((id) => known.has(id)) });
   const dw: DecisionWords = { approve: w.brief_approve, refuse: w.brief_refuse, holdQuestion: w.brief_hold_question, holdMeanwhile: w.brief_hold_meanwhile, stepMeanwhile: w.brief_step_meanwhile,
-    connectionQuestion: w.brief_connection_question, signInAgain: w.brief_sign_in_again, connectionMeanwhile: w.brief_connection_meanwhile };
+    connectionQuestion: w.brief_connection_question, signInAgain: w.brief_sign_in_again, connectionMeanwhile: w.brief_connection_meanwhile,
+    openTaf: w.brief_open_taf, checkMeanwhile: w.brief_check_meanwhile };
+  const zone = me.timeZone ?? "UTC";
   const byAgent = new Map(tafs.map((t) => [t.kiffAgent, t]));
   const decisions: BriefDecisionIn[] = [
     ...kiff.held.flatMap((h) => {
@@ -7431,6 +7438,14 @@ async function briefInputs(event: HTTPEvent, me: KIFFIdentity, deps: Deps, now: 
       const d = t ? connectionDecision(c, tafOf(t), dw) : undefined;
       return d ? [[d.id, d] as const] : [];
     })).values()],
+    // A scheduled check that couldn't read at its last firings in a row (health.ts check_failing, counted across a version
+    // switch, which neither fails nor recovers): the taf finds no new work, so it's the owner's to see now.
+    ...tafs.flatMap((t, i) => {
+      const f = fired[i];
+      if (!f?.length) return [];
+      const r = healthOf(recent[i] ?? [], f, now).reasons.find((x) => x.code === "check_failing");
+      return r ? [checkDecision(tafOf(t), healthLine(r, lang, zone, now, checkAppOf(conns, t.kiffAgent)), r.since, dw)] : [];
+    }),
   ];
   return { lang, w, tafs: tafs.map(tafOf), decisions, labelSet, later: laterOf(kept, now) };
 }
@@ -8958,7 +8973,10 @@ export async function sweepFailingSchedules(deps: Deps): Promise<Array<{ tenant:
       // schedule's run of failures (windows count from its start): one that drops work at every firing
       // would otherwise alert every time.
       const again = dropped ? `#unfinished#${Math.floor((Date.parse(f.last ?? f.since) - Date.parse(f.since)) / DROPPED_AGAIN_MS) || 0}` : "";
-      if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}${again}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
+      // A lone failure said after FAILING_ALONE_MS is said once more when the next firing fails too: the owner told
+      // "it couldn't, once" hears that it's now failing in a row, and then nothing more for that run of failures.
+      const inARow = !dropped && !once && f.firings >= 2 ? "#in-a-row" : "";
+      if (!(await store.once(`${tenant}#schedule-failing#${s.id}#${f.since}${again}${inARow}`, new Date(now.getTime() + FAILING_KEPT_MS)))) continue;
       await tellPhones(deps, tenant, (lang) => failingNotification(taf, s, f, lang));
       told.push({ tenant, schedule: s.id });
     }
@@ -8984,6 +9002,15 @@ const FAILING_KEPT_MS = 30 * 24 * 3600_000;
 
 /** How long Home waits for a taf's firings before it shows the taf without its health. */
 const HEALTH_READ_MS = 1500;
+
+/**
+ * planque's list of the account's connections, read only when some taf's check couldn't read at one of its firings, so its
+ * lines can name the app it reads (checkAppOf). A list that can't be read names none: the lines say "the app".
+ */
+async function checkConnections(event: HTTPEvent, me: KIFFIdentity, deps: Deps, fired: Array<Fired[] | undefined>): Promise<AccountConnection[]> {
+  if (!deps.planqueBase || !fired.some((f) => f?.some((x) => x.outcome === "failed_check"))) return [];
+  return accountConnections(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event)).catch(() => [] as AccountConnection[]);
+}
 
 /**
  * A taf's schedule's last firings, for its health: none for a taf with no schedule, and undefined when the
@@ -9215,6 +9242,8 @@ function failingWords(s: Schedule, failing: NonNullable<Schedule["failing"]>, la
   const w = wordsIn(lang);
   if (s.kind === "once") return s.follow_up ? w.failing_follow_up : w.failing_once;
   if (failing.outcome === "failed_unfinished") return failing.firings > 1 ? w.failing_unfinished_many(failing.firings) : w.failing_unfinished_one;
+  // A check that couldn't read the app started no run: it says so, never that a run couldn't start.
+  if (failing.outcome === "failed_check") return failing.firings > 1 ? w.failing_check_many(failing.firings) : w.failing_check_one;
   return failing.firings > 1 ? w.failing_many(failing.firings) : w.failing_one;
 }
 

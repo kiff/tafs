@@ -3779,6 +3779,30 @@ describe("a schedule whose runs keep failing to start", () => {
     expect(bodyOf(w.pushed[0]!.n)).toBe(FAILING_WORDS.one);
   });
 
+  // "Unanswered emails": its first check failed at its creation, was said alone 6 hours later, and its second, in a row,
+  // two days later, was never said.
+  it("says a check that couldn't read in its own words: two in a row once, and a lone one said after six hours once more when the next fails too", async () => {
+    const { w, deps } = await setUp({ since: SINCE, firings: 2, outcome: "failed_check" });
+    expect(await sweepFailingSchedules(deps)).toHaveLength(1);
+    expect(bodyOf(w.pushed[0]!.n)).toBe("Its scheduled check couldn't read the app 2 times in a row. It tries again at each scheduled time. Open it to see why.");
+    expect(await sweepFailingSchedules(deps)).toEqual([]);
+    expect(w.pushed).toHaveLength(1);
+    {
+      const old = new Date(AT.getTime() - 34 * 3600_000).toISOString();
+      const { w: w2, deps: d2 } = await setUp({ since: old, firings: 1, outcome: "failed_check" });
+      expect(await sweepFailingSchedules(d2)).toHaveLength(1);
+      expect(bodyOf(w2.pushed[0]!.n)).toBe("Its scheduled check couldn't read the app. It tries again at its next time. Open it to see why.");
+      expect(await sweepFailingSchedules(d2)).toEqual([]);
+      // The next firing fails too: said once more, as two in a row, and then nothing for this run of failures.
+      w2.agents.schedules.set(`t_acme|${RAE}`, { ...w2.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: old, firings: 2, outcome: "failed_check" } });
+      expect(await sweepFailingSchedules(d2)).toHaveLength(1);
+      expect(bodyOf(w2.pushed[1]!.n)).toMatch(/^Its scheduled check couldn't read the app 2 times in a row\./);
+      w2.agents.schedules.set(`t_acme|${RAE}`, { ...w2.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: old, firings: 3, outcome: "failed_check" } });
+      expect(await sweepFailingSchedules(d2)).toEqual([]);
+      expect(w2.pushed).toHaveLength(2);
+    }
+  });
+
   it("says a run that stopped partway at once, in its own words: what it was working on won't be tried again", async () => {
     const { w, deps } = await setUp({ since: SINCE, firings: 1, run: "run_1", outcome: "failed_unfinished" });
     expect(await sweepFailingSchedules(deps)).toEqual([{ tenant: "t_acme", schedule: RAE }]);
@@ -3803,13 +3827,13 @@ describe("a schedule whose runs keep failing to start", () => {
       expect(await sweepFailingSchedules(d3)).toEqual([]);
       expect(w3.pushed).toHaveLength(2);
     }
-    // One that couldn't start, or a check that couldn't read, still waits for a second firing, and says so.
-    for (const outcome of ["failed_unworked", "failed_check"]) {
+    // One that couldn't start, or a check that couldn't read, still waits for a second firing, and says so in its own words.
+    for (const [outcome, words] of [["failed_unworked", FAILING_WORDS.many(2)], ["failed_check", wordsIn("en").failing_check_many(2)]] as const) {
       const { w: w2, deps: d2 } = await setUp({ since: SINCE, firings: 1, outcome });
       expect(await sweepFailingSchedules(d2)).toEqual([]);
       w2.agents.schedules.set(`t_acme|${RAE}`, { ...w2.agents.schedules.get(`t_acme|${RAE}`)!, failing: { since: SINCE, firings: 2, outcome } });
       expect(await sweepFailingSchedules(d2)).toHaveLength(1);
-      expect(bodyOf(w2.pushed[0]!.n)).toBe(FAILING_WORDS.many(2));
+      expect(bodyOf(w2.pushed[0]!.n)).toBe(words);
     }
   });
 
@@ -7008,6 +7032,51 @@ describe("GET /v1/brief and Later", () => {
     // planque down: the brief still answers, with no connection in it.
     const down = { ...deps, fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/") ? new Response("", { status: 503 }) : base.fetch!(url, init)) as Deps["fetch"] };
     const r = await handle({ rawPath: "/v1/brief", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_paris" } }, down);
+    expect(r.statusCode).toBe(200);
+    expect(JSON.parse(r.body).decisions).toEqual([]);
+  });
+
+  it("lists a taf whose scheduled check couldn't read twice in a row, across a version switch, as urgent, naming its app; it leaves once a check reads", async () => {
+    const w = world();
+    const at = (iso: string) => ({ due: iso, at: iso });
+    // The mail app answered 400 at both checks (kiff/agents' reason, never shown); a new version went live in between.
+    const vendor400 = { outcome: "failed_check", reason: "the check's read failed: planque: the app answered 400 Bad Request" };
+    w.agents.firings.set(`t_acme|${RAE}`, [
+      { ...at("2026-10-29T08:00:00.000Z"), ...vendor400 },
+      { ...at("2026-10-28T08:00:00.000Z"), outcome: "skipped_switching" },
+      { ...at("2026-10-27T08:00:00.000Z"), ...vendor400 },
+      { ...at("2026-10-26T08:00:00.000Z"), outcome: "quiet" },
+    ]);
+    const conns = [{ agent: "rae", vendor: "Gmail", kind: "vendor_sign_in", status: "connected" }];
+    const base = depsOf(w);
+    const deps = { ...base, coach: memoryCoach(() => w.now), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) =>
+      url.startsWith("https://planque.test/") ? new Response(JSON.stringify({ connections: conns }), { status: 200 }) : base.fetch!(url, init)) as Deps["fetch"] };
+    const get = async (path = "/v1/brief", lang?: string) => JSON.parse((await handle({ rawPath: path, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_paris", ...(lang ? { "accept-language": lang } : {}) } }, deps)).body);
+    // Ana reads in Paris: the first failure was Tue 09:00 there.
+    expect((await get()).decisions).toEqual([{ id: `check:${RAE}`, question: "The scheduled check couldn't read Gmail 2 times in a row, since Tue 09:00",
+      answers: [{ words: "Open the taf", answer: "open", recommended: false }], meanwhile: "Rae finds no new work until its check can read again.", urgent: true,
+      ref: { kind: "check", id: RAE, taf: RAE } }]);
+    expect((await get("/v1/brief", "de")).decisions[0]).toMatchObject({ question: "Die geplante Prüfung konnte Gmail 2-mal hintereinander nicht lesen, seit Di 09:00", answers: [{ words: "Den taf öffnen" }] });
+    // Urgent: it can't be put off.
+    const later = await handle({ rawPath: `/v1/brief/decisions/check:${RAE}/later`, requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana_paris" } }, deps);
+    expect(later.statusCode).toBe(409);
+    // Home and the taf's page say the same, with the time and the app.
+    const work = await get(`/v1/tafs/${RAE}/work`);
+    expect(work.summary).toEqual({ status: "idle", line: "The 09:00 check couldn't read Gmail", needs_you: 0, attention: true });
+    expect(work.health).toMatchObject({ level: "failing", lines: ["The scheduled check couldn't read Gmail 2 times in a row, since Tue 09:00. Check the app's connection."] });
+    expect((await get("/v1/home")).tafs.find((t: { id: string }) => t.id === RAE).work.line).toBe("The 09:00 check couldn't read Gmail");
+    // With two apps connected, the check's app can't be told: "the app".
+    conns.push({ agent: "rae", vendor: "Stripe", kind: "key", status: "connected" });
+    expect((await get()).decisions[0].question).toBe("The scheduled check couldn't read the app 2 times in a row, since Tue 09:00");
+    // One failure alone is the taf's page's to say, not a decision.
+    w.agents.firings.set(`t_acme|${RAE}`, [{ ...at("2026-10-29T08:00:00.000Z"), ...vendor400 }, { ...at("2026-10-28T08:00:00.000Z"), outcome: "quiet" }]);
+    expect((await get()).decisions).toEqual([]);
+    // A check that reads again ends it.
+    w.agents.firings.set(`t_acme|${RAE}`, [{ ...at("2026-10-29T09:00:00.000Z"), outcome: "quiet" }, { ...at("2026-10-29T08:00:00.000Z"), ...vendor400 }, { ...at("2026-10-28T08:00:00.000Z"), ...vendor400 }]);
+    expect((await get()).decisions).toEqual([]);
+    // kiff/agents down: the brief still answers, with no such decision.
+    w.agents.api.scheduleFirings = async () => { throw new Error("kiff/agents is down"); };
+    const r = await handle({ rawPath: "/v1/brief", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_paris" } }, deps);
     expect(r.statusCode).toBe(200);
     expect(JSON.parse(r.body).decisions).toEqual([]);
   });

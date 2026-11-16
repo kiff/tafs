@@ -20,7 +20,7 @@ export const BRIEF_DECISIONS = 5;
 export interface BriefDecisionIn {
   /** Stable across briefs, so "Later" can name it: `${ref.kind}:${ref.id}`. */
   id: string;
-  ref: { kind: "hold" | "step" | "connection" | "proposal"; id: string; taf: string };
+  ref: { kind: "hold" | "step" | "connection" | "check" | "proposal"; id: string; taf: string };
   /** The taf it's for, with its labels (the brief's filter). */
   taf: { id: string; name: string; labels?: string[] };
   question: string;
@@ -214,6 +214,8 @@ export interface DecisionWords {
   connectionQuestion: (vendor: string) => string;
   signInAgain: string;
   connectionMeanwhile: (taf: string, vendor: string) => string;
+  openTaf: string;
+  checkMeanwhile: (taf: string) => string;
 }
 
 /**
@@ -258,6 +260,24 @@ export function connectionDecision(c: { vendor: string; status: string }, taf: B
     question: w.connectionQuestion(c.vendor),
     answers: [{ words: w.signInAgain, answer: "sign_in" }],
     meanwhile: w.connectionMeanwhile(taf.name, c.vendor),
+    blocked: true,
+  };
+}
+
+/**
+ * A taf whose scheduled check couldn't read its app at its last firings in a row, as a decision (ref kind check): it finds
+ * no new work until a check reads again, so it's blocked, and urgent, as a blocked connection is. `line` is its health's
+ * line (health.ts healthLine: how many times, since when, and the app by its connection's name). Its one answer opens the
+ * taf, where the owner sees why and fixes it (its connection, or its check with Coach): nothing is answered from the brief.
+ * One per taf, raised at the first of those failures; it leaves the brief at the first check that reads again.
+ */
+export function checkDecision(taf: BriefDecisionIn["taf"], line: string, since: string | undefined, w: DecisionWords): BriefDecisionIn {
+  return {
+    id: `check:${taf.id}`, ref: { kind: "check", id: taf.id, taf: taf.id }, taf,
+    question: line,
+    answers: [{ words: w.openTaf, answer: "open" }],
+    meanwhile: w.checkMeanwhile(taf.name),
+    ...(since ? { since } : {}),
     blocked: true,
   };
 }

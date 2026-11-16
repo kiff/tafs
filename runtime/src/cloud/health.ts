@@ -5,7 +5,7 @@
  */
 import type { Fired, Run } from "./agents.js";
 import { type Lang, wordsIn } from "./words/index.js";
-import { timeIn } from "./work.js";
+import { timeIn, whenIn } from "./work.js";
 
 export type HealthLevel = "healthy" | "at_risk" | "failing";
 
@@ -168,8 +168,11 @@ export function healthOf(runs: Run[], fired: Fired[], now: Date): Health {
   return { level: reasons.some((r) => r.level === "failing") ? "failing" : reasons.length ? "at_risk" : "healthy", reasons };
 }
 
-/** What happened, in words, with no "what to do": the line the list shows, and the alert's start. */
-export function healthLine(r: HealthReason, lang: Lang = "en", zone = "UTC", now = new Date()): string {
+/**
+ * What happened, in words, with no "what to do": the line the list shows, and the alert's start. A check that couldn't
+ * read says when, and names the app it reads by its connection's own name (`app`, checkAppOf), else "the app".
+ */
+export function healthLine(r: HealthReason, lang: Lang = "en", zone = "UTC", now = new Date(), app?: string): string {
   const w = wordsIn(lang);
   switch (r.code) {
     case "too_large": return w.health_too_large(r.n ?? TOO_LARGE_FAILING);
@@ -178,8 +181,8 @@ export function healthLine(r: HealthReason, lang: Lang = "en", zone = "UTC", now
     case "dropped": return w.health_dropped;
     case "streak": return w.health_streak(r.n ?? STREAK_FAILING);
     case "streak_one": return w.health_streak_one;
-    case "check_failing": return w.health_check_failing(r.n ?? STREAK_FAILING);
-    case "check_failing_one": return w.health_check_failing_one;
+    case "check_failing": return w.health_check_failing(r.n ?? STREAK_FAILING, timeIn(r.since ?? now.toISOString(), zone, now, lang), app);
+    case "check_failing_one": return w.health_check_failing_one(whenIn(r.since ?? now.toISOString(), zone, now, lang), app);
     case "all_failed": return w.health_all_failed(r.n ?? FAILED_IN_A_ROW);
     case "capped": return w.health_capped(r.n ?? 0, r.of ?? 0);
     case "failed_some": return w.health_failed_some(r.n ?? 0, r.of ?? 0);
@@ -219,8 +222,8 @@ function healthFix(r: HealthReason, lang: Lang, reader: Reader): Omit<HealthFix,
 }
 
 /** The level and each reason as a whole line: what happened, then what to do; and the buttons that fix them. */
-export function healthView(h: Health, lang: Lang = "en", reader: Reader = {}, zone = "UTC", now = new Date()): HealthView {
-  const lines = h.reasons.map((r) => [healthLine(r, lang, zone, now) + ".", healthDo(r, lang)].filter(Boolean).join(" "));
+export function healthView(h: Health, lang: Lang = "en", reader: Reader = {}, zone = "UTC", now = new Date(), app?: string): HealthView {
+  const lines = h.reasons.map((r) => [healthLine(r, lang, zone, now, app) + ".", healthDo(r, lang)].filter(Boolean).join(" "));
   const fixes = h.reasons.flatMap((r, line) => {
     const fix = healthFix(r, lang, reader);
     return fix ? [{ line, ...fix }] : [];
