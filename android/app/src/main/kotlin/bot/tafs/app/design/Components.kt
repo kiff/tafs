@@ -129,6 +129,9 @@ fun PrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifi
       maxLines = PRIMARY_BUTTON_LINES,
       overflow = TextOverflow.Ellipsis,
       textAlign = TextAlign.Center,
+      // The button's whole width, centred: with more than one line and an ellipsis, the words are laid out that wide, so a
+      // label measured narrower ("Send") would read as overflowing though nothing is cut.
+      modifier = Modifier.fillMaxWidth(),
     )
   }
 }
