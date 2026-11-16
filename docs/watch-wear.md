@@ -98,6 +98,6 @@ watch doesn't know is shown as Open on phone, never guessed at.
 ## Still to come
 
 1. The tile with Needs you's count.
-3. Talk to Coach by voice.
-4. Screenshots in all 8 languages. A Wear OS build on Play's listing (the internal track first) is a store-listing change,
+2. Talk to Coach by voice.
+3. Screenshots in all 8 languages. A Wear OS build on Play's listing (the internal track first) is a store-listing change,
    so it waits for the owner.
