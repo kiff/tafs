@@ -137,7 +137,8 @@ it has alerts off and says so in Settings.
 **Versions** (`android/app/build.gradle.kts`): `versionCode` goes up by one with every build,
 and `versionName` is what the store shows: `1.x` for a release with new features, `1.x.y` for
 one with fixes only. Every Android batch pull request says its `versionName`. The app went public
-at 1.0 (versionCode 40), and 1.1 (43) is its first feature release since.
+at 1.0 (versionCode 40), and 1.1 (43) is its first feature release since. The Wear OS watch shares the package
+and counts in its own band, from 400,000,001 (docs/watch-wear.md, Versions).
 
 **Releases** are signed bundles for Google Play, built by `android.yml`'s release job by hand,
 or on a merge to main that raises `versionCode` (the `version` job compares it with the commit
