@@ -164,6 +164,7 @@ export const it: Words = {
   remove_signed: "Rimuovilo dal tuo dispositivo: rimuovere un taf chiede ogni volta il blocco schermo. Non è stato rimosso nulla.",
   approval_window_closed: "Il tempo per l'approvazione è scaduto. Non è stato approvato nulla; approva di nuovo con la tua impronta.",
   approval_sign_missing: "Questo non è stato firmato su questo dispositivo, quindi non è stato fatto nulla. Riprova qui.",
+  approval_sign_both: "Questo è arrivato firmato due volte, con una passkey e una chiave del dispositivo, quindi non è stato fatto nulla. Riprova qui.",
   approval_sign_invalid: "La firma di questo dispositivo non corrispondeva, quindi non è stato fatto nulla. Riprova e, se succede ancora, accedi di nuovo su questo dispositivo.",
   approval_sign_view_only: "Questo dispositivo può solo visualizzare, quindi non è stato fatto nulla. Fallo su un dispositivo che approva, oppure aggiungi questo da quel dispositivo.",
   approval_sign_session: "Questo accesso non può firmare per questo dispositivo, quindi non è stato fatto nulla. Accedi di nuovo su questo dispositivo.",

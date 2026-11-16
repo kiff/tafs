@@ -164,6 +164,7 @@ export const pt: Words = {
   remove_signed: "Remova-o no seu dispositivo: remover um taf pede sempre o bloqueio do ecrã. Nada foi removido.",
   approval_window_closed: "O prazo de aprovação terminou. Nada foi aprovado; aprove novamente com a sua impressão digital.",
   approval_sign_missing: "Isto não foi assinado neste dispositivo, por isso nada foi feito. Tente novamente aqui.",
+  approval_sign_both: "Isto chegou assinado duas vezes, com uma chave de acesso e uma chave do dispositivo, por isso nada foi feito. Tente novamente aqui.",
   approval_sign_invalid: "A assinatura deste dispositivo não correspondeu, por isso nada foi feito. Tente novamente e, se voltar a acontecer, é preciso iniciar sessão novamente neste dispositivo.",
   approval_sign_view_only: "Este dispositivo só pode ver, por isso nada foi feito. Faça-o num dispositivo que aprove, ou adicione este a partir desse dispositivo.",
   approval_sign_session: "Esta sessão não pode assinar por este dispositivo, por isso nada foi feito. É preciso iniciar sessão novamente neste dispositivo.",

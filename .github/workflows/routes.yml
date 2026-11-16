@@ -1,0 +1,25 @@
+# The screens both apps open by name (app/routes.json): the checks over the list, and that each app's
+# generated list is what app/routes.py writes. Nobody edits a generated file by hand.
+name: Routes
+
+on:
+  push:
+    branches: [main]
+    paths: ["app/routes.json", "app/routes.py", "app/test_routes.py", "app/strings/**", "ios/Tafs/Design/AppRoutes.swift", "android/app/src/main/kotlin/bot/tafs/app/model/AppRoutes.kt", ".github/workflows/routes.yml"]
+  pull_request:
+    paths: ["app/routes.json", "app/routes.py", "app/test_routes.py", "app/strings/**", "ios/Tafs/Design/AppRoutes.swift", "android/app/src/main/kotlin/bot/tafs/app/model/AppRoutes.kt", ".github/workflows/routes.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  routes:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: The checks over the routes
+        run: python3 -W error -m unittest discover -s app -p test_routes.py
+      - name: The generated files are what the generator writes
+        run: python3 app/routes.py --check

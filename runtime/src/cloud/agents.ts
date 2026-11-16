@@ -247,6 +247,8 @@ export interface Run {
    */
   tally?: Record<string, { sent?: number; held?: number; refused?: number; failed?: number; unknown?: number }>;
   requirements?: Requirement[];
+  /** How many times kiff/agents resumed the run after it stopped while it worked (its sweeper's crash-resume); absent before any. */
+  resumes?: number;
   cancel_requested?: boolean;
   /** What the owner wrote to the run while it went (kiff/agents#102), each marked once the run took it. */
   steering?: Array<{ text: string; at: string; taken?: boolean }>;

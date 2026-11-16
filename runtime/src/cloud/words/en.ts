@@ -175,6 +175,7 @@ export const en = {
   approval_window_closed: "Your approval window has ended. Nothing was approved; approve it again with your fingerprint.",
   /** KIFF's refusal of a device's signature (POST /v1/me/device-signature), by its code: said of this device, whichever it is, never "this phone". */
   approval_sign_missing: "This wasn't signed on this device, so nothing was done. Try again here.",
+  approval_sign_both: "This came signed twice, with a passkey and a device key, so nothing was done. Try again here.",
   approval_sign_invalid: "This device's signature didn't check out, so nothing was done. Try again, and if it happens again, sign in again on this device.",
   approval_sign_view_only: "This device can only view, so nothing was done. Do it on a device that approves, or add this one from that device.",
   approval_sign_session: "This sign-in can't sign for this device, so nothing was done. Sign in again on this device.",

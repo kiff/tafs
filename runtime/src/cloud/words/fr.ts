@@ -164,6 +164,7 @@ export const fr: Words = {
   remove_signed: "Supprimez-le depuis votre appareil : supprimer un taf demande chaque fois le verrouillage de l'écran. Rien n'a été supprimé.",
   approval_window_closed: "Le délai d'approbation est terminé. Rien n'a été approuvé ; approuvez à nouveau avec votre empreinte digitale.",
   approval_sign_missing: "Ceci n'a pas été signé sur cet appareil, donc rien n'a été fait. Réessayez ici.",
+  approval_sign_both: "Ceci est arrivé signé deux fois, avec une clé d'accès et une clé de l'appareil, donc rien n'a été fait. Réessayez ici.",
   approval_sign_invalid: "La signature de cet appareil n'a pas été reconnue, donc rien n'a été fait. Réessayez et, si cela se reproduit, il faut se reconnecter sur cet appareil.",
   approval_sign_view_only: "Cet appareil peut seulement consulter, donc rien n'a été fait. Faites-le sur un appareil qui approuve, ou ajoutez celui-ci depuis cet appareil-là.",
   approval_sign_session: "Cette connexion ne peut pas signer pour cet appareil, donc rien n'a été fait. Il faut se reconnecter sur cet appareil.",

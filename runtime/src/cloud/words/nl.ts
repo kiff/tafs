@@ -164,6 +164,7 @@ export const nl: Words = {
   remove_signed: "Verwijder het op je apparaat: een taf verwijderen vraagt elke keer om je schermvergrendeling. Er is niets verwijderd.",
   approval_window_closed: "De tijd om goed te keuren is voorbij. Er is niets goedgekeurd; keur het opnieuw goed met je vingerafdruk.",
   approval_sign_missing: "Dit is niet op dit apparaat ondertekend, dus er is niets gedaan. Je kunt het hier opnieuw proberen.",
+  approval_sign_both: "Dit kwam twee keer ondertekend binnen, met een passkey en een apparaatsleutel, dus er is niets gedaan. Je kunt het hier opnieuw proberen.",
   approval_sign_invalid: "De handtekening van dit apparaat klopte niet, dus er is niets gedaan. Je kunt het opnieuw proberen; als het weer gebeurt, moet je opnieuw inloggen op dit apparaat.",
   approval_sign_view_only: "Dit apparaat kan alleen bekijken, dus er is niets gedaan. Doe het op een apparaat dat goedkeurt, of voeg dit apparaat vanaf dat apparaat toe.",
   approval_sign_session: "Deze aanmelding kan niet ondertekenen voor dit apparaat, dus er is niets gedaan. Je moet opnieuw inloggen op dit apparaat.",

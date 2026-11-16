@@ -67,6 +67,17 @@ verified, and the signature is the passkey's. It takes each approval once.
 **The app never falls back to a device key** for an approval: a computer that can't produce the
 passkey's assertion says to approve on the phone.
 
+**tafs cloud's signed routes take it too.** Remove for good (`DELETE /v1/tafs/{id}`), Discard
+(`POST /v1/home/setting-up/{kiff_agent}/discard`), a drive's start (`POST /v1/coach/drive`) and an
+approval's report (`POST /v1/tafs/{id}/components/{component}/approval/{ask}`) read
+`KIFF-Passkey-Assertion` as well as `KIFF-Device-Signature`. tafs cloud sends it to KIFF's
+`POST /v1/me/device-signature` as `passkey`, as it came, in place of `signature`. KIFF answers a
+passkey as the approval key with no window, so each route's key rule holds as it is. A request
+carrying both headers is refused before KIFF is asked (400, `signature_twice`), and one with
+neither is unsigned (`signature_missing`, or the unsigned removal while `TAFS_SIGNED_REMOVE` is off).
+A session that doesn't approve with a passkey gets KIFF's `passkey_not_this_session`, in tafs
+cloud's words, and the same assertion twice gets 409 (`signature_taken`).
+
 ## Status
 
 - Windows: built, behind a switch until its pairing makes the computer's passkey.

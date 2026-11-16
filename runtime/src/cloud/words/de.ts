@@ -164,6 +164,7 @@ export const de: Words = {
   remove_signed: "Entferne ihn auf deinem Gerät: Das Entfernen eines taf fragt jedes Mal nach deiner Displaysperre. Nichts wurde entfernt.",
   approval_window_closed: "Das Zeitfenster für die Genehmigung ist abgelaufen. Es wurde nichts genehmigt; genehmige es erneut mit deinem Fingerabdruck.",
   approval_sign_missing: "Das wurde nicht auf diesem Gerät signiert, daher ist nichts passiert. Versuche es hier noch einmal.",
+  approval_sign_both: "Das kam zweimal signiert an, mit einem Passkey und einem Geräteschlüssel, daher ist nichts passiert. Versuche es hier noch einmal.",
   approval_sign_invalid: "Die Signatur dieses Geräts hat nicht gepasst, daher ist nichts passiert. Versuche es noch einmal, und wenn es wieder passiert, musst du dich auf diesem Gerät erneut anmelden.",
   approval_sign_view_only: "Dieses Gerät kann nur ansehen, daher ist nichts passiert. Mach es auf einem Gerät, das genehmigt, oder füge dieses Gerät von dort hinzu.",
   approval_sign_session: "Diese Anmeldung kann nicht für dieses Gerät signieren, daher ist nichts passiert. Du musst dich auf diesem Gerät erneut anmelden.",

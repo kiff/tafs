@@ -26,10 +26,10 @@ import { handedByOf, requestDetail } from "./request.js";
 import { checkNoMoneyPlace, type VendorPlace, vendorPlace } from "./places.js";
 import { type DeadHandoff, deadHandoffs, deliveredLine, deliveriesOf, type DeliveryContext, deliveryViews, sendDeliveryAgain, settleEveryTaf, settleRuns, sweepDeliveries as sweepRunDeliveries } from "./delivery.js";
 import { allowOffer } from "./allow.js";
-import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
+import { type CatalogApp, ConnectError, listApps, type Proof, startApp } from "./connect.js";
 import { sheetOf, takesKey } from "./sheet.js";
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
-import { galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
+import { connectsOf, galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
 import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
 import { late, lateAlert, oldestWaiting, PROMISE_MAX_HOURS, waitingView } from "./waiting.js";
 import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
@@ -2315,8 +2315,17 @@ async function owned(me: KIFFIdentity, id: string, deps: Deps, opts: { removing?
  * Cards are KIFF's: the phone revokes them, before calling this.
  */
 /**
+ * How a device signed this request: its KIFF-Device-Signature, or the passkey assertion a computer approves with
+ * (KIFF-Passkey-Assertion, docs/computer-passkeys.md), as it came. `checkSigned` sends KIFF whichever is there and
+ * refuses a request carrying both.
+ */
+function signedBy(event: HTTPEvent): { signature: string; passkey: string } {
+  return { signature: event.headers?.["kiff-device-signature"] ?? "", passkey: event.headers?.["kiff-passkey-assertion"] ?? "" };
+}
+
+/**
  * A removal is the phone's act: its DELETE comes signed by the phone (KIFF-Device-Signature, as a setup call is
- * signed), and KIFF says whether this phone signed it, each signature taken once (`checkSigned`). tafs cloud holds
+ * signed; a computer's passkey assertion, KIFF-Passkey-Assertion, in its place), and KIFF says whether this phone signed it, each signature taken once (`checkSigned`). tafs cloud holds
  * no device key, and takes only the approval key, behind the screen lock each time (`critical_key_required` for
  * the device key or an approval window). A taf already being removed is finished unsigned: a signed DELETE began it, and the apps finish
  * what's left on their next read. Until both apps sign it, an unsigned DELETE still removes and is logged as
@@ -2325,8 +2334,8 @@ async function owned(me: KIFFIdentity, id: string, deps: Deps, opts: { removing?
  */
 async function removalSigned(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<void> {
   if (taf.removing) return;
-  const signature = event.headers?.["kiff-device-signature"] ?? "";
-  if (!signature) {
+  const { signature, passkey } = signedBy(event);
+  if (!signature && !passkey) {
     if (process.env.TAFS_SIGNED_REMOVE === "on") throw new HTTPError(403, wordsIn(langOf(event)).remove_signed, { code: "signature_required" });
     console.log(JSON.stringify({ event: "taf_remove", signed: false, taf: taf.id }));
     return;
@@ -2334,7 +2343,7 @@ async function removalSigned(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
   const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
   // The approval key, behind the screen lock, each time: never the device key, nor an earlier unlock's window.
   await checkSigned({ token: bearer(event), kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, lang: langOf(event),
-    signed: { method: "DELETE", uri, body: rawBody(event), signature } }, "approval").catch((err) => {
+    signed: { method: "DELETE", uri, body: rawBody(event), signature, passkey } }, "approval").catch((err) => {
     if (err instanceof ApprovalError && err.code === "critical_key_required") throw new HTTPError(403, wordsIn(langOf(event)).remove_signed, { code: "critical_key_required" });
     return approvalFailure(err);
   });
@@ -3779,7 +3788,7 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     await requireAIConsent(event, me, deps);
     const body = parseBody(event);
     const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
-    const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
+    const signed = { method: "POST", uri, body: rawBody(event), ...signedBy(event) };
     // Only the approval key, behind the fingerprint, starts a drive: never the device key, never a window's tap.
     await checkSigned({ tenant: me.tenantID, taf: "", component: "", token: bearer(event), proof: "", store, planqueBase: deps.planqueBase ?? "", kiffBase: deps.kiffBase,
       fetch: deps.fetch ?? fetch, now, newID: () => "", signed, lang: langOf(event) }, "approval").catch(approvalFailure);
@@ -4119,7 +4128,7 @@ async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf,
   const card = await shownCard(me, taf, component, "approval", str(body.session).trim(), deps);
   if (!card) throw new HTTPError(404, "no card of yours by that id");
   const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
-  const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
+  const signed = { method: "POST", uri, body: rawBody(event), ...signedBy(event) };
   const outcome = await settleApproval(askID, report, { ...ctx, signed, session: card.session }).catch(approvalFailure);
   await deps.coach!.remove(approvalWaitKey(me.tenantID, taf.id, me.subject)).catch(() => undefined);
   let told: Awaited<ReturnType<typeof tellCoach>> | { session: string };
@@ -7668,15 +7677,15 @@ const DISCARD_REREAD_MS = 700;
 
 /** A discard is signed by the phone as a removal is, under the same switch (TAFS_SIGNED_REMOVE). */
 async function discardSigned(event: HTTPEvent, agent: string, deps: Deps): Promise<void> {
-  const signature = event.headers?.["kiff-device-signature"] ?? "";
-  if (!signature) {
+  const { signature, passkey } = signedBy(event);
+  if (!signature && !passkey) {
     if (process.env.TAFS_SIGNED_REMOVE === "on") throw new HTTPError(403, wordsIn(langOf(event)).remove_signed, { code: "signature_required" });
     console.log(JSON.stringify({ event: "half_made_discard", signed: false, agent }));
     return;
   }
   const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
   await checkSigned({ token: bearer(event), kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, lang: langOf(event),
-    signed: { method: "POST", uri, body: rawBody(event), signature } }, "approval").catch((err) => {
+    signed: { method: "POST", uri, body: rawBody(event), signature, passkey } }, "approval").catch((err) => {
     if (err instanceof ApprovalError && err.code === "critical_key_required") throw new HTTPError(403, wordsIn(langOf(event)).remove_signed, { code: "critical_key_required" });
     return approvalFailure(err);
   });
@@ -8768,19 +8777,64 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   const r = await agentsCall(() => deps.agents.getRun(tenant, task.taf, task.run));
   const ended = r.status === "COMPLETED" || r.status === "ERROR" || r.status === "CANCELLED";
   if (!ended && r.status !== "PAUSED") return { taken: false };
+  // kiff/agents sends a note at least once: the same note again, or two at once, acts once. The claim is the run's
+  // state as read back, so a run that pauses again on something else is told again.
+  // The claim is a short lease while this note is told, then a mark that it was, kept as long as the task: a handling
+  // killed between the two (a timeout, a deploy) leaves only the lease, so kiff/agents' next delivery tells it.
+  const claim = noteClaim(tenant, note.ref, r);
+  const at = deps.now?.() ?? new Date();
+  if (!(await deps.coach.once(claim, new Date(at.getTime() + NOTE_LEASE_MS)))) {
+    // Told already: taken. Still a lease, another handling at work: not taken yet, so kiff/agents keeps the note owed
+    // and sends it again at its next wait (a 2xx would settle it, and a handling killed inside the lease would leave it
+    // never told).
+    if ((await deps.coach.get(claim).catch(() => undefined)) === "told") return { taken: true };
+    throw new HTTPError(409, "this note is being told now: send it again later", { taken: false, being_told: true });
+  }
+  let told: { taken: boolean };
+  try {
+    told = await tellRunEnded(tenant, key, task, r, ended, at, deps);
+  } catch (err) {
+    // Nothing was said: the next note, or a retry of this one, says it.
+    await deps.coach.remove(claim).catch(() => undefined);
+    throw err;
+  }
+  await deps.coach.put(claim, "told", new Date(at.getTime() + TASK_KEPT_MS));
+  return told;
+}
+
+/**
+ * How long a note's claim holds while it's told: longer than one handling, shorter than kiff/agents' first retry of a
+ * note (a minute, then 5, 20 and 60). A handling that dies leaves this lease alone, and the retry after it tells it.
+ */
+export const NOTE_LEASE_MS = 2 * 60_000;
+
+/**
+ * The key a run's note is acted on under: the run and its state, read back from kiff/agents. An ended run's status;
+ * a paused run's status, its resume count and the calls it waits on, so a second pause on another card or call, or
+ * after another resume, is its own.
+ */
+export function noteClaim(tenant: string, ref: string, r: Pick<Run, "id" | "status" | "requirements" | "resumes">): string {
+  if (r.status !== "PAUSED") return `${tenant}#run-note#${ref}#${r.id}#${r.status}`;
+  // A pause is its open calls, and which resume of the run it is: a run kiff/agents resumed after a crash may pause with
+  // no open call, and each such retry is its own note, while a duplicate of one reads the same count.
+  const waits = (r.requirements ?? []).filter((q) => !q.answered).map((q) => q.call_id).sort().join(",");
+  return `${tenant}#run-note#${ref}#${r.id}#PAUSED#r${r.resumes ?? 0}${waits ? `#${waits}` : ""}`;
+}
+
+/** What a run's note says, once: Coach told at work, or a note kept for the person's chat, the phones, and the task forgotten once it ended. */
+async function tellRunEnded(tenant: string, key: string, task: Task, r: Run, ended: boolean, at: Date, deps: Deps): Promise<{ taken: boolean }> {
   const taf = await deps.tafs.get(tenant, task.taf);
   const name = taf?.name ?? task.taf;
   const { line, said } = coachLine(name, task, r);
   // Its level (kiff/tafs#210): quiet while the owner is around, kept for "While you
   // were away" otherwise. A paused run is a hold, which KIFF's alert interrupts for.
-  const at = deps.now?.() ?? new Date();
   const level = ended ? levelOf("run_ended", !(await deps.slots.held(presenceKey(tenant)))) : undefined;
   const tafs = await deps.tafs.list(tenant);
   const setup = tafs.find((t) => t.job === SETUP_JOB && !t.removing);
   // A watch request's taf: its line goes to the watch, never to the phone's Coach chat or its alerts.
   if (task.ask) {
-    if (taf && !taf.removing) await watchTaskEnded(event, tenant, setup, task, r, line, said, deps);
-    if (ended) await deps.coach.remove(key);
+    if (taf && !taf.removing) await watchTaskEnded(tenant, setup, task, r, line, said, deps);
+    if (ended) await deps.coach?.remove(key);
     return { taken: true };
   }
   let told = false;
@@ -8791,11 +8845,11 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (!told && task.person && taf && !taf.removing) {
     // The person reads the taf and how it went; their Coach reads the whole line. A task
     // with no person behind it is told to no one's Coach.
-    await deps.coach.append(coachKeys.notes(tenant, task.person), { at: at.toISOString(), text: line, taf: name, taf_id: taf.id, said, ...(level === "later" ? { away: true } : {}) },
+    await deps.coach!.append(coachKeys.notes(tenant, task.person), { at: at.toISOString(), text: line, taf: name, taf_id: taf.id, said, ...(level === "later" ? { away: true } : {}) },
       new Date(at.getTime() + TASK_KEPT_MS));
   }
   if (level === "quiet") await tellPhones(deps, tenant, (lang) => endedNotification(name, r, lang));
-  if (ended) await deps.coach.remove(key);
+  if (ended) await deps.coach!.remove(key);
   return { taken: true };
 }
 
@@ -9810,8 +9864,10 @@ async function connectApps(event: HTTPEvent, method: string, parts: string[], me
       ]);
       // Each app's logo as a path on tafs cloud, and never planque's icon URL: no phone loads anything from a third party.
       const [logos, uses, needs] = await Promise.all([nameLogos(deps.coach, page.apps.map((a) => a.icon), new Date()), connectionUses(event, me, deps), needContext(event, me, deps, reads)]);
-      const apps = page.apps.map(({ icon, ...app }) => ({ ...(icon && logos.has(icon) ? { ...app, logo: logos.get(icon)! } : app), ...appRow(app, me, uses, langOf(event)), ...needFields(app, needs) }));
-      return { ...page, apps, removed_tafs: removed };
+      // A proof is tafs cloud's for the gallery (connectsOf), never served to the apps.
+      const apps = page.apps.map(({ icon, proved: _proof, ...app }) => ({ ...(icon && logos.has(icon) ? { ...app, logo: logos.get(icon)! } : app), ...appRow(app, me, uses, langOf(event)), ...needFields(app, needs) }));
+      const { proved: _proved, ...listed } = page;
+      return { ...listed, apps, removed_tafs: removed };
     }
     if (parts.length === 4 && method === "POST") {
       need(me, "cards.manage");
@@ -10083,15 +10139,17 @@ async function suggestionsOf(me: KIFFIdentity, deps: Deps, lang: Lang): Promise<
  * provider's apps, a page at a time. Undefined when it can't be read whole: a catalog longer than the pages
  * read, or planque not answering. A recipe is never hidden for a vendor on a page that wasn't read.
  */
-async function wholeCatalog(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<CatalogApp[] | undefined> {
+async function wholeCatalog(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<{ apps: CatalogApp[]; proved?: Record<string, Proof> } | undefined> {
   if (!deps.planqueBase) return undefined;
   try {
     const apps: CatalogApp[] = [];
+    let proved: Record<string, Proof> | undefined;
     let page: { cursor?: string; provider?: string } = {};
     for (let i = 0; i < CATALOG_PAGES; i++) {
       const got = await listApps(deps.fetch ?? fetch, deps.planqueBase, me.tenantID, bearer(event), "", page);
       apps.push(...got.apps);
-      if (!got.next_cursor && !got.partial) return apps;
+      if (got.proved) proved = { ...proved, ...got.proved };
+      if (!got.next_cursor && !got.partial) return { apps, ...(proved ? { proved } : {}) };
       if (got.partial) return undefined;
       page = { cursor: got.next_cursor, ...(got.provider ? { provider: got.provider } : {}) };
     }
@@ -10101,6 +10159,9 @@ async function wholeCatalog(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Pro
     return undefined;
   }
 }
+
+/** Whether the apps that connect today are read from planque's catalog (`proved`), not CONNECTS_TODAY: dark until planque and kiff.dev read it too. */
+const provedFromCatalog = () => process.env.TAFS_PROVED_FROM_CATALOG === "on";
 
 /** The recipes the account's tafs were built from (#671 keeps it on the taf): Setup and tafs being removed aside. */
 async function runningRecipes(me: KIFFIdentity, deps: Deps): Promise<{ live: boolean; running: Set<string> }> {
@@ -10123,11 +10184,13 @@ async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
   // list is empty and the words say why, so the apps draw only what comes.
   const suggestions = await suggestionsOf(me, deps, lang);
   if (suggestions.reason !== "on") return noRecipes(suggestions, lang, manages);
-  const catalog = await wholeCatalog(event, me, deps);
-  const view = recipesFor(catalog, lang, manages);
+  const read = await wholeCatalog(event, me, deps);
+  const catalog = read?.apps;
+  const connects = connectsOf(read, provedFromCatalog());
+  const view = recipesFor(catalog, lang, manages, connects);
   const logos = await nameLogos(deps.coach, iconsFor(view.recipes, catalog), new Date());
   const running = manages ? (await runningRecipes(me, deps)).running : undefined;
-  return { ...view, recipes: withApps(view.recipes, catalog, logos, running) };
+  return { ...view, recipes: withApps(view.recipes, catalog, logos, running, connects) };
 }
 
 /**
@@ -10138,10 +10201,12 @@ async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
 async function gallery(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<GalleryView> {
   const lang = langOf(event);
   const manages = me.capabilities.includes("cards.manage");
-  const [catalog, suggestions, tafs] = await Promise.all([wholeCatalog(event, me, deps), suggestionsOf(me, deps, lang), runningRecipes(me, deps)]);
-  const all = recipesFor(catalog, lang, manages).recipes;
+  const [read, suggestions, tafs] = await Promise.all([wholeCatalog(event, me, deps), suggestionsOf(me, deps, lang), runningRecipes(me, deps)]);
+  const catalog = read?.apps;
+  const connects = connectsOf(read, provedFromCatalog());
+  const all = recipesFor(catalog, lang, manages, connects).recipes;
   const logos = await nameLogos(deps.coach, iconsFor(all, catalog), new Date());
-  return galleryFor(catalog, lang, { manages, live: tafs.live, suggestions: suggestions.show, ...(manages ? { running: tafs.running } : {}) }, logos);
+  return galleryFor(catalog, lang, { manages, live: tafs.live, suggestions: suggestions.show, ...(manages ? { running: tafs.running } : {}) }, logos, connects);
 }
 
 /**
@@ -10334,13 +10399,14 @@ async function watchCoachEnded(tenant: string, id: string, note: { run: string; 
  * The taf a watch request went to paused or ended: Coach's watch conversation writes it as one line, in a turn of
  * its own. If kiff/agents won't start that turn, the taf's own words, checked, are the line.
  */
-async function watchTaskEnded(event: HTTPEvent, tenant: string, setup: Taf | undefined, task: Task, r: Run, line: string, said: string, deps: Deps): Promise<void> {
+async function watchTaskEnded(tenant: string, setup: Taf | undefined, task: Task, r: Run, line: string, said: string, deps: Deps): Promise<void> {
   if (!deps.coach || !task.ask) return;
   const ask = (await deps.coach.get(watchKeys.ask(tenant, task.ask))) as Ask | undefined;
   if (!ask) return;
   const next: AskState = r.status === "PAUSED" ? "working" : r.status === "COMPLETED" && (!r.stop || r.stop === "answered") ? "done" : "failed";
   const ref = newRef(tenant);
-  const notify = watchNotify(event, ref, deps);
+  // The note's own request isn't at hand here (it's claimed and told once): tafs cloud's public address names the route.
+  const notify = watchNotify(undefined, ref, deps);
   if (setup && ask.session && notify) {
     try {
       await deps.agents.startRun(tenant, setup.id, line, { session: ask.session, requester: { kind: "member", id: ask.person } }, undefined, notify);

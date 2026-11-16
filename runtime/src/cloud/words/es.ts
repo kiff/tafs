@@ -164,6 +164,7 @@ export const es: Words = {
   remove_signed: "Elimínalo desde tu dispositivo: eliminar un taf pide cada vez el bloqueo de pantalla. No se ha eliminado nada.",
   approval_window_closed: "El plazo de aprobación terminó. No se aprobó nada; vuelve a aprobarlo con tu huella digital.",
   approval_sign_missing: "Esto no se firmó en este dispositivo, así que no se hizo nada. Vuelve a intentarlo aquí.",
+  approval_sign_both: "Esto llegó firmado dos veces, con una llave de acceso y una clave del dispositivo, así que no se hizo nada. Vuelve a intentarlo aquí.",
   approval_sign_invalid: "La firma de este dispositivo no coincidió, así que no se hizo nada. Vuelve a intentarlo y, si vuelve a pasar, tienes que volver a iniciar sesión en este dispositivo.",
   approval_sign_view_only: "Este dispositivo solo puede ver, así que no se hizo nada. Hazlo en un dispositivo que apruebe, o añade este desde ese dispositivo.",
   approval_sign_session: "Este inicio de sesión no puede firmar por este dispositivo, así que no se hizo nada. Tienes que volver a iniciar sesión en este dispositivo.",

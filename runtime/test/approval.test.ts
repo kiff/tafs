@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AGREE_FIRST, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS } from "../src/cloud/approval.js";
 import { approvalAnswerWords, checkedOnReadFor, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
+import { contract } from "./contract.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 /**
@@ -1146,6 +1147,36 @@ describe("the approval window (kiff/tafs#494): which key an ask takes, and the r
     expect((await w.call("POST", `${ASK}/${id}`, { result: "confirmed" }, SIG)).body).toMatchObject({ answer: "approved" });
   });
 
+  // A computer approves with its passkey (KIFF-Passkey-Assertion), never a device key (win-dev, 16 Nov): tafs cloud
+  // sent KIFF only `signature`, so every computer's report was refused. KIFF takes `passkey` in its place, one of the two.
+  it("checks a computer's passkey with KIFF in place of a signature, refuses both at once, and says KIFF's refusals in tafs cloud's words", async () => {
+    const PASSKEY = { "kiff-passkey-assertion": "t=2026-10-16T12:00:30Z,a=assertion" };
+    const s = services();
+    const w = await world(s);
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    const id = (r.body.ask as { id: string }).id;
+    s.grants = [grant({ status: "connected" })];
+    // Both at once: refused before KIFF is asked, and nothing is settled.
+    const both = await w.call("POST", `${ASK}/${id}`, { result: "connected" }, { ...SIG, ...PASSKEY });
+    expect(both.status).toBe(400);
+    expect(both.body).toEqual({ error: WORDS.signBoth, code: "signature_twice" });
+    expect(s.checks).toEqual([]);
+    // A session that doesn't approve with a passkey: KIFF's code, in tafs cloud's words.
+    s.signed = 403;
+    s.signedCode = "passkey_not_this_session";
+    const session = await w.call("POST", `${ASK}/${id}`, { result: "connected" }, PASSKEY);
+    expect(session.status).toBe(403);
+    expect(session.body).toEqual({ error: WORDS.signPasskey, code: "passkey_not_this_session" });
+    // The same assertion again: KIFF takes each once.
+    s.signed = 409;
+    expect((await w.call("POST", `${ASK}/${id}`, { result: "connected" }, PASSKEY)).body).toEqual({ error: WORDS.signTaken, code: "signature_taken" });
+    // The passkey KIFF checks: sent as `passkey`, as it came, with no `signature`; KIFF answers it as the approval key.
+    s.signed = true;
+    s.signedKey = "critical";
+    expect((await w.call("POST", `${ASK}/${id}`, { result: "connected" }, PASSKEY)).body).toMatchObject({ answer: "approved" });
+    expect(s.checks.at(-1)).toEqual({ method: "POST", uri: `${ASK}/${id}`, body_sha256: createHash("sha256").update(JSON.stringify({ result: "connected" })).digest("hex"), passkey: PASSKEY["kiff-passkey-assertion"] });
+  });
+
   it("takes a routine ask signed inside an open window, and refuses one whose window has ended", async () => {
     const s = services();
     const w = await world(s);
@@ -2138,6 +2169,8 @@ describe("a card whose sign-in planque couldn't narrow says so, and Coach hears 
     const w = await world(s, {});
     const first = await w.call("GET", CHAT, undefined);
     expect(comp(first)?.wider).toEqual({ words: "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools." });
+    // Every app that can approve a card draws this line (contracts/README.md): it reads the same answer.
+    contract("coach-wider", "GET /v1/tafs/{id}/conversation read with the device's planque proof: an approval card whose connection planque couldn't narrow (usual_access), marked `wider: {words}`, the line every app that can approve the card draws over its buttons.", first.body);
     const fr = await w.call("GET", CHAT, undefined, { "accept-language": "fr" });
     expect(comp(fr)?.wider?.words).toMatch(/^La connexion à Google Sheets ne peut pas être limitée/);
     // Coach reads it with the owner's next message, once, however many reads.
@@ -2361,7 +2394,7 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(w.rulesFigures("X")).toContain("X");
       expect(w.rulesFigures("X")).not.toBe(WORDS.rulesFigures("X"));
     }
-    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_figures") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
+    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_figures") && REDRAFT_CODES.has("rules_unagreed_figure") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
   });
 
   describe("the figures the owner agreed", () => {
@@ -2399,6 +2432,32 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(String(w.told()?.answer)).toMatch(/^failed: the rules the owner agreed give "Refund a charge" 5000 as a day's total on sum\(amount\), and a Card covering it has 2000\. Draft it again with an aggregate \{quantity: "sum\(amount\)", window: "calendar_day", limit: 5000\} with no per/);
     });
 
+    // Eval 43927756622 (Setup, run 1): refused once for a day's total on both Cards, Coach redrafted with an hour's €50 held
+    // on the per-refund Card, beside the agreed €5 a refund held and €50 a day refused, and signed it. Never signed now,
+    // and Coach hears the one figure to drop and to change nothing else.
+    it("a limit the owner never agreed, in any window, is refused, and Coach hears to drop only that one", async () => {
+      const split = [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, over: "ask" }, DAY] }, { tool: "list_charges", over: "refuse" }];
+      const cards = (held: unknown[]) => [
+        { id: "c1", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: held },
+        { id: "c1b", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(5000)] },
+        { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }];
+      const hour = await setUp("refuse");
+      hour.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards([{ quantity: "sum(amount)", window: "rolling_1h", limit: 5000 }]) };
+      hour.rules("rules-1", split);
+      const r = await hour.tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
+      expect(String(r.answer)).toMatch(/^failed: the draft gives "Refund a charge" a limit the owner never agreed: 5000 on sum\(amount\), per rolling_1h\. /);
+      expect(String(r.answer)).toContain("Draft it again without that one, and change nothing else: no new limit, Card or tool in its place.");
+      expect(String(r.answer)).toContain(`${REFUSAL_CLOSED}`);
+      expect(String(r.answer)).toContain(DRAW_AGAIN);
+      expect(hour.s.checks).toEqual([]);
+      // The same Cards with only what was agreed: signed.
+      const agreed = await setUp("refuse");
+      agreed.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards([]) };
+      agreed.rules("rules-1", split);
+      expect(await agreed.tap()).toMatchObject({ outcome: "sign" });
+    });
+
     // Eval 16's refunds: ask past €5 a refund, refuse past €50 a day, as data, and each answer on its own Card.
     it("ask past one figure and refuse past another: signed on two Cards, refused on one", async () => {
       const split = [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, over: "ask" }, DAY] }, { tool: "list_charges", over: "refuse" }];
@@ -2417,11 +2476,17 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       expect(String(r.answer)).toContain(`failed: the rules the owner agreed ask past one of "Refund a charge"'s limits and refuse past another, and the draft puts both on one Card, which has one on_exceed. Draft it again with each on its own Card`);
     });
 
-    it("a figure the rules don't name, and one the notice's words don't say, are logged and signed", async () => {
+    it("a figure the rules don't name is refused; one the notice's words don't say is logged and signed", async () => {
+      // A total of another argument the rules never set: refused (a count beside the amounts is count_on_amount's).
+      const extra = await setUp("refuse");
+      setFigures(extra.s, 500, [dayTotal(5000), { quantity: "sum(fee)", window: "calendar_day", limit: 100 }]);
+      extra.rules("rules-1", FIGURED);
+      const r = await extra.tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
+      expect(String(r.answer)).toMatch(/^failed: the draft gives "Refund a charge" a limit the owner never agreed: 100 on sum\(fee\), per calendar_day\. /);
+      // The test notice says "€50 a day", so the €5 a refund is the figure its words don't say: logged, and signed.
       const { s, rules, tap } = await setUp("refuse");
-      // A count beside the amounts is refused on its own (count_on_amount): the unnamed figure here is a total of another argument.
-      setFigures(s, 500, [dayTotal(5000), { quantity: "sum(fee)", window: "calendar_day", limit: 100 }]);
-      // The test notice says "€50 a day", so the €5 a refund is the figure its words don't say.
+      setFigures(s, 500, [dayTotal(5000)]);
       rules("rules-1", FIGURED);
       const logged: string[] = [];
       const spy = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { logged.push(a.join(" ")); });
@@ -2430,7 +2495,6 @@ describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () =
       } finally {
         spy.mockRestore();
       }
-      expect(logged).toContain("approval rules: a figure the rules don't name: refund_charge_k3 sum(fee) calendar_day 100");
       expect(logged).toContain("approval rules: a figure the notice's words don't say: refund_charge sum(amount) call 500");
       expect(logged.filter((l) => l.includes("calendar_day 5000"))).toEqual([]);
     });
