@@ -42,6 +42,8 @@ struct SetupChatView: View {
     /// The thread's ids when the owner sent it: the pin goes only to a message that wasn't
     /// there, so the same words sent again never pin the older copy (kiff/tafs#138, item 34).
     @State private var sentBefore: Set<String> = []
+    /// What the thread has drawn, in its order (`SteadyOrder`): nothing moves while Coach answers.
+    @State private var drawn: [SteadyOrder.Entry] = []
     @State private var viewport: CGFloat = 600
     /// The pinned message's turn, as laid out: the room under it is the screen less this (the 845 test).
     @State private var turn = PinnedTurn()
@@ -232,8 +234,23 @@ struct SetupChatView: View {
         .padding(20)
     }
 
+    /// The thread as shown, in the order already drawn: a card never moves under the person's eyes when
+    /// tafs cloud's copy of their message lands, or Coach's words come at the end of its turn.
+    private var shown: [SetupThread.Item] {
+        SteadyOrder.order(textBeforeCards(model.setupThread.items), drawn: drawn, id: \.id, at: \.at, ownerText: Self.ownerText)
+    }
+
+    static func ownerText(_ item: SetupThread.Item) -> String? {
+        if case .message(let m) = item, m.from == .owner { return m.text }
+        return nil
+    }
+
+    private func rememberDrawn() {
+        drawn = shown.map { SteadyOrder.Entry(id: $0.id, ownerText: Self.ownerText($0)) }
+    }
+
     private var thread: some View {
-        let items = textBeforeCards(model.setupThread.items)
+        let items = shown
         let thinking = model.setupThinking
         let waiting = model.setupWaiting
         return ScrollViewReader { proxy in
@@ -401,9 +418,10 @@ struct SetupChatView: View {
                 .padding(.bottom, 10)
             }
             .onChange(of: items.map(\.id)) { ids in
+                rememberDrawn()
                 // The thread as it is now: the captured `items` can be the body's before the
                 // change, without the message just sent (the 845 test, as in TafChatView).
-                let items = textBeforeCards(model.setupThread.items)
+                let items = shown
                 if let p = pinned, p.hasPrefix("m|"), !ids.contains(p) {
                     if let words = pinnedWords,
                        let copy = items.last(where: { if case .message(let m) = $0 { return m.from == .owner && SetupThread.matchesSent(m.text, words) } else { return false } })?.id {
@@ -477,7 +495,10 @@ struct SetupChatView: View {
                 }
                 follow(proxy)
             }
-            .onAppear { land(proxy, waiting: waiting) }
+            .onAppear { land(proxy, waiting: waiting); rememberDrawn() }
+            // Another conversation is drawn in its own order, from nothing.
+            .onChange(of: model.setupChat) { _ in drawn = [] }
+            .onChange(of: model.setupFresh) { _ in drawn = [] }
         }
     }
 

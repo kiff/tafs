@@ -66,6 +66,11 @@ which reads that again with the phone's own session and takes nothing from the p
 - `halted` and `resumed`: the home list;
 - `knock`: that taf's doors, and its thread where it's been read.
 
+**Coach's thread keeps the order it has drawn** (`SteadyOrder`, as Android's tafs#1233): what's on screen never moves
+while Coach answers. Items drawn keep their places, new ones go after them in the thread's order, and an earlier page
+goes before. The owner's message keeps its place when tafs cloud's copy replaces the one sent from this device
+(another id and time, the same words). Another conversation, or the thread reopened, is drawn in its own order.
+
 Every refresh and every push also reads planque's grants again: tafs cloud never sees them, so
 this is how a connection its vendor signed out reaches the list. A change of a kind the app
 doesn't know is ignored. While Coach's chat is open, its thread is read every 3 seconds (every second
