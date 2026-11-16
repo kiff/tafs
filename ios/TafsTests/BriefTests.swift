@@ -14,7 +14,7 @@ final class BriefTests: XCTestCase {
     private static let liveBrief = #"""
     {"decisions":[{"id":"d1","question":"Pay 3 supplier bills due Friday, €1,240?","why":"All three match their orders.","meanwhile":"these three wait.",
       "answers":[{"words":"Pay the 3","answer":"approve","recommended":true},{"words":"Not now","answer":"refuse","decline":true}],
-      "later":"Later","ref":{"kind":"hold","id":"ce_1","taf":"depl_1"}}]}
+      "later":{"words":"Later"},"ref":{"kind":"hold","id":"ce_1","taf":"depl_1"}}]}
     """#
 
     private func stubbedSession() -> URLSession {
@@ -92,7 +92,9 @@ final class BriefTests: XCTestCase {
         let decision = try XCTUnwrap(model.briefDecisions.first)
         model.laterBrief(decision)
         for _ in 0..<50 where !model.briefDecisions.isEmpty { try await Task.sleep(nanoseconds: 20_000_000) }
-        XCTAssertEqual(StubProtocol.sent.filter { $0.httpMethod == "POST" }.map { $0.url?.path }, ["/v1/brief/decisions/d1/later"])
+        XCTAssertNotNil(decision.later, "the decision offers Later")
+        XCTAssertEqual(StubProtocol.sent.filter { $0.httpMethod == "POST" && $0.url?.path.hasPrefix("/v1/brief") == true }.map { $0.url?.path },
+                       ["/v1/brief/decisions/d1/later"], "Later's route, once")
         XCTAssertTrue(model.briefDecisions.isEmpty)
     }
 
