@@ -11,12 +11,14 @@ import bot.tafs.app.app.Mode
 import bot.tafs.app.design.TafsTheme
 import bot.tafs.app.views.SettingsSheet
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
 /**
  * A fast fling to the end of Account leaves the sheet where it is (Android 111: the sheet bounced on its own after a fast swipe,
- * never after a slow one). The sheet's top doesn't move while nothing touches the screen, and Sign out ends fully on screen.
+ * never after a slow one). The sheet's top doesn't move while nothing touches the screen, and Sign out ends fully inside the
+ * list's visible box.
  */
 class SheetFlingTest {
   @get:Rule(order = 0) val awake = AwakeDevice()
@@ -48,6 +50,11 @@ class SheetFlingTest {
       rule.waitForIdle()
       assertEquals("the sheet moved with no finger on the screen", open, titleTop())
     }
+    // Sign out shows in full: its whole row is inside the list's visible box, not partly under the bottom fade or off the
+    // sheet. assertIsDisplayed alone passes when any part of it shows.
     rule.onNodeWithText("Sign out").assertIsDisplayed()
+    val row = rule.onNodeWithText("Sign out").getBoundsInRoot()
+    val list = rule.onNode(hasScrollAction()).getBoundsInRoot()
+    assertTrue("Sign out ends below the list's visible box ($row in $list)", row.bottom <= list.bottom && row.top >= list.top)
   }
 }
