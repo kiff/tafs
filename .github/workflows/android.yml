@@ -23,6 +23,10 @@ on:
         type: choice
         options: [phone, wear]
         default: phone
+      watch_timing:
+        description: "Watch only: show the timing readout (an internal build for a test on a real watch; never one for production)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -305,7 +309,9 @@ jobs:
             case $f in store_password) export TAFS_UPLOAD_STORE_PASSWORD="$v";; key_password) export TAFS_UPLOAD_KEY_PASSWORD="$v";; alias) export TAFS_UPLOAD_KEY_ALIAS="$v";; esac
           done
           unset secret
-          TAFS_UPLOAD_KEYSTORE="$key" ./gradlew :wear:bundleRelease --stacktrace
+          # The timing readout only when asked for by hand (docs/watch-wear.md): a build that a version raise starts never has it.
+          TAFS_WATCH_TIMING="${{ github.event_name == 'workflow_dispatch' && inputs.watch_timing && '1' || '' }}" \
+            TAFS_UPLOAD_KEYSTORE="$key" ./gradlew :wear:bundleRelease --stacktrace
           rm -f "$key"
           # Signed, or CI stops here, before Play: `jarsigner -verify` exits 0 on an unsigned bundle too, so its own words are
           # read ("jar verified."). Not -strict, which fails every upload-key build on the self-signed certificate's warnings.
