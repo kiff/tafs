@@ -71,3 +71,21 @@ Each mission has a log: what its tafs delivered, newest last, kept 90 days (the 
 
 - **The lead's tools:** a task from the lead names its reason by reference, and a task with none is refused.
 - **The brief:** what got done, the decisions, and the one next move.
+
+## Your brief
+
+Your brief replaces Needs you: twice a day, at 08:00 and 18:00 in the account's time zone, plus an alert at once for
+what's truly urgent (design v2.1 §7). Its builder is `runtime/src/cloud/brief.ts`; the route (`GET /v1/brief?label=`,
+`POST /v1/brief/decisions/{id}/later`) and its words come next.
+
+- **Urgent** is tafs cloud's rule, never a model's: a deadline before the next brief, money going out today, a halt, a
+  blocked connection, or "ask me at once".
+- **Decisions**: the urgent ones first, then by deadline, then the oldest. Every urgent one shows; the others are capped so
+  at most 5 show in all, the rest counted (`more`). At
+  most one answer is recommended, and only with a why; without one, the answers show as equals.
+- **Later** moves a decision to the next brief. It's offered only for what can wait; one that can't says why
+  (`now_why`). A decision put off comes back early if it turns urgent.
+- **Done** is said per case ("reminder sent Tuesday · waiting for payment · next check Friday"), grouped by mission.
+- **Labels**: the brief narrows to one label's tafs; each label's count and waiting are over the whole account, before
+  the filter, and a decision put off with Later still counts as waiting.
+- A recommendation is shown, never acted on: every answer goes through the place it already goes.
