@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: a Coach card whose Card KIFF didn't give says why, with Try again**: it never sits silent with Approve off, and its draft is read again while the card waits ([docs/ios-app.md](docs/ios-app.md)).
