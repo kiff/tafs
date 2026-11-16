@@ -243,8 +243,12 @@ export function stepDecision(s: { handoff: string; what: string; since: string; 
   };
 }
 
-/** Where the decisions put off with Later are kept: one record per account, {decision id: until}. */
-export const briefLaterKey = (tenant: string) => `${tenant}#brief-later`;
+/**
+ * Where the decisions put off with Later are kept: one record per person, {decision id: until}. It's their brief: one
+ * person's Later never moves a decision out of anyone else's, so a member who can't answer a held call can't hide it
+ * from the person who can.
+ */
+export const briefLaterKey = (tenant: string, person: string) => `${tenant}#brief-later#${person}`;
 
 /** The decisions still put off at `now`, from what was kept: anything else (a past time, a value that isn't one) is dropped. */
 export function laterOf(kept: unknown, now: Date): Map<string, string> {

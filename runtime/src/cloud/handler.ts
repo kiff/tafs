@@ -7313,7 +7313,7 @@ async function notEndedHere(deps: Deps, tenant: string, runs: Run[]): Promise<Ru
 /**
  * What Your brief is built from (docs/missions.md, Your brief), read as Home reads it: the tafs this person may see, the
  * calls KIFF holds on them, the steps their recent runs handed their owner, the account's labels and what was put off
- * with Later. A label or Later store that can't be read leaves the labels out and puts nothing off, never the brief.
+ * with Later by this person. A label or Later store that can't be read leaves the labels out and puts nothing off, never the brief.
  */
 async function briefInputs(event: HTTPEvent, me: KIFFIdentity, deps: Deps, now: Date) {
   const lang = langOf(event);
@@ -7328,7 +7328,7 @@ async function briefInputs(event: HTTPEvent, me: KIFFIdentity, deps: Deps, now: 
   const [recent, labelSet, kept] = await Promise.all([
     Promise.all(tafs.map((t) => deps.agents.runs(me.tenantID, t.id, false, 20).catch(() => [] as Run[]))),
     deps.coach ? readLabels(deps.coach, me.tenantID).catch(() => undefined) : undefined,
-    deps.coach ? deps.coach.get(briefLaterKey(me.tenantID)).catch(() => undefined) : undefined,
+    deps.coach ? deps.coach.get(briefLaterKey(me.tenantID, me.subject)).catch(() => undefined) : undefined,
   ]);
   const known = new Set(labelSet?.labels.map((l) => l.id) ?? []);
   const tafOf = (t: Taf) => ({ id: t.id, name: t.name, labels: (t.labels ?? []).filter((id) => known.has(id)) });
@@ -7375,10 +7375,10 @@ async function briefLater(event: HTTPEvent, me: KIFFIdentity, id: string, deps: 
   const put = putOff(d, now, me.timeZone ?? "UTC");
   if ("refused" in put) throw new HTTPError(409, put.refused === "urgent" ? "this decision is urgent: it can't wait for the next brief" : "this decision can't wait for the next brief", { code: put.refused });
   // Read again just before the write, so a Later from another phone in between is kept.
-  const kept = laterOf(await deps.coach.get(briefLaterKey(me.tenantID)), now);
+  const kept = laterOf(await deps.coach.get(briefLaterKey(me.tenantID, me.subject)), now);
   kept.set(id, put.until);
   const last = Math.max(...[...kept.values()].map((u) => Date.parse(u)));
-  await deps.coach.put(briefLaterKey(me.tenantID), Object.fromEntries(kept), new Date(last + 24 * 3600_000));
+  await deps.coach.put(briefLaterKey(me.tenantID, me.subject), Object.fromEntries(kept), new Date(last + 24 * 3600_000));
   return { id, until: put.until };
 }
 

@@ -87,7 +87,7 @@ Later at `POST /v1/brief/decisions/{id}/later` ([api.md](api.md)).
 - **Decisions**: the urgent ones first, then by deadline, then the oldest. Every urgent one shows; the others are capped so
   at most 5 show in all, the rest counted (`more`). At
   most one answer is recommended, and only with a why; without one, the answers show as equals.
-- **Later** moves a decision to the next brief. It's offered only for what can wait; one that can't says why
+- **Later** moves a decision to the next brief, in that person's brief only. It's offered only for what can wait; one that can't says why
   (`now_why`). A decision put off comes back early if it turns urgent.
 - **Done** is said per case ("reminder sent Tuesday · waiting for payment · next check Friday"), grouped by mission.
 - **Labels**: the brief narrows to one label's tafs; each label's count and waiting are over the whole account, before

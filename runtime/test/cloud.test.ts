@@ -6969,12 +6969,14 @@ describe("GET /v1/brief and Later", () => {
     expect((await ask("GET", "/v1/brief", { query: "label=lbl_none" })).body).toMatchObject({ decisions: [], rest: { count: 0 } });
   });
 
-  it("puts a decision off to the next brief, where it's back; refuses Later for an urgent one and for one not in the brief", async () => {
+  it("puts a decision off to the next brief in that person's brief alone, where it's back; refuses Later for an urgent one and for one not in the brief", async () => {
     const { w, ask } = setUp();
     expect(await ask("POST", "/v1/brief/decisions/hold:h1/later")).toEqual({ status: 200, body: { id: "hold:h1", until: "2026-10-29T17:00:00.000Z" } });
     expect((await ask("GET", "/v1/brief")).body.decisions.map((d: { id: string }) => d.id)).toEqual(["step:ho_1"]);
     expect(await ask("POST", "/v1/brief/decisions/step:ho_1/later")).toMatchObject({ status: 409, body: { code: "urgent" } });
     expect((await ask("POST", "/v1/brief/decisions/hold:nope/later")).status).toBe(404);
+    // It's Ana's brief alone: another person on the account still sees the decision she put off.
+    expect((await ask("GET", "/v1/brief", { token: "owner" })).body.decisions.map((d: { id: string }) => d.id)).toEqual(["step:ho_1", "hold:h1"]);
     // At 18:00 Paris it's back (the step has expired by then and left).
     w.now = new Date("2026-10-29T17:00:00Z");
     expect((await ask("GET", "/v1/brief")).body.decisions.map((d: { id: string }) => d.id)).toContain("hold:h1");
