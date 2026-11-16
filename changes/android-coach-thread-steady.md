@@ -1,0 +1,1 @@
+- **Android: nothing in a chat moves while you watch it.** A card that comes while Coach answers stays after the message it answers, and the thread read again at the end of a turn leaves what is shown where it is (docs/android-app.md, Coach's screen).

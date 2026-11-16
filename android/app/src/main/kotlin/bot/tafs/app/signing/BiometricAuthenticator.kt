@@ -12,6 +12,7 @@ import androidx.fragment.app.FragmentActivity
 import java.lang.ref.WeakReference
 import java.security.Signature
 import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
@@ -63,7 +64,7 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
 
         // A face or finger that doesn't match leaves the prompt up for another try; an error ends it.
         override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-          if (cont.isActive) cont.resume(false)
+          if (cont.isActive) ended(cont, errorCode)
         }
       },
     )
@@ -91,7 +92,7 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
         }
 
         override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-          if (cont.isActive) cont.resume(false)
+          if (cont.isActive) ended(cont, errorCode)
         }
       },
     )
@@ -105,10 +106,23 @@ class BiometricAuthenticator(private val context: Context) : Authenticator {
     cont.invokeOnCancellation { prompt.cancelAuthentication() }
   }
 
+  /** How the prompt ended without a match: closed by the person or the system ([PromptClosed]), or anything else (false). */
+  private fun ended(cont: kotlinx.coroutines.CancellableContinuation<Boolean>, errorCode: Int) {
+    if (closed(errorCode)) cont.resumeWithException(PromptClosed()) else cont.resume(false)
+  }
+
   companion object {
 
     /** A biometric the phone counts as strong, or the screen lock: what signs with the signing key asks with either. */
     const val ALLOWED = BIOMETRIC_STRONG or DEVICE_CREDENTIAL
+
+    /**
+     * The prompt's errors that mean it was closed, not that a finger failed: Cancel, back or a tap outside, or the system
+     * closing it (another app, the screen going off). A lockout, a timeout or a sensor error is not one of them.
+     */
+    fun closed(errorCode: Int): Boolean = errorCode == BiometricPrompt.ERROR_USER_CANCELED ||
+      errorCode == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+      errorCode == BiometricPrompt.ERROR_CANCELED
   }
 }
 

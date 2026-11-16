@@ -158,7 +158,7 @@ function fold(name: string): string {
  * one of these (rule 13): a job whose app can't connect yet stays out, and comes back once its app is added
  * here, after a check proves it.
  */
-export const CONNECTS_TODAY: ReadonlySet<string> = new Set(["stripe", "qonto", "shippo", "intercom", "zendesk", "pipedrive", "github", "gmail"]);
+export const CONNECTS_TODAY: ReadonlySet<string> = new Set(["stripe", "qonto", "shippo", "intercom", "zendesk", "pipedrive", "github", "gmail", "typeform"]);
 
 /** Whether each of a recipe's connections has an app among those that connect (today's, unless said). */
 export function connectsToday(r: { connections: ReadonlyArray<ReadonlyArray<string>> }, connects: ReadonlySet<string> = CONNECTS_TODAY): boolean {

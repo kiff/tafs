@@ -1,0 +1,1 @@
+- **"Follow up new leads within the hour" is in the gallery (tafs cloud).** Typeform's sign-in was proved on a phone, so it joins the apps that connect today (`CONNECTS_TODAY`), and `GET /v1/recipes` now lists the job, in every language. The proof ran on a US-region account; an account kept in Typeform's EU data centre isn't proved yet (docs/coach.md).

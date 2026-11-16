@@ -39,6 +39,14 @@ line says what will show there. Nothing is fetched, signed or sent from it, and 
 stay in the conversation; beside it, the plan's line above the thread steps aside, since the panel
 shows it (`SetupShapeTest`).
 
+**Nothing on screen moves while you watch.** A chat screen keeps the order it has already drawn
+(`Chat.steady`, one `Chat.Shown` per open chat): a turn that streams, a card that comes with it, and the thread read again
+when the turn ends leave what's shown where it is. Something new goes after it, in the order it arrived; older than
+everything shown (an earlier page), before it. Your message, once tafs cloud has it under its own id, takes the place of
+the one you sent. Opened again, the thread is in its own order, a card after what Coach wrote with it
+(`CoachWords.items`). Before, a card that came while Coach answered could show above your message, then jump twice as
+Coach's words came in and the turn ended (`ChatSteadyTest`).
+
 A taf's page, under its compact header: the sample's Refunds; a chat opening at its newest, with a
 stranger's knock and a paired sender's message at their times; and the page folded as the chat
 scrolls (the last two drawn by `TafPageScreenTest`, from synthetic data):
@@ -693,8 +701,9 @@ never named, and a taf shared with no one else reads "Not shared".
     under **Not sent**, with the place's name for one of the taf's own, and **Send again** by its place.
   - **What it remembers**, **Versions**, Pause (in the sample) and **Remove for good**. Remove for good reads tafs cloud's
     words before its confirmation opens; meanwhile the button takes no second tap and reads as disabled (Android 1.27.11).
-    The fingerprint comes first: with the prompt closed or the finger not recognized, nothing is removed and the screen says
-    so, "Not removed. Nothing changed." (`taf.remove.not_confirmed`); before, the button came back with no word.
+    The fingerprint comes first: with the prompt closed, nothing is removed and the screen says so, "Not removed. Nothing
+    changed." (`taf.remove.not_confirmed`); before, the button came back with no word. A finger not recognized says "Try
+    again, or sign in again if your fingerprints changed." ([Signing](#signing)).
 
 A change to the dial's setting (a size, Skip it / Run after, a place in an app) makes the taf's
 next version: "DRAFT · Vn · NOT LIVE" and **Make N changes live** show in the sheet while it waits
@@ -1164,6 +1173,19 @@ new sign-in. Whether the phone can approve is read each time the app comes back
 to do ([approvals.md](approvals.md#set-up-approvals-on-this-device)). A debug build on a phone with no screen lock signs without asking, as the iOS
 Simulator does; a release never does.
 
+**A prompt that didn't sign** says what happened, and nothing is sent. `BiometricAuthenticator` reads how the prompt ended:
+Cancel, back, or the system closing it (`ERROR_USER_CANCELED`, `ERROR_NEGATIVE_BUTTON`, `ERROR_CANCELED`) is a closed
+prompt (`PromptClosed`); a lockout, a timeout or a sensor error is not. `AppModel.notSigned` then says:
+- **A closed prompt, where nothing is waiting on it** (Start Coach, a Card, a door, a version, Halt's Resume, signing a
+  device out, removing a passkey, and the rest): "Cancelled. Nothing changed." (`approval.cancelled`), the key every app
+  shares.
+- **A closed prompt, where the request still waits** (Approve or Refuse on a held call, Your step's Done and Skip, dismissing
+  a Card unit request): "Cancelled, so nothing was approved. The request is kept: approve again when you're ready."
+  (`approval.cancelled_nothing_approved_request_kept`).
+- **Remove for good and Discard** keep their own lines, "Not removed. Nothing changed." and "Not discarded. Nothing changed."
+- **A finger not recognized** (the prompt ended without a match, the approval key still good): "Try again, or sign in again if
+  your fingerprints changed." (`approval.not_recognized`). Before, a closed prompt said this too, or nothing.
+
 **What the prompt says** is the last thing read before signing. Connecting an app names the app and
 the taf as the person knows them (`ConnectionWords.connectPrompt`, `giveKeyPrompt`): tafs cloud's
 Connect apps title for that connection, else planque's vendor name, and the taf's name, else the
@@ -1404,7 +1426,9 @@ A simpler first run (Android 1.20), drawn from tafs cloud's words ([coach.md](co
     Home is read again. A Card KIFF didn't revoke is said, with tafs cloud's refusal (`cards_in_force`) when it gives one, and
     Home is read again then too. The Cards that refusal names are kept and revoked on the next tap, with its own fingerprint
     (a signature is taken once, so there's no second ask). Once tafs cloud drops it, no Card is said left. The
-    phone decides nothing: whether it's theirs to drop is tafs cloud's to prove. iPhone and iPad do the same.
+    phone decides nothing: whether it's theirs to drop is tafs cloud's to prove. iPhone and iPad do the same. With the
+    prompt closed nothing is revoked or sent, and the screen says "Not discarded. Nothing changed."
+    (`setup.discard_not_confirmed`); a finger not recognized says try again ([Signing](#signing)).
 - **When it shows:** after sign-in and at launch while it isn't given, and whenever tafs cloud refuses a model turn with
   `ai_consent_required`. `TafsCloud` reads that refusal once, for every route, plain or streamed, and the sheet shows the
   `consent` it carries.
