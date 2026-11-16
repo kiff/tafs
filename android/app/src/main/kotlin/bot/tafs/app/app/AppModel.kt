@@ -35,6 +35,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 import bot.tafs.app.model.CardCheck
 import bot.tafs.app.model.Card
 import bot.tafs.app.model.Decision
@@ -1189,9 +1191,7 @@ class AppModel(
       throw e
     }
     endSignIn()
-    // The account loads to the end whatever the screen does: the sign-in screen leaves as soon as the app is signed in, and its
-    // coroutine with it, which used to cancel the first refresh and leave Home on "Loading your tafs…" until a pull.
-    withContext(NonCancellable) { useSession(token.accessToken, token.tenant) }
+    takeSession(token, stopped = !currentCoroutineContext().isActive)
   }
 
   /** A sign-in's code and when it expires, kept with the phone's secrets until it's done. */
@@ -1286,6 +1286,21 @@ class AppModel(
       expiresIn = maxOf(0L, java.time.Duration.between(clock(), offer.expires).seconds).toInt(), interval = pairClaimIntervalSeconds,
     )
     val token = untilApproved(start, offer.expires, minimumSeconds = pairClaimIntervalSeconds) { kiff.claimPairing(offer.nonce, offer.pub, proof) }
+    takeSession(token, stopped = !currentCoroutineContext().isActive)
+  }
+
+  /**
+   * Uses the session a sign-in answered with, unless the screen had already [stopped] that way: on a tablet, the person switched
+   * from the QR to KIFF's code, or back, or left, just as the token landed. A token for a way they stopped is never kept; it's
+   * ended at KIFF with its own bearer, and the stop goes on (qa-kiff, 16 Nov; iOS's tafs#1246). Kept, the account loads to the
+   * end whatever the screen does: the sign-in screen leaves as soon as the app is signed in, and its coroutine with it, which
+   * used to cancel the first refresh and leave Home on "Loading your tafs…" until a pull.
+   */
+  internal suspend fun takeSession(token: bot.tafs.app.kiff.DeviceToken, stopped: Boolean) {
+    if (stopped) {
+      withContext(NonCancellable) { runCatching { kiff.signOut(bearer = token.accessToken) } }
+      throw CancellationException()
+    }
     withContext(NonCancellable) { useSession(token.accessToken, token.tenant) }
   }
 
