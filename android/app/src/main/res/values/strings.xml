@@ -1869,8 +1869,10 @@
     <string name="settings_devices_note">Signing a device out ends its sign-in on this account at once. To sign out this phone, use Sign out in Account.</string>
     <string name="settings_devices_note_device">Signing a device out ends its sign-in on this account at once. To sign out this %1$s, use Sign out of KIFF.</string>
     <string name="settings_devices_pair">Add a device</string>
+    <string name="settings_devices_pair_add_only">Add this device to your account. Only this device; nothing else changes.</string>
     <string name="settings_devices_pair_check">Does your computer show %1$s?</string>
     <string name="settings_devices_pair_check_phone">Does your new phone or tablet show %1$s?</string>
+    <string name="settings_devices_pair_claims">It calls itself %1$s.</string>
     <string name="settings_devices_pair_code_differs">KIFF paired %1$s with the code %2$s, not %3$s as checked. If that isn\'t your computer, sign it out here.</string>
     <string name="settings_devices_pair_done">%1$s is paired. It showed %2$s.</string>
     <string name="settings_devices_pair_expired">The code on your computer expired. Show a new one and scan it again.</string>
@@ -2024,6 +2026,8 @@
     <string name="sign_in_again_to_sign_device">Sign in with KIFF again: this sign-in can\'t sign for the %1$s.</string>
     <string name="sign_in_agree">By signing in, you agree to KIFF\'s %1$s, which cover tafs, and its %2$s.</string>
     <string name="sign_in_check_code">Check that KIFF shows the same code before you approve.</string>
+    <string name="sign_in_connected">You\'re connected.</string>
+    <string name="sign_in_connected_line">Let\'s build great things together.</string>
     <string name="sign_in_could_not_finish">Couldn\'t finish: %1$s. Try again.</string>
     <string name="sign_in_could_not_start">Couldn\'t start: %1$s. Try again.</string>
     <string name="sign_in_deletes_every_taf_runs_chats">Deletes every taf, its runs, chats and notes, your Cards and your connections. It can\'t be undone.</string>
@@ -2032,6 +2036,7 @@
     <string name="sign_in_how_works">How it works</string>
     <string name="sign_in_ios_did_not_open_sign">iOS didn\'t open the sign-in page (error %1$s; %2$s). Try again with tafs open.</string>
     <string name="sign_in_lead">Your tafs act under KIFF Cards. Approve this %1$s in KIFF, and the Cards you issued show up here.</string>
+    <string name="sign_in_lets_go">Let\'s go</string>
     <string name="sign_in_not_signed_out">Not signed out at KIFF yet. Try again, or sign this phone out from another device\'s Devices.</string>
     <string name="sign_in_not_signed_out_device">Not signed out at KIFF yet: %1$s. Try again, or sign this %2$s out from another device\'s Devices.</string>
     <string name="sign_in_open_kiff">Open KIFF to approve</string>
@@ -2051,6 +2056,8 @@
     <string name="sign_in_relink_no_connection">No connection. Try again.</string>
     <string name="sign_in_relink_not_approved_in_browser">It wasn\'t approved in the browser.</string>
     <string name="sign_in_relink_prompt">Approve again with this fingerprint</string>
+    <string name="sign_in_scan_with_tafs">Scan with tafs</string>
+    <string name="sign_in_show_code">Show the code</string>
     <string name="sign_in_sign_did_not_come_back">The sign-in didn\'t come back to tafs.</string>
     <string name="sign_in_tafs_had_no_window_screen">tafs had no window on screen to open the sign-in over. Open tafs and try again.</string>
     <string name="sign_in_waiting">Waiting for your approval…</string>
@@ -2064,6 +2071,7 @@
     <string name="sign_in_welcome_revoked_rest">no new action goes through.</string>
     <string name="sign_in_welcome_title">tafs</string>
     <string name="sign_in_with_kiff">Sign in with KIFF</string>
+    <string name="sign_in_with_phone">Sign in with your phone</string>
     <string name="sign_in_your_code">Your code</string>
     <string name="taf_activity_all_apps">All apps</string>
     <string name="taf_activity_checking_waits">Checking what waits for you…</string>

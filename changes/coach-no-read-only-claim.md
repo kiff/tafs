@@ -1,0 +1,1 @@
+- **Coach never calls a connection, a sign-in or a step "read-only"** (`connect-an-app@28`): it says what the taf does, never what an app's sign-in allows, and says a sign-in asks for more access than the taf uses once planque's grant has `usual_access`.

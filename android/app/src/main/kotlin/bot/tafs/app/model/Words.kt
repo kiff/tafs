@@ -2000,8 +2000,10 @@ object Words {
       val note: String get() = Res.s(R.string.settings_devices_note)
       fun noteDevice(device: String): String = Res.s(R.string.settings_devices_note_device, device, Words.demonstrative(device))
       val pair: String get() = Res.s(R.string.settings_devices_pair)
+      val pairAddOnly: String get() = Res.s(R.string.settings_devices_pair_add_only)
       fun pairCheck(code: String): String = Res.s(R.string.settings_devices_pair_check, code)
       fun pairCheckPhone(code: String): String = Res.s(R.string.settings_devices_pair_check_phone, code)
+      fun pairClaims(name: String): String = Res.s(R.string.settings_devices_pair_claims, name)
       fun pairCodeDiffers(device: String, kiff: String, shown: String): String = Res.s(R.string.settings_devices_pair_code_differs, device, kiff, shown)
       fun pairDone(device: String, code: String): String = Res.s(R.string.settings_devices_pair_done, device, code)
       val pairExpired: String get() = Res.s(R.string.settings_devices_pair_expired)
@@ -2174,6 +2176,8 @@ object Words {
     fun againToSignDevice(device: String): String = Res.s(R.string.sign_in_again_to_sign_device, device, Words.demonstrative(device))
     fun agree(terms: String, privacy: String): String = Res.s(R.string.sign_in_agree, terms, privacy)
     val checkCode: String get() = Res.s(R.string.sign_in_check_code)
+    val connected: String get() = Res.s(R.string.sign_in_connected)
+    val connectedLine: String get() = Res.s(R.string.sign_in_connected_line)
     fun couldNotFinish(why: String): String = Res.s(R.string.sign_in_could_not_finish, why)
     fun couldNotStart(why: String): String = Res.s(R.string.sign_in_could_not_start, why)
     val deletesEveryTafRunsChats: String get() = Res.s(R.string.sign_in_deletes_every_taf_runs_chats)
@@ -2182,6 +2186,7 @@ object Words {
     val howWorks: String get() = Res.s(R.string.sign_in_how_works)
     fun iosDidNotOpenSign(code: String, context: String): String = Res.s(R.string.sign_in_ios_did_not_open_sign, code, context)
     fun lead(device: String): String = Res.s(R.string.sign_in_lead, device, Words.demonstrative(device))
+    val letsGo: String get() = Res.s(R.string.sign_in_lets_go)
     val notSignedOut: String get() = Res.s(R.string.sign_in_not_signed_out)
     fun notSignedOutDevice(why: String, device: String): String = Res.s(R.string.sign_in_not_signed_out_device, why, device, Words.demonstrative(device))
     val openKiff: String get() = Res.s(R.string.sign_in_open_kiff)
@@ -2203,6 +2208,8 @@ object Words {
       val notApprovedInBrowser: String get() = Res.s(R.string.sign_in_relink_not_approved_in_browser)
       val prompt: String get() = Res.s(R.string.sign_in_relink_prompt)
     }
+    val scanWithTafs: String get() = Res.s(R.string.sign_in_scan_with_tafs)
+    val showCode: String get() = Res.s(R.string.sign_in_show_code)
     val signDidNotComeBack: String get() = Res.s(R.string.sign_in_sign_did_not_come_back)
     val tafsHadNoWindowScreen: String get() = Res.s(R.string.sign_in_tafs_had_no_window_screen)
     val waiting: String get() = Res.s(R.string.sign_in_waiting)
@@ -2218,6 +2225,7 @@ object Words {
       val title: String get() = Res.s(R.string.sign_in_welcome_title)
     }
     val withKiff: String get() = Res.s(R.string.sign_in_with_kiff)
+    val withPhone: String get() = Res.s(R.string.sign_in_with_phone)
     val yourCode: String get() = Res.s(R.string.sign_in_your_code)
   }
   object Taf {

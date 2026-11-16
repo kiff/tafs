@@ -1869,8 +1869,10 @@
     <string name="settings_devices_note">Terminar a sessão de um dispositivo termina de imediato o seu início de sessão nesta conta. Para terminar a sessão neste telefone, use Terminar sessão em Conta.</string>
     <string name="settings_devices_note_device">Terminar a sessão de um dispositivo termina de imediato o seu início de sessão nesta conta. Para terminar a sessão neste %1$s, use Terminar sessão no KIFF.</string>
     <string name="settings_devices_pair">Adicionar um dispositivo</string>
+    <string name="settings_devices_pair_add_only">Adicionar este dispositivo à sua conta. Só este dispositivo; nada mais muda.</string>
     <string name="settings_devices_pair_check">O seu computador mostra %1$s?</string>
     <string name="settings_devices_pair_check_phone">O seu novo telefone ou tablet mostra %1$s?</string>
+    <string name="settings_devices_pair_claims">Diz chamar-se %1$s.</string>
     <string name="settings_devices_pair_code_differs">O KIFF associou %1$s com o código %2$s, não %3$s como verificou. Se não for o seu computador, termine a sessão dele aqui.</string>
     <string name="settings_devices_pair_done">%1$s está associado. Mostrava %2$s.</string>
     <string name="settings_devices_pair_expired">O código no seu computador expirou. Mostre um novo e leia-o outra vez.</string>
@@ -2024,6 +2026,8 @@
     <string name="sign_in_again_to_sign_device">Inicie sessão novamente com o KIFF: esta sessão não pode assinar pelo %1$s.</string>
     <string name="sign_in_agree">Ao iniciar sessão, aceita os %1$s do KIFF, que abrangem o tafs, e a sua %2$s.</string>
     <string name="sign_in_check_code">Verifique se o KIFF mostra o mesmo código antes de aprovar.</string>
+    <string name="sign_in_connected">Ligação feita.</string>
+    <string name="sign_in_connected_line">Vamos construir grandes coisas juntos.</string>
     <string name="sign_in_could_not_finish">Não foi possível concluir: %1$s. Tente novamente.</string>
     <string name="sign_in_could_not_start">Não foi possível começar: %1$s. Tente novamente.</string>
     <string name="sign_in_deletes_every_taf_runs_chats">Elimina todos os tafs, as suas execuções, chats e notas, os seus Cards e as suas ligações. Não pode ser desfeito.</string>
@@ -2032,6 +2036,7 @@
     <string name="sign_in_how_works">Como funciona</string>
     <string name="sign_in_ios_did_not_open_sign">O iOS não abriu a página de início de sessão (erro %1$s; %2$s). Tente novamente com o tafs aberto.</string>
     <string name="sign_in_lead">Os seus tafs agem ao abrigo de Cards do KIFF. Aprove este %1$s no KIFF, e os Cards que emitiu aparecem aqui.</string>
+    <string name="sign_in_lets_go">Vamos lá</string>
     <string name="sign_in_not_signed_out">Ainda sem sessão terminada no KIFF. Tente novamente, ou termine a sessão deste telefone em Dispositivos noutro dispositivo.</string>
     <string name="sign_in_not_signed_out_device">Ainda sem sessão terminada no KIFF: %1$s. Tente novamente, ou termine a sessão deste %2$s em Dispositivos noutro dispositivo.</string>
     <string name="sign_in_open_kiff">Abrir o KIFF para aprovar</string>
@@ -2051,6 +2056,8 @@
     <string name="sign_in_relink_no_connection">Sem ligação. Tente novamente.</string>
     <string name="sign_in_relink_not_approved_in_browser">Não foi aprovado no navegador.</string>
     <string name="sign_in_relink_prompt">Aprovar novamente com esta impressão digital</string>
+    <string name="sign_in_scan_with_tafs">Leia com o tafs</string>
+    <string name="sign_in_show_code">Mostrar o código</string>
     <string name="sign_in_sign_did_not_come_back">O início de sessão não voltou ao tafs.</string>
     <string name="sign_in_tafs_had_no_window_screen">O tafs não tinha nenhuma janela no ecrã sobre a qual abrir o início de sessão. Abra o tafs e tente novamente.</string>
     <string name="sign_in_waiting">À espera da sua aprovação…</string>
@@ -2064,6 +2071,7 @@
     <string name="sign_in_welcome_revoked_rest">nenhuma ação nova é concluída.</string>
     <string name="sign_in_welcome_title">tafs</string>
     <string name="sign_in_with_kiff">Iniciar sessão com o KIFF</string>
+    <string name="sign_in_with_phone">Iniciar sessão com o seu telefone</string>
     <string name="sign_in_your_code">O seu código</string>
     <string name="taf_activity_all_apps">Todas as apps</string>
     <string name="taf_activity_checking_waits">A verificar o que aguarda por si…</string>

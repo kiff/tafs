@@ -1985,8 +1985,10 @@
     <string name="settings_devices_note">Wylogowanie urządzenia natychmiast kończy jego logowanie na tym koncie. Aby wylogować ten telefon, użyj Wyloguj w sekcji Konto.</string>
     <string name="settings_devices_note_device">Wylogowanie urządzenia natychmiast kończy jego logowanie na tym koncie. Aby wylogować to urządzenie (%1$s), użyj Wyloguj z KIFF.</string>
     <string name="settings_devices_pair">Dodaj urządzenie</string>
+    <string name="settings_devices_pair_add_only">Dodaj to urządzenie do konta. Tylko to urządzenie; nic innego się nie zmienia.</string>
     <string name="settings_devices_pair_check">Czy Twój komputer pokazuje %1$s?</string>
     <string name="settings_devices_pair_check_phone">Czy Twój nowy telefon lub tablet pokazuje %1$s?</string>
+    <string name="settings_devices_pair_claims">Przedstawia się jako %1$s.</string>
     <string name="settings_devices_pair_code_differs">KIFF sparował %1$s z kodem %2$s, a nie %3$s, jak sprawdzono. Jeśli to nie Twój komputer, wyloguj go tutaj.</string>
     <string name="settings_devices_pair_done">%1$s jest sparowany. Pokazywał %2$s.</string>
     <string name="settings_devices_pair_expired">Kod na Twoim komputerze wygasł. Wyświetl nowy i zeskanuj go ponownie.</string>
@@ -2140,6 +2142,8 @@
     <string name="sign_in_again_to_sign_device">Zaloguj się ponownie przez KIFF: to logowanie nie może podpisywać za to urządzenie (%1$s).</string>
     <string name="sign_in_agree">Logując się, akceptujesz %1$s KIFF, które obejmują tafs. Obowiązuje też %2$s KIFF.</string>
     <string name="sign_in_check_code">Zanim zatwierdzisz, sprawdź, czy KIFF pokazuje ten sam kod.</string>
+    <string name="sign_in_connected">Połączono.</string>
+    <string name="sign_in_connected_line">Twórzmy razem wielkie rzeczy.</string>
     <string name="sign_in_could_not_finish">Nie udało się dokończyć: %1$s. Spróbuj ponownie.</string>
     <string name="sign_in_could_not_start">Nie udało się rozpocząć: %1$s. Spróbuj ponownie.</string>
     <string name="sign_in_deletes_every_taf_runs_chats">Usuwa każdego tafa, jego uruchomienia, czaty i notatki, Twoje Card i Twoje połączenia. Nie można tego cofnąć.</string>
@@ -2148,6 +2152,7 @@
     <string name="sign_in_how_works">Jak to działa</string>
     <string name="sign_in_ios_did_not_open_sign">iOS nie otworzył strony logowania (błąd %1$s; %2$s). Spróbuj ponownie przy otwartym tafs.</string>
     <string name="sign_in_lead">Twoje tafs działają w ramach Card KIFF. Zatwierdź to urządzenie (%1$s) w KIFF, a wydane przez Ciebie Card pojawią się tutaj.</string>
+    <string name="sign_in_lets_go">Zaczynamy</string>
     <string name="sign_in_not_signed_out">Jeszcze nie wylogowano w KIFF. Spróbuj ponownie albo wyloguj ten telefon z sekcji Urządzenia na innym urządzeniu.</string>
     <string name="sign_in_not_signed_out_device">Jeszcze nie wylogowano w KIFF: %1$s. Spróbuj ponownie albo wyloguj to urządzenie (%2$s) z sekcji Urządzenia na innym urządzeniu.</string>
     <string name="sign_in_open_kiff">Otwórz KIFF, aby zatwierdzić</string>
@@ -2167,6 +2172,8 @@
     <string name="sign_in_relink_no_connection">Brak połączenia. Spróbuj ponownie.</string>
     <string name="sign_in_relink_not_approved_in_browser">Nie zostało zatwierdzone w przeglądarce.</string>
     <string name="sign_in_relink_prompt">Zatwierdź ponownie tym odciskiem palca</string>
+    <string name="sign_in_scan_with_tafs">Zeskanuj w tafs</string>
+    <string name="sign_in_show_code">Pokaż kod</string>
     <string name="sign_in_sign_did_not_come_back">Logowanie nie wróciło do tafs.</string>
     <string name="sign_in_tafs_had_no_window_screen">tafs nie miał na ekranie okna, nad którym mógłby otworzyć logowanie. Otwórz tafs i spróbuj ponownie.</string>
     <string name="sign_in_waiting">Czeka na Twoje zatwierdzenie…</string>
@@ -2180,6 +2187,7 @@
     <string name="sign_in_welcome_revoked_rest">żadna nowa akcja nie przejdzie.</string>
     <string name="sign_in_welcome_title">tafs</string>
     <string name="sign_in_with_kiff">Zaloguj się przez KIFF</string>
+    <string name="sign_in_with_phone">Zaloguj się telefonem</string>
     <string name="sign_in_your_code">Twój kod</string>
     <string name="taf_activity_all_apps">Wszystkie aplikacje</string>
     <string name="taf_activity_checking_waits">Sprawdzanie, co na Ciebie czeka…</string>

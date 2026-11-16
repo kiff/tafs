@@ -3,6 +3,8 @@
   "sign_in.again_to_sign_device": "Melde dich erneut mit KIFF an: Diese Anmeldung kann nicht für das {device} signieren.",
   "sign_in.agree": "Mit der Anmeldung stimmst du KIFFs {terms}, die tafs abdecken, und seiner {privacy} zu.",
   "sign_in.check_code": "Prüfe, ob KIFF denselben Code zeigt, bevor du genehmigst.",
+  "sign_in.connected": "Du bist verbunden.",
+  "sign_in.connected_line": "Lass uns gemeinsam Großartiges schaffen.",
   "sign_in.could_not_finish": "Konnte nicht abgeschlossen werden: {why}. Versuch es erneut.",
   "sign_in.could_not_start": "Konnte nicht starten: {why}. Versuch es erneut.",
   "sign_in.deletes_every_taf_runs_chats": "Löscht jeden taf, seine Läufe, Chats und Notizen, deine Cards und deine Verbindungen. Das lässt sich nicht rückgängig machen.",
@@ -11,6 +13,7 @@
   "sign_in.how_works": "So funktioniert es",
   "sign_in.ios_did_not_open_sign": "iOS hat die Anmeldeseite nicht geöffnet (Fehler {code}; {context}). Versuch es erneut, während tafs geöffnet ist.",
   "sign_in.lead": "Deine tafs handeln unter KIFF-Cards. Genehmige dieses {device} in KIFF, und die Cards, die du ausgestellt hast, erscheinen hier.",
+  "sign_in.lets_go": "Los geht's",
   "sign_in.not_signed_out": "Bei KIFF noch nicht abgemeldet. Versuch es erneut oder melde dieses Telefon über „Geräte“ auf einem anderen Gerät ab.",
   "sign_in.not_signed_out_device": "Bei KIFF noch nicht abgemeldet: {why}. Versuch es erneut oder melde dieses {device} über „Geräte“ auf einem anderen Gerät ab.",
   "sign_in.open_kiff": "KIFF zum Genehmigen öffnen",
@@ -30,6 +33,8 @@
   "sign_in.relink.no_connection": "Keine Verbindung. Versuch es erneut.",
   "sign_in.relink.not_approved_in_browser": "Es wurde im Browser nicht genehmigt.",
   "sign_in.relink.prompt": "Mit diesem Fingerabdruck erneut genehmigen",
+  "sign_in.scan_with_tafs": "Mit tafs scannen",
+  "sign_in.show_code": "Code anzeigen",
   "sign_in.sign_did_not_come_back": "Die Anmeldung ist nicht zu tafs zurückgekehrt.",
   "sign_in.tafs_had_no_window_screen": "tafs hatte kein Fenster auf dem Bildschirm, über dem sich die Anmeldung öffnen konnte. Öffne tafs und versuch es erneut.",
   "sign_in.waiting": "Wartet auf deine Genehmigung…",
@@ -43,5 +48,6 @@
   "sign_in.welcome.revoked_rest": "heißt: Keine neue Aktion geht durch.",
   "sign_in.welcome.title": "tafs",
   "sign_in.with_kiff": "Mit KIFF anmelden",
+  "sign_in.with_phone": "Mit deinem Telefon anmelden",
   "sign_in.your_code": "Dein Code"
 }
