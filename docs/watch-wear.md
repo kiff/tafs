@@ -25,7 +25,8 @@ this page says what is there now and what each step adds.
 - **The phone's relay** (`app/…/watch/WearRelayService`, `WatchRelay`). The phone app declares `tafs_phone_relay`
   (`res/values/wear.xml`, kept through the release build's resource shrinking by `res/raw/keep.xml`: Google Play
   services reads it and no code does, so 111 went out without it and the watch read the phone as out of range; CI's
-  `play/check_watch_link.sh` fails a release build without it) and answers requests under `/tafs/watch/v1/` only. Each passes `WatchLink.accept` first; then
+  `play/check_watch_link.sh` fails a release build without it; `WatchCapabilityTest` ties the declaration, the keep and
+  the check to the watch's own `WatchLink.PHONE_CAPABILITY`, so the name can't change on one side only) and answers requests under `/tafs/watch/v1/` only. Each passes `WatchLink.accept` first; then
   Needs you is read again (`refresh`), at most once every 10 s for the watch (`RefreshFloor`), and answered as the phone shows it: tafs cloud's count and words, and each held call's
   taf, summary, KIFF's amount and reason. Your tafs is each taf's line (`Taf.now`), or Halted. With no KIFF session (signed
   out, or the sample) the watch is told `signed_out`. Coach is answered Open on phone for now, with nothing sent
