@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { AGREE_FIRST, connectedKey, SHOW_NOW, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, splitApproval, WAITING_DRAFT_KEPT_MS, waitingDraftKey, WORDS } from "../src/cloud/approval.js";
 import { approvalAnswerWords, checkedOnReadFor, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
+import { contract } from "./contract.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
 /**
@@ -2168,6 +2169,8 @@ describe("a card whose sign-in planque couldn't narrow says so, and Coach hears 
     const w = await world(s, {});
     const first = await w.call("GET", CHAT, undefined);
     expect(comp(first)?.wider).toEqual({ words: "The sign-in for Google Sheets can't be narrowed to this job: it asks for more access than the taf uses. The taf still uses only its own tools." });
+    // Every app that can approve a card draws this line (contracts/README.md): it reads the same answer.
+    contract("coach-wider", "GET /v1/tafs/{id}/conversation read with the device's planque proof: an approval card whose connection planque couldn't narrow (usual_access), marked `wider: {words}`, the line every app that can approve the card draws over its buttons.", first.body);
     const fr = await w.call("GET", CHAT, undefined, { "accept-language": "fr" });
     expect(comp(fr)?.wider?.words).toMatch(/^La connexion à Google Sheets ne peut pas être limitée/);
     // Coach reads it with the owner's next message, once, however many reads.
