@@ -77,7 +77,8 @@ class WatchModelTest {
     val model = WatchModel(phone, now = { t }, unlocked = { false })
     model.refuse("hold_1")
     model.halt("taf_1")
-    model.halt(null)
+    model.askHaltAll()
+    model.confirmHaltAll()
     assertEquals(WatchModel.Outcome.NeedsLock, model.outcome.value)
     assertTrue("nothing reached the phone", phone.asked.isEmpty())
   }
@@ -90,11 +91,27 @@ class WatchModelTest {
     assertEquals(listOf(WatchRequest.Refuse(t, "hold_1"), WatchRequest.NeedsYou(t), WatchRequest.Tafs(t)), phone.asked)
   }
 
+  @Test fun haltAllIsAskedOnTheWatchBeforeAnythingIsSent() = runTest {
+    val phone = Phone { if (it is WatchRequest.Halt) Asked.Answered(WatchReply.Done("All your tafs halted")) else reads(it) }
+    val model = WatchModel(phone, now = { t }, unlocked = { true })
+    model.confirmHaltAll()
+    model.askHaltAll()
+    assertTrue(model.confirmingHaltAll.value)
+    model.cancelHaltAll()
+    model.confirmHaltAll()
+    assertTrue("not asked, or cancelled: nothing sent", phone.asked.none { it is WatchRequest.Halt })
+    model.askHaltAll()
+    model.confirmHaltAll()
+    assertEquals(listOf(WatchRequest.Halt(t, null)), phone.asked.filterIsInstance<WatchRequest.Halt>())
+    assertEquals(false, model.confirmingHaltAll.value)
+  }
+
   @Test fun haltOneAndHaltAllNameWhatTheyHalt() = runTest {
     val phone = Phone { if (it is WatchRequest.Halt) Asked.Answered(WatchReply.Done("Halted")) else reads(it) }
     val model = WatchModel(phone, now = { t }, unlocked = { true })
     model.halt("taf_1")
-    model.halt(null)
+    model.askHaltAll()
+    model.confirmHaltAll()
     assertEquals(listOf(WatchRequest.Halt(t, "taf_1"), WatchRequest.Halt(t, null)), phone.asked.filterIsInstance<WatchRequest.Halt>())
     assertEquals(WatchModel.Outcome.Done("Halted"), model.outcome.value)
   }

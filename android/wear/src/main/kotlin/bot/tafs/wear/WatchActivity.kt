@@ -46,14 +46,19 @@ class WatchActivity : ComponentActivity() {
       MaterialTheme {
         val shown by model.shown.collectAsState()
         val outcome by model.outcome.collectAsState()
+        val confirmingHaltAll by model.confirmingHaltAll.collectAsState()
         WatchScreen(
           shown,
           outcome,
+          confirmingHaltAll,
           Actions(
             openOnPhone = ::openOnPhone,
             tryAgain = { lifecycleScope.launch { model.refresh() } },
             refuse = { hold -> lifecycleScope.launch { model.refuse(hold) } },
             halt = { taf -> lifecycleScope.launch { model.halt(taf) } },
+            askHaltAll = model::askHaltAll,
+            confirmHaltAll = { lifecycleScope.launch { model.confirmHaltAll() } },
+            cancelHaltAll = model::cancelHaltAll,
             dismiss = model::dismissOutcome,
           ),
         )
@@ -87,13 +92,17 @@ private class Actions(
   val openOnPhone: (String) -> Unit,
   val tryAgain: () -> Unit,
   val refuse: (String) -> Unit,
-  /** A taf by its id, or null for every taf. */
-  val halt: (String?) -> Unit,
+  /** One taf, by its id. */
+  val halt: (String) -> Unit,
+  /** Halt all: asked first, then confirmed or cancelled. */
+  val askHaltAll: () -> Unit,
+  val confirmHaltAll: () -> Unit,
+  val cancelHaltAll: () -> Unit,
   val dismiss: () -> Unit,
 )
 
 @Composable
-private fun WatchScreen(shown: WatchModel.Shown, outcome: WatchModel.Outcome?, act: Actions) {
+private fun WatchScreen(shown: WatchModel.Shown, outcome: WatchModel.Outcome?, confirmingHaltAll: Boolean, act: Actions) {
   ScalingLazyColumn(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
     outcome?.let { item { OutcomeCard(it, act) } }
     when (shown) {
@@ -114,7 +123,18 @@ private fun WatchScreen(shown: WatchModel.Shown, outcome: WatchModel.Outcome?, a
           item { ListHeader { Text(Words.Home.yourTafs) } }
           for (taf in read.tafs) item { TafRow(taf, act) }
           if (!read.allHalted && read.tafs.isNotEmpty()) item {
-            Button(onClick = { act.halt(null) }, modifier = Modifier.fillMaxWidth()) { Text(Words.Halt.allNow) }
+            if (confirmingHaltAll) {
+              // Asked once more on the wrist: every taf stops until resumed on the phone.
+              Card(onClick = act.cancelHaltAll, modifier = Modifier.fillMaxWidth()) {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                  Text(Words.HaltAll.title, style = MaterialTheme.typography.titleSmall)
+                  Button(onClick = act.confirmHaltAll, modifier = Modifier.fillMaxWidth()) { Text(Words.Halt.allNow) }
+                  Button(onClick = act.cancelHaltAll, modifier = Modifier.fillMaxWidth()) { Text(Words.Common.cancel) }
+                }
+              }
+            } else {
+              Button(onClick = act.askHaltAll, modifier = Modifier.fillMaxWidth()) { Text(Words.Halt.allNow) }
+            }
           }
         }
       }

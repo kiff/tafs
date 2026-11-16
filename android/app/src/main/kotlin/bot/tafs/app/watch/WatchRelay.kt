@@ -71,16 +71,21 @@ class WatchRelay(
   private suspend fun halt(tafId: String?): WatchReply {
     val model = signedIn() ?: return WatchReply.SignedOut
     if (tafId != null && model.state.value.taf(tafId) == null) return WatchReply.Failed(Words.Watch.openOnPhone)
+    // Where it stands now, read again: one halted or halting already (a Halt sent twice, or from the phone meanwhile) is
+    // answered as it stands, and nothing is asked of tafs cloud a second time.
+    model.refreshHalt(tafId)
+    if (!model.state.value.haltOf(tafId).running) return standing(model.state.value.haltOf(tafId), tafId)
     model.halt(tafId)
     val state = model.state.value
     state.haltError?.let { return WatchReply.Failed(it) }
-    val halt = state.haltOf(tafId)
-    return when {
-      halt.halted -> WatchReply.Done(if (tafId == null) Words.Alert.allHalted else Words.Taf.State.halted)
-      halt.halting -> WatchReply.Done(Words.Halt.Explain.halting)
-      // Nothing was asked of tafs cloud (a taf it doesn't run): the phone's own Halt says why.
-      else -> WatchReply.Failed(Words.Watch.openOnPhone)
-    }
+    return standing(state.haltOf(tafId), tafId)
+  }
+
+  private fun standing(halt: bot.tafs.app.kiff.Halt, tafId: String?): WatchReply = when {
+    halt.halted -> WatchReply.Done(if (tafId == null) Words.Alert.allHalted else Words.Taf.State.halted)
+    halt.halting -> WatchReply.Done(Words.Halt.Explain.halting)
+    // Nothing was asked of tafs cloud (a taf it doesn't run): the phone's own Halt says why.
+    else -> WatchReply.Failed(Words.Watch.openOnPhone)
   }
 
   companion object {

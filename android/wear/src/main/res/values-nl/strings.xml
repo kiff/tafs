@@ -5,10 +5,12 @@
     <string name="alert_needs_you">Een taf wacht op jou</string>
     <string name="alert_not_refused">Niet geweigerd</string>
     <string name="coach_ask">Coach vragen</string>
+    <string name="common_cancel">Annuleren</string>
     <string name="common_loading">Laden…</string>
     <string name="common_try_again">Opnieuw proberen</string>
     <string name="halt_all_now">Alles nu stilzetten</string>
     <string name="halt_now">Nu stilzetten</string>
+    <string name="halt_all_title">Alle tafs stilzetten</string>
     <string name="home_your_tafs">Je tafs</string>
     <string name="needs_you_nothing">Niets wacht op jou.</string>
     <string name="needs_you_refuse">Weigeren</string>

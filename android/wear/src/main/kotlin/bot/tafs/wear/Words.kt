@@ -15,12 +15,16 @@ object Words {
     val ask: String get() = Res.s(R.string.coach_ask)
   }
   object Common {
+    val cancel: String get() = Res.s(R.string.common_cancel)
     val loading: String get() = Res.s(R.string.common_loading)
     val tryAgain: String get() = Res.s(R.string.common_try_again)
   }
   object Halt {
     val allNow: String get() = Res.s(R.string.halt_all_now)
     val now: String get() = Res.s(R.string.halt_now)
+  }
+  object HaltAll {
+    val title: String get() = Res.s(R.string.halt_all_title)
   }
   object Home {
     val yourTafs: String get() = Res.s(R.string.home_your_tafs)

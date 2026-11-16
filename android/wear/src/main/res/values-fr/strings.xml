@@ -5,10 +5,12 @@
     <string name="alert_needs_you">Un taf vous attend</string>
     <string name="alert_not_refused">Non refusé</string>
     <string name="coach_ask">Demander à Coach</string>
+    <string name="common_cancel">Annuler</string>
     <string name="common_loading">Chargement…</string>
     <string name="common_try_again">Réessayer</string>
     <string name="halt_all_now">Tout bloquer maintenant</string>
     <string name="halt_now">Bloquer maintenant</string>
+    <string name="halt_all_title">Bloquer tous les tafs</string>
     <string name="home_your_tafs">Vos tafs</string>
     <string name="needs_you_nothing">Rien ne vous attend.</string>
     <string name="needs_you_refuse">Refuser</string>

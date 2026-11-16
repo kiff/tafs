@@ -159,4 +159,55 @@ class WatchRefuseHaltTest {
     assertTrue(failed.toString(), failed is WatchReply.Failed && failed.words.isNotBlank())
     assertEquals(WatchReply.Failed("Open on phone"), relay.ask(WatchRequest.Halt(now, "no_such_taf")))
   }
+
+  // MARK: Asked twice, or of a call the phone can't answer
+
+  @Test fun aRefusalSentTwiceIsAnsweredOnce() = runTest {
+    reads(); transport.answer("POST /v1/me/card-exceptions/ce_1/reject", 200, "{}")
+    val m = model()
+    val hold = m.state.value.held.single().id
+    val relay = WatchRelay(model = { m }, now = { now })
+    assertEquals(WatchReply.Done("Refused"), relay.ask(WatchRequest.Refuse(now, hold)))
+    // KIFF no longer holds it: the same request again, within 30 s, is already answered, and nothing is sent or signed again.
+    val signed = signer.signed
+    transport.reset(); reads(withHeld = false)
+    assertEquals(WatchReply.AlreadyAnswered, relay.ask(WatchRequest.Refuse(now + 5_000, hold)))
+    assertTrue(transport.requests.none { it.method == "POST" })
+    assertEquals(signed, signer.signed)
+  }
+
+  @Test fun aHaltSentTwiceAsksTafsCloudOnce() = runTest {
+    reads(withHeld = false)
+    transport.answer("GET /v1/tafs/id_a-1/halt", 200, haltBody("running"))
+    transport.answer("POST /v1/tafs/id_a-1/halt", 200, haltBody("halting"))
+    transport.answer("GET /v1/tafs/id_a-1/halt", 200, haltBody("halting"))
+    val m = model()
+    val taf = m.state.value.tafs.single().id
+    val relay = WatchRelay(model = { m }, now = { now })
+    val first = relay.ask(WatchRequest.Halt(now, taf))
+    val again = relay.ask(WatchRequest.Halt(now + 5_000, taf))
+    assertEquals(first, again)
+    assertEquals("one halt, however often the wrist asks", 1, transport.requestsTo("POST /v1/tafs/id_a-1/halt").size)
+  }
+
+  @Test fun whetherACallMayBeRefusedIsThePhonesOwnRead() = runTest {
+    // KIFF holds it but keeps no accounting version this phone could sign over: the phone can't answer it from here.
+    val unsigned = held.replace("\"accounting_version\":1,", "")
+    transport.answer("GET /v1/me", 200, me)
+    transport.answer("GET /v1/home", 200, home)
+    transport.answer("GET /v1/me/card-exceptions", 200, """{"exceptions":[$unsigned]}""")
+    transport.answer("GET /v1/me/activity", 200, """{"calls":[$activity]}""")
+    val m = model()
+    val call = m.state.value.held.single()
+    assertTrue("not refusable from the wrist", !WatchRelay.needsYou(m.state.value).calls.single().refusable)
+    // The watch's request carries no say in it (the gate refuses any extra field), and the phone answers from its own read.
+    val relay = WatchRelay(model = { m }, now = { now })
+    assertEquals(
+      WatchReply.Refused(NotAccepted.MALFORMED),
+      relay.answer(WatchLink.REFUSE, """{"made_at":$now,"hold_id":"${call.id}","refusable":true}""".encodeToByteArray()),
+    )
+    assertEquals(WatchReply.Failed("Open on phone"), relay.ask(WatchRequest.Refuse(now, call.id)))
+    assertTrue(transport.requests.none { it.method == "POST" })
+    assertEquals(0, signer.signed)
+  }
 }
