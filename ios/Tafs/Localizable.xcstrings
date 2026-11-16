@@ -5063,10 +5063,52 @@
     "approval.security_key.enter_pin": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib die PIN deines Sicherheitsschlüssels ein. tafs fragt jedes Mal danach und speichert sie nie."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Enter your security key's PIN. tafs asks for it each time and never stores it."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduce el PIN de tu llave de seguridad. tafs lo pide cada vez y nunca lo guarda."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez le code PIN de votre clé de sécurité. tafs le demande à chaque fois et ne l'enregistre jamais."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inserisci il PIN della tua chiave di sicurezza. tafs lo chiede ogni volta e non lo salva mai."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voer de pincode van je beveiligingssleutel in. tafs vraagt er elke keer om en bewaart hem nooit."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wpisz PIN swojego klucza bezpieczeństwa. tafs pyta o niego za każdym razem i nigdy go nie zapisuje."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduza o PIN da sua chave de segurança. O tafs pede-o sempre e nunca o guarda."
           }
         }
       }
@@ -5074,10 +5116,52 @@
     "approval.security_key.failed": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Sicherheitsschlüssel konnte nicht signieren, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The security key couldn't sign, so nothing was approved. The request is kept: approve again when you're ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La llave de seguridad no pudo firmar, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé de sécurité n'a pas pu signer : rien n'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chiave di sicurezza non è riuscita a firmare, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De beveiligingssleutel kon niet ondertekenen, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz bezpieczeństwa nie mógł podpisać, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave de segurança não conseguiu assinar, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto."
           }
         }
       }
@@ -5085,10 +5169,52 @@
     "approval.security_key.locked": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Sicherheitsschlüssel ist nach zu vielen falschen PINs gesperrt und kann nicht genehmigen. Genehmige auf deinem Telefon. Beim Zurücksetzen wird der Schlüssel gelöscht. Um wieder mit einem Schlüssel zu genehmigen, kopple diesen Computer erneut."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "This security key is locked after too many wrong PINs, so it can't approve. Approve on your phone. Resetting the key erases it, so to approve with a key again, pair this computer again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta llave de seguridad está bloqueada tras demasiados PIN incorrectos, así que no puede aprobar. Aprueba en tu teléfono. Restablecer la llave la borra, así que para volver a aprobar con una llave, vuelve a vincular este ordenador."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette clé de sécurité est verrouillée après trop de codes PIN incorrects : elle ne peut pas approuver. Approuvez sur votre téléphone. Réinitialiser la clé l'efface : pour approuver de nouveau avec une clé, associez de nouveau cet ordinateur."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa chiave di sicurezza è bloccata dopo troppi PIN errati, quindi non può approvare. Approva sul telefono. Ripristinare la chiave la cancella, quindi per approvare di nuovo con una chiave, associa di nuovo questo computer."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze beveiligingssleutel is vergrendeld na te veel verkeerde pincodes, dus hij kan niet goedkeuren. Keur goed op je telefoon. Als je de sleutel herstelt, wordt hij gewist. Om weer met een sleutel goed te keuren, koppel je deze computer opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten klucz bezpieczeństwa jest zablokowany po zbyt wielu złych PIN-ach, więc nie może zatwierdzać. Zatwierdź na telefonie. Zresetowanie klucza go wymazuje, więc aby znów zatwierdzać kluczem, sparuj ten komputer ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta chave de segurança está bloqueada após demasiados PIN errados, por isso não pode aprovar. Aprove no seu telefone. Repor a chave apaga-a, por isso, para voltar a aprovar com uma chave, associe novamente este computador."
           }
         }
       }
@@ -5096,10 +5222,52 @@
     "approval.security_key.no_key": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steck deinen Sicherheitsschlüssel ein und versuch es dann erneut."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Plug in your security key, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conecta tu llave de seguridad y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Branchez votre clé de sécurité, puis réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Collega la tua chiave di sicurezza, poi riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Steek je beveiligingssleutel erin en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podłącz swój klucz bezpieczeństwa i spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ligue a sua chave de segurança e tente novamente."
           }
         }
       }
@@ -5107,10 +5275,52 @@
     "approval.security_key.no_pin_set": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Sicherheitsschlüssel hat keine PIN und kann nicht genehmigen. Steck den Schlüssel ein, der zu diesem Computer gehört. Wurde er zurückgesetzt, genehmige auf deinem Telefon und kopple diesen Computer erneut, um mit einem Schlüssel zu genehmigen."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "This security key has no PIN, so it can't approve. Plug in the one that goes with this computer. If it was reset, approve on your phone, and pair this computer again to approve with a key."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta llave de seguridad no tiene PIN, así que no puede aprobar. Conecta la que va con este ordenador. Si se restableció, aprueba en tu teléfono y vuelve a vincular este ordenador para aprobar con una llave."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette clé de sécurité n'a pas de code PIN : elle ne peut pas approuver. Branchez celle liée à cet ordinateur. Si elle a été réinitialisée, approuvez sur votre téléphone, et associez de nouveau cet ordinateur pour approuver avec une clé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa chiave di sicurezza non ha un PIN, quindi non può approvare. Collega quella che va con questo computer. Se è stata ripristinata, approva sul telefono e associa di nuovo questo computer per approvare con una chiave."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze beveiligingssleutel heeft geen pincode, dus hij kan niet goedkeuren. Steek de sleutel erin die bij deze computer hoort. Is hij hersteld, keur dan goed op je telefoon en koppel deze computer opnieuw om met een sleutel goed te keuren."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten klucz bezpieczeństwa nie ma PIN-u, więc nie może zatwierdzać. Podłącz klucz powiązany z tym komputerem. Jeśli został zresetowany, zatwierdź na telefonie i sparuj ten komputer ponownie, aby zatwierdzać kluczem."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta chave de segurança não tem PIN, por isso não pode aprovar. Ligue a que vai com este computador. Se foi reposta, aprove no seu telefone e associe novamente este computador para aprovar com uma chave."
           }
         }
       }
@@ -5118,10 +5328,52 @@
     "approval.security_key.not_allowed": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Sicherheitsschlüssel hat es nicht zugelassen, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The security key didn't allow it, so nothing was approved. The request is kept: approve again when you're ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La llave de seguridad no lo permitió, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé de sécurité ne l'a pas autorisé : rien n'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chiave di sicurezza non l'ha consentito, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De beveiligingssleutel stond het niet toe, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz bezpieczeństwa na to nie pozwolił, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave de segurança não o permitiu, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto."
           }
         }
       }
@@ -5129,10 +5381,52 @@
     "approval.security_key.not_fido2": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Sicherheitsschlüssel kann keine PIN prüfen und daher nicht genehmigen. Steck den Schlüssel ein, der zu diesem Computer gehört."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "This security key can't check a PIN, so it can't approve. Plug in the one that goes with this computer."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta llave de seguridad no puede comprobar un PIN, así que no puede aprobar. Conecta la que va con este ordenador."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette clé de sécurité ne peut pas vérifier un code PIN : elle ne peut pas approuver. Branchez celle liée à cet ordinateur."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa chiave di sicurezza non può verificare un PIN, quindi non può approvare. Collega quella che va con questo computer."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze beveiligingssleutel kan geen pincode controleren, dus hij kan niet goedkeuren. Steek de sleutel erin die bij deze computer hoort."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten klucz bezpieczeństwa nie umie sprawdzić PIN-u, więc nie może zatwierdzać. Podłącz klucz powiązany z tym komputerem."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta chave de segurança não consegue verificar um PIN, por isso não pode aprovar. Ligue a que vai com este computador."
           }
         }
       }
@@ -5140,10 +5434,52 @@
     "approval.security_key.not_this_key": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist nicht der Sicherheitsschlüssel, der zu diesem Computer gehört. Steck diesen ein und versuch es erneut, oder genehmige auf deinem Telefon."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "This isn't the security key that goes with this computer. Plug that one in and try again, or approve on your phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta no es la llave de seguridad que va con este ordenador. Conecta esa y vuelve a intentarlo, o aprueba en tu teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce n'est pas la clé de sécurité liée à cet ordinateur. Branchez celle-ci et réessayez, ou approuvez sur votre téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa non è la chiave di sicurezza che va con questo computer. Collega quella e riprova, oppure approva sul telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit is niet de beveiligingssleutel die bij deze computer hoort. Steek die erin en probeer het opnieuw, of keur goed op je telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To nie jest klucz bezpieczeństwa powiązany z tym komputerem. Podłącz tamten i spróbuj ponownie albo zatwierdź na telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta não é a chave de segurança que vai com este computador. Ligue essa e tente novamente, ou aprove no seu telefone."
           }
         }
       }
@@ -5151,7 +5487,49 @@
     "approval.security_key.pin": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        },
         "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code PIN"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pincode"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN"
+          }
+        },
+        "pt": {
           "stringUnit": {
             "state": "translated",
             "value": "PIN"
@@ -5162,10 +5540,52 @@
     "approval.security_key.pin_paused": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das sind drei falsche PINs hintereinander. Zieh den Schlüssel ab, steck ihn wieder ein und versuch es dann erneut."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "That's three wrong PINs in a row. Unplug the key, plug it in again, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son tres PIN incorrectos seguidos. Desconecta la llave, vuelve a conectarla y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trois codes PIN incorrects de suite. Débranchez la clé, rebranchez-la, puis réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sono tre PIN errati di fila. Scollega la chiave, ricollegala, poi riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dat zijn drie verkeerde pincodes achter elkaar. Haal de sleutel eruit, steek hem er weer in en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To trzy złe PIN-y z rzędu. Odłącz klucz, podłącz go ponownie i spróbuj jeszcze raz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "São três PIN errados seguidos. Desligue a chave, volte a ligá-la e tente novamente."
           }
         }
       }
@@ -5173,10 +5593,52 @@
     "approval.security_key.pin_too_long": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese PIN ist für einen Sicherheitsschlüssel zu lang."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "That PIN is too long for a security key."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese PIN es demasiado largo para una llave de seguridad."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce code PIN est trop long pour une clé de sécurité."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo PIN è troppo lungo per una chiave di sicurezza."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die pincode is te lang voor een beveiligingssleutel."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten PIN jest za długi dla klucza bezpieczeństwa."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esse PIN é demasiado longo para uma chave de segurança."
           }
         }
       }
@@ -5184,10 +5646,52 @@
     "approval.security_key.pin_too_short": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die PIN eines Sicherheitsschlüssels hat mindestens 4 Zeichen."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "A security key's PIN has at least 4 characters."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El PIN de una llave de seguridad tiene al menos 4 caracteres."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le code PIN d'une clé de sécurité compte au moins 4 caractères."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il PIN di una chiave di sicurezza ha almeno 4 caratteri."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De pincode van een beveiligingssleutel heeft minstens 4 tekens."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN klucza bezpieczeństwa ma co najmniej 4 znaki."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O PIN de uma chave de segurança tem pelo menos 4 caracteres."
           }
         }
       }
@@ -5195,10 +5699,52 @@
     "approval.security_key.several_keys": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es ist mehr als ein Sicherheitsschlüssel eingesteckt. Zieh die anderen ab, lass den Schlüssel stecken, der zu diesem Computer gehört, und versuch es dann erneut."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "More than one security key is plugged in. Unplug the others, keep the one that goes with this computer, then try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay más de una llave de seguridad conectada. Desconecta las demás, deja la que va con este ordenador y vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plusieurs clés de sécurité sont branchées. Débranchez les autres, gardez celle liée à cet ordinateur, puis réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "È collegata più di una chiave di sicurezza. Scollega le altre, tieni quella che va con questo computer, poi riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er zit meer dan één beveiligingssleutel in. Haal de andere eruit, laat de sleutel zitten die bij deze computer hoort en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podłączono więcej niż jeden klucz bezpieczeństwa. Odłącz pozostałe, zostaw klucz powiązany z tym komputerem i spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Há mais de uma chave de segurança ligada. Desligue as outras, mantenha a que vai com este computador e tente novamente."
           }
         }
       }
@@ -5206,10 +5752,52 @@
     "approval.security_key.timed_out": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Sicherheitsschlüssel wurde nicht rechtzeitig berührt, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The security key wasn't touched in time, so nothing was approved. The request is kept: approve again when you're ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La llave de seguridad no se tocó a tiempo, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé de sécurité n'a pas été touchée à temps : rien n'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chiave di sicurezza non è stata toccata in tempo, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De beveiligingssleutel is niet op tijd aangeraakt, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucza bezpieczeństwa nie dotknięto na czas, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave de segurança não foi tocada a tempo, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto."
           }
         }
       }
@@ -5217,10 +5805,52 @@
     "approval.security_key.title": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit deinem Sicherheitsschlüssel genehmigen"
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Approve with your security key"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobar con tu llave de seguridad"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approuver avec votre clé de sécurité"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approva con la tua chiave di sicurezza"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Goedkeuren met je beveiligingssleutel"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatwierdź kluczem bezpieczeństwa"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprovar com a sua chave de segurança"
           }
         }
       }
@@ -5228,10 +5858,74 @@
     "approval.security_key.touch": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berühre deinen Sicherheitsschlüssel."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Touch your security key."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca tu llave de seguridad."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez votre clé de sécurité."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca la tua chiave di sicurezza."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raak je beveiligingssleutel aan."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dotknij swojego klucza bezpieczeństwa."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toque na sua chave de segurança."
+          }
+        }
+      }
+    },
+    "approval.security_key.tries_left|few": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostały %1$@ próby, zanim klucz się zablokuje."
+          }
+        }
+      }
+    },
+    "approval.security_key.tries_left|many": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostało %1$@ prób, zanim klucz się zablokuje."
           }
         }
       }
@@ -5239,10 +5933,52 @@
     "approval.security_key.tries_left|one": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch %1$@ Versuch, bevor der Schlüssel gesperrt wird."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ try left before the key locks."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queda %1$@ intento antes de que la llave se bloquee."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encore %1$@ essai avant que la clé ne se verrouille."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resta %1$@ tentativo prima che la chiave si blocchi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog %1$@ poging voordat de sleutel vergrendelt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Została %1$@ próba, zanim klucz się zablokuje."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resta %1$@ tentativa antes de a chave bloquear."
           }
         }
       }
@@ -5250,10 +5986,52 @@
     "approval.security_key.tries_left|other": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch %1$@ Versuche, bevor der Schlüssel gesperrt wird."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "%1$@ tries left before the key locks."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quedan %1$@ intentos antes de que la llave se bloquee."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encore %1$@ essais avant que la clé ne se verrouille."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restano %1$@ tentativi prima che la chiave si blocchi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nog %1$@ pogingen voordat de sleutel vergrendelt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostało %1$@ próby, zanim klucz się zablokuje."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restam %1$@ tentativas antes de a chave bloquear."
           }
         }
       }
@@ -5261,10 +6039,52 @@
     "approval.security_key.unplugged": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Sicherheitsschlüssel wurde abgezogen, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "The security key was unplugged, so nothing was approved. The request is kept: approve again when you're ready."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La llave de seguridad se desconectó, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé de sécurité a été débranchée : rien n'a été approuvé. La demande est conservée : approuvez à nouveau quand vous êtes prêt."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chiave di sicurezza è stata scollegata, quindi non è stato approvato nulla. La richiesta resta: approva di nuovo quando sei pronto."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De beveiligingssleutel is eruit gehaald, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz bezpieczeństwa został odłączony, więc nic nie zostało zatwierdzone. Prośba zostaje zachowana: zatwierdź ją ponownie, kiedy zechcesz."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave de segurança foi desligada, por isso nada foi aprovado. O pedido fica guardado: aprove novamente quando estiver pronto."
           }
         }
       }
@@ -5272,10 +6092,74 @@
     "approval.security_key.wrong_pin_no_count": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falsche PIN. Versuch es erneut."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Wrong PIN. Try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN incorrecto. Vuelve a intentarlo."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code PIN incorrect. Réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN errato. Riprova."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verkeerde pincode. Probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zły PIN. Spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN errado. Tente novamente."
+          }
+        }
+      }
+    },
+    "approval.security_key.wrong_pin|few": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zły PIN. Zostały %1$@ próby, zanim klucz się zablokuje."
+          }
+        }
+      }
+    },
+    "approval.security_key.wrong_pin|many": {
+      "extractionState": "manual",
+      "localizations": {
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zły PIN. Zostało %1$@ prób, zanim klucz się zablokuje."
           }
         }
       }
@@ -5283,10 +6167,52 @@
     "approval.security_key.wrong_pin|one": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falsche PIN. Noch %1$@ Versuch, bevor der Schlüssel gesperrt wird."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Wrong PIN. %1$@ try left before the key locks."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN incorrecto. Queda %1$@ intento antes de que la llave se bloquee."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code PIN incorrect. Encore %1$@ essai avant que la clé ne se verrouille."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN errato. Resta %1$@ tentativo prima che la chiave si blocchi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verkeerde pincode. Nog %1$@ poging voordat de sleutel vergrendelt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zły PIN. Została %1$@ próba, zanim klucz się zablokuje."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN errado. Resta %1$@ tentativa antes de a chave bloquear."
           }
         }
       }
@@ -5294,10 +6220,52 @@
     "approval.security_key.wrong_pin|other": {
       "extractionState": "manual",
       "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falsche PIN. Noch %1$@ Versuche, bevor der Schlüssel gesperrt wird."
+          }
+        },
         "en": {
           "stringUnit": {
             "state": "translated",
             "value": "Wrong PIN. %1$@ tries left before the key locks."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN incorrecto. Quedan %1$@ intentos antes de que la llave se bloquee."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code PIN incorrect. Encore %1$@ essais avant que la clé ne se verrouille."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN errato. Restano %1$@ tentativi prima che la chiave si blocchi."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verkeerde pincode. Nog %1$@ pogingen voordat de sleutel vergrendelt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zły PIN. Zostało %1$@ próby, zanim klucz się zablokuje."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PIN errado. Restam %1$@ tentativas antes de a chave bloquear."
           }
         }
       }

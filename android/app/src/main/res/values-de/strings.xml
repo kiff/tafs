@@ -95,6 +95,32 @@
     <string name="approval_prompt_approve_on_kiff">Bei KIFF genehmigen</string>
     <string name="approval_ready_approve">Dieses %1$s ist bereit, mit %2$s zu genehmigen.</string>
     <string name="approval_request_kept">" Die Anfrage bleibt erhalten."</string>
+    <string name="approval_security_key_enter_pin">Gib die PIN deines Sicherheitsschlüssels ein. tafs fragt jedes Mal danach und speichert sie nie.</string>
+    <string name="approval_security_key_failed">Der Sicherheitsschlüssel konnte nicht signieren, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
+    <string name="approval_security_key_locked">Dieser Sicherheitsschlüssel ist nach zu vielen falschen PINs gesperrt und kann nicht genehmigen. Genehmige auf deinem Telefon. Beim Zurücksetzen wird der Schlüssel gelöscht. Um wieder mit einem Schlüssel zu genehmigen, kopple diesen Computer erneut.</string>
+    <string name="approval_security_key_no_key">Steck deinen Sicherheitsschlüssel ein und versuch es dann erneut.</string>
+    <string name="approval_security_key_no_pin_set">Dieser Sicherheitsschlüssel hat keine PIN und kann nicht genehmigen. Steck den Schlüssel ein, der zu diesem Computer gehört. Wurde er zurückgesetzt, genehmige auf deinem Telefon und kopple diesen Computer erneut, um mit einem Schlüssel zu genehmigen.</string>
+    <string name="approval_security_key_not_allowed">Der Sicherheitsschlüssel hat es nicht zugelassen, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
+    <string name="approval_security_key_not_fido2">Dieser Sicherheitsschlüssel kann keine PIN prüfen und daher nicht genehmigen. Steck den Schlüssel ein, der zu diesem Computer gehört.</string>
+    <string name="approval_security_key_not_this_key">Das ist nicht der Sicherheitsschlüssel, der zu diesem Computer gehört. Steck diesen ein und versuch es erneut, oder genehmige auf deinem Telefon.</string>
+    <string name="approval_security_key_pin">PIN</string>
+    <string name="approval_security_key_pin_paused">Das sind drei falsche PINs hintereinander. Zieh den Schlüssel ab, steck ihn wieder ein und versuch es dann erneut.</string>
+    <string name="approval_security_key_pin_too_long">Diese PIN ist für einen Sicherheitsschlüssel zu lang.</string>
+    <string name="approval_security_key_pin_too_short">Die PIN eines Sicherheitsschlüssels hat mindestens 4 Zeichen.</string>
+    <string name="approval_security_key_several_keys">Es ist mehr als ein Sicherheitsschlüssel eingesteckt. Zieh die anderen ab, lass den Schlüssel stecken, der zu diesem Computer gehört, und versuch es dann erneut.</string>
+    <string name="approval_security_key_timed_out">Der Sicherheitsschlüssel wurde nicht rechtzeitig berührt, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
+    <string name="approval_security_key_title">Mit deinem Sicherheitsschlüssel genehmigen</string>
+    <string name="approval_security_key_touch">Berühre deinen Sicherheitsschlüssel.</string>
+    <plurals name="approval_security_key_tries_left">
+        <item quantity="one">Noch %1$s Versuch, bevor der Schlüssel gesperrt wird.</item>
+        <item quantity="other">Noch %1$s Versuche, bevor der Schlüssel gesperrt wird.</item>
+    </plurals>
+    <string name="approval_security_key_unplugged">Der Sicherheitsschlüssel wurde abgezogen, also wurde nichts genehmigt. Die Anfrage bleibt erhalten: Genehmige erneut, wenn du so weit bist.</string>
+    <plurals name="approval_security_key_wrong_pin">
+        <item quantity="one">Falsche PIN. Noch %1$s Versuch, bevor der Schlüssel gesperrt wird.</item>
+        <item quantity="other">Falsche PIN. Noch %1$s Versuche, bevor der Schlüssel gesperrt wird.</item>
+    </plurals>
+    <string name="approval_security_key_wrong_pin_no_count">Falsche PIN. Versuch es erneut.</string>
     <string name="approval_set_a_screen_lock">Richte eine Displaysperre auf diesem Telefon ein, um zu genehmigen</string>
     <string name="approval_settings_face_id_passcode_touch">Einstellungen → Face ID &amp; Code (Touch ID &amp; Code auf einem Gerät mit Touch ID)</string>
     <string name="approval_settings_path_face_id">Einstellungen → Face ID &amp; Code</string>
