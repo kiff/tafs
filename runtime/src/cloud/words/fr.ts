@@ -304,6 +304,7 @@ export const fr: Words = {
   brief_sign_in_again: "Se reconnecter",
   brief_connection_meanwhile: (taf, vendor) => `${taf} ne peut pas joindre ${vendor} d'ici là.`,
   brief_open_taf: "Ouvrir le taf",
+  card_wider: (vendor) => `${vendor ? `La connexion à ${vendor}` : "Cette connexion"} ne peut pas être limitée à cette tâche : elle demande plus d'accès que le taf n'en utilise. Le taf n'utilise toujours que ses propres outils.`,
   brief_check_meanwhile: (taf) => `${taf} ne voit aucun nouveau travail tant que sa vérification ne peut pas lire à nouveau.`,
   mission_log_delivered: (done, held, refused) => [`${done} fait${done > 1 ? "s" : ""}`, held ? `${held} retenu${held > 1 ? "s" : ""}` : "", refused ? `${refused} refusé${refused > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · "),
   business_title: "Ce que les tafs savent de votre entreprise",

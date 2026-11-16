@@ -42,7 +42,7 @@ import { answerContent, askApp, CONTINUE_SAID, currentDrive, DRIVE_TOOLS, DRIVE_
 import { type Keys as PermitKeys, publishedKeys } from "./permit.js";
 import { AI_CONSENT_CODE, aiConsentOf, aiConsentView, type ConsentWhy, consentPauseKey, consentPauseOf, consentPauseWords, giveAIConsent, recordFirstYes, recordMaker, takeOver, unattendedConsent, waitsForConsent, withdrawAIConsent, consentingPeople, markGone } from "./consent.js";
 import { PageRefusal, readPage, type PageFetch } from "./webread.js";
-import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles } from "./steps.js";
+import { attachWhys, coachGuard, CONNECTION_TOOL, connectsRefused, foldRetried, failedStep, type Refused, refusalKind, takeRefused, whyOf, STEP_WHY_KEPT_MS, STEP_WHYS_KEPT, stepWhyKey, type StepWhys, signInApp, stepWords, Steps, type ToolTitles, vendorName } from "./steps.js";
 import { replayHeld, type Unanswered, unansweredOf, unansweredWords, waitsForCredits } from "./doors/hold.js";
 import { addDoor, answerKnock, DoorError, doorLights, answerKeptEvents, doorRunEnded, placesOf, sendAgain, settlePending, unsentOf, sweepDoorReplies, type DoorsContext, type DoorsDeps, keepBound, knocksOf, listDoors, offered, type Owner, pair, parseDoorMessage, removeDoor, removeTafDoors, sentOf, setOpen, unpair } from "./doors/doors.js";
 import { inbound, isDoorPath } from "./doors/inbound.js";
@@ -3269,11 +3269,14 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
   await refuseSplitApprovals(event, me, taf, components, deps).catch((err) => console.error(`split approval: ${(err as Error).message}`));
   const proof = event.headers?.["planque-device-signature"] ?? "";
   if (!proof || !deps.planqueBase) return;
-  const waiting = components.filter((c) => !c.answer && (c.component as { type?: unknown; grant?: unknown } | undefined)?.type === "approval" &&
+  const naming = (type: string) => components.filter((c) => !c.answer && (c.component as { type?: unknown; grant?: unknown } | undefined)?.type === type &&
     typeof (c.component as { grant?: unknown }).grant === "string");
-  if (!waiting.length) return;
+  const waiting = naming("approval");
+  const signIns = naming("sign_in");
+  if (!waiting.length && !signIns.length) return;
   const grants = await within(readGrants(deps.planqueBase, me.tenantID, proof, deps.fetch ?? fetch), SIGNS_READ_MS).catch(() => undefined);
   if (!grants) return;
+  await markWider(me, taf, [...waiting, ...signIns], grants, langOf(event), deps);
   const can = (new URLSearchParams(event.rawQueryString ?? "").get("can") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
   const flags = readFlags();
   const lang = langOf(event);
@@ -3301,6 +3304,32 @@ async function markSigns(event: HTTPEvent, me: KIFFIdentity, taf: Taf, component
     }
     const takes = takesOf(step, confirmKey);
     c.component = { ...card, signs: { ...signsOf(step, draft, lang, grant), ...(takes ? { takes } : {}) } };
+  }
+}
+
+/**
+ * A waiting approval or sign-in card whose connection planque couldn't narrow (`usual_access`: the app's sign-in asks for more
+ * access than the taf uses, such as Google Sheets with no read-only scope) says so before the owner signs in or approves:
+ * `wider: {words}` on the card, for the apps to draw over its buttons, so no card stands under Coach's "change nothing" or
+ * "read-only" unsaid. Coach hears it once per connection, as a line it reads with the owner's next message, so it says it
+ * plainly and never calls that sign-in read-only.
+ */
+async function markWider(me: KIFFIdentity, taf: Taf, cards: ThreadComponent[], grants: ApprovalGrant[], lang: Lang, deps: Deps): Promise<void> {
+  for (const c of cards) {
+    const card = c.component as { grant: string };
+    const grant = grants.find((g) => g.id === card.grant);
+    if (grant?.usual_access !== true) continue;
+    const vendor = grant.vendor || vendorName(grant.request.server) || "";
+    c.component = { ...card, wider: { words: wordsIn(lang).card_wider(vendor || undefined) } };
+    if (!deps.coach) continue;
+    const at = deps.now?.() ?? new Date();
+    const until = new Date(at.getTime() + TASK_KEPT_MS);
+    if (!(await deps.coach.once(`${me.tenantID}#wider#${grant.id}`, until).catch(() => false))) continue;
+    const name = vendor || "This app";
+    const line = `[connection ${name} (grant ${grant.id})] The sign-in for ${name} can't be narrowed to what the taf uses: it asks for more access than the job needs. `
+      + "Say so plainly to the owner before they sign in or approve; never call this sign-in read-only or say it changes nothing. The taf still uses only its own tools.";
+    await deps.coach.append(coachKeys.notes(me.tenantID, me.subject), { at: at.toISOString(), text: line, taf: taf.name, taf_id: taf.id, said: wordsIn(lang).card_wider(vendor || undefined) }, until)
+      .catch((err) => console.error(`coach line, ${grant.id} wider:`, err));
   }
 }
 

@@ -49,6 +49,11 @@ export interface ApprovalGrant {
   signed_in?: boolean;
   /** Its tools are declared in KIFF while they wait for approval, so a Card can be drafted and confirmed over them. */
   declared?: boolean;
+  /**
+   * planque couldn't narrow the app's sign-in to what the taf uses (its ceiling has no narrower scope, such as Google Sheets
+   * with no read-only one): the sign-in asks for more access than the job needs (kiff/planque's `UsualAccess`).
+   */
+  usual_access?: boolean;
 }
 
 /**

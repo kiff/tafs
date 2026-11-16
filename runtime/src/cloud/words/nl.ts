@@ -304,6 +304,7 @@ export const nl: Words = {
   brief_sign_in_again: "Opnieuw inloggen",
   brief_connection_meanwhile: (taf, vendor) => `${taf} kan ${vendor} tot dan niet bereiken.`,
   brief_open_taf: "Het taf openen",
+  card_wider: (vendor) => `${vendor ? `De aanmelding bij ${vendor}` : "Deze aanmelding"} kan niet tot deze taak worden beperkt: hij vraagt meer toegang dan het taf gebruikt. Het taf gebruikt nog steeds alleen zijn eigen tools.`,
   brief_check_meanwhile: (taf) => `${taf} vindt geen nieuw werk tot de controle weer kan lezen.`,
   mission_log_delivered: (done, held, refused) => [`${done} gedaan`, held ? `${held} vastgehouden` : "", refused ? `${refused} geweigerd` : ""].filter(Boolean).join(" · "),
   business_title: "Wat tafs over je bedrijf weten",
