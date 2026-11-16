@@ -26,9 +26,11 @@ import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
 import androidx.wear.remote.interactions.RemoteActivityHelper
+import bot.tafs.watchlink.DecisionLine
 import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
 import bot.tafs.watchlink.WatchLink
+import bot.tafs.watchlink.WatchReply
 import kotlinx.coroutines.launch
 
 /**
@@ -155,11 +157,17 @@ internal fun WatchScreen(
             Text(Words.Watch.voiceTextOnly, style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
           }
         }
-        item { ListHeader { Text(Words.NeedsYou.title) } }
-        // Nothing waits: the owner's all-clear (board 12) above Needs you's own words.
-        if (shown.needsYou.allClear) item { AllClearIllustration() }
-        line(shown.needsYou.words)
-        for (call in shown.needsYou.calls) item { HeldCallCard(call, act) }
+        val brief = shown.brief
+        if (brief != null) {
+          // Your brief, in Needs you's place (the switch on, and the account has one).
+          briefItems(brief, shown, act)
+        } else {
+          item { ListHeader { Text(Words.NeedsYou.title) } }
+          // Nothing waits: the owner's all-clear (board 12) above Needs you's own words.
+          if (shown.needsYou.allClear) item { AllClearIllustration() }
+          line(shown.needsYou.words)
+          for (call in shown.needsYou.calls) item { HeldCallCard(call, act) }
+        }
         shown.tafs?.let { read ->
           item { ListHeader { Text(Words.Home.yourTafs) } }
           for (taf in read.tafs) item { TafRow(taf, act) }
@@ -179,6 +187,55 @@ internal fun WatchScreen(
           }
         }
       }
+    }
+  }
+}
+
+/**
+ * Your brief, in tafs cloud's words, where Needs you would be: its title and `when` line, each decision on its own card (answered on
+ * the phone, so Open on phone; Refuse only where Needs you offers it), its line for more, what got done, and the rest.
+ */
+private fun ScalingLazyListScope.briefItems(brief: WatchReply.Brief, shown: WatchModel.Shown.Read, act: Actions) {
+  item { ListHeader { Text(brief.title) } }
+  brief.whenLine?.let { line(it) }
+  for (decision in brief.decisions) item { DecisionCard(decision, brief.urgent, shown.refusable(decision), act) }
+  brief.more?.let { line(it) }
+  brief.done?.let { done ->
+    item {
+      Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(done, style = MaterialTheme.typography.titleSmall)
+        for (case in brief.doneCases) Text(case, style = MaterialTheme.typography.bodySmall)
+      }
+    }
+  }
+  if (brief.rest != null || brief.needsYou != null) item {
+    // What waits and needs nothing now, and what Needs you holds beyond the brief: Needs you's list, on the phone.
+    Card(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) {
+      Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        brief.rest?.let { Text(it) }
+        brief.needsYou?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+      }
+    }
+  }
+}
+
+/**
+ * One of the brief's decisions: its taf, the question, its deadline, and why it can't wait. It's answered on the phone, never here:
+ * Open on phone, and Refuse only for a held call Needs you would let the wrist refuse ([refuseHold]).
+ */
+@Composable
+private fun DecisionCard(decision: DecisionLine, urgentWord: String?, refuseHold: String?, act: Actions) {
+  Card(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+      decision.taf?.let { Text(it, style = MaterialTheme.typography.titleSmall) }
+      if (decision.urgent) urgentWord?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error) }
+      Text(decision.question)
+      decision.deadline?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+      decision.cantWait?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+      if (refuseHold != null) {
+        Button(onClick = { act.refuse(refuseHold) }, modifier = Modifier.fillMaxWidth()) { Text(Words.NeedsYou.refuse) }
+      }
+      Button(onClick = { act.openOnPhone("needs-you") }, modifier = Modifier.fillMaxWidth()) { Text(Words.Watch.openOnPhone) }
     }
   }
 }

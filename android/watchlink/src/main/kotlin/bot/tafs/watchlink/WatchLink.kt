@@ -30,6 +30,12 @@ sealed interface WatchRequest {
 
   /** A message to Coach, as text: the watch's speech input becomes text there, and no audio is ever sent. */
   data class Coach(override val madeAt: Long, val text: String) : WatchRequest
+
+  /**
+   * Your brief, as the phone shows it in Needs you's place: a read, like [NeedsYou]. The watch asks it only while its own switch is
+   * on (docs/watch-wear.md, Your brief); a phone answers it either way, as answering a read is harmless.
+   */
+  data class Brief(override val madeAt: Long) : WatchRequest
 }
 
 /** Why the phone refused a message before reading or signing anything. */
@@ -81,7 +87,56 @@ sealed interface WatchReply {
   /** The phone refused the request itself ([NotAccepted]), before reading or signing anything. */
   @Serializable @SerialName("not_accepted")
   data class Refused(val reason: NotAccepted) : WatchReply
+
+  /**
+   * Your brief, in tafs cloud's words, as the phone shows it in Needs you's place: its title and its `when` line ("Morning brief ·
+   * 08:00 · next at 18:00"), the decisions still to answer in tafs cloud's order (the urgent first), its line for more decisions,
+   * what got done (its heading and at most two case names), and the rest. Nothing on it is answered from the wrist but a held
+   * call's Refuse, where Needs you already allows it.
+   */
+  @Serializable @SerialName("brief")
+  data class Brief(
+    val title: String,
+    @SerialName("when") val whenLine: String? = null,
+    val decisions: List<DecisionLine> = emptyList(),
+    /** More decisions than the brief shows, in tafs cloud's words ("2 more decisions"). */
+    val more: String? = null,
+    /** tafs cloud's word for an urgent decision ("Urgent"). */
+    val urgent: String? = null,
+    /** Done's heading, when anything got done. */
+    val done: String? = null,
+    /** The first two of what got done, by name. */
+    @SerialName("done_cases") val doneCases: List<String> = emptyList(),
+    /** The things that wait and need nothing now, in tafs cloud's line. */
+    val rest: String? = null,
+    /** What Needs you holds that the brief doesn't show, in the phone's words: nothing waiting is out of reach. */
+    @SerialName("needs_you") val needsYou: String? = null,
+  ) : WatchReply
+
+  /** The account has no brief now: the watch shows Needs you, as without one. */
+  @Serializable @SerialName("no_brief")
+  data object NoBrief : WatchReply
 }
+
+/**
+ * One of the brief's decisions, as the phone shows it: its question, its taf, its deadline in words, and, when it's urgent, why it
+ * can't wait. Answered on the phone; [holdId] names the held call it's about as Needs you's [HeldLine] does, so the watch offers
+ * Refuse exactly where Needs you would.
+ */
+@Serializable
+data class DecisionLine(
+  val id: String,
+  val question: String,
+  val taf: String? = null,
+  val deadline: String? = null,
+  val urgent: Boolean = false,
+  @SerialName("cant_wait") val cantWait: String? = null,
+  /** What it's about, as tafs cloud says: `hold`, `step`, `connection`, `check`, and its id there. */
+  @SerialName("ref_kind") val refKind: String = "",
+  @SerialName("ref_id") val refId: String = "",
+  /** The held call's id as Needs you lists it ([HeldLine.holdId]), for a decision about one the phone holds now. */
+  @SerialName("hold_id") val holdId: String? = null,
+)
 
 /** A held call as the phone's Needs you shows it: its taf, what it wants, KIFF's amount and the reason, as words. */
 @Serializable
@@ -107,6 +162,7 @@ object WatchLink {
   const val REFUSE = PREFIX + "refuse"
   const val HALT = PREFIX + "halt"
   const val COACH = PREFIX + "coach"
+  const val BRIEF = PREFIX + "brief"
 
   /** What the phone app declares (its `android_wear_capabilities`), so the watch finds the phone that can answer it. */
   const val PHONE_CAPABILITY = "tafs_phone_relay"
@@ -151,6 +207,7 @@ object WatchLink {
         if (request.tafId == null) HaltBody(request.madeAt, all = true) else HaltBody(request.madeAt, tafId = request.tafId),
       )
       is WatchRequest.Coach -> COACH to json.encodeToString(CoachBody.serializer(), CoachBody(request.madeAt, request.text))
+      is WatchRequest.Brief -> BRIEF to json.encodeToString(Read.serializer(), Read(request.madeAt))
     }
     return path to body.encodeToByteArray()
   }
@@ -162,7 +219,7 @@ object WatchLink {
   }
 
   /**
-   * The phone's side: [path] and [data] as they arrived, checked before anything is read or signed. Only the five requests
+   * The phone's side: [path] and [data] as they arrived, checked before anything is read or signed. Only the six requests
    * above pass, each exactly as [encode] writes it, made within [MAX_AGE_MS] of [nowMs].
    */
   fun accept(path: String, data: ByteArray, nowMs: Long): Accepted {
@@ -180,6 +237,7 @@ object WatchLink {
           }
         }
         COACH -> json.decodeFromString(CoachBody.serializer(), text).let { WatchRequest.Coach(it.madeAt, it.text) }
+        BRIEF -> WatchRequest.Brief(json.decodeFromString(Read.serializer(), text).madeAt)
         else -> return Accepted.No(NotAccepted.UNKNOWN_PATH)
       }
     } catch (_: IllegalArgumentException) {
@@ -196,7 +254,7 @@ object WatchLink {
     is WatchRequest.Refuse -> request.holdId.isNotBlank()
     is WatchRequest.Halt -> request.tafId == null || request.tafId.isNotBlank()
     is WatchRequest.Coach -> request.text.isNotBlank() && request.text.length <= MAX_COACH_TEXT
-    is WatchRequest.NeedsYou, is WatchRequest.Tafs -> true
+    is WatchRequest.NeedsYou, is WatchRequest.Tafs, is WatchRequest.Brief -> true
   }
 
   /** The phone's answer, as bytes for the Data Layer. */

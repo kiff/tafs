@@ -90,6 +90,32 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
     `watch.more_on_phone`. Nothing heard is kept: the words and the answer are forgotten once closed
     (`WatchCoachTest`, `WatchModelTest`).
 
+## Your brief (behind a switch)
+
+Where the phone shows Your brief in Needs you's place, the watch can show it too, in tafs cloud's words. It's built and **off**:
+`BRIEF_ON_WATCH` (`wear/…/WatchModel.kt`) is `false`, and turns on with the owner's yes, as that one line. Off, the watch asks and
+draws exactly what it did before (the same requests, the same screens, the same store screenshots, `WatchModelTest`).
+
+With it on (`WatchModel(briefOn = true)` in the tests):
+- **The read.** After Needs you, the watch asks `brief`; then Your tafs. The phone answers from the brief it already holds
+  (`AppState.brief`, read with Needs you by `AppModel.refresh`, behind the same 10 s `RefreshFloor`): no read of its own, and
+  nothing new goes to tafs cloud or KIFF. The phone answers `brief` whatever the watch's switch, as answering a read is harmless.
+  No brief on the account is `no_brief`, and a phone that doesn't know the path refuses it: either way the watch shows Needs you.
+- **What's sent** (`WatchReply.Brief`, `WatchRelay.brief`): the title and its `when` line ("Morning brief · 08:00 · next at
+  18:00"); the decisions still to answer on the phone (one set aside there isn't), in tafs cloud's order, which puts the urgent
+  first, each with its question, its taf, its deadline in words, why it can't wait, and what it's about (`ref` kind and id); the
+  line for more decisions; tafs cloud's word for urgent; Done's heading and its first two cases by name; the rest line; and the
+  phone's own line for what Needs you holds beyond the brief, so nothing waiting is out of reach.
+- **What's drawn:** the brief in Needs you's place, then Your tafs with Halt, unchanged. Each decision is a card with **Open on
+  phone** (`tafs://open/needs-you`, the one destination the phone takes from the watch: Needs you's list, opened over the brief),
+  and no answer buttons: decisions are answered on the phone. The rest is one card that opens Needs you on the phone.
+- **Refuse, as Needs you has it.** A decision about a held call (`ref` kind `hold`) carries the call's id as Needs you lists it
+  (`hold_id`, the phone matching KIFF's id in `ref`); the watch offers **Refuse** only when its own Needs you read lists that
+  same id as refusable (`Shown.Read.refusable`). It's the same request, sent only with a screen lock set and the watch unlocked.
+- **Unchanged:** the tile (Needs you's count, only while unlocked); a locked watch shows only "A taf needs you"; the brief is
+  kept in memory and forgotten when the watch is put away. No new words: the brief's are tafs cloud's, and Open on phone and
+  Refuse are the watch's own (`WatchBriefScreenTest`, `WatchBriefTest`).
+
 ## Versions
 
 The watch shares the phone's package, and Play needs every `versionCode` on the listing to be unique across the phone's and
@@ -138,7 +164,7 @@ The watch holds **no keys, no session and no KIFF client**. It sends the phone a
 reads or signs with its own session and keys, and the watch draws the answer in the phone's words. A lost watch can read
 and stop things, never approve.
 
-The watch may ask five things (`WatchRequest`), each a path under `/tafs/watch/v1/`:
+The watch may ask six things (`WatchRequest`), each a path under `/tafs/watch/v1/`:
 
 | Path | What the phone does |
 | --- | --- |
@@ -147,13 +173,14 @@ The watch may ask five things (`WatchRequest`), each a path under `/tafs/watch/v
 | `refuse` | Refuses one held call, by `hold_id` |
 | `halt` | Halts one taf (`taf_id`), or every taf (`all: true`, in so many words: a body without its taf is never every taf) |
 | `coach` | Sends Coach a message as text |
+| `brief` | Reads Your brief as the phone shows it, or says there's none (`no_brief`); asked only with the watch's switch on (below) |
 
 **There is no approval request.** Approving a held call, a Card, a payment, a connection or extra room is a signature with
 the phone's approval key behind its fingerprint, so on the watch each says **Approve on your phone** and opens it there.
 
 **What the phone refuses before reading or signing anything** (`WatchLink.accept`, `NotAccepted`):
 
-- a path that isn't one of the five (an approval, a newer version): `UNKNOWN_PATH`;
+- a path that isn't one of the six (an approval, a newer version): `UNKNOWN_PATH`;
 - a body that isn't exactly what its path takes, a field missing, extra (`"answer": "approve_once"` on a refusal) or blank,
   or a Coach message that's empty or over 2,000 characters: `MALFORMED`;
 - a request made more than 30 seconds ago: `TOO_OLD`. Requests are live messages (`MessageClient.sendRequest`), never

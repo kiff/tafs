@@ -1,5 +1,6 @@
 package bot.tafs.wear
 
+import bot.tafs.watchlink.DecisionLine
 import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
 import bot.tafs.watchlink.WatchReply
@@ -7,6 +8,12 @@ import bot.tafs.watchlink.WatchRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+
+/**
+ * Your brief on the watch (docs/watch-wear.md, Your brief): off. With it off the watch asks and shows exactly what it did before;
+ * on, it asks the phone for the brief too and shows it in Needs you's place. It turns on with the owner's yes, as this one line.
+ */
+internal const val BRIEF_ON_WATCH = false
 
 /** How the watch reaches the phone: one live request and its answer, or nothing when the phone can't be reached. */
 fun interface PhoneLink {
@@ -38,13 +45,25 @@ class WatchModel(
   private val unlocked: () -> Boolean = { false },
   /** Needs you's count for the tile, the only thing written to disk; none in a test that doesn't look at it. */
   private val tile: TileCount? = null,
+  /** Whether the watch asks for Your brief and shows it ([BRIEF_ON_WATCH]); a test passes it rather than flipping the switch. */
+  private val briefOn: Boolean = BRIEF_ON_WATCH,
 ) {
   sealed interface Shown {
     /** Asking the phone, with nothing to show yet. */
     data object Asking : Shown
 
-    /** The phone's Needs you and Your tafs, in its words. */
-    data class Read(val needsYou: NeedsYouRead, val tafs: TafsRead?) : Shown
+    /**
+     * The phone's Needs you and Your tafs, in its words; and its brief, shown in Needs you's place, when the switch is on and the
+     * account has one.
+     */
+    data class Read(val needsYou: NeedsYouRead, val tafs: TafsRead?, val brief: WatchReply.Brief? = null) : Shown {
+      /**
+       * The hold [decision] may be refused by, from the wrist: only a held call Needs you's own read lists as refusable, matched by
+       * its hold id, so the brief offers Refuse exactly where Needs you does. Null for any other: it's Open on phone.
+       */
+      fun refusable(decision: DecisionLine): String? =
+        decision.holdId?.takeIf { id -> needsYou.calls.any { it.holdId == id && it.refusable } }
+    }
 
     /** The phone isn't signed in to tafs. */
     data object SignedOut : Shown
@@ -188,7 +207,7 @@ class WatchModel(
   private val _shown = MutableStateFlow<Shown>(Shown.Asking)
   val shown: StateFlow<Shown> = _shown.asStateFlow()
 
-  /** Reads Needs you, then Your tafs, from the phone. Your tafs not answering leaves Needs you shown, without the tafs. */
+  /** Reads Needs you, then Your brief (with the switch on), then Your tafs, from the phone. Your tafs not answering leaves Needs you shown, without the tafs. */
   suspend fun refresh() {
     if (_shown.value !is Shown.Read) _shown.value = Shown.Asking
     val needsYou = when (val asked = phone.ask(WatchRequest.NeedsYou(now()))) {
@@ -203,8 +222,10 @@ class WatchModel(
       Asked.Unreachable -> return show(Shown.PhoneUnreachable)
       Asked.NotUnderstood -> return show(Shown.OpenOnPhone)
     }
+    // Your brief, only with the switch on: none, or a phone that can't say (an older one), and Needs you stays, as today.
+    val brief = if (briefOn) (phone.ask(WatchRequest.Brief(now())) as? Asked.Answered)?.reply as? WatchReply.Brief else null
     val tafs = (phone.ask(WatchRequest.Tafs(now())) as? Asked.Answered)?.let { it.reply as? WatchReply.Tafs }?.let { TafsRead(it.tafs, it.allHalted) }
-    show(Shown.Read(needsYou, tafs))
+    show(Shown.Read(needsYou, tafs, brief))
   }
 
   /** What the watch keeps once it's put away or the phone signs out: nothing. */
