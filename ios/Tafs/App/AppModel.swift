@@ -2231,12 +2231,22 @@ final class AppModel: ObservableObject {
     /// The brief's decisions still to answer here.
     var briefDecisions: [TafsCloud.Brief.Decision] { (brief?.decisions ?? []).filter { !briefSetAside.contains($0.id) } }
 
-    /// Needs you's own count, shown under the brief whenever the app's list holds more than the brief's
-    /// decisions: a held call the brief doesn't name is never out of reach. Nil when the brief covers it all.
-    nonisolated static func needsYouBeyondBrief(count: Int, decisions: Int) -> String? {
-        count > decisions ? Words.NeedsYou.count(count: count) : nil
+    /// How much of Needs you the brief doesn't show, matched item by item, never by number: a held call or a
+    /// step the brief shows is matched by its `ref` (`hold:<id>`, `step:<handoff>`), and anything the brief
+    /// can't carry (`others`) counts. Equal counts of different items still leave something to link to.
+    nonisolated static func needsYouBeyondBrief(items: [String], others: Int, brief: [TafsCloud.Brief.Decision]) -> Int {
+        let shown = Set(brief.map { "\($0.ref.kind):\($0.ref.id)" })
+        return items.filter { !shown.contains($0) }.count + others
     }
-    var briefNeedsYouLine: String? { Self.needsYouBeyondBrief(count: needsYouCount, decisions: briefDecisions.count) }
+
+    /// Needs you's count of what the brief doesn't show, under the brief: nothing waiting is ever out of
+    /// reach. Nil when the brief shows it all.
+    var briefNeedsYouLine: String? {
+        let items = held.compactMap { $0.kiffID.map { "hold:" + $0 } } + yourSteps.map { "step:" + $0.handoff }
+        let others = held.filter { $0.kiffID == nil }.count + cardUnitExceptions.count + unproven.count + coachWaiting.count
+        let beyond = Self.needsYouBeyondBrief(items: items, others: others, brief: briefDecisions)
+        return beyond > 0 ? Words.NeedsYou.count(count: beyond) : nil
+    }
 
     /// Reads the brief for the label chosen: the sample's for screenshots, else tafs cloud's. The switch is
     /// the route itself: until tafs cloud serves `GET /v1/brief`, it answers 404 and there's no brief, so

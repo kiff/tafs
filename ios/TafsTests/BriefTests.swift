@@ -99,10 +99,20 @@ final class BriefTests: XCTestCase {
         XCTAssertEqual(AppModel.destination(of: unknown, answer: decision.answers[0]), "needs-you")
     }
 
-    func testNeedsYouStaysReachableWheneverItHoldsMoreThanTheBrief() {
-        XCTAssertEqual(AppModel.needsYouBeyondBrief(count: 3, decisions: 1), Words.NeedsYou.count(count: 3))
-        XCTAssertNil(AppModel.needsYouBeyondBrief(count: 1, decisions: 1), "the brief covers it all")
-        XCTAssertNil(AppModel.needsYouBeyondBrief(count: 0, decisions: 0))
+    /// Needs you stays reachable whatever the brief shows, matched by item: equal counts of different items
+    /// still leave a link (a held call Later moved out, a step the brief doesn't carry).
+    func testNeedsYouStaysReachableMatchedByItemNeverByNumber() {
+        func decision(_ kind: String, _ id: String) -> TafsCloud.Brief.Decision {
+            var d = TafsCloud.Brief.Decision()
+            d.id = "\(kind):\(id)"; d.ref = .init(kind: kind, id: id)
+            return d
+        }
+        let brief = [decision("hold", "ce_1"), decision("step", "h1"), decision("hold", "ce_2")]
+        XCTAssertEqual(AppModel.needsYouBeyondBrief(items: ["hold:ce_1", "step:h1", "hold:ce_9"], others: 0, brief: brief), 1,
+                       "three and three, but one of Needs you's isn't in the brief")
+        XCTAssertEqual(AppModel.needsYouBeyondBrief(items: ["hold:ce_1", "step:h1"], others: 0, brief: brief), 0, "the brief shows it all")
+        XCTAssertEqual(AppModel.needsYouBeyondBrief(items: ["hold:ce_1"], others: 2, brief: brief), 2, "what the brief can't carry counts")
+        XCTAssertEqual(AppModel.needsYouBeyondBrief(items: ["step:ce_1"], others: 0, brief: brief), 1, "matched by kind too")
     }
 
     func testLaterMovesItOnlyOnceTafsCloudHas() async throws {
