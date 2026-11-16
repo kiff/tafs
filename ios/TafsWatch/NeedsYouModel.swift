@@ -17,6 +17,8 @@ final class NeedsYouModel: ObservableObject {
     }
 
     @Published private(set) var state: State = .loading
+    /// Each Refuse sent from here, by KIFF's id for the held call.
+    @Published private(set) var answers: [String: WatchAnswer] = [:]
     private let phone: PhoneAsking
     private let clock: () -> Date
 
@@ -44,14 +46,26 @@ final class NeedsYouModel: ObservableObject {
             state = .signedOut
         case .failed:
             state = .failed(reply.line ?? Words.Alert.tafsCouldNotReachKiff)
-        case .refused, .stale, .notYet:
-            // The phone dropped it, or is an older version: ask again from the screen.
+        case .refused, .stale, .notYet, .answered:
+            // The phone dropped it, is an older version, or answered as if to a Refuse: ask again
+            // from the screen.
             state = .unreachable
         }
+    }
+
+    /// Refuses a held call through the phone, which signs it as from its notification. Once
+    /// at a time per call; the result is the phone's.
+    func refuse(_ hold: String) async {
+        guard answers[hold]?.isSending != true else { return }
+        answers[hold] = .sending
+        let reply = await phone.ask(WatchRequest(.refuse, made: clock(), hold: hold))
+        if reply?.outcome == .signedOut { state = .signedOut; answers = [:]; return }
+        answers[hold] = WatchAnswer.from(reply, notDone: Words.Alert.notRefused)
     }
 
     /// The app left the screen: what was read goes.
     func leave() {
         state = .loading
+        answers = [:]
     }
 }

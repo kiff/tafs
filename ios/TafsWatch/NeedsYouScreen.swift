@@ -1,7 +1,8 @@
 import SwiftUI
 
 /// Needs you on the wrist: the count, then each held call in the phone's words (the taf, what
-/// it asks with its amount, why it was held, and when it lapses). Answering is on the phone.
+/// it asks with its amount, why it was held, and when it lapses). Refuse is answered from here,
+/// through the phone; approving is on the phone.
 /// Until the phone answers, it says it's loading, never that nothing is waiting.
 struct NeedsYouScreen: View {
     @ObservedObject var model: NeedsYouModel
@@ -32,23 +33,29 @@ struct NeedsYouScreen: View {
                     Text(Words.Watch.asOf(time: needsYou.at.formatted(date: .omitted, time: .shortened)))
                 }
                 ForEach(needsYou.calls) { call in
-                    HeldCallRow(call: call)
+                    HeldCallRow(call: call, answer: model.answers[call.id]) {
+                        Task { await model.refuse(call.id) }
+                    }
                 }
             }
             .refreshable { await model.load() }
         case .unreachable:
-            Notice(line: Words.Watch.phoneNotReachable) { await model.load() }
+            WatchNotice(line: Words.Watch.phoneNotReachable) { await model.load() }
         case .signedOut:
-            Notice(line: Words.Watch.signInOnPhone) { await model.load() }
+            WatchNotice(line: Words.Watch.signInOnPhone) { await model.load() }
         case .failed(let why):
-            Notice(line: why) { await model.load() }
+            WatchNotice(line: why) { await model.load() }
         }
     }
 }
 
-/// One held call, as the phone words it: the taf, what it asks, why, and by when.
+/// One held call, as the phone words it: the taf, what it asks, why, and by when. Refuse, once
+/// confirmed, and what came of it; never Approve.
 struct HeldCallRow: View {
     let call: WatchNeedsYou.Call
+    let answer: WatchAnswer?
+    let refuse: () -> Void
+    @State private var confirming = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -61,17 +68,37 @@ struct HeldCallRow: View {
             Text(Words.NeedsYou.answerBy(time: call.answerBy))
                 .font(.footnote)
                 .foregroundStyle(.secondary)
-            // The watch never approves: an approval is signed on the phone, behind Face ID.
-            Label(Words.Watch.approveOnPhone, systemImage: "iphone")
-                .font(.footnote)
-                .padding(.top, 2)
+            switch answer {
+            case nil:
+                Button(Words.NeedsYou.refuse, role: .destructive) { confirming = true }
+                    .buttonStyle(.bordered)
+                    .padding(.top, 4)
+                // The watch never approves: an approval is signed on the phone, behind Face ID.
+                Label(Words.Watch.approveOnPhone, systemImage: "iphone")
+                    .font(.footnote)
+                    .padding(.top, 2)
+            case .sending:
+                ProgressView()
+            case .done(let line):
+                Text(line)
+                    .font(.footnote.weight(.semibold))
+            case .failed(let why):
+                Text(why)
+                    .font(.footnote)
+                Button(Words.Common.tryAgain, role: .destructive) { refuse() }
+                    .buttonStyle(.bordered)
+            }
         }
-        .accessibilityElement(children: .combine)
+        .confirmationDialog(Words.NeedsYou.refuse, isPresented: $confirming) {
+            Button(Words.NeedsYou.refuse, role: .destructive) { refuse() }
+        } message: {
+            Text([call.taf, call.what].compactMap { $0 }.joined(separator: "\n"))
+        }
     }
 }
 
 /// A line from the phone, or about it, with Try again.
-private struct Notice: View {
+struct WatchNotice: View {
     let line: String
     let retry: () async -> Void
 
