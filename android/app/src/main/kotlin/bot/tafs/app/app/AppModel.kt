@@ -1299,7 +1299,7 @@ class AppModel(
   internal suspend fun takeSession(token: bot.tafs.app.kiff.DeviceToken, stopped: Boolean) {
     if (stopped) {
       withContext(NonCancellable) { runCatching { kiff.signOut(bearer = token.accessToken) } }
-      throw CancellationException("the sign-in this token answers was stopped")
+      throw CancellationException()
     }
     withContext(NonCancellable) { useSession(token.accessToken, token.tenant) }
   }
