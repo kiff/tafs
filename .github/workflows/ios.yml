@@ -76,6 +76,8 @@ jobs:
       actions: read
     outputs:
       ipad: ${{ steps.diff.outputs.ipad }}
+      # The watch app (watch job): what it's built from changed.
+      watch: ${{ steps.diff.outputs.watch }}
       shots: ${{ steps.diff.outputs.shots }}
       # The iPhone's UI tests (TafsUITests): a manual run's from the lookup, else the diff's.
       ui: ${{ steps.tested.outputs.ui || steps.diff.outputs.ui }}
@@ -103,30 +105,35 @@ jobs:
           ui='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|\.github/workflows/ios\.yml$)'
           # What the iPhone's UI tests depend on: what draws the screens, and the UI tests.
           uitests='^(ios/Tafs/(Views|Design|Assets\.xcassets)/|ios/Tafs/App/TafsApp\.swift$|ios/Shared/Mascot\.xcassets/|ios/TafsUITests/|\.github/workflows/ios\.yml$)'
+          # What the watch app is built from: its own folders, the phone's words it
+          # compiles, the project file. And this workflow.
+          watch='^(ios/(TafsWatch|TafsWatchTests|Shared)/|ios/project\.yml$|ios/Tafs/Design/Words\.swift$|ios/Tafs/Localizable\.xcstrings$|\.github/workflows/ios\.yml$)'
           case "$EVENT" in
-            workflow_dispatch) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "shots=$SHOTS" >> "$GITHUB_OUTPUT"; exit 0 ;;
+            workflow_dispatch) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "watch=true" >> "$GITHUB_OUTPUT"; echo "shots=$SHOTS" >> "$GITHUB_OUTPUT"; exit 0 ;;
             push) case "$REF" in
-                    refs/tags/v*) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "shots=full" >> "$GITHUB_OUTPUT"; exit 0 ;;
+                    refs/tags/v*) echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "watch=true" >> "$GITHUB_OUTPUT"; echo "shots=full" >> "$GITHUB_OUTPUT"; exit 0 ;;
                   esac
                   # main: the iPad's and the iPhone's UI tests only when the push
                   # touches what they test, as on a pull request.
                   echo "shots=none" >> "$GITHUB_OUTPUT"
                   if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-                    echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; exit 0
+                    echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "watch=true" >> "$GITHUB_OUTPUT"; exit 0
                   fi
                   changed=$(git diff --name-only "$BASE" "$HEAD")
                   if echo "$changed" | grep -Eq "$ipad"; then echo "ipad=true" >> "$GITHUB_OUTPUT"; else echo "ipad=false" >> "$GITHUB_OUTPUT"; fi
                   if echo "$changed" | grep -Eq "$uitests"; then echo "ui=true" >> "$GITHUB_OUTPUT"; else echo "ui=false" >> "$GITHUB_OUTPUT"; fi
+                  if echo "$changed" | grep -Eq "$watch"; then echo "watch=true" >> "$GITHUB_OUTPUT"; else echo "watch=false" >> "$GITHUB_OUTPUT"; fi
                   exit 0 ;;
           esac
           if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
-            echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "shots=key" >> "$GITHUB_OUTPUT"   # nothing to compare with
+            echo "ipad=true" >> "$GITHUB_OUTPUT"; echo "ui=true" >> "$GITHUB_OUTPUT"; echo "watch=true" >> "$GITHUB_OUTPUT"; echo "shots=key" >> "$GITHUB_OUTPUT"   # nothing to compare with
             exit 0
           fi
           changed=$(git diff --name-only "$BASE" "$HEAD")
           if echo "$changed" | grep -Eq "$ipad"; then echo "ipad=true" >> "$GITHUB_OUTPUT"; else echo "ipad=false" >> "$GITHUB_OUTPUT"; fi
           if echo "$changed" | grep -Eq "$uitests"; then echo "ui=true" >> "$GITHUB_OUTPUT"; else echo "ui=false" >> "$GITHUB_OUTPUT"; fi
           if echo "$changed" | grep -Eq "$ui"; then echo "shots=key" >> "$GITHUB_OUTPUT"; else echo "shots=none" >> "$GITHUB_OUTPUT"; fi
+          if echo "$changed" | grep -Eq "$watch"; then echo "watch=true" >> "$GITHUB_OUTPUT"; else echo "watch=false" >> "$GITHUB_OUTPUT"; fi
 
       # A manual run (an upload, or screenshots): has main already passed what
       # it would test, on a commit with the same app? Then it's skipped, and an
@@ -267,6 +274,53 @@ jobs:
             -project Tafs.xcodeproj -scheme Tafs \
             -destination "id=$DEVICE_ID" \
             -only-testing:TafsUITests \
+            CODE_SIGNING_ALLOWED=NO
+
+  # The Apple Watch app (docs/watch-app.md): built and its unit tests run on a watch
+  # simulator, in one xcodebuild, only when what it's built from changes (changes.watch);
+  # a tag and a manual run always. A draft runs nothing. Its own scheme (TafsWatch): the
+  # phone's jobs never build it. Kept short, since the macOS runners are shared.
+  watch:
+    needs: changes
+    if: (github.event_name != 'pull_request' || !github.event.pull_request.draft) && needs.changes.outputs.watch == 'true'
+    runs-on: macos-26
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Generate the Xcode project
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+
+      - name: Build and test on a watch simulator
+        run: |
+          cd ios
+          xcodebuild -version
+          # The newest watchOS runtime's Apple Watch. The image ships one for its
+          # Xcode; if it doesn't, the platform is downloaded once, here.
+          pick() {
+            xcrun simctl list devices available -j | python3 -c '
+          import json, re, sys
+          devices = json.load(sys.stdin)["devices"]
+          def version(key):
+              return [int(n) for n in re.findall(r"\d+", key.rsplit("watchOS", 1)[-1])]
+          runtimes = sorted((k for k in devices if "watchOS" in k and devices[k]), key=version)
+          print(devices[runtimes[-1]][-1]["udid"] if runtimes else "")
+          '
+          }
+          WATCH_ID=$(pick)
+          if [ -z "$WATCH_ID" ]; then
+            echo "No watchOS simulator on this image: downloading the platform."
+            xcodebuild -downloadPlatform watchOS
+            WATCH_ID=$(pick)
+          fi
+          [ -n "$WATCH_ID" ] || { echo "::error::No watchOS simulator, even after downloading the platform."; exit 1; }
+          xcodebuild test \
+            -project Tafs.xcodeproj -scheme TafsWatch \
+            -destination "id=$WATCH_ID" \
             CODE_SIGNING_ALLOWED=NO
 
   # The iPad's sidebar (the 901 test): the list's UI tests on the 13-inch iPad, since the
@@ -611,6 +665,9 @@ jobs:
       && (needs.ipad.result == 'success' || (needs.ipad.result == 'skipped' && needs.changes.outputs.ipad_tested == 'true'))
     runs-on: macos-26
     timeout-minutes: 45
+    # The signing secrets (DIST_P12, ASC_KEY_P8) are this environment's, which deploys only from main and
+    # v* tags: a workflow pushed on another branch can't read them (docs/mac-app.md, Signing and TestFlight).
+    environment: apple-release
     env:
       ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
       ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}

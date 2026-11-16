@@ -1220,6 +1220,7 @@
     <string name="home_explore_jobs">Explorar tarefas</string>
     <string name="home_footer">Sessão iniciada com o KIFF.</string>
     <string name="home_halted_open_halt">Bloqueado. Abrir Bloquear</string>
+    <string name="home_labels_all">Todos</string>
     <string name="home_loading">A carregar os seus tafs…</string>
     <string name="home_new_taf">Novo taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Já não funciona. O tafs elimina o que resta sempre que atualiza.</string>
@@ -2383,6 +2384,23 @@
     <string name="voice_title">Ditado</string>
     <string name="voice_voice_becomes_text_device_not">A sua voz torna-se texto neste dispositivo. Não é enviada até a enviar.</string>
     <string name="voice_what_you_said_stays_message">O que disse fica na caixa de mensagem, por enviar.</string>
+    <string name="watch_already_answered">Já respondido, ou terminado.</string>
+    <string name="watch_approve_on_phone">Aprove no telemóvel</string>
+    <string name="watch_as_of">Atualizado às %1$s</string>
+    <string name="watch_asking_phone">A perguntar ao telemóvel…</string>
+    <string name="watch_coach_needs_consent">Antes de falar com o Coach, permita a utilização de IA no tafs no telemóvel.</string>
+    <string name="watch_glance_description">Quantos precisam de si, nunca o quê nem quem.</string>
+    <plurals name="watch_held_calls">
+        <item quantity="one">%1$s chamada retida precisa de si</item>
+        <item quantity="other">%1$s chamadas retidas precisam de si</item>
+    </plurals>
+    <string name="watch_more_on_phone">O resto está no telemóvel.</string>
+    <string name="watch_needs_lock">Para recusar ou bloquear a partir deste relógio, defina um bloqueio de ecrã e desbloqueie-o.</string>
+    <string name="watch_open_on_phone">Abrir no telemóvel</string>
+    <string name="watch_phone_not_reachable">O telemóvel não está ao alcance. Aproxime-o e tente novamente.</string>
+    <string name="watch_refused">Recusado. Nada foi enviado.</string>
+    <string name="watch_sign_in_on_phone">Primeiro, inicie sessão no tafs no telemóvel.</string>
+    <string name="watch_voice_text_only">O Coach recebe as suas palavras como texto, nunca a sua voz.</string>
     <string name="work_answer_within">Responder em</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s dia</item>

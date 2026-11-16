@@ -1,0 +1,1 @@
+- **Android: Terms and Privacy open in the app's language.** The Terms and Privacy policy links (Settings, Sign-in, Plan & usage) now open tafs's own pages in the app's language on kiff.dev, in all 8 languages, without the "(in English)" mark; a language kiff.dev doesn't serve them in still opens English and says so (docs/android-app.md).

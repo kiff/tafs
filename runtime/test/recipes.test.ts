@@ -180,7 +180,7 @@ Bezahle meine Rechnungen unter 100 EUR.
   it("keeps the apps' order: by category, then each recipe's place, with refunds leading Money", () => {
     expect(RECIPES.map((r) => r.id)).toEqual([
       "refunds-within-a-limit", "chargebacks-with-evidence", "chase-overdue-invoices", "save-a-customer-who-cancels",
-      "answer-questions-about-orders", "follow-up-new-leads", "acknowledge-every-ticket",
+      "answer-questions-about-orders", "follow-up-new-leads", "acknowledge-every-ticket", "returns-by-email",
       "book-and-move-appointments", "ship-when-green",
       "file-receipts",
     ]);
@@ -233,6 +233,14 @@ Bezahle meine Rechnungen unter 100 EUR.
     // Once an app is proved, its jobs come back with no other change.
     const withTypeform = new Set([...CONNECTS_TODAY, "typeform"]);
     expect(recipesFor(undefined, "en", true, withTypeform).recipes.map((r) => r.id)).toContain("follow-up-new-leads");
+  });
+
+  // Returns by email: small shops on a store app handle each return by hand. It stays out until the store app is proved.
+  it("lists returns by email only once its store app connects today", () => {
+    expect(recipesFor(undefined).recipes.map((r) => r.id)).not.toContain("returns-by-email");
+    const withShopify = new Set([...CONNECTS_TODAY, "shopify"]);
+    const ids = recipesFor(undefined, "en", true, withShopify).recipes.map((r) => r.id);
+    expect(ids).toEqual(expect.arrayContaining(["returns-by-email", "answer-questions-about-orders", "chargebacks-with-evidence"]));
   });
 
   // dev-android's read of the four key jobs (13 Nov): refunds drew Gorgias, which can't connect yet, ahead of Intercom.

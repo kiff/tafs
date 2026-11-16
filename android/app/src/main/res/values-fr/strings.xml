@@ -1220,6 +1220,7 @@
     <string name="home_explore_jobs">Explorer les tâches</string>
     <string name="home_footer">Connecté avec KIFF.</string>
     <string name="home_halted_open_halt">Bloqué. Ouvrir Bloquer</string>
+    <string name="home_labels_all">Tous</string>
     <string name="home_loading">Chargement de vos tafs…</string>
     <string name="home_new_taf">Nouveau taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Il ne tourne plus. tafs supprime ce qui reste à chaque actualisation.</string>
@@ -2383,6 +2384,23 @@
     <string name="voice_title">Dictée</string>
     <string name="voice_voice_becomes_text_device_not">Votre voix devient du texte sur cet appareil. Elle n\'est envoyée que lorsque vous l\'envoyez.</string>
     <string name="voice_what_you_said_stays_message">Ce que vous avez dit reste dans le champ de message, non envoyé.</string>
+    <string name="watch_already_answered">Déjà répondu, ou terminé.</string>
+    <string name="watch_approve_on_phone">Approuvez sur votre téléphone</string>
+    <string name="watch_as_of">Mis à jour à %1$s</string>
+    <string name="watch_asking_phone">Demande à votre téléphone…</string>
+    <string name="watch_coach_needs_consent">Avant de parler à Coach, autorisez l\'utilisation de l\'IA dans tafs sur votre téléphone.</string>
+    <string name="watch_glance_description">Combien vous attendent, jamais quoi ni qui.</string>
+    <plurals name="watch_held_calls">
+        <item quantity="one">%1$s appel retenu vous attend</item>
+        <item quantity="other">%1$s appels retenus vous attendent</item>
+    </plurals>
+    <string name="watch_more_on_phone">La suite est sur votre téléphone.</string>
+    <string name="watch_needs_lock">Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l\'écran et déverrouillez-la.</string>
+    <string name="watch_open_on_phone">Ouvrir sur le téléphone</string>
+    <string name="watch_phone_not_reachable">Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.</string>
+    <string name="watch_refused">Refusé. Rien n\'a été envoyé.</string>
+    <string name="watch_sign_in_on_phone">Connectez-vous d\'abord à tafs sur votre téléphone.</string>
+    <string name="watch_voice_text_only">Coach reçoit vos mots en texte, jamais votre voix.</string>
     <string name="work_answer_within">Répondre sous</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s jour</item>

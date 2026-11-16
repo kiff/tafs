@@ -2252,7 +2252,7 @@ describe("Setup (kiff/agents#91)", () => {
     // The button says what it does: no question above it (the app-words cut, screen 1), and a short intro.
     expect(first.coach_tools_step).not.toHaveProperty("ask");
     expect(first.coach_tools_step.intro).toBe("Coach needs these to look after your tafs.");
-    expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 7, 2]);
+    expect(first.coach_tools_step.groups.map((g: { tools: unknown[] }) => g.tools.length)).toEqual([3, 3, 8, 2]);
     // Tools missing: the batch alone. KIFF refuses a Card naming an action no tool declares yet,
     // so the Cards come on the read after the tools are connected, and nothing is previewed now.
     expect(first.card).toBeUndefined();
@@ -5709,7 +5709,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     w.tafs.held.delete(`t_acme#${RAE}`);
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@27,draft-the-card@29,name-the-tools@17,set-up-a-taf@11,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@27,draft-the-card@30,name-the-tools@17,set-up-a-taf@12,usage-and-plans@3`);
     // The same chat goes on with what the session holds: nothing is sent again.
     const again = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "and remind them twice", session: free.body.session } });
     expect(again.status).toBe(200);
@@ -5717,23 +5717,23 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // The account's state joins the start: a call held for the owner brings the holds, a halt brings halting.
     w.account.held = [{ id: "x1", subject: "rae", status: "held", action_name: "refund", created_at: w.now.toISOString() } as unknown as Held];
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "why is it stuck?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@29,name-the-tools@17,set-up-a-taf@11,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@30,name-the-tools@17,set-up-a-taf@12,usage-and-plans@3`);
     w.account.held = [];
     await w.agents.api.halt("t_acme", undefined, "ana");
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "is everything stopped?", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@27,draft-the-card@29,halting@1,name-the-tools@17,set-up-a-taf@11,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=connect-an-app@27,draft-the-card@30,halting@1,name-the-tools@17,set-up-a-taf@12,usage-and-plans@3`);
     await w.agents.api.resume("t_acme");
     // An account with a taf of its own: every Coach start has the holds and the halting, whatever its state.
     // "Refunds hasn't done anything" and "stop everything" never name a skill, and the model left to read
     // one didn't (kiff/agents Eval 42788659962).
     w.tafs.held.set(`t_acme#${RAE}`, rae);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Rae hasn't done anything since this morning", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@29,halting@1,name-the-tools@17,set-up-a-taf@11,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@30,halting@1,name-the-tools@17,set-up-a-taf@12,usage-and-plans@3`);
     // An improvement opens on the taf: its skill.
     w.account.mandates = [];
     const improve = await call(w, "POST", `/v1/tafs/${RAE}/improve`, { token: "ana", body: { text: "add disputes" } });
     expect(improve.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@29,halting@1,improve-a-taf@1,name-the-tools@17`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@30,halting@1,improve-a-taf@2,name-the-tools@17`);
     // A taf's own chat loads nothing: the skills are Coach's.
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "refund ch_1", new_chat: true } });
     expect(w.agents.calls.at(-1)).toBe(`startRun ${RAE} new`);
@@ -5751,7 +5751,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     await w.agents.api.putAgent("t_acme", COACH, { ...live, skills: live.skills!.flatMap(before) });
     const free = await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "I want a taf that chases overdue invoices", new_chat: true } });
     expect(free.status).toBe(200);
-    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@29,halting@1,name-the-tools@17,set-up-a-taf@2,usage-and-plans@3`);
+    expect(w.agents.calls.at(-1)).toBe(`startRun ${COACH} new skills=cards-and-holds@3,connect-an-app@27,draft-the-card@30,halting@1,name-the-tools@17,set-up-a-taf@2,usage-and-plans@3`);
     // A tool's add: the live version of its skill, and none for a skill the definition doesn't name yet.
     w.agents.access.set("u_ana", { cards_manage: true });
     const run = await w.agents.api.startRun("t_acme", COACH, "Set up refunds", { requester: { kind: "member", id: "u_ana" } });
@@ -5764,7 +5764,7 @@ describe("Coach's result, handed over by tafs cloud", () => {
     // Once the Upgrade names the lock's versions, a new chat asks for those.
     await w.agents.api.putAgent("t_acme", COACH, live);
     await call(w, "POST", `/v1/tafs/${COACH}/messages`, { token: "ana", body: { text: "Another one", new_chat: true } });
-    expect(w.agents.calls.at(-1)).toContain("set-up-a-taf@11");
+    expect(w.agents.calls.at(-1)).toContain("set-up-a-taf@12");
   });
 
   // agentgabo on #574, the owner's call (11:32): with no one named, a taf writes for the account's company,
@@ -6806,5 +6806,119 @@ describe("the first run", () => {
     w.tafs.held.delete(`t_acme#${id}`);
     expect(await sweepFirstRuns(deps)).toEqual([]);
     expect(w.agents.calls.filter((c) => c.startsWith("trigger"))).toEqual([]);
+  });
+});
+
+// The owner's 105 retest: Stripe connected under "Unanswered emails", a Gmail taf, because the phone took the only
+// taf there was. Starting a connection from Connect apps now goes only to a taf that needs the app (needed.ts).
+describe("Connect apps: which taf a connection goes to", () => {
+  const DESK = "taf-dddd0000000000000000";
+  async function post(w: ReturnType<typeof world>, entry: string, taf: string, opts: { proof?: string; grants?: unknown[]; grantsStatus?: number; mandates?: unknown[]; token?: string; lang?: string } = {}) {
+    const started: string[] = [];
+    const ok = (v: unknown) => new Response(JSON.stringify(v), { status: 200 });
+    const r = await handle({ rawPath: `/v1/connect/apps/${encodeURIComponent(entry)}`, requestContext: { http: { method: "POST" } },
+      headers: { Authorization: `Bearer ${opts.token ?? "ana_co"}`, "content-type": "application/json", ...(opts.proof ? { "planque-device-signature": opts.proof } : {}),
+        ...(opts.lang ? { "accept-language": opts.lang } : {}) },
+      body: JSON.stringify({ taf }) },
+    { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+      if (url.startsWith("https://planque.test/v1/accounts/t_acme/catalog?") || url === "https://planque.test/v1/accounts/t_acme/catalog") return ok({ entries: [
+        { entry: "stripe@3", vendor: "Stripe", title: "Stripe", how: "oauth", state: "available" },
+        { entry: "connector:p:gmail", vendor: "gmail", title: "Gmail", how: "oauth", state: "available" },
+        { entry: "typeform@1", vendor: "Typeform", title: "Typeform", how: "oauth", state: "available" },
+        // An entry whose slug isn't its vendor's: only the catalog says it's Stripe.
+        { entry: "acme-pay@2", vendor: "Stripe", title: "Stripe", how: "oauth", state: "available" },
+      ] });
+      if (url.includes("/catalog/") && url.endsWith("/grants") && init?.method === "POST") {
+        started.push(`${decodeURIComponent(url.split("/catalog/")[1]!.replace(/\/grants$/, ""))} for ${JSON.parse(String(init.body)).agent}`);
+        return ok({ grant: { id: "g-new" } });
+      }
+      if (url === "https://planque.test/v1/accounts/t_acme/connections") return ok({ connections: [
+        { agent: "desk", vendor: "Stripe", kind: "vendor_sign_in", entry: "stripe@3", status: "connected" },
+      ] });
+      if (url === "https://planque.test/v1/accounts/t_acme/grants") return opts.grantsStatus ? new Response("{}", { status: opts.grantsStatus }) : ok({ grants: opts.grants ?? [] });
+      if (url.startsWith("https://planque.test/")) return new Response("{}", { status: 500 });
+      if (url.endsWith("/v1/me/mandates")) return ok({ mandates: opts.mandates ?? [] });
+      return depsOf(w).fetch!(url, init);
+    }) as Deps["fetch"] });
+    return { status: r.statusCode, body: JSON.parse(r.body) as Record<string, unknown>, started };
+  }
+  function tafs() {
+    const w = world();
+    w.tafs.held.set(`t_acme#${NEW}`, { id: NEW, name: "Refunds", job: "refunds", kiffAgent: "chargebacks", nameClaim: "c", created: "2026-10-14T09:00:00Z", recipe: "refunds-within-a-limit" });
+    w.tafs.held.set(`t_acme#${DESK}`, { id: DESK, name: "Unanswered emails", job: "custom", kiffAgent: "desk", nameClaim: "d", created: "2026-10-14T09:00:00Z" });
+    return w;
+  }
+
+  // kiff-qa's 1: an app no taf needs (here, Stripe for a taf with no recipe or Card using it) is refused.
+  it("refuses a taf that doesn't use the app (not_needed), and starts nothing", async () => {
+    const w = tafs();
+    const r = await post(w, "typeform@1", NEW);
+    expect(r).toMatchObject({ status: 409, body: { code: "not_needed", words: "Refunds doesn't use this app. Coach can set it up for Refunds." } });
+    expect(r.started).toEqual([]);
+    // In the person's language, as the halted refusals are.
+    expect((await post(w, "typeform@1", NEW, { lang: "es" })).body.words).toBe("Refunds no usa esta app. Coach puede configurarla para Refunds.");
+  });
+
+  // kiff-qa's 3 on the review: the POST reads the app's vendor from the catalog, not its entry's slug alone.
+  it("reads the app's vendor from the catalog: an entry whose slug isn't the recipe's vendor still goes to the taf whose recipe names it", async () => {
+    const w = tafs();
+    expect((await post(w, "acme-pay@2", NEW)).started).toEqual(["acme-pay@2 for chargebacks"]);
+  });
+
+  // kiff-qa's 2 on the review: the tafs unread, nothing starts, and the person hears to try again, not "doesn't use it".
+  it("fails closed with try-again words when the tafs can't be read (tafs_unread)", async () => {
+    const w = tafs();
+    w.tafs.list = async () => { throw new Error("store down"); };
+    const r = await post(w, "stripe@3", NEW);
+    expect(r).toMatchObject({ status: 503, body: { code: "tafs_unread", words: "Your tafs couldn't be read just now, so nothing was connected. Try again in a moment." } });
+    expect(r.started).toEqual([]);
+  });
+
+  it("never offers a Setup taf, even with a recipe that names the app", async () => {
+    const w = tafs();
+    w.tafs.held.set(`t_acme#taf-ssss0000000000000000`, { id: "taf-ssss0000000000000000", name: "Coach setup", job: "setup", kiffAgent: "setup-x", nameClaim: "s", created: "2026-10-14T09:00:00Z", recipe: "refunds-within-a-limit" });
+    const r = await handle({ rawPath: "/v1/connect/apps", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_co" } },
+      { ...depsOf(w), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) => {
+        if (url.startsWith("https://planque.test/v1/accounts/t_acme/catalog")) return new Response(JSON.stringify({ entries: [{ entry: "stripe@3", vendor: "Stripe", title: "Stripe", how: "oauth", state: "available" }] }), { status: 200 });
+        if (url.startsWith("https://planque.test/")) return new Response(JSON.stringify({ connections: [] }), { status: 200 });
+        return depsOf(w).fetch!(url, init);
+      }) as Deps["fetch"] });
+    const stripe = (JSON.parse(r.body).apps as Array<{ entry: string; needed_by?: Array<{ taf: string }> }>).find((a) => a.entry === "stripe@3");
+    expect(stripe?.needed_by?.map((n) => n.taf)).toEqual([NEW]);
+  });
+
+  // kiff-qa's 4: an app two tafs need is accepted for each.
+  it("starts it for a taf whose recipe needs the app, and for one whose Card uses it", async () => {
+    const w = tafs();
+    expect((await post(w, "stripe@3", NEW)).started).toEqual(["stripe@3 for chargebacks"]);
+    const card = await post(w, "stripe@3", DESK, { proof: "proof-1",
+      grants: [{ id: "g-stripe", status: "connected", entry: "stripe@3", tools: ["refund_charge_k3"], request: { agent: "chargebacks" } }],
+      mandates: [{ id: "m1", subject: "desk", active: true, grants: [{ action: "refund_charge_k3" }] }] });
+    expect(card.started).toEqual(["stripe@3 for desk"]);
+  });
+
+  // kiff-qa's 5, at the start, and the review's blocking change: holding the wrong connection never makes it needed, with
+  // the grants and Cards read, without the proof (every app today), or with a proof planque refused (the GET's resent).
+  it("refuses a taf that only holds a connection, whether the phone's grants are read, missing, or refused", async () => {
+    const w = tafs();
+    const read = await post(w, "stripe@3", DESK, { proof: "proof-1",
+      grants: [{ id: "g-wrong", status: "connected", entry: "stripe@3", tools: ["refund_charge_k3"], request: { agent: "desk" } }], mandates: [] });
+    expect(read).toMatchObject({ status: 409, body: { code: "not_needed" } });
+    const none = await post(w, "stripe@3", DESK);
+    expect(none).toMatchObject({ status: 409, body: { code: "not_needed" } });
+    expect(none.started).toEqual([]);
+    const refused = await post(w, "stripe@3", DESK, { proof: "proof-used", grantsStatus: 401 });
+    expect(refused).toMatchObject({ status: 409, body: { code: "not_needed" } });
+    expect(refused.started).toEqual([]);
+  });
+
+  // kiff-qa's 2 and 3: another account's taf, or one this person can't manage, is refused before need is asked.
+  it("refuses another account's taf, and a taf for someone who can't manage Cards", async () => {
+    const w = tafs();
+    w.tafs.held.set(`t_other#taf-oooo0000000000000000`, { id: "taf-oooo0000000000000000", name: "Theirs", job: "refunds", kiffAgent: "theirs", nameClaim: "o", created: "2026-10-14T09:00:00Z", recipe: "refunds-within-a-limit" });
+    expect((await post(w, "stripe@3", "taf-oooo0000000000000000")).status).toBe(404);
+    const viewer = await post(w, "stripe@3", NEW, { token: "viewer" });
+    expect(viewer.status).toBe(403);
+    expect(viewer.started).toEqual([]);
   });
 });

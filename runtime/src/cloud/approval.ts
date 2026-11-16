@@ -164,7 +164,18 @@ async function cardsChecked(ask: ApprovalAsk, draftID: string, grant: ApprovalGr
       const first = waiting[0]!;
       // Named so it differs from this app (Eval 18, intros: two key apps on one host were both "the host", and Coach put the
       // Card on the waiting app's own approval): its tools when the names clash, and its grant id for Coach.
-      return { outcome: "answered", answer: `failed: the Card also covers ${first.name}'s tools (grant ${first.grant}), which still wait for their own approval: show ${first.name}'s approval first, as its own connection with no Card, then show this one (${ownName(grant, others)}, grant ${grant.id}) again: it carries the Card`, note: W.otherAppFirst(first.name), code: "other_app_first" };
+      // The Card comes with the last app's approval, as the person reads it (approval_other_app_first): the waiting app's,
+      // with this same draft. Never this one again once it's connected (Eval 19, intros: told "then show this one again:
+      // it carries the Card", Coach showed the connected sheet's approval again after the mailbox's had confirmed the Card).
+      const own = `${ownName(grant, others)} (grant ${grant.id})`;
+      const next = grant.status === "connected"
+        ? `show ${first.name}'s approval with this same draft: it carries the Card. ${own} is connected already: never show its approval again`
+        : `show ${own}'s approval for its connection alone, with no draft, then ${first.name}'s with this same draft: the last one carries the Card. Show each approval once`;
+      // The waiting app's approval must carry this draft (Eval 20b, intros run 1: Coach showed the mailbox's key alone, then
+      // the Card on a third approval). Kept so the chat's read refuses that approval shown without it (splitApproval).
+      await ctx.store.put(waitingDraftKey(ctx.tenant, first.grant), { draft: draftID, name: first.name, at: ctx.now.toISOString() } satisfies WaitingDraft,
+        new Date(ctx.now.getTime() + WAITING_DRAFT_KEPT_MS)).catch(() => undefined);
+      return { outcome: "answered", answer: `failed: the Card also covers ${first.name}'s tools (grant ${first.grant}), which still wait for their own approval. The Card comes with the last app's approval: ${next}.`, note: W.otherAppFirst(first.name), code: "other_app_first" };
     }
     const left = uncoveredTool(grant, draft.cards, inForce);
     if (left) {
@@ -382,6 +393,48 @@ export function onDemandLetsRun(grant: ApprovalGrant, cards: unknown[]): string 
  */
 /** An app of the same taf whose tools still wait for their own approval: its grant, and its name for people and Coach. */
 export interface WaitingApp { grant: string; name: string }
+
+/**
+ * The Card draft a waiting app's approval must carry, kept against its grant when tafs cloud answers `other_app_first`:
+ * that app's connection and the Card go under one approval, so its approval shown without the draft would split them
+ * (Eval 20b, intros run 1: the mailbox's key approved alone, then the Card on a third approval).
+ */
+export interface WaitingDraft { draft: string; name: string; at: string }
+export const waitingDraftKey = (tenant: string, grant: string) => `${tenant}#waiting-draft#${grant}`;
+/** How long the note holds: past it, a draftless approval of that app is shown as any other. */
+export const WAITING_DRAFT_KEPT_MS = 24 * 3600_000;
+
+/**
+ * The waiting-draft note for a grant while its draft is still a draft in KIFF: once the draft is confirmed (the waiting
+ * app approved with it, the case working as meant), revoked or gone, the note is removed and nothing is refused, so a
+ * later Sign in again or tools addition of that app is shown as any other. A draft that can't be read refuses nothing:
+ * never refused on a guess. `read` is KIFF's draft read (undefined for a draft KIFF doesn't have).
+ */
+export async function liveWaitingDraft(store: CoachStore, tenant: string, grant: string, read: (draft: string) => Promise<{ status: string } | undefined>): Promise<WaitingDraft | undefined> {
+  const key = waitingDraftKey(tenant, grant);
+  const n = (await store.get(key).catch(() => undefined)) as Partial<WaitingDraft> | null | undefined;
+  if (!n || typeof n.draft !== "string" || !n.draft || typeof n.name !== "string" || !n.name) return undefined;
+  let d: { status: string } | undefined;
+  try { d = await read(n.draft); } catch { return undefined; }
+  if (!d || d.status !== "draft") {
+    await store.remove(key).catch(() => undefined);
+    return undefined;
+  }
+  return { draft: n.draft, name: n.name, at: typeof n.at === "string" ? n.at : "" };
+}
+
+/**
+ * What Coach hears for an approval card shown for an app whose approval must carry a waiting draft, and was shown with
+ * none: undefined for any other card (one with a draft, a redraft's included, or an app with no waiting draft). The
+ * card is answered on the chat's read, before the person sees Approve, so the key or tools can't be approved apart
+ * from the Card, however Coach read `other_app_first`.
+ */
+export function splitApproval(card: { grant?: unknown; draft?: unknown }, note: unknown): string | undefined {
+  if (typeof card.grant !== "string" || !card.grant || (typeof card.draft === "string" && card.draft)) return undefined;
+  const n = note as Partial<WaitingDraft> | null | undefined;
+  if (!n || typeof n.draft !== "string" || !n.draft || typeof n.name !== "string" || !n.name) return undefined;
+  return `failed: ${n.name}'s approval was shown without the Card draft ${n.draft}, which waits for it: ${n.name}'s connection and the Card go under one approval, so this one is never shown to the owner. ${REFUSAL_CLOSED} Show ${n.name}'s approval again with draft ${n.draft}: it carries the Card. Show it once.`;
+}
 
 /**
  * The apps of the same taf, other than `grant`'s, that a draft's Cards cover and that aren't connected yet: their tools
@@ -610,6 +663,7 @@ export function approvalWords(lang: Lang = "en") {
     cardsNotIssued: w.approval_cards_not_issued,
     connectedCardNext: w.approval_connected_card_next,
     otherAppFirst: w.approval_other_app_first,
+    withItsCard: w.approval_with_its_card,
     draftIs: (status: string) => w.approval_draft_is(w.approval_status(status)),
     noDraft: w.approval_no_draft,
     cardsUnread: w.approval_cards_unread,
@@ -630,6 +684,14 @@ export function approvalWords(lang: Lang = "en") {
     criticalKey: w.approval_critical_key,
     driveKey: w.approval_drive_key,
     windowClosed: w.approval_window_closed,
+    signMissing: w.approval_sign_missing,
+    signInvalid: w.approval_sign_invalid,
+    signViewOnly: w.approval_sign_view_only,
+    signSession: w.approval_sign_session,
+    signPasskey: w.approval_sign_passkey,
+    signClock: w.approval_sign_clock,
+    signTaken: w.approval_sign_taken,
+    signUnchecked: w.approval_sign_unchecked,
     signInClosed: w.approval_sign_in_closed,
     noCode: w.approval_no_code,
     // What came back, in the owner's words, never planque's status: already signed in (its actions come next), or nothing opened.
@@ -985,6 +1047,12 @@ export async function decide(ask: ApprovalAsk, ctx: DecideContext): Promise<Deci
   const vendor = vendorOf(grant);
   const refused = await agentRefusal(ask, grant, vendor, ctx);
   if (refused) return withoutCode(refused);
+  // The waiting app's approval tapped with no draft, though its connection and the Card go under one approval
+  // (splitApproval): never signed apart, whatever the phone showed (a read that drew Approve before the chat's check).
+  if (!ask.draft) {
+    const split = splitApproval({ grant: grant.id }, await liveWaitingDraft(ctx.store, ctx.tenant, grant.id, (d) => draftInfo(ctx.token, d, ctx.fetch, ctx.kiffBase ?? KIFF_API, ctx.now)));
+    if (split) return { outcome: "answered", answer: split, note: W.withItsCard(vendor) };
+  }
   // The same taf's other connections: a Card may cover their tools too (two apps, one Card).
   const sameTaf = sameTafOf(grant, grants);
   const redraft = await redraftRefusal(ask, vendor, ctx);
@@ -1122,8 +1190,30 @@ export interface ReportContext extends DecideContext {
   signed: { method: string; uri: string; body: string; signature: string };
 }
 
+/** KIFF's code for a refused signature (`error`, as its 400s and 403s send it), or "" when it sent none it could read. */
+async function kiffCode(res: Response): Promise<string> {
+  const body = (await res.json().catch(() => ({}))) as { error?: unknown };
+  return typeof body.error === "string" ? body.error : "";
+}
+
 /**
- * Asks KIFF whether this phone signed the report, with the phone's own session
+ * KIFF's refusal of a device's signature, in the person's words and with KIFF's code, so the app and the person
+ * hear why: a view-only device, a session that can't sign for it, a passkey this session doesn't approve with, a
+ * clock that's off, or a signature that didn't check out. Said of "this device", whichever it is (a phone, a tablet,
+ * a computer), never "this phone". A code tafs cloud doesn't know reads as a signature that didn't check out.
+ */
+export function signRefusal(status: number, code: string, W: ReturnType<typeof approvalWords>): ApprovalError {
+  switch (code) {
+    case "view_only": return new ApprovalError(403, W.signViewOnly, code);
+    case "device_session_required": return new ApprovalError(403, W.signSession, code);
+    case "passkey_not_this_session": return new ApprovalError(403, W.signPasskey, code);
+    case "signed_at_out_of_range": return new ApprovalError(400, W.signClock, code);
+    default: return new ApprovalError(status === 400 ? 400 : 403, W.signInvalid, "signature_invalid");
+  }
+}
+
+/**
+ * Asks KIFF whether this device signed the report, with the device's own session
  * (`POST /v1/me/device-signature`): tafs cloud holds no device key and checks
  * no signature itself. Each signed report is taken once. KIFF also says which
  * key signed and, for a signature made inside an approval window, whether that
@@ -1137,7 +1227,7 @@ export interface ReportContext extends DecideContext {
 export async function checkSigned(ctx: Pick<ReportContext, "signed" | "fetch" | "kiffBase" | "token" | "lang"> & Partial<ReportContext>, key: "window" | "critical" | "approval" = "window"): Promise<void> {
   const W = approvalWords(ctx.lang);
   const { signed } = ctx;
-  if (!signed.signature) throw new ApprovalError(403, "this answer isn't signed by your phone");
+  if (!signed.signature) throw new ApprovalError(403, W.signMissing, "signature_missing");
   let res: Response;
   try {
     res = await ctx.fetch(`${ctx.kiffBase ?? KIFF_API}/v1/me/device-signature`, {
@@ -1146,17 +1236,17 @@ export async function checkSigned(ctx: Pick<ReportContext, "signed" | "fetch" | 
       body: JSON.stringify({ method: signed.method, uri: signed.uri, body_sha256: createHash("sha256").update(signed.body, "utf8").digest("hex"), signature: signed.signature }),
     });
   } catch {
-    throw new ApprovalError(502, "KIFF didn't answer; try again");
+    throw new ApprovalError(502, W.signUnchecked, "signature_unchecked");
   }
-  if (res.status === 403) throw new ApprovalError(403, "this phone didn't sign that answer");
-  if (res.status === 409) throw new ApprovalError(409, "this signed answer was already taken");
+  if (res.status === 403 || res.status === 400) throw signRefusal(res.status, await kiffCode(res), W);
+  if (res.status === 409) throw new ApprovalError(409, W.signTaken, "signature_taken");
   if (res.status === 401) throw new KIFFError(401, "KIFF did not accept this sign-in");
-  if (!res.ok) throw new ApprovalError(502, `KIFF answered ${res.status} for the signature`);
+  if (!res.ok) throw new ApprovalError(502, W.signUnchecked, "signature_unchecked");
   // KIFF's answer also carries a one-minute device grant (`grant`, `grant_until`): the writes a
   // service like the gateway then makes for the phone. tafs cloud makes none and must not use
   // it, so only `signed` is read; the grant is dropped here and never kept or passed on.
   const out = (await res.json().catch(() => ({}))) as { signed?: unknown; key?: unknown; window?: { open?: unknown } };
-  if (out.signed !== true) throw new ApprovalError(403, "this phone didn't sign that answer");
+  if (out.signed !== true) throw new ApprovalError(403, W.signInvalid, "signature_invalid");
   // Only the approval key, behind the fingerprint: a Coach drive's start (kiff/tafs#544).
   if (key === "approval" && (out.key !== "critical" || out.window)) throw new ApprovalError(403, W.driveKey, "critical_key_required");
   if (!out.window) return; // signed outside a window: as every report before (the device key's, v1)
@@ -1180,6 +1270,12 @@ export async function settle(askID: string, report: Report, ctx: ReportContext):
   const pending = ID.test(askID) ? ((await ctx.store.get(key)) as Pending | undefined) : undefined;
   const outcome = await settleAsk(askID, report, ctx);
   // The Card this conversation approved for the connection: no other draft over it is approved here (redraftRefusal).
+  // The waiting app approved with the draft it waited for: its note has done its work (liveWaitingDraft would also see
+  // the draft confirmed; this saves the read).
+  if (outcome.answer === "approved" && pending?.draft) {
+    const note = (await ctx.store.get(waitingDraftKey(ctx.tenant, pending.grant)).catch(() => undefined)) as Partial<WaitingDraft> | undefined;
+    if (note?.draft === pending.draft) await ctx.store.remove(waitingDraftKey(ctx.tenant, pending.grant)).catch(() => undefined);
+  }
   if (outcome.answer === "approved" && pending?.draft && ctx.session) {
     await ctx.store.put(approvedDraftKey(ctx.tenant, ctx.taf, ctx.session, pending.grant), { draft: pending.draft, at: ctx.now.toISOString() },
       new Date(ctx.now.getTime() + APPROVED_DRAFT_KEPT_MS));

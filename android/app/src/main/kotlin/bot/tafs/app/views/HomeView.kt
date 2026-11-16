@@ -119,6 +119,9 @@ fun HomeView(
     },
     modifier = modifier.fillMaxSize(),
   ) {
+    // The label the list is filtered to: All every time the list opens (docs/android-app.md, Labels).
+    var labelId by remember { mutableStateOf<String?>(null) }
+    val label = chosenLabel(state.labels, labelId)
     LazyColumn(
       Modifier.fillMaxSize().statusBarsPadding(),
       contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
@@ -168,7 +171,9 @@ fun HomeView(
               }
             }
             // A new account's Home leads with the jobs: "0 tafs working" and "Nothing needs you" say nothing yet.
-            if (!state.homeLeadsWithRecipes) Headline(state)
+            if (!state.homeLeadsWithRecipes) Headline(state, label)
+            // The account's labels: All, then each with its count; none, and no row.
+            if (state.mode == Mode.kiff && state.listLoaded) LabelRow(state.labels, allWords(state.labelsAll), state.listedTafs.size, label?.id) { labelId = it }
             // Explore jobs: every job to read, with nothing created, with or without a taf, and with no Coach needed. Only when tafs
             // cloud sends its words: it leaves them out while Home already lists every job.
             if (onExplore != null) HomeWords.exploreRow(state.gallery)?.let { ExploreRow(it, onExplore) }
@@ -179,13 +184,13 @@ fun HomeView(
         }
         item {
           Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            val byId = state.listedTafs.associateBy { it.id }
+            val byId = onLabel(state.listedTafs, label?.id).associateBy { it.id }
             order.forEach { id ->
-              byId[id]?.let { taf -> TafRow(taf, state.signedOut(taf.id)?.let(bot.tafs.app.model.ConnectionWords::signedOut), onHalted = { onHalted(taf.id) }) { onOpenTaf(taf.id) } }
+              byId[id]?.let { taf -> TafRow(taf, state.signedOut(taf.id)?.let(bot.tafs.app.model.ConnectionWords::signedOut), onHalted = { onHalted(taf.id) }, tags = labelTags(taf, state.labels)) { onOpenTaf(taf.id) } }
             }
           }
         }
-        if (state.settingUp.isNotEmpty()) {
+        if (label == null && state.settingUp.isNotEmpty()) {
           // Tafs whose setup stopped partway, among the tafs: by name, tafs cloud's "Finish setting up", and no state, since it
           // doesn't run yet. A tap opens Coach where it stopped, for someone who may use Coach.
           item {
@@ -203,7 +208,7 @@ fun HomeView(
         // A few jobs the account doesn't run yet, under its tafs, as tafs cloud picks them (docs/android-app.md).
         val gallery = state.gallery
         if (gallery != null && state.tafs.isNotEmpty() && state.mayUseCoach && gallery.stripRecipes.isNotEmpty()) item { JobStrip(gallery, onRecipe, onExplore) }
-        if (state.otherAgents.isNotEmpty()) {
+        if (label == null && state.otherAgents.isNotEmpty()) {
           // Agents made through KIFF's API, not run by tafs: their Cards, apart.
           item {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -321,7 +326,7 @@ internal val AppState.homeLeadsWithRecipes: Boolean
   get() = mode == Mode.kiff && listLoaded && !listUnread && tafs.isEmpty() && recipes?.home?.shown == true && recipes.labels != null
 
 @Composable
-private fun Headline(state: AppState) {
+private fun Headline(state: AppState, label: bot.tafs.app.kiff.HomeLabel? = null) {
   Column {
     // Never "0 tafs working" before the tafs are read (#91).
     if (state.mode == Mode.kiff && !state.listLoaded) {
@@ -330,6 +335,11 @@ private fun Headline(state: AppState) {
     }
     if (state.mode == Mode.kiff && state.listUnread) {
       Text(Words.Home.notLoaded, style = scaled(36, FontWeight.Bold, Theme.dim, display = true))
+      return@Column
+    }
+    // Filtered to a label: tafs cloud's line for it ("2 tafs working · Money"), in place of the account's two.
+    if (label != null) {
+      Text(labelHeadline(label), style = scaled(36, FontWeight.Bold, Theme.ink, display = true))
       return@Column
     }
     // tafs cloud's line, counted from the tafs it lists: a new taf with no schedule reads "1 taf ready.", never "0 tafs working."
@@ -364,7 +374,7 @@ private fun NeedsYouStrip(call: HeldCall, taf: Taf, onClick: () -> Unit) {
 
 @Composable
 /** [onHalted]: a halted taf's chip opens Halt, where it's resumed; the rest of the row opens the taf. */
-fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, showState: Boolean = true, onClick: () -> Unit) {
+fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, showState: Boolean = true, tags: List<String> = emptyList(), onClick: () -> Unit) {
   val shape = RoundedCornerShape(18.dp)
   Column(
     Modifier
@@ -399,6 +409,8 @@ fun TafRow(taf: Taf, signedOut: String? = null, onHalted: (() -> Unit)? = null, 
           else -> Theme.dim
         }
         (signedOut ?: taf.now).takeIf { it.isNotEmpty() }?.let { Text(it, style = scaled(13, color = tone), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        // Its labels, as chips (docs/android-app.md, Labels).
+        LabelTags(tags)
       }
       if (showState) StateChip(taf.state, onClick = onHalted?.takeIf { taf.state == TafState.halted })
     }

@@ -1220,6 +1220,7 @@
     <string name="home_explore_jobs">Explore jobs</string>
     <string name="home_footer">Signed in with KIFF.</string>
     <string name="home_halted_open_halt">Halted. Open Halt</string>
+    <string name="home_labels_all">All</string>
     <string name="home_loading">Loading your tafs…</string>
     <string name="home_new_taf">New taf</string>
     <string name="home_no_longer_runs_tafs_deletes">It no longer runs. tafs deletes what\'s left each time it refreshes.</string>
@@ -2383,6 +2384,23 @@
     <string name="voice_title">Dictation</string>
     <string name="voice_voice_becomes_text_device_not">Your voice becomes text on this device. It isn\'t sent until you send it.</string>
     <string name="voice_what_you_said_stays_message">What you said stays in the message box, unsent.</string>
+    <string name="watch_already_answered">Already answered, or it ended.</string>
+    <string name="watch_approve_on_phone">Approve on your phone</string>
+    <string name="watch_as_of">As of %1$s</string>
+    <string name="watch_asking_phone">Asking your phone…</string>
+    <string name="watch_coach_needs_consent">Before you talk to Coach, allow AI use in tafs on your phone.</string>
+    <string name="watch_glance_description">How many need you, never what or who.</string>
+    <plurals name="watch_held_calls">
+        <item quantity="one">%1$s held call needs you</item>
+        <item quantity="other">%1$s held calls need you</item>
+    </plurals>
+    <string name="watch_more_on_phone">The rest is on your phone.</string>
+    <string name="watch_needs_lock">To refuse or halt from this watch, set a screen lock on it and unlock it.</string>
+    <string name="watch_open_on_phone">Open on phone</string>
+    <string name="watch_phone_not_reachable">Your phone isn\'t in reach. Bring it closer, then try again.</string>
+    <string name="watch_refused">Refused. Nothing was sent.</string>
+    <string name="watch_sign_in_on_phone">Sign in to tafs on your phone first.</string>
+    <string name="watch_voice_text_only">Coach gets your words as text, never your voice.</string>
     <string name="work_answer_within">Answer within</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s day</item>

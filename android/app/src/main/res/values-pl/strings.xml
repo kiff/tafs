@@ -1314,6 +1314,7 @@
     <string name="home_explore_jobs">Przeglądaj zadania</string>
     <string name="home_footer">Zalogowano przez KIFF.</string>
     <string name="home_halted_open_halt">Zablokowane. Otwórz sekcję Zablokuj</string>
+    <string name="home_labels_all">Wszystkie</string>
     <string name="home_loading">Wczytywanie Twoich tafs…</string>
     <string name="home_new_taf">Nowy taf</string>
     <string name="home_no_longer_runs_tafs_deletes">Już nie działa. tafs usuwa to, co zostało, przy każdym odświeżeniu.</string>
@@ -2515,6 +2516,25 @@
     <string name="voice_title">Dyktowanie</string>
     <string name="voice_voice_becomes_text_device_not">Twój głos zamienia się w tekst na tym urządzeniu. Nie zostanie wysłany, dopóki go nie wyślesz.</string>
     <string name="voice_what_you_said_stays_message">Podyktowany tekst zostaje w polu wiadomości, niewysłany.</string>
+    <string name="watch_already_answered">Już odpowiedziano albo zakończono.</string>
+    <string name="watch_approve_on_phone">Zatwierdź na telefonie</string>
+    <string name="watch_as_of">Stan na %1$s</string>
+    <string name="watch_asking_phone">Pytam telefon…</string>
+    <string name="watch_coach_needs_consent">Zanim porozmawiasz z Coachem, zezwól na użycie AI w tafs na telefonie.</string>
+    <string name="watch_glance_description">Ile czeka na Ciebie, nigdy co ani kto.</string>
+    <plurals name="watch_held_calls">
+        <item quantity="one">%1$s oczekujące wywołanie czeka na Ciebie</item>
+        <item quantity="few">%1$s oczekujące wywołania czekają na Ciebie</item>
+        <item quantity="many">%1$s oczekujących wywołań czeka na Ciebie</item>
+        <item quantity="other">%1$s oczekującego wywołania czeka na Ciebie</item>
+    </plurals>
+    <string name="watch_more_on_phone">Reszta jest na telefonie.</string>
+    <string name="watch_needs_lock">Aby odrzucać lub blokować z tego zegarka, ustaw blokadę ekranu i odblokuj go.</string>
+    <string name="watch_open_on_phone">Otwórz na telefonie</string>
+    <string name="watch_phone_not_reachable">Telefon jest poza zasięgiem. Przybliż go i spróbuj ponownie.</string>
+    <string name="watch_refused">Odrzucono. Nic nie zostało wysłane.</string>
+    <string name="watch_sign_in_on_phone">Najpierw zaloguj się do tafs na telefonie.</string>
+    <string name="watch_voice_text_only">Coach dostaje Twoje słowa jako tekst, nigdy Twój głos.</string>
     <string name="work_answer_within">Odpowiedź w ciągu</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s dzień</item>
