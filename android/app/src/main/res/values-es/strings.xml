@@ -95,6 +95,9 @@
     <string name="approval_prompt_approve_on_kiff">Aprobar en KIFF</string>
     <string name="approval_ready_approve">Este %1$s está listo para aprobar con %2$s.</string>
     <string name="approval_request_kept">" La solicitud se conserva."</string>
+    <string name="approval_security_key_add">Añadir llave</string>
+    <string name="approval_security_key_add_enter_pin">Introduce el PIN de tu llave de seguridad para añadirla. tafs lo pide cada vez y nunca lo guarda.</string>
+    <string name="approval_security_key_add_title">Añadir tu llave de seguridad a este ordenador</string>
     <string name="approval_security_key_enter_pin">Introduce el PIN de tu llave de seguridad. tafs lo pide cada vez y nunca lo guarda.</string>
     <string name="approval_security_key_failed">La llave de seguridad no pudo firmar, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras.</string>
     <string name="approval_security_key_locked">Esta llave de seguridad está bloqueada tras demasiados PIN incorrectos, así que no puede aprobar. Aprueba en tu teléfono. Restablecer la llave la borra, así que para volver a aprobar con una llave, vuelve a vincular este ordenador.</string>
@@ -103,6 +106,7 @@
     <string name="approval_security_key_not_allowed">La llave de seguridad no lo permitió, así que no se aprobó nada. La solicitud se conserva: vuelve a aprobar cuando quieras.</string>
     <string name="approval_security_key_not_fido2">Esta llave de seguridad no puede comprobar un PIN, así que no puede aprobar. Conecta la que va con este ordenador.</string>
     <string name="approval_security_key_not_this_key">Esta no es la llave de seguridad que va con este ordenador. Conecta esa y vuelve a intentarlo, o aprueba en tu teléfono.</string>
+    <string name="approval_security_key_pair_without">Vincular sin llave</string>
     <string name="approval_security_key_pin">PIN</string>
     <string name="approval_security_key_pin_paused">Son tres PIN incorrectos seguidos. Desconecta la llave, vuelve a conectarla y vuelve a intentarlo.</string>
     <string name="approval_security_key_pin_too_long">Ese PIN es demasiado largo para una llave de seguridad.</string>

@@ -95,6 +95,9 @@
     <string name="approval_prompt_approve_on_kiff">Goedkeuren op KIFF</string>
     <string name="approval_ready_approve">Deze %1$s is klaar om goed te keuren met %2$s.</string>
     <string name="approval_request_kept">" Het verzoek blijft bewaard."</string>
+    <string name="approval_security_key_add">Sleutel toevoegen</string>
+    <string name="approval_security_key_add_enter_pin">Voer de pincode van je beveiligingssleutel in om hem toe te voegen. tafs vraagt er elke keer om en bewaart hem nooit.</string>
+    <string name="approval_security_key_add_title">Je beveiligingssleutel aan deze computer toevoegen</string>
     <string name="approval_security_key_enter_pin">Voer de pincode van je beveiligingssleutel in. tafs vraagt er elke keer om en bewaart hem nooit.</string>
     <string name="approval_security_key_failed">De beveiligingssleutel kon niet ondertekenen, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent.</string>
     <string name="approval_security_key_locked">Deze beveiligingssleutel is vergrendeld na te veel verkeerde pincodes, dus hij kan niet goedkeuren. Keur goed op je telefoon. Als je de sleutel herstelt, wordt hij gewist. Om weer met een sleutel goed te keuren, koppel je deze computer opnieuw.</string>
@@ -103,6 +106,7 @@
     <string name="approval_security_key_not_allowed">De beveiligingssleutel stond het niet toe, dus er is niets goedgekeurd. Het verzoek blijft bewaard: keur het goed wanneer je klaar bent.</string>
     <string name="approval_security_key_not_fido2">Deze beveiligingssleutel kan geen pincode controleren, dus hij kan niet goedkeuren. Steek de sleutel erin die bij deze computer hoort.</string>
     <string name="approval_security_key_not_this_key">Dit is niet de beveiligingssleutel die bij deze computer hoort. Steek die erin en probeer het opnieuw, of keur goed op je telefoon.</string>
+    <string name="approval_security_key_pair_without">Koppelen zonder sleutel</string>
     <string name="approval_security_key_pin">Pincode</string>
     <string name="approval_security_key_pin_paused">Dat zijn drie verkeerde pincodes achter elkaar. Haal de sleutel eruit, steek hem er weer in en probeer het opnieuw.</string>
     <string name="approval_security_key_pin_too_long">Die pincode is te lang voor een beveiligingssleutel.</string>

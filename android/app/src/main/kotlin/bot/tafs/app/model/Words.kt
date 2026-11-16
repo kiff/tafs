@@ -113,6 +113,9 @@ object Words {
     fun readyApprove(device: String, either: String): String = Res.s(R.string.approval_ready_approve, device, either)
     val requestKept: String get() = Res.s(R.string.approval_request_kept)
     object SecurityKey {
+      val add: String get() = Res.s(R.string.approval_security_key_add)
+      val addEnterPin: String get() = Res.s(R.string.approval_security_key_add_enter_pin)
+      val addTitle: String get() = Res.s(R.string.approval_security_key_add_title)
       val enterPin: String get() = Res.s(R.string.approval_security_key_enter_pin)
       val failed: String get() = Res.s(R.string.approval_security_key_failed)
       val locked: String get() = Res.s(R.string.approval_security_key_locked)
@@ -121,6 +124,7 @@ object Words {
       val notAllowed: String get() = Res.s(R.string.approval_security_key_not_allowed)
       val notFido2: String get() = Res.s(R.string.approval_security_key_not_fido2)
       val notThisKey: String get() = Res.s(R.string.approval_security_key_not_this_key)
+      val pairWithout: String get() = Res.s(R.string.approval_security_key_pair_without)
       val pin: String get() = Res.s(R.string.approval_security_key_pin)
       val pinPaused: String get() = Res.s(R.string.approval_security_key_pin_paused)
       val pinTooLong: String get() = Res.s(R.string.approval_security_key_pin_too_long)
