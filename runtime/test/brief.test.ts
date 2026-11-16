@@ -100,7 +100,7 @@ describe("Your brief (design v2.1 §7)", () => {
     expect(support.more).toBeUndefined();
   });
 
-  // kiff-qa on #1176: with a label chosen, the other labels keep their waiting, so their dot still says where to look.
+  // With a label chosen, the other labels keep their waiting, so their dot still says where to look.
   it("keeps every label's waiting over the whole account when one label is chosen, put-off decisions included", () => {
     const decisions = [hold("a"), hold("b"), hold("other", { taf: taf("desk", ["support"]), ref: { kind: "step", id: "s1", taf: "desk" } })];
     const b = buildBrief({
