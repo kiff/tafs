@@ -27,6 +27,17 @@ describe("Connect apps", () => {
     ] });
   });
 
+  it("keeps an entry's proof (planque's proved) only with a date, and its link only when https", async () => {
+    const got = await listApps(fake(200, { entries: [
+      { entry: "connector:composio:typeform", vendor: "typeform", title: "Typeform", how: "oauth", proved: { at: "2026-11-16", link: "https://github.com/kiff/kiff-cloud/issues/1" } },
+      { entry: "connector:composio:googlecalendar", vendor: "googlecalendar", title: "Google Calendar", how: "oauth", proved: { at: "2026-11-16", link: "http://plain/no" } },
+      { entry: "connector:composio:shopify", vendor: "shopify", title: "Shopify", how: "oauth", proved: { at: "not a date" } },
+      { entry: "connector:composio:gorgias", vendor: "gorgias", title: "Gorgias", how: "oauth", proved: "yes" },
+    ] }), BASE, "t1", "s", "");
+    const proved = Object.fromEntries(got.apps.map((a) => [a.vendor, a.proved]));
+    expect(proved).toEqual({ typeform: { at: "2026-11-16", link: "https://github.com/kiff/kiff-cloud/issues/1" }, googlecalendar: { at: "2026-11-16" }, shopify: undefined, gorgias: undefined });
+  });
+
   it("puts the account's own connections first, then the apps whose name matches the search", async () => {
     const got = await listApps(fake(200, { entries: [
       { entry: "connector:composio:pylon_mcp", title: "Pylon MCP", how: "oauth" },

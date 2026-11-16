@@ -160,6 +160,19 @@ function fold(name: string): string {
  */
 export const CONNECTS_TODAY: ReadonlySet<string> = new Set(["stripe", "qonto", "shippo", "intercom", "zendesk", "pipedrive", "github", "gmail", "typeform", "googlecalendar", "googledrive"]);
 
+/**
+ * The apps that connect today, read from planque's catalog: each entry a check has connected carries `proved`
+ * (rule 13), so a proof is one data change and kiff.dev and the gallery can't disagree. Only when `fromCatalog`
+ * (TAFS_PROVED_FROM_CATALOG=on, once planque and kiff.dev read the same flag); and never from a catalog that
+ * couldn't be read, or one that marks nothing proved (a planque before the flag): those keep CONNECTS_TODAY, so the
+ * gallery is never emptied by a read.
+ */
+export function connectsOf(catalog: Pick<CatalogApp, "entry" | "vendor" | "proved">[] | undefined, fromCatalog: boolean): ReadonlySet<string> {
+  if (!fromCatalog || !catalog) return CONNECTS_TODAY;
+  const proved = catalog.filter((a) => a.proved).flatMap(vendorOf);
+  return proved.length ? new Set(proved) : CONNECTS_TODAY;
+}
+
 /** Whether each of a recipe's connections has an app among those that connect (today's, unless said). */
 export function connectsToday(r: { connections: ReadonlyArray<ReadonlyArray<string>> }, connects: ReadonlySet<string> = CONNECTS_TODAY): boolean {
   return r.connections.every((group) => group.some((v) => connects.has(fold(v))));
@@ -238,11 +251,11 @@ function byVendor(catalog: CatalogApp[] | undefined): Map<string, CatalogApp> {
  * first, else one that connects today: never an app that can't connect yet (rule 13). With neither, no
  * entry, and the name of the connection's app that connects today.
  */
-function pickApps(r: Recipe, vendors: Map<string, CatalogApp>): Array<{ app?: CatalogApp; name: string }> {
+function pickApps(r: Recipe, vendors: Map<string, CatalogApp>, connects: ReadonlySet<string> = CONNECTS_TODAY): Array<{ app?: CatalogApp; name: string }> {
   return r.connections.map((group) => {
     const listed = group.map((v) => vendors.get(fold(v))).filter((a): a is CatalogApp => a !== undefined);
-    const app = listed.find((a) => a.state === "connected") ?? listed.find((a) => vendorOf(a).some((v) => CONNECTS_TODAY.has(v)));
-    return { app, name: app?.title || group.find((v) => CONNECTS_TODAY.has(fold(v))) || group[0] || "" };
+    const app = listed.find((a) => a.state === "connected") ?? listed.find((a) => vendorOf(a).some((v) => connects.has(v)));
+    return { app, name: app?.title || group.find((v) => connects.has(fold(v))) || group[0] || "" };
   });
 }
 
@@ -251,10 +264,10 @@ function pickApps(r: Recipe, vendors: Map<string, CatalogApp>): Array<{ app?: Ca
  * a vendor's name and logo come from its entry. `logos` maps an entry's `icon` to its path on tafs cloud.
  * `running`, for someone who manages the tafs, is the recipes the account's tafs were built from.
  */
-export function withApps(recipes: Recipe[], catalog: CatalogApp[] | undefined, logos: Map<string, string>, running?: Set<string>): RecipeWithApps[] {
+export function withApps(recipes: Recipe[], catalog: CatalogApp[] | undefined, logos: Map<string, string>, running?: Set<string>, connects: ReadonlySet<string> = CONNECTS_TODAY): RecipeWithApps[] {
   const vendors = byVendor(catalog);
   return recipes.map((r) => {
-    const picked = pickApps(r, vendors);
+    const picked = pickApps(r, vendors, connects);
     const apps = picked.map(({ app, name }): RecipeApp => {
       const logo = app?.icon ? logos.get(app.icon) : undefined;
       return logo ? { name, logo } : { name };
@@ -330,14 +343,14 @@ export interface GalleryState {
  * suggestions" says. The strip is shown only to someone who manages the tafs, once the account has a
  * live taf (before that, Home leads with every job), with suggestions on and a job left to show.
  */
-export function galleryFor(catalog: CatalogApp[] | undefined, lang: Lang, state: GalleryState, logos: Map<string, string>): GalleryView {
-  const base = recipesFor(catalog, lang, state.manages);
+export function galleryFor(catalog: CatalogApp[] | undefined, lang: Lang, state: GalleryState, logos: Map<string, string>, connects: ReadonlySet<string> = CONNECTS_TODAY): GalleryView {
+  const base = recipesFor(catalog, lang, state.manages, connects);
   const running = state.manages ? state.running ?? new Set<string>() : undefined;
-  const recipes = withApps(base.recipes, catalog, logos, running);
+  const recipes = withApps(base.recipes, catalog, logos, running, connects);
   const vendors = byVendor(catalog);
   // Every app connected first, then some, then none.
   const rank = (r: RecipeWithApps) => {
-    const linked = pickApps(r, vendors).filter((p) => p.app?.state === "connected").length;
+    const linked = pickApps(r, vendors, connects).filter((p) => p.app?.state === "connected").length;
     return r.connected ? 0 : linked > 0 ? 1 : 2;
   };
   const left = recipes.filter((r) => !r.running);

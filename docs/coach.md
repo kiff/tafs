@@ -912,7 +912,11 @@ Coach must never call read-only first.
 
 The result is posted as one line: the app, `connected`, the read's tool and a count, with no ids or account
 names. Then kiff.dev's apps list marks the app as working, and a tafs PR adds it to `CONNECTS_TODAY`, with a
-test that its jobs are listed. A proof covers the account it ran on: an app whose accounts live in another
+test that its jobs are listed. That list is moving to one source: planque's catalog marks each entry a check
+connected with `proved: {at, link}`, and with `TAFS_PROVED_FROM_CATALOG=on` tafs cloud reads the apps that
+connect today from it (`connectsOf`), for the recipes, the gallery and the app each job draws, so a proof is
+one data change. A catalog that can't be read, or that marks nothing proved yet, keeps `CONNECTS_TODAY`, so no
+read empties the gallery. The flag stays off until kiff.dev reads the same mark. A proof covers the account it ran on: an app whose accounts live in another
 region (a separate API address) is proved for that region only.
 
 They show only while the account has no live taf, and while its "Show suggestions" setting is

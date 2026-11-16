@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { RECIPES } from "../src/recipes.js";
-import { CATEGORIES, categoriesIn, connectsToday, CONNECTS_TODAY, labelsIn, recipesFor, vendorOf, withApps } from "../src/cloud/recipes.js";
+import { CATEGORIES, categoriesIn, connectsOf, connectsToday, CONNECTS_TODAY, labelsIn, recipesFor, vendorOf, withApps } from "../src/cloud/recipes.js";
 import type { CatalogApp } from "../src/cloud/connect.js";
 import { LANGUAGES } from "../src/cloud/words/index.js";
 // The generator is plain JavaScript, so the script and the test parse the files the same way.
@@ -271,6 +271,30 @@ Bezahle meine Rechnungen unter 100 EUR.
       expect(w.card.holds, lang).toHaveLength(2);
       expect(w.card.allows[0], lang).not.toMatch(/EUR/);
     }
+  });
+
+  // Rule 13 on the read: once planque's catalog says which apps a check connected (`proved`), the gallery reads it, so a
+  // proof is one data change. Dark behind CONNECTS_TODAY (TAFS_PROVED_FROM_CATALOG); and a catalog that can't be read, or
+  // marks nothing proved yet, keeps the list, so no read ever empties the gallery.
+  it("reads the apps that connect today from the catalog's proofs, only when asked and only from a catalog that has them", () => {
+    const app = (vendor: string, proved?: string): CatalogApp => ({ entry: `connector:p:${vendor}`, vendor, title: vendor, name: vendor, how: "oauth", state: "available",
+      ...(proved ? { proved: { at: proved } } : {}) });
+    const catalog = [app("stripe", "2026-11-13"), app("gmail", "2026-11-13"), app("typeform", "2026-11-16"), app("pipedrive", "2026-11-13"), app("shopify"), app("gorgias")];
+    expect(connectsOf(catalog, false)).toBe(CONNECTS_TODAY);
+    expect(connectsOf(undefined, true)).toBe(CONNECTS_TODAY);
+    expect(connectsOf(catalog.map((a) => ({ ...a, proved: undefined })), true)).toBe(CONNECTS_TODAY);
+    const read = connectsOf(catalog, true);
+    expect([...read].sort()).toEqual(["gmail", "pipedrive", "stripe", "typeform"]);
+    const ids = recipesFor(catalog, "en", true, read).recipes.map((r) => r.id);
+    // Proved: new leads (Typeform, Pipedrive, mail) and refunds (mail, Stripe). Not proved: the store app's jobs.
+    expect(ids).toEqual(expect.arrayContaining(["follow-up-new-leads", "refunds-within-a-limit"]));
+    expect(ids).not.toContain("answer-questions-about-orders");
+    // A proof added in planque's data alone lists its jobs: no list here changes.
+    const withShopify = connectsOf(catalog.map((a) => (a.vendor === "shopify" ? { ...a, proved: { at: "2026-11-17" } } : a)), true);
+    expect(recipesFor(catalog, "en", true, withShopify).recipes.map((r) => r.id)).toContain("answer-questions-about-orders");
+    // The app drawn for a connection is one that connects by the same read: Gorgias, listed but not proved, isn't.
+    expect(withApps(recipesFor(catalog, "en", true, read).recipes, catalog, new Map(), undefined, read)
+      .find((r) => r.id === "refunds-within-a-limit")!.apps.map((a) => a.name)).toEqual(["gmail", "stripe"]);
   });
 
   // dev-android's read of the four key jobs (13 Nov): refunds drew Gorgias, which can't connect yet, ahead of Intercom.

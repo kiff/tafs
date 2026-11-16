@@ -29,7 +29,7 @@ import { allowOffer } from "./allow.js";
 import { type CatalogApp, ConnectError, listApps, startApp } from "./connect.js";
 import { sheetOf, takesKey } from "./sheet.js";
 import { type CoachState, entryOf, loadedKey, LOADED_KEPT_MS, skillFiles, startSkills, toolSkills, asNamed } from "./coach-skills.js";
-import { galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
+import { connectsOf, galleryFor, type GalleryView, iconsFor, noRecipes, recipesFor, type RecipesView, suggestionWords, type Suggestions, withApps } from "./recipes.js";
 import { logoFor, type LogoDeps, nameLogos } from "./logos.js";
 import { late, lateAlert, oldestWaiting, PROMISE_MAX_HOURS, waitingView } from "./waiting.js";
 import { type Check, checkOf, instantIn, type PlannedSchedule, plannedOf, sameAppEvent, schedulesOf, TriggerError, type Trigger } from "./triggers.js";
@@ -10063,6 +10063,9 @@ async function wholeCatalog(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Pro
   }
 }
 
+/** Whether the apps that connect today are read from planque's catalog (`proved`), not CONNECTS_TODAY: dark until planque and kiff.dev read it too. */
+const provedFromCatalog = () => process.env.TAFS_PROVED_FROM_CATALOG === "on";
+
 /** The recipes the account's tafs were built from (#671 keeps it on the taf): Setup and tafs being removed aside. */
 async function runningRecipes(me: KIFFIdentity, deps: Deps): Promise<{ live: boolean; running: Set<string> }> {
   const tafs = (await deps.tafs.list(me.tenantID)).filter((t) => t.job !== SETUP_JOB && !t.removing);
@@ -10085,10 +10088,11 @@ async function recipes(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
   const suggestions = await suggestionsOf(me, deps, lang);
   if (suggestions.reason !== "on") return noRecipes(suggestions, lang, manages);
   const catalog = await wholeCatalog(event, me, deps);
-  const view = recipesFor(catalog, lang, manages);
+  const connects = connectsOf(catalog, provedFromCatalog());
+  const view = recipesFor(catalog, lang, manages, connects);
   const logos = await nameLogos(deps.coach, iconsFor(view.recipes, catalog), new Date());
   const running = manages ? (await runningRecipes(me, deps)).running : undefined;
-  return { ...view, recipes: withApps(view.recipes, catalog, logos, running) };
+  return { ...view, recipes: withApps(view.recipes, catalog, logos, running, connects) };
 }
 
 /**
@@ -10100,9 +10104,10 @@ async function gallery(event: HTTPEvent, me: KIFFIdentity, deps: Deps): Promise<
   const lang = langOf(event);
   const manages = me.capabilities.includes("cards.manage");
   const [catalog, suggestions, tafs] = await Promise.all([wholeCatalog(event, me, deps), suggestionsOf(me, deps, lang), runningRecipes(me, deps)]);
-  const all = recipesFor(catalog, lang, manages).recipes;
+  const connects = connectsOf(catalog, provedFromCatalog());
+  const all = recipesFor(catalog, lang, manages, connects).recipes;
   const logos = await nameLogos(deps.coach, iconsFor(all, catalog), new Date());
-  return galleryFor(catalog, lang, { manages, live: tafs.live, suggestions: suggestions.show, ...(manages ? { running: tafs.running } : {}) }, logos);
+  return galleryFor(catalog, lang, { manages, live: tafs.live, suggestions: suggestions.show, ...(manages ? { running: tafs.running } : {}) }, logos, connects);
 }
 
 /**

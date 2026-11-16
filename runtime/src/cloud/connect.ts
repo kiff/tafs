@@ -24,6 +24,8 @@ export interface CatalogApp {
   /** For `needs_setup`: the line the apps show in place of Connect. */
   words?: string;
   grant?: string;
+  /** When a check connected this app, and where it's recorded (planque's catalog, from its reviewed list): absent until one has. */
+  proved?: { at: string; link?: string };
 }
 
 /** What an app that needs setting up says in place of Connect. */
@@ -100,6 +102,7 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
       entry: e.entry, vendor, title: e.title, ...displayName(e.entry, vendor, e.title),
       ...(typeof e.icon === "string" && e.icon.startsWith("https://") ? { icon: e.icon } : {}),
       how, state, ...(state === "needs_setup" ? { words: NEEDS_SETUP_WORDS } : {}), ...(typeof e.grant === "string" ? { grant: e.grant } : {}),
+      ...provedOf(e.proved),
     });
   }
   return {
@@ -109,6 +112,14 @@ export async function listApps(fetchFn: Fetch, base: string, tenant: string, bea
     ...(Number.isInteger(got.skipped) && (got.skipped as number) > 0 ? { skipped: got.skipped as number } : {}),
     ...(got.partial === true ? { partial: true as const } : {}),
   };
+}
+
+/** planque's `proved` on an entry, kept only when it has a date, and a link only when it's https. */
+function provedOf(v: unknown): { proved?: { at: string; link?: string } } {
+  if (!v || typeof v !== "object") return {};
+  const p = v as { at?: unknown; link?: unknown };
+  if (typeof p.at !== "string" || Number.isNaN(Date.parse(p.at))) return {};
+  return { proved: { at: p.at, ...(typeof p.link === "string" && p.link.startsWith("https://") ? { link: p.link } : {}) } };
 }
 
 /**

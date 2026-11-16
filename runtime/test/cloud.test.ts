@@ -350,6 +350,32 @@ describe("tafs cloud", () => {
     expect((await call(w, "GET", "/v1/recipes", { token: "ana" })).body.shown).toBe(true);
   });
 
+  it("with TAFS_PROVED_FROM_CATALOG on, the gallery lists the jobs whose apps planque's catalog marks proved; off, CONNECTS_TODAY", async () => {
+    const w = world();
+    for (const k of [...w.tafs.held.keys()]) if (k.startsWith("t_acme#")) w.tafs.held.delete(k);
+    const vendors = [...new Set(RECIPES.flatMap((r) => r.connections.flat() as string[]))];
+    // Proved in this catalog: Stripe, Gmail and Shopify only. Shopify isn't in CONNECTS_TODAY; GitHub is, but isn't proved here.
+    const entries = vendors.map((v) => ({ entry: `connector:composio:${v}`, vendor: v, title: v, how: "oauth",
+      ...(["stripe", "gmail", "shopify"].includes(v) ? { proved: { at: "2026-11-16" } } : {}) }));
+    const deps = { ...depsOf(w), coach: memoryCoach(() => new Date()), planqueBase: "https://planque.test",
+      fetch: (async (url: string, init?: RequestInit) => url.startsWith("https://planque.test/")
+        ? new Response(JSON.stringify({ entries }), { status: 200 })
+        : depsOf(w).fetch!(url, init)) as Deps["fetch"] };
+    const ids = async () => (JSON.parse((await handle({ rawPath: "/v1/recipes/gallery", requestContext: { http: { method: "GET" } },
+      headers: { Authorization: "Bearer ana" } }, deps)).body).recipes as Array<{ id: string }>).map((r) => r.id);
+    const before = await ids();
+    expect(before).toContain("ship-when-green");
+    expect(before).not.toContain("answer-questions-about-orders");
+    process.env.TAFS_PROVED_FROM_CATALOG = "on";
+    try {
+      const read = await ids();
+      expect(read).toEqual(expect.arrayContaining(["answer-questions-about-orders", "refunds-within-a-limit", "save-a-customer-who-cancels"]));
+      expect(read).not.toContain("ship-when-green");
+    } finally {
+      delete process.env.TAFS_PROVED_FROM_CATALOG;
+    }
+  });
+
   it("serves the gallery at any time, each job with its apps and logos from tafs cloud, and the strip under the tafs list", async () => {
     const w = world();
     for (const k of [...w.tafs.held.keys()]) if (k.startsWith("t_acme#")) w.tafs.held.delete(k);
