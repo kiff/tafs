@@ -940,7 +940,9 @@ never as a small sheet that grows once the list comes (Android 1.27.11).
   With no taf yet, an app to connect offers **Ask Coach** instead, which opens Coach, where a taf is made; "Make a taf first"
   sits above Discover only, never above Yours (Android 1.27.1).
   A connected app opens its connections, each with Disconnect, from anywhere on its row (Android 1.27.1; before, only its
-  "Connected" label). The note on what removing access takes shows only when a taf uses one of them. Its tap always answers (Android 1.26.1): with none of its
+  "Connected" label). So does an app tafs cloud doesn't mark connected whose connection the phone holds, such as a sign-in
+  kept after its card was declined (`listed`): it gives no taf any access and the app stays where tafs cloud puts it, but
+  only that sheet can end it (`opensConnections`). The note on what removing access takes shows only when a taf uses one of them. Its tap always answers (Android 1.26.1): with none of its
   connections on this phone, planque's connections are read again first (`refreshConnections`), and if there are still
   none, the sheet says why: the read's failure (`connectionsError`, kept in words and written to the diagnostics), or
   that connecting isn't set up from this phone. A sheet emptied by removing its app's last connection closes instead,

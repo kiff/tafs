@@ -139,6 +139,14 @@ object ConnectAppsWords {
 fun connectionsOf(state: AppState, app: ConnectApps.App): List<bot.tafs.app.kiff.Grant> =
   state.grants.filter { (it.entry == app.entry || it.id == app.grant) && it.status !in setOf("disconnected", "failed") }
 
+/**
+ * Whether an app's row opens its connections: when tafs cloud marks it connected, and also when the phone holds a connection
+ * to it tafs cloud doesn't count as one, such as a sign-in kept but never approved (`listed`, a declined card's). That gives
+ * no taf any access, so `connected` keeps its meaning and the app stays where tafs cloud puts it; but it's the owner's to end,
+ * and only the connections' sheet has Disconnect.
+ */
+fun opensConnections(state: AppState, app: ConnectApps.App): Boolean = app.connected || connectionsOf(state, app).isNotEmpty()
+
 /** An app's connections by taf: one section per taf, its name as the heading, with its connections in the order planque lists them. */
 data class TafConnections(val taf: String, val grants: List<bot.tafs.app.kiff.Grant>)
 
@@ -476,7 +484,7 @@ fun ConnectAppsSheet(
           // 2239 left the row dead when the read had failed), and the sheet then says why when there are still none.
           // An app no taf needs (tafs cloud's `needed_by` empty) offers Ask Coach, which sets one up, in place of Connect.
           val connectHere = connect?.takeIf { app.needsReconnect || tafsFor(app, tafs).isNotEmpty() }
-          AppRow(app, connectHere, onChooseActions, onManage = { a: ConnectApps.App ->
+          AppRow(app, connectHere, onChooseActions, opens = opensConnections(state, app), onManage = { a: ConnectApps.App ->
             if (connectionsOf(state, a).isNotEmpty()) managing = a else readScope.launch { onReadConnections(); managing = a }
           }, usedBy = usedBy(state, app), onAskCoach = onAskCoach.takeIf { onConnect != null && connectHere == null },
             removing = state.disconnecting?.let { id -> connectionsOf(state, app).any { it.id == id } } == true)
@@ -522,6 +530,8 @@ private fun AppRow(
   app: ConnectApps.App,
   onConnect: ((ConnectApps.App) -> Unit)?,
   onChooseActions: (ConnectApps.App) -> Unit = {},
+  /** Whether the row opens its connections ([opensConnections]): connected, or holding a connection on the phone. */
+  opens: Boolean = app.connected,
   onManage: ((ConnectApps.App) -> Unit)? = null,
   usedBy: List<String> = emptyList(),
   /** With no taf to connect it for, the way to make one: Coach. */
@@ -530,9 +540,10 @@ private fun AppRow(
   removing: Boolean = false,
 ) {
   // A connected app's whole row opens its connections, not only its "Connected" label (an audit: "I tapped the whole Gmail
-  // row and nothing happened").
-  val opens = if (app.connected && onManage != null) Modifier.tapping(onClickLabel = Words.Connect.Apps.manage) { onManage(app) } else Modifier
-  Panel(opens) {
+  // row and nothing happened"); so does one whose connection the phone holds though it isn't connected, a declined sign-in's,
+  // which only that sheet can end (the owner's phone, 16 Nov).
+  val opensRow = if (opens && onManage != null) Modifier.tapping(onClickLabel = Words.Connect.Apps.manage) { onManage(app) } else Modifier
+  Panel(opensRow) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
       // The app's logo from tafs cloud, small and as it is; without one, its initial on a tile, which is only a marker.
       val logo = bot.tafs.app.design.rememberLogo(app.logo)
