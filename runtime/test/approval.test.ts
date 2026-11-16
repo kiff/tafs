@@ -1,8 +1,8 @@
 import { wordsIn } from "../src/cloud/words/index.js";
 import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { connectedKey, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, WORDS } from "../src/cloud/approval.js";
-import { approvalAnswerWords, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
+import { AGREE_FIRST, connectedKey, approvalWords, ASK_KEPT_MS, COUNT_NEVER_A_RULE, DRAW_AGAIN, KEEP_THE_REST, READS_A_DAY, REDRAFT_CODES, REFUSAL_CLOSED, WORDS } from "../src/cloud/approval.js";
+import { approvalAnswerWords, checkedOnReadFor, handle, type HTTPEvent, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { fakeAgents, memoryAccounts, memoryArchived, memoryClaims, memoryCoach, memoryKeys, memoryNames, memoryRemovals, memorySlots, memoryTafs } from "./fakes.js";
 
@@ -513,9 +513,9 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
   // Evals 10 to 12: the refund Card also counted refunds, 1,000 a day held for the owner, though the rules set only each
   // refund's cap and the day's total, so 1,001 one-cent refunds under the cap would wait for the owner. Coach's words
   // alone didn't hold. A write with an amount limit carries no count of its calls.
-  it("a draft that counts a write's calls beside its amount limits isn't signed; a count of 0, per item, or on a read is", async () => {
+  it("a draft that counts a write's calls beside its amount limits isn't signed; a count of 0, the owner's per item, or on a read is", async () => {
     const s = services();
-    const tools = [{ tool: "refund_charge", name: "refund_charge_k3", title: "Refund a charge", amount_argument: "amount" },
+    const tools = [{ tool: "refund_charge", name: "refund_charge_k3", title: "Refund a charge", amount_argument: "amount", resource_argument: "charge" },
       { tool: "send_reply", name: "send_reply_k3", title: "Send a reply" },
       { tool: "get_charge", name: "get_charge_k3", title: "Read a charge", read_only: true }];
     s.grants = [grant({ status: "connected" }, { tools })];
@@ -541,11 +541,28 @@ describe("an approval card: tafs cloud decides what needs signing", () => {
     expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
     draft([each([count(30)]), others]);
     expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
-    // 4. A count of 0 held (each refund asks the owner), or a count per item (one refund per charge): signed.
+    // 4. A count of 0 held (each refund asks the owner), or the owner's limit for each item, per the tool's own
+    // resource_argument over its life or any 7 days (one refund per charge, ever): signed.
     draft([each([count(0)]), daily([day(20_000)]), others]);
     expect(await ask()).toMatchObject({ outcome: "sign" });
     draft([each([count(1, { per: "charge", window: "lifetime" })]), daily([day(20_000)]), others]);
     expect(await ask()).toMatchObject({ outcome: "sign" });
+    draft([each([count(1, { per: " Charge ", window: "rolling_7d" })]), daily([day(20_000)]), others]);
+    expect(await ask()).toMatchObject({ outcome: "sign" });
+    // 5. A live test's "1 a day for each payment intent" on the money tool: a count per item the owner never gave, so
+    // not signed, and Coach hears the item. Another item than the tool's own, even over its life: not signed either.
+    draft([each([count(1, { per: "payment_intent" })]), daily([day(20_000)]), others]);
+    const p = await ask();
+    expect(p).toMatchObject({ outcome: "answered", note: WORDS.countOnAmount("Refund a charge") });
+    expect(String(p.answer)).toContain(`failed: the draft counts "Refund a charge"'s calls (1 per calendar_day for each payment_intent) beside its amount limits`);
+    draft([each([count(1, { per: "charge" })]), daily([day(20_000)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    draft([each([count(1, { per: "payment_intent", window: "lifetime" })]), daily([day(20_000)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
+    // 6. With no resource_argument, no count per item is the owner's shape: it goes in the taf's instructions.
+    s.grants = [grant({ status: "connected" }, { tools: tools.map(({ resource_argument: _, ...t }) => t) })];
+    draft([each([count(1, { per: "charge", window: "lifetime" })]), daily([day(20_000)]), others]);
+    expect((await ask()).note).toBe(WORDS.countOnAmount("Refund a charge"));
   });
 
   // Eval 43402441612: "one invoice per order, ever" and "up to 10 drafts a day" signed as 1 create_invoice in the Card's
@@ -1427,6 +1444,45 @@ describe("never signs a Card that allows more than the taf's connections give", 
   }
 });
 
+// Eval 18, intros replay: two key apps on one host (a sheet and a mailbox). The Card over both was refused with "show
+// desk.example.com's approval first", the same name as the app asked, so Coach couldn't tell which went first: it asked
+// the mailbox's key alone, then put the Card on the mailbox again (one grant approved twice). The waiting app is named
+// so it differs from this one, by its tools, with its grant id for Coach.
+describe("the app that waits is named so it differs from this one (other_app_first, Eval 18)", () => {
+  const base = (name: string, tool: string, title: string) => ({ kind: "api_key", server: "desk.example.com",
+    api: { url: `https://desk.example.com/${name}/openapi.json`, digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } },
+    tools: [{ tool, name: `${tool}_k3`, title }] });
+  const sheet = (over: Record<string, unknown> = {}) => grant({ id: "g_1", vendor: "desk.example.com", title: "desk.example.com", ...over }, base("sheet", "append_row", "Append a row"));
+  const mailbox = (over: Record<string, unknown> = {}) => grant({ id: "g_2", vendor: "desk.example.com", title: "desk.example.com", ...over }, base("mail", "send_mail", "Send an email"));
+  const both = [{ id: "c1", subject: "refunds-x", grants: [{ action: "append_row_k3" }, { action: "send_mail_k3" }], aggregates: [] }];
+
+  it("names the waiting app by its tools and grant, and this one too, when both are one host", async () => {
+    const s = services();
+    s.grants = [sheet({ status: "connected" }), mailbox()];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: both };
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sheet({ status: "connected" }).digest, draft: "drf_1", shown_draft: "v3" });
+    expect(r.body).toMatchObject({ outcome: "answered" });
+    const answer = String(r.body.answer);
+    expect(answer).toContain("desk.example.com (Send an email)'s tools (grant g_2)");
+    expect(answer).toContain("this one (desk.example.com (Append a row), grant g_1)");
+    expect(answer).not.toMatch(/show desk\.example\.com's approval/);
+    // The person reads the waiting app's name with its tools, never two apps called the same.
+    expect(String(r.body.note)).toContain("desk.example.com (Send an email)");
+  });
+
+  it("names an app on another host by its name alone", async () => {
+    const s = services();
+    s.grants = [sheet({ status: "connected" }), grant({ id: "g_2", vendor: "Mail", title: "Mail · Demo Shop" }, { server: "mcp.mail.example", tools: [{ tool: "send_mail", name: "send_mail_k3" }] })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: both };
+    const w = await world(s, { draft: "drf_1" });
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sheet({ status: "connected" }).digest, draft: "drf_1", shown_draft: "v3" });
+    expect(r.body).toMatchObject({ outcome: "answered" });
+    expect(String(r.body.answer)).toContain("show Mail · Demo Shop's approval first");
+    expect(String(r.body.note)).not.toContain("(");
+  });
+});
+
 describe("one signature for a key and its Card (key_and_cards, docs/secure-connection.md)", () => {
   const API = { kind: "api_key", api: { url: "https://example.com/desk/openapi.json", digest: "a".repeat(64), base: "https://desk.example.com/v1", auth: { in: "header", name: "X-Desk-Key" } } };
   const keyGrant = (over: Record<string, unknown> = {}) => grant(over, API);
@@ -1589,7 +1645,7 @@ describe("a Card over two apps approves every app's tools, or says which waits (
     s.drafts.drf_1 = { status: "confirmed", version: "v3", agent_id: "refunds-x", cards: [both] };
     const rep = await w.call("POST", `${ASK}/${(r.body.ask as { id: string }).id}`, { result: "confirmed" }, SIGNED);
     expect(rep.body.answer).not.toBe("approved");
-    expect(String(rep.body.answer)).toMatch(/Stripe's tools still wait/);
+    expect(String(rep.body.answer)).toMatch(/Stripe's tools \(grant g_2\) still wait/);
   });
 
   // Both apps waiting (Win-back: Gmail a held sign-in, Stripe added tools): each card moves forward, never sending the
@@ -1641,11 +1697,11 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     try {
       const r = await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" });
       expect(r.status).toBe(200);
-      expect(r.body).toEqual({ outcome: "answered", code: "vendor_name", redraft: true, note: WORDS.registeredName("list_charges", "list_charges_noyy"),
+      expect(r.body).toEqual({ outcome: "answered", code: "vendor_name", redraft: true, checked_on_read: true, rules_unchecked: true, note: WORDS.registeredName("list_charges", "list_charges_noyy"),
         answer: expect.stringMatching(/^failed: the Card covers "list_charges", but this taf's connection gives that tool as "list_charges_noyy"/) });
       // The draft over the registered name passes: ok, with the version it was checked at.
       s.drafts.drf_1.cards = card(["refund_charge", "list_charges_noyy"]);
-      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "ok", version: "v3" });
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "ok", version: "v3", checked_on_read: true, rules_unchecked: true });
       // The log has the reason code only: never the draft, its Cards or the tools.
       expect(logged.filter((l) => l.startsWith("approval check:"))).toEqual(["approval check: vendor_name", "approval check: ok"]);
       expect(logged.join("\n")).not.toMatch(/drf_1|list_charges|refund_charge/);
@@ -1667,7 +1723,7 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     const check = async (body: Record<string, unknown>, path = CHECK, headers: Record<string, string> = {}) => w.call("POST", path, body, headers);
     expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "read_again", code: "out_of_date" });
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x" };
-    expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "read_again", code: "cards_unread", note: WORDS.cardsUnread });
+    expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "read_again", code: "cards_unread", note: WORDS.cardsUnread, checked_on_read: true, rules_unchecked: true });
     s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: null as unknown as unknown[] };
     expect((await check({ draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "no_card", note: WORDS.noCard });
     // A draft for another taf than the grant's, and a grant planque doesn't list for this account.
@@ -1679,6 +1735,82 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     expect((await check({ draft: "drf_1", shown_draft: "v3" }, "/v1/connect/grants/g_9/check")).body).toMatchObject({ outcome: "answered", code: "no_grant" });
     // KIFF has no such draft for this person.
     expect((await check({ draft: "drf_9", shown_draft: "v3" })).body).toMatchObject({ outcome: "answered", code: "no_draft" });
+  });
+
+  // An e2e harness kept its own copy of which cards the chat's read checks, and it differed from tafs cloud's in two steps,
+  // so a refusal the owner would meet at the tap didn't show in the Eval. The route says it, by the chat read's own rule.
+  it("never checks the agreed rules, even where they're required, and says so on every answer (rules_unchecked)", async () => {
+    const s = services();
+    s.grants = [grant({ status: "connected" }, { tools })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: card(["refund_charge", "list_charges_noyy"]) };
+    const w = await world(s);
+    process.env.TAFS_RULES_REQUIRED = "on";
+    try {
+      // Approve would refuse this draft (no rules agreed in a conversation); the check route has none to read, so it says ok
+      // and that the rules weren't checked: a caller never reads its ok as "the rules hold".
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toEqual({ outcome: "ok", version: "v3", checked_on_read: true, rules_unchecked: true });
+      s.drafts.drf_1.version = "v4";
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ outcome: "read_again", rules_unchecked: true });
+    } finally {
+      delete process.env.TAFS_RULES_REQUIRED;
+    }
+  });
+
+  describe("says whether the chat's read checks the card (checked_on_read), by the chat read's rule", () => {
+    afterEach(() => { delete process.env.TAFS_TOOLS_AND_CARDS; delete process.env.TAFS_KEY_AND_CARDS; });
+    const g = (over: Record<string, unknown>, request: Record<string, unknown> = {}) => grant(over, { tools, ...request }) as unknown as Parameters<typeof checkedOnReadFor>[0];
+    const all = ["tools_and_cards", "key_and_cards", "signs"];
+
+    it("for each step: a Card alone, the tools or key with their Card, and never a connection alone", () => {
+      process.env.TAFS_TOOLS_AND_CARDS = "on";
+      process.env.TAFS_KEY_AND_CARDS = "on";
+      // A connected grant's Card alone (cards): checked.
+      expect(checkedOnReadFor(g({ status: "connected" }), "drf_1", [])).toBe(true);
+      // A first connection (connect): never, even with a draft and every step the phone can sign.
+      expect(checkedOnReadFor(g({ status: "pending" }), "drf_1", all)).toBe(false);
+      // A pending grant signed in elsewhere but not declared yet: connect, not checked (where a copy took any signed-in grant).
+      expect(checkedOnReadFor(g({ status: "pending", signed_in: true }), "drf_1", all)).toBe(false);
+      // Tools added to a connected grant, or a held, declared sign-in, with their Card (tools_and_cards): checked.
+      expect(checkedOnReadFor(g({ status: "pending", connected: [{ tool: "list_charges" }] }), "drf_1", all)).toBe(true);
+      expect(checkedOnReadFor(g({ status: "pending", signed_in: true, declared: true }), "drf_1", all)).toBe(true);
+      // A key grant with its Card (key_and_cards), in any approvable status, not only pending (where a copy took pending only).
+      for (const status of ["pending", "approved", "needs_reconnect"]) {
+        expect(checkedOnReadFor(g({ status }, { kind: "api_key" }), "drf_1", all), status).toBe(true);
+      }
+      // No draft, no grant: nothing to check.
+      expect(checkedOnReadFor(g({ status: "connected" }), undefined, all)).toBe(false);
+      expect(checkedOnReadFor(undefined, "drf_1", all)).toBe(false);
+    });
+
+    it("by what the phone can sign and the deploy's flags, as the chat's read does", () => {
+      const added = g({ status: "pending", connected: [{ tool: "list_charges" }] });
+      const key = g({ status: "pending" }, { kind: "api_key" });
+      // Flags off: both combined steps sign the connection alone.
+      expect(checkedOnReadFor(added, "drf_1", all)).toBe(false);
+      expect(checkedOnReadFor(key, "drf_1", all)).toBe(false);
+      process.env.TAFS_TOOLS_AND_CARDS = "on";
+      process.env.TAFS_KEY_AND_CARDS = "on";
+      // A phone that can't sign the combined step: the connection alone.
+      expect(checkedOnReadFor(added, "drf_1", ["key_and_cards"])).toBe(false);
+      expect(checkedOnReadFor(key, "drf_1", ["tools_and_cards"])).toBe(false);
+      // A held sign-in's first tools need the phone that draws the card by its mark (`signs`).
+      expect(checkedOnReadFor(g({ status: "pending", signed_in: true, declared: true }), "drf_1", ["tools_and_cards"])).toBe(false);
+    });
+
+    it("on the route, with the caller's `can`, on an ok and on a refusal alike", async () => {
+      process.env.TAFS_TOOLS_AND_CARDS = "on";
+      const s = services();
+      s.grants = [grant({ status: "pending", connected: [{ tool: "list_charges_noyy" }] }, { tools })];
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: card(["refund_charge", "list_charges_noyy"]) };
+      const w = await world(s);
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" })).body).toMatchObject({ checked_on_read: false });
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards"] })).body).toMatchObject({ checked_on_read: true });
+      expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3", can: "tools_and_cards,signs" })).body).toMatchObject({ checked_on_read: true });
+      // A grant planque doesn't list: refused, and not checked on the read.
+      expect((await w.call("POST", "/v1/connect/grants/g_9/check", { draft: "drf_1", shown_draft: "v3", can: ["tools_and_cards"] })).body)
+        .toMatchObject({ code: "no_grant", checked_on_read: false });
+      expect(s.checks).toEqual([]);
+    });
   });
 
   it("refuses a request it can't check: no phone proof, no session, a body without the draft or the version read", async () => {
@@ -1885,4 +2017,218 @@ describe("the chat's read checks a Card signed with its tools or key too, before
       expect(w.told()).toBeUndefined();
     });
   }
+});
+
+describe("the Cards follow the rules the owner agreed, as data (rules.ts)", () => {
+  const CHAT = `/v1/tafs/${COACH}/conversation`;
+  const tools = [{ tool: "refund_charge", name: "refund_charge_k3", title: "Refund a charge" },
+    { tool: "list_charges", name: "list_charges_k3", title: "List charges", read_only: true }];
+  const cards = (refund: string) => [
+    { id: "c1", subject: "refunds-x", on_exceed: refund, grants: [{ action: "refund_charge_k3" }], aggregates: [] },
+    { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }];
+  const RULES = [{ tool: "refund_charge", over: "refuse" }, { tool: "list_charges", over: "refuse" }];
+  async function setUp(refund: string) {
+    const s = services();
+    s.grants = [grant({ status: "connected" }, { tools })];
+    s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: cards(refund) };
+    const w = await world(s, { draft: "drf_1" });
+    /** Coach shows a rules notice, and the confirm that agrees to it; `agree` records the person's tap. */
+    const rules = (id: string, list: unknown, agree = true) => {
+      w.agents.show(w.stored, { type: "notice", id, tone: "info", text: "Refunds are refused past €50 a day.", rules: list });
+      w.agents.show(w.stored, { type: "confirm", id: `ok-${id}`, text: "Agree?", agrees: id, options: [{ value: "agree", label: "Agree" }, { value: "change", label: "Change something" }] });
+      if (!agree) return;
+      const list2 = w.agents.events.get(w.stored.session)!;
+      list2.push({ session: w.stored.session, run: w.stored.id, seq: list2.length + 1, time: NOW.toISOString(), kind: "answered", body: { id: `ok-${id}`, type: "confirm", answer: "agree", words: "Agree" } });
+    };
+    const tap = async () => (await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+    return { s, w, rules, tap };
+  }
+  afterEach(() => { delete process.env.TAFS_RULES_REQUIRED; });
+
+  it("a Card whose on_exceed is the agreed rule's is signed; one that isn't is refused, and Coach hears the fix", async () => {
+    const ok = await setUp("refuse");
+    ok.rules("rules-1", RULES);
+    expect(await ok.tap()).toMatchObject({ outcome: "sign" });
+    const off = await setUp("owner");
+    off.rules("rules-1", RULES);
+    const r = await off.tap();
+    expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesOnExceed("Refund a charge") });
+    expect(String(r.answer)).toContain(`failed: the rules the owner agreed say "Refund a charge" refuses past its limit, and the draft's Card for it has on_exceed "owner". Draft it again with on_exceed "refuse" on that Card.`);
+    expect(String(r.answer)).toContain(`${REFUSAL_CLOSED}`);
+    expect(String(r.answer)).toContain(DRAW_AGAIN);
+    expect(off.s.checks).toEqual([]);
+  });
+
+  it("the chat's read refuses it before the card is drawn, so the owner never approves it", async () => {
+    const { w, rules } = await setUp("owner");
+    rules("rules-1", RULES);
+    const read = await w.call("GET", CHAT, undefined);
+    const a1 = (read.body.components as Array<{ component: { id?: string; signs?: unknown }; answer?: { state: string } }>).find((c) => c.component.id === "a1");
+    expect(a1?.answer?.state).toBe("answered");
+    expect(a1?.component.signs).toBeUndefined();
+    expect(String(w.told()?.answer)).toMatch(/^failed: the rules the owner agreed say "Refund a charge" refuses past its limit/);
+  });
+
+  it("a write the agreed rules say nothing of isn't signed", async () => {
+    const { rules, tap } = await setUp("refuse");
+    rules("rules-1", [{ tool: "list_charges", over: "refuse" }]);
+    expect(await tap()).toMatchObject({ outcome: "answered", note: WORDS.rulesMissing("Refund a charge") });
+  });
+
+  // kiff-qa on #1100: the conversation that can't be read is never trusted; it's read again, nothing signed.
+  it("a conversation that can't be read isn't trusted: the card reads again, and nothing is signed", async () => {
+    // How many conversation reads a tap makes, the rules' own read last; then the same tap with only that read failing.
+    const count = await setUp("refuse");
+    count.rules("rules-1", RULES);
+    const counted = count.w.agents.api.session.bind(count.w.agents.api);
+    let n = 0;
+    count.w.agents.api.session = async (...a: Parameters<typeof counted>) => { n++; return counted(...a); };
+    expect(await count.tap()).toMatchObject({ outcome: "sign" });
+    const { s, w, rules, tap } = await setUp("refuse");
+    rules("rules-1", RULES);
+    const real = w.agents.api.session.bind(w.agents.api);
+    let reads = 0;
+    w.agents.api.session = async (...a: Parameters<typeof real>) => {
+      if (++reads === n) throw new Error("kiff/agents is down");
+      return real(...a);
+    };
+    expect(await tap()).toMatchObject({ outcome: "read_again", note: WORDS.cardsUnread });
+    expect(s.checks).toEqual([]);
+  });
+
+  // kiff-qa on #1100: the rules hold for every tool the taf holds, the same taf's other connections included.
+  it("another connection's tool of the same taf follows the agreed rules too", async () => {
+    const s = services();
+    const mail = [{ tool: "send_reply", name: "send_reply_m7", title: "Send a reply" }];
+    s.grants = [grant({ status: "connected" }, { tools }), grant({ id: "g_2", status: "connected", vendor: "Mail" }, { server: "mcp.mail.example", tools: mail })];
+    const mailCard = (onExceed: string) => ({ id: "c3", subject: "refunds-x", on_exceed: onExceed, grants: [{ action: "send_reply_m7" }], aggregates: [] });
+    const both = [...RULES, { tool: "send_reply", over: "refuse" }];
+    for (const [onExceed, rulesList, want] of [["refuse", both, "sign"], ["owner", both, WORDS.rulesOnExceed("Send a reply")], ["refuse", RULES, WORDS.rulesMissing("Send a reply")]] as const) {
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [...cards("refuse"), mailCard(onExceed)] };
+      const w = await world(s, { draft: "drf_1" });
+      w.agents.show(w.stored, { type: "notice", id: "rules-1", tone: "info", text: "The rules.", rules: rulesList });
+      w.agents.show(w.stored, { type: "confirm", id: "ok-rules-1", text: "Agree?", agrees: "rules-1", options: [{ value: "agree", label: "Agree" }, { value: "change", label: "Change something" }] });
+      const list = w.agents.events.get(w.stored.session)!;
+      list.push({ session: w.stored.session, run: w.stored.id, seq: list.length + 1, time: NOW.toISOString(), kind: "answered", body: { id: "ok-rules-1", type: "confirm", answer: "agree", words: "Agree" } });
+      const r = (await w.call("POST", ASK, { grant: "g_1", draft: "drf_1", shown_draft: "v3" })).body;
+      if (want === "sign") expect(r).toMatchObject({ outcome: "sign" });
+      else expect(r).toMatchObject({ outcome: "answered", note: want });
+    }
+  });
+
+  it("rules shown and not agreed yet, or newer than the agreement, block the draft until agreed", async () => {
+    const shown = await setUp("refuse");
+    shown.rules("rules-1", RULES, false);
+    const r = await shown.tap();
+    expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesUnagreed });
+    expect(String(r.answer)).toContain(AGREE_FIRST);
+    expect(String(r.answer)).not.toContain(DRAW_AGAIN);
+    const newer = await setUp("refuse");
+    newer.rules("rules-1", RULES);
+    newer.rules("rules-2", [{ tool: "refund_charge", over: "ask" }, { tool: "list_charges", over: "refuse" }], false);
+    expect((await newer.tap()).note).toBe(WORDS.rulesUnagreed);
+  });
+
+  it("with no rules shown, a draft is signed as before, unless the rules are required (TAFS_RULES_REQUIRED=on)", async () => {
+    const before = await setUp("owner");
+    const logged: string[] = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { logged.push(a.join(" ")); });
+    try {
+      expect(await before.tap()).toMatchObject({ outcome: "sign" });
+    } finally {
+      spy.mockRestore();
+    }
+    expect(logged).toContain("approval rules: none agreed in the conversation");
+    process.env.TAFS_RULES_REQUIRED = "on";
+    const required = await setUp("refuse");
+    const r = await required.tap();
+    expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesRequired });
+    expect(String(r.answer)).toContain(AGREE_FIRST);
+  });
+
+  it("the owner's notes are in each language", () => {
+    for (const lang of ["es", "fr", "de", "it", "nl", "pl", "pt"] as const) {
+      const w = approvalWords(lang);
+      expect(w.rulesOnExceed("X")).toContain("X");
+      expect(w.rulesOnExceed("X")).not.toBe(WORDS.rulesOnExceed("X"));
+      expect(w.rulesUnagreed).not.toBe(WORDS.rulesUnagreed);
+      expect(w.rulesRequired).not.toBe(WORDS.rulesRequired);
+      expect(w.rulesMissing("X")).not.toBe(WORDS.rulesMissing("X"));
+      expect(w.rulesFigures("X")).toContain("X");
+      expect(w.rulesFigures("X")).not.toBe(WORDS.rulesFigures("X"));
+    }
+    expect(REDRAFT_CODES.has("rules_on_exceed") && REDRAFT_CODES.has("rules_missing") && REDRAFT_CODES.has("rules_figures") && REDRAFT_CODES.has("rules_unagreed")).toBe(true);
+  });
+
+  describe("the figures the owner agreed", () => {
+    const EACH = { quantity: "sum(amount)", window: "call", limit: 500 };
+    const DAY = { quantity: "sum(amount)", window: "calendar_day", limit: 5000 };
+    const FIGURED = [{ tool: "refund_charge", over: "refuse", limits: [EACH, DAY] }, { tool: "list_charges", over: "refuse" }];
+    /** The refund Card with a cap on each refund and the day's total, and what else it carries. */
+    function setFigures(s: ReturnType<typeof services>, max: number, aggregates: unknown[]) {
+      s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
+        { id: "c1", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max }] }], aggregates },
+        { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }] };
+    }
+    const dayTotal = (limit: number) => ({ quantity: "sum(amount)", window: "calendar_day", limit });
+
+    it("the agreed figures on the Card are signed; a Card at 50000 a refund against an agreed 500 is refused, and Coach hears the fix", async () => {
+      const ok = await setUp("refuse");
+      setFigures(ok.s, 500, [dayTotal(5000)]);
+      ok.rules("rules-1", FIGURED);
+      expect(await ok.tap()).toMatchObject({ outcome: "sign" });
+      const off = await setUp("refuse");
+      setFigures(off.s, 50000, [dayTotal(5000)]);
+      off.rules("rules-1", FIGURED);
+      const r = await off.tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesFigures("Refund a charge") });
+      expect(String(r.answer)).toContain(`failed: the rules the owner agreed give "Refund a charge" 500 as each call on sum(amount), and a Card covering it has 50000. Draft it again with per_action_max {quantity: "sum(amount)", max: 500} on its grant, and no other figure for it on any Card.`);
+      expect(String(r.answer)).toContain(DRAW_AGAIN);
+      expect(off.s.checks).toEqual([]);
+    });
+
+    it("a stricter day's total is refused too, and the chat's read refuses it before the card is drawn", async () => {
+      const { s, w, rules } = await setUp("refuse");
+      setFigures(s, 500, [dayTotal(2000)]);
+      rules("rules-1", FIGURED);
+      await w.call("GET", CHAT, undefined);
+      expect(String(w.told()?.answer)).toMatch(/^failed: the rules the owner agreed give "Refund a charge" 5000 as a day's total on sum\(amount\), and a Card covering it has 2000\. Draft it again with an aggregate \{quantity: "sum\(amount\)", window: "calendar_day", limit: 5000\} with no per/);
+    });
+
+    // Eval 16's refunds: ask past €5 a refund, refuse past €50 a day, as data, and each answer on its own Card.
+    it("ask past one figure and refuse past another: signed on two Cards, refused on one", async () => {
+      const split = [{ tool: "refund_charge", over: "refuse", limits: [{ ...EACH, over: "ask" }, DAY] }, { tool: "list_charges", over: "refuse" }];
+      const two = await setUp("refuse");
+      two.s.drafts.drf_1 = { status: "draft", version: "v3", agent_id: "refunds-x", cards: [
+        { id: "c1", subject: "refunds-x", on_exceed: "owner", grants: [{ action: "refund_charge_k3", per_action_max: [{ quantity: "sum(amount)", max: 500 }] }], aggregates: [] },
+        { id: "c1b", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "refund_charge_k3" }], aggregates: [dayTotal(5000)] },
+        { id: "c2", subject: "refunds-x", on_exceed: "refuse", grants: [{ action: "list_charges_k3" }], aggregates: [] }] };
+      two.rules("rules-1", split);
+      expect(await two.tap()).toMatchObject({ outcome: "sign" });
+      const one = await setUp("refuse");
+      setFigures(one.s, 500, [dayTotal(5000)]);
+      one.rules("rules-1", split);
+      const r = await one.tap();
+      expect(r).toMatchObject({ outcome: "answered", note: WORDS.rulesOnExceed("Refund a charge") });
+      expect(String(r.answer)).toContain(`failed: the rules the owner agreed ask past one of "Refund a charge"'s limits and refuse past another, and the draft puts both on one Card, which has one on_exceed. Draft it again with each on its own Card`);
+    });
+
+    it("a figure the rules don't name, and one the notice's words don't say, are logged and signed", async () => {
+      const { s, rules, tap } = await setUp("refuse");
+      // A count beside the amounts is refused on its own (count_on_amount): the unnamed figure here is a total of another argument.
+      setFigures(s, 500, [dayTotal(5000), { quantity: "sum(fee)", window: "calendar_day", limit: 100 }]);
+      // The test notice says "€50 a day", so the €5 a refund is the figure its words don't say.
+      rules("rules-1", FIGURED);
+      const logged: string[] = [];
+      const spy = vi.spyOn(console, "log").mockImplementation((...a: unknown[]) => { logged.push(a.join(" ")); });
+      try {
+        expect(await tap()).toMatchObject({ outcome: "sign" });
+      } finally {
+        spy.mockRestore();
+      }
+      expect(logged).toContain("approval rules: a figure the rules don't name: refund_charge_k3 sum(fee) calendar_day 100");
+      expect(logged).toContain("approval rules: a figure the notice's words don't say: refund_charge sum(amount) call 500");
+      expect(logged.filter((l) => l.includes("calendar_day 5000"))).toEqual([]);
+    });
+  });
 });

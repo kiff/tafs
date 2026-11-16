@@ -44,6 +44,9 @@ targets:
       path: Tafs/Info.plist
       properties:
         CFBundleDisplayName: tafs
+        # The Mac's menu bar and its app menu ("About tafs", "Quit tafs") read the bundle's
+        # name, which is otherwise the target's, "Tafs". iPhone and iPad show the display name.
+        CFBundleName: tafs
         # From the build settings, so CI's build number reaches App Store Connect.
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
@@ -63,6 +66,9 @@ targets:
         # Attachments (kiff/tafs#209): a photo taken for a message goes only with that message.
         NSCameraUsageDescription: tafs takes a photo to attach to your message, or reads the code your computer shows to pair it. A photo goes only with that message, to your own chat.
         ITSAppUsesNonExemptEncryption: false
+        # The Mac App Store requires a Mac app's category in its Info.plist; iOS ignores it.
+        # It should match the App Store listing's primary category (docs/mac-app.md).
+        LSApplicationCategoryType: public.app-category.business
         NSSupportsLiveActivities: true
         # A silent push says a held call was answered elsewhere, so its alert goes.
         UIBackgroundModes: [remote-notification]
@@ -93,6 +99,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app
+        # The Mac build's own entitlements: push by its Mac name, and the App Sandbox
+        # (docs/mac-app.md, "Signing and the sandbox").
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Tafs/TafsMac.entitlements
         # Set by CI for a manually signed TestFlight build; empty otherwise.
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_APP)
         # iPhone and iPad (kiff/tafs#85).
@@ -165,6 +174,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: bot.tafs.app.notify
+        "CODE_SIGN_ENTITLEMENTS[sdk=macosx*]": Notify/TafsNotifyMac.entitlements
         PROVISIONING_PROFILE_SPECIFIER: $(TAFS_PROFILE_NOTIFY)
         TARGETED_DEVICE_FAMILY: "1,2"
   TafsTests:

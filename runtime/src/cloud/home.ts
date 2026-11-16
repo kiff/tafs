@@ -448,10 +448,11 @@ export function cardView(m: Mandate, lang: Lang = "en"): CardView {
  * id", "€100.00 in total a day for each customer". A window tafs doesn't know is said as it was sent.
  */
 export function eachItemWords(a: NonNullable<Mandate["aggregates"]>[number], lang: Lang = "en"): string {
-  // A whole line in the person's language, its window too. The item is the argument KIFF counts by, as named.
+  // A whole line in the person's language, its window and its item too.
   const w = wordsIn(lang);
   const window = windowWords(a.window, lang).each;
-  const item = (a.per ?? "").trim().toLowerCase().replaceAll("_", " ");
+  // The argument as tafs cloud's word for it, never the vendor's English name: "invoice_id" is an invoice.
+  const item = w.each_item_name((a.per ?? "").trim().toLowerCase().replace(/[_ ]id$/, ""));
   if (!isSum(a.quantity)) return w.each_item_calls(a.limit, plural(lang, a.limit), window, item);
   const scale = a.scale ?? 0;
   const amount = amountWords({ value: (a.limit / 10 ** scale).toFixed(scale), unit: a.unit ?? "" }) ?? String(a.limit);

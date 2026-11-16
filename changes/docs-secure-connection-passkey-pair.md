@@ -1,0 +1,1 @@
+- **The pair's passkey form is described (docs).** `docs/secure-connection.md` now describes how a computer that approves with its own passkey signs two requests under one Windows Hello: `KIFF-Passkey-Assertion: t=…,a=…,with=sha256:…`, its challenge over `kiff.requests.v1`. KIFF's API and gateway already take it, so nothing changes for the apps (docs/secure-connection.md).

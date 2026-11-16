@@ -1,0 +1,1 @@
+- **Docs: how a computer approves with a passkey.** A new page says how each kind of computer approves: a Mac with Touch ID with its approval key, Windows with its platform passkey, and a Mac without Touch ID or Linux with a USB security key or the phone, and what a passkey approval carries (docs/computer-passkeys.md).

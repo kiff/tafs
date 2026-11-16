@@ -1,0 +1,1 @@
+- **Android: "Which taf?" lists only the tafs that use the app.** An app none of your tafs uses offers Ask Coach instead of Connect, and a connection made under a taf that doesn't use the app says so, with its Cancel or Disconnect.

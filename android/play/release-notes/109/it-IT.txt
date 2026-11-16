@@ -1,0 +1,2 @@
+- «Per quale taf è?» mostra solo i taf che usano l'app. Un'app che nessuno dei tuoi taf usa offre Chiedi a Coach.
+- Una connessione fatta per un taf che non usa l'app lo dice, e si può chiudere dalla sua riga.

@@ -1,0 +1,6 @@
+{"messages":[
+ {"at":"2026-11-15T09:00:00Z","from":"owner","kind":"message","text":"I want a taf that answers refund requests, and refunds anything up to €150 on its own.","session":"sample_coach"},
+ {"at":"2026-11-15T09:00:20Z","from":"taf","kind":"message","text":"Got it. Refunds will read new requests in Gmail and refund through Stripe. Up to €150 each, it refunds on its own; above that, it asks you first. Where do the requests come in?","session":"sample_coach"},
+ {"at":"2026-11-15T09:01:05Z","from":"owner","kind":"message","text":"To support@ in Gmail. And never more than €1,000 a day in total.","session":"sample_coach"},
+ {"at":"2026-11-15T09:01:30Z","from":"taf","kind":"message","text":"Done: €150 per refund, and €1,000 a day in total. Next I'll connect Gmail and Stripe, then you approve the Card.","session":"sample_coach"}
+]}

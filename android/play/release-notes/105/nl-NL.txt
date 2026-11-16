@@ -1,0 +1,3 @@
+- Een goedkeuringskaart blijft niet meer staan op “Lezen waar het om vraagt…” als het verzoek wat later binnenkomt.
+- “Inloggen opnieuw openen” vraagt nu opnieuw om je goedkeuring, met één vingerafdruk, in plaats van een al gebruikte link opnieuw te openen.
+- Terwijl de toegang van een app wordt ingetrokken, zegt Apps koppelen “Toegang wordt ingetrokken…”.

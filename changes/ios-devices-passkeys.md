@@ -1,0 +1,1 @@
+- **iPhone: Devices lists the account's passkeys, and adds one on this iPhone.** Owners and admins on an iPhone that approves can add a kiff.dev passkey, so a computer can approve through it by its QR code, and remove one of their own. A computer's own passkey is listed with its computer. iPad and Mac list them.

@@ -51,6 +51,7 @@
   "approval.set_a_screen_lock": "Establece un bloqueo de pantalla en este teléfono para aprobar",
   "approval.settings_face_id_passcode_touch": "Ajustes → Face ID y código (Touch ID y código en un dispositivo con Touch ID)",
   "approval.settings_path.face_id": "Ajustes → Face ID y código",
+  "approval.settings_path.mac_touch_id": "Ajustes del Sistema → Touch ID y contraseña",
   "approval.settings_path.touch_id": "Ajustes → Touch ID y código",
   "approval.state.none_enrolled": "No hay ninguna huella configurada en este teléfono. Añade una en sus ajustes y vuelve.",
   "approval.state.ready": "Las aprobaciones están configuradas en este teléfono.",
@@ -62,6 +63,7 @@
   "approval.turned_off_tafs_open_settings": "{either} está desactivado para tafs. Abre Ajustes y activa {either_2} para tafs.",
   "approval.turned_off_tafs_turn_tafs": "{either} está desactivado para tafs. Actívalo en los ajustes de tafs para aprobar.",
   "approval.view_only": "Vuelve a iniciar sesión en este teléfono para aprobar, o aprueba desde tu otro teléfono.",
+  "approval.view_only_mac": "Este Mac solo puede ver. Para aprobar aquí, añádelo desde tu teléfono: Cuenta › Dispositivos › Añadir un dispositivo.",
   "approval.why": "Cada aprobación que das en tafs, una Card, una conexión o un pago por encima de un límite, se firma en este teléfono con una clave que solo tu huella desbloquea. Tu PIN o patrón no pueden aprobar.",
   "approval.without_allows": "Sin aprobaciones aún puedes iniciar sesión, revisar, rechazar y bloquear.",
   "approval.your_passcode": "tu código"

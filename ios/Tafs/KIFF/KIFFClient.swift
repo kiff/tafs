@@ -260,9 +260,16 @@ final class KIFFClient {
         let expiresIn: Int
         let tenant: String
         let subject: String
+        /// What the session may do: "key" approves with its approval key, "view" approves nothing
+        /// (a computer signed in through the browser on an account that already has a device that
+        /// approves: it approves only once paired from a phone).
+        /// Absent from an older KIFF.
+        var approvalMode: String? = nil
+
+        var viewOnly: Bool { approvalMode == "view" }
 
         enum CodingKeys: String, CodingKey {
-            case accessToken = "access_token", expiresIn = "expires_in", tenant, subject
+            case accessToken = "access_token", expiresIn = "expires_in", tenant, subject, approvalMode = "approval_mode"
         }
     }
 
@@ -477,6 +484,64 @@ final class KIFFClient {
 
     /// Sends a device's removal, prepared and signed.
     func removeDevice(_ prepared: Prepared, signatureHeader: String) async throws {
+        let _: Empty = try await send("DELETE", prepared.path, body: Optional<RawJSON>.none, presigned: signatureHeader)
+    }
+
+    // MARK: Passkeys
+
+    static let passkeysPath = "/v1/me/passkeys"
+
+    /// A passkey of the account's, as KIFF lists it (KIFF's pairing contract, "Registering one"): the
+    /// person's own, with its id, or a computer's own (`device_id`, no id), which goes with its device and
+    /// is never removed on its own. `synced` stays unknown until the passkey's first approval.
+    struct Passkey: Decodable, Equatable {
+        var passkeyID: String? = nil
+        var name: String? = nil
+        var synced: Bool? = nil
+        var createdAt: Date? = nil
+        var deviceID: String? = nil
+
+        /// Only a passkey of its own can be removed: a computer's goes with the computer.
+        var removable: Bool { passkeyID != nil && deviceID == nil }
+
+        enum CodingKeys: String, CodingKey {
+            case passkeyID = "id", name, synced, createdAt = "created_at", deviceID = "device_id"
+        }
+    }
+
+    /// The account's passkeys. Read unsigned, as Devices is.
+    func passkeys() async throws -> [Passkey] {
+        struct Response: Decodable { let passkeys: [Passkey]? }
+        let r: Response = try await send("GET", Self.passkeysPath)
+        return r.passkeys ?? []
+    }
+
+    /// Registering a passkey, built to be signed by the approval key: `kiff.request.v1` over
+    /// `POST /v1/me/passkeys` and its body, never inside a window. KIFF takes it only from an approval
+    /// device, an owner's or an admin's.
+    func preparePasskeyRegistration(_ body: PasskeyRegistration.Body, signedAt: String) throws -> Prepared {
+        try prepare(method: "POST", path: Self.passkeysPath, body: try JSONEncoder().encode(body), gateway: false, signedAt: signedAt)
+    }
+
+    /// Sends a passkey's registration, prepared and signed. `409 passkey_registered` is the same passkey
+    /// registered already: the caller takes it as done.
+    func registerPasskey(_ prepared: Prepared, signatureHeader: String) async throws -> Passkey {
+        struct Answer: Decodable { let passkey: Passkey }
+        let answer: Answer = try await send(prepared.method, prepared.path, body: RawJSON(data: prepared.body), presigned: signatureHeader)
+        return answer.passkey
+    }
+
+    static func passkeyPath(_ id: String) -> String {
+        "\(passkeysPath)/\(id.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed.subtracting(CharacterSet(charactersIn: "/"))) ?? id)"
+    }
+
+    /// Removing a passkey, built to be signed by the approval key, never by the device key alone.
+    func preparePasskeyRemoval(_ id: String, signedAt: String) throws -> Prepared {
+        try prepare(method: "DELETE", path: Self.passkeyPath(id), body: Data(), gateway: false, signedAt: signedAt)
+    }
+
+    /// Sends a passkey's removal, prepared and signed.
+    func removePasskey(_ prepared: Prepared, signatureHeader: String) async throws {
         let _: Empty = try await send("DELETE", prepared.path, body: Optional<RawJSON>.none, presigned: signatureHeader)
     }
 
@@ -1707,4 +1772,32 @@ final class KIFFClient {
         }
         return d
     }()
+}
+
+/// tafs cloud's Activity (`GET /v1/tafs/{id}/activity`, `contracts/taf-activity.json`) sends each entry's call without
+/// `held`, which only KIFF's own read sends: absent, it reads as not held, and the page loads. Written out in an
+/// extension so the memberwise initializer stays.
+extension KIFFClient.ActivityCall {
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        proposalID = try c.decode(String.self, forKey: .proposalID)
+        actionName = try c.decode(String.self, forKey: .actionName)
+        title = try c.decodeIfPresent(String.self, forKey: .title)
+        actorID = try c.decodeIfPresent(String.self, forKey: .actorID)
+        outcome = try c.decode(String.self, forKey: .outcome)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        held = try c.decodeIfPresent(Bool.self, forKey: .held) ?? false
+        toolOutcome = try c.decodeIfPresent(ToolOutcome.self, forKey: .toolOutcome)
+        amount = try c.decodeIfPresent(Amount.self, forKey: .amount)
+        readOnly = try c.decodeIfPresent(Bool.self, forKey: .readOnly)
+        entityID = try c.decodeIfPresent(String.self, forKey: .entityID)
+        onHash = try c.decodeIfPresent(String.self, forKey: .onHash)
+        onArg = try c.decodeIfPresent(String.self, forKey: .onArg)
+        answer = try c.decodeIfPresent(Answer.self, forKey: .answer)
+        receipt = try c.decodeIfPresent(Receipt.self, forKey: .receipt)
+        reasons = try c.decodeIfPresent([String].self, forKey: .reasons)
+        madeAt = try c.decodeIfPresent(Date.self, forKey: .madeAt)
+        reason = try c.decodeIfPresent(String.self, forKey: .reason)
+        detail = try c.decodeIfPresent(String.self, forKey: .detail)
+    }
 }

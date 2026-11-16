@@ -1,0 +1,1 @@
+- Novità in Dispositivi: “Aggiungi una passkey su questo telefono”. Con una passkey su questo telefono, un computer può approvare tramite esso: mostra un codice QR e tu lo scansioni con questo telefono. Aggiungerla richiede la tua impronta, e possono farlo solo i proprietari e gli amministratori dell'account.
