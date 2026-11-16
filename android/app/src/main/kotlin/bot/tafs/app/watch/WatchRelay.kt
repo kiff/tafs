@@ -10,6 +10,7 @@ import bot.tafs.watchlink.TafLine
 import bot.tafs.watchlink.WatchLink
 import bot.tafs.watchlink.WatchReply
 import bot.tafs.watchlink.WatchRequest
+import kotlinx.coroutines.flow.first
 
 /**
  * The phone's answers to the Wear OS watch (docs/watch-wear.md). Every message passes [WatchLink.accept] before anything is read
@@ -18,13 +19,15 @@ import bot.tafs.watchlink.WatchRequest
  *
  * Refuse and Halt from the wrist only take authority away, so the phone signs them with its signing key and no prompt of its
  * own, as a notification's Refuse on iPhone: the watch sends one only while its own screen lock is set and it's unlocked. The
- * approval key is never used here, and nothing on this path approves. Coach from the wrist comes later: until then it's
- * answered with Open on phone, and nothing is sent.
+ * approval key is never used here, and nothing on this path approves. Coach from the wrist is text only (the watch's own speech
+ * input), sent as the phone's own message to Coach, after the AI consent given on the phone.
  */
 class WatchRelay(
   /** The app's model, its session restored; null when there's none to read with. */
   private val model: suspend () -> AppModel?,
   private val now: () -> Long = System::currentTimeMillis,
+  /** How long the phone waits for Coach's answer before the watch is told it's on the phone: under the watch's own 10 s. */
+  private val coachWaitMs: Long = 8_000,
 ) {
   suspend fun answer(path: String, data: ByteArray): WatchReply {
     val request = when (val accepted = WatchLink.accept(path, data, now())) {
@@ -41,8 +44,33 @@ class WatchRelay(
       }
       is WatchRequest.Refuse -> refuse(request.holdId)
       is WatchRequest.Halt -> halt(request.tafId)
-      is WatchRequest.Coach -> WatchReply.Failed(Words.Watch.openOnPhone)
+      is WatchRequest.Coach -> coach(request.text)
     }
+  }
+
+  /**
+   * Coach from the wrist: the words, as text, sent as the phone's own message to Coach, then Coach's answer, short. Only with
+   * the AI consent given on the phone, and only to a Coach started on it (starting asks for the fingerprint). An answer that
+   * shows a card (an approval, a sign-in, a setup step) or is longer than the watch draws says Open on phone; one slower than
+   * [coachWaitMs] is on the phone. Nothing heard reaches the phone: the watch sends text.
+   */
+  private suspend fun coach(text: String): WatchReply {
+    val model = signedIn() ?: return WatchReply.SignedOut
+    val before = model.state.value
+    if (before.aiConsent?.given != true) return WatchReply.Failed(Words.Watch.coachNeedsConsent)
+    if (before.coachCloudId == null) return WatchReply.Failed(Words.Watch.openOnPhone)
+    val since = java.time.Instant.ofEpochMilli(now())
+    val cards = before.coachComponents.size
+    if (!model.deliverChat(text, bot.tafs.app.app.COACH_CHAT)) {
+      return WatchReply.Failed(model.state.value.chatErrors[bot.tafs.app.app.COACH_CHAT] ?: Words.Watch.openOnPhone)
+    }
+    val answered = kotlinx.coroutines.withTimeoutOrNull(coachWaitMs) {
+      model.state.first { coachDone(it) && coachAnswer(it, since) != null }
+    } ?: return WatchReply.Coach(Words.Watch.moreOnPhone, long = true)
+    val words = coachAnswer(answered, since)!!
+    val card = answered.coachComponents.size > cards
+    return if (card || words.length > COACH_SHORT) WatchReply.Coach(words.take(COACH_SHORT).trimEnd() + "…", long = true)
+    else WatchReply.Coach(words, long = false)
   }
 
   private suspend fun signedIn(): AppModel? = model()?.takeIf { it.state.value.mode == Mode.kiff }
@@ -89,6 +117,18 @@ class WatchRelay(
   }
 
   companion object {
+    /** The longest answer the watch draws whole: past it, the start and Open on phone. */
+    const val COACH_SHORT = 280
+
+    /** Coach has stopped working on the owner's message, as the phone's own chat says (`AppState.thinking`). */
+    fun coachDone(state: AppState): Boolean = !state.thinking(bot.tafs.app.app.COACH_CHAT)
+
+    /** Coach's newest answer since [since], as the phone shows it; null while there's none. */
+    fun coachAnswer(state: AppState, since: java.time.Instant): String? =
+      state.chats[bot.tafs.app.app.COACH_CHAT].orEmpty().lastOrNull {
+        it.from == bot.tafs.app.model.ChatMessage.From.taf && it.kind == bot.tafs.app.model.ChatMessage.Kind.message && !it.at.isBefore(since) && it.text.isNotBlank()
+      }?.text?.trim()
+
     /**
      * Needs you as the phone shows it: tafs cloud's count and its words, and each held call with its taf, what it wants, KIFF's
      * amount and the reason. One this phone can't answer from here (KIFF doesn't hold its key) isn't refusable from the wrist.

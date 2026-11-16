@@ -127,6 +127,48 @@ class WatchModel(
     refresh()
   }
 
+  /** Coach from the wrist: the words heard, shown before they're sent; then Coach's answer. */
+  sealed interface Talk {
+    /** What the watch's speech input heard, shown to the person before anything is sent. */
+    data class Heard(val text: String) : Talk
+
+    data object Sending : Talk
+
+    /** Coach's answer, short; [long] when the rest (a card, more words) is on the phone. */
+    data class Answered(val text: String, val long: Boolean) : Talk
+
+    /** Not sent, in the phone's words (no AI consent yet, Coach not started on the phone…): Open on phone. */
+    data class NotSent(val words: String?) : Talk
+  }
+
+  private val _talk = MutableStateFlow<Talk?>(null)
+  val talk: StateFlow<Talk?> = _talk.asStateFlow()
+
+  /** The speech input's text: shown, never sent until the person says Send. Nothing heard is kept but this text. */
+  fun heard(text: String) {
+    _talk.value = text.trim().takeIf { it.isNotEmpty() }?.let { Talk.Heard(it) }
+  }
+
+  /** Sends what was heard to Coach, through the phone, as text. */
+  suspend fun sendToCoach() {
+    val heard = _talk.value as? Talk.Heard ?: return
+    _talk.value = Talk.Sending
+    _talk.value = when (val asked = phone.ask(WatchRequest.Coach(now(), heard.text))) {
+      is Asked.Answered -> when (val reply = asked.reply) {
+        is WatchReply.Coach -> Talk.Answered(reply.text, reply.long)
+        is WatchReply.Failed -> Talk.NotSent(reply.words)
+        else -> Talk.NotSent(null)
+      }
+      Asked.Unreachable -> Talk.NotSent(null)
+      Asked.NotUnderstood -> Talk.NotSent(null)
+    }
+  }
+
+  /** Done with Coach: the words and the answer are forgotten. */
+  fun closeTalk() {
+    _talk.value = null
+  }
+
   fun dismissOutcome() {
     _outcome.value = null
   }
@@ -158,6 +200,7 @@ class WatchModel(
     _shown.value = Shown.Asking
     _outcome.value = null
     _confirmingHaltAll.value = false
+    _talk.value = null
   }
 
   private fun show(shown: Shown) {

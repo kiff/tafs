@@ -130,4 +130,47 @@ class WatchModelTest {
       assertEquals(answer.toString(), outcome, model.outcome.value)
     }
   }
+
+  // MARK: Coach
+
+  @Test fun theWordsHeardAreShownAndSentOnlyOnSend() = runTest {
+    val phone = Phone { if (it is WatchRequest.Coach) Asked.Answered(WatchReply.Coach("Done. Refunds pause until Monday.", long = false)) else reads(it) }
+    val model = WatchModel(phone, now = { t })
+    model.heard("  Pause refunds until Monday ")
+    assertEquals(WatchModel.Talk.Heard("Pause refunds until Monday"), model.talk.value)
+    assertTrue("nothing sent before Send", phone.asked.none { it is WatchRequest.Coach })
+    model.sendToCoach()
+    assertEquals(listOf(WatchRequest.Coach(t, "Pause refunds until Monday")), phone.asked.filterIsInstance<WatchRequest.Coach>())
+    assertEquals(WatchModel.Talk.Answered("Done. Refunds pause until Monday.", long = false), model.talk.value)
+    model.closeTalk()
+    assertEquals(null, model.talk.value)
+  }
+
+  @Test fun cancelledOrSilentNothingIsSent() = runTest {
+    val phone = Phone(::reads)
+    val model = WatchModel(phone, now = { t })
+    model.heard("   ")
+    assertEquals(null, model.talk.value)
+    model.sendToCoach()
+    model.heard("Pause refunds")
+    model.closeTalk()
+    model.sendToCoach()
+    assertTrue(phone.asked.none { it is WatchRequest.Coach })
+  }
+
+  @Test fun whatCoachCantSayHereIsOnThePhone() = runTest {
+    val cases = mapOf<Asked, WatchModel.Talk>(
+      Asked.Answered(WatchReply.Coach("The rest is on your phone.", long = true)) to WatchModel.Talk.Answered("The rest is on your phone.", long = true),
+      Asked.Answered(WatchReply.Failed("Before you talk to Coach, allow AI use in tafs on your phone.")) to
+        WatchModel.Talk.NotSent("Before you talk to Coach, allow AI use in tafs on your phone."),
+      Asked.Unreachable to WatchModel.Talk.NotSent(null),
+      Asked.NotUnderstood to WatchModel.Talk.NotSent(null),
+    )
+    for ((answer, talk) in cases) {
+      val model = WatchModel(Phone { if (it is WatchRequest.Coach) answer else reads(it) }, now = { t })
+      model.heard("Pause refunds")
+      model.sendToCoach()
+      assertEquals(answer.toString(), talk, model.talk.value)
+    }
+  }
 }

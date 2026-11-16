@@ -6,7 +6,10 @@
     <string name="alert_not_refused">Non refusé</string>
     <string name="coach_ask">Demander à Coach</string>
     <string name="common_cancel">Annuler</string>
+    <string name="common_close">Fermer</string>
+    <string name="common_done">Terminé</string>
     <string name="common_loading">Chargement…</string>
+    <string name="common_send">Envoyer</string>
     <string name="common_try_again">Réessayer</string>
     <string name="halt_all_now">Tout bloquer maintenant</string>
     <string name="halt_now">Bloquer maintenant</string>

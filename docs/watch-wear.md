@@ -65,6 +65,18 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
   count and its time are **the only things the watch writes to disk** (`TileCount`, preferences `tafs.tile`); the phone saying
   it's signed out clears them too (`TileCountTest`).
 
+- **Talk to Coach** (`WatchModel.talk`, `WatchRelay.coach`):
+  - **Ask Coach** opens the watch's own speech input (`RecognizerIntent`). Only its text comes back, and the watch shows
+    it before anything is sent, with Send and Cancel. Under the button: "Coach gets your words as text, never your voice."
+  - **Send** gives the phone the text (`coach`). The phone sends it as its own message to Coach (`deliverChat`), but only
+    with the AI consent given on the phone (else `watch.coach_needs_consent`), and only to a Coach already started on the
+    phone. Starting asks for the fingerprint, so the watch says Open on phone and asks nothing itself.
+  - **The answer:** the phone waits up to 8 s for Coach's answer, until its chat is no longer thinking (`AppState.thinking`).
+    The watch draws it whole if it's short. If it's longer than 280 characters, or if Coach showed a card with it (an
+    approval, a sign-in, a setup step), the watch shows its start with Open on phone. If it's slower than 8 s, the watch shows
+    `watch.more_on_phone`. Nothing heard is kept: the words and the answer are forgotten once closed
+    (`WatchCoachTest`, `WatchModelTest`).
+
 ## How the watch talks to KIFF and tafs cloud: through the phone
 
 The watch holds **no keys, no session and no KIFF client**. It sends the phone a request over the Data Layer, the phone
@@ -113,6 +125,5 @@ watch doesn't know is shown as Open on phone, never guessed at.
 
 ## Still to come
 
-1. Talk to Coach by voice.
-2. Screenshots in all 8 languages. A Wear OS build on Play's listing (the internal track first) is a store-listing change,
+1. Screenshots in all 8 languages. A Wear OS build on Play's listing (the internal track first) is a store-listing change,
    so it waits for the owner.
