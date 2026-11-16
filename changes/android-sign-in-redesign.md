@@ -1,0 +1,1 @@
+- **Android: a phone signs in with KIFF only, and the approve-pairing sheet shows the check code first.** "Sign in with your other phone" is offered on a tablet only, as on the iPad. Approving a computer from the phone puts the code to compare first, before what yes gives (docs/android-app.md, Pairing a computer; Signing in with your other phone).

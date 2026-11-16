@@ -201,8 +201,11 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
           Text(it, style = scaled(14, color = Theme.no))
           OutlineButton(Words.Common.tryAgain, { attempt += 1 }, Modifier.fillMaxWidth())
         }
-        // Already signed in on another phone: that phone adds this one, with no browser.
-        OutlineButton(Words.SignIn.pairStart, { model.endSignIn(); renewed = false; pairing = true }, Modifier.fillMaxWidth().testTag(PAIR_START))
+        // On a tablet only: the person's phone adds it, with no browser. A phone always signs in with KIFF itself, so it isn't
+        // offered being added from another phone (the owner, 16 Nov), as on the iPhone; a tablet keeps it, as the iPad does.
+        if (offersPairSignIn(bot.tafs.app.model.ThisDevice.tablet)) {
+          OutlineButton(Words.SignIn.pairStart, { model.endSignIn(); renewed = false; pairing = true }, Modifier.fillMaxWidth().testTag(PAIR_START))
+        }
 
         Text(
           buildAnnotatedString {
@@ -223,6 +226,9 @@ fun SignInSheet(model: AppModel, onClose: () -> Unit) {
 }
 
 internal const val PAIR_START = "sign_in.pair.start"
+
+/** Whether the sign-in offers being added from the person's phone: on a tablet only, never on a phone. */
+internal fun offersPairSignIn(tablet: Boolean): Boolean = tablet
 
 private fun androidx.compose.ui.text.AnnotatedString.Builder.link(text: String, url: String) {
   withLink(LinkAnnotation.Url(url, TextLinkStyles(SpanStyle(color = Theme.amberText)))) { append(text) }

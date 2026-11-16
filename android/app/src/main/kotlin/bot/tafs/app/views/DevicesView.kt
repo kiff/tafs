@@ -184,13 +184,12 @@ fun DevicesSheet(
       onDismissRequest = cancelPair,
       title = { Text(Words.Settings.Devices.pairNamed(device = qr.name)) },
       text = {
-        // What saying yes gives that computer, before the code: the code protects against a swapped QR only if the person
-        // knows why it matters.
+        // The check code first: the name is only what the other device says it is, so the code on its screen is what binds this
+        // yes to the device in front of the person (qa-kiff, 16 Nov). Then what saying yes gives it, then that it's this one only.
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-          Text(pairGives(qr))
-          Text(if (qr.isPhone) Words.Settings.Devices.pairOnlyNowPhone else Words.Settings.Devices.pairOnlyNow)
-          val check = if (qr.isPhone) Words.Settings.Devices.pairCheckPhone(code = qr.checkCode.orEmpty()) else Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty())
-          Text(check, fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag(PAIR_CHECK))
+          pairLines(qr).forEachIndexed { i, line ->
+            if (i == 0) Text(line, fontWeight = FontWeight.SemiBold, modifier = Modifier.testTag(PAIR_CHECK)) else Text(line)
+          }
         }
       },
       confirmButton = {
@@ -200,6 +199,13 @@ fun DevicesSheet(
     )
   }
 }
+
+/** The approve-pairing sheet's lines, in order: the check code to compare, what saying yes gives, and that it's only this one. */
+internal fun pairLines(qr: PairQr): List<String> = listOf(
+  if (qr.isPhone) Words.Settings.Devices.pairCheckPhone(code = qr.checkCode.orEmpty()) else Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty()),
+  pairGives(qr),
+  if (qr.isPhone) Words.Settings.Devices.pairOnlyNowPhone else Words.Settings.Devices.pairOnlyNow,
+)
 
 /** What pairing gives the computer, by what approves on it (§5.1's `kind`). */
 internal fun pairGives(qr: PairQr): String = when {

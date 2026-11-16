@@ -142,6 +142,23 @@ class PairingTest {
     assertTrue(bot.tafs.app.views.pairGives(PairQr.read(qrText(approvalPub = null))!!).endsWith("with a passkey."))
   }
 
+  // The name is only what the other device says it is; the check code on its screen is what binds the yes, so it comes first.
+  @Test fun theApproveSheetShowsTheCheckCodeFirstThenWhatItGivesThenThisOneOnly() {
+    val qr = PairQr.read(qrText())!!
+    val lines = bot.tafs.app.views.pairLines(qr)
+    assertEquals(3, lines.size)
+    assertEquals(bot.tafs.app.model.Words.Settings.Devices.pairCheck(code = qr.checkCode.orEmpty()), lines[0])
+    assertTrue(lines[0], lines[0].contains(qr.checkCode!!))
+    assertEquals(bot.tafs.app.views.pairGives(qr), lines[1])
+    assertEquals(bot.tafs.app.model.Words.Settings.Devices.pairOnlyNow, lines[2])
+  }
+
+  // A phone always signs in with KIFF itself, so only a tablet offers being added from the person's phone (the owner, 16 Nov).
+  @Test fun onlyATabletOffersBeingAddedFromThePersonsPhone() {
+    assertFalse(bot.tafs.app.views.offersPairSignIn(tablet = false))
+    assertTrue(bot.tafs.app.views.offersPairSignIn(tablet = true))
+  }
+
   @Test fun aComputerWithASoftwareKeyIsSaidToSendItsApprovalsToThisPhone() {
     val mac = PairQr.read(qrText(approvalPub = null).replace("\"platform\":\"windows\"", "\"platform\":\"macos\"").replace("\"exp\":", "\"key_store\":\"software\",\"exp\":").replace("tafs on this Windows PC", "tafs on this Mac"))!!
     assertEquals("tafs on this Mac will show your tafs and send approvals to this phone.", bot.tafs.app.views.pairGives(mac))

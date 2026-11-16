@@ -1237,12 +1237,14 @@ pair one; without it, Devices says approving needs a new sign-in and sends nothi
    `kind: "passkey"` QR carries as `credential {id, public_key}`, takes the approval key's place,
    so the code covers the passkey the pairing registers; with neither, or for a computer whose device
    key is in software (`key_store: "software"`), the device key alone. The alert asks
-   "Pair {name}?", says first what yes gives ("{name} will be able to approve your tafs' actions
+   "Pair {name}?", and its first line is the code to compare, "Does your computer show {code}?": the name
+   is only what the other device says it is, so the code is what binds the yes to the device in front of
+   the person (`pairLines`). Then it says what yes gives ("{name} will be able to approve your tafs' actions
    with Windows Hello" for `hello` or a Windows computer's own passkey, Touch ID for `enclave`, a
    passkey for any other `passkey`), for a computer whose QR
    says `key_store: "software"`, which never approves, "{name} will show your tafs and send approvals
    to this phone." in place of what it would approve with,
-   and "Only pair a computer you're using right now.", then "Does your computer show {code}?", with **Yes, pair it** or
+   and "Only pair a computer you're using right now.", with **Yes, pair it** or
    Cancel. A page showing its own QR shows another code; the code protects only if the person
    knows what yes gives.
 4. **The approval.** On yes, `POST /v1/me/pairings` carries the QR's fields as they came
@@ -1286,9 +1288,11 @@ request, the window, each refusal) and `PairComputerTest` (the sheet).
 
 ## Signing in with your other phone
 
-A new phone or tablet can be added from a phone that's already signed in, with no browser:
+A new tablet can be added from a phone that's already signed in, with no browser:
 the sign-in sheet's **Sign in with your other phone** (KIFF's pairing contract for phones; the
-approving side is [Pairing a computer](#pairing-a-computer)).
+approving side is [Pairing a computer](#pairing-a-computer)). A phone isn't offered it: it always
+signs in with KIFF itself, so being added from another phone is only for a tablet, as on the iPad
+(`offersPairSignIn`, from `ThisDevice.tablet`).
 
 1. **The offer** (`kiff/Pairing.kt`, `PairOffer.make`): the same `kiff.pair.v1` QR as a computer, with
    `platform: "android"`, `kind: "keystore"`, `device_kind` (`android_phone` or `android_tablet`),
