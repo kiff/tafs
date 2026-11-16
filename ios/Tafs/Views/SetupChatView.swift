@@ -1333,6 +1333,8 @@ struct SetupComponentView: View {
                 }
                 Text(c.note ?? Words.Coach.signInNote)
                     .scaledFont(14).foregroundColor(Theme.soft).fixedSize(horizontal: false, vertical: true)
+                // A sign-in that asks for more than the job, said above the button, in tafs cloud's words.
+                if let wider = c.widerWords { WiderLine(words: wider) }
                 Button(state == .working ? model.connectStep ?? Words.Connect.openingSignIn : state.isFailure ? Words.Common.tryAgain : signedOut != nil ? Words.Connect.signInAgain : c.yes ?? c.service.map { Words.Coach.SignIn.open(service: $0) } ?? Words.Coach.SignIn.openSignIn) {
                     Task { await model.signInAgain(c) }
                 }
@@ -1701,6 +1703,8 @@ struct SetupApproval: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("approval.card-next")
             }
+            // A sign-in that asks for more than the job, said above the buttons, in tafs cloud's words.
+            if !replaced, let wider = component.widerWords { WiderLine(words: wider) }
             if replaced {
                 // Opened to read again: its words only. The newer request below is the one to act on.
                 Text(Words.Coach.newerRequestConnectionBelow)
@@ -1876,6 +1880,18 @@ struct WhileYouWereAway: View {
         .background(Theme.raised)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .accessibilityElement(children: .combine)
+    }
+}
+
+/// A sign-in wider than the job, in tafs cloud's words (`wider.words`): above a card's buttons, so no card stands
+/// unsaid under a line that calls the sign-in harmless (as Android's `WiderLine`).
+struct WiderLine: View {
+    let words: String
+    var body: some View {
+        Text(words)
+            .scaledFont(14, weight: .medium).foregroundColor(Theme.amberText)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("card.wider")
     }
 }
 

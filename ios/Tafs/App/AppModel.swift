@@ -800,8 +800,10 @@ final class AppModel: ObservableObject {
         var errorDescription: String? { message }
     }
 
-    /// Makes the QR this device shows, from the keys it already holds, and signs the claim's proof once,
-    /// behind Face ID or the passcode: the person is here, with this device in their hands.
+    /// Makes the QR this device shows, from the keys it already holds, and signs the claim's proof with
+    /// the device key, with no prompt, as Android and Windows do: the QR shows as soon as the screen opens,
+    /// and a renewed code asks nothing either. What protects the account is the other phone's approval,
+    /// behind its own Face ID, after the person compares the check code.
     func startPairingSignIn() async throws -> PairingStart {
         let key = signer.publicKeyDER, approvalKey = signer.approvalPublicKeyDER
         guard !key.isEmpty, !approvalKey.isEmpty else { throw CannotPair(message: Words.SignIn.pairNoKey(device: "\(ThisDevice.kind)")) }
@@ -810,7 +812,7 @@ final class AppModel: ObservableObject {
                                       platform: ThisDevice.platform,
                                       deviceKind: PairingOffer.deviceKind(platform: ThisDevice.platform, kiffKind: ThisDevice.kiffKind),
                                       nonce: PairingOffer.freshNonce(), now: clock())
-        let proof = try await signer.sign(offer.claimMessage, reason: Words.SignIn.pairPrompt(device: "\(ThisDevice.kind)"))
+        let proof = try signer.signConfirmed(offer.claimMessage)
         return PairingStart(offer: offer, proof: proof)
     }
 
@@ -7162,6 +7164,9 @@ final class AppModel: ObservableObject {
     // MARK: Coach mode (kiff/tafs#138)
 
     /// Coach mode is open: Setup's conversation, over whatever is on screen.
+    /// Just signed in on this device, by KIFF or by pairing: the celebration shows over the home screen
+    /// until Let's go (`ConnectedView`). Never in sample mode or the screenshots.
+    @Published var justConnected = false
     @Published var coachOpen = false
     /// The taf whose page is on screen, the context Coach mode opens with; nil elsewhere.
     @Published var tafOnScreen: UUID?

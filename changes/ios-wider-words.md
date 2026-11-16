@@ -1,0 +1,1 @@
+- **iPhone, iPad and Mac: a sign-in wider than the job is said on Coach's card**: when an app's sign-in asks for more than the taf uses, the approval and sign-in cards say so above their buttons, in tafs cloud's words ([docs/ios-app.md](docs/ios-app.md)).

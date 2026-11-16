@@ -8,7 +8,7 @@ final class SignInTests: XCTestCase {
     private static let start = #"{"device_code":"dc_1","user_code":"WXYZ-1234","verification_uri":"https://app.kiff.dev/auth/device","verification_uri_complete":"https://app.kiff.dev/auth/device?code=WXYZ-1234","expires_in":600,"interval":5}"#
     private static let token = #"{"access_token":"kiff_dev_new","expires_in":7776000,"tenant":"t_01","subject":"u_1"}"#
 
-    private func model() -> AppModel {
+    private func model(signer: ApprovalSigning = FaceIDSigner()) -> AppModel {
         StubProtocol.responses = [:]
         StubProtocol.thenRespond = [:]
         StubProtocol.dropped = [:]
@@ -20,7 +20,7 @@ final class SignInTests: XCTestCase {
         let kiff = KIFFClient(baseURL: URL(string: "https://api.test")!, gatewayURL: URL(string: "https://mcp.test")!, token: nil, session: session)
         let cloud = TafsCloud(baseURL: URL(string: "https://cloud.test")!, token: nil, session: session)
         let planque = PlanqueClient(baseURL: URL(string: "https://planque.test")!, session: session)
-        let model = AppModel(signer: FaceIDSigner(), kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: StubVendor())
+        let model = AppModel(signer: signer, kiff: kiff, cloud: cloud, planque: planque, vendorSignIn: StubVendor())
         // What a new session loads.
         StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.empty)
         StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
@@ -149,6 +149,47 @@ final class SignInTests: XCTestCase {
             XCTAssertTrue(label.hasPrefix("Terms"), "the row's own words first")
             XCTAssertNotEqual(label, "Terms")
         }
+    }
+
+    /// The pairing QR shows at once: its claim is signed with the device key, with no Face ID or Touch ID,
+    /// as on Android and Windows, and a renewed code asks nothing either. The phone's approval, behind its
+    /// own Face ID after comparing the check code, is what adds the device.
+    func testThePairingClaimIsSignedWithNoPrompt() async throws {
+        let signer = TwoKeySigner()
+        let model = model(signer: signer)
+        let first = try await model.startPairingSignIn()
+        let renewed = try await model.startPairingSignIn()
+        XCTAssertTrue(signer.currentPrompted.isEmpty, "no Face ID or Touch ID")
+        XCTAssertTrue(signer.approvalPrompted.isEmpty)
+        XCTAssertEqual(signer.current, [first, renewed].map { String(decoding: $0.offer.claimMessage, as: UTF8.self) })
+        XCTAssertEqual(first.proof, "current")
+    }
+
+    /// An iPhone offers only "Sign in with KIFF": any phone can open KIFF's own sign-in. An iPad or a Mac
+    /// offers both halves, "Sign in with your phone" beside it.
+    func testOnlyAnIPhoneLeavesOutSignInWithYourPhone() {
+        XCTAssertFalse(SignInView.offersPhone(isPhone: true))
+        XCTAssertTrue(SignInView.offersPhone(isPhone: false))
+    }
+
+    /// The redesign's words are the shared keys, and the approve-pairing sheet puts the check code first:
+    /// it, not the device's claimed name, binds the yes to the device in front of the person.
+    func testTheSignInsWordsAndTheApprovalSheetsOrder() throws {
+        XCTAssertEqual(Words.SignIn.withPhone, "Sign in with your phone")
+        XCTAssertEqual(Words.SignIn.scanWithTafs, "Scan with tafs")
+        XCTAssertEqual(Words.SignIn.connected, "You're connected.")
+        XCTAssertEqual(Words.SignIn.connectedLine, "Let's build great things together.")
+        XCTAssertEqual(Words.SignIn.letsGo, "Let's go")
+        XCTAssertEqual(Words.Settings.Devices.pairClaims(name: "MacBook Pro"), "It calls itself MacBook Pro.")
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let sheet = try String(contentsOf: views.appendingPathComponent("PairComputerView.swift"), encoding: .utf8)
+        let code = try XCTUnwrap(sheet.range(of: "Text(request.checkCode)"))
+        let only = try XCTUnwrap(sheet.range(of: "Text(Words.Settings.Devices.pairAddOnly)"))
+        let claim = try XCTUnwrap(sheet.range(of: "Text(Words.Settings.Devices.pairClaims(name: request.name))"))
+        XCTAssertTrue(code.lowerBound < only.lowerBound && only.lowerBound < claim.lowerBound, "the code, then only this device, then its claimed name")
+        XCTAssertFalse(sheet.contains("Words.Settings.Devices.pairNamed(device: request.name)"), "the name is never the heading")
+        let signIn = try String(contentsOf: views.appendingPathComponent("SignInView.swift"), encoding: .utf8)
+        XCTAssertTrue(signIn.contains("model.justConnected = true"), "either way ends on the celebration")
     }
 
     /// Account › Legal draws its two rows from `Legal`, with the same words as Android's.
