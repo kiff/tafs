@@ -388,7 +388,7 @@ struct ReceiptView: View {
                         if let reason = entry.reason { line(Words.Receipt.Fact.why, reason) }
                         line(Words.Receipt.Fact.decidedBy, decidedBy)
                     }
-                    if !steps.isEmpty {
+                    if !steps.isEmpty, Self.showsWhatHappened(check, mismatch: onMismatch || amountMismatch || answerMismatch) {
                         Eyebrow(text: Words.Receipt.whatHappened)
                         timeline
                     }
@@ -432,6 +432,14 @@ struct ReceiptView: View {
     }
 
     // MARK: The receipt
+
+    /// "What happened" is what KIFF signed for this line: drawn only once this device checked KIFF's signature and
+    /// the receipt matches the line. Not signed yet, or not checking out, its steps aren't drawn as what happened
+    /// (the full receipt still shows them, under what didn't check out).
+    static func showsWhatHappened(_ check: ReceiptCheck?, mismatch: Bool) -> Bool {
+        if case .verified = check { return !mismatch }
+        return false
+    }
 
     @ViewBuilder private var receiptPanel: some View {
         switch check {
