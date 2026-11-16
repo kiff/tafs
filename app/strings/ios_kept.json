@@ -132,5 +132,14 @@
     "It matches order 0388, and Bill pay checked it this morning.": "the sample brief's stand-in for tafs cloud's words (Missions draft, -brief YES only)",
     "the payment stays held; nothing is sent.": "the sample brief's stand-in for tafs cloud's words (Missions draft, -brief YES only)",
     "This can't wait: it expires at 12:00, before the next brief.": "the sample brief's stand-in for tafs cloud's words (Missions draft, -brief YES only)"
+  },
+  "Services/ThisDevice.swift": {
+    "Mac": "the device's name, a product's name, the same in every language, as iPhone and iPad are"
+  },
+  "App/SampleScreens.swift": {
+    "Mac": "the device's name, a product's name, the same in every language, as iPhone and iPad are (the reference set's sample Devices)"
+  },
+  "KIFF/PasskeyRegistration.swift": {
+    "kiff.passkey.register.v1\\n\\(tenant)\\n\\(subject)\\n\\(issuedAt)": "the message a passkey's registration challenge is the hash of (KIFF's pairing contract), never shown"
   }
 }

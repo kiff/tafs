@@ -1,0 +1,1 @@
+- Adicionar um dispositivo: em Conta, Dispositivos, leia o código do computador, confirme que mostra os mesmos 6 caracteres e aprove com a impressão digital.

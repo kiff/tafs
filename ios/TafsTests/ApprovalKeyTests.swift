@@ -29,7 +29,10 @@ final class TwoKeySigner: ApprovalSigning {
 
     /// Set when the next approval prompt closes without a recognized face or finger.
     var approvalUnrecognized = false
+    /// Thrown by the next approval prompt instead: the person's own cancel (`LAError.userCancel`), say.
+    var approvalThrows: Error?
     func signApproval(_ message: Data, reason: String) async throws -> String {
+        if let approvalThrows { throw approvalThrows }
         if approvalUnrecognized { throw ApprovalSigner.SignerError.notAuthenticated }
         approvalPrompted.append(String(decoding: message, as: UTF8.self))
         return "approval"
@@ -109,6 +112,94 @@ final class ApprovalKeyTests: XCTestCase {
         XCTAssertTrue(register.value(forHTTPHeaderField: "KIFF-Device-Signature")?.hasSuffix(",v1=current") == true,
                       "the current key vouches for it, without Face ID")
         XCTAssertTrue(signer.currentPrompted.isEmpty && signer.approvalPrompted.isEmpty, "registering asks for no Face ID")
+    }
+
+    /// KIFF keeps this session view-only (`view_only`): the phone says to sign in again on it or approve
+    /// from the other phone, offers no Approve again, and asks KIFF nothing more until a new sign-in (as
+    /// Android 100 does).
+    func testAViewOnlySessionSaysToSignInAgainOrUseTheOtherPhoneAndAsksNoMore() async throws {
+        let model = await signedIn(TwoKeySigner(), registration: (403, #"{"error":"view_only","message":"this device can't approve"}"#))
+        XCTAssertTrue(model.approvalKeyLost)
+        XCTAssertTrue(model.approvalViewOnly)
+        XCTAssertFalse(model.sessionHasApprovalKey)
+        XCTAssertEqual(model.approvalKeyLostWords, ThisDevice.isMac ? Words.Approval.viewOnlyMac : Words.Approval.viewOnly)
+        XCTAssertEqual(Words.Approval.viewOnly, "Sign in again on this phone to approve, or approve from your other phone.")
+        let asked = sent("POST", "/v1/me/device/approval-key").count
+        XCTAssertEqual(asked, 1)
+        await model.refresh()
+        await model.registerApprovalKey()
+        XCTAssertEqual(sent("POST", "/v1/me/device/approval-key").count, asked, "no retry loop")
+        let relink = await model.startRelink()
+        XCTAssertNil(relink, "a view-only session isn't re-linked: only a new sign-in, or the other phone")
+    }
+
+    /// A view-only session isn't offered Revoke on a taf's Card, on every device alike (Android 104): the
+    /// shared line says where it's done instead. The sample, and a session that approves, keep Revoke.
+    func testAViewOnlySessionIsToldWhereToRevokeInsteadOfRevoke() throws {
+        XCTAssertEqual(Words.Taf.revokeNeedsApprover, "To revoke this Card, use a device that can approve.")
+        let views = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent().appendingPathComponent("Tafs/Views")
+        let file = try String(contentsOf: views.appendingPathComponent("TafDetailView.swift"), encoding: .utf8)
+        let gate = try XCTUnwrap(file.range(of: "if taf.state != .revoked, model.mode == .sample || model.manages(taf.id) {"))
+        let rest = String(file[gate.upperBound...].prefix(900))
+        let line = try XCTUnwrap(rest.range(of: "if model.mode == .kiff && model.approvalViewOnly {"))
+        let words = try XCTUnwrap(rest.range(of: "Text(Words.Taf.revokeNeedsApprover)"))
+        let button = try XCTUnwrap(rest.range(of: "Button(Words.Taf.revoke) { confirmRevoke = true }"))
+        XCTAssertTrue(line.upperBound <= words.lowerBound && words.upperBound <= button.lowerBound, "the line in Revoke's place")
+        XCTAssertTrue(rest[words.upperBound..<button.lowerBound].contains("} else {"), "Revoke only where the line isn't")
+    }
+
+    /// KIFF says at sign-in that the session is view-only (`approval_mode: view`), as for a computer
+    /// signed in through the browser on an account with a device that approves:
+    /// the app knows from the start, asks KIFF for no approval key, and says why.
+    func testASessionKIFFSignsInViewOnlyIsViewOnlyFromTheStart() async throws {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        let session = URLSession(configuration: config)
+        let model = AppModel(signer: TwoKeySigner(),
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[]}"#)
+        await model.useSession("kiff_dev_x", tenant: "t_01", viewOnly: true)
+        XCTAssertTrue(model.approvalViewOnly)
+        XCTAssertTrue(model.approvalKeyLost)
+        XCTAssertEqual(model.approvalKeyLostWords, ThisDevice.isMac ? Words.Approval.viewOnlyMac : Words.Approval.viewOnly)
+        XCTAssertTrue(sent("POST", "/v1/me/device/approval-key").isEmpty, "a view-only session registers no approval key")
+        // A new sign-in that may approve clears it.
+        await model.useSession("kiff_dev_y", tenant: "t_01")
+        XCTAssertFalse(model.approvalViewOnly)
+    }
+
+    /// Coach's Approve on a view-only session stops before Face ID or Touch ID, with the view-only words on
+    /// the card, in both of its ways (an app's sign-in, and a key with its Card).
+    func testCoachsApproveOnAViewOnlySessionStopsBeforeTheFingerprint() throws {
+        let file = try String(contentsOf: URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
+            .appendingPathComponent("Tafs/App/AppModel.swift"), encoding: .utf8)
+        for start in ["private func approveAsked(", "func approveKeyAndCard("] {
+            let at = try XCTUnwrap(file.range(of: start))
+            let body = String(file[at.upperBound...].prefix(700))
+            let gate = try XCTUnwrap(body.range(of: "approvalViewOnly { cardNotes[component.id] = approvalKeyLostWords; return"), start)
+            for prompt in ["signer.sign", "signConfirmed", "sign("] {
+                if let p = body.range(of: prompt) { XCTAssertTrue(gate.upperBound <= p.lowerBound, "\(start) asks before the gate") }
+            }
+        }
+    }
+
+    /// A view-only Mac says how to add it from a phone, never "sign in again on this phone".
+    func testAViewOnlyMacSaysToAddItFromThePhone() {
+        XCTAssertEqual(Words.Approval.viewOnlyMac, "This Mac can only view. To approve here, add it from your phone: Account › Devices › Add a device.")
+        XCTAssertFalse(Words.Approval.viewOnlyMac.contains("this phone"))
+    }
+
+    /// Another refusal leaves the session as before: no view-only words.
+    func testAnotherRefusalIsntViewOnly() async throws {
+        let model = await signedIn(TwoKeySigner(), registration: (404, #"{"error":"not_found"}"#))
+        XCTAssertFalse(model.approvalViewOnly)
+        XCTAssertEqual(model.approvalKeyLostWords, KIFFClient.approvalKeyLost)
     }
 
     /// Whether this test host keeps Keychain items: an unsigned test bundle on CI's

@@ -1,5 +1,6 @@
 package bot.tafs.app.app
 
+import bot.tafs.app.kiff.PasskeyRegistration
 import bot.tafs.app.kiff.activityPage
 import bot.tafs.app.kiff.runsPage
 import bot.tafs.app.kiff.setupView
@@ -50,6 +51,9 @@ import bot.tafs.app.model.threeMonthsOn
 import bot.tafs.app.kiff.Account
 import bot.tafs.app.kiff.AlertTarget
 import bot.tafs.app.kiff.Grant
+import bot.tafs.app.kiff.PairOffer
+import bot.tafs.app.kiff.PairQr
+import bot.tafs.app.kiff.Pairing
 import bot.tafs.app.kiff.CloudSetup
 import bot.tafs.app.kiff.PlanqueClient
 import bot.tafs.app.kiff.PlanqueError
@@ -124,6 +128,8 @@ import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 
 /** How the app is fed: nothing yet, the sample, or the owner's KIFF account. */
 enum class Mode { signedOut, sample, kiff }
@@ -223,6 +229,11 @@ data class AppState(
    * phone turned its key off when a fingerprint was added. Refusing still works.
    */
   val approvalKeyLost: Boolean = false,
+  /**
+   * KIFF keeps this session view-only (`view_only`): the phone signed in with no approval key while the person has another
+   * device that approves, so it gains none here. Approving takes a new sign-in on this phone, or the other phone.
+   */
+  val approvalViewOnly: Boolean = false,
   /** Approve again, waiting for the browser: the code to compare, and where to approve it. */
   val relink: Relink? = null,
   /** Why the last Approve again didn't go through. */
@@ -488,6 +499,11 @@ data class AppState(
   val coachNotes: Map<String, String> = emptyMap(),
   /** Clearing removed tafs' connections is on its way, and how it went, under them in Connect apps. */
   val clearingRemoved: Boolean = false,
+  /**
+   * The connection whose removal is on its way, by its grant: from Disconnect's fingerprint until planque answered and the list
+   * was read again. Its app and its row say "Removing access…", never "Connected", meanwhile (as iOS's button does).
+   */
+  val disconnecting: String? = null,
   val clearNote: String? = null,
   /** A drive card being approved, by its key: Approve waits for the fingerprint and tafs cloud. */
   val driveStarting: String? = null,
@@ -589,7 +605,25 @@ data class AppState(
   val peopleError: String? = null,
   /** The devices signed in as this person on the account (Settings, Devices), and why they couldn't be read or one signed out. */
   val devices: List<Device> = emptyList(),
+  /**
+   * Adding a device (docs/android-app.md, Pairing a computer): the QR read, while the person compares its code; the line that says
+   * what came of it; and whether a scan or a pairing is under way. Kept here, not in the sheet, so the sheet coming back from
+   * Google's scanner, or from the fingerprint, loses none of it.
+   */
+  val pairAsking: PairQr? = null,
+  val pairLine: String? = null,
+  val pairBusy: Boolean = false,
   val devicesError: String? = null,
+  /**
+   * The account's passkeys, as KIFF lists them (Settings, Devices), a computer's own among them; the line that says what came of
+   * adding or removing one, why they couldn't be read, and whether a passkey is being made or registered.
+   */
+  val passkeys: List<bot.tafs.app.kiff.Passkey> = emptyList(),
+  val passkeyLine: String? = null,
+  val passkeysError: String? = null,
+  val passkeyBusy: Boolean = false,
+  /** Whether KIFF takes a passkey from this person (owners and admins), as its members say; null until read. */
+  val passkeyMayAdd: Boolean? = null,
   /** The account is being deleted, and why deleting it stopped, for its sheet; null when nothing went wrong. */
   val deletingAccount: Boolean = false,
   val deleteAccountError: String? = null,
@@ -1131,8 +1165,13 @@ class AppModel(
    * Asks KIFF with [poll] until the person approves [start]'s code in their browser. It keeps asking through a dropped
    * connection or a KIFF error until the code expires.
    */
-  private suspend fun <T> untilApproved(start: DeviceStart, deadline: Instant = clock().plusSeconds(start.expiresIn.toLong()), poll: suspend () -> T): T {
-    var intervalMs = maxOf(start.interval, signInMinimumIntervalSeconds) * 1000L
+  private suspend fun <T> untilApproved(
+    start: DeviceStart,
+    deadline: Instant = clock().plusSeconds(start.expiresIn.toLong()),
+    minimumSeconds: Int = signInMinimumIntervalSeconds,
+    poll: suspend () -> T,
+  ): T {
+    var intervalMs = maxOf(start.interval, minimumSeconds) * 1000L
     while (clock() < deadline) {
       var waited = 0L
       while (waited < intervalMs && !signInNudged) {
@@ -1152,6 +1191,39 @@ class AppModel(
       }
     }
     throw KiffError.Expired
+  }
+
+  // MARK: Signing in with your other phone
+
+  /**
+   * Starts being added from the person's other phone (KIFF's pairing contract for phones): this phone's two keys in a
+   * `kiff.pair.v1` QR the other phone scans, with the code both screens show. The approval key is required, so a phone with no
+   * strong biometric can't be paired: it says so, and signs in with KIFF instead. Nothing is sent until [finishPairSignIn].
+   */
+  fun startPairSignIn(): PairOffer {
+    val key = signer.publicKeyDER
+    val approvalKey = signer.approvalPublicKeyDER
+    if (key.isEmpty() || approvalKey.isEmpty()) throw bot.tafs.app.model.OwnWords(Words.SignIn.pairNoKey(device = bot.tafs.app.model.ThisDevice.word))
+    return PairOffer.make(key, approvalKey, deviceName, bot.tafs.app.model.ThisDevice.kiffKind, PairOffer.freshNonce(), clock())
+  }
+
+  /** The least time between two claims, in seconds: KIFF asks for 3 or more. */
+  var pairClaimIntervalSeconds = 3
+
+  /**
+   * Claims, until the other phone approves [offer], the session KIFF minted for this phone, proving with its device key that it
+   * holds the key; then uses it as any sign-in does. Throws [KiffError.Expired] once the offer's time is up: the screen shows a
+   * new one. KIFF decides everything else: whether the claim's proof holds, and what the session may do.
+   */
+  suspend fun finishPairSignIn(offer: PairOffer) {
+    // One signature, by the device key and without a prompt: it names only the nonce and the key, so every poll sends it.
+    val proof = signer.signConfirmed(offer.claimMessage)
+    val start = DeviceStart(
+      deviceCode = offer.nonce, userCode = offer.checkCode, verificationUri = "", verificationUriComplete = "",
+      expiresIn = maxOf(0L, java.time.Duration.between(clock(), offer.expires).seconds).toInt(), interval = pairClaimIntervalSeconds,
+    )
+    val token = untilApproved(start, offer.expires, minimumSeconds = pairClaimIntervalSeconds) { kiff.claimPairing(offer.nonce, offer.pub, proof) }
+    withContext(NonCancellable) { useSession(token.accessToken, token.tenant) }
   }
 
   /** A failure worth trying again: the network, or KIFF briefly not answering. */
@@ -1434,6 +1506,10 @@ class AppModel(
       e.fingerprint // the key sent at sign-in, or another
     } catch (e: Exception) {
       if (e is CancellationException) throw e
+      // KIFF keeps this session view-only: say so, once, and ask nothing more of it until a new sign-in.
+      if (e is KiffError.Server && e.refused("view_only") && generation == accountGeneration) {
+        _state.update { it.copy(approvalKeyLost = true, approvalViewOnly = true) }
+      }
       return
     }
     if (generation != accountGeneration) return
@@ -1451,7 +1527,7 @@ class AppModel(
   private fun useApprovalKey() {
     approvalKeyRefusals = 0
     sessionHasApprovalKey = true
-    _state.update { it.copy(approvalKeyLost = false) }
+    _state.update { it.copy(approvalKeyLost = false, approvalViewOnly = false) }
     val signer = signer
     kiff.approvalSigner = { built -> signer.signApproval(approvalReason, built) }
   }
@@ -3205,14 +3281,36 @@ class AppModel(
   }
 
   /**
-   * Enrols this phone with planque for Coach, once: planque gets the phone's key and a connector key minted with a signed setup
-   * call, never kept here. False, with why said through [failed], when it didn't go. [kiff]'s and [planque]'s signers are the
-   * caller's, under the confirmation it took.
+   * Enrols this phone with planque for Coach, once: planque gets the phone's key and, unless the account's enrolled one still
+   * stands (`kept`), a connector key minted with a signed setup call, never kept here. False, with why said through [failed],
+   * when it didn't go. [kiff]'s and [planque]'s signers are the caller's, under the confirmation it took.
    */
+  /**
+   * planque's answer to a keyless enrolment that asks for a key: `409 needs_key`, and only that. Every planque takes a keyless
+   * enrolment now (planque#248), so a 400 is a body it couldn't read, and an enrolment with a key would fail the same way.
+   */
+  internal fun needsConnectorKey(e: PlanqueError.Server): Boolean = e.status == 409 && e.code == "needs_key"
+
   private suspend fun enrolForCoach(failed: (String) -> Unit): Boolean {
     if (_state.value.planqueReady) return true
     try {
-      planque.enrol(signer.publicKeyDER, kiff.mintConnectorKey())
+      // Asked first with no key: `kept: true` is set up, and nothing is minted, since a phone can't revoke a connector key and a
+      // new one would be left live in KIFF. Only planque saying it needs one (`409 needs_key`) mints one and hands it over. A 2xx
+      // without `kept: true` mints nothing and stops, as on every app until planque says what it means: the next Start asks again. Anything else (not reached, a 5xx, a replayed signature, a 400,
+      // which planque sends only for a body it can't read, a window that ended) goes to the caller as it did,
+      // with nothing minted: a key minted then, its enrolment failing too, would be left live and held by no device. The next
+      // Start asks again.
+      val needsKey = try {
+        if (!planque.enrol(signer.publicKeyDER).kept) {
+          failed(CoachWords.CONNECTING_FAILED)
+          return false
+        }
+        false
+      } catch (e: PlanqueError.Server) {
+        if (!needsConnectorKey(e)) throw e
+        true
+      }
+      if (needsKey) planque.enrol(signer.publicKeyDER, kiff.mintConnectorKey())
     } catch (e: CancellationException) {
       throw e
     } catch (e: KiffError.Server) {
@@ -3221,7 +3319,9 @@ class AppModel(
     } catch (e: PlanqueError.Server) {
       failed(
         when (e.status) {
-          409 -> Words.Coach.connectOtherDevice
+          // A 409 with planque's code (a replayed signature, an enrolment that changed meanwhile) says why. Only one with no code,
+          // from a planque that enrolled a single phone, is another device's.
+          409 -> if (e.code == null) Words.Coach.connectOtherDevice else Words.Coach.connectingNotSetUp(why = ErrorWords.of(e))
           // planque couldn't check this phone with KIFF. KIFF's session works, so it isn't a sign-out.
           401 -> CoachWords.CONNECTING_FAILED
           else -> Words.Coach.connectingNotSetUp(why = ErrorWords.of(e))
@@ -3480,17 +3580,20 @@ class AppModel(
     if (approvals.isEmpty()) return
     refreshConnections()
     // An open card whose grant planque doesn't list yet: tafs cloud can write the card as the grant is made, and the card would
-    // say "Reading what it asks for…" until another tab read the grants. Read them again a few seconds apart until planque has it.
-    val unread = _state.value.coachComponents.filter { it.answer == null && (it.component.type == "approval" || it.component.type == "sign_in") }
-      .mapNotNull { it.component.grant }.filter { g -> _state.value.grants.none { it.id == g } }
+    // say "Reading what it asks for…" until the chat was opened again (a live test: over a minute, with Coach's run done, so
+    // the thread wasn't read again either). Planque's grants are read again while such a card waits, 3 s apart for the first
+    // minute and 10 s apart after (CARD_GRANT_READ_DELAYS): until planque lists its grant or the card is answered, for ten
+    // minutes at most from when this phone began reading.
+    val unread = grantsCardsWaitOn(_state.value.coachComponents, _state.value.grants)
       // Marked followed only once a re-read starts: a read planque refused leaves them for the next thread read.
       .takeIf { _state.value.planqueReady }.orEmpty().filter { grantsFollowed.add(it) }
     if (unread.isNotEmpty()) scope.launch {
-      repeat(SET_UP_READS) {
-        delay(SET_UP_READ_MS)
+      for (wait in CARD_GRANT_READ_DELAYS) {
+        delay(wait)
         if (generation != accountGeneration) return@launch
         refreshConnections()
-        if (unread.all { g -> _state.value.grants.any { it.id == g } }) return@launch
+        val s = _state.value
+        if (unread.none { it in grantsCardsWaitOn(s.coachComponents, s.grants) }) return@launch
       }
     }
     for (c in approvals) {
@@ -3518,16 +3621,23 @@ class AppModel(
     val asked = ++connectAppsAsked
     val generation = accountGeneration
     try {
-      // This phone's signed grants read, as Setup sends it: tafs cloud then says which removed taf's connections Clear may end.
-      planque.tenant = kiffTenant; planque.deviceLoader = { kiff.thisDeviceId() }
-      val proof = runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
-      val apps = cloud.connectApps(q, proof = proof)
+      val apps = cloud.connectApps(q, proof = connectAppsProof())
       if (generation == accountGeneration && asked == connectAppsAsked) _state.update { it.copy(connectApps = apps, connectAppsError = null) }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
       if (generation == accountGeneration) _state.update { it.copy(connectAppsError = Words.Connect.appsNotRead(why = ErrorWords.of(e))) }
     }
+  }
+
+  /**
+   * This phone's signed grants read, as Setup sends it: with it tafs cloud says which removed taf's connections Clear may end, which
+   * tafs need an app by their Card (`needed_by`) and which connections were made under a taf that doesn't (`misplaced`). Null when
+   * it can't be signed; tafs cloud then decides from recipes alone.
+   */
+  private suspend fun connectAppsProof(): String? {
+    planque.tenant = kiffTenant; planque.deviceLoader = { kiff.thisDeviceId() }
+    return runCatching { planque.grantsReadProof { signer.signConfirmed(it) } }.getOrNull()
   }
 
   /** The search the shown list is for, sent again with the next page's cursor. */
@@ -3542,7 +3652,7 @@ class AppModel(
     val cursor = now.nextCursor ?: return
     val generation = accountGeneration
     try {
-      val page = cloud.connectApps(connectAppsQuery, now.provider, cursor)
+      val page = cloud.connectApps(connectAppsQuery, now.provider, cursor, proof = connectAppsProof())
       if (generation == accountGeneration) _state.update { s ->
         val shown = s.connectApps ?: return@update s
         // The removed tafs stay as the first page read them, with its proof: a further page only adds apps.
@@ -4088,13 +4198,13 @@ class AppModel(
       _state.update { it.copy(listApproval = app.grant, listApprovalNeedsKey = false) }
       return
     }
-    // The taf it's for, by its tafs cloud id: the one chosen, or the only one this person manages.
-    val taf = tafId?.let { id -> _state.value.taf(id) } ?: _state.value.connectableTafs.singleOrNull()
+    // The taf it's for, by its tafs cloud id: the one the person named, never a guess (not even the only one they manage).
+    val taf = tafId?.let { id -> _state.value.taf(id) }
     val cloudId = taf?.cloudId ?: return
     val generation = accountGeneration
     _state.update { it.copy(startingApp = app.entry, connectAppsError = null) }
     try {
-      val started = cloud.startConnect(app.entry, cloudId)
+      val started = cloud.startConnect(app.entry, cloudId, proof = connectAppsProof())
       if (generation != accountGeneration) return
       refreshConnections()
       if (generation == accountGeneration) _state.update { it.copy(listApproval = started.grant, listApprovalNeedsKey = started.needsKey) }
@@ -4109,11 +4219,43 @@ class AppModel(
 
   /** Approve on the sheet over Connect apps: the same as Coach's card (KIFF's words, the signature, the vendor's sign-in), then the list again. */
   fun startListApproval(grantId: String, shownDigest: String) {
-    scope.launch { approveFromList(grantId, shownDigest) }
+    listApprovalJob?.cancel()
+    listApprovalJob = scope.launch { restartable({ startListApproval(grantId, shownDigest) }) { approveFromList(grantId, shownDigest) } }
+  }
+
+  /** The approval the sheet over Connect apps started, while it runs: "Not now" ends it, and with it the vendor's wait. */
+  private var listApprovalJob: Job? = null
+
+  /**
+   * While the sheet's approval waits on the vendor's page, planque's grants are read again (3 s apart for a minute, then 10 s, as
+   * for a card). A sign-in that finished with no link back to tafs (the person backed out, then signed in) shows there: planque
+   * says it holds the sign-in, and the approval runs again ([reopenSignIn]), which planque answers with its confirm code, no page.
+   * Before, nothing on the sheet read planque again, and it stayed on "Approving…".
+   */
+  private suspend fun watchListSignIn(grantId: String) {
+    for (wait in CARD_GRANT_READ_DELAYS) {
+      delay(wait)
+      if (!_state.value.vendorPageOpen) continue
+      refreshConnections()
+      val g = _state.value.grants.firstOrNull { it.id == grantId } ?: continue
+      if (g.signedIn == true || g.connected || g.listed) {
+        reopenSignIn()
+        return
+      }
+    }
   }
 
   /** The approval from Connect apps, run to its end: then what came of it is said at once, and the list read again. */
   suspend fun approveFromList(grantId: String, shownDigest: String) {
+    val watch = scope.launch { watchListSignIn(grantId) }
+    try {
+      approveFromListOnce(grantId, shownDigest)
+    } finally {
+      watch.cancel()
+    }
+  }
+
+  private suspend fun approveFromListOnce(grantId: String, shownDigest: String) {
     run {
       when (val result = connect(ConnectWords.cardKey(grantId), grantId, shownDigest)) {
         is Connected.Done, is Connected.AlreadyApproved -> {
@@ -4131,7 +4273,16 @@ class AppModel(
 
   fun dismissConnectedNow() = _state.update { it.copy(connectedNow = null) }
 
-  fun closeListApproval() = _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, keyForCard = null, keyReceipt = null) }
+  /**
+   * The sheet closed ("Not now", or Cancel): the approval it started ends with it, so its vendor's wait ends and the one-approval
+   * lock is free. Before, the approval kept waiting in the model, and the next Connect said another approval was going through
+   * until tafs was stopped.
+   */
+  fun closeListApproval() {
+    listApprovalJob?.cancel()
+    listApprovalJob = null
+    _state.update { it.copy(listApproval = null, listApprovalNeedsKey = false, keyForCard = null, keyReceipt = null) }
+  }
 
   /** The secure sheet's words for [grantId], read from tafs cloud when the key sheet opens, once per grant. */
   suspend fun loadSecureSheet(grantId: String) {
@@ -4521,6 +4672,10 @@ class AppModel(
         // Listed is signed in too: planque holds the sign-in and listed the vendor's tools for Setup to choose from.
         if (!connected.connected && !connected.listed) return Connected.Failed(CoachWords.notConnected(grant.vendor), "the sign-in at ${grant.vendor} came back, but planque says the connection is ${connected.status}")
         return Connected.Done(connected)
+      } catch (e: bot.tafs.app.kiff.VendorSignInReplaced) {
+        // Given up for a new approval (reopenSignIn): nothing to say or answer; the approval runs again.
+        refreshConnections()
+        return Connected.Stopped
       } catch (e: VendorSignInCancelled) {
         refreshConnections()
         return Connected.Failed(Words.Connect.signInClosedNothingConnected, told = "The sign-in was closed. Nothing was connected.")
@@ -4547,7 +4702,37 @@ class AppModel(
    * (planque's confirm, the answer to Coach, reading the thread, following the run) goes on whatever happens to it.
    */
   fun startApproval(c: SetupComponent, shownDigest: String?, shownDraft: String?) {
-    scope.launch { approveCoach(c, shownDigest, shownDraft) }
+    scope.launch { restartable({ startApproval(c, shownDigest, shownDraft) }) { approveCoach(c, shownDigest, shownDraft) } }
+  }
+
+  /** How the approval waiting on a vendor's page now starts again, for [reopenSignIn]; none once it ended. */
+  @Volatile private var signInRestart: (() -> Unit)? = null
+
+  private suspend fun <T> restartable(again: () -> Unit, run: suspend () -> T): T {
+    signInRestart = again
+    try {
+      return run()
+    } finally {
+      if (signInRestart === again) signInRestart = null
+    }
+  }
+
+  /**
+   * Open again, on a sign-in the owner came back from with no link (docs/android-app.md › Connect apps). A vendor's sign-in link
+   * is single-use: once its first redirect reached planque, the same page only says it's used. So the wait on it ends quietly
+   * (nothing answered or reported), and the card's approval runs again, one fingerprint: planque answers a grant it holds
+   * signed in with its confirm code (the signed-in path, no page), and any other with a fresh link. Where no approval can run
+   * again, the same page opens, as before.
+   */
+  fun reopenSignIn() {
+    val again = signInRestart ?: return vendorSignIn.reopen()
+    signInRestart = null
+    scope.launch {
+      vendorSignIn.replace()
+      // Once the approval that waited has stopped: only one runs at a time.
+      withTimeoutOrNull(REPLACE_WAIT_MS) { _state.first { it.connecting == null } } ?: return@launch
+      again()
+    }
   }
 
   /**
@@ -4573,7 +4758,7 @@ class AppModel(
 
   /** The sign-in card's Sign in again, run by the model for the same reason as [startApproval]. */
   fun startSignInAgain(c: SetupComponent) {
-    scope.launch { signInAgain(c) }
+    scope.launch { restartable({ startSignInAgain(c) }) { signInAgain(c) } }
   }
 
   /** A taf page's Sign in again (a connection its vendor signed out), run by the model for the same reason. */
@@ -4708,10 +4893,12 @@ class AppModel(
             }
             came = made
           }
+          // Given up for a new approval: tafs cloud hears nothing of this one, and the card waits for the next.
+          if (came == Came.Replaced) return true
           val report = kotlinx.serialization.json.buildJsonObject {
             when (val c2 = came) {
               is Came.Of -> { put("result", c2.result); c2.status?.let { put("status", it) }; c2.why?.let { put("why", it) } }
-              Came.WindowEnded -> put("result", "failed")
+              Came.WindowEnded, Came.Replaced -> put("result", "failed")
             }
             session?.let { put("session", it) }
           }
@@ -4871,6 +5058,9 @@ class AppModel(
 
     /** planque refused it: signed in an approval window that had ended, so nothing was done. */
     data object WindowEnded : Came
+
+    /** The vendor's page was given up for a new approval (reopenSignIn): nothing is reported; the approval runs again. */
+    data object Replaced : Came
   }
 
   /**
@@ -4976,6 +5166,8 @@ class AppModel(
         }
       }
     }
+  } catch (e: bot.tafs.app.kiff.VendorSignInReplaced) {
+    Came.Replaced
   } catch (e: VendorSignInCancelled) {
     Came.Of("sign_in_closed")
   } catch (e: bot.tafs.app.kiff.PlanqueError.WindowRequired) {
@@ -5164,6 +5356,16 @@ class AppModel(
 
   /** Disconnects a vendor: planque removes its tools from KIFF and revokes the sign-in at the vendor. Asks for the owner's confirmation. */
   suspend fun disconnect(grantId: String): Boolean {
+    if (_state.value.disconnecting != null) return false
+    _state.update { it.copy(disconnecting = grantId) }
+    return try {
+      disconnectNow(grantId)
+    } finally {
+      _state.update { if (it.disconnecting == grantId) it.copy(disconnecting = null) else it }
+    }
+  }
+
+  private suspend fun disconnectNow(grantId: String): Boolean {
     val tenant = kiffTenant
     val grant = _state.value.grants.firstOrNull { it.id == grantId }
     if (_state.value.mode != Mode.kiff || !_state.value.sessionHasKey || tenant == null || grant == null || !_state.value.planqueReady) return false
@@ -7038,7 +7240,15 @@ class AppModel(
     AccountTime.use(account.timeZone ?: "UTC")
     val device = java.time.ZoneId.systemDefault().id
     val offer = device.takeIf { it != (account.timeZone ?: "UTC") && secrets.load(declinedZoneKey()) != it }
-    _state.update { it.copy(kiffAccount = account, timeZoneOffer = offer) }
+    // KIFF says how this session approves (`approval_mode`): a view-only one is shown as such from the start, not only once
+    // registering the approval key is refused. Only KIFF's word sets it; a new sign-in that approves clears it.
+    val viewOnly = account.viewOnly
+    _state.update {
+      it.copy(
+        kiffAccount = account, timeZoneOffer = offer,
+        approvalViewOnly = it.approvalViewOnly || viewOnly, approvalKeyLost = it.approvalKeyLost || viewOnly,
+      )
+    }
   }
 
   private fun declinedZoneKey(): String = "tafs.timeZone.declined|${kiffTenant.orEmpty()}"
@@ -7214,29 +7424,296 @@ class AppModel(
     }
   }
 
-  /** Signs another device out of the account, behind one confirmation. This device signs out with Sign out instead. False when it didn't go through. */
+  /**
+   * Signs another device out of the account, behind one fingerprint that names it. This device signs out with Sign out instead.
+   * Removing a device that holds an approval key takes an approval at KIFF (its pairing contract), so the approval key signs it,
+   * its fingerprint the confirmation; a session KIFF holds no approval key for confirms here, and KIFF decides. False when it
+   * didn't go through.
+   */
   suspend fun removeDevice(device: Device): Boolean {
     val tenant = kiffTenant
-    if (_state.value.mode != Mode.kiff || tenant == null || device.thisDevice) return false
+    if (_state.value.mode != Mode.kiff || tenant == null || device.thisDevice || !_state.value.sessionHasKey) return false
     val generation = accountGeneration
     val what = Words.Settings.Devices.signOutPrompt(device = device.shown ?: Words.Settings.Devices.thisDevice)
+    kiff.tenant = tenant
+    val signer = signer
     try {
-      signer.sign("tafs.devices.v1|$tenant|${device.id}".toByteArray(), what)
+      if (!sessionHasApprovalKey) signer.sign("tafs.devices.v1|$tenant|${device.id}".toByteArray(), what)
+      if (generation != accountGeneration) return false
+      approvalReason = what
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      kiff.removeDevice(device.id)
     } catch (_: SignerException) {
       return false
-    }
-    if (generation != accountGeneration) return false
-    kiff.tenant = tenant
-    try {
-      kiff.removeDevice(device.id)
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = KiffClient.APPROVAL_KEY_LOST) }
+      return false
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {
-      if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))) }
+      // A view-only session approves nothing, signing another device out included: the line every app shares, which says which
+      // device can do it. KIFF's refusal carries only a developer's message, in English.
+      val said = if (e is KiffError.Server && e.refused("view_only")) {
+        Words.Settings.Devices.signoutNeedsApprover
+      } else {
+        Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))
+      }
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = said) }
       return false
+    } finally {
+      kiff.setupSigner = null
+      approvalReason = Words.Approval.Prompt.approveOnKiff
     }
     refreshDevices()
     return true
+  }
+
+  /**
+   * Pairs the computer whose QR the person scanned and whose check code they said matches (KIFF's pairing contract):
+   * the QR's fields, signed by the approval key behind its fingerprint, which names the computer. Whether it's paired is KIFF's:
+   * the phone shows KIFF's answer, the computer then listed in Devices with Sign out. Null when it didn't go through, why in
+   * [AppState.devicesError]; also null, with nothing to say, when the person put the fingerprint away.
+   */
+  suspend fun pairComputer(qr: PairQr): Pairing? {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null) return null
+    // Only an approval device grants approval authority: a session KIFF holds no approval key for can't pair one.
+    if (!_state.value.sessionHasKey || !sessionHasApprovalKey || _state.value.approvalKeyLost) {
+      _state.update { it.copy(devicesError = KiffClient.APPROVAL_KEY_LOST) }
+      return null
+    }
+    val generation = accountGeneration
+    val what = Words.Settings.Devices.pairPrompt(device = qr.name)
+    approvalReason = what
+    kiff.tenant = tenant
+    val signer = signer
+    kiff.setupSigner = { signer.signConfirmed(it) }
+    _state.update { it.copy(devicesError = null) }
+    val pairing = try {
+      kiff.pair(qr)
+    } catch (_: SignerException) {
+      return null
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = KiffClient.APPROVAL_KEY_LOST) }
+      return null
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(devicesError = Words.Common.didntGoThrough(what = Words.Settings.Devices.pair, why = pairingWhy(e))) }
+      return null
+    } finally {
+      kiff.setupSigner = null
+      approvalReason = Words.Approval.Prompt.approveOnKiff
+    }
+    if (generation != accountGeneration) return null
+    refreshDevices()
+    return pairing
+  }
+
+  /**
+   * Add a device: [scan] reads a QR (Google's scanner, in its own screen), then the QR is asked about ([AppState.pairAsking]), or
+   * the line says it isn't a pairing. In the model's scope, so the sheet torn down and rebuilt while the scanner is in front
+   * changes nothing. A scan already under way, or a pairing, starts nothing more.
+   */
+  fun addDevice(scan: suspend () -> String?) {
+    if (_state.value.pairBusy) return
+    _state.update { it.copy(pairLine = null, pairAsking = null, pairBusy = true) }
+    scope.launch {
+      try {
+        val text = try {
+          scan()
+        } catch (e: CancellationException) {
+          throw e
+        } catch (e: Exception) {
+          _state.update { it.copy(pairLine = Words.Settings.Devices.pairScannerFailed(why = ErrorWords.of(e))) }
+          return@launch
+        } ?: return@launch
+        val qr = PairQr.read(text)
+        _state.update { it.copy(pairAsking = qr, pairLine = if (qr == null) Words.Settings.Devices.pairNotAPairing else null) }
+      } finally {
+        _state.update { it.copy(pairBusy = false) }
+      }
+    }
+  }
+
+  /** Yes to the device being asked about: it's paired ([pairComputer]), and the line says what came of it. */
+  fun confirmPairing() {
+    val qr = _state.value.pairAsking ?: return
+    _state.update { it.copy(pairAsking = null, pairBusy = true) }
+    scope.launch {
+      try {
+        pairComputer(qr)?.let { p -> _state.update { it.copy(pairLine = bot.tafs.app.kiff.pairedLine(qr, p)) } }
+      } finally {
+        _state.update { it.copy(pairBusy = false) }
+      }
+    }
+  }
+
+  /** Cancel on the device being asked about: nothing is signed. */
+  fun cancelPairing() {
+    _state.update { it.copy(pairAsking = null) }
+  }
+
+  /** Devices closed: what came of the last pairing, or the last passkey, goes with it. */
+  fun clearPairLine() {
+    _state.update { it.copy(pairLine = null, pairAsking = null, passkeyLine = null) }
+  }
+
+  /** Reads the account's passkeys for Devices, a computer's own among them. KIFF lists them; the phone decides nothing of them. */
+  suspend fun refreshPasskeys() {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null) return
+    val generation = accountGeneration
+    kiff.tenant = tenant
+    try {
+      val list = kiff.passkeys()
+      if (generation == accountGeneration) _state.update { it.copy(passkeys = list, passkeysError = null) }
+      // Whether to offer Add a passkey: KIFF takes one from owners and admins only.
+      val role = runCatching { kiff.people().firstOrNull { it.you == true }?.role }.getOrNull()
+      if (generation == accountGeneration && role != null) _state.update { it.copy(passkeyMayAdd = PasskeyRegistration.mayAdd(role)) }
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) _state.update { it.copy(passkeysError = Words.Settings.Devices.passkeysNotLoaded(why = ErrorWords.of(e))) }
+    }
+  }
+
+  /**
+   * Adds a kiff.dev passkey on this phone to the account (KIFF's passkey registration, with proof of possession): [make] has
+   * Android make it from the creation's options ([PasskeyRegistration.createOptions], null when the person put Android's sheet
+   * away), then the approval key, behind its fingerprint, signs the registration, never inside an approval window. A session
+   * that holds no approval key can't add one: a stolen session would add its own. Whether it's registered is KIFF's, which
+   * takes it only from an owner or an admin, and only from a build Play signed. False when it didn't go through, why in
+   * [AppState.passkeyLine].
+   */
+  suspend fun addPasskey(model: String?, make: suspend (String) -> String?): Boolean {
+    val tenant = kiffTenant
+    if (_state.value.mode != Mode.kiff || tenant == null || _state.value.passkeyBusy) return false
+    if (!_state.value.sessionHasKey || !sessionHasApprovalKey || _state.value.approvalKeyLost) {
+      _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyNeedsApprover) }
+      return false
+    }
+    val generation = accountGeneration
+    kiff.tenant = tenant
+    _state.update { it.copy(passkeyBusy = true, passkeyLine = null) }
+    val signer = signer
+    var made = false
+    try {
+      // The person, as KIFF lists them: the subject the challenge names and the email the passkey is shown with.
+      val me = kiff.people().firstOrNull { it.you == true }
+      val email = me?.email ?: _state.value.kiffAccount?.email
+      // Before Android is asked for anything: a member's passkey would be made on the phone and then refused by KIFF.
+      if (me == null || email.isNullOrEmpty() || !PasskeyRegistration.mayAdd(me.role)) {
+        _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyAdminsOnly, passkeyMayAdd = me?.let { p -> PasskeyRegistration.mayAdd(p.role) }) }
+        return false
+      }
+      val issuedAt = PasskeyRegistration.issuedAt(clock())
+      val options = PasskeyRegistration.createOptions(tenant, me.subject, email, issuedAt)
+      val response = try {
+        make(options.toString())
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        if (generation == accountGeneration) _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyNotMade(why = ErrorWords.of(e))) }
+        return false
+      } ?: return false
+      // From here, the passkey is on the phone: if it isn't added, the person is told so, and where to remove it.
+      made = true
+      if (generation != accountGeneration) return false
+      val body = PasskeyRegistration.registerBody(PasskeyRegistration.name(model), issuedAt, response)
+      approvalReason = Words.Settings.Devices.passkeyPrompt
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      try {
+        kiff.registerPasskey(body)
+      } catch (e: KiffError.Server) {
+        // The same passkey registered already (an answer lost on the way, then tried again): it's there, so it's done.
+        if (e.status != 409 || !e.refused("passkey_registered")) throw e
+      }
+    } catch (_: SignerException) {
+      // The fingerprint put away after Android made the passkey: it's on the phone, not on the account.
+      if (made && generation == accountGeneration) _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyNotRegistered) }
+      return false
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(passkeyLine = KiffClient.APPROVAL_KEY_LOST) }
+      return false
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      val said = when {
+        e is KiffError.Server && e.refused("admins_only") -> Words.Settings.Devices.passkeyAdminsOnly
+        e is KiffError.Server && e.refused("view_only") -> Words.Settings.Devices.passkeyNeedsApprover
+        // KIFF takes the challenge's time within 10 minutes: past it, a new passkey from a new challenge.
+        e is KiffError.Server && e.refused("issued_at") -> Words.Settings.Devices.passkeyTooSlow
+        // Made, then refused (a debug build's origin among them): it's on the phone, not on the account.
+        made -> Words.Settings.Devices.passkeyNotRegistered
+        else -> Words.Common.didntGoThrough(what = Words.Settings.Devices.passkeyAdd, why = ErrorWords.of(e))
+      }
+      if (generation == accountGeneration) _state.update { it.copy(passkeyLine = said) }
+      return false
+    } finally {
+      kiff.setupSigner = null
+      approvalReason = Words.Approval.Prompt.approveOnKiff
+      _state.update { it.copy(passkeyBusy = false) }
+    }
+    if (generation != accountGeneration) return false
+    _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyAdded) }
+    refreshPasskeys()
+    return true
+  }
+
+  /**
+   * Removes one of the account's passkeys, behind one fingerprint that names it, signed by the approval key as a device's
+   * removal is. A computer's own passkey has no id and goes with its computer: it's never removed here. False when it didn't go.
+   */
+  suspend fun removePasskey(passkey: bot.tafs.app.kiff.Passkey): Boolean {
+    val tenant = kiffTenant
+    val id = passkey.id
+    if (_state.value.mode != Mode.kiff || tenant == null || id == null || !passkey.removable) return false
+    if (!_state.value.sessionHasKey || !sessionHasApprovalKey || _state.value.approvalKeyLost) {
+      _state.update { it.copy(passkeyLine = Words.Settings.Devices.passkeyNeedsApprover) }
+      return false
+    }
+    val generation = accountGeneration
+    kiff.tenant = tenant
+    val signer = signer
+    try {
+      approvalReason = Words.Settings.Devices.passkeyRemovePrompt(name = passkey.name)
+      kiff.setupSigner = { signer.signConfirmed(it) }
+      kiff.removePasskey(id)
+    } catch (_: SignerException) {
+      return false
+    } catch (_: KiffError.ApprovalKeyRequired) {
+      if (generation == accountGeneration) _state.update { it.copy(passkeyLine = KiffClient.APPROVAL_KEY_LOST) }
+      return false
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      val what = Words.Settings.Devices.passkeyRemovePrompt(name = passkey.name)
+      if (generation == accountGeneration) _state.update { it.copy(passkeyLine = Words.Common.didntGoThrough(what = what, why = ErrorWords.of(e))) }
+      return false
+    } finally {
+      kiff.setupSigner = null
+      approvalReason = Words.Approval.Prompt.approveOnKiff
+    }
+    refreshPasskeys()
+    return true
+  }
+
+  /**
+   * Why a pairing didn't go through: KIFF's own words where it sends them; for its codes (§5.3), the app's words until KIFF
+   * words them; else the usual.
+   */
+  internal fun pairingWhy(e: Throwable): String {
+    if (e is KiffError.Server) {
+      e.words?.takeIf { it.isNotBlank() }?.let { return it }
+      when {
+        e.refused("pairing_expired") -> return Words.Settings.Devices.pairExpired
+        e.refused("pairing_used") -> return Words.Settings.Devices.pairUsed
+        e.refused("key_registered") -> return Words.Settings.Devices.pairKeyRegistered
+        e.refused("invalid_pairing") -> return Words.Settings.Devices.pairInvalid
+      }
+    }
+    return ErrorWords.of(e)
   }
 
   // MARK: Deleting the account
@@ -7876,6 +8353,27 @@ class AppModel(
     /** How many times, and how far apart, the list is read for a taf tafs cloud said it set up, until the list has it. */
     const val SET_UP_READS = 3
     const val SET_UP_READ_MS = 3_000L
+
+    /** How long Open again waits for the approval it gave up to stop, before its new one starts; past it, none starts. */
+    const val REPLACE_WAIT_MS = 10_000L
+
+    /**
+     * How long before each read of planque's grants while a card waits on its grant: 3 s apart for the first minute, when a
+     * grant is most likely to be listed, then 10 s apart, ten minutes in all, counted on this phone (never against the card's
+     * time, which is tafs cloud's clock). 74 signed reads at most, where 3 s throughout took 200.
+     */
+    val CARD_GRANT_READ_DELAYS: List<Long> = List(20) { 3_000L } + List(54) { 10_000L }
+
+    /**
+     * The grants that an unanswered approval or sign-in card in the thread waits on: planque doesn't list them yet. While one
+     * does, planque's grants are read again, as iOS's thread reads do.
+     */
+    fun grantsCardsWaitOn(components: List<ShownComponent>, grants: List<Grant>): Set<String> =
+      components.asSequence()
+        .filter { it.answer == null && (it.component.type == "approval" || it.component.type == "sign_in") }
+        .mapNotNull { it.component.grant }
+        .filter { g -> grants.none { it.id == g } }
+        .toSet()
 
     /** The stops of the run's own: it ends with no words for it. */
     val CAP_STOPS = setOf("cost_cap", "turn_cap", "max_token", "refused")

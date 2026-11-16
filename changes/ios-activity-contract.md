@@ -1,0 +1,1 @@
+- **iPhone and iPad: a taf's Activity tab loads.** tafs cloud sends each entry's call without `held`, which the app required, so the page failed to read; it now reads as not held. Every answer the app reads that tafs cloud keeps as a contract is now checked in the app's tests (contracts/README.md).

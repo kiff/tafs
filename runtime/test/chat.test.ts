@@ -1192,11 +1192,12 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     const cases: Array<[string, unknown]> = [
       ["[confirm which] live", { type: "confirm", id: "which", answer: "live" }],
       [`[questions limits] {"cap":{"value":"50"}}`, { type: "questions", id: "limits", answer: { cap: { value: "50" } } }],
-      ["[approval connect] approved", { type: "approval", id: "connect", answer: "approved" }],
-      ["[approval connect] approved, signed in", { type: "approval", id: "connect", answer: "approved" }],
+      // A person's message never approves an approval card: Approve does, signed (qa-kiff, 15 Nov).
+      ["[approval connect] approved", undefined],
+      ["[approval connect] approved, signed in", undefined],
       ["[approval connect] declined", { type: "approval", id: "connect", answer: "declined" }],
       ["[approval connect] failed: Face ID was cancelled", { type: "approval", id: "connect", answer: "failed: Face ID was cancelled" }],
-      ["[approval connect] already approved: Stripe is connected and its Card is confirmed", { type: "approval", id: "connect", answer: "already approved: Stripe is connected and its Card is confirmed" }],
+      ["[approval connect] already approved: Stripe is connected and its Card is confirmed", undefined],
       ["[sign_in stripe] signed in", { type: "sign_in", id: "stripe", answer: "signed in" }],
       ["[sign_in stripe] not now", { type: "sign_in", id: "stripe", answer: "not now" }],
       ["[questions limits] not json", undefined],
@@ -1215,7 +1216,9 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
       const w = world();
       const run = await waiting(w, c.card);
       const r = await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: c.text } });
-      expect([c.text, r.status, w.agents.calls]).toEqual([c.text, 200, [`answerCard ${RAE} ${run.id} ${c.card.id} ${JSON.stringify(c.body.answer)}`]]);
+      // An approval's "approved" (kiff/agents takes it from tafs cloud's own answer) is, from a person, a message.
+      const answers = c.card.type !== "approval" || c.body.answer === "declined" || String(c.body.answer).startsWith("failed:");
+      expect([c.text, r.status, w.agents.calls]).toEqual([c.text, 200, answers ? [`answerCard ${RAE} ${run.id} ${c.card.id} ${JSON.stringify(c.body.answer)}`] : [`startRun ${RAE} live`]]);
     }
   });
 
@@ -1231,6 +1234,34 @@ describe("a card answered as data (kiff/agents' cards wait for their answer)", (
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "[confirm nothing] live" } });
     await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "[approval which] approved" } });
     expect(w.agents.calls).toEqual([`startRun ${RAE} live`, `startRun ${RAE} live`]);
+  });
+
+  // qa-kiff, 15 Nov: anyone holding the person's session (a view-only device's too) could make Coach's approval card read
+  // "Approved", recorded as the person's answer, with nothing signed. Approve, signed and checked, is the only way.
+  it("takes only declined or failed from a person on an approval card, never approved, and leaves a sign-in card as it was", async () => {
+    for (const answer of ["approved", "already approved: Stripe is connected", "approved, signed in"]) {
+      const w = world();
+      await waiting(w, { type: "approval", id: "connect" });
+      const r = await call(w, "POST", `/v1/tafs/${RAE}/components/connect/answer`, { token: "ana", body: { answer } });
+      expect([answer, r.status, w.agents.calls.filter((c) => c.startsWith("answerCard"))]).toEqual([answer, 400, []]);
+      expect(String(r.body.error)).toContain("through Approve");
+    }
+    for (const answer of ["declined", "failed: Face ID was cancelled"]) {
+      const w = world();
+      const run = await waiting(w, { type: "approval", id: "connect" });
+      const r = await call(w, "POST", `/v1/tafs/${RAE}/components/connect/answer`, { token: "ana", body: { answer } });
+      expect([answer, r.status, w.agents.calls]).toEqual([answer, 200, [`answerCard ${RAE} ${run.id} connect ${JSON.stringify(answer)}`]]);
+    }
+    // The old form's "approved" isn't the card's answer: it goes as a message, and the card still waits.
+    const w = world();
+    await waiting(w, { type: "approval", id: "connect" });
+    await call(w, "POST", `/v1/tafs/${RAE}/messages`, { token: "ana", body: { text: "[approval connect] approved" } });
+    expect(w.agents.calls.filter((c) => c.startsWith("answerCard"))).toEqual([]);
+    // A sign-in card takes what it took.
+    const s = world();
+    const run = await waiting(s, { type: "sign_in", id: "stripe" });
+    expect((await call(s, "POST", `/v1/tafs/${RAE}/components/stripe/answer`, { token: "ana", body: { answer: "signed in" } })).status).toBe(200);
+    expect(s.agents.calls).toEqual([`answerCard ${RAE} ${run.id} stripe "signed in"`]);
   });
 
   it("sends the old form as a message when the card doesn't take the answer", async () => {

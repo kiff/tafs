@@ -1,0 +1,1 @@
+- **A device KIFF signs in view-only knows it at once.** It no longer asks for Face ID or Touch ID on Coach's Approve, which KIFF would refuse; it says it can only view. This is how a Mac signed in through the browser behaves (docs/mac-app.md).

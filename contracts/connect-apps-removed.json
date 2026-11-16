@@ -1,0 +1,115 @@
+{
+  "about": "GET /v1/connect/apps with the phone's signed grants read: a removed taf's connections, one still used by a live taf's Card (kept) and one used by none (Clear ends it). Written by tafs cloud's tests (runtime/test/contract.ts); write it again with UPDATE_CONTRACTS=1, never by hand.",
+  "answer": {
+    "apps": [
+      {
+        "entry": "connector:p:gmail",
+        "vendor": "gmail",
+        "title": "Gmail",
+        "name": "Gmail",
+        "how": "oauth",
+        "state": "needs_reconnect",
+        "grant": "g-gmail",
+        "connected": false,
+        "method": "sign_in",
+        "whose": "Company",
+        "used_by": [
+          {
+            "taf": "taf-aaaa0000000000000000",
+            "name": "Rae"
+          }
+        ],
+        "line": "Sign in · Sign in again · Used by Rae",
+        "needed_by": [],
+        "misplaced": []
+      },
+      {
+        "entry": "stripe@3",
+        "vendor": "Stripe",
+        "title": "Stripe",
+        "name": "Stripe",
+        "how": "oauth",
+        "state": "connected",
+        "grant": "g-stripe",
+        "logo": "/v1/logos/1727e175f8a2db4567f09996e221c578",
+        "connected": true,
+        "method": "sign_in",
+        "whose": "Company",
+        "used_by": [
+          {
+            "taf": "taf-aaaa0000000000000000",
+            "name": "Rae"
+          }
+        ],
+        "line": "Sign in · Connected · Used by Rae",
+        "needed_by": [],
+        "misplaced": []
+      },
+      {
+        "entry": "qonto@2",
+        "vendor": "Qonto",
+        "title": "Qonto invoicing: reads and drafts",
+        "name": "Qonto",
+        "subtitle": "Invoicing: reads and drafts",
+        "how": "key",
+        "state": "available",
+        "connected": false,
+        "method": "key",
+        "line": "With a key",
+        "needed_by": [],
+        "misplaced": []
+      },
+      {
+        "entry": "connector:p:crm",
+        "vendor": "crm",
+        "title": "Example CRM",
+        "name": "Example CRM",
+        "how": "oauth",
+        "state": "needs_setup",
+        "words": "Needs setting up first. Ask tafs to enable it.",
+        "connected": false,
+        "method": "sign_in",
+        "line": "Sign in · Needs setting up",
+        "needed_by": [],
+        "misplaced": []
+      },
+      {
+        "entry": "connector:p:typeform",
+        "vendor": "typeform",
+        "title": "Typeform",
+        "name": "Typeform",
+        "how": "oauth",
+        "state": "available",
+        "connected": false,
+        "method": "sign_in",
+        "line": "Sign in",
+        "needed_by": [],
+        "misplaced": []
+      }
+    ],
+    "by_key": true,
+    "provider": "p",
+    "next_cursor": "cur_2",
+    "removed_tafs": [
+      {
+        "agent": "old-refunds",
+        "removed_at": "2026-11-07T20:00:00Z",
+        "grants": [
+          {
+            "grant": "g-old-stripe",
+            "used_by": [
+              {
+                "taf": "taf-cccc0000000000000000",
+                "name": "Chargebacks"
+              }
+            ]
+          },
+          {
+            "grant": "g-old-sheets",
+            "used_by": []
+          }
+        ]
+      }
+    ]
+  }
+}

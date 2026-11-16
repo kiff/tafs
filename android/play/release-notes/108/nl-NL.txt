@@ -1,0 +1,3 @@
+- Apps koppelen vraagt voor welke taf een koppeling is, ook als je er maar één hebt.
+- Een app koppelen blijft niet meer hangen op "Goedkeuren…": "Inloggen opnieuw openen" opent de pagina weer, en "Nu niet" stopt het wachten.
+- Een koppelverzoek zonder antwoord kun je annuleren vanaf de rij.

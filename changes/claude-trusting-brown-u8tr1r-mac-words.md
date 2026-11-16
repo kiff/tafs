@@ -1,0 +1,1 @@
+- **Mac: its own words where the phone's would mislead.** A view-only Mac says it can only view and how to add it from the phone (Account › Devices › Add a device). The microphone, speech recognition and dictation lines point to System Settings on the Mac (System Preferences on macOS 12), not the iPhone's Settings. New `*_mac` keys in 8 languages, beside the phone's.

@@ -15,7 +15,8 @@ import bot.tafs.app.signing.SignerException
 object ErrorWords {
   fun of(e: Throwable): String {
     val status = when (e) {
-      is CloudError -> e.words?.let { return it } ?: e.status
+      is CloudError -> e.words?.let { return it }
+        ?: if (e.code in CLOUD_WORDED && !e.message.isNullOrBlank()) return e.message!! else e.status
       is KiffError.Server -> e.status
       // A vendor that refuses planque's client (one that allow-lists who may sign in): planque's own words, which say whose it is,
       // not "it isn't working on our side".
@@ -38,6 +39,9 @@ object ErrorWords {
     in 500..599 -> DOWN
     else -> OURS
   }
+
+  /** tafs cloud's codes whose `error` is shown as sent, where it sends no `words`: "‹taf› doesn't use this app", never "It changed". */
+  val CLOUD_WORDED = setOf("not_needed")
 
   /** planque's codes whose `error` is shown as planque says it, from before planque sent `words`. */
   val PLANQUE_WORDED = setOf("vendor_refused_client")

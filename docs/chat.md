@@ -144,6 +144,8 @@ outcome, and a failed step is left out once something worked (`WorkLog.rows`).
 **Why a step failed.** A failed step carries `failed: true` and, when there is one, `why`:
 the first line of what the tool answered, in the owner's words, with a service's "answered
 403:" prefix, ids, codes and hashes left out, at most 160 characters (`whyOf`, `steps.ts`).
+The name of the thing a left-out id was stays, in words: Stripe's "No such payment_intent:
+'pi_…'" reads "No such payment intent", never "No such: 'it'".
 The live `step` event has it, and the thread's step has the same line: tafs cloud keeps a
 run's reasons while the run streams (by run and call, for as long as the run is kept), since
 kiff/agents keeps a result only until its run ends and its usage record says only that the
@@ -321,7 +323,11 @@ run pauses on it, and the answer comes back to the run as data, never as text in
   `{"<question>": {"value"} | {"values"} | {"own"}}`; approval, `declined` from the phone, and
   otherwise what tafs cloud decided ([coach.md](coach.md#approving-tafs-cloud-decides)): `approved`
   only after a signature it checked, `already approved: <vendor> is connected and its Card is
-  confirmed` for a connection and Card approved earlier with their own signature, or `failed: <why>`;
+  confirmed` for a connection and Card approved earlier with their own signature, or `failed: <why>`.
+  From the person, `POST …/components/{id}/answer` on an approval card takes only `declined` or
+  `failed: <why>`; `approved` and `already approved: …` are refused (400), so a session alone, a
+  view-only device's too, never makes the card read "Approved", and the old form's `[approval <id>]
+  approved` goes as a message;
   sign_in, `signed in`, `not now` or `failed: <why>`. The run goes on with it.
 - Writing a message instead while a card waits answers it with those words: the run that
   waits goes on, and no second run starts beside it.
@@ -441,7 +447,12 @@ same app went through later in the run, the message says so in three lines, all 
 the person's language: `words`, the failed step's own ("Coach couldn't connect Shippo yet"); `why`, the
 server's reason, scrubbed as any step's reason is (`whyOf`) and with any host name or phone number left out too (`shownWhy`: the server can quote a description a third party wrote), as a line ("Why: managed sign-in isn't set up
 for this app"), left out when nothing readable is left; and `next`, what to do ("Next: ask Coach to connect
-Shippo with its key instead, or to use another app."). It's taken before a retry folds the step away, so
+Shippo with its key instead, or to use another app."). A read Coach makes as itself while it sets up (`planque read` of a
+`setup_reads` tool) that KIFF refuses for want of a Card (`no_mandate_issued`, `mandate_not_covered`) isn't the
+connection failing: planque issues that Card when the owner approves, and a slow sign-in can leave it unissued while the
+connection works. Its lines say so and never ask for a sign-in: "Coach's reads of Stripe couldn't be set up", "Stripe
+is connected: only the reads Coach makes while it sets up weren't allowed.", "Next: ask Coach to go on without reading
+Stripe first." (`step_reads_*`). It's taken before a retry folds the step away, so
 a later read that went through (the catalog, say) doesn't hide it; a later request for the same server, description, catalog entry or reused grant (or the same app by a known name), or tools set on the same grant (even while they wait for the owner's approval),
 that went through does, and so does any later connection call whose answer shows it `signed_in`, `listed` or
 `connected`, so "couldn't connect" never stands under "signed in" (`Steps.connectedBy`); one showing it failed

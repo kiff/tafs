@@ -199,4 +199,48 @@ describe("a section of the kiff skill", () => {
     expect(CALL_INSTRUCTIONS).toContain('A held call isn\'t done: it "waits for your approval", never "submitted",\n  "sent" or "done"');
     expect(CALL_INSTRUCTIONS).toContain("Name a date or a day only when you\n  read it");
   });
+
+  // Chargebacks: a taf typed a dispute's id wrong, the app said there was no such dispute, and the taf left that dispute
+  // undone. A not-found on an id it typed is checked against what it read, and made once more with the id as read.
+  it("tells the taf to check an id the app doesn't know against what it read, and make the call once more", () => {
+    expect(CALL_INSTRUCTIONS).toContain('When the app says an id you typed doesn\'t exist ("no such", "not found"),\n  check it against what you read');
+    expect(CALL_INSTRUCTIONS).toContain("make the call once more with the id as you read it, and a new\n  kiff_operation_id: that's a new call, not a retry.");
+    // In this run: a taf that saw its slip once said it would redo the call "next run", and didn't make it.
+    expect(CALL_INSTRUCTIONS).toContain("Make it now, in this run,\n  before you report: never leave it for the next run.");
+    // Once, and only for a slip: never a loop, and never a different item.
+    expect(CALL_INSTRUCTIONS).toContain("Once only: if it still\n  isn't found, or the id was right, report it.");
+    // No Eval case's own example in every taf's instructions.
+    expect(CALL_INSTRUCTIONS).not.toMatch(/T-20\d\d|dispute id/);
+    // Every job's definition carries it.
+    expect(definition(ID, jobById("chargebacks")).instructions).toContain("that's a new call, not a retry");
+  });
+
+  // Chargebacks: a taf made some of its calls, then reported the rest as left for the next run though nothing stopped
+  // it. Every call the run can make is made before it reports; only what KIFF held or refused, or it couldn't do, is left.
+  it("tells the taf to make every call this run needs before it reports", () => {
+    expect(CALL_INSTRUCTIONS).toContain("Do every call this run's work needs before you report. A call you can make\n  now never waits for the next run");
+    // A note that says not to do it still wins (NOTES_INSTRUCTIONS): what it stopped is reported as left too.
+    expect(CALL_INSTRUCTIONS).toContain("report as left only what KIFF held or\n  refused, what a note stopped, or what you couldn't do.");
+    expect(NOTES_INSTRUCTIONS).toContain("When a\nnote says not to do it, the note wins: don't make the call, and say in your report\nwhich note stopped you.");
+    expect(CALL_INSTRUCTIONS).not.toMatch(/T-20\d\d|dispute/);
+    expect(definition(ID, jobById("chargebacks")).instructions).toContain("A call you can make\n  now never waits for the next run");
+  });
+
+  // Chargebacks: KIFF held one of a run's calls, which pauses the run until the owner answers, and the calls the taf
+  // hadn't made yet were never made. The calls within its limits go first; one past a limit goes last.
+  it("tells the taf to make a call past its limits last, since a held call pauses the run", () => {
+    expect(CALL_INSTRUCTIONS).toContain("A call KIFF holds for the owner pauses the run until they answer.");
+    expect(CALL_INSTRUCTIONS).toContain("make\n  every call within your limits first, and a call past a limit your Card or\n  your instructions name last, once nothing else this run needs is left.");
+    // Still made: last, never skipped (one request is one call, and KIFF decides).
+    expect(CALL_INSTRUCTIONS).not.toMatch(/skip a call past|don't make a call past/);
+    expect(CALL_INSTRUCTIONS).not.toMatch(/T-20\d\d|dispute/);
+    expect(definition(ID, jobById("chargebacks")).instructions).toContain("pauses the run until they answer");
+  });
+
+  // Chargebacks: a taf sent a "placeholder" evidence update to a dispute it should have closed. What a call sends is
+  // final, or the call isn't made.
+  it("tells the taf to send only what's final, never a placeholder", () => {
+    expect(CALL_INSTRUCTIONS).toContain("Send only what's final: never a placeholder, a test value or text you mean\n  to replace. If you can't write it yet, don't make the call; say why.");
+    expect(definition(ID, jobById("chargebacks")).instructions).toContain("never a placeholder");
+  });
 });

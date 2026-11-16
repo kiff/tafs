@@ -9,10 +9,10 @@ name: Android
 on:
   push:
     branches: [main]
-    paths: ["android/**", "contracts/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "contracts/**", "vectors/**", ".github/workflows/android.yml"]
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    paths: ["android/**", "contracts/**", ".github/workflows/android.yml"]
+    paths: ["android/**", "contracts/**", "vectors/**", ".github/workflows/android.yml"]
   # The signed release bundle for Play, on demand (the release job).
   workflow_dispatch:
 
@@ -63,6 +63,9 @@ jobs:
           if [ -n "$GOOGLE_SERVICES_JSON" ]; then printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json; fi
       - name: Unit tests and the debug builds
         run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace
+      # The Wear OS watch (docs/watch-wear.md): the messages it and the phone exchange, and its debug build.
+      - name: The watch's tests and its debug build
+        run: ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDebug --stacktrace
       # The current versionCode's Play release notes, when there are any: all eight languages, each short enough.
       - name: Play release notes, and the upload's own tests
         run: |
@@ -73,7 +76,10 @@ jobs:
         if: failure()
         with:
           name: android-unit-test-results
-          path: android/app/build/reports/tests
+          path: |
+            android/app/build/reports/tests
+            android/watchlink/build/reports/tests
+            android/wear/build/reports/tests
 
   # The screens' UI tests (the held call's card) on an emulator: KVM makes it fast enough.
   ui:
@@ -148,7 +154,9 @@ jobs:
     if: >-
       !cancelled() && needs.test.result == 'success' && needs.ui.result == 'success' &&
       (github.event_name == 'workflow_dispatch' || needs.version.outputs.raised == 'true')
-    # The owner approves each release here; the release role trusts only this environment.
+    # An internal release goes out on a merge to main that raises versionCode (or a manual run), with no reviewer to wait on:
+    # CI, the reviews and the internal track are the guardrails. Promotion beyond internal (Play review) is the owner's, in Play.
+    # The release role trusts only this environment.
     environment: android-release
     runs-on: ubuntu-latest
     timeout-minutes: 30

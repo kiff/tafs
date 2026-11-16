@@ -1,4 +1,3 @@
-import ActivityKit
 import Foundation
 import UserNotifications
 
@@ -88,9 +87,7 @@ enum NotificationRefuse {
         switch outcome {
         case .refused(let left):
             PushDelegate.removeAlerts(forHold: hold)
-            if left == 0, #available(iOS 16.1, *) {
-                for activity in Activity<HeldActivityAttributes>.activities { await activity.end(dismissalPolicy: .immediate) }
-            }
+            if left == 0 { await LockScreen.endActivities() }
         case .gone:
             PushDelegate.removeAlerts(forHold: hold)
         case .needsApp(let why):

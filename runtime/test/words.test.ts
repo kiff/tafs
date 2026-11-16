@@ -76,7 +76,7 @@ describe("tafs cloud's words in eight languages (docs/languages.md)", () => {
     // "25 min" and "5 h" are written alike in most of the eight (Dutch writes "5 u", Polish "5 godz.").
     all: ["cr_company", "waiting_minutes", "waiting_hours", "doing_titled", "sheet_sha"], // doing_titled: the tool's own title and "…"; sheet_sha: "SHA-256" is its name everywhere
     de: ["push_credits_title", "dial_app", "sheet_details"], // "Credits" is the German term in the glossary; "App" and "Details" are German too
-    fr: ["cr_actions", "dial_app"], // "action", "actions" and "App" are French words too
+    fr: ["cr_actions", "dial_app", "setup_notes", "setup_actions"], // "action", "actions", "note", "notes" and "App" are French words too
     es: ["dial_app"], // "App" is used as is
     it: ["cr_pct", "dial_place_email", "dial_app"], pt: ["cr_pct", "dial_place_email", "dial_app"], pl: ["cr_pct"], // "80%" is written alike; "Email" and "App" are used as is
     nl: ["cr_pct", "cr_credits", "cr_runs", "push_credits_title", "dial_open", "dial_app", "sheet_details"], // "credit", "run" are the Dutch terms in the glossary; "Open", "App" and "Details" are Dutch too
