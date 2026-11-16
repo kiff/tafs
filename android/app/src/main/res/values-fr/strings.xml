@@ -1325,7 +1325,7 @@
         <item quantity="one">%2$s · %1$s cran</item>
         <item quantity="other">%2$s · %1$s crans</item>
     </plurals>
-    <string name="mission_log">Journal</string>
+    <string name="mission_log">Historique</string>
     <string name="mission_read_only">Lecture seule · plus récent d\'abord</string>
     <string name="mission_removed">retiré</string>
     <string name="needs_you_a_taf">Un taf</string>

@@ -1425,7 +1425,7 @@
         <item quantity="many">%2$s · %1$s pozycji</item>
         <item quantity="other">%2$s · %1$s pozycji</item>
     </plurals>
-    <string name="mission_log">Dziennik</string>
+    <string name="mission_log">Historia</string>
     <string name="mission_read_only">Tylko do odczytu · najnowsze najpierw</string>
     <string name="mission_removed">usunięty</string>
     <string name="needs_you_a_taf">Taf</string>

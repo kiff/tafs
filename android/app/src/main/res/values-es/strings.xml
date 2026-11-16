@@ -1325,7 +1325,7 @@
         <item quantity="one">%2$s · %1$s parada</item>
         <item quantity="other">%2$s · %1$s paradas</item>
     </plurals>
-    <string name="mission_log">Registro</string>
+    <string name="mission_log">Historial</string>
     <string name="mission_read_only">Solo lectura · lo más reciente primero</string>
     <string name="mission_removed">quitado</string>
     <string name="needs_you_a_taf">Un taf</string>
