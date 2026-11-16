@@ -459,42 +459,57 @@ jobs:
             mv "$frame" "$out"
             xcrun simctl terminate "$DEVICE_ID" bot.tafs.app || true
           }
-          # The smallest iPhone: an SE made for the run when the newest iOS runtime supports one (a
-          # runner lists none of its own), else the smallest iPhone listed (a mini, a 16e, then any
-          # but a Plus, Pro Max or Air). The welcome, the tafs list and Needs you, light then dark
-          # (small-…). The welcome has no scroll view, so its drawing (board 1) must shrink to
-          # leave the buttons on screen; this is where that shows. It leaves the small iPhone
-          # booted as DEVICE_ID.
+          # The smallest iPhone any available iOS runtime supports, by its screen's height in pixels
+          # (each device type's profile.plist), made for the run with simctl create: a runner lists
+          # no small iPhone of its own, and picking by name fell back to a 6.3-inch one. The step
+          # fails if none can be made, and warns if the smallest is taller than an SE's 1334 px, so
+          # a fallback is never silent. The welcome, the tafs list and Needs you, light then dark
+          # (small-…), each look from a fresh install, so the dark welcome is the welcome and not
+          # the light pass's sample session. The welcome has no scroll view, so its drawing (board
+          # 1) must shrink to leave the buttons on screen; this is where that shows. It leaves the
+          # small iPhone booted as DEVICE_ID.
           small_pass() {
             xcrun simctl shutdown "$DEVICE_ID" || true
-            read -r runtime setype < <(xcrun simctl list runtimes -j | python3 -c '
-          import json, sys
-          rts = [r for r in json.load(sys.stdin)["runtimes"] if r.get("platform") == "iOS" and r.get("isAvailable")]
-          rt = sorted(rts, key=lambda r: [int(p) for p in r["version"].split(".")])[-1]
-          se = [t for t in rt.get("supportedDeviceTypes", []) if "iPhone SE" in t["name"]]
-          print(rt["identifier"], se[-1]["identifier"] if se else "")
+            read -r runtime smalltype height < <(python3 -c '
+          import json, os, plistlib, subprocess
+          def listed(kind):
+              return json.loads(subprocess.check_output(["xcrun", "simctl", "list", kind, "-j"]))[kind]
+          types = {t["identifier"]: t for t in listed("devicetypes")}
+          def height(identifier):
+              t = types.get(identifier)
+              if not t:
+                  return None
+              try:
+                  with open(os.path.join(t["bundlePath"], "Contents", "Resources", "profile.plist"), "rb") as f:
+                      return plistlib.load(f).get("mainScreenHeight")
+              except (OSError, KeyError):
+                  return None
+          best = None
+          for r in listed("runtimes"):
+              if r.get("platform") != "iOS" or not r.get("isAvailable"):
+                  continue
+              version = [int(p) for p in r["version"].split(".")]
+              for st in r.get("supportedDeviceTypes", []):
+                  h = height(st["identifier"])
+                  if st["name"].startswith("iPhone") and h:
+                      key = (h, [-v for v in version])
+                      if best is None or key < best[0]:
+                          best = (key, r["identifier"], st["identifier"], h)
+          print(*(best[1:] if best else ()))
           ') || true
-            DEVICE_ID=""
-            if [ -n "$setype" ]; then
-              DEVICE_ID=$(xcrun simctl create tafs-small "$setype" "$runtime" || true)
+            if [ -z "$smalltype" ]; then
+              echo "::error::small_pass: no iPhone device type with a known screen size in any available iOS runtime"
+              exit 1
             fi
-            if [ -z "$DEVICE_ID" ]; then
-              DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c '
-          import json, sys
-          devices = json.load(sys.stdin)["devices"]
-          ios = sorted(k for k in devices if "iOS" in k)
-          iphones = [d for d in devices[ios[-1]] if d["name"].startswith("iPhone")]
-          rank = lambda d: next((i for i, key in enumerate(("SE", "mini", "16e")) if key in d["name"]),
-                                9 if any(big in d["name"] for big in ("Plus", "Max", "Air")) else 3)
-          print(sorted(iphones, key=rank)[0]["udid"])
-          ')
-            fi
-            echo "small_pass: $(xcrun simctl list devices | grep "$DEVICE_ID" || echo "$DEVICE_ID")"
+            DEVICE_ID=$(xcrun simctl create tafs-small "$smalltype" "$runtime")
+            echo "small_pass: $smalltype on $runtime, $height px tall"
+            [ "$height" -le 1334 ] || echo "::warning::small_pass: the smallest iPhone here is $height px tall, taller than an SE (1334 px)"
             xcrun simctl boot "$DEVICE_ID" || true
             xcrun simctl bootstatus "$DEVICE_ID" -b
             xcrun simctl status_bar "$DEVICE_ID" override --time 9:41 --batteryState charged --batteryLevel 100 || true
-            xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
             for look in light dark; do
+              xcrun simctl uninstall "$DEVICE_ID" bot.tafs.app || true
+              xcrun simctl install "$DEVICE_ID" build/Build/Products/Debug-iphonesimulator/Tafs.app
               xcrun simctl ui "$DEVICE_ID" appearance "$look"
               suffix=""; [ "$look" = dark ] && suffix="-dark"
               shoot "small-1-welcome$suffix"
