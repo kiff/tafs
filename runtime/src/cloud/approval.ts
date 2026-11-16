@@ -700,6 +700,7 @@ export function approvalWords(lang: Lang = "en") {
     driveKey: w.approval_drive_key,
     windowClosed: w.approval_window_closed,
     signMissing: w.approval_sign_missing,
+    signBoth: w.approval_sign_both,
     signInvalid: w.approval_sign_invalid,
     signViewOnly: w.approval_sign_view_only,
     signSession: w.approval_sign_session,
@@ -1201,8 +1202,11 @@ export function reportOf(body: Record<string, unknown>): Report {
 }
 
 export interface ReportContext extends DecideContext {
-  /** The request as the phone signed it: its method, path and raw body, and its KIFF-Device-Signature. */
-  signed: { method: string; uri: string; body: string; signature: string };
+  /**
+   * The request as the device signed it: its method, path and raw body, and its KIFF-Device-Signature, or the
+   * passkey assertion a computer approves with (KIFF-Passkey-Assertion, as sent): exactly one of the two.
+   */
+  signed: { method: string; uri: string; body: string; signature: string; passkey?: string };
 }
 
 /** KIFF's code for a refused signature (`error`, as its 400s and 403s send it), or "" when it sent none it could read. */
@@ -1242,13 +1246,19 @@ export function signRefusal(status: number, code: string, W: ReturnType<typeof a
 export async function checkSigned(ctx: Pick<ReportContext, "signed" | "fetch" | "kiffBase" | "token" | "lang"> & Partial<ReportContext>, key: "window" | "critical" | "approval" = "window"): Promise<void> {
   const W = approvalWords(ctx.lang);
   const { signed } = ctx;
-  if (!signed.signature) throw new ApprovalError(403, W.signMissing, "signature_missing");
+  // A computer approves with its passkey (docs/computer-passkeys.md), sent as KIFF took it from the gateway: KIFF
+  // checks it in place of a device signature, takes each once, and answers it as the approval key with no window.
+  // KIFF takes one or the other, never both, so a request carrying both is refused before KIFF is asked.
+  const passkey = signed.passkey ?? "";
+  if (signed.signature && passkey) throw new ApprovalError(400, W.signBoth, "signature_twice");
+  if (!signed.signature && !passkey) throw new ApprovalError(403, W.signMissing, "signature_missing");
   let res: Response;
   try {
     res = await ctx.fetch(`${ctx.kiffBase ?? KIFF_API}/v1/me/device-signature`, {
       method: "POST",
       headers: { authorization: `Bearer ${ctx.token}`, accept: "application/json", "content-type": "application/json" },
-      body: JSON.stringify({ method: signed.method, uri: signed.uri, body_sha256: createHash("sha256").update(signed.body, "utf8").digest("hex"), signature: signed.signature }),
+      body: JSON.stringify({ method: signed.method, uri: signed.uri, body_sha256: createHash("sha256").update(signed.body, "utf8").digest("hex"),
+        ...(passkey ? { passkey } : { signature: signed.signature }) }),
     });
   } catch {
     throw new ApprovalError(502, W.signUnchecked, "signature_unchecked");

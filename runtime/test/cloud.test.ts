@@ -1879,6 +1879,63 @@ describe("removing a taf", () => {
     }
   });
 
+  // A computer approves with its passkey, never a device key (docs/computer-passkeys.md): it sends KIFF-Passkey-Assertion, which
+  // tafs cloud never read, so Windows could only remove unsigned (win-dev, 16 Nov). KIFF checks the passkey in place of a signature.
+  it("takes a computer's passkey on a removal in place of the phone's signature, and refuses both at once", async () => {
+    const asked: Array<Record<string, unknown>> = [];
+    let answer: { status: number; body: unknown } = { status: 200, body: { signed: true, key: "critical" } };
+    const withKIFF = (w: World) => {
+      const base = depsOf(w);
+      return { ...base, fetch: (async (url: string, init?: RequestInit) => {
+        if (String(url).endsWith("/v1/me/device-signature")) {
+          asked.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+          return new Response(JSON.stringify(answer.body), { status: answer.status });
+        }
+        return (base.fetch as typeof fetch)(url, init);
+      }) as typeof fetch };
+    };
+    const del = (w: World, headers: Record<string, string>) =>
+      handle({ rawPath: `/v1/tafs/${RAE}`, requestContext: { http: { method: "DELETE" } }, headers: { Authorization: "Bearer ana", ...headers } }, withKIFF(w));
+    const passkey = { "kiff-passkey-assertion": "t=2026-10-16T12:00:30Z,a=assertion" };
+    const sig = { "kiff-device-signature": "t=2026-10-16T12:00:30Z,v1=sig" };
+    // Both at once: refused before KIFF is asked, nothing removed.
+    const wb = world();
+    const both = await del(wb, { ...sig, ...passkey });
+    expect(both.statusCode).toBe(400);
+    expect(JSON.parse(both.body)).toMatchObject({ code: "signature_twice", error: "This came signed twice, with a passkey and a device key, so nothing was done. Try again here." });
+    expect(asked).toEqual([]);
+    expect(wb.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
+    // A session that doesn't approve with a passkey: KIFF's code, in tafs cloud's words, nothing removed.
+    answer = { status: 403, body: { error: "passkey_not_this_session" } };
+    const wn = world();
+    const notThis = await del(wn, passkey);
+    expect(notThis.statusCode).toBe(403);
+    expect(JSON.parse(notThis.body)).toMatchObject({ code: "passkey_not_this_session", error: "This device's sign-in doesn't approve with a passkey, so nothing was done. Sign in again on this device." });
+    expect(wn.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
+    // The same assertion twice: KIFF takes each once.
+    answer = { status: 409, body: {} };
+    const wt = world();
+    expect(JSON.parse((await del(wt, passkey)).body)).toMatchObject({ code: "signature_taken" });
+    expect(wt.tafs.held.has(`t_acme#${RAE}`)).toBe(true);
+    // The passkey KIFF answers as the approval key: removed, with KIFF asked about this DELETE by `passkey` alone.
+    answer = { status: 200, body: { signed: true, key: "critical" } };
+    const w = world();
+    expect((await del(w, passkey)).statusCode).toBe(200);
+    expect(asked.at(-1)).toMatchObject({ method: "DELETE", uri: `/v1/tafs/${RAE}`, passkey: passkey["kiff-passkey-assertion"] });
+    expect(asked.at(-1)).not.toHaveProperty("signature");
+    expect(w.tafs.held.has(`t_acme#${RAE}`)).toBe(false);
+    // And signing is required: a passkey counts as signed, never as the unsigned removal TAFS_SIGNED_REMOVE refuses.
+    const was = process.env.TAFS_SIGNED_REMOVE;
+    process.env.TAFS_SIGNED_REMOVE = "on";
+    try {
+      const wr = world();
+      expect((await del(wr, passkey)).statusCode).toBe(200);
+      expect(wr.tafs.held.has(`t_acme#${RAE}`)).toBe(false);
+    } finally {
+      if (was === undefined) delete process.env.TAFS_SIGNED_REMOVE; else process.env.TAFS_SIGNED_REMOVE = was;
+    }
+  });
+
   it("takes the right to manage Cards, and another account's taf answers like a missing one", async () => {
     const w = world();
     expect((await call(w, "DELETE", `/v1/tafs/${RAE}`, { token: "viewer" })).status).toBe(403);
@@ -5643,6 +5700,43 @@ describe("Coach's result, handed over by tafs cloud", () => {
     expect(again.statusCode).toBe(200);
     expect(JSON.parse(again.body)).toEqual({ discarded: true, already: true, kiff_agent: "refunds-x" });
     expect((await req("POST", "/v1/home/setting-up/refunds-x/discard", "owner")).statusCode).toBe(404);
+  });
+
+  // A Discard from a computer is signed by its passkey (KIFF-Passkey-Assertion), as a removal is: KIFF checks it in place of a signature.
+  it("takes a computer's passkey on a discard, checked by KIFF in place of a signature", async () => {
+    const w = world();
+    w.tafs.held.set(`t_acme#${COACH}`, { id: COACH, name: "Coach", job: SETUP_JOB, kiffAgent: "setup-acme", nameClaim: "c", created: "2026-10-17T09:00:00Z" });
+    await w.agents.api.putAgent("t_acme", COACH, setupDefinition(COACH));
+    w.agents.setupDrafts.set("drf_s1", { tenant: "t_acme", agent: "refunds-x" });
+    const run = await w.agents.api.startRun("t_acme", COACH, "Set up", { requester: { kind: "member", id: "u_ana" } });
+    Object.assign(w.agents.runs.find((r) => r.id === run.id)!, { status: "PAUSED", requirements: [{ call_id: "c", tool: "show", operation: "", expires: "2026-11-05T12:00:00Z", kind: "card",
+      input: { type: "result", id: "c", text: "Ready.", taf: { agent: "refunds-x", name: "Refunds", draft: "drf_s1", kickoff: "Work the queue." } } }] });
+    w.account.mandates = [{ id: "card_refunds-x", subject: "refunds-x", active: true, grants: [{ action: "lookup" }], aggregates: [], revoked_at: "2026-11-13T17:00:00Z" }];
+    const asked: Array<Record<string, unknown>> = [];
+    const base = { ...depsOf(w), coach: memoryCoach(() => w.now) };
+    const deps = { ...base, fetch: (async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith("/v1/me/device-signature")) {
+        asked.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+        return new Response(JSON.stringify({ signed: true, key: "critical" }), { status: 200 });
+      }
+      return (base.fetch as typeof fetch)(url, init);
+    }) as typeof fetch };
+    const passkey = "t=2026-11-13T17:00:30Z,a=assertion";
+    const discard = (headers: Record<string, string>) =>
+      handle({ rawPath: "/v1/home/setting-up/refunds-x/discard", requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana", "accept-language": "en", ...headers } }, deps);
+    // Both at once: refused, KIFF isn't asked, and the chat goes on.
+    const both = await discard({ "kiff-device-signature": "t=2026-11-13T17:00:30Z,v1=sig", "kiff-passkey-assertion": passkey });
+    expect(both.statusCode).toBe(400);
+    expect(JSON.parse(both.body)).toMatchObject({ code: "signature_twice" });
+    expect(asked).toEqual([]);
+    expect(w.agents.calls.some((c) => c.startsWith("cancelRun"))).toBe(false);
+    // The passkey: KIFF is asked by `passkey` alone, and the discard is done.
+    const r = await discard({ "kiff-passkey-assertion": passkey });
+    expect(r.statusCode).toBe(200);
+    expect(JSON.parse(r.body)).toEqual({ discarded: true, kiff_agent: "refunds-x" });
+    expect(asked).toHaveLength(1);
+    expect(asked[0]).toMatchObject({ method: "POST", uri: "/v1/home/setting-up/refunds-x/discard", passkey });
+    expect(asked[0]).not.toHaveProperty("signature");
   });
 
   // Android 80, 13 Nov: the phone revoked the Card, then asked to discard, and KIFF's read still showed the Card in force for a

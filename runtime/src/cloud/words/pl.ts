@@ -164,6 +164,7 @@ export const pl: Words = {
   remove_signed: "Usuń go na urządzeniu: usunięcie tafa za każdym razem wymaga blokady ekranu. Nic nie zostało usunięte.",
   approval_window_closed: "Czas na zatwierdzenie minął. Nic nie zostało zatwierdzone; zatwierdź ponownie odciskiem palca.",
   approval_sign_missing: "To nie zostało podpisane na tym urządzeniu, więc nic nie zrobiono. Spróbuj ponownie tutaj.",
+  approval_sign_both: "To przyszło podpisane dwa razy, kluczem dostępu i kluczem urządzenia, więc nic nie zrobiono. Spróbuj ponownie tutaj.",
   approval_sign_invalid: "Podpis tego urządzenia się nie zgadzał, więc nic nie zrobiono. Spróbuj ponownie, a jeśli to się powtórzy, zaloguj się ponownie na tym urządzeniu.",
   approval_sign_view_only: "To urządzenie może tylko przeglądać, więc nic nie zrobiono. Zrób to na urządzeniu, które zatwierdza, albo dodaj to urządzenie z tamtego.",
   approval_sign_session: "To logowanie nie może podpisywać w imieniu tego urządzenia, więc nic nie zrobiono. Zaloguj się ponownie na tym urządzeniu.",
