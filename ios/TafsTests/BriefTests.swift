@@ -9,6 +9,84 @@ final class BriefTests: XCTestCase {
         try KIFFClient.decoder.decode(TafsCloud.Brief.self, from: Data(json.utf8))
     }
 
+    // MARK: The live route: the switch is tafs cloud answering it
+
+    private static let liveBrief = #"""
+    {"decisions":[{"id":"d1","question":"Pay 3 supplier bills due Friday, €1,240?","why":"All three match their orders.","meanwhile":"these three wait.",
+      "answers":[{"words":"Pay the 3","answer":"approve","recommended":true},{"words":"Not now","answer":"refuse","decline":true}],
+      "later":"Later","ref":{"kind":"hold","id":"ce_1","taf":"depl_1"}}]}
+    """#
+
+    private func stubbedSession() -> URLSession {
+        StubProtocol.responses = [:]
+        StubProtocol.thenRespond = [:]
+        StubProtocol.sent = []
+        let config = URLSessionConfiguration.ephemeral
+        config.protocolClasses = [StubProtocol.self]
+        return URLSession(configuration: config)
+    }
+
+    override func tearDown() {
+        Keychain.delete(AppModel.tokenAccount)
+        super.tearDown()
+    }
+
+    private func kiffModel() async -> AppModel {
+        let session = stubbedSession()
+        let model = AppModel(signer: StubSigner(),
+                             kiff: KIFFClient(baseURL: URL(string: "https://api.test")!, session: session),
+                             cloud: TafsCloud(baseURL: URL(string: "https://cloud.test")!, session: session))
+        StubProtocol.responses["GET /v1/home"] = (200, HomeJSON.list([HomeJSON.rae]))
+        StubProtocol.responses["GET /v1/me/card-exceptions?status=held"] = (200, #"{"exceptions":[]}"#)
+        StubProtocol.responses["GET /v1/tafs"] = (200, #"{"tafs":[{"id":"depl_1","name":"Rae","job":"refunds","kiff_agent":"rae-k3f9","status":"active"}]}"#)
+        await model.useSession("kiff_dev_x")
+        return model
+    }
+
+    func testNoRouteYetMeansNoBriefAndNeedsYouAsToday() async {
+        let model = await kiffModel()
+        StubProtocol.responses["GET /v1/brief"] = (404, #"{"error":"not found"}"#)
+        await model.loadBrief()
+        XCTAssertNil(model.brief)
+        XCTAssertEqual(model.needsYouTabTitle, Words.NeedsYou.title)
+    }
+
+    func testOnceTheRouteAnswersTheBriefShows() async {
+        let model = await kiffModel()
+        StubProtocol.responses["GET /v1/brief"] = (200, Self.liveBrief)
+        await model.loadBrief()
+        XCTAssertEqual(model.briefDecisions.map(\.id), ["d1"])
+    }
+
+    func testAnAnswerOpensWhereItsSignedAnswerIsGivenNeverAnsweringHere() async throws {
+        let model = await kiffModel()
+        StubProtocol.responses["GET /v1/brief"] = (200, Self.liveBrief)
+        await model.loadBrief()
+        let decision = try XCTUnwrap(model.briefDecisions.first)
+        StubProtocol.sent = []
+        model.answerBrief(decision, decision.answers[0])
+        XCTAssertEqual(model.requestedHold, .init(kiffID: "ce_1", answer: "approve"), "the held call opens with Approve chosen, for Face ID there")
+        XCTAssertTrue(StubProtocol.sent.allSatisfy { $0.httpMethod == "GET" }, "nothing is sent or signed from the brief")
+        XCTAssertEqual(model.briefDecisions.map(\.id), ["d1"], "it stays until it's answered there")
+        var unknown = decision
+        unknown.ref = .init(kind: "proposal", id: "p1")
+        XCTAssertEqual(AppModel.destination(of: unknown, answer: decision.answers[0]), "needs-you")
+        unknown.ref = .init(kind: "hold", id: "")
+        XCTAssertEqual(AppModel.destination(of: unknown, answer: decision.answers[0]), "needs-you")
+    }
+
+    func testLaterMovesItOnlyOnceTafsCloudHas() async throws {
+        let model = await kiffModel()
+        StubProtocol.responses["GET /v1/brief"] = (200, Self.liveBrief)
+        StubProtocol.responses["POST /v1/brief/decisions/d1/later"] = (200, "{}")
+        await model.loadBrief()
+        let decision = try XCTUnwrap(model.briefDecisions.first)
+        model.laterBrief(decision)
+        for _ in 0..<50 where !model.briefDecisions.isEmpty { try await Task.sleep(nanoseconds: 20_000_000) }
+        XCTAssertEqual(StubProtocol.sent.filter { $0.httpMethod == "POST" }.map { $0.url?.path }, ["/v1/brief/decisions/d1/later"])
+        XCTAssertTrue(model.briefDecisions.isEmpty)
+    }
+
     func testTheBriefReadsV21sFieldsAsSent() throws {
         let b = try brief(#"""
         {"at":"2026-11-14T08:00:00+01:00","next_at":"2026-11-14T18:00:00+01:00",
@@ -84,6 +162,26 @@ final class BriefTests: XCTestCase {
 
     /// The tafs list's chips: none without labels, so the list is as today; a chip keeps only its tafs,
     /// in the same order, and All gives them all back.
+    /// The log as tafs cloud serves it (kiff/tafs#1030's `logPage`): `{items, before?}`, each item
+    /// `{id, at, by: {kind, name?}, kind, words, evidence: [{kind, id}], removed?}`.
+    func testTheLogReadsTafsCloudsShape() throws {
+        let json = #"""
+        {"items":[
+          {"id":"log_r2","at":"2026-11-16T07:10:00Z","by":{"kind":"taf","name":"Bill pay"},"kind":"delivered","words":"6 done · 1 held for you","evidence":[{"kind":"run","id":"r2"},{"kind":"item","id":"inv_0412"}]},
+          {"id":"log_r1","at":"2026-11-16T06:10:00Z","by":{"kind":"taf"},"kind":"delivered","words":"3 done","evidence":[{"kind":"run","id":"r1"}],"removed":true},
+          {"id":"log_n1","at":"2026-11-16T06:00:00Z","by":{"kind":"lead"},"kind":"note","words":"Started the month's close.","evidence":[]}
+        ],"before":"log_n1"}
+        """#
+        let log = try JSONDecoder().decode(TafsCloud.MissionLog.self, from: Data(json.utf8))
+        XCTAssertEqual(log.items.map(\.id), ["log_r2", "log_r1", "log_n1"])
+        XCTAssertEqual(log.items.map(\.byWords), ["Bill pay", Words.NeedsYou.aTaf, Words.Coach.title],
+                       "a removed taf has no name; the lead is Coach")
+        XCTAssertEqual(log.items.map(\.removed), [false, true, false])
+        XCTAssertEqual(log.items[0].kind, "delivered")
+        XCTAssertTrue(log.items[0].evidence.isEmpty, "refs only, never shown as data")
+        XCTAssertEqual(log.before, "log_n1")
+    }
+
     func testTheTafsListsChipsFilterWithoutReordering() throws {
         let model = AppModel()
         XCTAssertTrue(model.listLabels.isEmpty, "no labels: no chips")

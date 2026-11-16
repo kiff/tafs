@@ -2231,15 +2231,35 @@ final class AppModel: ObservableObject {
     /// The brief's decisions still to answer here.
     var briefDecisions: [TafsCloud.Brief.Decision] { (brief?.decisions ?? []).filter { !briefSetAside.contains($0.id) } }
 
-    /// Reads the brief for the label chosen. The sample's for screenshots; tafs cloud's route isn't read
-    /// until its flag is on in production, so nothing changes for anyone before then.
+    /// Reads the brief for the label chosen: the sample's for screenshots, else tafs cloud's. The switch is
+    /// the route itself: until tafs cloud serves `GET /v1/brief`, it answers 404 and there's no brief, so
+    /// Needs you is as today. Any other failure keeps Needs you too: the brief never hides what waits.
     func loadBrief() async {
         if mode == .sample, Screenshots.brief {
             if brief == nil, briefLabel == nil { briefLabel = Screenshots.briefLabel }
             brief = .sample(label: briefLabel, urgent: Screenshots.briefUrgent)
             return
         }
-        brief = nil
+        guard mode == .kiff else { brief = nil; return }
+        let gen = accountGeneration
+        let read = try? await cloud.brief(label: briefLabel)
+        guard gen == accountGeneration else { return }
+        brief = read.flatMap { $0.decisions.isEmpty && $0.done.isEmpty && $0.nextMove == nil ? nil : $0 }
+    }
+
+    /// Where a decision is answered: the route it already has, opened with the answer chosen, where its own
+    /// signed answer is given (a held call with Face ID for Approve). Nothing is answered from the brief.
+    nonisolated static func destination(of decision: TafsCloud.Brief.Decision, answer: TafsCloud.Brief.Answer) -> String {
+        guard !decision.ref.id.isEmpty else { return "needs-you" }
+        switch decision.ref.kind {
+        case "hold":
+            let chosen = [AlertAnswers.approve, AlertAnswers.refuse].contains(answer.answer) ? answer.answer : nil
+            return AlertAnswers.destination(hold: decision.ref.id, answer: chosen)
+        case "step":
+            return "step:" + decision.ref.id
+        default:
+            return "needs-you"
+        }
     }
 
     func filterBrief(_ label: String?) async {
@@ -2252,7 +2272,8 @@ final class AppModel: ObservableObject {
     /// connection, a proposal), where its own signed answer is given; nothing is signed from the brief
     /// itself. Draft: on the sample the card is set aside; the route is wired once tafs cloud's is live.
     func answerBrief(_ decision: TafsCloud.Brief.Decision, _ answer: TafsCloud.Brief.Answer) {
-        briefSetAside.insert(decision.id)
+        guard mode == .kiff else { briefSetAside.insert(decision.id); return }
+        open(Self.destination(of: decision, answer: answer))
     }
 
     /// "Later": the decision moves to the next brief (`POST /v1/brief/decisions/{id}/later`, wired once
@@ -2260,7 +2281,12 @@ final class AppModel: ObservableObject {
     func laterBrief(_ decision: TafsCloud.Brief.Decision) {
         // An urgent decision can't be put off, whatever was sent: refused here as the card hides it.
         guard decision.later != nil, !decision.urgent else { return }
-        briefSetAside.insert(decision.id)
+        guard mode == .kiff else { briefSetAside.insert(decision.id); return }
+        Task {
+            // Set aside only once tafs cloud has moved it; else it stays, to answer or try again.
+            guard (try? await cloud.briefLater(decision.id)) != nil else { return }
+            briefSetAside.insert(decision.id)
+        }
     }
 
     /// Start the next move: Coach opens with it, where the person and Coach take it on.

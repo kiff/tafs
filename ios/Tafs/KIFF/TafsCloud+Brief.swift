@@ -282,11 +282,15 @@ extension TafsCloud {
             var evidence: [Evidence] = []
             var value: String?
             var removed = false
-            var id: String { at + "|" + by + "|" + words }
+            /// tafs cloud's id for the entry (docs/missions.md, "The log"), when it sends one.
+            var serverID: String?
+            var id: String { serverID ?? (at + "|" + by + "|" + words) }
             enum CodingKeys: String, CodingKey {
                 case at, by, kind, words, evidence, value, removed
-                case kindWords = "kind_words", byWords = "by_words"
+                case kindWords = "kind_words", byWords = "by_words", serverID = "id"
             }
+            /// Who wrote it, as tafs cloud sends it: `{kind: taf | lead | person, name?}`.
+            private struct By: Decodable { var kind: String?; var name: String? }
             init(at: String = "", by: String = "", kind: String = "", words: String = "", kindWords: String = "", byWords: String = "",
                  evidence: [Evidence] = [], value: String? = nil, removed: Bool = false) {
                 self.at = at; self.by = by; self.kind = kind; self.words = words; self.kindWords = kindWords; self.byWords = byWords
@@ -296,6 +300,20 @@ extension TafsCloud {
                 guard let c = try? decoder.container(keyedBy: CodingKeys.self) else { return }
                 at = Brief.text(c, .at) ?? ""; by = Brief.text(c, .by) ?? ""; kind = Brief.text(c, .kind) ?? ""; words = Brief.text(c, .words) ?? ""
                 kindWords = Brief.text(c, .kindWords) ?? ""; byWords = Brief.text(c, .byWords) ?? ""
+                serverID = Brief.text(c, .serverID)
+                // tafs cloud sends `by` as an object: the taf by its name (none once it's removed), the
+                // mission's lead, or the person.
+                if by.isEmpty, let who = (try? c.decodeIfPresent(By.self, forKey: .by)) ?? nil {
+                    by = who.kind ?? ""
+                    if byWords.isEmpty {
+                        let name = who.name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                        switch who.kind {
+                        case "lead": byWords = name.isEmpty ? Words.Coach.title : name
+                        case "person": byWords = name.isEmpty ? Words.Common.you : name
+                        default: byWords = name.isEmpty ? Words.NeedsYou.aTaf : name
+                        }
+                    }
+                }
                 evidence = (Brief.list(c, .evidence) as [Evidence]).filter { !$0.words.isEmpty }
                 value = Brief.text(c, .value)
                 removed = ((try? c.decodeIfPresent(Bool.self, forKey: .removed)) ?? nil) ?? false
@@ -314,6 +332,12 @@ extension TafsCloud {
 
     func brief(label: String?) async throws -> Brief {
         try await send("GET", "/v1/brief" + (label.map { "?label=" + ($0.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? $0) } ?? ""))
+    }
+
+    /// "Later": the decision moves to the next brief (design v2.1 §7.5).
+    func briefLater(_ decision: String) async throws {
+        let id = decision.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? decision
+        _ = try await sendData("POST", "/v1/brief/decisions/\(id)/later", body: [String: String](), headers: [:])
     }
 
     func missionLog(_ mission: String, before: String? = nil) async throws -> MissionLog {
