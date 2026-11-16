@@ -65,7 +65,10 @@ final class BriefTests: XCTestCase {
         let decision = try XCTUnwrap(model.briefDecisions.first)
         StubProtocol.sent = []
         model.answerBrief(decision, decision.answers[0])
-        XCTAssertEqual(model.requestedHold, .init(kiffID: "ce_1", answer: "approve"), "the held call opens with Approve chosen, for Face ID there")
+        XCTAssertEqual(model.requestedHold, .init(kiffID: "ce_1", answer: nil),
+                       "the held call opens on its own card with nothing chosen: never the notification's path, where an unlock counts as Face ID")
+        model.answerBrief(decision, decision.answers[1])
+        XCTAssertEqual(model.requestedHold, .init(kiffID: "ce_1", answer: nil), "a decline too")
         XCTAssertTrue(StubProtocol.sent.allSatisfy { $0.httpMethod == "GET" }, "nothing is sent or signed from the brief")
         XCTAssertEqual(model.briefDecisions.map(\.id), ["d1"], "it stays until it's answered there")
         var unknown = decision
@@ -73,6 +76,12 @@ final class BriefTests: XCTestCase {
         XCTAssertEqual(AppModel.destination(of: unknown, answer: decision.answers[0]), "needs-you")
         unknown.ref = .init(kind: "hold", id: "")
         XCTAssertEqual(AppModel.destination(of: unknown, answer: decision.answers[0]), "needs-you")
+    }
+
+    func testNeedsYouStaysReachableWheneverItHoldsMoreThanTheBrief() {
+        XCTAssertEqual(AppModel.needsYouBeyondBrief(count: 3, decisions: 1), Words.NeedsYou.count(count: 3))
+        XCTAssertNil(AppModel.needsYouBeyondBrief(count: 1, decisions: 1), "the brief covers it all")
+        XCTAssertNil(AppModel.needsYouBeyondBrief(count: 0, decisions: 0))
     }
 
     func testLaterMovesItOnlyOnceTafsCloudHas() async throws {

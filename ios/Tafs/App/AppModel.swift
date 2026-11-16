@@ -2231,6 +2231,13 @@ final class AppModel: ObservableObject {
     /// The brief's decisions still to answer here.
     var briefDecisions: [TafsCloud.Brief.Decision] { (brief?.decisions ?? []).filter { !briefSetAside.contains($0.id) } }
 
+    /// Needs you's own count, shown under the brief whenever the app's list holds more than the brief's
+    /// decisions: a held call the brief doesn't name is never out of reach. Nil when the brief covers it all.
+    nonisolated static func needsYouBeyondBrief(count: Int, decisions: Int) -> String? {
+        count > decisions ? Words.NeedsYou.count(count: count) : nil
+    }
+    var briefNeedsYouLine: String? { Self.needsYouBeyondBrief(count: needsYouCount, decisions: briefDecisions.count) }
+
     /// Reads the brief for the label chosen: the sample's for screenshots, else tafs cloud's. The switch is
     /// the route itself: until tafs cloud serves `GET /v1/brief`, it answers 404 and there's no brief, so
     /// Needs you is as today. Any other failure keeps Needs you too: the brief never hides what waits.
@@ -2247,14 +2254,15 @@ final class AppModel: ObservableObject {
         brief = read.flatMap { $0.decisions.isEmpty && $0.done.isEmpty && $0.nextMove == nil ? nil : $0 }
     }
 
-    /// Where a decision is answered: the route it already has, opened with the answer chosen, where its own
-    /// signed answer is given (a held call with Face ID for Approve). Nothing is answered from the brief.
+    /// Where a decision is answered: the route it already has, where its own signed answer is given. A held
+    /// call opens on its own card with **no answer chosen**: an answer chosen in advance is the notification's
+    /// path, where an unlock seconds before counts as the Face ID, and the brief never takes it. The person
+    /// approves on KIFF's own card, with Face ID asked there. Nothing is answered from the brief.
     nonisolated static func destination(of decision: TafsCloud.Brief.Decision, answer: TafsCloud.Brief.Answer) -> String {
         guard !decision.ref.id.isEmpty else { return "needs-you" }
         switch decision.ref.kind {
         case "hold":
-            let chosen = [AlertAnswers.approve, AlertAnswers.refuse].contains(answer.answer) ? answer.answer : nil
-            return AlertAnswers.destination(hold: decision.ref.id, answer: chosen)
+            return AlertAnswers.destination(hold: decision.ref.id)
         case "step":
             return "step:" + decision.ref.id
         default:
@@ -2282,9 +2290,10 @@ final class AppModel: ObservableObject {
         // An urgent decision can't be put off, whatever was sent: refused here as the card hides it.
         guard decision.later != nil, !decision.urgent else { return }
         guard mode == .kiff else { briefSetAside.insert(decision.id); return }
+        let gen = accountGeneration
         Task {
             // Set aside only once tafs cloud has moved it; else it stays, to answer or try again.
-            guard (try? await cloud.briefLater(decision.id)) != nil else { return }
+            guard (try? await cloud.briefLater(decision.id)) != nil, gen == accountGeneration else { return }
             briefSetAside.insert(decision.id)
         }
     }

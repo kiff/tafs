@@ -122,11 +122,16 @@ struct BriefView: View {
         }
     }
 
-    /// The things that need nothing now, in one line: today's Needs you list, unchanged.
+    /// The things that need nothing now, in one line: today's Needs you list, unchanged. With its own count
+    /// whenever that list holds more than the brief's decisions, even when tafs cloud sent no line for it.
     @ViewBuilder private func rest(_ brief: TafsCloud.Brief) -> some View {
-        if let rest = brief.rest {
+        let count = model.briefNeedsYouLine
+        if brief.rest != nil || count != nil {
             PanelLink { NeedsYouView() } label: {
-                Text(rest.words).scaledFont(14).foregroundColor(Theme.ink)
+                VStack(alignment: .leading, spacing: 2) {
+                    if let rest = brief.rest { Text(rest.words).scaledFont(14).foregroundColor(Theme.ink) }
+                    if let count { Text(count).scaledFont(13, weight: .semibold).foregroundColor(brief.rest == nil ? Theme.ink : Theme.dim) }
+                }
             }
             .accessibilityIdentifier("brief.rest")
         }
