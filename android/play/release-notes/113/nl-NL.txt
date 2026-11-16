@@ -1,0 +1,4 @@
+- Op een tablet "Inloggen met KIFF" en "Inloggen met je telefoon" naast elkaar, daarna "Je bent verbonden."
+- Een telefoon logt in met KIFF. "Apparaat toevoegen" toont eerst de controlecode.
+- Het Wear OS-horloge vindt de telefoon weer.
+- Account blijft stil na snel vegen, en "Uitloggen" is helemaal te zien.
