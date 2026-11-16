@@ -3429,6 +3429,90 @@ enum Words {
             /// Email from a new address asked for it
             static var updateBankWhy: String { Words.line("sample.bill_pay.update_bank_why") }
         }
+        enum Brief {
+            enum Case {
+                /// 12 bills sorted, 2 didn't match their order: Mercier 0412, Lumio 0415
+                static var billsLine: String { Words.line("sample.brief.case.bills_line") }
+                /// Brio Bikes, invoice 0139
+                static var brio: String { Words.line("sample.brief.case.brio") }
+                /// paid Thursday · closed
+                static var brioLine: String { Words.line("sample.brief.case.brio_line") }
+                /// Atelier Dubois, invoice 0142
+                static var dubois: String { Words.line("sample.brief.case.dubois") }
+                /// reminder sent Tuesday · waiting for payment · next check Friday
+                static var duboisLine: String { Words.line("sample.brief.case.dubois_line") }
+                /// Friday
+                static var duboisNext: String { Words.line("sample.brief.case.dubois_next") }
+                /// Fern & Co, invoice 0137
+                static var fern: String { Words.line("sample.brief.case.fern") }
+                /// promised Friday · waiting for payment · last checked Monday 14:00
+                static var fernLine: String { Words.line("sample.brief.case.fern_line") }
+                /// Support replies
+                static var support: String { Words.line("sample.brief.case.support") }
+                /// 9 tickets answered · 1 waits for a refund check · next check 13:00
+                static var supportLine: String { Words.line("sample.brief.case.support_line") }
+            }
+            /// Today: 38 credits, the lead's runs included.
+            static var credits: String { Words.line("sample.brief.credits") }
+            enum Expires {
+                /// Pay €2,100
+                static var answer: String { Words.line("sample.brief.expires.answer") }
+                /// This can't wait: it expires at 12:00, before the next brief.
+                static var cantWait: String { Words.line("sample.brief.expires.cant_wait") }
+                /// Don't pay
+                static var decline: String { Words.line("sample.brief.expires.decline") }
+                /// the payment stays held; nothing is sent.
+                static var meanwhile: String { Words.line("sample.brief.expires.meanwhile") }
+                /// Pay Mercier Textiles €2,100 before the payment expires at 12:00?
+                static var question: String { Words.line("sample.brief.expires.question") }
+                /// It matches order 0388, and {taf} checked it this morning.
+                static func why(taf: String) -> String { Words.line("sample.brief.expires.why", taf) }
+            }
+            enum Label {
+                /// Clients
+                static var clients: String { Words.line("sample.brief.label.clients") }
+                /// Money
+                static var money: String { Words.line("sample.brief.label.money") }
+                /// Support
+                static var support: String { Words.line("sample.brief.label.support") }
+            }
+            /// Later
+            static var later: String { Words.line("sample.brief.later") }
+            /// €3,400 due back
+            static var moneyValue: String { Words.line("sample.brief.money_value") }
+            /// Prepare an escalation summary for these 3 invoices past 30 days?
+            static var nextMove: String { Words.line("sample.brief.next_move") }
+            /// Dismiss
+            static var nextMoveDismiss: String { Words.line("sample.brief.next_move_dismiss") }
+            enum Pay {
+                /// Pay the 3
+                static var answer: String { Words.line("sample.brief.pay.answer") }
+                /// by Fri 12:00
+                static var deadline: String { Words.line("sample.brief.pay.deadline") }
+                /// other payouts carry on; these three wait.
+                static var meanwhile: String { Words.line("sample.brief.pay.meanwhile") }
+                /// Pay the 3 opens three approvals, one after the other.
+                static var note: String { Words.line("sample.brief.pay.note") }
+                /// Pay 3 supplier bills due Friday, €1,240?
+                static var question: String { Words.line("sample.brief.pay.question") }
+                /// All three match their orders and were checked by {taf}.
+                static func why(taf: String) -> String { Words.line("sample.brief.pay.why", taf) }
+            }
+            enum Remind {
+                /// Don't send
+                static var decline: String { Words.line("sample.brief.remind.decline") }
+                /// the reminder is held; nothing is sent.
+                static var meanwhile: String { Words.line("sample.brief.remind.meanwhile") }
+                /// Send the first reminder to Atelier Dubois (invoice 0142, €860, 21 days late)?
+                static var question: String { Words.line("sample.brief.remind.question") }
+                /// No reply to the invoice, and no dispute in the log.
+                static var why: String { Words.line("sample.brief.remind.why") }
+            }
+            /// {count} things wait that need nothing from you now
+            static func rest(count: Int) -> String { Words.count("sample.brief.rest", count) }
+            /// Morning brief · 08:00 · next at 18:00
+            static var when: String { Words.line("sample.brief.when") }
+        }
         enum Card {
             /// Read Stripe
             static var readStripe: String { Words.line("sample.card.read_stripe") }
@@ -3462,6 +3546,38 @@ enum Words {
         enum Chat {
             /// How did this morning go?
             static var question: String { Words.line("sample.chat.question") }
+        }
+        enum Coach {
+            /// Agree
+            static var agree: String { Words.line("sample.coach.agree") }
+            /// Set up refunds for my online shop
+            static var ask: String { Words.line("sample.coach.ask") }
+            /// Change them
+            static var change: String { Words.line("sample.coach.change") }
+            /// I'll connect your payments first.
+            static var connectFirst: String { Words.line("sample.coach.connect_first") }
+            /// Connected. Here are the rules I'd use.
+            static var connected: String { Words.line("sample.coach.connected") }
+            /// Read your payments and refund one.
+            static var grant: String { Words.line("sample.coach.grant") }
+            /// Step 3 of 6 · Your rules
+            static var planLine: String { Words.line("sample.coach.plan_line") }
+            /// Refund up to €50 each, €200 a day. Anything over waits for you.
+            static var rules: String { Words.line("sample.coach.rules") }
+            /// Use these rules?
+            static var rulesTitle: String { Words.line("sample.coach.rules_title") }
+            enum Step {
+                /// Your Card
+                static var card: String { Words.line("sample.coach.step.card") }
+                /// Connect your payments
+                static var connect: String { Words.line("sample.coach.step.connect") }
+                /// Read your payments
+                static var read: String { Words.line("sample.coach.step.read") }
+                /// Your rules
+                static var rules: String { Words.line("sample.coach.step.rules") }
+                /// Start Refunds
+                static var start: String { Words.line("sample.coach.step.start") }
+            }
         }
         enum Credits {
             /// Then 900 in packs, which never expire
