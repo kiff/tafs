@@ -94,7 +94,7 @@ counts up by one from 400,000,001** (`android/wear/build.gradle.kts`), so the tw
   job compares the phone's and the watch's each on their own), once `test` passed, which runs the watch's tests.
 - **The bundle:** `:wear:bundleRelease`, signed with the phone's upload key from Secrets Manager, in the `android-release`
   environment. The Data Layer joins the two apps only when Play signs both with one key, and Play's app signing re-signs
-  every upload with the listing's key. The signed bundle is kept one day.
+  every upload with the listing's key. It isn't kept as a run artifact: the repository is public, so Play holds the only copy.
 - **To Play:** once the repository variable `WEAR_UPLOAD` is `on`, `play_internal.py --wear --upload` sends it to the Wear
   OS internal track, `wear:internal`, and no other: one edit, the bundle, the track's release with its notes, committed.
   The sign-in is the phone's (workload identity federation). A bundle Play reads as another `versionCode` commits nothing.
