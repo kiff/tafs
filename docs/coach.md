@@ -402,12 +402,16 @@ things (`runtime/src/cloud/approval.ts`):
   the default for a figure that says none. Each Card covering the tool then has the `on_exceed` of
   the agreed figures it carries (the tool's when it carries none), so two figures with different
   answers on one Card are refused: one Card has one `on_exceed` (`rules_on_exceed`, naming the
-  split). The same notice shown again with another figure's `over` is other rules. Two things are logged, never
-  refused: a figure a Card adds on a tool whose rule has figures, for a quantity and window the
-  rule doesn't name ("approval rules: a figure the rules don't name: …"; refused behind a flag
-  after an Eval), and an agreed figure whose number, in the Card's units or in hundredths, the
-  notice's words don't write ("approval rules: a figure the notice's words don't say: …"), since
-  formats vary by language.
+  split). The same notice shown again with another figure's `over` is other rules. **A limit the
+  owner never agreed is refused** (`rules_unagreed_figure`): on a tool whose rule has figures, any
+  figure a Card adds for a quantity and window the rule doesn't name, in any window (each call's, a
+  day's, `rolling_1h`, `rolling_24h`, `rolling_7d`, `lifetime`). Coach hears that one figure, and to
+  draft again without it, changing nothing else. The person reads the rules-figures note (Eval
+  43927756622: after a refused draft, Coach signed an hour's €50 held beside the agreed €5 a refund
+  and €50 a day refused). A total for each item (`per`) is the earlier checks', and a count of 0
+  (each call asks) only asks, so neither is refused here. Logged, never refused: an agreed figure whose
+  number, in the Card's units or in hundredths, the notice's words don't write ("approval rules: a
+  figure the notice's words don't say: …"), since formats vary by language.
 - **read_again**: the card is out of date (its terms or its draft changed since it was shown)
   or KIFF's words for the connection aren't on the phone yet. Nothing is told to Coach; the
   card shows the note, and the app reads the connections and the draft again.
