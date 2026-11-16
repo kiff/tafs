@@ -308,7 +308,10 @@ class Generator(unittest.TestCase):
         # A count's number is written as the app's language writes it, never as plain digits.
         self.assertIn("[number(count)] + values", swift)
         # In the language of the lines, as the catalog names it, never the device's region.
-        self.assertIn('Bundle.main.localizedString(forKey: "_language", value: "en", table: nil)', swift)
+        self.assertIn('bundle.localizedString(forKey: "_language", value: "en", table: nil)', swift)
+        # Read from one catalog the app can swap, so a language picked in the app applies at once.
+        self.assertIn("nonisolated(unsafe) static var bundle = Bundle.main", swift)
+        self.assertNotIn("Bundle.main.localizedString", swift)
         self.assertIn("formatter.locale = locale", swift)
         self.assertNotIn("Locale.current", swift)
         self.assertNotIn("String(count)", swift)

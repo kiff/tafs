@@ -322,8 +322,12 @@ the app in sample mode.
   for want of it goes back where it was (the composer, with its files; the card, as chosen), with no Not sent row.
 - **Account › Language:** the language tafs's lines are in, by its own name ("Français", "Polski",
   `AppLanguage.name`), so someone in a language they don't read still finds theirs, and **Change
-  language**, which opens tafs's page in Settings, where iOS lists the app's 8 languages. No picker
-  of the app's own, as on Android (`settings.language_title`, `settings.change_language`).
+  language**, which opens the app's own list (`LanguagePicker`), as on Android and on a Mac too. The device's
+  language comes first ("This iPhone's language", `settings.language_device`), then the 8, each named in
+  itself, and the one in use is marked. A tap applies it at once, with no relaunch: the lines are read from
+  that language's catalog (`Words.bundle`, `AppLanguage.choose`), every screen draws again, and tafs cloud and
+  KIFF are read again in it. It's kept for the next launch (`tafs.language`), and iOS's own Settings › tafs ›
+  Language shows the same (`AppleLanguages`). The device's language clears both.
 - **Account says who is signed in once** (`AccountLines`): the account's name, then "Signed in as" only when the
   email differs from it (a Solo account is named after its owner's email). The account's id is on the account's
   own screen only. People & groups' first line is the count alone for such an account.
@@ -1090,8 +1094,8 @@ reads "1,000 runs", not "1.000 runs".
 The notification extension compiles Model and KIFF, so it has `Words.swift` and the catalog too.
 
 The app ships the eight languages `app/strings/languages.json` lists, and iOS picks the phone's (or the
-language chosen for tafs in Settings), else English. What the servers say comes in the same language: every request to
-KIFF and tafs cloud carries `Accept-Language` with the language the screens resolved to, then the phone's other
+language chosen for tafs in Settings or in Account › Language), else English. What the servers say comes in the same language: every request to
+KIFF and tafs cloud carries `Accept-Language` with the lines' own language (`Words.locale`), then the phone's other
 languages the app ships (`Words.languages`), at most four, then `en` (`KIFFClient.screenLanguages`). A language only
 Siri's phrases are in never counts. The calendar's titles follow the language's order (`calendar.title.*`), and its
 month view names the month on its own (`calendar.month_title.*`, the nominative in Polish). Halt all's Siri lines
