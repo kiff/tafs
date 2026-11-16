@@ -112,6 +112,28 @@ object Words {
     }
     fun readyApprove(device: String, either: String): String = Res.s(R.string.approval_ready_approve, device, either)
     val requestKept: String get() = Res.s(R.string.approval_request_kept)
+    object SecurityKey {
+      val enterPin: String get() = Res.s(R.string.approval_security_key_enter_pin)
+      val failed: String get() = Res.s(R.string.approval_security_key_failed)
+      val locked: String get() = Res.s(R.string.approval_security_key_locked)
+      val noKey: String get() = Res.s(R.string.approval_security_key_no_key)
+      val noPinSet: String get() = Res.s(R.string.approval_security_key_no_pin_set)
+      val notAllowed: String get() = Res.s(R.string.approval_security_key_not_allowed)
+      val notFido2: String get() = Res.s(R.string.approval_security_key_not_fido2)
+      val notThisKey: String get() = Res.s(R.string.approval_security_key_not_this_key)
+      val pin: String get() = Res.s(R.string.approval_security_key_pin)
+      val pinPaused: String get() = Res.s(R.string.approval_security_key_pin_paused)
+      val pinTooLong: String get() = Res.s(R.string.approval_security_key_pin_too_long)
+      val pinTooShort: String get() = Res.s(R.string.approval_security_key_pin_too_short)
+      val severalKeys: String get() = Res.s(R.string.approval_security_key_several_keys)
+      val timedOut: String get() = Res.s(R.string.approval_security_key_timed_out)
+      val title: String get() = Res.s(R.string.approval_security_key_title)
+      val touch: String get() = Res.s(R.string.approval_security_key_touch)
+      fun triesLeft(count: Int): String = Res.p(R.plurals.approval_security_key_tries_left, count, Res.number(count))
+      val unplugged: String get() = Res.s(R.string.approval_security_key_unplugged)
+      fun wrongPin(count: Int): String = Res.p(R.plurals.approval_security_key_wrong_pin, count, Res.number(count))
+      val wrongPinNoCount: String get() = Res.s(R.string.approval_security_key_wrong_pin_no_count)
+    }
     val setAScreenLock: String get() = Res.s(R.string.approval_set_a_screen_lock)
     val settingsFaceIdPasscodeTouch: String get() = Res.s(R.string.approval_settings_face_id_passcode_touch)
     object SettingsPath {
