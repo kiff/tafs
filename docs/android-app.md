@@ -1440,7 +1440,7 @@ which waits until there's a Compose hierarchy to read before reading it.
 
 `AppMapWalkTest` (a UI test, run with the others by `connectedDebugAndroidTest` in the
 workflow's `ui` job) walks every screen in app/routes.json. It launches `MainActivity`, starts
-the sample on the activity's own `AppModel`, and for each `AppRoute` calls `open(path)` with
+the sample on the app's one `AppModel` (`TafsApplication.model`), and for each `AppRoute` calls `open(path)` with
 `{taf}` filled by the sample's first taf. Between routes it goes back to Home: back closes any
 sheet or dialog, then the `tafs` route clears the rest. For each route it records `opened`
 (what `open` returned), `title_shown` (whether the route's English title, from the app's
@@ -1454,7 +1454,8 @@ The walk writes `{generated_by, mode: "sample", routes: [...]}`, sorted by route
 `APP MAP END`). It fails when a route that opens doesn't show its title, or when the walk
 differs from the committed `app/map/android.json`, packed as the UI tests' asset. A change
 to what a screen opens in the sample updates that file with it: the failure prints the
-walk's map to copy in.
+walk's map to copy in. The model outlives the test, so a walk that started signed out clears
+the sample from it at the end, and the tests after it start as they did.
 
 ## The first run
 

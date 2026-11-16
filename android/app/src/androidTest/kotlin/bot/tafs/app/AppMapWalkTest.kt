@@ -6,7 +6,6 @@ import android.view.KeyEvent
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.lifecycle.ViewModelProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.AppState
@@ -14,6 +13,7 @@ import bot.tafs.app.app.Mode
 import bot.tafs.app.model.AppRoute
 import java.io.File
 import java.util.Locale
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import org.junit.After
@@ -24,7 +24,7 @@ import org.junit.Test
 
 /**
  * The app map's walk (docs/android-app.md, "The app map"): the app in the sample, every route in app/routes.json opened on the
- * activity's own model by its path, as `AppModel.open` takes it, and what each did written as JSON, which CI keeps. A route the
+ * app's one model by its path, as `AppModel.open` takes it, and what each did written as JSON, which CI keeps. A route the
  * committed map (app/map/android.json, packed as this test's asset) says opens must show its English title, and the walk must
  * match that map: when a screen changes what it opens, the map is updated with it.
  */
@@ -38,7 +38,13 @@ class AppMapWalkTest {
   private val sample = File(instrumentation.targetContext.filesDir, "sample.json")
   private val sampleBefore = sample.exists()
 
+  /** The app's one model, which outlives the activity and this test: what the walk found, it leaves as it was. */
+  private var model: AppModel? = null
+  private var modeBefore: Mode? = null
+
   @After fun forgetTheSample() {
+    // The sample this walk started is cleared from the model too, so the tests after it start signed out as they did.
+    model?.let { m -> if (modeBefore == Mode.signedOut) runBlocking { m.signOut(tellKiff = false) } }
     if (!sampleBefore) sample.delete()
   }
 
@@ -95,11 +101,11 @@ class AppMapWalkTest {
 
   @Test fun everyRouteInTheSampleMatchesTheMap() {
     rule.waitForIdle()
-    lateinit var model: AppModel
-    instrumentation.runOnMainSync {
-      model = ViewModelProvider(rule.activity)[AppModel::class.java]
-      model.startSample()
-    }
+    // The activity's model is the app's one model (TafsApplication.model), as the watch relay shares it.
+    val model = (rule.activity.application as TafsApplication).model
+    this.model = model
+    modeBefore = model.state.value.mode
+    instrumentation.runOnMainSync { model.startSample() }
     rule.waitUntil(30_000) { model.state.value.mode == Mode.sample && model.state.value.tafs.isNotEmpty() }
     rule.waitForIdle()
     val taf = model.state.value.tafs.first()
