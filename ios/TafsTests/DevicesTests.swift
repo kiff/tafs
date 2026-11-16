@@ -95,7 +95,7 @@ final class DevicesTests: XCTestCase {
         signer.throwing = LAError(.userCancel)
         let cancelled = await model.removeDevice(phone)
         XCTAssertFalse(cancelled)
-        XCTAssertEqual(model.devicesError, Words.Common.didntGoThroughUnconfirmed(what: what))
+        XCTAssertEqual(model.devicesError, "Cancelled. Nothing changed.")
         XCTAssertTrue(deletes().isEmpty)
     }
 

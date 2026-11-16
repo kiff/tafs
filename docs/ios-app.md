@@ -290,9 +290,10 @@ the app in sample mode.
   phone sends no disconnect of its own and asks for one Face ID, the removal's. The result says "Its access to
   apps is removed." only when tafs cloud lists `connections` as removed, and names "access to apps" among the steps
   left when it lists it as failed (`AppModel.removalCards`, `removalStep`).
-  **Face ID closed, or a face not recognised, is never silent** (`ApprovalReadiness.notDone`). Remove for good and
-  a taf's Discard say "Not removed. Nothing changed." (`taf.remove.not_confirmed`, as Android), and signing a device
-  out or removing a passkey says "… didn't go through: it wasn't confirmed." (`common.didnt_go_through_unconfirmed`).
+  **Face ID closed, or a face not recognised, is never silent** (`ApprovalReadiness.notDone`). Remove for good says
+  "Not removed. Nothing changed." (`taf.remove.not_confirmed`, as Android), a taf's Discard "Not discarded. Nothing
+  changed." (`setup.discard_not_confirmed`), and signing a device out or removing a passkey "Cancelled. Nothing
+  changed." (`approval.cancelled`), where nothing is left waiting.
   A key that couldn't sign says why. Nothing is sent either way.
 - **Setup › Starts when** (`StartsWhenView`, `TafSetupViews.swift`), from `GET …/knob`
   `wakes`: its schedule with − and + through the stop's `size.choices` (`adjustKnob`), Skip it /

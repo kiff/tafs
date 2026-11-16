@@ -1195,7 +1195,7 @@ final class AppModel: ObservableObject {
             signature = try await signer.signApproval(prepared.message, reason: PromptReason.pick(what, mac: Words.Settings.Devices.signOutPromptMac(device: named)))
         } catch {
             // Said, never silent: not confirmed, or why it couldn't be signed.
-            if gen == accountGeneration { devicesError = ApprovalReadiness.notDone(error, what: what) }
+            if gen == accountGeneration { devicesError = ApprovalReadiness.notDone(error, what: what, unconfirmedWords: Words.Approval.cancelled) }
             return false
         }
         guard gen == accountGeneration else { return false }
@@ -1324,7 +1324,7 @@ final class AppModel: ObservableObject {
             signature = try await signer.signApproval(prepared.message, reason: reason)
         } catch {
             // A closed prompt says it wasn't confirmed; a key that couldn't sign says why.
-            if gen == accountGeneration { passkeysError = ApprovalReadiness.notDone(error, what: reason) }
+            if gen == accountGeneration { passkeysError = ApprovalReadiness.notDone(error, what: reason, unconfirmedWords: Words.Approval.cancelled) }
             return false
         }
         guard gen == accountGeneration else { return false }
@@ -3515,7 +3515,7 @@ final class AppModel: ObservableObject {
             signature = try await signer.signApproval(message, reason: words.title.isEmpty ? words.button : words.title)
         } catch {
             guard gen == accountGeneration else { return nil }
-            return ApprovalReadiness.notDone(error, what: words.button, unconfirmedWords: Words.Taf.Remove.notConfirmed)
+            return ApprovalReadiness.notDone(error, what: words.button, unconfirmedWords: Words.Setup.discardNotConfirmed)
         }
         guard gen == accountGeneration else { return nil }
         var cardsLeft = 0

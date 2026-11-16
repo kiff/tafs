@@ -172,8 +172,8 @@ final class PasskeyTests: XCTestCase {
         XCTAssertFalse(computers, "a computer's own isn't removed here")
     }
 
-    /// Cancelling Face ID to remove one says it wasn't confirmed; a key that couldn't sign says why.
-    func testACancelledRemovalSaysItWasntConfirmedAndAFailedOneSaysWhy() async {
+    /// Cancelling Face ID to remove one says nothing changed; a key that couldn't sign says why.
+    func testACancelledRemovalSaysNothingChangedAndAFailedOneSaysWhy() async {
         let signer = TwoKeySigner()
         let model = await signedIn(signer, maker: StubPasskeyMaker())
         StubProtocol.responses["GET /v1/me/passkeys"] = (200, #"{"passkeys":[{"id":"pk_1","name":"Ana's iPhone"}]}"#)
@@ -181,7 +181,7 @@ final class PasskeyTests: XCTestCase {
         signer.approvalThrows = LAError(.userCancel)
         let cancelled = await model.removePasskey(model.passkeys[0], reason: "Remove the passkey")
         XCTAssertFalse(cancelled)
-        XCTAssertEqual(model.passkeysError, "Remove the passkey didn't go through: it wasn't confirmed.")
+        XCTAssertEqual(model.passkeysError, "Cancelled. Nothing changed.")
         signer.approvalThrows = ApprovalSigner.SignerError.notAuthenticated
         let failed = await model.removePasskey(model.passkeys[0], reason: "Remove the passkey")
         XCTAssertFalse(failed)
