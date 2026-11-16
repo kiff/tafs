@@ -71160,6 +71160,165 @@
         }
       }
     },
+    "pair.passkey_why_body": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er bleibt auf diesem %1$@, geschützt durch %2$@. Damit genehmigt dieses %1$@ die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It stays on this %1$@, behind %2$@. With it, this %1$@ approves your tafs' actions, and nothing is approved without you. Windows asks for your face, fingerprint or PIN next."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se queda en este %1$@, protegida por %2$@. Con ella, este %1$@ aprueba las acciones de tus tafs, y nada se aprueba sin ti. A continuación, Windows te pedirá tu cara, tu huella o tu PIN."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elle reste sur %3$@, protégée par %2$@. Avec elle, %3$@ approuve les actions de vos tafs, et rien n'est approuvé sans vous. Windows vous demande ensuite votre visage, votre empreinte digitale ou votre code PIN."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resta su questo %1$@, protetta da %2$@. Così questo %1$@ può approvare le azioni dei tuoi tafs, e nulla viene approvato senza di te. Poi Windows ti chiederà il volto, l'impronta digitale o il PIN."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hij blijft op deze %1$@, beveiligd met %2$@. Daarmee keurt deze %1$@ de acties van je tafs goed, en niets wordt goedgekeurd zonder jou. Daarna vraagt Windows om je gezicht, vingerafdruk of pincode."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostaje na tym urządzeniu (%1$@), chroniony przez %2$@. Dzięki niemu to urządzenie zatwierdza działania Twoich tafs, a nic nie zostanie zatwierdzone bez Ciebie. Następnie Windows poprosi o twarz, odcisk palca lub PIN."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fica neste %1$@, protegida pelo %2$@. Com ela, este %1$@ aprova as ações dos seus tafs, e nada é aprovado sem si. A seguir, o Windows pede o seu rosto, impressão digital ou PIN."
+          }
+        }
+      }
+    },
+    "pair.passkey_why_go": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey anlegen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make the passkey"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crear la llave de acceso"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créer la clé d'accès"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea la passkey"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passkey maken"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utwórz klucz dostępu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Criar a chave de acesso"
+          }
+        }
+      }
+    },
+    "pair.passkey_why_title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einen Passkey für dieses %1$@ anlegen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make a passkey for this %1$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea una llave de acceso para este %1$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créer une clé d'accès pour %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crea una passkey per questo %1$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak een passkey voor deze %1$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utwórz klucz dostępu dla tego urządzenia (%1$@)"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Crie uma chave de acesso para este %1$@"
+          }
+        }
+      }
+    },
     "pair.steps": {
       "extractionState": "manual",
       "localizations": {

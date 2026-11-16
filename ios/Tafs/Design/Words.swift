@@ -2743,6 +2743,12 @@ enum Words {
         static func keychainRefused(code: String) -> String { Words.line("pair.keychain_refused", code) }
         /// Show a new code
         static var newCode: String { Words.line("pair.new_code") }
+        /// It stays on this {device}, behind {biometry}. With it, this {device} approves your tafs' actions, and nothing is approved without you. Windows asks for your face, fingerprint or PIN next.
+        static func passkeyWhyBody(device: String, biometry: String) -> String { Words.line("pair.passkey_why_body", device, biometry, Words.demonstrative(device)) }
+        /// Make the passkey
+        static var passkeyWhyGo: String { Words.line("pair.passkey_why_go") }
+        /// Make a passkey for this {device}
+        static func passkeyWhyTitle(device: String) -> String { Words.line("pair.passkey_why_title", device, Words.demonstrative(device)) }
         /// On your phone, open tafs, then {account}, {devices}, {pair}. Scan this code.
         static func steps(account: String, devices: String, pair: String) -> String { Words.line("pair.steps", account, devices, pair) }
         /// Add this {device} with your phone

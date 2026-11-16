@@ -1,1 +1,1 @@
-- **Strings: "Your approvals are signed on your phone."** (`sign_in.every_action_taf_takes_goes_view`), for computers that only view, in all 8 languages.
+- **Strings: the card before Windows Hello makes a passkey** (`pair.passkey_why_title`, `_body`, `_go`), in all 8 languages.

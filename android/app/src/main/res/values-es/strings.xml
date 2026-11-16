@@ -1423,6 +1423,9 @@
     <string name="pair_from_sign_in">¿Ya usas tafs en tu teléfono? Añade este %1$s con él.</string>
     <string name="pair_keychain_refused">Este Mac no pudo guardar su inicio de sesión en el llavero (error %1$s), así que no se añadió. Muestra un código nuevo y vuelve a intentarlo.</string>
     <string name="pair_new_code">Mostrar un código nuevo</string>
+    <string name="pair_passkey_why_body">Se queda en este %1$s, protegida por %2$s. Con ella, este %1$s aprueba las acciones de tus tafs, y nada se aprueba sin ti. A continuación, Windows te pedirá tu cara, tu huella o tu PIN.</string>
+    <string name="pair_passkey_why_go">Crear la llave de acceso</string>
+    <string name="pair_passkey_why_title">Crea una llave de acceso para este %1$s</string>
     <string name="pair_steps">En tu teléfono, abre tafs y luego %1$s, %2$s, %3$s. Escanea este código.</string>
     <string name="pair_title">Añade este %1$s con tu teléfono</string>
     <string name="pair_view_only_add">Añadir este %1$s</string>
