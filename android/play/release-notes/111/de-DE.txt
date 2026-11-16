@@ -1,0 +1,6 @@
+- Eine Card sagt, wenn die Anmeldung einer App mehr verlangt, als die Aufgabe braucht.
+- Coach: Im Chat verschiebt sich nichts mehr, während er antwortet.
+- Das Protokoll zeigt nie die rohe Fehlermeldung einer App.
+- Wer die Fingerabdruck-Abfrage schließt, sieht „Abgebrochen. Nichts wurde geändert.“
+- Ein Card-Entwurf, der nicht gelesen werden konnte, sagt warum, mit „Erneut versuchen“.
+- Konto › Zeitzone bietet die Zeitzone des Telefons nur an, wenn sie abweicht.
