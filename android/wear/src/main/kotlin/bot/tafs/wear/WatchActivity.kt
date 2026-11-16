@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.foundation.lazy.ScalingLazyListScope
+import androidx.wear.compose.foundation.lazy.ScalingLazyListState
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
 import androidx.wear.compose.material3.Button
 import androidx.wear.compose.material3.Card
 import androidx.wear.compose.material3.ListHeader
@@ -106,7 +108,7 @@ class WatchActivity : ComponentActivity() {
 }
 
 /** What the screen can do: everything that reaches the phone goes through [WatchModel]. */
-private class Actions(
+internal class Actions(
   val openOnPhone: (String) -> Unit,
   val tryAgain: () -> Unit,
   val refuse: (String) -> Unit,
@@ -123,9 +125,17 @@ private class Actions(
   val dismiss: () -> Unit,
 )
 
+/** The one screen. [list] is the screen's own scroll unless a caller (the store screenshots) opens it on another item. */
 @Composable
-private fun WatchScreen(shown: WatchModel.Shown, outcome: WatchModel.Outcome?, confirmingHaltAll: Boolean, talk: WatchModel.Talk?, act: Actions) {
-  ScalingLazyColumn(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+internal fun WatchScreen(
+  shown: WatchModel.Shown,
+  outcome: WatchModel.Outcome?,
+  confirmingHaltAll: Boolean,
+  talk: WatchModel.Talk?,
+  act: Actions,
+  list: ScalingLazyListState = rememberScalingLazyListState(),
+) {
+  ScalingLazyColumn(Modifier.fillMaxWidth(), state = list, verticalArrangement = Arrangement.spacedBy(4.dp)) {
     outcome?.let { item { OutcomeCard(it, act) } }
     talk?.let { item { TalkCard(it, act) } }
     when (shown) {

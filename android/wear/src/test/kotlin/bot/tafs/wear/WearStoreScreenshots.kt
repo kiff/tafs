@@ -1,0 +1,114 @@
+package bot.tafs.wear
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onRoot
+import androidx.test.core.app.ApplicationProvider
+import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
+import androidx.wear.compose.material3.MaterialTheme
+import bot.tafs.watchlink.HeldLine
+import bot.tafs.watchlink.TafLine
+import com.github.takahirom.roborazzi.captureRoboImage
+import java.io.File
+import java.text.NumberFormat
+import java.util.Currency
+import java.util.Locale
+import org.json.JSONObject
+import org.junit.Assert.assertTrue
+import org.junit.Rule
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.ParameterizedRobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
+import org.robolectric.annotation.Config
+import org.robolectric.annotation.GraphicsMode
+
+/**
+ * The watch's Play store screenshots (docs/watch-wear.md, Versions): the real screen, drawn with the watch's own words in each of
+ * the 8 languages and the phone app's sample tafs (app/strings/<lang>/sample.json), never a mock-up and nothing drawn over it.
+ * Round, 384 × 384 px (192 dp at xhdpi), Play's smallest Wear OS size. Drawn into android/play/wear-screenshots/<locale>/ only
+ * when asked (`./gradlew :wear:testDebugUnitTest -PwearScreenshots`); otherwise each screen is still drawn, so one that no longer
+ * draws fails here.
+ */
+@RunWith(ParameterizedRobolectricTestRunner::class)
+@GraphicsMode(GraphicsMode.Mode.NATIVE)
+@Config(sdk = [35], application = WatchApplication::class)
+class WearStoreScreenshots(private val language: String, private val playLocale: String) {
+  @get:Rule val compose = createComposeRule()
+
+  private val repo = File(System.getProperty("tafs.repo") ?: "../..")
+
+  /** The phone's words for [language], from app/strings, where the sample tafs and their states live. */
+  private fun phoneWords(file: String): JSONObject = JSONObject(File(repo, "app/strings/$language/$file.json").readText())
+
+  private val sample by lazy { phoneWords("sample") }
+  private val taf by lazy { phoneWords("taf") }
+
+  private fun shot(name: String, content: @androidx.compose.runtime.Composable () -> Unit) {
+    RuntimeEnvironment.setQualifiers("$language-w192dp-h192dp-round-watch-xhdpi")
+    Res.install(ApplicationProvider.getApplicationContext())
+    // The watch's window is black (Theme.DeviceDefault on Wear OS); the JVM has no window, so it's drawn here as the watch shows it.
+    compose.setContent { MaterialTheme { Box(Modifier.fillMaxSize().background(Color.Black)) { content() } } }
+    val out = File(repo, "android/play/wear-screenshots/$playLocale/$name.png")
+    compose.onRoot().captureRoboImage(out.path)
+    // Drawn in the watch's own words: the screen's language is the one asked for.
+    assertTrue(Res.language, Res.language == language)
+  }
+
+  private val actions = Actions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+
+  private fun euros(amount: Int): String =
+    NumberFormat.getCurrencyInstance(Locale.forLanguageTag(language)).apply { currency = Currency.getInstance("EUR") }.format(amount)
+
+  private fun read(): WatchModel.Shown.Read {
+    val refund = HeldLine(
+      holdId = "h1",
+      taf = sample.getString("sample.refunds.name"),
+      wants = sample.getString("sample.refunds.refund_4471"),
+      amount = euros(184),
+      reason = sample.getString("sample.refunds.refund_4471_why"),
+      refusable = true,
+    )
+    val tafs = listOf(
+      TafLine("t1", sample.getString("sample.refunds.name"), taf.getString("taf.state.waiting"), halted = false),
+      TafLine("t2", sample.getString("sample.bill_pay.name"), taf.getString("taf.state.working"), halted = false),
+    )
+    return WatchModel.Shown.Read(
+      WatchModel.NeedsYouRead(count = 1, words = Res.p(R.plurals.watch_held_calls, 1, Res.number(1)), calls = listOf(refund)),
+      WatchModel.TafsRead(tafs, allHalted = false),
+    )
+  }
+
+  /** Needs you, opened on the held refund: Refuse and Approve on your phone. The list is Ask Coach 0, Needs you 1, its line 2, the refund 3. */
+  @Test fun needsYou() = shot("1-needs-you") {
+    WatchScreen(read(), outcome = null, confirmingHaltAll = false, talk = null, act = actions, list = rememberScalingLazyListState(initialCenterItemIndex = 3))
+  }
+
+  /** A refund refused from the wrist, in the phone's words, above Ask Coach. */
+  @Test fun refused() = shot("2-refused") {
+    WatchScreen(read(), WatchModel.Outcome.Done(Res.s(R.string.watch_refused)), confirmingHaltAll = false, talk = null, act = actions, list = rememberScalingLazyListState(initialCenterItemIndex = 1))
+  }
+
+  /** Halt all, asked once more on the wrist. */
+  @Test fun haltAll() = shot("3-halt-all") {
+    // Nothing needs you here, so the list is Ask Coach 0, Needs you 1, its line 2, Your tafs 3, two tafs 4-5, then Halt all 6.
+    WatchScreen(
+      read().copy(needsYou = WatchModel.NeedsYouRead(0, Res.s(R.string.needs_you_nothing), emptyList())), null, confirmingHaltAll = true,
+      talk = null, act = actions, list = rememberScalingLazyListState(initialCenterItemIndex = 6),
+    )
+  }
+
+  companion object {
+    /** The 8 languages, each with the Play listing's own locale for its folder. */
+    @JvmStatic
+    @ParameterizedRobolectricTestRunner.Parameters(name = "{0}")
+    fun languages(): List<Array<String>> = listOf(
+      arrayOf("en", "en-US"), arrayOf("de", "de-DE"), arrayOf("fr", "fr-FR"), arrayOf("es", "es-ES"),
+      arrayOf("it", "it-IT"), arrayOf("pt", "pt-PT"), arrayOf("nl", "nl-NL"), arrayOf("pl", "pl-PL"),
+    )
+  }
+}
