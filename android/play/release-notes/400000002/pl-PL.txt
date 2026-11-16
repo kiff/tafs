@@ -1,0 +1,6 @@
+Pierwsza aplikacja tafs na Wear OS, towarzyszka aplikacji tafs na telefonie.
+- „Czeka na Ciebie” i „Twoje tafs” na nadgarstku, odczytane z telefonu.
+- Odrzuć oczekujące wywołanie lub zablokuj tafa z zegarka. Zatwierdzanie zostaje na telefonie.
+- Gdy nic na Ciebie nie czeka, mówi o tym zielony znacznik.
+- Karta z liczbą tego, co na Ciebie czeka, widoczna tylko przy odblokowanym zegarku.
+- Rozmawiaj z Coach: dostaje Twoje słowa jako tekst, nigdy Twój głos.
