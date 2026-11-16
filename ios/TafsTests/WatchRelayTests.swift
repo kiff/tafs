@@ -17,6 +17,7 @@ final class WatchRelayTests: XCTestCase {
         var halted: [String?] = []
         var refuseOutcome = NotificationRefuse.Outcome.refused(left: 0)
         var haltOutcome = HaltAll.Outcome.done("Halted. Resuming starts only new work.")
+        var coached: [String] = []
         let page: WatchNeedsYou
         init(at: Date) {
             page = WatchNeedsYou(count: 2, calls: [.init(id: "ce_1", taf: "Rae", what: "Refund order 4502, €480.00",
@@ -40,8 +41,12 @@ final class WatchRelayTests: XCTestCase {
             halted.append(taf)
             return haltOutcome
         }
-        /// Nothing was read, refused or halted.
-        var untouched: Bool { reads == 0 && refused.isEmpty && halted.isEmpty }
+        func coach(text: String) async -> WatchReply {
+            coached.append(text)
+            return WatchReply(.ok, coach: WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false))
+        }
+        /// Nothing was read, refused, halted or sent to Coach.
+        var untouched: Bool { reads == 0 && refused.isEmpty && halted.isEmpty && coached.isEmpty }
     }
 
     private func send(_ request: WatchRequest, reading: Reading) async -> WatchReply {
@@ -122,11 +127,12 @@ final class WatchRelayTests: XCTestCase {
         XCTAssertEqual(reply, WatchReply(.failed, line: Words.Alert.tafsCouldNotReachKiff))
     }
 
-    func testCoachIsNotAnsweredFromTheWatchYet() async {
+    func testCoachGetsTheWordsAsTheWatchWroteThem() async {
         let reading = Reading(at: now)
         let reply = await send(WatchRequest(.coach, made: now, text: "Pause Rae"), reading: reading)
-        XCTAssertEqual(reply, WatchReply(.notYet))
-        XCTAssertTrue(reading.untouched)
+        XCTAssertEqual(reply.coach?.text, "Rae is paused.")
+        XCTAssertEqual(reading.coached, ["Pause Rae"])
+        XCTAssertTrue(reading.refused.isEmpty && reading.halted.isEmpty)
     }
 
     func testRefuseNamesItsHoldAndSaysWhatKIFFDid() async {
@@ -271,6 +277,85 @@ final class WatchRelayTests: XCTestCase {
         StubProtocol.responses["GET /v1/tafs/depl_1/halt"] = (200, #"{"halt":{"state":"halted","halted_at":"2026-10-24T12:00:00Z","runtime":true,"kiff":true,"planque":true,"account":false,"stopped":1}}"#)
         let tafs = try await reading.tafs()
         XCTAssertEqual(tafs.first?.halted, true, "a taf halted on its own isn't offered Halt again")
+    }
+
+    // MARK: Coach
+
+    private static let setupJSON = #"{"id":"taf-setup","name":"Setup","job":"setup","kiff_agent":"setup","status":"active","next_run":null,"last_run":null}"#
+
+    private func coachReading() -> KeptWatchReading {
+        let reading = kept(CurrentKeyOnly())
+        StubProtocol.responses["GET /v1/setup"] = (200, #"{"setup":\#(Self.setupJSON)}"#)
+        return reading
+    }
+
+    func testCoachsAnswerIsReadAfterThePersonsWords() async {
+        let reading = coachReading()
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (200, #"{"session":"s1","new_session":false,"message":{"id":"m1"}}"#)
+        StubProtocol.responses["GET /v1/tafs/taf-setup/conversation/s1"] = (200, #"{"messages":[{"at":"2026-10-14T10:44:00Z","from":"taf","kind":"message","text":"An older answer","session":"s1"},{"id":"m1","at":"2026-10-14T10:45:00Z","from":"owner","kind":"message","text":"Pause Rae","session":"s1"},{"at":"2026-10-14T10:45:05Z","from":"taf","kind":"message","text":"Rae is paused.","session":"s1"}],"components":[]}"#)
+        let reply = await reading.coach(text: "Pause Rae")
+        XCTAssertEqual(reply, WatchReply(.ok, coach: WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false)))
+        XCTAssertEqual(StubProtocol.sent.filter { $0.httpMethod == "POST" }.map { $0.url?.path }, ["/v1/tafs/taf-setup/messages"],
+                       "the words, once, and nothing signed or approved")
+    }
+
+    func testCoachRefusedForTheAIConsentSaysToAllowItOnThePhone() async {
+        let reading = coachReading()
+        StubProtocol.responses["POST /v1/tafs/taf-setup/messages"] = (403, #"{"error":"Allow AI use first.","code":"ai_consent_required","consent":{"given":false}}"#)
+        let reply = await reading.coach(text: "Pause Rae")
+        XCTAssertEqual(reply, WatchReply(.failed, line: Words.Watch.coachNeedsConsent))
+    }
+
+    func testACardInCoachsAnswerIsOnlyApproveOnYourPhone() throws {
+        let at = { (s: TimeInterval) in self.now.addingTimeInterval(s) }
+        var thread = SetupThread()
+        thread.messages = [TafsCloud.ChatMessage(at: at(0), from: .owner, text: "Connect Stripe", session: "s1", serverID: "m1"),
+                           TafsCloud.ChatMessage(at: at(3), from: .taf, text: "Approve the connection.", session: "s1")]
+        thread.components = [ShownComponent(firstAt: at(4), session: "s1", run: "r1",
+                                            component: try SetupTests.component(#"{"type":"approval","id":"connect","waits":"owner","grant":"g_01"}"#))]
+        let answer = try XCTUnwrap(KeptWatchReading.answer(in: thread, after: "m1", session: "s1"))
+        XCTAssertTrue(answer.approveOnPhone)
+        XCTAssertEqual(answer.text, "Approve the connection.", "Coach's words only: nothing of the card")
+        XCTAssertNil(KeptWatchReading.answer(in: SetupThread(), after: "m1", session: "s1"), "nothing written yet")
+    }
+
+    func testAnOlderAnswerIsNeverTakenForThisOne() throws {
+        let at = { (s: TimeInterval) in self.now.addingTimeInterval(s) }
+        var thread = SetupThread()
+        // Coach's earlier answer and card, in the same chat; the person's new message isn't in yet.
+        thread.messages = [TafsCloud.ChatMessage(at: at(-60), from: .owner, text: "Connect Stripe", session: "s1", serverID: "m0"),
+                           TafsCloud.ChatMessage(at: at(-55), from: .taf, text: "Approve the connection.", session: "s1")]
+        thread.components = [ShownComponent(firstAt: at(-54), session: "s1", run: "r1",
+                                            component: try SetupTests.component(#"{"type":"approval","id":"connect","waits":"owner","grant":"g_01"}"#))]
+        XCTAssertNil(KeptWatchReading.answer(in: thread, after: "m1", session: "s1"), "not yet: keep waiting")
+        // Then the person's message and Coach's reply to it.
+        thread.messages += [TafsCloud.ChatMessage(at: at(0), from: .owner, text: "Pause Rae", session: "s1", serverID: "m1"),
+                            TafsCloud.ChatMessage(at: at(4), from: .taf, text: "Rae is paused.", session: "s1")]
+        let answer = try XCTUnwrap(KeptWatchReading.answer(in: thread, after: "m1", session: "s1"))
+        XCTAssertEqual(answer, WatchCoachAnswer(text: "Rae is paused.", more: false, approveOnPhone: false),
+                       "the older card isn't this answer's")
+    }
+
+    func testCoachsWordsOverTwoThousandCharactersAreRefused() async {
+        let reading = Reading(at: now)
+        let long = String(repeating: "a", count: WatchRequest.coachLimit + 1)
+        let refused = await send(WatchRequest(.coach, made: now, text: long), reading: reading)
+        XCTAssertEqual(refused, WatchReply(.refused))
+        XCTAssertTrue(reading.untouched, "nothing sent to Coach")
+        let atLimit = await send(WatchRequest(.coach, made: now, text: String(repeating: "a", count: WatchRequest.coachLimit)), reading: reading)
+        XCTAssertEqual(atLimit.outcome, .ok)
+    }
+
+    func testThePhoneAnswersWellWithinTheWatchsWait() {
+        XCTAssertLessThanOrEqual(KeptWatchReading.coachWait, 15)
+    }
+
+    func testALongAnswerIsCutAtAWord() {
+        let long = Array(repeating: "refund", count: 80).joined(separator: " ")
+        let cut = WatchCoachAnswer.cut(long, more: false, approveOnPhone: false)
+        XCTAssertTrue(cut.more)
+        XCTAssertLessThanOrEqual(cut.text.count, WatchCoachAnswer.wristLength + 1)
+        XCTAssertTrue(cut.text.hasSuffix("refund…"))
     }
 
     func testTheReadsUseTheSessionTheAppKeeps() {

@@ -18,6 +18,8 @@ struct WatchRequest: Codable, Equatable, Sendable {
 
     /// How old a request may be when the phone reads it, either way.
     static let maxAge: TimeInterval = 30
+    /// The most Coach's words may be, as on Wear OS: longer is refused before anything is sent.
+    static let coachLimit = 2_000
 
     var kind: Kind
     /// When the watch made it.
@@ -44,7 +46,7 @@ struct WatchRequest: Codable, Equatable, Sendable {
         case .needsYou, .tafs, .haltAll: return true
         case .refuse: return given(hold)
         case .halt: return given(taf)
-        case .coach: return given(text)
+        case .coach: return given(text) && (text ?? "").count <= Self.coachLimit
         }
     }
 }
@@ -71,15 +73,40 @@ struct WatchReply: Codable, Equatable, Sendable {
     var outcome: Outcome
     var needsYou: WatchNeedsYou?
     var tafs: [WatchTaf]?
+    var coach: WatchCoachAnswer?
     /// What happened, or why not, in the phone's words: shown only once the phone has KIFF's
     /// or tafs cloud's answer.
     var line: String?
 
-    init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, line: String? = nil) {
+    init(_ outcome: Outcome, needsYou: WatchNeedsYou? = nil, tafs: [WatchTaf]? = nil, coach: WatchCoachAnswer? = nil, line: String? = nil) {
         self.outcome = outcome
         self.needsYou = needsYou
         self.tafs = tafs
+        self.coach = coach
         self.line = line
+    }
+}
+
+/// Coach's answer on the wrist: its words, cut short, never its cards. Anything Coach asks
+/// to approve, or any card it shows, is on the phone.
+struct WatchCoachAnswer: Codable, Equatable, Sendable {
+    /// The most of Coach's words the wrist shows.
+    static let wristLength = 300
+
+    /// Coach's words, at most `wristLength` characters.
+    var text: String
+    /// They were cut, or Coach hadn't finished: the rest is on the phone.
+    var more: Bool
+    /// The answer holds a card or a step: "Approve on your phone", and nothing of it here.
+    var approveOnPhone: Bool
+
+    /// Coach's words as the wrist shows them, cut at a word where it can be.
+    static func cut(_ words: String, more: Bool, approveOnPhone: Bool) -> WatchCoachAnswer {
+        let text = words.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard text.count > wristLength else { return WatchCoachAnswer(text: text, more: more, approveOnPhone: approveOnPhone) }
+        let head = String(text.prefix(wristLength))
+        let atWord = head.lastIndex(where: \.isWhitespace).map { String(head[..<$0]) } ?? head
+        return WatchCoachAnswer(text: atWord + "…", more: true, approveOnPhone: approveOnPhone)
     }
 }
 

@@ -24,7 +24,7 @@ final class NeedsYouModelTests: XCTestCase {
 
     func testItAsksForNeedsYouMadeNow() async {
         let phone = Phone(WatchReply(.ok, needsYou: page))
-        let model = NeedsYouModel(phone: phone, clock: { self.now })
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked())
         XCTAssertEqual(model.state, .loading)
         await model.load()
         XCTAssertEqual(phone.asked, [WatchRequest(.needsYou, made: now)])
@@ -32,14 +32,14 @@ final class NeedsYouModelTests: XCTestCase {
     }
 
     func testThePhoneOutOfReachIsSaidAsSuch() async {
-        let model = NeedsYouModel(phone: Phone(nil), clock: { self.now })
+        let model = NeedsYouModel(phone: Phone(nil), clock: { self.now }, lock: Unlocked())
         await model.load()
         XCTAssertEqual(model.state, .unreachable)
     }
 
     func testSignedOutShowsNothingOfTheAccount() async {
         let phone = Phone(WatchReply(.ok, needsYou: page))
-        let model = NeedsYouModel(phone: phone, clock: { self.now })
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked())
         await model.load()
         phone.reply = WatchReply(.signedOut)
         await model.load()
@@ -47,13 +47,13 @@ final class NeedsYouModelTests: XCTestCase {
     }
 
     func testAFailureIsThePhonesWords() async {
-        let model = NeedsYouModel(phone: Phone(WatchReply(.failed, line: "tafs couldn't reach KIFF.")), clock: { self.now })
+        let model = NeedsYouModel(phone: Phone(WatchReply(.failed, line: "tafs couldn't reach KIFF.")), clock: { self.now }, lock: Unlocked())
         await model.load()
         XCTAssertEqual(model.state, .failed("tafs couldn't reach KIFF."))
     }
 
     func testWhatWasReadGoesWhenTheAppLeavesTheScreen() async {
-        let model = NeedsYouModel(phone: Phone(WatchReply(.ok, needsYou: page)), clock: { self.now })
+        let model = NeedsYouModel(phone: Phone(WatchReply(.ok, needsYou: page)), clock: { self.now }, lock: Unlocked())
         await model.load()
         model.leave()
         XCTAssertEqual(model.state, .loading)
@@ -61,7 +61,7 @@ final class NeedsYouModelTests: XCTestCase {
 
     func testRefusedShowsOnlyOnceThePhoneSaysSo() async {
         let phone = Phone(WatchReply(.ok, needsYou: page))
-        let model = NeedsYouModel(phone: phone, clock: { self.now })
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked())
         await model.load()
         phone.reply = WatchReply(.ok, line: "Refused. Nothing was sent.")
         await model.refuse("ce_1")
@@ -71,7 +71,7 @@ final class NeedsYouModelTests: XCTestCase {
 
     func testARefuseThatDidntGoSaysNotRefusedAndWhy() async {
         let phone = Phone(WatchReply(.failed, line: "KIFF didn't take the refusal."))
-        let model = NeedsYouModel(phone: phone, clock: { self.now })
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: Unlocked())
         await model.refuse("ce_1")
         XCTAssertEqual(model.answers["ce_1"], .failed(Words.Alert.notRefused + "\nKIFF didn't take the refusal."))
         phone.reply = nil
@@ -80,7 +80,7 @@ final class NeedsYouModelTests: XCTestCase {
     }
 
     func testAlreadyAnsweredIsSaid() async {
-        let model = NeedsYouModel(phone: Phone(WatchReply(.answered, line: "Already answered, or it ended.")), clock: { self.now })
+        let model = NeedsYouModel(phone: Phone(WatchReply(.answered, line: "Already answered, or it ended.")), clock: { self.now }, lock: Unlocked())
         await model.refuse("ce_1")
         XCTAssertEqual(model.answers["ce_1"], .done("Already answered, or it ended."))
     }
@@ -94,5 +94,15 @@ final class NeedsYouModelTests: XCTestCase {
         for kind in ["approve", "approve_once", "extra_room", "install"] {
             XCTAssertNil(WatchRequest.Kind(rawValue: kind), kind)
         }
+    }
+
+    /// A watch with no passcode can be anyone's wrist: Refuse asks nothing of the phone and says
+    /// to set a screen lock, as on Wear OS.
+    func testWithNoPasscodeRefuseSendsNothing() async {
+        let phone = Phone(WatchReply(.ok, line: "Refused. Nothing was sent."))
+        let model = NeedsYouModel(phone: phone, clock: { self.now }, lock: NoPasscode())
+        await model.refuse("ce_1")
+        XCTAssertTrue(phone.asked.isEmpty, "nothing reaches the phone")
+        XCTAssertEqual(model.answers["ce_1"], .failed(Words.Watch.needsLock))
     }
 }

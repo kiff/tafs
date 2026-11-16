@@ -18,12 +18,14 @@ protocol WatchReading {
     func refuse(hold: String, now: Date) async -> NotificationRefuse.Outcome
     /// Halts a taf, or with none every taf, as the app and Siri do: no Face ID.
     func halt(taf: String?) async -> HaltAll.Outcome
+    /// Sends Coach the person's words, and reads its answer for a moment.
+    func coach(text: String) async -> WatchReply
 }
 
 /// Answers the watch's requests (docs/watch-app.md, "The relay"). It answers only the kinds
 /// `WatchRequest` decodes, only when the request is complete and live, and only while the
 /// phone is signed in: anything else is refused before any read or signature. Only Refuse
-/// signs, with the current key, as from its notification. Coach isn't answered from the watch yet.
+/// signs, with the current key, as from its notification. Coach gets text, never audio.
 @MainActor
 enum WatchRelay {
     static func answer(_ data: Data, now: Date, reading: WatchReading) async -> WatchReply {
@@ -58,7 +60,7 @@ enum WatchRelay {
             case .needsApp(let said): return WatchReply(.failed, line: said)
             }
         case .coach:
-            return WatchReply(.notYet)
+            return await reading.coach(text: request.text ?? "")
         }
     }
 }
@@ -151,6 +153,57 @@ struct KeptWatchReading: WatchReading {
             break
         }
         return outcome
+    }
+
+    /// How long the phone waits for Coach's answer, inside the watch's live request: well within what
+    /// the watch waits for a reply, so the watch always hears back; past it, the rest is on the phone.
+    static let coachWait: TimeInterval = 12
+
+    /// Coach, as the app's plain send does (`AppModel`'s setup send when the stream can't open):
+    /// the words to Coach's current chat, then its thread read until Coach's answer to them is
+    /// written, for `coachWait` at most. Refusals come back in the phone's words.
+    func coach(text: String) async -> WatchReply {
+        let setup: TafsCloud.CloudTaf
+        let sent: TafsCloud.Sent
+        do {
+            guard let s = try await cloud.setup() else { return WatchReply(.failed, line: Words.Watch.openOnPhone) }
+            setup = s
+            sent = try await cloud.sendMessage(s.id, text: text)
+        } catch let e as TafsCloud.CloudError where e.code == TafsCloud.aiConsentRequired {
+            return WatchReply(.failed, line: Words.Watch.coachNeedsConsent)
+        } catch let e as TafsCloud.CloudError where AppModel.waitsForCredits(e) != nil {
+            return WatchReply(.failed, line: AppModel.waitsForCredits(e))
+        } catch {
+            return WatchReply(.failed, line: Words.Alert.notSent + "\n" + error.localizedDescription)
+        }
+        var waited: TimeInterval = 0
+        var answer: WatchCoachAnswer?
+        while waited <= Self.coachWait {
+            if let thread = try? await cloud.setupThread(setup.id, session: sent.session) {
+                answer = Self.answer(in: thread, after: sent.message?.id, session: sent.session)
+                if thread.working == nil, answer != nil { break }
+            }
+            await wait()
+            waited += 1
+        }
+        guard var answer else { return WatchReply(.ok, line: Words.Watch.moreOnPhone) }
+        if waited > Self.coachWait { answer.more = true }
+        return WatchReply(.ok, coach: answer)
+    }
+
+    /// Coach's answer to the person's message: Coach's words written after it in that chat, and
+    /// whether it shows any card there. Nil while Coach has written nothing yet.
+    static func answer(in thread: SetupThread, after sentID: String?, session: String) -> WatchCoachAnswer? {
+        // Until the person's own message is in the thread, nothing in it can be its answer: an older
+        // answer or card is never taken for this one.
+        guard let mine = thread.messages.last(where: { $0.session == session && $0.from == .owner && (sentID == nil || $0.serverID == sentID) })
+        else { return nil }
+        let since = mine.at
+        let words = thread.messages.filter { $0.session == session && $0.from == .taf && $0.at >= since }.map(\.text)
+            .filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let cards = thread.components.contains { $0.session == session && $0.firstAt >= since }
+        guard !words.isEmpty || cards else { return nil }
+        return WatchCoachAnswer.cut(words.joined(separator: "\n\n"), more: false, approveOnPhone: cards)
     }
 
     func halt(taf: String?) async -> HaltAll.Outcome {

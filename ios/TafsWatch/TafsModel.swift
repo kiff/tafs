@@ -19,11 +19,14 @@ final class TafsModel: ObservableObject {
     @Published private(set) var halts: [String: WatchAnswer] = [:]
     private let phone: PhoneAsking
     private let clock: () -> Date
+    /// Sending needs a passcode on this watch (`WristLock`).
+    private let lock: WristLock
     private var asking = false
 
-    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init) {
+    init(phone: PhoneAsking, clock: @escaping () -> Date = Date.init, lock: WristLock = DeviceWristLock()) {
         self.phone = phone
         self.clock = clock
+        self.lock = lock
     }
 
     func load() async {
@@ -48,6 +51,8 @@ final class TafsModel: ObservableObject {
     func halt(_ taf: String?) async {
         let key = taf ?? Self.all
         guard halts[key]?.isSending != true else { return }
+        // No passcode on this watch: nothing is asked of the phone.
+        guard lock.isSecure else { halts[key] = .failed(Words.Watch.needsLock); return }
         halts[key] = .sending
         let request = taf.map { WatchRequest(.halt, made: clock(), taf: $0) } ?? WatchRequest(.haltAll, made: clock())
         let reply = await phone.ask(request)

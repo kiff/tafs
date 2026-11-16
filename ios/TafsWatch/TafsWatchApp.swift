@@ -7,6 +7,7 @@ import SwiftUI
 struct TafsWatchApp: App {
     @StateObject private var needsYou = NeedsYouModel(phone: PhoneLink.shared)
     @StateObject private var tafs = TafsModel(phone: PhoneLink.shared)
+    @StateObject private var coach = CoachModel(phone: PhoneLink.shared)
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
@@ -19,6 +20,7 @@ struct TafsWatchApp: App {
             TabView {
                 NeedsYouScreen(model: needsYou)
                 TafsScreen(model: tafs)
+                CoachScreen(model: coach)
             }
             .tabViewStyle(.verticalPage)
         }
@@ -28,6 +30,7 @@ struct TafsWatchApp: App {
             if phase == .background {
                 needsYou.leave()
                 tafs.leave()
+                coach.leave()
             }
             if phase == .active {
                 Task {
