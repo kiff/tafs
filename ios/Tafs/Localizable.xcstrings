@@ -71166,7 +71166,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Er bleibt auf diesem %1$@, geschützt durch %2$@. Damit genehmigt dieses %1$@ die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN."
+            "value": "Er bleibt auf diesem %1$@, geschützt durch %2$@. Damit genehmigt dieser %1$@ die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN."
           }
         },
         "en": {
@@ -71272,7 +71272,7 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Einen Passkey für dieses %1$@ anlegen"
+            "value": "Einen Passkey für diesen %1$@ anlegen"
           }
         },
         "en": {

@@ -1423,9 +1423,9 @@
     <string name="pair_from_sign_in">Nutzt du tafs schon auf deinem Handy? Füge diesen %1$s damit hinzu.</string>
     <string name="pair_keychain_refused">Dieser Mac konnte seine Anmeldung nicht im Schlüsselbund sichern (Fehler %1$s) und wurde nicht hinzugefügt. Zeig einen neuen Code und versuch es noch einmal.</string>
     <string name="pair_new_code">Neuen Code zeigen</string>
-    <string name="pair_passkey_why_body">Er bleibt auf diesem %1$s, geschützt durch %2$s. Damit genehmigt dieses %1$s die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN.</string>
+    <string name="pair_passkey_why_body">Er bleibt auf diesem %1$s, geschützt durch %2$s. Damit genehmigt dieser %1$s die Aktionen deiner tafs, und nichts wird ohne dich genehmigt. Windows fragt als Nächstes nach deinem Gesicht, deinem Fingerabdruck oder deiner PIN.</string>
     <string name="pair_passkey_why_go">Passkey anlegen</string>
-    <string name="pair_passkey_why_title">Einen Passkey für dieses %1$s anlegen</string>
+    <string name="pair_passkey_why_title">Einen Passkey für diesen %1$s anlegen</string>
     <string name="pair_steps">Öffne auf deinem Handy tafs, dann %1$s, %2$s, %3$s. Scanne diesen Code.</string>
     <string name="pair_title">Diesen %1$s mit deinem Handy hinzufügen</string>
     <string name="pair_view_only_add">Diesen %1$s hinzufügen</string>
