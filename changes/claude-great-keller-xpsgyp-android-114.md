@@ -1,0 +1,1 @@
+- **Android 1.35.0 (114): the release candidate.** The owner's illustrations on their screens, a main button's words on two lines rather than cut, a stopped sign-in ended at KIFF, and no Cancel once connected (docs/android-app.md).

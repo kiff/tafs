@@ -1,6 +1,6 @@
 # The Wear OS watch
 
-A small companion to the Android app, on Wear OS 3 and later: Samsung Galaxy Watch (Watch4 onwards) and Pixel Watch. It is
+A small companion to the Android app, on Wear OS 3 or later. It is
 the same product, account and words as the phone, drawn smaller, with no sign-in of its own. It is being built in steps;
 this page says what is there now and what each step adds.
 
