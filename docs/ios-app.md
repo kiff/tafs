@@ -123,7 +123,11 @@ latest run's report, with the firings that started no run among them by time (th
 whose `work.attention` is set says what went wrong last in place of its next run, and its row and
 page drop the **Working** chip (`Taf.attention`). Its Cards keep tafs cloud's order (`Taf.shownCards`):
 the one in front is the one that has used most of its limit. The Record shows an action's whole
-title with its amount ("Save a dispute response · $800"), never the verb alone. What needs the owner
+title with its amount ("Save a dispute response · $800"), never the verb alone. When an app refused a
+call, the line quotes the app's own reason only when it's a short plain sentence (`KIFFMapping.quotable`:
+one line, 160 characters at most, not JSON, no email address). Otherwise it says only who refused it, so a
+vendor's raw body never reaches anyone the taf is shared with; "Last failed" in Connect apps reuses that
+line. What needs the owner
 comes first, then the work, then the runs, as on Android (`TafActivityList.parts`). Under the health lines, the work shows its **oldest waiting case**
 (`oldest_waiting.words`, tafs cloud's line, amber once `late`) and, for whoever manages the taf,
 **Answer within** (`PromiseRow`): the promise as tafs cloud keeps it (`promise.hours`) or Not set,
