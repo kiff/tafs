@@ -15,6 +15,10 @@ struct NeedsYouScreen: View {
         .task { await model.load() }
     }
 
+    /// Nothing waiting: the calm check (`AllClearArt`) above the phone's words. Only once the phone has
+    /// answered, so it never stands in for loading.
+    static func allClear(_ count: Int) -> Bool { count == 0 }
+
     @ViewBuilder private var content: some View {
         switch model.state {
         case .loading:
@@ -22,6 +26,9 @@ struct NeedsYouScreen: View {
         case .loaded(let needsYou):
             List {
                 Section {
+                    if Self.allClear(needsYou.count) {
+                        AllClearArt().listRowBackground(Color.clear)
+                    }
                     Text(needsYou.count == 0 ? Words.NeedsYou.nothingWaiting : Words.NeedsYou.count(count: needsYou.count))
                         .font(.headline)
                     if needsYou.count > needsYou.calls.count {

@@ -56,7 +56,10 @@ class WatchModel(
     data object OpenOnPhone : Shown
   }
 
-  data class NeedsYouRead(val count: Int, val words: String, val calls: List<HeldLine>)
+  data class NeedsYouRead(val count: Int, val words: String, val calls: List<HeldLine>) {
+    /** Nothing waits for the person: no count and no held call. The screen shows the all-clear above the words. */
+    val allClear: Boolean get() = count == 0 && calls.isEmpty()
+  }
 
   data class TafsRead(val tafs: List<TafLine>, val allHalted: Boolean)
 

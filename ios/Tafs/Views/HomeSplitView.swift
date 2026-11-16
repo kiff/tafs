@@ -135,7 +135,12 @@ struct HomeSplitView: View {
                     .screenBackground()
                 case nil:
                     VStack(spacing: 12) {
-                        Mascot(size: 72)
+                        // Board 2, no tafs yet (docs/ios-app.md › Illustrations), where the line says so.
+                        if !model.loadingList, !model.listUnread, model.tafs.isEmpty {
+                            Illustration.noTafs
+                        } else {
+                            Mascot(size: 72)
+                        }
                         Text(model.loadingList ? Words.Home.loading : model.listUnread ? Words.Home.notLoaded
                              : model.tafs.isEmpty ? Words.Home.noTafs : Words.Home.chooseTaf)
                             .scaledFont(16).foregroundColor(Theme.dim)

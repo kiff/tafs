@@ -1059,6 +1059,30 @@ the yes to the device in front of the person. Then "Add this device to your acco
 else changes." (`settings.devices.pair_add_only`), the name as the device's own claim ("It calls itself …",
 `settings.devices.pair_claims`), what pairing gives, and the one yes.
 
+## Illustrations
+
+The approved first-time and empty-state drawings: ten boards for the iPhone, iPad and Mac (two more are the
+watches'). All ten are in `Design/Illustrations.swift`, drawn in code from shapes (no image file), in the theme's
+colours for light and dark, with the brand's sweep (`Theme.brand`) as the mark, as `SignInArt` draws it. Each is drawn
+on its board's grid and scaled to fit the width it's given, so a short screen gets a smaller drawing. The other
+platforms port from this list.
+
+**Rule 14: no text in a drawing.** Shapes only, never a letter, a number or a word, not even a symbol's: every
+word stays the screen's own shared key. Every drawing is hidden from VoiceOver (`IllustrationsTests`).
+
+| Board | View | Screen, and when |
+| --- | --- | --- |
+| 1. First run | `Illustration.firstRun` | The welcome (`OnboardingView`), in the mascot's place. |
+| 2. No tafs yet | `Illustration.noTafs` | Home with no taf and no job listed, above the empty line (`HomeView`); the iPad's and the Mac's pane beside the sidebar, where it says there's no taf yet (`HomeSplitView`). |
+| 3. Your brief, nothing to do | `Illustration.briefClear` | Your brief with no decision left (`BriefView`), where the decisions go. |
+| 4. All halted | `Illustration.allHalted` | Halt all (`HaltScreen` with no taf), once every taf is halted. |
+| 5. An app connected | `Illustration.appConnected` | The receipt once a key went in (`ConnectApprovalSheet`). A sign-in at the vendor closes the sheet, so it has no such moment. |
+| 6. Needs you, nothing waiting | `Illustration.nothingWaiting` | Needs you with nothing waiting (`NeedsYouView`), above its words. |
+| 7. Coach, no taf or one | `Illustration.coachFirst` | Coach's empty chat (`SetupChatView`), above "Ask anything about your tafs", while the account has no taf or one. |
+| 8. New taf, small | `Illustration.newTaf` | Beside "Say it in your own words" in the new taf's gallery (`RecipeGallerySheet`). |
+| 9. Coach starting | `Illustration.coachStarting` | Coach's start, before its first message (`SetupChatView`'s intro), at a regular width only. |
+| 10. Overview | `Illustration.overview` | The Overview's header (`OverviewView`), at a regular width only. |
+
 ## Tests and CI
 
 - **Unit tests** (`TafsTests`) sit by feature: `ChatTests`, `WorkLogTests`,

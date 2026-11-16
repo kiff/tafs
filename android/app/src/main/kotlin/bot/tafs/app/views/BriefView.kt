@@ -209,7 +209,11 @@ private val WIDE_BRIEF = 600.dp
 @Composable
 private fun ColumnScope.Decisions(state: AppState, brief: Brief, actions: BriefActions) {
   val open = state.briefDecisions
-  if (open.isEmpty()) return
+  // Nothing to decide: the owner's board 3, where the decisions would be; Done and the rest say the brief's own words.
+  if (open.isEmpty()) {
+    bot.tafs.app.design.Illustrated { bot.tafs.app.design.BriefClearArt(it) }
+    return
+  }
   Eyebrow(brief.words.decisionsShown)
   open.forEach { decision -> DecisionCard(decision, brief.words, state, actions) }
   brief.more?.let { Text(it.words, style = scaled(13, color = Theme.soft)) }

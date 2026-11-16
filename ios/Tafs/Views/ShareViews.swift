@@ -222,6 +222,7 @@ struct OverviewView: View {
     var showsCalendar = true
     /// Opens a taf, or a held call on its taf's page, beside the sidebar.
     let open: (HomeSelection) -> Void
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var shares: [String: [KIFFClient.Share]] = [:]
 
     var body: some View {
@@ -245,6 +246,8 @@ struct OverviewView: View {
                         .accessibilityIdentifier("overview.calendar")
                     }
                 }
+                // Board 10, the Overview's header (docs/ios-app.md › Illustrations): an iPad's or a Mac's width only.
+                if sizeClass == .regular { Illustration.overview.frame(maxWidth: .infinity) }
                 // Everything Needs you counts, not only the held calls: with no taf, a Coach chat or a step
                 // still waits (the owner's iPad: "Needs you · 3" beside "No tafs yet").
                 if model.needsYouCount > 0 { needsYou }
