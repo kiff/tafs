@@ -22,18 +22,49 @@
     <string name="watch_already_answered">Schon beantwortet oder beendet.</string>
     <string name="watch_approve_on_phone">Genehmige auf deinem Handy</string>
     <string name="watch_as_of">Stand: %1$s</string>
+    <string name="watch_ask">tafs fragen</string>
+    <string name="watch_ask_needs_consent">Bevor du tafs fragst, erlaube die KI-Nutzung in tafs auf deinem Handy.</string>
+    <string name="watch_ask_not_on">Fragen von der Uhr aus ist noch nicht an.</string>
+    <string name="watch_ask_text_only">tafs bekommt deine Worte als Text, nie deine Stimme.</string>
     <string name="watch_asking_phone">Fragt dein Handy…</string>
+    <string name="watch_check_phone">Prüf die Verbindung deines Handys</string>
     <string name="watch_coach_needs_consent">Bevor du mit Coach sprichst, erlaube die KI-Nutzung in tafs auf deinem Handy.</string>
+    <string name="watch_didnt_catch">Nicht verstanden. Tippe, um es erneut zu versuchen.</string>
     <string name="watch_glance_description">Wie viele dich brauchen, nie was oder wer.</string>
+    <string name="watch_halting">%1$s wird angehalten…</string>
+    <string name="watch_halting_all">Alle deine tafs werden angehalten…</string>
+    <string name="watch_hear">Anhören</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s zurückgehaltener Aufruf braucht dich</item>
         <item quantity="other">%1$s zurückgehaltene Aufrufe brauchen dich</item>
     </plurals>
+    <string name="watch_mic_needed">Um per Stimme zu fragen, erlaube tafs das Mikrofon auf dieser Uhr.</string>
     <string name="watch_more_on_phone">Der Rest ist auf deinem Handy.</string>
     <string name="watch_needs_lock">Um mit dieser Uhr abzulehnen oder anzuhalten, richte eine Displaysperre ein und entsperre sie.</string>
+    <plurals name="watch_needs_you_count">
+        <item quantity="one">%1$s braucht dich</item>
+        <item quantity="other">%1$s brauchen dich</item>
+    </plurals>
+    <string name="watch_not_sure">Unklar, ob es ankam</string>
     <string name="watch_open_on_phone">Auf dem Handy öffnen</string>
     <string name="watch_phone_not_reachable">Dein Handy ist nicht in Reichweite. Bring es näher und versuch es dann erneut.</string>
+    <plurals name="watch_ready_count">
+        <item quantity="one">%1$s fertig</item>
+        <item quantity="other">%1$s fertig</item>
+    </plurals>
     <string name="watch_refused">Abgelehnt. Nichts wurde gesendet.</string>
+    <string name="watch_reply">Antworten</string>
+    <string name="watch_result_ready">Ein Ergebnis ist da</string>
+    <string name="watch_results_channel">Ergebnisse</string>
+    <string name="watch_retry">Erneut senden</string>
+    <string name="watch_sending">Wird gesendet…</string>
+    <string name="watch_sent">Gesendet</string>
     <string name="watch_sign_in_on_phone">Melde dich zuerst auf deinem Handy bei tafs an.</string>
+    <string name="watch_timing">Zuhören %1$s ms · Bestätigung %2$s ms · Ergebnis %3$s ms</string>
+    <string name="watch_update_phone">Aktualisiere tafs auf deinem Handy und versuch es dann erneut.</string>
     <string name="watch_voice_text_only">Coach bekommt deine Worte als Text, nie deine Stimme.</string>
+    <plurals name="watch_working_count">
+        <item quantity="one">%1$s arbeitet</item>
+        <item quantity="other">%1$s arbeiten</item>
+    </plurals>
 </resources>

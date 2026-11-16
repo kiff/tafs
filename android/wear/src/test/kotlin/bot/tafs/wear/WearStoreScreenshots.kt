@@ -60,7 +60,19 @@ class WearStoreScreenshots(private val language: String, private val playLocale:
     assertTrue(Res.language, Res.language == language)
   }
 
-  private val actions = Actions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {})
+  private val actions = Actions.none
+
+  /** An ask a sample taf finished: its taf and a line of the phone's sample words, as tafs cloud would send one. */
+  private fun finished() = bot.tafs.watchlink.AskLine(
+    "wa_1", "w_00000001", bot.tafs.watchlink.AskLine.DONE, sample.getString("sample.bill_pay.name"),
+    sample.getString("sample.brief.case.bills_line"), Res.s(R.string.common_done), "2026-11-16T19:01:00Z",
+  )
+
+  /** An ask at work, with its taf and tafs cloud's word for it. */
+  private fun working() = bot.tafs.watchlink.AskLine(
+    "wa_2", "w_00000002", bot.tafs.watchlink.AskLine.WORKING, sample.getString("sample.refunds.name"), null, taf.getString("taf.state.working"),
+    "2026-11-16T19:02:00Z",
+  )
 
   /**
    * A whole amount in euros, written as the watch shows it: the phone sends `Money.formatted`, which writes a whole amount with no
@@ -91,32 +103,27 @@ class WearStoreScreenshots(private val language: String, private val playLocale:
     )
   }
 
-  /** Needs you, opened on the held refund: Refuse and Approve on your phone. The list is Ask Coach 0, Needs you 1, its line 2, the refund 3. */
-  @Test fun needsYou() = shot("1-needs-you") {
-    WatchScreen(read(), outcome = null, confirmingHaltAll = false, talk = null, act = actions, list = rememberScalingLazyListState(initialCenterItemIndex = 3))
+  /** The microphone first: Ask tafs, an ask at work and one ready under it, and Needs you's count. */
+  @Test fun askTafs() = shot("1-ask-tafs") {
+    WatchScreen(read(), null, false, voice = null, result = null, working = listOf(working()), ready = listOf(finished()), act = actions)
   }
 
-  /** A refund refused from the wrist, in the phone's words, above Ask Coach. */
-  @Test fun refused() = shot("2-refused") {
-    WatchScreen(read(), WatchModel.Outcome.Done(Res.s(R.string.watch_refused)), confirmingHaltAll = false, talk = null, act = actions, list = rememberScalingLazyListState(initialCenterItemIndex = 1))
+  /** A result: its taf, its line, Hear and Reply. */
+  @Test fun result() = shot("2-result") {
+    WatchScreen(read(), null, false, voice = null, result = finished(), working = emptyList(), ready = emptyList(), act = actions)
   }
 
-  /** Halt all, asked once more on the wrist. */
-  @Test fun haltAll() = shot("3-halt-all") {
-    // Nothing needs you here, so the list is Ask Coach 0, Needs you 1, the all-clear 2, its line 3, Your tafs 4, two tafs 5-6,
-    // then Halt all 7.
-    WatchScreen(
-      read().copy(needsYou = WatchModel.NeedsYouRead(0, Res.s(R.string.needs_you_nothing), emptyList())), null, confirmingHaltAll = true,
-      talk = null, act = actions, list = rememberScalingLazyListState(initialCenterItemIndex = 7),
-    )
+  /** Needs you, opened on the held refund: Refuse and Approve on your phone. The list is the microphone 0, Needs you 1, its line 2, the refund 3. */
+  @Test fun needsYou() = shot("3-needs-you") {
+    WatchScreen(read(), null, false, null, null, emptyList(), emptyList(), actions, list = rememberScalingLazyListState(initialCenterItemIndex = 3))
   }
 
-  /** Nothing needs you: the owner's all-clear (board 12) above Needs you's words. The list is Ask Coach 0, Needs you 1, the all-clear 2. */
+  /** Nothing needs you: the owner's all-clear (board 12) above Needs you's words. The list is the microphone 0, Needs you 1, the all-clear 2. */
   @Test fun allClear() = shot("4-all-clear") {
     WatchScreen(
-      read().copy(needsYou = WatchModel.NeedsYouRead(0, Res.s(R.string.needs_you_nothing), emptyList())), null, confirmingHaltAll = false,
-      talk = null, act = actions,
-      // A little further on, so the line above Needs you is off the screen rather than cut at its edge.
+      read().copy(needsYou = WatchModel.NeedsYouRead(0, Res.s(R.string.needs_you_nothing), emptyList())), null, false, null, null,
+      emptyList(), emptyList(), actions,
+      // A little further on, so the microphone above Needs you is off the screen rather than cut at its edge.
       list = rememberScalingLazyListState(initialCenterItemIndex = 2, initialCenterItemScrollOffset = 28),
     )
   }

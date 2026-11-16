@@ -44,11 +44,13 @@ import kotlinx.coroutines.launch
 
 /** Who a taf is shared with, on its page, and Share: only for whoever manages it, as KIFF says, and only for a taf KIFF runs. */
 @Composable
-fun ShareLine(tafId: String, state: AppState, actions: PeopleActions) {
+fun ShareLine(tafId: String, state: AppState, actions: PeopleActions, routeTaken: () -> Unit = {}) {
   val taf = state.taf(tafId) ?: return
   if (state.mode != Mode.kiff || !state.manages(tafId)) return
   var shares by remember { mutableStateOf<List<Share>?>(null) }
   var sharing by remember { mutableStateOf(false) }
+  // Asked for by its route (AppModel.open).
+  LaunchedEffect(state.requestedRoute) { if (state.requested(bot.tafs.app.model.AppRoute.TafShare, tafId)) { sharing = true; routeTaken() } }
   // Read on open, when the groups change, and again once the sheet closes, whatever it changed.
   LaunchedEffect(tafId, state.groups, sharing) { if (!sharing) shares = actions.shares(tafId) }
   LaunchedEffect(Unit) { if (state.groups.isEmpty() && state.people.isEmpty()) actions.refresh() }

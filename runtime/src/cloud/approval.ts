@@ -860,9 +860,9 @@ async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards
   if (!off) {
     // A limit the owner never agreed, in any window, is never signed (Eval 43927756622: an hour's €50 held, beside the
     // agreed €5 a refund held and €50 a day refused). Coach hears the one figure to drop, and to change nothing else.
-    const extra = rulesUnnamedFigures([grant, ...others], cards, agreement.rules)[0];
+    const extra = rulesUnnamedFigures([grant, ...others], cards, agreement.rules, ctx.rulesPerToTheLetter)[0];
     if (extra) {
-      const per = extra.window === "call" ? "each call" : extra.window ? `per ${extra.window}` : "with no window";
+      const per = (extra.window === "call" ? "each call" : extra.window ? `per ${extra.window}` : "with no window") + (extra.per ? ` for each ${extra.per}` : "");
       return { outcome: "answered", answer: `failed: the draft gives "${extra.tool}" a limit the owner never agreed: ${extra.limit} on ${extra.quantity}, ${per}. The rules they agreed name every limit it has, and a Card carries those alone: no other ceiling, total or count, even as a safety margin. Draft it again without that one, and change nothing else: no new limit, Card or tool in its place.`, note: W.rulesFigures(extra.tool), code: "rules_unagreed_figure" };
     }
     // Figures the notice's words don't say: logged, never refused (formats vary by language).
@@ -876,8 +876,9 @@ async function rulesChecked(grant: ApprovalGrant, others: ApprovalGrant[], cards
     return { outcome: "answered", answer: `failed: the rules the owner agreed ask past one of "${off.tool}"'s limits and refuse past another, and the draft puts both on one Card, which has one on_exceed. Draft it again with each on its own Card: on_exceed "owner" on the one whose limit asks, "refuse" on the one whose limit refuses.`, note: W.rulesOnExceed(off.tool), code: "rules_on_exceed" };
   }
   if (off.kind === "figure") {
-    const each = off.window === "call" ? "each call" : "a day's total";
-    const where = off.window === "call" ? `per_action_max {quantity: "${off.quantity}", max: ${off.agreed}} on its grant` : `an aggregate {quantity: "${off.quantity}", window: "calendar_day", limit: ${off.agreed}} with no per`;
+    const each = off.per ? `a total for each ${off.per}, per ${off.window}` : off.window === "call" ? "each call" : "a day's total";
+    const where = off.per ? `an aggregate {quantity: "${off.quantity}", window: "${off.window}", per: "${off.per}", limit: ${off.agreed}}`
+      : off.window === "call" ? `per_action_max {quantity: "${off.quantity}", max: ${off.agreed}} on its grant` : `an aggregate {quantity: "${off.quantity}", window: "calendar_day", limit: ${off.agreed}} with no per`;
     const has = off.drafted === undefined ? "no Card covering it has that figure" : `a Card covering it has ${off.drafted}`;
     return { outcome: "answered", answer: `failed: the rules the owner agreed give "${off.tool}" ${off.agreed} as ${each} on ${off.quantity}, and ${has}. Draft it again with ${where}, and no other figure for it on any Card.`, note: W.rulesFigures(off.tool), code: "rules_figures" };
   }
@@ -931,6 +932,8 @@ export interface DecideContext {
   rulesAgreement?: () => Promise<RulesAgreement>;
   /** A draft with no agreed rules is refused too (TAFS_RULES_REQUIRED=on), once every Coach run sends them. */
   rulesRequired?: boolean;
+  /** A total for each item no agreed figure names is refused on a rule that names none too (TAFS_RULES_PER=on), once Coach's rules carry them. */
+  rulesPerToTheLetter?: boolean;
 }
 
 /** Where the Card a conversation approved for a connection is noted: one draft per connection, per conversation. */

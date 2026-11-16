@@ -885,4 +885,6 @@ export const de: Words = {
   ai_consent_paused_no_one: "Pausiert: Noch niemand hat die KI-Nutzung für die Läufe dieses tafs erlaubt. Er läuft weiter, sobald jemand, der tafs verwaltet, sie unter Konto erlaubt.",
   ai_consent_paused_not_given: "Pausiert: Die KI-Nutzung für die Läufe dieses tafs wurde widerrufen. Er läuft weiter, sobald sie wieder erlaubt ist oder jemand, der tafs verwaltet, ihn übernimmt.",
   ai_consent_paused_left: "Pausiert: Die Person, deren KI-Erlaubnis die Läufe nutzten, ist nicht mehr im Konto. Er läuft weiter, sobald jemand, der tafs verwaltet, ihn übernimmt.",
+  // A request from the watch, by its state (docs/watch-ask.md): the watch shows and says these.
+  watch_ask: { accepted: "Gesendet", working: "Läuft", done: "Erledigt", no_taf: "Kein taf hat es übernommen", failed: "Das hat nicht geklappt" },
 };

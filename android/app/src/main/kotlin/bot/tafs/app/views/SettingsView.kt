@@ -63,6 +63,9 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import bot.tafs.app.model.AlertWords
 import bot.tafs.app.model.UsageWords
+import bot.tafs.app.model.AppRoute
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInParent
 import kotlinx.coroutines.launch
 
 /** Settings: the account, how this phone is signed in, and what the app is. */
@@ -97,6 +100,9 @@ fun SettingsSheet(
   onLoadAIConsent: () -> Unit = {},
   onAllowAI: () -> Unit = {},
   onWithdrawAI: () -> Unit = {},
+  /** The section a route asked for (AppModel.open), scrolled to once; then [onFocused]. */
+  focus: AppRoute? = null,
+  onFocused: () -> Unit = {},
 ) {
   val scope = rememberCoroutineScope()
   val uri = LocalUriHandler.current
@@ -110,6 +116,9 @@ fun SettingsSheet(
   val version = remember(context) { runCatching { context.packageManager.getPackageInfo(context.packageName, 0).let { versionWords(androidx.core.content.pm.PackageInfoCompat.getLongVersionCode(it), it.versionName) } }.getOrNull() ?: "–" }
   LaunchedEffect(state.mode) { if (state.mode == Mode.kiff) { onLoadAlerts(); onLoadSuggestions(); onLoadAIConsent() } }
   if (zonePicker) LaunchedEffect(zoneQuery) { kotlinx.coroutines.delay(250); onLoadTimeZones(zoneQuery) }
+  var focusAt by remember { mutableStateOf<Int?>(null) }
+  LaunchedEffect(focusAt) { focusAt?.let { scroll.animateScrollTo(it); onFocused(); focusAt = null } }
+  fun at(route: AppRoute): Modifier = if (focus == route) Modifier.onGloballyPositioned { focusAt = it.positionInParent().y.toInt() } else Modifier
 
   DriveSheet(onDismissRequest = onClose, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = Theme.background) {
     Column(Modifier.fillMaxWidth().fillMaxHeight(0.92f).navigationBarsPadding()) {
@@ -141,7 +150,7 @@ fun SettingsSheet(
           if (state.mode == Mode.kiff) Section(Words.Settings.plan) { PlanRow(state, onUsage) }
           if (state.mode == Mode.sample) Section(Words.Usage.label) { Action(UsageWords.TITLE, Theme.ink, onUsage) }
           if (state.mode == Mode.kiff) {
-            Section(Words.Settings.alerts) {
+            Section(Words.Settings.alerts, at(AppRoute.AccountAlerts)) {
               LockScreenExample(AlertWords.WITH_SOUND, AlertWords.LOUD_EXAMPLE)
               LockScreenExample(AlertWords.SILENT, AlertWords.SILENT_EXAMPLE)
               val on = state.phoneAlerts?.enabled ?: state.alertsReady
@@ -189,7 +198,7 @@ fun SettingsSheet(
               haptics = on
             }
           }
-          Section(Words.Settings.themeTitle) {
+          Section(Words.Settings.themeTitle, at(AppRoute.AccountTheme)) {
             Row(Modifier.fillMaxWidth().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
               ThemePreference.entries.forEach { choice ->
                 Row(Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(if (Theme.preference == choice) Theme.ink else Theme.raised)
@@ -203,11 +212,11 @@ fun SettingsSheet(
           }
           // The language tafs's lines are in, as the resources resolved them, and the app's own picker to change it: the phone's
           // language or one of the 8, applied at once (AppLocale: Android 13+'s per-app language, else kept by the app).
-          Section(Words.Settings.languageTitle) {
+          Section(Words.Settings.languageTitle, at(AppRoute.AccountLanguage)) {
             Value(Words.Settings.languageTitle, bot.tafs.app.model.AppLanguage.name())
             Action(Words.Settings.changeLanguage, Theme.amberText) { languagePicker = true }
           }
-          if (state.mode == Mode.kiff) Section(Words.Settings.timeZoneTitle) {
+          if (state.mode == Mode.kiff) Section(Words.Settings.timeZoneTitle, at(AppRoute.AccountTimeZone)) {
             val deviceZone = java.time.ZoneId.systemDefault().id
             Value(Words.Settings.timeZoneTitle, state.kiffAccount?.timeZone ?: "UTC")
             Action(Words.Settings.chooseTimeZone, Theme.amberText) { zonePicker = true }
@@ -331,8 +340,8 @@ fun ConfirmSignOut(way: SignOut, onDismiss: () -> Unit, onConfirm: () -> Unit) {
 }
 
 @Composable
-private fun Section(title: String, content: @Composable ColumnScope.() -> Unit) {
-  Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+private fun Section(title: String, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+  Column(modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
     Text(title.uppercase(), style = scaled(12, color = Theme.dim, mono = true), modifier = Modifier.padding(horizontal = 4.dp))
     val shape = RoundedCornerShape(14.dp)
     Column(Modifier.fillMaxWidth().clip(shape).background(Theme.panel).border(BorderStroke(1.dp, Theme.line), shape)) {

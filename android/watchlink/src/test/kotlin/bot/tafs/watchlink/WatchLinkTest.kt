@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-/** The phone acts only on the watch's five requests, each exactly as the watch writes it, and only while it is fresh. */
+/** The phone acts only on the watch's requests, each exactly as the watch writes it, and only while it is fresh. */
 class WatchLinkTest {
   private val now = 1_763_244_000_000L
 
@@ -21,6 +21,11 @@ class WatchLinkTest {
       WatchRequest.Halt(now, "taf_1"),
       WatchRequest.Halt(now, null),
       WatchRequest.Coach(now, "Pause refunds until Monday"),
+      WatchRequest.Ask(now, "w_7f3a9c21", "Move my four o'clock call to six"),
+      WatchRequest.Ask(now, "w_7f3a9c22", "Make it seven", replyTo = "wa_01"),
+      WatchRequest.Asks(now),
+      WatchRequest.Asks(now, since = "2026-11-16T19:00:00.000Z"),
+      WatchRequest.Brief(now),
     )
     for (request in requests) {
       val (path, data) = WatchLink.encode(request)
@@ -76,6 +81,18 @@ class WatchLinkTest {
     refused(NotAccepted.MALFORMED, WatchLink.COACH, """{"made_at":$now,"text":"hi","audio":"AAAA"}""")
   }
 
+  /** The brief is a read, checked as the others: its path, exactly its body, and only while it's fresh. */
+  @Test fun theBriefIsAReadCheckedAsTheOthers() {
+    assertEquals("/tafs/watch/v1/brief", WatchLink.BRIEF)
+    assertEquals(WatchLink.Accepted.Yes(WatchRequest.Brief(now)), accept(WatchLink.BRIEF, """{"made_at":$now}"""))
+    refused(NotAccepted.MALFORMED, WatchLink.BRIEF, """{"made_at":$now,"answer":"approve"}""")
+    refused(NotAccepted.MALFORMED, WatchLink.BRIEF, """{}""")
+    refused(NotAccepted.TOO_OLD, WatchLink.BRIEF, """{"made_at":${now - 31_000}}""")
+    refused(NotAccepted.FROM_THE_FUTURE, WatchLink.BRIEF, """{"made_at":${now + 6_000}}""")
+    // An answer to a decision is never a watch request.
+    refused(NotAccepted.UNKNOWN_PATH, WatchLink.PREFIX + "brief/answer", """{"made_at":$now}""")
+  }
+
   @Test fun repliesRoundTripAndANewerKindIsNotGuessed() {
     val replies = listOf(
       WatchReply.NeedsYou(1, "1 held call needs you", listOf(HeldLine("hold_1", "Refunds", "Refund order 1042", "€64.00", "Over its limit", refusable = true))),
@@ -86,9 +103,65 @@ class WatchLinkTest {
       WatchReply.SignedOut,
       WatchReply.Coach("Done. Refunds pause until Monday.", long = false),
       WatchReply.Refused(NotAccepted.TOO_OLD),
+      WatchReply.Brief(
+        title = "Your brief",
+        whenLine = "Morning brief · 08:00 · next at 18:00",
+        decisions = listOf(
+          DecisionLine("d1", "Pay bill 0412?", "Bill pay", "by Fri 12:00", urgent = true, cantWait = "It expires before the next brief.", refKind = "hold", refId = "ce_1", holdId = "hold_1"),
+          DecisionLine("d2", "Sign in to the bank again?", refKind = "connection", refId = "bank"),
+        ),
+        more = "2 more decisions",
+        urgent = "Urgent",
+        done = "Done since last evening",
+        doneCases = listOf("Atelier Dubois", "Brio"),
+        rest = "14 more wait and need nothing now",
+        needsYou = "1 needs you",
+      ),
+      WatchReply.Brief(title = "Your brief"),
+      WatchReply.NoBrief,
     )
     for (reply in replies) assertEquals(reply, WatchLink.decodeReply(WatchLink.encodeReply(reply)))
     assertNull(WatchLink.decodeReply("""{"kind":"approve_here"}""".encodeToByteArray()))
     assertEquals(WatchReply.Done("Halted"), WatchLink.decodeReply("""{"kind":"done","words":"Halted","newer":1}""".encodeToByteArray()))
+  }
+
+  // MARK: Ask tafs
+
+  @Test fun anAskCarriesTheWatchsOwnIdAndPlainText() {
+    // An id too short, or with a character tafs cloud wouldn't take, is refused before anything is signed.
+    refused(NotAccepted.MALFORMED, WatchLink.ASK, """{"made_at":$now,"client_id":"w_1","text":"hi"}""")
+    refused(NotAccepted.MALFORMED, WatchLink.ASK, """{"made_at":$now,"client_id":"w_7f3a9c21/../x","text":"hi"}""")
+    refused(NotAccepted.MALFORMED, WatchLink.ASK, """{"made_at":$now,"client_id":"w_7f3a9c21","text":"  "}""")
+    refused(NotAccepted.MALFORMED, WatchLink.ASK, """{"made_at":$now,"client_id":"w_7f3a9c21","text":"${"a".repeat(WatchLink.MAX_ASK_TEXT + 1)}"}""")
+    refused(NotAccepted.MALFORMED, WatchLink.ASK, """{"made_at":$now,"client_id":"w_7f3a9c21","text":"hi","reply_to":""}""")
+  }
+
+  @Test fun anAskCantNameItsTafOrMarkItselfAnything() {
+    // The watch says what it wants; tafs cloud picks the taf. A field the ask doesn't take is refused, not passed on.
+    refused(NotAccepted.MALFORMED, WatchLink.ASK, """{"made_at":$now,"client_id":"w_7f3a9c21","text":"hi","taf":"taf_1"}""")
+    refused(NotAccepted.MALFORMED, WatchLink.ASK, """{"made_at":$now,"client_id":"w_7f3a9c21","text":"hi","entry":"watch"}""")
+    refused(NotAccepted.MALFORMED, WatchLink.ASKS, """{"made_at":$now,"since":"yesterday at noon"}""")
+  }
+
+  @Test fun anAsksLateMessageIsDroppedAsAnyOther() {
+    refused(NotAccepted.TOO_OLD, WatchLink.ASK, """{"made_at":${now - WatchLink.MAX_AGE_MS - 1},"client_id":"w_7f3a9c21","text":"hi"}""")
+  }
+
+  @Test fun theResultIsTheWatchsToReadNeverARequestThePhoneAnswers() {
+    refused(NotAccepted.UNKNOWN_PATH, WatchLink.ASK_RESULT, """{"made_at":$now}""")
+    val line = AskLine("wa_01", "w_7f3a9c21", AskLine.DONE, "Calendar", "Moved your call to 18:00.", "Done", "2026-11-16T19:02:00Z")
+    assertEquals(line, WatchLink.decodeResult(WatchLink.encodeResult(line)))
+    assertEquals(true, line.ended)
+    assertEquals(false, line.copy(state = AskLine.WORKING).ended)
+    // A newer phone's extra field is read past; something that isn't an ask is nothing.
+    assertEquals(line, WatchLink.decodeResult(String(WatchLink.encodeResult(line)).replace("}", ",\"newer\":1}").encodeToByteArray()))
+    assertNull(WatchLink.decodeResult("{}".encodeToByteArray()))
+  }
+
+  @Test fun theAskRepliesComeBackAsTheyWereMade() {
+    val line = AskLine("wa_01", "w_7f3a9c21", AskLine.ACCEPTED, words = "Sent", updated = "2026-11-16T19:00:00Z")
+    for (reply in listOf(WatchReply.AskTaken(line), WatchReply.AskList(listOf(line, line.copy(id = "wa_02", state = AskLine.WORKING, tafName = "Inbox"))))) {
+      assertEquals(reply, WatchLink.decodeReply(WatchLink.encodeReply(reply)))
+    }
   }
 }

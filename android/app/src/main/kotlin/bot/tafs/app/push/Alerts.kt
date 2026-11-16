@@ -14,7 +14,8 @@ import java.time.Instant
  *               draft's shape; tafs cloud sends these as "alert" with brief_kind)
  *   brief_kind  on an alert, "brief" (Your brief is ready) or "urgent" (one that came at once, a held call's): the brief is read
  *               again with the app open; with decision, the one it's about ("hold:<id>")
- *   change      what changed (docs/approvals.md, "Live updates"): "taf", "halted", "resumed" or "knock", with taf_id
+ *   change      what changed (docs/approvals.md, "Live updates"): "taf", "halted", "resumed" or "knock", with taf_id; or
+ *               "watch_ask", with ask_id: an ask from the Wear OS watch changed, for the phone to pass on to the watch
  *   title,body  what an alert says
  *   open        where tapping it goes: "needs-you", "usage", or "taf" (a door's alert) with taf_id, the taf's id in tafs cloud
  *   hold_id, request_id   what the alert is about: a later alert with the same one replaces it
@@ -69,6 +70,12 @@ sealed interface Alert {
    * when the change is about one.
    */
   data class Changed(val change: String, val tafId: String?) : Alert
+
+  /**
+   * An ask from the Wear OS watch changed in tafs cloud (docs/watch-wear.md, Ask tafs): the phone reads it and passes it to the
+   * watch. Nothing is shown on the phone.
+   */
+  data class WatchAsk(val askId: String) : Alert
 }
 
 object AlertPayload {
@@ -85,6 +92,9 @@ object AlertPayload {
 
   /** The changes tafs cloud tells the phones of; one of a newer kind is ignored, and the next return to the app reads it. */
   val CHANGES = setOf("taf", "halted", "resumed", "knock")
+
+  /** An ask from the Wear OS watch changed: the phone passes it to the watch, and shows nothing itself. */
+  const val WATCH_ASK = "watch_ask"
 
   /** Where a door's alert goes: the taf, by its id in tafs cloud. */
   fun taf(cloudId: String) = "$TAF:$cloudId"
@@ -129,7 +139,8 @@ object AlertPayload {
       ?: data["handoff"]?.takeIf { it.isNotBlank() }?.let { "step:$it" } ?: ""
     return when (data["kind"]) {
       "answered" -> if (tag.isEmpty()) null else Alert.Clear(tag)
-      "background" -> data["change"]?.takeIf { it in CHANGES }?.let { Alert.Changed(it, data["taf_id"]?.takeIf(String::isNotBlank)) }
+      "background" -> if (data["change"] == WATCH_ASK) data["ask_id"]?.takeIf(String::isNotBlank)?.let { Alert.WatchAsk(it) }
+        else data["change"]?.takeIf { it in CHANGES }?.let { Alert.Changed(it, data["taf_id"]?.takeIf(String::isNotBlank)) }
       "alert" -> {
         val tafId = data["taf_id"]?.takeIf { it.isNotBlank() }
         // A door's knock (tafs cloud's `knock`, the knock's id) opens its taf on Activity; any other taf alert, its taf as before.

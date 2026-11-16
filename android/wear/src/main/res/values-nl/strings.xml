@@ -22,18 +22,49 @@
     <string name="watch_already_answered">Al beantwoord, of beëindigd.</string>
     <string name="watch_approve_on_phone">Keur goed op je telefoon</string>
     <string name="watch_as_of">Bijgewerkt om %1$s</string>
+    <string name="watch_ask">Vraag tafs</string>
+    <string name="watch_ask_needs_consent">Sta eerst AI-gebruik toe in tafs op je telefoon voordat je tafs iets vraagt.</string>
+    <string name="watch_ask_not_on">Vragen vanaf je horloge staat nog niet aan.</string>
+    <string name="watch_ask_text_only">tafs krijgt je woorden als tekst, nooit je stem.</string>
     <string name="watch_asking_phone">Je telefoon vragen…</string>
+    <string name="watch_check_phone">Controleer de verbinding van je telefoon</string>
     <string name="watch_coach_needs_consent">Sta eerst AI-gebruik toe in tafs op je telefoon voordat je met Coach praat.</string>
+    <string name="watch_didnt_catch">Niet verstaan. Tik om het opnieuw te proberen.</string>
     <string name="watch_glance_description">Hoeveel er op je wachten, nooit wat of wie.</string>
+    <string name="watch_halting">%1$s wordt stilgezet…</string>
+    <string name="watch_halting_all">Al je tafs worden stilgezet…</string>
+    <string name="watch_hear">Beluisteren</string>
     <plurals name="watch_held_calls">
         <item quantity="one">%1$s vastgehouden aanroep wacht op jou</item>
         <item quantity="other">%1$s vastgehouden aanroepen wachten op jou</item>
     </plurals>
+    <string name="watch_mic_needed">Sta de microfoon toe voor tafs op dit horloge om met je stem te vragen.</string>
     <string name="watch_more_on_phone">De rest staat op je telefoon.</string>
     <string name="watch_needs_lock">Stel een schermvergrendeling in op dit horloge en ontgrendel het om vanaf hier te weigeren of stil te zetten.</string>
+    <plurals name="watch_needs_you_count">
+        <item quantity="one">%1$s wacht op jou</item>
+        <item quantity="other">%1$s wachten op jou</item>
+    </plurals>
+    <string name="watch_not_sure">Onzeker of het aankwam</string>
     <string name="watch_open_on_phone">Openen op telefoon</string>
     <string name="watch_phone_not_reachable">Je telefoon is buiten bereik. Breng hem dichterbij en probeer het opnieuw.</string>
+    <plurals name="watch_ready_count">
+        <item quantity="one">%1$s klaar</item>
+        <item quantity="other">%1$s klaar</item>
+    </plurals>
     <string name="watch_refused">Geweigerd. Er is niets verstuurd.</string>
+    <string name="watch_reply">Antwoorden</string>
+    <string name="watch_result_ready">Er is een resultaat</string>
+    <string name="watch_results_channel">Resultaten</string>
+    <string name="watch_retry">Opnieuw</string>
+    <string name="watch_sending">Versturen…</string>
+    <string name="watch_sent">Verstuurd</string>
     <string name="watch_sign_in_on_phone">Log eerst in bij tafs op je telefoon.</string>
+    <string name="watch_timing">Luisteren %1$s ms · ontvangst %2$s ms · resultaat %3$s ms</string>
+    <string name="watch_update_phone">Werk tafs bij op je telefoon en probeer het opnieuw.</string>
     <string name="watch_voice_text_only">Coach krijgt je woorden als tekst, nooit je stem.</string>
+    <plurals name="watch_working_count">
+        <item quantity="one">%1$s bezig</item>
+        <item quantity="other">%1$s bezig</item>
+    </plurals>
 </resources>

@@ -526,7 +526,7 @@ function answerNotification(requestID: string, status: unknown, pack: unknown, n
 }
 
 /** What changed on an account, for its phones to read again (docs/approvals.md, "Live updates"). */
-export type Change = "taf" | "halted" | "resumed" | "knock";
+export type Change = "taf" | "halted" | "resumed" | "knock" | "watch_ask";
 
 /**
  * A silent push saying what changed: only its kind and the taf, never words or amounts. The phone
@@ -534,6 +534,14 @@ export type Change = "taf" | "halted" | "resumed" | "knock";
  */
 export function changeNotification(change: Change, taf?: string): Notification {
   return { kind: "background", payload: { aps: { "content-available": 1 }, change, ...(taf ? { taf_id: taf } : {}) } };
+}
+
+/**
+ * A watch request's state changed (docs/watch-ask.md): only its id, for the phone to read with its own session
+ * and pass to the watch. Never the request's words, its taf or its line.
+ */
+export function watchAskNotification(askID: string): Notification {
+  return { kind: "background", payload: { aps: { "content-available": 1 }, change: "watch_ask", ask_id: askID } };
 }
 
 function answeredNotification(holdID: string): Notification {
