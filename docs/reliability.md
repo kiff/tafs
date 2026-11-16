@@ -114,7 +114,14 @@ One that couldn't read the app is `failed_check`, and counts toward the taf's he
 zone) and name the app the check reads by its connection's name in planque, when the taf has exactly one app connected
 (else "the app"; planque's list is read only when a check failed): "The 09:00 check couldn't read Gmail", "The scheduled
 check couldn't read Gmail 2 times in a row, since Tue 09:00". Two in a row also put the taf in the owner's brief as an
-urgent decision ([missions.md](missions.md#your-brief)) until a check reads again.
+urgent decision ([missions.md](missions.md#your-brief)) until a check reads again. When the app itself refused the read,
+kiff/agents keeps how it answered (`Fired.vendor`: its HTTP status and canonical code, never its words), and the taf's
+health says what that asks of the owner instead of "Check the app's connection.": 401, 403, `UNAUTHENTICATED` or
+`PERMISSION_DENIED` is "Gmail refused the read: connect it again with an account that can read it."; `FAILED_PRECONDITION`
+(such as a Google account with no mailbox) is "Gmail said the connected account isn't set up for this read: connect it
+again with the account you use for it."; 429, 5xx, `RESOURCE_EXHAUSTED`, `UNAVAILABLE`, `DEADLINE_EXCEEDED` or `INTERNAL`
+is "Gmail couldn't answer just then. It tries again at its next time." Only the newest failure's answer counts; any other
+answer says what it said before (`health.ts` `vendorKind`).
 
 ## Where results go
 
