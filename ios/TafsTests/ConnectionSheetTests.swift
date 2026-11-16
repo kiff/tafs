@@ -122,6 +122,23 @@ final class ConnectionSheetTests: XCTestCase {
         XCTAssertNil(AppModel.lastFailure(try grant("g5", agent: "chase-1", tools: #"[{"tool":"get_contact"}]"#), record: record, ownTaf: chase))
     }
 
+    /// KIFF's `tool_outcome.message` carries the app's own body: the Record line, and "Last failed" with it,
+    /// quote it only when it's a short plain sentence. JSON, a long body, several lines or an email address is
+    /// never shown, to anyone the taf is shared with included; the line then says who refused it.
+    func testAnAppsRawAnswerIsNeverQuoted() throws {
+        let gmail = #"Gmail refused it (it answered 400): { "error": { "code": 400, "message": "Precondition check failed.", "status": "FAILED_PRECONDITION" } }"#
+        for raw in [gmail, #"{"error":"invalid_grant"}"#, String(repeating: "word ", count: 40),
+                    "Line one\nline two", "Mailbox owner@example.com is not enabled for Gmail."] {
+            XCTAssertNil(KIFFMapping.quotable(raw), raw)
+            let (_, line) = KIFFMapping.executed(.init(status: "refused_by_tool", message: raw), approved: false, vendor: "Gmail")
+            XCTAssertFalse(line.contains("error") || line.contains("@") || line.contains("word word"), line)
+            XCTAssertEqual(line, Words.Record.toolRefusedCountsWhy(who: "Gmail", why: ""))
+        }
+        XCTAssertEqual(KIFFMapping.quotable(" Agent Mail refused it (it answered 403): Forbidden. "), "Agent Mail refused it (it answered 403): Forbidden.")
+        let (_, plain) = KIFFMapping.executed(.init(status: "refused_by_tool", message: "Forbidden."), approved: false, vendor: "Agent Mail")
+        XCTAssertEqual(plain, Words.Record.toolRefusedCountsWhy(who: "Agent Mail", why: ": Forbidden."), "a short plain reason still shows")
+    }
+
     func testASignInThatNeverCameBackIsWaitingAndCanBeCancelled() throws {
         XCTAssertTrue(try grant("g7", agent: "cal-1", status: "approved").waitingSignIn)
         XCTAssertFalse(try grant("g8", agent: "cal-1", status: "connected").waitingSignIn)
