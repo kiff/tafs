@@ -48,7 +48,20 @@ apps compile. The phone's end is `ios/Tafs/Services/WatchRelay.swift`, and the w
   session, no signature and no Face ID. Resuming stays on the phone, behind Face ID.
 - **The wrist shows the phone's result:** "Refused" or "Halted" appears only once KIFF or tafs
   cloud has answered. If it didn't go, it says why, in the phone's words.
-- **Coach** comes next.
+- **Coach** gets text only: the words the person dictated or wrote on the watch, shown there
+  before they're sent. The phone sends them to Coach's current chat with the session it keeps,
+  then reads the thread for up to 20 seconds for Coach's answer to them.
+
+## Coach
+
+- **In:** the watch's own text input, dictation or Scribble. No audio leaves the watch through
+  tafs, and nothing heard is kept. The watch's dictation is the system's: it may be processed by
+  Apple, so the watch never says the voice stays on the device, as the phone's dictation can.
+- **Out:** Coach's words, cut at about 300 characters with "The rest is on your phone". If the
+  answer shows any card or step, the wrist says "Approve on your phone" and nothing of the card:
+  nothing started from the wrist can grant anything.
+- **Refused:** without the AI-use consent, "allow AI use in tafs on your phone"; past the
+  credits, the app's own words; anything else, "Not sent" and why.
 
 ## What the watch keeps
 
