@@ -7,17 +7,17 @@ name: Runtime
 # holds none.
 
 # The paths are the runtime and every file outside it that its tests read
-# (docs/languages.md's Terms table and docs/glossary.sha256 in words.test.ts,
-# docs/drive.md in drive.test.ts), so a change to one of those runs the tests
-# too: a words-only change once left main red, and nothing deployed, with no
+# (recipes/ in recipes.test.ts, docs/languages.md's Terms table and
+# docs/glossary.sha256 in words.test.ts, docs/drive.md in drive.test.ts), so
+# a change to one of those runs the tests too: a words-only change once left main red, and nothing deployed, with no
 # check run on its pull request. By hand (main only), a run deploys main as
 # it is, for when nothing under these paths has merged since a failed run.
 on:
   push:
     branches: [main]
-    paths: ["runtime/**", "infra/**", "contracts/**", "docs/languages.md", "docs/glossary.sha256", "docs/drive.md", ".github/workflows/runtime.yml"]
+    paths: ["runtime/**", "infra/**", "contracts/**", "recipes/**", "docs/languages.md", "docs/glossary.sha256", "docs/drive.md", ".github/workflows/runtime.yml"]
   pull_request:
-    paths: ["runtime/**", "infra/**", "contracts/**", "docs/languages.md", "docs/glossary.sha256", "docs/drive.md", ".github/workflows/runtime.yml"]
+    paths: ["runtime/**", "infra/**", "contracts/**", "recipes/**", "docs/languages.md", "docs/glossary.sha256", "docs/drive.md", ".github/workflows/runtime.yml"]
   workflow_dispatch:
 
 defaults:
