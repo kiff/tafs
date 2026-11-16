@@ -242,6 +242,14 @@
     <string name="billing_test_purchase_credits">Zakupy testowe nie dodają kredytów do tego konta.</string>
     <string name="billing_try_free">Wypróbuj %1$s za darmo</string>
     <string name="billing_what_credits">Na co są kredyty</string>
+    <string name="brief_decisions">Decyzje</string>
+    <string name="brief_done">Gotowe od ostatniego przeglądu</string>
+    <string name="brief_evidence">Dowody</string>
+    <string name="brief_meanwhile">W międzyczasie:</string>
+    <string name="brief_next_move">Następny krok</string>
+    <string name="brief_recommends">Coach poleca</string>
+    <string name="brief_title">Twój przegląd</string>
+    <string name="brief_urgent">Pilne</string>
     <string name="calendar_agenda">Plan dnia</string>
     <string name="calendar_choose_date">Wybierz datę</string>
     <string name="calendar_date_picker">Data</string>

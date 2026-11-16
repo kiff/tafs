@@ -246,6 +246,16 @@ object Words {
     fun tryFree(trial: String): String = Res.s(R.string.billing_try_free, trial)
     val whatCredits: String get() = Res.s(R.string.billing_what_credits)
   }
+  object Brief {
+    val decisions: String get() = Res.s(R.string.brief_decisions)
+    val done: String get() = Res.s(R.string.brief_done)
+    val evidence: String get() = Res.s(R.string.brief_evidence)
+    val meanwhile: String get() = Res.s(R.string.brief_meanwhile)
+    val nextMove: String get() = Res.s(R.string.brief_next_move)
+    val recommends: String get() = Res.s(R.string.brief_recommends)
+    val title: String get() = Res.s(R.string.brief_title)
+    val urgent: String get() = Res.s(R.string.brief_urgent)
+  }
   object Calendar {
     val agenda: String get() = Res.s(R.string.calendar_agenda)
     val chooseDate: String get() = Res.s(R.string.calendar_choose_date)

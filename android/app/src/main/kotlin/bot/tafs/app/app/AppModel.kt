@@ -258,6 +258,22 @@ data class AppState(
   /** The account's labels and the filter row's words, from Home: the list filters by them, and nothing else does. */
   val labels: List<bot.tafs.app.kiff.HomeLabel> = emptyList(),
   val labelsAll: String? = null,
+  /**
+   * "Your brief" (Missions design v2.1 §7), in Needs you's place once there is one: tafs cloud's (`GET /v1/brief`), or the
+   * sample's for the store's screenshots. Null: Needs you, as today.
+   */
+  val brief: bot.tafs.app.kiff.Brief? = null,
+  /** The label the brief is filtered to; null is All. */
+  val briefLabel: String? = null,
+  /** Decisions put off here (Later, once tafs cloud took it) or answered in the sample, until the next read drops them. */
+  val briefSetAside: Set<String> = emptySet(),
+  /** The next move dismissed here: it isn't shown again until the next read. */
+  val nextMoveDismissed: Boolean = false,
+  /**
+   * Where a decision's answer opened, over the brief ([BriefRoutes]): Needs you's own list, a held call on its own card, or a
+   * step. The answer is given there, never from the brief.
+   */
+  val briefOpen: String? = null,
   /** Coach is on screen (its chat `coachChat`): set by the screen, for the badge. */
   val coachShown: Boolean = false,
   /** After a set-aside, where the chats went, in tafs cloud's words (`words.done`); gone once Coach opens. */
@@ -702,6 +718,24 @@ data class AppState(
 
   /** Home's line for it: tafs cloud's words, else the app's for its own count. */
   val needsYouWords: String get() = needsYou?.words ?: needsYouCount.let { if (it == 0) Words.NeedsYou.nothing else Words.NeedsYou.count(count = it) }
+
+  /** The Needs you tab's name: tafs cloud's (`words.title`, "Your brief") once there's a brief, else Needs you. */
+  val needsYouTabTitle: String get() = brief?.words?.let { w -> w.title.ifBlank { w.tab } }?.takeIf { it.isNotBlank() } ?: Words.NeedsYou.title
+
+  /** The brief's decisions still to answer here. */
+  val briefDecisions: List<bot.tafs.app.kiff.Brief.Decision> get() = brief?.decisions.orEmpty().filterNot { it.id in briefSetAside }
+
+  /**
+   * The line under the brief for what Needs you holds beyond its decisions, matched by item (BriefRoutes.needsYouBeyondBrief): a held
+   * call the brief doesn't show is never out of reach. Null when the brief shows it all.
+   */
+  val briefNeedsYouLine: String? get() = BriefRoutes.needsYouBeyondBrief(
+    count = needsYouCount,
+    held = held.map { it.kiffId ?: it.id },
+    steps = yourSteps.map { it.handoff },
+    others = cardUnitExceptions.size + unsure.size + coachWaiting.size,
+    decisions = briefDecisions,
+  )
 
   /** Halting is tafs cloud's: the account's, or a taf it runs. */
   fun canHalt(tafId: String?): Boolean = mode == Mode.kiff && (tafId == null || taf(tafId)?.cloudId != null)
@@ -1393,6 +1427,8 @@ class AppModel(
       refreshConnections()
       // The plan, for Settings' Plan card and Home's line: tafs cloud's balance, quietly.
       refreshPlan(generation)
+      // Your brief, in Needs you's place once tafs cloud serves one; none, and Needs you is as today.
+      loadBrief()
       // Did this happen?: the money calls KIFF can't prove, for whoever answers held calls, read quietly.
       if (_state.value.mayAnswerHolds) attempt { kiff.didThisHappen() }?.let { calls ->
         if (generation == accountGeneration) _state.update { it.copy(unsure = calls) }
@@ -1806,12 +1842,14 @@ class AppModel(
     val saved = store?.load()
     if (saved != null) {
       _state.value = AppState(mode = Mode.sample, ready = true, tafs = saved.tafs, held = saved.held, record = saved.record,
-        scriptPosition = saved.scriptPosition, templateOf = saved.templateOf)
+        scriptPosition = saved.scriptPosition, templateOf = saved.templateOf, briefLabel = _state.value.briefLabel)
+      showSampleBrief()
       return
     }
     _state.update { it.copy(mode = Mode.sample, ready = true) }
     loadSample()
     save()
+    showSampleBrief()
   }
 
   private fun loadSample() {
@@ -2803,6 +2841,8 @@ class AppModel(
     val tafId = cloudId?.let { id -> _state.value.tafs.firstOrNull { it.cloudId == id }?.id }
     when (change) {
       "taf", "halted", "resumed" -> refresh()
+      // A brief's alert, or an urgent one, came with the app open: the brief is read again.
+      BriefRoutes.BRIEF_CHANGE -> loadBrief()
       "knock" -> {
         tafId?.let { loadDoors(it) }
         // Every push reads planque's grants too (a refresh does): tafs cloud never sees them, so a connection its vendor signed
@@ -5452,6 +5492,115 @@ class AppModel(
     _state.update { it.copy(screenshots = true) }
   }
 
+  // MARK: Your brief (Missions design v2.1 §7)
+
+  /** The sample's brief, for the store's screenshots only (the `brief` extra, debug builds), and with an urgent decision leading it. */
+  private var sampleBrief = false
+  private var sampleBriefUrgent = false
+
+  /** "Your brief" in Needs you's place over the sample, for the store's screenshots: filtered to [label] from the start. */
+  fun showBriefForScreenshots(label: String? = null, urgent: Boolean = false) {
+    sampleBrief = true
+    sampleBriefUrgent = urgent
+    _state.update { it.copy(briefLabel = label) }
+    showSampleBrief()
+  }
+
+  private fun showSampleBrief() {
+    if (_state.value.mode == Mode.sample && sampleBrief) {
+      _state.update { it.copy(brief = bot.tafs.app.model.SampleBrief.brief(it.briefLabel, sampleBriefUrgent)) }
+    }
+  }
+
+  /**
+   * Reads the brief for the label chosen: the sample's for the screenshots, else tafs cloud's. The switch is the route itself: until
+   * tafs cloud serves `GET /v1/brief` it answers 404 and there's no brief, so Needs you is as today. Any other failure keeps Needs
+   * you too: the brief never hides what waits.
+   */
+  suspend fun loadBrief() {
+    val s = _state.value
+    if (s.mode == Mode.sample && sampleBrief) return showSampleBrief()
+    if (s.mode != Mode.kiff) {
+      if (s.brief != null) _state.update { it.copy(brief = null) }
+      return
+    }
+    val generation = accountGeneration
+    val label = s.briefLabel
+    val read = attempt { cloud.brief(label) }
+    // Another account, or another label chosen meanwhile: that read is the one that shows.
+    if (generation != accountGeneration || _state.value.briefLabel != label) return
+    val brief = read?.takeIf { it.drawable }
+    // With no brief, nothing stays open over it.
+    _state.update { it.copy(brief = brief, briefOpen = if (brief == null) null else it.briefOpen) }
+  }
+
+  /** The brief filtered to [label] (null is All), as tafs cloud filters it. */
+  suspend fun filterBrief(label: String?) {
+    _state.update { it.copy(briefLabel = label, briefSetAside = emptySet()) }
+    loadBrief()
+  }
+
+  /**
+   * One tap on an answer opens its decision where its own signed answer is given ([BriefRoutes.destination]): a held call on its own
+   * card with no answer chosen, a step, else Needs you's list. Nothing is answered, signed or sent from the brief; the person answers
+   * there, with the fingerprint asked there. The sample's card is set aside, as there is nothing to open.
+   */
+  fun answerBrief(decision: bot.tafs.app.kiff.Brief.Decision, answer: bot.tafs.app.kiff.Brief.Answer) {
+    if (_state.value.mode != Mode.kiff) {
+      _state.update { it.copy(briefSetAside = it.briefSetAside + decision.id) }
+      return
+    }
+    _state.update { it.copy(briefOpen = BriefRoutes.destination(decision, answer)) }
+  }
+
+  /** Needs you's list, opened from the brief's line for it, or from a held call's alert: over the brief, when there is one. */
+  fun openNeedsYouFromBrief() = _state.update { if (it.brief == null) it else it.copy(briefOpen = BriefRoutes.NEEDS_YOU) }
+
+  /** Back to the brief from what an answer opened. */
+  fun closeBriefOpen() = _state.update { it.copy(briefOpen = null) }
+
+  /**
+   * "Later": the decision moves to the next brief (`POST /v1/brief/decisions/{id}/later`). The card goes only once tafs cloud took it;
+   * else it stays, to answer or try again, and says why. Never on an urgent decision, whatever was sent.
+   */
+  suspend fun laterBrief(decision: bot.tafs.app.kiff.Brief.Decision): Boolean {
+    if (decision.laterShown == null) return false
+    if (_state.value.mode != Mode.kiff) {
+      _state.update { it.copy(briefSetAside = it.briefSetAside + decision.id) }
+      return true
+    }
+    val generation = accountGeneration
+    try {
+      cloud.briefLater(decision.id)
+    } catch (e: CancellationException) {
+      throw e
+    } catch (e: Exception) {
+      if (generation == accountGeneration) fail(ErrorWords.of(e))
+      return false
+    }
+    if (generation != accountGeneration) return false
+    _state.update { it.copy(briefSetAside = it.briefSetAside + decision.id) }
+    return true
+  }
+
+  /** Start the next move: Coach opens on a new conversation with it in the message box, for the person to take on. Nothing is sent. */
+  fun startNextMove(move: bot.tafs.app.kiff.Brief.NextMove) {
+    _state.update { it.copy(nextMoveDismissed = true) }
+    openCoachWith(move.words)
+  }
+
+  fun dismissNextMove() = _state.update { it.copy(nextMoveDismissed = true) }
+
+  /** Ask Coach about a mission, from its log: a new conversation with the mission's name in the message box. Nothing is sent. */
+  fun askCoachAboutMission(title: String) = openCoachWith(title)
+
+  private fun openCoachWith(words: String) {
+    if (_state.value.mode != Mode.kiff || !_state.value.mayUseCoach) return
+    newCoachChat()
+    setDraft(COACH_CHAT, words)
+    _state.update { it.copy(coachRequested = true) }
+  }
+
   /** The owner's answer to one of Coach's cards. */
   fun answerCoach(type: String, id: String, answer: String) {
     viewModelScope.launch { answerCard(type, id, answer) }
@@ -7230,9 +7379,15 @@ class AppModel(
     scope.launch { refresh() }
   }
 
-  /** A page of a mission's log (Missions v2.1 §6), read only; null when it can't be read now. Signed in only. */
-  suspend fun missionLog(mission: String, before: String? = null): bot.tafs.app.kiff.MissionLogPage? =
-    if (_state.value.mode != Mode.kiff) null else attempt { cloud.missionLog(mission, before) }
+  /**
+   * A page of a mission's log (Missions v2.1 §6), read only; null when it can't be read now. Signed in, tafs cloud's; on the sample
+   * with its brief shown (the store's screenshots), the sample's own log, one page; else none.
+   */
+  suspend fun missionLog(mission: String, before: String? = null): bot.tafs.app.kiff.MissionLogPage? = when {
+    _state.value.mode == Mode.kiff -> attempt { cloud.missionLog(mission, before) }
+    _state.value.mode == Mode.sample && sampleBrief && _state.value.brief != null && before == null -> bot.tafs.app.model.SampleBrief.log()
+    else -> null
+  }
 
   /** Reads where a halt stands. */
   suspend fun refreshHalt(tafId: String?) {

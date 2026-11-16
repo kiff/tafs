@@ -228,6 +228,14 @@
     <string name="billing_test_purchase_credits">Testaankopen voegen geen credits toe aan dit account.</string>
     <string name="billing_try_free">Probeer %1$s gratis</string>
     <string name="billing_what_credits">Waar de credits voor zijn</string>
+    <string name="brief_decisions">Beslissingen</string>
+    <string name="brief_done">Klaar sinds de vorige briefing</string>
+    <string name="brief_evidence">Bewijs</string>
+    <string name="brief_meanwhile">Intussen:</string>
+    <string name="brief_next_move">Volgende stap</string>
+    <string name="brief_recommends">Coach raadt aan</string>
+    <string name="brief_title">Jouw briefing</string>
+    <string name="brief_urgent">Dringend</string>
     <string name="calendar_agenda">Agenda</string>
     <string name="calendar_choose_date">Kies een datum</string>
     <string name="calendar_date_picker">Datum</string>

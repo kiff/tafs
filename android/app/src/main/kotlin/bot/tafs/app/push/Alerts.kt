@@ -9,7 +9,11 @@ import java.time.Instant
  * from KIFF with the phone's own session when it is opened.
  *
  *   kind        "alert" shows a notification; "answered" takes one away (a held call someone answered); "background" with
- *               change says what changed on the account, for the app to read again
+ *               change says what changed on the account, for the app to read again; "brief" or "urgent" (Missions design v2.1)
+ *               shows the brief's alert, or an urgent one, which opens Your brief unless `open` names where (an earlier
+ *               draft's shape; tafs cloud sends these as "alert" with brief_kind)
+ *   brief_kind  on an alert, "brief" (Your brief is ready) or "urgent" (one that came at once, a held call's): the brief is read
+ *               again with the app open; with decision, the one it's about ("hold:<id>")
  *   change      what changed (docs/approvals.md, "Live updates"): "taf", "halted", "resumed" or "knock", with taf_id
  *   title,body  what an alert says
  *   open        where tapping it goes: "needs-you", "usage", or "taf" (a door's alert) with taf_id, the taf's id in tafs cloud
@@ -19,7 +23,16 @@ import java.time.Instant
  */
 sealed interface Alert {
   /** A notification to show. */
-  data class Show(val title: String, val body: String, val open: String, val tag: String, val loud: Boolean, val expiresAt: Instant?) : Alert {
+  data class Show(
+    val title: String,
+    val body: String,
+    val open: String,
+    val tag: String,
+    val loud: Boolean,
+    val expiresAt: Instant?,
+    /** The brief's alert, or an urgent one: with the app open, the brief is read again. */
+    val brief: Boolean = false,
+  ) : Alert {
     /**
      * What this alert says on a locked phone, or a locked watch it bridges to: only that a taf needs you (`alert.needs_you`, iOS's
      * hidden-preview placeholder), never tafs cloud's title or body, which can name an amount, a merchant or a person. The same for
@@ -41,8 +54,14 @@ sealed interface Alert {
 object AlertPayload {
   const val NEEDS_YOU = "needs-you"
   const val USAGE = "usage"
+
+  /** Your brief, in Needs you's place (Missions design v2.1): where a brief's alert, or an urgent one, opens. */
+  const val BRIEF = "brief"
   private const val TAF = "taf"
-  private val OPEN = setOf(NEEDS_YOU, USAGE)
+  private val OPEN = setOf(NEEDS_YOU, USAGE, BRIEF)
+
+  /** An alert's `brief_kind` (Missions design v2.1, §7.5): Your brief is ready, or one that came at once. */
+  private val BRIEF_KINDS = setOf("brief", "urgent")
 
   /** The changes tafs cloud tells the phones of; one of a newer kind is ignored, and the next return to the app reads it. */
   val CHANGES = setOf("taf", "halted", "resumed", "knock")
@@ -93,8 +112,21 @@ object AlertPayload {
           tafId != null && open != NEEDS_YOU -> Words.Push.openTaf
           else -> Words.Push.openNeedsYou
         }
+        // Your brief's own alert, or an urgent one: the brief is read again with the app open. One brief's alert replaces the last.
+        val briefKind = data["brief_kind"]?.takeIf { it in BRIEF_KINDS }
         // A door's alerts with nothing else to name them are one per taf: the latest replaces the one before.
-        Alert.Show(title, body, open, tag.ifEmpty { tafOf(open)?.let(::taf) ?: "alert" }, loud = data["level"] != "quiet", expiresAt = expires)
+        val tagged = tag.ifEmpty { if (briefKind == "brief") BRIEF else tafOf(open)?.let(::taf) ?: "alert" }
+        Alert.Show(title, body, open, tagged, loud = data["level"] != "quiet", expiresAt = expires, brief = briefKind != null)
+      }
+      // The brief's alert, or an urgent one (Missions design v2.1): the brief, whose urgent card leads it, unless it names where it
+      // opens. Urgency is tafs cloud's: its `level` says whether it sounds, as any alert's does.
+      "brief", "urgent" -> {
+        val open = data["open"]?.takeIf { it in OPEN } ?: BRIEF
+        val expires = data["expires_at"]?.let { runCatching { Instant.parse(it) }.getOrNull() }
+        if (expires != null && !expires.isAfter(now)) return null
+        val title = data["title"]?.takeIf { it.isNotBlank() } ?: Words.Alert.needsYou
+        val body = data["body"]?.takeIf { it.isNotBlank() } ?: Words.Push.openNeedsYou
+        Alert.Show(title, body, open, tag.ifEmpty { data["kind"].orEmpty() }, loud = data["level"] != "quiet", expiresAt = expires, brief = true)
       }
       else -> null
     }

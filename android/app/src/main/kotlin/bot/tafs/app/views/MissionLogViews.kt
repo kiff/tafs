@@ -70,7 +70,13 @@ internal fun kindColor(kind: String): Color = when (kind) {
  * tafs cloud words it; a removed taf's entries stay, greyed and marked removed, so the history is whole.
  */
 @Composable
-fun MissionLogView(mission: HomeLabelMission, load: suspend (String, String?) -> MissionLogPage?, onBack: () -> Unit) {
+fun MissionLogView(
+  mission: HomeLabelMission,
+  load: suspend (String, String?) -> MissionLogPage?,
+  onBack: () -> Unit,
+  /** Ask Coach about this mission: Coach opens with its name in the message box. Null where Coach isn't there. */
+  askCoach: ((String) -> Unit)? = null,
+) {
   var pages by remember(mission.id) { mutableStateOf<List<MissionLogPage>>(emptyList()) }
   var failed by remember(mission.id) { mutableStateOf(false) }
   var loading by remember(mission.id) { mutableStateOf(true) }
@@ -97,6 +103,7 @@ fun MissionLogView(mission: HomeLabelMission, load: suspend (String, String?) ->
         Text(mission.name, style = scaled(28, FontWeight.Bold, Theme.ink, display = true))
         mission.goal?.takeIf { it.isNotBlank() }?.let { Text(it, style = scaled(15, color = Theme.soft)) }
         Text(Words.Mission.readOnly, style = scaled(12, color = Theme.dim))
+        askCoach?.let { ask -> OutlineButton(Words.Coach.ask, onClick = { ask(mission.name) }, modifier = Modifier.fillMaxWidth(), color = Theme.blue) }
       }
     }
     items(items, key = { it.id.ifEmpty { it.at + it.words } }) { LogEntry(it) }

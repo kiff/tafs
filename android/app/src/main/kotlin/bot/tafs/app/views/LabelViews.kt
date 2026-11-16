@@ -68,7 +68,7 @@ internal fun chosenLabel(labels: List<HomeLabel>, selected: String?): HomeLabel?
 private const val MAX_FOLDED = 2
 
 @Composable
-internal fun LabelRow(labels: List<HomeLabel>, all: String, allCount: Int, selected: String?, onSelect: (String?) -> Unit) {
+internal fun LabelRow(labels: List<HomeLabel>, all: String, allCount: Int?, selected: String?, onSelect: (String?) -> Unit) {
   if (labels.isEmpty()) return
   var expanded by remember { mutableStateOf(false) }
   val (shown, more) = shownLabels(labels, expanded, selected)

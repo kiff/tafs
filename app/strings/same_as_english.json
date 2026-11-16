@@ -78,6 +78,7 @@
     "approval.touch_id",
     "attachment.photo",
     "attachment.photo_numbered",
+    "brief.urgent",
     "calendar.agenda",
     "calendar.date_picker",
     "calendar.day_heading",

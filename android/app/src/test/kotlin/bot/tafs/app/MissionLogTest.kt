@@ -74,7 +74,11 @@ class MissionLogTest {
   }
 
   @Test fun theSampleHasNoMissionLog() = runTest {
-    assertNull(testModel().missionLog("m_1"))
+    val sample = testModel()
+    assertNull(sample.missionLog("m_1"))
+    // Only the store's screenshots of Your brief show one: the sample brief's own, from its Done's Evidence.
+    sample.showBriefForScreenshots()
+    assertEquals(bot.tafs.app.model.SampleBrief.log(), sample.missionLog("m_1"))
   }
 
   @Test fun nothingIsDrawnForAnEmptyLog() {

@@ -414,6 +414,22 @@ class TafsCloud(
 
   private inline fun <T> orNone(read: () -> T): T? = try { read() } catch (e: CloudError) { if (e.status == 404) null else throw e }
 
+  // MARK: Your brief (Missions design v2.1 §7)
+
+  /** The brief, filtered to [label] (none is All); null while tafs cloud doesn't serve it (404). Read leniently ([Brief.parse]). */
+  suspend fun brief(label: String? = null): Brief? = orNone {
+    Brief.parse(String(send("GET", "/v1/brief" + (label?.let { "?label=${escaped(it)}" } ?: ""))))
+  }
+
+  /**
+   * "Later": the decision moves to the next brief (§7.5). Throws when tafs cloud didn't take it, so the card stays. The id's `:`
+   * (`hold:<id>`, `step:<handoff>`) goes as is, as iOS sends it: a path may carry it, and the route reads the id raw.
+   */
+  suspend fun briefLater(decision: String) {
+    send("POST", "/v1/brief/decisions/${escaped(decision).replace("%3A", ":")}/later", "{}".toByteArray())
+  }
+
+
   // MARK: Halt
 
   private fun haltPath(id: String?): String = id?.let { "/v1/tafs/${escaped(it)}/halt" } ?: "/v1/halt"
