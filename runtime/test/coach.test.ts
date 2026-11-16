@@ -1,10 +1,10 @@
 import { generateKeyPairSync, sign } from "node:crypto";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { describe, expect, it, vi } from "vitest";
-import { COACH_CARDS, COACH_TOOL_GROUPS, coachCardsDraft, coachToolsStep, OP_ARG, SESSION_ARG, TOOLS } from "../src/cloud/coach.js";
+import { COACH_CARDS, COACH_TOOL_GROUPS, coachCardsDraft, coachToolsStep, OP_ARG, SESSION_ARG, TASK_KEPT_MS, TOOLS } from "../src/cloud/coach.js";
 import { startDrive } from "../src/cloud/drive.js";
 import { AgentsError } from "../src/cloud/agents.js";
-import { CHAT, type Deps, handle, type HTTPEvent, noteClaim, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
+import { CHAT, type Deps, handle, type HTTPEvent, NOTE_LEASE_MS, noteClaim, SETUP_JOB, type Taf } from "../src/cloud/handler.js";
 import { sha256 } from "../src/cloud/jcs.js";
 import { readLabels, saveLabels } from "../src/cloud/labels.js";
 import { readMissions } from "../src/cloud/missions.js";
@@ -853,6 +853,28 @@ describe("a run's note acts at most once (kiff/agents sends it at least once)", 
     w.coach.append = append;
     expect((await w.send("POST", "/v1/runs/ended", note)).body).toEqual({ taken: true });
     expect((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines).toHaveLength(1);
+  });
+
+  it("a handling killed after its claim leaves a lease only: once it runs out, the same note is told, once", async () => {
+    const w = world();
+    const task = await w.tool("taf_task", { taf: RAE, text: "Refund order 42" }, { act: "u_ana" });
+    const ref = w.agents.notified.get(task.json.run)!.ref;
+    const run = w.agents.runs.find((r) => r.id === task.json.run)!;
+    Object.assign(run, { status: "ERROR", error: "Stripe said no." });
+    const claim = noteClaim(T, ref, run);
+    const now = new Date("2026-10-16T12:00:00Z").getTime();
+    const lines = async () => ((await w.send("GET", `/v1/tafs/${SETUP}/conversation`, undefined, "ana")).body.coach_lines ?? []) as unknown[];
+    const note = { run: task.json.run, agent: RAE, status: "ERROR", ref };
+    // A handling at work holds its lease: a duplicate meanwhile is taken and does nothing.
+    w.coach.held.set(claim, { value: true, until: now + NOTE_LEASE_MS });
+    expect((await w.send("POST", "/v1/runs/ended", note)).body).toEqual({ taken: true });
+    expect(await lines()).toHaveLength(0);
+    // That handling died (no throw, no mark): its lease runs out, and the next delivery tells it.
+    w.coach.held.set(claim, { value: true, until: now - 1 });
+    expect((await w.send("POST", "/v1/runs/ended", note)).body).toEqual({ taken: true });
+    expect(await lines()).toHaveLength(1);
+    // Told: the mark is kept as long as the task, so a late duplicate never tells it again.
+    expect(w.coach.held.get(claim)).toMatchObject({ value: "told", until: now + TASK_KEPT_MS });
   });
 
   it("claims a run's state as read back: an ended run by its status, a paused one by what it waits on", () => {

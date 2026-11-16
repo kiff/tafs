@@ -8737,17 +8737,28 @@ async function runEnded(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (!ended && r.status !== "PAUSED") return { taken: false };
   // kiff/agents sends a note at least once: the same note again, or two at once, acts once. The claim is the run's
   // state as read back, so a run that pauses again on something else is told again.
+  // The claim is a short lease while this note is told, then a mark that it was, kept as long as the task: a handling
+  // killed between the two (a timeout, a deploy) leaves only the lease, so kiff/agents' next delivery tells it.
   const claim = noteClaim(tenant, note.ref, r);
   const at = deps.now?.() ?? new Date();
-  if (!(await deps.coach.once(claim, new Date(at.getTime() + TASK_KEPT_MS)))) return { taken: true };
+  if (!(await deps.coach.once(claim, new Date(at.getTime() + NOTE_LEASE_MS)))) return { taken: true };
+  let told: { taken: boolean };
   try {
-    return await tellRunEnded(tenant, key, task, r, ended, at, deps);
+    told = await tellRunEnded(tenant, key, task, r, ended, at, deps);
   } catch (err) {
     // Nothing was said: the next note, or a retry of this one, says it.
     await deps.coach.remove(claim).catch(() => undefined);
     throw err;
   }
+  await deps.coach.put(claim, "told", new Date(at.getTime() + TASK_KEPT_MS));
+  return told;
 }
+
+/**
+ * How long a note's claim holds while it's told: longer than one handling, shorter than kiff/agents' first retry of a
+ * note (a minute, then 5, 20 and 60). A handling that dies leaves this lease alone, and the retry after it tells it.
+ */
+export const NOTE_LEASE_MS = 2 * 60_000;
 
 /**
  * The key a run's note is acted on under: the run and its state, read back from kiff/agents. An ended run's status;
