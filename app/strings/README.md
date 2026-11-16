@@ -60,6 +60,8 @@ The terms, the voice and the rules are in [docs/languages.md](../../docs/languag
   catalog's own `_plural` entry says which form a number takes in the app's language.
 - **Android:** its resources and typed accessors, written by `android.py` beside the
   generator. A key that isn't here doesn't compile there either.
+- **The Wear OS watch:** `android.py` also writes the watch's own resources and accessors, for its
+  `watch.*` lines and the phone's lines it shows (`WEAR_KEYS`, docs/watch-wear.md).
 
 **Nobody edits the generated files by hand.** `python3 app/strings/generate.py --check`
 fails when one differs from what the generator writes, and CI runs it.
