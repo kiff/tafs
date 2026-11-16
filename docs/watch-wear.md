@@ -75,7 +75,7 @@ cd android && ./gradlew :watchlink:test :wear:testDebugUnitTest :wear:assembleDe
     Halt: Coach acts on what it's told. Otherwise nothing is sent and the watch says `watch.needs_lock`. The phone sends it as its own message to Coach (`deliverChat`), but only
     with the AI consent given on the phone (else `watch.coach_needs_consent`), and only to a Coach already started on the
     phone. Starting asks for the fingerprint, so the watch says Open on phone and asks nothing itself.
-  - **The answer:** the phone waits up to 8 s for Coach's answer, until its chat is no longer thinking (`AppState.thinking`):
+  - **The answer:** the phone waits up to 8 s for Coach's answer, counted from the request's start (the send included), until its chat is no longer thinking (`AppState.thinking`):
     Coach's newest message after the owner's own, by the chat's order, never by comparing tafs cloud's clock with the phone's.
     The watch draws it whole if it's short. If it's longer than 280 characters, or if Coach showed a card with it (an
     approval, a sign-in, a setup step), the watch shows its start with Open on phone. If it's slower than 8 s, the watch shows

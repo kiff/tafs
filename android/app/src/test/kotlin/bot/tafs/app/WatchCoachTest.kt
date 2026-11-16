@@ -75,6 +75,14 @@ class WatchCoachTest {
     assertEquals(WatchReply.SignedOut, WatchRelay(model = { testModel() }, now = { now }).ask(WatchRequest.Coach(now, "hi")))
   }
 
+  /** The 8 s run from the request's start: a slow send leaves less for the answer, so the watch's 10 s is never passed. */
+  @Test fun theWaitForCoachCountsTheSendToo() {
+    assertEquals(8_000, WatchRelay.waitLeft(startedMs = now, nowMs = now, budgetMs = 8_000))
+    assertEquals("a 3 s send leaves 5 s", 5_000, WatchRelay.waitLeft(now, now + 3_000, 8_000))
+    assertEquals("a send slower than the budget leaves nothing to wait", 0, WatchRelay.waitLeft(now, now + 9_000, 8_000))
+    assertEquals("a clock set back never waits longer than the budget", 8_000, WatchRelay.waitLeft(now, now - 60_000, 8_000))
+  }
+
   @Test fun coachsAnswerIsItsNewestSinceTheMessage() {
     fun msg(at: Long, from: ChatMessage.From, text: String, kind: ChatMessage.Kind = ChatMessage.Kind.message) =
       ChatMessage(at = Instant.ofEpochMilli(at), from = from, text = text, session = "s1", kind = kind)

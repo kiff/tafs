@@ -56,7 +56,7 @@ class WatchRelay(
    * Coach from the wrist: the words, as text, sent as the phone's own message to Coach, then Coach's answer, short. Only with
    * the AI consent given on the phone, and only to a Coach started on it (starting asks for the fingerprint). An answer that
    * shows a card (an approval, a sign-in, a setup step) or is longer than the watch draws says Open on phone; one slower than
-   * [coachWaitMs] is on the phone. Nothing heard reaches the phone: the watch sends text.
+   * [coachWaitMs], counted from the request's start, is on the phone. Nothing heard reaches the phone: the watch sends text.
    */
   private suspend fun coach(text: String): WatchReply {
     val model = signedIn() ?: return WatchReply.SignedOut
@@ -64,10 +64,12 @@ class WatchRelay(
     if (before.aiConsent?.given != true) return WatchReply.Failed(Words.Watch.coachNeedsConsent)
     if (before.coachCloudId == null) return WatchReply.Failed(Words.Watch.openOnPhone)
     val cards = before.coachComponents.size
+    // The budget runs from the request's start, sending included, so the whole answer stays under the watch's own 10 s.
+    val started = now()
     if (!model.deliverChat(text, bot.tafs.app.app.COACH_CHAT)) {
       return WatchReply.Failed(model.state.value.chatErrors[bot.tafs.app.app.COACH_CHAT] ?: Words.Watch.openOnPhone)
     }
-    val answered = kotlinx.coroutines.withTimeoutOrNull(coachWaitMs) {
+    val answered = kotlinx.coroutines.withTimeoutOrNull(waitLeft(started, now(), coachWaitMs)) {
       model.state.first { coachDone(it) && coachAnswer(it, text) != null }
     } ?: return WatchReply.Coach(Words.Watch.moreOnPhone, long = true)
     val words = coachAnswer(answered, text)!!
@@ -120,6 +122,13 @@ class WatchRelay(
   }
 
   companion object {
+    /**
+     * What's left of [budgetMs] for Coach's answer, the request having started at [startedMs]: the send's own time comes off it,
+     * so a slow network never takes the whole answer past the watch's limit. Never below 0, never above the budget (a clock
+     * set back).
+     */
+    fun waitLeft(startedMs: Long, nowMs: Long, budgetMs: Long): Long = (budgetMs - (nowMs - startedMs)).coerceIn(0, budgetMs)
+
     /** The longest answer the watch draws whole: past it, the start and Open on phone. */
     const val COACH_SHORT = 280
 
