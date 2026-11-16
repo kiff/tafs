@@ -1,3 +1,4 @@
+import { balanceView } from "../src/cloud/credits.js";
 import { afterEach, describe, expect, it, vi, beforeEach } from "vitest";
 import { LANGUAGES, wordsIn } from "../src/cloud/words/index.js";
 import { AgentsError, type SessionEvent } from "../src/cloud/agents.js";
@@ -7006,6 +7007,25 @@ describe("GET /v1/brief and Later", () => {
     const r = await handle({ rawPath: "/v1/brief", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_paris" } }, down);
     expect(r.statusCode).toBe(200);
     expect(JSON.parse(r.body).decisions).toEqual([]);
+  });
+
+  it("says the account's credits as Settings does, and leaves the line out when the balance can't be read", async () => {
+    const w = world();
+    const base = depsOf(w);
+    const period = { start: "2026-10-01T00:00:00Z", end: "2026-11-01T00:00:00Z" };
+    const balance = { kind: "solo", state: "ok", meter_pct: 40, included: 1000, used: 400, left: 600, packs_left: 0, over: 0, beyond: 0, beyond_cents: 0, limit_cents: 0, seats: 1, period,
+      can_raise: false, raise_to_cents: 0, can_buy: { solo: false, packs: true }, billed_by: "stripe" };
+    let up = true;
+    const deps = { ...base, coach: memoryCoach(() => w.now), fetch: (async (url: string, init?: RequestInit) => new URL(url).pathname === "/v1/me/usage/credits"
+      ? (up ? new Response(JSON.stringify({ period, current: true, credits: 400, runs: 3, balance }), { status: 200 }) : new Response("{}", { status: 500 }))
+      : base.fetch!(url, init)) as Deps["fetch"] };
+    const get = async () => JSON.parse((await handle({ rawPath: "/v1/brief", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_paris" } }, deps)).body);
+    expect((await get()).credits).toEqual({ words: balanceView(balance as never, "en").balance.words });
+    expect((await get()).credits.words).toMatch(/600/);
+    up = false;
+    const down = await get();
+    expect(down.credits).toBeUndefined();
+    expect(down.at).toBe("2026-10-29T07:00:00.000Z");
   });
 
   it("leaves out a taf being removed, with its calls and steps (M7)", async () => {

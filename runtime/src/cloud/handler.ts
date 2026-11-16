@@ -7431,7 +7431,12 @@ async function briefInputs(event: HTTPEvent, me: KIFFIdentity, deps: Deps, now: 
 /** GET /v1/brief?label=: Your brief, built here (brief.ts), so the apps count and cut nothing. */
 async function brief(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
   const now = deps.now?.() ?? new Date();
-  const { lang, w, tafs, decisions, labelSet, later } = await briefInputs(event, me, deps, now);
+  // The account's credits line, as Settings says it (credits.ts balanceView), read beside the rest: a balance that can't
+  // be read leaves the line out, never the brief.
+  const [{ lang, w, tafs, decisions, labelSet, later }, balance] = await Promise.all([
+    briefInputs(event, me, deps, now),
+    within(readBalance(bearer(event), deps.fetch, deps.kiffBase), SIGNS_READ_MS).catch(() => undefined),
+  ]);
   const label = new URLSearchParams(event.rawQueryString ?? "").get("label") ?? undefined;
   const waiting = new Set(decisions.map((d) => d.taf.id));
   const rest = tafs.filter((t) => !waiting.has(t.id) && (!label || t.labels.includes(label))).length;
@@ -7439,6 +7444,7 @@ async function brief(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
     now, timeZone: me.timeZone ?? "UTC", decisions, cases: [], later, tafs, rest, ...(label ? { label } : {}),
     labels: (labelSet?.labels ?? []).map((l) => ({ id: l.id, name: labelName(l, lang), color: l.color })),
     words: { decisions: w.brief_decisions, done: w.brief_done, rest: w.brief_rest, later: w.brief_later,
+      ...(balance ? { credits: balanceView(balance, lang).balance.words } : {}),
       more: (n) => w.brief_more(n, plural(lang, n)), restLine: (n) => w.brief_rest_line(n, plural(lang, n)) },
   });
   // The tab's own name, in the glossary's words ("Your brief"), with the headings.
