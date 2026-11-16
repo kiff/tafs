@@ -2,18 +2,49 @@
   "watch.already_answered": "Ha già una risposta, o è terminata.",
   "watch.approve_on_phone": "Approva sul telefono",
   "watch.as_of": "Aggiornato alle {time}",
+  "watch.ask": "Chiedi a tafs",
+  "watch.ask_needs_consent": "Prima di chiedere a tafs, consenti l'uso dell'IA in tafs sul telefono.",
+  "watch.ask_not_on": "Chiedere dall'orologio non è ancora attivo.",
+  "watch.ask_text_only": "tafs riceve le tue parole come testo, mai la tua voce.",
   "watch.asking_phone": "Chiedo al telefono…",
+  "watch.check_phone": "Controlla la connessione del telefono",
   "watch.coach_needs_consent": "Prima di parlare con Coach, consenti l'uso dell'IA in tafs sul telefono.",
+  "watch.didnt_catch": "Non ho capito. Tocca per riprovare.",
   "watch.glance_description": "Quanti ti aspettano, mai cosa né chi.",
+  "watch.halting": "Blocco di {taf}…",
+  "watch.halting_all": "Blocco di tutti i tuoi tafs…",
+  "watch.hear": "Ascolta",
   "watch.held_calls": {
     "one": "{count} chiamata trattenuta ti aspetta",
     "other": "{count} chiamate trattenute ti aspettano"
   },
+  "watch.mic_needed": "Per chiedere a voce, consenti il microfono a tafs su questo orologio.",
   "watch.more_on_phone": "Il resto è sul telefono.",
   "watch.needs_lock": "Per rifiutare o bloccare da questo orologio, imposta un blocco schermo e sbloccalo.",
+  "watch.needs_you_count": {
+    "one": "{count} ti aspetta",
+    "other": "{count} ti aspettano"
+  },
+  "watch.not_sure": "Non è sicuro che sia arrivato",
   "watch.open_on_phone": "Apri sul telefono",
   "watch.phone_not_reachable": "Il telefono non è raggiungibile. Avvicinalo, poi riprova.",
+  "watch.ready_count": {
+    "one": "{count} pronto",
+    "other": "{count} pronti"
+  },
   "watch.refused": "Rifiutata. Non è stato inviato nulla.",
+  "watch.reply": "Rispondi",
+  "watch.result_ready": "C'è un risultato",
+  "watch.results_channel": "Risultati",
+  "watch.retry": "Riprova",
+  "watch.sending": "Invio…",
+  "watch.sent": "Inviato",
   "watch.sign_in_on_phone": "Prima accedi a tafs sul telefono.",
-  "watch.voice_text_only": "Coach riceve le tue parole come testo, mai la tua voce."
+  "watch.timing": "Ascolto {listen} ms · ricevuta {receipt} ms · risultato {result} ms",
+  "watch.update_phone": "Aggiorna tafs sul telefono, poi riprova.",
+  "watch.voice_text_only": "Coach riceve le tue parole come testo, mai la tua voce.",
+  "watch.working_count": {
+    "one": "{count} in corso",
+    "other": "{count} in corso"
+  }
 }

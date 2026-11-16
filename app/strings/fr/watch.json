@@ -2,18 +2,49 @@
   "watch.already_answered": "Déjà répondu, ou terminé.",
   "watch.approve_on_phone": "Approuvez sur votre téléphone",
   "watch.as_of": "Mis à jour à {time}",
+  "watch.ask": "Demander",
+  "watch.ask_needs_consent": "Avant de demander à tafs, autorisez l'utilisation de l'IA dans tafs sur votre téléphone.",
+  "watch.ask_not_on": "Demander depuis la montre n'est pas encore activé.",
+  "watch.ask_text_only": "tafs reçoit vos mots en texte, jamais votre voix.",
   "watch.asking_phone": "Demande à votre téléphone…",
+  "watch.check_phone": "Vérifiez la connexion du téléphone",
   "watch.coach_needs_consent": "Avant de parler à Coach, autorisez l'utilisation de l'IA dans tafs sur votre téléphone.",
+  "watch.didnt_catch": "Pas compris. Touchez pour réessayer.",
   "watch.glance_description": "Combien vous attendent, jamais quoi ni qui.",
+  "watch.halting": "Blocage de {taf}…",
+  "watch.halting_all": "Blocage de tous vos tafs…",
+  "watch.hear": "Écouter",
   "watch.held_calls": {
     "one": "{count} appel retenu vous attend",
     "other": "{count} appels retenus vous attendent"
   },
+  "watch.mic_needed": "Pour demander à la voix, autorisez le micro pour tafs sur cette montre.",
   "watch.more_on_phone": "La suite est sur votre téléphone.",
   "watch.needs_lock": "Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l'écran et déverrouillez-la.",
+  "watch.needs_you_count": {
+    "one": "{count} vous attend",
+    "other": "{count} vous attendent"
+  },
+  "watch.not_sure": "Envoi incertain",
   "watch.open_on_phone": "Ouvrir sur le téléphone",
   "watch.phone_not_reachable": "Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.",
+  "watch.ready_count": {
+    "one": "{count} prêt",
+    "other": "{count} prêts"
+  },
   "watch.refused": "Refusé. Rien n'a été envoyé.",
+  "watch.reply": "Répondre",
+  "watch.result_ready": "Un résultat est prêt",
+  "watch.results_channel": "Résultats",
+  "watch.retry": "Réessayer",
+  "watch.sending": "Envoi…",
+  "watch.sent": "Envoyé",
   "watch.sign_in_on_phone": "Connectez-vous d'abord à tafs sur votre téléphone.",
-  "watch.voice_text_only": "Coach reçoit vos mots en texte, jamais votre voix."
+  "watch.timing": "Écoute {listen} ms · accusé {receipt} ms · résultat {result} ms",
+  "watch.update_phone": "Mettez à jour tafs sur votre téléphone, puis réessayez.",
+  "watch.voice_text_only": "Coach reçoit vos mots en texte, jamais votre voix.",
+  "watch.working_count": {
+    "one": "{count} en cours",
+    "other": "{count} en cours"
+  }
 }

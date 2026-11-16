@@ -4,6 +4,21 @@
     <!-- A watch app: Play offers it to Wear OS watches only. -->
     <uses-feature android:name="android.hardware.type.watch" />
 
+    <!-- Ask tafs: the watch's own speech recognizer turns words into text on the watch; only the text goes to the phone. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- A result's notification, on the watch (Wear OS 4 and later ask for it). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- The recognizer and text-to-speech the watch has, which Android 11 and later hide from an app that doesn't name them. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:name=".WatchApplication"
         android:allowBackup="false"
@@ -20,12 +35,26 @@
         <activity
             android:name=".WatchActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:taskAffinity="">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- An ask's new state, from the phone only (WatchLink.ASK_RESULT, docs/watch-wear.md). -->
+        <service
+            android:name=".AskResultService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:path="/tafs/watch/v1/ask-result" />
+            </intent-filter>
+        </service>
 
         <!-- The tile: Needs you's count, only while the watch is unlocked (docs/watch-wear.md). -->
         <service

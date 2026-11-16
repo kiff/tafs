@@ -6,6 +6,7 @@ import bot.tafs.app.app.Mode
 import bot.tafs.app.model.Answer
 import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.Words
+import bot.tafs.watchlink.AskLine
 import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
 import bot.tafs.watchlink.WatchLink
@@ -21,7 +22,8 @@ import kotlinx.coroutines.flow.first
  * Refuse and Halt from the wrist only take authority away, so the phone signs them with its signing key and no prompt of its
  * own, as a notification's Refuse on iPhone: the watch sends one only while its own screen lock is set and it's unlocked. The
  * approval key is never used here, and nothing on this path approves. Coach from the wrist is text only (the watch's own speech
- * input), sent as the phone's own message to Coach, after the AI consent given on the phone.
+ * input), sent as the phone's own message to Coach, after the AI consent given on the phone. Ask tafs from the wrist is text
+ * too, sent to tafs cloud as this phone's, signed with its device key: tafs cloud marks it as the watch's and hands it to one taf.
  */
 class WatchRelay(
   /** The app's model, its session restored; null when there's none to read with. */
@@ -49,6 +51,44 @@ class WatchRelay(
       is WatchRequest.Refuse -> refuse(request.holdId)
       is WatchRequest.Halt -> halt(request.tafId)
       is WatchRequest.Coach -> coach(request.text)
+      is WatchRequest.Ask -> ask(request)
+      is WatchRequest.Asks -> asks(request.since)
+    }
+  }
+
+  /**
+   * Ask tafs from the wrist (docs/watch-wear.md): the words, as text, sent to tafs cloud as this phone's, signed with its device
+   * key, after the AI consent given on the phone. tafs cloud gives its receipt, the same for a retry with the same id; with no
+   * answer from it, the watch is told it may have arrived ([WatchReply.Unsure]) and retries with the same id.
+   */
+  private suspend fun ask(request: WatchRequest.Ask): WatchReply {
+    val model = signedIn() ?: return WatchReply.SignedOut
+    if (model.state.value.aiConsent?.given != true) return WatchReply.Failed(Words.Watch.askNeedsConsent)
+    return try {
+      val ask = model.watchAsk(request.clientId, request.text, request.replyTo) ?: return WatchReply.SignedOut
+      WatchReply.AskTaken(lineOf(ask))
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (e: bot.tafs.app.kiff.CloudError) {
+      refusedAsk(e)
+    } catch (_: java.io.IOException) {
+      // Sent, perhaps, with no answer back: only a retry with the same id tells.
+      WatchReply.Unsure
+    }
+  }
+
+  /** The watch's asks as tafs cloud has them, updated after [since]. */
+  private suspend fun asks(since: String?): WatchReply {
+    val model = signedIn() ?: return WatchReply.SignedOut
+    return try {
+      val asks = model.watchAsks(since) ?: return WatchReply.SignedOut
+      WatchReply.AskList(asks.map(::lineOf))
+    } catch (e: kotlinx.coroutines.CancellationException) {
+      throw e
+    } catch (e: bot.tafs.app.kiff.CloudError) {
+      refusedAsk(e)
+    } catch (_: java.io.IOException) {
+      WatchReply.Failed(Words.Watch.openOnPhone)
     }
   }
 
@@ -122,6 +162,21 @@ class WatchRelay(
   }
 
   companion object {
+    /** An ask as the watch draws it: tafs cloud's state and words, the taf's name, and the checked line, as they come. */
+    fun lineOf(ask: bot.tafs.app.kiff.WatchAsk): AskLine =
+      AskLine(ask.id, ask.clientId, ask.state, ask.taf?.name, ask.line, ask.words, ask.updated)
+
+    /**
+     * tafs cloud's refusal of an ask, in its words: asking from the watch not on yet says so; 5xx, which may have come after the
+     * ask was taken, is "may have arrived", so the watch retries with the same id; anything else, tafs cloud's own words.
+     */
+    fun refusedAsk(e: bot.tafs.app.kiff.CloudError): WatchReply = when {
+      e.code == "watch_off" -> WatchReply.Failed(Words.Watch.askNotOn)
+      e.status >= 500 -> WatchReply.Unsure
+      e.status == 401 -> WatchReply.SignedOut
+      else -> WatchReply.Failed(e.message?.takeIf { it.isNotBlank() } ?: Words.Watch.openOnPhone)
+    }
+
     /**
      * What's left of [budgetMs] for Coach's answer, the request having started at [startedMs]: the send's own time comes off it,
      * so a slow network never takes the whole answer past the watch's limit. Never below 0, never above the budget (a clock
