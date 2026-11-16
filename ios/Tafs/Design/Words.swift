@@ -4740,6 +4740,28 @@ enum Words {
         /// What you said stays in the message box, unsent.
         static var whatYouSaidStaysMessage: String { Words.line("voice.what_you_said_stays_message") }
     }
+    enum Watch {
+        /// Already answered, or it ended.
+        static var alreadyAnswered: String { Words.line("watch.already_answered") }
+        /// Approve on your phone
+        static var approveOnPhone: String { Words.line("watch.approve_on_phone") }
+        /// As of {time}
+        static func asOf(time: String) -> String { Words.line("watch.as_of", time) }
+        /// Before you talk to Coach, allow AI use in tafs on your phone.
+        static var coachNeedsConsent: String { Words.line("watch.coach_needs_consent") }
+        /// How many need you, never what or who.
+        static var glanceDescription: String { Words.line("watch.glance_description") }
+        /// The rest is on your phone.
+        static var moreOnPhone: String { Words.line("watch.more_on_phone") }
+        /// Open on phone
+        static var openOnPhone: String { Words.line("watch.open_on_phone") }
+        /// Your phone isn't in reach. Bring it closer, then try again.
+        static var phoneNotReachable: String { Words.line("watch.phone_not_reachable") }
+        /// Refused. Nothing was sent.
+        static var refused: String { Words.line("watch.refused") }
+        /// Sign in to tafs on your phone first.
+        static var signInOnPhone: String { Words.line("watch.sign_in_on_phone") }
+    }
     enum Work {
         /// Answer within
         static var answerWithin: String { Words.line("work.answer_within") }

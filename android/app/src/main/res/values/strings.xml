@@ -2383,6 +2383,16 @@
     <string name="voice_title">Dictation</string>
     <string name="voice_voice_becomes_text_device_not">Your voice becomes text on this device. It isn\'t sent until you send it.</string>
     <string name="voice_what_you_said_stays_message">What you said stays in the message box, unsent.</string>
+    <string name="watch_already_answered">Already answered, or it ended.</string>
+    <string name="watch_approve_on_phone">Approve on your phone</string>
+    <string name="watch_as_of">As of %1$s</string>
+    <string name="watch_coach_needs_consent">Before you talk to Coach, allow AI use in tafs on your phone.</string>
+    <string name="watch_glance_description">How many need you, never what or who.</string>
+    <string name="watch_more_on_phone">The rest is on your phone.</string>
+    <string name="watch_open_on_phone">Open on phone</string>
+    <string name="watch_phone_not_reachable">Your phone isn\'t in reach. Bring it closer, then try again.</string>
+    <string name="watch_refused">Refused. Nothing was sent.</string>
+    <string name="watch_sign_in_on_phone">Sign in to tafs on your phone first.</string>
     <string name="work_answer_within">Answer within</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s day</item>

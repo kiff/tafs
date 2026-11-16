@@ -1,0 +1,12 @@
+{
+  "watch.already_answered": "Ya respondida, o terminada.",
+  "watch.approve_on_phone": "Aprueba en tu teléfono",
+  "watch.as_of": "Actualizado a las {time}",
+  "watch.coach_needs_consent": "Antes de hablar con Coach, permite el uso de IA en tafs en tu teléfono.",
+  "watch.glance_description": "Cuántos te necesitan, nunca qué ni quién.",
+  "watch.more_on_phone": "El resto está en tu teléfono.",
+  "watch.open_on_phone": "Abrir en el teléfono",
+  "watch.phone_not_reachable": "Tu teléfono no está al alcance. Acércalo y vuelve a intentarlo.",
+  "watch.refused": "Rechazada. No se envió nada.",
+  "watch.sign_in_on_phone": "Primero inicia sesión en tafs en tu teléfono."
+}

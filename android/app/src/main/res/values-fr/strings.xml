@@ -2383,6 +2383,16 @@
     <string name="voice_title">Dictée</string>
     <string name="voice_voice_becomes_text_device_not">Votre voix devient du texte sur cet appareil. Elle n\'est envoyée que lorsque vous l\'envoyez.</string>
     <string name="voice_what_you_said_stays_message">Ce que vous avez dit reste dans le champ de message, non envoyé.</string>
+    <string name="watch_already_answered">Déjà répondu, ou terminé.</string>
+    <string name="watch_approve_on_phone">Approuvez sur votre téléphone</string>
+    <string name="watch_as_of">Mis à jour à %1$s</string>
+    <string name="watch_coach_needs_consent">Avant de parler à Coach, autorisez l\'utilisation de l\'IA dans tafs sur votre téléphone.</string>
+    <string name="watch_glance_description">Combien vous attendent, jamais quoi ni qui.</string>
+    <string name="watch_more_on_phone">La suite est sur votre téléphone.</string>
+    <string name="watch_open_on_phone">Ouvrir sur le téléphone</string>
+    <string name="watch_phone_not_reachable">Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.</string>
+    <string name="watch_refused">Refusé. Rien n\'a été envoyé.</string>
+    <string name="watch_sign_in_on_phone">Connectez-vous d\'abord à tafs sur votre téléphone.</string>
     <string name="work_answer_within">Répondre sous</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s jour</item>

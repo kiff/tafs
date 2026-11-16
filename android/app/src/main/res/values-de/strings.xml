@@ -2383,6 +2383,16 @@
     <string name="voice_title">Diktieren</string>
     <string name="voice_voice_becomes_text_device_not">Deine Stimme wird auf diesem Gerät zu Text. Sie wird erst gesendet, wenn du sendest.</string>
     <string name="voice_what_you_said_stays_message">Was du gesagt hast, bleibt ungesendet im Nachrichtenfeld.</string>
+    <string name="watch_already_answered">Schon beantwortet oder beendet.</string>
+    <string name="watch_approve_on_phone">Genehmige auf deinem Handy</string>
+    <string name="watch_as_of">Stand: %1$s</string>
+    <string name="watch_coach_needs_consent">Bevor du mit Coach sprichst, erlaube die KI-Nutzung in tafs auf deinem Handy.</string>
+    <string name="watch_glance_description">Wie viele dich brauchen, nie was oder wer.</string>
+    <string name="watch_more_on_phone">Der Rest ist auf deinem Handy.</string>
+    <string name="watch_open_on_phone">Auf dem Handy öffnen</string>
+    <string name="watch_phone_not_reachable">Dein Handy ist nicht in Reichweite. Bring es näher und versuch es dann erneut.</string>
+    <string name="watch_refused">Abgelehnt. Nichts wurde gesendet.</string>
+    <string name="watch_sign_in_on_phone">Melde dich zuerst auf deinem Handy bei tafs an.</string>
     <string name="work_answer_within">Antwort innerhalb</string>
     <plurals name="work_answer_within_days">
         <item quantity="one">%1$s Tag</item>

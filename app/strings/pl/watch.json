@@ -1,0 +1,12 @@
+{
+  "watch.already_answered": "Już odpowiedziano albo zakończono.",
+  "watch.approve_on_phone": "Zatwierdź na telefonie",
+  "watch.as_of": "Stan na {time}",
+  "watch.coach_needs_consent": "Zanim porozmawiasz z Coachem, zezwól na użycie AI w tafs na telefonie.",
+  "watch.glance_description": "Ile czeka na Ciebie, nigdy co ani kto.",
+  "watch.more_on_phone": "Reszta jest na telefonie.",
+  "watch.open_on_phone": "Otwórz na telefonie",
+  "watch.phone_not_reachable": "Telefon jest poza zasięgiem. Przybliż go i spróbuj ponownie.",
+  "watch.refused": "Odrzucono. Nic nie zostało wysłane.",
+  "watch.sign_in_on_phone": "Najpierw zaloguj się do tafs na telefonie."
+}
