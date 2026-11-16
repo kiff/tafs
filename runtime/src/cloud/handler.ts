@@ -54,7 +54,7 @@ import { appCalls, type GrantView, runningTool, setupGrants, setupView } from ".
 import { syncScheduleZone } from "./time-zone.js";
 import { tafPurpose } from "./taf-purpose.js";
 import { cardUnitExceptions, cardUnitNotice } from "./card-unit.js";
-import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, signsOf, splitApproval, stepFor, takesOf, WAITING_DRAFT_KEPT_MS, waitingDraftKey } from "./approval.js";
+import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, checkDraft, checkSigned, type Connected, connectedKey, decide as decideApproval, readGrants, reportOf, settle as settleApproval, liveWaitingDraft, signsOf, splitApproval, stepFor, takesOf, WAITING_DRAFT_KEPT_MS } from "./approval.js";
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
@@ -3302,7 +3302,8 @@ async function refuseSplitApprovals(event: HTTPEvent, me: KIFFIdentity, taf: Taf
     if (c.answer || card?.type !== "approval" || typeof card.grant !== "string" || (typeof card.draft === "string" && card.draft)) continue;
     const component = String(card.id ?? "");
     if (!component) continue;
-    const answer = splitApproval(card, await deps.coach.get(waitingDraftKey(me.tenantID, card.grant)).catch(() => undefined));
+    const live = await within(liveWaitingDraft(deps.coach, me.tenantID, card.grant, (d) => draftInfo(bearer(event), d, deps.fetch, deps.kiffBase)), SIGNS_READ_MS).catch(() => undefined);
+    const answer = splitApproval(card, live);
     if (!answer) continue;
     const now = nowOf(deps);
     const toldKey = splitKeys.told(me.tenantID, c.session, component);
@@ -3866,6 +3867,9 @@ async function draftCheckRoute(event: HTTPEvent, grant: string, me: KIFFIdentity
   const body = parseBody(event);
   const draft = str(body.draft).trim();
   const shown = str(body.shown_draft).trim();
+  // A card with no draft (`draft: ""`): the one check its read makes, whether that app's approval must carry a waiting
+  // draft (approval.ts splitApproval), answered as the read answers it, so the e2e sees the same refusal at the same moment.
+  if (!draft && /^[A-Za-z0-9_.:-]{1,128}$/.test(grant)) return draftlessCheck(event, grant, me, deps);
   if (!/^[A-Za-z0-9_.:-]{1,128}$/.test(grant) || !/^[A-Za-z0-9_.:-]{1,128}$/.test(draft) || !shown || shown.length > 256) {
     throw new HTTPError(400, "send the grant, its Card draft and the draft's version you read");
   }
@@ -3888,6 +3892,21 @@ async function draftCheckRoute(event: HTTPEvent, grant: string, me: KIFFIdentity
   // taken for "the rules hold".
   const answered = out.outcome === "answered" && REDRAFT_CODES.has(out.code) ? { ...out, redraft: true } : out;
   return { ...answered, checked_on_read: checkedOnRead, rules_unchecked: true };
+}
+
+/**
+ * `/check` for an approval card with no draft: `split_approval` (answered, `redraft`, `checked_on_read`, the refusal the
+ * chat's read tells Coach) when that app's approval must carry a draft still waiting in KIFF; else `ok` with
+ * `checked_on_read: false`, nothing to check. Nothing is signed, kept or told to Coach.
+ */
+async function draftlessCheck(event: HTTPEvent, grant: string, me: KIFFIdentity, deps: Deps): Promise<unknown> {
+  // The same caller as a draft's check: its phone's proof, though a card with no draft reads no grant.
+  if (!event.headers?.["planque-device-signature"]) throw new HTTPError(503, "send the phone's Planque-Device-Signature");
+  const live = deps.coach ? await liveWaitingDraft(deps.coach, me.tenantID, grant, (d) => draftInfo(bearer(event), d, deps.fetch, deps.kiffBase)) : undefined;
+  const answer = splitApproval({ grant }, live);
+  console.log(`approval check: ${answer ? "split_approval" : "ok"}`);
+  if (!answer || !live) return { outcome: "ok", checked_on_read: false, rules_unchecked: true };
+  return { outcome: "answered", answer, note: wordsIn(langOf(event)).approval_with_its_card(live.name), code: "split_approval", redraft: true, checked_on_read: true, rules_unchecked: true };
 }
 
 /**

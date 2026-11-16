@@ -1597,6 +1597,39 @@ describe("the waiting app's approval is never shown without the waiting draft (o
     expect(String(r2.body.answer ?? "")).not.toContain("was shown without the Card draft");
   });
 
+  it("forgets the note once its draft is confirmed, so a later draftless approval of that app is drawn and tapped as normal", async () => {
+    // Run 1's sequence done right: the mailbox approved with the draft, so KIFF shows it confirmed. Then a Sign in again
+    // (or a tools addition) of the same app, with no draft.
+    const s = services2();
+    s.drafts.drf_1 = { ...s.drafts.drf_1!, status: "confirmed" };
+    const w = await world(s, { grant: "g_2" });
+    const put = () => w.coach.put(waitingDraftKey("t_acme", "g_2"), { draft: "drf_1", name: NAME, at: NOW.toISOString() }, new Date(NOW.getTime() + WAITING_DRAFT_KEPT_MS));
+    await put();
+    expect(a1(await w.call("GET", CHAT, undefined))?.answer).toBeUndefined();
+    expect(w.told()).toBeUndefined();
+    expect(await w.coach.get(waitingDraftKey("t_acme", "g_2"))).toBeUndefined();
+    await put();
+    expect((await w.call("POST", ASK, { grant: "g_2", shown_digest: mailbox().digest })).body).toMatchObject({ outcome: "sign", ask: { step: "connect" } });
+    expect(await w.coach.get(waitingDraftKey("t_acme", "g_2"))).toBeUndefined();
+    // A draft KIFF no longer has: the same.
+    delete s.drafts.drf_1;
+    await put();
+    expect((await w.call("POST", "/v1/connect/grants/g_2/check", { draft: "" })).body).toEqual({ outcome: "ok", checked_on_read: false, rules_unchecked: true });
+  });
+
+  it("answers the e2e's /check for a draftless card as the chat's read does (split_approval), and ok with no note", async () => {
+    const w = await world(services2(), { grant: "g_2" });
+    const CHECK = "/v1/connect/grants/g_2/check";
+    expect((await w.call("POST", CHECK, { draft: "" })).body).toEqual({ outcome: "ok", checked_on_read: false, rules_unchecked: true });
+    await w.coach.put(waitingDraftKey("t_acme", "g_2"), { draft: "drf_1", name: NAME, at: NOW.toISOString() }, new Date(NOW.getTime() + WAITING_DRAFT_KEPT_MS));
+    const r = await w.call("POST", CHECK, { draft: "" });
+    expect(r.status).toBe(200);
+    expect(r.body).toMatchObject({ outcome: "answered", code: "split_approval", redraft: true, checked_on_read: true, rules_unchecked: true });
+    expect(String(r.body.answer)).toMatch(new RegExp(`^failed: ${NAME.replace(/[().]/g, "\\$&")}'s approval was shown without the Card draft drf_1`));
+    // Only checked: Coach heard nothing, and the card still waits.
+    expect(w.told()).toBeUndefined();
+  });
+
   it("leaves the approval with the draft, a redraft's, and any app with no waiting draft as they were", async () => {
     const note = { draft: "drf_1", name: NAME, at: NOW.toISOString() };
     expect(splitApproval({ grant: "g_2", draft: "drf_1" }, note)).toBeUndefined();
@@ -1951,9 +1984,12 @@ describe("the check route: Approve's checks on a draft, with nothing signed (POS
     expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" }, {}, undefined, "nobody")).status).toBe(401);
     // Only someone who may manage the account's Cards, as for the secure connection sheet.
     expect((await w.call("POST", CHECK, { draft: "drf_1", shown_draft: "v3" }, {}, undefined, "cy")).status).toBe(403);
-    for (const body of [{ shown_draft: "v3" }, { draft: "drf_1" }, { draft: "../x", shown_draft: "v3" }, { draft: "drf_1", shown_draft: "v".repeat(300) }]) {
+    for (const body of [{ draft: "drf_1" }, { draft: "../x", shown_draft: "v3" }, { draft: "drf_1", shown_draft: "v".repeat(300) }]) {
       expect((await w.call("POST", CHECK, body)).status).toBe(400);
     }
+    // A card with no draft is a check of its own (the waiting draft, Eval 20b): nothing to refuse here, with the proof.
+    expect((await w.call("POST", CHECK, { shown_draft: "v3" })).body).toEqual({ outcome: "ok", checked_on_read: false, rules_unchecked: true });
+    expect((await w.call("POST", CHECK, { draft: "" }, { "planque-device-signature": "" })).status).toBe(503);
     expect((await w.call("POST", "/v1/connect/grants/g%2F1/check", { draft: "drf_1", shown_draft: "v3" })).status).toBe(400);
     expect(s.checks).toEqual([]);
   });
