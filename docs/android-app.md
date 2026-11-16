@@ -463,6 +463,10 @@ searches across their tafs, opens one case, and exports receipts
 
 ## Words and languages
 
+**Long languages read whole on a main button.** `PrimaryButton`'s words take up to two lines before anything is cut
+(`PRIMARY_BUTTON_LINES`), so French's "Approuver une fois avec votre empreinte digitale" reads whole on a 360 dp phone
+rather than "…digit…"; a short action stays one line, at the same height (`PrimaryButtonTest`).
+
 **Account › Language** shows the lines' language named in itself ("Français", `AppLanguage.name`), as the resources
 resolved it, and **Change language**, which opens the app's own list: "This phone's language" first, then the 8, each
 named in itself, in the order of the languages table. The current choice is marked; a tap applies it at once and closes the
