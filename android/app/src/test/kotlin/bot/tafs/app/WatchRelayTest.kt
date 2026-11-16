@@ -71,8 +71,25 @@ class WatchRelayTest {
       assertEquals(call.proposed.summary, line.wants)
       assertEquals(call.proposed.amount?.formatted, line.amount)
       assertEquals(call.reason, line.reason)
-      assertEquals(state.canAnswer(call), line.refusable)
+      assertEquals(call.kiffId != null && state.canAnswer(call), line.refusable)
     }
+  }
+
+  /**
+   * A call tafs cloud holds alone (no KIFF id) is answered through the phone's own prompt, which nobody sees with the phone in a
+   * pocket: the wrist never offers Refuse on it, though the phone itself may answer it.
+   */
+  @Test fun aCallTafsCloudHoldsAloneIsNotRefusableFromTheWrist() {
+    val state = testModel().state.value.copy(mode = Mode.kiff)
+    val call = state.held.first().copy(kiffId = null)
+    val withIt = state.copy(held = listOf(call))
+    assertTrue("the phone may answer it", withIt.canAnswer(call))
+    assertFalse(WatchRelay.refusableFromWrist(withIt, call))
+    assertFalse(WatchRelay.needsYou(withIt).calls.single().refusable)
+    // One KIFF holds, with a version this phone signs over, is.
+    val kiffs = call.copy(kiffId = "ce_1", accountingVersion = 1)
+    val withKiffs = withIt.copy(held = listOf(kiffs), sessionHasKey = true)
+    assertTrue(WatchRelay.refusableFromWrist(withKiffs, kiffs))
   }
 
   @Test fun yourTafsSaysWhichAreHalted() {

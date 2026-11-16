@@ -30,6 +30,8 @@ class WearRelayService : WearableListenerService() {
     scope.launch {
       // Only a watch connected to this phone now: the Data Layer names the node it came from, and it must be one of them.
       val connected = runCatching { Wearable.getNodeClient(this@WearRelayService).connectedNodes.await().any { it.id == nodeId } }.getOrDefault(false)
+      // Not connected now is answered as a path this phone doesn't serve: the watch's words are the same (Open on phone), and
+      // a new reason would be one an older watch can't read. In logs, UNKNOWN_PATH from here means "not a connected node".
       val reply = if (!connected) bot.tafs.watchlink.WatchReply.Refused(bot.tafs.watchlink.NotAccepted.UNKNOWN_PATH)
       else runCatching { WatchRelay(model = { app.restoredModel(onScreen = false) }, floor = floor).answer(path, request) }
         .getOrElse { bot.tafs.watchlink.WatchReply.Failed(bot.tafs.app.model.Words.Watch.openOnPhone) }

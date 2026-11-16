@@ -4,6 +4,7 @@ import bot.tafs.app.app.AppModel
 import bot.tafs.app.app.AppState
 import bot.tafs.app.app.Mode
 import bot.tafs.app.model.Answer
+import bot.tafs.app.model.HeldCall
 import bot.tafs.app.model.Words
 import bot.tafs.watchlink.HeldLine
 import bot.tafs.watchlink.TafLine
@@ -60,7 +61,7 @@ class WatchRelay(
     model.refresh()
     val before = model.state.value
     val call = before.held.firstOrNull { it.id == holdId } ?: return WatchReply.AlreadyAnswered
-    if (!before.canAnswer(call)) return WatchReply.Failed(Words.Watch.openOnPhone)
+    if (!refusableFromWrist(before, call)) return WatchReply.Failed(Words.Watch.openOnPhone)
     val done = model.answer(call, Answer.Refuse, confirmed = true)
     val after = model.state.value
     return when {
@@ -93,6 +94,13 @@ class WatchRelay(
 
   companion object {
     /**
+     * Whether the wrist may refuse [call]: one KIFF holds that this phone can answer from here. A call tafs cloud holds alone
+     * (no KIFF id) is signed through the phone's own prompt, which nobody would see with the phone in a pocket, so it's
+     * Approve and Refuse on the phone. The wrist's Refuse is always the signing key with no prompt (`signConfirmed`).
+     */
+    fun refusableFromWrist(state: AppState, call: HeldCall): Boolean = call.kiffId != null && state.canAnswer(call)
+
+    /**
      * Needs you as the phone shows it: tafs cloud's count and its words, and each held call with its taf, what it wants, KIFF's
      * amount and the reason. One this phone can't answer from here (KIFF doesn't hold its key) isn't refusable from the wrist.
      */
@@ -106,7 +114,7 @@ class WatchRelay(
           wants = call.proposed.summary,
           amount = call.proposed.amount?.formatted,
           reason = call.reason.takeIf { it.isNotBlank() },
-          refusable = state.canAnswer(call),
+          refusable = refusableFromWrist(state, call),
         )
       },
     )

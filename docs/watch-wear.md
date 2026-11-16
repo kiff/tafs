@@ -28,7 +28,7 @@ this page says what is there now and what each step adds.
   taf, summary, KIFF's amount and reason. Your tafs is each taf's line (`Taf.now`), or Halted. With no KIFF session (signed
   out, or the sample) the watch is told `signed_out`. Coach is answered Open on phone for now, with nothing sent
   (`WatchRelayTest`). The phone answers only a watch connected to it now (`NodeClient.connectedNodes`).
-- **Refuse and Halt from the wrist.** A held call the phone can answer shows **Refuse**; each taf not halted shows
+- **Refuse and Halt from the wrist.** A held call KIFF holds that the phone can answer shows **Refuse** (one tafs cloud holds alone is signed behind the phone's own prompt, so it's the phone's to answer); each taf not halted shows
   **Halt now**, and the list ends with **Halt all now**. The watch sends one only while a screen lock is set and it's unlocked
   (`KeyguardManager.isDeviceSecure` and not `isDeviceLocked`); otherwise it sends nothing and says `watch.needs_lock`, with
   Open on phone. The phone then:
