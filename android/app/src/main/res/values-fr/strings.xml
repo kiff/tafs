@@ -2086,6 +2086,7 @@
     <string name="sign_in_deletes_every_taf_runs_chats">Supprime chaque taf, ses exécutions, chats et notes, vos Cards et vos connexions. C\'est irréversible.</string>
     <string name="sign_in_didnt_work">La connexion n\'a pas fonctionné.</string>
     <string name="sign_in_every_action_taf_takes_goes">Chaque action d\'un taf passe par KIFF, qui vérifie sa Card avant que quoi que ce soit n\'atteigne une app. Vos réponses sont signées sur %2$s.</string>
+    <string name="sign_in_every_action_taf_takes_goes_view">Chaque action d\'un taf passe par KIFF, qui vérifie sa Card avant que quoi que ce soit n\'atteigne une app. Vos réponses sont signées sur votre téléphone.</string>
     <string name="sign_in_how_works">Comment ça marche</string>
     <string name="sign_in_ios_did_not_open_sign">iOS n\'a pas ouvert la page de connexion (erreur %1$s ; %2$s). Réessayez avec tafs ouvert.</string>
     <string name="sign_in_lead">Vos tafs agissent sous des Cards KIFF. Approuvez %2$s dans KIFF, et les Cards que vous avez émises s\'affichent ici.</string>

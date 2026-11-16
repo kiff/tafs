@@ -10,6 +10,7 @@
   "sign_in.deletes_every_taf_runs_chats": "Supprime chaque taf, ses exécutions, chats et notes, vos Cards et vos connexions. C'est irréversible.",
   "sign_in.didnt_work": "La connexion n'a pas fonctionné.",
   "sign_in.every_action_taf_takes_goes": "Chaque action d'un taf passe par KIFF, qui vérifie sa Card avant que quoi que ce soit n'atteigne une app. Vos réponses sont signées sur {device|this}.",
+  "sign_in.every_action_taf_takes_goes_view": "Chaque action d'un taf passe par KIFF, qui vérifie sa Card avant que quoi que ce soit n'atteigne une app. Vos réponses sont signées sur votre téléphone.",
   "sign_in.how_works": "Comment ça marche",
   "sign_in.ios_did_not_open_sign": "iOS n'a pas ouvert la page de connexion (erreur {code} ; {context}). Réessayez avec tafs ouvert.",
   "sign_in.lead": "Vos tafs agissent sous des Cards KIFF. Approuvez {device|this} dans KIFF, et les Cards que vous avez émises s'affichent ici.",

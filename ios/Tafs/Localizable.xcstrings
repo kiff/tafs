@@ -105711,6 +105711,59 @@
         }
       }
     },
+    "sign_in.every_action_taf_takes_goes_view": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jede Aktion eines tafs läuft über KIFF, das seine Card prüft, bevor etwas eine App erreicht. Deine Antworten werden auf deinem Handy signiert."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every action a taf takes goes through KIFF, which checks its Card before anything reaches an app. Your answers are signed on your phone."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada acción de un taf pasa por KIFF, que comprueba su Card antes de que nada llegue a una app. Tus respuestas se firman en tu teléfono."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque action d'un taf passe par KIFF, qui vérifie sa Card avant que quoi que ce soit n'atteigne une app. Vos réponses sont signées sur votre téléphone."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ogni azione di un taf passa da KIFF, che controlla la sua Card prima che qualcosa raggiunga un'app. Le tue risposte vengono firmate sul telefono."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke actie van een taf gaat via KIFF, dat zijn Card controleert voordat er iets een app bereikt. Je antwoorden worden ondertekend op je telefoon."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Każda akcja tafa przechodzi przez KIFF, który sprawdza jego Card, zanim cokolwiek dotrze do aplikacji. Twoje odpowiedzi są podpisywane na telefonie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada ação de um taf passa pelo KIFF, que verifica o seu Card antes de algo chegar a uma app. As suas respostas são assinadas no seu telemóvel."
+          }
+        }
+      }
+    },
     "sign_in.how_works": {
       "extractionState": "manual",
       "localizations": {
