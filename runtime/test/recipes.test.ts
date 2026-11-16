@@ -234,6 +234,10 @@ Bezahle meine Rechnungen unter 100 EUR.
     expect(ids).toContain("follow-up-new-leads");
     const without = new Set([...CONNECTS_TODAY].filter((v) => v !== "typeform"));
     expect(recipesFor(undefined, "en", true, without).recipes.map((r) => r.id)).not.toContain("follow-up-new-leads");
+    // Google Calendar, Drive and Sheets were proved by sign-ins on a phone (16 Nov): appointments and receipts are listed.
+    expect(ids).toEqual(expect.arrayContaining(["book-and-move-appointments", "file-receipts"]));
+    const noSheets = new Set([...CONNECTS_TODAY].filter((v) => v !== "googlesheets"));
+    expect(recipesFor(undefined, "en", true, noSheets).recipes.map((r) => r.id)).not.toContain("file-receipts");
   });
 
   // Three jobs for small shops that need only apps that connect today: listed now, with no proof run.
