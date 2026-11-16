@@ -772,7 +772,8 @@ final class PlanqueTests: XCTestCase {
         }
         signer.throwing = nil
         signer.refuse = true
-        let failed = try XCTUnwrap(await model.removeTaf(refunds))
+        let refused = await model.removeTaf(refunds)
+        let failed = try XCTUnwrap(refused)
         XCTAssertTrue(failed.hasPrefix("Remove didn't go through."), failed)
         XCTAssertTrue(sent("DELETE", "cloud.test", "/v1/tafs/depl_1").isEmpty, "nothing is removed")
         XCTAssertTrue(sent("POST", "api.test", "/v1/me/mandates/refunds-card/revoke").isEmpty, "no Card is revoked")
