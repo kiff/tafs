@@ -80,7 +80,11 @@ Later at `POST /v1/brief/decisions/{id}/later` ([api.md](api.md)).
 
 - **What it's built from**, read as Home reads it: the calls KIFF holds on the tafs the person may see (Approve or Refuse,
   as equals: KIFF gives no why), the steps their runs handed their owner (with KIFF's expiry as the deadline), and their
-  connections that need signing in again (blocked, so urgent). The credits line is the balance's, as Settings says it. Coach's proposals and case lines come next.
+  connections that need signing in again (blocked, so urgent), and their tafs whose scheduled check couldn't read at its
+  last 2 firings in a row (`ref.kind: check`, blocked, so urgent; counted across a version switch, which neither fails nor
+  recovers). That one's question is the taf's health line, with how many times, since when, and the app by its
+  connection's name when the taf has one app connected; its one answer, "Open the taf" (`answer: open`), opens the taf
+  (`ref.taf`), where the owner sees why; it leaves at the first check that reads again. The credits line is the balance's, as Settings says it. Coach's proposals and case lines come next.
 - **Alerts**: each carries `brief_kind` (`brief` or `urgent`; not `kind`, which FCM's data uses already). On Android
   today an urgent one goes on the Needs you channel and the brief's on the quiet one; channels named Briefs and Urgent
   are an app follow-up. At each brief's time, the phones of the people who may answer get "Your 08:00 brief is ready."

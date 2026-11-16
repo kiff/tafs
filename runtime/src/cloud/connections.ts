@@ -64,6 +64,16 @@ export async function accountConnections(fetchFn: Fetch, base: string, tenant: s
 }
 
 /**
+ * The app a taf's scheduled check reads, by the name its connection has in planque ("Gmail"), so a line can say "couldn't
+ * read Gmail": told only when the taf has one app connected, since a check names its tool and not its connection. With
+ * none or several, undefined, and the line says "the app". Never a name written into the words.
+ */
+export function checkAppOf(conns: AccountConnection[], agent: string): string | undefined {
+  const apps = new Set(conns.filter((c) => c.agent === agent && c.vendor && c.vendor !== "an app").map((c) => c.vendor));
+  return apps.size === 1 ? [...apps][0] : undefined;
+}
+
+/**
  * The lines for the tafs the person may see, each naming its taf: "- Stripe, for Chargebacks: vendor_sign_in,
  * server https://…". None when there's nothing to say. `tafs` maps a taf's KIFF agent to its name.
  */

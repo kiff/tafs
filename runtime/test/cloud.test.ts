@@ -7010,6 +7010,51 @@ describe("GET /v1/brief and Later", () => {
     expect(JSON.parse(r.body).decisions).toEqual([]);
   });
 
+  it("lists a taf whose scheduled check couldn't read twice in a row, across a version switch, as urgent, naming its app; it leaves once a check reads", async () => {
+    const w = world();
+    const at = (iso: string) => ({ due: iso, at: iso });
+    // The mail app answered 400 at both checks (kiff/agents' reason, never shown); a new version went live in between.
+    const vendor400 = { outcome: "failed_check", reason: "the check's read failed: planque: the app answered 400 Bad Request" };
+    w.agents.firings.set(`t_acme|${RAE}`, [
+      { ...at("2026-10-29T08:00:00.000Z"), ...vendor400 },
+      { ...at("2026-10-28T08:00:00.000Z"), outcome: "skipped_switching" },
+      { ...at("2026-10-27T08:00:00.000Z"), ...vendor400 },
+      { ...at("2026-10-26T08:00:00.000Z"), outcome: "quiet" },
+    ]);
+    const conns = [{ agent: "rae", vendor: "Gmail", kind: "vendor_sign_in", status: "connected" }];
+    const base = depsOf(w);
+    const deps = { ...base, coach: memoryCoach(() => w.now), planqueBase: "https://planque.test", fetch: (async (url: string, init?: RequestInit) =>
+      url.startsWith("https://planque.test/") ? new Response(JSON.stringify({ connections: conns }), { status: 200 }) : base.fetch!(url, init)) as Deps["fetch"] };
+    const get = async (path = "/v1/brief", lang?: string) => JSON.parse((await handle({ rawPath: path, requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_paris", ...(lang ? { "accept-language": lang } : {}) } }, deps)).body);
+    // Ana reads in Paris: the first failure was Tue 09:00 there.
+    expect((await get()).decisions).toEqual([{ id: `check:${RAE}`, question: "The scheduled check couldn't read Gmail 2 times in a row, since Tue 09:00",
+      answers: [{ words: "Open the taf", answer: "open", recommended: false }], meanwhile: "Rae finds no new work until its check can read again.", urgent: true,
+      ref: { kind: "check", id: RAE, taf: RAE } }]);
+    expect((await get("/v1/brief", "de")).decisions[0]).toMatchObject({ question: "Die geplante Prüfung konnte Gmail 2-mal hintereinander nicht lesen, seit Di 09:00", answers: [{ words: "Den taf öffnen" }] });
+    // Urgent: it can't be put off.
+    const later = await handle({ rawPath: `/v1/brief/decisions/check:${RAE}/later`, requestContext: { http: { method: "POST" } }, headers: { Authorization: "Bearer ana_paris" } }, deps);
+    expect(later.statusCode).toBe(409);
+    // Home and the taf's page say the same, with the time and the app.
+    const work = await get(`/v1/tafs/${RAE}/work`);
+    expect(work.summary).toEqual({ status: "idle", line: "The 09:00 check couldn't read Gmail", needs_you: 0, attention: true });
+    expect(work.health).toMatchObject({ level: "failing", lines: ["The scheduled check couldn't read Gmail 2 times in a row, since Tue 09:00. Check the app's connection."] });
+    expect((await get("/v1/home")).tafs.find((t: { id: string }) => t.id === RAE).work.line).toBe("The 09:00 check couldn't read Gmail");
+    // With two apps connected, the check's app can't be told: "the app".
+    conns.push({ agent: "rae", vendor: "Stripe", kind: "key", status: "connected" });
+    expect((await get()).decisions[0].question).toBe("The scheduled check couldn't read the app 2 times in a row, since Tue 09:00");
+    // One failure alone is the taf's page's to say, not a decision.
+    w.agents.firings.set(`t_acme|${RAE}`, [{ ...at("2026-10-29T08:00:00.000Z"), ...vendor400 }, { ...at("2026-10-28T08:00:00.000Z"), outcome: "quiet" }]);
+    expect((await get()).decisions).toEqual([]);
+    // A check that reads again ends it.
+    w.agents.firings.set(`t_acme|${RAE}`, [{ ...at("2026-10-29T09:00:00.000Z"), outcome: "quiet" }, { ...at("2026-10-29T08:00:00.000Z"), ...vendor400 }, { ...at("2026-10-28T08:00:00.000Z"), ...vendor400 }]);
+    expect((await get()).decisions).toEqual([]);
+    // kiff/agents down: the brief still answers, with no such decision.
+    w.agents.api.scheduleFirings = async () => { throw new Error("kiff/agents is down"); };
+    const r = await handle({ rawPath: "/v1/brief", requestContext: { http: { method: "GET" } }, headers: { Authorization: "Bearer ana_paris" } }, deps);
+    expect(r.statusCode).toBe(200);
+    expect(JSON.parse(r.body).decisions).toEqual([]);
+  });
+
   it("says the account's credits as Settings does, and leaves the line out when the balance can't be read", async () => {
     const w = world();
     const base = depsOf(w);
