@@ -702,6 +702,329 @@ export const RECIPES = [
     }
   },
   {
+    "id": "failed-card-payments",
+    "title": "Failed card payments",
+    "category": "money",
+    "order": 5,
+    "line": "When a customer's card payment fails, writes to them with the link to pay, within the Card.",
+    "headline": "A failed payment doesn't turn into a lost customer.",
+    "today": "A card that expires or is declined stops a subscription quietly, and the customer never hears why.",
+    "say": "When a customer's card payment fails at my payment provider, write to them with the link to update their card and pay, once for each failed invoice. At most 20 messages a day; send them, or leave them as drafts where my email can't send. Anything more waits for me. Never charge, retry a payment, refund or cancel a subscription.",
+    "connections": [
+      [
+        "stripe"
+      ],
+      [
+        "gmail",
+        "intercom"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Messages or drafts to customers, up to 20 a day"
+      ],
+      "holds": [
+        "A message or draft past 20 in a day"
+      ],
+      "never": [
+        "A charge or a payment retry",
+        "A refund",
+        "A cancelled subscription"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Fehlgeschlagene Kartenzahlungen",
+        "headline": "Aus einer fehlgeschlagenen Zahlung wird keine verlorene Kundschaft.",
+        "today": "Eine abgelaufene oder abgelehnte Karte beendet ein Abo still, und die Kundschaft erfährt nie, warum.",
+        "line": "Wenn eine Kartenzahlung fehlschlägt, schreibt der Kundschaft mit dem Link zum Bezahlen, im Rahmen der Card.",
+        "say": "Wenn bei meinem Zahlungsanbieter eine Kartenzahlung fehlschlägt, schreib der Kundschaft mit dem Link, um die Karte zu aktualisieren und zu bezahlen, einmal pro fehlgeschlagener Rechnung. Höchstens 20 Nachrichten am Tag; schick sie, oder lass sie als Entwurf, wo meine E-Mail nicht senden kann. Alles darüber wartet auf mich. Buche nie ab, versuche nie erneut eine Zahlung, erstatte nichts und kündige kein Abo.",
+        "card": {
+          "allows": [
+            "Nachrichten oder Entwürfe an die Kundschaft, bis zu 20 am Tag"
+          ],
+          "holds": [
+            "Eine Nachricht oder ein Entwurf über 20 an einem Tag"
+          ],
+          "never": [
+            "Eine Abbuchung oder ein neuer Zahlungsversuch",
+            "Eine Erstattung",
+            "Ein gekündigtes Abo"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Paiements par carte échoués",
+        "headline": "Un paiement échoué ne devient pas un client perdu.",
+        "today": "Une carte expirée ou refusée arrête un abonnement en silence, et le client ne sait jamais pourquoi.",
+        "line": "Quand le paiement par carte d'un client échoue, lui écrit avec le lien pour payer, dans les limites de la Card.",
+        "say": "Quand le paiement par carte d'un client échoue chez mon prestataire de paiement, écris-lui avec le lien pour mettre à jour sa carte et payer, une fois par facture échouée. Au plus 20 messages par jour ; envoie-les, ou laisse-les en brouillon là où mon e-mail ne peut pas envoyer. Au-delà, cela attend mon accord. Ne prélève jamais, ne relance jamais un paiement, ne rembourse pas et n'annule aucun abonnement.",
+        "card": {
+          "allows": [
+            "Des messages ou brouillons aux clients, jusqu'à 20 par jour"
+          ],
+          "holds": [
+            "Un message ou brouillon au-delà de 20 dans la journée"
+          ],
+          "never": [
+            "Un prélèvement ou une nouvelle tentative de paiement",
+            "Un remboursement",
+            "Un abonnement annulé"
+          ]
+        }
+      },
+      "es": {
+        "title": "Pagos con tarjeta fallidos",
+        "headline": "Un pago fallido no se convierte en un cliente perdido.",
+        "today": "Una tarjeta caducada o rechazada detiene una suscripción sin ruido, y el cliente nunca sabe por qué.",
+        "line": "Cuando falla el pago con tarjeta de un cliente, le escribe con el enlace para pagar, dentro de la Card.",
+        "say": "Cuando falle el pago con tarjeta de un cliente en mi proveedor de pagos, escríbele con el enlace para actualizar su tarjeta y pagar, una vez por cada factura fallida. Como mucho 20 mensajes al día; envíalos, o déjalos como borrador donde mi email no pueda enviar. Cualquier cosa más me espera. Nunca cobres, reintentes un pago, reembolses ni canceles una suscripción.",
+        "card": {
+          "allows": [
+            "Mensajes o borradores a clientes, hasta 20 al día"
+          ],
+          "holds": [
+            "Un mensaje o borrador por encima de 20 en un día"
+          ],
+          "never": [
+            "Un cobro o un nuevo intento de pago",
+            "Un reembolso",
+            "Una suscripción cancelada"
+          ]
+        }
+      },
+      "it": {
+        "title": "Pagamenti con carta non riusciti",
+        "headline": "Un pagamento non riuscito non diventa un cliente perso.",
+        "today": "Una carta scaduta o rifiutata ferma un abbonamento in silenzio, e il cliente non sa mai perché.",
+        "line": "Quando il pagamento con carta di un cliente non riesce, gli scrive con il link per pagare, nei limiti della Card.",
+        "say": "Quando il pagamento con carta di un cliente non riesce nel mio fornitore di pagamenti, scrivigli con il link per aggiornare la carta e pagare, una volta per ogni fattura non riuscita. Al massimo 20 messaggi al giorno; inviali, o lasciali come bozza dove la mia email non può inviare. Qualsiasi cosa in più aspetta me. Non addebitare, non ritentare un pagamento, non rimborsare e non annullare mai un abbonamento.",
+        "card": {
+          "allows": [
+            "Messaggi o bozze ai clienti, fino a 20 al giorno"
+          ],
+          "holds": [
+            "Un messaggio o bozza oltre 20 in un giorno"
+          ],
+          "never": [
+            "Un addebito o un nuovo tentativo di pagamento",
+            "Un rimborso",
+            "Un abbonamento annullato"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Pagamentos com cartão falhados",
+        "headline": "Um pagamento falhado não se torna um cliente perdido.",
+        "today": "Um cartão expirado ou recusado para uma subscrição em silêncio, e o cliente nunca sabe porquê.",
+        "line": "Quando o pagamento com cartão de um cliente falha, escreve-lhe com a ligação para pagar, dentro da Card.",
+        "say": "Quando o pagamento com cartão de um cliente falhar no meu fornecedor de pagamentos, escreve-lhe com a ligação para atualizar o cartão e pagar, uma vez por cada fatura falhada. No máximo 20 mensagens por dia; envia-as, ou deixa-as como rascunho onde o meu email não consegue enviar. Qualquer coisa a mais espera por mim. Nunca cobres, tentes de novo um pagamento, reembolses nem canceles uma subscrição.",
+        "card": {
+          "allows": [
+            "Mensagens ou rascunhos a clientes, até 20 por dia"
+          ],
+          "holds": [
+            "Uma mensagem ou rascunho acima de 20 num dia"
+          ],
+          "never": [
+            "Uma cobrança ou uma nova tentativa de pagamento",
+            "Um reembolso",
+            "Uma subscrição cancelada"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Mislukte kaartbetalingen",
+        "headline": "Een mislukte betaling wordt geen verloren klant.",
+        "today": "Een verlopen of geweigerde kaart stopt een abonnement stilletjes, en de klant hoort nooit waarom.",
+        "line": "Als de kaartbetaling van een klant mislukt, schrijft de klant met de link om te betalen, binnen de Card.",
+        "say": "Als de kaartbetaling van een klant bij mijn betaalprovider mislukt, schrijf de klant met de link om de kaart bij te werken en te betalen, één keer per mislukte factuur. Hooguit 20 berichten per dag; verstuur ze, of laat ze als concept staan waar mijn e-mail niet kan versturen. Alles daarboven wacht op mij. Schrijf nooit af, probeer nooit opnieuw te betalen, betaal niets terug en zeg geen abonnement op.",
+        "card": {
+          "allows": [
+            "Berichten of concepten aan klanten, tot 20 per dag"
+          ],
+          "holds": [
+            "Een bericht of concept boven 20 op één dag"
+          ],
+          "never": [
+            "Een afschrijving of een nieuwe betaalpoging",
+            "Een terugbetaling",
+            "Een opgezegd abonnement"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Nieudane płatności kartą",
+        "headline": "Nieudana płatność nie zamienia się w utraconego klienta.",
+        "today": "Wygasła lub odrzucona karta po cichu zatrzymuje subskrypcję, a klient nigdy nie wie dlaczego.",
+        "line": "Gdy płatność kartą klienta się nie powiedzie, pisze do niego z linkiem do zapłaty, w ramach Card.",
+        "say": "Gdy u mojego operatora płatności nie powiedzie się płatność kartą klienta, napisz do niego z linkiem do aktualizacji karty i zapłaty, raz na każdą nieopłaconą fakturę. Najwyżej 20 wiadomości dziennie; wyślij je albo zostaw jako wersje robocze tam, gdzie moja poczta nie może wysyłać. Wszystko ponad to czeka na mnie. Nigdy nie obciążaj, nie ponawiaj płatności, nie zwracaj pieniędzy i nie anuluj subskrypcji.",
+        "card": {
+          "allows": [
+            "Wiadomości lub wersje robocze do klientów, do 20 dziennie"
+          ],
+          "holds": [
+            "Wiadomość lub wersja robocza powyżej 20 w ciągu dnia"
+          ],
+          "never": [
+            "Obciążenie lub ponowna próba płatności",
+            "Zwrot pieniędzy",
+            "Anulowana subskrypcja"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "payouts-matched-to-the-bank",
+    "title": "Payouts matched to the bank",
+    "category": "money",
+    "order": 6,
+    "line": "Each day, matches every payout from the payment provider to its credit in the bank, and tells you what doesn't match.",
+    "headline": "Know that every payout reached the bank.",
+    "today": "Payouts are checked against the bank by hand, if at all, and a missing one is found weeks later.",
+    "say": "Every morning, match each payout from my payment provider to its credit in my bank account, and tell me which payouts haven't arrived or don't match the amount. Only read: never move money or change anything in either account.",
+    "connections": [
+      [
+        "qonto"
+      ],
+      [
+        "stripe"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Reading the bank account's transactions and the payment provider's payouts"
+      ],
+      "holds": [],
+      "never": [
+        "A payment, transfer or refund",
+        "A change in the bank account or the payment provider"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Auszahlungen mit der Bank abgleichen",
+        "headline": "Wissen, dass jede Auszahlung auf der Bank angekommen ist.",
+        "today": "Auszahlungen werden von Hand mit der Bank abgeglichen, wenn überhaupt, und eine fehlende fällt erst Wochen später auf.",
+        "line": "Gleicht jeden Tag jede Auszahlung des Zahlungsanbieters mit ihrer Gutschrift auf der Bank ab und sagt dir, was nicht passt.",
+        "say": "Gleiche jeden Morgen jede Auszahlung meines Zahlungsanbieters mit ihrer Gutschrift auf meinem Bankkonto ab und sag mir, welche Auszahlungen nicht angekommen sind oder im Betrag nicht passen. Nur lesen: bewege nie Geld und ändere nichts in einem der beiden Konten.",
+        "card": {
+          "allows": [
+            "Die Buchungen des Bankkontos und die Auszahlungen des Zahlungsanbieters lesen"
+          ],
+          "holds": [],
+          "never": [
+            "Eine Zahlung, Überweisung oder Erstattung",
+            "Eine Änderung am Bankkonto oder beim Zahlungsanbieter"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Versements rapprochés de la banque",
+        "headline": "Savoir que chaque versement est arrivé en banque.",
+        "today": "Les versements sont rapprochés de la banque à la main, quand ils le sont, et un versement manquant se découvre des semaines plus tard.",
+        "line": "Chaque jour, rapproche chaque versement du prestataire de paiement de son crédit en banque, et vous dit ce qui ne correspond pas.",
+        "say": "Chaque matin, rapproche chaque versement de mon prestataire de paiement de son crédit sur mon compte bancaire, et dis-moi quels versements ne sont pas arrivés ou dont le montant ne correspond pas. Lecture seule : ne déplace jamais d'argent et ne modifie rien dans aucun des deux comptes.",
+        "card": {
+          "allows": [
+            "La lecture des opérations du compte bancaire et des versements du prestataire de paiement"
+          ],
+          "holds": [],
+          "never": [
+            "Un paiement, un virement ou un remboursement",
+            "Une modification du compte bancaire ou chez le prestataire de paiement"
+          ]
+        }
+      },
+      "es": {
+        "title": "Liquidaciones cuadradas con el banco",
+        "headline": "Saber que cada liquidación llegó al banco.",
+        "today": "Las liquidaciones se cuadran con el banco a mano, si se cuadran, y una que falta se descubre semanas después.",
+        "line": "Cada día, cuadra cada liquidación del proveedor de pagos con su abono en el banco y te dice lo que no cuadra.",
+        "say": "Cada mañana, cuadra cada liquidación de mi proveedor de pagos con su abono en mi cuenta bancaria, y dime qué liquidaciones no han llegado o no coinciden en el importe. Solo lectura: nunca muevas dinero ni cambies nada en ninguna de las dos cuentas.",
+        "card": {
+          "allows": [
+            "Leer los movimientos de la cuenta bancaria y las liquidaciones del proveedor de pagos"
+          ],
+          "holds": [],
+          "never": [
+            "Un pago, una transferencia o un reembolso",
+            "Un cambio en la cuenta bancaria o en el proveedor de pagos"
+          ]
+        }
+      },
+      "it": {
+        "title": "Accrediti riconciliati con la banca",
+        "headline": "Sapere che ogni accredito è arrivato in banca.",
+        "today": "Gli accrediti si riconciliano con la banca a mano, se lo si fa, e uno mancante si scopre settimane dopo.",
+        "line": "Ogni giorno abbina ogni accredito del fornitore di pagamenti al suo movimento in banca e ti dice cosa non torna.",
+        "say": "Ogni mattina abbina ogni accredito del mio fornitore di pagamenti al suo movimento sul mio conto bancario, e dimmi quali accrediti non sono arrivati o non tornano nell'importo. Solo lettura: non spostare mai denaro e non cambiare nulla in nessuno dei due conti.",
+        "card": {
+          "allows": [
+            "Leggere i movimenti del conto bancario e gli accrediti del fornitore di pagamenti"
+          ],
+          "holds": [],
+          "never": [
+            "Un pagamento, un bonifico o un rimborso",
+            "Una modifica al conto bancario o nel fornitore di pagamenti"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Pagamentos recebidos conferidos com o banco",
+        "headline": "Saber que cada transferência chegou ao banco.",
+        "today": "As transferências são conferidas com o banco à mão, quando o são, e uma em falta só se descobre semanas depois.",
+        "line": "Todos os dias, confere cada transferência do fornecedor de pagamentos com o seu crédito no banco e diz-lhe o que não bate certo.",
+        "say": "Todas as manhãs, confere cada transferência do meu fornecedor de pagamentos com o seu crédito na minha conta bancária, e diz-me que transferências não chegaram ou não batem certo no valor. Só leitura: nunca movas dinheiro nem alteres nada em nenhuma das contas.",
+        "card": {
+          "allows": [
+            "Ler os movimentos da conta bancária e as transferências do fornecedor de pagamentos"
+          ],
+          "holds": [],
+          "never": [
+            "Um pagamento, uma transferência ou um reembolso",
+            "Uma alteração na conta bancária ou no fornecedor de pagamentos"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Uitbetalingen naast de bank",
+        "headline": "Weten dat elke uitbetaling op de bank is aangekomen.",
+        "today": "Uitbetalingen worden met de hand naast de bank gelegd, als het al gebeurt, en een ontbrekende valt pas weken later op.",
+        "line": "Legt elke dag elke uitbetaling van de betaalprovider naast de bijschrijving op de bank en zegt je wat niet klopt.",
+        "say": "Leg elke ochtend elke uitbetaling van mijn betaalprovider naast de bijschrijving op mijn bankrekening, en zeg me welke uitbetalingen niet zijn aangekomen of niet kloppen in het bedrag. Alleen lezen: verplaats nooit geld en wijzig niets in een van beide rekeningen.",
+        "card": {
+          "allows": [
+            "De transacties van de bankrekening en de uitbetalingen van de betaalprovider lezen"
+          ],
+          "holds": [],
+          "never": [
+            "Een betaling, overboeking of terugbetaling",
+            "Een wijziging in de bankrekening of bij de betaalprovider"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Wypłaty uzgodnione z bankiem",
+        "headline": "Wiedz, że każda wypłata dotarła do banku.",
+        "today": "Wypłaty uzgadnia się z bankiem ręcznie, o ile w ogóle, a brakującą wykrywa się po tygodniach.",
+        "line": "Codziennie dopasowuje każdą wypłatę od operatora płatności do jej wpływu w banku i mówi ci, co się nie zgadza.",
+        "say": "Każdego ranka dopasuj każdą wypłatę od mojego operatora płatności do jej wpływu na moje konto bankowe i powiedz mi, które wypłaty nie dotarły lub nie zgadzają się co do kwoty. Tylko odczyt: nigdy nie przenoś pieniędzy i niczego nie zmieniaj na żadnym z kont.",
+        "card": {
+          "allows": [
+            "Odczyt transakcji na koncie bankowym i wypłat od operatora płatności"
+          ],
+          "holds": [],
+          "never": [
+            "Płatność, przelew lub zwrot pieniędzy",
+            "Zmiana na koncie bankowym lub u operatora płatności"
+          ]
+        }
+      }
+    }
+  },
+  {
     "id": "answer-questions-about-orders",
     "title": "Answer questions about orders",
     "category": "customers",
@@ -1389,6 +1712,173 @@ export const RECIPES = [
           "never": [
             "Zwrot pieniędzy na inną metodę płatności",
             "Zmiana lub anulowanie zamówienia"
+          ]
+        }
+      }
+    }
+  },
+  {
+    "id": "late-parcels",
+    "title": "Late parcels",
+    "category": "customers",
+    "order": 5,
+    "line": "When a parcel's tracking stalls or it goes back to the sender, tells the customer before they ask, within the Card.",
+    "headline": "The customer hears about a late parcel from you first.",
+    "today": "A parcel stuck in transit turns into a worried email, then a complaint, then a refund request.",
+    "say": "Check my parcels' tracking every morning. When a parcel hasn't moved for 3 working days, or is going back to me, write to the customer to say so and that I'm on it. At most 30 messages a day; send them, or leave them as drafts where my email can't send. Anything more waits for me. Never buy a label, refund, or promise a refund or a new delivery date.",
+    "connections": [
+      [
+        "shippo"
+      ],
+      [
+        "gmail",
+        "intercom",
+        "zendesk"
+      ]
+    ],
+    "card": {
+      "allows": [
+        "Messages or drafts to customers, up to 30 a day"
+      ],
+      "holds": [
+        "A message or draft past 30 in a day"
+      ],
+      "never": [
+        "A new label",
+        "A refund"
+      ]
+    },
+    "languages": {
+      "de": {
+        "title": "Verspätete Pakete",
+        "headline": "Die Kundschaft hört von einem verspäteten Paket zuerst von dir.",
+        "today": "Ein Paket, das unterwegs feststeckt, wird zu einer besorgten E-Mail, dann zu einer Beschwerde, dann zu einer Erstattungsanfrage.",
+        "line": "Wenn die Sendungsverfolgung eines Pakets stockt oder es an dich zurückgeht, sagt es der Kundschaft, bevor sie fragt, im Rahmen der Card.",
+        "say": "Prüf jeden Morgen die Sendungsverfolgung meiner Pakete. Wenn sich ein Paket seit 3 Werktagen nicht bewegt hat oder an mich zurückgeht, schreib der Kundschaft, dass es so ist und dass ich mich darum kümmere. Höchstens 30 Nachrichten am Tag; schick sie, oder lass sie als Entwurf, wo meine E-Mail nicht senden kann. Alles darüber wartet auf mich. Kauf nie ein Etikett, erstatte nichts und versprich weder eine Erstattung noch ein neues Lieferdatum.",
+        "card": {
+          "allows": [
+            "Nachrichten oder Entwürfe an die Kundschaft, bis zu 30 am Tag"
+          ],
+          "holds": [
+            "Eine Nachricht oder ein Entwurf über 30 an einem Tag"
+          ],
+          "never": [
+            "Ein neues Versandetikett",
+            "Eine Erstattung"
+          ]
+        }
+      },
+      "fr": {
+        "title": "Colis en retard",
+        "headline": "Le client apprend le retard de son colis par vous, en premier.",
+        "today": "Un colis bloqué en route devient un e-mail inquiet, puis une réclamation, puis une demande de remboursement.",
+        "line": "Quand le suivi d'un colis s'arrête ou qu'il repart vers l'expéditeur, prévient le client avant qu'il ne demande, dans les limites de la Card.",
+        "say": "Vérifie chaque matin le suivi de mes colis. Quand un colis n'a pas bougé depuis 3 jours ouvrés, ou qu'il me revient, écris au client pour le lui dire et pour dire que je m'en occupe. Au plus 30 messages par jour ; envoie-les, ou laisse-les en brouillon là où mon e-mail ne peut pas envoyer. Au-delà, cela attend mon accord. N'achète jamais d'étiquette, ne rembourse pas, et ne promets ni remboursement ni nouvelle date de livraison.",
+        "card": {
+          "allows": [
+            "Des messages ou brouillons aux clients, jusqu'à 30 par jour"
+          ],
+          "holds": [
+            "Un message ou brouillon au-delà de 30 dans la journée"
+          ],
+          "never": [
+            "Une nouvelle étiquette",
+            "Un remboursement"
+          ]
+        }
+      },
+      "es": {
+        "title": "Paquetes con retraso",
+        "headline": "El cliente se entera por ti de que su paquete va con retraso.",
+        "today": "Un paquete atascado en tránsito se convierte en un email preocupado, luego en una queja y luego en una solicitud de reembolso.",
+        "line": "Cuando el seguimiento de un paquete se detiene o vuelve al remitente, avisa al cliente antes de que pregunte, dentro de la Card.",
+        "say": "Revisa cada mañana el seguimiento de mis paquetes. Cuando un paquete no se haya movido en 3 días laborables, o esté volviendo a mí, escribe al cliente para decírselo y que me estoy ocupando. Como mucho 30 mensajes al día; envíalos, o déjalos como borrador donde mi email no pueda enviar. Cualquier cosa más me espera. Nunca compres una etiqueta, reembolses ni prometas un reembolso o una nueva fecha de entrega.",
+        "card": {
+          "allows": [
+            "Mensajes o borradores a clientes, hasta 30 al día"
+          ],
+          "holds": [
+            "Un mensaje o borrador por encima de 30 en un día"
+          ],
+          "never": [
+            "Una etiqueta nueva",
+            "Un reembolso"
+          ]
+        }
+      },
+      "it": {
+        "title": "Pacchi in ritardo",
+        "headline": "Il cliente sa del pacco in ritardo prima da te.",
+        "today": "Un pacco bloccato in transito diventa un'email preoccupata, poi un reclamo, poi una richiesta di rimborso.",
+        "line": "Quando il tracciamento di un pacco si ferma o torna al mittente, avvisa il cliente prima che chieda, nei limiti della Card.",
+        "say": "Controlla ogni mattina il tracciamento dei miei pacchi. Quando un pacco non si muove da 3 giorni lavorativi, o sta tornando da me, scrivi al cliente per dirglielo e che me ne sto occupando. Al massimo 30 messaggi al giorno; inviali, o lasciali come bozza dove la mia email non può inviare. Qualsiasi cosa in più aspetta me. Non comprare mai un'etichetta, non rimborsare e non promettere un rimborso o una nuova data di consegna.",
+        "card": {
+          "allows": [
+            "Messaggi o bozze ai clienti, fino a 30 al giorno"
+          ],
+          "holds": [
+            "Un messaggio o bozza oltre 30 in un giorno"
+          ],
+          "never": [
+            "Una nuova etichetta",
+            "Un rimborso"
+          ]
+        }
+      },
+      "pt": {
+        "title": "Encomendas atrasadas",
+        "headline": "O cliente sabe primeiro por si que a encomenda vai atrasada.",
+        "today": "Uma encomenda parada em trânsito transforma-se num email preocupado, depois numa reclamação, depois num pedido de reembolso.",
+        "line": "Quando o seguimento de uma encomenda para ou ela volta ao remetente, avisa o cliente antes de ele perguntar, dentro da Card.",
+        "say": "Verifica todas as manhãs o seguimento das minhas encomendas. Quando uma encomenda não se mexer há 3 dias úteis, ou estiver a voltar para mim, escreve ao cliente a dizê-lo e que estou a tratar do assunto. No máximo 30 mensagens por dia; envia-as, ou deixa-as como rascunho onde o meu email não consegue enviar. Qualquer coisa a mais espera por mim. Nunca compres uma etiqueta, reembolses nem prometas um reembolso ou uma nova data de entrega.",
+        "card": {
+          "allows": [
+            "Mensagens ou rascunhos a clientes, até 30 por dia"
+          ],
+          "holds": [
+            "Uma mensagem ou rascunho acima de 30 num dia"
+          ],
+          "never": [
+            "Uma etiqueta nova",
+            "Um reembolso"
+          ]
+        }
+      },
+      "nl": {
+        "title": "Vertraagde pakketten",
+        "headline": "De klant hoort het eerst van jou als een pakket vertraagd is.",
+        "today": "Een pakket dat onderweg vastzit, wordt een bezorgde e-mail, dan een klacht, dan een verzoek om terugbetaling.",
+        "line": "Als de tracking van een pakket stilvalt of het teruggaat naar de afzender, laat het de klant weten voordat die het vraagt, binnen de Card.",
+        "say": "Controleer elke ochtend de tracking van mijn pakketten. Als een pakket al 3 werkdagen niet beweegt, of naar mij teruggaat, schrijf de klant dat het zo is en dat ik ermee bezig ben. Hooguit 30 berichten per dag; verstuur ze, of laat ze als concept staan waar mijn e-mail niet kan versturen. Alles daarboven wacht op mij. Koop nooit een label, betaal niets terug en beloof geen terugbetaling of nieuwe leverdatum.",
+        "card": {
+          "allows": [
+            "Berichten of concepten aan klanten, tot 30 per dag"
+          ],
+          "holds": [
+            "Een bericht of concept boven 30 op één dag"
+          ],
+          "never": [
+            "Een nieuw verzendlabel",
+            "Een terugbetaling"
+          ]
+        }
+      },
+      "pl": {
+        "title": "Spóźnione paczki",
+        "headline": "Klient dowiaduje się o spóźnionej paczce najpierw od ciebie.",
+        "today": "Paczka utknięta w drodze zamienia się w zaniepokojony e-mail, potem w reklamację, potem w prośbę o zwrot pieniędzy.",
+        "line": "Gdy śledzenie paczki staje albo paczka wraca do nadawcy, informuje klienta, zanim zapyta, w ramach Card.",
+        "say": "Każdego ranka sprawdzaj śledzenie moich paczek. Gdy paczka nie ruszyła się od 3 dni roboczych albo wraca do mnie, napisz do klienta, że tak jest i że się tym zajmuję. Najwyżej 30 wiadomości dziennie; wyślij je albo zostaw jako wersje robocze tam, gdzie moja poczta nie może wysyłać. Wszystko ponad to czeka na mnie. Nigdy nie kupuj etykiety, nie zwracaj pieniędzy i nie obiecuj zwrotu ani nowej daty dostawy.",
+        "card": {
+          "allows": [
+            "Wiadomości lub wersje robocze do klientów, do 30 dziennie"
+          ],
+          "holds": [
+            "Wiadomość lub wersja robocza powyżej 30 w ciągu dnia"
+          ],
+          "never": [
+            "Nowa etykieta",
+            "Zwrot pieniędzy"
           ]
         }
       }

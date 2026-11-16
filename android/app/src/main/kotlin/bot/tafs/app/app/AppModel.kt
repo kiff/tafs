@@ -255,6 +255,9 @@ data class AppState(
   val needsYou: bot.tafs.app.kiff.NeedsYouCount? = null,
   /** Home's first line, in tafs cloud's words; null from a tafs cloud that sends none, where the app's own count stands in. */
   val headline: String? = null,
+  /** The account's labels and the filter row's words, from Home: the list filters by them, and nothing else does. */
+  val labels: List<bot.tafs.app.kiff.HomeLabel> = emptyList(),
+  val labelsAll: String? = null,
   /** Coach is on screen (its chat `coachChat`): set by the screen, for the badge. */
   val coachShown: Boolean = false,
   /** After a set-aside, where the chats went, in tafs cloud's words (`words.done`); gone once Coach opens. */
@@ -1024,11 +1027,15 @@ class AppModel(
 
   // MARK: Where the owner left off
 
-  /** Restores where the owner left off: signed in to KIFF, or the saved sample. */
-  suspend fun restore() {
+  /**
+   * Restores where the owner left off: signed in to KIFF, or the saved sample. [onScreen] false is the Wear OS watch's relay
+   * with no screen up: what needs the person (the approval key's registration, behind the fingerprint) and Play are left for
+   * [finishRestoreOnScreen] (RestoreOnce).
+   */
+  suspend fun restore(onScreen: Boolean = true) {
     val token = secrets.load(TOKEN)
     if (token != null) {
-      resumeSession(token, secrets.load(TENANT), keyed = secrets.load(KEYED) == "1")
+      resumeSession(token, secrets.load(TENANT), keyed = secrets.load(KEYED) == "1", onScreen = onScreen)
       endDriveLeftOn()
     } else {
       store?.load()?.let { startSample() }
@@ -1037,7 +1044,7 @@ class AppModel(
   }
 
   /** Goes on with a KIFF session kept from an earlier launch. */
-  private suspend fun resumeSession(token: String, tenant: String?, keyed: Boolean) {
+  private suspend fun resumeSession(token: String, tenant: String?, keyed: Boolean, onScreen: Boolean = true) {
     kiff.token = token
     cloud.token = token
     kiffTenant = tenant
@@ -1055,10 +1062,18 @@ class AppModel(
     if (keyGone) lostApprovalKey()
     refresh()
     loadAIConsent(ask = true)
-    // A session from before the approval key registers it once (kiff/tafs#233).
-    registerApprovalKey()
     // This phone's alerts, where its owner turned them on.
     syncPush()
+    if (onScreen) finishRestoreOnScreen()
+  }
+
+  /**
+   * What a restore leaves for a screen, where the person can answer: a session from before the approval key registers it once
+   * (kiff/tafs#233), signed behind the fingerprint; and Play's purchases. Run by the restore itself on screen, or by the screen's
+   * first ask after a restore for the watch (RestoreOnce).
+   */
+  suspend fun finishRestoreOnScreen() {
+    registerApprovalKey()
     startPurchases()
   }
 
@@ -1466,6 +1481,8 @@ class AppModel(
         coachWaitingClear = read.home.coachWaitingClear?.takeIf { it.words.button.isNotBlank() },
         needsYou = read.home.needsYou,
         headline = read.home.headline?.words?.takeIf { it.isNotBlank() },
+        labels = bot.tafs.app.views.usableLabels(read.home.labels),
+        labelsAll = read.home.labelsWords?.all?.takeIf { it.isNotBlank() },
         // What the tafs did, as KIFF records it (kiff/tafs#102), not only the answers given on this device.
         record = read.activity?.let { withDecisions(KiffMapping.record(it, holders)) } ?: s.record,
         // What this person may do with each agent, as KIFF says: a read that failed leaves what was known.
@@ -7212,6 +7229,10 @@ class AppModel(
     // The list reads it halted at once, not at its next read; the halt sheet doesn't wait for the whole list to show its own.
     scope.launch { refresh() }
   }
+
+  /** A page of a mission's log (Missions v2.1 §6), read only; null when it can't be read now. Signed in only. */
+  suspend fun missionLog(mission: String, before: String? = null): bot.tafs.app.kiff.MissionLogPage? =
+    if (_state.value.mode != Mode.kiff) null else attempt { cloud.missionLog(mission, before) }
 
   /** Reads where a halt stands. */
   suspend fun refreshHalt(tafId: String?) {
