@@ -75,8 +75,12 @@ Each mission has a log: what its tafs delivered, newest last, kept 90 days (the 
 ## Your brief
 
 Your brief replaces Needs you: twice a day, at 08:00 and 18:00 in the account's time zone, plus an alert at once for
-what's truly urgent (design v2.1 §7). Its builder is `runtime/src/cloud/brief.ts`; the route (`GET /v1/brief?label=`,
-`POST /v1/brief/decisions/{id}/later`) and its words come next.
+what's truly urgent (design v2.1 §7). Its builder is `runtime/src/cloud/brief.ts`, served at `GET /v1/brief?label=`, with
+Later at `POST /v1/brief/decisions/{id}/later` ([api.md](api.md)).
+
+- **What it's built from**, read as Home reads it: the calls KIFF holds on the tafs the person may see (Approve or Refuse,
+  as equals: KIFF gives no why) and the steps their runs handed their owner (with KIFF's expiry as the deadline). Blocked
+  connections, Coach's proposals, case lines, the credits line and the pushes come next.
 
 - **Urgent** is tafs cloud's rule, never a model's: a deadline before the next brief, money going out today, a halt, a
   blocked connection, or "ask me at once".

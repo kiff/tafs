@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { BRIEF_DECISIONS, briefDecisions, briefTimes, buildBrief, isUrgent, putOff, type BriefDecisionIn, type BriefWords } from "../src/cloud/brief.js";
+import { BRIEF_DECISIONS, briefDecisions, briefTimes, buildBrief, isUrgent, laterOf, putOff, type BriefDecisionIn, type BriefWords } from "../src/cloud/brief.js";
 
 const W: BriefWords = {
   decisions: "Decisions", done: "Done", rest: "The rest", later: "Later",
@@ -124,5 +124,11 @@ describe("Your brief (design v2.1 §7)", () => {
     expect(isUrgent(hold("x", { deadline: "soon" }), new Date("2026-11-16T17:00:00Z"))).toBe(true);
     expect(() => briefTimes(new Date(), "Europe/Paris", [])).toThrow();
     expect(() => briefTimes(new Date(), "Europe/Paris", ["8am"])).toThrow();
+  });
+
+  it("keeps only the Laters still ahead of now from what was stored, and drops anything that isn't one", () => {
+    const now = new Date("2026-11-16T09:30:00Z");
+    expect([...laterOf({ "hold:a": "2026-11-16T17:00:00.000Z", "hold:b": "2026-11-16T07:00:00.000Z", "hold:c": 5, "hold:d": "soon" }, now)]).toEqual([["hold:a", "2026-11-16T17:00:00.000Z"]]);
+    for (const kept of [undefined, null, "x", ["hold:a"]]) expect(laterOf(kept, now).size).toBe(0);
   });
 });

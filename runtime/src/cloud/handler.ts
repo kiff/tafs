@@ -58,9 +58,10 @@ import { CARD_NEXT, ApprovalError, type ApprovalGrant, REDRAFT_CODES, askOf, che
 import { type Estimate, estimate, type Own, paceLine, type Plan, planOf, samplesFromKIFF, testsFor, trialsFromKIFF, WINDOW_DAYS, type WeekOne, weekOneOf, weekOneWords } from "./estimate.js";
 import { RECIPES } from "../recipes.js";
 import { misplaced, neededBy, type NeedApp, type NeedTaf } from "./needed.js";
-import { findLabel, LabelRefusal, labelsView, readLabels, saveLabels, withLabelChanged, withTafLabels } from "./labels.js";
+import { findLabel, LabelRefusal, labelName, labelsView, readLabels, saveLabels, withLabelChanged, withTafLabels } from "./labels.js";
 import { BusinessRefusal, businessView, readBusiness, saveBusiness } from "./business.js";
 import { MissionRefusal, planMission, readMissions, saveMissions } from "./missions.js";
+import { briefLaterKey, buildBrief, type BriefDecisionIn, type DecisionWords, holdDecision, laterOf, putOff, stepDecision } from "./brief.js";
 import { logDelivered, logPage, readLog } from "./missionlog.js";
 
 /**
@@ -77,6 +78,8 @@ import { logDelivered, logPage, readLog } from "./missionlog.js";
  *   GET  /v1/home                       the app's list: each taf's state, colour, Card summary, doors and open trial, Home's first line (`headline`), and the account's other agents with Cards
  *   POST /v1/home/coach-waiting/{session}/set-aside   the person's own waiting Coach chat set aside ("not now"): its run ends, nothing approved
  *   POST /v1/home/coach-waiting/set-aside             every one of them at once ("Set all aside")
+ *   GET  /v1/brief?label=               Your brief (docs/missions.md): the decisions from held calls and steps, urgent first, at most 5 more, the labels' counts
+ *   POST /v1/brief/decisions/{id}/later the decision moved to the next brief; refused for one that's urgent or can't wait
  *   GET  /v1/events                     halts, resumes, door events and Coach's drives, newest first, for Activity (kiff/tafs#236)
  *   GET  /v1/usage/ai                   the period's AI use against its bound (kiff/tafs#193)
  *   GET  /v1/usage/credits              the period's credits, read-only, in words (docs/accounts.md, "Credits")
@@ -600,7 +603,7 @@ async function answer(event: HTTPEvent, deps: Deps): Promise<HTTPResult> {
 const ROUTE_WORDS = new Set(("v1 account ai alerts answer apps archive archived attachments calls chats coach components connect continue conversation drive " +
   "activity delete deletions deliveries doors door email whatsapp ended estimate events follow-ups halt holds home improve install jobs keys kiff knob knocks live mcp " +
   "logos gallery recipes memory messages time-zones pause push requests results resume run runs send setup steer stop stream switch switching tafs trial trials try " +
-  "unarchive usage versions work webhooks record cases receipts").split(" "));
+  "unarchive usage versions work webhooks record cases receipts brief decisions later").split(" "));
 
 /**
  * One line per request, so a check can be confirmed from tafs cloud's own logs: the method, the route
@@ -655,6 +658,8 @@ async function route(event: HTTPEvent, deps: Deps): Promise<unknown> {
   if (parts[1] === "push") return push(event, method, parts, deps);
   if (parts[1] === "alerts" && parts.length === 2) return alerts(event, method, await person(event, deps), deps);
   if (parts[1] === "home" && parts.length === 2 && method === "GET") return home(event, await person(event, deps), deps);
+  if (parts[1] === "brief" && parts.length === 2 && method === "GET") return brief(event, await person(event, deps), deps);
+  if (parts[1] === "brief" && parts.length === 5 && parts[2] === "decisions" && parts[4] === "later" && method === "POST") return briefLater(event, await person(event, deps), parts[3]!, deps);
   if (parts[1] === "missions" && parts.length === 4 && parts[3] === "log" && method === "GET") return missionLog(event, await person(event, deps), parts[2]!, deps);
   if (parts[1] === "home" && parts[2] === "coach-waiting" && method === "POST" && (parts.length === 4 || parts.length === 5) && parts[parts.length - 1] === "set-aside") {
     let session: string | undefined;
@@ -7305,6 +7310,76 @@ async function notEndedHere(deps: Deps, tenant: string, runs: Run[]): Promise<Ru
  * GET /v1/missions/{id}/log (missionlog.ts): read-only, newest first, a page at a time, kept 90 days after its mission
  * ends. An entry by a taf the person may not see is left out; one by a removed taf is marked removed (M7).
  */
+/**
+ * What Your brief is built from (docs/missions.md, Your brief), read as Home reads it: the tafs this person may see, the
+ * calls KIFF holds on them, the steps their recent runs handed their owner, the account's labels and what was put off
+ * with Later. A label or Later store that can't be read leaves the labels out and puts nothing off, never the brief.
+ */
+async function briefInputs(event: HTTPEvent, me: KIFFIdentity, deps: Deps, now: Date) {
+  const lang = langOf(event);
+  const w = wordsIn(lang);
+  const [records, kiff, access] = await Promise.all([
+    deps.tafs.list(me.tenantID),
+    readKIFF(bearer(event), deps.fetch, deps.kiffBase),
+    readAccess(bearer(event), deps.fetch, deps.kiffBase),
+  ]);
+  // A taf being removed, or one whose removal finished, is gone from the brief with its calls and steps (M7).
+  const tafs = records.filter((t) => !t.removing && t.job !== SETUP_JOB && listable(access, t.kiffAgent));
+  const [recent, labelSet, kept] = await Promise.all([
+    Promise.all(tafs.map((t) => deps.agents.runs(me.tenantID, t.id, false, 20).catch(() => [] as Run[]))),
+    deps.coach ? readLabels(deps.coach, me.tenantID).catch(() => undefined) : undefined,
+    deps.coach ? deps.coach.get(briefLaterKey(me.tenantID)).catch(() => undefined) : undefined,
+  ]);
+  const known = new Set(labelSet?.labels.map((l) => l.id) ?? []);
+  const tafOf = (t: Taf) => ({ id: t.id, name: t.name, labels: (t.labels ?? []).filter((id) => known.has(id)) });
+  const dw: DecisionWords = { approve: w.brief_approve, refuse: w.brief_refuse, holdQuestion: w.brief_hold_question, holdMeanwhile: w.brief_hold_meanwhile, stepMeanwhile: w.brief_step_meanwhile };
+  const byAgent = new Map(tafs.map((t) => [t.kiffAgent, t]));
+  const decisions: BriefDecisionIn[] = [
+    ...kiff.held.flatMap((h) => {
+      const t = byAgent.get(h.subject);
+      const d = t ? holdDecision(h, tafOf(t), dw) : undefined;
+      return d ? [d] : [];
+    }),
+    ...tafs.flatMap((t, i) => (recent[i] ?? []).flatMap((r) => yourStepsOf(r, lang).map((st) => stepDecision(st, tafOf(t), dw)))),
+  ];
+  return { lang, w, tafs: tafs.map(tafOf), decisions, labelSet, later: laterOf(kept, now) };
+}
+
+/** GET /v1/brief?label=: Your brief, built here (brief.ts), so the apps count and cut nothing. */
+async function brief(event: HTTPEvent, me: KIFFIdentity, deps: Deps) {
+  const now = deps.now?.() ?? new Date();
+  const { lang, w, tafs, decisions, labelSet, later } = await briefInputs(event, me, deps, now);
+  const label = new URLSearchParams(event.rawQueryString ?? "").get("label") ?? undefined;
+  const waiting = new Set(decisions.map((d) => d.taf.id));
+  const rest = tafs.filter((t) => !waiting.has(t.id) && (!label || t.labels.includes(label))).length;
+  return buildBrief({
+    now, timeZone: me.timeZone ?? "UTC", decisions, cases: [], later, tafs, rest, ...(label ? { label } : {}),
+    labels: (labelSet?.labels ?? []).map((l) => ({ id: l.id, name: labelName(l, lang), color: l.color })),
+    words: { decisions: w.brief_decisions, done: w.brief_done, rest: w.brief_rest, later: w.brief_later,
+      more: (n) => w.brief_more(n, plural(lang, n)), restLine: (n) => w.brief_rest_line(n, plural(lang, n)) },
+  });
+}
+
+/**
+ * POST /v1/brief/decisions/{id}/later: the decision waits for the next brief (decision 2). Refused (409) for one that's
+ * urgent or can't wait, as the brief offers Later for neither; 404 for one that isn't in this person's brief.
+ */
+async function briefLater(event: HTTPEvent, me: KIFFIdentity, id: string, deps: Deps) {
+  if (!deps.coach) throw new HTTPError(503, "Later can't be kept here");
+  const now = deps.now?.() ?? new Date();
+  const { decisions } = await briefInputs(event, me, deps, now);
+  const d = decisions.find((x) => x.id === id);
+  if (!d) throw new HTTPError(404, "no such decision in your brief");
+  const put = putOff(d, now, me.timeZone ?? "UTC");
+  if ("refused" in put) throw new HTTPError(409, put.refused === "urgent" ? "this decision is urgent: it can't wait for the next brief" : "this decision can't wait for the next brief", { code: put.refused });
+  // Read again just before the write, so a Later from another phone in between is kept.
+  const kept = laterOf(await deps.coach.get(briefLaterKey(me.tenantID)), now);
+  kept.set(id, put.until);
+  const last = Math.max(...[...kept.values()].map((u) => Date.parse(u)));
+  await deps.coach.put(briefLaterKey(me.tenantID), Object.fromEntries(kept), new Date(last + 24 * 3600_000));
+  return { id, until: put.until };
+}
+
 async function missionLog(event: HTTPEvent, me: KIFFIdentity, id: string, deps: Deps) {
   if (!deps.coach) throw new HTTPError(503, "missions can't be kept here");
   const log = await readLog(deps.coach, me.tenantID, id);
