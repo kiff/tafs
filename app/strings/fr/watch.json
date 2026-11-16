@@ -2,11 +2,18 @@
   "watch.already_answered": "Déjà répondu, ou terminé.",
   "watch.approve_on_phone": "Approuvez sur votre téléphone",
   "watch.as_of": "Mis à jour à {time}",
+  "watch.asking_phone": "Demande à votre téléphone…",
   "watch.coach_needs_consent": "Avant de parler à Coach, autorisez l'utilisation de l'IA dans tafs sur votre téléphone.",
   "watch.glance_description": "Combien vous attendent, jamais quoi ni qui.",
+  "watch.held_calls": {
+    "one": "{count} appel retenu vous attend",
+    "other": "{count} appels retenus vous attendent"
+  },
   "watch.more_on_phone": "La suite est sur votre téléphone.",
+  "watch.needs_lock": "Pour refuser ou bloquer depuis cette montre, définissez un verrouillage de l'écran et déverrouillez-la.",
   "watch.open_on_phone": "Ouvrir sur le téléphone",
   "watch.phone_not_reachable": "Votre téléphone est hors de portée. Rapprochez-le, puis réessayez.",
   "watch.refused": "Refusé. Rien n'a été envoyé.",
-  "watch.sign_in_on_phone": "Connectez-vous d'abord à tafs sur votre téléphone."
+  "watch.sign_in_on_phone": "Connectez-vous d'abord à tafs sur votre téléphone.",
+  "watch.voice_text_only": "Coach reçoit vos mots en texte, jamais votre voix."
 }
