@@ -44,7 +44,7 @@ That build is unsigned. The signed one goes to TestFlight (below).
 - **The app and its notification extension** are signed with the same Apple Distribution certificate as the iOS upload (`DIST_P12`). They use the iPhone's and iPad's bundle IDs, so it's universal purchase: the same products, and restore across devices.
 - **Their profiles** are Mac Catalyst App Store profiles (`MAC_CATALYST_APP_STORE`), made and installed through the App Store Connect API: `asc-profiles.rb --mac`, "tafs Mac App Store CI" and "tafs notify Mac App Store CI". On a Mac, push is named `com.apple.developer.aps-environment`, and the script checks the profile carries it.
 - **The package** is signed with the Mac Installer Distribution certificate (`MAC_INSTALLER_P12`, `MAC_INSTALLER_P12_PASSWORD`). The run stops with a clear error while it isn't stored.
-- **Which is which:** only the certificate's own workflow (below) runs in the `mac-signing` environment, so its reviewer approves once per certificate, when it's made and at renewal. The two certificate secrets are **repository** secrets, not the environment's, so Mac TestFlight reads them with no approval, and an upload never waits on anyone.
+- **Which is which:** the signing secrets (`DIST_P12`, `MAC_INSTALLER_P12`, their passwords, and `ASC_KEY_P8`) are secrets of the **`apple-release`** environment, which deploys only from `main` and `v*` tags and has no required reviewer. iOS's TestFlight job and Mac TestFlight run in it, so an upload never waits on anyone, and a workflow pushed on any other branch can't read them. Only the certificate's own workflow (below) runs in the `mac-signing` environment, so its reviewer approves once per certificate, when it's made and at renewal. It needs `ASC_KEY_P8` too, so that key is also a `mac-signing` secret.
 
 **The installer certificate is made once** (`.github/workflows/mac-installer-cert.yml`). Its private key is made inside that run and leaves it only encrypted to an admin's public key. This repository is public, so its logs and artifacts are too. An admin does each step, on their own machine:
 
@@ -57,7 +57,7 @@ That build is unsigned. The signed one goes to TestFlight (below).
    ```
 
 2. **Run "Mac installer certificate"** from main, with that line as `public_key`. It runs in the `mac-signing` environment, so its reviewer approves it. The run prints the certificate's id and expiry only.
-3. **Decrypt the artifact and store the two secrets,** as repository secrets (`gh secret set -R kiff/tafs`), not the environment's:
+3. **Decrypt the artifact and store the two secrets** in the `apple-release` environment (`gh secret set --env apple-release -R kiff/tafs`):
 
    ```bash
    gh run download <run id> -R kiff/tafs -n mac-installer-sealed -D sealed
@@ -65,8 +65,8 @@ That build is unsigned. The signed one goes to TestFlight (below).
      -pkeyopt rsa_padding_mode:oaep -pkeyopt rsa_oaep_md:sha256 -pkeyopt rsa_mgf1_md:sha256
    openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in sealed/mac-installer.tar.enc -out bundle.tar -pass file:aes.key
    mkdir out && tar -C out -xf bundle.tar
-   base64 < out/installer.p12 | tr -d '\n' | gh secret set MAC_INSTALLER_P12 -R kiff/tafs
-   tr -d '\n' < out/password.txt | gh secret set MAC_INSTALLER_P12_PASSWORD -R kiff/tafs
+   base64 < out/installer.p12 | tr -d '\n' | gh secret set MAC_INSTALLER_P12 --env apple-release -R kiff/tafs
+   tr -d '\n' < out/password.txt | gh secret set MAC_INSTALLER_P12_PASSWORD --env apple-release -R kiff/tafs
    ```
 
 4. **Delete the run's artifact** (Actions → the run → Artifacts), and the local files: `sealed`, `aes.key`, `bundle.tar`, `out` and, once the secrets are stored, `mac-signing.pem`.
