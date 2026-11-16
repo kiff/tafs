@@ -2303,8 +2303,17 @@ async function owned(me: KIFFIdentity, id: string, deps: Deps, opts: { removing?
  * Cards are KIFF's: the phone revokes them, before calling this.
  */
 /**
+ * How a device signed this request: its KIFF-Device-Signature, or the passkey assertion a computer approves with
+ * (KIFF-Passkey-Assertion, docs/computer-passkeys.md), as it came. `checkSigned` sends KIFF whichever is there and
+ * refuses a request carrying both.
+ */
+function signedBy(event: HTTPEvent): { signature: string; passkey: string } {
+  return { signature: event.headers?.["kiff-device-signature"] ?? "", passkey: event.headers?.["kiff-passkey-assertion"] ?? "" };
+}
+
+/**
  * A removal is the phone's act: its DELETE comes signed by the phone (KIFF-Device-Signature, as a setup call is
- * signed), and KIFF says whether this phone signed it, each signature taken once (`checkSigned`). tafs cloud holds
+ * signed; a computer's passkey assertion, KIFF-Passkey-Assertion, in its place), and KIFF says whether this phone signed it, each signature taken once (`checkSigned`). tafs cloud holds
  * no device key, and takes only the approval key, behind the screen lock each time (`critical_key_required` for
  * the device key or an approval window). A taf already being removed is finished unsigned: a signed DELETE began it, and the apps finish
  * what's left on their next read. Until both apps sign it, an unsigned DELETE still removes and is logged as
@@ -2313,8 +2322,8 @@ async function owned(me: KIFFIdentity, id: string, deps: Deps, opts: { removing?
  */
 async function removalSigned(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps: Deps): Promise<void> {
   if (taf.removing) return;
-  const signature = event.headers?.["kiff-device-signature"] ?? "";
-  if (!signature) {
+  const { signature, passkey } = signedBy(event);
+  if (!signature && !passkey) {
     if (process.env.TAFS_SIGNED_REMOVE === "on") throw new HTTPError(403, wordsIn(langOf(event)).remove_signed, { code: "signature_required" });
     console.log(JSON.stringify({ event: "taf_remove", signed: false, taf: taf.id }));
     return;
@@ -2322,7 +2331,7 @@ async function removalSigned(event: HTTPEvent, me: KIFFIdentity, taf: Taf, deps:
   const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
   // The approval key, behind the screen lock, each time: never the device key, nor an earlier unlock's window.
   await checkSigned({ token: bearer(event), kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, lang: langOf(event),
-    signed: { method: "DELETE", uri, body: rawBody(event), signature } }, "approval").catch((err) => {
+    signed: { method: "DELETE", uri, body: rawBody(event), signature, passkey } }, "approval").catch((err) => {
     if (err instanceof ApprovalError && err.code === "critical_key_required") throw new HTTPError(403, wordsIn(langOf(event)).remove_signed, { code: "critical_key_required" });
     return approvalFailure(err);
   });
@@ -3767,7 +3776,7 @@ async function driveRoute(event: HTTPEvent, method: string, parts: string[], me:
     await requireAIConsent(event, me, deps);
     const body = parseBody(event);
     const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
-    const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
+    const signed = { method: "POST", uri, body: rawBody(event), ...signedBy(event) };
     // Only the approval key, behind the fingerprint, starts a drive: never the device key, never a window's tap.
     await checkSigned({ tenant: me.tenantID, taf: "", component: "", token: bearer(event), proof: "", store, planqueBase: deps.planqueBase ?? "", kiffBase: deps.kiffBase,
       fetch: deps.fetch ?? fetch, now, newID: () => "", signed, lang: langOf(event) }, "approval").catch(approvalFailure);
@@ -4107,7 +4116,7 @@ async function approvalReportRoute(event: HTTPEvent, me: KIFFIdentity, taf: Taf,
   const card = await shownCard(me, taf, component, "approval", str(body.session).trim(), deps);
   if (!card) throw new HTTPError(404, "no card of yours by that id");
   const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
-  const signed = { method: "POST", uri, body: rawBody(event), signature: event.headers?.["kiff-device-signature"] ?? "" };
+  const signed = { method: "POST", uri, body: rawBody(event), ...signedBy(event) };
   const outcome = await settleApproval(askID, report, { ...ctx, signed, session: card.session }).catch(approvalFailure);
   await deps.coach!.remove(approvalWaitKey(me.tenantID, taf.id, me.subject)).catch(() => undefined);
   let told: Awaited<ReturnType<typeof tellCoach>> | { session: string };
@@ -7646,15 +7655,15 @@ const DISCARD_REREAD_MS = 700;
 
 /** A discard is signed by the phone as a removal is, under the same switch (TAFS_SIGNED_REMOVE). */
 async function discardSigned(event: HTTPEvent, agent: string, deps: Deps): Promise<void> {
-  const signature = event.headers?.["kiff-device-signature"] ?? "";
-  if (!signature) {
+  const { signature, passkey } = signedBy(event);
+  if (!signature && !passkey) {
     if (process.env.TAFS_SIGNED_REMOVE === "on") throw new HTTPError(403, wordsIn(langOf(event)).remove_signed, { code: "signature_required" });
     console.log(JSON.stringify({ event: "half_made_discard", signed: false, agent }));
     return;
   }
   const uri = event.rawPath + (event.rawQueryString ? `?${event.rawQueryString}` : "");
   await checkSigned({ token: bearer(event), kiffBase: deps.kiffBase, fetch: deps.fetch ?? fetch, lang: langOf(event),
-    signed: { method: "POST", uri, body: rawBody(event), signature } }, "approval").catch((err) => {
+    signed: { method: "POST", uri, body: rawBody(event), signature, passkey } }, "approval").catch((err) => {
     if (err instanceof ApprovalError && err.code === "critical_key_required") throw new HTTPError(403, wordsIn(langOf(event)).remove_signed, { code: "critical_key_required" });
     return approvalFailure(err);
   });

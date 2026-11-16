@@ -1146,6 +1146,36 @@ describe("the approval window (kiff/tafs#494): which key an ask takes, and the r
     expect((await w.call("POST", `${ASK}/${id}`, { result: "confirmed" }, SIG)).body).toMatchObject({ answer: "approved" });
   });
 
+  // A computer approves with its passkey (KIFF-Passkey-Assertion), never a device key (win-dev, 16 Nov): tafs cloud
+  // sent KIFF only `signature`, so every computer's report was refused. KIFF takes `passkey` in its place, one of the two.
+  it("checks a computer's passkey with KIFF in place of a signature, refuses both at once, and says KIFF's refusals in tafs cloud's words", async () => {
+    const PASSKEY = { "kiff-passkey-assertion": "t=2026-10-16T12:00:30Z,a=assertion" };
+    const s = services();
+    const w = await world(s);
+    const r = await w.call("POST", ASK, { grant: "g_1", shown_digest: sha256(grant().request) });
+    const id = (r.body.ask as { id: string }).id;
+    s.grants = [grant({ status: "connected" })];
+    // Both at once: refused before KIFF is asked, and nothing is settled.
+    const both = await w.call("POST", `${ASK}/${id}`, { result: "connected" }, { ...SIG, ...PASSKEY });
+    expect(both.status).toBe(400);
+    expect(both.body).toEqual({ error: WORDS.signBoth, code: "signature_twice" });
+    expect(s.checks).toEqual([]);
+    // A session that doesn't approve with a passkey: KIFF's code, in tafs cloud's words.
+    s.signed = 403;
+    s.signedCode = "passkey_not_this_session";
+    const session = await w.call("POST", `${ASK}/${id}`, { result: "connected" }, PASSKEY);
+    expect(session.status).toBe(403);
+    expect(session.body).toEqual({ error: WORDS.signPasskey, code: "passkey_not_this_session" });
+    // The same assertion again: KIFF takes each once.
+    s.signed = 409;
+    expect((await w.call("POST", `${ASK}/${id}`, { result: "connected" }, PASSKEY)).body).toEqual({ error: WORDS.signTaken, code: "signature_taken" });
+    // The passkey KIFF checks: sent as `passkey`, as it came, with no `signature`; KIFF answers it as the approval key.
+    s.signed = true;
+    s.signedKey = "critical";
+    expect((await w.call("POST", `${ASK}/${id}`, { result: "connected" }, PASSKEY)).body).toMatchObject({ answer: "approved" });
+    expect(s.checks.at(-1)).toEqual({ method: "POST", uri: `${ASK}/${id}`, body_sha256: createHash("sha256").update(JSON.stringify({ result: "connected" })).digest("hex"), passkey: PASSKEY["kiff-passkey-assertion"] });
+  });
+
   it("takes a routine ask signed inside an open window, and refuses one whose window has ended", async () => {
     const s = services();
     const w = await world(s);

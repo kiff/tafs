@@ -211,6 +211,29 @@ describe("a drive, from the phone", () => {
     expect(w.events).toEqual([{ kind: "drive_started", title: "Coach started driving", detail: "Run Chargebacks" }]);
   });
 
+  // A computer's approval key is its passkey (KIFF-Passkey-Assertion): it starts a drive as the phone's fingerprint does.
+  it("starts with a computer's passkey, checked by KIFF in place of a signature", async () => {
+    const w = await world();
+    const sent: Array<Record<string, unknown>> = [];
+    const base = w.deps.fetch!;
+    w.deps.fetch = (async (url: string, init?: RequestInit) => {
+      if (String(url).endsWith("/v1/me/device-signature")) sent.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+      return base(url, init);
+    }) as typeof fetch;
+    const passkey = "t=2026-11-06T00:30:00Z,a=assertion";
+    const r = await w.call("POST", "/v1/coach/drive", { session: w.session, task: "Run Chargebacks", component: "d1" }, { "kiff-passkey-assertion": passkey });
+    expect(r.status).toBe(200);
+    expect(sent).toHaveLength(1);
+    expect(sent[0]).toMatchObject({ method: "POST", uri: "/v1/coach/drive", passkey });
+    expect(sent[0]).not.toHaveProperty("signature");
+    // Both at once: refused, and nothing more is asked of KIFF.
+    const w2 = await world();
+    const both = await w2.call("POST", "/v1/coach/drive", { session: w2.session, task: "Run Chargebacks", component: "d1" }, { ...SIGNED, "kiff-passkey-assertion": passkey });
+    expect(both.status).toBe(400);
+    expect(both.body.code).toBe("signature_twice");
+    expect(await currentDrive(w2.coach, T, ANA, NOW)).toBeUndefined();
+  });
+
   it("refuses the device key, a window's tap, and no signature: nothing starts", async () => {
     for (const signed of [{ key: "device" }, { key: "critical", window: { id: "w", open: true } }, {}]) {
       const w = await world(signed);

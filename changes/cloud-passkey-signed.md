@@ -1,0 +1,1 @@
+- **A computer's passkey signs Remove for good, Discard, a drive's start and an approval's report:** tafs cloud reads `KIFF-Passkey-Assertion` beside `KIFF-Device-Signature` and asks KIFF to check it in place of a signature. A request with both is refused (`signature_twice`).
