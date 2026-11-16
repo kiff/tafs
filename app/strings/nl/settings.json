@@ -87,6 +87,7 @@
   "settings.each_sends_who_answered_through": "Elke melding vermeldt wie er is beantwoord en via welke deur, nooit de woorden. Zet het uit in Configuratie › Resultaten gaan naar van het taf.",
   "settings.find_time_zone": "Een tijdzone zoeken",
   "settings.kiff_account": "KIFF-account",
+  "settings.language_device": "De taal van deze {device}",
   "settings.language_title": "Taal",
   "settings.legal": "Juridisch",
   "settings.legal_in_english": "{label} (in het Engels)",

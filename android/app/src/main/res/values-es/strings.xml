@@ -1919,6 +1919,7 @@
     <string name="settings_each_sends_who_answered_through">Cada una indica a quién se respondió y por qué puerta, nunca sus palabras. Desactívalo en el taf, en Configuración › Los resultados van a.</string>
     <string name="settings_find_time_zone">Buscar una zona horaria</string>
     <string name="settings_kiff_account">Cuenta de KIFF</string>
+    <string name="settings_language_device">El idioma de este %1$s</string>
     <string name="settings_language_title">Idioma</string>
     <string name="settings_legal">Legal</string>
     <string name="settings_legal_in_english">%1$s (en inglés)</string>

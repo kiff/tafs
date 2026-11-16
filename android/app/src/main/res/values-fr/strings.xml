@@ -1919,6 +1919,7 @@
     <string name="settings_each_sends_who_answered_through">Chacune indique à qui il a été répondu et par quelle porte, jamais son contenu. Désactivez-la dans Configuration du taf › Les résultats vont vers.</string>
     <string name="settings_find_time_zone">Rechercher un fuseau horaire</string>
     <string name="settings_kiff_account">Compte KIFF</string>
+    <string name="settings_language_device">La langue de cet %1$s</string>
     <string name="settings_language_title">Langue</string>
     <string name="settings_legal">Mentions légales</string>
     <string name="settings_legal_in_english">%1$s (en anglais)</string>

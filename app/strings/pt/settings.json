@@ -87,6 +87,7 @@
   "settings.each_sends_who_answered_through": "Cada um indica a quem foi respondido e por que porta, nunca as palavras. Desative-o na Configuração do taf › Os resultados vão para.",
   "settings.find_time_zone": "Procurar um fuso horário",
   "settings.kiff_account": "Conta KIFF",
+  "settings.language_device": "O idioma deste {device}",
   "settings.language_title": "Idioma",
   "settings.legal": "Informações legais",
   "settings.legal_in_english": "{label} (em inglês)",
