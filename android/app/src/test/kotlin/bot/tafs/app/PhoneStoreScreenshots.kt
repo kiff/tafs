@@ -131,7 +131,8 @@ class PhoneStoreScreenshots(private val language: String, private val playLocale
    */
   @Test fun coach() {
     phone()
-    val t0 = java.time.Instant.now().minusSeconds(120)
+    // 09:41 today, so the thread's time is the same whenever the screenshots are drawn.
+    val t0 = java.time.LocalDate.now(java.time.ZoneOffset.UTC).atTime(9, 41).toInstant(java.time.ZoneOffset.UTC)
     fun q(text: String) = kotlinx.serialization.json.JsonPrimitive(text).toString()
     fun component(json: String) = KiffClient.json.decodeFromString<SetupComponent>(json)
     val plan = component(
