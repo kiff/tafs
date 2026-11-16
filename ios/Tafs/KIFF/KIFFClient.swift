@@ -402,6 +402,12 @@ final class KIFFClient {
         let _: Empty = try await send("POST", "/v1/auth/device/logout", body: [String: String]())
     }
 
+    /// Ends a session this device was handed but won't keep (the person stopped that way of signing in),
+    /// with that session's own token, whatever this client holds.
+    func signOut(bearer: String) async throws {
+        let _: Empty = try await send("POST", "/v1/auth/device/logout", body: [String: String](), bearer: bearer)
+    }
+
     /// This device's id in KIFF (`dev_…`), from the person's device list:
     /// planque asks KIFF about the device by it (kiff/planque#10). Nil when KIFF lists
     /// this session without a device yet.
@@ -1599,7 +1605,7 @@ final class KIFFClient {
     /// `inWindow` false signs it outside any approval window: KIFF refused it inside one.
     private func send<T: Decodable, B: Encodable>(_ method: String, _ path: String, body: B?, base: URL? = nil, authorized: Bool = true,
                                                    signedBy: (@MainActor (Data) throws -> String)? = nil, presigned: String? = nil,
-                                                   inWindow: Bool = true) async throws -> T {
+                                                   inWindow: Bool = true, bearer: String? = nil) async throws -> T {
         guard let url = URL(string: path, relativeTo: base ?? baseURL) else { throw KIFFError.server(status: 0, message: Words.Error.badPath) }
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -1641,7 +1647,7 @@ final class KIFFClient {
             }
         }
         if authorized {
-            guard let token else { throw KIFFError.unauthorized }
+            guard let token = bearer ?? token else { throw KIFFError.unauthorized }
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
 
